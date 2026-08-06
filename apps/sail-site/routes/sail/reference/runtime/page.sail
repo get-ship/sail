@@ -74,7 +74,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       idents referenced. Same symbols are also available as tier B imports.
     </p>
     <grid cols="3" gap="2">
-      <for {controllerRows()} as="c" key={c.name}>
+      <for {controllerRows() as c} key={c.name}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -89,14 +89,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </grid>
   </column>
 
-  <for {groups()} as="group" key={group.id}>
+  <for {groups() as group} key={group.id}>
     <column gap="3">
       <h2>{group.id} — {group.count}</h2>
       <p>
         style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })
 {group.summary}</p>
       <column gap="1">
-        <for {group.exports} as="e" key={e.name}>
+        <for {group.exports as e} key={e.name}>
           <row gap="3" align="start">
             style({ box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) })
 

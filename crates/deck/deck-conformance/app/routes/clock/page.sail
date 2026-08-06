@@ -10,21 +10,17 @@ export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})
   <h1>
     style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 Live Clock</h1>
-  <while-loading {t}>
-  <p>
+  <match {t()}>
+  {loading => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Loading…</p>
-  </while-loading>
-  <while-error as="err" {t}>
-  <p>
+Loading…</p>}
+  {error as err => <p>
     style({ paint: fg(destructive), text: fontSize(sm) })
-Error: {err.message}</p>
-  </while-error>
-  <if {t().kind === 'ok'}>
-  <p>
+Error: {err.message}</p>}
+  {ok as value => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Tick: <strong>
     style({ paint: fg(foreground), text: fontFamily(mono) })
-{t().value.now}</strong></p>
-  </if>
+{value.now}</strong></p>}
+</match>
 </column>

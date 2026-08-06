@@ -677,62 +677,57 @@ fn collect_scope_prop_names(scope_body: &str) -> Vec<String> {
     names
 }
 
-/// `<for … as="row">` / `as='g'` binding names outside the controller body.
+/// `<for {items as row}>` / match `{ok as names => …}` binding names outside
+/// the controller body. Collect bare identifiers after top-level ` as `.
 fn collect_for_binding_names(sail_source: &str) -> Vec<String> {
     let ctrl = find_controller_raw(sail_source).map(|(s, e, _)| (s, e));
     let mut names = Vec::new();
     let bytes = sail_source.as_bytes();
     let mut i = 0usize;
-    while i < bytes.len() {
+    while i + 4 <= bytes.len() {
         if !sail_source.is_char_boundary(i) {
             i += 1;
             continue;
         }
-        // as="name" or as='name'
         let rest = &sail_source[i..];
-        if !rest.starts_with("as=") {
+        if !rest.starts_with(" as ") {
             i += 1;
             continue;
         }
         if ctrl.is_some_and(|(s, e)| i >= s && i < e) {
-            i += 3;
+            i += 4;
             continue;
         }
-        // Word boundary before `as` (avoid `has=` etc.)
-        if i > 0 {
-            let prev = bytes[i - 1] as char;
-            if prev.is_ascii_alphanumeric() || prev == '_' || prev == '$' || prev == '-' {
-                i += 1;
-                continue;
-            }
-        }
-        let after = i + 3;
-        let quote = bytes.get(after).copied();
-        if quote != Some(b'"') && quote != Some(b'\'') {
-            i += 3;
-            continue;
-        }
-        let q = quote.unwrap();
-        let name_start = after + 1;
-        let mut j = name_start;
-        while j < bytes.len() && bytes[j] != q {
+        let after = i + 4;
+        // Skip optional `(` for `(item, i)` forms — take first ident.
+        let mut j = after;
+        while j < bytes.len() && bytes[j].is_ascii_whitespace() {
             j += 1;
         }
-        if j > name_start && j < bytes.len() {
+        if j < bytes.len() && bytes[j] == b'(' {
+            j += 1;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+        }
+        let name_start = j;
+        while j < bytes.len()
+            && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'$')
+        {
+            j += 1;
+        }
+        if j > name_start {
             let name = &sail_source[name_start..j];
             if name
                 .chars()
                 .next()
                 .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$')
-                && name
-                    .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
                 && !names.iter().any(|n| n == name)
             {
                 names.push(name.to_string());
             }
         }
-        i = j.saturating_add(1);
+        i = j.max(i + 1);
     }
     names
 }
@@ -1397,7 +1392,7 @@ export default controller((ctx) => ({ count: signal(0) }))
 import { controller } from '@ship/sail-runtime'
 export default controller(() => ({ items: () => [{ key: 'a', label: 'A' }] }))
 </controller>
-<for {items()} as="row" key={row.key}>
+<for {items() as row} key={row.key}>
   <p>{row.label}</p>
 </for>
 "#;

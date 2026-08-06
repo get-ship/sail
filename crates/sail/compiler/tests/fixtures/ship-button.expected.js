@@ -28,12 +28,8 @@ const __wireBoundary_b4 = (anchor) => bindIf({
     () => {
       const __frag5 = document.createDocumentFragment();
       const __c6 = [];
-      const __t7 = document.createTextNode("\n    ");
-      __frag5.appendChild(__t7);
-      const __e8 = __tpl1();
-      __frag5.appendChild(__e8);
-      const __t9 = document.createTextNode("\n  ");
-      __frag5.appendChild(__t9);
+      const __e7 = __tpl1();
+      __frag5.appendChild(__e7);
       return { nodes: Array.from(__frag5.childNodes), cleanup: () => { for (const c of __c6) try { c(); } catch (e) {} } };
     },
   ],

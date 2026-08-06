@@ -271,14 +271,13 @@ Shipping address</h1>
                 style({ box: w(full) })
 
                 <option value="">Select {regionLabel()}</option>
-                <for {regions()} as="region" key={region.code}>
+                <for {regions() as region} key={region.code}>
                   <option value={region.code}>{region.name}</option>
                 </for>
               </select>
               <span slot="error">{errors().state}</span>
             </field>
-          <else>
-            <field>
+          {else => <field>
               style({ box: w(full) })
 
               <label slot="label">State / Province</label>
@@ -288,8 +287,7 @@ Shipping address</h1>
                 <option value="">Not required for Other</option>
               </select>
               <span slot="hint">Region is not required when country is Other.</span>
-            </field>
-          </else></if>
+            </field>}</if>
 
           <row gap="2" align="center" justify="end">
             style({ box: w(full) })
@@ -303,9 +301,7 @@ Shipping address</h1>
                   <spinner size="sm"></spinner>
                   <span>Saving…</span>
                 </row>
-              <else>
-                Save address
-              </else></if>
+              {else => Save address}</if>
             </button>
           </row>
 

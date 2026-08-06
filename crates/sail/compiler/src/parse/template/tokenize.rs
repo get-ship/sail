@@ -2,7 +2,8 @@
 //!
 //! Walks element children and splits text nodes at brace markers.
 //! Element children pass through as `Element` tokens for the
-//! recursive compile pass.
+//! recursive compile pass. Brace arms (`{pattern as binding => body}`)
+//! become `Arm` tokens whose body is re-parsed as a template fragment.
 
 use crate::diagnostics::Span;
 use crate::parse::html::{self, Node};
@@ -18,47 +19,36 @@ pub enum TokenKind {
     Text(String),
     Element(html::Element),
     Expr { src: String },
+    /// `{pattern as binding => body}` or `{else => body}` / `{else-if {c} => body}`.
+    Arm {
+        head: String,
+        body_src: String,
+    },
     OpenIf { src: String },
     OpenFor { src: String },
     OpenMatch { src: String },
     OpenWhen { src: String },
-    OpenWhileLoading { src: String },
-    OpenWhileError { src: String },
-    ElseIf { src: String },
-    Else,
-    Case { src: String },
-    Default,
     CloseIf,
     CloseFor,
     CloseMatch,
     CloseWhen,
-    CloseWhileLoading,
-    CloseWhileError,
 }
 
 /// Lightweight discriminant used by the consumer's terminator list.
-/// Two `Discriminant`s compare equal if they match the same variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Discriminant {
     Text,
     Element,
     Expr,
+    Arm,
     OpenIf,
     OpenFor,
     OpenMatch,
     OpenWhen,
-    OpenWhileLoading,
-    OpenWhileError,
-    ElseIf,
-    Else,
-    Case,
-    Default,
     CloseIf,
     CloseFor,
     CloseMatch,
     CloseWhen,
-    CloseWhileLoading,
-    CloseWhileError,
 }
 
 impl TokenKind {
@@ -67,22 +57,15 @@ impl TokenKind {
             TokenKind::Text(_) => Discriminant::Text,
             TokenKind::Element(_) => Discriminant::Element,
             TokenKind::Expr { .. } => Discriminant::Expr,
+            TokenKind::Arm { .. } => Discriminant::Arm,
             TokenKind::OpenIf { .. } => Discriminant::OpenIf,
             TokenKind::OpenFor { .. } => Discriminant::OpenFor,
             TokenKind::OpenMatch { .. } => Discriminant::OpenMatch,
             TokenKind::OpenWhen { .. } => Discriminant::OpenWhen,
-            TokenKind::OpenWhileLoading { .. } => Discriminant::OpenWhileLoading,
-            TokenKind::OpenWhileError { .. } => Discriminant::OpenWhileError,
-            TokenKind::ElseIf { .. } => Discriminant::ElseIf,
-            TokenKind::Else => Discriminant::Else,
-            TokenKind::Case { .. } => Discriminant::Case,
-            TokenKind::Default => Discriminant::Default,
             TokenKind::CloseIf => Discriminant::CloseIf,
             TokenKind::CloseFor => Discriminant::CloseFor,
             TokenKind::CloseMatch => Discriminant::CloseMatch,
             TokenKind::CloseWhen => Discriminant::CloseWhen,
-            TokenKind::CloseWhileLoading => Discriminant::CloseWhileLoading,
-            TokenKind::CloseWhileError => Discriminant::CloseWhileError,
         }
     }
 
@@ -91,22 +74,15 @@ impl TokenKind {
             Discriminant::Text => "text",
             Discriminant::Element => "element",
             Discriminant::Expr => "{expr}",
-            Discriminant::OpenIf => "{#if}",
-            Discriminant::OpenFor => "{#for}",
-            Discriminant::OpenMatch => "{#match}",
+            Discriminant::Arm => "{arm => …}",
+            Discriminant::OpenIf => "<if>",
+            Discriminant::OpenFor => "<for>",
+            Discriminant::OpenMatch => "<match>",
             Discriminant::OpenWhen => "<when>",
-            Discriminant::OpenWhileLoading => "{#while-loading}",
-            Discriminant::OpenWhileError => "{#while-error}",
-            Discriminant::ElseIf => "{:else if}",
-            Discriminant::Else => "{:else}",
-            Discriminant::Case => "{:case}",
-            Discriminant::Default => "{:default}",
-            Discriminant::CloseIf => "{/if}",
-            Discriminant::CloseFor => "{/for}",
-            Discriminant::CloseMatch => "{/match}",
+            Discriminant::CloseIf => "</if>",
+            Discriminant::CloseFor => "</for>",
+            Discriminant::CloseMatch => "</match>",
             Discriminant::CloseWhen => "</when>",
-            Discriminant::CloseWhileLoading => "{/while-loading}",
-            Discriminant::CloseWhileError => "{/while-error}",
         }
     }
 }
@@ -126,7 +102,7 @@ pub fn tokenize_children(nodes: &[Node]) -> Vec<Token> {
                 }
                 let before = out.len();
                 tokenize_text(&t.data, t.span, &mut out);
-                // Strip indentation whitespace around control markers / retired-block errors.
+                // Strip indentation whitespace around control markers / arms.
                 let has_non_text = out[before..]
                     .iter()
                     .any(|tok| !matches!(tok.kind, TokenKind::Text(_)));
@@ -169,15 +145,9 @@ fn tokenize_text(text: &str, base_span: Span, out: &mut Vec<Token>) {
         if bytes[i] == b'{'
             && let Some(close) = find_matching_close(text, i)
         {
-            // Expression body stays RAW — never entity-decoded. JS
-            // source goes through the expression tokenizer / checker
-            // which assumes the bytes match the source positions.
             let inner = text[i + 1..close].trim().to_string();
             if !buf.is_empty() {
                 let span = Span::new(base_span.start + buf_start, base_span.start + i);
-                // Text segment around the expression CAN be decoded —
-                // it becomes a DOM text node and entity references like
-                // `&deg;` are author shorthand for the resulting char.
                 let decoded = super::super::html::decode_entities(&buf);
                 buf.clear();
                 out.push(Token {
@@ -249,50 +219,75 @@ fn find_matching_close(text: &str, start: usize) -> Option<usize> {
 }
 
 fn classify_brace(inner: &str) -> TokenKind {
-    // Brace control-flow is retired. Emit a DynamicText expr that the
-    // expression validator will reject with a migration message — or we
-    // hard-error at Open* if anything still produces those tokens.
-    // Prefer an immediate Expr with a sentinel the validate step catches.
-    let retired = |kind: &str| -> TokenKind {
-        TokenKind::Expr {
-            src: format!(
-                "__sail_retired_block__(\"{kind}\") /* use <{kind}>…</{kind}> elements */"
-            ),
-        }
-    };
-    if inner.starts_with("#if") {
-        return retired("if");
-    }
-    if inner.starts_with("#for") {
-        return retired("for");
-    }
-    if inner.starts_with("#match") {
-        return retired("match");
-    }
-    if inner.starts_with("#while-loading") {
-        return retired("while-loading");
-    }
-    if inner.starts_with("#while-error") {
-        return retired("while-error");
-    }
-    if inner.starts_with(":else if")
-        || inner == ":else"
-        || inner.starts_with(":case")
-        || inner == ":default"
-        || inner == "/if"
-        || inner == "/for"
-        || inner == "/match"
-        || inner == "/while-loading"
-        || inner == "/while-error"
+    // Retired brace-block forms — never Open* tokens. Expression validator
+    // rejects the sentinel with a normal unknown-call error (DEEMBALM: no
+    // permanent tombstone pointer).
+    if inner.starts_with('#')
+        || inner.starts_with(':')
+        || inner.starts_with('/')
+        || inner.starts_with("while-")
     {
         return TokenKind::Expr {
-            src: "__sail_retired_block__(\"clause\") /* use <else-if>/<else>/<case>/<default> inside <if>/<for>/<match> */"
-                .into(),
+            src: format!("__sail_unknown_block__({inner:?})"),
+        };
+    }
+    // Arm: `{head => body}` — top-level `=>` (not inside nested braces/parens).
+    if let Some((head, body)) = split_arm(inner) {
+        return TokenKind::Arm {
+            head: head.to_string(),
+            body_src: body.to_string(),
         };
     }
     TokenKind::Expr {
         src: inner.to_string(),
     }
+}
+
+/// Split `head => body` on the first top-level `=>`.
+fn split_arm(inner: &str) -> Option<(&str, &str)> {
+    let bytes = inner.as_bytes();
+    let mut depth = 0i32;
+    let mut str_quote: Option<u8> = None;
+    let mut i = 0usize;
+    while i + 1 < bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = str_quote {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        if c == b'"' || c == b'\'' || c == b'`' {
+            str_quote = Some(c);
+            i += 1;
+            continue;
+        }
+        if matches!(c, b'(' | b'[' | b'{') {
+            depth += 1;
+            i += 1;
+            continue;
+        }
+        if matches!(c, b')' | b']' | b'}') {
+            depth -= 1;
+            i += 1;
+            continue;
+        }
+        if depth == 0 && c == b'=' && bytes[i + 1] == b'>' {
+            let head = inner[..i].trim();
+            let body = inner[i + 2..].trim();
+            if head.is_empty() {
+                return None;
+            }
+            return Some((head, body));
+        }
+        i += 1;
+    }
+    None
 }
 
 #[cfg(test)]
@@ -308,9 +303,32 @@ mod tests {
     }
 
     #[test]
-    fn brace_blocks_are_retired_not_open_if() {
+    fn brace_blocks_are_not_open_if() {
         let mut out = Vec::new();
         tokenize_text("{#if a}b{/if}", Span::new(0, 13), &mut out);
-        assert!(matches!(&out[0].kind, TokenKind::Expr { src } if src.contains("retired")));
+        assert!(matches!(&out[0].kind, TokenKind::Expr { src } if src.contains("unknown_block")));
+    }
+
+    #[test]
+    fn classifies_arm_with_binding() {
+        let mut out = Vec::new();
+        tokenize_text("{ok as names => <p>{names}</p>}", Span::new(0, 31), &mut out);
+        match &out[0].kind {
+            TokenKind::Arm { head, body_src } => {
+                assert_eq!(head, "ok as names");
+                assert!(body_src.contains("<p>"), "body={body_src}");
+            }
+            other => panic!("expected Arm, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn classifies_else_arm() {
+        let mut out = Vec::new();
+        tokenize_text("{else => <p>n</p>}", Span::new(0, 18), &mut out);
+        match &out[0].kind {
+            TokenKind::Arm { head, .. } => assert_eq!(head, "else"),
+            other => panic!("expected Arm, got {other:?}"),
+        }
     }
 }

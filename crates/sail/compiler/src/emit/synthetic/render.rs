@@ -464,8 +464,6 @@ fn unsupported_feature(instrs: &[Instr]) -> Option<CompileError> {
                 }
                 w.else_body.as_deref()
             }
-                        Instr::WhileLoading(wl) => Some(&wl.body),
-            Instr::WhileError(we) => Some(&we.body),
             _ => None,
         };
         if let Some(children) = nested

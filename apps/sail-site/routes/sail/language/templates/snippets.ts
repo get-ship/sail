@@ -6,19 +6,12 @@ export const code = {
 
   ifBlock: `<if {user()}>
   <p>Welcome back.</p>
-<else-if {pending()}>
-  <spinner></spinner>
-</else-if><else>
-  <a href="/login">Sign in</a>
-</else></if>`,
+{else-if {pending()} => <spinner></spinner>}{else => <a href="/login">Sign in</a>}</if>`,
 
   matchBlock: `<match {status()}>
-  <case {'draft'}> <badge tone="muted">Draft</badge>
-  </case><case {'live'}>  <badge tone="success">Live</badge>
-  </case><default>      <badge>Unknown</badge>
-</default></match>`,
+  {'draft' => <badge tone="muted">Draft</badge>}{'live' => <badge tone="success">Live</badge>}{else => <badge>Unknown</badge>}</match>`,
 
-  forBlock: `<for {rows()} as="row" key={row.id}>
+  forBlock: `<for {rows() as row} key={row.id}>
   <tr><td>{row.name}</td></tr>
 </for>`,
 

@@ -27,9 +27,9 @@ fn parses_when_else_and_nests_in_if() {
 <div>
   <when {tablet}>
     <p>wide</p>
-    <else>
+    {else => 
       <if {open()}><span>narrow-open</span></if>
-    </else>
+    }
   </when>
 </div>
 "#;
@@ -46,7 +46,7 @@ fn parses_when_else_and_nests_in_if() {
 #[test]
 fn emits_bind_when_with_media_query() {
     let js = compile_js(
-        r#"<div><when {tablet}><p>wide</p><else><p>narrow</p></else></when></div>"#,
+        r#"<div><when {tablet}><p>wide</p>{else => <p>narrow</p>}</when></div>"#,
     );
     assert!(
         js.contains("bindWhen"),
@@ -95,8 +95,8 @@ fn nests_inside_for() {
     let js = compile_js(
         r#"
 <div>
-  <for {items()} as="item" key={item.id}>
-    <when {desktop}><span>{item.id}</span><else><em>{item.id}</em></else></when>
+  <for {items() as item} key={item.id}>
+    <when {desktop}><span>{item.id}</span>{else => <em>{item.id}</em>}</when>
   </for>
 </div>
 "#,
@@ -114,3 +114,4 @@ fn when_without_else_emits_then_only() {
         "no else branch when omitted:\n{js}"
     );
 }
+

@@ -22,18 +22,12 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.row = row;
     __childScope2.__i = __i;
     return (($scope) => {
-const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __t5 = document.createTextNode("\n    ");
-__frag3.appendChild(__t5);
-const __e6 = __tpl0();
-const __t7 = __e6.firstChild;
-markHydrateText(__t7, "b1");
-__t7.textContent = ($scope.row.label);
-__frag3.appendChild(__e6);
-const __t8 = document.createTextNode("\n  ");
-__frag3.appendChild(__t8);
-      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new9, __newI10) => { const __old = $scope.row; $scope.row = __new9; $scope.__i = __newI10; if (__old.label !== $scope.row.label) { __t7.textContent = ($scope.row.label); } } };
+const __e5 = __tpl0();
+const __t6 = __e5.firstChild;
+markHydrateText(__t6, "b1");
+__t6.textContent = ($scope.row.label);
+      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new7, __newI8) => { const __old = $scope.row; $scope.row = __new7; $scope.__i = __newI8; if (__old.label !== $scope.row.label) { __t6.textContent = ($scope.row.label); } } };
     })(__childScope2);
   },
 });

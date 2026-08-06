@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>style&#40;&#123; paint: radius(…) &#125;&#41;</code>, <code>style&#40;&#123; paint: fg(…) &#125;&#41;</code>, and so on.
     </p>
     <grid cols="2" gap="2">
-      <for {sxRows()} as="a" key={a.prop}>
+      <for {sxRows() as a} key={a.prop}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -107,7 +107,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       each names the element or attribute to use instead.
     </p>
     <grid cols="2" gap="2">
-      <for {refusals()} as="r" key={r.atom}>
+      <for {refusals() as r} key={r.atom}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -133,7 +133,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
-      <for {statePrefixes()} as="s" key={s.prefix}>
+      <for {statePrefixes() as s} key={s.prefix}>
         <row gap="3" align="center">
           style({ box: padX(3).padY(1), paint: radius(md) })
 
@@ -163,7 +163,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Use <code>when&#40;&#123; tablet: style&#40;&#123; text: fontSize(lg) &#125;&#41;, desktop: style&#40;&#123; text: fontSize(xl) &#125;&#41; &#125;&#41;</code>.
     </p>
     <grid cols="3" gap="2">
-      <for {conditionPrefixes()} as="c" key={c.prefix}>
+      <for {conditionPrefixes() as c} key={c.prefix}>
         <row gap="3" align="center">
           style({ box: padX(3).padY(1), paint: radius(md) })
 
@@ -189,7 +189,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       property (timeline tracks, range-driven paint).
     </p>
     <grid cols="2" gap="2">
-      <for {extraForms()} as="f" key={f.form}>
+      <for {extraForms() as f} key={f.form}>
         <card padding="sm">
           style({ box: minW(0) })
 

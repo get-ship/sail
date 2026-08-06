@@ -402,13 +402,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <ul role="listbox" id={listId()} aria-label={label()} use:captureList>
       style({  box: grow(1).maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)  })
 
-      <for {rows()} as="row" key={row.key}>
+      <for {rows() as row} key={row.key}>
         <if {row.isHeading}>
           <li role="presentation">
             style({ box: padY(2).padB(1), paint: fg(muted-foreground).select(none), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
 {row.heading}</li>
-        <else>
-          <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
+        {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
             style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm) }).when(selected, { paint: bg(selected-bg) }).when(disabled, { paint: fg(muted-foreground).cursor(default).opacity(50) })
 
             <if {row.icon !== ''}>
@@ -424,8 +423,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 style({  box: grow(0).ml(auto), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono)  })
 {row.hint}</span>
             </if>
-          </li>
-        </else></if>
+          </li>}</if>
       </for>
       <if {rows().length === 0}>
         <li role="status">

@@ -66,19 +66,15 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     <match {phase()}>
-      <case {'idle'}> <badge tone="muted">
+      {'idle' => <badge tone="muted">
         style({ animate: enter({ opacity: 'fade' }) })
-idle</badge>
-      </case><case {'building'}> <badge tone="warning">
+idle</badge>}{'building' => <badge tone="warning">
         style({ animate: enter({ translate-x: 'spring:snappy' }) })
-building</badge>
-      </case><case {'live'}> <badge tone="success">
+building</badge>}{'live' => <badge tone="success">
         style({ animate: enter({ scale: 'spring:bouncy' }) })
-live</badge>
-      </case><default> <badge tone="destructive">
+live</badge>}{else => <badge tone="destructive">
         style({ animate: enter({ opacity: 'fade' }) })
-failed</badge>
-    </default></match>
+failed</badge>}</match>
   </row>
 
   <row gap="2">
@@ -95,7 +91,7 @@ failed</badge>
          on:keydown|key:Escape={clear} />
 
   <column gap="1">
-    <for {filtered()} as="env" key={env.id}>
+    <for {filtered() as env} key={env.id}>
       <row gap="3" align="center">
         style(envRow)
 

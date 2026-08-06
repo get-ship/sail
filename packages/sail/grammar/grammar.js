@@ -32,13 +32,9 @@ export default grammar({
       $.for_block,
       $.match_block,
       $.when_block,
-      $.while_loading_block,
-      $.while_error_block,
-      $.else_if_clause,
-      $.else_clause,
-      $.case_clause,
-      $.default_clause,
       $.element,
+      // Arms (`{ok as x => …}`, `{else => …}`) parse as interpolations;
+      // the compiler re-classifies `=>` brace groups as control arms.
       $.interpolation,
       $.text,
     ),
@@ -203,56 +199,6 @@ export default grammar({
       '</when>',
     ),
 
-    while_loading_block: $ => seq(
-      '<while-loading',
-      repeat($._attribute),
-      '>',
-      repeat($._template_node),
-      '</while-loading>',
-    ),
-
-    while_error_block: $ => seq(
-      '<while-error',
-      repeat($._attribute),
-      '>',
-      repeat($._template_node),
-      '</while-error>',
-    ),
-
-    else_if_clause: $ => seq(
-      '<else-if',
-      repeat($._attribute),
-      '>',
-      repeat($._template_node),
-      '</else-if>',
-    ),
-
-    else_clause: $ => seq(
-      '<else',
-      repeat($._attribute),
-      '>',
-      repeat($._template_node),
-      '</else>',
-    ),
-
-    case_clause: $ => seq(
-      '<case',
-      repeat($._attribute),
-      '>',
-      repeat($._template_node),
-      '</case>',
-    ),
-
-    default_clause: $ => seq(
-      '<default',
-      repeat($._attribute),
-      '>',
-      repeat($._template_node),
-      '</default>',
-    ),
-
-    // `x of items` (bare binding) or `(x, i) of items` (parenthesized
-    // tuple with index) — matches
     // ── opaque expression body ────────────────────────────────────
     // Inside `{…}` we capture everything as a balanced atom stream so
     // the host-language injection (TypeScript) can highlight it. The

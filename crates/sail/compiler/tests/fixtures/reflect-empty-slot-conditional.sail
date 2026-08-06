@@ -6,7 +6,5 @@
 <button>
   <if {busy()}>
     <span aria-hidden="true"></span>
-  <else>
-    <slot reflect-empty="data-icon-only"></slot>
-  </else></if>
+  {else => <slot reflect-empty="data-icon-only"></slot>}</if>
 </button>

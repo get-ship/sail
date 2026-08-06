@@ -92,7 +92,7 @@ This project</p>
                 </button>
               </studio-empty>
             </if>
-            <for {library.projectRows()} as="row" key={row.key}>
+            <for {library.projectRows() as row} key={row.key}>
               <studio-list-row
                 component-row
                 component-id={row.id}
@@ -123,7 +123,7 @@ Installed packs</p>
                 style(muted)
 No installed packs</p>
             </if>
-            <for {library.packRows()} as="row" key={row.key}>
+            <for {library.packRows() as row} key={row.key}>
               <studio-list-row
                 component-row
                 component-id={row.id}
@@ -322,7 +322,7 @@ Intent</p>
                   <p>
                     style(eyebrow)
 Meta</p>
-                  <for {library.kvRows()} as="kv" key={kv.key}>
+                  <for {library.kvRows() as kv} key={kv.key}>
                     <row kv-row gap="3" align="start" nowrap>
                       <p>
                         style({  box: shrink(0).w(24), paint: fg(muted-foreground), text: fontSize(xs)  })
@@ -375,7 +375,7 @@ Type</p>
                         style(eyebrow)
 Default</p>
                     </row>
-                    <for {library.propRows()} as="prop" key={prop.key}>
+                    <for {library.propRows() as prop} key={prop.key}>
                       <row prop-row gap="3" align="start" nowrap>
                         style({ box: padY(2), paint: borderBWidth(1).borderB(border-subtle) })
 
@@ -408,7 +408,7 @@ Default</p>
   </row>
 
   <toast-region position="bottom-end" components-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>

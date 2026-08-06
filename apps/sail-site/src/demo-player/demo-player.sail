@@ -65,8 +65,7 @@ The Reactive Quartet</p>
           style([bar, style({ box: h(5), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
 </div>
       </row>
-    <else>
-      <row gap="1" align="center">
+    {else => <row gap="1" align="center">
         style(eq)
 
         <div>
@@ -81,7 +80,6 @@ The Reactive Quartet</p>
         <div>
           style(rest)
 </div>
-      </row>
-    </else></if>
+      </row>}</if>
   </row>
 </card>

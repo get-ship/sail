@@ -49,12 +49,10 @@ export default controller(() => {
     <h2>history</h2>
     <if {history().length === 0}>
       <p data-muted="true" data-test="empty">No history yet.</p>
-    <else>
-      <ol data-test="history">
-        <for {history()} as="v" key={v.k}>
+    {else => <ol data-test="history">
+        <for {history() as v} key={v.k}>
           <li>{v.value}</li>
         </for>
-      </ol>
-    </else></if>
+      </ol>}</if>
   </section>
 </div>

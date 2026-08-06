@@ -87,7 +87,7 @@ export default controller((ctx) => {
   <column gap="1">
     style(list)
 
-    <for {flights()} as="f" key={f.id}>
+    <for {flights() as f} key={f.id}>
       <row align="center" gap="3" nowrap>
         style({ animate: enter({ opacity: 'fade' }) })
 
@@ -98,10 +98,7 @@ export default controller((ctx) => {
           style(gate)
 {f.gate}</span>
         <match {f.status}>
-          <case {'boarding'}> <badge tone="success">Boarding</badge>
-          </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>
-          </case><default>         <badge tone="muted">On time</badge>
-        </default></match>
+          {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
       </row>
     </for>
   </column>

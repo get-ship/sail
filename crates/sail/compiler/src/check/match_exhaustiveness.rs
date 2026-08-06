@@ -1,30 +1,41 @@
-//! Style `match` exhaustiveness — a warning when a `match(prop, {…})` that
-//! dispatches on a CLOSED-union scope prop (`variant: 'solid' | 'soft' | …`)
-//! leaves union members without an arm.
+//! Match exhaustiveness for two surfaces:
 //!
-//! The Style grammar has no catch-all arm (`parse_match` accepts only word
-//! keys; nothing special-cases `default` / `else` / `_`), so an uncovered
-//! member is always worth naming. It stays a WARNING, never an error: a
-//! partial match is a legitimate way to leave a variant unstyled.
+//! 1. **Style** `match(prop, {…})` on a closed-union scope prop — WARNING
+//!    when members lack an arm (partial paint is legitimate).
+//! 2. **Template** `<match {disc}>` with kind arms on LiveState /
+//!    MutationState closed unions — COMPILE ERROR naming the missing arm.
+//!    `{else => …}` covers any remainder.
 //!
-//! Scrutinees that are not closed-union props (string / number / free-form
-//! TS types, dotted paths like `row.tone`) emit nothing.
+//! Style remains warning-only. Template kind-unions gate the build.
 
 use std::collections::HashSet;
 
 use sail_lint::style::Style;
 
 use crate::diagnostics::{DiagSeverity, Diagnostic, line_col};
-use crate::ir::{Program, PropKind};
+use crate::ir::{Instr, MatchInstr, MatchTest, Program, PropKind};
 
-/// Lint-style rule id carried on every diagnostic this pass emits.
+/// Style-match rule id (warnings).
 pub const RULE: &str = "sail-style-match-exhaustive";
+
+/// Template match exhaustiveness rule id (errors).
+pub const TEMPLATE_RULE: &str = "sail-match-exhaustive";
 
 const MATCH_OPEN: &str = "match(";
 
-/// Collect exhaustiveness warnings for every Style `match` in `<scope>`
-/// Style consts and host `sx=` values. Warnings only — never gates the build.
+/// LiveState closed kinds.
+const LIVE_STATE_KINDS: &[&str] = &["loading", "error", "ok"];
+/// MutationState closed kinds.
+const MUTATION_STATE_KINDS: &[&str] = &["idle", "loading", "ok", "error"];
+
+/// Collect Style match warnings + template match exhaustiveness errors.
 pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
+    let mut out = Vec::new();
+
+    // ── Template `<match>` kind-union exhaustiveness (errors) ──────────
+    walk_template_match(&program.template, source, &mut out);
+
+    // ── Style match (warnings) ─────────────────────────────────────────
     // Closed-union props: name → members.
     let unions: Vec<(&str, &[String])> = program
         .props
@@ -35,14 +46,10 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
         })
         .collect();
     if unions.is_empty() {
-        return Vec::new();
+        return out;
     }
 
-    let mut out = Vec::new();
-
-    // `<scope>` Style consts — `const tones = match(variant, {…})`. The env
-    // harvest already parsed each RHS; we re-locate the declaration for the
-    // span. A name is checked once even if several `<scope>` blocks repeat it.
+    // `<scope>` Style consts — `const tones = match(variant, {…})`.
     let env = crate::parse::scope_block::style_env_from_source(source);
     let mut seen_consts: HashSet<&str> = HashSet::new();
     for (body_start, body) in scope_bodies(source) {
@@ -72,6 +79,102 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
     }
 
     out
+}
+
+fn walk_template_match(instrs: &[Instr], source: &str, out: &mut Vec<Diagnostic>) {
+    for i in instrs {
+        match i {
+            Instr::Match(m) => {
+                check_template_match(m, source, out);
+                for c in &m.cases {
+                    walk_template_match(&c.body, source, out);
+                }
+                if let Some(d) = &m.default {
+                    walk_template_match(d, source, out);
+                }
+            }
+            Instr::If(iff) => {
+                for b in &iff.branches {
+                    walk_template_match(&b.body, source, out);
+                }
+                if let Some(e) = &iff.else_body {
+                    walk_template_match(e, source, out);
+                }
+            }
+            Instr::For(f) => {
+                walk_template_match(&f.body, source, out);
+                if let Some(e) = &f.else_body {
+                    walk_template_match(e, source, out);
+                }
+            }
+            Instr::When(w) => {
+                walk_template_match(&w.body, source, out);
+                if let Some(e) = &w.else_body {
+                    walk_template_match(e, source, out);
+                }
+            }
+            Instr::Element(el) => walk_template_match(&el.children, source, out),
+            Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => {}
+        }
+    }
+}
+
+fn check_template_match(m: &MatchInstr, source: &str, out: &mut Vec<Diagnostic>) {
+    // `{else => …}` covers every remainder.
+    if m.default.is_some() {
+        return;
+    }
+    let mut kind_arms: HashSet<&str> = HashSet::new();
+    for c in &m.cases {
+        if let MatchTest::Kind(k) = &c.test {
+            kind_arms.insert(k.as_str());
+        }
+    }
+    if kind_arms.is_empty() {
+        return; // pure expression-equality match — no closed-kind law
+    }
+
+    // idle present → MutationState; else any LiveState kind → LiveState.
+    // Custom kind words alone do not invent a closed union.
+    let expected: &[&str] = if kind_arms.contains("idle") {
+        MUTATION_STATE_KINDS
+    } else if kind_arms
+        .iter()
+        .any(|k| matches!(*k, "loading" | "error" | "ok"))
+    {
+        LIVE_STATE_KINDS
+    } else {
+        return;
+    };
+
+    let missing: Vec<&str> = expected
+        .iter()
+        .copied()
+        .filter(|k| !kind_arms.contains(k))
+        .collect();
+    if missing.is_empty() {
+        return;
+    }
+
+    let quoted = missing
+        .iter()
+        .map(|m| format!("`{m}`"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let (line, col) = line_col(source, m.span.start);
+    out.push(Diagnostic {
+        line,
+        col,
+        end_line: line,
+        end_col: col + 1,
+        severity: DiagSeverity::Error,
+        message: format!(
+            "<match> is not exhaustive — missing arm(s) for {quoted}; \
+             add `{{{first} => …}}` (or `{{else => …}}` to cover the rest).",
+            first = missing[0]
+        ),
+        rule: Some(TEMPLATE_RULE.to_string()),
+    });
 }
 
 /// Walk `style` pre-order; every `Match` whose scrutinee resolves to a

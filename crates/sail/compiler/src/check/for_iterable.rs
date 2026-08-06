@@ -1,4 +1,4 @@
-//! Type-strengthening #5: `<for {EXPR} as="x">` iterable shape.
+//! Type-strengthening #5: `<for {EXPR as x}>` iterable shape.
 //!
 //! `<for>` walks an iterable. Number, boolean, null, and undefined
 //! literals can never satisfy that contract; the runtime currently
@@ -45,8 +45,6 @@ fn walk(instrs: &[Instr]) -> Result<(), CompileError> {
                     walk(e)?;
                 }
             }
-                        Instr::WhileLoading(wl) => walk(&wl.body)?,
-            Instr::WhileError(we) => walk(&we.body)?,
             _ => {}
         }
     }

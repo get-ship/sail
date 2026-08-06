@@ -53,7 +53,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <grid cols="1" gap="2">
-      <for {directives()} as="d" key={d.syntax}>
+      <for {directives() as d} key={d.syntax}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -80,7 +80,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>tag:event</code> names stay open without a row here.
     </p>
     <grid cols="2" gap="2">
-      <for {eventNames()} as="e" key={e.name}>
+      <for {eventNames() as e} key={e.name}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -101,7 +101,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       style({ box: maxW(breakpoint-tablet) })
 Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
-      <for {modifierRows()} as="m" key={m.key}>
+      <for {modifierRows() as m} key={m.key}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -119,7 +119,7 @@ Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
   <column gap="3">
     <h3>bind: targets</h3>
     <grid cols="3" gap="2">
-      <for {bindTargets()} as="b" key={b.target}>
+      <for {bindTargets() as b} key={b.target}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -137,7 +137,7 @@ Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
   <column gap="3">
     <h3>Blocks</h3>
     <grid cols="2" gap="2">
-      <for {blockRows()} as="b" key={b.open}>
+      <for {blockRows() as b} key={b.open}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -165,7 +165,7 @@ Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
       HTML/CSS/JS habits the parser teaches against, with the sail way.
     </p>
     <grid cols="1" gap="2">
-      <for {foreignIdioms()} as="r" key={r.syntax}>
+      <for {foreignIdioms() as r} key={r.syntax}>
         <card padding="sm">
           style({ box: minW(0) })
 

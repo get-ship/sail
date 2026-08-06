@@ -43,7 +43,7 @@ data-theme = {active()}</small>
   </row>
 
   <row gap="1" align="center">
-    <for {themes()} as="t" key={t.id}>
+    <for {themes() as t} key={t.id}>
       <button size="sm" tone="primary" variant={active() === t.id ? 'solid' : 'ghost'} on:click={() => pick(t.id)}>
         {t.label}
       </button>

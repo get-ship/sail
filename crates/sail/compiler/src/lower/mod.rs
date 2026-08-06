@@ -196,26 +196,6 @@ fn walk_instr(
             }
             walk_instrs(&el.children, out, is_route, depth)?;
         }
-        Instr::WhileLoading(wl) => {
-            out.runtime_imports.insert("bindWhileLoading");
-            if is_route && *depth == 0 {
-                out.dom_imports.insert("collectElementMarkers");
-                out.dom_imports.insert("hydrateWhileLoading");
-            }
-            *depth += 1;
-            walk_instrs(&wl.body, out, is_route, depth)?;
-            *depth -= 1;
-        }
-        Instr::WhileError(we) => {
-            out.runtime_imports.insert("bindWhileError");
-            if is_route && *depth == 0 {
-                out.dom_imports.insert("collectElementMarkers");
-                out.dom_imports.insert("hydrateWhileError");
-            }
-            *depth += 1;
-            walk_instrs(&we.body, out, is_route, depth)?;
-            *depth -= 1;
-        }
         Instr::If(IfInstr {
             branches,
             else_body,
@@ -286,8 +266,12 @@ fn walk_instr(
             }
             *depth += 1;
             for c in cases {
-                if is_route && !out.uses_route && expr_references_route(&c.test.source) {
-                    out.uses_route = true;
+                if is_route && !out.uses_route {
+                    if let MatchTest::Expr(e) = &c.test {
+                        if expr_references_route(&e.source) {
+                            out.uses_route = true;
+                        }
+                    }
                 }
                 walk_instrs(&c.body, out, is_route, depth)?;
             }

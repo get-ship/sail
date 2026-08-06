@@ -22,15 +22,9 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.row = row;
     __childScope2.__i = __i;
     return (($scope) => {
-const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __t5 = document.createTextNode("\n    ");
-__frag3.appendChild(__t5);
-const __e6 = __tpl0();
-__frag3.appendChild(__e6);
-const __t7 = document.createTextNode("\n  ");
-__frag3.appendChild(__t7);
-      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} } };
+const __e5 = __tpl0();
+      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} } };
     })(__childScope2);
   },
 });

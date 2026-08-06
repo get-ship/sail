@@ -12,9 +12,9 @@ fn layout_enumerates_when_wide_branch_overflow() {
 <div data-viewport="400x200" class="sail-col" style="width:200px;overflow:hidden;height:100px">
   <when {tablet}>
     <div class="sail-row" style="width:900px;height:40px">wide-only-overflow</div>
-    <else>
+    {else => 
       <div class="sail-row" style="width:100px;height:20px">narrow-ok</div>
-    </else>
+    }
   </when>
 </div>
 "#;

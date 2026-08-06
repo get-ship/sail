@@ -90,28 +90,11 @@ pub(crate) fn parse_tokens(
                 instrs.push(r.instr);
                 i = r.end;
             }
-            TokenKind::OpenWhileLoading { .. } => {
-                let scope = make_scope();
-                let r = blocks::parse_while_loading(tokens, i, &scope)?;
-                instrs.push(r.instr);
-                i = r.end;
-            }
-            TokenKind::OpenWhileError { .. } => {
-                let scope = make_scope();
-                let r = blocks::parse_while_error(tokens, i, &scope)?;
-                instrs.push(r.instr);
-                i = r.end;
-            }
-            TokenKind::ElseIf { .. }
-            | TokenKind::Else
-            | TokenKind::Case { .. }
-            | TokenKind::Default
+            TokenKind::Arm { .. }
             | TokenKind::CloseIf
             | TokenKind::CloseFor
             | TokenKind::CloseMatch
-            | TokenKind::CloseWhen
-            | TokenKind::CloseWhileLoading
-            | TokenKind::CloseWhileError => {
+            | TokenKind::CloseWhen => {
                 return Err(
                     CompileError::new(format!("unexpected token: {}", tok.kind.label()))
                         .with_span(tok.span),

@@ -66,7 +66,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>label</code>.
     </p>
     <grid cols="1" gap="2">
-      <for {semanticProps()} as="p" key={p.name}>
+      <for {semanticProps() as p} key={p.name}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>sail-no-data-attr</code>). App tests use role / name / text.
     </p>
     <grid cols="2" gap="2">
-      <for {anatomyRows()} as="a" key={a.tag}>
+      <for {anatomyRows() as a} key={a.tag}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -170,7 +170,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Constructs the language refuses, with the rule id that fails closed.
     </p>
     <grid cols="1" gap="2">
-      <for {bans()} as="b" key={b.rule}>
+      <for {bans() as b} key={b.rule}>
         <card padding="sm">
           style({ box: minW(0) })
 

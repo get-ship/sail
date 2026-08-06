@@ -74,7 +74,7 @@ export default controller(() => {
          exit is the one thing CSS can't do alone: the framework holds the
          node in the tree until the animation finishes. -->
     <column gap="2">
-      <for {notes()} as="n" key={n.id}>
+      <for {notes() as n} key={n.id}>
         <!-- TODO 5: rows should cascade in (style.enter with a stagger
              duration) and fade out on dismiss (style.exit). -->
         <row gap="3" align="center">

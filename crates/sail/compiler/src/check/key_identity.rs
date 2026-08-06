@@ -51,8 +51,6 @@ fn walk_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
                     walk_instrs(e)?;
                 }
             }
-                        Instr::WhileLoading(wl) => walk_instrs(&wl.body)?,
-            Instr::WhileError(we) => walk_instrs(&we.body)?,
             _ => {}
         }
     }

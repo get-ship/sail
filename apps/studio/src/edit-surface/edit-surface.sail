@@ -53,7 +53,7 @@ export default controller(() => {
       <row edit-tab-list label="Open documents" gap="0" align="stretch" nowrap on:click={onTabClick} on:mousedown={onTabMiddle}>
         style({  box: grow(1).minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)  })
 
-        <for {docTabs()} as="tab" key={tab.key}>
+        <for {docTabs() as tab} key={tab.key}>
           <row tab-id={tab.id} active={tab.active ? 'true' : 'false'} tab-select selected={tab.active ? 'true' : 'false'} current={tab.active ? 'page' : undefined} title={tab.id} gap="1" align="center" nowrap>
             style({  box: shrink(0).h(full).padX(3).maxW(48), paint: borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).cursor(pointer)  }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(surface-0).fg(foreground).borderT(primary) })
             <icon name="file-code-2" size="sm"></icon>

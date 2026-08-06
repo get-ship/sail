@@ -57,8 +57,10 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
         }) => {
             expr_references_ident(&discriminant.source, name)
                 || cases.iter().any(|c| {
-                    expr_references_ident(&c.test.source, name)
-                        || template_references_ident(&c.body, name)
+                    (match &c.test {
+                        crate::ir::MatchTest::Expr(e) => expr_references_ident(&e.source, name),
+                        crate::ir::MatchTest::Kind(_) => false,
+                    }) || template_references_ident(&c.body, name)
                 })
                 || default
                     .as_ref()
@@ -74,8 +76,6 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
                     .as_ref()
                     .is_some_and(|b| template_references_ident(b, name))
         }
-        Instr::WhileLoading(wl) => template_references_ident(&wl.body, name),
-        Instr::WhileError(we) => template_references_ident(&we.body, name),
         Instr::StaticText { .. } | Instr::Comment { .. } => false,
     }
 }

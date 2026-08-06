@@ -132,7 +132,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <grid cols="3" gap="3">
-    <for {sections()} as="s" key={s.href}>
+    <for {sections() as s} key={s.href}>
       <a href={s.href}>
         <card padding="md">
           style({ box: minW(0).h(full) })

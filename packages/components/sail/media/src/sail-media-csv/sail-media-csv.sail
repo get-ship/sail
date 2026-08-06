@@ -175,23 +175,21 @@ export default controller((_ctx: Scope) => {
       {errorMsg()}
     </span>
 </column>
-<else>
-  <table hoverable>
+{else => <table hoverable>
     <thead>
       <tr>
-        <for {columns()} as="col" key={col.id}>
+        <for {columns() as col} key={col.id}>
           <th>{col.label}</th>
         </for>
       </tr>
     </thead>
     <tbody>
-      <for {rows()} as="row" key={row.id}>
+      <for {rows() as row} key={row.id}>
         <tr data-row-id={row.id}>
-          <for {row.cells} as="cell" key={cell.id}>
+          <for {row.cells as cell} key={cell.id}>
             <td>{cell.value}</td>
           </for>
         </tr>
       </for>
     </tbody>
-  </table>
-</else></if>
+  </table>}</if>

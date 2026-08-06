@@ -235,7 +235,7 @@ export default controller(({ value, layout }: Scope) => {
   <svg aria-hidden="true">
     style({ box: position(absolute).top(0).left(0).overflow(visible), paint: pointerEvents(none) })
 
-    <for {routes()} as="r" key={r.id}>
+    <for {routes() as r} key={r.id}>
       <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} stroke-width="2">
         style({ paint: fill(none).stroke(border) }).when(stateIncident, { paint: stroke(primary) })
 </path>
@@ -247,7 +247,7 @@ export default controller(({ value, layout }: Scope) => {
     </if>
   </svg>
 
-  <for {nodes()} as="n" key={n.id}>
+  <for {nodes() as n} key={n.id}>
     <div
       role="group"
       tabindex="0"
@@ -261,7 +261,7 @@ export default controller(({ value, layout }: Scope) => {
       style({ box: pad(2), paint: boxSizing(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).cursor(grab).select(none).outline(none) }).when(focus, { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }).when(selected, { paint: border(primary).outline(primary) })
 
       <slot name={n.id}></slot>
-      <for {n.ports} as="p" key={p.id}>
+      <for {n.ports as p} key={p.id}>
         <span
           data-port-id={p.id}
           data-state={p.side}

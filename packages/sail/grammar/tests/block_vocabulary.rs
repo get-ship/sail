@@ -5,6 +5,7 @@
 //!
 //! Element-form control flow (`<if>`, `<for>`, …) is locked by open-tag
 //! prefix literals (`'<if'`) and close-tag tokens (`'</if>'`) in grammar.js.
+//! Arm clauses (`{else => …}`) ride the interpolation rule.
 
 const GRAMMAR_SRC: &str = include_str!("../grammar.js");
 
@@ -16,9 +17,13 @@ fn tag_from(token: &str) -> &str {
         .unwrap_or(token)
 }
 
-/// True if grammar.js recognizes this block/clause open as an element
-/// control-flow token (`'<if'`, `'</if>'`, etc.).
+/// True if grammar.js recognizes this block/clause.
 fn token_present(token: &str) -> bool {
+    // Arm clauses are brace-form — covered by `interpolation`.
+    if token.trim_start().starts_with('{') {
+        return GRAMMAR_SRC.contains("interpolation:")
+            || GRAMMAR_SRC.contains("$.interpolation");
+    }
     let tag = tag_from(token);
     let open = format!("'<{tag}'");
     let close = format!("'</{tag}>'");
@@ -49,10 +54,22 @@ fn grammar_block_vocabulary_matches_compiler_manifest() {
     }
     assert_eq!(
         sail_compiler::block_manifest::BLOCKS.len(),
-        6,
+        4,
         "block_manifest::BLOCKS changed size — update grammar.js's block \
-         rules (if/for/match/when/while-loading/while-error today) and this \
-         test's expected count together.",
+         rules (if/for/match/when) and this test's expected count together.",
+    );
+}
+
+#[test]
+fn grammar_does_not_recognize_retired_while_or_case_elements() {
+    assert!(
+        !GRAMMAR_SRC.contains("while_loading_block")
+            && !GRAMMAR_SRC.contains("while_error_block")
+            && !GRAMMAR_SRC.contains("case_clause")
+            && !GRAMMAR_SRC.contains("default_clause")
+            && !GRAMMAR_SRC.contains("else_if_clause")
+            && !GRAMMAR_SRC.contains("else_clause"),
+        "grammar.js still declares retired while-*/case/default/else element rules",
     );
 }
 

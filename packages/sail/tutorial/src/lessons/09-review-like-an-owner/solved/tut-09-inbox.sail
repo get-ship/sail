@@ -56,50 +56,53 @@ export default controller(() => {
     </row>
   </row>
 
-  <while-loading {inbox}>
-    <row gap="2" align="center">
-      style(loadingRow)
+  <match {inbox()}>
+    {loading =>
+      <row gap="2" align="center">
+        style(loadingRow)
+        <spinner size="sm"></spinner>
+        <small>
+          style(muted)
+          loading messages…
+        </small>
+      </row>
+    }
+    {error as err =>
+      <alert tone="destructive">{err.message}</alert>
+    }
+    {ok =>
+      <column gap="1">
+        <for {visible() as m} key={m.id}>
+          <row gap="3" align="center">
+            messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })
 
-      <spinner size="sm"></spinner>
-      <small>
-        style(muted)
-loading messages…</small>
-    </row>
-  </while-loading>
-
-  <while-error {inbox}> as="err">
-    <alert tone="destructive">{err.message}</alert>
-  </while-error>
-
-  <if {inbox().kind === 'ok'}>
-    <column gap="1">
-      <for {visible()} as="m" key={m.id}>
-        <row gap="3" align="center">
-          messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })
-
-          <if {!m.read}><span>
-            style(unreadDot)
-</span></if>
-          <column gap="0">
-            style({ box: grow(1) })
-
-            <strong>
-              style(from)
-{m.from}</strong>
-            <small>
-              style(muted)
-{m.subject}</small>
-          </column>
-          <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
-          <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
-        </row>
-      </for>
-      <if {visible().length === 0}>
-        <empty-state variant="inline" tone="muted">
-          <span slot="title">Inbox zero</span>
-          Nothing matches this filter.
-        </empty-state>
-      </if>
-    </column>
-  </if>
+            <if {!m.read}>
+              <span>
+                style(unreadDot)
+              </span>
+            </if>
+            <column gap="0">
+              style({ box: grow(1) })
+              <strong>
+                style(from)
+                {m.from}
+              </strong>
+              <small>
+                style(muted)
+                {m.subject}
+              </small>
+            </column>
+            <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
+            <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
+          </row>
+        </for>
+        <if {visible().length === 0}>
+          <empty-state variant="inline" tone="muted">
+            <span slot="title">Inbox zero</span>
+            Nothing matches this filter.
+          </empty-state>
+        </if>
+      </column>
+    }
+  </match>
 </column>

@@ -57,8 +57,6 @@ fn walk(instrs: &[Instr], parent_tag: Option<&str>) -> Result<(), CompileError> 
                     walk(e, parent_tag)?;
                 }
             }
-                        Instr::WhileLoading(wl) => walk(&wl.body, parent_tag)?,
-            Instr::WhileError(we) => walk(&we.body, parent_tag)?,
             _ => {}
         }
     }

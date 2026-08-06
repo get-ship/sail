@@ -11,7 +11,7 @@
 //! every reachable `Expr` (including nested boundaries' tests,
 //! discriminants, iterables, keys, and attribute expressions).
 
-use crate::ir::{AttrInstr, Expr, Instr};
+use crate::ir::{AttrInstr, Expr, Instr, MatchTest};
 
 /// True iff any expression reachable from `body` references `var_name`
 /// (the row binder) or `idx_name` (the optional index binder) as an
@@ -55,7 +55,7 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
         Instr::Match(m) => {
             expr_references(&m.discriminant, var_name, idx_name)
                 || m.cases.iter().any(|c| {
-                    expr_references(&c.test, var_name, idx_name)
+                    (match &c.test { MatchTest::Expr(e) => expr_references(e, var_name, idx_name), MatchTest::Kind(_) => false })
                         || body_references_for_vars(&c.body, var_name, idx_name)
                 })
                 || m.default
@@ -68,8 +68,6 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
                     body_references_for_vars(e, var_name, idx_name)
                 })
         }
-                Instr::WhileLoading(w) => body_references_for_vars(&w.body, var_name, idx_name),
-        Instr::WhileError(w) => body_references_for_vars(&w.body, var_name, idx_name),
     }
 }
 

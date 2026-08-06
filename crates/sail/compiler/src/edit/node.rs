@@ -257,48 +257,6 @@ impl<'a> IndexBuild<'a> {
                 );
                 Some(id)
             }
-            Instr::WhileLoading(wl) => {
-                let content = format!("while-loading|{}", wl.bind);
-                let id = node_id(self.file, &path, &content);
-                let open_span = self.author_open_span("while-loading");
-                let full_span =
-                    full_element_span(self.source, open_span, "while-loading").unwrap_or(open_span);
-                let kids = self.walk_block(&wl.body, &path, Some(id.clone()));
-                self.nodes.insert(
-                    id.clone(),
-                    EditNode {
-                        id: id.clone(),
-                        tag: "while-loading".into(),
-                        open_span,
-                        full_span,
-                        parent_id,
-                        children: kids,
-                        static_attrs: BTreeMap::new(),
-                    },
-                );
-                Some(id)
-            }
-            Instr::WhileError(we) => {
-                let content = format!("while-error|{}", we.bind);
-                let id = node_id(self.file, &path, &content);
-                let open_span = self.author_open_span("while-error");
-                let full_span =
-                    full_element_span(self.source, open_span, "while-error").unwrap_or(open_span);
-                let kids = self.walk_block(&we.body, &path, Some(id.clone()));
-                self.nodes.insert(
-                    id.clone(),
-                    EditNode {
-                        id: id.clone(),
-                        tag: "while-error".into(),
-                        open_span,
-                        full_span,
-                        parent_id,
-                        children: kids,
-                        static_attrs: BTreeMap::new(),
-                    },
-                );
-                Some(id)
-            }
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => None,
         }
     }

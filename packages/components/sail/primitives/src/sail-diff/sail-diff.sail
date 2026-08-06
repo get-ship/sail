@@ -111,10 +111,9 @@ export default controller(({ from, to, value }: Scope) => {
   style({ box: w(full).minW(0).overflowX(auto), paint: bg(surface-0) })
   <span>
     style({ box: display(contents), text: fontFamily(mono).fontSize(xs).leading(normal) })
-    <for {lines()} as="line" key={line.key}>
+    <for {lines() as line} key={line.key}>
     <match {line.kind}>
-      <case {'add'}>
-        <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0">
+      {'add' => <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0">
           style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(success, 15) })
 
           <small aria-hidden="true">
@@ -123,9 +122,7 @@ export default controller(({ from, to, value }: Scope) => {
           <pre>
             style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })
 {line.text}</pre>
-        </row>
-      </case><case {'del'}>
-        <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0">
+        </row>}{'del' => <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0">
           style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(destructive, 15) })
 
           <small aria-hidden="true">
@@ -134,9 +131,7 @@ export default controller(({ from, to, value }: Scope) => {
           <pre>
             style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })
 {line.text}</pre>
-        </row>
-      </case><case {'hunk'}>
-        <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0">
+        </row>}{'hunk' => <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0">
           style({ box: padX(2).padY(px).w(full).minW(0), paint: bg(muted) })
 
           <small aria-hidden="true">
@@ -145,9 +140,7 @@ export default controller(({ from, to, value }: Scope) => {
           <pre>
             style({  box: grow(1).minW(0), paint: fg(info), text: fontSize(xs)  })
 {line.text}</pre>
-        </row>
-      </case><default>
-        <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0">
+        </row>}{else => <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0">
           style({ box: padX(2).padY(px).w(full).minW(0) })
 
           <small aria-hidden="true">
@@ -156,8 +149,7 @@ export default controller(({ from, to, value }: Scope) => {
           <pre>
             style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })
 {line.text}</pre>
-        </row>
-    </default></match>
+        </row>}</match>
   </for>
   </span>
 </column>

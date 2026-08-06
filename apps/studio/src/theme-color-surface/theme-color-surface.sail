@@ -765,7 +765,7 @@ color.info</p>
   </row>
 
   <toast-region position="bottom-end" color-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} color-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>

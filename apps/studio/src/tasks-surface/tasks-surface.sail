@@ -128,7 +128,7 @@ Tasks</p>
             </if>
           </if>
           <if {hasTaskThreads()}>
-            <for {taskThreadRows()} as="row" key={row.key}>
+            <for {taskThreadRows() as row} key={row.key}>
               <studio-list-row
                 task-id={row.id}
                 thread-row
@@ -206,7 +206,7 @@ Tasks</p>
           <row attachments gap="2" align="center">
             style({  box: shrink(0).padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle)  })
 
-            <for {taskAttachChips()} as="a" key={a.key}>
+            <for {taskAttachChips() as a} key={a.key}>
               <badge attach-chip attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
                 {a.label}
               </badge>

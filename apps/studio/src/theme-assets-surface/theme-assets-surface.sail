@@ -106,7 +106,7 @@ display · body · mono</p>
                 style(fieldHint)
 Display</p>
               <select type-token="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
-                <for {assets.displayFontOpts()} as="o" key={o.key}>
+                <for {assets.displayFontOpts() as o} key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
               </select>
@@ -116,7 +116,7 @@ Display</p>
                 style(fieldHint)
 Body</p>
               <select type-token="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
-                <for {assets.bodyFontOpts()} as="o" key={o.key}>
+                <for {assets.bodyFontOpts() as o} key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
               </select>
@@ -126,7 +126,7 @@ Body</p>
                 style(fieldHint)
 Mono</p>
               <select type-token="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
-                <for {assets.monoFontOpts()} as="o" key={o.key}>
+                <for {assets.monoFontOpts() as o} key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
               </select>
@@ -160,7 +160,7 @@ Font discoverer</p>
             <row gap="1" align="center" nowrap font-cats>
               style({ box: overflowX(auto).minW(0) })
 
-              <for {assets.fontCategoryOpts()} as="c" key={c.key}>
+              <for {assets.fontCategoryOpts() as c} key={c.key}>
                 <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory}>
                   style([ style(catChip), style({ box: shrink(0) }) ])
 
@@ -178,7 +178,7 @@ Searching catalog…</p>
             </if>
             <if {assets.hasFontHits()}>
               <column gap="2" font-hits>
-                <for {assets.fontSearchHits()} as="f" key={f.key}>
+                <for {assets.fontSearchHits() as f} key={f.key}>
                   <column gap="2" font-hit font-family={f.family}>
                     style(fontHit)
 
@@ -254,7 +254,7 @@ Browse glyphs</p>
           </column>
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
-              <for {assets.iconGlyphs()} as="g" key={g.key}>
+              <for {assets.iconGlyphs() as g} key={g.key}>
                 <center title={g.name}>
                   style([ style(iconCell), style({ box: shrink(0) }) ])
 
@@ -380,7 +380,7 @@ Master</p>
               </row>
               <if {assets.hasIconGlyphs()}>
                 <row specimen-icons gap="3" align="center" nowrap>
-                  <for {assets.iconGlyphs()} as="g" key={g.key}>
+                  <for {assets.iconGlyphs() as g} key={g.key}>
                     <icon name={g.name} size={assets.iconPreviewSize()} label={g.name}>
                       style({ box: shrink(0) })
 </icon>
@@ -409,7 +409,7 @@ Icons inherit currentColor under the theme table.</p>
   </row>
 
   <toast-region position="bottom-end" assets-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} assets-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>

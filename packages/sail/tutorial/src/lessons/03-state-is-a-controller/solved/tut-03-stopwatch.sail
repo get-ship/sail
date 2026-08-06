@@ -80,7 +80,7 @@ export default controller(() => {
 
   <if {laps().length > 0}>
     <column gap="1">
-      <for {laps()} as="lap" key={lap.id}>
+      <for {laps() as lap} key={lap.id}>
         <row align="center" justify="between">
           style(lapRow)
 

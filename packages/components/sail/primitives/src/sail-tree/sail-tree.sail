@@ -192,20 +192,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <div role="alert">
   <error-state>{error()}</error-state>
 </div>
-<else-if {isEmptyInitial()}>
-<div role="status">
+{else-if {isEmptyInitial()} => <div role="status">
   <slot name="empty"><empty-state></empty-state></slot>
-</div>
-</else-if><else-if {isEmptyFiltered()}>
-<div role="status">
+</div>}{else-if {isEmptyFiltered()} => <div role="status">
   <slot name="empty">
     <empty-state>
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
     </empty-state>
   </slot>
-</div>
-</else-if><else>
-<div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+</div>}{else => <div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
   style({ box: w(full).h(full).minH(0).overflow(hidden), paint: fg(foreground) })
   <span>
     style({ box: display(contents), text: fontFamily(body).fontSize(density) })
@@ -215,7 +210,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <div>
     style({ box: w(full).h(full).minH(0).overflowY(auto) })
 
-    <for {flowItems()} as="w" key={w.key}>
+    <for {flowItems() as w} key={w.key}>
       <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent}>
         style({ box: w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)), paint: group().radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg) }).when(busy, { paint: fg(muted-foreground).cursor(default) }).when(focus, { paint: outline(ring) })
         <span>
@@ -228,11 +223,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
             <icon name="chevron-right" size="sm"></icon>
           </row>
-        <else>
-          <span aria-hidden="true">
+        {else => <span aria-hidden="true">
             style({ box: w(density-icon).minW(density-icon) })
-</span>
-        </else></if>
+</span>}</if>
 
         <if {selectable() === 'multi'}>
           <span>
@@ -251,9 +244,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <icon name={w.icon} size="sm">
             style({ paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })
 </icon>
-        <else>
-          <slot name="node-icon"></slot>
-        </else></if>
+        {else => <slot name="node-icon"></slot>}</if>
         <span>
           style({ box: grow(1).minW(0), text: truncate() })
 {w.label}</span>
@@ -265,11 +256,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <span aria-label="Unsaved">
                 style({ paint: fg(warning) })
 ●</span>
-            <else>
-              <span aria-label={`Meta ${w.trailing}`}>
+            {else => <span aria-label={`Meta ${w.trailing}`}>
                 style({ paint: fg(muted-foreground) })
-{w.trailing}</span>
-            </else></if>
+{w.trailing}</span>}</if>
           </if>
           <span>
             style({ paint: fg(muted-foreground) })
@@ -280,5 +269,4 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </for>
   </div>
   </span>
-</div>
-</else></if>
+</div>}</if>

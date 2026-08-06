@@ -1,12 +1,12 @@
 // FILE_CAP_OVERRIDE: five sibling control-flow blocks ({#if}, {#for},
-// {#match}, {#while-loading}, {#while-error}) all share a hoist /
+// {#match}, <match>, ) all share a hoist /
 // hydrate / boundary-key plumbing pattern that's only legible
 // side-by-side. Splitting each into its own file would force the
 // shared `emit_branch` + `emit_boundary_hydrate` helpers behind a
 // `pub(super)` boundary and obscure the structural similarity.
 
-//! Control-flow emit: `{#if}`, `{#for}`, `{#match}`, `{#while-loading}`,
-//! and `{#while-error}`.
+//! Control-flow emit: `{#if}`, `{#for}`, `{#match}`, `<match>`,
+//! and ``.
 //!
 //! Phase 3b.5 (gate H): control-flow boundaries are direct-emit through
 //! the unified `hydrate(root, ctx)` function on the route's setup return.
@@ -18,7 +18,7 @@
 //! `__b<N>_attach` named properties are no longer emitted — `attach()`
 //! drives boundaries through hydrate now, not through `wireBoundaries`.
 //!
-//! `{#while-loading}` / `{#while-error}` follow the same shape via
+//! `<match>` / `` follow the same shape via
 //! `hydrateWhileLoading` / `hydrateWhileError` (gate G).
 
 use super::super::writer::{Writer, js_string};
@@ -152,8 +152,6 @@ fn instr_has_reflect_empty_slot(instr: &Instr) -> bool {
                     .as_deref()
                     .is_some_and(instrs_have_reflect_empty_slot)
         }
-        Instr::WhileLoading(w) => instrs_have_reflect_empty_slot(&w.body),
-        Instr::WhileError(w) => instrs_have_reflect_empty_slot(&w.body),
         Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => false,
     }
 }
@@ -619,13 +617,14 @@ impl TemplateEmitter {
         h.line("anchor,");
         h.line("test: () => {");
         h.enter();
-        // D5: subscribe to the discriminant's (and each case test's)
-        // row-field deps — same rationale as `emit_if` above. A keyed
-        // `{#for}` row reuse only bumps `__v_<field>` signals; without
-        // reading them here this `bindIf` test never re-fires and the
-        // stale branch stays mounted.
-        let mut combined_parts: Vec<&str> = vec![instr.discriminant.source.as_str()];
-        combined_parts.extend(instr.cases.iter().map(|c| c.test.source.as_str()));
+        // Subscribe to discriminant (+ expr-arm) row-field deps so keyed
+        // for-row reuse re-fires this match test.
+        let mut combined_parts: Vec<String> = vec![instr.discriminant.source.clone()];
+        for c in &instr.cases {
+            if let MatchTest::Expr(e) = &c.test {
+                combined_parts.push(e.source.clone());
+            }
+        }
         let combined_source = combined_parts.join(" ; ");
         let fvs = self.for_version_stmt(&combined_source);
         if !fvs.is_empty() {
@@ -633,8 +632,18 @@ impl TemplateEmitter {
         }
         h.line(&format!("const __d = ({disc_rw});"));
         for (i, c) in instr.cases.iter().enumerate() {
-            let c_rw = self.rw(&c.test.source, &[]);
-            h.line(&format!("if (__d === ({c_rw})) return {i};"));
+            match &c.test {
+                MatchTest::Kind(kind) => {
+                    h.line(&format!(
+                        "if (__d && __d.kind === {k}) return {i};",
+                        k = js_string(kind),
+                    ));
+                }
+                MatchTest::Expr(e) => {
+                    let c_rw = self.rw(&e.source, &[]);
+                    h.line(&format!("if (__d === ({c_rw})) return {i};"));
+                }
+            }
         }
         let fallback = if instr.default.is_some() {
             instr.cases.len() as i32
@@ -647,7 +656,7 @@ impl TemplateEmitter {
         h.line("branches: [");
         h.enter();
         for c in &instr.cases {
-            self.emit_branch(&mut h, &c.body);
+            self.emit_match_arm_branch(&mut h, &disc_rw, c);
         }
         if let Some(d) = &instr.default {
             self.emit_branch(&mut h, d);
@@ -657,6 +666,69 @@ impl TemplateEmitter {
         h.leave();
         h.line("});");
         self.boundary_hoists.push_str(&h.into_string());
+    }
+
+    /// Emit one match arm branch, binding payload locals when present.
+    fn emit_match_arm_branch(
+        &mut self,
+        w: &mut Writer,
+        disc_rw: &str,
+        c: &MatchCase,
+    ) {
+        match (&c.test, &c.binding) {
+            (MatchTest::Kind(kind), Some(binding)) if kind == "ok" || kind == "error" => {
+                let field = if kind == "ok" { "value" } else { "error" };
+                let outer_inline = std::mem::take(&mut self.inline_update_stmts);
+                w.line("() => {");
+                w.enter();
+                w.line(&format!("const {binding} = ({disc_rw}).{field};"));
+                let frag = self.fresh("frag");
+                let cl = self.fresh("c");
+                w.line(&format!(
+                    "const {frag} = document.createDocumentFragment();"
+                ));
+                w.line(&self.decl_cleanups(&cl));
+                // Treat binding as machinery local so rewrite leaves it bare.
+                let mark = self.machinery_locals.len();
+                self.machinery_locals.push(binding.clone());
+                self.boundary_depth += 1;
+                self.emit_children(w, &c.body, &frag, &cl);
+                self.boundary_depth -= 1;
+                self.machinery_locals.truncate(mark);
+                w.line(&format!(
+                    "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
+                ));
+                w.leave();
+                w.line("},");
+                self.inline_update_stmts = outer_inline;
+            }
+            (_, Some(binding)) => {
+                // Generic binding: whole discriminant.
+                let outer_inline = std::mem::take(&mut self.inline_update_stmts);
+                w.line("() => {");
+                w.enter();
+                w.line(&format!("const {binding} = ({disc_rw});"));
+                let frag = self.fresh("frag");
+                let cl = self.fresh("c");
+                w.line(&format!(
+                    "const {frag} = document.createDocumentFragment();"
+                ));
+                w.line(&self.decl_cleanups(&cl));
+                let mark = self.machinery_locals.len();
+                self.machinery_locals.push(binding.clone());
+                self.boundary_depth += 1;
+                self.emit_children(w, &c.body, &frag, &cl);
+                self.boundary_depth -= 1;
+                self.machinery_locals.truncate(mark);
+                w.line(&format!(
+                    "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
+                ));
+                w.leave();
+                w.line("},");
+                self.inline_update_stmts = outer_inline;
+            }
+            _ => self.emit_branch(w, &c.body),
+        }
     }
 
     pub(in crate::emit) fn emit_when(
@@ -754,163 +826,6 @@ impl TemplateEmitter {
             "  __cleanups.push(__wireBoundary_{key}({anchor_arg}{host_arg}));"
         ));
         self.hydrate_calls.line("}");
-    }
-
-    /// Emit `{#while-loading of <bind>}…{/while-loading}`.
-    ///
-    /// Hoists `const __renderWhileLoading_<N> = () => …` inside
-    /// `setup(ctx)` so the body is walked exactly once. Both `__mount`
-    /// (legacy) and `hydrate(root, ctx)` reference the same hoisted const.
-    /// Single walk = single registry-key consumption per body.
-    pub(super) fn emit_while_loading_block(
-        &mut self,
-        w: &mut Writer,
-        instr: &WhileLoadingInstr,
-        parent_var: &str,
-        cleanups_var: &str,
-    ) {
-        // Registry parity: while-loading consumes one b<N> for the
-        // boundary itself. Body keys are consumed during the (single)
-        // emit walk below.
-        let key = self.next_key();
-        let idx = self.while_loading_idx;
-        self.while_loading_idx += 1;
-        let render_key = format!("__renderWhileLoading_{idx}");
-        let bind = &instr.bind;
-
-        // Hoist the render fn so it's a single-source-of-truth.
-        self.emit_wl_render_hoist(&render_key, &instr.body);
-
-        // __mount inline call references the hoisted const.
-        let anchor = self.fresh("wlAnchor");
-        w.line(&format!(
-            "const {anchor} = document.createComment(\"while-loading\");"
-        ));
-        w.line(&format!("{parent_var}.appendChild({anchor});"));
-        w.line(&format!(
-            "{cleanups_var}.push(bindWhileLoading({{ anchor: {anchor}, signal: $scope.{bind}, render: {render_key} }}));"
-        ));
-
-        // Phase 3b.5 gate G: direct-emit hydrate call. The render fn is
-        // already in the setup closure (no need to expose it as a named
-        // property anymore).
-        if self.is_route && self.boundary_depth == 0 {
-            self.hydrate_uses_markers = true;
-            self.hydrate_calls.line(&format!(
-                "if (__m[{k}]) __cleanups.push(hydrateWhileLoading(__m[{k}], {k}, () => $scope.{bind}(), {render_key}));",
-                k = js_string(&key),
-            ));
-        }
-    }
-
-    /// Emit `{#while-error <errVar> of <bind>}…{/while-error}`.
-    pub(super) fn emit_while_error_block(
-        &mut self,
-        w: &mut Writer,
-        instr: &WhileErrorInstr,
-        parent_var: &str,
-        cleanups_var: &str,
-    ) {
-        let key = self.next_key();
-        let idx = self.while_error_idx;
-        self.while_error_idx += 1;
-        let render_key = format!("__renderWhileError_{idx}");
-        let bind = &instr.bind;
-        let var = &instr.error_var;
-
-        self.emit_we_render_hoist(&render_key, var, &instr.body);
-
-        let anchor = self.fresh("weAnchor");
-        w.line(&format!(
-            "const {anchor} = document.createComment(\"while-error\");"
-        ));
-        w.line(&format!("{parent_var}.appendChild({anchor});"));
-        w.line(&format!(
-            "{cleanups_var}.push(bindWhileError({{ anchor: {anchor}, signal: $scope.{bind}, render: {render_key} }}));"
-        ));
-
-        if self.is_route && self.boundary_depth == 0 {
-            self.hydrate_uses_markers = true;
-            // The `{#while-error}` render binds its error as `Error` (so the
-            // author's `err.message` type-checks), matching `bindWhileError`.
-            // But `hydrateWhileError` types its render param `unknown`, so in
-            // the typed synthetic render the narrower `(err: Error)` fn is not
-            // directly assignable — cast it to the helper's own param type.
-            // Production emits untyped JS (no cast). This surfaces an upstream
-            // runtime-types inconsistency between the bind/hydrate while-error
-            // helpers (see the slice-1 assessment notes).
-            let render_arg = if self.is_synthetic() {
-                format!("({render_key} as unknown as Parameters<typeof hydrateWhileError>[3])")
-            } else {
-                render_key.clone()
-            };
-            self.hydrate_calls.line(&format!(
-                "if (__m[{k}]) __cleanups.push(hydrateWhileError(__m[{k}], {k}, () => $scope.{bind}(), {render_arg}));",
-                k = js_string(&key),
-            ));
-        }
-    }
-
-    fn emit_wl_render_hoist(&mut self, render_key: &str, body: &[Instr]) {
-        let frag = self.fresh("frag");
-        let cl = self.fresh("c");
-        let mut h = Writer::new();
-        h.line(&format!("const {render_key} = () => {{"));
-        h.enter();
-        h.line(&format!(
-            "const {frag} = document.createDocumentFragment();"
-        ));
-        h.line(&self.decl_cleanups(&cl));
-        self.boundary_depth += 1;
-        self.emit_children(&mut h, body, &frag, &cl);
-        self.boundary_depth -= 1;
-        h.line(&format!(
-            "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
-        ));
-        h.leave();
-        h.line("};");
-        self.boundary_hoists.push_str(&h.into_string());
-    }
-
-    fn emit_we_render_hoist(&mut self, render_key: &str, error_var: &str, body: &[Instr]) {
-        let child = self.fresh("childScope");
-        let var = error_var;
-        let mut h = Writer::new();
-        // The `{#while-error}` binder is an `Error` (the runtime
-        // `bindWhileError` contract); annotate it in synthetic mode so the
-        // render type-checks strict.
-        let ep = self.machinery_param(var, "Error");
-        h.line(&format!("const {render_key} = ({ep}) => {{"));
-        h.enter();
-        h.line(&format!("const {child} = Object.create($scope);"));
-        h.line(&format!("{child}.{var} = {var};"));
-        // IIFE-shadow `$scope` to avoid the TDZ that would fire if we
-        // declared `const $scope = {child}` in the same block as the
-        // `Object.create($scope)` above.
-        h.line("return (($scope) => {");
-        h.enter();
-        let frag = self.fresh("frag");
-        let cl = self.fresh("c");
-        h.line(&format!(
-            "const {frag} = document.createDocumentFragment();"
-        ));
-        h.line(&self.decl_cleanups(&cl));
-        self.boundary_depth += 1;
-        // The error binder lives on the runtime `$scope` child scope; qualify
-        // author references to it with `$scope.` (synthetic mode).
-        let machinery_mark = self.machinery_locals.len();
-        self.machinery_locals.push(var.to_string());
-        self.emit_children(&mut h, body, &frag, &cl);
-        self.machinery_locals.truncate(machinery_mark);
-        self.boundary_depth -= 1;
-        h.line(&format!(
-            "return {{ nodes: Array.from({frag}.childNodes), cleanup: () => {{ for (const c of {cl}) try {{ c(); }} catch (e) {{}} }} }};"
-        ));
-        h.leave();
-        h.line(&format!("}})({child});"));
-        h.leave();
-        h.line("};");
-        self.boundary_hoists.push_str(&h.into_string());
     }
 }
 

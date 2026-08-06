@@ -51,7 +51,7 @@ export default controller((ctx) => {
 <row sail-studio-shell gap="0" nowrap align="stretch">
   style({  box: w(full).minH(screen).h(screen).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })
   <studio-activity-bar studio-rail on:click={onRailClick}>
-    <for {rail()} as="item" key={item.key}>
+    <for {rail() as item} key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
           href={item.href}
@@ -110,7 +110,7 @@ export default controller((ctx) => {
 
           Collected
         </p>
-        <for {batchChips()} as="chip" key={chip.key}>
+        <for {batchChips() as chip} key={chip.key}>
           <badge batch-chip={chip.id} tone="muted" size="sm" variant="outline">
             {chip.label}
           </badge>

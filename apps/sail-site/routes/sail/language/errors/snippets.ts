@@ -36,7 +36,8 @@ export default controller(() => {
 </error-boundary>`,
 
   async: `<!-- async failure is a STATE, not a throw — render it -->
-<while-error {users}> as="err">
-  <alert tone="destructive">{err.message}</alert>
-</while-error>`,
+<match {users()}>
+  {error as err => <alert tone="destructive">{err.message}</alert>}
+  {else => }
+</match>`,
 }

@@ -260,7 +260,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   <svg role="group" aria-label={statusLabel()}>
     style({ box: position(absolute).top(0).left(0).overflow(visible), paint: pointerEvents(none) })
 
-    <for {rendered()} as="el" key={el.id}>
+    <for {rendered() as el} key={el.id}>
       <if {el.kind === 'text'}>
         <text
           x={el.at.x}
@@ -274,8 +274,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         >
           style({ paint: stroke(none), text: fontFamily(body).fontSize(base) }).when(selected, { paint: fill(primary) })
 {el.text}</text>
-      <else>
-        <path
+      {else => <path
           d={el.path}
           data-el-id={el.id}
           data-state={el.kind === 'pen' ? 'pen' : null}
@@ -288,8 +287,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 
         >
           style({ paint: fill(none).cursor(pointer) }).when(selected, { paint: stroke(primary) }).when(statePen, { paint: fill(currentColor).stroke(none) })
-</path>
-      </else></if>
+</path>}</if>
     </for>
     <if {draftPath()}>
       <path

@@ -56,13 +56,13 @@ export default controller(() => {
     </row>
   </row>
 
-  <while-error {inbox}> as="err">
+  {error as err =>
     <alert tone="destructive">{err.message}</alert>
-  </while-error>
+  }
 
   <if {inbox().kind === 'ok'}>
     <column gap="1">
-      <for {visible()} as="m" key={m.topic}>
+      <for {visible() as m} key={m.topic}>
         <row gap="3" align="center">
           messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' })
 

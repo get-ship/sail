@@ -82,11 +82,9 @@ export default controller((ctx) => {
       <span>
         style({ box: w(half).h(3), paint: visibility(hidden) })
 </span>
-    <else>
-      <span>
+    {else => <span>
         style({ box: w(half).h(3), paint: bg(border-subtle) })
-</span>
-    </else></if>
+</span>}</if>
     <span>
       style({ box: w(2_5).h(2_5), paint: radius(full).bg(foreground) })
 </span>
@@ -94,11 +92,9 @@ export default controller((ctx) => {
       <span>
         style({  box: grow(1).w(half), paint: visibility(hidden)  })
 </span>
-    <else>
-      <span>
+    {else => <span>
         style({  box: grow(1).w(half), paint: bg(border-subtle)  })
-</span>
-    </else></if>
+</span>}</if>
   </column>
   <column gap="0">
     style({  box: grow(1).minW(0).padY(2)  })

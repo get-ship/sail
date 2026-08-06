@@ -179,11 +179,9 @@ AI</a>
 
       <slot name="route"></slot>
     </main>
-  <else>
-    <main>
+  {else => <main>
       style([ style(appMain), style({ box: grow(1).minW(0).w(full) }) ])
 
       <slot name="route"></slot>
-    </main>
-  </else></if>
+    </main>}</if>
 </column>

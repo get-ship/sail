@@ -243,7 +243,7 @@ browse</span></span>
   <column gap="1" aria-live="polite">
     style({ box: mt(2) })
 
-    <for {displayFiles()} as="f" key={f.key}>
+    <for {displayFiles() as f} key={f.key}>
       <row align="center" gap="3">
         <span aria-hidden="true">
           style({ paint: fg(muted-foreground) })

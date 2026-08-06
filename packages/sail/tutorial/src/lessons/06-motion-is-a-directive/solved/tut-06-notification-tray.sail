@@ -73,7 +73,7 @@ on:click={() => toggle()}>
     <column gap="2">
       style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
 
-      <for {notes()} as="n" key={n.id}>
+      <for {notes() as n} key={n.id}>
         <row gap="3" align="center">
           noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })
 

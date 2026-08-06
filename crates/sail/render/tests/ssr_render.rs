@@ -150,9 +150,9 @@ fn unknown_if_does_not_paint_both_branches() {
 <div style={style.pad(2).bg(surface-0)}>
   <if {window.x}>
     <p>yes-branch</p>
-    <else>
+    {else => 
       <p>no-branch</p>
-    </else>
+    }
   </if>
   <p style={style.fg(foreground)}>anchor</p>
 </div>

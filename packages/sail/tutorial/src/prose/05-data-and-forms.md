@@ -33,17 +33,12 @@ only reachable behind `kind === 'ok'`, so a template cannot render data
 it has not confirmed arrived:
 
 ```
-<while-loading {team}>
-  <spinner></spinner>
-</while-loading>
-
-<while-error {team}> as="err">
-  <alert tone="destructive">{err.message}</alert>
-</while-error>
-
-<if {team().kind === 'ok'}>
-  <for {team().value} as="m" key={m.id}>…</for>
-</if>
+<match {team()}>
+  {loading => <spinner></spinner>}
+  {error as err =>
+  <alert tone="destructive">{err.message}</alert>}
+  {ok as value => <for {value as m} key={m.id}>…</for>}
+</match>
 ```
 
 ## Refetch is a signal you bump

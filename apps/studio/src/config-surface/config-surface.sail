@@ -43,7 +43,7 @@ Config</p>
         <column gap="1">
           style({ box: pad(2) })
 
-          <for {categories()} as="cat" key={cat.key}>
+          <for {categories() as cat} key={cat.key}>
             <button
               type="button"
               config-cat={cat.id}
@@ -84,7 +84,7 @@ Config</p>
         <column gap="3">
           style({ box: pad(4).minW(0) })
 
-          <for {sections()} as="sec" key={sec.key}>
+          <for {sections() as sec} key={sec.key}>
             <if {sec.selected}>
               <column
                 config-block={sec.id}
@@ -167,7 +167,7 @@ Account, sync, and hosted agents when the plugin host is available.</p>
                       </tr>
                     </thead>
                     <tbody>
-                      <for {sec.fields} as="f" key={f.key}>
+                      <for {sec.fields as f} key={f.key}>
                         <tr config-field={f.key}>
                           <td>
                             <p>

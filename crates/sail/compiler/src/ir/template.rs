@@ -17,8 +17,6 @@ pub enum Instr {
     For(ForInstr),
     Match(MatchInstr),
     When(WhenInstr),
-    WhileLoading(WhileLoadingInstr),
-    WhileError(WhileErrorInstr),
 }
 
 #[derive(Debug, Clone)]
@@ -27,24 +25,6 @@ pub struct ElementInstr {
     pub tag: String,
     pub attrs: Vec<AttrInstr>,
     pub children: Vec<Instr>,
-    pub span: Span,
-}
-
-#[derive(Debug, Clone)]
-pub struct WhileLoadingInstr {
-    /// Signal name bound to (e.g. `"agents"`).
-    pub bind: String,
-    pub body: Vec<Instr>,
-    pub span: Span,
-}
-
-#[derive(Debug, Clone)]
-pub struct WhileErrorInstr {
-    /// Signal name bound to (e.g. `"agents"`).
-    pub bind: String,
-    /// Local name for the error value inside the block body.
-    pub error_var: String,
-    pub body: Vec<Instr>,
     pub span: Span,
 }
 
@@ -270,14 +250,29 @@ pub struct ForInstr {
 pub struct MatchInstr {
     pub discriminant: Expr,
     pub cases: Vec<MatchCase>,
+    /// `{else => …}` catch-all arm.
     pub default: Option<Vec<Instr>>,
     pub span: Span,
 }
 
+/// One arm of `<match {disc}> {pattern as binding => body}`.
 #[derive(Debug, Clone)]
 pub struct MatchCase {
-    pub test: Expr,
+    /// How this arm is selected against the discriminant.
+    pub test: MatchTest,
+    /// Optional payload binding (`ok as names` → `names`, `error as err` → `err`).
+    pub binding: Option<String>,
     pub body: Vec<Instr>,
+}
+
+/// Match arm selector.
+#[derive(Debug, Clone)]
+pub enum MatchTest {
+    /// Bare kind word — discriminates `disc.kind === 'ok'` (LiveState /
+    /// MutationState / future kinded unions).
+    Kind(String),
+    /// Expression equality — `disc === (expr)` (string/number/literal arms).
+    Expr(Expr),
 }
 
 /// Structural viewport branch: different trees per theme breakpoint.

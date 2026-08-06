@@ -12,7 +12,7 @@ export const code = {
 
 <column gap="3">
   <input placeholder="Filter people" bind:value={query} />
-  <for {filtered()} as="p" key={p.id}>
+  <for {filtered() as p} key={p.id}>
     <card interactive>
       style({ animate: enter({ opacity: 'fade' }) })
       <avatar name={p.name} tone="primary" /> {p.name} · {p.team}

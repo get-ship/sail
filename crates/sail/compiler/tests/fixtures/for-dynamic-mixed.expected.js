@@ -22,20 +22,14 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.row = row;
     __childScope2.__i = __i;
     return (($scope) => {
-const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __t5 = document.createTextNode("\n    ");
-__frag3.appendChild(__t5);
-const __e6 = __tpl0();
-__c4.push((() => { const __read = () => { const __av7 = ($scope.rows().length > 0); return __av7 == null || __av7 === false || __av7 === "" ? null : (__av7 === true ? "true" : String(__av7)); }; return bindAttr(__e6, "aria-selected", __read); })());
-const __e8 = __e6.firstChild;
-const __t9 = __e8.firstChild;
-markHydrateText(__t9, "b2");
-__t9.textContent = ($scope.row.label);
-__frag3.appendChild(__e6);
-const __t10 = document.createTextNode("\n  ");
-__frag3.appendChild(__t10);
-      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new11, __newI12) => { const __old = $scope.row; $scope.row = __new11; $scope.__i = __newI12; if (__old.label !== $scope.row.label) { __t9.textContent = ($scope.row.label); } } };
+const __e5 = __tpl0();
+__c4.push((() => { const __read = () => { const __av6 = ($scope.rows().length > 0); return __av6 == null || __av6 === false || __av6 === "" ? null : (__av6 === true ? "true" : String(__av6)); }; return bindAttr(__e5, "aria-selected", __read); })());
+const __e7 = __e5.firstChild;
+const __t8 = __e7.firstChild;
+markHydrateText(__t8, "b2");
+__t8.textContent = ($scope.row.label);
+      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new9, __newI10) => { const __old = $scope.row; $scope.row = __new9; $scope.__i = __newI10; if (__old.label !== $scope.row.label) { __t8.textContent = ($scope.row.label); } } };
     })(__childScope2);
   },
 });

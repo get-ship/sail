@@ -1,4 +1,4 @@
-//! `sail-for-key` — `<for {items} as="item">` blocks should declare a `key=`
+//! `sail-for-key` — `<for {items as item}>` blocks should declare a `key=`
 //! expression so the reconciler can preserve DOM identity across
 //! reorder / insert / delete.
 //!
@@ -266,13 +266,13 @@ mod tests {
 
     #[test]
     fn for_with_key_attribute_passes() {
-        let src = r#"<ul><for {items} as="item" key={item.id}><li>{item.name}</li></for></ul>"#;
+        let src = r#"<ul><for {items as item} key={item.id}><li>{item.name}</li></for></ul>"#;
         assert_eq!(lint(src).len(), 0);
     }
 
     #[test]
     fn for_without_key_warns() {
-        let src = r#"<ul><for {items} as="item"><li>{item.name}</li></for></ul>"#;
+        let src = r#"<ul><for {items as item}><li>{item.name}</li></for></ul>"#;
         let findings = lint(src);
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("`key=`"));
@@ -281,22 +281,22 @@ mod tests {
 
     #[test]
     fn iter_expression_using_key_identifier_does_not_count() {
-        let src = r#"<for {items.sortBy(i => i.key)} as="item"><li>x</li></for>"#;
+        let src = r#"<for {items.sortBy(i => i.key) as item}><li>x</li></for>"#;
         assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
     fn two_for_blocks_each_evaluated_separately() {
         let src = r#"
-            <for {as} as="a" key={a.id}><li>{a.name}</li></for>
-            <for {bs} as="b"><li>{b.name}</li></for>
+            <for {as as a} key={a.id}><li>{a.name}</li></for>
+            <for {bs as b}><li>{b.name}</li></for>
         "#;
         assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
     fn iter_with_gt_in_string_does_not_break_scan() {
-        let src = r#"<for {items.filter(i => i.s === ">")} as="x" key={x.id}><li>x</li></for>"#;
+        let src = r#"<for {items.filter(i => i.s === ">") as x} key={x.id}><li>x</li></for>"#;
         assert_eq!(lint(src).len(), 0);
     }
 
@@ -328,13 +328,13 @@ mod tests {
 
     #[test]
     fn real_keyless_for_after_a_string_expression_still_flagged() {
-        let src = r#"<p>{'<for>'}</p><for {ys} as="y"><li>{y}</li></for>"#;
+        let src = r#"<p>{'<for>'}</p><for {ys as y}><li>{y}</li></for>"#;
         assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
     fn severity_is_error() {
-        let src = r#"<for {items} as="item"><li>x</li></for>"#;
+        let src = r#"<for {items as item}><li>x</li></for>"#;
         let findings = lint(src);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].severity, Severity::Error);

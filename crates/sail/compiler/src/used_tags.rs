@@ -52,8 +52,6 @@ fn visit(instrs: &[Instr], found: &mut BTreeSet<String>) {
                     visit(e, found);
                 }
             }
-            Instr::WhileLoading(wl) => visit(&wl.body, found),
-            Instr::WhileError(we) => visit(&we.body, found),
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => {}
         }
     }
@@ -82,9 +80,9 @@ mod tests {
     fn finds_tags_nested_in_control_flow() {
         // if / for / match / while-loading / while-error each carry a distinct tag.
         let src = r#"<div>
-            <if {cond()}><sail-a></sail-a><else><sail-b></sail-b></else></if>
-            <for {items()} as="x"><sail-c></sail-c></for>
-            <match {m()}><case {1}><sail-d></sail-d></case><default><sail-e></sail-e></default></match>
+            <if {cond()}><sail-a></sail-a>{else => <sail-b></sail-b>}</if>
+            <for {items() as x}><sail-c></sail-c></for>
+            <match {m()}>{1 => <sail-d></sail-d>}{else => <sail-e></sail-e>}</match>
             <while-loading {data}><sail-f></sail-f></while-loading>
             <while-error as="err" {data}><sail-g></sail-g></while-error>
         </div>"#;

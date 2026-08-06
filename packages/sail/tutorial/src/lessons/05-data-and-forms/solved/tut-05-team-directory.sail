@@ -67,35 +67,37 @@ export default controller(() => {
     </row>
   </row>
 
-  <while-loading {team}>
-    <row gap="2" align="center">
-      style(loadingRow)
-
-      <spinner size="sm"></spinner>
-      <small>
-        style(muted)
-loading the roster…</small>
-    </row>
-  </while-loading>
-
-  <while-error {team}> as="err">
-    <alert tone="destructive">{err.message}</alert>
-  </while-error>
-
-  <if {team().kind === 'ok'}>
-    <column gap="1">
-      <for {team().value} as="m" key={m.id}>
-        <row gap="3" align="center">
-          style(memberRow)
-
-          <strong>
-            style([ style(memberName), style({ box: grow(1) }) ])
-{m.name}</strong>
-          <if {m.role === 'admin'}><badge tone="primary" variant="soft" size="sm">admin</badge></if>
-        </row>
-      </for>
-    </column>
-  </if>
+  <match {team()}>
+    {loading =>
+      <row gap="2" align="center">
+        style(loadingRow)
+        <spinner size="sm"></spinner>
+        <small>
+          style(muted)
+          loading the roster…
+        </small>
+      </row>
+    }
+    {error as err =>
+      <alert tone="destructive">{err.message}</alert>
+    }
+    {ok as value =>
+      <column gap="1">
+        <for {value as m} key={m.id}>
+          <row gap="3" align="center">
+            style(memberRow)
+            <strong>
+              style([ style(memberName), style({ box: grow(1) }) ])
+              {m.name}
+            </strong>
+            <if {m.role === 'admin'}>
+              <badge tone="primary" variant="soft" size="sm">admin</badge>
+            </if>
+          </row>
+        </for>
+      </column>
+    }
+  </match>
 
   <form on:submit|prevent={add}>
     <row gap="2" align="center">

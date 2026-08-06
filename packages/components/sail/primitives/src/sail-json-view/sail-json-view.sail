@@ -138,16 +138,15 @@ export default controller(({ data, expanded, depth }: Scope) => {
       style({ paint: fg(destructive) })
 Invalid JSON: {parseError()}</span>
   </if>
-  <for {rows()} as="row" key={row.k}>
+  <for {rows() as row} key={row.k}>
     <match {row.kind}>
-      <case {'branch'}>
-        <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
+      {'branch' => <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
 >
           style({ paint: group().radius(sm).cursor(pointer) }).when(hover, { paint: bg(hover-bg) })
 
-          <for {row.pads} as="pad" key={pad.i}>
+          <for {row.pads as pad} key={pad.i}>
             <span>
               style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
 </span>
@@ -173,10 +172,8 @@ Invalid JSON: {parseError()}</span>
               style({ paint: fg(muted-foreground) })
 …{row.closeBracket}</span>
           </if>
-        </row>
-      </case><case {'close'}>
-        <row gap="0" align="center">
-          <for {row.pads} as="pad" key={pad.i}>
+        </row>}{'close' => <row gap="0" align="center">
+          <for {row.pads as pad} key={pad.i}>
             <span>
               style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
 </span>
@@ -184,12 +181,10 @@ Invalid JSON: {parseError()}</span>
           <span>
             style({ box: padX(1), paint: fg(muted-foreground) })
 {row.text}</span>
-        </row>
-      </case><default>
-        <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center">
+        </row>}{else => <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center">
           style({ paint: radius(sm) }).when(hover, { paint: bg(hover-bg) })
 
-          <for {row.pads} as="pad" key={pad.i}>
+          <for {row.pads as pad} key={pad.i}>
             <span>
               style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
 </span>
@@ -202,24 +197,18 @@ Invalid JSON: {parseError()}</span>
 :&nbsp;</span>
           </if>
           <match {row.kind}>
-            <case {'str'}> <span>
+            {'str' => <span>
               style({ paint: fg(success) })
-{row.text}</span>
-            </case><case {'num'}> <span>
+{row.text}</span>}{'num' => <span>
               style({ paint: fg(info) })
-{row.text}</span>
-            </case><case {'bool'}> <span>
+{row.text}</span>}{'bool' => <span>
               style({ paint: fg(accent), text: fontWeight(medium) })
-{row.text}</span>
-            </case><case {'null'}> <span>
+{row.text}</span>}{'null' => <span>
               style({ paint: fg(muted-foreground) })
-{row.text}</span>
-            </case><default> <span>
+{row.text}</span>}{else => <span>
               style({ paint: fg(muted-foreground) })
-{row.text}</span>
-          </default></match>
-        </row>
-    </default></match>
+{row.text}</span>}</match>
+        </row>}</match>
   </for>
   </span>
 </column>

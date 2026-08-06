@@ -23,16 +23,6 @@ export default controller(() => ({ tone: signal<Tone>('info') }))
 
   <section data-test="alert" data-tone={tone()}>
     <match {tone()}>
-      <case {'info'}>
-        <strong>Heads up.</strong> Just a friendly note.
-      </case><case {'success'}>
-        <strong>All good.</strong> The thing finished without errors.
-      </case><case {'warning'}>
-        <strong>Careful.</strong> This action may have side-effects.
-      </case><case {'destructive'}>
-        <strong>Stop.</strong> This will permanently delete data.
-      </case><default>
-        <em>Pick a tone.</em>
-    </default></match>
+      {'info' => <strong>Heads up.</strong> Just a friendly note.}{'success' => <strong>All good.</strong> The thing finished without errors.}{'warning' => <strong>Careful.</strong> This action may have side-effects.}{'destructive' => <strong>Stop.</strong> This will permanently delete data.}{else => <em>Pick a tone.</em>}</match>
   </section>
 </div>

@@ -431,8 +431,16 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
         }) => {
             check_expr(discriminant, v, &[]);
             for c in cases {
-                check_expr(&c.test, v, &[]);
+                if let MatchTest::Expr(e) = &c.test {
+                    check_expr(e, v, &[]);
+                }
+                if let Some(b) = &c.binding {
+                    v.scope.names.insert(b.clone());
+                }
                 visit_instrs(&c.body, v);
+                if let Some(b) = &c.binding {
+                    v.scope.names.remove(b);
+                }
             }
             if let Some(d) = default {
                 visit_instrs(d, v);
@@ -447,13 +455,6 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
             if let Some(eb) = else_body {
                 visit_instrs(eb, v);
             }
-        }
-        Instr::WhileLoading(wl) => visit_instrs(&wl.body, v),
-        Instr::WhileError(we) => {
-            // `{#while-error err" of={agents}>` binds `err` inside the body.
-            v.scope.names.insert(we.error_var.clone());
-            visit_instrs(&we.body, v);
-            v.scope.names.remove(&we.error_var);
         }
     }
 }

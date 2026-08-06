@@ -55,7 +55,7 @@ v2.4.0</badge>
 published {published()}</p>
 
   <column gap="1">
-    <for {notes()} as="note" key={note.id}>
+    <for {notes() as note} key={note.id}>
       <row gap="3" align="center">
         style(noteRow)
 

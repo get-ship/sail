@@ -31,7 +31,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="4">
-    <for {grammar()} as="g" key={g.form}>
+    <for {grammar() as g} key={g.form}>
       <column gap="2">
         <row gap="3" align="center">
           <h3>{g.form}</h3>
@@ -56,7 +56,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       kinds are refused with an error naming the alternative.
     </p>
     <column gap="3">
-      <for {refusals()} as="r" key={r.syntax}>
+      <for {refusals() as r} key={r.syntax}>
         <column gap="1">
           <code>
             style({ paint: fg(destructive) })

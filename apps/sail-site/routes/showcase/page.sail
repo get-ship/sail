@@ -139,7 +139,7 @@ shanty</strong>
       style({ box: grow(1), paint: fg(muted-foreground), text: fontSize(sm) })
 a full app in one .sail file</p>
     <row gap="1">
-      <for {THEMES} as="t" key={t}>
+      <for {THEMES as t} key={t}>
         <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'outline'} size="sm">{t}</button>
       </for>
     </row>
@@ -157,7 +157,7 @@ a full app in one .sail file</p>
         <p>
           style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Playlists</p>
-        <for {filteredPlaylists()} as="p" key={p.id}>
+        <for {filteredPlaylists() as p} key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
                current={activePlaylist() === p.id ? 'true' : null}
  align="center" justify="between">
@@ -202,7 +202,7 @@ Playlist</p>
         style({  box: grow(1).minH(0).padX(6).padB(4)  })
 
         <column gap="1">
-          <for {visibleTracks()} as="t" key={t.id}>
+          <for {visibleTracks() as t} key={t.id}>
             <row on:click={() => playTrack(t.id)}
                  current={currentId() === t.id ? 'true' : null}
 

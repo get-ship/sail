@@ -197,7 +197,7 @@ Quick patterns</p>
 recipes</p>
           </row>
           <grid cols="3" gap="2" recipe-grid on:click={shape.onRecipeClick}>
-            <for {shape.recipes()} as="r" key={r.key}>
+            <for {shape.recipes() as r} key={r.key}>
               <button
                 type="button"
                 size="sm"
@@ -883,7 +883,7 @@ Globals only — dial once, surfaces follow.</p>
   </row>
 
   <toast-region position="bottom-end" shape-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} shape-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
