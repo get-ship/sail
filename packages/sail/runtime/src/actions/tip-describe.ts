@@ -73,12 +73,17 @@ export const tipDescribe: Action<void> = (node) => {
   const n = ++_seq
   const bubbleId = `sail-tooltip-${n}`
 
-  // Bubble is the host's [role=tooltip] child (structure, not a part class).
-  const bubble = el.querySelector('[role="tooltip"]') as HTMLElement | null
+  // Bubble is the host's tooltip part (data-tooltip-bubble; structure, not a class).
+  // Closed action stamps role=tooltip — not free author markup.
+  const bubble =
+    (el.querySelector('[data-tooltip-bubble]') as HTMLElement | null) ??
+    (el.querySelector('[role="tooltip"]') as HTMLElement | null)
+  if (bubble && !bubble.hasAttribute('role')) bubble.setAttribute('role', 'tooltip')
 
   const sync = (): void => {
     applyPlacement(el, el.getAttribute('placement'))
     if (bubble) {
+      if (!bubble.hasAttribute('role')) bubble.setAttribute('role', 'tooltip')
       bubble.id = bubbleId
       bubble.textContent = el.getAttribute('content') ?? ''
     }

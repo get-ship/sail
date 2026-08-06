@@ -17,7 +17,8 @@ function makeHost(opts: { invalid?: boolean; withControl?: boolean } = {}): {
   el.setAttribute('data-sail-host', 'field')
   if (opts.invalid) el.setAttribute('invalid', '')
 
-  // Structure mirrors field.sail: label, control, hint, error-gate → [role=alert]
+  // Structure mirrors field.sail: label, control, hint, error-gate → [data-field-error]
+  // (role=alert + aria-live stamped by the action, not free author markup).
   const label = document.createElement('div')
   label.textContent = 'Email'
 
@@ -34,7 +35,7 @@ function makeHost(opts: { invalid?: boolean; withControl?: boolean } = {}): {
 
   const errorGate = document.createElement('div')
   const error = document.createElement('div')
-  error.setAttribute('role', 'alert')
+  error.setAttribute('data-field-error', '')
   error.textContent = 'Enter a valid email address.'
   errorGate.append(error)
 
@@ -54,6 +55,13 @@ describe('describedControl (use: action)', () => {
     expect(hint.id).toMatch(/^sail-field-hint-\d+$/)
     expect(error.id).toMatch(/^sail-field-error-\d+$/)
     expect(hint.id).not.toBe(error.id)
+  })
+
+  it('stamps role=alert + aria-live=polite on the error part (closed anatomy)', () => {
+    const { el, error } = makeHost()
+    describedControl(el)
+    expect(error.getAttribute('role')).toBe('alert')
+    expect(error.getAttribute('aria-live')).toBe('polite')
   })
 
   it('valid → aria-describedby points at hint; aria-invalid false', () => {

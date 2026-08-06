@@ -753,8 +753,8 @@ Build 1837 · shipped · Mon</p>
                   <column gap="2">
                     style({ box: w(full) })
 
-                    <sail-message role="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
-                    <sail-message role="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
+                    <sail-message from="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
+                    <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
                   </column>
                 </else-if><else-if {e.tag === 'sail-citation'}>
                   <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>

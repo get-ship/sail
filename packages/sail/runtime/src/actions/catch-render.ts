@@ -18,15 +18,19 @@ interface HostWithReset extends HTMLElement {
  * This supplies what CSS cannot: the handle, the caught mark, the error published
  * out of band, and Retry.
  *
- * Default fallback anatomy (structure under [role=alert], not classes):
+ * Default fallback anatomy (structure under [data-error-alert], not classes):
  * message div immediately before the Retry button. Author `slot="fallback"`
- * replaces the default and then we touch neither.
+ * replaces the default and then we touch neither. Stamps role=alert (closed
+ * anatomy — not free author markup).
  */
 export const catchRender: Action<void> = (node) => {
   const el = node as HostWithReset
   // Present only when the default fallback is in play — an author-supplied
   // `slot="fallback"` replaces it wholesale, and then we touch neither.
-  const alert = el.querySelector('[role="alert"]')
+  const alert =
+    (el.querySelector('[data-error-alert]') as HTMLElement | null) ??
+    (el.querySelector('[role="alert"]') as HTMLElement | null)
+  if (alert && !alert.hasAttribute('role')) alert.setAttribute('role', 'alert')
   const retry = alert?.querySelector('button[type="button"]') as HTMLButtonElement | null
   const message = (retry?.previousElementSibling as HTMLElement | null) ?? null
 

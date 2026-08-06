@@ -38,7 +38,8 @@
     }),
   ])
 
-    <row align="start" gap="1" role="alert" live="polite">
+    <!-- alert role + polite live stamped by use:describedControl (closed anatomy) -->
+    <row align="start" gap="1" data-field-error>
       style(error)
 
       <svg viewBox="0 0 24 24" hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

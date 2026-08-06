@@ -13,7 +13,7 @@
 export type ChatMessageItem = {
   id: string
   content?: string
-  role?: string
+  from?: string
   contentType?: string
   timestamp?: string
   status?: string

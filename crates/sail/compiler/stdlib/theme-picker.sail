@@ -118,13 +118,14 @@
 ◐</span>
   </button>
 
+  <!-- listbox role stamped by use:themeSelect (closed multi-part anatomy) -->
   <div
     id="sail-theme-panel"
     popover
     use:anchor
     placement="bottom-end"
-    role="listbox"
     label="Theme"
+    data-theme-listbox
 
   >
     style([
@@ -154,10 +155,11 @@ Active</span>
       </column>
 
       <!-- Filter tabs: selected = bold + fill + primary underline (readable on every host theme) -->
-      <row gap="0" role="tablist" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap>
+      <!-- tablist/tab/option roles stamped by use:themeSelect -->
+      <row gap="0" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap>
         style([ style(modeSeg), style({ box: minW(0) }) ])
 
-        <button type="button" data-mode="light" role="tab" selected="true" data-active="true" title="Show light themes">
+        <button type="button" data-mode="light" selected="true" data-active="true" title="Show light themes">
           style([ style({ box: grow(1).minW(0) }), 
           modeSegBtn,
           when({
@@ -169,7 +171,7 @@ Active</span>
 
           Light
         </button>
-        <button type="button" data-mode="dark" role="tab" selected="false" title="Show dark themes">
+        <button type="button" data-mode="dark" selected="false" title="Show dark themes">
           style([ style({ box: grow(1).minW(0) }), 
           modeSegBtn,
           when({
@@ -181,7 +183,7 @@ Active</span>
 
           Dark
         </button>
-        <button type="button" data-mode="system" role="tab" selected="false" title="Show dual-mode themes">
+        <button type="button" data-mode="system" selected="false" title="Show dual-mode themes">
           style([ style({ box: grow(1).minW(0) }), 
           modeSegBtn,
           when({
@@ -203,7 +205,7 @@ Light themes</span>
     <column gap="2" data-theme-grid>
       style([ style(panelList), style({ box: minW(0) }) ])
 
-      <button type="button" role="option" value="sail">
+      <button type="button" value="sail">
         style([
         option,
         when({

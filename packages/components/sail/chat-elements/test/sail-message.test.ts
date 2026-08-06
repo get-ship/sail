@@ -28,13 +28,15 @@ describe('<sail-message>', () => {
     expect(customElements.get('sail-message')).toBeDefined()
   })
 
-  it('reflects role / content-type / status onto the host for attribute-driven CSS', () => {
+  it('reflects from / content-type / status onto the host (message kind, not ARIA role)', () => {
     const el = mount(
-      '<sail-message role="user" content-type="code" status="error">hi</sail-message>',
+      '<sail-message from="user" content-type="code" status="error">hi</sail-message>',
     )
-    expect(el.getAttribute('role')).toBe('user')
+    expect(el.getAttribute('from')).toBe('user')
     expect(el.getAttribute('content-type')).toBe('code')
     expect(el.getAttribute('status')).toBe('error')
+    // Message kind must not misuse ARIA role=
+    expect(el.getAttribute('role')).toBeNull()
   })
 
   it('projects the turn content into the bubble', () => {
@@ -44,9 +46,9 @@ describe('<sail-message>', () => {
     expect(bubble(el).textContent).toContain('hello there')
   })
 
-  it('surfaces the role label + timestamp in the meta row', () => {
+  it('surfaces the from label + timestamp in the meta row', () => {
     const el = mount(
-      '<sail-message role="assistant" timestamp="2024-01-01T00:00:00Z">x</sail-message>',
+      '<sail-message from="assistant" timestamp="2024-01-01T00:00:00Z">x</sail-message>',
     )
     expect(el.textContent).toContain('assistant')
     const time = el.querySelector<HTMLTimeElement>('time')!

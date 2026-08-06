@@ -161,7 +161,7 @@ export function uiConversation(): EventUi[] {
 export type MessageListItem = {
   id: string
   content: string
-  role: 'user' | 'assistant' | 'system'
+  from: 'user' | 'assistant' | 'system'
   contentType: string
   timestamp: string
   status: 'sent' | 'sending' | 'error'
@@ -181,12 +181,12 @@ export function uiMessageListItems(): MessageListItem[] {
         ? `${content}\n\n_Attachments: ${labels}_`
         : `_Attachments: ${labels}_`
     }
-    const role: MessageListItem['role'] =
+    const from: MessageListItem['from'] =
       m.actorKind === 'agent' ? 'assistant' : m.actorKind === 'you' ? 'user' : 'system'
     return {
       id: m.id,
       content: content || '…',
-      role,
+      from,
       contentType: 'text',
       timestamp: m.time,
       status: 'sent',

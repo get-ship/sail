@@ -608,8 +608,8 @@ describe('chat-elements projections', () => {
     await selectThread(id!)
     const items = uiMessageListItems()
     expect(items.length).toBeGreaterThanOrEqual(2)
-    expect(items.some((m) => m.role === 'user')).toBe(true)
-    expect(items.some((m) => m.role === 'assistant' && m.content.includes('looking'))).toBe(
+    expect(items.some((m) => m.from === 'user')).toBe(true)
+    expect(items.some((m) => m.from === 'assistant' && m.content.includes('looking'))).toBe(
       true,
     )
     expect(items.every((m) => m.id && m.status === 'sent')).toBe(true)

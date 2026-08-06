@@ -12,7 +12,7 @@
   is absolutely positioned at its virtual offset.
 
   Item shape (all but `id` / `content` optional):
-    { id, content, role?, contentType?, timestamp?, status? }
+    { id, content, from?, contentType?, timestamp?, status? }
 
   Pure framework primitive — no SDK, no data fetching. Consumers feed
   their own array.
@@ -42,7 +42,7 @@ import type { Scope } from './sail-message-list.sail'
 interface MessageItem {
   id: string
   content?: unknown
-  role?: string
+  from?: string
   contentType?: string
   timestamp?: string
   status?: string
@@ -170,7 +170,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         style({ box: position(absolute).left(3).right(3), paint: translateY(bind(rowY)) })
 
         <sail-message
-          role={w.item.role || 'assistant'}
+          from={w.item.from || 'assistant'}
           content-type={w.item.contentType || 'text'}
           timestamp={w.item.timestamp || ''}
           status={w.item.status || 'sent'}

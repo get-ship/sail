@@ -26,7 +26,7 @@ const settle = async () => {
 
 interface MsgItem {
   id: string
-  role?: string
+  from?: string
   content?: string
   contentType?: string
   timestamp?: string
@@ -99,7 +99,7 @@ const rowsOf = (el: MessageListEl): HTMLElement[] =>
   )
 const renderedMessages = (el: MessageListEl): NodeListOf<HTMLElement> =>
   el.querySelectorAll<HTMLElement>('sail-message')
-// A message renders its meta row (role, timestamp) alongside the projected turn,
+// A message renders its meta row (from, timestamp) alongside the projected turn,
 // so the ITEM's text is what landed in that message's default slot.
 const contentOf = (msg: HTMLElement): string =>
   msg.querySelector<HTMLSlotElement>('slot:not([name])')!.textContent!
@@ -112,15 +112,16 @@ describe('<sail-message-list>', () => {
   it('renders one <sail-message> per keyed item, in order, set via the items prop', async () => {
     const el = await mountList()
     el.items = [
-      { id: 'a', role: 'user', content: 'one' },
-      { id: 'b', role: 'assistant', content: 'two' },
+      { id: 'a', from: 'user', content: 'one' },
+      { id: 'b', from: 'assistant', content: 'two' },
     ]
     await flush()
     const msgs = renderedMessages(el)
     expect(msgs.length).toBe(2)
-    expect(msgs[0]!.getAttribute('role')).toBe('user')
+    expect(msgs[0]!.getAttribute('from')).toBe('user')
+    expect(msgs[0]!.getAttribute('role')).toBeNull()
     expect(contentOf(msgs[0]!)).toBe('one')
-    expect(msgs[1]!.getAttribute('role')).toBe('assistant')
+    expect(msgs[1]!.getAttribute('from')).toBe('assistant')
     expect(contentOf(msgs[1]!)).toBe('two')
   })
 
@@ -128,7 +129,7 @@ describe('<sail-message-list>', () => {
     const el = await mountList()
     el.items = Array.from({ length: 5000 }, (_, i) => ({
       id: String(i),
-      role: i % 2 ? 'assistant' : 'user',
+      from: i % 2 ? 'assistant' : 'user',
       content: `msg ${i}`,
     }))
     await flush()
