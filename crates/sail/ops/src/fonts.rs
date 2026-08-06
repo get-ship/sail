@@ -433,25 +433,26 @@ fn resolve_project_arg(args: &Value, ctx: &Ctx) -> Result<PathBuf, OpError> {
 
 fn resolve_project(ctx: &Ctx) -> Result<PathBuf, OpError> {
     let p = &ctx.project_root;
-    if p.join("routes").is_dir() || p.join("package.json").is_file() {
-        // Avoid treating the monorepo workspace root as an "app" just because
-        // it has a package.json — prefer apps/* when project_root == workspace.
-        if p.canonicalize().ok().as_ref() != ctx.workspace_root.canonicalize().ok().as_ref() {
-            return Ok(p.clone());
-        }
+    let same_as_workspace = p.canonicalize().ok().as_ref()
+        == ctx.workspace_root.canonicalize().ok().as_ref();
+
+    // Strong signal: routes/ means this is an app (external or monorepo).
+    if p.join("routes").is_dir() {
+        return Ok(p.clone());
     }
-    // Prefer apps/studio then first apps/* under workspace.
-    for candidate in ["apps/studio", "apps/sail-site"] {
-        let c = ctx.workspace_root.join(candidate);
-        if c.join("routes").is_dir() {
-            return Ok(c);
-        }
+    // package.json alone only counts when not the monorepo workspace root
+    // (workspace roots often carry a package.json without being an app).
+    if p.join("package.json").is_file() && !same_as_workspace {
+        return Ok(p.clone());
     }
+
+    // Monorepo fallback: first apps/* with routes (sorted — no named-app hardcode).
     let apps = ctx.workspace_root.join("apps");
     if apps.is_dir() {
         if let Ok(rd) = std::fs::read_dir(&apps) {
-            for e in rd.flatten() {
-                let path = e.path();
+            let mut paths: Vec<PathBuf> = rd.flatten().map(|e| e.path()).collect();
+            paths.sort();
+            for path in paths {
                 if path.join("routes").is_dir() {
                     return Ok(path);
                 }
@@ -459,7 +460,7 @@ fn resolve_project(ctx: &Ctx) -> Result<PathBuf, OpError> {
         }
     }
     Err(OpError::FailedPrecondition(
-        "FontAdd needs a project (pass project: \"apps/<app>\" or run with project ctx)".into(),
+        "FontAdd needs a project (pass project: \"<app-root>\" or run with project ctx)".into(),
     ))
 }
 
@@ -578,16 +579,18 @@ fn write_type_role_tokens(
     project: &Path,
     family: &str,
 ) -> Result<Option<String>, OpError> {
-    let themes_dir = project.join("tokens/themes");
-    if !themes_dir.is_dir() {
-        return Ok(None);
-    }
-    // Prefer first json theme file.
+    // Modern `themes/` then legacy `tokens/themes/` (EXT-1 E4 dual layout).
+    let theme_dirs = sail_compiler::tokens_generate::project_theme_dirs(project);
     let mut theme_file: Option<PathBuf> = None;
-    if let Ok(rd) = std::fs::read_dir(&themes_dir) {
-        for e in rd.flatten() {
-            let p = e.path();
-            if p.extension().and_then(|x| x.to_str()) == Some("json") {
+    for themes_dir in &theme_dirs {
+        if let Ok(rd) = std::fs::read_dir(themes_dir) {
+            let mut jsons: Vec<PathBuf> = rd
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().and_then(|x| x.to_str()) == Some("json"))
+                .collect();
+            jsons.sort();
+            if let Some(p) = jsons.into_iter().next() {
                 theme_file = Some(p);
                 break;
             }

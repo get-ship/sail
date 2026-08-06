@@ -15,7 +15,7 @@
         "type": "string"
       },
       "project": {
-        "description": "App root (e.g. `apps/studio`). Defaults to ctx / first apps/* with routes.",
+        "description": "App root (project-relative; external app or monorepo `apps/<name>`). Defaults to ctx project / first apps/* with routes.",
         "type": [
           "string",
           "null"

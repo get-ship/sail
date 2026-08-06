@@ -212,7 +212,7 @@
       "type": "object",
       "properties": {
         "project": {
-          "description": "Workspace-relative project root (`apps/sail-site`). Default: ops project.",
+          "description": "Workspace-relative project root (e.g. `.` for an external app, or `apps/<name>` in a monorepo). Default: ops project.",
           "type": [
             "string",
             "null"
@@ -350,7 +350,7 @@
   },
   {
     "name": "sail_theme_list",
-    "description": "List theme JSON files under a directory. Path must be apps/*/tokens/themes or packages/sail/tokens/model/themes.",
+    "description": "List theme JSON files under a directory. Path must be themes/**, tokens/themes/** (legacy), or packages/sail/tokens/model/themes.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -380,7 +380,7 @@
   },
   {
     "name": "sail_theme_write",
-    "description": "Write a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only.",
+    "description": "Write a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -399,7 +399,7 @@
   },
   {
     "name": "sail_theme_delete",
-    "description": "Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).",
+    "description": "Delete a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json (catalog refused).",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -414,7 +414,7 @@
   },
   {
     "name": "sail_theme_fork",
-    "description": "Fork a catalog or project theme into apps/*/tokens/themes/. Optional new_id rewrites $extensions.ship.themeId.",
+    "description": "Fork a catalog or project theme into themes/ (or legacy tokens/themes/). Optional new_id rewrites $extensions.ship.themeId.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -532,7 +532,7 @@
           "type": "string"
         },
         "project": {
-          "description": "App root (e.g. `apps/studio`). Defaults to ctx / first apps/* with routes.",
+          "description": "App root (project-relative; external app or monorepo `apps/<name>`). Defaults to ctx project / first apps/* with routes.",
           "type": [
             "string",
             "null"

@@ -1831,9 +1831,14 @@ mod tests {
     #[test]
     fn theme_write_policy_lives_in_sail_ops() {
         use sail_ops::theme::{is_list_theme_dir, is_read_theme_path, is_write_theme_path};
+        // Modern E4 + legacy tokens/themes (project-relative; no apps/ required).
+        assert!(is_write_theme_path("themes/custom.json"));
+        assert!(is_write_theme_path("tokens/themes/custom.json"));
         assert!(is_write_theme_path(
             "apps/sail-site/tokens/themes/custom.json"
         ));
+        assert!(is_list_theme_dir("themes"));
+        assert!(is_list_theme_dir("tokens/themes"));
         assert!(is_list_theme_dir("apps/sail-site/tokens/themes"));
         assert!(is_list_theme_dir("apps/sail-site/tokens/themes/"));
         assert!(!is_write_theme_path("apps/sail-site/tokens/base.json"));
@@ -1849,7 +1854,8 @@ mod tests {
         assert!(!is_write_theme_path(
             "apps/sail-site/tokens/themes/notes.txt"
         ));
-        assert!(!is_write_theme_path("tmp/tokens/themes/x.json"));
+        // Structural allowlist: tokens/themes shape is writable anywhere under workspace.
+        assert!(is_write_theme_path("tmp/tokens/themes/x.json"));
     }
 
     #[test]
