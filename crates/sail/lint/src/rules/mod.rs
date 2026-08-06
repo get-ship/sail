@@ -41,7 +41,6 @@ pub mod for_key;
 pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
-pub mod legacy_layout;
 pub mod ambient;
 pub mod no_ambient_dom;
 pub mod no_ambient_events;
@@ -135,7 +134,6 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (for_key::RULE_ID, for_key::check),
     (sx::RULE_ID, sx::check),
     (layout::RULE_ID, layout::check),
-    (legacy_layout::RULE_ID, legacy_layout::check),
     (height_chain::RULE_ID, height_chain::check),
     (virtualizer::RULE_ID, virtualizer::check),
     (participation_style::RULE_ID, participation_style::check),

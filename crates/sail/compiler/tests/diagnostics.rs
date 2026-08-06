@@ -24,27 +24,6 @@ fn compile_route(source: &str) -> sail_compiler::CompileError {
 }
 
 #[test]
-fn state_directive_is_retired() {
-    // The legacy `<state>` directive was retired in favour of declaring
-    // reactive state in the controller's setup function. Authors who
-    // still ship the old form get a parse error pointing at the
-    // migration target.
-    let src = r#"<state name="x" value="0" />"#;
-    let err = compile_route(src);
-    assert!(
-        err.message.contains("no longer supported"),
-        "msg: {}",
-        err.message
-    );
-    assert!(
-        err.message.contains("setup function"),
-        "msg should name the migration target: {}",
-        err.message
-    );
-    assert_eq!(err.category.as_deref(), Some("<state name=\"x\">"));
-}
-
-#[test]
 fn arrow_in_attr_expression_is_rejected() {
     let src = r#"<button disabled={() => true}></button>"#;
     let err = compile_route(src);

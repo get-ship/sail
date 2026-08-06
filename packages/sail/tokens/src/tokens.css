@@ -486,6 +486,7 @@
 }
 
 /* ─── compat aliases (legacy CSS names) ─── */
+/* MIGRATION-DEBT: dies with CHANNELS-1 / TOKENS-1 (token-alias migration). */
 :root {
   /* Legacy aliases (PE compat) */
   --app-accent-agents: var(--accent-agents);

@@ -62,13 +62,11 @@ pub fn tag_props(tag: &str) -> &'static [&'static str] {
         // axis only fires when the author asks — no output churn on existing
         // columns.
         "column" => &["gap", "align", "justify", "direction", "inline"],
+        // MIGRATION-DEBT: dies with CHANNELS-1 (layout-keyword migration).
         // `direction` is a backward-compat alias for the old `<sail-stack
         // direction="row">` escape hatch (horizontal stack). Accepted on
         // row/column so legacy code keeps compiling through the keyword
-        // migration. Misuse (`<column direction="row">` when you really
-        // want `<row>`) is what `sail-legacy-layout` would flag, but the
-        // modern author has no reason to reach for `direction` — they use
-        // the keyword itself.
+        // migration. Modern authors use the keyword itself (`<row>`).
         // `nowrap` is a boolean axis: a `<row>` wraps by default (it absorbed
         // `sail-cluster`), and `<row nowrap>` is the single-line variant —
         // toolbars, split panes, anything that must NOT reflow onto a second

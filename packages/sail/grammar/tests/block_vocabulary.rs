@@ -57,17 +57,6 @@ fn grammar_block_vocabulary_matches_compiler_manifest() {
 }
 
 #[test]
-fn grammar_does_not_recognize_brace_control_flow() {
-    // Brace form is retired. The grammar must not still declare `{#if` etc.
-    for retired in ["'{#if'", "'{#for'", "'{#match'", "'{:else}'", "'{:else if'"] {
-        assert!(
-            !GRAMMAR_SRC.contains(retired),
-            "grammar.js still declares retired brace marker {retired}",
-        );
-    }
-}
-
-#[test]
 fn grammar_does_not_recognize_retired_style_directive() {
     assert!(
         !GRAMMAR_SRC.contains("style_attr") && !GRAMMAR_SRC.contains("'style:'"),

@@ -6,8 +6,7 @@
 //!  2. HTML parse — produces a span-bearing DOM-ish tree.
 //!  3. Directive lift — pluck `<scope>` (props/variants/types) and
 //!     top-level `<style>` out of the top-level child list into the
-//!     IR. A top-level `<state>` directive is rejected with a parse
-//!     error pointing authors at the controller's `setup:` factory.
+//!     IR.
 //!  4. Template grammar scan — text-node `{...}` markers become
 //!     template instructions; element children recurse.
 //!  5. Expression validate — every brace expression goes through the
@@ -34,8 +33,6 @@ pub fn parse(source: &str) -> Result<Program, CompileError> {
 /// land in a lightly normalized string — callers remap to author bytes via
 /// tag ordinal when needed (SailInspect).
 pub fn parse_author(source: &str) -> Result<Program, CompileError> {
-    reject_retired_host_selector(source)?;
-    reject_part_selector(source)?;
     let prepared = preprocess::preprocess_author(source)?;
     parse_prepared(source, &prepared)
 }
@@ -48,11 +45,6 @@ pub(crate) fn parse_element_source(source: &str) -> Result<Program, CompileError
 }
 
 fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileError> {
-    // Reject retired shadow-DOM CSS idioms in author `<style>` BEFORE preprocess
-    // injects the compiler's own scoped CSS (which uses `:host`/`:scope` as
-    // internal dual-target plumbing). Only author `<style>` is inspected.
-    reject_retired_host_selector(source)?;
-    reject_part_selector(source)?;
     let prepared = preprocess::preprocess_impl(source, expand_elements)?;
     parse_prepared(source, &prepared)
 }
@@ -76,9 +68,6 @@ fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError>
                 continue;
             }
             Node::Element(el) => match el.tag.as_str() {
-                "state" => {
-                    return Err(state_directive_retired(el));
-                }
                 "scope" => {
                     // The component's static surface: `type` aliases +
                     // `props:` (union props only) + optional `compound:`,
@@ -128,90 +117,4 @@ fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError>
         source_len: source.len(),
         span: Span::new(0, source.len()),
     })
-}
-
-/// Reject author-written `:host` in a component's `<style>` block. Model A:
-/// an element styles its own template nodes by class — a spliced element's
-/// root is `.sail-<name>`, a native-kind element's is the bare tag; variants
-/// are attribute-keyed. Components are light DOM; there is no host to select.
-/// Scans the RAW source, before preprocess prepends the compiler's own
-/// scoped CSS.
-fn reject_retired_host_selector(source: &str) -> Result<(), CompileError> {
-    let mut i = 0;
-    while let Some(rel) = source[i..].find("<style") {
-        let open = i + rel;
-        let Some(gt) = source[open..].find('>') else {
-            break;
-        };
-        let cs = open + gt + 1;
-        let Some(close) = source[cs..].find("</style>") else {
-            break;
-        };
-        let content = &source[cs..cs + close];
-        if let Some(pos) = content.find(":host") {
-            let at = cs + pos;
-            return Err(CompileError::new(
-                "`:host` is a shadow-DOM idiom — light DOM has no host to select. \
-                 Style the element with sx.",
-            )
-            .with_span(Span::new(at, at + ":host".len())));
-        }
-        i = cs + close + "</style>".len();
-    }
-    Ok(())
-}
-
-/// Reject a `::part()` selector in an author `<style>` block. Light DOM has no
-/// shadow parts — the target element's class is the styling hook (anatomy =
-/// classes + attributes). Scans the RAW source, before preprocess prepends the
-/// compiler's own scoped CSS (which never uses `::part`).
-fn reject_part_selector(source: &str) -> Result<(), CompileError> {
-    let mut i = 0;
-    while let Some(rel) = source[i..].find("<style") {
-        let open = i + rel;
-        let Some(gt) = source[open..].find('>') else {
-            break;
-        };
-        let cs = open + gt + 1;
-        let Some(close) = source[cs..].find("</style>") else {
-            break;
-        };
-        let content = &source[cs..cs + close];
-        if let Some(pos) = content.find("::part") {
-            let at = cs + pos;
-            return Err(CompileError::new(
-                "the `::part()` selector is retired — light DOM has no shadow \
-                 parts. Style the target with sx.",
-            )
-            .with_span(Span::new(at, at + "::part".len())));
-        }
-        i = cs + close + "</style>".len();
-    }
-    Ok(())
-}
-
-/// Build the parse error returned when an author writes a top-level
-/// `<state>` element. The directive was retired in favour of
-/// declaring reactive state in the controller's setup function; the
-/// message names the migration target so authors can fix the file
-/// without consulting the changelog.
-fn state_directive_retired(el: &html::Element) -> CompileError {
-    let name = el.get_attribute("name").unwrap_or_default();
-    let label = if name.is_empty() {
-        "<state>".to_string()
-    } else {
-        format!("<state name=\"{name}\">")
-    };
-    CompileError::new(format!(
-        "{label} directive is no longer supported. Declare reactive state \
-         in the controller's setup function \
-         (e.g. `controller((ctx) => {{ ...; return {{ {} }} }})`).",
-        if name.is_empty() {
-            "x: signal(0)".to_string()
-        } else {
-            format!("{name}: signal(...)")
-        }
-    ))
-    .with_span(el.span)
-    .with_category(label)
 }

@@ -2,8 +2,9 @@
 //! them, writing the emitted JS (and CEM/schema/meta/dts/ssr.html sidecars)
 //! into a project-level mirror tree at `<repo-root>/.sail-out/<source-
 //! relative-path>/`. Pass `--out <dir>` to override and emit every file to
-//! a single directory (legacy behaviour). Errors render with file path,
-//! line, and column.
+//! a single directory (legacy behaviour).
+//! MIGRATION-DEBT: dies with CLI-legacy cleanup (`--out` single-dir mode).
+//! Errors render with file path, line, and column.
 //
 // FILE_CAP_OVERRIDE: single cohesive CLI driver — arg parsing (clap), the
 // component-path guardrail, mirror-tree resolution, per-file emit, and the
@@ -77,6 +78,7 @@ enum Command {
         /// and the JS module is named `<stem>.compiled.js`. When supplied,
         /// every file is emitted into this single directory and the JS
         /// module is named `<stem>.js` (legacy behaviour).
+        /// MIGRATION-DEBT: dies with CLI-legacy cleanup (`--out` single-dir mode).
         #[arg(long)]
         out: Option<PathBuf>,
         /// Remove each source file's mirror directory (or `--out` directory)

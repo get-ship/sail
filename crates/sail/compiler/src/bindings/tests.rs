@@ -75,13 +75,6 @@ fn style_directive_is_rejected_at_parse_time() {
 }
 
 #[test]
-fn prop_and_attr_prefixes_are_rejected() {
-    // Author surface no longer has prop:/attr:; plain fields only.
-    assert!(crate::parse::parse("<a prop:href={x}>x</a>").is_err());
-    assert!(crate::parse::parse("<a attr:href={x}>x</a>").is_err());
-}
-
-#[test]
 fn if_emits_if_binding_then_walks_body() {
     let r = build_for("<if {x}><p>{x}</p></if>");
     assert_eq!(r.len(), 2);

@@ -512,6 +512,7 @@ pub fn generate_with_options(
     if layers.is_empty() {
         bail!("No model/*.json files found in {}", model_dir.display());
     }
+    // MIGRATION-DEBT: dies with CHANNELS-1 / TOKENS-1 (token-alias migration).
     let aliases = load_compat_aliases(model_dir)?;
     let themes = load_emit_themes(model_dir, &name_index, opts)?;
 

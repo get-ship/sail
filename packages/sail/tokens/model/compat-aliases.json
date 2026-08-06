@@ -1,5 +1,5 @@
 {
-  "$description": "Legacy CSS names → current cssName (dual-emit aliases for PE stability)",
+  "$description": "Legacy CSS names → current cssName (dual-emit aliases for PE stability). MIGRATION-DEBT: dies with CHANNELS-1 / TOKENS-1 (token-alias migration).",
   "aliases": {
     "app-accent-dashboard": "accent-dashboard",
     "app-accent-pipelines": "accent-pipelines",

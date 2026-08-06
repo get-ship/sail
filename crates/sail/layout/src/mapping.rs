@@ -384,6 +384,7 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
         },
         declarations: &[Declaration::JustifyContent(JustifyContent::SpaceEvenly)],
     },
+    // MIGRATION-DEBT: dies with CHANNELS-1 (layout-keyword migration).
     // --- flex direction modifier (legacy alias) ------------------------------
     LayoutRule {
         selector: Selector::Modifier {

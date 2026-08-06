@@ -73,11 +73,9 @@ const COMMITTED_ASSETS: &[&str] = &["lucide-icons.json"];
 
 /// Content written to a framework bundle's staging path when the real bake
 /// output is not yet available (from-zero checkout, or the very build that
-/// produces the bundles). It only has to let `include_str!` compile; the
-/// runtime freshness tests (`baked_runtime_is_the_current_engine_not_a_stale_bake`)
-/// intentionally reject a stub bake, and `build-assets` overwrites
-/// `.deck/framework/` with the real bytes, which the `rerun-if-changed` hooks
-/// re-stage on the next `cargo build`.
+/// produces the bundles). It only has to let `include_str!` compile;
+/// `build-assets` overwrites `.deck/framework/` with the real bytes, which
+/// the `rerun-if-changed` hooks re-stage on the next `cargo build`.
 const BOOTSTRAP_STUB: &str =
     "/* deck bootstrap stub — regenerate with `cargo run -p deck-cli -- build-assets`. */\n";
 

@@ -45,14 +45,8 @@ pub fn emit_meta(_program: &Program, bindings: &BindingRegistry) -> Value {
             entry
         })
         .collect();
-    // `"clients"` stays in the wire shape as an always-empty array — the
-    // retired `<client>` directive was its only producer, but the field
-    // itself is part of the checked-in sidecar contract downstream tooling
-    // (and the compiled module's own default export) reads, so it isn't
-    // dropped here.
     json!({
         "bindings": entries,
-        "clients": Value::Array(Vec::new()),
         "_compilerVersion": crate::compiler_version().to_json(),
     })
 }

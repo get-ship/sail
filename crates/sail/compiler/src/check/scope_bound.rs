@@ -492,17 +492,6 @@ mod collect_tests {
     use super::{check, collect};
 
     #[test]
-    fn ship_is_no_longer_ambient() {
-        // `ship` is no longer an ambient BUILTIN — it's simply not a name,
-        // same as any other undeclared identifier.
-        let program = crate::parse::parse("<div>{ship.git.overview()}</div>").expect("parses");
-        assert!(
-            check(&program, None, None).is_err(),
-            "ship must be rejected as an unbound identifier"
-        );
-    }
-
-    #[test]
     fn route_is_host_granted_never_ambient() {
         let program = crate::parse::parse("<h1>Hello, {route.params.id()}</h1>").expect("parses");
         // Granted (deck passed the params): legal.

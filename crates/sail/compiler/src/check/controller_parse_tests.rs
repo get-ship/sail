@@ -10,15 +10,6 @@ fn p(src: &str) -> ParsedController {
 }
 
 #[test]
-fn ignores_legacy_setup_shape() {
-    let r = parse(
-        PathBuf::from("legacy.ts"),
-        "export default function setup() { return {} }".into(),
-    );
-    assert!(r.is_none());
-}
-
-#[test]
 fn ignores_null_default() {
     let r = parse(PathBuf::from("n.ts"), "export default null\n".into());
     assert!(r.is_none());

@@ -2,11 +2,6 @@
 //! Emit a JSON-serializable description of a file's directive
 //! declarations: `<prop>`. Used by tooling (HMR, error overlay,
 //! devserver) that needs a quick semantic summary without the JS bundle.
-//!
-//! `"data"` stays in the wire shape as an always-empty array — the
-//! retired `<data>` directive was its only producer, but the field
-//! itself is part of the checked-in schema contract downstream tooling
-//! reads, so it isn't dropped here.
 
 use crate::CompileOpts;
 use crate::ir::*;
@@ -19,7 +14,6 @@ pub fn emit_schema(program: &Program, opts: &CompileOpts) -> Value {
         .map(|m| component_value(&m.name, &program.props));
 
     json!({
-        "data": Value::Array(Vec::new()),
         "component": component,
         "_compilerVersion": crate::compiler_version().to_json(),
     })

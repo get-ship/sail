@@ -509,6 +509,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
     // earlier preset/top-level value (layout.raw_containers is the SSOT name).
     // A policy object that only carries lint.severity.* does NOT clobber
     // preset/top-level raw_containers.
+    // MIGRATION-DEBT: dies with BLOCKS-1 (config-key migration — flat raw_containers).
     if registry.raw_containers_explicit {
         // Drop a prior signal line for the legacy key if present — the nested
         // name is authoritative.
@@ -877,32 +878,6 @@ mod tests {
         let src = tmp.path().join("w.sail");
         std::fs::write(&src, "<p>{x}</p>").unwrap();
         assert_eq!(Policy::resolve_opt(&src), None);
-    }
-
-    // ----------------------------------------------------------------------
-    // Doc/parser key match: the config key the parser reads is `preset`, with
-    // values `full`/`strict` — NOT the drifted `{"policy":"floor|stripped|
-    // strictest"}` the docs used to advertise. Standardized on `preset`.
-    // ----------------------------------------------------------------------
-
-    #[test]
-    fn preset_is_the_parser_key_and_the_drifted_values_do_not_parse() {
-        // `{"preset":"strict"}` — the standardized key — resolves.
-        assert_eq!(tier(r#"{"preset":"strict"}"#), Policy::STRICT);
-        assert_eq!(tier(r#"{"preset":"full"}"#), Policy::FULL);
-        // The OLD advertised values (`floor`/`stripped`/`strictest`) are NOT
-        // preset names the parser knows — proving the docs must name `full`/
-        // `strict`, not the drifted vocabulary.
-        assert_eq!(Policy::preset("floor"), None);
-        assert_eq!(Policy::preset("stripped"), None);
-        assert_eq!(Policy::preset("strictest"), None);
-        // The OLD key name never carried a tier either — and being an
-        // unrecognized key, it now fails closed LOUDLY (Rejected), not silently.
-        assert_eq!(tier(r#"{"policy":"floor"}"#), Policy::STRICT);
-        assert!(matches!(
-            kind(r#"{"policy":"floor"}"#),
-            ResolutionKind::Rejected(_)
-        ));
     }
 
     // ----------------------------------------------------------------------

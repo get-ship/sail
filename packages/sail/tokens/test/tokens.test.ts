@@ -702,6 +702,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   })
 
   it('dual-emit compat aliases remain (registry + tokens.css)', () => {
+    // MIGRATION-DEBT: dies with TOKENS-1 (token-alias migration / app-accent-* cut).
     // Do not drop PE dual-emit: app-accent-* → var(--accent-*).
     const reg = loadRegistry()
     const css = loadSrc('../src/tokens.css')

@@ -44,7 +44,7 @@ __frag3.appendChild(__t10);
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("table");
-__e0.setAttribute("class", "sail-table sx-wfull sx-fontFamilybody sx-fontSizesm sx-leadingnormal sx-fgforeground sx-textAlignstart");
+__e0.setAttribute("class", "sail-table sx-wfull sx-fgforeground sx-fontFamilybody sx-fontSizesm sx-leadingnormal sx-textAlignstart");
 __e0.setAttribute("data-sail-host", "table");
 const __forAnchor1 = document.createComment("for");
 __e0.appendChild(__forAnchor1);
