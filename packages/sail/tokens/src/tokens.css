@@ -90,7 +90,8 @@
   --panel-ch-w-md: 38ch;
   --panel-ch-w-lg: 60ch;
   --panel-rail-w: 14rem;
-  --menu-min-w: 12rem;
+  --panel-menu-min-w: 12rem;
+  --panel-toast-region-width: var(--panel-w-toast);
   --panel-pad-x: var(--space-6);
   --panel-head-pad-y: 18px;
   --panel-body-pad-y: var(--space-4);
@@ -107,7 +108,6 @@
   --leading-tight: 1.2;
   --leading-snug: 1.35;
   --leading-normal: 1.5;
-  --leading-normal-plus: 1.55;
   --leading-code: 1.6;
   --leading-relaxed: 1.7;
   --text-xs: 11px;
@@ -142,7 +142,6 @@
   --heading-tracking: var(--tracking-tight);
   --body-font: var(--font-body);
   --body-weight: var(--font-weight-normal);
-  --body-tracking: var(--tracking-normal);
   --mono-font: var(--font-mono);
   --label-font: var(--font-body);
   --label-weight: var(--font-weight-semibold);
@@ -164,12 +163,6 @@
   --border: oklch(0.147 0.004 49.25 / 25%);
   --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
   --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
-  --glow-default: none;
-  --glow-muted: none;
-  --glow-info: none;
-  --glow-success: none;
-  --glow-warning: none;
-  --glow-destructive: none;
   --background: oklch(0.975 0.002 106.423);
   --foreground: oklch(0.147 0.004 49.25);
   --primary: oklch(0.67 0.16 var(--brand-hue, 58));
@@ -259,6 +252,7 @@
   --z-popover: 30;
   --z-dialog: 40;
   --z-toast: 50;
+  --z-toast-region: var(--z-toast);
   --z-max: 100;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
@@ -376,14 +370,12 @@
   --tab-list-rail: var(--muted);
   --tab-foreground: var(--muted-foreground);
   --tab-selected-foreground: var(--foreground);
-  --tab-selected: var(--background);
+  --tab-selected-bg: var(--background);
   --theme-picker: var(--popover);
   --theme-picker-foreground: var(--popover-foreground);
   --theme-picker-trigger-foreground: var(--foreground);
   --theme-picker-option-foreground: var(--muted-foreground);
   --theme-picker-option-hover-bg: var(--hover-bg);
-  --toast-region-width: var(--panel-w-toast);
-  --toast-region-z: var(--z-toast);
   --toast: var(--background);
   --toast-foreground: var(--foreground);
   --toast-border: var(--border);
@@ -483,26 +475,6 @@
 
   /* Separator stroke — themable line colour for <separator>. */
   --separator-line: var(--border);
-}
-
-/* ─── compat aliases (legacy CSS names) ─── */
-:root {
-  /* Legacy aliases (PE compat) */
-  --app-accent-agents: var(--accent-agents);
-  --app-accent-canvas: var(--accent-canvas);
-  --app-accent-chat: var(--accent-chat);
-  --app-accent-collections: var(--accent-collections);
-  --app-accent-dashboard: var(--accent-dashboard);
-  --app-accent-events: var(--accent-events);
-  --app-accent-git: var(--accent-git);
-  --app-accent-mesh: var(--accent-mesh);
-  --app-accent-overview: var(--accent-overview);
-  --app-accent-pipelines: var(--accent-pipelines);
-  --app-accent-settings: var(--accent-settings);
-  --app-accent-setup: var(--accent-setup);
-  --app-accent-skills: var(--accent-skills);
-  --app-accent-specs: var(--accent-specs);
-  --app-accent-theme: var(--accent-theme);
 }
 
 /*

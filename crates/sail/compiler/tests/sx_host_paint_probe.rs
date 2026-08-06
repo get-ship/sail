@@ -433,7 +433,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
     assert!(
         tab_src.contains("pill:")
             && tab_src.contains("enclosed:")
-            && (tab_src.contains("tab-selected") || tab_src.contains("bg(tab-selected)")),
+            && (tab_src.contains("tab-selected-bg") || tab_src.contains("bg(tab-selected-bg)")),
         "tab.sail must Style match pill/enclosed selected chrome"
     );
 }
@@ -1509,9 +1509,9 @@ fn prose_host_paint_on_sx_descendants_generated() {
                 || src.contains("font-body")
                 || src.contains("font-family: body"))
             && (src.contains("prose-foreground") || src.contains("text-foreground"))
-            && (src.contains("leading(normal-plus)")
-                || src.contains("leading-normal-plus")
-                || src.contains("leading: normal-plus")),
+            && (src.contains("leading(loose)")
+                || src.contains("leading-loose")
+                || src.contains("leading: loose")),
         "prose host Style must carry block + body type/color/leading"
     );
     assert!(
@@ -1526,9 +1526,9 @@ fn prose_host_paint_on_sx_descendants_generated() {
                 || out.structure_html.contains("sx-fgprose")
                 || out.skin_css.contains("var(--prose-foreground)")
                 || out.structure_html.contains("sx-textforeground"))
-            && (out.structure_html.contains("leadingnormalplus")
-                || out.structure_html.contains("sx-leadingnormalplus")
-                || out.skin_css.contains("var(--leading-normal-plus)")),
+            && (out.structure_html.contains("leadingloose")
+                || out.structure_html.contains("sx-leadingloose")
+                || out.skin_css.contains("var(--leading-loose)")),
         "host paint atoms on structure:\n{}",
         out.structure_html
     );
@@ -1968,7 +1968,7 @@ fn overlay_family_anchor_geometry_on_host_sx() {
         ("dropdown", "use:menu"),
         ("context-menu", "use:contextMenu"),
         ("hover-card", "panel-rail-w"),
-        ("popover", "menu-min-w"),
+        ("popover", "panel-menu-min-w"),
     ] {
         let src = sail_compiler::stdlib::sources()
             .iter()

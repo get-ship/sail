@@ -65,6 +65,27 @@ const UNIONS_HEADER: &str = "\
 
 ";
 
+const PRODUCTS_HEADER: &str = "\
+/*
+ * GENERATED FILE — do not edit by hand.
+ *
+ * Source of truth: packages/sail/tokens/model/products.json (system channels).
+ * Regenerate: cargo run -p sail-compiler -- tokens
+ *            (or: pnpm --filter @ship/tokens generate)
+ *
+ * Product brand hues. The two axes compose instead of colliding: a THEME owns
+ * lightness and chroma (its character — how muted, how bright, how glassy), a
+ * PRODUCT owns hue (the brand). Every brand token in tokens.css and themes.css
+ * is written `oklch(L C var(--brand-hue, <theme's own hue>))`, so with no
+ * product set the theme looks exactly as it always did, and with one set only
+ * the hue moves.
+ *
+ * Switch the theme and the whole page repaints. Cross from SAIL into Deck and
+ * only the accent turns violet.
+ */
+
+";
+
 /// Stable theme catalog order. One id per file; light/dark live under `modes`.
 const THEME_ORDER: &[&str] = &[
     "ship",
@@ -182,8 +203,24 @@ pub struct GenerateReport {
     pub layers: Vec<String>,
     pub tokens_css: PathBuf,
     pub themes_css: PathBuf,
+    pub products_css: PathBuf,
     pub registry_json: PathBuf,
     pub unions_ts: PathBuf,
+}
+
+/// Product brand-hue system axis (model/products.json) — not theme-overridable.
+#[derive(Debug, Clone)]
+struct ProductEntry {
+    id: String,
+    hue: u32,
+    label: String,
+}
+
+#[derive(Debug, Clone)]
+struct ProductsAxis {
+    channel: String,
+    composition_law: String,
+    entries: Vec<ProductEntry>,
 }
 
 /// Default project theme id scaffolded into `<project>/themes/` (modes-in-file).
@@ -513,6 +550,7 @@ pub fn generate_with_options(
         bail!("No model/*.json files found in {}", model_dir.display());
     }
     let aliases = load_compat_aliases(model_dir)?;
+    let products = load_products(model_dir)?;
     let themes = load_emit_themes(model_dir, &name_index, opts)?;
 
     let by_layer: HashMap<String, &Layer> =
@@ -653,12 +691,24 @@ pub fn generate_with_options(
             layers: layers.iter().map(|l| l.meta.layer.clone()).collect(),
             tokens_css: PathBuf::new(),
             themes_css,
+            products_css: PathBuf::new(),
             registry_json: PathBuf::new(),
             unions_ts: PathBuf::new(),
         });
     }
 
-    let registry = build_registry(&base_tokens, &aliases);
+    // products.css — system brand-hue axis (not theme-overridable).
+    let products_css = out_dir.join("products.css");
+    if let Some(ref axis) = products {
+        write_with_trailing_newline(&products_css, &emit_products_css(axis))?;
+    }
+
+    let mut registry = build_registry(&base_tokens, &aliases);
+    if let Some(ref axis) = products {
+        if let Some(obj) = registry.as_object_mut() {
+            obj.insert("products".into(), products_registry_meta(axis));
+        }
+    }
     let color_count = registry["colors"].as_array().map(|a| a.len()).unwrap_or(0);
     let path_count = registry["paths"].as_object().map(|o| o.len()).unwrap_or(0);
     let token_count = registry["names"].as_array().map(|a| a.len()).unwrap_or(0);
@@ -687,6 +737,7 @@ pub fn generate_with_options(
         layers: layers.iter().map(|l| l.meta.layer.clone()).collect(),
         tokens_css,
         themes_css,
+        products_css,
         registry_json,
         unions_ts,
     })
@@ -985,7 +1036,9 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
         .filter_map(|e| e.ok())
         .filter(|e| e.path().is_file())
         .filter_map(|e| e.file_name().into_string().ok())
-        .filter(|f| f.ends_with(".json") && f != "compat-aliases.json")
+        .filter(|f| {
+            f.ends_with(".json") && f != "compat-aliases.json" && f != "products.json"
+        })
         .collect();
     files.sort();
 
@@ -2057,6 +2110,126 @@ fn load_compat_aliases(model_dir: &Path) -> Result<BTreeMap<String, String>> {
         }
     }
     Ok(out)
+}
+
+/// Load product brand-hue system channels from `model/products.json`.
+fn load_products(model_dir: &Path) -> Result<Option<ProductsAxis>> {
+    let p = model_dir.join("products.json");
+    if !p.is_file() {
+        return Ok(None);
+    }
+    let doc = load_json(&p)?;
+    let channel = doc
+        .pointer("/$extensions/ship/channel")
+        .and_then(|v| v.as_str())
+        .unwrap_or("brand-hue")
+        .to_string();
+    let composition_law = doc
+        .pointer("/$extensions/ship/compositionLaw")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let Some(products) = doc.get("products").and_then(|v| v.as_object()) else {
+        bail!("products.json missing products object");
+    };
+    // Stable product order matches historical products.css (ship → sail → deck → …).
+    const ORDER: &[&str] = &["ship", "sail", "deck", "components", "ai"];
+    let mut entries = Vec::new();
+    let mut seen = HashSet::new();
+    for id in ORDER {
+        if let Some(entry) = products.get(*id) {
+            let hue = entry
+                .get("brandHue")
+                .and_then(|v| v.as_u64())
+                .ok_or_else(|| anyhow!("products.{id}.brandHue missing or not a number"))?
+                as u32;
+            let label = entry
+                .get("label")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            entries.push(ProductEntry {
+                id: (*id).to_string(),
+                hue,
+                label,
+            });
+            seen.insert((*id).to_string());
+        }
+    }
+    for (id, entry) in products {
+        if seen.contains(id) {
+            continue;
+        }
+        let hue = entry
+            .get("brandHue")
+            .and_then(|v| v.as_u64())
+            .ok_or_else(|| anyhow!("products.{id}.brandHue missing or not a number"))?
+            as u32;
+        let label = entry
+            .get("label")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        entries.push(ProductEntry {
+            id: id.clone(),
+            hue,
+            label,
+        });
+    }
+    Ok(Some(ProductsAxis {
+        channel,
+        composition_law,
+        entries,
+    }))
+}
+
+fn emit_products_css(axis: &ProductsAxis) -> String {
+    let mut lines = vec![PRODUCTS_HEADER.trim_end().to_string(), String::new()];
+    // Pad product ids so selectors align like the historical hand file.
+    let id_width = axis
+        .entries
+        .iter()
+        .map(|e| e.id.len())
+        .max()
+        .unwrap_or(0);
+    for e in &axis.entries {
+        let pad = " ".repeat(id_width.saturating_sub(e.id.len()));
+        let comment = if e.label.is_empty() {
+            String::new()
+        } else {
+            format!("  /* {} */", e.label)
+        };
+        lines.push(format!(
+            ":root[data-product='{}']{} {{ --{}: {}; }}{}",
+            e.id, pad, axis.channel, e.hue, comment
+        ));
+    }
+    lines.push(String::new());
+    lines.join("\n")
+}
+
+fn products_registry_meta(axis: &ProductsAxis) -> Value {
+    let mut entries = Map::new();
+    for e in &axis.entries {
+        let mut m = Map::new();
+        m.insert("hue".into(), Value::Number(e.hue.into()));
+        if !e.label.is_empty() {
+            m.insert("label".into(), Value::String(e.label.clone()));
+        }
+        entries.insert(e.id.clone(), Value::Object(m));
+    }
+    let mut out = Map::new();
+    out.insert("layer".into(), Value::String("system".into()));
+    out.insert("axis".into(), Value::String("product".into()));
+    out.insert("channel".into(), Value::String(axis.channel.clone()));
+    if !axis.composition_law.is_empty() {
+        out.insert(
+            "compositionLaw".into(),
+            Value::String(axis.composition_law.clone()),
+        );
+    }
+    out.insert("entries".into(), Value::Object(entries));
+    Value::Object(out)
 }
 
 fn emit_block(selector: &str, tokens: &[Token], indent: &str) -> String {

@@ -101,24 +101,6 @@
             },
             "$type": "dimension"
           },
-          "default": {
-            "$value": "radial-gradient(circle, color-mix(in oklch, var(--foreground) 6%, transparent), transparent 60%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "glow-default"
-              }
-            },
-            "$type": "string"
-          },
-          "muted": {
-            "$value": "radial-gradient(circle, color-mix(in oklch, var(--muted-foreground) 6%, transparent), transparent 60%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "glow-muted"
-              }
-            },
-            "$type": "string"
-          },
           "primary": {
             "$value": "radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 60%)",
             "$extensions": {

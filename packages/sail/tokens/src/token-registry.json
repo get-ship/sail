@@ -25,21 +25,6 @@
     "alert",
     "alert-foreground",
     "alert-stripe",
-    "app-accent-agents",
-    "app-accent-canvas",
-    "app-accent-chat",
-    "app-accent-collections",
-    "app-accent-dashboard",
-    "app-accent-events",
-    "app-accent-git",
-    "app-accent-mesh",
-    "app-accent-overview",
-    "app-accent-pipelines",
-    "app-accent-settings",
-    "app-accent-setup",
-    "app-accent-skills",
-    "app-accent-specs",
-    "app-accent-theme",
     "avatar",
     "avatar-foreground",
     "backdrop",
@@ -48,7 +33,6 @@
     "badge-border",
     "badge-foreground",
     "body-font",
-    "body-tracking",
     "body-weight",
     "border",
     "border-strong",
@@ -136,13 +120,7 @@
     "font-weight-semibold",
     "foreground",
     "glow-accent",
-    "glow-default",
-    "glow-destructive",
-    "glow-info",
-    "glow-muted",
     "glow-primary",
-    "glow-success",
-    "glow-warning",
     "gradient-accent",
     "gradient-primary",
     "gradient-surface",
@@ -192,13 +170,11 @@
     "leading-loose",
     "leading-none",
     "leading-normal",
-    "leading-normal-plus",
     "leading-relaxed",
     "leading-snug",
     "leading-tight",
     "menu-item-foreground",
     "menu-item-hover-bg",
-    "menu-min-w",
     "mix-bg",
     "mix-border",
     "mix-hover",
@@ -224,6 +200,7 @@
     "panel-max-w-md",
     "panel-max-w-sm",
     "panel-max-w-xs",
+    "panel-menu-min-w",
     "panel-min-h-cell",
     "panel-min-h-daycol",
     "panel-min-w-lg",
@@ -233,6 +210,7 @@
     "panel-pad-menu",
     "panel-pad-x",
     "panel-rail-w",
+    "panel-toast-region-width",
     "panel-vh-lg",
     "panel-vh-md",
     "panel-vh-sm",
@@ -365,7 +343,7 @@
     "tab-list",
     "tab-list-border",
     "tab-list-rail",
-    "tab-selected",
+    "tab-selected-bg",
     "tab-selected-foreground",
     "text-2xl",
     "text-3xl",
@@ -385,8 +363,6 @@
     "toast",
     "toast-border",
     "toast-foreground",
-    "toast-region-width",
-    "toast-region-z",
     "toggle",
     "toggle-border",
     "toggle-foreground",
@@ -410,7 +386,8 @@
     "z-max",
     "z-popover",
     "z-sticky",
-    "z-toast"
+    "z-toast",
+    "z-toast-region"
   ],
   "colors": [
     "accent",
@@ -434,21 +411,6 @@
     "alert",
     "alert-foreground",
     "alert-stripe",
-    "app-accent-agents",
-    "app-accent-canvas",
-    "app-accent-chat",
-    "app-accent-collections",
-    "app-accent-dashboard",
-    "app-accent-events",
-    "app-accent-git",
-    "app-accent-mesh",
-    "app-accent-overview",
-    "app-accent-pipelines",
-    "app-accent-settings",
-    "app-accent-setup",
-    "app-accent-skills",
-    "app-accent-specs",
-    "app-accent-theme",
     "avatar",
     "avatar-foreground",
     "backdrop",
@@ -585,7 +547,7 @@
     "tab-list",
     "tab-list-border",
     "tab-list-rail",
-    "tab-selected",
+    "tab-selected-bg",
     "tab-selected-foreground",
     "theme-picker",
     "theme-picker-foreground",
@@ -1068,11 +1030,17 @@
       "type": "dimension",
       "value": "14rem"
     },
-    "menu-min-w": {
+    "panel-menu-min-w": {
       "path": "panel.menuMinW",
-      "cssName": "menu-min-w",
+      "cssName": "panel-menu-min-w",
       "type": "dimension",
       "value": "12rem"
+    },
+    "panel-toast-region-width": {
+      "path": "panel.toast-region-width",
+      "cssName": "panel-toast-region-width",
+      "type": "dimension",
+      "value": "var(--panel-w-toast)"
     },
     "panel-pad-x": {
       "path": "panel.pad-x",
@@ -1169,12 +1137,6 @@
       "cssName": "leading-normal",
       "type": "number",
       "value": "1.5"
-    },
-    "leading-normal-plus": {
-      "path": "typography.leading.normal-plus",
-      "cssName": "leading-normal-plus",
-      "type": "number",
-      "value": "1.55"
     },
     "leading-code": {
       "path": "typography.leading.code",
@@ -1386,12 +1348,6 @@
       "type": "number",
       "value": "var(--font-weight-normal)"
     },
-    "body-tracking": {
-      "path": "typography.body.tracking",
-      "cssName": "body-tracking",
-      "type": "dimension",
-      "value": "var(--tracking-normal)"
-    },
     "mono-font": {
       "path": "typography.monoFont",
       "cssName": "mono-font",
@@ -1571,42 +1527,6 @@
       "cssName": "glow-accent",
       "type": "dimension",
       "value": "radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%)"
-    },
-    "glow-default": {
-      "path": "color.glow.default",
-      "cssName": "glow-default",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-muted": {
-      "path": "color.glow.muted",
-      "cssName": "glow-muted",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-info": {
-      "path": "color.glow.info",
-      "cssName": "glow-info",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-success": {
-      "path": "color.glow.success",
-      "cssName": "glow-success",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-warning": {
-      "path": "color.glow.warning",
-      "cssName": "glow-warning",
-      "type": "string",
-      "value": "none"
-    },
-    "glow-destructive": {
-      "path": "color.glow.destructive",
-      "cssName": "glow-destructive",
-      "type": "string",
-      "value": "none"
     },
     "shape-pill": {
       "path": "color.shapePill",
@@ -2147,6 +2067,12 @@
       "cssName": "z-toast",
       "type": "number",
       "value": "50"
+    },
+    "z-toast-region": {
+      "path": "z.toast-region",
+      "cssName": "z-toast-region",
+      "type": "number",
+      "value": "var(--z-toast)"
     },
     "z-max": {
       "path": "z.max",
@@ -2856,9 +2782,9 @@
       "type": "color",
       "value": "var(--foreground)"
     },
-    "tab-selected": {
+    "tab-selected-bg": {
       "path": "component.tab.selected-bg",
-      "cssName": "tab-selected",
+      "cssName": "tab-selected-bg",
       "type": "color",
       "value": "var(--background)"
     },
@@ -2891,18 +2817,6 @@
       "cssName": "theme-picker-option-hover-bg",
       "type": "color",
       "value": "var(--hover-bg)"
-    },
-    "toast-region-width": {
-      "path": "component.toast-region.width",
-      "cssName": "toast-region-width",
-      "type": "dimension",
-      "value": "var(--panel-w-toast)"
-    },
-    "toast-region-z": {
-      "path": "component.toast-region.z",
-      "cssName": "toast-region-z",
-      "type": "number",
-      "value": "var(--z-toast)"
     },
     "toast": {
       "path": "component.toast.bg",
@@ -2963,111 +2877,6 @@
       "cssName": "tooltip-foreground",
       "type": "color",
       "value": "var(--background)"
-    },
-    "app-accent-agents": {
-      "path": "color.accent.agents",
-      "cssName": "app-accent-agents",
-      "type": "color",
-      "value": "var(--accent-agents)",
-      "aliasOf": "accent-agents"
-    },
-    "app-accent-canvas": {
-      "path": "color.accent.canvas",
-      "cssName": "app-accent-canvas",
-      "type": "color",
-      "value": "var(--accent-canvas)",
-      "aliasOf": "accent-canvas"
-    },
-    "app-accent-chat": {
-      "path": "color.accent.chat",
-      "cssName": "app-accent-chat",
-      "type": "color",
-      "value": "var(--accent-chat)",
-      "aliasOf": "accent-chat"
-    },
-    "app-accent-collections": {
-      "path": "color.accent.collections",
-      "cssName": "app-accent-collections",
-      "type": "color",
-      "value": "var(--accent-collections)",
-      "aliasOf": "accent-collections"
-    },
-    "app-accent-dashboard": {
-      "path": "color.accent.dashboard",
-      "cssName": "app-accent-dashboard",
-      "type": "color",
-      "value": "var(--accent-dashboard)",
-      "aliasOf": "accent-dashboard"
-    },
-    "app-accent-events": {
-      "path": "color.accent.events",
-      "cssName": "app-accent-events",
-      "type": "color",
-      "value": "var(--accent-events)",
-      "aliasOf": "accent-events"
-    },
-    "app-accent-git": {
-      "path": "color.accent.git",
-      "cssName": "app-accent-git",
-      "type": "color",
-      "value": "var(--accent-git)",
-      "aliasOf": "accent-git"
-    },
-    "app-accent-mesh": {
-      "path": "color.accent.mesh",
-      "cssName": "app-accent-mesh",
-      "type": "color",
-      "value": "var(--accent-mesh)",
-      "aliasOf": "accent-mesh"
-    },
-    "app-accent-overview": {
-      "path": "color.accent.overview",
-      "cssName": "app-accent-overview",
-      "type": "color",
-      "value": "var(--accent-overview)",
-      "aliasOf": "accent-overview"
-    },
-    "app-accent-pipelines": {
-      "path": "color.accent.pipelines",
-      "cssName": "app-accent-pipelines",
-      "type": "color",
-      "value": "var(--accent-pipelines)",
-      "aliasOf": "accent-pipelines"
-    },
-    "app-accent-settings": {
-      "path": "color.accent.settings",
-      "cssName": "app-accent-settings",
-      "type": "color",
-      "value": "var(--accent-settings)",
-      "aliasOf": "accent-settings"
-    },
-    "app-accent-setup": {
-      "path": "color.accent.setup",
-      "cssName": "app-accent-setup",
-      "type": "color",
-      "value": "var(--accent-setup)",
-      "aliasOf": "accent-setup"
-    },
-    "app-accent-skills": {
-      "path": "color.accent.skills",
-      "cssName": "app-accent-skills",
-      "type": "color",
-      "value": "var(--accent-skills)",
-      "aliasOf": "accent-skills"
-    },
-    "app-accent-specs": {
-      "path": "color.accent.specs",
-      "cssName": "app-accent-specs",
-      "type": "color",
-      "value": "var(--accent-specs)",
-      "aliasOf": "accent-specs"
-    },
-    "app-accent-theme": {
-      "path": "color.accent.theme",
-      "cssName": "app-accent-theme",
-      "type": "color",
-      "value": "var(--accent-theme)",
-      "aliasOf": "accent-theme"
     }
   },
   "paths": {
@@ -3101,7 +2910,6 @@
     "component.badge.border": "badge-border",
     "component.badge.fg": "badge-foreground",
     "typography.body.font": "body-font",
-    "typography.body.tracking": "body-tracking",
     "typography.body.weight": "body-weight",
     "color.border.default": "border",
     "color.border.strong": "border-strong",
@@ -3189,13 +2997,7 @@
     "typography.font.weight-semibold": "font-weight-semibold",
     "color.foreground": "foreground",
     "color.glow.accent": "glow-accent",
-    "color.glow.default": "glow-default",
-    "color.glow.destructive": "glow-destructive",
-    "color.glow.info": "glow-info",
-    "color.glow.muted": "glow-muted",
     "color.glow.primary": "glow-primary",
-    "color.glow.success": "glow-success",
-    "color.glow.warning": "glow-warning",
     "color.gradient.accent": "gradient-accent",
     "color.gradient.primary": "gradient-primary",
     "color.gradient.surface": "gradient-surface",
@@ -3245,13 +3047,11 @@
     "typography.leading.loose": "leading-loose",
     "typography.leading.none": "leading-none",
     "typography.leading.normal": "leading-normal",
-    "typography.leading.normal-plus": "leading-normal-plus",
     "typography.leading.relaxed": "leading-relaxed",
     "typography.leading.snug": "leading-snug",
     "typography.leading.tight": "leading-tight",
     "component.menu-item.fg": "menu-item-foreground",
     "component.menu-item.hover-bg": "menu-item-hover-bg",
-    "panel.menuMinW": "menu-min-w",
     "color.mix.bgMix": "mix-bg",
     "color.mix.borderMix": "mix-border",
     "color.mix.hoverMix": "mix-hover",
@@ -3277,6 +3077,7 @@
     "panel.max-w-md": "panel-max-w-md",
     "panel.max-w-sm": "panel-max-w-sm",
     "panel.max-w-xs": "panel-max-w-xs",
+    "panel.menuMinW": "panel-menu-min-w",
     "panel.min-h-cell": "panel-min-h-cell",
     "panel.min-h-daycol": "panel-min-h-daycol",
     "panel.min-w-lg": "panel-min-w-lg",
@@ -3286,6 +3087,7 @@
     "panel.pad-menu": "panel-pad-menu",
     "panel.pad-x": "panel-pad-x",
     "panel.rail-w": "panel-rail-w",
+    "panel.toast-region-width": "panel-toast-region-width",
     "panel.vh-lg": "panel-vh-lg",
     "panel.vh-md": "panel-vh-md",
     "panel.vh-sm": "panel-vh-sm",
@@ -3418,7 +3220,7 @@
     "component.tab-list.bg": "tab-list",
     "component.tab-list.border": "tab-list-border",
     "component.tab-list.rail": "tab-list-rail",
-    "component.tab.selected-bg": "tab-selected",
+    "component.tab.selected-bg": "tab-selected-bg",
     "component.tab.selected-fg": "tab-selected-foreground",
     "typography.text.2xl": "text-2xl",
     "typography.text.3xl": "text-3xl",
@@ -3438,8 +3240,6 @@
     "component.toast.bg": "toast",
     "component.toast.border": "toast-border",
     "component.toast.fg": "toast-foreground",
-    "component.toast-region.width": "toast-region-width",
-    "component.toast-region.z": "toast-region-z",
     "component.toggle.bg": "toggle",
     "component.toggle.border": "toggle-border",
     "component.toggle.fg": "toggle-foreground",
@@ -3463,23 +3263,36 @@
     "z.max": "z-max",
     "z.popover": "z-popover",
     "z.sticky": "z-sticky",
-    "z.toast": "z-toast"
+    "z.toast": "z-toast",
+    "z.toast-region": "z-toast-region"
   },
-  "aliases": {
-    "app-accent-agents": "accent-agents",
-    "app-accent-canvas": "accent-canvas",
-    "app-accent-chat": "accent-chat",
-    "app-accent-collections": "accent-collections",
-    "app-accent-dashboard": "accent-dashboard",
-    "app-accent-events": "accent-events",
-    "app-accent-git": "accent-git",
-    "app-accent-mesh": "accent-mesh",
-    "app-accent-overview": "accent-overview",
-    "app-accent-pipelines": "accent-pipelines",
-    "app-accent-settings": "accent-settings",
-    "app-accent-setup": "accent-setup",
-    "app-accent-skills": "accent-skills",
-    "app-accent-specs": "accent-specs",
-    "app-accent-theme": "accent-theme"
+  "aliases": {},
+  "products": {
+    "layer": "system",
+    "axis": "product",
+    "channel": "brand-hue",
+    "compositionLaw": "theme owns L/C; product owns hue. Every brand token reads oklch(L C var(--brand-hue, <theme's own hue>)). With no product set the theme looks as authored; with one set only the hue moves.",
+    "entries": {
+      "ship": {
+        "hue": 195,
+        "label": "teal — umbrella"
+      },
+      "sail": {
+        "hue": 27,
+        "label": "red — the framework"
+      },
+      "deck": {
+        "hue": 285,
+        "label": "violet — the app framework"
+      },
+      "components": {
+        "hue": 155,
+        "label": "green — the library"
+      },
+      "ai": {
+        "hue": 255,
+        "label": "blue — agent tooling"
+      }
+    }
   }
 }

@@ -953,7 +953,7 @@ const PROSE_MAP: &[DescRule] = &[
             ("border-radius", "var(--radius-md)"),
             ("padding-block", "var(--space-3)"),
             ("padding-inline", "var(--space-4)"),
-            ("line-height", "var(--leading-normal-plus)"),
+            ("line-height", "var(--leading-loose)"),
             ("white-space", "pre-wrap"),
             ("overflow-wrap", "anywhere"),
             ("word-break", "anywhere"),

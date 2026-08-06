@@ -701,23 +701,42 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
   })
 
-  it('dual-emit compat aliases remain (registry + tokens.css)', () => {
-    // Do not drop PE dual-emit: app-accent-* → var(--accent-*).
+  it('compat aliases scrubbed (TOKENS-1 — app-accent-* cut, no dual-emit tombstones)', () => {
     const reg = loadRegistry()
-    const css = loadSrc('../src/tokens.css')
     const compat = JSON.parse(loadSrc('../model/compat-aliases.json')) as {
       aliases: Record<string, string>
     }
-    const aliases = compat.aliases
-    expect(Object.keys(aliases).length).toBeGreaterThan(0)
-    for (const [oldName, newName] of Object.entries(aliases)) {
-      expect(reg.aliases?.[oldName]).toBe(newName)
-      expect(reg.tokens[oldName]?.aliasOf).toBe(newName)
-      expect(reg.tokens[oldName]?.cssName).toBe(oldName)
-      expect(reg.tokens[oldName]?.path).toBe(reg.tokens[newName]?.path)
-      const re = new RegExp(`--${oldName}\\s*:\\s*var\\(--${newName}\\)`)
-      expect(css).toMatch(re)
+    expect(Object.keys(compat.aliases).length).toBe(0)
+    expect(Object.keys(reg.aliases ?? {}).length).toBe(0)
+    const names = reg.names as string[]
+    expect(names.some((n) => n.startsWith('app-accent-'))).toBe(false)
+  })
+
+  it('products.css is generated from model/products.json (system brand-hue axis)', () => {
+    const productsCss = loadSrc('../src/products.css')
+    expect(productsCss).toMatch(/GENERATED FILE/)
+    expect(productsCss).toMatch(/Source of truth: packages\/sail\/tokens\/model\/products\.json/)
+    for (const [id, hue] of [
+      ['ship', '195'],
+      ['sail', '27'],
+      ['deck', '285'],
+      ['components', '155'],
+      ['ai', '255'],
+    ] as const) {
+      const re = new RegExp(
+        String.raw`:root\[data-product='${id}'\]\s*\{\s*--brand-hue:\s*${hue};`,
+      )
+      expect(productsCss).toMatch(re)
     }
+    const reg = loadRegistry() as {
+      products?: {
+        channel: string
+        entries: Record<string, { hue: number }>
+      }
+    }
+    expect(reg.products?.channel).toBe('brand-hue')
+    expect(reg.products?.entries.ship?.hue).toBe(195)
+    expect(reg.products?.entries.sail?.hue).toBe(27)
   })
 
   it('tokens.css :root name set equals registry names (emit parity)', () => {
@@ -806,7 +825,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       ['component.radio.fg', 'radio-foreground'],
       ['component.tab.fg', 'tab-foreground'],
       ['component.tab.selected-fg', 'tab-selected-foreground'],
-      ['component.tab.selected-bg', 'tab-selected'],
+      ['component.tab.selected-bg', 'tab-selected-bg'],
       ['component.tab-list.bg', 'tab-list'],
       ['component.tab-list.border', 'tab-list-border'],
       ['component.tab-list.rail', 'tab-list-rail'],
