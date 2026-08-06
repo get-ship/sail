@@ -32,3 +32,4 @@ coverage/
 
 # Ephemeral Sail local store (tasks, agent scratch — never commit)
 .sail/
+*.deck.stage*
