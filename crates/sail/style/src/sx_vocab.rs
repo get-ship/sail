@@ -668,9 +668,14 @@ mod tests {
                     !instead.contains("fx:"),
                     "animate must not redirect to retired fx:, got {instead}"
                 );
+                // Channel spine teaching (not flat-era `style.enter` chains).
                 assert!(
-                    instead.contains("style."),
-                    "animate must name Style motion methods, got {instead}"
+                    instead.contains("style({") && instead.contains("animate"),
+                    "animate must name Style animate channel, got {instead}"
+                );
+                assert!(
+                    !instead.contains("style.enter") && !instead.contains("style.loop"),
+                    "must not teach flat style.method motion, got {instead}"
                 );
             }
             _ => panic!("animate must be refused"),

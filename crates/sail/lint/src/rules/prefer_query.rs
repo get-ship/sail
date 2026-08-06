@@ -31,6 +31,7 @@ fn path_in_scope(path: &Path) -> bool {
         || p.contains(".spec.")
         || p.contains("/__tests__/")
         || p.contains("/packages/")
+        || p.starts_with("packages/")
         || p.contains("/node_modules/")
     {
         return false;

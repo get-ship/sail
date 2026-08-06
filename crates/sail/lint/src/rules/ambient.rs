@@ -14,6 +14,9 @@ use crate::report::{Finding, Severity};
 /// True when this path is in-scope for ambient Part-2 rules.
 pub fn is_ambient_app_path(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/");
+    // Absolute (`/repo/packages/…`) and workspace-relative (`packages/…`) both
+    // out of scope — relative paths lack the leading slash that `/packages/`
+    // matches, so also accept starts_with.
     if p.contains("/test/")
         || p.contains("/tests/")
         || p.contains("/qa/")
@@ -24,6 +27,9 @@ pub fn is_ambient_app_path(path: &Path) -> bool {
         || p.contains("/__tests__/")
         || p.contains("/node_modules/")
         || p.contains("/packages/")
+        || p.starts_with("packages/")
+        || p.contains("/crates/")
+        || p.starts_with("crates/")
     {
         return false;
     }

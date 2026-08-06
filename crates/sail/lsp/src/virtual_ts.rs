@@ -261,6 +261,19 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
                 });
             }
         }
+        // Style const values: `const doorCard = style({…}).when(…)` so template
+        // attachments that reference them typecheck under tsgo.
+        let mut style_const_block = String::new();
+        for style_src in collect_scope_style_consts(raw_body) {
+            style_const_block.push_str(&quote_style_dsl_for_tsc(&style_src));
+            if !style_const_block.ends_with('\n') {
+                style_const_block.push('\n');
+            }
+        }
+        if !style_const_block.is_empty() {
+            view_text.push_str("\n// ── <scope> Style consts (channel form) ────────────────────\n");
+            view_text.push_str(&style_const_block);
+        }
     }
 
     // ── View: scope recovery ───────────────────────────────────────────────
@@ -296,7 +309,15 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
                 end: emb.sail_end,
                 kind: RegionKind::Expression,
             });
-            let rewritten = rewrite_with_prefix(&emb.source, &[], "scope.");
+            // Style expressions use free setters/tokens/when-keys (ambient pack),
+            // not controller scope members — do not `scope.`-qualify them.
+            // Quote bare hyphen tokens for pure tsc (`hover-bg` → `'hover-bg'`).
+            // Ordinary template exprs still get `scope.` qualification.
+            let rewritten = if looks_like_style_expr(&emb.source) {
+                quote_style_dsl_for_tsc(&emb.source)
+            } else {
+                rewrite_with_prefix(&emb.source, &[], "scope.")
+            };
             view_text.push_str("void (() => (");
             let v_start = view_text.len();
             view_text.push_str(&rewritten);
@@ -330,6 +351,237 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
     })
 }
 
+// ── Style DSL → valid TS (tsc/tsgo surface) ────────────────────────────────
+
+/// Quote Style-DSL bare tokens that are not valid TypeScript identifiers, and
+/// rewrite the sole hyphenated free motion call `focus-visible(`.
+///
+/// Product authors write `fg(muted-foreground)` / `padX(2_5)` / `focus-visible({…})`.
+/// sail-compiler accepts those; pure tsc does not. virtual_ts is the bridge.
+///
+/// Only applied to expressions that look like Style (contain `style(` or free
+/// channel setters / motion) so ordinary template arithmetic stays untouched.
+pub(crate) fn quote_style_dsl_for_tsc(src: &str) -> String {
+    if !looks_like_style_expr(src) {
+        return src.to_string();
+    }
+    let mut s = src.replace("focus-visible(", "__sailFocusVisible(");
+    // Reserved free setters (Style `break(…)` is a JS keyword as a free call).
+    s = s.replace("break(", "__sailBreak(");
+    // Reserved bare keyword args (`cursor(default)`) — quote for pure tsc.
+    s = quote_reserved_style_keyword_args(&s);
+    // bind(rowY) → bind('rowY') — Style bind probe is a compile-time name.
+    s = quote_bind_idents(&s);
+    quote_bare_style_tokens(&s)
+}
+
+/// `bind(swatchColor)` → `bind('swatchColor')` for pure tsc.
+fn quote_bind_idents(src: &str) -> String {
+    let bytes = src.as_bytes();
+    let mut out = String::with_capacity(src.len() + 8);
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if src.is_char_boundary(i) && src[i..].starts_with("bind(") {
+            let after = i + 5;
+            let mut j = after;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            let name_start = j;
+            if j < bytes.len()
+                && (bytes[j].is_ascii_alphabetic() || bytes[j] == b'_' || bytes[j] == b'$')
+            {
+                j += 1;
+                while j < bytes.len()
+                    && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'$')
+                {
+                    j += 1;
+                }
+                let name_end = j;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                if bytes.get(j) == Some(&b')') {
+                    out.push_str("bind('");
+                    out.push_str(&src[name_start..name_end]);
+                    out.push_str("')");
+                    i = j + 1;
+                    continue;
+                }
+            }
+        }
+        out.push(bytes[i] as char);
+        i += 1;
+    }
+    out
+}
+
+/// Quote JS-reserved Style keyword args: `cursor(default)` → `cursor('default')`.
+fn quote_reserved_style_keyword_args(src: &str) -> String {
+    // Only keywords that appear as Style setter args and are JS reserved.
+    const RESERVED_ARGS: &[&str] = &["default", "static", "new", "void", "in", "with"];
+    let mut out = src.to_string();
+    for kw in RESERVED_ARGS {
+        // (kw) or (kw, or (kw)  — bare arg form
+        let pat = format!("({kw})");
+        let rep = format!("('{kw}')");
+        out = out.replace(&pat, &rep);
+        let pat2 = format!("({kw},");
+        let rep2 = format!("('{kw}',");
+        out = out.replace(&pat2, &rep2);
+        let pat3 = format!(", {kw})");
+        let rep3 = format!(", '{kw}')");
+        out = out.replace(&pat3, &rep3);
+    }
+    out
+}
+
+fn looks_like_style_expr(src: &str) -> bool {
+    src.contains("style(")
+        || src.contains("style.")
+        || src.contains("box:")
+        || src.contains("paint:")
+        || src.contains("text:")
+        || src.contains("animate:")
+        || src.contains(".when(")
+}
+
+/// Outside strings/comments, quote:
+/// - hyphenated idents: `muted-foreground` → `'muted-foreground'`
+/// - digit underscore scale tokens: `2_5` → `'2_5'` (else TS numeric separator)
+fn quote_bare_style_tokens(src: &str) -> String {
+    let bytes = src.as_bytes();
+    let mut out = String::with_capacity(src.len() + 16);
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let c = bytes[i];
+        // Line comment
+        if c == b'/' && bytes.get(i + 1) == Some(&b'/') {
+            let start = i;
+            i += 2;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            out.push_str(&src[start..i]);
+            continue;
+        }
+        // Block comment
+        if c == b'/' && bytes.get(i + 1) == Some(&b'*') {
+            let start = i;
+            i += 2;
+            while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i = (i + 2).min(bytes.len());
+            out.push_str(&src[start..i]);
+            continue;
+        }
+        // String literals
+        if c == b'\'' || c == b'"' || c == b'`' {
+            let quote = c;
+            let start = i;
+            i += 1;
+            while i < bytes.len() {
+                if bytes[i] == b'\\' {
+                    i = (i + 2).min(bytes.len());
+                    continue;
+                }
+                if bytes[i] == quote {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            out.push_str(&src[start..i]);
+            continue;
+        }
+        // Digit underscore token: 2_5, 0_75, 1_25
+        if c.is_ascii_digit() {
+            let start = i;
+            let mut j = i;
+            let mut saw_us = false;
+            while j < bytes.len()
+                && (bytes[j].is_ascii_digit() || bytes[j] == b'_')
+            {
+                if bytes[j] == b'_' {
+                    saw_us = true;
+                }
+                j += 1;
+            }
+            // Must be underscore-containing and a full token boundary.
+            let boundary_before = start == 0
+                || matches!(
+                    bytes[start - 1],
+                    b'(' | b'[' | b',' | b':' | b' ' | b'\t' | b'\n' | b'\r' | b'=' | b'?'
+                );
+            let boundary_after = j >= bytes.len()
+                || matches!(
+                    bytes[j],
+                    b')' | b']' | b',' | b':' | b' ' | b'\t' | b'\n' | b'\r' | b'.' | b';' | b'}'
+                        | b'|' | b'&' | b'?'
+                );
+            if saw_us && boundary_before && boundary_after && bytes[start..j].contains(&b'_') {
+                // Reject trailing/leading underscore-only junk: require digit on both sides of each _
+                let s = &src[start..j];
+                if s.split('_').all(|p| !p.is_empty() && p.chars().all(|ch| ch.is_ascii_digit())) {
+                    out.push('\'');
+                    out.push_str(s);
+                    out.push('\'');
+                    i = j;
+                    continue;
+                }
+            }
+            out.push_str(&src[start..j]);
+            i = j;
+            continue;
+        }
+        // Hyphenated bare ident: muted-foreground, hover-bg, border-subtle
+        if c.is_ascii_alphabetic() || c == b'_' || c == b'$' {
+            let start = i;
+            let mut j = i + 1;
+            let mut saw_hyphen = false;
+            while j < bytes.len() {
+                let b = bytes[j];
+                if b.is_ascii_alphanumeric() || b == b'_' || b == b'$' {
+                    j += 1;
+                } else if b == b'-' {
+                    // peek next is ident start
+                    if j + 1 < bytes.len()
+                        && (bytes[j + 1].is_ascii_alphanumeric() || bytes[j + 1] == b'_')
+                    {
+                        saw_hyphen = true;
+                        j += 1;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+            let boundary_before = start == 0
+                || !matches!(
+                    bytes[start - 1] as char,
+                    'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '$'
+                );
+            if saw_hyphen && boundary_before {
+                // Do not quote if this is already a property access after `.` of a weird name —
+                // Style doesn't use that. Quote.
+                out.push('\'');
+                out.push_str(&src[start..j]);
+                out.push('\'');
+                i = j;
+                continue;
+            }
+            out.push_str(&src[start..j]);
+            i = j;
+            continue;
+        }
+        out.push(c as char);
+        i += 1;
+    }
+    out
+}
+
 // ── collection helpers ─────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
@@ -340,7 +592,22 @@ struct ExprEmbed {
 }
 
 fn collect_template_exprs(original: &str, stripped: &str) -> Vec<ExprEmbed> {
+    // Full product Style spines first (`style({…}).when(…)`). Brace-scan alone
+    // only captures the inner `{ box: … }` object and drops the `style` call head.
+    let style_exprs = collect_style_product_exprs(original);
+    let style_spans: Vec<(usize, usize)> = style_exprs
+        .iter()
+        .map(|e| (e.sail_start, e.sail_end))
+        .collect();
+
     let mut out = scan_brace_exprs(original);
+    out.retain(|e| {
+        !style_spans
+            .iter()
+            .any(|&(s, end)| e.sail_start >= s && e.sail_end <= end)
+    });
+    out.extend(style_exprs);
+
     if out.is_empty() {
         if let Ok(program) = parse(stripped) {
             let mut used: Vec<(usize, usize)> = Vec::new();
@@ -366,6 +633,144 @@ fn collect_template_exprs(original: &str, stripped: &str) -> Vec<ExprEmbed> {
     }
     out.sort_by_key(|e| (e.sail_start, e.sail_end));
     out.dedup_by_key(|e| (e.sail_start, e.sail_end));
+    out
+}
+
+/// Collect full `const name = style(…)` declarations from a `<scope>` body.
+fn collect_scope_style_consts(scope_body: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = scope_body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !scope_body.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if !scope_body[i..].starts_with("const ") {
+            i += 1;
+            continue;
+        }
+        // Word boundary
+        if i > 0 {
+            let prev = bytes[i - 1] as char;
+            if prev.is_ascii_alphanumeric() || prev == '_' || prev == '$' {
+                i += 1;
+                continue;
+            }
+        }
+        let start = i;
+        // Find `= style(`
+        let rest = &scope_body[i..];
+        let Some(eq_rel) = rest.find('=') else {
+            i += 5;
+            continue;
+        };
+        let after_eq = i + eq_rel + 1;
+        let mut j = after_eq;
+        while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+            j += 1;
+        }
+        if j >= bytes.len() || !scope_body.is_char_boundary(j) || !scope_body[j..].starts_with("style") {
+            i += 5;
+            continue;
+        }
+        // Reuse product collector on the suffix starting at style
+        let suffix = &scope_body[j..];
+        let found = collect_style_product_exprs(suffix);
+        let Some(first) = found.first() else {
+            i += 5;
+            continue;
+        };
+        // first is relative to suffix; full decl is start..j+first.sail_end
+        let end = j + first.sail_end;
+        if end <= scope_body.len() && scope_body.is_char_boundary(end) {
+            let mut decl = scope_body[start..end].trim().to_string();
+            if !decl.ends_with(';') {
+                decl.push(';');
+            }
+            out.push(decl);
+            i = end;
+        } else {
+            i += 5;
+        }
+    }
+    out
+}
+
+/// Collect `style(…)` product expressions including trailing `.when(…)` chains.
+fn collect_style_product_exprs(original: &str) -> Vec<ExprEmbed> {
+    let mut out = Vec::new();
+    let ctrl = find_controller_raw(original).map(|(s, e, _)| (s, e));
+    let bytes = original.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        // Stay on UTF-8 char boundaries — source may contain em-dashes in comments.
+        if !original.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if !original[i..].starts_with("style") {
+            i += 1;
+            continue;
+        }
+        // Word boundary before `style`
+        if i > 0 {
+            let prev = bytes[i - 1] as char;
+            if prev.is_ascii_alphanumeric() || prev == '_' || prev == '$' {
+                i += 1;
+                continue;
+            }
+        }
+        let after = i + 5;
+        let mut j = after;
+        while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+            j += 1;
+        }
+        // Channel / list / ref call — not flat `style.method`
+        if bytes.get(j) != Some(&b'(') {
+            i = after;
+            continue;
+        }
+        if ctrl.is_some_and(|(s, e)| i >= s && i < e) {
+            i = after;
+            continue;
+        }
+        let Some(paren_end) = find_matching_paren(original, j) else {
+            i = after;
+            continue;
+        };
+        let mut end = paren_end + 1;
+        // Trailing `.when(…)` (map or cond form)
+        loop {
+            let mut k = end;
+            while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                k += 1;
+            }
+            if k >= bytes.len() || !original.is_char_boundary(k) {
+                break;
+            }
+            if !original[k..].starts_with(".when") {
+                break;
+            }
+            k += 5;
+            while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                k += 1;
+            }
+            if bytes.get(k) != Some(&b'(') {
+                break;
+            }
+            let Some(when_end) = find_matching_paren(original, k) else {
+                break;
+            };
+            end = when_end + 1;
+        }
+        out.push(ExprEmbed {
+            source: original[i..end].to_string(),
+            sail_start: i,
+            sail_end: end,
+        });
+        i = end;
+    }
     out
 }
 
@@ -457,8 +862,16 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
 }
 
 fn find_matching_brace(src: &str, open: usize) -> Option<usize> {
+    find_matching_delim(src, open, b'{', b'}')
+}
+
+fn find_matching_paren(src: &str, open: usize) -> Option<usize> {
+    find_matching_delim(src, open, b'(', b')')
+}
+
+fn find_matching_delim(src: &str, open: usize, open_ch: u8, close_ch: u8) -> Option<usize> {
     let bytes = src.as_bytes();
-    if open >= bytes.len() || bytes[open] != b'{' {
+    if open >= bytes.len() || bytes[open] != open_ch {
         return None;
     }
     let mut depth = 0i32;
@@ -482,11 +895,11 @@ fn find_matching_brace(src: &str, open: usize) -> Option<usize> {
                 in_str = Some(c);
                 i += 1;
             }
-            b'{' => {
+            c if c == open_ch => {
                 depth += 1;
                 i += 1;
             }
-            b'}' => {
+            c if c == close_ch => {
                 depth -= 1;
                 if depth == 0 {
                     return Some(i);
@@ -714,6 +1127,28 @@ export default controller((ctx) => ({ count: signal(0) }))
 
         let title = COUNTER.find("title={count()}").unwrap() + "title={".len();
         assert_eq!(v.region_at(title), Some(RegionKind::Expression));
+    }
+
+    #[test]
+    fn style_product_expr_keeps_style_head_and_quotes_hyphen_tokens() {
+        let src = include_str!("../../../../apps/studio/src/studio-list-row/studio-list-row.sail");
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("style({") && v.view_text.contains(".when("),
+            "full style spine required, got:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("'hover-bg'") && v.view_text.contains("'muted-foreground'"),
+            "hyphen tokens must be quoted for tsc, got:\n{}",
+            v.view_text
+        );
+        // Must not emit bare channel objects without style( head
+        assert!(
+            !v.view_text.contains("void (() => (box:"),
+            "brace-only channel body leak:\n{}",
+            v.view_text
+        );
     }
 
     #[test]

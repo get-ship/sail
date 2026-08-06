@@ -80,12 +80,13 @@ fn style_misuse_is_tsc_error_and_good_chain_is_green() {
         work.join("good.ts"),
         r#"
 const a = style({ box: padX(2), paint: bg(primary).radius(sm).fg('muted-foreground') })
-const b = style({}).when({ hover: style({ paint: bg(muted })) })
+const b = style({}).when(hover, { paint: bg(muted) })
 const c = match('solid', { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) })
 const d = compound({ pill: true }, style({ paint: radius(full) }))
 const e = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
-const f = [a, b, c, d, e]
-void f
+const f = style({ box: pad(4).gap(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })
+const g = [a, b, c, d, e, f]
+void g
 void signal(0)
 void controller(() => ({ n: signal(1) }))
 "#,

@@ -94,6 +94,8 @@ const WHEN_IDENT_KEYS: &[&str] = &[
     "busy",
     "sortable",
     "stateLive",
+    "stateEdit",
+    "stateLocked",
     "groupCurrent",
     "groupRequired",
     "groupInvalid",
@@ -359,7 +361,7 @@ fn emit_style_types(out: &mut String) {
     out.push_str("// ── Style builder (from sail_lint::style::setters) ──\n");
 
     out.push_str(
-        "/** Author motion config object (`style.enter({ opacity: 'fade' })`).\n\
+        "/** Author motion config object (`enter({ opacity: 'fade' })`).\n\
          \x20*  Hyphenated property keys need quotes under pure tsc. */\n\
          type SailStyleMotionConfig = {\n\
          \x20 opacity?: string | number\n\
@@ -385,7 +387,15 @@ fn emit_style_types(out: &mut String) {
     out.push_str("  | (string & {})\n\n");
 
     out.push_str(
-        "type SailWhenMap = { [K in SailWhenKey]?: SailStyleValue }\n\
+        "/** Channel partial — product spine keys. */\n\
+         type SailStyleChannels = {\n\
+         \x20 box?: SailStyleValue\n\
+         \x20 paint?: SailStyleValue\n\
+         \x20 text?: SailStyleValue\n\
+         \x20 animate?: SailStyleValue\n\
+         }\n\
+         \n\
+         type SailWhenMap = { [K in SailWhenKey]?: SailStyleValue | SailStyleChannels }\n\
          \n\
          /** Opaque compile-time Style value (chain / match / when / list / ref). */\n\
          type SailStyleValue = SailStyleChain\n\
@@ -416,13 +426,22 @@ fn emit_style_types(out: &mut String) {
             "  {m}(config: SailStyleMotionConfig): SailStyleChain\n"
         ));
     }
+    // Map form + cond form (product: `.when(hover, { paint: … })`).
     out.push_str("  when(map: SailWhenMap): SailStyleChain\n");
+    out.push_str(
+        "  when(key: SailWhenKey, partial: SailStyleChannels | SailStyleValue): SailStyleChain\n",
+    );
     out.push_str("}\n\n");
 
-    // `style` is a chain head (same methods, starts empty).
+    // Callable channel head + residual flat chain methods (unit/codemod dual).
     out.push_str(
-        "/** Compile-time Style builder head — `style.bg(primary).padX(2)`. */\n\
-         type SailStyleBuilder = SailStyleChain\n\
+        "/** Compile-time Style head — product: `style({ box, paint, text, animate })`.\n\
+         \x20*  Residual flat `style.method` remains typed for codemod/unit dual path. */\n\
+         interface SailStyleBuilder extends SailStyleChain {\n\
+         \x20 (channels?: SailStyleChannels): SailStyleChain\n\
+         \x20 (items: SailStyleValue[]): SailStyleChain\n\
+         \x20 (ref: SailStyleValue): SailStyleChain\n\
+         }\n\
          \n",
     );
 
@@ -495,14 +514,34 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     out.push_str("// ── Ambient globals (controller / scope / template regions) ──\n");
     out.push_str("declare global {\n");
 
-    // Bare Style-token identifiers so `style.bg(primary)` typechecks across
-    // files. Hyphenated tokens use the string form under tsc.
+    // Setter / motion / when-key names that also appear as token idents need a
+    // callable∩literal hybrid — cannot emit both `const border` and `function border`.
+    let setter_names: BTreeSet<&str> = setters().iter().map(|s| s.name).collect();
+    let motion_free: BTreeSet<&str> = MOTION_CHAIN_METHODS
+        .iter()
+        .copied()
+        .filter(|m| *m != "focus-visible")
+        .collect();
+    let when_key_set: BTreeSet<&str> = WHEN_IDENT_KEYS.iter().copied().collect();
+    let hybrid_names: BTreeSet<&str> = setter_names
+        .iter()
+        .copied()
+        .chain(motion_free.iter().copied())
+        .chain(when_key_set.iter().copied())
+        .collect();
+
+    // Bare Style-token identifiers so `bg(primary)` typechecks across files.
+    // Hyphenated tokens use the string form under pure tsc (or virtual_ts
+    // quotes them for sail check). Skip names that get hybrid emit below.
     out.push_str(
         "  // Style token idents (valid JS names only).\n\
-         \x20 // Hyphenated: style.bg('muted-foreground') under tsc;\n\
-         \x20 // sail-compiler still accepts the Style-DSL bare form.\n",
+         \x20 // Hyphenated: bg('muted-foreground') under pure tsc;\n\
+         \x20 // sail-compiler + virtual_ts accept the Style-DSL bare form.\n",
     );
     for tok in bare_tokens {
+        if hybrid_names.contains(tok.as_str()) {
+            continue;
+        }
         out.push_str(&format!(
             "  const {tok}: {lit}\n",
             lit = ts_literal(tok)
@@ -591,12 +630,30 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \n",
     );
 
-    // Style head + free forms
+    // Setter keyword idents used as bare args: `cursor(pointer)`, `overflow(hidden)`.
+    // Not always present on a token scale — still need ambient consts for tsc.
+    out.push_str("  // Style setter keyword idents (bare args).\n");
+    let mut kw_seen: BTreeSet<&str> = BTreeSet::new();
+    for spec in setters() {
+        for kw in spec.keywords {
+            if !is_ambient_const_name(kw) {
+                continue;
+            }
+            if bare_tokens.contains(*kw) || hybrid_names.contains(kw) || !kw_seen.insert(kw) {
+                continue;
+            }
+            out.push_str(&format!("  const {kw}: '{kw}'\n"));
+        }
+    }
+    out.push('\n');
+
+    // Style head + free forms (channel product).
     out.push_str(
         "  /** Compile-time Style builder — erased to classes by sail-compiler. */\n\
          \x20 const style: SailStyleBuilder\n\
          \x20 function match(scrutinee: unknown, arms: SailMatchArms): SailStyleValue\n\
          \x20 function when(map: SailWhenMap): SailStyleValue\n\
+         \x20 function when(key: SailWhenKey, partial: SailStyleChannels | SailStyleValue): SailStyleValue\n\
          \x20 function compound(\n\
          \x20\x20  keys: Record<string, unknown>,\n\
          \x20\x20  body: SailStyleValue,\n\
@@ -605,7 +662,241 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \n",
     );
 
+    // Free setters for channel bodies: `box: pad(4).gap(2)`, `paint: bg(primary)`.
+    out.push_str("  // Free Style setters (channel body chains).\n");
+    for spec in setters() {
+        emit_free_setter(out, spec, bare_tokens);
+    }
+
+    // Free motion triggers for animate channel: `animate: enter({…}).exit({…})`.
+    out.push_str("  // Free motion triggers (animate channel).\n");
+    for m in MOTION_CHAIN_METHODS {
+        if *m == "focus-visible" {
+            // Invalid bare ident — virtual_ts rewrites `focus-visible(` → this name.
+            out.push_str(
+                "  function __sailFocusVisible(config: SailStyleMotionConfig): SailStyleChain\n",
+            );
+            continue;
+        }
+        if setter_names.contains(m) {
+            // press/scroll/hover already emitted as free setter (paint) — add motion overload via hybrid below.
+            continue;
+        }
+        if when_key_set.contains(m) {
+            continue; // hybrid with when-key
+        }
+        out.push_str(&format!(
+            "  function {m}(config: SailStyleMotionConfig): SailStyleChain\n"
+        ));
+    }
+
+    // Hybrids: token∩setter, when-key∩motion, press dual paint/motion.
+    out.push_str("  // Hybrid token / when-key / dual paint-motion free forms.\n");
+    for tok in bare_tokens {
+        if !setter_names.contains(tok.as_str()) {
+            continue;
+        }
+        let Some(spec) = setters().iter().find(|s| s.name == tok.as_str()) else {
+            continue;
+        };
+        emit_hybrid_token_setter(out, spec, tok);
+    }
+    for k in WHEN_IDENT_KEYS {
+        let is_motion = motion_free.contains(k);
+        let is_token = bare_tokens.contains(*k);
+        let is_setter = setter_names.contains(k);
+        if !is_motion && !is_token && !is_setter {
+            // Pure when-key ambient const.
+            out.push_str(&format!("  const {k}: '{k}'\n"));
+            continue;
+        }
+        if is_setter {
+            // Already hybridized with token/setter above when it's a token; pure setter when-keys rare.
+            if !is_token {
+                if let Some(spec) = setters().iter().find(|s| s.name == *k) {
+                    emit_hybrid_when_setter(out, spec, k, is_motion);
+                }
+            }
+            continue;
+        }
+        if is_motion {
+            out.push_str(&format!(
+                "  const {k}: ((config: SailStyleMotionConfig) => SailStyleChain) & '{k}'\n"
+            ));
+            continue;
+        }
+        if is_token {
+            out.push_str(&format!("  const {k}: '{k}'\n"));
+        }
+    }
+    // press: paint zero-arg + motion object (setter already hybrid if token; else dual free).
+    if setter_names.contains("press") && !bare_tokens.contains("press") {
+        out.push_str(
+            "  const press: {\n\
+             \x20\x20 (): SailStyleChain\n\
+             \x20\x20 (config: SailStyleMotionConfig): SailStyleChain\n\
+             \x20 }\n",
+        );
+    }
+    if setter_names.contains("scroll") && !bare_tokens.contains("scroll") {
+        // scroll paint form takes a token; free setter emit covers paint — motion overload:
+        // free setter already emitted; add ambient overload via interface merge is hard.
+        // Chain method + free motion: re-emit motion-capable free scroll.
+        out.push_str(
+            "  function scroll(config: SailStyleMotionConfig): SailStyleChain\n",
+        );
+    }
+
     out.push_str("}\n\n");
+}
+
+fn emit_free_setter(out: &mut String, spec: &SetterSpec, bare_tokens: &BTreeSet<String>) {
+    let name = spec.name;
+    // Hybrids / duals handled separately.
+    if bare_tokens.contains(name) {
+        return;
+    }
+    if WHEN_IDENT_KEYS.contains(&name) {
+        return;
+    }
+    if name == "press" {
+        return; // dual paint/motion hybrid
+    }
+    if name.contains('-') {
+        return; // not a free TS ident
+    }
+    // JS reserved words cannot be free function names. Emit a renamable
+    // `__sailX` form; virtual_ts rewrites product `break(` → `__sailBreak(`.
+    if JS_RESERVED.iter().any(|r| *r == name) {
+        let arg = arg_type_for_setter(spec);
+        let alias = free_reserved_alias(name);
+        if ZERO_ARG_SETTERS.contains(&name) {
+            out.push_str(&format!("  function {alias}(): SailStyleChain\n"));
+        } else {
+            out.push_str(&format!(
+                "  function {alias}(token: {arg}): SailStyleChain\n"
+            ));
+        }
+        return;
+    }
+    if ZERO_ARG_SETTERS.contains(&name) {
+        out.push_str(&format!("  function {name}(): SailStyleChain\n"));
+        return;
+    }
+    let arg = arg_type_for_setter(spec);
+    if matches!(
+        name,
+        "border"
+            | "borderX"
+            | "borderY"
+            | "borderT"
+            | "borderB"
+            | "borderL"
+            | "borderR"
+            | "borderS"
+            | "borderE"
+            | "outline"
+            | "ring"
+    ) {
+        out.push_str(&format!(
+            "  function {name}(a: {arg}, b?: {arg}): SailStyleChain\n"
+        ));
+        return;
+    }
+    out.push_str(&format!(
+        "  function {name}(token: {arg}): SailStyleChain\n"
+    ));
+}
+
+/// Ambient free-name for a Style setter that is a JS reserved word.
+fn free_reserved_alias(name: &str) -> String {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return format!("__sail_{name}");
+    };
+    format!("__sail{}{}", first.to_ascii_uppercase(), chars.as_str())
+}
+
+fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
+    let name = spec.name;
+    if name.contains('-') {
+        out.push_str(&format!("  const {tok}: {lit}\n", lit = ts_literal(tok)));
+        return;
+    }
+    if ZERO_ARG_SETTERS.contains(&name) {
+        let motion = if name == "press" {
+            "  (config: SailStyleMotionConfig): SailStyleChain\n"
+        } else {
+            ""
+        };
+        out.push_str(&format!(
+            "  const {name}: {{\n\
+             \x20\x20 (): SailStyleChain\n\
+             {motion}\
+             \x20 }} & {lit}\n",
+            lit = ts_literal(tok)
+        ));
+        return;
+    }
+    let arg = arg_type_for_setter(spec);
+    if matches!(
+        name,
+        "border"
+            | "borderX"
+            | "borderY"
+            | "borderT"
+            | "borderB"
+            | "borderL"
+            | "borderR"
+            | "borderS"
+            | "borderE"
+            | "outline"
+            | "ring"
+    ) {
+        out.push_str(&format!(
+            "  const {name}: {{\n\
+             \x20\x20 (a: {arg}, b?: {arg}): SailStyleChain\n\
+             \x20 }} & {lit}\n",
+            lit = ts_literal(tok)
+        ));
+        return;
+    }
+    let motion = if name == "hover" || name == "scroll" {
+        "  (config: SailStyleMotionConfig): SailStyleChain\n"
+    } else {
+        ""
+    };
+    out.push_str(&format!(
+        "  const {name}: {{\n\
+         \x20\x20 (token: {arg}): SailStyleChain\n\
+         {motion}\
+         \x20 }} & {lit}\n",
+        lit = ts_literal(tok)
+    ));
+}
+
+fn emit_hybrid_when_setter(out: &mut String, spec: &SetterSpec, key: &str, is_motion: bool) {
+    let arg = arg_type_for_setter(spec);
+    let motion = if is_motion {
+        "  (config: SailStyleMotionConfig): SailStyleChain\n"
+    } else {
+        ""
+    };
+    if ZERO_ARG_SETTERS.contains(&spec.name) {
+        out.push_str(&format!(
+            "  const {key}: {{\n\
+             \x20\x20 (): SailStyleChain\n\
+             {motion}\
+             \x20 }} & '{key}'\n"
+        ));
+        return;
+    }
+    out.push_str(&format!(
+        "  const {key}: {{\n\
+         \x20\x20 (token: {arg}): SailStyleChain\n\
+         {motion}\
+         \x20 }} & '{key}'\n"
+    ));
 }
 
 #[cfg(test)]
@@ -647,6 +938,19 @@ mod tests {
     fn pack_types_style_head_and_free_forms() {
         let dts = emit_types_dts();
         assert!(dts.contains("const style: SailStyleBuilder"));
+        assert!(
+            dts.contains("interface SailStyleBuilder extends SailStyleChain"),
+            "style head must be callable channel form"
+        );
+        assert!(
+            dts.contains("box?: SailStyleValue") && dts.contains("paint?: SailStyleValue"),
+            "SailStyleChannels missing"
+        );
+        // Free channel-body setters
+        assert!(dts.contains("function pad(") || dts.contains("function padX("), "{dts}");
+        assert!(dts.contains("function bg(") || dts.contains("const bg:"), "free bg");
+        assert!(dts.contains("function enter("), "free enter motion");
+        assert!(dts.contains("const hover:"), "when-key / motion hybrid hover");
         assert!(dts.contains("function match("));
         assert!(dts.contains("function when("));
         assert!(dts.contains("function compound("));
