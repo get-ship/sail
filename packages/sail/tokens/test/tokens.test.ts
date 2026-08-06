@@ -872,6 +872,24 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       ['component.kbd.bg', 'kbd'],
       ['component.kbd.fg', 'kbd-foreground'],
       ['component.kbd.border', 'kbd-border'],
+      // Slice #2 residual packs
+      ['component.table.fg', 'table-foreground'],
+      ['component.table.muted-fg', 'table-muted-foreground'],
+      ['component.table.stripe', 'table-stripe'],
+      ['component.table.sticky-bg', 'table-sticky-bg'],
+      ['component.progress.track', 'progress'],
+      ['component.progress.fill', 'progress-fill'],
+      ['component.meter.track', 'meter'],
+      ['component.meter.optimum', 'meter-optimum'],
+      ['component.meter.suboptimum', 'meter-suboptimum'],
+      ['component.meter.sub-suboptimum', 'meter-sub-suboptimum'],
+      ['component.slider.track', 'slider-track'],
+      ['component.slider.fill', 'slider-fill'],
+      ['component.slider.track-border', 'slider-track-border'],
+      ['component.breadcrumb.fg', 'breadcrumb-foreground'],
+      ['component.breadcrumb.current', 'breadcrumb-current'],
+      ['component.fieldset.border', 'fieldset-border'],
+      ['component.legend.fg', 'legend-foreground'],
     ]
     for (const [path, cssName] of expected) {
       expect(reg.paths?.[path], path).toBe(cssName)
@@ -882,6 +900,14 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--accordion\s*:\s*var\(--surface-1\)/)
     expect(css).toMatch(/--skeleton\s*:\s*var\(--muted\)/)
     expect(css).toMatch(/--kbd\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--table-foreground\s*:\s*var\(--foreground\)/)
+    expect(css).toMatch(/--progress\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--progress-fill\s*:\s*var\(--primary\)/)
+    expect(css).toMatch(/--meter\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--slider-track\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--breadcrumb-foreground\s*:\s*var\(--muted-foreground\)/)
+    expect(css).toMatch(/--fieldset-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--legend-foreground\s*:\s*var\(--foreground\)/)
   })
 
   it('color surface includes brand + tone tokens and excludes space/text', () => {

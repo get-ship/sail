@@ -43,6 +43,8 @@
     "border-strong",
     "border-subtle",
     "border-width",
+    "breadcrumb-current",
+    "breadcrumb-foreground",
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
@@ -120,6 +122,7 @@
     "field-error",
     "field-foreground",
     "field-hint",
+    "fieldset-border",
     "focus-ring",
     "focus-ring-offset",
     "font-body",
@@ -192,8 +195,13 @@
     "leading-relaxed",
     "leading-snug",
     "leading-tight",
+    "legend-foreground",
     "menu-item-foreground",
     "menu-item-hover-bg",
+    "meter",
+    "meter-optimum",
+    "meter-sub-suboptimum",
+    "meter-suboptimum",
     "mix-bg",
     "mix-border",
     "mix-hover",
@@ -243,6 +251,8 @@
     "primary",
     "primary-foreground",
     "primary-hover",
+    "progress",
+    "progress-fill",
     "prose-foreground",
     "radio-foreground",
     "radius",
@@ -294,6 +304,9 @@
     "sidebar-ring",
     "skeleton",
     "skeleton-highlight",
+    "slider-fill",
+    "slider-track",
+    "slider-track-border",
     "space-0_75",
     "space-1",
     "space-10",
@@ -366,6 +379,10 @@
     "tab-list-rail",
     "tab-selected-bg",
     "tab-selected-foreground",
+    "table-foreground",
+    "table-muted-foreground",
+    "table-sticky-bg",
+    "table-stripe",
     "text-2xl",
     "text-3xl",
     "text-4xl",
@@ -447,6 +464,8 @@
     "border",
     "border-strong",
     "border-subtle",
+    "breadcrumb-current",
+    "breadcrumb-foreground",
     "button",
     "button-border",
     "button-foreground",
@@ -489,6 +508,7 @@
     "field-error",
     "field-foreground",
     "field-hint",
+    "fieldset-border",
     "foreground",
     "hover-bg",
     "hover-card",
@@ -517,8 +537,13 @@
     "kbd-foreground",
     "label-foreground",
     "label-required",
+    "legend-foreground",
     "menu-item-foreground",
     "menu-item-hover-bg",
+    "meter",
+    "meter-optimum",
+    "meter-sub-suboptimum",
+    "meter-suboptimum",
     "muted",
     "muted-foreground",
     "navbar",
@@ -532,6 +557,8 @@
     "primary",
     "primary-foreground",
     "primary-hover",
+    "progress",
+    "progress-fill",
     "prose-foreground",
     "radio-foreground",
     "ring",
@@ -556,6 +583,9 @@
     "sidebar-ring",
     "skeleton",
     "skeleton-highlight",
+    "slider-fill",
+    "slider-track",
+    "slider-track-border",
     "spinner-foreground",
     "spinner-track",
     "status-amber",
@@ -591,6 +621,10 @@
     "tab-list-rail",
     "tab-selected-bg",
     "tab-selected-foreground",
+    "table-foreground",
+    "table-muted-foreground",
+    "table-sticky-bg",
+    "table-stripe",
     "theme-picker",
     "theme-picker-foreground",
     "theme-picker-option-foreground",
@@ -2488,6 +2522,18 @@
       "type": "color",
       "value": "var(--border)"
     },
+    "breadcrumb-foreground": {
+      "path": "component.breadcrumb.fg",
+      "cssName": "breadcrumb-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "breadcrumb-current": {
+      "path": "component.breadcrumb.current",
+      "cssName": "breadcrumb-current",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
     "button": {
       "path": "component.button.bg",
       "cssName": "button",
@@ -2746,6 +2792,12 @@
       "type": "color",
       "value": "var(--destructive)"
     },
+    "fieldset-border": {
+      "path": "component.fieldset.border",
+      "cssName": "fieldset-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "hover-card": {
       "path": "component.hover-card.bg",
       "cssName": "hover-card",
@@ -2788,6 +2840,12 @@
       "type": "color",
       "value": "var(--destructive)"
     },
+    "legend-foreground": {
+      "path": "component.legend.fg",
+      "cssName": "legend-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
     "menu-item-foreground": {
       "path": "component.menu-item.fg",
       "cssName": "menu-item-foreground",
@@ -2799,6 +2857,30 @@
       "cssName": "menu-item-hover-bg",
       "type": "color",
       "value": "var(--muted)"
+    },
+    "meter": {
+      "path": "component.meter.track",
+      "cssName": "meter",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "meter-optimum": {
+      "path": "component.meter.optimum",
+      "cssName": "meter-optimum",
+      "type": "color",
+      "value": "var(--success)"
+    },
+    "meter-suboptimum": {
+      "path": "component.meter.suboptimum",
+      "cssName": "meter-suboptimum",
+      "type": "color",
+      "value": "var(--warning)"
+    },
+    "meter-sub-suboptimum": {
+      "path": "component.meter.sub-suboptimum",
+      "cssName": "meter-sub-suboptimum",
+      "type": "color",
+      "value": "var(--destructive)"
     },
     "navbar": {
       "path": "component.navbar.bg",
@@ -2848,6 +2930,18 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "progress": {
+      "path": "component.progress.track",
+      "cssName": "progress",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "progress-fill": {
+      "path": "component.progress.fill",
+      "cssName": "progress-fill",
+      "type": "color",
+      "value": "var(--primary)"
+    },
     "prose-foreground": {
       "path": "component.prose.fg",
       "cssName": "prose-foreground",
@@ -2889,6 +2983,24 @@
       "cssName": "skeleton-highlight",
       "type": "color",
       "value": "color-mix(in oklch, var(--skeleton) 60%, var(--background))"
+    },
+    "slider-track": {
+      "path": "component.slider.track",
+      "cssName": "slider-track",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "slider-fill": {
+      "path": "component.slider.fill",
+      "cssName": "slider-fill",
+      "type": "color",
+      "value": "var(--primary)"
+    },
+    "slider-track-border": {
+      "path": "component.slider.track-border",
+      "cssName": "slider-track-border",
+      "type": "color",
+      "value": "var(--border)"
     },
     "spinner-foreground": {
       "path": "component.spinner.fg",
@@ -2953,6 +3065,30 @@
     "tab-selected-bg": {
       "path": "component.tab.selected-bg",
       "cssName": "tab-selected-bg",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "table-foreground": {
+      "path": "component.table.fg",
+      "cssName": "table-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "table-muted-foreground": {
+      "path": "component.table.muted-fg",
+      "cssName": "table-muted-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "table-stripe": {
+      "path": "component.table.stripe",
+      "cssName": "table-stripe",
+      "type": "color",
+      "value": "var(--surface-2)"
+    },
+    "table-sticky-bg": {
+      "path": "component.table.sticky-bg",
+      "cssName": "table-sticky-bg",
       "type": "color",
       "value": "var(--background)"
     },
@@ -3088,6 +3224,8 @@
     "color.border.strong": "border-strong",
     "color.border.subtle": "border-subtle",
     "color.border.width": "border-width",
+    "component.breadcrumb.current": "breadcrumb-current",
+    "component.breadcrumb.fg": "breadcrumb-foreground",
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
@@ -3165,6 +3303,7 @@
     "component.field.error": "field-error",
     "component.field.fg": "field-foreground",
     "component.field.hint": "field-hint",
+    "component.fieldset.border": "fieldset-border",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
@@ -3237,8 +3376,13 @@
     "typography.leading.relaxed": "leading-relaxed",
     "typography.leading.snug": "leading-snug",
     "typography.leading.tight": "leading-tight",
+    "component.legend.fg": "legend-foreground",
     "component.menu-item.fg": "menu-item-foreground",
     "component.menu-item.hover-bg": "menu-item-hover-bg",
+    "component.meter.track": "meter",
+    "component.meter.optimum": "meter-optimum",
+    "component.meter.sub-suboptimum": "meter-sub-suboptimum",
+    "component.meter.suboptimum": "meter-suboptimum",
     "color.mix.bgMix": "mix-bg",
     "color.mix.borderMix": "mix-border",
     "color.mix.hoverMix": "mix-hover",
@@ -3288,6 +3432,8 @@
     "color.primary.default": "primary",
     "color.primary.foreground": "primary-foreground",
     "color.primary.hover": "primary-hover",
+    "component.progress.track": "progress",
+    "component.progress.fill": "progress-fill",
     "component.prose.fg": "prose-foreground",
     "component.radio.fg": "radio-foreground",
     "radius.default": "radius",
@@ -3339,6 +3485,9 @@
     "color.sidebar.ring": "sidebar-ring",
     "component.skeleton.bg": "skeleton",
     "component.skeleton.highlight": "skeleton-highlight",
+    "component.slider.fill": "slider-fill",
+    "component.slider.track": "slider-track",
+    "component.slider.track-border": "slider-track-border",
     "space.0_75": "space-0_75",
     "space.1": "space-1",
     "space.10": "space-10",
@@ -3411,6 +3560,10 @@
     "component.tab-list.rail": "tab-list-rail",
     "component.tab.selected-bg": "tab-selected-bg",
     "component.tab.selected-fg": "tab-selected-foreground",
+    "component.table.fg": "table-foreground",
+    "component.table.muted-fg": "table-muted-foreground",
+    "component.table.sticky-bg": "table-sticky-bg",
+    "component.table.stripe": "table-stripe",
     "typography.text.2xl": "text-2xl",
     "typography.text.3xl": "text-3xl",
     "typography.text.4xl": "text-4xl",

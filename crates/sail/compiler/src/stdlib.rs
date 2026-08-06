@@ -197,7 +197,7 @@ const SELECT_CHEVRON: &str = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.
 // Mask-source chevron (black stroke) — colored via background on summary::after.
 const SUMMARY_CHEVRON_MASK: &str = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\") center / 1rem no-repeat";
 const INDET_GRADIENT: &str =
-    "linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%)";
+    "linear-gradient(90deg, transparent 0%, var(--progress-fill) 50%, transparent 100%)";
 
 const INPUT_MAP: &[DescRule] = &[
     DescRule {
@@ -253,9 +253,9 @@ const INPUT_MAP: &[DescRule] = &[
             ("border-radius", "var(--shape-pill)"),
             (
                 "background",
-                "linear-gradient(to right, var(--primary) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%)",
+                "linear-gradient(to right, var(--slider-fill) 0 var(--rng-pct, 0%), var(--slider-track) var(--rng-pct, 0%) 100%)",
             ),
-            ("box-shadow", "inset 0 0 0 1px var(--border)"),
+            ("box-shadow", "inset 0 0 0 1px var(--slider-track-border)"),
         ]),
     },
     DescRule {
@@ -263,8 +263,8 @@ const INPUT_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("height", "var(--rng-track)"),
             ("border-radius", "var(--shape-pill)"),
-            ("background", "var(--muted)"),
-            ("box-shadow", "inset 0 0 0 1px var(--border)"),
+            ("background", "var(--slider-track)"),
+            ("box-shadow", "inset 0 0 0 1px var(--slider-track-border)"),
         ]),
     },
     DescRule {
@@ -272,7 +272,7 @@ const INPUT_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("height", "var(--rng-track)"),
             ("border-radius", "var(--shape-pill)"),
-            ("background", "var(--primary)"),
+            ("background", "var(--slider-fill)"),
         ]),
     },
     DescRule {
@@ -289,7 +289,7 @@ const INPUT_MAP: &[DescRule] = &[
             ),
             ("border-radius", "50%"),
             ("background", "var(--field)"),
-            ("border", "2px solid var(--primary)"),
+            ("border", "2px solid var(--slider-fill)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
     },
@@ -301,7 +301,7 @@ const INPUT_MAP: &[DescRule] = &[
             ("height", "var(--rng-thumb)"),
             ("border-radius", "50%"),
             ("background", "var(--field)"),
-            ("border", "2px solid var(--primary)"),
+            ("border", "2px solid var(--slider-fill)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
     },
@@ -374,9 +374,9 @@ const RANGE_MAP: &[DescRule] = &[
             ("border-radius", "var(--shape-pill)"),
             (
                 "background",
-                "linear-gradient(to right, var(--primary) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%)",
+                "linear-gradient(to right, var(--slider-fill) 0 var(--rng-pct, 0%), var(--slider-track) var(--rng-pct, 0%) 100%)",
             ),
-            ("box-shadow", "inset 0 0 0 1px var(--border)"),
+            ("box-shadow", "inset 0 0 0 1px var(--slider-track-border)"),
         ]),
     },
     DescRule {
@@ -384,8 +384,8 @@ const RANGE_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("height", "var(--rng-track)"),
             ("border-radius", "var(--shape-pill)"),
-            ("background", "var(--muted)"),
-            ("box-shadow", "inset 0 0 0 1px var(--border)"),
+            ("background", "var(--slider-track)"),
+            ("box-shadow", "inset 0 0 0 1px var(--slider-track-border)"),
         ]),
     },
     DescRule {
@@ -393,7 +393,7 @@ const RANGE_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("height", "var(--rng-track)"),
             ("border-radius", "var(--shape-pill)"),
-            ("background", "var(--primary)"),
+            ("background", "var(--slider-fill)"),
         ]),
     },
     DescRule {
@@ -410,7 +410,7 @@ const RANGE_MAP: &[DescRule] = &[
             ),
             ("border-radius", "50%"),
             ("background", "var(--field)"),
-            ("border", "2px solid var(--primary)"),
+            ("border", "2px solid var(--slider-fill)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
     },
@@ -422,7 +422,7 @@ const RANGE_MAP: &[DescRule] = &[
             ("height", "var(--rng-thumb)"),
             ("border-radius", "50%"),
             ("background", "var(--field)"),
-            ("border", "2px solid var(--primary)"),
+            ("border", "2px solid var(--slider-fill)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
     },
@@ -625,7 +625,7 @@ const TABLE_MAP: &[DescRule] = &[
         sel: "caption",
         paint: DescPaint(&[
             ("padding", "var(--space-2) var(--space-3)"),
-            ("color", "var(--muted-foreground)"),
+            ("color", "var(--table-muted-foreground)"),
             ("text-align", "left"),
         ]),
     },
@@ -634,10 +634,10 @@ const TABLE_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("padding", "var(--space-2_5) var(--space-3)"),
             ("font-weight", "var(--font-weight-semibold)"),
-            ("color", "var(--muted-foreground)"),
+            ("color", "var(--table-muted-foreground)"),
             (
                 "border-bottom",
-                "1px solid color-mix(in srgb, var(--foreground) 16%, transparent)",
+                "1px solid color-mix(in srgb, var(--table-foreground) 16%, transparent)",
             ),
             ("white-space", "nowrap"),
             ("text-align", "left"),
@@ -649,7 +649,7 @@ const TABLE_MAP: &[DescRule] = &[
             ("padding", "var(--space-2_5) var(--space-3)"),
             (
                 "border-bottom",
-                "1px solid color-mix(in srgb, var(--foreground) 9%, transparent)",
+                "1px solid color-mix(in srgb, var(--table-foreground) 9%, transparent)",
             ),
         ]),
     },
@@ -663,17 +663,17 @@ const TABLE_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "[striped] > tbody > tr:nth-child(even)",
-        paint: DescPaint(&[("background", "var(--surface-2)")]),
+        paint: DescPaint(&[("background", "var(--table-stripe)")]),
     },
     DescRule {
         sel: "[hoverable] > tbody > tr:hover",
-        paint: DescPaint(&[("background", "var(--surface-2)")]),
+        paint: DescPaint(&[("background", "var(--table-stripe)")]),
     },
     DescRule {
         sel: "[bordered] th, [bordered] td",
         paint: DescPaint(&[(
             "border",
-            "1px solid color-mix(in srgb, var(--foreground) 9%, transparent)",
+            "1px solid color-mix(in srgb, var(--table-foreground) 9%, transparent)",
         )]),
     },
     DescRule {
@@ -682,7 +682,7 @@ const TABLE_MAP: &[DescRule] = &[
             ("position", "sticky"),
             ("top", "0"),
             ("z-index", "1"),
-            ("background", "var(--background)"),
+            ("background", "var(--table-sticky-bg)"),
         ]),
     },
     DescRule {
@@ -698,21 +698,21 @@ const PROGRESS_MAP: &[DescRule] = &[
     DescRule {
         sel: "::-webkit-progress-bar",
         paint: DescPaint(&[
-            ("background", "var(--muted)"),
+            ("background", "var(--progress)"),
             ("border-radius", "var(--shape-pill)"),
         ]),
     },
     DescRule {
         sel: "::-webkit-progress-value",
         paint: DescPaint(&[
-            ("background", "var(--primary)"),
+            ("background", "var(--progress-fill)"),
             ("border-radius", "var(--shape-pill)"),
         ]),
     },
     DescRule {
         sel: "::-moz-progress-bar",
         paint: DescPaint(&[
-            ("background", "var(--primary)"),
+            ("background", "var(--progress-fill)"),
             ("border-radius", "var(--shape-pill)"),
         ]),
     },
@@ -741,7 +741,7 @@ const METER_MAP: &[DescRule] = &[
     DescRule {
         sel: "::-webkit-meter-bar",
         paint: DescPaint(&[
-            ("background", "var(--muted)"),
+            ("background", "var(--meter)"),
             ("border", "0"),
             ("border-radius", "var(--shape-pill)"),
         ]),
@@ -749,21 +749,21 @@ const METER_MAP: &[DescRule] = &[
     DescRule {
         sel: "::-webkit-meter-optimum-value",
         paint: DescPaint(&[
-            ("background", "var(--success)"),
+            ("background", "var(--meter-optimum)"),
             ("border-radius", "var(--shape-pill)"),
         ]),
     },
     DescRule {
         sel: "::-webkit-meter-suboptimum-value",
         paint: DescPaint(&[
-            ("background", "var(--warning)"),
+            ("background", "var(--meter-suboptimum)"),
             ("border-radius", "var(--shape-pill)"),
         ]),
     },
     DescRule {
         sel: "::-webkit-meter-even-less-good-value",
         paint: DescPaint(&[
-            ("background", "var(--destructive)"),
+            ("background", "var(--meter-sub-suboptimum)"),
             ("border-radius", "var(--shape-pill)"),
         ]),
     },
@@ -774,15 +774,15 @@ const METER_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: ":-moz-meter-optimum::-moz-meter-bar",
-        paint: DescPaint(&[("background", "var(--success)")]),
+        paint: DescPaint(&[("background", "var(--meter-optimum)")]),
     },
     DescRule {
         sel: ":-moz-meter-sub-optimum::-moz-meter-bar",
-        paint: DescPaint(&[("background", "var(--warning)")]),
+        paint: DescPaint(&[("background", "var(--meter-suboptimum)")]),
     },
     DescRule {
         sel: ":-moz-meter-sub-sub-optimum::-moz-meter-bar",
-        paint: DescPaint(&[("background", "var(--destructive)")]),
+        paint: DescPaint(&[("background", "var(--meter-sub-suboptimum)")]),
     },
 ];
 
@@ -808,14 +808,14 @@ const BREADCRUMB_MAP: &[DescRule] = &[
         sel: "li:not(:first-child)::before",
         paint: DescPaint(&[
             ("content", "'/'"),
-            ("color", "var(--muted-foreground)"),
+            ("color", "var(--breadcrumb-foreground)"),
             ("user-select", "none"),
         ]),
     },
     DescRule {
         sel: "a",
         paint: DescPaint(&[
-            ("color", "var(--muted-foreground)"),
+            ("color", "var(--breadcrumb-foreground)"),
             ("text-decoration", "none"),
             ("border-radius", "var(--radius-sm)"),
             ("transition", "color var(--duration-fast) var(--ease-out)"),
@@ -823,7 +823,7 @@ const BREADCRUMB_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "a:hover",
-        paint: DescPaint(&[("color", "var(--foreground)")]),
+        paint: DescPaint(&[("color", "var(--breadcrumb-current)")]),
     },
     DescRule {
         sel: "a:focus-visible",
@@ -835,7 +835,7 @@ const BREADCRUMB_MAP: &[DescRule] = &[
     DescRule {
         sel: "[aria-current='page']",
         paint: DescPaint(&[
-            ("color", "var(--foreground)"),
+            ("color", "var(--breadcrumb-current)"),
             ("font-weight", "var(--font-weight-medium)"),
         ]),
     },

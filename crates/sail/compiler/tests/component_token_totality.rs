@@ -66,6 +66,46 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
             "field-border-hover",
         ],
     ),
+    // Slice #2 — residual gauges / structure / form chrome.
+    (
+        "table",
+        &[
+            "table-foreground",
+            "table-muted-foreground",
+            "table-stripe",
+            "table-sticky-bg",
+        ],
+    ),
+    ("progress", &["progress", "progress-fill"]),
+    (
+        "meter",
+        &[
+            "meter",
+            "meter-optimum",
+            "meter-suboptimum",
+            "meter-sub-suboptimum",
+        ],
+    ),
+    (
+        "slider",
+        &["slider-track", "slider-fill", "slider-track-border"],
+    ),
+    (
+        "breadcrumb",
+        &["breadcrumb-foreground", "breadcrumb-current"],
+    ),
+    ("fieldset", &["fieldset-border"]),
+    ("legend", &["legend-foreground"]),
+    // Button-link chrome on <a variant=…> shares the button pack.
+    (
+        "a-button-link",
+        &[
+            "button",
+            "button-foreground",
+            "button-border",
+            "button-hover-bg",
+        ],
+    ),
 ];
 
 /// Default-rest free globals that a slice element must NOT use for its owned
@@ -99,6 +139,22 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* input */", &["background", "foreground"]),
     ("/* select */", &["background", "foreground"]),
     ("/* textarea */", &["background", "foreground"]),
+    // Slice #2 residual defaults
+    (
+        "/* table */",
+        &["foreground", "muted-foreground", "surface-2", "background"],
+    ),
+    ("/* progress */", &["muted", "primary"]),
+    (
+        "/* meter */",
+        &["muted", "success", "warning", "destructive"],
+    ),
+    ("/* slider */", &["muted", "primary", "border"]),
+    ("/* breadcrumb */", &["muted-foreground", "foreground"]),
+    ("/* fieldset */", &["border"]),
+    ("/* legend */", &["foreground"]),
+    // Button-link default rest (shared button pack)
+    ("/* a */", &["background", "foreground"]),
 ];
 
 fn component_packs() -> BTreeMap<String, BTreeSet<String>> {
