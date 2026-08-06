@@ -212,6 +212,17 @@ describe('themes home — honesty UI contracts (source)', () => {
     expect(sail).not.toMatch(/theme-preview=\{/)
   })
 
+  it('preview mode uses data-mode (themes.css cascade), not bare mode=', () => {
+    const sail = readFileSync(SURFACE, 'utf8')
+    // themes.css selects [theme=id][data-mode=light|dark] — DOMDEC bare rename of
+    // data-mode→mode broke catalog light/dark toggle paint.
+    expect(sail).toMatch(/data-mode=\{previewModeId\(\)\}/)
+    expect(sail).toMatch(/data-mode=\{row\.paintMode\}/)
+    // Bare mode= on paint hosts is not the cascade bit (filter tabs etc. may differ).
+    expect(sail).not.toMatch(/\smode=\{previewModeId\(\)\}/)
+    expect(sail).not.toMatch(/\smode=\{row\.paintMode\}/)
+  })
+
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {
     const vm = readFileSync(VM, 'utf8')
     const confirm = readFileSync(
@@ -327,6 +338,31 @@ describe('themes home — surface handlers (behavioral)', () => {
     await new Promise((r) => setTimeout(r, 20))
     expect(forks).toEqual([])
     expect(vm.toastMessage()).toMatch(/cancelled/i)
+  })
+
+  it('mode switch updates previewModeId for dual-mode themes', async () => {
+    wireProjectAndCatalog({ projectFiles: [] })
+    await loadThemes({ themeId: 'studio' })
+    const vm = makeSurface()
+    // Select a dual-mode catalog theme (studio ships light + dark).
+    const row = document.createElement('div')
+    row.dataset.themeId = 'studio'
+    document.body.appendChild(row)
+    vm.onListClick({ target: row } as unknown as Event)
+    expect(vm.canToggleMode()).toBe(true)
+    const start = vm.previewModeId()
+    const flipToDark = start !== 'dark'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.checked = flipToDark
+    vm.onPreviewModeSwitch({ target: input } as unknown as Event)
+    expect(vm.previewModeId()).toBe(flipToDark ? 'dark' : 'light')
+    expect(vm.modeDarkOn()).toBe(flipToDark)
+    expect(vm.modeLightOn()).toBe(!flipToDark)
+    // Toggle back
+    input.checked = !flipToDark
+    vm.onPreviewModeSwitch({ target: input } as unknown as Event)
+    expect(vm.previewModeId()).toBe(flipToDark ? 'light' : 'dark')
   })
 
   it('project rows have no enable-off path; surface does not export onEnableChange', async () => {

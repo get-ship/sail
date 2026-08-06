@@ -304,9 +304,29 @@ describe('theme-draft-paint adapter', () => {
     expect(calls.length).toBeGreaterThan(0)
     expect(calls[calls.length - 1]).toEqual({ mode: 'dark', hasDoc: true })
     expect(host.getAttribute('data-applied')).toBe('dark')
-    expect(host.getAttribute('data-draft-paint')).toBe('apply')
+    // DOMDEC: marker is draft-paint (not data-draft-paint)
+    expect(host.getAttribute('draft-paint')).toBe('apply')
     unbindPreviewHost(host)
     expect(__draftPaintHostCountForTests()).toBe(0)
+  })
+
+  it('registered cold path paints theme + data-mode (themes.css cascade)', () => {
+    // No draft doc → applyRegisteredAttrs. data-mode is the cascade bit.
+    setDraftPaintApplier(null)
+    const host = document.createElement('div')
+    host.setAttribute('data-theme', 'legacy')
+    bindPreviewHost(host)
+    flushDraftPaint({
+      doc: null,
+      mode: 'dark',
+      themeId: 'my-ship',
+      paintId: 'ship',
+    })
+    expect(host.getAttribute('theme')).toBe('ship')
+    expect(host.getAttribute('data-mode')).toBe('dark')
+    expect(host.hasAttribute('data-theme')).toBe(false)
+    expect(host.getAttribute('draft-paint')).toBe('registered')
+    unbindPreviewHost(host)
   })
 
   it('re-applies after store write when host is bound', async () => {

@@ -169,12 +169,13 @@ function applyOne(host: HTMLElement, opts: DraftPaintOpts): void {
 
 function applyRegisteredAttrs(host: HTMLElement, opts: DraftPaintOpts): void {
   const id = opts.paintId || opts.themeId || 'studio'
-  // Author IR `theme` + mode — paint authority for registered tables
-  // (`[theme=id]` in themes.css). Never data-theme / data-theme-preview.
+  // Author IR `theme` + data-mode — paint authority for registered tables
+  // (`[theme=id][data-mode=…]` in themes.css). Never data-theme / data-theme-preview.
+  // DOMDEC bare rename must NOT touch data-mode: it is the cascade bit, not a host tag.
   host.setAttribute('theme', id)
-  host.removeAttribute('theme')
-  host.removeAttribute('theme-preview')
-  host.setAttribute('mode', opts.mode)
+  host.removeAttribute('data-theme')
+  host.removeAttribute('data-theme-preview')
+  host.setAttribute('data-mode', opts.mode)
 }
 
 /** Test helper — bound host count. */

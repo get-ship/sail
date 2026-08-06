@@ -170,7 +170,7 @@ export default controller(() => {
                 style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
-                <row theme-swatches theme={row.previewId} mode={row.paintMode} gap="0" nowrap hidden="true">
+                <row theme-swatches theme={row.previewId} data-mode={row.paintMode} gap="0" nowrap hidden="true">
                   style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })
 
                   <center>
@@ -245,7 +245,7 @@ export default controller(() => {
               >
                 style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
-                <row theme-swatches theme={row.previewId} mode={row.paintMode} gap="0" nowrap hidden="true">
+                <row theme-swatches theme={row.previewId} data-mode={row.paintMode} gap="0" nowrap hidden="true">
                   style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })
 
                   <center>
@@ -411,7 +411,7 @@ Mode</p>
             </p>
             <row
               theme={previewPaintId()}
-              mode={previewModeId()}
+              data-mode={previewModeId()}
               gap="2"
               color-story-grid
             >
@@ -472,7 +472,7 @@ Surface</p>
           <column
             type-story
             theme={previewPaintId()}
-            mode={previewModeId()}
+            data-mode={previewModeId()}
             gap="2"
 
           >
@@ -544,7 +544,7 @@ xl</p>
             </p>
             <column
               theme={previewPaintId()}
-              mode={previewModeId()}
+              data-mode={previewModeId()}
               preview-specimen
               gap="0"
 
