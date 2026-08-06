@@ -19,56 +19,17 @@
 
 <controller>
 /**
- * Pathname that updates on SPA chrome-reuse. Layout controllers stay mounted
- * across leaf navigations; route.pathname alone has been observed to lag, so
- * we also listen to history + subscribe to the route signal.
+ * Path for aria-current on rail links. Layout chrome stays mounted across leaf
+ * navigations — subscribe to route.pathname (Deck updates the shared signal on
+ * navigate). No history monkey-patch / bare mount required for current state.
  */
 function useLivePath(ctx: { route?: { pathname?: () => string } }) {
- const path = signal(
- typeof location !== 'undefined' ? location.pathname : '/',
- )
- const sync = (): void => {
+ return derived(() => {
  const fromRoute = ctx.route?.pathname?.()
- const next =
- typeof location !== 'undefined' && location.pathname
- ? location.pathname
- : (fromRoute ?? path())
- if (next !== path()) path.set(next)
- }
- // Keep derived/route subscribers honest when the signal moves.
- effect(() => {
- const r = ctx.route?.pathname?.()
- if (typeof r === 'string' && r.length > 0 && r !== path()) path.set(r)
+ if (typeof fromRoute === 'string' && fromRoute.length > 0) return fromRoute
+ if (typeof location !== 'undefined' && location.pathname) return location.pathname
+ return '/'
  })
- mount(() => {
- if (typeof window === 'undefined') return
- const onPop = (): void => sync()
- window.addEventListener('popstate', onPop)
- const wrap =
- (fn: History['pushState']) =>
- function (this: History, ...args: Parameters<History['pushState']>) {
- const ret = fn.apply(this, args)
- sync()
- return ret
- }
- const origPush = history.pushState.bind(history)
- const origReplace = history.replaceState.bind(history)
- history.pushState = wrap(origPush)
- history.replaceState = wrap(origReplace)
- // Capture-phase clicks on in-app links (deck may navigate after click).
- const onClick = (): void => {
- queueMicrotask(sync)
- }
- document.addEventListener('click', onClick, true)
- sync()
- return () => {
- window.removeEventListener('popstate', onPop)
- document.removeEventListener('click', onClick, true)
- history.pushState = origPush
- history.replaceState = origReplace
- }
- })
- return path
 }
 
 export default controller((ctx) => {

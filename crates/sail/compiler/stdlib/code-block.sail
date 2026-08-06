@@ -4,6 +4,10 @@
 
   Paint: bg/fg from component.code-block tokens (cssNames code-block,
   code-block-foreground).
+
+  Element mode forbids use:action={param} (static splice). The action node is
+  this structure root; props land on the stamped CE host — syntaxHighlight
+  resolves host `.code` / `code` attr (and observes attribute changes).
 -->
 <scope>
   props: {

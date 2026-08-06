@@ -54,70 +54,92 @@ Ada Lovelace</strong>
     <code>&lt;button&gt;</code> or <code>&lt;table&gt;</code> is already the
     design system's. The catalog groups them like this:
   </p>
-  <column gap="2">
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Inputs</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-button, input, textarea, select,
-      combobox, checkbox, radio-group, switch, slider, toggle-group, field,
-      label, fieldset, dropzone, theme-picker</p>
-    </row>
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Display</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-badge, chip, status-dot, card,
-      avatar, icon, separator, kbd, accordion, prose</p>
-    </row>
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Feedback</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-alert, progress, meter, spinner,
-      skeleton, empty-state, error-state, error-boundary, toast</p>
-    </row>
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Overlay</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-tooltip, hover-card, popover,
-      dropdown, context-menu, dialog</p>
-    </row>
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Navigation</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-tabs, breadcrumb, pagination,
-      navbar</p>
-    </row>
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Data</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-table</p>
-    </row>
-    <row gap="3" align="start" nowrap>
-      <badge variant="outline">
-        style({ box: shrink(0) })
-Layout</badge>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-row, column, grid, center,
-      scroll-area</p>
-    </row>
+  <column gap="4">
+    <column gap="2">
+      <badge variant="outline" tone="muted">Inputs</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">button</badge>
+        <badge size="sm" variant="soft" tone="muted">input</badge>
+        <badge size="sm" variant="soft" tone="muted">textarea</badge>
+        <badge size="sm" variant="soft" tone="muted">select</badge>
+        <badge size="sm" variant="soft" tone="muted">combobox</badge>
+        <badge size="sm" variant="soft" tone="muted">checkbox</badge>
+        <badge size="sm" variant="soft" tone="muted">radio-group</badge>
+        <badge size="sm" variant="soft" tone="muted">switch</badge>
+        <badge size="sm" variant="soft" tone="muted">slider</badge>
+        <badge size="sm" variant="soft" tone="muted">toggle-group</badge>
+        <badge size="sm" variant="soft" tone="muted">field</badge>
+        <badge size="sm" variant="soft" tone="muted">label</badge>
+        <badge size="sm" variant="soft" tone="muted">fieldset</badge>
+        <badge size="sm" variant="soft" tone="muted">dropzone</badge>
+        <badge size="sm" variant="soft" tone="muted">theme-picker</badge>
+      </row>
+    </column>
+    <column gap="2">
+      <badge variant="outline" tone="muted">Display</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">badge</badge>
+        <badge size="sm" variant="soft" tone="muted">chip</badge>
+        <badge size="sm" variant="soft" tone="muted">status-dot</badge>
+        <badge size="sm" variant="soft" tone="muted">card</badge>
+        <badge size="sm" variant="soft" tone="muted">avatar</badge>
+        <badge size="sm" variant="soft" tone="muted">icon</badge>
+        <badge size="sm" variant="soft" tone="muted">separator</badge>
+        <badge size="sm" variant="soft" tone="muted">kbd</badge>
+        <badge size="sm" variant="soft" tone="muted">accordion</badge>
+        <badge size="sm" variant="soft" tone="muted">prose</badge>
+      </row>
+    </column>
+    <column gap="2">
+      <badge variant="outline" tone="muted">Feedback</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">alert</badge>
+        <badge size="sm" variant="soft" tone="muted">progress</badge>
+        <badge size="sm" variant="soft" tone="muted">meter</badge>
+        <badge size="sm" variant="soft" tone="muted">spinner</badge>
+        <badge size="sm" variant="soft" tone="muted">skeleton</badge>
+        <badge size="sm" variant="soft" tone="muted">empty-state</badge>
+        <badge size="sm" variant="soft" tone="muted">error-state</badge>
+        <badge size="sm" variant="soft" tone="muted">error-boundary</badge>
+        <badge size="sm" variant="soft" tone="muted">toast</badge>
+      </row>
+    </column>
+    <column gap="2">
+      <badge variant="outline" tone="muted">Overlay</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">tooltip</badge>
+        <badge size="sm" variant="soft" tone="muted">hover-card</badge>
+        <badge size="sm" variant="soft" tone="muted">popover</badge>
+        <badge size="sm" variant="soft" tone="muted">dropdown</badge>
+        <badge size="sm" variant="soft" tone="muted">context-menu</badge>
+        <badge size="sm" variant="soft" tone="muted">dialog</badge>
+      </row>
+    </column>
+    <column gap="2">
+      <badge variant="outline" tone="muted">Navigation</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">tabs</badge>
+        <badge size="sm" variant="soft" tone="muted">breadcrumb</badge>
+        <badge size="sm" variant="soft" tone="muted">pagination</badge>
+        <badge size="sm" variant="soft" tone="muted">navbar</badge>
+      </row>
+    </column>
+    <column gap="2">
+      <badge variant="outline" tone="muted">Data</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">table</badge>
+      </row>
+    </column>
+    <column gap="2">
+      <badge variant="outline" tone="muted">Layout</badge>
+      <row gap="1" align="center">
+        <badge size="sm" variant="soft" tone="muted">row</badge>
+        <badge size="sm" variant="soft" tone="muted">column</badge>
+        <badge size="sm" variant="soft" tone="muted">grid</badge>
+        <badge size="sm" variant="soft" tone="muted">center</badge>
+        <badge size="sm" variant="soft" tone="muted">scroll-area</badge>
+      </row>
+    </column>
   </column>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })

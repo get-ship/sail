@@ -13,6 +13,7 @@
 // Authority: build-spec §"Events", §"Keyboard nav", behavioral specs #2/#3/#4/#7.
 
 import { effect } from '@ship/sail-runtime'
+import { invokeCallback } from '@ship/sail-runtime/internal'
 import type { Table } from '../sail-table/engine/create-table'
 import type { ExpandedState } from '../sail-table/engine/types'
 import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
@@ -83,7 +84,11 @@ export function wireTreeInteractions(
       tree.setRowSelection({ mode: 'include', ids: new Set<string>() })
       tree.toggleRowSelected(id, true)
     }
-    host.emit?.('sail-select', { id })
+    // L1 author surface is on-select={fn} → host.onSelect (bindProp). CustomEvent
+    // remains for residual listeners/tests; callback is what studio explorer uses.
+    const detail = { id }
+    host.emit?.('sail-select', detail)
+    invokeCallback(host, 'onSelect', detail)
     emitSelect()
   }
 

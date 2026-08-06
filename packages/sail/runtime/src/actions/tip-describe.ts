@@ -59,9 +59,11 @@ const applyPlacement = (el: HTMLElement, raw: string | null): void => {
 }
 
 /**
- * `use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide is pure
- * CSS (group-hover / group-focus-within opacity on the bubble). This action
- * supplies only what CSS can't alone:
+ * `use:tipDescribe` — the L1 `<tooltip>` element's behavior.
+ * Show is CSS (group-hover / group-focus-within opacity on the bubble).
+ * Hide is forced snappy: bubble Style has no opacity transition, and this
+ * action clears residual open paint on mouseleave / focusout / Escape.
+ * Also supplies:
  *  - placement geometry vars the bubble sx reads (box + arrow insets),
  *  - the bubble text (from the `content` attribute) + `aria-describedby`
  *    wiring from the trigger to the bubble,
@@ -79,6 +81,20 @@ export const tipDescribe: Action<void> = (node) => {
     (el.querySelector('[data-tooltip-bubble]') as HTMLElement | null) ??
     (el.querySelector('[role="tooltip"]') as HTMLElement | null)
   if (bubble && !bubble.hasAttribute('role')) bubble.setAttribute('role', 'tooltip')
+
+  /** Instant hide — no linger after pointer leaves the host group. */
+  const forceHide = (): void => {
+    if (!bubble) return
+    bubble.style.transition = 'none'
+    bubble.style.opacity = '0'
+  }
+
+  /** Clear forced hide so CSS group-hover / focus-within can show again. */
+  const clearForceHide = (): void => {
+    if (!bubble) return
+    bubble.style.removeProperty('transition')
+    bubble.style.removeProperty('opacity')
+  }
 
   const sync = (): void => {
     applyPlacement(el, el.getAttribute('placement'))
@@ -105,14 +121,35 @@ export const tipDescribe: Action<void> = (node) => {
   obs.observe(el, { attributes: true, attributeFilter: ['content', 'placement'] })
 
   const onKeydown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape') el.blur()
+    if (e.key === 'Escape') {
+      forceHide()
+      el.blur()
+    }
   }
+  const onMouseLeave = (): void => forceHide()
+  const onMouseEnter = (): void => clearForceHide()
+  const onFocusOut = (e: FocusEvent): void => {
+    const next = e.relatedTarget as Node | null
+    if (next && el.contains(next)) return
+    forceHide()
+  }
+  const onFocusIn = (): void => clearForceHide()
+
   el.addEventListener('keydown', onKeydown)
+  el.addEventListener('mouseleave', onMouseLeave)
+  el.addEventListener('mouseenter', onMouseEnter)
+  el.addEventListener('focusout', onFocusOut)
+  el.addEventListener('focusin', onFocusIn)
 
   return {
     destroy: () => {
       obs.disconnect()
       el.removeEventListener('keydown', onKeydown)
+      el.removeEventListener('mouseleave', onMouseLeave)
+      el.removeEventListener('mouseenter', onMouseEnter)
+      el.removeEventListener('focusout', onFocusOut)
+      el.removeEventListener('focusin', onFocusIn)
+      clearForceHide()
       for (const prop of [
         '--tt-top',
         '--tt-bottom',

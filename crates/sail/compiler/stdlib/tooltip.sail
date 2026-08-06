@@ -9,6 +9,8 @@
     bubble sx — absolute + (--tt-*) geometry via bind (the vars tipDescribe
                 publishes, same bridge as use:anchor) + opacity show under
                 group hover/focus-within + after: arrow
+    Hide is instant (no opacity transition) so tooltips never linger after
+    leave; tipDescribe also forces hide on mouseleave/focusout.
   No contracts PE matrix.
 
   Legacy utility-atom spellings this Style paint replaces (pinned by
@@ -26,7 +28,8 @@
   }
 
   const host = style({ box: position(relative), paint: group() })
-  const bubble = style({ box: position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).padY(1).padX(2), paint: translateX(bind(ttTx)).z(popover).opacity(0).transition(opacity).duration(fast).ease(out).bg(tooltip).fg(tooltip-foreground).radius(md).shadow(md).pointerEvents(none), text: fontFamily(body).fontSize(xs).fontWeight(medium).whitespace(nowrap) })
+  // No opacity transition — linger after leave was a real product bug.
+  const bubble = style({ box: position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).padY(1).padX(2), paint: translateX(bind(ttTx)).z(popover).opacity(0).bg(tooltip).fg(tooltip-foreground).radius(md).shadow(md).pointerEvents(none), text: fontFamily(body).fontSize(xs).fontWeight(medium).whitespace(nowrap) })
   const arrow = style({ box: position(absolute).w(2).h(2).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt)), paint: content(empty).bg(tooltip).rotate(45) })
 </scope>
 
