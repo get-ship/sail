@@ -254,7 +254,7 @@ fn classify_layer(tag: &str) -> String {
     ) {
         return "l1-keyword".into();
     }
-    // Stdlib L1 elements (stdlib registry + native reskins)
+    // Stdlib L1 elements
     if sail_compiler::l1_entries()
         .iter()
         .any(|e| e.tag.eq_ignore_ascii_case(&lower))
@@ -271,7 +271,7 @@ fn classify_layer(tag: &str) -> String {
         }
         return "userland".into();
     }
-    // Native HTML tags without L1 reskin row
+    // Native HTML tags without a stdlib L1 row
     "l1-element".into()
 }
 

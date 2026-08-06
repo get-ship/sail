@@ -559,7 +559,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     // Error strip + retry (not empty-state-as-error only)
     expect(surface).toMatch(/checks-error/)
     expect(surface).toMatch(/retry-checks|onRetryChecks|Retry/)
-    expect(surface).toMatch(/<collapsible\b/)
+    expect(surface).toMatch(/<accordion\b/)
     // Review UI is an inline sheet; findings overlay dialog lives in chrome
     expect(surface).not.toMatch(/<dialog\b/)
     expect(surface).not.toMatch(/commit intent/i)

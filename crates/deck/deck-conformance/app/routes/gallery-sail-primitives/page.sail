@@ -233,14 +233,14 @@ Stack item 3</span>
   <section>
     <h2>
       style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })
-sail-collapsible</h2>
+sail-accordion</h2>
     <row gap="3" align="start">
-      <collapsible>
+      <accordion>
         <sail-button slot="trigger" variant="outline" size="sm">Toggle details</sail-button>
         <column>
           style({ box: padY(2) })
 Revealed content when expanded.</column>
-      </collapsible>
+      </accordion>
     </row>
   </section>
 

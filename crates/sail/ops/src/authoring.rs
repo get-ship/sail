@@ -220,14 +220,14 @@ Controllers never `.style` / `createElement`.\n\
             let (stdlib, reskin) = sail_compiler::l1_by_kind();
             let _ = writeln!(
                 md,
-                "{} stdlib + {} reskins (from `l1_manifest`).\n\n\
+                "{} stdlib elements (from `l1_manifest`; native reskins retired).\n\n\
                  ### Semantic a11y props (SPEC-ARIA-1)\n\n\
                  Authors never write free `aria-*` / free ARIA `role=`. Use these \
                  props; the compiler stamps the correct attribute. Fixed host roles \
                  come from L1 anatomy (see each element's contract).\n",
                 stdlib.len(),
-                reskin.len()
             );
+            let _ = reskin; // always empty post SPEC-L1-1 reskin scrub
             for p in sail_compiler::SEMANTIC_PROPS {
                 let ty = match p.kind {
                     sail_compiler::SemanticKind::String => "string".to_string(),
@@ -286,10 +286,6 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(md, "\n### Stdlib\n");
             for e in &stdlib {
-                let _ = writeln!(md, "- `<{}>` — {}", e.tag, e.description);
-            }
-            let _ = writeln!(md, "\n### Native reskins\n");
-            for e in &reskin {
                 let _ = writeln!(md, "- `<{}>` — {}", e.tag, e.description);
             }
         }
@@ -1090,7 +1086,14 @@ mod tests {
             l1.contains("data-sail-host") && l1.contains("part identity"),
             "host anatomy must document compiler-only data-sail-host: {l1}"
         );
-        assert!(l1.contains("Native reskin") || l1.contains("native reskin") || l1.contains("<hr>"), "reskins: {l1}");
+        assert!(
+            l1.contains("<accordion>") || l1.contains("<separator>") || l1.contains("<kbd>"),
+            "stdlib L1 rows present: {l1}"
+        );
+        assert!(
+            !l1.contains("### Native reskins"),
+            "native reskins section must be gone: {l1}"
+        );
     }
 
     #[test]

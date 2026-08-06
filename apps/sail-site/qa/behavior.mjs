@@ -98,7 +98,7 @@ const DRIVE_OVERLAY = {
   'sail-hover-card':    { kind: 'attr',   attr: 'open' },
   'sail-dropdown-menu': { kind: 'click',  trigger: '[slot="trigger"]' },
   'sail-context-menu':  { kind: 'attr',   attr: 'open' },
-  'sail-collapsible':   { kind: 'click',  trigger: '[slot="trigger"]' },
+  'sail-accordion':   { kind: 'click',  trigger: '[slot="trigger"]' },
   'sail-dialog':        { kind: 'attr',   attr: 'open' },
   'sail-alert-dialog':  { kind: 'attr',   attr: 'open' },
   'sail-drawer':        { kind: 'attr',   attr: 'open' },

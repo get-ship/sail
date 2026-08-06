@@ -85,12 +85,10 @@ dt { font-weight: var(--font-weight-semibold, 600); color: var(--foreground); }
 dd { margin: 0 0 var(--space-2) 0; color: var(--muted-foreground); }
 blockquote { margin: 0; padding-left: var(--space-4); border-left: 2px solid var(--border-strong); color: var(--muted-foreground); }
 mark { background: var(--hover-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }
-kbd { font-family: var(--mono-font, monospace); font-size: 0.85em; padding: 0.1em 0.4em; border: var(--border-width) solid var(--border); border-bottom-width: calc(var(--border-width) * 2); border-radius: var(--radius-sm); background: var(--muted); color: var(--foreground); }
 abbr[title] { text-decoration: underline dotted; cursor: help; }
 sub, sup { font-size: 0.75em; line-height: 0; }
 pre { margin: 0; padding: var(--space-4); overflow-x: auto; background: var(--muted); border-radius: var(--radius-md); font-family: var(--mono-font, monospace); font-size: var(--text-sm); line-height: 1.5; }
 pre code { font-size: inherit; }
-hr { border: 0; border-top: 1px solid var(--border); margin: var(--space-4) 0; }
 iframe { max-width: 100%; border: 0; }
 :where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }
 /* Button + button-link floor. NOT :where — zero-specificity loses to any

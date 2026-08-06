@@ -2,7 +2,7 @@
 //
 // Native <details> has no disabled state. This mix-in preventDefaults click
 // and Enter/Space (capture) while the host carries [disabled]. Stacked with
-// `use:detailsToggle` on the L1 <collapsible> root.
+// `use:detailsToggle` on the L1 <accordion> root.
 
 import type { Action } from '../action'
 

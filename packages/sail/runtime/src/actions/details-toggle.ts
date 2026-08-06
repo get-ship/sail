@@ -2,7 +2,7 @@
 //
 // Capability mix-in: any host that IS a <details> (or behaves as one) can
 // stamp `use:detailsToggle` so bound signals can sync on open flips.
-// Stacked with `use:detailsDisabled` on the L1 <collapsible> root.
+// Stacked with `use:detailsDisabled` on the L1 <accordion> root.
 
 import type { Action } from '../action'
 import { invokeCallback } from '../callback'

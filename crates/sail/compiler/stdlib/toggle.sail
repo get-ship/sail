@@ -1,7 +1,9 @@
 <!--
-  <toggle> — first/last join + variant/orientation/size Style.
+  <toggle> — pressed-button cell for <toggle-group> only (standalone died).
+  First/last join + variant/orientation/size Style.
   Paint: rest bg/fg/border from component.toggle tokens
          (cssNames toggle, toggle-foreground, toggle-border).
+  Binary form control → use <switch>. Action button → use <button>.
 -->
 
 <scope>

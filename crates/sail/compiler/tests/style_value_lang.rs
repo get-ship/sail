@@ -414,7 +414,8 @@ fn batch_e_residuals_compile_on_style_path() {
     // Structure-only (no host paint): pagination, slider — excluded from paint asserts.
     for (tag, src) in [
         ("breadcrumb", include_str!("../stdlib/breadcrumb.sail")),
-        ("collapsible", include_str!("../stdlib/collapsible.sail")),
+        ("accordion", include_str!("../stdlib/accordion.sail")),
+        ("kbd", include_str!("../stdlib/kbd.sail")),
         (
             "error-boundary",
             include_str!("../stdlib/error-boundary.sail"),

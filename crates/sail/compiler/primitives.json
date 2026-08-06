@@ -30,6 +30,24 @@
         "default": "default"
       }
     },
+    "accordion": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "multiple": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "open": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "alert": {
       "dismissible": {
         "type": "bool",
@@ -273,16 +291,6 @@
         "default": "sail"
       }
     },
-    "collapsible": {
-      "disabled": {
-        "type": "bool",
-        "default": "false"
-      },
-      "open": {
-        "type": "bool",
-        "default": "false"
-      }
-    },
     "combobox": {
       "placeholder": {
         "type": "string",
@@ -297,12 +305,6 @@
       "for": {
         "type": "string",
         "default": ""
-      }
-    },
-    "details": {
-      "open": {
-        "type": "bool",
-        "default": "false"
       }
     },
     "dialog": {

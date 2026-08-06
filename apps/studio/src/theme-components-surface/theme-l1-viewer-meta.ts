@@ -24,7 +24,6 @@ export type L1ViewerMeta = {
 const STAGE_KEY_OVERRIDES: Partial<Record<L1Id, string>> = {
   switch: 'switchToggle',
   progress: 'progressBar',
-  details: 'details',
 }
 
 function kebabToCamel(id: string): string {

@@ -1,4 +1,4 @@
-// L1 conformance spec: <collapsible> (mechanism-1, native <details>). Probe
+// L1 conformance spec: <accordion> (mechanism-1, native <details>). Probe
 // asserts the native open/closed contract: open → content laid out; closed →
 // content removed (height 0). Rendered closed + open side by side.
 
@@ -7,10 +7,10 @@ const trig = 'display:flex;align-items:center;justify-content:space-between;gap:
 const body = 'padding:0 14px 14px;font-size:14px;color:var(--muted-foreground);line-height:1.5'
 const box = 'border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;width:340px'
 const coll = (open) =>
-  `<details class="sail-collapsible"${open ? ' open' : ''} style="${box}"><summary class="trigger-wrap" style="${trig}"><span>What is SAIL?</span>${chev}</summary><div class="content-wrap"><div class="content-inner" style="${body}">A trustworthy compiler and a beautiful component language — L1 primitives that compile away to static DOM with zero runtime.</div></div></details>`
+  `<details class="sail-accordion"${open ? ' open' : ''} style="${box}"><summary class="trigger-wrap" style="${trig}"><span>What is SAIL?</span>${chev}</summary><div class="content-wrap"><div class="content-inner" style="${body}">A trustworthy compiler and a beautiful component language — L1 primitives that compile away to static DOM with zero runtime.</div></div></details>`
 
 export default {
-  tag: 'collapsible',
+  tag: 'accordion',
   width: 780,
   rows() {
     return [coll(false) + coll(true)]
@@ -20,13 +20,13 @@ export default {
     // Measure whether the content ADDS to the details' height — true only when
     // open. Robust to the collapse mechanism (display:none OR clip-to-0 via
     // ::details-content both give detailsH ≈ summaryH when closed).
-    document.querySelectorAll('.sail-collapsible').forEach((el) => {
+    document.querySelectorAll('.sail-accordion').forEach((el) => {
       const open = el.hasAttribute('open')
       const detailsH = el.getBoundingClientRect().height
       const summaryH = el.querySelector('summary').getBoundingClientRect().height
       const contentContributes = detailsH > summaryH + 2
       if (contentContributes !== open) bad.push({ open, detailsH: Math.round(detailsH), summaryH: Math.round(summaryH) })
     })
-    return { count: document.querySelectorAll('.sail-collapsible').length, bad }
+    return { count: document.querySelectorAll('.sail-accordion').length, bad }
   },
 }

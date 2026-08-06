@@ -31,8 +31,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("textarea", include_str!("../stdlib/textarea.sail")),
     ("select", include_str!("../stdlib/select.sail")),
     ("dialog", include_str!("../stdlib/dialog.sail")),
-    ("details", include_str!("../stdlib/details.sail")),
-    ("summary", include_str!("../stdlib/summary.sail")),
+    ("accordion", include_str!("../stdlib/accordion.sail")),
     ("table", include_str!("../stdlib/table.sail")),
     ("fieldset", include_str!("../stdlib/fieldset.sail")),
     ("legend", include_str!("../stdlib/legend.sail")),
@@ -40,6 +39,7 @@ const SOURCES: &[(&str, &str)] = &[
     ("meter", include_str!("../stdlib/meter.sail")),
     ("a", include_str!("../stdlib/anchor.sail")),
     ("separator", include_str!("../stdlib/separator.sail")),
+    ("kbd", include_str!("../stdlib/kbd.sail")),
     ("icon", include_str!("../stdlib/icon.sail")),
     ("label", include_str!("../stdlib/label.sail")),
     ("card", include_str!("../stdlib/card.sail")),
@@ -57,7 +57,6 @@ const SOURCES: &[(&str, &str)] = &[
     ("code-block", include_str!("../stdlib/code-block.sail")),
     ("chip", include_str!("../stdlib/chip.sail")),
     ("field", include_str!("../stdlib/field.sail")),
-    ("collapsible", include_str!("../stdlib/collapsible.sail")),
     ("slider", include_str!("../stdlib/slider.sail")),
     ("radio", include_str!("../stdlib/radio.sail")),
     ("radio-group", include_str!("../stdlib/radio-group.sail")),
@@ -158,12 +157,10 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
         "code-block" => Some(CODE_BLOCK_MAP),
         "breadcrumb" => Some(BREADCRUMB_MAP),
         "dialog" => Some(DIALOG_MAP),
-        // details + collapsible both host a native <summary> chevron; collapsible
-        // is its own CE (`.sail-collapsible`) so it needs the same map — without
-        // it summary::after is only a solid bg square (mask never applied).
-        "details" => Some(DETAILS_MAP),
-        "collapsible" => Some(DETAILS_MAP),
-        "summary" => Some(SUMMARY_MAP),
+        // accordion hosts a native <summary> chevron (not the retired L1
+        // <summary> element) — without this map summary::after is only a
+        // solid bg square (mask never applied).
+        "accordion" => Some(ACCORDION_MAP),
         "table" => Some(TABLE_MAP),
         "progress" => Some(PROGRESS_MAP),
         "meter" => Some(METER_MAP),
@@ -544,9 +541,9 @@ const DIALOG_MAP: &[DescRule] = &[
     },
 ];
 
-const DETAILS_MAP: &[DescRule] = &[
-    // Kill UA disclosure marker on the hosted summary (collapsible does not
-    // wrap the <summary> L1 component, so SUMMARY_MAP never runs on it).
+const ACCORDION_MAP: &[DescRule] = &[
+    // Kill UA disclosure marker on the hosted summary (accordion does not
+    // wrap a separate L1 <summary> element).
     DescRule {
         sel: "> summary::-webkit-details-marker",
         paint: DescPaint(&[("display", "none")]),
@@ -588,59 +585,20 @@ const DETAILS_MAP: &[DescRule] = &[
         sel: "> summary ~ *",
         paint: DescPaint(&[("margin", "var(--space-3) var(--space-4)")]),
     },
-    // Stacked accordion: merge shared edges when details sit back-to-back.
+    // Stacked accordion: merge shared edges when items sit back-to-back.
     DescRule {
-        sel: ":has(+ .sail-details)",
+        sel: ":has(+ .sail-accordion)",
         paint: DescPaint(&[
             ("border-bottom-left-radius", "0"),
             ("border-bottom-right-radius", "0"),
         ]),
     },
     DescRule {
-        sel: "+ .sail-details",
+        sel: "+ .sail-accordion",
         paint: DescPaint(&[
             ("border-top", "0"),
             ("border-top-left-radius", "0"),
             ("border-top-right-radius", "0"),
-        ]),
-    },
-    // Collapsible hosts stack the same way (class is .sail-collapsible).
-    DescRule {
-        sel: ":has(+ .sail-collapsible)",
-        paint: DescPaint(&[
-            ("border-bottom-left-radius", "0"),
-            ("border-bottom-right-radius", "0"),
-        ]),
-    },
-    DescRule {
-        sel: "+ .sail-collapsible",
-        paint: DescPaint(&[
-            ("border-top", "0"),
-            ("border-top-left-radius", "0"),
-            ("border-top-right-radius", "0"),
-        ]),
-    },
-];
-
-const SUMMARY_MAP: &[DescRule] = &[
-    DescRule {
-        sel: "::-webkit-details-marker",
-        paint: DescPaint(&[("display", "none")]),
-    },
-    DescRule {
-        sel: "::marker",
-        paint: DescPaint(&[("content", "''")]),
-    },
-    DescRule {
-        sel: "::after",
-        paint: DescPaint(&[
-            ("flex", "0 0 auto"),
-            ("-webkit-mask", SUMMARY_CHEVRON_MASK),
-            ("mask", SUMMARY_CHEVRON_MASK),
-            (
-                "transition",
-                "transform var(--duration-medium) var(--ease-out), background var(--duration-fast) var(--ease-out)",
-            ),
         ]),
     },
 ];

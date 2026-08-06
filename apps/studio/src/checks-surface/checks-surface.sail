@@ -295,7 +295,7 @@ Autofix</p>
               </if>
             </row>
             <for {g.rows as f} key={f.key}>
-              <collapsible
+              <accordion
                 open={f.expanded}
                 finding-id={f.id}
                 selected={f.selected ? 'true' : 'false'}
@@ -433,7 +433,7 @@ Suggestion</p>
                     </column>
                   </card>
                 </column>
-              </collapsible>
+              </accordion>
             </for>
           </column>
         </for>
