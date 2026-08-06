@@ -34,7 +34,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (dev, build, scaffold, compile, tokens, types, check, lsp, mcp, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (create, dev, build, scaffold, compile, tokens, types, check, lsp, mcp, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -58,6 +58,14 @@ enum Command {
         /// Repeatable. e.g. `sail routes --root apps/shell --root apps/spaces`.
         #[arg(long = "root")]
         root: Vec<PathBuf>,
+    },
+
+    /// Scaffold a new Sail app (`package.json`, `sail.config.jsonc`, `routes/`,
+    /// `themes/`, `.gitignore` with `.deck/`). External-app product path (EXT-1 E8).
+    Create {
+        /// App directory to create (e.g. `my-app` → `./my-app`). Basename must
+        /// match `/^[a-z][a-z0-9-]*$/`.
+        name: PathBuf,
     },
 
     /// Generate boilerplate for a new route, component, pack, or theme.
@@ -326,6 +334,7 @@ fn run() -> Result<()> {
             println!("{brand} routes → {n_routes} first-party route(s)");
             Ok(())
         }
+        Command::Create { name } => scaffold::run_create(name),
         Command::Scaffold(Scaffold::Route {
             name,
             path,

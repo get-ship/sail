@@ -3,7 +3,7 @@ name = "deck-cli"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Sail CLI (`sail`) — dev, build, scaffold, compile, tokens, check, lsp, mcp, layout, doctor, version."
+description = "Sail CLI (`sail`) — create, dev, build, scaffold, compile, tokens, check, lsp, mcp, layout, doctor, version."
 
 [[bin]]
 name = "sail"

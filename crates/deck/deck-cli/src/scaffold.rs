@@ -312,6 +312,158 @@ pub fn run_pack(name: String) -> Result<()> {
     Ok(())
 }
 
+/// Validate an external app directory basename (`my-app`).
+///
+/// Same shape as route/pack names: `/^[a-z][a-z0-9-]*$/`. Becomes the npm
+/// `package.json` `name` field (unscoped) and the on-disk directory name.
+fn validate_app_name(name: &str) -> Result<()> {
+    if name.is_empty() {
+        bail!("app name is required");
+    }
+    if name == "." || name == ".." || name.contains('/') || name.contains('\\') {
+        // Multi-segment paths are allowed as the create *path*; only the
+        // basename is validated here. Callers strip parents first.
+        bail!("app name must be a single path segment — got {name:?}");
+    }
+    if !name.starts_with(|c: char| c.is_ascii_lowercase()) {
+        bail!("app name must start with a lowercase letter — got {name:?}");
+    }
+    if !name
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    {
+        bail!("app name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
+    }
+    Ok(())
+}
+
+/// `sail create my-app` — write the external-app 4-entry tree + gitignore.
+///
+/// Shape (EXT-1 E8):
+/// ```text
+/// my-app/
+///   package.json         # registry-style @ship/* deps (no file:/workspace:*)
+///   sail.config.jsonc    # theme section
+///   routes/page.sail     # hello-world source
+///   themes/ship.json     # modern project theme SSOT (baked catalog)
+///   .gitignore           # includes .deck/ (build output — never commit)
+/// ```
+///
+/// Also seeds `.sail/types.d.ts` + a thin `tsconfig.json` so the TS-1 ambient
+/// path works out of the box. Does **not** publish to a registry (operator).
+pub fn run_create(name: PathBuf) -> Result<()> {
+    let cwd = std::env::current_dir().context("cwd")?;
+    let app_dir = if name.as_os_str().is_empty() {
+        bail!("app name is required");
+    } else if name.is_absolute() {
+        name
+    } else {
+        cwd.join(&name)
+    };
+
+    let basen = app_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| anyhow!("app path has no basename: {}", app_dir.display()))?;
+    validate_app_name(basen)?;
+
+    if app_dir.exists() {
+        bail!("directory already exists: {}", app_dir.display());
+    }
+    fs::create_dir_all(app_dir.join("routes"))
+        .with_context(|| format!("mkdir {}", app_dir.display()))?;
+
+    // Registry-style deps only (no file:, no workspace:*). Versions track the
+    // monorepo package versions; operator npm publish is out of band (E8).
+    let pkg_json = format!(
+        "{{\n  \
+         \"name\": \"{basen}\",\n  \
+         \"private\": true,\n  \
+         \"version\": \"0.1.0\",\n  \
+         \"type\": \"module\",\n  \
+         \"description\": \"Sail app scaffolded by `sail create`.\",\n  \
+         \"scripts\": {{\n    \
+         \"dev\": \"sail dev\",\n    \
+         \"build\": \"sail build\",\n    \
+         \"check\": \"sail check .\"\n  \
+         }},\n  \
+         \"dependencies\": {{\n    \
+         \"@ship/sail-runtime\": \"^0.3.0\",\n    \
+         \"@ship/sail-dom\": \"^0.3.0\",\n    \
+         \"@ship/tokens\": \"^0.3.0\"\n  \
+         }}\n\
+         }}\n"
+    );
+    fs::write(app_dir.join("package.json"), pkg_json)
+        .with_context(|| format!("write {}/package.json", app_dir.display()))?;
+
+    // Hello-world page — legal under every styling policy (layout + typography).
+    let title = title_case(basen);
+    let page = format!(
+        "<column gap=\"4\">\n  \
+         <h1>{title}</h1>\n  \
+         <p>Sail app ready. Edit routes/page.sail.</p>\n\
+         </column>\n"
+    );
+    fs::write(app_dir.join("routes").join("page.sail"), page)
+        .with_context(|| format!("write {}/routes/page.sail", app_dir.display()))?;
+
+    // Theme SSOT from the baked catalog (no monorepo tree required). Prefer
+    // disk catalog when this CLI is run inside the monorepo so forks stay live.
+    let catalog_dir = find_repo_root(&app_dir)
+        .or_else(|_| find_repo_root(&cwd))
+        .ok()
+        .map(|root| root.join("packages/sail/tokens/model/themes"))
+        .filter(|p| p.is_dir());
+    let theme_id = sail_compiler::tokens_generate::DEFAULT_PROJECT_THEME_ID;
+    let theme_dest = sail_compiler::tokens_generate::scaffold_default_project_theme(
+        &app_dir,
+        catalog_dir.as_deref(),
+        Some(theme_id),
+    )?;
+    let _ = sail_compiler::tokens_generate::scaffold_theme_config(&app_dir, theme_id)?;
+
+    // .gitignore with .deck/ + .sail/README.md (S0 / project_store).
+    sail_ops::ensure_project_store(&app_dir)
+        .map_err(|e| anyhow!("ensure project store (.gitignore / .sail): {e}"))?;
+
+    // Ambient pack + tsconfig so `tsc` works without a monorepo ambient path.
+    // `.sail/types.d.ts` is gitignored via ensure_project_store; regenerate
+    // with `sail types` after clone if needed.
+    let _ = sail_compiler::ambients::write_project_types(&app_dir)?;
+    let tsconfig = sail_compiler::ambients::emit_project_tsconfig_json(&[
+        "src/**/*.ts",
+        "routes/**/*.ts",
+    ]);
+    fs::write(app_dir.join("tsconfig.json"), tsconfig)
+        .with_context(|| format!("write {}/tsconfig.json", app_dir.display()))?;
+
+    let rel = app_dir
+        .strip_prefix(&cwd)
+        .unwrap_or(&app_dir)
+        .display()
+        .to_string();
+    println!("[create] {rel}/");
+    println!("[create]   package.json");
+    println!("[create]   sail.config.jsonc");
+    println!("[create]   routes/page.sail");
+    println!(
+        "[create]   {}",
+        theme_dest
+            .strip_prefix(&app_dir)
+            .unwrap_or(&theme_dest)
+            .display()
+    );
+    println!("[create]   .gitignore  (includes .deck/)");
+    println!("[create]   tsconfig.json  .sail/types.d.ts");
+    println!("[create] next steps:");
+    println!("  1. cd {rel}");
+    println!("  2. bun install   # after @ship packages are published");
+    println!("  3. sail dev");
+    println!("  4. sail check .");
+    Ok(())
+}
+
 /// Copy one Sail catalog theme into the project's `themes/` and seed a thin
 /// `sail.config.jsonc` theme section when the project has none.
 ///
