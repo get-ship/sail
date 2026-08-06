@@ -325,6 +325,15 @@ pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
         },
     ),
     (
+        "skeleton",
+        HostAnatomy {
+            role: Some("status"),
+            live: None,
+            atomic: None,
+            label: Some("Loading"),
+        },
+    ),
+    (
         "switch",
         HostAnatomy {
             role: Some("switch"),

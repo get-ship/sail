@@ -673,6 +673,18 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "solid"
     }
   ],
+  "skeleton": [
+    {
+      "name": "shape",
+      "type": "text · line · block · circle",
+      "default": "text"
+    },
+    {
+      "name": "size",
+      "type": "md · sm · lg",
+      "default": "md"
+    }
+  ],
   "slider": [
     {
       "name": "value",

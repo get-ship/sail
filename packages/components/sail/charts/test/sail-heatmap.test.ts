@@ -216,7 +216,7 @@ describe('<sail-heatmap>', () => {
       loading: true,
     })
     await flush()
-    expect(root(el).querySelector('[skeleton]')).not.toBeNull()
+    expect(root(el).querySelector('.sail-skeleton')).not.toBeNull()
     expect(root(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

@@ -154,7 +154,7 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
 
 </controller>
 <if {loading()}>
-  <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
 {else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <svg
     viewBox={'0 0 ' + svgW() + ' ' + svgH()}
     width={svgW()}

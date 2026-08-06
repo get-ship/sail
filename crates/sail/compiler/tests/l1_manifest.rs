@@ -41,12 +41,13 @@ fn stdlib_tags_match_manifest() {
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    // 54 stdlib after SPEC-L1-1 structure cuts:
+    // 55 stdlib after SPEC-L1-1 structure + skeleton promote:
     //   − collapsible, details, summary  + accordion, kbd
     //   − 2 native reskins (hr, kbd floor) deleted entirely
-    assert_eq!(stdlib.len(), 54, "stdlib L1 count");
+    //   + skeleton (was attribute floor)
+    assert_eq!(stdlib.len(), 55, "stdlib L1 count");
     assert_eq!(reskins.len(), 0, "reskins must be gone");
-    assert_eq!(l1_entries().len(), 54);
+    assert_eq!(l1_entries().len(), 55);
 }
 
 #[test]
@@ -72,6 +73,10 @@ fn l1_kind_is_stdlib_only() {
         "accordion must be L1"
     );
     assert!(entries.iter().any(|e| e.tag == "kbd"), "kbd must be L1");
+    assert!(
+        entries.iter().any(|e| e.tag == "skeleton"),
+        "skeleton must be L1 (promoted from attribute floor)"
+    );
     assert!(
         entries.iter().any(|e| e.tag == "separator"),
         "separator must be L1 (absorbs hr)"
@@ -134,4 +139,21 @@ fn kbd_description_names_keycap() {
         "kbd description unexpected: {}",
         kbd.description
     );
+}
+
+#[test]
+fn skeleton_description_names_loading_placeholder() {
+    let sk = l1_entries()
+        .into_iter()
+        .find(|e| e.tag == "skeleton")
+        .expect("skeleton in L1");
+    let d = sk.description.to_ascii_lowercase();
+    assert!(
+        d.contains("load") || d.contains("placeholder") || d.contains("shimmer") || d.contains("sheen"),
+        "skeleton description unexpected: {}",
+        sk.description
+    );
+    let names: Vec<&str> = sk.attributes.iter().map(|a| a.name.as_str()).collect();
+    assert!(names.contains(&"shape"), "skeleton must declare shape prop");
+    assert!(names.contains(&"size"), "skeleton must declare size prop");
 }

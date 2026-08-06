@@ -7479,6 +7479,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "native <hr>. Style value language only."
     },
     {
+      "tag": "skeleton",
+      "description": "loading placeholder sheen. Style product for geometry;"
+    },
+    {
       "tag": "slider",
       "description": "native range alias. use:rangeFill → --rng-pct (WebKit fill)."
     },
@@ -7677,6 +7681,13 @@ export const HOST_ANATOMY: HostAnatomyDoc[] = [
   },
   {
     "tag": "spinner",
+    "role": "status",
+    "live": null,
+    "atomic": null,
+    "label": "Loading"
+  },
+  {
+    "tag": "skeleton",
     "role": "status",
     "live": null,
     "atomic": null,

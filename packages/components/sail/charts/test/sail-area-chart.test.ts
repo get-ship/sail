@@ -171,7 +171,7 @@ describe('<sail-area-chart>', () => {
     const series = JSON.stringify([{ name: 'a', data: [1, 2, 3] }])
     const { el } = mount(reg, 'sail-area-chart', { series, loading: true })
     await flush()
-    expect(root(el).querySelector('[skeleton]')).not.toBeNull()
+    expect(root(el).querySelector('.sail-skeleton')).not.toBeNull()
     expect(root(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

@@ -2,9 +2,9 @@
 //
 // SSOT for product @keyframes + --animate-* vars. Style.animate(name)
 // lowers to `animation: var(--animate-{name})`; L1 skins (status-dot,
-// skeleton, progress) reference the same vars. Not Style motion interaction
-// catalog (crates/sail/lint/animation-presets.json) — infinite spinners /
-// shimmers stay on CSS PE, not style.loop.
+// skeleton L1 map, progress) reference the same vars. Not Style motion
+// interaction catalog (crates/sail/lint/animation-presets.json) — infinite
+// spinners / shimmers stay on CSS PE, not style.loop.
 //
 // Closed ambient loops; materialised in sail-base.css.
 
@@ -54,7 +54,7 @@ export const KEYFRAME_CATALOG: readonly KeyframeCatalogEntry[] = [
     frames: '0% { background-position: 200% 0; } 100% { background-position: -200% 0; }',
     animation: 'sail-skeleton-shimmer 1.5s ease-in-out infinite',
     styleAnimate: false,
-    doc: 'Skeleton placeholder sheen (span[skeleton])',
+    doc: 'Skeleton placeholder sheen (.sail-skeleton / SKELETON_MAP)',
   },
   {
     name: 'progress-indeterminate',

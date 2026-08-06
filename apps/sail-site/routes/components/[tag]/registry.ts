@@ -295,13 +295,12 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   skeleton: lang('skeleton', 'skeleton', {
     blurb:
-      'An attribute on a span: skeleton plus a shape draws the shimmer placeholder. No component to import — the loading state is markup.',
-    variants: ['text', 'block', 'circle'],
+      'Loading placeholder sheen. Shape and size props draw the shimmer block — no import, no attribute floor.',
+    variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
     props: [
-      { name: 'skeleton', desc: 'the attribute that makes a span one', type: 'attr' },
       { name: 'shape', desc: 'what it stands in for', type: 'text · line · block · circle' },
-      { name: 'size', desc: 'text-row height', type: 'sm · md · lg' },
+      { name: 'size', desc: 'text-row height or circle scale', type: 'sm · md · lg' },
     ],
   }),
   'empty-state': lang('empty-state', 'emptyState', {

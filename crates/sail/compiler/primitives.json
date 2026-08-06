@@ -767,6 +767,25 @@
         "default": "solid"
       }
     },
+    "skeleton": {
+      "shape": {
+        "values": [
+          "text",
+          "line",
+          "block",
+          "circle"
+        ],
+        "default": "text"
+      },
+      "size": {
+        "values": [
+          "md",
+          "sm",
+          "lg"
+        ],
+        "default": "md"
+      }
+    },
     "slider": {
       "disabled": {
         "type": "bool",

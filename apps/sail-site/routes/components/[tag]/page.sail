@@ -427,14 +427,14 @@ one signal drives both — {load()}%</p>
               <row gap="3" align="center">
                 style({ box: w(full).maxW(panel-max-w-sm) })
 
-                <span skeleton shape={variant()}>
+                <skeleton shape={variant()}>
                   style({ box: w(7).h(7) })
-</span>
+</skeleton>
                 <column gap="2">
                   style({ box: grow(1) })
 
-                  <span skeleton shape={variant()} size="sm"></span>
-                  <span skeleton shape={variant()} size="sm"></span>
+                  <skeleton shape={variant()} size="sm"></skeleton>
+                  <skeleton shape={variant()} size="sm"></skeleton>
                 </column>
               </row>
             </if>

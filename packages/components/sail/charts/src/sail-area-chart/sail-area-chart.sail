@@ -102,7 +102,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
   style({ box: w(full) })
 
   <if {loading()}>
-    <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+    <skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
   {else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <svg
       viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
       height={height()}

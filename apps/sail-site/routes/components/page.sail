@@ -390,12 +390,12 @@ Syncing…</span>
                   </row>}{else-if {e.tag === 'skeleton'} => <column gap="2">
                     style({ box: w(full) })
 
-                    <span skeleton size="md">
+                    <skeleton size="md">
                       style({ box: w(full).h(3) })
-</span>
-                    <span skeleton size="sm">
+</skeleton>
+                    <skeleton size="sm">
                       style({ box: w(28).h(2) })
-</span>
+</skeleton>
                   </column>}{else-if {e.tag === 'empty-state'} => <empty-state>
                     <strong slot="title">No deploys yet</strong>
                     Ship something from the CLI to populate this list.
