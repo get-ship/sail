@@ -63,11 +63,15 @@ fn walk(
             for slot in op_slots(op) {
                 let key = ((*slot).to_string(), path.to_string());
                 if fresh.contains(&key) {
-                    diags.push(StyleDiagnostic::Clash {
-                        slot: format!("{slot}@{path}"),
-                        first: writes.get(&key).cloned().unwrap_or_default(),
-                        second: op.source.clone(),
-                    });
+                    let first = writes.get(&key).cloned().unwrap_or_default();
+                    // Idempotent re-write of the same op (codemod merge noise) is not a clash.
+                    if first != op.source {
+                        diags.push(StyleDiagnostic::Clash {
+                            slot: format!("{slot}@{path}"),
+                            first,
+                            second: op.source.clone(),
+                        });
+                    }
                 } else {
                     // First write — or a later List item shadowing an
                     // earlier one: overwrite, emit no diagnostic.

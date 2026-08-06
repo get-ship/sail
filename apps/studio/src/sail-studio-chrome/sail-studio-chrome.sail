@@ -49,7 +49,7 @@ export default controller((ctx) => {
 </controller>
 
 <row sail-studio-shell gap="0" nowrap align="stretch">
-  style({  box: w(full).minH(screen).h(screen).w(full).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })
+  style({  box: w(full).minH(screen).h(screen).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })
   <span>
     style({ box: display(contents), text: fontFamily(body).fontSize(sm) })
     <studio-activity-bar studio-rail on:click={onRailClick}>
@@ -98,7 +98,7 @@ export default controller((ctx) => {
   </studio-activity-bar>
 
   <column gap="0">
-    style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full).minW(0)  })
+    style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })
 
     <if {hasBatch()}>
       <row batch-tray align="center" gap="2" nowrap>
@@ -142,10 +142,10 @@ export default controller((ctx) => {
     </if>
 
     <row gap="0" nowrap align="stretch">
-      style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full).minW(0)  })
+      style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })
 
       <column studio-surface>
-        style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full).minW(0)  })
+        style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })
 
         <slot name="route"></slot>
       </column>
@@ -189,11 +189,11 @@ export default controller((ctx) => {
     </dialog>
 
     <row studio-status align="center" gap="3" nowrap>
-      style({  box: shrink(0).minW(0).h(6).minH(6).padX(3).minW(0).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground)  })
+      style({  box: shrink(0).minW(0).h(6).minH(6).padX(3).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground)  })
       <span>
         style({ box: display(contents), text: fontSize(xs) })
         <p>
-        style({  box: grow(1).minW(0).minW(0), text: fontFamily(mono).truncate()  })
+        style({  box: grow(1).minW(0), text: fontFamily(mono).truncate()  })
 {statusLine()}</p>
       <p save-status>
         style({ box: shrink(0), text: fontSize(xs) })

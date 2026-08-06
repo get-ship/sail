@@ -150,7 +150,7 @@ Tasks</p>
     </column>
 
     <column task-detail gap="0">
-      style({  box: grow(1).minW(0).minH(0).h(full).basis(0).minW(0).overflow(hidden), paint: bg(surface-0)  })
+      style({  box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden), paint: bg(surface-0)  })
 
       <if {!hasTaskSelected()}>
         <column align="center" justify="center">

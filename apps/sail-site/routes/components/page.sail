@@ -377,7 +377,7 @@ We'll never share this.</span>
                   </fieldset>
                 </else-if><else-if {e.tag === 'dropzone'}>
                   <div dropzone>
-                    style({  box: w(full).minH(14).w(full).pad(3)  })
+                    style({  box: w(full).minH(14).pad(3)  })
 
                     <p>
                       style({ text: fontSize(sm).fontWeight(medium) })
@@ -760,7 +760,7 @@ Build 1837 · shipped · Mon</p>
                   <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>
                 </else-if><else-if {e.tag === 'sail-composer'}>
                   <sail-composer placeholder="Message the agent…">
-                    style({  box: w(full).w(full).minW(0)  })
+                    style({  box: w(full).minW(0)  })
 </sail-composer>
                 </else-if><else-if {e.tag === 'sail-thinking-dots'}>
                   <row gap="2" align="center">

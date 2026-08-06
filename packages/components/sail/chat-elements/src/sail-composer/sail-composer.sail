@@ -122,12 +122,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <row nowrap gap="2" align="center">
     <if {multiline()}>
       <textarea rows="1" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys>
-        style({  box: grow(1).minW(0).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })
+        style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })
 </textarea>
     </if>
     <if {!multiline()}>
       <input type="text" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys>
-        style({  box: grow(1).minW(0).minW(0).minH(0).padY(1_5).padX(2), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })
+        style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })
       </input>
     </if>
     <row nowrap gap="1" align="center">

@@ -47,14 +47,14 @@ export default controller(() => {
   </edit-explorer>
 
   <column gap="0">
-    style({  box: grow(1).minW(0).minH(0).h(full).basis(0).minW(0).overflow(hidden)  })
+    style({  box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden)  })
 
     <!-- Doc tabs strip -->
     <row studio-tabs edit-tabs gap="0" align="stretch" nowrap>
       style({  box: shrink(0).h(8).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
       <row edit-tab-list label="Open documents" gap="0" align="stretch" nowrap on:click={onTabClick} on:mousedown={onTabMiddle}>
-        style({  box: grow(1).minW(0).minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)  })
+        style({  box: grow(1).minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)  })
 
         <for {docTabs()} as="tab" key={tab.key}>
           <row tab-id={tab.id} active={tab.active ? 'true' : 'false'} tab-select selected={tab.active ? 'true' : 'false'} current={tab.active ? 'page' : undefined} title={tab.id} gap="1" align="center" nowrap>

@@ -65,7 +65,7 @@ Eval</a>
  </nav>
 
  <column gap="0">
-   style({  box: grow(1).minW(0).minH(0).minW(0)  })
+   style({  box: grow(1).minW(0).minH(0)  })
 
  <div>
    style(mobileBar)

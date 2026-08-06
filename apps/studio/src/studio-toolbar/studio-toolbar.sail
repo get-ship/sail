@@ -4,7 +4,7 @@
   Ban-clean: layout keywords + L1 only.
 -->
 <row studio-toolbar align="center" gap="2" nowrap>
-  style({  box: shrink(0).minW(0).h(7).padX(2).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
+  style({  box: shrink(0).minW(0).h(7).padX(2).overflow(hidden), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
   <slot></slot>
 </row>

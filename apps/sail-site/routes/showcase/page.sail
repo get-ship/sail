@@ -308,7 +308,7 @@ Playlist</p>
 {positionLabel()}</span>
           <!-- progress host paints w-full; grow shell owns the flex share so times stay on one line -->
           <row>
-            style({  box: grow(1).minW(0).minW(0)  })
+            style({  box: grow(1).minW(0)  })
 
             <progress value={position()} max={current().secs}></progress>
           </row>

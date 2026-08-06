@@ -93,6 +93,25 @@ fn scan_attrs(
         if i >= bytes.len() {
             break;
         }
+        // Control / value braces on tags: `<if {expr}>`, `attr={expr}` — skip
+        // bare `{…}` groups so `{w.canExpand}` is not read as attr `w`.
+        if bytes[i] == b'{' {
+            let mut d = 0i32;
+            while i < bytes.len() {
+                if bytes[i] == b'{' {
+                    d += 1;
+                } else if bytes[i] == b'}' {
+                    d -= 1;
+                    i += 1;
+                    if d == 0 {
+                        break;
+                    }
+                    continue;
+                }
+                i += 1;
+            }
+            continue;
+        }
         // attr name
         let name_start = i;
         while i < bytes.len()
@@ -247,5 +266,18 @@ mod tests {
     #[test]
     fn skips_html_comments() {
         assert!(run(r#"<!-- grow min-w="0" --> <div>x</div>"#).is_empty());
+    }
+
+    #[test]
+    fn skips_control_brace_expr_with_w_binding() {
+        // `<if {w.canExpand}>` must not flag bare `w` (for-as binding).
+        assert!(run(
+            r#"<for {items()} as="w" key={w.key}>
+  <if {w.canExpand}>
+    <row>x</row>
+  </if>
+</for>"#
+        )
+        .is_empty());
     }
 }

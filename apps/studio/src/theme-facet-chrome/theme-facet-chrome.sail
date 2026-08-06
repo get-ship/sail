@@ -119,7 +119,7 @@ export default controller(() => {
     style({  box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background)  })
 
     <row align="center" gap="2" nowrap>
-      style({  box: grow(1).minW(0).minW(0)  })
+      style({  box: grow(1).minW(0)  })
 
       <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes

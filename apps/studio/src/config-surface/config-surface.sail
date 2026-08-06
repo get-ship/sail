@@ -157,7 +157,7 @@ Account, sync, and hosted agents when the plugin host is available.</p>
 
                 <if {sec.showFields}>
                   <table config-fields config-table={sec.id} dense hoverable>
-                    style({  box: w(full).w(full)  })
+                    style({  box: w(full)  })
 
                     <thead>
                       <tr>

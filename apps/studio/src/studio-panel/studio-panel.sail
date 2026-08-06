@@ -11,7 +11,7 @@
 </scope>
 
 <column studio-panel gap="0">
-  style({  box: grow(1).minW(0).minH(0).minW(0).h(full).overflow(hidden), paint: borderWidth(1).border(border-subtle).radius(md).bg(surface-1)  })
+  style({  box: grow(1).minW(0).minH(0).h(full).overflow(hidden), paint: borderWidth(1).border(border-subtle).radius(md).bg(surface-1)  })
 
   <slot name="header">
     <row studio-panel-header align="center" gap="2" nowrap justify="between">

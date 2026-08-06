@@ -317,7 +317,7 @@ Catalog</badge>
 
     <!-- PREVIEW -->
     <scroll-area themes-preview theme-preview-pane>
-      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })
 
       <column gap="6">
         style({ box: padX(8).padT(6).padB(10).maxW(panel-max-w-lg) })

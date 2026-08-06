@@ -64,7 +64,7 @@ Loading…</p>
     style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
     <scroll-area assets-editor>
-      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })
 
       <column gap="8">
         style(editorCol)
@@ -302,7 +302,7 @@ Master</p>
     </scroll-area>
 
     <column specimen-dock gap="0">
-      style({  box: grow(1).minW(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
+      style({  box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
 
       <column gap="0">
         style({  box: grow(1).minH(0).h(full).pad(4)  })

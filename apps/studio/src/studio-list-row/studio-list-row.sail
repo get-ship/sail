@@ -13,7 +13,7 @@
 </scope>
 
 <row studio-list-row selected={selected() ? 'true' : 'false'} gap="2" align="center" nowrap>
-  style({  box: minW(0).h(6).padX(3).minW(0)  }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2) })
+  style({  box: minW(0).h(6).padX(3)  }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2) })
 
   <slot name="leading"></slot>
   <p>

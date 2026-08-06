@@ -140,7 +140,7 @@ override</badge>
 
     <!-- CENTER: large live specimen stage -->
     <column specimen-dock components-stage gap="0">
-      style({  box: grow(1).minW(0).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background)  })
+      style({  box: grow(1).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background)  })
 
       <column gap="0">
         style({  box: grow(1).minH(0).h(full).pad(4)  })

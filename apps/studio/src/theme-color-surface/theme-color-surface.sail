@@ -124,7 +124,7 @@ Loading…</p>
   style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
     <scroll-area color-editor>
-      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })
 
       <column gap="8">
         style(editorCol)
