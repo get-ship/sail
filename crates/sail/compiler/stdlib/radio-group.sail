@@ -4,7 +4,7 @@
   Selection, arrow-key roving, focus, and form participation are the BROWSER's:
   use:radioGroup gives every child radio's <input> the shared name (so native
   single-select + arrow navigation kick in), reflects the group's `value` to the
-  checked radio, writes a hidden <input> for the form, and dispatches sail-change.
+  checked radio, writes a hidden <input> for the form, and invokes onChange.
   disabled / aria-label / required propagate from the group.
 
   Paint (Style product): layout owns stack+gap (`<column gap="2">`); typeface is Style.
@@ -20,7 +20,9 @@
     name = ''
     label = ''
     required = false
-  }
+  
+    onChange: (detail: { value: string }) => void
+}
 
   const host = style({ text: fontFamily(body) })
 </scope>

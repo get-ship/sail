@@ -112,9 +112,8 @@ export function makeSessionShellActions(ctx: SessionActionCtx) {
     v === 'assets' ||
     v === 'components'
 
-  const onPathSelect = (e: Event) => {
-    const ce = e as CustomEvent<{ value?: string }>
-    const v = ce.detail?.value || ''
+  const onPathSelect = (detail: { value?: string }) => {
+    const v = detail?.value || ''
     if (!v || v === ctx.facet) {
       ctx.pathCrumb.set(facetCrumb(ctx.facet))
       return

@@ -248,7 +248,7 @@ Sail docs</small>
  side="start"
  size="sm"
  label="Sail docs navigation"
- on:sail-close={closeNav}
+ on-close={closeNav}
 >
  <header>
   <row align="center" justify="between" gap="2">

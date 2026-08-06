@@ -68,10 +68,9 @@ export function createEditElementTree() {
     queueMicrotask(() => scrollSourceEditor(querySourceEditor()))
   }
 
-  const onTreeSelect = (e: Event) => {
-    const ce = e as CustomEvent<{ id?: string }>
-    if (!ce.detail?.id) return
-    selectAndScroll(ce.detail.id)
+  const onTreeSelect = (detail: { id?: string }) => {
+    if (!detail?.id) return
+    selectAndScroll(detail.id)
   }
 
   return {

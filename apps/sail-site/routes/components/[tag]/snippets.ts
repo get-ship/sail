@@ -44,12 +44,12 @@ export default controller(() => ({ team: signal('Design') }))
   combobox: `<controller>
 export default controller(() => {
   const fw = signal('')
-  return { fw, pick: (e) => fw.set(e.detail.value) }
+  return { fw, pick: (e) => fw.set(e.value) }
 })
 </controller>
 
 <combobox placeholder="Pick a framework"
-          on:sail-combobox-select={(e) => pick(e)}>
+          on-select={(e) => pick(e)}>
   <option value="sail">Sail</option>
   <option value="react">React</option>
   <option value="svelte">Svelte</option>
@@ -235,7 +235,7 @@ export default controller(() => {
 </controller>
 
 <if {kept()}>
-  <chip removable on:sail-remove={drop}>Design</chip>
+  <chip removable on-remove={drop}>Design</chip>
 </if>
 <if {!kept()}>
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
@@ -401,11 +401,11 @@ export default controller(() => {
   pagination: `<controller>
 export default controller(() => {
   const page = signal('2')
-  return { page, go: (e) => page.set(e.detail.value) }
+  return { page, go: (e) => page.set(e.page ?? e.value) }
 })
 </controller>
 
-<pagination value={page()} on:sail-page-change={(e) => go(e)}>
+<pagination value={page()} on-page-change={(e) => go(e)}>
   <page value="1">1</page>
   <page value="2">2</page>
   <page value="3">3</page>

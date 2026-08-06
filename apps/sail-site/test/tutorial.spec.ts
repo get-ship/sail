@@ -81,9 +81,9 @@ test('editing the source recompiles; a broken edit reports the editor row', asyn
         dispatchEvent: (e: Event) => boolean
       }
       el.value = next
-      el.dispatchEvent(
-        new CustomEvent('sail-change', { detail: { value: next }, bubbles: true }),
-      )
+      const host = el as HTMLElement & { onChange?: (d: { value: string }) => void; value?: string }
+      host.value = next
+      host.onChange?.({ value: next })
     },
     `${src}\n<span>{nothingProvidesThis()}</span>`,
   )

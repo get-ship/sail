@@ -130,37 +130,35 @@ describe('<sail-mermaid> — register + render', () => {
 })
 
 describe('<sail-mermaid> — error event', () => {
-  it('dispatches sail-mermaid-error with { message, source } on a render failure', async () => {
+  it('invokes onError with { message, source } on a render failure', async () => {
     const m = mount('not mermaid syntax at all >>><<<')
     const errors: Array<{ message: string; source: string }> = []
-    m.el.addEventListener('sail-mermaid-error', (e) => {
-      const ev = e as CustomEvent<{ message: string; source: string }>
-      errors.push(ev.detail)
-    })
+    ;(m.el as any).onError = (d: { message: string; source: string }) => {
+      errors.push(d)
+    }
     await settle(m)
     // If mermaid parsed the bad source (it sometimes does), no error
-    // fires and the SVG renders — that's fine. The contract is
-    // documented as: every failure path emits the event. The positive
-    // assertion is the dispatch shape; the negative path is the SVG.
+    // fires and the SVG renders — that's fine. The contract is: every
+    // failure path invokes onError. The positive assertion is the
+    // payload shape; the negative path is the SVG.
     for (const detail of errors) {
       expect(typeof detail.message).toBe('string')
       expect(detail.source).toBe('not mermaid syntax at all >>><<<')
     }
   }, 15000)
 
-  it('sail-mermaid-error event bubbles + is composed', async () => {
+  it('onError is a host property (no event bus)', async () => {
     const m = mount('not mermaid syntax at all >>><<<')
-    let caught: Event | null = null
-    m.root.addEventListener('sail-mermaid-error', (e) => {
-      caught = e
-    })
-    await settle(m)
-    if (caught) {
-      expect(caught.bubbles).toBe(true)
-      expect(caught.composed).toBe(true)
+    let caught: { message: string; source: string } | null = null
+    ;(m.el as any).onError = (d: { message: string; source: string }) => {
+      caught = d
     }
-    // If mermaid parsed the bad source cleanly, the event is never
-    // dispatched — the test passes by recording the seam is wired.
+    await settle(m)
+    // If mermaid parsed the bad source cleanly, the callback never
+    // runs — the test passes by recording the seam is wired.
+    if (caught) {
+      expect(typeof caught.message).toBe('string')
+    }
   }, 15000)
 })
 

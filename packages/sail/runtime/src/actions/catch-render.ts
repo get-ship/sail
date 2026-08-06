@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 import { attachBoundary, detachBoundary } from '../error-boundary'
 
 /** The boundary hangs `reset()` on its own host so callers can recover it
@@ -38,7 +39,7 @@ export const catchRender: Action<void> = (node) => {
     if (!el.hasAttribute('data-caught')) return
     el.removeAttribute('data-caught')
     el.removeAttribute('data-error-message')
-    el.dispatchEvent(new CustomEvent('sail-error-reset', { bubbles: true, composed: true }))
+    invokeCallback(el, 'onErrorReset')
   }
 
   attachBoundary(el, {
@@ -55,13 +56,7 @@ export const catchRender: Action<void> = (node) => {
       // written for a developer, not for the person using the app.
       if (message) message.textContent = el.getAttribute('message') || 'Something went wrong'
 
-      el.dispatchEvent(
-        new CustomEvent('sail-error-caught', {
-          bubbles: true,
-          composed: true,
-          detail: { error, source },
-        }),
-      )
+      invokeCallback(el, 'onErrorCaught', { error, source })
     },
     reset,
   })

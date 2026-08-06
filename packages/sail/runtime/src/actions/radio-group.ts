@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 let _seq = 0
 
@@ -60,7 +61,7 @@ export const radioGroup: Action<void> = (node) => {
     if (el.getAttribute('value') === val) return
     el.setAttribute('value', val)
     sync()
-    el.dispatchEvent(new CustomEvent('sail-change', { detail: { value: val }, bubbles: true, composed: true }))
+    invokeCallback(el, 'onChange', { value: val })
   }
   el.addEventListener('change', onChange)
 

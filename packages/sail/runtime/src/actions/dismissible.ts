@@ -1,4 +1,4 @@
-// dismissible — removable host emits `sail-remove`. `use:dismissible`
+// dismissible — removable host invokes `onRemove`. `use:dismissible`
 //
 // One of the three behaviors the L1 `<chip>` element stacks with `use:`
 // stamps (pressable / pressed / dismissible) instead of a monolithic
@@ -6,9 +6,10 @@
 // contract.
 
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 /**
- * Emit `sail-remove` (bubbles, composed) from a removable host:
+ * Invoke `onRemove` from a removable host:
  *
  * - `Backspace` / `Delete` keydown fires it, but only while the host carries
  *   `[removable]` — the attribute is the gate because L1 templates are
@@ -18,14 +19,14 @@ import type { Action } from '../action'
  *   too, with `stopPropagation()` so the remove gesture isn't also treated as
  *   host activation.
  *
- * Both paths are suppressed while the host is `[disabled]`. Consumers listen
- * for `sail-remove` and own the actual removal — the action only signals.
+ * Both paths are suppressed while the host is `[disabled]`. Consumers set
+ * `on-remove={fn}` and own the actual removal — the action only signals.
  */
 export const dismissible: Action<void> = (node) => {
   const el = node as HTMLElement
 
   const emitRemove = (): void => {
-    el.dispatchEvent(new CustomEvent('sail-remove', { detail: {}, bubbles: true, composed: true }))
+    invokeCallback(el, 'onRemove')
   }
 
   const onKeydown = (e: KeyboardEvent): void => {

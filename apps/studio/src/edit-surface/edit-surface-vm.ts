@@ -151,12 +151,8 @@ export function createEditSurface() {
     }
   })
 
-  const onSourceSailChange = (e: Event) => {
-    const ce = e as CustomEvent<{ value?: string }>
-    const v =
-      typeof ce.detail?.value === 'string'
-        ? ce.detail.value
-        : String((e.target as { value?: string })?.value ?? '')
+  const onSourceSailChange = (detail: { value?: string }) => {
+    const v = typeof detail?.value === 'string' ? detail.value : ''
     setSourceTextFromEditor(v)
     sync()
   }

@@ -2,9 +2,8 @@
 //
 // Capability mix-in: reads `duration` attr (ms; default 5000; ≤0 = sticky),
 // pauses the timer on pointerenter/focusin, resumes on pointerleave/focusout.
-// On fire: dispatch `sail-toast-dismiss` then remove. Stacked with
-// `use:dismissControl` on the L1 <toast> root. Duration comes from the attr
-// only — param is void.
+// On fire: invoke `onDismiss` then remove. Stacked with `use:dismissControl`
+// on the L1 <toast> root. Duration comes from the attr only — param is void.
 
 import type { Action } from '../action'
 import { dismissSelf, isDismissed } from './dismiss-self'
@@ -33,7 +32,7 @@ export const autoDismiss: Action<void> = (node) => {
       clearTimeout(timer)
       timer = undefined
     }
-    dismissSelf(el)
+    dismissSelf(el) // invokes onDismiss
   }
 
   const start = (): void => {

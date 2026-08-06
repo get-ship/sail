@@ -232,13 +232,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
         hostEl.value = iso
         focused.set(iso)
         open.set(false)
-        host.dispatchEvent(
-          new CustomEvent('sail-change', {
-            detail: { value: iso },
-            bubbles: true,
-            composed: true,
-          }),
-        )
+        ;(host as any).onChange?.({ value: iso })
       }
 
       const openPanel = () => {
@@ -265,13 +259,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
         const v = inputElement.value.trim()
         if (v === '') {
           hostEl.value = ''
-          host.dispatchEvent(
-            new CustomEvent('sail-change', {
-              detail: { value: '' },
-              bubbles: true,
-              composed: true,
-            }),
-          )
+          ;(host as any).onChange?.({ value: '' })
           return
         }
         const parts = parseIso(v)

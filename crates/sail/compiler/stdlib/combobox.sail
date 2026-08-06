@@ -11,7 +11,7 @@
   supplies everything the ARIA pattern demands (ids, popovertarget, aria-expanded /
   -controls / -activedescendant, filter-as-you-type, Up/Down/Home/End, Enter to
   commit, Escape to close) so the author writes the tag and the options and nothing
-  else. Commit emits `sail-combobox-select` with { value, label } and reflects to
+  else. Commit invokes `onSelect` with { value, label } and reflects to
   the element's `value`.
 
   Element mode is STATIC structure, so `placeholder` is not bound in the template:
@@ -29,7 +29,9 @@
   props: {
     placeholder = ''
     value = ''
-  }
+  
+    onSelect: (detail: { value: string; label: string }) => void
+}
 
   const host = style({ box: display(block).position(relative).w(full), text: fontFamily(body) })
   // Same field chrome as bare <input type=text> so combobox survives theme swaps.

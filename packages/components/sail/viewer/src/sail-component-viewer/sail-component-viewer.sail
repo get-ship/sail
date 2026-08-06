@@ -80,13 +80,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
         const v = btn.getAttribute('data-variant') ?? ''
         active.set(v)
         apply()
-        host.dispatchEvent(
-          new CustomEvent('sail-variant-change', {
-            detail: { variant: v },
-            bubbles: true,
-            composed: true,
-          }),
-        )
+        ;(host as any).onVariantChange?.({ variant: v })
       }
       host.addEventListener('click', onClick)
       // The specimen tracks the selection: identity props (variants) may land

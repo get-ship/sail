@@ -66,7 +66,7 @@ Live — throw, catch, retry</p>
       <column gap="3">
         style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
-        <error-boundary on:sail-error-reset={disarm}>
+        <error-boundary on-error-reset={disarm}>
           <if {armed()}><p>{boom()}</p></if>
           <if {!armed()}>
             <p>This subtree is protected.</p>

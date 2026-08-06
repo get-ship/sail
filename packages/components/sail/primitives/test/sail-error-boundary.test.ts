@@ -110,19 +110,17 @@ describe('<sail-error-boundary>', () => {
     expect(fallbackBox(el)).toBeNull()
   })
 
-  it('dispatches sail-error-boundary:caught with { error, source } (bubbles + composed)', () => {
+  it('invokes onErrorCaught with { error, source }', () => {
     const { el } = mount(reg, 'sail-error-boundary', {}, '<span>x</span>')
-    let evt: CustomEvent<{ error: Error; source: string }> | null = null
-    el.addEventListener('sail-error-boundary:caught', (ev) => {
-      evt = ev as CustomEvent<{ error: Error; source: string }>
-    })
+    let detail: { error: Error; source: string } | null = null
+    ;(el as any).onErrorCaught = (d: { error: Error; source: string }) => {
+      detail = d
+    }
     const handle = findNearestBoundary(el)!
     handle.catch(new Error('boom'), 'effect')
-    expect(evt).not.toBeNull()
-    expect(evt!.detail.error.message).toBe('boom')
-    expect(evt!.detail.source).toBe('effect')
-    expect(evt!.bubbles).toBe(true)
-    expect(evt!.composed).toBe(true)
+    expect(detail).not.toBeNull()
+    expect(detail!.error.message).toBe('boom')
+    expect(detail!.source).toBe('effect')
   })
 
   it('inner boundary catches first when nested', () => {

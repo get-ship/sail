@@ -653,7 +653,7 @@ Tab panel body.</p>
                     </breadcrumb>
                   </if>
                   <if {components.stage.pagination()}>
-                    <pagination value={components.pageNo()} size={components.variant() || 'md'} on:sail-page-change={components.onPageChange}>
+                    <pagination value={components.pageNo()} size={components.variant() || 'md'} on-page-change={components.onPageChange}>
                       <page value="1">1</page>
                       <page value="2">2</page>
                       <page value="3">3</page>
@@ -809,7 +809,7 @@ component.*</p>
                       <stack token-chip>
                         style({  box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0)  })
 
-                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
+                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onComponentColor}></sail-color-picker>
                       </stack>
                       <column gap="0">
                         style({ box: grow(1).minW(0) })
@@ -874,7 +874,7 @@ theme-wide</p>
                       <stack token-chip>
                         style({  box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0)  })
 
-                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
+                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onGlobalColor}></sail-color-picker>
                       </stack>
                       <p>
                         style(pathMeta)
@@ -902,7 +902,7 @@ No related globals listed for this face.</p>
 
   <toast-region position="bottom-end" components-toast-region>
     <for {session.toastItems() as t} key={t.key}>
-      <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} components-toast on-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

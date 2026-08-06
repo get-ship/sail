@@ -10,7 +10,9 @@
     selected = false
     removable = false
     disabled = false
-  }
+  
+    onRemove: () => void
+}
 
   // Default solid rides component.chip tokens (muted secondary — not primary).
   // Primary/info/… tones only when tone= is set. gap-1 keeps the dismiss mark

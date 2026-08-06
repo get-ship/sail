@@ -203,6 +203,11 @@ pub fn native_idl_prop(tag: &str, name: &str) -> bool {
 /// Pick the web runtime binder for a plain dynamic field.
 pub fn plain_field_binder(tag: &str, name: &str) -> &'static str {
     let t = tag.to_ascii_lowercase();
+    // Callback props (`on-select={fn}`) are identity properties — functions
+    // cannot ride attributes. Always bindProp (camelCase) on every host.
+    if name.starts_with("on-") {
+        return "bindProp";
+    }
     // Native <dialog open={sig}> must use showModal via bindOpen — assigning
     // the IDL `open` property is non-modal (no top-layer, no backdrop dismiss).
     if t == "dialog" && name == "open" {

@@ -28,7 +28,7 @@ export default controller(() => {
     captureEditor,
     opsUrl: vm.opsUrl,
     opsPath: vm.opsPath,
-    onSourceSailChange: (e: Event) => vm.onSourceSailChange(e),
+    onSourceSailChange: (detail: { value?: string }) => vm.onSourceSailChange(detail),
     onSaveSource: () => vm.onSaveSource(),
     onTabClick: (e: Event) => vm.onTabClick(e),
     onTabMiddle: (e: Event) => vm.onTabMiddle(e),
@@ -174,8 +174,8 @@ export default controller(() => {
                 ops-path={opsPath()}
                 value={sourceText()}
                 use:captureEditor
-                on:sail-change={onSourceSailChange}
-                on:sail-save={onSaveSource}
+                on-change={onSourceSailChange}
+                on-save={onSaveSource}
                 label="Source editor"
 
               >

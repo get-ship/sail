@@ -39,6 +39,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "dismissible",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "onDismiss",
+      "type": "() => void"
     }
   ],
   "avatar": [
@@ -189,6 +193,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "onRemove",
+      "type": "() => void"
     }
   ],
   "code-block": [
@@ -213,6 +221,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "onToggle",
+      "type": "(detail: { open: boolean }) => void"
     }
   ],
   "combobox": [
@@ -225,6 +237,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "value",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "onSelect",
+      "type": "(detail: { value: string; label: string }) => void"
     }
   ],
   "context-menu": [
@@ -232,6 +248,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "for",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "onSelect",
+      "type": "(detail: { value: string }) => void"
     }
   ],
   "details": [
@@ -239,6 +259,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "open",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "onToggle",
+      "type": "(detail: { open: boolean }) => void"
     }
   ],
   "dialog": [
@@ -256,6 +280,14 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "side",
       "type": "center · start · end · top · bottom",
       "default": "center"
+    },
+    {
+      "name": "onClose",
+      "type": "() => void"
+    },
+    {
+      "name": "onDismiss",
+      "type": "() => void"
     }
   ],
   "dropdown": [
@@ -263,6 +295,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "placement",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "onSelect",
+      "type": "(detail: { value: string }) => void"
     }
   ],
   "empty-state": [
@@ -287,6 +323,14 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "message",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "onErrorReset",
+      "type": "() => void"
+    },
+    {
+      "name": "onErrorCaught",
+      "type": "(detail: { error: Error; source: string }) => void"
     }
   ],
   "error-state": [
@@ -496,6 +540,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "sm · md · lg",
       "default": "md"
+    },
+    {
+      "name": "onPageChange",
+      "type": "(detail: { page: string }) => void"
     }
   ],
   "popover": [
@@ -569,6 +617,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "required",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "onChange",
+      "type": "(detail: { value: string }) => void"
     }
   ],
   "scroll-area": [
@@ -796,6 +848,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "orientation",
       "type": "horizontal · vertical",
       "default": "horizontal"
+    },
+    {
+      "name": "onTabChange",
+      "type": "(detail: { name: string }) => void"
     }
   ],
   "textarea": [
@@ -845,6 +901,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "modeOnly",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "onThemeChange",
+      "type": "(detail: { theme: string; mode: string; preference: string }) => void"
     }
   ],
   "ticker": [
@@ -869,6 +929,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "duration",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "onDismiss",
+      "type": "() => void"
     }
   ],
   "toast-region": [
@@ -929,6 +993,10 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "orientation",
       "type": "horizontal · vertical",
       "default": "horizontal"
+    },
+    {
+      "name": "onToggleChange",
+      "type": "(detail: { value: string }) => void"
     }
   ],
   "tooltip": [

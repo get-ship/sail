@@ -110,30 +110,12 @@ export function createColorEdit(session: ThemeSession) {
   session.onSync(sync)
   sync()
 
-  const colorFromEvent = (e: Event): string => {
-    const ce = e as CustomEvent<{ value?: string }>
-    const t = e.target as HTMLElement & { value?: string }
-    // sail-color-picker: detail.value; native input fallback
-    return String(ce.detail?.value ?? t?.value ?? t?.getAttribute?.('value') ?? '').trim()
-  }
-
-  const roleFromEvent = (e: Event): ColorRoleKey | null => {
-    const t = e.currentTarget as HTMLElement | null
-    const host = (e.target as HTMLElement | null)
-    const el =
-      t?.closest?.('[token]') ||
-      host?.closest?.('[token]') ||
-      (host?.hasAttribute?.('token') ? host : null)
-    const key = el?.getAttribute('token') as ColorRoleKey | null
-    return key && key in COLOR_ROLES ? key : null
-  }
-
-  const onRoleColor = (e: Event) => {
+  const onRoleColor = (detail: { value?: string; token?: string }) => {
     if (!session.guardEdit()) return
-    const hex = colorFromEvent(e)
+    const hex = String(detail?.value ?? '').trim()
     if (!hex) return
-    const key = roleFromEvent(e)
-    if (!key) return
+    const key = detail?.token as ColorRoleKey | null
+    if (!key || !(key in COLOR_ROLES)) return
     const def = COLOR_ROLES[key]
     hexByKey[key].set(tryPickerHex(hex) || hex)
     const write = key === 'primary' ? setBrandColor(hex) : setTokenValue(def.path, hex)

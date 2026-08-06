@@ -13,7 +13,7 @@ export default controller(() => {
     dirtyCountLabel: c.dirtyCountLabel,
     fileCountLabel: c.fileCountLabel,
     onFilterInput: (e: Event) => c.onFilterInput(e),
-    onTreeSelect: (e: Event) => c.onTreeSelect(e),
+    onTreeSelect: (detail: { id?: string }) => c.onTreeSelect(detail),
   }
 })
 </controller>
@@ -67,7 +67,7 @@ export default controller(() => {
         selectable="single"
         size="sm"
         show-guides
-        on:sail-select={onTreeSelect}
+        on-select={onTreeSelect}
 
       >
         style({ box: w(full).h(full).minH(0) })

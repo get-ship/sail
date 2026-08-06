@@ -387,8 +387,8 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/size="sm"/)
     expect(surface).toMatch(/chrome="flush"/)
     expect(surface).toMatch(/save-source/)
-    expect(surface).toMatch(/on:sail-save=\{onSaveSource\}/)
-    expect(surface).toMatch(/on:sail-change=\{onSourceSailChange\}/)
+    expect(surface).toMatch(/on-save=\{onSaveSource\}/)
+    expect(surface).toMatch(/on-change=\{onSourceSailChange\}/)
     // Bulk diagnostic list above editor removed — Checks panel + CM lints remain
     expect(surface).not.toMatch(/source-gutter/)
     expect(surface).not.toMatch(/checkRows/)

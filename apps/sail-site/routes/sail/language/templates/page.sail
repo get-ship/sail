@@ -67,20 +67,34 @@ The language</p>
   </p>
   <code-block code={code.forBlock}></code-block>
 
-  <h2>Events</h2>
+  <h2>Events and callbacks</h2>
   <p>
-    <code>on:</code> attaches any DOM event. The handler is an expression
-    over the controller's returned scope:
+    Props flow down. Callbacks report up. <code>bind:</code> syncs a value.
+    That is the entire communication model — there is no event bus.
+  </p>
+  <p>
+    <code>on:</code> attaches a real DOM event (click, input, submit, …).
+    The handler is an expression over the controller's returned scope:
   </p>
   <code-block code={code.events}></code-block>
   <p>
-    Modifiers go after the event name, separated by <code>|</code>:
+    Component moments use typed callback props — kebab
+    <code>on-*</code> attrs such as <code>on-select=&#123;fn&#125;</code> or
+    <code>on-page-change=&#123;go&#125;</code>. The payload is typed on the
+    owning element; hover shows it. Form mutation moments are
+    <code>on-success</code> / <code>on-failure</code> on
+    <code>&lt;form mutation=…&gt;</code> (do not react to moments via the
+    MutationState signal — it persists and re-fires).
+  </p>
+  <p>
+    Modifiers go after a DOM event name, separated by <code>|</code>:
     <code>prevent</code> calls <code>preventDefault</code> before the
     handler, <code>stop</code> stops propagation, <code>self</code> fires
     only when the event target is the element itself,
     <code>key:Escape</code> filters a keyboard event to one key, and
     <code>debounce:200</code> / <code>throttle:100</code> rate-limit in
-    milliseconds. They chain.
+    milliseconds. They chain. Modifiers do not apply to callback props —
+    use the runtime debounce helper when needed.
   </p>
   <code-block code={code.modifiers}></code-block>
 

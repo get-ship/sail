@@ -37,13 +37,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
     const hostEl = signal<HTMLElement | null>(null)
 
     const emitRemove = (id: string): void => {
-      hostEl()?.dispatchEvent(
-        new CustomEvent('sail-annotation-remove', {
-          detail: { id },
-          bubbles: true,
-          composed: true,
-        }),
-      )
+      ;(hostEl() as any)?.onRemove?.({ id })
     }
 
     mount((host) => {

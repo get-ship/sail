@@ -10,7 +10,9 @@
 <scope>
   props: {
     placement = ''
-  }
+  
+    onSelect: (detail: { value: string }) => void
+}
 
   // w(max)=max-content hugs the longest item. No minW floor — 12rem panel-menu-min-w
   // made short path menus look empty. Product scoped sx does not reach top-layer

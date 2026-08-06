@@ -98,7 +98,7 @@ Surface picker · open files & routes</p>
               selectable="single"
               size="sm"
               show-guides
-              on:sail-select={inspect.onTreeSelect}
+              on-select={inspect.onTreeSelect}
 
             >
               style({ box: w(full).h(full).minH(0) })
@@ -253,7 +253,7 @@ No state bindings on this surface.</p>
 
   <toast-region position="bottom-end" components-toast-region>
     <for {session.toastItems() as t} key={t.key}>
-      <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} components-toast on-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

@@ -104,13 +104,10 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
           const error = err instanceof Error ? err : new Error(String(err))
           host.setAttribute('data-error-message', error.message)
           caughtError.set(error)
-          host.dispatchEvent(
-            new CustomEvent('sail-error-boundary:caught', {
-              bubbles: true,
-              composed: true,
-              detail: { error, source: source as BoundarySource },
-            }),
-          )
+          ;(host as any).onErrorCaught?.({
+            error,
+            source: source as BoundarySource,
+          })
         },
         reset,
       })

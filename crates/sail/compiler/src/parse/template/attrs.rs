@@ -86,6 +86,17 @@ fn compile_attr(
     }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
+        // Callback props (`on-select={fn}`, `on-success={…}`) accept the same
+        // expression subset as `on:` handlers — including arrow functions.
+        // They bind as identity properties (bindProp), not event listeners.
+        if name.starts_with("on-") {
+            expr::validate_at(&inner, true, loc, value_span)?;
+            return Ok(AttrInstr::Expr {
+                name: name.to_string(),
+                expr: Expr::new(inner, value_span, true),
+                span: value_span,
+            });
+        }
         // Parse the STRIPPED inner expression — `signal(0)`,
         // `state.x`, `"hello"` all parse fine; `count` parses as an
         // ident. Parse failures then fall into a first-char-based
@@ -121,7 +132,8 @@ fn compile_attr(
                     format!(
                         "attribute `{name}` value `{value}` is an arrow function — \
                          attribute expressions must be a plain JS value, not an arrow; \
-                         for an event handler use `on:event={{...}}` instead"
+                         for a DOM event use `on:event={{...}}`; for a component moment \
+                         use a typed callback prop `on-select={{...}}`"
                     )
                 } else {
                     format!(
@@ -305,11 +317,15 @@ fn compile_on(
     }
     if !crate::directive_manifest::is_known_event(&event) {
         let mut msg = format!("unknown event {event}");
-        if let Some(hint) = crate::directive_manifest::suggest_event(&event) {
-            msg.push_str(&format!(" — did you mean {hint}?"));
+        if let Some(cb) = crate::directive_manifest::custom_event_callback_hint(&event) {
+            msg.push_str(&format!(
+                " — custom events are retired; use the callback prop `{cb}`. Props flow down, callbacks report up; there is no event bus."
+            ));
+        } else if let Some(hint) = crate::directive_manifest::suggest_event(&event) {
+            msg.push_str(&format!(" — did you mean on:{hint}?"));
         } else {
             msg.push_str(
-                " — on: accepts standard DOM event names, sail-*/ship-* custom events, and namespaced tag:event names",
+                " — on: accepts standard DOM event names only. Component moments use on-* callback props (e.g. on-select={{fn}}); form mutation uses on-success/on-failure.",
             );
         }
         return Err(CompileError::new(msg)

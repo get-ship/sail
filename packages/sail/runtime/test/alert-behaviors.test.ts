@@ -79,14 +79,12 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
     expect(el.getAttribute('aria-live')).toBe('assertive')
   })
 
-  it('dismissControl: dismissible + dismiss control → sail-dismiss + removed', () => {
+  it('dismissControl: dismissible + dismiss control → onDismiss + removed', () => {
     const el = makeAlert({ dismissible: true, tone: 'info' })
     dismissControl(el)
 
     let dismissed = 0
-    el.addEventListener('sail-dismiss', () => {
-      dismissed++
-    })
+    ;(el as any).onDismiss = () => { dismissed++ }
 
     const close = el.querySelector('[data-dismiss]') as HTMLElement
     close.click()
@@ -99,9 +97,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
     dismissControl(el)
 
     let dismissed = 0
-    el.addEventListener('sail-dismiss', () => {
-      dismissed++
-    })
+    ;(el as any).onDismiss = () => { dismissed++ }
 
     const close = el.querySelector('[data-dismiss]') as HTMLElement
     close.click()
@@ -118,9 +114,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
     expect(el.getAttribute('aria-live')).toBe('assertive')
 
     let dismissed = 0
-    el.addEventListener('sail-dismiss', () => {
-      dismissed++
-    })
+    ;(el as any).onDismiss = () => { dismissed++ }
     ;(el.querySelector('[data-dismiss]') as HTMLElement).click()
     expect(dismissed).toBe(1)
     expect(document.body.contains(el)).toBe(false)

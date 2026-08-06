@@ -408,7 +408,7 @@ describe('chrome contracts (hygiene, not product proof)', () => {
     // Modal isolation: bindOpen via open={leaveOpen()} — NOT static open (non-modal).
     expect(chrome).toMatch(/open=\{leaveOpen\(\)\}/)
     expect(chrome).not.toMatch(/<dialog[^>]*\sopen[\s>]/)
-    expect(chrome).toMatch(/on:sail-close=\{onLeaveCancel\}/)
+    expect(chrome).toMatch(/on-close=\{onLeaveCancel\}/)
     expect(chrome).toMatch(/<header\b[^>]*>[\s\S]*Unsaved theme changes/)
     expect(chrome).toMatch(/<footer\b/)
     expect(chrome).not.toMatch(/data-facet-overflow/)

@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 const host = (name: string) => `[data-sail-host="${name}"]`
 
@@ -70,9 +71,7 @@ export const toggleGroup: Action<void> = (node) => {
   const commit = (v: string): void => {
     setAttr(root, 'value', v)
     sync()
-    root.dispatchEvent(
-      new CustomEvent('sail-toggle-change', { detail: { value: v }, bubbles: true, composed: true }),
-    )
+    invokeCallback(root, 'onToggleChange', { value: v })
   }
 
   const toggleFrom = (e: Event): HTMLElement | null => {

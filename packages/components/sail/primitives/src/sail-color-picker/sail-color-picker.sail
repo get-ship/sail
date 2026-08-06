@@ -74,13 +74,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       let userEdited = false
 
       const emit = (hex: string) => {
-        host.dispatchEvent(
-          new CustomEvent('sail-change', {
-            detail: { value: hex },
-            bubbles: true,
-            composed: true,
-          }),
-        )
+        ;(host as any).onChange?.({
+          value: hex,
+          token: host.getAttribute('token') ?? host.getAttribute('token-path') ?? undefined,
+        })
       }
 
       const syncFromHex = (hex: string) => {

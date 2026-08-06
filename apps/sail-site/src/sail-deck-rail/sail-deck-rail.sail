@@ -115,7 +115,7 @@ Deck docs</small>
  side="start"
  size="sm"
  label="Deck docs navigation"
- on:sail-close={closeNav}
+ on-close={closeNav}
 >
  <header>
   <row align="center" justify="between" gap="2">

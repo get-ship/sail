@@ -68,13 +68,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       if (_ctx.disabled()) return
       const trimmed = text().trim()
       if (trimmed.length === 0) return
-      hostEl?.dispatchEvent(
-        new CustomEvent('sail-composer-submit', {
-          detail: { text: trimmed, attachments: [...attachments()] },
-          bubbles: true,
-          composed: true,
-        }),
-      )
+      ;(hostEl as any)?.onSubmit?.({ text: trimmed, attachments: [...attachments()] })
       text.set('')
     }
 

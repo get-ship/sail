@@ -120,8 +120,8 @@ function wireProjectAndCatalog(opts?: {
   }
 }
 
-function menuEvent(value: string): CustomEvent<{ value: string }> {
-  return new CustomEvent('sail-menu-select', { detail: { value } })
+function menuDetail(value: string): { value: string } {
+  return { value }
 }
 
 describe('themes home — delete behavior (store)', () => {
@@ -266,7 +266,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     btn.setAttribute('theme-id', 'my-ship')
     document.body.appendChild(btn)
     vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
-    vm.onRowMenu(menuEvent('delete'))
+    vm.onRowMenu(menuDetail('delete'))
 
     // Wait microtasks for deleteTheme promise
     await new Promise((r) => setTimeout(r, 20))
@@ -286,7 +286,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     btn.setAttribute('theme-id', 'my-ship')
     document.body.appendChild(btn)
     vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
-    vm.onRowMenu(menuEvent('delete'))
+    vm.onRowMenu(menuDetail('delete'))
     await new Promise((r) => setTimeout(r, 20))
     expect(deleted).toEqual([])
     expect(vm.toastMessage()).toMatch(/cancelled/i)
@@ -308,7 +308,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     btn.setAttribute('theme-id', 'ship')
     document.body.appendChild(btn)
     vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
-    vm.onRowMenu(menuEvent('delete'))
+    vm.onRowMenu(menuDetail('delete'))
     await new Promise((r) => setTimeout(r, 20))
     expect(deleted).toEqual([])
     expect(vm.toastMessage()).toMatch(/Catalog themes cannot be deleted/i)

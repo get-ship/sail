@@ -32,8 +32,16 @@ In `apps/` (and any product authoring surface), never:
 - module `let state` + manual sync when `@ship/sail-runtime` stores/
   signals exist
 
-Use: signals/stores, `use:` actions, L1–L2/compositions, sx+tokens.
+Use: signals/stores, `use:` actions, L1–L2/compositions, Style+tokens.
 Missing primitive → report gap; do not invent DOM.
+
+### Communication model
+
+Props flow down. Callbacks report up. `bind:` syncs a value. That is
+the entire communication model — there is no event bus. Use `on:` only
+for real DOM events; component moments are typed `on-*` callback props
+(`on-select={fn}`); form mutation moments are `on-success` /
+`on-failure`. Never author `on:sail-*` / `CustomEvent` for widget APIs.
 
 ## Process
 

@@ -132,6 +132,7 @@ export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } 
 // ── Actions (public use: + Action types) ───────────────────────────────────
 export type { Action, ActionResult } from './action'
 export type { Disposer } from './bind'
+// icon is internal (L1 <icon> owns it) — auto-import for stdlib only.
 export {
   anchor,
   autosize,
@@ -140,7 +141,6 @@ export {
   contextMenu,
   dropzone,
   hotkeys,
-  icon,
   primeIconCache,
   rect,
   tipDescribe,

@@ -43,6 +43,7 @@ export {
 // ── ABI-only: events ───────────────────────────────────────────────────────
 export { on, matchesKey } from './on'
 export type { OnOptions, Modifier } from './on'
+export { invokeCallback } from './callback'
 
 // ── ABI-only: control flow ─────────────────────────────────────────────────
 export { bindFor, bindForSignal } from './for'

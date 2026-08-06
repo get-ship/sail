@@ -12,7 +12,9 @@
     variant: 'outline' | 'ghost' | 'segmented' = 'outline'
     size: 'sm' | 'md' | 'lg' = 'md'
     orientation: 'horizontal' | 'vertical' = 'horizontal'
-  }
+  
+    onToggleChange: (detail: { value: string }) => void
+}
 
   const segmented = style({ box: pad(1), paint: bg(toggle-group).borderWidth(1).border(toggle-group-border).radius(md) })
 </scope>

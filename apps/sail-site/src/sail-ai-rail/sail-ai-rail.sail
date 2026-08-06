@@ -89,7 +89,7 @@ AI docs</small>
  side="start"
  size="sm"
  label="AI docs navigation"
- on:sail-close={closeNav}
+ on-close={closeNav}
 >
  <header>
   <row align="center" justify="between" gap="2">

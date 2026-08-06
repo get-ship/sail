@@ -105,7 +105,7 @@ Color</p>
               <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'}>
                 style(heroSwatch)
 
-                <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on:sail-change={overview.onHeroColor}>
+                <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on-change={overview.onHeroColor}>
                   style({ box: w(full).h(20).minH(20) })
 </sail-color-picker>
               </stack>
@@ -126,7 +126,7 @@ Primary</p>
               <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'}>
                 style(heroSwatch)
 
-                <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on:sail-change={overview.onHeroColor}>
+                <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on-change={overview.onHeroColor}>
                   style({ box: w(full).h(20).minH(20) })
 </sail-color-picker>
               </stack>
@@ -147,7 +147,7 @@ Secondary</p>
               <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'}>
                 style(heroSwatch)
 
-                <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on:sail-change={overview.onHeroColor}>
+                <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on-change={overview.onHeroColor}>
                   style({ box: w(full).h(20).minH(20) })
 </sail-color-picker>
               </stack>
@@ -429,7 +429,7 @@ Email</p>
 
   <toast-region position="bottom-end" overview-toast-region>
     <for {session.toastItems() as t} key={t.key}>
-      <toast tone={t.tone} overview-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} overview-toast on-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

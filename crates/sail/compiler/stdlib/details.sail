@@ -7,7 +7,9 @@
 <scope>
   props: {
     open = false
-  }
+  
+    onToggle: (detail: { open: boolean }) => void
+}
 
   const base = style({ paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 </scope>

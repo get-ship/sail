@@ -62,7 +62,7 @@ export default controller(() => {
     onPreviewAddToProject: () => vm.onPreviewAddToProject(),
     onPreviewModeSwitch: (e: Event) => vm.onPreviewModeSwitch(e),
     onNewTheme: () => vm.onNewTheme(),
-    onRowMenu: (e: Event) => vm.onRowMenu(e),
+    onRowMenu: (detail: { value?: string }) => vm.onRowMenu(detail),
     onRetryThemes: () => vm.onRetryThemes(),
     onToastDismiss: () => vm.onToastDismiss(),
   }
@@ -228,7 +228,7 @@ export default controller(() => {
                   >
                     <icon name="ellipsis" size="sm"></icon>
                   </button>
-                  <dropdown id={row.menuId} placement="bottom-end" on:sail-menu-select={onRowMenu}>
+                  <dropdown id={row.menuId} placement="bottom-end" on-select={onRowMenu}>
                     <menu-item value="open">Open</menu-item>
                     <menu-item value="remix">Remix</menu-item>
                     <menu-item value="delete">Delete</menu-item>
@@ -318,7 +318,7 @@ Catalog</badge>
                   >
                     <icon name="ellipsis" size="sm"></icon>
                   </button>
-                  <dropdown id={row.menuId} placement="bottom-end" on:sail-menu-select={onRowMenu}>
+                  <dropdown id={row.menuId} placement="bottom-end" on-select={onRowMenu}>
                     <menu-item value="enable">Add to project</menu-item>
                     <menu-item value="open">Open</menu-item>
                     <menu-item value="duplicate">Duplicate</menu-item>
@@ -622,7 +622,7 @@ Sample card</p>
   <!-- Ephemeral notes: fixed overlay — does not reflow master–detail -->
   <toast-region position="bottom-end" themes-toast-region>
     <for {toastItems() as t} key={t.key}>
-      <toast tone={t.tone} themes-toast on:sail-toast-dismiss={onToastDismiss}>
+      <toast tone={t.tone} themes-toast on-dismiss={onToastDismiss}>
         {t.message}
       </toast>
     </for>

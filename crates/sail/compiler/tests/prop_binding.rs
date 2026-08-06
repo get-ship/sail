@@ -174,3 +174,41 @@ fn freeform_chip_stamps_prop_defaults() {
         r.js
     );
 }
+
+#[test]
+fn on_callback_prop_emits_bind_prop_on_native_host() {
+    // Freeform L1 hosts are native tags; on-* must still bind as properties.
+    let src = r#"<div on-remove={drop}></div>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains(r#"bindProp(__e0, "onRemove""#)
+            || r.js.contains(r#"bindProp(__e0, "onRemove","#),
+        "expected bindProp for on-remove callback, got:\n{}",
+        r.js
+    );
+    assert!(!r.js.contains(r#"bindAttr(__e0, "on-remove""#));
+}
+
+#[test]
+fn custom_event_on_handler_is_refused() {
+    let src = r#"<chip removable on:sail-remove={drop}>x</chip>"#;
+    let err = compile(src, route_opts()).expect_err("on:sail-remove must fail");
+    assert!(
+        err.message.contains("sail-remove")
+            && (err.message.contains("on-remove") || err.message.contains("callback")),
+        "msg: {}",
+        err.message
+    );
+}
+
+#[test]
+fn form_success_event_is_refused() {
+    let src = r#"<form mutation="demo.x" on:success={() => {}}></form>"#;
+    let err = compile(src, route_opts()).expect_err("on:success must fail");
+    assert!(
+        err.message.contains("success")
+            && (err.message.contains("on-success") || err.message.contains("callback")),
+        "msg: {}",
+        err.message
+    );
+}

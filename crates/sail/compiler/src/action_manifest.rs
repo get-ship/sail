@@ -87,7 +87,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "autoDismiss",
         param: "void",
-        summary: "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; emits a dismiss event then removes the host.",
+        summary: "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; invokes `onDismiss` then removes the host.",
         auto_import: true,
     },
     ActionEntry {
@@ -153,19 +153,19 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "detailsToggle",
         param: "void",
-        summary: "Re-emit a native <details> `toggle` as composed `sail-toggle` with `{open}`.",
+        summary: "On native <details> `toggle`, invoke `onToggle` with `{ open }`.",
         auto_import: true,
     },
     ActionEntry {
         name: "dismissControl",
         param: "void",
-        summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
+        summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) invokes `onDismiss` then removes the host; non-toast hosts gate on [dismissible].",
         auto_import: true,
     },
     ActionEntry {
         name: "dismissible",
         param: "void",
-        summary: "Emit `sail-remove` from a `[removable]` host on Backspace/Delete or `.remove` click — the attr-gated dismiss mix-in.",
+        summary: "Invoke `onRemove` on a `[removable]` host for Backspace/Delete or remove-button click — the attr-gated dismiss mix-in.",
         auto_import: true,
     },
     ActionEntry {
@@ -201,7 +201,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "icon",
         param: "void",
-        summary: "Resolve a glyph from the icon cache and stamp the matching <use href>.",
+        summary: "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
         auto_import: true,
     },
     ActionEntry {
@@ -378,8 +378,10 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// auto-imported for stdlib but are not the taught package API.
 ///
 /// ACTIONS-1 diet: widget-private behaviors (`tabs`, `radioGroup`, `menu`,
-/// `pagination`, `combobox`) are closed impl inside L1 widgets — not public.
-pub const PUBLIC_ACTION_COUNT: usize = 12;
+/// `pagination`, `combobox`, `icon`) are closed impl inside L1 widgets — not public.
+/// An action is node-lifetime imperative behavior the language has no syntax
+/// for — never content, state, or data (icon fails that test; the element owns it).
+pub const PUBLIC_ACTION_COUNT: usize = 11;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
@@ -388,7 +390,6 @@ pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "contextMenu",
     "dropzone",
     "hotkeys",
-    "icon",
     "rect",
     "tipDescribe",
     "virtualRow",
@@ -594,12 +595,12 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 12);
+        assert_eq!(PUBLIC_ACTION_COUNT, 11);
     }
 
     #[test]
-    fn diet_five_are_not_public() {
-        for name in ["tabs", "radioGroup", "menu", "pagination", "combobox"] {
+    fn diet_widget_privates_are_not_public() {
+        for name in ["tabs", "radioGroup", "menu", "pagination", "combobox", "icon"] {
             assert!(
                 !is_public_action(name),
                 "{name} must not be on the public use: surface (ACTIONS-1 diet)"

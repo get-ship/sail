@@ -16,7 +16,7 @@ export default controller(() => {
 })
 </controller>
 
-<error-boundary on:sail-error-reset={disarm}>
+<error-boundary on-error-reset={disarm}>
   <if {armed()}><p>{boom()}</p></if>
   <if {!armed()}>
     <p>This subtree is protected.</p>

@@ -75,9 +75,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>
       style({ box: maxW(breakpoint-tablet) })
 
-      Web DOM event names plus framework custom events the runtime fires.
-      <code>sail-*</code> / <code>ship-*</code> prefixes and namespaced
-      <code>tag:event</code> names stay open without a row here.
+      Standard DOM event names only. Component moments are typed
+      <code>on-*</code> callback props (e.g. <code>on-select=&#123;fn&#125;</code>);
+      form mutation moments are <code>on-success</code> /
+      <code>on-failure</code>. Props flow down; callbacks report up;
+      <code>bind:</code> syncs a value — there is no custom-event bus.
     </p>
     <grid cols="2" gap="2">
       <for {eventNames() as e} key={e.name}>

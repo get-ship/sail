@@ -34,7 +34,7 @@ export default controller(() => {
     onTaskThreadClick: (e: Event) => c.onTaskThreadClick(e),
     onTaskOpenFilter: (e: Event) => c.onTaskOpenFilter(e),
     onTaskActorFilter: (e: Event) => c.onTaskActorFilter(e),
-    onComposerSubmit: (e: Event) => c.onComposerSubmit(e),
+    onComposerSubmit: (detail: { text?: string; attachments?: unknown[] }) => c.onComposerSubmit(detail),
     onCloseDetail: () => c.onCloseDetail(),
     onNewTaskQuick: () => c.onNewTaskQuick(),
     onRetryTasks: () => c.onRetryTasks(),
@@ -249,7 +249,7 @@ Tasks</p>
             multiline
             disabled={composerDisabled()}
             placeholder="Message…"
-            on:sail-composer-submit={onComposerSubmit}
+            on-submit={onComposerSubmit}
 
           >
             style({ box: w(full) })

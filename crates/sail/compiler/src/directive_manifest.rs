@@ -159,14 +159,10 @@ pub struct EventEntry {
 /// order. Anything else is a compile error with a did-you-mean hint drawn
 /// from this table.
 ///
-/// Framework escape hatches (not every name is a row, still accepted):
-/// - `sail-*` / `ship-*` prefixes — component/product custom events
-/// - a `:` in the name — namespaced custom-element events (`tag:event`)
-///
-/// Those prefixes stay open so a new component event does not require a
-/// compiler bump; this table is the honest web + known-framework set the
-/// docs and completions surface. In-tree `sail-*` emits used by handlers
-/// are listed so the reference page is not a bare DOM dump.
+/// **DOM events only.** Component moments are typed callback props
+/// (`on-select={fn}`), not CustomEvents. Form mutation moments are
+/// `on-success` / `on-failure` callback props on `<form mutation=…>`.
+/// There is no author-facing custom-event bus.
 pub const EVENT_NAMES: &[EventEntry] = &[
     // ── pointer / mouse ──────────────────────────────────────────────
     EventEntry {
@@ -585,189 +581,120 @@ pub const EVENT_NAMES: &[EventEntry] = &[
         name: "storage",
         summary: "another document changed localStorage/sessionStorage",
     },
-    // ── framework custom (no sail-/ship- prefix) ──────────────────────
-    EventEntry {
-        name: "success",
-        summary: "form mutation settled ok — fired by <form mutation=…> on its host",
-    },
-    EventEntry {
-        name: "failure",
-        summary: "form mutation settled with an error — fired by <form mutation=…> on its host",
-    },
-    // ── sail-* custom events used in-tree ────────────────────────────
-    EventEntry {
-        name: "sail-change",
-        summary: "generic value change from a sail control",
-    },
-    EventEntry {
-        name: "sail-combobox-select",
-        summary: "combobox option selected",
-    },
-    EventEntry {
-        name: "sail-tab-change",
-        summary: "active tab changed",
-    },
-    EventEntry {
-        name: "sail-page-change",
-        summary: "pagination page changed",
-    },
-    EventEntry {
-        name: "sail-variant-change",
-        summary: "variant selection changed",
-    },
-    EventEntry {
-        name: "sail-remove",
-        summary: "item remove requested",
-    },
-    EventEntry {
-        name: "sail-error-reset",
-        summary: "error boundary reset requested",
-    },
-    EventEntry {
-        name: "sail-toggle",
-        summary: "toggle pressed",
-    },
-    EventEntry {
-        name: "sail-toggle-change",
-        summary: "toggle checked state changed",
-    },
-    EventEntry {
-        name: "sail-select",
-        summary: "selection changed",
-    },
-    EventEntry {
-        name: "sail-menu-select",
-        summary: "menu item selected",
-    },
-    EventEntry {
-        name: "sail-dismiss",
-        summary: "overlay/toast dismissed",
-    },
-    EventEntry {
-        name: "sail-toast-dismiss",
-        summary: "toast dismissed",
-    },
-    EventEntry {
-        name: "sail-cancel",
-        summary: "cancel action (e.g. composer)",
-    },
-    EventEntry {
-        name: "sail-save",
-        summary: "save action",
-    },
-    EventEntry {
-        name: "sail-composer-submit",
-        summary: "chat composer submitted",
-    },
-    EventEntry {
-        name: "sail-citation-open",
-        summary: "citation pill activated",
-    },
-    EventEntry {
-        name: "sail-theme-change",
-        summary: "theme selection changed",
-    },
-    EventEntry {
-        name: "sail-date-change",
-        summary: "date picker value changed",
-    },
-    EventEntry {
-        name: "sail-range-change",
-        summary: "range control value changed",
-    },
-    EventEntry {
-        name: "sail-view-change",
-        summary: "view mode changed",
-    },
-    EventEntry {
-        name: "sail-error-caught",
-        summary: "error boundary caught an error",
-    },
-    EventEntry {
-        name: "sail-mermaid-error",
-        summary: "mermaid diagram failed to render",
-    },
-    EventEntry {
-        name: "sail-canvas-viewport",
-        summary: "canvas pan/zoom viewport changed",
-    },
-    EventEntry {
-        name: "sail-board-change",
-        summary: "board model mutated",
-    },
-    EventEntry {
-        name: "sail-node-select",
-        summary: "board node selection changed",
-    },
-    EventEntry {
-        name: "sail-edge-create",
-        summary: "board edge created via port drag",
-    },
-    EventEntry {
-        name: "sail-draw-change",
-        summary: "draw scene mutated",
-    },
-    EventEntry {
-        name: "sail-draw-select",
-        summary: "draw selection changed",
-    },
-    EventEntry {
-        name: "sail-annotation-staged",
-        summary: "annotation staged for send",
-    },
-    EventEntry {
-        name: "sail-annotation-sent",
-        summary: "annotation POST succeeded",
-    },
-    EventEntry {
-        name: "sail-annotation-error",
-        summary: "annotation POST failed",
-    },
-    EventEntry {
-        name: "sail-annotation-remove",
-        summary: "annotation remove requested",
-    },
-    EventEntry {
-        name: "sail-event-click",
-        summary: "calendar event clicked",
-    },
-    EventEntry {
-        name: "sail-event-select",
-        summary: "calendar event selected",
-    },
-    EventEntry {
-        name: "sail-event-move",
-        summary: "calendar event moved",
-    },
-    EventEntry {
-        name: "sail-event-create-intent",
-        summary: "calendar empty-slot create intent",
-    },
 ];
 
-/// True when `name` is an accepted `on:` event: an `EVENT_NAMES` row, a
-/// `sail-*` / `ship-*` custom event, or a namespaced `tag:event` name.
+/// True when `name` is an accepted `on:` event — an `EVENT_NAMES` row
+/// (standard DOM events only). Custom `sail-*` / `ship-*` / `tag:event`
+/// names are refused; component moments are typed `on-*` callback props.
 pub fn is_known_event(name: &str) -> bool {
     if name.is_empty() {
         return false;
     }
-    if EVENT_NAMES.iter().any(|e| e.name == name) {
-        return true;
+    EVENT_NAMES.iter().any(|e| e.name == name)
+}
+
+/// Hint when an author reaches for a retired custom-event name via `on:`.
+/// Maps common former `sail-*` event names to the callback prop they became.
+pub fn custom_event_callback_hint(name: &str) -> Option<&'static str> {
+    let bare = name
+        .strip_prefix("sail-")
+        .or_else(|| name.strip_prefix("ship-"))
+        .unwrap_or(name);
+    // Form mutation moments (were bare `success`/`failure` CustomEvents).
+    if matches!(name, "success" | "failure") {
+        return Some(if name == "success" {
+            "on-success={handler}"
+        } else {
+            "on-failure={handler}"
+        });
     }
-    // Framework / product custom-event prefixes — open so component authors
-    // do not need a compiler bump for every new emit.
+    // Former sail-*/ship-* events → on-<rest> callback prop.
     if name.starts_with("sail-") || name.starts_with("ship-") {
-        return name.bytes().all(|b| {
-            b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-' || b == b':' || b == b'.'
+        // A few renames where the prop name differs from the event tail.
+        let prop = match bare {
+            "toast-dismiss" => "on-dismiss",
+            "menu-select" | "combobox-select" => "on-select",
+            "composer-submit" => "on-submit",
+            "citation-open" => "on-open",
+            "error-reset" => "on-error-reset",
+            "error-caught" => "on-error-caught",
+            other => {
+                // Generic: sail-page-change → on-page-change
+                // Build is static-only; return a shared template via match
+                // for the common tails used in-tree, else generic message.
+                match other {
+                    "change" => "on-change",
+                    "close" => "on-close",
+                    "dismiss" => "on-dismiss",
+                    "remove" => "on-remove",
+                    "select" => "on-select",
+                    "save" => "on-save",
+                    "cancel" => "on-cancel",
+                    "tab-change" => "on-tab-change",
+                    "page-change" => "on-page-change",
+                    "toggle" => "on-toggle",
+                    "toggle-change" => "on-toggle-change",
+                    "variant-change" => "on-variant-change",
+                    "theme-change" => "on-theme-change",
+                    "date-change" => "on-change",
+                    "range-change" => "on-change",
+                    "view-change" => "on-change",
+                    "mermaid-error" => "on-error",
+                    "canvas-viewport" => "on-viewport-change",
+                    "board-change" => "on-change",
+                    "node-select" => "on-select",
+                    "edge-create" => "on-edge-create",
+                    "draw-change" => "on-change",
+                    "draw-select" => "on-select",
+                    "annotation-staged" => "on-staged",
+                    "annotation-sent" => "on-sent",
+                    "annotation-error" => "on-error",
+                    "annotation-remove" => "on-remove",
+                    "event-click" => "on-event-click",
+                    "event-select" => "on-event-select",
+                    "event-move" => "on-event-move",
+                    "event-create-intent" => "on-create-intent",
+                    _ => "on-…",
+                }
+            }
+        };
+        if prop == "on-…" {
+            return Some("a typed on-* callback prop (props flow down; callbacks report up)");
+        }
+        // Leak a stable string: format into the error message at the call site
+        // with the prop name. We return the prop attr form.
+        // Use a static table so we can return &'static str.
+        return Some(match prop {
+            "on-dismiss" => "on-dismiss={handler}",
+            "on-select" => "on-select={handler}",
+            "on-submit" => "on-submit={handler}",
+            "on-open" => "on-open={handler}",
+            "on-error-reset" => "on-error-reset={handler}",
+            "on-error-caught" => "on-error-caught={handler}",
+            "on-change" => "on-change={handler}",
+            "on-close" => "on-close={handler}",
+            "on-remove" => "on-remove={handler}",
+            "on-save" => "on-save={handler}",
+            "on-cancel" => "on-cancel={handler}",
+            "on-tab-change" => "on-tab-change={handler}",
+            "on-page-change" => "on-page-change={handler}",
+            "on-toggle" => "on-toggle={handler}",
+            "on-toggle-change" => "on-toggle-change={handler}",
+            "on-variant-change" => "on-variant-change={handler}",
+            "on-theme-change" => "on-theme-change={handler}",
+            "on-error" => "on-error={handler}",
+            "on-viewport-change" => "on-viewport-change={handler}",
+            "on-edge-create" => "on-edge-create={handler}",
+            "on-staged" => "on-staged={handler}",
+            "on-sent" => "on-sent={handler}",
+            "on-event-click" => "on-event-click={handler}",
+            "on-event-select" => "on-event-select={handler}",
+            "on-event-move" => "on-event-move={handler}",
+            "on-create-intent" => "on-create-intent={handler}",
+            _ => "a typed on-* callback prop",
         });
     }
-    // Namespaced custom-element event (`sail-rail:toggle`, `dialog:open`).
-    if name.contains(':') {
-        return name.bytes().all(|b| {
-            b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-' || b == b':' || b == b'.'
-        });
-    }
-    false
+    None
 }
 
 /// Closest `EVENT_NAMES` entry to `name` by Levenshtein distance, or
@@ -940,14 +867,46 @@ mod tests {
     #[test]
     fn known_events_are_accepted_and_typos_suggest() {
         assert!(is_known_event("click"));
-        assert!(is_known_event("sail-change"));
-        assert!(is_known_event("sail-rail:toggle"));
-        assert!(is_known_event("ship-thing:done"));
-        assert!(is_known_event("success"));
+        assert!(is_known_event("input"));
+        assert!(is_known_event("close"));
+        // Custom-event bus is gone — DOM only.
+        assert!(!is_known_event("sail-change"));
+        assert!(!is_known_event("sail-rail:toggle"));
+        assert!(!is_known_event("ship-thing:done"));
+        assert!(!is_known_event("success"));
+        assert!(!is_known_event("failure"));
         assert!(!is_known_event("clik"));
         assert!(!is_known_event("Click"));
         assert_eq!(suggest_event("clik"), Some("click"));
         assert_eq!(suggest_event("Click"), Some("click"));
+        assert_eq!(
+            custom_event_callback_hint("sail-remove"),
+            Some("on-remove={handler}")
+        );
+        assert_eq!(
+            custom_event_callback_hint("success"),
+            Some("on-success={handler}")
+        );
+    }
+
+    #[test]
+    fn event_names_are_dom_only() {
+        for e in EVENT_NAMES {
+            assert!(
+                !e.name.starts_with("sail-") && !e.name.starts_with("ship-"),
+                "EVENT_NAMES must not list custom events: {}",
+                e.name
+            );
+            assert!(
+                !e.name.contains(':'),
+                "EVENT_NAMES must not list namespaced tag:event: {}",
+                e.name
+            );
+            assert!(
+                !matches!(e.name, "success" | "failure"),
+                "form moments are on-success/on-failure callback props, not events"
+            );
+        }
     }
 
     /// Active lexer prefixes must match live DIRECTIVES rows; dead prefixes

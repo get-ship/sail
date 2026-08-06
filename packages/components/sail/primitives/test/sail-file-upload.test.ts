@@ -95,10 +95,10 @@ describe('<sail-file-upload>', () => {
     expect(clicked).toBe(1)
   })
 
-  it('selecting a file via the input fires sail-change with the file in detail (bubbles + composed)', async () => {
+  it('selecting a file via the input invokes onChange with the file in detail (bubbles + composed)', async () => {
     const { el } = mount(reg, 'sail-file-upload')
     let evt: CustomEvent | null = null
-    el.addEventListener('sail-change', (e) => { evt = e as CustomEvent })
+    (el as any).onChange = (d: any) => { evt = { detail: d } as any }
     const inp = fileInput(el)
     const f = makeFile('a.txt', 4)
     setInputFiles(inp, [f])
@@ -108,16 +108,12 @@ describe('<sail-file-upload>', () => {
     const detail = evt!.detail as { files: File[] }
     expect(detail.files.length).toBe(1)
     expect(detail.files[0]!.name).toBe('a.txt')
-    expect(evt!.bubbles).toBe(true)
-    expect(evt!.composed).toBe(true)
   })
 
-  it('drag-and-drop populates the file list and fires sail-change', async () => {
+  it('drag-and-drop populates the file list and invokes onChange', async () => {
     const { el } = mount(reg, 'sail-file-upload')
     let detail: { files: File[] } | null = null
-    el.addEventListener('sail-change', (e) => {
-      detail = (e as CustomEvent).detail
-    })
+    (el as any).onChange = (d: any) => { detail = d }
     const f = makeFile('dropped.txt', 8)
     fireDrop(dropzone(el), [f])
     await flush()
@@ -209,16 +205,14 @@ describe('<sail-file-upload>', () => {
     expect(clicked).toBe(0)
 
     let detail: unknown = null
-    el.addEventListener('sail-change', (e) => {
-      detail = (e as CustomEvent).detail
-    })
+    (el as any).onChange = (d: any) => { detail = d }
     fireDrop(dropzone(el), [makeFile('x.txt', 4)])
     await flush()
     expect(detail).toBeNull()
     expect(shadow(el).querySelector('[aria-live="polite"] > *')).toBeNull()
   })
 
-  it('remove button deletes the file and fires sail-change with the new list', async () => {
+  it('remove button deletes the file and invokes onChange with the new list', async () => {
     const { el } = mount(reg, 'sail-file-upload', { multiple: true })
     const inp = fileInput(el)
     setInputFiles(inp, [makeFile('a.txt', 4), makeFile('b.txt', 4)])
@@ -227,9 +221,7 @@ describe('<sail-file-upload>', () => {
     expect(shadow(el).querySelectorAll('[aria-live="polite"] > *').length).toBe(2)
 
     let detail: { files: File[] } | null = null
-    el.addEventListener('sail-change', (e) => {
-      detail = (e as CustomEvent).detail
-    })
+    (el as any).onChange = (d: any) => { detail = d }
     const firstRemove = shadow(el).querySelector(
       'button[data-idx="0"][aria-label^="Remove"]',
     ) as HTMLButtonElement
