@@ -35,9 +35,9 @@ A preset is the teachable starting point. When you need a specific
 animation, write it:
 
 ```
-style.loop({ translate-x: { from: 0, to: '120px' },
-               rotate: { to: '15deg' },
-               duration: 3600, easing: [0.6, 0, 0.2, 1] }}
+style({ animate: loop({ translate-x: { from: 0, to: '120px' },
+                        rotate: { to: '15deg' },
+                        duration: 3600, easing: [0.6, 0, 0.2, 1] }) })
 ```
 
 One rule governs every value: **quoted is a literal, unquoted is code.**
@@ -58,7 +58,7 @@ not need a token to exist before you can write it.
 Any field can be an expression, which is how a signal gets in:
 
 ```
-style.loop({ translate-x: { to: dist() }, duration: speed() }}
+style({ animate: loop({ translate-x: { to: dist() }, duration: speed() }) })
 ```
 
 When the signal changes, the animation is re-created with the new
@@ -71,10 +71,10 @@ that one to scrub; each change on `fx:` costs an animation teardown.
 ## exit is why the framework is involved
 
 CSS can animate an element in; it cannot animate one *out*, because by
-then the node is gone. `style.exit` is the exception the framework
-owns: it **holds the element in the tree** until the exit animation
-finishes, then removes it. Dismiss a notification in the solved example
-— the row fades, then leaves. That is exit-hold.
+then the node is gone. `style({ animate: exit({…}) })` is the exception
+the framework owns: it **holds the element in the tree** until the exit
+animation finishes, then removes it. Dismiss a notification in the solved
+example — the row fades, then leaves. That is exit-hold.
 
 ## stagger is a relationship
 
@@ -100,15 +100,16 @@ prefixes.)
 The starter works perfectly and moves not at all. Add only directives —
 the controller does not change:
 
-1. **Make dismiss graceful** (TODO 5). `style.exit({ opacity:
-   'fade-out' }}` on the row. Before you add it, dismiss one and watch
+1. **Make dismiss graceful** (TODO 5). `style({ animate: exit({ opacity:
+   'fade-out' }) })` on the row. Before you add it, dismiss one and watch
    it snap; after, watch exit-hold do its job.
-2. **Make arrival a cascade** (TODO 5). `style.enter` with a spring on
-   `translate-x` and `stagger: '50ms'`, then hit Restock.
+2. **Make arrival a cascade** (TODO 5). `style({ animate: enter({…}) })`
+   with a spring on `translate-x` and `stagger: '50ms'`, then hit Restock.
 3. **Panel lifecycle** (TODO 4). Enter and exit on the `<if {open()}>`
    panel — toggle the tray both ways.
 4. **The small stuff** (TODO 1–3). Rotate the restock hint on hover,
-   press-scale the trigger, pulse the unread dot with `style.loop`.
+   press-scale the trigger, pulse the unread dot with
+   `style({ animate: loop({…}) })`.
 5. **Try to cheat.** Set a preset to `'whoosh'` and read the rejection —
    it lists the entire legal set, and points at the inline form.
 6. **Then stop cheating and just write it.** Replace one preset with an

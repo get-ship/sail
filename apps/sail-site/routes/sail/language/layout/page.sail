@@ -122,10 +122,10 @@ The language</p>
   </p>
   <p>
     A child can cover more than one cell with the layout attrs
-    <code>col-span</code> / <code>row-span</code> — same family as
-    <code>grow</code> / <code>shrink</code>, not <code>data-*</code>. Below
-    720px, spans collapse and every child goes back to one cell, so a wide
-    card never forces a phone to scroll sideways:
+    <code>col-span</code> / <code>row-span</code> — language attrs, not
+    <code>data-*</code>. Below 720px, spans collapse and every child goes
+    back to one cell, so a wide card never forces a phone to scroll
+    sideways:
   </p>
   <grid cols="4" gap="3">
     <card col-span="2">
@@ -175,7 +175,7 @@ two</card>
   <h2>How children size themselves</h2>
   <p>
     The parent decides how children sit; a child decides how it fills the
-    space it was given with <strong>layout attributes</strong> — legal on any
+    space it was given on the <strong>box channel</strong> — legal on any
     element, not only layout keywords:
   </p>
   <row gap="3" align="center">
@@ -185,26 +185,30 @@ two</card>
       style({ box: grow(1).minW(0) })
 Ada Lovelace</strong>
     <badge tone="success">
-      style({ box: shrink(1) })
+      style({ box: shrink(0) })
 Active</badge>
   </row>
   <code-block code={code.grow}></code-block>
   <p>
-    Boolean <code>grow</code> / <code>shrink</code> mean flex-grow/shrink 1;
-    <code>grow="0"</code> / <code>shrink="0"</code> pin the other end.
-    <code>w="full"</code>, <code>min-w</code>, and <code>max-w</code> take the
-    same size tokens Style does. One spelling for participation — attrs, not
-    Style setters — so tools and agents see the same words in every file.
+    Participation is one spelling: the box channel.
+    <code>grow(1)</code> / <code>shrink(0)</code> are flex participation;
+    <code>w(full)</code>, <code>minW(0)</code>, and <code>maxW(…)</code> take
+    the same size tokens as other Style box setters. Bare attrs
+    (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
+    (<code>sail-participation-style</code>) — write
+    <code>style({ box: grow(1).minW(0) })</code> instead.
   </p>
   <p>
-    Participation lives on the <strong>box channel</strong>
-    (<code>style({ box: grow(1).minW(0) })</code>), not bare attrs.
-    Style also owns paint (pad, color, type, chrome), intrinsic box size
-    (<code>h</code>, icon <code>w</code>/<code>size</code>), and chrome like
-    <code>minH</code> on badges — all as a block Style statement. Every child of
-    a layout element is also born with <code>min-width: 0</code> — the browser
-    default where an item refuses to shrink below its content is corrected at
-    the language level, so <code>style({ text: truncate() })</code> works the first time.
+    Layout-keyword <strong>axis</strong> sugar is separate and intentional:
+    <code>gap</code> / <code>align</code> / <code>justify</code> stay on
+    <code>&lt;row&gt;</code> / <code>&lt;column&gt;</code> /
+    <code>&lt;grid&gt;</code>. Style also owns paint (pad, color, type,
+    chrome), intrinsic box size (<code>h</code>, icon
+    <code>w</code>/<code>size</code>), and chrome like <code>minH</code> on
+    badges — all as a block Style statement. Every child of a layout element
+    is also born with <code>min-width: 0</code> — the browser default where an
+    item refuses to shrink below its content is corrected at the language
+    level, so <code>style({ text: truncate() })</code> works the first time.
   </p>
 
   <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>

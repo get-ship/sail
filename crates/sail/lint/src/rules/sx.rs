@@ -372,7 +372,8 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
             .to_string(),
         suggest: Some(
             "Drive a primitive prop instead (e.g. `tone={ok() ? 'success' : 'destructive'}`), \
-             or select between static `sx=\"…\"` values with an {#if} branch."
+             attach a block Style statement (`style({ box: …, paint: … })`), or branch with \
+             when / match / an `{#if}` between static Style values."
                 .to_string(),
         ),
     }

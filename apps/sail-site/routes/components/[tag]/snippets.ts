@@ -184,7 +184,8 @@ export default controller(() => ({ loading: signal(true) }))
   <span skeleton shape="circle">
     style({ box: w(7).h(7) })
   </span>
-  <column gap="2" grow>
+  <column gap="2">
+    style({ box: grow(1) })
     <span skeleton shape="text" size="sm"></span>
     <span skeleton shape="text" size="sm"></span>
   </column>

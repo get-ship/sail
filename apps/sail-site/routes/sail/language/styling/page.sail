@@ -11,7 +11,7 @@ import type { Scope } from './page.sail'
 import { code } from './snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-  // Range writes shift; effect mirrors into px for style.translateX(bind(px)).
+  // Range writes shift; effect mirrors into px for style({ box: translateX(bind(px)) }).
   const shift = signal('0')
   const px = signal('0px')
   effect(() => px.set(`${shift()}px`))

@@ -1,6 +1,6 @@
 ---
 title: "Styling is Style"
-description: "One attribute, style.* chains, when for states — tokens only, never utility strings."
+description: "Block Style, channel spines, when for states — tokens only, never utility strings."
 order: 2
 slug: "02-styling-is-sx"
 prev: "01-a-page-is-markup"

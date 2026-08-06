@@ -1,17 +1,18 @@
-//! `sail-layout` — the language-level layout elements + child participation attrs.
+//! `sail-layout` — the language-level layout elements + axis sugar + participation
+//! lowering helpers.
 //!
 //! `row`, `column`, `grid`, `center`, `stack` are compile-time keywords, not
 //! web components. The preprocess pass lowers each to a plain `<div>` + atomic
 //! classes, and injects the deduped CSS those classes need into the component's
-//! `<style>` — the same "class + injected stylesheet" mechanism `sx` uses. No
+//! `<style>` — the same "class + injected stylesheet" mechanism Style uses. No
 //! shadow DOM, no custom-element upgrade: layout disappears into the language.
 //!
-//! **Participation attrs** (`grow`, `shrink`, `w`, `min-w`, `max-w`) are the
-//! product home for a child's box-model role inside a flex/grid parent. They
-//! are legal on **any** element (layout keywords included), and lower to the
-//! same atomic classes Style's grow/w setters emit so cascade stays one system.
-//! Paint (pad, color, type, chrome) stays on Style; grow/shrink participation
-//! is attrs-only in product (`sail-participation-style` errors on Style).
+//! **Product participation** is the **box channel**
+//! (`style({ box: grow(1).minW(0) })`), not bare attrs. Bare `grow` / `shrink` /
+//! `w` / `min-w` / `max-w` are refused by `sail-participation-style` with a
+//! pointer to the box form. Layout-keyword **axis** attrs (`gap` / `align` /
+//! `justify` / `cols` / …) stay structural sugar on the keyword. Paint (pad,
+//! color, type, chrome) stays on paint/text channels.
 //!
 //! Faithful successor to the `<sail-stack>` / `<sail-cluster>` / `<sail-grid>` /
 //! `<sail-center>` primitives — the hard-won opinions ride along in the lowering:
@@ -23,7 +24,7 @@
 //!
 //! Every axis value comes from a CLOSED enum; off-enum (`gap="99"`,
 //! `align="middle"`) is a `Severity::Error`, so a typo can't silently degrade to
-//! an unstyled div — the same no-silent-failure contract as `sx`.
+//! an unstyled div — the same no-silent-failure contract as Style.
 //!
 //! Naming: `column` = vertical flow (was `sail-stack`), `row` = horizontal flow
 //! that wraps (was `sail-cluster`), `grid`/`center` unchanged, and `stack` is the
@@ -1017,13 +1018,14 @@ fn unknown_attr_hint(tag: &str) -> String {
     let axes = tag_props(tag);
     if axes.is_empty() {
         format!(
-            "<{tag}> takes no axis props; participation attrs (grow, shrink, w, min-w, max-w) \
-             and HTML/global pass-throughs are allowed."
+            "<{tag}> takes no axis props; participation is box channel \
+             (`style({{ box: grow(1).minW(0) }})`); HTML/global pass-throughs are allowed."
         )
     } else {
         format!(
-            "<{tag}> takes these axis props: {} — plus participation attrs (grow, shrink, w, min-w, max-w) \
-             or any HTML/global pass-through (id, sx, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, use:*).",
+            "<{tag}> takes these axis props: {} — participation is box channel \
+             (`style({{ box: grow(1).minW(0) }})`); HTML/global pass-throughs \
+             (id, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, use:*) allowed.",
             axes.join(", ")
         )
     }

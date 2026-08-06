@@ -25,8 +25,10 @@
   - The row + its caret are the L1 layout keyword `row` (align/justify
     attributes), not a hand-styled flex `<div>`/`<span>` — display:flex,
     align-items and gap for both now come from the keyword, not authored CSS.
-    The row's cursor/radius/ink/hover-bg are sx (`sx={style({ paint: radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) })}` / `sx={style({ paint: fg(muted-foreground) })}` on the
-    caret) instead of raw `.row`/`.caret` declarations.
+    The row's cursor/radius/ink/hover-bg are block Style
+    (`style({ paint: radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) })`
+    / `style({ paint: fg(muted-foreground) })` on the caret) instead of raw
+    `.row`/`.caret` declarations.
   - L1 controls were already framework-composed pre-gate (sail-checkbox,
     sail-icon, sail-empty-state, sail-error-state) — nothing hand-skinned.
   - Dropped a dead line from the style block: a bare (outside any selector,

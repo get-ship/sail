@@ -7426,7 +7426,7 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
 export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   {
     "atom": "animate",
-    "instead": "style.loop / style.press / style.enter / style.exit / style.reveal / style.scroll — Style motion"
+    "instead": "style({ animate: loop|press|enter|exit|reveal|scroll({ … }) }) — animate channel"
   },
   {
     "atom": "flex",
@@ -7450,15 +7450,15 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "gap",
-    "instead": "host paint via style.gap(2) — or the layout element's gap prop: <row gap=\"2\">"
+    "instead": "layout element gap prop: <row gap=\"2\"> — or host box channel style({ box: gap(2) })"
   },
   {
     "atom": "gap-x",
-    "instead": "host paint via style.gapX(2) — or <row gap=\"2\">"
+    "instead": "layout element gap prop: <row gap=\"2\"> — or host box channel style({ box: gapX(2) })"
   },
   {
     "atom": "gap-y",
-    "instead": "host paint via style.gapY(2) — or <column gap=\"2\">"
+    "instead": "layout element gap prop: <column gap=\"2\"> — or host box channel style({ box: gapY(2) })"
   },
   {
     "atom": "grid",
@@ -9243,7 +9243,7 @@ export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   },
   {
     "syntax": "<div> / <span> for layout structure",
-    "instead": "layout keywords <column>, <row>, <grid>, <stack>, <center>, … with participation attrs (grow, gap, align, …)"
+    "instead": "layout keywords <column>, <row>, <grid>, <stack>, <center> with axis attrs (gap, align, justify); participation is box channel style({ box: grow(1).minW(0) })"
   },
   {
     "syntax": "document.querySelector / getElementById in a controller",

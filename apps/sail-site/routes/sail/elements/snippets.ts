@@ -7,7 +7,9 @@ export const code = {
   style({ box: pad(4) })
   <row gap="3" align="center">
     <avatar></avatar>
-    <strong grow>Ada Lovelace</strong>
+    <strong>
+      style({ box: grow(1).minW(0) })
+    Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
 </card>`,

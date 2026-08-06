@@ -64,7 +64,7 @@ const RAW_LESSONS: TutorialLesson[] = [
   {
     "slug": "02-styling-is-sx",
     "title": "Styling is Style",
-    "description": "One attribute, style.* chains, when for states — tokens only, never utility strings.",
+    "description": "Block Style, channel spines, when for states — tokens only, never utility strings.",
     "chapter": "surface",
     "order": 2,
     "prev": "01-a-page-is-markup",
@@ -205,7 +205,7 @@ export const TUTORIAL_GROUPS: TutorialGroup[] = [
       {
         "slug": "02-styling-is-sx",
         "title": "Styling is Style",
-        "description": "One attribute, style.* chains, when for states — tokens only, never utility strings.",
+        "description": "Block Style, channel spines, when for states — tokens only, never utility strings.",
         "order": 2,
         "href": "/sail/tutorial/02-styling-is-sx"
       }

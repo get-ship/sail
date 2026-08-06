@@ -33,13 +33,15 @@ Run 1. The compiler reports one costed rejection at a time — first, a
 Style paint value that is not on the closed scale:
 
 ```
-Error: Style error in `sx=`: style `pad(12px)` — value is not a token on this setter's scale
+Error: Style error: style `pad(12px)` — value is not a token on this setter's scale
 ```
 
 The message *is* the spacing scale rule. `12px` is not a token —
-comfortable padding on this ramp is `pad(4)`. Style failures are now
-hard compile errors (not silently empty paint), so they surface before
-later expression and motion checks.
+comfortable padding on this ramp is `pad(4)` inside a block Style
+statement (`style({ box: pad(4) })`). Style failures are now hard compile
+errors (not silently empty paint), so they surface before later expression
+and motion checks. Utility-string hosts (`sx="…"`) are refused the same
+way — retired form, not product.
 
 Run 2. After the Style fix, a call shape the render path forbids:
 

@@ -3,7 +3,7 @@
   tiles (no clipping text); full expression leads and presets are one
   paragraph; scroll/loop prose in plain English; choreography demo full-width
   with the code below it; Under the hood answers where Sail ends and the
-  embedded Motion library begins. The style.reveal demos are correct as
+  embedded Motion library begins. The animate:reveal demos are correct as
   written — the reveal trigger currently attaches nothing at runtime
   (known regression; this page is the visual gate).
 -->
@@ -70,7 +70,9 @@ The language</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
-    Animation is declared on the element via Style chain methods. <code>style.enter</code> / <code>.exit</code> / <code>.loop</code> / <code>.reveal</code> name a
+    Animation is declared on the element via the Style <strong>animate
+    channel</strong>. <code>style({ animate: enter({…}) })</code> /
+    <code>exit</code> / <code>loop</code> / <code>reveal</code> name a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
     <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
     <strong>config</strong>: which properties move, how far, how fast. When
@@ -86,8 +88,8 @@ Replay</button>
     <p>
       style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
-      Five tiles, one <code>style.enter</code> each; <code>stagger</code>
-      is the delay between siblings.
+      Five tiles, one <code>style({ animate: enter({…}) }})</code> each;
+      <code>stagger</code> is the delay between siblings.
     </p>
   </row>
   <if {dealt()}>

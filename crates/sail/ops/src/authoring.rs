@@ -90,10 +90,10 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
-                 - Style product: `style={{style.pad(4).bg(surface-2)}}` — not utility strings.\n\
+                 - Style product: `style({{ box: pad(4), paint: bg(surface-2) }})` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
-                 - Participation attrs only: `grow` `shrink` `w` `min-w` `max-w` \
-                   (`sail-participation-style` bans `style.grow`/`shrink`).\n\
+                 - Participation on the box channel: `style({{ box: grow(1).minW(0) }})` \
+                   (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
                  - Never `style.display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.sx-displaynone`. Plain host + nest layout.\n\
                  - **a11y IR (SPEC-ARIA-1):** never free `aria-*` / free ARIA `role=` \
@@ -137,8 +137,9 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(
                 md,
-                "\n**Participation (any element):** `grow` / `shrink` (bool or `\"0\"|\"1\"`), \
-                 `w` / `min-w` / `max-w` (size tokens).\n\n\
+                "\n**Participation (any element, box channel):** \
+                 `style({{ box: grow(1).minW(0).w(full) }})` / `shrink(0)` — bare attrs refused \
+                 (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
                  **Refused layout-as-sx** (`sx_vocab::refusals()`):\n"
             );
             for (atom, instead) in sail_lint::sx_vocab::refusals() {
@@ -155,7 +156,8 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "Closed product table from `sail_lint::style::setters`. \
-                 **Not listed:** `grow` / `shrink` — layout attrs only.\n"
+                 **Participation:** `grow` / `shrink` live on the box channel \
+                 (`style({{ box: grow(1) }})`); bare attrs refused.\n"
             );
             for s in sail_lint::style::setters::setters() {
                 if matches!(s.name, "grow" | "shrink") {
