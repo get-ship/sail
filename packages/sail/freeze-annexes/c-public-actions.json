@@ -1,0 +1,111 @@
+{
+  "$comment": "Annex C — Public action catalog (use:). Generated from language-surface PUBLIC_ACTIONS + action_manifest::PUBLIC_ACTION_NAMES.",
+  "source": {
+    "surface": "apps/sail-site/src/language-surface.gen.ts#PUBLIC_ACTIONS",
+    "manifest": "crates/sail/compiler/src/action_manifest.rs#PUBLIC_ACTION_NAMES"
+  },
+  "count": 11,
+  "names": [
+    "anchor",
+    "autosize",
+    "clickOutside",
+    "clipboard",
+    "contextMenu",
+    "dropzone",
+    "hotkeys",
+    "rect",
+    "tipDescribe",
+    "virtualRow",
+    "zoomPan"
+  ],
+  "actions": [
+    {
+      "name": "anchor",
+      "param": "AnchorPlacement | undefined",
+      "summary": "Position a popper-like surface against an anchor element.",
+      "public": true
+    },
+    {
+      "name": "autosize",
+      "param": "void",
+      "summary": "Autosize a textarea (height) or single-line input (width) to its content.",
+      "public": true
+    },
+    {
+      "name": "clickOutside",
+      "param": "(() => void) | undefined",
+      "summary": "Fire a callback when a click lands outside the element.",
+      "public": true
+    },
+    {
+      "name": "clipboard",
+      "param": "ClipboardParam",
+      "summary": "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
+      "public": true
+    },
+    {
+      "name": "contextMenu",
+      "param": "void",
+      "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC.",
+      "public": true
+    },
+    {
+      "name": "dropzone",
+      "param": "undefined",
+      "summary": "Drag-and-drop file receiver; reads files into a controller-side handler.",
+      "public": true
+    },
+    {
+      "name": "hotkeys",
+      "param": "HotkeysMap | undefined",
+      "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
+      "public": true
+    },
+    {
+      "name": "rect",
+      "param": "BoxRect | null | undefined",
+      "summary": "Track the element's bounding rect via ResizeObserver.",
+      "public": true
+    },
+    {
+      "name": "tipDescribe",
+      "param": "void",
+      "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
+      "public": true
+    },
+    {
+      "name": "virtualRow",
+      "param": "number | null | undefined",
+      "summary": "Register a virtualized row; tells the parent scroller its measured height.",
+      "public": true
+    },
+    {
+      "name": "zoomPan",
+      "param": "ZoomPanState | null | undefined",
+      "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
+      "public": true
+    }
+  ],
+  "manifestNames": [
+    "anchor",
+    "autosize",
+    "clickOutside",
+    "clipboard",
+    "contextMenu",
+    "dropzone",
+    "hotkeys",
+    "rect",
+    "tipDescribe",
+    "virtualRow",
+    "zoomPan"
+  ],
+  "manifestDrift": {
+    "surfaceOnly": [],
+    "manifestOnly": []
+  },
+  "sanctionedPreRcAdditions": [
+    "focus",
+    "inView"
+  ],
+  "note": "Widget-private actions remain auto-imported for stdlib stamps but are not public / taught."
+}

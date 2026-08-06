@@ -1,0 +1,684 @@
+{
+  "$comment": "Annex D — Runtime public exports (tier B author surface). Generated from packages/sail/runtime/author-surface.json.",
+  "source": "packages/sail/runtime/author-surface.json",
+  "specifier": "@ship/sail-runtime",
+  "entry": ".",
+  "count": 125,
+  "categories": {
+    "reactivity": "Signals, effects, context, ambient lifecycle",
+    "controller": "Controller factory and scope types",
+    "store": "Shared stores",
+    "compositions": "Reusable signal-graph builders",
+    "data": "Query / mutation live values",
+    "theme": "Runtime theme state",
+    "motion": "Timeline + drivers (scrub lane; Style motion is template/A)",
+    "actions": "Public use: actions + Action types (full use: table also on /sail/reference/actions)",
+    "errors": "Error boundary handles",
+    "components": "Declarative component() / defineComponent for pack authors",
+    "host": "Host capability types on generated Scope (capabilities language page)"
+  },
+  "countsByCategory": {
+    "reactivity": 20,
+    "controller": 8,
+    "store": 7,
+    "compositions": 5,
+    "data": 15,
+    "theme": 16,
+    "motion": 18,
+    "actions": 20,
+    "errors": 6,
+    "components": 8,
+    "host": 2
+  },
+  "exports": [
+    {
+      "name": "Action",
+      "category": "actions"
+    },
+    {
+      "name": "ActionResult",
+      "category": "actions"
+    },
+    {
+      "name": "anchor",
+      "category": "actions"
+    },
+    {
+      "name": "AnchorPlacement",
+      "category": "actions"
+    },
+    {
+      "name": "attachBoundary",
+      "category": "errors"
+    },
+    {
+      "name": "autosize",
+      "category": "actions"
+    },
+    {
+      "name": "batch",
+      "category": "reactivity"
+    },
+    {
+      "name": "BoundaryHandle",
+      "category": "errors"
+    },
+    {
+      "name": "BoundarySource",
+      "category": "errors"
+    },
+    {
+      "name": "clearThemeOverrides",
+      "category": "theme"
+    },
+    {
+      "name": "clearThemeScope",
+      "category": "theme"
+    },
+    {
+      "name": "clickOutside",
+      "category": "actions"
+    },
+    {
+      "name": "clipboard",
+      "category": "actions"
+    },
+    {
+      "name": "ClipboardParam",
+      "category": "actions"
+    },
+    {
+      "name": "clock",
+      "category": "motion"
+    },
+    {
+      "name": "ClockOptions",
+      "category": "motion"
+    },
+    {
+      "name": "ClockSignal",
+      "category": "motion"
+    },
+    {
+      "name": "component",
+      "category": "components"
+    },
+    {
+      "name": "ComponentDef",
+      "category": "components"
+    },
+    {
+      "name": "ComponentFactory",
+      "category": "components"
+    },
+    {
+      "name": "ComponentSchema",
+      "category": "components"
+    },
+    {
+      "name": "ComponentSetupContext",
+      "category": "components"
+    },
+    {
+      "name": "contextKey",
+      "category": "reactivity"
+    },
+    {
+      "name": "ContextKey",
+      "category": "reactivity"
+    },
+    {
+      "name": "contextMenu",
+      "category": "actions"
+    },
+    {
+      "name": "controller",
+      "category": "controller"
+    },
+    {
+      "name": "ControllerDef",
+      "category": "controller"
+    },
+    {
+      "name": "ControllerExport",
+      "category": "controller"
+    },
+    {
+      "name": "ControllerScope",
+      "category": "controller"
+    },
+    {
+      "name": "ControllerSetup",
+      "category": "controller"
+    },
+    {
+      "name": "debounce",
+      "category": "reactivity"
+    },
+    {
+      "name": "defineComponent",
+      "category": "components"
+    },
+    {
+      "name": "defineStore",
+      "category": "store"
+    },
+    {
+      "name": "derived",
+      "category": "reactivity"
+    },
+    {
+      "name": "Derived",
+      "category": "reactivity"
+    },
+    {
+      "name": "detachBoundary",
+      "category": "errors"
+    },
+    {
+      "name": "Disposer",
+      "category": "actions"
+    },
+    {
+      "name": "dropzone",
+      "category": "actions"
+    },
+    {
+      "name": "effect",
+      "category": "reactivity"
+    },
+    {
+      "name": "EffectScope",
+      "category": "reactivity"
+    },
+    {
+      "name": "filteredList",
+      "category": "compositions"
+    },
+    {
+      "name": "findNearestBoundary",
+      "category": "errors"
+    },
+    {
+      "name": "form",
+      "category": "compositions"
+    },
+    {
+      "name": "FormOptions",
+      "category": "compositions"
+    },
+    {
+      "name": "Host",
+      "category": "host"
+    },
+    {
+      "name": "HotkeyEntry",
+      "category": "actions"
+    },
+    {
+      "name": "HotkeyHandler",
+      "category": "actions"
+    },
+    {
+      "name": "hotkeys",
+      "category": "actions"
+    },
+    {
+      "name": "HotkeysMap",
+      "category": "actions"
+    },
+    {
+      "name": "hydrateTheme",
+      "category": "theme"
+    },
+    {
+      "name": "injectContext",
+      "category": "reactivity"
+    },
+    {
+      "name": "interval",
+      "category": "reactivity"
+    },
+    {
+      "name": "isSignal",
+      "category": "reactivity"
+    },
+    {
+      "name": "ListSource",
+      "category": "compositions"
+    },
+    {
+      "name": "LiveSignal",
+      "category": "data"
+    },
+    {
+      "name": "LiveSource",
+      "category": "data"
+    },
+    {
+      "name": "LiveState",
+      "category": "data"
+    },
+    {
+      "name": "LiveValueOf",
+      "category": "data"
+    },
+    {
+      "name": "LoweredThemeToken",
+      "category": "theme"
+    },
+    {
+      "name": "lowerThemeDoc",
+      "category": "theme"
+    },
+    {
+      "name": "LowerThemeResult",
+      "category": "theme"
+    },
+    {
+      "name": "mountAmbient",
+      "category": "reactivity"
+    },
+    {
+      "name": "MutableState",
+      "category": "controller"
+    },
+    {
+      "name": "mutation",
+      "category": "data"
+    },
+    {
+      "name": "Mutation",
+      "category": "data"
+    },
+    {
+      "name": "MutationOpts",
+      "category": "data"
+    },
+    {
+      "name": "MutationState",
+      "category": "data"
+    },
+    {
+      "name": "onCleanup",
+      "category": "reactivity"
+    },
+    {
+      "name": "OptimisticHandle",
+      "category": "data"
+    },
+    {
+      "name": "peekStore",
+      "category": "store"
+    },
+    {
+      "name": "persisted",
+      "category": "reactivity"
+    },
+    {
+      "name": "PersistedOpts",
+      "category": "reactivity"
+    },
+    {
+      "name": "primeIconCache",
+      "category": "actions"
+    },
+    {
+      "name": "prop",
+      "category": "components"
+    },
+    {
+      "name": "PropDef",
+      "category": "components"
+    },
+    {
+      "name": "provideContext",
+      "category": "reactivity"
+    },
+    {
+      "name": "provideStore",
+      "category": "store"
+    },
+    {
+      "name": "query",
+      "category": "data"
+    },
+    {
+      "name": "QueryKey",
+      "category": "data"
+    },
+    {
+      "name": "queryKeyed",
+      "category": "data"
+    },
+    {
+      "name": "QueryOpts",
+      "category": "data"
+    },
+    {
+      "name": "ReadonlyState",
+      "category": "controller"
+    },
+    {
+      "name": "ReadonlyView",
+      "category": "controller"
+    },
+    {
+      "name": "rect",
+      "category": "actions"
+    },
+    {
+      "name": "RouteSignals",
+      "category": "host"
+    },
+    {
+      "name": "runProtected",
+      "category": "errors"
+    },
+    {
+      "name": "SailMountOutsideSetupError",
+      "category": "reactivity"
+    },
+    {
+      "name": "SailTimelineError",
+      "category": "motion"
+    },
+    {
+      "name": "scrollProgress",
+      "category": "motion"
+    },
+    {
+      "name": "ScrollProgressOptions",
+      "category": "motion"
+    },
+    {
+      "name": "selection",
+      "category": "compositions"
+    },
+    {
+      "name": "setThemePersist",
+      "category": "theme"
+    },
+    {
+      "name": "signal",
+      "category": "reactivity"
+    },
+    {
+      "name": "Signal",
+      "category": "reactivity"
+    },
+    {
+      "name": "snapshotStore",
+      "category": "store"
+    },
+    {
+      "name": "SpringOptions",
+      "category": "motion"
+    },
+    {
+      "name": "springValue",
+      "category": "motion"
+    },
+    {
+      "name": "StoreDef",
+      "category": "store"
+    },
+    {
+      "name": "StoreInstance",
+      "category": "store"
+    },
+    {
+      "name": "theme",
+      "category": "theme"
+    },
+    {
+      "name": "Theme",
+      "category": "theme"
+    },
+    {
+      "name": "ThemeApplyScopeOptions",
+      "category": "theme"
+    },
+    {
+      "name": "ThemeDoc",
+      "category": "theme"
+    },
+    {
+      "name": "ThemePatch",
+      "category": "theme"
+    },
+    {
+      "name": "ThemePersist",
+      "category": "theme"
+    },
+    {
+      "name": "ThemeScopePatch",
+      "category": "theme"
+    },
+    {
+      "name": "ThemeState",
+      "category": "theme"
+    },
+    {
+      "name": "ThemeTokenName",
+      "category": "theme"
+    },
+    {
+      "name": "timeline",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineEasing",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineEasingName",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineOptions",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineSignals",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineStop",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineStopOptions",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineTrack",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineTracks",
+      "category": "motion"
+    },
+    {
+      "name": "TimelineValue",
+      "category": "motion"
+    },
+    {
+      "name": "tipDescribe",
+      "category": "actions"
+    },
+    {
+      "name": "untrack",
+      "category": "reactivity"
+    },
+    {
+      "name": "unwrap",
+      "category": "data"
+    },
+    {
+      "name": "unwrapOr",
+      "category": "data"
+    },
+    {
+      "name": "useStore",
+      "category": "store"
+    },
+    {
+      "name": "virtualRow",
+      "category": "actions"
+    },
+    {
+      "name": "zoomPan",
+      "category": "actions"
+    }
+  ],
+  "exportsByCategory": {
+    "reactivity": [
+      "ContextKey",
+      "Derived",
+      "EffectScope",
+      "PersistedOpts",
+      "SailMountOutsideSetupError",
+      "Signal",
+      "batch",
+      "contextKey",
+      "debounce",
+      "derived",
+      "effect",
+      "injectContext",
+      "interval",
+      "isSignal",
+      "mountAmbient",
+      "onCleanup",
+      "persisted",
+      "provideContext",
+      "signal",
+      "untrack"
+    ],
+    "controller": [
+      "ControllerDef",
+      "ControllerExport",
+      "ControllerScope",
+      "ControllerSetup",
+      "MutableState",
+      "ReadonlyState",
+      "ReadonlyView",
+      "controller"
+    ],
+    "store": [
+      "StoreDef",
+      "StoreInstance",
+      "defineStore",
+      "peekStore",
+      "provideStore",
+      "snapshotStore",
+      "useStore"
+    ],
+    "compositions": [
+      "FormOptions",
+      "ListSource",
+      "filteredList",
+      "form",
+      "selection"
+    ],
+    "data": [
+      "LiveSignal",
+      "LiveSource",
+      "LiveState",
+      "LiveValueOf",
+      "Mutation",
+      "MutationOpts",
+      "MutationState",
+      "OptimisticHandle",
+      "QueryKey",
+      "QueryOpts",
+      "mutation",
+      "query",
+      "queryKeyed",
+      "unwrap",
+      "unwrapOr"
+    ],
+    "theme": [
+      "LowerThemeResult",
+      "LoweredThemeToken",
+      "Theme",
+      "ThemeApplyScopeOptions",
+      "ThemeDoc",
+      "ThemePatch",
+      "ThemePersist",
+      "ThemeScopePatch",
+      "ThemeState",
+      "ThemeTokenName",
+      "clearThemeOverrides",
+      "clearThemeScope",
+      "hydrateTheme",
+      "lowerThemeDoc",
+      "setThemePersist",
+      "theme"
+    ],
+    "motion": [
+      "ClockOptions",
+      "ClockSignal",
+      "SailTimelineError",
+      "ScrollProgressOptions",
+      "SpringOptions",
+      "TimelineEasing",
+      "TimelineEasingName",
+      "TimelineOptions",
+      "TimelineSignals",
+      "TimelineStop",
+      "TimelineStopOptions",
+      "TimelineTrack",
+      "TimelineTracks",
+      "TimelineValue",
+      "clock",
+      "scrollProgress",
+      "springValue",
+      "timeline"
+    ],
+    "actions": [
+      "Action",
+      "ActionResult",
+      "AnchorPlacement",
+      "ClipboardParam",
+      "Disposer",
+      "HotkeyEntry",
+      "HotkeyHandler",
+      "HotkeysMap",
+      "anchor",
+      "autosize",
+      "clickOutside",
+      "clipboard",
+      "contextMenu",
+      "dropzone",
+      "hotkeys",
+      "primeIconCache",
+      "rect",
+      "tipDescribe",
+      "virtualRow",
+      "zoomPan"
+    ],
+    "errors": [
+      "BoundaryHandle",
+      "BoundarySource",
+      "attachBoundary",
+      "detachBoundary",
+      "findNearestBoundary",
+      "runProtected"
+    ],
+    "components": [
+      "ComponentDef",
+      "ComponentFactory",
+      "ComponentSchema",
+      "ComponentSetupContext",
+      "PropDef",
+      "component",
+      "defineComponent",
+      "prop"
+    ],
+    "host": [
+      "Host",
+      "RouteSignals"
+    ]
+  }
+}
