@@ -34,7 +34,8 @@
   use:dismissible
 
 >
-  style([
+  <span>
+    style([
     base,
     match(size, {
       md: sizeMd,
@@ -121,23 +122,14 @@
       hover: style({ paint: bg(hover-bg) }),
     })),
   ])
-
-  <span>
+    <span>
     style(leading)
 
     <slot name="leading"></slot>
   </span>
   <slot></slot>
-  <button
-    type="button"
-    anatomy
-    data-dismiss
-    label="Remove"
-    tabindex="-1"
-    shrink="0"
-
-  >
-    style([
+  <button type="button" anatomy data-dismiss label="Remove" tabindex="-1">
+    style([ style({ box: shrink(0) }), 
       remove,
       when({
         group-removable: style({ box: display(inline-flex) }),
@@ -152,4 +144,5 @@
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>
+  </span>
 </row>

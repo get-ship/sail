@@ -56,24 +56,17 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="themes"
-  theme-overview-surface
-  overview-chrome
-  gap="0"
-  grow
-
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+<column surface="themes" theme-overview-surface overview-chrome gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row overview-error align="center" gap="2" shrink="0">
-      style(bandError)
+    <row overview-error align="center" gap="2">
+      style([ style(bandError), style({ box: shrink(0) }) ])
 
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" overview-retry on:click={session.onRetry}>
         Retry
@@ -82,8 +75,8 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row overview-loading align="center" gap="2" shrink="0">
-      style(bandStatus)
+    <row overview-loading align="center" gap="2">
+      style([ style(bandStatus), style({ box: shrink(0) }) ])
 
       <spinner size="sm"></spinner>
       <p>
@@ -92,24 +85,11 @@ Loading…</p>
     </row>
   </if>
 
-  <row
-    overview-workbench
-    editorial-split
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+  <row overview-workbench editorial-split gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
-
-    <scroll-area
-      identity-column
-      grow
-      min-w="0"
-
-    >
-      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
+    <scroll-area identity-column>
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
 
       <column gap="8">
         style(identityCol)
@@ -119,8 +99,8 @@ Loading…</p>
             style(sectionTitle)
 Color</p>
           <row hero-colors gap="3" align="stretch">
-            <column hero-card token="primary" grow gap="0" min-w="0">
-              style(heroCard)
+            <column hero-card token="primary" gap="0">
+              style([ style(heroCard), style({ box: grow(1).minW(0) }) ])
 
               <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'}>
                 style(heroSwatch)
@@ -140,8 +120,8 @@ Primary</p>
 {primaryHex()}</p>
               </row>
             </column>
-            <column hero-card token="secondary" grow gap="0" min-w="0">
-              style(heroCard)
+            <column hero-card token="secondary" gap="0">
+              style([ style(heroCard), style({ box: grow(1).minW(0) }) ])
 
               <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'}>
                 style(heroSwatch)
@@ -161,8 +141,8 @@ Secondary</p>
 {secondaryHex()}</p>
               </row>
             </column>
-            <column hero-card token="accent" grow gap="0" min-w="0">
-              style(heroCard)
+            <column hero-card token="accent" gap="0">
+              style([ style(heroCard), style({ box: grow(1).minW(0) }) ])
 
               <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'}>
                 style(heroSwatch)
@@ -251,8 +231,8 @@ Pack</p>
                 style({ box: padT(1) })
 
                 <for {overview.iconGlyphs()} as="g" key={g.key}>
-                  <center shrink="0" title={g.name}>
-                    style(iconCell)
+                  <center title={g.name}>
+                    style([ style(iconCell), style({ box: shrink(0) }) ])
 
                     <icon name={g.name} size="sm" label={g.name}></icon>
                   </center>
@@ -298,10 +278,12 @@ More detail</p>
                 style(doorCard)
 
                 <row gap="2" align="center">
-                  <icon name={door.icon} size="sm" shrink="0">
-                    style(mutedIcon)
+                  <icon name={door.icon} size="sm">
+                    style([ style(mutedIcon), style({ box: shrink(0) }) ])
 </icon>
-                  <column gap="0" grow min-w="0">
+                  <column gap="0">
+                    style({ box: grow(1).minW(0) })
+
                     <p>
                       style(doorTitle)
 {door.label}</p>
@@ -317,17 +299,11 @@ More detail</p>
       </column>
     </scroll-area>
 
-    <column
-      specimen-dock
-      gap="0"
-      grow
-      min-w="0"
+    <column specimen-dock gap="0">
+      style({  box: grow(1).minW(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
 
-    >
-      style({ box: minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
-
-      <column grow gap="0">
-        style({ box: minH(0).h(full).pad(4) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).h(full).pad(4)  })
 
         <card
           overview-specimen
@@ -339,41 +315,34 @@ More detail</p>
         >
           style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
-          <column gap="0" grow>
-            style({ box: minH(0).h(full) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).h(full)  })
 
-            <row
-              specimen-chrome
-              align="center"
-              gap="2"
-              nowrap
-              shrink="0"
+            <row specimen-chrome align="center" gap="2" nowrap>
+              style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-            >
-              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+              <row gap="2" align="center" nowrap hidden="true">
+                style({  box: shrink(0).minW(12)  })
 
-              <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style({ box: minW(12) })
-
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
 </stack>
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
 </stack>
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
 </stack>
               </row>
-              <p grow min-w="0">
-                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
+              <p>
+                style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {session.nameEdit()}</p>
-              <p shrink="0">
-                style(pathMeta)
+              <p>
+                style([ style(pathMeta), style({ box: shrink(0) }) ])
 {session.paintMode()}</p>
             </row>
-            <scroll-area grow>
-              style({ box: minH(0).basis(0).h(full), paint: bg(background) })
+            <scroll-area>
+              style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })
 
               <!--
                 Plain host for density gap bind — layout column always ships sail-g-*
@@ -418,7 +387,9 @@ More detail</p>
                 <if {overview.hasIconGlyphs()}>
                   <row specimen-icons gap="2" align="center" nowrap>
                     <for {overview.iconGlyphs()} as="g" key={g.key}>
-                      <icon name={g.name} size={overview.iconSize()} label={g.name} shrink="0"></icon>
+                      <icon name={g.name} size={overview.iconSize()} label={g.name}>
+                        style({ box: shrink(0) })
+</icon>
                     </for>
                   </row>
                 </if>

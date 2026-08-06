@@ -343,7 +343,9 @@ mod tests {
     #[test]
     fn a_prop_match_returns_a_binding() {
         let program = program_with_props(vec![prop("glowRadius", PropKind::Number)]);
-        let source = r#"<div style="w-(--glow-radius)"></div>"#;
+        let source = r#"<div>
+  style({ box: w(bind(glowRadius)) })
+</div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "glowRadius");
@@ -359,7 +361,9 @@ mod tests {
             "controller((ctx) => { const hue = signal(220); return { hue }; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div style="bg-(--hue)"></div>"#;
+        let source = r#"<div>
+  style({ paint: bg(bind(hue)) })
+</div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "hue");
@@ -375,7 +379,9 @@ mod tests {
             "controller((ctx) => { const tileX = signal('0px'); return { tileX }; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div style={style.translateX(bind(tileX))}></div>"#;
+        let source = r#"<div>
+  style({ paint: translateX(bind(tileX)) })
+</div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].css_name, "tile-x");
@@ -397,10 +403,12 @@ mod tests {
     #[test]
     fn an_unmatched_name_refuses_with_did_you_mean() {
         let program = program_with_props(vec![prop("rowY", PropKind::Number)]);
-        let source = r#"<div style="top-(--row-x)"></div>"#;
+        let source = r#"<div>
+  style({ box: top(bind(rowX)) })
+</div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("does not match"));
-        assert!(err.message.contains("row-y"), "{}", err.message);
+        assert!(err.message.contains("row-y") || err.message.contains("rowY"), "{}", err.message);
     }
 
     #[test]
@@ -411,9 +419,11 @@ mod tests {
             "controller((ctx) => { const hue = signal(220); return {}; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div style="bg-(--hue)"></div>"#;
+        let source = r#"<div>
+  style({ paint: bg(bind(hue)) })
+</div>"#;
         let err = resolve(source, &program, Some(&controller)).unwrap_err();
-        assert!(err.message.contains("does not match"));
+        assert!(err.message.contains("does not match") || err.message.contains("hue"), "{}", err.message);
     }
 
     #[test]

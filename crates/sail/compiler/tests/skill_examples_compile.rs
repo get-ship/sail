@@ -128,18 +128,20 @@ fn skill_generator_matches_product_surface() {
         md.contains("colorDeepen") && md.contains("foreground"),
         "skill must document colorDeepen (solid deepen toward foreground)"
     );
-    // Product-banned participation must not appear as teachable style({ box: grow(…) })
+    // Participation lives on the box channel (not bare attrs).
     assert!(
-        !md.contains("`style({ box: grow(…) })`"),
-        "skill must not teach style({ box: grow }) — use layout attrs (sail-participation-style)"
+        md.contains("box: grow") || md.contains("grow(1)") || md.contains("box channel"),
+        "skill must teach box-channel participation: {}",
+        &md[md.find("Participation").unwrap_or(0)..md.find("Participation").unwrap_or(0).saturating_add(200).min(md.len())]
     );
     assert!(
-        !md.contains("`style({ box: shrink(…) })`"),
-        "skill must not teach style({ box: shrink }) — use layout attrs"
+        md.contains("sail-participation-style")
+            || (md.contains("grow") && md.contains("box")),
+        "skill hard rules must mention participation → box channel"
     );
     assert!(
-        md.contains("sail-participation-style") || md.contains("grow") && md.contains("attrs"),
-        "skill hard rules must still mention participation attrs"
+        !md.contains("Participation attrs only"),
+        "skill must not still teach bare participation attrs as canonical"
     );
     assert!(
         md.contains("sail-display-on-layout") || md.contains("display") && md.contains("layout"),

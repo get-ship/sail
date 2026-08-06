@@ -61,15 +61,8 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="checks"
-  checks-surface
-  checks-panel-mode={panel() ? 'true' : 'false'}
-  gap="0"
-  grow
-
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden) })
+<column surface="checks" checks-surface checks-panel-mode={panel() ? 'true' : 'false'} gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden)  })
 
   <!-- Full-page chrome only (not drawer) -->
   <if {!panel()}>
@@ -83,7 +76,9 @@ export default controller(() => {
       <p last-run>
         style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {lastRunLabel()}</p>
-      <row slot="actions" gap="2" align="center" nowrap shrink="0">
+      <row slot="actions" gap="2" align="center" nowrap>
+        style({ box: shrink(0) })
+
         <button type="button" size="sm" variant="ghost" tone="muted" recheck on:click={onRecheck}>
           {recheckLabel()}
         </button>
@@ -96,7 +91,9 @@ export default controller(() => {
     </studio-page-header>
 
     <studio-toolbar checks-toolbar>
-      <select filter-rule label="Filter by rule" value={ruleFilterVal()} on:change={onRuleFilter} w="28">
+      <select filter-rule label="Filter by rule" value={ruleFilterVal()} on:change={onRuleFilter}>
+        style({ box: w(28) })
+
         <for {ruleOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
@@ -104,7 +101,9 @@ export default controller(() => {
       <separator orientation="vertical">
         style({ box: h(4) })
       </separator>
-      <select filter-file label="Filter by file" value={fileFilterVal()} on:change={onFileFilter} w="28">
+      <select filter-file label="Filter by file" value={fileFilterVal()} on:change={onFileFilter}>
+        style({ box: w(28) })
+
         <for {fileOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
@@ -112,7 +111,9 @@ export default controller(() => {
       <separator orientation="vertical">
         style({ box: h(4) })
       </separator>
-      <select filter-severity label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter} w="28">
+      <select filter-severity label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter}>
+        style({ box: w(28) })
+
         <for {severityOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
@@ -142,20 +143,21 @@ Autofix</p>
 
   <!-- Drawer: one dense tools strip — no dual headers, no overflowing selects -->
   <if {panel()}>
-    <column
-      findings-panel-tools
-      shrink="0"
-      gap="2"
+    <column findings-panel-tools gap="2">
+      style({  box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-    >
-      style({ box: padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+      <row align="center" justify="between" nowrap gap="2">
+        style({ box: minW(0) })
 
-      <row align="center" justify="between" nowrap gap="2" min-w="0">
-        <row align="center" gap="2" nowrap grow min-w="0">
+        <row align="center" gap="2" nowrap>
+          style({ box: grow(1).minW(0) })
+
           <badge error-count tone="destructive" size="sm" variant="soft" pill>{errorCountLabel()}</badge>
           <badge warning-count tone="warning" size="sm" variant="soft" pill>{warningCountLabel()}</badge>
         </row>
-        <button type="button" size="sm" variant="ghost" tone="muted" recheck on:click={onRecheck} shrink="0">
+        <button type="button" size="sm" variant="ghost" tone="muted" recheck on:click={onRecheck}>
+          style({ box: shrink(0) })
+
           {recheckLabel()}
         </button>
       </row>
@@ -180,17 +182,11 @@ Autofix</p>
   </if>
 
   <if {hasChecksError()}>
-    <row
-      checks-error
-      align="center"
-      gap="2"
-      shrink="0"
+    <row checks-error align="center" gap="2">
+      style({  box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border)  })
 
-    >
-      style({ box: h(7).padX(3), paint: borderBWidth(1).borderB(border) })
-
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(xs).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(xs).truncate() })
 {checksError()}</p>
       <button type="button" size="sm" variant="ghost" retry-checks on:click={onRetryChecks}>
         Retry
@@ -202,16 +198,8 @@ Autofix</p>
     Findings host: createTable identity assigned to host.table (assignTableHost).
     Columns severity · rule · file:span · summary; groups from table.rows().
   -->
-  <scroll-area
-    findings-list
-    findings-table
-    findings-table-host
-    grow
-    min-w="0"
-    on:click={onFindingClick}
-
-  >
-    style({ box: minH(0).h(full).basis(0) })
+  <scroll-area findings-list findings-table findings-table-host on:click={onFindingClick}>
+    style({  box: grow(1).minW(0).minH(0).h(full).basis(0)  })
 
     <column gap="0">
       style({ box: padY(1) })
@@ -270,12 +258,8 @@ Autofix</p>
               >
                 {g.open ? '▾' : '▸'}
               </button>
-              <p
-                grow
-                min-w="0"
-
-              >
-                style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).fontFamily(mono).truncate() })
+              <p>
+                style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).fontFamily(mono).truncate() })
 
                 {g.rule}
               </p>
@@ -351,8 +335,8 @@ Autofix</p>
 
                     {f.fileSpan}
                   </p>
-                  <p grow min-w="0">
-                    style({ text: fontSize(sm).truncate() })
+                  <p>
+                    style({ box: grow(1).minW(0), text: fontSize(sm).truncate() })
 {f.message}</p>
                   <if {f.showFixChip}>
                     <p fix-chip>
@@ -397,9 +381,10 @@ Suggestion</p>
                         gap="0"
 
                       >
-                        style({ box: pad(2), paint: bg(surface-0).radius(sm), text: fontFamily(mono).fontSize(xs) })
-
-                        <for {f.snippet} as="ln" key={ln.key}>
+                        style({ box: pad(2), paint: bg(surface-0).radius(sm) })
+                        <span>
+                          style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
+                          <for {f.snippet} as="ln" key={ln.key}>
                           <p
                             snippet-line={ln.n}
                             highlight={ln.highlight ? 'true' : 'false'}
@@ -407,7 +392,8 @@ Suggestion</p>
                             {ln.n} {ln.text}
                           </p>
                         </for>
-                      </column>
+                        </span>
+</column>
                       <row gap="2" align="center" nowrap>
                         <button
                           type="button"
@@ -457,16 +443,13 @@ Suggestion</p>
     </column>
   </scroll-area>
 
-  <row
-    checks-status
-    shrink="0"
-    align="center"
-
-  >
-    style({ box: h(6).padX(3), paint: borderTWidth(1).borderT(border-subtle).fg(muted-foreground), text: fontSize(xs) })
-
-    <p>{checksStatusNote()}</p>
-  </row>
+  <row checks-status align="center">
+    style({  box: shrink(0).h(6).padX(3), paint: borderTWidth(1).borderT(border-subtle).fg(muted-foreground)  })
+    <span>
+      style({ box: display(contents), text: fontSize(xs) })
+      <p>{checksStatusNote()}</p>
+    </span>
+</row>
 
   <!--
     Review sheet (not L1 dialog): dialog ships overflow:hidden + maxH and
@@ -474,14 +457,8 @@ Suggestion</p>
     keeps the same markers for tests/apply flow.
   -->
   <if {reviewOpen()}>
-    <column
-      review-dialog
-      review-sheet
-      gap="2"
-      shrink="0"
-
-    >
-      style({ box: pad(3).minW(0).maxH(56).overflow(auto), paint: borderTWidth(1).borderT(border).bg(surface-1) })
+    <column review-dialog review-sheet gap="2">
+      style({  box: shrink(0).pad(3).minW(0).maxH(56).overflow(auto), paint: borderTWidth(1).borderT(border).bg(surface-1)  })
 
       <row align="center" justify="between" nowrap gap="2">
         <p>
@@ -508,8 +485,8 @@ Review fixes</p>
           <column gap="2">
             <row gap="2" align="center" nowrap>
               <badge tone="primary" size="sm" variant="soft">{item.rule}</badge>
-              <p grow min-w="0">
-                style({ text: fontSize(sm).truncate() })
+              <p>
+                style({ box: grow(1).minW(0), text: fontSize(sm).truncate() })
 {item.message}</p>
             </row>
             <column review-diff gap="1">

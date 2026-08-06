@@ -11,14 +11,8 @@
   }
 </scope>
 
-<empty-state
-  studio-empty
-  variant={variant()}
-  size={size()}
-  w="full"
-
->
-  style({ box: pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
+<empty-state studio-empty variant={variant()} size={size()}>
+  style({  box: w(full).pad(3), paint: borderWidth(1).border(border-subtle).radius(md)  })
 
   <slot name="icon"></slot>
   <strong slot="title">{title()}</strong>

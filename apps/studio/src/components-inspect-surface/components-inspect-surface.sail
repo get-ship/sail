@@ -18,36 +18,17 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="components"
-  components-surface
-  components-inspect
-  gap="0"
-  grow
+<column surface="components" components-surface components-inspect gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+  <row components-workbench gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })
 
-  <row
-    components-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+    <column inspect-tree-pane gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(panel-min-w-lg).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
-
-    <column
-      inspect-tree-pane
-      grow
-      gap="0"
-
-    >
-      style({ box: minH(0).h(full).minW(panel-min-w-lg).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) })
-
-      <column inspect-tree-head shrink="0" gap="2">
-        style({ box: padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) })
+      <column inspect-tree-head gap="2">
+        style({  box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle)  })
 
         <row align="center" justify="between" nowrap gap="2">
           <p>
@@ -85,8 +66,8 @@ Surface picker · open files & routes</p>
       </column>
 
       <if {inspect.isLoading()}>
-        <row align="center" gap="2" shrink="0">
-          style({ box: padX(4).padY(2) })
+        <row align="center" gap="2">
+          style({  box: shrink(0).padX(4).padY(2)  })
 
           <spinner size="sm"></spinner>
           <p>
@@ -95,8 +76,8 @@ Surface picker · open files & routes</p>
         </row>
       </if>
 
-      <column grow gap="0">
-        style({ box: minH(0).basis(0).pad(1).overflow(hidden) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).basis(0).pad(1).overflow(hidden)  })
 
         <if {!inspect.hasSurface()}>
           <studio-empty title="Select a surface to inspect" size="sm">
@@ -127,17 +108,11 @@ Surface picker · open files & routes</p>
       </column>
     </column>
 
-    <column
-      inspect-detail
-      components-detail
-      grow
-      gap="0"
+    <column inspect-detail components-detail gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(panel-min-w-md).basis(0).overflow(hidden), paint: bg(background)  })
 
-    >
-      style({ box: minH(0).h(full).minW(panel-min-w-md).basis(0).overflow(hidden), paint: bg(background) })
-
-      <column shrink="0" gap="3">
-        style({ box: padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
+      <column gap="3">
+        style({  box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0)  })
 
         <if {!inspect.hasNode()}>
           <p>
@@ -179,8 +154,8 @@ Select a node in the tree.</p>
         </if>
       </column>
 
-      <scroll-area grow>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="4">
           style({ box: pad(5) })
@@ -202,8 +177,12 @@ No diagnostics on this surface.</p>
             </if>
             <for {inspect.issueRows()} as="iss" key={iss.key}>
               <row gap="2" align="start" nowrap>
-                <badge tone={iss.tone} size="sm" variant="soft" pill shrink="0">{iss.severity}</badge>
-                <column grow min-w="0" gap="0">
+                <badge tone={iss.tone} size="sm" variant="soft" pill>
+                  style({ box: shrink(0) })
+{iss.severity}</badge>
+                <column gap="0">
+                  style({ box: grow(1).minW(0) })
+
                   <p>
                     style({ text: fontSize(sm) })
 {iss.message}</p>
@@ -232,14 +211,16 @@ Boxes from the compiler model (not browser computed style).</p>
                 <row gap="2" align="center" nowrap>
                   style({ box: padY(1) })
 
-                  <p shrink="0">
-                    style({ text: fontSize(sm).fontFamily(mono) })
+                  <p>
+                    style({ box: shrink(0), text: fontSize(sm).fontFamily(mono) })
 {box.tag}</p>
-                  <p grow min-w="0">
-                    style(pathMeta)
+                  <p>
+                    style([ style(pathMeta), style({ box: grow(1).minW(0) }) ])
 {box.dims}</p>
                   <if {box.flags}>
-                    <badge tone="warning" size="sm" variant="soft" pill shrink="0">{box.flags}</badge>
+                    <badge tone="warning" size="sm" variant="soft" pill>
+                      style({ box: shrink(0) })
+{box.flags}</badge>
                   </if>
                 </row>
               </for>
@@ -257,8 +238,8 @@ No state bindings on this surface.</p>
             </if>
             <for {inspect.stateRows()} as="st" key={st.key}>
               <row gap="2" align="center" nowrap>
-                <p grow min-w="0">
-                  style({ text: fontSize(sm).fontFamily(mono).truncate() })
+                <p>
+                  style({ box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() })
 {st.name}</p>
                 <badge tone="muted" size="sm" variant="outline" pill>{st.kind}</badge>
                 <badge tone={st.tierTone} size="sm" variant="soft" pill>{st.tierLabel}</badge>

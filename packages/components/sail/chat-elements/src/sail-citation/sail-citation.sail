@@ -68,8 +68,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       justify="center"
 
     >
-      style({ box: minW(4).h(4).padX(1), paint: fg(primary-foreground).bg(primary).radius(full), text: fontWeight(semibold) })
-{index()}</row>
+      style({ box: minW(4).h(4).padX(1), paint: fg(primary-foreground).bg(primary).radius(full) })
+      <span>
+        style({ box: display(contents), text: fontWeight(semibold) })
+        {index()}
+      </span>
+</row>
     <span>
       style({ text: truncate() })
 {source()}</span>

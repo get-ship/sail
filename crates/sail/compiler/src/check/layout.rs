@@ -158,8 +158,12 @@ mod severity_tests {
         // Column with overflow hidden and a child that wants height while parent
         // collapses — classic silent-clip shape (simplified).
         let src = r#"
-            <column style={style.overflow(hidden).h(0)}>
-              <div style={style.h(20)}>tall</div>
+            <column>
+  style({ box: overflow(hidden).h(0) })
+
+              <div>
+  style({ box: h(20) })
+tall</div>
             </column>
         "#;
         let diags = collect(src);
@@ -181,7 +185,11 @@ mod severity_tests {
     /// from Warning → Error so studio check fails closed.
     #[test]
     fn layout_error_profile_promotes_zero_main_axis() {
-        let src = r#"<column style={style.h(0)}><div style={style.h(20)}>x</div></column>"#;
+        let src = r#"<column>
+  style({ box: h(0) })
+<div>
+  style({ box: h(20) })
+x</div></column>"#;
         let dir = tempfile::tempdir().expect("tempdir");
         std::fs::write(
             dir.path().join("sail.config.json"),
@@ -518,7 +526,11 @@ mod tests {
     /// diagnostic lands on the deepest collapsed box with non-zero children
     /// (the div — the column's only child totals 0 after flex shrink, so the
     /// parent case is suppressed by the layout crate's noise gate).
-    const ZERO_MAIN_SRC: &str = r#"<column style={style.h(0)}><div style={style.h(20)}>x</div></column>"#;
+    const ZERO_MAIN_SRC: &str = r#"<column>
+  style({ box: h(0) })
+<div>
+  style({ box: h(20) })
+x</div></column>"#;
 
     #[test]
     fn maps_zero_main_axis_back_to_collapsed_box() {
@@ -569,7 +581,11 @@ mod tests {
     #[test]
     fn duplicate_columns_map_by_index() {
         let src =
-            "<column>A</column>\n<column style={style.h(0)}><div style={style.h(20)}>x</div></column>";
+            "<column>A</column>\n<column>
+  style({ box: h(0) })
+<div>
+  style({ box: h(20) })
+x</div></column>";
         let diags = collect(src);
         let zero = diags
             .iter()

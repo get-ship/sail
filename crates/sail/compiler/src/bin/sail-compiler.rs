@@ -1021,10 +1021,11 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<stack>` with `gap` / `align` / `justify` / `cols` attrs. Rows **wrap by\n  \
            default**; `<row nowrap>` is the single-line row. Unrecognized attrs on a\n  \
            layout keyword are a compile error.\n\
-         - **Participation attrs only** on any element: boolean `grow` / `shrink`\n  \
-           (or `grow=\"0\"|\"1\"`), `w` / `min-w` / `max-w` (size tokens). `style.grow` /\n  \
-           `style.shrink` are a hard lint (`sail-participation-style`). Style keeps\n  \
-           paint (pad, color, type, chrome) and intrinsic size (`h`, icon `w`/`size`).\n\
+         - **Participation on the box channel** — `style({{ box: grow(1).minW(0).w(full) }})`\n  \
+           (or `shrink(0)`). Bare attrs `grow` / `shrink` / `w` / `min-w` / `max-w` are a\n  \
+           hard lint (`sail-participation-style`). Layout-keyword **axis** attrs\n  \
+           (`gap` / `align` / `justify` on row|column|grid) stay. Paint (bg, type,\n  \
+           chrome) stays on paint/text channels.\n\
          - **Never `style.display(…)` on layout keywords** (`row`/`column`/`grid`/\n  \
            `center`/`stack`). Bases own `display:flex|grid` and beat `.sx-displaynone`\n  \
            (`.sail-col` footgun). Hide a plain host and nest the layout inside\n  \
@@ -1075,7 +1076,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         let _ = writeln!(
             md,
             "Everyday paint from `style::setters`. **Not listed:** full inventory +\n\
-             `grow`/`shrink` (layout attrs only — `sail-participation-style`).\n"
+             `grow`/`shrink` live on `box:` (`sail-participation-style` refuses bare attrs).\n"
         );
         for s in sail_lint::style::setters::setters() {
             if !CORE_SETTERS.contains(&s.name) {

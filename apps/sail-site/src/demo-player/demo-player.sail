@@ -37,7 +37,9 @@ export default controller((ctx: Scope) => {
   style(card)
 
   <row gap="3" align="center" nowrap>
-    <column gap="1" grow min-w="0">
+    <column gap="1">
+      style({ box: grow(1).minW(0) })
+
       <strong>
         style(title)
 Signals in the Rain</strong>

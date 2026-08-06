@@ -907,8 +907,12 @@ sail-context-menu</h2>
 Right-click triggered overlay menu — positioned at cursor via show(x,y)</p>
         <context-menu>
           <column slot="trigger">
-            style({ box: padY(4).padX(6), paint: borderWidth(1).border(border).radius(md).fg(muted-foreground).select(none).cursor(context-menu), text: textAlign(center).fontSize(sm) })
-Right-click this area</column>
+            style({ box: padY(4).padX(6), paint: borderWidth(1).border(border).radius(md).fg(muted-foreground).select(none).cursor(context-menu) })
+            <span>
+              style({ box: display(contents), text: textAlign(center).fontSize(sm) })
+              Right-click this area
+            </span>
+</column>
           <sail-menu-item value="open">Open</sail-menu-item>
           <sail-menu-item value="rename">Rename</sail-menu-item>
           <sail-menu-separator></sail-menu-separator>
@@ -1134,25 +1138,31 @@ sail-tab-panel (inside sail-tabs)</h2>
           <sail-tab name="tp3" label="History"></sail-tab>
           <tab-panel name="tp1">
             <column>
-              style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md), text: fontSize(sm) })
-
-              Overview panel — rendered when the Overview tab is active.
+              style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) })
+              <span>
+                style({ box: display(contents), text: fontSize(sm) })
+                Overview panel — rendered when the Overview tab is active.
               Uses <code>animation: sail-tab-panel-fade</code> on transition.
-            </column>
+              </span>
+</column>
           </tab-panel>
           <tab-panel name="tp2">
             <column>
-              style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md), text: fontSize(sm) })
-
-              Details panel — secondary content rendered on demand.
-            </column>
+              style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) })
+              <span>
+                style({ box: display(contents), text: fontSize(sm) })
+                Details panel — secondary content rendered on demand.
+              </span>
+</column>
           </tab-panel>
           <tab-panel name="tp3">
             <column>
-              style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md), text: fontSize(sm) })
-
-              History panel — lazy content until the user navigates here.
-            </column>
+              style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) })
+              <span>
+                style({ box: display(contents), text: fontSize(sm) })
+                History panel — lazy content until the user navigates here.
+              </span>
+</column>
           </tab-panel>
         </tabs>
       </column>
@@ -1184,10 +1194,12 @@ sail-error-boundary</h2>
 This subtree is broken (error boundary will catch)</column>
           <else>
             <column>
-              style({ box: pad(4), paint: bg(surface-2).radius(md).fg(success-foreground), text: fontSize(sm) })
-
-              Subtree is healthy. Toggle the switch above to simulate a fault.
-            </column>
+              style({ box: pad(4), paint: bg(surface-2).radius(md).fg(success-foreground) })
+              <span>
+                style({ box: display(contents), text: fontSize(sm) })
+                Subtree is healthy. Toggle the switch above to simulate a fault.
+              </span>
+</column>
           </else></if>
         </error-boundary>
       </column>

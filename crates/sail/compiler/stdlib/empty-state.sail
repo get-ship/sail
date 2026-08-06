@@ -50,16 +50,8 @@
     }),
   ])
 
-  <row
-    inline
-    nowrap
-    align="center"
-    justify="center"
-    hidden="true"
-    shrink
-
-  >
-    style([
+  <row inline nowrap align="center" justify="center" hidden="true">
+    style([ style({ box: shrink(1) }), 
       icon,
       match(tone, {
         default: style({ paint: bg(muted).fg(muted-foreground) }),
@@ -79,8 +71,8 @@
 
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" grow min-w="0">
-    style(copy)
+  <column align="stretch" gap="1">
+    style([ style(copy), style({ box: grow(1).minW(0) }) ])
 
     <div>
       style([

@@ -81,8 +81,12 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
         data-state={state()}
 
       >
-        style({ box: w(5).h(5), paint: radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).shadow(sm).cursor(pointer).pointerEvents(auto), text: fontSize(xs).fontWeight(medium).fontFamily(body) }).when(stateActive, { paint: outline(ring-color) })
-{badge()}</row>
+        style({ box: w(5).h(5), paint: radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).shadow(sm).cursor(pointer).pointerEvents(auto) }).when(stateActive, { paint: outline(ring-color) })
+        <span>
+          style({ box: display(contents), text: fontSize(xs).fontWeight(medium).fontFamily(body) })
+          {badge()}
+        </span>
+</row>
     </center>
   </div>
 <else-if {hasBox()}>

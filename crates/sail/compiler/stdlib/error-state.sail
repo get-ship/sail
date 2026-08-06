@@ -50,16 +50,8 @@
     }),
   ])
 
-  <row
-    inline
-    nowrap
-    align="center"
-    justify="center"
-    hidden="true"
-    shrink
-
-  >
-    style([
+  <row inline nowrap align="center" justify="center" hidden="true">
+    style([ style({ box: shrink(1) }), 
       icon,
       when({
         forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),
@@ -74,8 +66,8 @@
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" grow min-w="0">
-    style(copy)
+  <column align="stretch" gap="1">
+    style([ style(copy), style({ box: grow(1).minW(0) }) ])
 
     <div>
       style(title)

@@ -41,11 +41,11 @@ export default controller((ctx) => {
  const mobileBar = style({ box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar) }).when(tablet, { box: display(none) })
 </scope>
 
-<row nowrap align="stretch" w="full" grow min-w="0" gap="0">
-  style(shell)
+<row nowrap align="stretch" gap="0">
+  style([ style(shell), style({ box: w(full).grow(1).minW(0) }) ])
 
- <nav shrink="0" label="Deck docs">
-   style(rail)
+ <nav label="Deck docs">
+   style([ style(rail), style({ box: shrink(0) }) ])
 
  <p>
    style(railLabel)
@@ -90,8 +90,8 @@ HMR</a>
 Build</a>
  </nav>
 
- <column grow min-w="0" gap="0">
-   style({ box: minH(0).minW(0) })
+ <column gap="0">
+   style({  box: grow(1).minW(0).minH(0).minW(0)  })
 
  <div>
    style(mobileBar)
@@ -101,8 +101,8 @@ Build</a>
    style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 Deck docs</small>
  </div>
- <main grow min-w="0">
-   style(mainDocs)
+ <main>
+   style([ style(mainDocs), style({ box: grow(1).minW(0) }) ])
 
  <slot name="route"></slot>
  </main>
@@ -118,7 +118,9 @@ Deck docs</small>
  on:sail-close={closeNav}
 >
  <header>
-  <row align="center" justify="between" gap="2" w="full">
+  <row align="center" justify="between" gap="2">
+    style({ box: w(full) })
+
    <strong>
      style({ text: fontSize(sm) })
 Deck docs</strong>

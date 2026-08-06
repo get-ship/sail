@@ -386,18 +386,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <dialog use:dialogBridge size={size()} backdrop="blur">
   <column gap="0">
-    style({ box: minH(0), paint: fg(foreground), text: fontFamily(body) })
+    style({ box: minH(0), paint: fg(foreground) })
+    <span>
+      style({ box: display(contents), text: fontFamily(body) })
+      <row align="center" gap="2">
+      style({  box: grow(0).pad(3).padX(4), paint: borderBWidth(1).borderB(border-subtle)  })
 
-    <row align="center" gap="2" grow="0">
-      style({ box: pad(3).padX(4), paint: borderBWidth(1).borderB(border-subtle) })
-
-      <icon name="search" size="sm" grow="0"></icon>
-      <input type="text" flush grow min-w="0" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput>
-        style({ text: fontFamily(body).fontSize(base).leading(normal) })
+      <icon name="search" size="sm">
+        style({ box: grow(0) })
+</icon>
+      <input type="text" flush autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput>
+        style({ box: grow(1).minW(0), text: fontFamily(body).fontSize(base).leading(normal) })
       </input>
     </row>
-    <ul grow role="listbox" id={listId()} aria-label={label()} use:captureList>
-      style({ box: maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0) })
+    <ul role="listbox" id={listId()} aria-label={label()} use:captureList>
+      style({  box: grow(1).maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)  })
 
       <for {rows()} as="row" key={row.key}>
         <if {row.isHeading}>
@@ -409,16 +412,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm) }).when(selected, { paint: bg(selected-bg) }).when(disabled, { paint: fg(muted-foreground).cursor(default).opacity(50) })
 
             <if {row.icon !== ''}>
-              <icon name={row.icon} size="sm" grow="0">
-                style({ paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })
+              <icon name={row.icon} size="sm">
+                style({ box: grow(0), paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })
 </icon>
             </if>
-            <span grow min-w="0">
-              style({ text: truncate() })
+            <span>
+              style({ box: grow(1).minW(0), text: truncate() })
 {row.label}</span>
             <if {row.hint !== ''}>
-              <span grow="0">
-                style({ box: ml(auto), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+              <span>
+                style({  box: grow(0).ml(auto), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono)  })
 {row.hint}</span>
             </if>
           </li>
@@ -430,5 +433,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 {emptyLabel()}</li>
       </if>
     </ul>
-  </column>
+    </span>
+</column>
 </dialog>

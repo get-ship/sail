@@ -18,42 +18,25 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="components"
-  components-surface
-  components-library
-  gap="0"
-  grow
+<column surface="components" components-surface components-library gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+  <row components-workbench gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })
 
-  <row
-    components-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+    <column components-nav gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
-
-    <column
-      components-nav
-      grow
-      gap="0"
-
-    >
-      style({ box: minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) })
-
-      <column components-nav-head shrink="0" gap="2">
-        style({ box: padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) })
+      <column components-nav-head gap="2">
+        style({  box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle)  })
 
         <row align="center" justify="between" nowrap gap="2">
           <p>
             style(eyebrow)
 Components</p>
-          <button type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen} shrink="0">
+          <button type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen}>
+            style({ box: shrink(0) })
+
             New…
           </button>
         </row>
@@ -76,8 +59,8 @@ Components</p>
       </column>
 
       <if {library.isLoading()}>
-        <row align="center" gap="2" shrink="0">
-          style({ box: padX(4).padY(2) })
+        <row align="center" gap="2">
+          style({  box: shrink(0).padX(4).padY(2)  })
 
           <spinner size="sm"></spinner>
           <p>
@@ -86,8 +69,8 @@ Components</p>
         </row>
       </if>
 
-      <scroll-area components-list grow on:click={library.onListClick}>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area components-list on:click={library.onListClick}>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="3">
           style({ box: pad(3) })
@@ -117,7 +100,9 @@ This project</p>
                 meta={row.meta}
                 selected={row.selected}
               >
-                <badge slot="trailing" tone={row.originTone} size="sm" variant="outline" pill shrink="0">
+                <badge slot="trailing" tone={row.originTone} size="sm" variant="outline" pill>
+                  style({ box: shrink(0) })
+
                   {row.originLabel}
                 </badge>
               </studio-list-row>
@@ -146,7 +131,9 @@ No installed packs</p>
                 meta={row.meta}
                 selected={row.selected}
               >
-                <badge slot="trailing" tone="muted" size="sm" variant="outline" pill shrink="0">
+                <badge slot="trailing" tone="muted" size="sm" variant="outline" pill>
+                  style({ box: shrink(0) })
+
                   pack
                 </badge>
               </studio-list-row>
@@ -165,24 +152,16 @@ No installed packs</p>
       </scroll-area>
     </column>
 
-    <column
-      components-detail
-      grow
-      gap="0"
+    <column components-detail gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background)  })
 
-    >
-      style({ box: minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) })
-
-      <column
-        components-detail-head
-        shrink="0"
-        gap="3"
-
-      >
-        style({ box: padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
+      <column components-detail-head gap="3">
+        style({  box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0)  })
 
         <row align="start" justify="between" gap="3" nowrap>
-          <column grow min-w="0" gap="1">
+          <column gap="1">
+            style({ box: grow(1).minW(0) })
+
             <p detail-title>
               style({ text: fontSize(lg).fontWeight(semibold).tracking(tight).truncate() })
 
@@ -198,7 +177,9 @@ No installed packs</p>
               </if>
             </row>
           </column>
-          <row gap="2" align="center" shrink="0" nowrap>
+          <row gap="2" align="center" nowrap>
+            style({ box: shrink(0) })
+
             <button
               type="button"
               size="sm"
@@ -237,8 +218,8 @@ No installed packs</p>
         </row>
       </column>
 
-      <scroll-area components-detail-body grow>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area components-detail-body>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="4">
           style({ box: pad(5).minW(0) })
@@ -282,35 +263,30 @@ Creates a draft brief only — does not write files yet.</p>
             style({ box: minW(0).overflow(hidden), paint: shadow(lg) })
 
             <column gap="0">
-              <row
-                specimen-chrome
-                align="center"
-                gap="2"
-                nowrap
-                shrink="0"
+              <row specimen-chrome align="center" gap="2" nowrap>
+                style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-              >
-                style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+                <row gap="2" align="center" nowrap hidden="true">
+                  style({  box: shrink(0).minW(12)  })
 
-                <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                  style({ box: minW(12) })
-
-                  <stack shrink="0">
-                    style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
+                  <stack>
+                    style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
 </stack>
-                  <stack shrink="0">
-                    style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
+                  <stack>
+                    style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
 </stack>
-                  <stack shrink="0">
-                    style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
+                  <stack>
+                    style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
 </stack>
                 </row>
-                <p grow min-w="0">
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
+                <p>
+                  style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 
                   {library.previewTitle()}
                 </p>
-                <badge tone="muted" size="sm" variant="outline" pill shrink="0">preview</badge>
+                <badge tone="muted" size="sm" variant="outline" pill>
+                  style({ box: shrink(0) })
+preview</badge>
               </row>
               <column mode="dark" specimen-body gap="2">
                 style({ box: pad(6).minH(32), paint: bg(background) })
@@ -348,11 +324,11 @@ Intent</p>
 Meta</p>
                   <for {library.kvRows()} as="kv" key={kv.key}>
                     <row kv-row gap="3" align="start" nowrap>
-                      <p shrink="0">
-                        style({ box: w(24), paint: fg(muted-foreground), text: fontSize(xs) })
+                      <p>
+                        style({  box: shrink(0).w(24), paint: fg(muted-foreground), text: fontSize(xs)  })
 {kv.label}</p>
-                      <p grow min-w="0">
-                        style({ text: fontSize(sm).fontFamily(mono).truncate() })
+                      <p>
+                        style({ box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() })
 {kv.value}</p>
                     </row>
                   </for>
@@ -389,8 +365,8 @@ Slots: {library.slotsLabel()}</p>
                     <row gap="3" nowrap>
                       style({ box: padY(1), paint: borderBWidth(1).borderB(border-subtle) })
 
-                      <p grow>
-                        style(eyebrow)
+                      <p>
+                        style([ style(eyebrow), style({ box: grow(1) }) ])
 Name</p>
                       <p>
                         style(eyebrow)
@@ -403,7 +379,9 @@ Default</p>
                       <row prop-row gap="3" align="start" nowrap>
                         style({ box: padY(2), paint: borderBWidth(1).borderB(border-subtle) })
 
-                        <column grow min-w="0" gap="0">
+                        <column gap="0">
+                          style({ box: grow(1).minW(0) })
+
                           <p>
                             style({ text: fontSize(sm).fontFamily(mono) })
 {prop.name}</p>
@@ -411,11 +389,11 @@ Default</p>
                             style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {prop.requiredLabel}</p>
                         </column>
-                        <p shrink="0">
-                          style(pathMeta)
+                        <p>
+                          style([ style(pathMeta), style({ box: shrink(0) }) ])
 {prop.type}</p>
-                        <p shrink="0">
-                          style(pathMeta)
+                        <p>
+                          style([ style(pathMeta), style({ box: shrink(0) }) ])
 {prop.defaultValue}</p>
                       </row>
                     </for>

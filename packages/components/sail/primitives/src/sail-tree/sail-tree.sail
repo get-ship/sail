@@ -204,16 +204,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </div>
 </else-if><else>
 <div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  style({ box: w(full), paint: fg(foreground), text: fontFamily(body).fontSize(density) })
-
-  <!-- Flow list: parent owns height; overflow scrolls. No absolute virtualizer
+  style({ box: w(full), paint: fg(foreground) })
+  <span>
+    style({ box: display(contents), text: fontFamily(body).fontSize(density) })
+    <!-- Flow list: parent owns height; overflow scrolls. No absolute virtualizer
        (collapse reflows; row boxes don't share a fixed estimate). -->
   <div>
     style({ box: w(full).h(full).minH(0).overflowY(auto) })
 
     <for {flowItems()} as="w" key={w.key}>
       <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent}>
-        style({ box: w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)), paint: group().radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg), text: fontWeight(medium) }).when(busy, { paint: fg(muted-foreground).cursor(default), text: italic(true) }).when(focus, { paint: outline(ring) })
+        style({ box: w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)), paint: group().radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg) }).when(busy, { paint: fg(muted-foreground).cursor(default) }).when(focus, { paint: outline(ring) })
+        <span>
+          style({ box: display(contents) }).when(selected, { text: fontWeight(medium) }).when(busy, { text: italic(true) })
 
         <!-- Chevron is paint only (aria-expanded / data-expanded). Expand is the row. -->
         <if {w.canExpand}>
@@ -248,8 +251,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <else>
           <slot name="node-icon"></slot>
         </else></if>
-        <span grow min-w="0">
-          style({ text: truncate() })
+        <span>
+          style({ box: grow(1).minW(0), text: truncate() })
 {w.label}</span>
         <span>
           style({ box: ml(auto), text: fontSize(xs) })
@@ -269,8 +272,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             style({ paint: fg(muted-foreground) })
 <slot name="node-trailing"></slot></span>
         </span>
+        </span>
       </row>
     </for>
   </div>
+  </span>
 </div>
 </else></if>

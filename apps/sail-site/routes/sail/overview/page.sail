@@ -53,13 +53,13 @@ Introduction</p>
       component — and the same lines running:
     </p>
     <row gap="6" align="start">
-      <column gap="2"  grow>
-        style({ box: basis(breakpoint-mobile).minW(0) })
+      <column gap="2">
+        style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="2"  grow justify="center">
-        style({ box: basis(64).minW(0).pad(4), paint: bg(muted).borderWidth(1).border(border).radius(lg) })
+      <column gap="2" justify="center">
+        style({  box: grow(1).basis(64).minW(0).pad(4), paint: bg(muted).borderWidth(1).border(border).radius(lg)  })
 
         <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
@@ -87,8 +87,8 @@ Introduction</p>
 
     <h2>The compiler pushes back</h2>
     <row gap="6" align="start">
-      <column gap="3"  grow>
-        style({ box: basis(breakpoint-mobile).minW(0) })
+      <column gap="3">
+        style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
         <p>
           The compiler checks more than syntax: a colour that isn't a token, a
@@ -107,8 +107,8 @@ Introduction</p>
           isn't granted doesn't compile.
         </p>
       </column>
-      <column gap="2"  grow>
-        style({ box: basis(breakpoint-mobile).minW(0) })
+      <column gap="2">
+        style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
         <p>
           style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })

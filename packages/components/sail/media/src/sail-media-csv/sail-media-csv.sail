@@ -169,8 +169,12 @@ export default controller((_ctx: Scope) => {
 </controller>
 <if {errorMsg()}>
   <column role="alert" gap="0">
-    style({ box: padY(3).padX(4), paint: fg(destructive), text: fontFamily(mono).fontSize(sm) })
-{errorMsg()}</column>
+    style({ box: padY(3).padX(4), paint: fg(destructive) })
+    <span>
+      style({ box: display(contents), text: fontFamily(mono).fontSize(sm) })
+      {errorMsg()}
+    </span>
+</column>
 <else>
   <table hoverable>
     <thead>

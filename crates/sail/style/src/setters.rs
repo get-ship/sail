@@ -46,14 +46,6 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["color"],
         },
-        SetterSpec {
-            name: "color",
-            vocab: "text",
-            scale: Some("color"),
-            keywords: &["transparent", "current", "currentColor"],
-            negatable: false,
-            slots: &["color"],
-        },
         // border disambiguates color / width / style by value via vocab.
         SetterSpec {
             name: "border",
@@ -1045,6 +1037,143 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["filter"],
         },
+        // Phase 3 gap keys — clip / mask / filter suite / 3D / container queries.
+        SetterSpec {
+            name: "clipPath",
+            vocab: "clip-path",
+            scale: None,
+            keywords: &["none", "circle", "ellipse", "inset-0", "border-box", "padding-box", "content-box", "fill-box", "stroke-box", "view-box", "margin-box"],
+            negatable: false,
+            slots: &["clip-path"],
+        },
+        SetterSpec {
+            name: "mask",
+            vocab: "mask",
+            scale: None,
+            keywords: &["none"],
+            negatable: false,
+            slots: &["mask-image"],
+        },
+        SetterSpec {
+            name: "maskImage",
+            vocab: "mask-image",
+            scale: None,
+            keywords: &["none"],
+            negatable: false,
+            slots: &["mask-image"],
+        },
+        SetterSpec {
+            name: "blur",
+            vocab: "blur",
+            scale: None,
+            keywords: &["0", "1", "2", "4", "8", "12", "16", "24"],
+            negatable: false,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "brightness",
+            vocab: "brightness",
+            scale: None,
+            keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200"],
+            negatable: false,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "contrast",
+            vocab: "contrast",
+            scale: None,
+            keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125", "150", "200"],
+            negatable: false,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "grayscale",
+            vocab: "grayscale",
+            scale: None,
+            keywords: &["0", "50", "100"],
+            negatable: false,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "hueRotate",
+            vocab: "hue-rotate",
+            scale: None,
+            keywords: &["0", "15", "30", "60", "90", "180"],
+            negatable: true,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "invert",
+            vocab: "invert",
+            scale: None,
+            keywords: &["0", "50", "100"],
+            negatable: false,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "sepia",
+            vocab: "sepia",
+            scale: None,
+            keywords: &["0", "50", "100"],
+            negatable: false,
+            slots: &["filter"],
+        },
+        SetterSpec {
+            name: "perspective",
+            vocab: "perspective",
+            scale: None,
+            keywords: &["none", "0", "250", "500", "750", "1000", "1500", "2000"],
+            negatable: false,
+            slots: &["perspective"],
+        },
+        SetterSpec {
+            name: "rotateX",
+            vocab: "rotate-x",
+            scale: Some("angle"),
+            keywords: &["0"],
+            negatable: true,
+            slots: &["rotate"],
+        },
+        SetterSpec {
+            name: "rotateY",
+            vocab: "rotate-y",
+            scale: Some("angle"),
+            keywords: &["0"],
+            negatable: true,
+            slots: &["rotate"],
+        },
+        SetterSpec {
+            name: "rotateZ",
+            vocab: "rotate-z",
+            scale: Some("angle"),
+            keywords: &["0"],
+            negatable: true,
+            slots: &["rotate"],
+        },
+        SetterSpec {
+            name: "containerType",
+            vocab: "container-type",
+            scale: None,
+            keywords: &["normal", "size", "inline-size"],
+            negatable: false,
+            slots: &["container-type"],
+        },
+        SetterSpec {
+            name: "containerName",
+            vocab: "container-name",
+            scale: None,
+            keywords: &["none"],
+            negatable: false,
+            slots: &["container-name"],
+        },
+        SetterSpec {
+            name: "container",
+            vocab: "container",
+            scale: None,
+            keywords: &["normal", "size", "inline-size"],
+            negatable: false,
+            slots: &["container-type"],
+        },
         // Host marker for group-* descendant PE — class `sail-grp`, no CSS decls.
         SetterSpec {
             name: "group",
@@ -1891,6 +2020,10 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "group" {
         return Ok(Vec::new());
     }
+    // Phase 3 gap keys — special-case CSS (filter longhands, clip/mask, 3D, cq).
+    if let Some(pairs) = lower_gap_key_css(spec.name, op) {
+        return pairs;
+    }
     // isolation stacking root.
     if spec.name == "isolate" {
         return Ok(vec![("isolation".into(), "isolate".into())]);
@@ -2614,6 +2747,202 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             source: op.source.clone(),
         }),
     }
+}
+
+/// Clip / filter / 3D / container-query product setters → real CSS.
+fn lower_gap_key_css(
+    name: &str,
+    op: &PaintOp,
+) -> Option<Result<Vec<(String, String)>, StyleDiagnostic>> {
+    let arg = op.first_arg();
+    let (neg, bare) = match arg {
+        PaintArg::Token(t) => strip_neg(t),
+        PaintArg::Bind(n) => {
+            let var = format!("var(--{})", n.replace('_', "-"));
+            return Some(Ok(match name {
+                "clipPath" => vec![("clip-path".into(), var)],
+                "mask" | "maskImage" => vec![("mask-image".into(), var)],
+                "blur" | "brightness" | "contrast" | "grayscale" | "hueRotate" | "invert"
+                | "sepia" | "saturate" => {
+                    let fn_name = match name {
+                        "hueRotate" => "hue-rotate",
+                        other => other,
+                    };
+                    vec![("filter".into(), format!("{fn_name}({var})"))]
+                }
+                "perspective" => vec![("perspective".into(), var)],
+                "rotateX" => vec![("transform".into(), format!("rotateX({var})"))],
+                "rotateY" => vec![("transform".into(), format!("rotateY({var})"))],
+                "rotateZ" => vec![("transform".into(), format!("rotateZ({var})"))],
+                "containerType" | "container" => vec![("container-type".into(), var)],
+                "containerName" => vec![("container-name".into(), var)],
+                _ => return None,
+            }));
+        }
+    };
+    let sign = if neg { "-" } else { "" };
+    Some(Ok(match name {
+        "clipPath" => {
+            let css = match bare {
+                "none" => "none".into(),
+                "circle" => "circle()".into(),
+                "ellipse" => "ellipse()".into(),
+                "inset-0" => "inset(0)".into(),
+                "border-box" | "padding-box" | "content-box" | "fill-box" | "stroke-box"
+                | "view-box" | "margin-box" => bare.into(),
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("clip-path".into(), css)]
+        }
+        "mask" | "maskImage" => {
+            let css = match bare {
+                "none" => "none".into(),
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("mask-image".into(), css)]
+        }
+        "blur" => {
+            let px = match bare {
+                "0" | "1" | "2" | "4" | "8" | "12" | "16" | "24" => bare,
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("filter".into(), format!("blur({px}px)"))]
+        }
+        "brightness" | "contrast" | "saturate" => {
+            let pct = match bare {
+                "0" | "50" | "60" | "65" | "75" | "90" | "95" | "100" | "105" | "110" | "125"
+                | "150" | "200" => bare,
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("filter".into(), format!("{name}({pct}%)"))]
+        }
+        "grayscale" | "invert" | "sepia" => {
+            let pct = match bare {
+                "0" | "50" | "100" => bare,
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("filter".into(), format!("{name}({pct}%)"))]
+        }
+        "hueRotate" => {
+            let deg = match bare {
+                "0" | "15" | "30" | "60" | "90" | "180" => bare,
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("filter".into(), format!("hue-rotate({sign}{deg}deg)"))]
+        }
+        "perspective" => {
+            let css = match bare {
+                "none" => "none".into(),
+                "0" => "0px".into(),
+                "250" | "500" | "750" | "1000" | "1500" | "2000" => format!("{bare}px"),
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("perspective".into(), css)]
+        }
+        "rotateX" | "rotateY" | "rotateZ" => {
+            let axis = match name {
+                "rotateX" => "X",
+                "rotateY" => "Y",
+                _ => "Z",
+            };
+            // Angle scale tokens (e.g. 45 → 45deg) or 0.
+            let deg = if bare == "0" {
+                "0deg".into()
+            } else if bare.chars().all(|c| c.is_ascii_digit()) {
+                format!("{sign}{bare}deg")
+            } else if let Some(v) = scales::lower("angle", bare) {
+                if neg {
+                    format!("calc(-1 * {v})")
+                } else {
+                    v
+                }
+            } else {
+                return Some(Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: bare.into(),
+                    source: op.source.clone(),
+                }));
+            };
+            vec![("transform".into(), format!("rotate{axis}({deg})"))]
+        }
+        "containerType" | "container" => {
+            let css = match bare {
+                "normal" | "size" | "inline-size" => bare.into(),
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("container-type".into(), css)]
+        }
+        "containerName" => {
+            let css = match bare {
+                "none" => "none".into(),
+                // Ident-like custom names (closed enough: [a-z0-9-]+).
+                t if t
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+                    && !t.is_empty() =>
+                {
+                    t.into()
+                }
+                _ => {
+                    return Some(Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare.into(),
+                        source: op.source.clone(),
+                    }));
+                }
+            };
+            vec![("container-name".into(), css)]
+        }
+        _ => return None,
+    }))
 }
 
 /// Setters that take two positional args: (width-token?, color-token).

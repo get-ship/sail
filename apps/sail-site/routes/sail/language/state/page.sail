@@ -44,8 +44,8 @@ The language</p>
 
   <h2>The graph, live</h2>
   <row gap="4" align="start">
-    <column  grow>
-      style({ box: basis(breakpoint-mobile).minW(0) })
+    <column>
+      style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
       <p>
         style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
@@ -84,8 +84,8 @@ effect output</small>
         </column>
       </column>
     </column>
-    <column  grow>
-      style({ box: basis(breakpoint-mobile).minW(0) })
+    <column>
+      style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
       <p>
         style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
@@ -199,8 +199,8 @@ Source</p>
     component can reach by name.
   </p>
   <row gap="4" align="start">
-    <column  grow>
-      style({ box: basis(breakpoint-mobile).minW(0) })
+    <column>
+      style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
       <p>
         style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
@@ -215,8 +215,8 @@ Live — click either card</p>
         <store-total></store-total>
       </column>
     </column>
-    <column  grow>
-      style({ box: basis(breakpoint-mobile).minW(0) })
+    <column>
+      style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
       <p>
         style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })

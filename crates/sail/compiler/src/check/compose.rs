@@ -1326,20 +1326,38 @@ mod tests {
     /// Committed spike fixture (was under gitignored `.artifacts/`).
     const RHYTHM_BROKEN: &str = r#"
 <row>
-  <div style={style.mr(4)}>card 1</div>
-  <div style={style.mr(2)}>card 2</div>
-  <div style={style.mr(4)}>card 3</div>
-  <div style={style.mr(4)}>card 4</div>
-  <div style={style.mr(6)}>card 5</div>
+  <div>
+  style({ box: mr(4) })
+card 1</div>
+  <div>
+  style({ box: mr(2) })
+card 2</div>
+  <div>
+  style({ box: mr(4) })
+card 3</div>
+  <div>
+  style({ box: mr(4) })
+card 4</div>
+  <div>
+  style({ box: mr(6) })
+card 5</div>
 </row>
 "#;
 
     const RHYTHM_DELIBERATE: &str = r#"
 <row>
-  <div style={style.mr(2)}>stage 1</div>
-  <div style={style.mr(4)}>stage 2</div>
-  <div style={style.mr(8)}>stage 3</div>
-  <div style={style.mr(16)}>stage 4</div>
+  <div>
+  style({ box: mr(2) })
+stage 1</div>
+  <div>
+  style({ box: mr(4) })
+stage 2</div>
+  <div>
+  style({ box: mr(8) })
+stage 3</div>
+  <div>
+  style({ box: mr(16) })
+stage 4</div>
 </row>
 "#;
 
@@ -1411,11 +1429,21 @@ mod tests {
     fn structural_spacing_resolves_style_chain_not_class_text() {
         let source = r#"
 <row>
-  <div style={style.pad(2).mr(4)}>a</div>
-  <div style={style.mr(2).bg(card)}>b</div>
-  <div style={style.mr(4)}>c</div>
-  <div style={style.mr(4)}>d</div>
-  <div style={style.mr(6)}>e</div>
+  <div>
+  style({ box: pad(2).mr(4) })
+a</div>
+  <div>
+  style({ box: mr(2), paint: bg(card) })
+b</div>
+  <div>
+  style({ box: mr(4) })
+c</div>
+  <div>
+  style({ box: mr(4) })
+d</div>
+  <div>
+  style({ box: mr(6) })
+e</div>
 </row>
 "#;
         let diags = collect(source, None, &[]);
@@ -1431,7 +1459,9 @@ mod tests {
     fn contrast_broken_emits_fix() {
         let source = r#"
 <column>
-  <p style={style.bg(background).fg(muted)}>low contrast on light bg</p>
+  <p>
+  style({ paint: bg(background).fg(muted) })
+low contrast on light bg</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1450,7 +1480,9 @@ mod tests {
     fn contrast_passing_is_silent() {
         let source = r#"
 <column>
-  <p style={style.bg(background).fg(foreground)}>ok</p>
+  <p>
+  style({ paint: bg(background).fg(foreground) })
+ok</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1466,7 +1498,9 @@ mod tests {
     fn contrast_fix_is_idempotent() {
         let source = r#"
 <column>
-  <p style={style.bg(background).fg(muted)}>low</p>
+  <p>
+  style({ paint: bg(background).fg(muted) })
+low</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1507,7 +1541,9 @@ mod tests {
         // Force a primary-family fg that fails AA against primary bg if needed.
         let source = r#"
 <column>
-  <p style={style.bg(primary).fg(primary)}>same-family low contrast</p>
+  <p>
+  style({ paint: bg(primary).fg(primary) })
+same-family low contrast</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1536,7 +1572,9 @@ mod tests {
         // than 28 ("7"). Equidistant values (e.g. 13) stay WARN-only.
         let source = r#"
 <column>
-  <div style={style.mr(25)}>x</div>
+  <div>
+  style({ box: mr(25) })
+x</div>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1558,7 +1596,9 @@ mod tests {
         // check_all merge, sail-compose-spacing never appears.
         let source = r#"
 <column>
-  <div style={style.mr(25)}>x</div>
+  <div>
+  style({ box: mr(25) })
+x</div>
 </column>
 "#;
         let diags = crate::check_all(source, None, &[], None);
@@ -1627,7 +1667,9 @@ mod tests {
         let source = r#"
 <column>
   <div>a</div>
-  <div style={style.ml(1)}>b</div>
+  <div>
+  style({ box: ml(1) })
+b</div>
   <div>c</div>
 </column>
 "#;
@@ -1652,7 +1694,9 @@ mod tests {
     #[test]
     fn raw_container_rewrite_to_column() {
         let source = r#"
-<div style={style.pad(2)}>body</div>
+<div>
+  style({ box: pad(2) })
+body</div>
 "#;
         let plans = crate::edit::suggest_fixes_for_source(source, "raw.sail", None);
         let raw = plans.iter().find(|p| p.rule == "sail-no-raw-container");
@@ -1719,7 +1763,9 @@ mod tests {
     fn raw_container_refuses_when_class_present() {
         // Floor bans `class=` — refuse rewrite when id present instead.
         let source = r#"
-<div id="box" style={style.pad(2)}>body</div>
+<div id="box">
+  style({ box: pad(2) })
+body</div>
 "#;
         let diags = crate::check_all(
             source,
@@ -1740,7 +1786,9 @@ mod tests {
     #[test]
     fn sx_typo_setter_rewrites_to_closest() {
         let source = r#"
-<div style={style.padd(2)}>x</div>
+<div>
+  style({ paint: padd(2) })
+x</div>
 "#;
         // Style unknown setter is a preprocess error with category sail-sx.
         let diags = crate::check_all(source, None, &[], None);
@@ -1774,16 +1822,32 @@ mod tests {
         // fire on the second parent (fingerprint#0 parent-attr bug regression).
         let source = r#"
 <row gap="4">
-  <div style={style.mr(4)}>a</div>
-  <div style={style.mr(4)}>b</div>
-  <div style={style.mr(4)}>c</div>
+  <div>
+  style({ box: mr(4) })
+a</div>
+  <div>
+  style({ box: mr(4) })
+b</div>
+  <div>
+  style({ box: mr(4) })
+c</div>
 </row>
 <row>
-  <div style={style.mr(4)}>card 1</div>
-  <div style={style.mr(2)}>card 2</div>
-  <div style={style.mr(4)}>card 3</div>
-  <div style={style.mr(4)}>card 4</div>
-  <div style={style.mr(6)}>card 5</div>
+  <div>
+  style({ box: mr(4) })
+card 1</div>
+  <div>
+  style({ box: mr(2) })
+card 2</div>
+  <div>
+  style({ box: mr(4) })
+card 3</div>
+  <div>
+  style({ box: mr(4) })
+card 4</div>
+  <div>
+  style({ box: mr(6) })
+card 5</div>
 </row>
 "#;
         let diags = collect(source, None, &[]);
@@ -1806,18 +1870,38 @@ mod tests {
     fn multi_parent_two_broken_rows_both_reported() {
         let source = r#"
 <row>
-  <div style={style.mr(4)}>a1</div>
-  <div style={style.mr(2)}>a2</div>
-  <div style={style.mr(4)}>a3</div>
-  <div style={style.mr(4)}>a4</div>
-  <div style={style.mr(6)}>a5</div>
+  <div>
+  style({ box: mr(4) })
+a1</div>
+  <div>
+  style({ box: mr(2) })
+a2</div>
+  <div>
+  style({ box: mr(4) })
+a3</div>
+  <div>
+  style({ box: mr(4) })
+a4</div>
+  <div>
+  style({ box: mr(6) })
+a5</div>
 </row>
 <row>
-  <div style={style.mr(4)}>b1</div>
-  <div style={style.mr(2)}>b2</div>
-  <div style={style.mr(4)}>b3</div>
-  <div style={style.mr(4)}>b4</div>
-  <div style={style.mr(8)}>b5</div>
+  <div>
+  style({ box: mr(4) })
+b1</div>
+  <div>
+  style({ box: mr(2) })
+b2</div>
+  <div>
+  style({ box: mr(4) })
+b3</div>
+  <div>
+  style({ box: mr(4) })
+b4</div>
+  <div>
+  style({ box: mr(8) })
+b5</div>
 </row>
 "#;
         let diags = collect(source, None, &[]);

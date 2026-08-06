@@ -48,8 +48,8 @@
     }),
   ])
 
-  <row inline nowrap align="center" justify="center" shrink>
-    style([
+  <row inline nowrap align="center" justify="center">
+    style([ style({ box: shrink(1) }), 
     ico,
     match(tone, {
       default: style({ paint: bg(muted).fg(muted-foreground) }),
@@ -66,7 +66,9 @@
 
     <slot name="icon"></slot>
   </row>
-  <column gap="1" grow min-w="0">
+  <column gap="1">
+    style({ box: grow(1).minW(0) })
+
     <div>
       style([
       title,
@@ -93,15 +95,8 @@
       <slot name="actions"></slot>
     </row>
   </column>
-  <button
-    data-dismiss
-    type="button"
-    anatomy
-    label="Dismiss"
-    shrink
-
-  >
-    style([
+  <button data-dismiss type="button" anatomy label="Dismiss">
+    style([ style({ box: shrink(1) }), 
       close,
       when({
         group-dismissible: style({ box: display(inline-block) }),

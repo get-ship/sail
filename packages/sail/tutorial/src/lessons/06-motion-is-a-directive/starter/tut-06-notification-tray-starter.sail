@@ -81,8 +81,8 @@ export default controller(() => {
           style(noteRow)
 
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p grow>
-            style(noteText)
+          <p>
+            style([ style(noteText), style({ box: grow(1) }) ])
 {n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>

@@ -53,28 +53,16 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="themes"
-  themes-surface
-  gap="0"
-  grow
-
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+<column surface="themes" themes-surface gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
   <!-- Page header — not the compact uppercase chrome strip -->
-  <row
-    themes-header
-    align="center"
-    justify="between"
-    gap="4"
-    shrink="0"
-    nowrap
+  <row themes-header align="center" justify="between" gap="4" nowrap>
+    style({  box: shrink(0).padX(6).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-  >
-    style({ box: padX(6).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+    <column gap="1">
+      style({ box: grow(1).minW(0) })
 
-    <column grow min-w="0" gap="1">
       <p>
         style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).tracking(tight) })
 
@@ -86,7 +74,9 @@ export default controller(() => {
         Project themes live on disk. Add catalog themes to the project, then open one to edit.
       </p>
     </column>
-    <row gap="2" align="center" shrink="0" nowrap>
+    <row gap="2" align="center" nowrap>
+      style({ box: shrink(0) })
+
       <button type="button" size="sm" variant="solid" tone="primary" new-theme on:click={onNewTheme}>
         New theme
       </button>
@@ -94,11 +84,11 @@ export default controller(() => {
   </row>
 
   <if {hasThemesError()}>
-    <row themes-error align="center" gap="2" shrink="0">
-      style({ box: padX(6).padY(2), paint: borderBWidth(1).borderB(border) })
+    <row themes-error align="center" gap="2">
+      style({  box: shrink(0).padX(6).padY(2), paint: borderBWidth(1).borderB(border)  })
 
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
 {themesError()}</p>
       <button type="button" size="sm" variant="ghost" retry-themes on:click={onRetryThemes}>
         Retry
@@ -107,8 +97,8 @@ export default controller(() => {
   </if>
 
   <if {isLoading()}>
-    <row themes-loading align="center" gap="2" shrink="0">
-      style({ box: padX(6).padY(2) })
+    <row themes-loading align="center" gap="2">
+      style({  box: shrink(0).padX(6).padY(2)  })
 
       <spinner size="sm"></spinner>
       <p>
@@ -117,28 +107,15 @@ export default controller(() => {
     </row>
   </if>
 
-  <row
-    themes-workbench
-    themes-split
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
-
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
+  <row themes-workbench themes-split gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })
 
     <!-- LIST -->
-    <column
-      themes-list-pane
-      grow
-      gap="0"
+    <column themes-list-pane gap="0">
+      style({  box: grow(1).minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1)  })
 
-    >
-      style({ box: minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) })
-
-      <column themes-list-head shrink="0" gap="1">
-        style({ box: padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) })
+      <column themes-list-head gap="1">
+        style({  box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle)  })
 
         <p>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(bold).textCase(uppercase).tracking(wide) })
@@ -152,15 +129,17 @@ export default controller(() => {
         </p>
       </column>
 
-      <scroll-area themes-list grow on:click={onListClick}>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area themes-list on:click={onListClick}>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="1">
           style({ box: pad(3) })
 
           <if {!hasAnyThemes()}>
             <if {!hasThemesError()}>
-              <empty-state variant="placeholder" size="sm" w="full" themes-empty>
+              <empty-state variant="placeholder" size="sm" themes-empty>
+                style({ box: w(full) })
+
                 <strong slot="title">No themes loaded</strong>
                 Retry, or create a project theme with New theme.
               </empty-state>
@@ -191,32 +170,25 @@ export default controller(() => {
                 style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
-                <row
-                  theme-swatches
-                  theme={row.previewId}
-                  mode={row.paintMode}
-                  shrink="0"
-                  gap="0"
-                  nowrap
+                <row theme-swatches theme={row.previewId} mode={row.paintMode} gap="0" nowrap hidden="true">
+                  style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })
 
-                  hidden="true"
-                >
-                  style({ box: w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle) })
-
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(background) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(background)  })
 </center>
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(surface-2) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(surface-2)  })
 </center>
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(primary) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(primary)  })
 </center>
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(accent) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(accent)  })
 </center>
                 </row>
-                <column grow min-w="0" gap="0">
+                <column gap="0">
+                  style({ box: grow(1).minW(0) })
+
                   <p>
                     style({ text: fontSize(sm).fontWeight(semibold).truncate() })
 {row.name}</p>
@@ -224,7 +196,9 @@ export default controller(() => {
                     style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {row.meta}</p>
                 </column>
-                <row gap="1" align="center" shrink="0" nowrap>
+                <row gap="1" align="center" nowrap>
+                  style({ box: shrink(0) })
+
                   <button
                     type="button"
                     size="sm"
@@ -271,32 +245,25 @@ export default controller(() => {
               >
                 style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
-                <row
-                  theme-swatches
-                  theme={row.previewId}
-                  mode={row.paintMode}
-                  shrink="0"
-                  gap="0"
-                  nowrap
+                <row theme-swatches theme={row.previewId} mode={row.paintMode} gap="0" nowrap hidden="true">
+                  style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })
 
-                  hidden="true"
-                >
-                  style({ box: w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle) })
-
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(background) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(background)  })
 </center>
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(surface-2) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(surface-2)  })
 </center>
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(primary) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(primary)  })
 </center>
-                  <center grow>
-                    style({ box: minW(0).h(full), paint: bg(accent) })
+                  <center>
+                    style({  box: grow(1).minW(0).h(full), paint: bg(accent)  })
 </center>
                 </row>
-                <column grow min-w="0" gap="0">
+                <column gap="0">
+                  style({ box: grow(1).minW(0) })
+
                   <p>
                     style({ text: fontSize(sm).fontWeight(semibold).truncate() })
 {row.name}</p>
@@ -304,8 +271,12 @@ export default controller(() => {
                     style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {row.meta}</p>
                 </column>
-                <badge tone="muted" size="sm" variant="outline" pill shrink="0">Catalog</badge>
-                <row gap="1" align="center" shrink="0" nowrap>
+                <badge tone="muted" size="sm" variant="outline" pill>
+                  style({ box: shrink(0) })
+Catalog</badge>
+                <row gap="1" align="center" nowrap>
+                  style({ box: shrink(0) })
+
                   <button
                     type="button"
                     size="sm"
@@ -345,20 +316,16 @@ export default controller(() => {
     </column>
 
     <!-- PREVIEW -->
-    <scroll-area
-      themes-preview
-      theme-preview-pane
-      grow
-      min-w="0"
-
-    >
-      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
+    <scroll-area themes-preview theme-preview-pane>
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
 
       <column gap="6">
         style({ box: padX(8).padT(6).padB(10).maxW(panel-max-w-lg) })
 
         <if {!hasSelected()}>
-          <empty-state variant="placeholder" size="sm" w="full" themes-preview-empty>
+          <empty-state variant="placeholder" size="sm" themes-preview-empty>
+            style({ box: w(full) })
+
             <strong slot="title">Nothing selected</strong>
             Pick a theme in the library to preview its surfaces and controls.
           </empty-state>
@@ -394,8 +361,8 @@ export default controller(() => {
                 <p>
                   style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
 Mode</p>
-                <icon name="sun" size="sm" label="Light" shrink="0">
-                  style({ paint: fg(muted-foreground) })
+                <icon name="sun" size="sm" label="Light">
+                  style({ box: shrink(0), paint: fg(muted-foreground) })
 </icon>
                 <switch
                   size="sm"
@@ -405,8 +372,8 @@ Mode</p>
                   label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
                   on:change={onPreviewModeSwitch}
                 ></switch>
-                <icon name="moon" size="sm" label="Dark" shrink="0">
-                  style({ paint: fg(muted-foreground) })
+                <icon name="moon" size="sm" label="Dark">
+                  style({ box: shrink(0), paint: fg(muted-foreground) })
 </icon>
               </row>
             </if>
@@ -448,7 +415,9 @@ Mode</p>
               gap="2"
               color-story-grid
             >
-              <column grow gap="1" min-w="0">
+              <column gap="1">
+                style({ box: grow(1).minW(0) })
+
                 <center>
                   style({ box: h(16), paint: radius(md).bg(primary).borderWidth(1).border(border-subtle) })
 </center>
@@ -456,7 +425,9 @@ Mode</p>
                   style({ text: fontSize(xs).fontWeight(medium) })
 Primary</p>
               </column>
-              <column grow gap="1" min-w="0">
+              <column gap="1">
+                style({ box: grow(1).minW(0) })
+
                 <center>
                   style({ box: h(16), paint: radius(md).bg(secondary).borderWidth(1).border(border-subtle) })
 </center>
@@ -464,7 +435,9 @@ Primary</p>
                   style({ text: fontSize(xs).fontWeight(medium) })
 Secondary</p>
               </column>
-              <column grow gap="1" min-w="0">
+              <column gap="1">
+                style({ box: grow(1).minW(0) })
+
                 <center>
                   style({ box: h(16), paint: radius(md).bg(accent).borderWidth(1).border(border-subtle) })
 </center>
@@ -472,7 +445,9 @@ Secondary</p>
                   style({ text: fontSize(xs).fontWeight(medium) })
 Accent</p>
               </column>
-              <column grow gap="1" min-w="0">
+              <column gap="1">
+                style({ box: grow(1).minW(0) })
+
                 <center>
                   style({ box: h(16), paint: radius(md).bg(background).borderWidth(1).border(border-subtle) })
 </center>
@@ -480,7 +455,9 @@ Accent</p>
                   style({ text: fontSize(xs).fontWeight(medium) })
 Background</p>
               </column>
-              <column grow gap="1" min-w="0">
+              <column gap="1">
+                style({ box: grow(1).minW(0) })
+
                 <center>
                   style({ box: h(16), paint: radius(md).bg(surface-1).borderWidth(1).border(border-subtle) })
 </center>

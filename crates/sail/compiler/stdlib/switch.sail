@@ -22,8 +22,8 @@
   const thumbLg = style({ box: size(icon-size-sm) })
 </scope>
 
-<input type="checkbox" shrink="0">
-  style([
+<input type="checkbox">
+  style([ style({ box: shrink(0) }), 
   base,
   match(size, {
     md: sizeMd,

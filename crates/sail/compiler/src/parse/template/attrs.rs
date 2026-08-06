@@ -1329,7 +1329,7 @@ mod tests {
         // author HTML parse — scale tokens must survive product Style parse.
         let src = r#"
             <h1>
-              style.fontSize(2xl).padX(2_5).fg(sidebar-foreground).when({ hover: style.fg(foreground) })
+              style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl) }).when(hover, { paint: fg(foreground) })
               T
             </h1>
         "#;

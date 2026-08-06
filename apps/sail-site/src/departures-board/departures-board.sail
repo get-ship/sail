@@ -91,8 +91,8 @@ export default controller((ctx) => {
       <row align="center" gap="3" nowrap>
         style({ animate: enter({ opacity: 'fade' }) })
 
-        <span grow min-w="0">
-          style(city)
+        <span>
+          style([ style(city), style({ box: grow(1).minW(0) }) ])
 {f.city}</span>
         <span>
           style(gate)

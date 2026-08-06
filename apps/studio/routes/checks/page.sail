@@ -17,15 +17,8 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  studio-redirect
-  checks-redirect
-  grow
-  align="center"
-  justify="center"
-
->
-  style({ box: minH(0).h(full), paint: bg(background) })
+<column studio-redirect checks-redirect align="center" justify="center">
+  style({  box: grow(1).minH(0).h(full), paint: bg(background)  })
 
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })

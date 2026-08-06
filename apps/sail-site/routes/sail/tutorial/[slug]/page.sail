@@ -337,15 +337,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
   tablet+: side-by-side workbench. Mobile (else / SSR default): stacked.
 -->
 <when {tablet}>
-<row nowrap align="stretch" w="full" gap="0">
-  style({ box: h(fill).minH(0).minW(0).overflow(hidden) })
+<row nowrap align="stretch" gap="0">
+  style({  box: w(full).h(fill).minH(0).minW(0).overflow(hidden)  })
 
   <!-- Lesson pane -->
-  <column shrink>
-    style({ box: w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border) })
+  <column>
+    style({  box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border)  })
 
-    <column grow gap="3">
-      style({ box: minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4) })
+    <column gap="3">
+      style({  box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4)  })
 
       <row align="center" justify="between" gap="2">
         <p>
@@ -360,16 +360,16 @@ TUTORIAL</p>
         <for {steps()} as="step" key={step.slug}>
           <match {step.state}>
             <case {'done'}>
-              <a href={step.href} title={step.title} grow>
-                style({ box: h(1), paint: radius(full).bg(primary) })
+              <a href={step.href} title={step.title}>
+                style({  box: grow(1).h(1), paint: radius(full).bg(primary)  })
 </a>
             </case><case {'current'}>
-              <a href={step.href} title={step.title} current="step" grow>
-                style({ box: h(1), paint: radius(full).bg(primary).opacity(50) })
+              <a href={step.href} title={step.title} current="step">
+                style({  box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50)  })
 </a>
             </case><default>
-              <a href={step.href} title={step.title} grow>
-                style({ box: h(1), paint: radius(full).bg(surface-2) })
+              <a href={step.href} title={step.title}>
+                style({  box: grow(1).h(1), paint: radius(full).bg(surface-2)  })
 </a>
           </default></match>
         </for>
@@ -389,8 +389,8 @@ TUTORIAL</p>
 </div>
     </column>
 
-    <row align="center" justify="between" gap="2" shrink="0">
-      style({ box: padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1) })
+    <row align="center" justify="between" gap="2">
+      style({  box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1)  })
 
       <a href="/sail/tutorial">
         style({ box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: fg(foreground).bg(surface-2) })
@@ -401,15 +401,15 @@ TUTORIAL</p>
     </row>
   </column>
 
-  <column grow gap="1">
-    style({ box: basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) })
+  <column gap="1">
+    style({  box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0)  })
 
     <!-- Editor card — file tabs + actions on one thin bar -->
-    <column grow gap="0">
-      style({ box: basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })
+    <column gap="0">
+      style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
 
-      <row align="center" justify="between" gap="2" shrink="0">
-        style({ box: padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) })
+      <row align="center" justify="between" gap="2">
+        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
         <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
           <tab-list variant="pill">
@@ -428,12 +428,12 @@ TUTORIAL</p>
         collapsed the editor to ~0. Remount re-pushes via the existing editor
         effect when captureEditor fires again.
       -->
-      <column grow gap="0">
-        style({ box: minH(0).overflow(hidden) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).overflow(hidden)  })
 
         <if {tab() === 'source'}>
-          <column grow gap="0">
-            style({ box: minH(0).overflow(hidden) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).overflow(hidden)  })
 
             <sail-code-editor
               pane="source"
@@ -447,11 +447,11 @@ TUTORIAL</p>
           </column>
         </if>
         <if {tab() === 'diff'}>
-          <column grow gap="0">
-            style({ box: minH(0).overflow(hidden) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).overflow(hidden)  })
 
-            <row align="center" gap="2" shrink="0">
-              style({ box: padY(1).padX(2), paint: borderBWidth(1).borderB(border) })
+            <row align="center" gap="2">
+              style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })
 
               <small>
                 style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })
@@ -459,8 +459,8 @@ your code → solution · {fileName()}</small>
             </row>
             <!-- Absolute fill: CE display:contents + content-height flex min
                  let the LCS list blow past the viewport; lock a real scrollport. -->
-            <column grow gap="0">
-              style({ box: minH(0).position(relative).overflow(hidden) })
+            <column gap="0">
+              style({  box: grow(1).minH(0).position(relative).overflow(hidden)  })
 
               <div>
                 style({ box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) })
@@ -474,11 +474,11 @@ your code → solution · {fileName()}</small>
     </column>
 
     <!-- Preview + console: fixed lower band; console is a real pane, not a 28px strip. -->
-    <column shrink="0" gap="0">
-      style({ box: h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })
+    <column gap="0">
+      style({  box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
 
-      <row align="center" justify="between" gap="2" shrink="0">
-        style({ box: padY(1).padX(2), paint: borderBWidth(1).borderB(border) })
+      <row align="center" justify="between" gap="2">
+        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })
 
         <row gap="2" align="center">
           <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
@@ -488,8 +488,8 @@ PREVIEW</small>
         </row>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column grow gap="0">
-        style({ box: minH(0).overflow(hidden) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).overflow(hidden)  })
 
         <iframe
           testid="tut-preview"
@@ -503,11 +503,11 @@ PREVIEW</small>
 </iframe>
       </column>
       <!-- h(16) ≈ 4rem ≈ 5 mono lines; was maxH(7)=28px under a gap-4 column. -->
-      <column live="polite" label="Preview console" gap="0" shrink="0"
->
-        style({ box: h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0), text: fontFamily(mono).fontSize(xs) })
-
-        <for {logs()} as="line" key={line.id}>
+      <column live="polite" label="Preview console" gap="0">
+        style({  box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })
+        <span>
+          style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
+          <for {logs()} as="line" key={line.id}>
           <match {line.kind}>
             <case {'success'}>
               <row gap="2"><small>
@@ -537,17 +537,18 @@ PREVIEW</small>
 {line.msg}</small></row>
           </default></match>
         </for>
-      </column>
+        </span>
+</column>
     </column>
   </column>
 </row>
 <else>
 <!-- Mobile: stacked — short lesson header + full-width playground -->
-<column gap="0" w="full">
-  style({ box: h(fill).minH(0).overflow(hidden) })
+<column gap="0">
+  style({  box: w(full).h(fill).minH(0).overflow(hidden)  })
 
-  <column shrink="0" gap="2">
-    style({ box: padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1) })
+  <column gap="2">
+    style({  box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
     <row align="center" justify="between" gap="2">
       <p>
@@ -567,14 +568,14 @@ All lessons</a>
       style({ box: w(full).minW(0).overflowX(hidden) })
 </div>
   </column>
-  <column grow gap="1">
-    style({ box: basis(0).minH(0).minW(0).pad(1), paint: bg(surface-0) })
+  <column gap="1">
+    style({  box: grow(1).basis(0).minH(0).minW(0).pad(1), paint: bg(surface-0)  })
 
-    <column grow gap="0">
-      style({ box: basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })
+    <column gap="0">
+      style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
 
-      <row align="center" justify="between" gap="2" shrink="0">
-        style({ box: padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) })
+      <row align="center" justify="between" gap="2">
+        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
         <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
           <tab-list variant="pill">
@@ -587,12 +588,12 @@ All lessons</a>
           <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
         </row>
       </row>
-      <column grow gap="0">
-        style({ box: minH(0).overflow(hidden) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).overflow(hidden)  })
 
         <if {tab() === 'source'}>
-          <column grow gap="0">
-            style({ box: minH(0).overflow(hidden) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).overflow(hidden)  })
 
             <sail-code-editor
               pane="source"
@@ -606,11 +607,11 @@ All lessons</a>
           </column>
         </if>
         <if {tab() === 'diff'}>
-          <column grow gap="0">
-            style({ box: minH(0).overflow(hidden) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).overflow(hidden)  })
 
-            <scroll-area grow>
-              style({ box: minH(0).w(full) })
+            <scroll-area>
+              style({  box: grow(1).minH(0).w(full)  })
 
               <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
             </scroll-area>
@@ -618,17 +619,17 @@ All lessons</a>
         </if>
       </column>
     </column>
-    <column shrink="0" gap="0">
-      style({ box: h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })
+    <column gap="0">
+      style({  box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
 
-      <row align="center" justify="between" gap="2" shrink="0">
-        style({ box: padY(1).padX(2), paint: borderBWidth(1).borderB(border) })
+      <row align="center" justify="between" gap="2">
+        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })
 
         <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column grow gap="0">
-        style({ box: minH(0).overflow(hidden) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).overflow(hidden)  })
 
         <iframe
           testid="tut-preview"
@@ -641,11 +642,11 @@ All lessons</a>
           style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })
 </iframe>
       </column>
-      <column live="polite" label="Preview console" gap="0" shrink="0"
->
-        style({ box: h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0), text: fontFamily(mono).fontSize(xs) })
-
-        <for {logs()} as="line" key={line.id}>
+      <column live="polite" label="Preview console" gap="0">
+        style({  box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })
+        <span>
+          style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
+          <for {logs()} as="line" key={line.id}>
           <match {line.kind}>
             <case {'success'}>
               <row gap="2"><small>
@@ -673,7 +674,8 @@ All lessons</a>
 {line.msg}</small></row>
           </default></match>
         </for>
-      </column>
+        </span>
+</column>
     </column>
   </column>
 </column>

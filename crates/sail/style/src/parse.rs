@@ -47,6 +47,10 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     if let Err(d) = forbid_motion_inside_when(&style) {
         diags.push(d);
     }
+    // Interaction state cannot gate geometry (box channel).
+    if let Err(d) = forbid_geometry_inside_interaction_when(&style) {
+        diags.push(d);
+    }
     (style, diags)
 }
 
@@ -144,6 +148,45 @@ fn style_contains_motion(style: &Style) -> bool {
         Style::Compound { body, .. } => style_contains_motion(body),
         Style::When { entries } => entries.iter().any(|(_, b)| style_contains_motion(b)),
         _ => false,
+    }
+}
+
+/// Interaction / pseudo `when` keys must not gate geometry (box-channel) ops.
+/// Media/viewport `when(tablet|desktop|…)` may still gate box.
+fn forbid_geometry_inside_interaction_when(style: &Style) -> Result<(), StyleDiagnostic> {
+    match style {
+        Style::When { entries } => {
+            for (key, body) in entries {
+                if super::channel::is_interaction_when_key(key)
+                    && super::channel::style_contains_geometry(body)
+                {
+                    return Err(StyleDiagnostic::ParseError {
+                        message: format!(
+                            "geometry (box channel: pad/gap/w/h/grow/…) cannot appear inside \
+                             interaction when({key}) — state can't gate layout. Put geometry on \
+                             the rest chain or under media/viewport when(tablet|desktop|…)."
+                        ),
+                        source: format!("when({key})"),
+                    });
+                }
+                forbid_geometry_inside_interaction_when(body)?;
+            }
+            Ok(())
+        }
+        Style::Chain(items) | Style::List(items) => {
+            for i in items {
+                forbid_geometry_inside_interaction_when(i)?;
+            }
+            Ok(())
+        }
+        Style::Match { arms, .. } => {
+            for (_, body) in arms {
+                forbid_geometry_inside_interaction_when(body)?;
+            }
+            Ok(())
+        }
+        Style::Compound { body, .. } => forbid_geometry_inside_interaction_when(body),
+        _ => Ok(()),
     }
 }
 
@@ -730,6 +773,20 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             }
             continue;
         }
+        // P4: `color` retired — sole paint color is `fg`.
+        if method == "color" {
+            let args = parse_paren_args(p, diags);
+            let arg_text = format_arg_text(&args);
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
+                    .into(),
+                source: format!("style.color({arg_text})"),
+            });
+            if p.pos == before {
+                p.force_progress();
+            }
+            continue;
+        }
         let args = parse_paren_args(p, diags);
         if p.pos == before {
             p.force_progress();
@@ -928,6 +985,19 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
                 message: "`box(…)` as a setter was renamed to `boxSizing(…)` — use channel key `box:` for geometry"
                     .into(),
                 source: format!("box({arg_text})"),
+            });
+            if p.pos == before {
+                p.force_progress();
+            }
+            continue;
+        }
+        if method == "color" {
+            let args = parse_paren_args(p, diags);
+            let arg_text = format_arg_text(&args);
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
+                    .into(),
+                source: format!("color({arg_text})"),
             });
             if p.pos == before {
                 p.force_progress();

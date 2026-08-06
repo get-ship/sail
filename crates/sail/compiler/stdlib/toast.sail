@@ -29,8 +29,8 @@
 ])
 
   <slot></slot>
-  <button data-toast-close type="button" anatomy label="Dismiss" shrink="0" grow="0">
-    style([
+  <button data-toast-close type="button" anatomy label="Dismiss">
+    style([ style({ box: shrink(0).grow(0) }), 
     close,
     when({
       hover: style({ paint: fg(foreground).bg(muted) }),

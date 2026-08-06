@@ -39,74 +39,31 @@ export default controller(() => {
 })
 </controller>
 
-<row
-  surface="edit"
-  edit-surface
-  gap="0"
-  grow
-  nowrap
-  align="stretch"
+<row surface="edit" edit-surface gap="0" nowrap align="stretch">
+  style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })
 
->
-  style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
-
-  <edit-explorer shrink="0">
-    style({ box: minH(0).h(full).overflow(hidden) })
+  <edit-explorer>
+    style({  box: shrink(0).minH(0).h(full).overflow(hidden)  })
   </edit-explorer>
 
-  <column
-    grow
-    min-w="0"
-    gap="0"
-
-  >
-    style({ box: minH(0).h(full).basis(0).minW(0).overflow(hidden) })
+  <column gap="0">
+    style({  box: grow(1).minW(0).minH(0).h(full).basis(0).minW(0).overflow(hidden)  })
 
     <!-- Doc tabs strip -->
-    <row
-      studio-tabs
-      edit-tabs
-      gap="0"
-      shrink="0"
-      align="stretch"
-      nowrap
+    <row studio-tabs edit-tabs gap="0" align="stretch" nowrap>
+      style({  box: shrink(0).h(8).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
-    >
-      style({ box: h(8).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border).bg(surface-1) })
-
-      <row
-        edit-tab-list
-        label="Open documents"
-        grow
-        min-w="0"
-        gap="0"
-        align="stretch"
-        nowrap
-        on:click={onTabClick}
-        on:mousedown={onTabMiddle}
-
-      >
-        style({ box: minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden) })
+      <row edit-tab-list label="Open documents" gap="0" align="stretch" nowrap on:click={onTabClick} on:mousedown={onTabMiddle}>
+        style({  box: grow(1).minW(0).minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)  })
 
         <for {docTabs()} as="tab" key={tab.key}>
-          <row
-            tab-id={tab.id}
-            active={tab.active ? 'true' : 'false'}
-            tab-select
-            selected={tab.active ? 'true' : 'false'}
-            current={tab.active ? 'page' : undefined}
-            title={tab.id}
-            gap="1"
-            align="center"
-            nowrap
-            shrink="0"
-
-          >
-            style({ box: h(full).padX(3).maxW(48), paint: borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).cursor(pointer), text: fontSize(sm) }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(surface-0).fg(foreground).borderT(primary) })
-
-            <icon name="file-code-2" size="sm"></icon>
-            <p grow min-w="0">
-              style({ text: truncate() })
+          <row tab-id={tab.id} active={tab.active ? 'true' : 'false'} tab-select selected={tab.active ? 'true' : 'false'} current={tab.active ? 'page' : undefined} title={tab.id} gap="1" align="center" nowrap>
+            style({  box: shrink(0).h(full).padX(3).maxW(48), paint: borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).cursor(pointer)  }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(surface-0).fg(foreground).borderT(primary) })
+            <span>
+              style({ box: display(contents), text: fontSize(sm) })
+              <icon name="file-code-2" size="sm"></icon>
+            <p>
+              style({ box: grow(1).minW(0), text: truncate() })
 {tab.label}</p>
             <if {tab.dirtyDot}>
               <p dirty-dot label="Unsaved">
@@ -129,16 +86,12 @@ export default controller(() => {
                 ×
               </button>
             </if>
-          </row>
+            </span>
+</row>
         </for>
       </row>
-      <row
-        gap="2"
-        align="center"
-        shrink="0"
-
-      >
-        style({ box: padX(2).h(full), paint: borderLWidth(1).borderL(border-subtle) })
+      <row gap="2" align="center">
+        style({  box: shrink(0).padX(2).h(full), paint: borderLWidth(1).borderL(border-subtle)  })
 
         <p>
           style({ box: maxW(40), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
@@ -175,22 +128,11 @@ export default controller(() => {
     </if>
 
     <if {!hasOpenDoc()}>
-      <column
-        grow
-        align="center"
-        justify="center"
+      <column align="center" justify="center">
+        style({  box: grow(1).minH(0).h(full).overflow(hidden), paint: bg(surface-0)  })
 
-      >
-        style({ box: minH(0).h(full).overflow(hidden), paint: bg(surface-0) })
-
-        <empty-state
-          variant="placeholder"
-          size="sm"
-          w="full"
-          edit-empty
-
-        >
-          style({ box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) })
+        <empty-state variant="placeholder" size="sm" edit-empty>
+          style({  box: w(full).pad(4), paint: borderWidth(1).border(border-subtle).radius(md)  })
 
           <strong slot="title">Open a file</strong>
           Pick a file from the Explorer.
@@ -199,25 +141,13 @@ export default controller(() => {
     </if>
 
     <if {hasOpenDoc()}>
-      <column
-        source-host
-        cm-mode="sail"
-        grow
-        gap="0"
-
-      >
-        style({ box: minH(0).basis(0).h(full).overflow(hidden), paint: bg(surface-0) })
+      <column source-host cm-mode="sail" gap="0">
+        style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden), paint: bg(surface-0)  })
 
         <!-- Status lives on tab (dirty) + chrome status bar — no SOURCE toolbar row. -->
         <if {isSourceLoading()}>
-          <empty-state
-            source-loading
-            variant="placeholder"
-            size="sm"
-            w="full"
-
-          >
-            style({ box: pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md) })
+          <empty-state source-loading variant="placeholder" size="sm">
+            style({  box: w(full).pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md)  })
 
             <strong slot="title">Loading…</strong>
             {sourceStatus()}
@@ -225,14 +155,8 @@ export default controller(() => {
         </if>
 
         <if {isSourceEmpty()}>
-          <empty-state
-            source-empty
-            variant="placeholder"
-            size="sm"
-            w="full"
-
-          >
-            style({ box: pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md) })
+          <empty-state source-empty variant="placeholder" size="sm">
+            style({  box: w(full).pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md)  })
 
             <strong slot="title">No source loaded</strong>
             Open a file from the Explorer. Non-Sail text needs a readable ops path.
@@ -240,24 +164,15 @@ export default controller(() => {
         </if>
 
         <if {isSourceReady()}>
-          <column
-            source-ready
-            grow
-            gap="0"
-
-          >
-            style({ box: minH(0).basis(0).h(full).overflow(hidden) })
+          <column source-ready gap="0">
+            style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden)  })
 
             <if {hasChecks()}>
-              <column
-                source-gutter
-                gap="0"
-                shrink="0"
-
-              >
-                style({ box: padX(3).padY(1).maxH(20).minH(0).overflow(auto), paint: bg(surface-2), text: fontSize(xs).fontFamily(mono) })
-
-                <for {checkRows()} as="ck" key={ck.key}>
+              <column source-gutter gap="0">
+                style({  box: shrink(0).padX(3).padY(1).maxH(20).minH(0).overflow(auto), paint: bg(surface-2)  })
+                <span>
+                  style({ box: display(contents), text: fontSize(xs).fontFamily(mono) })
+                  <for {checkRows()} as="ck" key={ck.key}>
                   <p
                     check-line={ck.line}
                     severity={ck.severity}
@@ -268,10 +183,11 @@ export default controller(() => {
                     L{ck.line} · {ck.severity}: {ck.message}
                   </p>
                 </for>
-              </column>
+                </span>
+</column>
             </if>
-            <column grow gap="0">
-              style({ box: minH(0).basis(0).h(full).overflow(hidden) })
+            <column gap="0">
+              style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden)  })
 
               <sail-code-editor
                 source-editor

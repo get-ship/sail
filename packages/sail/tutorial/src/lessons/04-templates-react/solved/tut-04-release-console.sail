@@ -100,8 +100,8 @@ failed</badge>
         style(envRow)
 
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong grow>
-          style(envName)
+        <strong>
+          style([ style(envName), style({ box: grow(1) }) ])
 {env.name}</strong>
         <small>
           style(envRegion)

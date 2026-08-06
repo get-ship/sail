@@ -97,7 +97,9 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
   })
 
 </controller>
-<column gap="0" w="full">
+<column gap="0">
+  style({ box: w(full) })
+
   <if {loading()}>
     <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
   <else-if {chart.error()}>
@@ -144,6 +146,10 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
     </column>
   </else></if>
   <row gap="3" align="stretch">
-    style({ box: mt(1_5), paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs) })
-<slot></slot></row>
+    style({ box: mt(1_5), paint: fg(muted-foreground) })
+    <span>
+      style({ box: display(contents), text: fontFamily(body).fontSize(xs) })
+      <slot></slot>
+    </span>
+</row>
 </column>

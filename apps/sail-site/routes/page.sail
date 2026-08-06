@@ -114,8 +114,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style(page)
 
 
-  <section shrink="0">
-    style(hero)
+  <section>
+    style([ style(hero), style({ box: shrink(0) }) ])
 
     <div>
       style(glow)
@@ -168,8 +168,8 @@ Why Sail</a>
     </column>
   </section>
 
-  <section shrink="0">
-    style(tickerSection)
+  <section>
+    style([ style(tickerSection), style({ box: shrink(0) }) ])
 
     <div>
       style(tickerBand)
@@ -195,8 +195,8 @@ NO RAW CSS&nbsp;&nbsp;◆&nbsp;&nbsp;SIGNALS BUILT IN&nbsp;&nbsp;◆&nbsp;&nbsp;
     </div>
   </section>
 
-  <section shrink="0">
-    style(bento)
+  <section>
+    style([ style(bento), style({ box: shrink(0) }) ])
 
     <!--
       <grid cols> is not breakpoint-aware. Duplicate the six cards only to
@@ -633,8 +633,8 @@ $</span> sail check app/</p>
     </else></if>
   </section>
 
-  <section shrink="0">
-    style(foot)
+  <section>
+    style([ style(foot), style({ box: shrink(0) }) ])
 
     <row justify="between" align="center">
       style(footRow)
@@ -656,8 +656,8 @@ GitHub</a>
     </row>
   </section>
 
-  <div shrink="0">
-    style(wordmarkWrap)
+  <div>
+    style([ style(wordmarkWrap), style({ box: shrink(0) }) ])
 
     <p>
       style(wordmark)

@@ -48,17 +48,11 @@ export default controller((ctx) => {
 })
 </controller>
 
-<row
-  sail-studio-shell
-  gap="0"
-  w="full"
-  nowrap
-  align="stretch"
-
->
-  style({ box: minH(screen).h(screen).w(full).minW(0).overflow(hidden), paint: bg(background).fg(foreground), text: fontFamily(body).fontSize(sm) })
-
-  <studio-activity-bar studio-rail on:click={onRailClick}>
+<row sail-studio-shell gap="0" nowrap align="stretch">
+  style({  box: w(full).minH(screen).h(screen).w(full).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })
+  <span>
+    style({ box: display(contents), text: fontFamily(body).fontSize(sm) })
+    <studio-activity-bar studio-rail on:click={onRailClick}>
     <for {rail()} as="item" key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
@@ -103,19 +97,12 @@ export default controller((ctx) => {
     </if>
   </studio-activity-bar>
 
-  <column grow gap="0" min-w="0">
-    style({ box: minH(0).basis(0).overflow(hidden).h(full).minW(0) })
+  <column gap="0">
+    style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full).minW(0)  })
 
     <if {hasBatch()}>
-      <row
-        batch-tray
-        align="center"
-        gap="2"
-        shrink="0"
-        nowrap
-
-      >
-        style({ box: padX(3).h(7).minH(7), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+      <row batch-tray align="center" gap="2" nowrap>
+        style({  box: shrink(0).padX(3).h(7).minH(7), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
         <badge tone="primary" size="sm" variant="soft" batch-count>
           {batchCountLabel()}
@@ -130,7 +117,9 @@ export default controller((ctx) => {
             {chip.label}
           </badge>
         </for>
-        <row grow></row>
+        <row>
+          style({ box: grow(1) })
+</row>
         <button
           type="button"
           size="sm"
@@ -152,23 +141,11 @@ export default controller((ctx) => {
       </row>
     </if>
 
-    <row
-      grow
-      gap="0"
-      nowrap
-      align="stretch"
-      min-w="0"
+    <row gap="0" nowrap align="stretch">
+      style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full).minW(0)  })
 
-    >
-      style({ box: minH(0).basis(0).overflow(hidden).h(full).minW(0) })
-
-      <column
-        grow
-        studio-surface
-        min-w="0"
-
-      >
-        style({ box: minH(0).basis(0).overflow(hidden).h(full).minW(0) })
+      <column studio-surface>
+        style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full).minW(0)  })
 
         <slot name="route"></slot>
       </column>
@@ -211,43 +188,22 @@ export default controller((ctx) => {
       </footer>
     </dialog>
 
-    <row
-      studio-status
-      align="center"
-      gap="3"
-      shrink="0"
-      nowrap
-      min-w="0"
-
-    >
-      style({ box: h(6).minH(6).padX(3).minW(0).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground), text: fontSize(xs) })
-
-      <p grow min-w="0">
-        style({ box: minW(0), text: fontFamily(mono).truncate() })
+    <row studio-status align="center" gap="3" nowrap>
+      style({  box: shrink(0).minW(0).h(6).minH(6).padX(3).minW(0).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground)  })
+      <span>
+        style({ box: display(contents), text: fontSize(xs) })
+        <p>
+        style({  box: grow(1).minW(0).minW(0), text: fontFamily(mono).truncate()  })
 {statusLine()}</p>
-      <p save-status shrink="0">
-        style({ text: fontSize(xs) })
+      <p save-status>
+        style({ box: shrink(0), text: fontSize(xs) })
 {saveStatusLabel()}</p>
-      <p theme-status shrink="0">
-        style({ paint: fg(muted-foreground), text: fontSize(xs) })
+      <p theme-status>
+        style({ box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) })
 {themeStatusLabel()}</p>
       <!-- Findings status: colored error · warn counts (not a mute "Checks" label) -->
-      <button
-        type="button"
-        checks-badge
-        findings-status
-        open-checks-panel
-        size="sm"
-        variant={hasChecksFindings() ? 'soft' : 'ghost'}
-        tone={findingsStatusTone()}
-        title="Open findings (Ctrl/⌘+Shift+K)"
-        label={findingsStatusAria()}
-        pressed={checksPanelOpen() ? 'true' : 'false'}
-        on:click={onToggleChecksPanel}
-        shrink="0"
-
-      >
-        style({ box: padX(2).h(5).minH(5) })
+      <button type="button" checks-badge findings-status open-checks-panel size="sm" variant={hasChecksFindings() ? 'soft' : 'ghost'} tone={findingsStatusTone()} title="Open findings (Ctrl/⌘+Shift+K)" label={findingsStatusAria()} pressed={checksPanelOpen() ? 'true' : 'false'} on:click={onToggleChecksPanel}>
+        style({  box: shrink(0).padX(2).h(5).minH(5)  })
 
         <row findings-status-inner align="center" gap="1" nowrap>
           <if {hasFindingsErrors()}>
@@ -280,34 +236,24 @@ export default controller((ctx) => {
           </if>
         </row>
       </button>
-      <row
-        health="ops"
-        align="center"
-        gap="1"
-        shrink="0"
-
-      >
-        style({ box: padX(1) }).when(hover, { paint: bg(hover-bg) })
+      <row health="ops" align="center" gap="1">
+        style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })
 
         <icon name="activity" size="sm"></icon>
         <badge tone={opsHealthTone()} size="sm" variant="soft" health-tone="ops">
           {opsHealthLabel()}
         </badge>
       </row>
-      <row
-        health="watch"
-        align="center"
-        gap="1"
-        shrink="0"
-
-      >
-        style({ box: padX(1) }).when(hover, { paint: bg(hover-bg) })
+      <row health="watch" align="center" gap="1">
+        style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })
 
         <icon name="radio" size="sm"></icon>
         <badge tone={watchHealthTone()} size="sm" variant="soft" health-tone="watch">
           {watchHealthLabel()}
         </badge>
       </row>
-    </row>
+      </span>
+</row>
   </column>
+  </span>
 </row>

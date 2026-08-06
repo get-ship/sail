@@ -22,8 +22,8 @@
   const sizeXl = style({ box: size(control-h-xl), text: fontSize(2xl) })
 </scope>
 
-<row inline nowrap align="center" justify="center" shrink="0" use:mediaFallback>
-  style([
+<row inline nowrap align="center" justify="center" use:mediaFallback>
+  style([ style({ box: shrink(0) }), 
   base,
   match(size, {
     md: sizeMd,

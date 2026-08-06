@@ -377,8 +377,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
 <row gap="2" align="center">
   style({ box: w(full).h(control-h-md).padX(2_5), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md) }).when(focusWithin, { paint: outline(ring) })
 
-  <input type="text" flush grow min-w="0" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} use:captureInput>
-    style({ text: fontFamily(body) }).when(disabled, { paint: cursor(not-allowed) })
+  <input type="text" flush name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} use:captureInput>
+    style({ box: grow(1).minW(0), text: fontFamily(body) }).when(disabled, { paint: cursor(not-allowed) })
   </input>
   <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     style({ box: w(icon-size-sm).h(icon-size-sm).minW(icon-size-sm), paint: fg(muted-foreground).pointerEvents(none) })
@@ -389,16 +389,17 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
 </row>
 <if {open() && !disabled()}>
   <div role="dialog" aria-label="Choose date">
-    style({ box: position(absolute).left(0).w(panel-max-w-sm).pad(2).mt(1), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md), text: fontFamily(body) })
-
-    <row align="center" justify="between">
+    style({ box: position(absolute).left(0).w(panel-max-w-sm).pad(2).mt(1), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md) })
+    <span>
+      style({ box: display(contents), text: fontFamily(body) })
+      <row align="center" justify="between">
       style({ box: mb(1) })
 
       <button type="button" data-act="prev" aria-label="Previous month">
         style({ box: w(icon-size-2xl).h(icon-size-2xl), paint: radius(sm).fg(muted-foreground).cursor(pointer) }).when(hover, { paint: bg(muted).fg(foreground) })
 ‹</button>
-      <span grow>
-        style({ text: fontWeight(semibold).textAlign(center) })
+      <span>
+        style({ box: grow(1), text: fontWeight(semibold).textAlign(center) })
 {monthLabel()}</span>
       <button type="button" data-act="next" aria-label="Next month">
         style({ box: w(icon-size-2xl).h(icon-size-2xl), paint: radius(sm).fg(muted-foreground).cursor(pointer) }).when(hover, { paint: bg(muted).fg(foreground) })
@@ -425,6 +426,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
 {cell.empty ? '' : cell.day}</button>
       </for>
     </grid>
-  </div>
+    </span>
+</div>
 </if>
 </column>

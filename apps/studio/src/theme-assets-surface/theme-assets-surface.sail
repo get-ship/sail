@@ -33,32 +33,25 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="themes"
-  theme-assets-surface
-  assets-chrome
-  gap="0"
-  grow
-
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+<column surface="themes" theme-assets-surface assets-chrome gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row assets-error align="center" gap="2" shrink="0">
-      style(bandError)
+    <row assets-error align="center" gap="2">
+      style([ style(bandError), style({ box: shrink(0) }) ])
 
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row assets-loading align="center" gap="2" shrink="0">
-      style(bandStatus)
+    <row assets-loading align="center" gap="2">
+      style([ style(bandStatus), style({ box: shrink(0) }) ])
 
       <spinner size="sm"></spinner>
       <p>
@@ -67,23 +60,11 @@ Loading…</p>
     </row>
   </if>
 
-  <row
-    assets-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+  <row assets-workbench gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
-
-    <scroll-area
-      assets-editor
-      grow
-      min-w="0"
-
-    >
-      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
+    <scroll-area assets-editor>
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
 
       <column gap="8">
         style(editorCol)
@@ -167,17 +148,12 @@ Font discoverer</p>
               Full Google Fonts catalog — search, preview, assign to a role, or install (vendor woff2 into the project).
             </p>
             <row gap="2" align="center" nowrap font-search>
-              <input
-                type="search"
-                size="sm"
-                grow
-                min-w="0"
-                placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)"
-                value={assets.fontSearchQ()}
-                on:input={assets.onFontSearchInput}
-                label="Search fonts"
-              />
-              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch} shrink="0">
+              <input type="search" size="sm" placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)" value={assets.fontSearchQ()} on:input={assets.onFontSearchInput} label="Search fonts">
+  style({ box: grow(1).minW(0) })
+</input>
+              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch}>
+                style({ box: shrink(0) })
+
                 Search
               </button>
             </row>
@@ -185,18 +161,8 @@ Font discoverer</p>
               style({ box: overflowX(auto).minW(0) })
 
               <for {assets.fontCategoryOpts()} as="c" key={c.key}>
-                <button
-                  type="button"
-                  size="xs"
-                  variant="outline"
-                  tone="muted"
-                  font-cat={c.id}
-                  selected={c.on ? 'true' : null}
-                  on:click={assets.onFontCategory}
-                  shrink="0"
-
-                >
-                  style(catChip)
+                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory}>
+                  style([ style(catChip), style({ box: shrink(0) }) ])
 
                   {c.label}
                 </button>
@@ -217,11 +183,11 @@ Searching catalog…</p>
                     style(fontHit)
 
                     <row align="baseline" justify="between" gap="2" nowrap>
-                      <p grow min-w="0">
-                        style(doorTitle)
+                      <p>
+                        style([ style(doorTitle), style({ box: grow(1).minW(0) }) ])
 {f.family}</p>
-                      <p shrink="0">
-                        style(pathMeta)
+                      <p>
+                        style([ style(pathMeta), style({ box: shrink(0) }) ])
 {f.category}</p>
                     </row>
                     <p font-sample face={f.family}>
@@ -237,7 +203,9 @@ Searching catalog…</p>
                       <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Mono
                       </button>
-                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-token="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} shrink="0">
+                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-token="body" on:click={assets.onFontInstall} disabled={!session.canEdit()}>
+                        style({ box: shrink(0) })
+
                         Install
                       </button>
                     </row>
@@ -287,8 +255,8 @@ Browse glyphs</p>
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs()} as="g" key={g.key}>
-                <center shrink="0" title={g.name}>
-                  style(iconCell)
+                <center title={g.name}>
+                  style([ style(iconCell), style({ box: shrink(0) }) ])
 
                   <icon name={g.name} size="md" label={g.name}></icon>
                 </center>
@@ -333,17 +301,11 @@ Master</p>
       </column>
     </scroll-area>
 
-    <column
-      specimen-dock
-      gap="0"
-      grow
-      min-w="0"
+    <column specimen-dock gap="0">
+      style({  box: grow(1).minW(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
 
-    >
-      style({ box: minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
-
-      <column grow gap="0">
-        style({ box: minH(0).h(full).pad(4) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).h(full).pad(4)  })
 
         <card
           assets-specimen
@@ -354,41 +316,34 @@ Master</p>
         >
           style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
-          <column gap="0" grow>
-            style({ box: minH(0).h(full) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).h(full)  })
 
-            <row
-              specimen-chrome
-              align="center"
-              gap="2"
-              nowrap
-              shrink="0"
+            <row specimen-chrome align="center" gap="2" nowrap>
+              style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-            >
-              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+              <row gap="2" align="center" nowrap hidden="true">
+                style({  box: shrink(0).minW(12)  })
 
-              <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style({ box: minW(12) })
-
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
 </stack>
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
 </stack>
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
 </stack>
               </row>
-              <p grow min-w="0">
-                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
+              <p>
+                style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {session.nameEdit()}</p>
-              <p shrink="0">
-                style(pathMeta)
+              <p>
+                style([ style(pathMeta), style({ box: shrink(0) }) ])
 {session.paintMode()}</p>
             </row>
-          <scroll-area grow>
-            style({ box: minH(0).h(full), paint: bg(background) })
+          <scroll-area>
+            style({  box: grow(1).minH(0).h(full), paint: bg(background)  })
 
             <column specimen-body gap="5">
               style({ box: pad(5).minW(0) })
@@ -426,7 +381,9 @@ Master</p>
               <if {assets.hasIconGlyphs()}>
                 <row specimen-icons gap="3" align="center" nowrap>
                   <for {assets.iconGlyphs()} as="g" key={g.key}>
-                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} shrink="0"></icon>
+                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name}>
+                      style({ box: shrink(0) })
+</icon>
                   </for>
                 </row>
               </if>

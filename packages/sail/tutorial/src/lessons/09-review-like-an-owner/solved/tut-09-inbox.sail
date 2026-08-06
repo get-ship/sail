@@ -80,7 +80,9 @@ loading messages…</small>
           <if {!m.read}><span>
             style(unreadDot)
 </span></if>
-          <column gap="0" grow>
+          <column gap="0">
+            style({ box: grow(1) })
+
             <strong>
               style(from)
 {m.from}</strong>

@@ -9,18 +9,12 @@
   }
 </scope>
 
-<row
-  studio-page-header
-  align="center"
-  gap="2"
-  shrink="0"
-  nowrap
-  justify="between"
+<row studio-page-header align="center" gap="2" nowrap justify="between">
+  style({  box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
->
-  style({ box: h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+  <row align="center" gap="2" nowrap>
+    style({ box: grow(1).minW(0) })
 
-  <row align="center" gap="2" nowrap grow min-w="0">
     <slot name="leading"></slot>
     <slot name="title">
       <p>
@@ -31,7 +25,9 @@
     </slot>
     <slot></slot>
   </row>
-  <row align="center" gap="2" nowrap shrink="0">
+  <row align="center" gap="2" nowrap>
+    style({ box: shrink(0) })
+
     <slot name="actions"></slot>
   </row>
 </row>

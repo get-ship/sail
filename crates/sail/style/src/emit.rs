@@ -306,9 +306,13 @@ pub fn lower_style_source_with_motion(
             | super::ir::StyleDiagnostic::UnknownSetter { .. }
             | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
             | super::ir::StyleDiagnostic::BadArity { .. } => true,
-            // Hard-fail lifecycle-in-when; other ParseErrors stay soft (emit what we can).
+            // Hard-fail lifecycle-in-when, geometry-in-interaction-when, color alias.
             super::ir::StyleDiagnostic::ParseError { message, .. } => {
                 message.contains("cannot appear inside when")
+                    || message.contains("cannot appear inside interaction when")
+                    || message.contains("state can't gate layout")
+                    || message.contains("was renamed to `fg")
+                    || message.contains("text channel is only legal")
             }
             _ => false,
         }

@@ -91,24 +91,17 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="themes"
-  theme-color-surface
-  color-chrome
-  gap="0"
-  grow
-
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+<column surface="themes" theme-color-surface color-chrome gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row color-error align="center" gap="2" shrink="0">
-      style(bandError)
+    <row color-error align="center" gap="2">
+      style([ style(bandError), style({ box: shrink(0) }) ])
 
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" color-retry on:click={session.onRetry}>
         Retry
@@ -117,8 +110,8 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row color-loading align="center" gap="2" shrink="0">
-      style(bandStatus)
+    <row color-loading align="center" gap="2">
+      style([ style(bandStatus), style({ box: shrink(0) }) ])
 
       <spinner size="sm"></spinner>
       <p>
@@ -127,23 +120,11 @@ Loading…</p>
     </row>
   </if>
 
-<row
-    color-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+<row color-workbench gap="0" nowrap align="stretch">
+  style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
-  >
-  style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
-
-    <scroll-area
-      color-editor
-      grow
-      min-w="0"
-
-    >
-      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
+    <scroll-area color-editor>
+      style({  box: grow(1).minW(0).minH(0).basis(0).h(full).minW(0), paint: bg(background)  })
 
       <column gap="8">
         style(editorCol)
@@ -161,10 +142,12 @@ Brand · surfaces · text · semantic</p>
         <row seed-strip align="center" gap="3" nowrap>
           style({ box: pad(3).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-0) })
 
-          <p shrink="0">
-            style(fieldHint)
+          <p>
+            style([ style(fieldHint), style({ box: shrink(0) }) ])
 Seed</p>
-          <row gap="1" align="center" nowrap grow min-w="0" hidden="true">
+          <row gap="1" align="center" nowrap hidden="true">
+            style({ box: grow(1).minW(0) })
+
             <stack use:swatch={primaryHex()}>
               style(seedDot)
 </stack>
@@ -203,8 +186,8 @@ Brand</p>
 color.primary · secondary · accent</p>
           </row>
           <row brand-grid gap="3" align="stretch">
-            <column brand-card token="primary" grow gap="0" min-w="0">
-              style(brandCard)
+            <column brand-card token="primary" gap="0">
+              style([ style(brandCard), style({ box: grow(1).minW(0) }) ])
 
               <stack token="primary">
                 style(brandSwatch)
@@ -225,7 +208,9 @@ color.primary · secondary · accent</p>
               <row align="center" justify="between">
                 style(heroMeta)
 
-                <column gap="0" min-w="0">
+                <column gap="0">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 Primary</p>
@@ -238,8 +223,8 @@ color.primary</p>
 {primaryHex()}</p>
               </row>
             </column>
-            <column brand-card token="secondary" grow gap="0" min-w="0">
-              style(brandCard)
+            <column brand-card token="secondary" gap="0">
+              style([ style(brandCard), style({ box: grow(1).minW(0) }) ])
 
               <stack token="secondary">
                 style(brandSwatch)
@@ -260,7 +245,9 @@ color.primary</p>
               <row align="center" justify="between">
                 style(heroMeta)
 
-                <column gap="0" min-w="0">
+                <column gap="0">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 Secondary</p>
@@ -273,8 +260,8 @@ color.secondary</p>
 {secondaryHex()}</p>
               </row>
             </column>
-            <column brand-card token="accent" grow gap="0" min-w="0">
-              style(brandCard)
+            <column brand-card token="accent" gap="0">
+              style([ style(brandCard), style({ box: grow(1).minW(0) }) ])
 
               <stack token="accent">
                 style(brandSwatch)
@@ -295,7 +282,9 @@ color.secondary</p>
               <row align="center" justify="between">
                 style(heroMeta)
 
-                <column gap="0" min-w="0">
+                <column gap="0">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 Accent</p>
@@ -330,8 +319,8 @@ color.bg · surface · card</p>
             <row token-row token="bg" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="bg"
@@ -343,7 +332,9 @@ color.bg · surface · card</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Background</p>
@@ -351,15 +342,15 @@ Background</p>
                   style(pathMeta)
 color.bg</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {bgHex()}</p>
             </row>
             <row token-row token="surface1" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="surface1"
@@ -371,7 +362,9 @@ color.bg</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Surface 1</p>
@@ -379,15 +372,15 @@ Surface 1</p>
                   style(pathMeta)
 color.surface.1</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {surface1Hex()}</p>
             </row>
             <row token-row token="surface2" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="surface2"
@@ -399,7 +392,9 @@ color.surface.1</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Surface 2</p>
@@ -407,15 +402,15 @@ Surface 2</p>
                   style(pathMeta)
 color.surface.2</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {surface2Hex()}</p>
             </row>
             <row token-row token="card" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="card"
@@ -427,7 +422,9 @@ color.surface.2</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Card</p>
@@ -435,8 +432,8 @@ Card</p>
                   style(pathMeta)
 color.surface.3</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {cardHex()}</p>
             </row>
           </column>
@@ -498,8 +495,8 @@ color.fg · muted · border · ring</p>
             <row token-row token="fg" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="fg"
@@ -511,7 +508,9 @@ color.fg · muted · border · ring</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Foreground</p>
@@ -519,15 +518,15 @@ Foreground</p>
                   style(pathMeta)
 color.foreground</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {fgHex()}</p>
             </row>
             <row token-row token="muted" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="muted"
@@ -539,7 +538,9 @@ color.foreground</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Muted</p>
@@ -547,15 +548,15 @@ Muted</p>
                   style(pathMeta)
 color.muted</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {mutedHex()}</p>
             </row>
             <row token-row token="border" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="border"
@@ -567,7 +568,9 @@ color.muted</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Border</p>
@@ -575,15 +578,15 @@ Border</p>
                   style(pathMeta)
 color.border</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {borderHex()}</p>
             </row>
             <row token-row token="ring" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="ring"
@@ -595,7 +598,9 @@ color.border</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Ring</p>
@@ -603,8 +608,8 @@ Ring</p>
                   style(pathMeta)
 color.ring</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {ringHex()}</p>
             </row>
           </column>
@@ -624,8 +629,8 @@ color.success · warning · danger · info</p>
             <row token-row token="success" sem="success" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="success"
@@ -637,7 +642,9 @@ color.success · warning · danger · info</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Success</p>
@@ -645,15 +652,15 @@ Success</p>
                   style(pathMeta)
 color.success</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {successHex()}</p>
             </row>
             <row token-row token="warning" sem="warning" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="warning"
@@ -665,7 +672,9 @@ color.success</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Warning</p>
@@ -673,15 +682,15 @@ Warning</p>
                   style(pathMeta)
 color.warning</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {warningHex()}</p>
             </row>
             <row token-row token="danger" sem="danger" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="danger"
@@ -693,7 +702,9 @@ color.warning</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Danger</p>
@@ -701,15 +712,15 @@ Danger</p>
                   style(pathMeta)
 color.danger</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {dangerHex()}</p>
             </row>
             <row token-row token="info" sem="info" align="center" gap="3" nowrap>
               style(tokenRow)
 
-              <stack token-chip shrink="0">
-                style(tokenChip)
+              <stack token-chip>
+                style([ style(tokenChip), style({ box: shrink(0) }) ])
 
               <sail-color-picker
                 token="info"
@@ -721,7 +732,9 @@ color.danger</p>
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <p>
                   style(doorTitle)
 Info</p>
@@ -729,8 +742,8 @@ Info</p>
                   style(pathMeta)
 color.info</p>
               </column>
-              <p shrink="0">
-                style(monoMeta)
+              <p>
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {infoHex()}</p>
             </row>
           </column>

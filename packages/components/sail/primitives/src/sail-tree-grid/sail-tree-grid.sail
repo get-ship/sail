@@ -237,17 +237,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </div>
 </else-if><else>
 <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  style({ box: w(full).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(body).fontSize(density) })
-
-  <grid tracks="--sail-grid-template" gap="0" role="row">
+  style({ box: w(full).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
+  <span>
+    style({ box: display(contents), text: fontFamily(body).fontSize(density) })
+    <grid tracks="--sail-grid-template" gap="0" role="row">
     style({ box: position(sticky).top(0), paint: z(sticky).bg(surface-2).borderBWidth(1).borderB(border) })
 
     <for {headers()} as="h" key={h.id}>
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null}>
-        style({ box: position(relative).padY(density-row-py).padX(density-row-px), paint: fg(foreground).borderBWidth(1).borderB(border-subtle), text: fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).whitespace(nowrap) }).when(sortable, { paint: cursor(pointer) })
-
-        <span grow min-w="0">
-          style({ text: truncate() })
+        style({ box: position(relative).padY(density-row-py).padX(density-row-px), paint: fg(foreground).borderBWidth(1).borderB(border-subtle) }).when(sortable, { paint: cursor(pointer) })
+        <span>
+          style({ box: display(contents), text: fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).whitespace(nowrap) })
+          <span>
+          style({ box: grow(1).minW(0), text: truncate() })
 {h.label}</span>
         <if {h.sorted === 'asc'}>
           <span aria-hidden="true">
@@ -270,7 +272,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             style({ box: position(absolute).top(0).bottom(0).right(0).w(1), paint: cursor(col-resize) }).when(hover, { paint: bg(primary) })
 </span>
         </if>
-      </row>
+        </span>
+</row>
     </for>
   </grid>
   <div use:captureViewport>
@@ -295,16 +298,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
                 </if>
-                <span grow min-w="0">
-                  style({ text: truncate() })
+                <span>
+                  style({ box: grow(1).minW(0), text: truncate() })
 {c.value}</span>
               </row>
             <else>
               <row role="gridcell">
                 style({ box: padY(density-row-py).padX(density-row-px).minW(0), paint: borderBWidth(1).borderB(border-subtle).fg(foreground) })
 
-                <span grow min-w="0">
-                  style({ text: truncate() })
+                <span>
+                  style({ box: grow(1).minW(0), text: truncate() })
 {c.value}</span>
               </row>
             </else></if>
@@ -312,5 +315,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </grid>
       </for>
     </div>
+  </span>
 </column>
 </else></if>

@@ -181,8 +181,12 @@ two</card>
   <row gap="3" align="center">
     style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
-    <strong grow min-w="0">Ada Lovelace</strong>
-    <badge tone="success" shrink>Active</badge>
+    <strong>
+      style({ box: grow(1).minW(0) })
+Ada Lovelace</strong>
+    <badge tone="success">
+      style({ box: shrink(1) })
+Active</badge>
   </row>
   <code-block code={code.grow}></code-block>
   <p>

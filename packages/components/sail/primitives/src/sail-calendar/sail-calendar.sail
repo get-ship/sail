@@ -358,9 +358,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 </controller>
 <div>
-  style({ box: display(block).overflow(hidden), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(lg).shadow(xs), text: fontFamily(body).fontSize(density) })
-
-  <row align="center" gap="density">
+  style({ box: display(block).overflow(hidden), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(lg).shadow(xs) })
+  <span>
+    style({ box: display(contents), text: fontFamily(body).fontSize(density) })
+    <row align="center" gap="density">
     style({ box: padY(density-row-py).padX(density-row-px), paint: borderBWidth(1).borderB(border) })
 
     <row gap="1" align="center">
@@ -368,8 +369,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <button type="button" variant="outline" size="sm" data-nav="today">Today</button>
       <button type="button" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
     </row>
-    <h2 grow>
-      style({ text: fontWeight(semibold).fontSize(base) })
+    <h2>
+      style({ box: grow(1), text: fontWeight(semibold).fontSize(base) })
 {title()}</h2>
     <row role="group" aria-label="Calendar view" gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
@@ -380,10 +381,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
   <if {isEmpty()}>
     <div role="status">
-      style({ box: padY(6).padX(density-row-px), paint: fg(muted-foreground), text: textAlign(center) })
-
-      <slot name="empty">No events</slot>
-    </div>
+      style({ box: padY(6).padX(density-row-px), paint: fg(muted-foreground) })
+      <span>
+        style({ box: display(contents), text: textAlign(center) })
+        <slot name="empty">No events</slot>
+      </span>
+</div>
   </if>
 
   <if {isMonth()}>
@@ -411,8 +414,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
             style({ box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border) }).when(stateOut, { paint: fg(muted-foreground).bg(muted) }).when(stateWeekend, { paint: bg(muted) }).when(stateRange, { paint: bg(selected-bg) })
 
             <row align="center" justify="center" gap="0">
-              style({ box: minW(control-h-2xs).h(control-h-2xs), paint: radius(full), text: fontSize(density) }).when(groupStateToday, { paint: fg(primary).outline(primary), text: fontWeight(semibold) })
-{cr.cell.day}</row>
+              style({ box: minW(control-h-2xs).h(control-h-2xs), paint: radius(full) }).when(groupStateToday, { paint: fg(primary).outline(primary) })
+              <span>
+                style({ box: display(contents), text: fontSize(density) }).when(groupStateToday, { text: fontWeight(semibold) })
+                {cr.cell.day}
+              </span>
+</row>
             <for {cr.cell.events} as="ev" key={ev.id}>
               <button
                 type="button"
@@ -449,21 +456,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
       <for {timeSlots()} as="slot" key={slot.key}>
         <div data-slot={slot.minutes} role="rowheader">
-          style({ box: h(control-h-md).padX(density-row-px), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(density) })
-{slot.label}</div>
+          style({ box: h(control-h-md).padX(density-row-px), paint: fg(muted-foreground).borderBWidth(1).borderB(border) })
+          <span>
+            style({ box: display(contents), text: fontSize(density) })
+            {slot.label}
+          </span>
+</div>
       </for>
     </column>
-    <row gap="0" grow>
+    <row gap="0">
+      style({ box: grow(1) })
+
       <for {dayColumns()} as="dc" key={dc.key}>
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} grow>
-          style({ box: position(relative).minH(panel-min-h-daycol), paint: borderRWidth(1).borderR(border) }).when(stateToday, { paint: bg(selected-bg) })
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso}>
+          style({  box: grow(1).position(relative).minH(panel-min-h-daycol), paint: borderRWidth(1).borderR(border)  }).when(stateToday, { paint: bg(selected-bg) })
 
           <column gap="0">
             style({ box: position(absolute).top(0).right(0).bottom(0).left(0) })
 
             <for {timeSlots()} as="slot" key={slot.key}>
-              <div data-iso={dc.col.iso} data-minutes={slot.minutes} grow>
-                style({ box: minH(control-h-md), paint: cursor(cell).borderBWidth(1).borderB(border) }).when(hover, { paint: bg(hover-bg) })
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes}>
+                style({  box: grow(1).minH(control-h-md), paint: cursor(cell).borderBWidth(1).borderB(border)  }).when(hover, { paint: bg(hover-bg) })
 </div>
             </for>
           </column>
@@ -500,4 +513,5 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </row>
   </grid>
 </if>
+  </span>
 </div>

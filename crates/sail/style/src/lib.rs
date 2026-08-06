@@ -20,7 +20,11 @@ pub mod sx_ir;
 pub mod sx_vocab;
 pub mod tokens;
 
-pub use channel::{Channel, channel_for_setter, is_animate_trigger};
+pub use channel::{
+    Channel, TEXT_BEARING_ELEMENTS, channel_for_setter, is_animate_trigger, is_geometry_setter,
+    is_interaction_when_key, is_text_bearing, style_contains_geometry, style_uses_text_channel,
+    style_uses_text_channel_env, text_channel_host_error,
+};
 pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
     CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,

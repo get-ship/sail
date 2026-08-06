@@ -16,51 +16,29 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  element-tree
-  components-tree
-  gap="0"
-  grow
+<column element-tree components-tree gap="0">
+  style({  box: grow(1).minH(0).basis(0).minW(0).h(full).overflow(hidden)  })
 
->
-  style({ box: minH(0).basis(0).minW(0).h(full).overflow(hidden) })
-
-  <row
-    align="center"
-    shrink="0"
-    gap="2"
-
-  >
-    style({ box: h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle) })
+  <row align="center" gap="2">
+    style({  box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle)  })
 
     <p>
       style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
       Components
     </p>
-    <p
-      element-file
-      grow
-      min-w="0"
-
-    >
-      style({ paint: fg(muted-foreground), text: fontSize(xs).truncate().fontFamily(mono) })
+    <p element-file>
+      style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate().fontFamily(mono) })
 
       {activePathLabel()}
     </p>
   </row>
-  <column grow gap="0">
-    style({ box: minH(0).basis(0).padX(1).padY(1).overflow(hidden) })
+  <column gap="0">
+    style({  box: grow(1).minH(0).basis(0).padX(1).padY(1).overflow(hidden)  })
 
     <if {!hasElements()}>
-      <empty-state
-        variant="placeholder"
-        size="sm"
-        w="full"
-        elements-empty
-
-      >
-        style({ box: pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
+      <empty-state variant="placeholder" size="sm" elements-empty>
+        style({  box: w(full).pad(3), paint: borderWidth(1).border(border-subtle).radius(md)  })
 
         <strong slot="title">No elements yet</strong>
         Open a .sail file to inspect its component tree.

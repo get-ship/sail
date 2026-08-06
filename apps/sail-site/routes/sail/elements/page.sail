@@ -39,7 +39,9 @@ Guide</p>
 
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong grow>Ada Lovelace</strong>
+      <strong>
+        style({ box: grow(1) })
+Ada Lovelace</strong>
       <badge tone="success">Active</badge>
     </row>
   </card>
@@ -54,7 +56,9 @@ Guide</p>
   </p>
   <column gap="2">
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Inputs</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Inputs</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 button, input, textarea, select,
@@ -62,41 +66,53 @@ button, input, textarea, select,
       label, fieldset, dropzone, theme-picker</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Display</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Display</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 badge, chip, status-dot, card,
       avatar, icon, separator, hr, details, collapsible, prose</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Feedback</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Feedback</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 alert, progress, meter, spinner,
       skeleton, empty-state, error-state, error-boundary, toast</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Overlay</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Overlay</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 tooltip, hover-card, popover,
       dropdown, context-menu, dialog</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Navigation</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Navigation</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 tabs, breadcrumb, pagination,
       navbar</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Data</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Data</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 table</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline"  shrink="0">Layout</badge>
+      <badge variant="outline">
+        style({ box: shrink(0) })
+Layout</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 row, column, grid, center,

@@ -496,14 +496,7 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
             ));
         }
     }
-    // grow/shrink are participation — refuse on setSx product path
-    if matches!(name, "grow" | "shrink") {
-        return Err(format!(
-            "setSx `{name}` is layout participation — use setAttr `{name}` instead. \
-             Allowed setters: {}",
-            allowed_setter_names().join(", ")
-        ));
-    }
+    // grow/shrink are box-channel participation — allowed on setSx / Style.
     let known = sail_lint::style::setters::setters();
     let Some(spec) = known.iter().find(|s| s.name == name) else {
         return Err(format!(

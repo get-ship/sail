@@ -129,14 +129,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style({ box: h(fill).minH(0).overflow(hidden), paint: bg(background).fg(foreground) })
 
   <!-- ── app chrome: brand + theme picker ─────────────────────────────── -->
-  <row align="center" gap="3" shrink>
-    style({ box: pad(3).padX(5), paint: borderBWidth(1).border(border) })
+  <row align="center" gap="3">
+    style({  box: shrink(1).pad(3).padX(5), paint: borderBWidth(1).border(border)  })
 
     <strong>
       style({ paint: fg(primary), text: fontFamily(mono).fontSize(lg) })
 shanty</strong>
-    <p grow>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
+    <p>
+      style({ box: grow(1), paint: fg(muted-foreground), text: fontSize(sm) })
 a full app in one .sail file</p>
     <row gap="1">
       <for {THEMES} as="t" key={t}>
@@ -145,8 +145,8 @@ a full app in one .sail file</p>
     </row>
   </row>
 
-  <row grow align="stretch" gap="0">
-    style({ box: minH(0) })
+  <row align="stretch" gap="0">
+    style({  box: grow(1).minH(0)  })
 
     <!-- ── library rail ───────────────────────────────────────────────── -->
     <column gap="3">
@@ -180,11 +180,11 @@ Playlists</p>
     </column>
 
     <!-- ── playlist main ──────────────────────────────────────────────── -->
-    <column grow min-w="0" gap="0">
-      style({ box: minH(0) })
+    <column gap="0">
+      style({  box: grow(1).minW(0).minH(0)  })
 
-      <column gap="1" shrink>
-        style({ box: pad(6).padB(4), animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) })
+      <column gap="1">
+        style({  box: shrink(1).pad(6).padB(4), animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' })  })
 
         <p>
           style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
@@ -198,8 +198,8 @@ Playlist</p>
           {trackCount()} tracks · click a row to play
         </p>
       </column>
-      <scroll-area grow>
-        style({ box: minH(0).padX(6).padB(4) })
+      <scroll-area>
+        style({  box: grow(1).minH(0).padX(6).padB(4)  })
 
         <column gap="1">
           <for {visibleTracks()} as="t" key={t.id}>
@@ -209,8 +209,8 @@ Playlist</p>
                  align="center" gap="3">
               style({ box: pad(2).padX(3), paint: radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })
 
-              <div shrink="0">
-                style({ box: position(relative).w(10).h(10).overflow(hidden), paint: radius(sm).bg(muted) })
+              <div>
+                style({  box: shrink(0).position(relative).w(10).h(10).overflow(hidden), paint: radius(sm).bg(muted)  })
 
                 <img src={t.cover} alt="">
                   style({ box: display(block).w(full).h(full), paint: objectFit(cover) })
@@ -235,7 +235,9 @@ Playlist</p>
                   </center>
                 </if>
               </div>
-              <column gap="0" grow min-w="0">
+              <column gap="0">
+                style({ box: grow(1).minW(0) })
+
                 <strong>
                   when({ groupCurrent: style({ paint: fg(primary) }) })
 {t.title}</strong>
@@ -261,13 +263,15 @@ Playlist</p>
   </row>
 
   <!-- ── now-playing bar ──────────────────────────────────────────────── -->
-  <column gap="2" shrink>
-    style({ box: pad(3).padX(5), paint: borderTWidth(1).border(border) })
+  <column gap="2">
+    style({  box: shrink(1).pad(3).padX(5), paint: borderTWidth(1).border(border)  })
 
     <row align="center" gap="4">
-      <row align="center" gap="3" grow min-w="0">
-        <div shrink="0">
-          style({ box: w(12).h(12).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) })
+      <row align="center" gap="3">
+        style({ box: grow(1).minW(0) })
+
+        <div>
+          style({  box: shrink(0).w(12).h(12).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border)  })
 
           <img src={current().cover} alt="">
             style({ box: display(block).w(full).h(full), paint: objectFit(cover) })
@@ -282,7 +286,9 @@ Playlist</p>
 {current().artist} · {current().album}</p>
         </column>
       </row>
-      <column align="center" gap="1" grow>
+      <column align="center" gap="1">
+        style({ box: grow(1) })
+
         <row gap="2" align="center">
           <button on:click={() => shuffle.set(!shuffle())} variant={shuffle() ? 'solid' : 'ghost'} size="sm">shuffle</button>
           <button on:click={() => advance(-1)} variant="ghost">⏮</button>
@@ -294,22 +300,26 @@ Playlist</p>
           <button on:click={() => advance(1)} variant="ghost">⏭</button>
           <button on:click={() => repeat.set(!repeat())} variant={repeat() ? 'solid' : 'ghost'} size="sm">repeat</button>
         </row>
-        <row gap="2" align="center" nowrap w="full" max-w="panel-max-w-md">
-          <span shrink>
-            style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
+        <row gap="2" align="center" nowrap>
+          style({ box: w(full).maxW(panel-max-w-md) })
+
+          <span>
+            style({ box: shrink(1), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {positionLabel()}</span>
           <!-- progress host paints w-full; grow shell owns the flex share so times stay on one line -->
-          <row grow min-w="0">
-            style({ box: minW(0) })
+          <row>
+            style({  box: grow(1).minW(0).minW(0)  })
 
             <progress value={position()} max={current().secs}></progress>
           </row>
-          <span shrink>
-            style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
+          <span>
+            style({ box: shrink(1), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {totalLabel()}</span>
         </row>
       </column>
-      <row gap="2" align="center" justify="end" nowrap grow min-w="0">
+      <row gap="2" align="center" justify="end" nowrap>
+        style({ box: grow(1).minW(0) })
+
         <button on:click={() => volume.set(Math.max(0, volume() - 10))} variant="ghost" size="sm">−</button>
         <div>
           style({ box: w(20).minW(20) })

@@ -159,9 +159,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   use:captureScroll
 
 >
-  style({ box: position(relative).h(full).minH(0).pad(3), text: fontFamily(body) })
-
-  <div use:virtualSpacer={totalSize()}>
+  style({ box: position(relative).h(full).minH(0).pad(3) })
+  <span>
+    style({ box: display(contents), text: fontFamily(body) })
+    <div use:virtualSpacer={totalSize()}>
     style({ box: position(relative).w(full).h(bind(rowsH)) })
 
     <for {windowItems()} as="w" key={w.key}>
@@ -180,4 +181,5 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <if {items().length === 0}>
     <center><slot name="empty"></slot></center>
   </if>
+  </span>
 </scroll-area>

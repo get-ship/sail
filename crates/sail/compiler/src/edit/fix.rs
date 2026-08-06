@@ -122,33 +122,193 @@ fn fix_participation_style(
     index: &BTreeMap<String, EditNode>,
     d: &crate::diagnostics::Diagnostic,
 ) -> Option<FixPlan> {
-    // Locate `.grow(` / `.shrink(` near the diagnostic offset.
+    // Bare attr → box channel. Diagnostic points at the attr name on the open tag.
     let offset = line_col_to_offset(source, d.line, d.col);
-    let (method, arg) = find_style_call_at(source, offset)?;
-    let attr = method; // grow / shrink
     let node = find_host_for_offset(index, offset)?;
-    // Strip the chain segment and add attr.
     let open = &source[node.open_span.start..node.open_span.end];
-    let new_open = strip_style_call_from_open(open, method, &arg)?;
-    let attr_val = if arg == "1" || arg.is_empty() {
-        None // boolean presence
-    } else {
-        Some(arg.clone())
+    let (attr, value) = find_participation_attr_at(open, source, offset)?;
+    let setter = match attr.as_str() {
+        "grow" => "grow",
+        "shrink" => "shrink",
+        "w" => "w",
+        "min-w" => "minW",
+        "max-w" => "maxW",
+        _ => return None,
     };
-    let new_open = insert_attr(&new_open, attr, attr_val.as_deref());
+    let arg = match (attr.as_str(), value.as_str()) {
+        ("grow" | "shrink", "") | ("grow" | "shrink", "1") | ("grow" | "shrink", "true") => {
+            "1".into()
+        }
+        ("grow" | "shrink", "0") | ("grow" | "shrink", "false") => "0".into(),
+        (_, v) if !v.is_empty() => v.to_string(),
+        _ => return None,
+    };
+    let new_open = strip_attr_from_open(open, &attr)?;
+    // Prefer injecting a block style after the open tag when host has a body.
+    let box_stmt = format!("style({{ box: {setter}({arg}) }})");
+    let insert_at = node.open_span.end;
+    let indent = "  ";
+    let replacement_open = new_open;
+    // Patch open tag (strip attr) + insert style statement after `>`.
+    let after = format!(
+        "{replacement_open}\n{indent}{box_stmt}\n"
+    );
     Some(FixPlan {
         rule: "sail-participation-style".into(),
         line: d.line,
         col: d.col,
-        message: format!("move style.{method}(…) to `{attr}` attr"),
+        message: format!("move `{attr}` attr to box channel `{box_stmt}`"),
         ops: vec![],
         text_patch: Some(TextPatch {
             start: node.open_span.start,
-            end: node.open_span.end,
-            replacement: new_open,
+            end: insert_at,
+            replacement: after,
         }),
         actor: None,
     })
+}
+
+fn find_participation_attr_at(
+    open: &str,
+    _source: &str,
+    _abs_offset: usize,
+) -> Option<(String, String)> {
+    // Scan attrs on the open tag fragment.
+    let bytes = open.as_bytes();
+    let mut i = 0;
+    // skip <tag
+    while i < bytes.len() && bytes[i] != b' ' && bytes[i] != b'>' && bytes[i] != b'/' {
+        i += 1;
+    }
+    while i < bytes.len() {
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i >= bytes.len() || bytes[i] == b'>' || bytes[i] == b'/' {
+            break;
+        }
+        let ns = i;
+        while i < bytes.len()
+            && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-' || bytes[i] == b'_')
+        {
+            i += 1;
+        }
+        let name = open[ns..i].to_string();
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        let mut val = String::new();
+        if i < bytes.len() && bytes[i] == b'=' {
+            i += 1;
+            while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            if i < bytes.len() && (bytes[i] == b'"' || bytes[i] == b'\'') {
+                let q = bytes[i];
+                i += 1;
+                let vs = i;
+                while i < bytes.len() && bytes[i] != q {
+                    i += 1;
+                }
+                val = open[vs..i].to_string();
+                if i < bytes.len() {
+                    i += 1;
+                }
+            }
+        }
+        if matches!(name.as_str(), "grow" | "shrink" | "w" | "min-w" | "max-w") {
+            return Some((name, val));
+        }
+    }
+    None
+}
+
+fn strip_attr_from_open(open: &str, attr: &str) -> Option<String> {
+    // Remove `attr` or `attr="…"` from the open tag string (byte scan).
+    let bytes = open.as_bytes();
+    let mut i = 0;
+    let mut out = String::new();
+    // copy <tag
+    while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
+        out.push(bytes[i] as char);
+        i += 1;
+    }
+    while i < bytes.len() {
+        let ws_start = i;
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i >= bytes.len() {
+            break;
+        }
+        if bytes[i] == b'>' || (bytes[i] == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'>') {
+            out.push_str(&open[ws_start..]);
+            break;
+        }
+        let ns = i;
+        while i < bytes.len()
+            && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-' || bytes[i] == b'_')
+        {
+            i += 1;
+        }
+        let name = &open[ns..i];
+        let name_end = i;
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i < bytes.len() && bytes[i] == b'=' {
+            i += 1;
+            while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            if i < bytes.len() && (bytes[i] == b'"' || bytes[i] == b'\'') {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    i += 1;
+                }
+                if i < bytes.len() {
+                    i += 1;
+                }
+            } else if i < bytes.len() && bytes[i] == b'{' {
+                let mut d = 0i32;
+                while i < bytes.len() {
+                    if bytes[i] == b'{' {
+                        d += 1;
+                    } else if bytes[i] == b'}' {
+                        d -= 1;
+                        if d == 0 {
+                            i += 1;
+                            break;
+                        }
+                    }
+                    i += 1;
+                }
+            } else {
+                while i < bytes.len()
+                    && !bytes[i].is_ascii_whitespace()
+                    && bytes[i] != b'>'
+                    && bytes[i] != b'/'
+                {
+                    i += 1;
+                }
+            }
+        }
+        if name == attr {
+            let _ = (ws_start, name_end);
+            continue;
+        }
+        let fragment = &open[ws_start..i];
+        if !out.ends_with(|c: char| c.is_whitespace()) && !fragment.starts_with(char::is_whitespace)
+        {
+            out.push(' ');
+        }
+        out.push_str(fragment);
+    }
+    if !out.contains('>') {
+        out.push('>');
+    }
+    Some(out)
 }
 
 fn fix_display_on_layout(
@@ -837,12 +997,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn participation_strips_grow() {
-        let open = r#"<div style={style.pad(2).grow(1).bg(card)}>"#;
-        let next = strip_style_call_from_open(open, "grow", "1").unwrap();
-        assert!(!next.contains("grow"));
-        assert!(next.contains("pad(2)"));
-        let with_attr = insert_attr(&next, "grow", None);
-        assert!(with_attr.contains(" grow") || with_attr.contains(" grow>"));
+    fn participation_strips_bare_grow_attr() {
+        let open = r#"<div grow min-w="0" class="x">"#;
+        let next = strip_attr_from_open(open, "grow").unwrap();
+        assert!(!next.contains("grow"), "{next}");
+        assert!(next.contains("min-w"), "{next}");
+        let next2 = strip_attr_from_open(&next, "min-w").unwrap();
+        assert!(!next2.contains("min-w"), "{next2}");
+        assert!(next2.contains("class"), "{next2}");
     }
 }

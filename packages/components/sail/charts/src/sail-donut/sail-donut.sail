@@ -104,8 +104,12 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       </for>
     </svg>
     <center>
-      style({ paint: fg(foreground).pointerEvents(none), text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight) })
-<slot></slot></center>
+      style({ paint: fg(foreground).pointerEvents(none) })
+      <span>
+        style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight) })
+        <slot></slot>
+      </span>
+</center>
     <column id="chart-data">
       style({ paint: srOnly() })
 

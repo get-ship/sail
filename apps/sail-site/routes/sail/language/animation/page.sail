@@ -215,7 +215,9 @@ Watch me leave before I go.</p>
     <div>
       style({ box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })
 </div>
-    <row grow></row>
+    <row>
+      style({ box: grow(1) })
+</row>
     <div testid="spin-demo">
       style({ box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) })
 </div>
@@ -250,15 +252,9 @@ tab to me</button>
     style({ box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
     <row align="center" gap="3">
-      <input
-        type="range"
-        min="0"
-        max="100"
-        step="1"
-        bind:value={scrubText}
-        testid="timeline-scrub"
-        grow min-w="0"
-      />
+      <input type="range" min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub">
+  style({ box: grow(1).minW(0) })
+</input>
       <span>
         style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) })
 {scrubText()}</span>
@@ -271,12 +267,8 @@ tab to me</button>
         so bg(primary) never wins and the tile disappears on most themes.
         Matches the stagger tiles above.
       -->
-      <div
-        testid="timeline-tile"
-        shrink="0"
-
-      >
-        style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })
+      <div testid="timeline-tile">
+        style({  box: shrink(0).w(9).h(9), paint: bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))  })
 </div>
     </row>
   </column>

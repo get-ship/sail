@@ -100,8 +100,8 @@ deck</b> docs</strong>
     <a href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
   </navbar>
 
-  <main grow min-w="0">
-    style({ box: pad(7).maxW(breakpoint-tablet) })
+  <main>
+    style({  box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet)  })
 
     <slot name="route"></slot>
   </main>

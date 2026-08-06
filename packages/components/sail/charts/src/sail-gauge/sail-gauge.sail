@@ -122,7 +122,11 @@ export default controller(({
       </if>
     </svg>
     <center>
-      style({ paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).fontSize(xl) })
-<slot></slot></center>
+      style({ paint: fg(foreground) })
+      <span>
+        style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(xl) })
+        <slot></slot>
+      </span>
+</center>
   </stack>
 </else></if>

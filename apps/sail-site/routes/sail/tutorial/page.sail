@@ -44,7 +44,9 @@ Tutorial</p>
 
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
-              <column gap="1" grow>
+              <column gap="1">
+                style({ box: grow(1) })
+
                 <strong>{lesson.title}</strong>
                 <small>
                   style({ paint: fg(muted-foreground) })

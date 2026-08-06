@@ -122,24 +122,17 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="themes"
-  theme-shape-surface
-  shape-chrome
-  gap="0"
-  grow
-
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+<column surface="themes" theme-shape-surface shape-chrome gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row shape-error align="center" gap="2" shrink="0">
-      style(bandError)
+    <row shape-error align="center" gap="2">
+      style([ style(bandError), style({ box: shrink(0) }) ])
 
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" shape-retry on:click={session.onRetry}>
         Retry
@@ -148,8 +141,8 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row shape-loading align="center" gap="2" shrink="0">
-      style(bandStatus)
+    <row shape-loading align="center" gap="2">
+      style([ style(bandStatus), style({ box: shrink(0) }) ])
 
       <spinner size="sm"></spinner>
       <p>
@@ -159,22 +152,11 @@ Loading…</p>
   </if>
 
   <!-- Shape: left controls ~panel | right LARGE specimen (inverted vs Color). -->
-  <row
-    shape-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+  <row shape-workbench gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
-
-    <scroll-area
-      shape-controls
-      shrink="0"
-
-    >
-      style({ box: minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background) })
+    <scroll-area shape-controls>
+      style({  box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background)  })
 
       <column gap="4">
         style(controlsCol)
@@ -398,7 +380,9 @@ elevation · {shape.elevLabel()}</p>
                 <stack hidden="true">
                   style(elevMarkNone)
 </stack>
-                <column gap="0" align="start" min-w="0">
+                <column gap="0" align="start">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 none</p>
@@ -421,7 +405,9 @@ flat</p>
                 <stack hidden="true">
                   style(elevMarkXs)
 </stack>
-                <column gap="0" align="start" min-w="0">
+                <column gap="0" align="start">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 xs</p>
@@ -444,7 +430,9 @@ hair</p>
                 <stack hidden="true">
                   style(elevMarkSm)
 </stack>
-                <column gap="0" align="start" min-w="0">
+                <column gap="0" align="start">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 sm</p>
@@ -467,7 +455,9 @@ rest</p>
                 <stack hidden="true">
                   style(elevMarkMd)
 </stack>
-                <column gap="0" align="start" min-w="0">
+                <column gap="0" align="start">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 md</p>
@@ -490,7 +480,9 @@ card</p>
                 <stack hidden="true">
                   style(elevMarkLg)
 </stack>
-                <column gap="0" align="start" min-w="0">
+                <column gap="0" align="start">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 lg</p>
@@ -513,7 +505,9 @@ float</p>
                 <stack hidden="true">
                   style(elevMarkXl)
 </stack>
-                <column gap="0" align="start" min-w="0">
+                <column gap="0" align="start">
+                  style({ box: minW(0) })
+
                   <p>
                     style(doorTitle)
 xl</p>
@@ -659,18 +653,11 @@ surface</p>
     </scroll-area>
 
     <!-- RIGHT: large specimen canvas (grow) -->
-    <column
-      specimen-dock
-      shape-canvas
-      gap="0"
-      grow
-      min-w="0"
+    <column specimen-dock shape-canvas gap="0">
+      style({  box: grow(1).minW(0).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background)  })
 
-    >
-      style({ box: minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background) })
-
-      <column grow gap="0">
-        style({ box: minH(0).h(full).pad(4) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).h(full).pad(4)  })
 
         <!--
           One themed host only. Frame chrome = theme name + mode.
@@ -685,44 +672,37 @@ surface</p>
         >
           style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
-          <column gap="0" grow>
-            style({ box: minH(0).h(full) })
+          <column gap="0">
+            style({  box: grow(1).minH(0).h(full)  })
 
-            <row
-              specimen-chrome
-              align="center"
-              gap="2"
-              nowrap
-              shrink="0"
+            <row specimen-chrome align="center" gap="2" nowrap>
+              style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-            >
-              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+              <row gap="2" align="center" nowrap hidden="true">
+                style({  box: shrink(0).minW(12)  })
 
-              <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style({ box: minW(12) })
-
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
 </stack>
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
 </stack>
-                <stack shrink="0">
-                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
+                <stack>
+                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
 </stack>
               </row>
-              <p grow min-w="0">
-                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
+              <p>
+                style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 
                 {session.nameEdit()} · Shape
               </p>
-              <p shrink="0">
-                style(pathMeta)
+              <p>
+                style([ style(pathMeta), style({ box: shrink(0) }) ])
 {session.paintMode()}</p>
             </row>
 
-            <scroll-area grow>
-              style(stageSolid)
+            <scroll-area>
+              style([ style(stageSolid), style({ box: grow(1) }) ])
 
               <column
                 specimen-body
@@ -754,7 +734,9 @@ Studio surface</p>
 
                     <row gap="3" align="center" nowrap>
                       <avatar size="sm" initials="S" tone="primary"></avatar>
-                      <column gap="0" grow min-w="0">
+                      <column gap="0">
+                        style({ box: grow(1).minW(0) })
+
                         <p>
                           style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 {session.nameEdit()}</p>
@@ -776,8 +758,8 @@ Project name</p>
                       <button type="button" size="sm" variant="outline" tone="primary">Outline</button>
                     </row>
                     <row gap="2" align="stretch">
-                      <column gap="0" grow min-w="0">
-                        style(statCell)
+                      <column gap="0">
+                        style([ style(statCell), style({ box: grow(1).minW(0) }) ])
 
                         <p>
                           style(pathMeta)
@@ -786,8 +768,8 @@ radius.md</p>
                           style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })
 {shape.statRadius()}</p>
                       </column>
-                      <column gap="0" grow min-w="0">
-                        style(statCell)
+                      <column gap="0">
+                        style([ style(statCell), style({ box: grow(1).minW(0) }) ])
 
                         <p>
                           style(pathMeta)
@@ -796,8 +778,8 @@ shadow</p>
                           style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })
 {shape.statShadow()}</p>
                       </column>
-                      <column gap="0" grow min-w="0">
-                        style(statCell)
+                      <column gap="0">
+                        style([ style(statCell), style({ box: grow(1).minW(0) }) ])
 
                         <p>
                           style(pathMeta)

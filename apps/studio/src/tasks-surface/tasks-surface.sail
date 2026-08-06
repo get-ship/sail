@@ -43,27 +43,15 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="tasks"
-  tasks-surface
-  gap="0"
-  grow
+<column surface="tasks" tasks-surface gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden)  })
 
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden) })
+  <row tasks-header align="center" justify="between" gap="3" nowrap>
+    style({  box: shrink(0).h(10).padX(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-  <row
-    tasks-header
-    align="center"
-    justify="between"
-    gap="3"
-    shrink="0"
-    nowrap
+    <row align="center" gap="3" nowrap>
+      style({ box: grow(1).minW(0) })
 
-  >
-    style({ box: h(10).padX(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
-
-    <row align="center" gap="3" nowrap grow min-w="0">
       <p>
         style({ text: fontSize(md).fontWeight(semibold) })
 Tasks</p>
@@ -100,23 +88,19 @@ Tasks</p>
         <option value="agent">Agent</option>
       </select>
     </row>
-    <button type="button" size="sm" tone="primary" new-task on:click={onNewTaskQuick} shrink="0">
+    <button type="button" size="sm" tone="primary" new-task on:click={onNewTaskQuick}>
+      style({ box: shrink(0) })
+
       New task
     </button>
   </row>
 
   <if {showTaskErrorAlert()}>
-    <row
-      tasks-error
-      align="center"
-      gap="2"
-      shrink="0"
+    <row tasks-error align="center" gap="2">
+      style({  box: shrink(0).padX(3).h(7), paint: borderBWidth(1).borderB(border)  })
 
-    >
-      style({ box: padX(3).h(7), paint: borderBWidth(1).borderB(border) })
-
-      <p grow min-w="0">
-        style({ paint: fg(destructive), text: fontSize(xs).truncate() })
+      <p>
+        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(xs).truncate() })
 {taskError()}</p>
       <button type="button" size="sm" variant="ghost" retry-tasks on:click={onRetryTasks}>
         Retry
@@ -124,27 +108,14 @@ Tasks</p>
     </row>
   </if>
 
-  <row
-    tasks-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+  <row tasks-workbench gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
+    <column threads-list tasks-nav gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1)  })
 
-    <column
-      threads-list
-      tasks-nav
-      grow
-      gap="0"
-
-    >
-      style({ box: minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) })
-
-      <scroll-area grow on:click={onTaskThreadClick}>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area on:click={onTaskThreadClick}>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="0" tasks-table>
           style({ box: padY(1).padX(1) })
@@ -166,16 +137,9 @@ Tasks</p>
                 meta={row.updatedLabel}
                 selected={row.selected}
               >
-                <badge
-                  slot="leading"
-                  status-badge={row.status}
-                  tone={row.statusTone}
-                  size="sm"
-                  variant="soft"
-                  pill
-                  label={row.statusLabel}
-                  shrink="0"
-                >
+                <badge slot="leading" status-badge={row.status} tone={row.statusTone} size="sm" variant="soft" pill label={row.statusLabel}>
+                  style({ box: shrink(0) })
+
                   {row.statusLabel}
                 </badge>
               </studio-list-row>
@@ -185,20 +149,16 @@ Tasks</p>
       </scroll-area>
     </column>
 
-    <column
-      task-detail
-      grow
-      gap="0"
-      min-w="0"
-
-    >
-      style({ box: minH(0).h(full).basis(0).minW(0).overflow(hidden), paint: bg(surface-0) })
+    <column task-detail gap="0">
+      style({  box: grow(1).minW(0).minH(0).h(full).basis(0).minW(0).overflow(hidden), paint: bg(surface-0)  })
 
       <if {!hasTaskSelected()}>
-        <column grow align="center" justify="center">
-          style({ box: minH(0).h(full).pad(4) })
+        <column align="center" justify="center">
+          style({  box: grow(1).minH(0).h(full).pad(4)  })
 
-          <empty-state variant="placeholder" size="sm" w="full" task-detail-empty>
+          <empty-state variant="placeholder" size="sm" task-detail-empty>
+            style({ box: w(full) })
+
             <strong slot="title">Select a task</strong>
             Or create a new one.
           </empty-state>
@@ -206,18 +166,12 @@ Tasks</p>
       </if>
 
       <if {hasTaskSelected()}>
-        <row
-          task-detail-header
-          align="center"
-          gap="2"
-          nowrap
-          shrink="0"
-          justify="between"
+        <row task-detail-header align="center" gap="2" nowrap justify="between">
+          style({  box: shrink(0).h(10).padX(3).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-        >
-          style({ box: h(10).padX(3).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+          <row align="center" gap="2" nowrap>
+            style({ box: grow(1).minW(0) })
 
-          <row align="center" gap="2" nowrap grow min-w="0">
             <strong>
               style({ text: fontSize(md).truncate() })
 {taskTitle()}</strong>
@@ -232,30 +186,16 @@ Tasks</p>
 
         <!-- Anchor: status only when present — no re-link/accept choreography in scaffold -->
         <if {taskAnchorHas()}>
-          <row
-            anchor-card
-            anchor-chip
-            drift={taskAnchorStatusRaw()}
-            align="center"
-            gap="2"
-            nowrap
-            shrink="0"
+          <row anchor-card anchor-chip drift={taskAnchorStatusRaw()} align="center" gap="2" nowrap>
+            style({  box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0)  })
 
-          >
-            style({ box: padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
+            <badge anchor-drift={taskAnchorStatusRaw()} tone={taskAnchorTone()} size="sm" variant="soft" pill>
+              style({ box: shrink(0) })
 
-            <badge
-              anchor-drift={taskAnchorStatusRaw()}
-              tone={taskAnchorTone()}
-              size="sm"
-              variant="soft"
-              pill
-              shrink="0"
-            >
               {taskAnchorStatus()}
             </badge>
-            <p grow min-w="0">
-              style({ text: fontSize(xs).fontFamily(mono).truncate() })
+            <p>
+              style({ box: grow(1).minW(0), text: fontSize(xs).fontFamily(mono).truncate() })
 
               {taskAnchorPath()}
             </p>
@@ -263,8 +203,8 @@ Tasks</p>
         </if>
 
         <if {hasTaskAttach()}>
-          <row attachments gap="2" align="center" shrink="0">
-            style({ box: padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle) })
+          <row attachments gap="2" align="center">
+            style({  box: shrink(0).padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle)  })
 
             <for {taskAttachChips()} as="a" key={a.key}>
               <badge attach-chip attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
@@ -274,50 +214,39 @@ Tasks</p>
           </row>
         </if>
 
-        <column
-          task-conversation
-          grow
-          gap="0"
-
-        >
-          style({ box: minH(0).basis(0).h(full).overflow(hidden) })
+        <column task-conversation gap="0">
+          style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden)  })
 
           <if {hasThreadMarkdown()}>
-            <scroll-area shrink="0">
-              style({ box: maxH(32).minH(0) })
+            <scroll-area>
+              style({  box: shrink(0).maxH(32).minH(0)  })
 
               <column>
                 style({ box: pad(3) })
 
                 <sail-markdown thread-markdown value={threadMarkdown()}>
-                  style({ text: fontSize(sm) })
+                  <span>
+                    style({ box: display(contents), text: fontSize(sm) })
+                    
+                  </span>
 </sail-markdown>
               </column>
             </scroll-area>
           </if>
-          <sail-message-list
-            messages-host
-            messages
-            sticky-bottom
-            grow
+          <sail-message-list messages-host messages sticky-bottom>
+            style({  box: grow(1).minH(0).h(full).w(full).basis(0)  })
 
-          >
-            style({ box: minH(0).h(full).w(full).basis(0) })
+            <empty-state slot="empty" variant="inline" size="sm">
+              style({ box: w(full) })
 
-            <empty-state slot="empty" variant="inline" size="sm" w="full">
               <strong slot="title">No messages yet</strong>
               Write below to start.
             </empty-state>
           </sail-message-list>
         </column>
 
-        <column
-          reply-composer
-          gap="2"
-          shrink="0"
-
-        >
-          style({ box: pad(3), paint: borderTWidth(1).borderT(border-subtle).bg(surface-1) })
+        <column reply-composer gap="2">
+          style({  box: shrink(0).pad(3), paint: borderTWidth(1).borderT(border-subtle).bg(surface-1)  })
 
           <sail-composer
             task-composer

@@ -321,5 +321,9 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 </sail-canvas>
 
 <div role="status" aria-live="polite">
-  style({ box: position(absolute).bottom(1).left(2), paint: fg(muted-foreground).pointerEvents(none), text: fontSize(xs) })
-{statusLabel()}</div>
+  style({ box: position(absolute).bottom(1).left(2), paint: fg(muted-foreground).pointerEvents(none) })
+  <span>
+    style({ box: display(contents), text: fontSize(xs) })
+    {statusLabel()}
+  </span>
+</div>

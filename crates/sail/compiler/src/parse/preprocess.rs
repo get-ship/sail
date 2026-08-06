@@ -245,6 +245,7 @@ fn lift_block_style(
             if let Some((rel_start, rel_end, expr)) = try_style_statement(body) {
                 let abs_lo = body_start + rel_start;
                 let abs_hi = body_start + rel_end;
+                refuse_text_on_non_text_host(tag, expr, env, abs_lo, abs_hi)?;
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, abs_lo, abs_hi))?;
                 let mut stmt_hi = abs_hi;
@@ -605,6 +606,34 @@ fn lower_sx_value(
     // Sole product path: Style value language (chain + match/when/compound/bind).
     // Motion chain methods (`.enter` / `.exit` / …) return alongside classes.
     sail_lint::sx_ir::lower_sx_string_with_motion(val, env, css, seen)
+}
+
+/// Text channel may only attach to text-bearing hosts (SPEC + Phase 3).
+///
+/// Scope consts are not host-checked at definition (no tag). Attach-time check
+/// inspects the **inline** Style IR only — `style(constRef)` is not expanded
+/// here (const-split / ref host-check is a follow-up migration). Direct
+/// `style({ text: … })` / when bodies with text setters on non-text hosts fail.
+fn refuse_text_on_non_text_host(
+    tag: &str,
+    expr: &str,
+    _env: &sail_lint::style::StyleEnv,
+    abs_lo: usize,
+    abs_hi: usize,
+) -> Result<(), CompileError> {
+    if sail_lint::style::is_text_bearing(tag) {
+        return Ok(());
+    }
+    let val = strip_outer_braces(expr.trim());
+    let (style, _) = sail_lint::style::parse(val);
+    if !sail_lint::style::style_uses_text_channel(&style) {
+        return Ok(());
+    }
+    Err(
+        CompileError::new(sail_lint::style::text_channel_host_error(tag))
+            .with_span(Span::new(abs_lo, abs_hi))
+            .with_category("sail-sx"),
+    )
 }
 
 /// Inject compiler-private `_sail_m_<trigger>="{{…}}"` attrs produced by Style
@@ -3009,7 +3038,7 @@ mod tests {
         // Regression: `<span class="badge" sx={…}>` must merge author class +
         // Style classes into one attribute (not two setAttribute("class") writes).
         let out =
-            preprocess(r#"<span class="badge"> style.pad(4) x</span>"#).expect("preprocess");
+            preprocess(r#"<span class="badge"> style({ box: pad(4) }) x</span>"#).expect("preprocess");
         assert!(
             out.contains(r#"class="badge "#) && out.contains("sx-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
@@ -3024,7 +3053,7 @@ mod tests {
     #[test]
     fn sx_before_class_also_merges() {
         let out =
-            preprocess(r#"<span class="badge"> style.pad(4) x</span>"#).expect("preprocess");
+            preprocess(r#"<span class="badge"> style({ box: pad(4) }) x</span>"#).expect("preprocess");
         assert!(
             out.contains("sx-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
@@ -3037,7 +3066,7 @@ mod tests {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static Style classes into an expression it can't evaluate.
         let out =
-            preprocess(r#"<span class={cls()}> style.pad(4) x</span>"#).expect("preprocess");
+            preprocess(r#"<span class={cls()}> style({ box: pad(4) }) x</span>"#).expect("preprocess");
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -3047,7 +3076,7 @@ mod tests {
 
     #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x"> style.pad(4) y</span>"#)
+        let out = preprocess(r#"<span title="a > b" class="x"> style({ box: pad(4) }) y</span>"#)
             .expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("sx-"),
@@ -3358,7 +3387,7 @@ mod tests {
             "default w(full) dropped for min-w/w: {via_min}"
         );
 
-        let via_sx = preprocess(r#"<select size="sm"> style.w(24) <option>x</option></select>"#)
+        let via_sx = preprocess(r#"<select size="sm"> style({ box: w(24) }) <option>x</option></select>"#)
             .expect("sx w");
         assert!(
             !via_sx.contains("sx-wfull"),
@@ -3455,7 +3484,7 @@ mod tests {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
         let src =
-            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\"> style.pad(4) é…‹›</span>";
+            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\"> style({ box: pad(4) }) é…‹›</span>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("sx-"),
@@ -3518,7 +3547,7 @@ mod tests {
         // Regression: `lower_sx` byte-walked with `i += 1` and sliced
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
-        let src = "<p>Failed — retry…</p>\n<sail-card> style.pad(4) café ☕</sail-card>";
+        let src = "<p>Failed — retry…</p>\n<sail-card> style({ box: pad(4) }) café ☕</sail-card>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains("café ☕"),
@@ -3552,7 +3581,7 @@ mod tests {
     #[test]
     fn lowers_boolean_grow_on_any_host_to_style_class() {
         // Participation attrs are legal on every element and mint the same
-        // atomic class Style would (`style.grow(1)` → `sx-grow1`).
+        // atomic class Style would (`style({ box: grow(1) })` → `sx-grow1`).
         let out = preprocess(r#"<div grow>x</div>"#).expect("preprocess");
         assert!(out.contains("sx-grow1"), "grow class: {out}");
         assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
@@ -3588,7 +3617,7 @@ mod tests {
     fn participation_matches_style_grow_class() {
         // Same class names as Style so cascade stays one system.
         let via_attr = preprocess(r#"<div grow>x</div>"#).expect("attr");
-        let via_style = preprocess(r#"<div> style.grow(1) x</div>"#).expect("style");
+        let via_style = preprocess(r#"<div> style({ box: grow(1) }) x</div>"#).expect("style");
         assert!(via_attr.contains("sx-grow1") && via_style.contains("sx-grow1"));
         assert!(via_attr.contains("flex-grow:1") && via_style.contains("flex-grow:1"));
     }
@@ -3597,7 +3626,7 @@ mod tests {
     fn layout_element_sx_merges_into_one_class() {
         // Style lowers first (→ class), then layout folds it into the div's classes.
         let out =
-            preprocess(r#"<column gap="2"> style.pad(4) x</column>"#).expect("preprocess");
+            preprocess(r#"<column gap="2"> style({ box: pad(4) }) x</column>"#).expect("preprocess");
         assert!(
             out.contains("sail-col") && out.contains("sail-g-2") && out.contains("sx-"),
             "merged: {out}"
@@ -4002,9 +4031,9 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn lower_sx_var_ref_binds_an_atomic_class() {
-        // Product form: `style.translateY(bind(rowY))` — reactive paint via
+        // Product form: `style({ paint: translateY(bind(rowY)) })` — reactive paint via
         // CSS custom property. JS writes `--row-y`; Style declares the read.
-        let out = preprocess(r#"<grid> style.translateY(bind(rowY)) row</grid>"#)
+        let out = preprocess(r#"<grid> style({ paint: translateY(bind(rowY)) }) row</grid>"#)
             .expect("preprocess");
         assert!(
             out.contains("var(--row-y)") || out.contains("translate"),
@@ -4033,17 +4062,17 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     #[test]
     fn block_style_statement_lowers_to_class() {
         let out = preprocess(r#"<div>
-  style.bg(primary).padX(2)
+  style({ box: padX(2), paint: bg(primary) })
   x
 </div>"#).expect("preprocess");
         assert!(out.contains("sx-") || out.contains("var(--primary)"), "{out}");
-        assert!(!out.contains("style.bg(primary)"), "{out}");
+        assert!(!out.contains("style({ paint: bg(primary) })"), "{out}");
     }
     #[test]
     fn block_style_const_ref() {
         let out = preprocess(r#"
 <scope>
-  const base = style.pad(2)
+  const base = style({ box: pad(2) })
 </scope>
 <div>
   style(base)

@@ -32,17 +32,11 @@ export default controller(() => {
   const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 </scope>
 
-<column
-  specimen-dock
-  gap="0"
-  grow
-  min-w="0"
+<column specimen-dock gap="0">
+  style({  box: grow(1).minW(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
 
->
-  style({ box: minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
-
-  <column grow gap="0">
-    style({ box: minH(0).h(full).pad(4) })
+  <column gap="0">
+    style({  box: grow(1).minH(0).h(full).pad(4)  })
 
     <!-- Draft paint = applyScope via theme-session bind (not theme). -->
     <card
@@ -54,41 +48,34 @@ export default controller(() => {
     >
       style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
-      <column gap="0" grow>
-        style({ box: minH(0).h(full) })
+      <column gap="0">
+        style({  box: grow(1).minH(0).h(full)  })
 
-        <row
-          specimen-chrome
-          align="center"
-          gap="2"
-          nowrap
-          shrink="0"
+        <row specimen-chrome align="center" gap="2" nowrap>
+          style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
-        >
-          style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+          <row gap="2" align="center" nowrap hidden="true">
+            style({  box: shrink(0).minW(12)  })
 
-          <row gap="2" align="center" nowrap shrink="0" hidden="true">
-            style({ box: minW(12) })
-
-            <stack shrink="0">
-              style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
+            <stack>
+              style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
 </stack>
-            <stack shrink="0">
-              style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
+            <stack>
+              style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
 </stack>
-            <stack shrink="0">
-              style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
+            <stack>
+              style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
 </stack>
           </row>
-          <p grow min-w="0">
-            style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
+          <p>
+            style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {nameEdit()}</p>
-          <p shrink="0">
-            style(pathMeta)
+          <p>
+            style([ style(pathMeta), style({ box: shrink(0) }) ])
 {paintMode()}</p>
         </row>
-        <scroll-area grow>
-          style({ box: minH(0).basis(0).h(full), paint: bg(background) })
+        <scroll-area>
+          style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })
 
           <column specimen-body gap="4">
             style({ box: pad(5).minW(0) })

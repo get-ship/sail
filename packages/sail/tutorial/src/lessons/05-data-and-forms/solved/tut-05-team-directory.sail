@@ -88,8 +88,8 @@ loading the roster…</small>
         <row gap="3" align="center">
           style(memberRow)
 
-          <strong grow>
-            style(memberName)
+          <strong>
+            style([ style(memberName), style({ box: grow(1) }) ])
 {m.name}</strong>
           <if {m.role === 'admin'}><badge tone="primary" variant="soft" size="sm">admin</badge></if>
         </row>

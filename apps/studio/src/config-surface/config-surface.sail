@@ -21,42 +21,24 @@ export default controller(() => {
 })
 </controller>
 
-<column
-  surface="config"
-  config-surface
-  gap="0"
-  grow
+<column surface="config" config-surface gap="0">
+  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
 
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
+  <row config-workbench gap="0" nowrap align="stretch">
+    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })
 
-  <row
-    config-workbench
-    grow
-    gap="0"
-    nowrap
-    align="stretch"
+    <column config-nav gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1)  })
 
-  >
-    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
-
-    <column
-      config-nav
-      grow
-      gap="0"
-
-    >
-      style({ box: minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) })
-
-      <column shrink="0">
-        style({ box: padX(3).padT(3).padB(2), paint: borderBWidth(1).borderB(border-subtle) })
+      <column>
+        style({  box: shrink(0).padX(3).padT(3).padB(2), paint: borderBWidth(1).borderB(border-subtle)  })
 
         <p>
           style(eyebrow)
 Config</p>
       </column>
-      <scroll-area config-cat-list grow on:click={onCatClick}>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area config-cat-list on:click={onCatClick}>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="1">
           style({ box: pad(2) })
@@ -80,21 +62,11 @@ Config</p>
       </scroll-area>
     </column>
 
-    <column
-      config-main
-      grow
-      gap="0"
+    <column config-main gap="0">
+      style({  box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background)  })
 
-    >
-      style({ box: minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) })
-
-      <column
-        config-head
-        shrink="0"
-        gap="1"
-
-      >
-        style({ box: padX(5).padY(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
+      <column config-head gap="1">
+        style({  box: shrink(0).padX(5).padY(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0)  })
 
         <p config-section-title>
           style({ text: fontSize(lg).fontWeight(semibold).tracking(tight) })
@@ -106,8 +78,8 @@ Config</p>
 {sectionLead()}</p>
       </column>
 
-      <scroll-area config-body grow>
-        style({ box: minH(0).basis(0).h(full) })
+      <scroll-area config-body>
+        style({  box: grow(1).minH(0).basis(0).h(full)  })
 
         <column gap="3">
           style({ box: pad(4).minW(0) })
@@ -129,7 +101,9 @@ Config</p>
                       style({ box: minW(0), paint: borderWidth(1).border(primary).bg(surface-1) })
 
                       <row gap="3" align="start" nowrap>
-                        <column grow min-w="0" gap="1">
+                        <column gap="1">
+                          style({ box: grow(1).minW(0) })
+
                           <row gap="2" align="center" nowrap>
                             <p>
                               style({ text: fontSize(md).fontWeight(semibold) })
@@ -140,15 +114,9 @@ Ship Cloud</p>
                             style(muted)
 Account, sync, and hosted agents when the plugin host is available.</p>
                         </column>
-                        <button
-                          type="button"
-                          size="sm"
-                          variant="default"
-                          disabled
-                          title="Install path not available"
-                          install-ship-cloud
-                          shrink="0"
-                        >
+                        <button type="button" size="sm" variant="default" disabled title="Install path not available" install-ship-cloud>
+                          style({ box: shrink(0) })
+
                           Install…
                         </button>
                       </row>
@@ -188,15 +156,8 @@ Account, sync, and hosted agents when the plugin host is available.</p>
                 </if>
 
                 <if {sec.showFields}>
-                  <table
-                    config-fields
-                    config-table={sec.id}
-                    w="full"
-                    dense
-                    hoverable
-
-                  >
-                    style({ box: w(full) })
+                  <table config-fields config-table={sec.id} dense hoverable>
+                    style({  box: w(full).w(full)  })
 
                     <thead>
                       <tr>

@@ -131,9 +131,9 @@ export default controller(({ data, expanded, depth }: Scope) => {
 </controller>
 
 <column gap="0">
-  style({ text: fontFamily(mono).fontSize(sm).leading(normal-plus) })
-
-  <if {parseError() !== ''}>
+  <span>
+    style({ box: display(contents), text: fontFamily(mono).fontSize(sm).leading(normal-plus) })
+    <if {parseError() !== ''}>
     <span role="alert">
       style({ paint: fg(destructive) })
 Invalid JSON: {parseError()}</span>
@@ -221,4 +221,5 @@ Invalid JSON: {parseError()}</span>
         </row>
     </default></match>
   </for>
+  </span>
 </column>

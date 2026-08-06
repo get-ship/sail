@@ -46,13 +46,15 @@ domain-stub — awaits backend spec</span>
         </sail-canvas>
       </column>
       <dl>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
-        <dt>theme</dt><dd>"light"</dd>
+        style({ paint: fg(muted-foreground) })
+        <span>
+          style({ box: display(contents), text: fontSize(sm) })
+          <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"dots"</dd>
         <dt>label</dt><dd>"Demo canvas"</dd>
         <dt>readonly</dt><dd>false</dd>
-      </dl>
+        </span>
+</dl>
     </column>
 
     <!-- sail-board ──────────────────────────────────────────────── -->
@@ -82,13 +84,15 @@ domain-stub — awaits backend spec</span>
         </sail-board>
       </column>
       <dl>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
-        <dt>theme</dt><dd>"light"</dd>
+        style({ paint: fg(muted-foreground) })
+        <span>
+          style({ box: display(contents), text: fontSize(sm) })
+          <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"dots"</dd>
         <dt>layout</dt><dd>"none"</dd>
         <dt>label</dt><dd>"Demo board"</dd>
-      </dl>
+        </span>
+</dl>
     </column>
 
     <!-- sail-draw ───────────────────────────────────────────────── -->
@@ -117,14 +121,16 @@ domain-stub — awaits backend spec</span>
         </sail-draw>
       </column>
       <dl>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
-        <dt>theme</dt><dd>"light"</dd>
+        style({ paint: fg(muted-foreground) })
+        <span>
+          style({ box: display(contents), text: fontSize(sm) })
+          <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"lines"</dd>
         <dt>tool</dt><dd>"select"</dd>
         <dt>sketchy</dt><dd>false</dd>
         <dt>label</dt><dd>"Demo whiteboard"</dd>
-      </dl>
+        </span>
+</dl>
     </column>
 
     <!-- sail-graph-canvas ───────────────────────────────────────── -->
@@ -158,14 +164,16 @@ domain-stub — awaits backend spec</span>
         ></sail-graph-canvas>
       </column>
       <dl>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
-        <dt>nodes</dt><dd>2 mock nodes (JSON)</dd>
+        style({ paint: fg(muted-foreground) })
+        <span>
+          style({ box: display(contents), text: fontSize(sm) })
+          <dt>nodes</dt><dd>2 mock nodes (JSON)</dd>
         <dt>edges</dt><dd>1 mock edge (JSON)</dd>
         <dt>width</dt><dd>480</dd>
         <dt>height</dt><dd>240</dd>
         <dt>layout</dt><dd>"positioned"</dd>
-      </dl>
+        </span>
+</dl>
     </column>
 
   </grid>

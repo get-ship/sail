@@ -455,9 +455,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         aria-label="Choose color"
 
       >
-        style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md), text: fontSize(size-fs) })
-
-        <column gap="3">
+        style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md) })
+        <span>
+          style({ box: display(contents), text: fontSize(size-fs) })
+          <column gap="3">
           <div
             use:swatch={value() || '#000000'}
 
@@ -484,19 +485,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <label for={hueId()}>
                 style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })
 H</label>
-              <input
-                id={hueId()}
-                type="range"
-                min="0"
-                max="360"
-                step="1"
-                bind:value={hueText}
-                data-axis="h"
-                use:rangeFill
-                grow
-                min-w="0"
-                aria-label="Hue"
-              />
+              <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue">
+  style({ box: grow(1).minW(0) })
+</input>
               <span>
                 style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })
 {hue()}°</span>
@@ -505,19 +496,9 @@ H</label>
               <label for={satId()}>
                 style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })
 S</label>
-              <input
-                id={satId()}
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                bind:value={satText}
-                data-axis="s"
-                use:rangeFill
-                grow
-                min-w="0"
-                aria-label="Saturation"
-              />
+              <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation">
+  style({ box: grow(1).minW(0) })
+</input>
               <span>
                 style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })
 {sat()}%</span>
@@ -526,19 +507,9 @@ S</label>
               <label for={lightId()}>
                 style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })
 L</label>
-              <input
-                id={lightId()}
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                bind:value={lightText}
-                data-axis="l"
-                use:rangeFill
-                grow
-                min-w="0"
-                aria-label="Lightness"
-              />
+              <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness">
+  style({ box: grow(1).minW(0) })
+</input>
               <span>
                 style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })
 {light()}%</span>
@@ -549,20 +520,13 @@ L</label>
             <span>
               style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Hex</span>
-            <input
-              type="text"
-              bind:value={hexDraft}
-              spellcheck="false"
-              autocomplete="off"
-              aria-label="Hex color"
-              grow min-w="0"
-
->
-              style({ text: fontFamily(mono).textCase(lowercase).fontSize(xs) })
+            <input type="text" bind:value={hexDraft} spellcheck="false" autocomplete="off" aria-label="Hex color">
+              style({ box: grow(1).minW(0), text: fontFamily(mono).textCase(lowercase).fontSize(xs) })
             </input>
           </row>
         </column>
-      </div>
+        </span>
+</div>
     </if>
   </column>
 </if>
@@ -578,35 +542,12 @@ Hex</span>
     >
       style({ box: w(full).minH(size-h).padY(1).padX(1_5), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer) }).when(focusWithin, { paint: outline(ring) })
 
-      <button
-        type="button"
-        data-color-trigger-btn
-        disabled={disabled() ? true : null}
-        aria-haspopup="dialog"
-        aria-expanded={open() ? 'true' : 'false'}
-        aria-label="Choose color"
-        use:captureInput
-        use:swatch={value() || '#000000'}
-        shrink="0"
-
-      >
-        style({ box: size(10).minW(10).pad(0), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer) })
+      <button type="button" data-color-trigger-btn disabled={disabled() ? true : null} aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} aria-label="Choose color" use:captureInput use:swatch={value() || '#000000'}>
+        style({  box: shrink(0).size(10).minW(10).pad(0), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer)  })
 </button>
       <if {showHexUi()}>
-        <input
-          type="text"
-          flush
-          grow
-          min-w="0"
-
-          name={name()}
-          placeholder="#000000"
-          disabled={disabled()}
-          autocomplete="off"
-          aria-label="Hex color"
-          bind:value={value}
->
-          style({ paint: cursor(pointer), text: fontFamily(mono).textCase(lowercase) })
+        <input type="text" flush name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-label="Hex color" bind:value={value}>
+          style({ box: grow(1).minW(0), paint: cursor(pointer), text: fontFamily(mono).textCase(lowercase) })
         </input>
       </if>
     </row>
@@ -621,9 +562,10 @@ Hex</span>
         aria-label="Choose color"
 
       >
-        style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md), text: fontSize(size-fs) })
-
-        <column gap="3">
+        style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md) })
+        <span>
+          style({ box: display(contents), text: fontSize(size-fs) })
+          <column gap="3">
           <div
             use:swatch={value() || '#000000'}
 
@@ -650,19 +592,9 @@ Hex</span>
               <label for={hueId()}>
                 style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })
 H</label>
-              <input
-                id={hueId()}
-                type="range"
-                min="0"
-                max="360"
-                step="1"
-                bind:value={hueText}
-                data-axis="h"
-                use:rangeFill
-                grow
-                min-w="0"
-                aria-label="Hue"
-              />
+              <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue">
+  style({ box: grow(1).minW(0) })
+</input>
               <span>
                 style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })
 {hue()}°</span>
@@ -671,19 +603,9 @@ H</label>
               <label for={satId()}>
                 style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })
 S</label>
-              <input
-                id={satId()}
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                bind:value={satText}
-                data-axis="s"
-                use:rangeFill
-                grow
-                min-w="0"
-                aria-label="Saturation"
-              />
+              <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation">
+  style({ box: grow(1).minW(0) })
+</input>
               <span>
                 style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })
 {sat()}%</span>
@@ -692,19 +614,9 @@ S</label>
               <label for={lightId()}>
                 style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })
 L</label>
-              <input
-                id={lightId()}
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                bind:value={lightText}
-                data-axis="l"
-                use:rangeFill
-                grow
-                min-w="0"
-                aria-label="Lightness"
-              />
+              <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness">
+  style({ box: grow(1).minW(0) })
+</input>
               <span>
                 style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })
 {light()}%</span>
@@ -715,21 +627,14 @@ L</label>
               <span>
                 style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Hex</span>
-              <input
-                type="text"
-                bind:value={hexDraft}
-                spellcheck="false"
-                autocomplete="off"
-                aria-label="Hex color"
-                grow min-w="0"
-
->
-                style({ text: fontFamily(mono).textCase(lowercase).fontSize(xs) })
+              <input type="text" bind:value={hexDraft} spellcheck="false" autocomplete="off" aria-label="Hex color">
+                style({ box: grow(1).minW(0), text: fontFamily(mono).textCase(lowercase).fontSize(xs) })
               </input>
             </row>
           </if>
         </column>
-      </div>
+        </span>
+</div>
     </if>
   </column>
 </if>

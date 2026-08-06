@@ -80,8 +80,8 @@
       }),
     ])
 
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" shrink="0">
-      style(triggerIcon)
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true">
+      style([ style(triggerIcon), style({ box: shrink(0) }) ])
 
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
@@ -107,14 +107,14 @@
       }),
     ])
 
-    <span data-mode-icon="light" hidden="true" shrink="0">
-      style(glyph)
+    <span data-mode-icon="light" hidden="true">
+      style([ style(glyph), style({ box: shrink(0) }) ])
 ☀</span>
-    <span data-mode-icon="dark" hidden hidden="true" shrink="0">
-      style(glyph)
+    <span data-mode-icon="dark" hidden hidden="true">
+      style([ style(glyph), style({ box: shrink(0) }) ])
 ☾</span>
-    <span data-mode-icon="system" hidden hidden="true" shrink="0">
-      style(glyph)
+    <span data-mode-icon="system" hidden hidden="true">
+      style([ style(glyph), style({ box: shrink(0) }) ])
 ◐</span>
   </button>
 
@@ -129,34 +129,36 @@
   >
     style([
       panel,
-      when({
-        group-inline: style({ box: position(static).w(full).maxW(none).pad(0).overflowX(hidden), paint: shadow(none).bg(transparent).borderWidth(0) }),
-      }),
+      compound({ inline: true }, style({ box: position(static).w(full).maxW(none).pad(0).overflowX(hidden), paint: shadow(none).bg(transparent).borderWidth(0) })),
     ])
 
     <column gap="2" data-picker-header>
       style(header)
 
-      <column gap="1" min-w="0">
+      <column gap="1">
+        style({ box: minW(0) })
+
         <span>
           style(headerEyebrow)
 Active</span>
-        <row align="center" gap="2" nowrap min-w="0">
-          <span data-selected-label grow min-w="0">
-            style(headerTitle)
+        <row align="center" gap="2" nowrap>
+          style({ box: minW(0) })
+
+          <span data-selected-label>
+            style([ style(headerTitle), style({ box: grow(1).minW(0) }) ])
 —</span>
-          <span data-selected-tier shrink="0">
-            style(headerMeta)
+          <span data-selected-tier>
+            style([ style(headerMeta), style({ box: shrink(0) }) ])
 </span>
         </row>
       </column>
 
       <!-- Filter tabs: selected = bold + fill + primary underline (readable on every host theme) -->
-      <row gap="0" role="tablist" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap min-w="0">
-        style(modeSeg)
+      <row gap="0" role="tablist" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap>
+        style([ style(modeSeg), style({ box: minW(0) }) ])
 
-        <button type="button" data-mode="light" role="tab" selected="true" data-active="true" title="Show light themes" grow min-w="0">
-          style([
+        <button type="button" data-mode="light" role="tab" selected="true" data-active="true" title="Show light themes">
+          style([ style({ box: grow(1).minW(0) }), 
           modeSegBtn,
           when({
             hover: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }),
@@ -167,8 +169,8 @@ Active</span>
 
           Light
         </button>
-        <button type="button" data-mode="dark" role="tab" selected="false" title="Show dark themes" grow min-w="0">
-          style([
+        <button type="button" data-mode="dark" role="tab" selected="false" title="Show dark themes">
+          style([ style({ box: grow(1).minW(0) }), 
           modeSegBtn,
           when({
             hover: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }),
@@ -179,8 +181,8 @@ Active</span>
 
           Dark
         </button>
-        <button type="button" data-mode="system" role="tab" selected="false" title="Show dual-mode themes" grow min-w="0">
-          style([
+        <button type="button" data-mode="system" role="tab" selected="false" title="Show dual-mode themes">
+          style([ style({ box: grow(1).minW(0) }), 
           modeSegBtn,
           when({
             hover: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }),
@@ -198,8 +200,8 @@ Active</span>
       style(catalogHead)
 Light themes</span>
 
-    <column gap="2" data-theme-grid min-w="0">
-      style(panelList)
+    <column gap="2" data-theme-grid>
+      style([ style(panelList), style({ box: minW(0) }) ])
 
       <button type="button" role="option" value="sail">
         style([
@@ -214,8 +216,8 @@ Light themes</span>
         }),
       ])
 
-        <column gap="0" min-w="0">
-          style(optionCol)
+        <column gap="0">
+          style([ style(optionCol), style({ box: minW(0) }) ])
 
           <!-- Full-bleed live specimen: heading face + chromatic strips + controls -->
           <column theme="sail" data-mode="light" hidden="true">
@@ -224,36 +226,42 @@ Light themes</span>
             <span>
               style(overlay)
 </span>
-            <column gap="2" justify="between" min-w="0">
-              style(specimen)
+            <column gap="2" justify="between">
+              style([ style(specimen), style({ box: minW(0) }) ])
 
-              <row align="center" gap="2" nowrap min-w="0" w="full">
-                <span data-swatch-title grow min-w="0">
-                  style(title)
+              <row align="center" gap="2" nowrap>
+                style({ box: minW(0).w(full) })
+
+                <span data-swatch-title>
+                  style([ style(title), style({ box: grow(1).minW(0) }) ])
 Sail</span>
-                <span data-selected-check hidden hidden="true" shrink="0">
-                  style(checkMark)
+                <span data-selected-check hidden hidden="true">
+                  style([ style(checkMark), style({ box: shrink(0) }) ])
 ✓</span>
               </row>
               <!-- primary · secondary · accent — equal strips, no surface-matching noise -->
-              <row align="center" gap="1" nowrap min-w="0" w="full" hidden="true">
-                <span grow min-w="0">
-                  style(stripPrimary)
+              <row align="center" gap="1" nowrap hidden="true">
+                style({ box: minW(0).w(full) })
+
+                <span>
+                  style([ style(stripPrimary), style({ box: grow(1).minW(0) }) ])
 </span>
-                <span grow min-w="0">
-                  style(stripSecondary)
+                <span>
+                  style([ style(stripSecondary), style({ box: grow(1).minW(0) }) ])
 </span>
-                <span grow min-w="0">
-                  style(stripAccent)
+                <span>
+                  style([ style(stripAccent), style({ box: grow(1).minW(0) }) ])
 </span>
               </row>
               <!-- Body-face controls: outline + solid (fills the bottom without fake pangrams) -->
-              <row align="center" gap="1" nowrap min-w="0">
-                <row inline nowrap shrink="0">
-                  style(btnGhost)
+              <row align="center" gap="1" nowrap>
+                style({ box: minW(0) })
+
+                <row inline nowrap>
+                  style([ style(btnGhost), style({ box: shrink(0) }) ])
 Cancel</row>
-                <row inline nowrap shrink="0">
-                  style(btnSolid)
+                <row inline nowrap>
+                  style([ style(btnSolid), style({ box: shrink(0) }) ])
 Continue</row>
               </row>
             </column>

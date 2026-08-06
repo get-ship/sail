@@ -269,7 +269,7 @@ export default controller(({ value, layout }: Scope) => {
           on:pointerdown={portPointerDown}
 
         >
-          style({ box: position(absolute).w(3).h(3), paint: radius(full).bg(background).borderWidth(1).border(primary).cursor(crosshair) }).when(stateLeft, { box: left(bind(portLeft)).top(bind(portTop)) }).when(stateRight, { box: right(bind(portRight)).top(bind(portTop)) }).when(stateTop, { box: top(bind(portTop)).left(bind(portLeft)) }).when(stateBottom, { box: bottom(bind(portBottom)).left(bind(portLeft)) })
+          style({ box: position(absolute).w(3).h(3).left(bind(portLeft)).right(bind(portRight)).top(bind(portTop)).bottom(bind(portBottom)), paint: radius(full).bg(background).borderWidth(1).border(primary).cursor(crosshair) })
 </span>
       </for>
     </div>

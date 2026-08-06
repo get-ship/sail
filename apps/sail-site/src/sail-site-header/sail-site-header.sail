@@ -130,11 +130,13 @@ export default controller((ctx) => {
 </scope>
 
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
-<column gap="0" w="full">
-  style(shell)
+<column gap="0">
+  style([ style(shell), style({ box: w(full) }) ])
 
   <navbar sticky bordered use:chromeOffset>
-    <a slot="brand" href="/" label="SHIP UI home" shrink="0">
+    <a slot="brand" href="/" label="SHIP UI home">
+      style({ box: shrink(0) })
+
       <row gap="2" align="center" nowrap>
         <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
           <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
@@ -151,20 +153,20 @@ SHIP</b> UI</strong>
       </row>
     </a>
 
-    <row slot="center" gap="1" align="center" nowrap min-w="0" label="Products">
-      style(productSwitch)
+    <row slot="center" gap="1" align="center" nowrap label="Products">
+      style([ style(productSwitch), style({ box: minW(0) }) ])
 
-      <a href="/sail/overview" shrink="0" current={product() === 'sail' ? 'page' : null}>
-        style(productLink)
+      <a href="/sail/overview" current={product() === 'sail' ? 'page' : null}>
+        style([ style(productLink), style({ box: shrink(0) }) ])
 Sail</a>
-      <a href="/deck" shrink="0" current={product() === 'deck' ? 'page' : null}>
-        style(productLink)
+      <a href="/deck" current={product() === 'deck' ? 'page' : null}>
+        style([ style(productLink), style({ box: shrink(0) }) ])
 Deck</a>
-      <a href="/components" shrink="0" current={product() === 'components' ? 'page' : null}>
-        style(productLink)
+      <a href="/components" current={product() === 'components' ? 'page' : null}>
+        style([ style(productLink), style({ box: shrink(0) }) ])
 Components</a>
-      <a href="/ai" shrink="0" current={product() === 'ai' ? 'page' : null}>
-        style(productLink)
+      <a href="/ai" current={product() === 'ai' ? 'page' : null}>
+        style([ style(productLink), style({ box: shrink(0) }) ])
 AI</a>
     </row>
 
@@ -172,14 +174,14 @@ AI</a>
   </navbar>
 
   <if {landing()}>
-    <main grow min-w="0" w="full">
-      style(landingMain)
+    <main>
+      style([ style(landingMain), style({ box: grow(1).minW(0).w(full) }) ])
 
       <slot name="route"></slot>
     </main>
   <else>
-    <main grow min-w="0" w="full">
-      style(appMain)
+    <main>
+      style([ style(appMain), style({ box: grow(1).minW(0).w(full) }) ])
 
       <slot name="route"></slot>
     </main>

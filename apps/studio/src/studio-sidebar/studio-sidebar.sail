@@ -13,22 +13,12 @@
   }
 </scope>
 
-<column
-  studio-sidebar
-  shrink="0"
-  gap="0"
-
->
-  style({ box: w(64).minW(64).minH(0).h(full).overflow(hidden), paint: borderRWidth(1).borderR(border).bg(surface-1) })
+<column studio-sidebar gap="0">
+  style({  box: shrink(0).w(64).minW(64).minH(0).h(full).overflow(hidden), paint: borderRWidth(1).borderR(border).bg(surface-1)  })
 
   <slot name="header">
-    <row
-      studio-sidebar-header
-      align="center"
-      shrink="0"
-
-    >
-      style({ box: h(8).minH(8).padX(3), paint: borderBWidth(1).borderB(border-subtle) })
+    <row studio-sidebar-header align="center">
+      style({  box: shrink(0).h(8).minH(8).padX(3), paint: borderBWidth(1).borderB(border-subtle)  })
 
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
@@ -38,14 +28,8 @@
     </row>
   </slot>
   <slot name="toolbar"></slot>
-  <column
-    studio-sidebar-body
-    grow
-    gap="0"
-    min-w="0"
-
-  >
-    style({ box: minH(0).h(full).basis(0).overflow(hidden) })
+  <column studio-sidebar-body gap="0">
+    style({  box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden)  })
 
     <slot></slot>
   </column>

@@ -338,9 +338,10 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
 
 </controller>
 <div>
-  style({ box: position(relative).w(full).h(full), text: fontFamily(body) })
-
-  <slot></slot>
+  style({ box: position(relative).w(full).h(full) })
+  <span>
+    style({ box: display(contents), text: fontFamily(body) })
+    <slot></slot>
   <div use:overlayAction data-state={captureState()}>
     style({ box: position(absolute).top(0).right(0).bottom(0).left(0), paint: z(dropdown).pointerEvents(none) }).when(stateCapture, { paint: pointerEvents(auto) })
 
@@ -386,4 +387,5 @@ Send</button>
       </column>
     </if>
   </div>
+  </span>
 </div>

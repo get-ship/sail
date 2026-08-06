@@ -1,13 +1,12 @@
-//! `sail-participation-style` — flex/grid **participation** is spelled with
-//! layout attrs (`grow` / `shrink` / `w` / `min-w` / `max-w`), not Style setters.
+//! `sail-participation-style` — flex/grid **participation** is spelled on the
+//! **box channel** (`style({ box: grow(1).minW(0) })`), not bare attrs.
 //!
-//! `style.grow(…)` and `style.shrink(…)` (including mid-chain `.grow(1)`) still
-//! compile — they lower to the same atomic classes as the attrs — but product
-//! code must use the attrs so there is one spelling for participation. Paint
-//! (pad, color, type, chrome) and intrinsic size stay on Style; when a chain
-//! mixed grow+paint, split: attrs for participation, `style={…}` for paint only.
+//! Bare `grow` / `shrink` / `w` / `min-w` / `max-w` on open tags are refused
+//! with a pointer to the box channel. Layout-keyword **axis** attrs
+//! (`gap` / `align` / `justify` on row|column|grid|…) stay structural sugar
+//! (Phase 4–5 — not this rule).
 //!
-//! Severity `Error` — the dual path is closed for product after the cutover.
+//! Severity `Error` — dual path closed for product after the codemod.
 
 use std::path::Path;
 
@@ -15,8 +14,14 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-participation-style";
 
-/// Style method names that are layout participation, not paint.
-const SETTERS: &[(&str, &str)] = &[("grow", "grow"), ("shrink", "shrink")];
+/// Bare participation attr names (author surface — refused).
+const ATTRS: &[(&str, &str)] = &[
+    ("grow", "grow"),
+    ("shrink", "shrink"),
+    ("w", "w"),
+    ("min-w", "minW"),
+    ("max-w", "maxW"),
+];
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let bytes = source.as_bytes();
@@ -32,31 +37,36 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 None => break,
             }
         }
-        // Mid-chain or leading: `.grow(` / `.shrink(` — the Style product API.
-        if bytes[i] == b'.' {
-            if let Some(&(method, attr)) = SETTERS.iter().find(|&&(m, _)| {
-                source[i + 1..].starts_with(m) && bytes.get(i + 1 + m.len()) == Some(&b'(')
-            }) {
-                let (line, col) = offset_to_line_col(source, i);
-                findings.push(Finding {
-                    file: path.to_path_buf(),
-                    line,
-                    col,
-                    rule: RULE_ID,
-                    severity: Severity::Error,
-                    message: format!(
-                        "style.{method}(…) is layout participation — use the `{attr}` attr \
-                         (boolean `{attr}` = 1, `{attr}=\"0\"` / `{attr}=\"1\"` for an explicit value)"
-                    ),
-                    suggest: Some(format!(
-                        "Move participation off Style: put `{attr}` / `{attr}=\"0\"|\"1\"` on the \
-                         element (and `min-w=\"0\"` / `w=\"full\"` when those were only for flex \
-                         fill). Keep `style={{…}}` for paint and intrinsic size only."
-                    )),
-                });
-                i += 1 + method.len();
-                continue;
+        // Skip style/script/controller/scope bodies — attrs only on tags.
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_alphabetic() {
+            let tag_start = i + 1;
+            let mut tag_end = tag_start;
+            while tag_end < bytes.len()
+                && (bytes[tag_end].is_ascii_alphanumeric()
+                    || bytes[tag_end] == b'-'
+                    || bytes[tag_end] == b'_'
+                    || bytes[tag_end] == b':')
+            {
+                tag_end += 1;
             }
+            let mut k = tag_end;
+            let mut quote: Option<u8> = None;
+            let attr_region_start = k;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k > attr_region_start {
+                let region = &source[attr_region_start..k];
+                scan_attrs(path, source, attr_region_start, region, &mut findings);
+            }
+            i = k.min(bytes.len().saturating_sub(1)).saturating_add(1);
+            continue;
         }
         i += 1;
         while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
@@ -64,6 +74,115 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         }
     }
     findings
+}
+
+fn scan_attrs(
+    path: &Path,
+    source: &str,
+    region_abs: usize,
+    region: &str,
+    findings: &mut Vec<Finding>,
+) {
+    let bytes = region.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        // skip whitespace
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i >= bytes.len() {
+            break;
+        }
+        // attr name
+        let name_start = i;
+        while i < bytes.len()
+            && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-' || bytes[i] == b'_' || bytes[i] == b':')
+        {
+            i += 1;
+        }
+        if i == name_start {
+            i += 1;
+            continue;
+        }
+        let name = &region[name_start..i];
+        // value?
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        let mut value = "";
+        if i < bytes.len() && bytes[i] == b'=' {
+            i += 1;
+            while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            if i < bytes.len() && (bytes[i] == b'"' || bytes[i] == b'\'') {
+                let q = bytes[i];
+                i += 1;
+                let vs = i;
+                while i < bytes.len() && bytes[i] != q {
+                    i += 1;
+                }
+                value = &region[vs..i];
+                if i < bytes.len() {
+                    i += 1;
+                }
+            } else if i < bytes.len() && bytes[i] == b'{' {
+                let vs = i;
+                let mut d = 0i32;
+                while i < bytes.len() {
+                    if bytes[i] == b'{' {
+                        d += 1;
+                    } else if bytes[i] == b'}' {
+                        d -= 1;
+                        if d == 0 {
+                            i += 1;
+                            break;
+                        }
+                    }
+                    i += 1;
+                }
+                value = &region[vs..i];
+            } else {
+                let vs = i;
+                while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' && bytes[i] != b'/'
+                {
+                    i += 1;
+                }
+                value = &region[vs..i];
+            }
+        }
+        if let Some(&(attr, setter)) = ATTRS.iter().find(|&&(a, _)| a == name) {
+            let abs = region_abs + name_start;
+            let (line, col) = offset_to_line_col(source, abs);
+            let example = match (attr, value) {
+                ("grow", "") | ("grow", "1") | ("grow", "true") => "style({ box: grow(1) })".into(),
+                ("grow", v) => format!("style({{ box: grow({v}) }})"),
+                ("shrink", "") | ("shrink", "1") | ("shrink", "true") => {
+                    "style({ box: shrink(1) })".into()
+                }
+                ("shrink", v) => format!("style({{ box: shrink({v}) }})"),
+                ("w", v) if !v.is_empty() => format!("style({{ box: w({v}) }})"),
+                ("min-w", v) if !v.is_empty() => format!("style({{ box: minW({v}) }})"),
+                ("max-w", v) if !v.is_empty() => format!("style({{ box: maxW({v}) }})"),
+                _ => format!("style({{ box: {setter}(…) }})"),
+            };
+            findings.push(Finding {
+                file: path.to_path_buf(),
+                line,
+                col,
+                rule: RULE_ID,
+                severity: Severity::Error,
+                message: format!(
+                    "bare `{attr}` is layout participation — use the box channel: {example}"
+                ),
+                suggest: Some(format!(
+                    "Move participation onto Style: attach `{example}` as a block statement \
+                     (merge into an existing `style({{ box: … }})` when present). Layout-keyword \
+                     axis attrs `gap` / `align` / `justify` stay on row|column|grid."
+                )),
+            });
+        }
+    }
 }
 
 fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
@@ -92,35 +211,41 @@ mod tests {
     }
 
     #[test]
-    fn flags_style_grow_and_shrink() {
-        let f = run(r#"<div style={style.grow(1)}>x</div>"#);
-        assert_eq!(f.len(), 1);
-        assert_eq!(f[0].rule, RULE_ID);
-        assert_eq!(f[0].severity, Severity::Error);
-        assert!(f[0].message.contains("grow"));
-
-        let f = run(r#"const x = style.shrink(0).m(0)"#);
-        assert_eq!(f.len(), 1);
-        assert!(f[0].message.contains("shrink"));
+    fn flags_bare_grow_and_shrink_attrs() {
+        let f = run(r#"<div grow min-w="0">x</div>"#);
+        assert!(f.iter().any(|x| x.message.contains("grow")), "{f:?}");
+        assert!(f.iter().any(|x| x.message.contains("min-w")), "{f:?}");
+        assert!(f.iter().all(|x| x.rule == RULE_ID));
     }
 
     #[test]
-    fn flags_mid_chain_grow() {
-        let f = run(r#"<div style={style.pad(2).grow(1).bg(card)}>x</div>"#);
-        assert_eq!(f.len(), 1);
-        assert!(f[0].message.contains("grow"));
+    fn flags_w_full_attr() {
+        let f = run(r#"<row w="full" gap="2">x</row>"#);
+        assert!(f.iter().any(|x| x.message.contains("`w`")), "{f:?}");
+        // gap is axis sugar — not participation
+        assert!(!f.iter().any(|x| x.message.contains("gap")), "{f:?}");
     }
 
     #[test]
-    fn allows_participation_attrs_and_paint_style() {
-        assert!(run(r#"<div grow min-w="0" style={style.truncate()}>x</div>"#).is_empty());
-        assert!(run(r#"<row grow="0" style={style.pad(2)}>x</row>"#).is_empty());
-        // Intrinsic width (icon box) stays on Style — not grow/shrink.
-        assert!(run(r#"<span style={style.w(9).h(9)}>x</span>"#).is_empty());
+    fn allows_box_channel_grow_and_paint() {
+        assert!(run(
+            r#"<div>
+  style({ box: grow(1).minW(0), paint: bg(card) })
+  x
+</div>"#
+        )
+        .is_empty());
+        assert!(run(
+            r#"<row gap="2" align="center">
+  style({ box: grow(1).w(full) })
+  x
+</row>"#
+        )
+        .is_empty());
     }
 
     #[test]
     fn skips_html_comments() {
-        assert!(run(r#"<!-- style.grow(1) --> <div grow>x</div>"#).is_empty());
+        assert!(run(r#"<!-- grow min-w="0" --> <div>x</div>"#).is_empty());
     }
 }

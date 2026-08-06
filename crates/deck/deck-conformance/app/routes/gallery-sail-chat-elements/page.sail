@@ -61,9 +61,10 @@ export default controller(() => ({
 </controller>
 
 <column gap="8">
-  style({ box: maxW(breakpoint-tablet).mx(auto).pad(6), paint: fg(foreground), text: fontFamily(body) })
-
-  <header>
+  style({ box: maxW(breakpoint-tablet).mx(auto).pad(6), paint: fg(foreground) })
+  <span>
+    style({ box: display(contents), text: fontFamily(body) })
+    <header>
     <h1>
       style({ box: mb(2), text: fontSize(3xl).fontWeight(bold) })
 sail/chat-elements</h1>
@@ -481,4 +482,5 @@ open=true — body expanded on load</h3>
       </column>
     </column>
   </section>
+  </span>
 </column>

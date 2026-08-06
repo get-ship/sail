@@ -121,25 +121,25 @@ export default controller((ctx) => {
 
 <if {workbench()}>
  <!-- Full-bleed workbench: no docs rail, fill the viewport shell. -->
- <row nowrap align="stretch" w="full" grow min-w="0" gap="0">
-   style(shell)
+ <row nowrap align="stretch" gap="0">
+   style([ style(shell), style({ box: w(full).grow(1).minW(0) }) ])
 
- <column grow min-w="0" gap="0">
-   style(contentCol)
+ <column gap="0">
+   style([ style(contentCol), style({ box: grow(1).minW(0) }) ])
 
- <main grow min-w="0" w="full">
-   style(mainWorkbench)
+ <main>
+   style([ style(mainWorkbench), style({ box: grow(1).minW(0).w(full) }) ])
 
  <slot name="route"></slot>
  </main>
  </column>
  </row>
 <else>
- <row nowrap align="stretch" w="full" grow min-w="0" gap="0">
-   style(shell)
+ <row nowrap align="stretch" gap="0">
+   style([ style(shell), style({ box: w(full).grow(1).minW(0) }) ])
 
- <nav shrink="0" label="Sail docs">
-   style(rail)
+ <nav label="Sail docs">
+   style([ style(rail), style({ box: shrink(0) }) ])
 
  <p>
    style(railLabel)
@@ -224,8 +224,8 @@ Reference</p>
 API reference</a>
  </nav>
 
- <column grow min-w="0" gap="0">
-   style(contentCol)
+ <column gap="0">
+   style([ style(contentCol), style({ box: grow(1).minW(0) }) ])
 
  <div>
    style(mobileBar)
@@ -235,8 +235,8 @@ API reference</a>
    style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 Sail docs</small>
  </div>
- <main grow min-w="0">
-   style(mainDocs)
+ <main>
+   style([ style(mainDocs), style({ box: grow(1).minW(0) }) ])
 
  <slot name="route"></slot>
  </main>
@@ -253,7 +253,9 @@ Sail docs</small>
  on:sail-close={closeNav}
 >
  <header>
-  <row align="center" justify="between" gap="2" w="full">
+  <row align="center" justify="between" gap="2">
+    style({ box: w(full) })
+
    <strong>
      style({ text: fontSize(sm) })
 Sail docs</strong>

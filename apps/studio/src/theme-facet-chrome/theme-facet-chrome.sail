@@ -112,22 +112,14 @@ export default controller(() => {
 })
 </controller>
 
-<column theme-facet-chrome-root shrink="0" gap="0">
-  style({ box: minW(0) })
+<column theme-facet-chrome-root gap="0">
+  style({  box: shrink(0).minW(0)  })
 
-  <row
-    theme-facet-chrome
-    align="center"
-    justify="between"
-    gap="3"
-    shrink="0"
-    nowrap
+  <row theme-facet-chrome align="center" justify="between" gap="3" nowrap>
+    style({  box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background)  })
 
-  >
-    style({ box: padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background) })
-
-    <row align="center" gap="2" grow min-w="0" nowrap>
-      style({ box: minW(0) })
+    <row align="center" gap="2" nowrap>
+      style({  box: grow(1).minW(0).minW(0)  })
 
       <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes
@@ -168,59 +160,44 @@ export default controller(() => {
       <dropdown id={pathMenuId()} placement="bottom-start" on:sail-menu-select={onPathSelect}>
         <for {pathNav()} as="item" key={item.key}>
           <menu-item value={item.value}>
-            <icon name={item.icon} size="sm" shrink="0"></icon>
+            <icon name={item.icon} size="sm">
+              style({ box: shrink(0) })
+</icon>
             {item.label}
           </menu-item>
         </for>
       </dropdown>
       <if {showStateChip()}>
-        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill shrink="0">
+        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill>
+          style({ box: shrink(0) })
+
           {stateChipLabel()}
         </badge>
       </if>
     </row>
 
     <!-- Edit cluster (save / unsaved / undo) — separate from mode switch on the right. -->
-    <row align="center" gap="3" shrink="0" nowrap>
-      <row edit-cluster align="center" gap="1" shrink="0" nowrap>
-        <button
-          type="button"
-          size="sm"
-          variant="ghost"
-          tone="muted"
-          facet-undo
-          label="Undo"
-          disabled={!canUndo()}
-          on:click={onUndo}
-          shrink="0"
-        >
+    <row align="center" gap="3" nowrap>
+      style({ box: shrink(0) })
+
+      <row edit-cluster align="center" gap="1" nowrap>
+        style({ box: shrink(0) })
+
+        <button type="button" size="sm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo}>
+          style({ box: shrink(0) })
+
           <icon name="undo-2" size="sm"></icon>
         </button>
-        <button
-          type="button"
-          size="sm"
-          variant="ghost"
-          tone="muted"
-          facet-redo
-          label="Redo"
-          disabled={!canRedo()}
-          on:click={onRedo}
-          shrink="0"
-        >
+        <button type="button" size="sm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo}>
+          style({ box: shrink(0) })
+
           <icon name="redo-2" size="sm"></icon>
         </button>
         <!-- Dropdown always mounted (not inside isDirty) so use:anchor can bind to the trigger. -->
         <if {isDirty()}>
-          <button
-            type="button"
-            size="sm"
-            variant="soft"
-            tone="primary"
-            shrink="0"
-            unsaved-trigger
-            popovertarget={diffMenuId()}
-            label="Unsaved changes"
-          >
+          <button type="button" size="sm" variant="soft" tone="primary" unsaved-trigger popovertarget={diffMenuId()} label="Unsaved changes">
+            style({ box: shrink(0) })
+
             Unsaved
             <icon name="chevron-down" size="sm"></icon>
           </button>
@@ -263,12 +240,16 @@ Edits pending — save to write theme JSON.</p>
           </column>
         </dropdown>
         <if {canEdit()}>
-          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave} shrink="0">
+          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave}>
+            style({ box: shrink(0) })
+
             {saveButtonLabel()}
           </button>
         </if>
         <if {isCatalog()}>
-          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject} shrink="0">
+          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject}>
+            style({ box: shrink(0) })
+
             Add to project
           </button>
         </if>
@@ -278,11 +259,15 @@ Edits pending — save to write theme JSON.</p>
         style({ box: w(half).h(5).minW(half), paint: bg(border-subtle) })
 </stack>
 
-      <row mode-cluster align="center" gap="2" shrink="0" nowrap>
+      <row mode-cluster align="center" gap="2" nowrap>
+        style({ box: shrink(0) })
+
         <if {canToggleMode()}>
-          <row dual-mode gap="2" align="center" nowrap shrink="0" label="Theme mode">
-            <icon name="sun" size="sm" label="Light" shrink="0">
-              style({ paint: fg(muted-foreground) })
+          <row dual-mode gap="2" align="center" nowrap label="Theme mode">
+            style({ box: shrink(0) })
+
+            <icon name="sun" size="sm" label="Light">
+              style({ box: shrink(0), paint: fg(muted-foreground) })
 </icon>
             <switch
               size="sm"
@@ -292,13 +277,15 @@ Edits pending — save to write theme JSON.</p>
               label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
               on:change={onModeSwitch}
             ></switch>
-            <icon name="moon" size="sm" label="Dark" shrink="0">
-              style({ paint: fg(muted-foreground) })
+            <icon name="moon" size="sm" label="Dark">
+              style({ box: shrink(0), paint: fg(muted-foreground) })
 </icon>
           </row>
         </if>
         <if {showAddMode()}>
-          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode} shrink="0">
+          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode}>
+            style({ box: shrink(0) })
+
             {addModeLabel()}
           </button>
         </if>

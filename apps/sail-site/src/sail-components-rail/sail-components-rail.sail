@@ -8,26 +8,11 @@
 -->
 
 <!-- Fill site-header appMain; independent catalog scrollport. -->
-<row
-  nowrap
-  align="stretch"
-  w="full"
-  grow
-  min-w="0"
-  gap="0"
-  components-shell
+<row nowrap align="stretch" gap="0" components-shell>
+  style({  box: w(full).grow(1).minW(0).minH(0).h(full).minW(0).overflow(hidden)  })
 
->
-  style({ box: minH(0).h(full).minW(0).overflow(hidden) })
-
-  <main
-    grow
-    min-w="0"
-    w="full"
-    components-scroll
-
-  >
-    style({ box: basis(0).minH(0).minW(0).h(full).overflowY(auto).overflowX(hidden) })
+  <main components-scroll>
+    style({  box: grow(1).minW(0).w(full).basis(0).minH(0).minW(0).h(full).overflowY(auto).overflowX(hidden)  })
 
     <slot name="route"></slot>
   </main>

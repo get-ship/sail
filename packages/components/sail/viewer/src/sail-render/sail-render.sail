@@ -290,9 +290,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
   <column gap="2">
-    style({ box: position(relative).minH(8), paint: fg(foreground), text: fontFamily(body) })
-
-    <if {compiling()}>
+    style({ box: position(relative).minH(8), paint: fg(foreground) })
+    <span>
+      style({ box: display(contents), text: fontFamily(body) })
+      <if {compiling()}>
       <row align="center" justify="center">
         style({ box: pad(4) })
 
@@ -307,8 +308,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
           style({ box: overflow(hidden), paint: bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md) })
 
           <header>
-            style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted), text: fontSize(xs).fontWeight(medium).tracking(wide) })
-TEXT</header>
+            style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted) })
+            <span>
+              style({ box: display(contents), text: fontSize(xs).fontWeight(medium).tracking(wide) })
+              TEXT
+            </span>
+</header>
           <separator>
             style({ box: m(0) })
 </separator>
@@ -326,8 +331,12 @@ TEXT</header>
           style({ box: overflow(hidden), paint: bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md) })
 
           <header>
-            style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted), text: fontSize(xs).fontWeight(medium).tracking(wide) })
-TEXT</header>
+            style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted) })
+            <span>
+              style({ box: display(contents), text: fontSize(xs).fontWeight(medium).tracking(wide) })
+              TEXT
+            </span>
+</header>
           <separator>
             style({ box: m(0) })
 </separator>
@@ -341,5 +350,6 @@ TEXT</header>
     <div use:captureStage use:maxWidth={stageMaxWidth()}>
       style({ box: w(full).ml(auto).mr(auto).maxW(bind(maxW)) })
 </div>
-  </column>
+    </span>
+</column>
 </error-boundary>

@@ -19,13 +19,8 @@ export default controller(() => {
 </controller>
 
 <studio-sidebar edit-explorer title="Explorer">
-  <column
-    slot="toolbar"
-    shrink="0"
-    gap="2"
-
-  >
-    style({ box: pad(2), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
+  <column slot="toolbar" gap="2">
+    style({  box: shrink(0).pad(2), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
 
     <input
       type="search"
@@ -53,23 +48,12 @@ export default controller(() => {
     </row>
   </column>
 
-  <column
-    file-tree
-    grow
-    gap="0"
-
-  >
-    style({ box: minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden), paint: bg(surface-0) })
+  <column file-tree gap="0">
+    style({  box: grow(1).minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden), paint: bg(surface-0)  })
 
     <if {!hasTree()}>
-      <empty-state
-        variant="placeholder"
-        size="sm"
-        w="full"
-        files-empty
-
-      >
-        style({ box: pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
+      <empty-state variant="placeholder" size="sm" files-empty>
+        style({  box: w(full).pad(3), paint: borderWidth(1).border(border-subtle).radius(md)  })
 
         <strong slot="title">No files</strong>
         Open a project to list sources.

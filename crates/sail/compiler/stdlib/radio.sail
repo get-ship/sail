@@ -17,7 +17,7 @@
 <label>
   style(host)
 
-  <input type="radio" shrink="0">
-    style(input)
+  <input type="radio">
+    style([ style(input), style({ box: shrink(0) }) ])
   </input><span><slot></slot></span>
 </label>

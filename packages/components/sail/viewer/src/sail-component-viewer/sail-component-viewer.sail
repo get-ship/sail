@@ -102,7 +102,9 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
   })
 </controller>
 
-<column gap="4" w="full">
+<column gap="4">
+  style({ box: w(full) })
+
   <row gap="3" align="center">
     <h2>
       style({ text: fontFamily(mono).tracking(tight) })
@@ -142,8 +144,8 @@ live</span>
       </row>
     </row>
 
-    <center data-stage grow>
-      style({ box: pad(6).minH(9) })
+    <center data-stage>
+      style({  box: grow(1).pad(6).minH(9)  })
 
       <slot name="stage"></slot>
     </center>
@@ -170,8 +172,8 @@ Props</p>
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
-              <span grow>
-                style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
+              <span>
+                style({ box: grow(1), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {r.type}</span>
             </row>
             <if {r.desc !== ''}>

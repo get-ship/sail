@@ -358,12 +358,20 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 {n.kind}</span>
             </row>
             <div>
-              style({ paint: fg(foreground), text: fontWeight(semibold) })
-{n.title}</div>
+              style({ paint: fg(foreground) })
+              <span>
+                style({ box: display(contents), text: fontWeight(semibold) })
+                {n.title}
+              </span>
+</div>
             <if {n.sub !== ''}>
               <div>
-                style({ paint: fg(muted-foreground), text: fontSize(xs) })
-{n.sub}</div>
+                style({ paint: fg(muted-foreground) })
+                <span>
+                  style({ box: display(contents), text: fontSize(xs) })
+                  {n.sub}
+                </span>
+</div>
             </if>
           </else></if>
         </column>

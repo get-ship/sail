@@ -45,7 +45,7 @@
     selected: style({ paint: fg(tab-selected-foreground).bg(tab-selected).shadow(xs).borderB(transparent) }),
   })),
   compound({ variant: enclosed }, when({
-    selected: style({ box: mb(-px), paint: fg(tab-selected-foreground).border(border).bg(tab-selected) }),
+    selected: style({ paint: fg(tab-selected-foreground).border(border).bg(tab-selected).translateY(px) }),
   })),
 ])
 

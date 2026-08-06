@@ -153,8 +153,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const catRow = style({ box: overflowX(auto).maxW(full) })
 </scope>
 
-<column gap="5" w="full" min-w="0">
-  style(page)
+<column gap="5">
+  style([ style(page), style({ box: w(full).minW(0) }) ])
 
   <column gap="1">
     <p>
@@ -171,7 +171,9 @@ Catalog</h1>
     </p>
   </column>
 
-  <column gap="2" w="full" min-w="0">
+  <column gap="2">
+    style({ box: w(full).minW(0) })
+
     <p>
       style(eyebrow)
 Packs</p>
@@ -179,8 +181,8 @@ Packs</p>
       style(packStack)
 
       <for {packs()} as="p" key={p.id}>
-        <button shrink="0" on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'}>
-          style(packBtn)
+        <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'}>
+          style([ style(packBtn), style({ box: shrink(0) }) ])
 
           <row gap="2" align="center">
             style(tileMeta)
@@ -202,7 +204,9 @@ Packs</p>
     </p>
   </column>
 
-  <column gap="4" w="full" min-w="0">
+  <column gap="4">
+    style({ box: w(full).minW(0) })
+
     <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
         <if {countLabel()}>
@@ -233,8 +237,8 @@ Packs</p>
             <column gap="0">
               style(tileCol)
 
-              <row align="center" justify="center" grow w="full">
-                style(preview)
+              <row align="center" justify="center">
+                style([ style(preview), style({ box: grow(1).w(full) }) ])
 
                 <if {!e.live}>
                   <p>
@@ -247,21 +251,27 @@ Select pack in the rail to mount</p>
                     <button variant="ghost" tone="destructive" size="sm">Delete</button>
                   </row>
                 </else-if><else-if {e.tag === 'input'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <label>
                       style(fieldLabel)
 Work email</label>
                     <input type="email" placeholder="you@company.com" bind:value={email} />
                   </column>
                 </else-if><else-if {e.tag === 'textarea'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <label>
                       style(fieldLabel)
 Release notes</label>
                     <textarea placeholder="What changed in this ship?" rows="2"></textarea>
                   </column>
                 </else-if><else-if {e.tag === 'select'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <label>
                       style(fieldLabel)
 Team</label>
@@ -272,7 +282,9 @@ Team</label>
                     </select>
                   </column>
                 </else-if><else-if {e.tag === 'combobox'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <label>
                       style(fieldLabel)
 Framework</label>
@@ -315,7 +327,9 @@ Framework</label>
 {notify() ? 'Notifications on' : 'Notifications off'}</p>
                   </row>
                 </else-if><else-if {e.tag === 'slider'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <row justify="between" align="center">
                       <span>
                         style(fieldLabel)
@@ -324,7 +338,9 @@ Volume</span>
                         style(cat)
 {volume()}%</span>
                     </row>
-                    <slider bind:value={volume} tone="primary" w="full"></slider>
+                    <slider bind:value={volume} tone="primary">
+                      style({ box: w(full) })
+</slider>
                   </column>
                 </else-if><else-if {e.tag === 'toggle-group'}>
                   <toggle-group value="day" label="Range">
@@ -333,7 +349,9 @@ Volume</span>
                     <toggle value="month">Month</toggle>
                   </toggle-group>
                 </else-if><else-if {e.tag === 'field'}>
-                  <field w="full">
+                  <field>
+                    style({ box: w(full) })
+
                     <label slot="label">Email</label>
                     <input type="email" placeholder="you@ship.dev" />
                     <span slot="hint">
@@ -358,8 +376,8 @@ We'll never share this.</span>
                     </column>
                   </fieldset>
                 </else-if><else-if {e.tag === 'dropzone'}>
-                  <div dropzone w="full">
-                    style({ box: minH(14).w(full).pad(3) })
+                  <div dropzone>
+                    style({  box: w(full).minH(14).w(full).pad(3)  })
 
                     <p>
                       style({ text: fontSize(sm).fontWeight(medium) })
@@ -381,18 +399,26 @@ tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
                 </else-if><else-if {e.tag === 'alert'}>
                   <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>
                 </else-if><else-if {e.tag === 'progress'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <span>
                       style(mutedXs)
 Uploading assets… 62%</span>
-                    <progress value="0.62" w="full"></progress>
+                    <progress value="0.62">
+                      style({ box: w(full) })
+</progress>
                   </column>
                 </else-if><else-if {e.tag === 'meter'}>
-                  <column gap="1" w="full">
+                  <column gap="1">
+                    style({ box: w(full) })
+
                     <span>
                       style(mutedXs)
 Storage used</span>
-                    <meter value="0.7" min="0" max="1" w="full"></meter>
+                    <meter value="0.7" min="0" max="1">
+                      style({ box: w(full) })
+</meter>
                   </column>
                 </else-if><else-if {e.tag === 'spinner'}>
                   <row gap="2" align="center">
@@ -402,7 +428,9 @@ Storage used</span>
 Syncing…</span>
                   </row>
                 </else-if><else-if {e.tag === 'skeleton'}>
-                  <column gap="2" w="full">
+                  <column gap="2">
+                    style({ box: w(full) })
+
                     <span skeleton size="md">
                       style({ box: w(full).h(3) })
 </span>
@@ -476,11 +504,15 @@ Down</span></row>
                     <icon name="settings"></icon>
                   </row>
                 </else-if><else-if {e.tag === 'separator'}>
-                  <column gap="2" w="full">
+                  <column gap="2">
+                    style({ box: w(full) })
+
                     <p>
                       style(mutedXs)
 Section A</p>
-                    <separator w="full"></separator>
+                    <separator>
+                      style({ box: w(full) })
+</separator>
                     <p>
                       style(mutedXs)
 Section B</p>
@@ -495,14 +527,18 @@ Right</span>
                     </row>
                   </column>
                 </else-if><else-if {e.tag === 'details'}>
-                  <details w="full">
+                  <details>
+                    style({ box: w(full) })
+
                     <summary>Advanced options</summary>
                     <p>
                       style(mutedXs)
 Native disclosure — no JS controller required.</p>
                   </details>
                 </else-if><else-if {e.tag === 'collapsible'}>
-                  <collapsible w="full">
+                  <collapsible>
+                    style({ box: w(full) })
+
                     <span slot="trigger">
                       style({ text: fontSize(sm).fontWeight(semibold) })
 Webhook endpoints</span>
@@ -591,7 +627,9 @@ Right-click this card</p>
                     </dialog>
                   </column>
                 </else-if><else-if {e.tag === 'tabs'}>
-                  <tabs w="full">
+                  <tabs>
+                    style({ box: w(full) })
+
                     <tab-list>
                       <tab>Overview</tab>
                       <tab>Metrics</tab>
@@ -616,7 +654,9 @@ p95 latency 42ms.</p></tab-panel>
                     <page value="3">3</page>
                   </pagination>
                 </else-if><else-if {e.tag === 'navbar'}>
-                  <navbar bordered w="full">
+                  <navbar bordered>
+                    style({ box: w(full) })
+
                     <strong slot="brand">
                       style({ text: fontSize(sm) })
 Harbor</strong>
@@ -628,7 +668,9 @@ Docs</span>
 App</span>
                   </navbar>
                 </else-if><else-if {e.tag === 'table'}>
-                  <table w="full">
+                  <table>
+                    style({ box: w(full) })
+
                     <thead><tr><th>Service</th><th>Status</th></tr></thead>
                     <tbody>
                       <tr><td>api</td><td>healthy</td></tr>
@@ -636,13 +678,23 @@ App</span>
                     </tbody>
                   </table>
                 </else-if><else-if {e.tag === 'layout'}>
-                  <row gap="2" w="full">
-                    <div grow>
-                      style({ box: pad(2), paint: bg(muted).radius(sm), text: fontSize(xs).fontFamily(mono) })
-main</div>
+                  <row gap="2">
+                    style({ box: w(full) })
+
                     <div>
-                      style({ box: pad(2).w(16), paint: bg(muted).radius(sm), text: fontSize(xs).fontFamily(mono) })
-aside</div>
+                      style({  box: grow(1).pad(2), paint: bg(muted).radius(sm)  })
+                      <span>
+                        style({ box: display(contents), text: fontSize(xs).fontFamily(mono) })
+                        main
+                      </span>
+</div>
+                    <div>
+                      style({ box: pad(2).w(16), paint: bg(muted).radius(sm) })
+                      <span>
+                        style({ box: display(contents), text: fontSize(xs).fontFamily(mono) })
+                        aside
+                      </span>
+</div>
                   </row>
                 </else-if><else-if {e.tag === 'scroll-area'}>
                   <scroll-area>
@@ -698,15 +750,17 @@ Build 1837 · shipped · Mon</p>
                 </else-if><else-if {e.tag === 'sail-mermaid'}>
                   <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
                 </else-if><else-if {e.tag === 'sail-message'}>
-                  <column gap="2" w="full">
+                  <column gap="2">
+                    style({ box: w(full) })
+
                     <sail-message role="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
                     <sail-message role="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
                   </column>
                 </else-if><else-if {e.tag === 'sail-citation'}>
                   <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>
                 </else-if><else-if {e.tag === 'sail-composer'}>
-                  <sail-composer placeholder="Message the agent…" w="full">
-                    style({ box: w(full).minW(0) })
+                  <sail-composer placeholder="Message the agent…">
+                    style({  box: w(full).w(full).minW(0)  })
 </sail-composer>
                 </else-if><else-if {e.tag === 'sail-thinking-dots'}>
                   <row gap="2" align="center">
@@ -716,7 +770,9 @@ Build 1837 · shipped · Mon</p>
 Agent is thinking…</span>
                   </row>
                 </else-if><else-if {e.tag === 'sail-tool-call'}>
-                  <sail-tool-call name="list_deploys" status="ok" open w="full">
+                  <sail-tool-call name="list_deploys" status="ok" open>
+                    style({ box: w(full) })
+
                     {toolArgs()}
                     <span slot="result">{toolResult()}</span>
                   </sail-tool-call>
