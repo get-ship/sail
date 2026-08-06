@@ -3266,5 +3266,33 @@
     "z.toast": "z-toast",
     "z.toast-region": "z-toast-region"
   },
-  "aliases": {}
+  "aliases": {},
+  "products": {
+    "layer": "system",
+    "axis": "product",
+    "channel": "brand-hue",
+    "compositionLaw": "theme owns L/C; product owns hue. Every brand token reads oklch(L C var(--brand-hue, <theme's own hue>)). With no product set the theme looks as authored; with one set only the hue moves.",
+    "entries": {
+      "ship": {
+        "hue": 195,
+        "label": "teal — umbrella"
+      },
+      "sail": {
+        "hue": 27,
+        "label": "red — the framework"
+      },
+      "deck": {
+        "hue": 285,
+        "label": "violet — the app framework"
+      },
+      "components": {
+        "hue": 155,
+        "label": "green — the library"
+      },
+      "ai": {
+        "hue": 255,
+        "label": "blue — agent tooling"
+      }
+    }
+  }
 }

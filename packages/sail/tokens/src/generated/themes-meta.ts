@@ -21,13 +21,10 @@ export const THEME_META: readonly ThemeMeta[] = [
   { id: 'contrast', dark: true, modes: ['dark'], defaultMode: 'dark' },
   { id: 'glass', dark: false, modes: ['light'], defaultMode: 'light' },
   { id: 'halo', dark: false, modes: ['light'], defaultMode: 'light' },
-  { id: 'my-theme-s99n', dark: true, modes: ['dark'], defaultMode: 'dark' },
-  { id: 'my-theme-vbtk', dark: false, modes: ['light'], defaultMode: 'light' },
   { id: 'neutral', dark: false, modes: ['light', 'dark'], defaultMode: 'light' },
   { id: 'paper', dark: false, modes: ['light'], defaultMode: 'light' },
   { id: 'sail', dark: false, modes: ['light', 'dark'], defaultMode: 'light' },
   { id: 'ship', dark: false, modes: ['light', 'dark'], defaultMode: 'light' },
-  { id: 'studio', dark: true, modes: ['light', 'dark'], defaultMode: 'dark' },
   { id: 'synthwave', dark: true, modes: ['dark'], defaultMode: 'dark' },
 ] as const
 
