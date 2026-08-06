@@ -27,6 +27,8 @@ pub fn is_ambient_app_path(path: &Path) -> bool {
         || p.contains("/__tests__/")
         || p.contains("/node_modules/")
         || p.contains("/packages/")
+        // Relative paths have no leading slash — `packages/x/src/y.sail`
+        // must not fall through to the /src/ catch-all below.
         || p.starts_with("packages/")
         || p.contains("/crates/")
         || p.starts_with("crates/")
