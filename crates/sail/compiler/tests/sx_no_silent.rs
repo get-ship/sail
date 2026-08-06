@@ -14,7 +14,7 @@ const TYPO_SRC: &str = r#"<scope>
     title = ''
   }
 </scope>
-<div> style.bg(surfce-2) {title()}</div>"#;
+<div> style({ paint: bg(surfce-2) }) {title()}</div>"#;
 
 const UTILITY_STRING_SRC: &str = r#"<div sx="p-4 bg-surface-2">x</div>"#;
 

@@ -70,7 +70,7 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
 
     assert!(
         (src.contains("group-caught") || src.contains("groupCaught"))
-            && (src.contains("style.group()") || src.contains("group()"))
+            && (src.contains("style({ paint: group() })") || src.contains("group()"))
             && is_style_product(src),
         "structure must express caught swap via Style when group-caught"
     );

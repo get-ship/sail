@@ -649,6 +649,8 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     if p.peek() == Some(&Tok::LParen) {
         return parse_style_call(p, diags);
     }
+    // Flat `style.method(…)` — still parsed for unit/codemod identity.
+    // Product lower (`lower_style_source`) refuses flat form (channel spine only).
     let mut ops = Vec::new();
     let mut iters = 0usize;
     loop {

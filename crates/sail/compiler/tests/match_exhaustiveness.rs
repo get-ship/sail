@@ -21,7 +21,7 @@ props: {
   variant: 'a' | 'b' | 'c' = 'a'
 }
 </scope>
-<div> match(variant, { a: style.bg(primary), b: style.bg(muted) }) x</div>
+<div> match(variant, { a: style({ paint: bg(primary) }), b: style({ paint: bg(muted) }) }) x</div>
 "#;
     let diags = warnings(src);
     assert_eq!(diags.len(), 1, "one warning for the missing arm: {diags:?}");
@@ -52,7 +52,7 @@ props: {
   variant: 'a' | 'b' | 'c' = 'a'
 }
 </scope>
-<div> match(variant, { a: style.bg(primary), b: style.bg(muted), c: style.bg(accent) }) x</div>
+<div> match(variant, { a: style({ paint: bg(primary) }), b: style({ paint: bg(muted) }), c: style({ paint: bg(accent) }) }) x</div>
 "#;
     assert!(warnings(src).is_empty(), "full coverage must not warn");
 }
@@ -66,8 +66,8 @@ props: {
   count = 3
 }
 </scope>
-<div> match(label, { x: style.bg(primary) }) x</div>
-<p> match(count, { 3: style.bg(muted) }) y</p>
+<div> match(label, { x: style({ paint: bg(primary) }) }) x</div>
+<p> match(count, { 3: style({ paint: bg(muted) }) }) y</p>
 "#;
     assert!(
         warnings(src).is_empty(),
@@ -82,7 +82,7 @@ fn scope_style_const_match_is_checked() {
 props: {
   variant: 'a' | 'b' | 'c' = 'a'
 }
-const tones = match(variant, { a: style.bg(primary) })
+const tones = match(variant, { a: style({ paint: bg(primary) }) })
 </scope>
 <div> style(tones) x</div>
 "#;

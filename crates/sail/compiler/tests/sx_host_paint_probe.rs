@@ -44,14 +44,14 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
     variant: 'soft' | 'solid' | 'outline' = 'soft'
     size: 'sm' | 'md' = 'md'
   }
-  const soft = style.bg(muted).fg(muted-foreground).borderWidth(1).border(border)
-  const solid = style.bg(primary).fg(primary-foreground).borderWidth(1).border(primary).when({ hover: style.opacity(90) })
-  const outline = style.bg(transparent).fg(foreground).borderWidth(1).border(border)
-  const sizeSm = style.fontSize(xs).padX(2)
-  const sizeMd = style.fontSize(sm).padX(2_5)
+  const soft = style({ paint: bg(muted).fg(muted-foreground).borderWidth(1).border(border) })
+  const solid = style({ paint: bg(primary).fg(primary-foreground).borderWidth(1).border(primary) }).when({ hover: style({ paint: opacity(90 })) })
+  const outline = style({ paint: bg(transparent).fg(foreground).borderWidth(1).border(border) })
+  const sizeSm = style({ box: padX(2), text: fontSize(xs) })
+  const sizeMd = style({ box: padX(2_5), text: fontSize(sm) })
 </scope>
 <span> style([
-  style.radius(full).borderWidth(1).fontWeight(medium),
+  style({ paint: radius(full).borderWidth(1), text: fontWeight(medium) }),
   match(variant, {
     soft: soft,
     solid: solid,
@@ -481,7 +481,7 @@ fn switch_host_track_paint_on_host_sx() {
     let out = compile_element(src, "switch").expect("switch compiles");
     assert!(
         !src.contains("--sw-")
-            && (src.contains("style.appearance(none)") || src.contains("appearance(none)"))
+            && (src.contains("style({ paint: appearance(none) })") || src.contains("appearance(none)"))
             && src.contains("bg(none)")
             && src.contains("bg(switch)")
             && src.contains("border(switch-border)")
@@ -786,7 +786,7 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // branded tone border via compound({tone}) + style.border(token) —
+    // branded tone border via compound({tone}) + style({ paint: border(token) }) —
     // match/compound mechanism, not the retired --tone* attribute channel.
     assert!(
         out.skin_css.contains("tone='primary'")
@@ -1254,10 +1254,10 @@ fn alert_tone_stripe_before_on_host_sx() {
         "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
     );
     assert!(
-        (src.contains("default: when({ before: style.bg(alert-stripe) })")
+        (src.contains("default: when({ before: style({ paint: bg(alert-stripe) }) })")
             || src.contains("default: when({ before: style({ paint: bg(alert-stripe) }) })")
             || (src.contains("before:") && src.contains("bg(alert-stripe)")))
-            && (src.contains("info: when({ before: style.bg(info) })")
+            && (src.contains("info: when({ before: style({ paint: bg(info) }) })")
                 || src.contains("info: when({ before: style({ paint: bg(info) }) })")
                 || (src.contains("before:") && src.contains("bg(info)"))),
         "match(tone) stripe: default alert-stripe; branded semantic tokens"
@@ -1815,7 +1815,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
     let src = include_str!("../stdlib/field.sail");
     let out = compile_element(src, "field").expect("field compiles");
     assert!(
-        (src.contains(".group()") || src.contains("style.group()") || src.contains("group()"))
+        (src.contains(".group()") || src.contains("style({ paint: group() })") || src.contains("group()"))
             && src.contains("empty:")
             && src.contains("group-invalid:")
             && !src.contains("class=")
@@ -1873,7 +1873,7 @@ fn label_req_gate_in_element_skins_anatomy() {
             && src.contains("label-required")
             && src.contains("group-required")
             && src.contains("display(none)")
-            && (src.contains(".group()") || src.contains("style.group()")),
+            && (src.contains(".group()") || src.contains("style({ paint: group() })")),
         "structure documents required marker via Style (no part class)"
     );
     assert!(out.native, "label is native-kind");

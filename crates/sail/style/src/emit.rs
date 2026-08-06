@@ -274,6 +274,18 @@ pub fn lower_style_source_with_motion(
     css: &mut String,
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
+    // Product authoring: channel spine only. Flat `style.pad().bg()` is retired
+    // (corpus codemod + block attachment). Unit tests may still call `parse` +
+    // `lower_style` directly on flat form for emit identity.
+    let t = src.trim_start();
+    if t.starts_with("style.") {
+        return Err(vec![super::ir::StyleDiagnostic::ParseError {
+            message: "flat `style.method(…)` chains are retired — use the channel spine: \
+                      style({ box: pad(4).gap(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+                .into(),
+            source: t.to_string(),
+        }]);
+    }
     let (style, diags) = super::parse::parse(src);
     if diags
         .iter()

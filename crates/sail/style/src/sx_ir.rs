@@ -1269,8 +1269,13 @@ mod tests {
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
         let env = std::collections::HashMap::new();
-        let classes = lower_sx_string("style.bg(primary).padX(2)", &env, &mut css, &mut seen)
-            .expect("valid Style chain lowers");
+        let classes = lower_sx_string(
+            "style({ paint: bg(primary), box: padX(2) })",
+            &env,
+            &mut css,
+            &mut seen,
+        )
+            .expect("valid Style spine lowers");
         assert!(classes.contains("sx-"), "{classes}");
         assert!(
             css.contains("var(--primary)") || css.contains("background"),

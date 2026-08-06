@@ -12,7 +12,7 @@ fn is_style_product(src: &str) -> bool {
 
 #[test]
 fn chain_emits_token_vars_on_product_path() {
-    let out = preprocess(r#"<div> style.bg(primary).padX(2) x</div>"#).expect("preprocess");
+    let out = preprocess(r#"<div> style({ box: padX(2), paint: bg(primary) }) x</div>"#).expect("preprocess");
     assert!(
         out.contains("var(--primary)") || out.contains("sx-bgprimary"),
         "chain must emit token paint:\n{out}"
@@ -26,7 +26,7 @@ fn chain_emits_token_vars_on_product_path() {
 #[test]
 fn match_emits_attribute_selectors() {
     let out = preprocess(
-        r#"<div> match(variant, { solid: style.bg(primary), soft: style.bg(muted) }) x</div>"#,
+        r#"<div> match(variant, { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) }) x</div>"#,
     )
     .expect("preprocess");
     assert!(out.contains("[variant='solid']"), "{out}");
@@ -36,14 +36,14 @@ fn match_emits_attribute_selectors() {
 #[test]
 fn when_emits_hover_not_events() {
     let out =
-        preprocess(r#"<div> when({ hover: style.bg(muted) }) x</div>"#).expect("preprocess");
+        preprocess(r#"<div> when({ hover: style({ paint: bg(muted) }) }) x</div>"#).expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div> compound({ pill: true }, style.radius(full)) x</div>"#)
+    let out = preprocess(r#"<div> compound({ pill: true }, style({ paint: radius(full) })) x</div>"#)
         .expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
@@ -61,7 +61,7 @@ fn utility_string_product_errors_at_parse() {
 
 #[test]
 fn clash_fail_closed() {
-    let (style, _) = parse("style.bg(primary).bg(muted)");
+    let (style, _) = parse("style({ paint: bg(primary).bg(muted) })");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
         diags
@@ -75,7 +75,7 @@ fn cross_setter_chain_clash_on_shared_slot() {
     // Slot-keyed detection narrows per call (op_slots): `border(1)` writes
     // the `border-width` paint slot, the same slot `borderWidth(2)` writes —
     // a cross-setter Chain clash, detected without any lowering.
-    let (style, _) = parse("style.border(1).borderWidth(2)");
+    let (style, _) = parse("style({ paint: border(1).borderWidth(2) })");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
         diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { slot, .. } if slot.starts_with("border-width@"))),
@@ -87,7 +87,7 @@ fn cross_setter_chain_clash_on_shared_slot() {
 fn cross_setter_disjoint_slots_do_not_clash() {
     // A color-token `border` narrows to border-color only, so it composes
     // with `borderWidth` — the stdlib focus/border idiom stays clash-free.
-    let (style, _) = parse("style.borderWidth(1).border(primary)");
+    let (style, _) = parse("style({ paint: borderWidth(1).border(primary) })");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
         !diags
@@ -100,7 +100,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
 #[test]
 fn list_shadows_silently_no_clash() {
     // List = ordered composition: later items shadow earlier ones.
-    let (style, _) = parse("[ style.bg(primary), style.bg(muted) ]");
+    let (style, _) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
         !diags
@@ -114,7 +114,7 @@ fn list_shadows_silently_no_clash() {
 fn list_shadowed_rule_emitted_after_earlier_rule() {
     // Stylesheet order implements the precedence: the shadowing (later) rule
     // lands after the shadowed (earlier) rule in the emitted CSS text.
-    let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
+    let (style, diags) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
     assert!(
         diags.is_empty(),
         "{:?}",
@@ -131,7 +131,7 @@ fn list_shadowed_rule_emitted_after_earlier_rule() {
 
 #[test]
 fn token_fail_closed() {
-    let (_, diags) = parse("style.bg(notARealTokenZzz999)");
+    let (_, diags) = parse("style({ paint: bg(notARealTokenZzz999) })");
     assert!(
         diags
             .iter()
@@ -209,7 +209,7 @@ fn card_compiles_and_emits_token_css() {
 
 #[test]
 fn list_and_bind_parse() {
-    let (style, diags) = parse("[ style.bg(primary), style.translateY(bind(rowY)) ]");
+    let (style, diags) = parse("[ style({ paint: bg(primary) }), style({ paint: translateY(bind(rowY) })) ]");
     assert!(
         diags.is_empty(),
         "{:?}",
@@ -224,7 +224,7 @@ fn scope_style_const_resolves_in_host_sx() {
     let out = preprocess(
         r#"
 <scope>
-  const filled = style.bg(primary).padX(2)
+  const filled = style({ box: padX(2), paint: bg(primary) })
 </scope>
 <div> style(filled) x</div>
 "#,
@@ -245,8 +245,8 @@ fn scope_style_const_in_match_arms() {
     let out = preprocess(
         r#"
 <scope>
-  const solid = style.bg(primary)
-  const soft = style.bg(muted)
+  const solid = style({ paint: bg(primary) })
+  const soft = style({ paint: bg(muted) })
 </scope>
 <div> match(variant, { solid: solid, soft: soft }) x</div>
 "#,

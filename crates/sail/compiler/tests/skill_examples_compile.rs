@@ -128,14 +128,14 @@ fn skill_generator_matches_product_surface() {
         md.contains("colorDeepen") && md.contains("foreground"),
         "skill must document colorDeepen (solid deepen toward foreground)"
     );
-    // Product-banned participation must not appear as teachable style.grow(…)
+    // Product-banned participation must not appear as teachable style({ box: grow(…) })
     assert!(
-        !md.contains("`style.grow(…)`"),
-        "skill must not teach style.grow — use layout attrs (sail-participation-style)"
+        !md.contains("`style({ box: grow(…) })`"),
+        "skill must not teach style({ box: grow }) — use layout attrs (sail-participation-style)"
     );
     assert!(
-        !md.contains("`style.shrink(…)`"),
-        "skill must not teach style.shrink — use layout attrs"
+        !md.contains("`style({ box: shrink(…) })`"),
+        "skill must not teach style({ box: shrink }) — use layout attrs"
     );
     assert!(
         md.contains("sail-participation-style") || md.contains("grow") && md.contains("attrs"),

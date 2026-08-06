@@ -79,11 +79,11 @@ fn style_misuse_is_tsc_error_and_good_chain_is_green() {
     fs::write(
         work.join("good.ts"),
         r#"
-const a = style.bg(primary).padX(2).radius(sm).fg('muted-foreground')
-const b = style.when({ hover: style.bg(muted) })
-const c = match('solid', { solid: style.bg(primary), soft: style.bg(muted) })
-const d = compound({ pill: true }, style.radius(full))
-const e = style.enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })
+const a = style({ box: padX(2), paint: bg(primary).radius(sm).fg('muted-foreground') })
+const b = style({}).when({ hover: style({ paint: bg(muted })) })
+const c = match('solid', { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) })
+const d = compound({ pill: true }, style({ paint: radius(full) }))
+const e = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
 const f = [a, b, c, d, e]
 void f
 void signal(0)
@@ -148,7 +148,7 @@ void controller(() => ({ n: signal(1) }))
     // Bad token type (number where color token required)
     fs::write(
         work.join("bad-token.ts"),
-        "const x = style.bg(12345 as 12345)\nvoid x\n",
+        "const x = style({ paint: bg(12345 as 12345) })\nvoid x\n",
     )
     .unwrap();
     fs::write(

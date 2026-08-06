@@ -4052,6 +4052,16 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
         assert!(out.contains("sx-"), "{out}");
     }
     #[test]
+    fn flat_style_method_chain_is_refused_on_product_path() {
+        let err = preprocess(r#"<div> style.pad(4).bg(primary) x</div>"#)
+            .expect_err("flat chain must fail product lower");
+        assert!(
+            err.message.contains("retired") || err.message.contains("channel spine"),
+            "got: {}",
+            err.message
+        );
+    }
+
     fn sx_attr_is_refused() {
         let err = preprocess(r#"<div sx={style.pad(4)}>x</div>"#).expect_err("sx");
         assert!(format!("{err:?}").contains("retired") || format!("{err:?}").contains("sx="));
