@@ -73,7 +73,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
     // build gate — sx is off under the fail-closed strict tier.
     let (_tmp2, sail_sx) = write_pack(
         r#"{"polcy":"strict"}"#,
-        r#"<sail-card style={style.pad(4)}>x</sail-card>"#,
+        r#"<sail-card> style.pad(4) x</sail-card>"#,
     );
     let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
         .expect_err("sx must be refused under the fail-closed strict tier");
@@ -136,7 +136,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // silently drop the sx.
     let (_tmp2, sail_sx) = write_pack(
         r#"{"stylesheets": []}"#,
-        r#"<sail-card style={style.pad(4)}>hi</sail-card>"#,
+        r#"<sail-card> style.pad(4) hi</sail-card>"#,
     );
     let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
         .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
@@ -157,7 +157,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
 fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
     let (_tmp, sail) = write_pack(
         r#"{"preset":"full"}"#,
-        r#"<sail-card style={style.pad(4)}>hi</sail-card>"#,
+        r#"<sail-card> style.pad(4) hi</sail-card>"#,
     );
     let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::FULL);
@@ -177,7 +177,7 @@ fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
 fn no_config_leaves_default_semantics_unchanged() {
     let tmp = tempfile::tempdir().unwrap();
     let sail = tmp.path().join("w.sail");
-    fs::write(&sail, r#"<sail-card style={style.pad(4)}>hi</sail-card>"#).unwrap();
+    fs::write(&sail, r#"<sail-card> style.pad(4) hi</sail-card>"#).unwrap();
     assert!(
         Policy::resolve_outcome(&sail).is_none(),
         "no config anywhere on the walk"

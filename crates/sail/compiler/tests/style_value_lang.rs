@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 #[test]
 fn chain_emits_token_vars_on_product_path() {
-    let out = preprocess(r#"<div style={style.bg(primary).padX(2)}>x</div>"#).expect("preprocess");
+    let out = preprocess(r#"<div> style.bg(primary).padX(2) x</div>"#).expect("preprocess");
     assert!(
         out.contains("var(--primary)") || out.contains("sx-bgprimary"),
         "chain must emit token paint:\n{out}"
@@ -21,7 +21,7 @@ fn chain_emits_token_vars_on_product_path() {
 #[test]
 fn match_emits_attribute_selectors() {
     let out = preprocess(
-        r#"<div style={match(variant, { solid: style.bg(primary), soft: style.bg(muted) })}>x</div>"#,
+        r#"<div> match(variant, { solid: style.bg(primary), soft: style.bg(muted) }) x</div>"#,
     )
     .expect("preprocess");
     assert!(out.contains("[variant='solid']"), "{out}");
@@ -31,14 +31,14 @@ fn match_emits_attribute_selectors() {
 #[test]
 fn when_emits_hover_not_events() {
     let out =
-        preprocess(r#"<div style={when({ hover: style.bg(muted) })}>x</div>"#).expect("preprocess");
+        preprocess(r#"<div> when({ hover: style.bg(muted) }) x</div>"#).expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div style={compound({ pill: true }, style.radius(full))}>x</div>"#)
+    let out = preprocess(r#"<div> compound({ pill: true }, style.radius(full)) x</div>"#)
         .expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
@@ -221,7 +221,7 @@ fn scope_style_const_resolves_in_host_sx() {
 <scope>
   const filled = style.bg(primary).padX(2)
 </scope>
-<div style={filled}>x</div>
+<div> style(filled) x</div>
 "#,
     )
     .expect("preprocess");
@@ -243,7 +243,7 @@ fn scope_style_const_in_match_arms() {
   const solid = style.bg(primary)
   const soft = style.bg(muted)
 </scope>
-<div style={match(variant, { solid: solid, soft: soft })}>x</div>
+<div> match(variant, { solid: solid, soft: soft }) x</div>
 "#,
     )
     .expect("preprocess");
@@ -347,7 +347,8 @@ fn batch_c_surfaces_compile_on_style_path() {
                 && (src.contains("match(")
                     || src.contains("when(")
                     || src.contains("compound(")
-                    || src.contains("style={")),
+                    || src.contains("style(")
+                    || src.contains("sx={")),
             "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
@@ -387,7 +388,7 @@ fn batch_d_chrome_menus_compile_on_style_path() {
         assert!(
             !src.contains("md: '")
                 && !src.contains("compound: [")
-                && !src.contains("style=\"")
+                && !src.contains("sx=\"")
                 && src.contains("style."),
             "{tag} must use Style product (no CVA string maps / string sx):\n{src}"
         );
@@ -421,7 +422,7 @@ fn batch_e_residuals_compile_on_style_path() {
         assert!(
             !src.contains("md: '")
                 && !src.contains("compound: [")
-                && !src.contains("style=\"")
+                && !src.contains("sx=\"")
                 && !src.contains("tone-bg")
                 && !src.contains("tone-fg")
                 && src.contains("style."),
@@ -449,7 +450,7 @@ fn batch_e_residuals_compile_on_style_path() {
         ("slider", include_str!("../stdlib/slider.sail")),
     ] {
         assert!(
-            !src.contains("style=\"") && !src.contains("md: '") && !src.contains("compound: ["),
+            !src.contains("sx=\"") && !src.contains("md: '") && !src.contains("compound: ["),
             "{tag} residual structure must not carry utility-string sx / CVA maps:\n{src}"
         );
         let _ = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));

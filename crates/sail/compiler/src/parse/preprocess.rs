@@ -501,7 +501,9 @@ fn consume_style_expr(s: &str) -> Option<usize> {
                         m += 1;
                     }
                     if m < bytes.len() && bytes[m] == b'(' {
-                        i = j;
+                        // Resume at the `(` so the next loop iteration opens
+                        // the group (avoids treating `.method` as complete).
+                        i = m;
                         continue;
                     }
                 }
@@ -3991,7 +3993,10 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             .expect_err("garbage var-ref in utility-string sx must fail loudly");
         let msg = format!("{err:?}");
         assert!(
-            msg.contains("Style error") || msg.contains("utility-string sx"),
+            msg.contains("Style error")
+                || msg.contains("utility-string")
+                || msg.contains("retired")
+                || msg.contains("sx="),
             "error must name the Style diagnostic: {msg}"
         );
     }

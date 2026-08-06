@@ -3,7 +3,7 @@
 //! Three invariants, each guarding a failure this repo has actually shipped:
 //!
 //!   1. NO DANGLING VAR — every `var(--x)` in emitted CSS resolves to a
-//!      declared name. `style="font-display"` lowered to `var(--display-font)`
+//!      declared name. `sx="font-display"` lowered to `var(--display-font)`
 //!      for its whole life; the token was never declared, so the atom
 //!      silently painted nothing. Nothing caught it because the reference is
 //!      built by string interpolation in `scales.rs`, so it is not greppable.

@@ -255,7 +255,7 @@ fn sx_only_source_passes_real_compile_path() {
     // instead of `class=` is clean. The full floor surface is
     // available: sx=, role, aria-*, on:event, data-*.
     let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
-    let src = r#"<p role="listbox" aria-label="x" style={style.pad(4).bg(surface-2)} on:click={noop}>{name}</p>"#;
+    let src = r#"<p role="listbox" aria-label="x" on:click={noop}> style.pad(4).bg(surface-2) {name}</p>"#;
     std::fs::write(&sail_path, src).unwrap();
     let overrides = Policy::overrides_for(&sail_path);
     let diags = check_all(src, Some(&sail_path), &overrides, None);

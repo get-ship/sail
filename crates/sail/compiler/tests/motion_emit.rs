@@ -1,6 +1,6 @@
 //! Style motion chain methods → `__sail_motion_attach(...)` integration tests.
 //!
-//! Author form: `style={style.… .enter({…}) / .hover({…}) / .loop({…}) …}`.
+//! Author form: `sx={style.… .enter({…}) / .hover({…}) / .loop({…}) …}`.
 //! Property is one of the closed `MOTION_PROPERTIES`; preset resolves against
 //! `animation-presets.json` (e.g. `spring:snappy`, `fade`, `press`).
 
@@ -25,7 +25,7 @@ fn compile_motion(source: &str) -> Result<String, String> {
 
 #[test]
 fn static_hover_scale_emits_runtime_dispatch() {
-    let js = compile_motion(r#"<button style={style.hover({ scale: 'spring:snappy' })}>x</button>"#)
+    let js = compile_motion(r#"<button> style.hover({ scale: 'spring:snappy' }) x</button>"#)
         .expect("compile");
     // Runtime dispatch: the per-property `MotionConfig` is embedded as
     // a literal object, then handed to `__sail_motion_attach`. No AOT
@@ -62,7 +62,7 @@ fn static_hover_scale_emits_runtime_dispatch() {
 
 #[test]
 fn unknown_preset_is_a_compile_error() {
-    let err = compile_motion(r#"<button style={style.hover({ scale: 'does-not-exist' })}>x</button>"#)
+    let err = compile_motion(r#"<button> style.hover({ scale: 'does-not-exist' }) x</button>"#)
         .expect_err("expected compile error");
     assert!(
         err.contains("does-not-exist"),
@@ -96,7 +96,7 @@ fn whole_config_as_one_expression_is_rejected_and_names_the_surface() {
 #[test]
 fn multiple_props_share_one_attach_call() {
     let js = compile_motion(
-        r#"<button style={style.hover({ scale: 'spring:snappy', opacity: 'fade' })}>x</button>"#,
+        r#"<button> style.hover({ scale: 'spring:snappy', opacity: 'fade' }) x</button>"#,
     )
     .expect("compile");
     let attach_idx = js
@@ -117,7 +117,7 @@ fn multiple_props_share_one_attach_call() {
 #[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
     let js =
-        compile_motion(r#"<img style={style.loop({ rotate: 'spin' })}>x</img>"#).expect("compile");
+        compile_motion(r#"<img> style.loop({ rotate: 'spin' }) x</img>"#).expect("compile");
     assert!(
         js.contains("__sail_motion_attach("),
         "expected runtime attach call:\n{js}"
@@ -155,7 +155,7 @@ fn loop_rotate_spin_emits_infinite_one_direction() {
 
 #[test]
 fn unknown_property_alias_is_rejected() {
-    let err = compile_motion(r#"<button style={style.hover({ foo: 'spring:snappy' })}>x</button>"#)
+    let err = compile_motion(r#"<button> style.hover({ foo: 'spring:snappy' }) x</button>"#)
         .expect_err("expected compile error");
     assert!(
         err.contains("foo"),
@@ -174,7 +174,7 @@ fn unknown_property_alias_is_rejected() {
 #[test]
 fn enter_exit_on_style_chain_with_paint() {
     let js = compile_motion(
-        r#"<card style={style.pad(4).enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })}>x</card>"#,
+        r#"<card> style.pad(4).enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) x</card>"#,
     )
     .expect("compile");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");
@@ -185,7 +185,7 @@ fn enter_exit_on_style_chain_with_paint() {
 #[test]
 fn enter_exit_via_animate_channel() {
     let js = compile_motion(
-        r#"<card style={style({ box: pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })}>x</card>"#,
+        r#"<card> style({ box: pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) }) x</card>"#,
     )
     .expect("compile animate channel");
     assert!(js.contains(r#"trigger: "enter""#), "{js}");
