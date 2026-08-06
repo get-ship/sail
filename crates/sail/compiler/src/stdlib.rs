@@ -804,12 +804,15 @@ const BREADCRUMB_MAP: &[DescRule] = &[
             ("gap", "var(--space-2)"),
         ]),
     },
+    // Separator before every non-first crumb — works for projected <li>
+    // and bare a/small/span children (catalog specimens without list-items).
     DescRule {
-        sel: "li:not(:first-child)::before",
+        sel: "ol > :not(:first-child)::before",
         paint: DescPaint(&[
             ("content", "'/'"),
             ("color", "var(--breadcrumb-foreground)"),
             ("user-select", "none"),
+            ("margin-inline-end", "var(--space-2)"),
         ]),
     },
     DescRule {
@@ -832,8 +835,11 @@ const BREADCRUMB_MAP: &[DescRule] = &[
             ("outline-offset", "var(--ring-offset)"),
         ]),
     },
+    // Leading type keeps this a *descendant* selector. A bare `[aria-…]`
+    // compounds onto the host (`.sail-breadcrumb[aria-current]`) which never
+    // matches — current crumb stayed muted forever.
     DescRule {
-        sel: "[aria-current='page']",
+        sel: "*[aria-current='page'], small, ol > :last-child:not(a)",
         paint: DescPaint(&[
             ("color", "var(--breadcrumb-current)"),
             ("font-weight", "var(--font-weight-medium)"),

@@ -164,13 +164,10 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     aria-describedby="chart-data"
 >
     style({ box: display(inline-block).overflow(visible) })
-    <span>
-      style({ box: display(contents), text: fontFamily(body) })
-      <for {cells() as cell} key={cell.id}>
+    <for {cells() as cell} key={cell.id}>
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     </for>
-    </span>
 </svg>
   <column id="chart-data">
     style({ paint: srOnly() })

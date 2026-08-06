@@ -836,7 +836,7 @@ center — both axes at once</p>
             </if>
             <if {stage.sailHeatmap()}>
               <column gap="3" align="center" tile-stage="sail-pack-heatmap">
-                <sail-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" cell-size="22" gap="3"></sail-heatmap>
+                <sail-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" cell-size="22" gap="3" tone="primary"></sail-heatmap>
               </column>
             </if>
             <if {stage.sailLineChart()}>
