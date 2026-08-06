@@ -1,0 +1,33 @@
+{
+  "$comment": "SAIL syntax freeze annex index — regenerate via node scripts/gen-freeze-annexes.mjs",
+  "generatedAt": "2026-08-06",
+  "tipSha": "e9ac4f184338008296e58e35bd3e0b1de8507339",
+  "annexes": {
+    "A": {
+      "file": "a-l1-elements.json",
+      "title": "L1 element inventory",
+      "count": 55
+    },
+    "B": {
+      "file": "b-tokens.json",
+      "title": "Token inventory",
+      "count": 435
+    },
+    "C": {
+      "file": "c-public-actions.json",
+      "title": "Public action catalog",
+      "count": 11
+    },
+    "D": {
+      "file": "d-runtime-exports.json",
+      "title": "Runtime public exports",
+      "count": 125
+    },
+    "E": {
+      "file": "e-channel-vocabulary.json",
+      "title": "Channel vocabulary",
+      "count": 164
+    }
+  },
+  "contentHash": "b5e076436e207aff"
+}
