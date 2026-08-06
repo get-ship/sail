@@ -673,7 +673,7 @@ export async function sailThemeGraph(
   return postJson<ThemeGraphRet>('/sail.ops.v1.SailTheme/Graph', args ?? {}, opts)
 }
 
-// SailTheme/List — List theme JSON files under a directory. Path must be apps/*/tokens/themes or packages/sail/tokens/model/themes.
+// SailTheme/List — List theme JSON files under a directory. Path must be themes/**, tokens/themes/** (legacy), or packages/sail/tokens/model/themes.
 export async function sailThemeList(
   args: ThemeListArgs,
   opts?: ClientOptions,
@@ -689,7 +689,7 @@ export async function sailThemeRead(
   return postJson<ThemeReadRet>('/sail.ops.v1.SailTheme/Read', args ?? {}, opts)
 }
 
-// SailTheme/Write — Write a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only.
+// SailTheme/Write — Write a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json.
 export async function sailThemeWrite(
   args: ThemeWriteArgs,
   opts?: ClientOptions,
@@ -697,7 +697,7 @@ export async function sailThemeWrite(
   return postJson<ThemeWriteRet>('/sail.ops.v1.SailTheme/Write', args ?? {}, opts)
 }
 
-// SailTheme/Delete — Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).
+// SailTheme/Delete — Delete a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json (catalog refused).
 export async function sailThemeDelete(
   args: ThemeDeleteArgs,
   opts?: ClientOptions,
@@ -705,7 +705,7 @@ export async function sailThemeDelete(
   return postJson<ThemeDeleteRet>('/sail.ops.v1.SailTheme/Delete', args ?? {}, opts)
 }
 
-// SailTheme/Fork — Fork a catalog or project theme into apps/*/tokens/themes/. Optional new_id rewrites $extensions.ship.themeId.
+// SailTheme/Fork — Fork a catalog or project theme into themes/ (or legacy tokens/themes/). Optional new_id rewrites $extensions.ship.themeId.
 export async function sailThemeFork(
   args: ThemeForkArgs,
   opts?: ClientOptions,

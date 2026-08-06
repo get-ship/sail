@@ -117,7 +117,8 @@ pub struct LayoutCheckRet {
 /// Includes sail/ts/json/css/… with node_modules/.git/target/dist ignored.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ListFilesArgs {
-    /// Workspace-relative project root (`apps/sail-site`). Default: ops project.
+    /// Workspace-relative project root (e.g. `.` for an external app, or
+    /// `apps/<name>` in a monorepo). Default: ops project.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
 }
@@ -126,7 +127,7 @@ pub struct ListFilesArgs {
 pub struct ListFilesRet {
     pub ok: bool,
     pub project: String,
-    /// Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).
+    /// Workspace-relative paths (`routes/page.sail`, `package.json`, …).
     pub files: Vec<String>,
 }
 
@@ -409,7 +410,8 @@ pub struct ThemeFontAddArgs {
     pub family: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub axes: Option<String>,
-    /// App root (e.g. `apps/studio`). Defaults to ctx / first apps/* with routes.
+    /// App root (project-relative; external app or monorepo `apps/<name>`).
+    /// Defaults to ctx project / first apps/* with routes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
 }
@@ -949,7 +951,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTheme",
         "List",
         "sail_theme_list",
-        "List theme JSON files under a directory. Path must be apps/*/tokens/themes or packages/sail/tokens/model/themes.",
+        "List theme JSON files under a directory. Path must be themes/**, tokens/themes/** (legacy), or packages/sail/tokens/model/themes.",
         ThemeListArgs,
         ThemeListRet,
         "ThemeListArgs",
@@ -973,7 +975,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTheme",
         "Write",
         "sail_theme_write",
-        "Write a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only.",
+        "Write a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json.",
         ThemeWriteArgs,
         ThemeWriteRet,
         "ThemeWriteArgs",
@@ -985,7 +987,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTheme",
         "Delete",
         "sail_theme_delete",
-        "Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).",
+        "Delete a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json (catalog refused).",
         ThemeDeleteArgs,
         ThemeDeleteRet,
         "ThemeDeleteArgs",
@@ -997,7 +999,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTheme",
         "Fork",
         "sail_theme_fork",
-        "Fork a catalog or project theme into apps/*/tokens/themes/. Optional new_id rewrites $extensions.ship.themeId.",
+        "Fork a catalog or project theme into themes/ (or legacy tokens/themes/). Optional new_id rewrites $extensions.ship.themeId.",
         ThemeForkArgs,
         ThemeForkRet,
         "ThemeForkArgs",

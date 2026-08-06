@@ -7,7 +7,7 @@ use crate::error::OpError;
 
 /// Canonical Sail app `.gitignore` body (no trailing blank-line requirement).
 ///
-/// Never default-ignore: `tokens/themes/**`, `sail.config.json(c)`.
+/// Never default-ignore: `themes/**`, legacy `tokens/themes/**`, `sail.config.json(c)`.
 pub const CANONICAL_GITIGNORE: &str = r#"# Dependencies & generic build
 node_modules/
 dist/
@@ -197,8 +197,10 @@ mod tests {
         }
         assert!(body.contains(".sail/"));
         assert!(body.contains(".deck/"));
-        // Themes / config must never be in the default ignore set.
+        // Themes / config must never be in the default ignore set
+        // (modern themes/ + legacy tokens/themes).
         assert!(!body.contains("tokens/themes"));
+        assert!(!body.lines().any(|l| l.trim() == "themes/" || l.trim() == "themes"));
         assert!(!body.contains("sail.config"));
     }
 

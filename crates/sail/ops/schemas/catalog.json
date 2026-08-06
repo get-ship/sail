@@ -409,7 +409,7 @@
         "type": "object",
         "properties": {
           "project": {
-            "description": "Workspace-relative project root (`apps/sail-site`). Default: ops project.",
+            "description": "Workspace-relative project root (e.g. `.` for an external app, or `apps/<name>` in a monorepo). Default: ops project.",
             "type": [
               "string",
               "null"
@@ -428,7 +428,7 @@
         ],
         "properties": {
           "files": {
-            "description": "Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).",
+            "description": "Workspace-relative paths (`routes/page.sail`, `package.json`, …).",
             "type": "array",
             "items": {
               "type": "string"
@@ -761,7 +761,7 @@
       "service": "SailTheme",
       "method": "List",
       "mcp_tool": "sail_theme_list",
-      "description": "List theme JSON files under a directory. Path must be apps/*/tokens/themes or packages/sail/tokens/model/themes.",
+      "description": "List theme JSON files under a directory. Path must be themes/**, tokens/themes/** (legacy), or packages/sail/tokens/model/themes.",
       "path": "/sail.ops.v1.SailTheme/List",
       "inputSchema": {
         "type": "object",
@@ -842,7 +842,7 @@
       "service": "SailTheme",
       "method": "Write",
       "mcp_tool": "sail_theme_write",
-      "description": "Write a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only.",
+      "description": "Write a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json.",
       "path": "/sail.ops.v1.SailTheme/Write",
       "inputSchema": {
         "type": "object",
@@ -887,7 +887,7 @@
       "service": "SailTheme",
       "method": "Delete",
       "mcp_tool": "sail_theme_delete",
-      "description": "Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).",
+      "description": "Delete a project theme JSON. Allowlist: themes/**/*.json or legacy tokens/themes/**/*.json (catalog refused).",
       "path": "/sail.ops.v1.SailTheme/Delete",
       "inputSchema": {
         "type": "object",
@@ -922,7 +922,7 @@
       "service": "SailTheme",
       "method": "Fork",
       "mcp_tool": "sail_theme_fork",
-      "description": "Fork a catalog or project theme into apps/*/tokens/themes/. Optional new_id rewrites $extensions.ship.themeId.",
+      "description": "Fork a catalog or project theme into themes/ (or legacy tokens/themes/). Optional new_id rewrites $extensions.ship.themeId.",
       "path": "/sail.ops.v1.SailTheme/Fork",
       "inputSchema": {
         "type": "object",
@@ -1128,7 +1128,7 @@
             "type": "string"
           },
           "project": {
-            "description": "App root (e.g. `apps/studio`). Defaults to ctx / first apps/* with routes.",
+            "description": "App root (project-relative; external app or monorepo `apps/<name>`). Defaults to ctx project / first apps/* with routes.",
             "type": [
               "string",
               "null"

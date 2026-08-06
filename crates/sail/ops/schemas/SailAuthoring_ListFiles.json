@@ -6,7 +6,7 @@
     "type": "object",
     "properties": {
       "project": {
-        "description": "Workspace-relative project root (`apps/sail-site`). Default: ops project.",
+        "description": "Workspace-relative project root (e.g. `.` for an external app, or `apps/<name>` in a monorepo). Default: ops project.",
         "type": [
           "string",
           "null"
@@ -25,7 +25,7 @@
     ],
     "properties": {
       "files": {
-        "description": "Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).",
+        "description": "Workspace-relative paths (`routes/page.sail`, `package.json`, …).",
         "type": "array",
         "items": {
           "type": "string"
