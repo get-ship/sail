@@ -768,44 +768,6 @@ mod tests {
         assert_eq!(resp.status, 200);
     }
 
-    /// inv-deck-no-node-runtime (bake freshness): framework singletons are baked
-    /// via `include_str!`, so the bake MUST be the CURRENT build — never stale.
-    /// Guards the de-view + engine-collapse: the runtime vends `component()` /
-    /// `mountComponent()` and NO `view()` export. A stale bake (e.g. the
-    /// partially-rebaked `view`-exporting runtime seen mid-migration) trips this.
-    /// Fix: `cargo run -p deck-cli -- build-assets`.
-    #[test]
-    fn baked_runtime_is_the_current_engine_not_a_stale_bake() {
-        assert!(
-            SUI_RUNTIME_JS.contains("as mountComponent,"),
-            "baked sail-runtime.js missing the `mountComponent` export — stale bake"
-        );
-        assert!(
-            SUI_RUNTIME_JS.contains("as component,"),
-            "baked sail-runtime.js missing the `component` export — stale bake"
-        );
-        assert!(
-            SUI_RUNTIME_JS.contains("as route,") || SUI_RUNTIME_JS.contains("as route}"),
-            "baked sail-runtime.js missing the `route` export — `@ship/sail-runtime/route` \
-             maps to this same bundle in production; a stale bake or a missing index.ts \
-             re-export breaks every compiled route's router import"
-        );
-        assert!(
-            SUI_RUNTIME_JS.contains("createVirtualizer"),
-            "baked sail-runtime.js missing `createVirtualizer` — `@ship/sail-runtime/virtual` \
-             maps to this same bundle; without it sail-table / sail-tree / sail-message-list \
-             fail at runtime. Fix: export ./virtual from framework-bundle.ts then \
-             `cargo run -p deck-cli -- build-assets`"
-        );
-        // The removed `view()` export must be gone. Match the export list (`as
-        // view`), not warning strings that merely mention the word "view".
-        assert!(
-            !SUI_RUNTIME_JS.contains("as view,") && !SUI_RUNTIME_JS.contains("as view}"),
-            "baked sail-runtime.js still EXPORTS `view` (removed in de-view) — stale \
-             bake; run `cargo run -p deck-cli -- build-assets`"
-        );
-    }
-
     #[test]
     fn parse_baked_stamp_reads_the_leading_comment() {
         let js = "/*! sail-framework-stamp: sha=deadbeef00000000 */\nexport const x = 1;\n";

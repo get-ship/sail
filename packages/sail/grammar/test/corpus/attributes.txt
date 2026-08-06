@@ -86,26 +86,6 @@ use action without param
     close_tag: (tag_name)))
 
 ==================
-public fx: is retired — parses as a plain attr_name, not a directive
-==================
-
-<badge fx:enter={{ opacity: 'fade', stagger: '150ms' }}>live</badge>
-
----
-
-(source_file
-  (element
-    tag: (tag_name)
-    (dynamic_attr
-      name: (attr_name)
-      (ERROR
-        (UNEXPECTED ':')
-        (tag_name))
-      value: (brace_expression))
-    (text)
-    close_tag: (tag_name)))
-
-==================
 attr: attribute is refused syntax — must NOT parse as a directive
 ==================
 

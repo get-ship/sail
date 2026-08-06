@@ -8,12 +8,9 @@
 // State model
 //   - Each (project, route) has an independent boolean signal.
 //   - Signals are in-memory only — they survive SPA navigation via the
-//     memoized SIGNALS map but reset on hard reload. Persistence was
-//     previously held in localStorage (`ship.edit-mode.<project>.<view>`)
-//     but a single accidental Alt+E hit on a built-in route (e.g.
-//     /artifacts) would stick forever and re-open the dev panel on every
-//     visit. Per-tab UI state doesn't survive reload; the user re-enters
-//     edit mode explicitly when they want it.
+//     memoized SIGNALS map but reset on hard reload. Per-tab UI state
+//     doesn't survive reload; the user re-enters edit mode explicitly
+//     when they want it.
 //   - Entering/exiting calls the host's `editModeTransport` (HostContext)
 //     so the runtime names no daemon URL — the host wires it to its
 //     route-service enter/exit RPC, or omits it (the toggle still works
@@ -36,26 +33,6 @@ function signalKey(name: string): string {
   return `${spaceId()}.${name}`
 }
 
-// One-shot migration: purge legacy `ship.edit-mode.*` keys from
-// localStorage. Pre-fix, edit-mode persisted across browser sessions —
-// users who accidentally hit Alt+E on a built-in route (e.g. /artifacts)
-// would re-enter edit mode on every visit. Clearing here is idempotent
-// and cheap.
-let migrated = false
-function purgeLegacyPersistence(): void {
-  if (migrated) return
-  migrated = true
-  if (typeof localStorage === 'undefined') return
-  try {
-    const stale: string[] = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)
-      if (k && k.startsWith('ship.edit-mode.')) stale.push(k)
-    }
-    for (const k of stale) localStorage.removeItem(k)
-  } catch { /* best-effort */ }
-}
-
 function postLifecycle(name: string, action: 'enter' | 'exit'): void {
   // The host owns the edit-mode lifecycle transport (its route-service
   // enter/exit RPC). The runtime names no daemon URL — it calls the
@@ -68,7 +45,6 @@ function postLifecycle(name: string, action: 'enter' | 'exit'): void {
  *  signal instance. Always starts OFF on first access; a hard reload
  *  resets every route to off. */
 export function editModeForRoute(name: string): Signal<boolean> {
-  purgeLegacyPersistence()
   const k = signalKey(name)
   const existing = SIGNALS.get(k)
   if (existing) return existing

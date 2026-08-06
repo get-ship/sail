@@ -43,7 +43,7 @@ const __wireBoundary_b4 = (anchor) => bindIf({
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("button");
-__e0.setAttribute("class", "sail-button sx-displayinlineflex sx-appearancenone sx-fontWeightmedium sx-leadingnone sx-radiusmd sx-borderWidthcontrolstroke sx-bordersolid sx-bordertransparent sx-borderImagecornerimage sx-isolate sx-positionrelative sx-controlFrame sx-selectnone sx-whitespacenowrap sx-cursorpointer sx-hover-controlLift sx-active-press sx-disabled-cursornotallowed sx-disabled-opacity50 sx-variantdefault-bgbackground sx-variantdefault-borderborder sx-variantdefault-fgforeground sx-variantdefault-shadowxs sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase");
+__e0.setAttribute("class", "sail-button sx-displayinlineflex sx-positionrelative sx-appearancenone sx-radiusmd sx-borderWidthcontrolstroke sx-bordersolid sx-bordertransparent sx-borderImagecornerimage sx-isolate sx-controlFrame sx-selectnone sx-cursorpointer sx-fontWeightmedium sx-leadingnone sx-whitespacenowrap sx-hover-controlLift sx-active-press sx-disabled-cursornotallowed sx-disabled-opacity50 sx-variantdefault-bgbackground sx-variantdefault-borderborder sx-variantdefault-fgforeground sx-variantdefault-shadowxs sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase");
 __e0.setAttribute("data-sail-host", "button");
 __e0.setAttribute("data-test", "root");
 __cleanups.push(bindProp(__e0, "disabled", () => ($scope.disabled() || $scope.loading())));
