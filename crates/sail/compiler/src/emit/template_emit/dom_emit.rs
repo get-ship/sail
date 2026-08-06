@@ -152,7 +152,7 @@ impl TemplateEmitter {
             self.svg_depth += 1;
         }
         for a in &el.attrs {
-            self.emit_attr(w, a, &v, cleanups_var, &el.tag);
+            self.emit_attr(w, a, &v, cleanups_var, &el.tag, &el.attrs);
         }
         if claim_root {
             w.line(&format!("{v}.classList.add(\"sail-root\");"));
@@ -181,6 +181,7 @@ impl TemplateEmitter {
         el_var: &str,
         cleanups_var: &str,
         tag: &str,
+        sibling_attrs: &[AttrInstr],
     ) {
         match a {
             AttrInstr::Static { name, value, .. } => {
@@ -216,15 +217,22 @@ impl TemplateEmitter {
                 if binder == "bindOpen" {
                     // Modal dialog: pass the signal cell (strip `()` on bare calls)
                     // so bindOpen can showModal + write back on native close.
+                    // `dismissible={false}` → third-arg opts (ESC/backdrop blocked).
                     let sig = crate::lower::bindings::dialog_open_signal_expr(&expr.source);
                     let sig_rw = self.rw(&sig, &[]);
+                    let opts =
+                        if crate::lower::bindings::dialog_dismissible_is_false(sibling_attrs) {
+                            ", { dismissible: false }"
+                        } else {
+                            ""
+                        };
                     w.line(&format!(
-                        "{cleanups_var}.push(bindOpen({el_var}, ({sig_rw})));"
+                        "{cleanups_var}.push(bindOpen({el_var}, ({sig_rw}){opts}));"
                     ));
                     if self.is_route && self.boundary_depth == 0 {
                         self.hydrate_uses_markers = true;
                         self.hydrate_calls.line(&format!(
-                            "if (__m[{k}]) __cleanups.push(bindOpen(__m[{k}], ({sig_rw})));",
+                            "if (__m[{k}]) __cleanups.push(bindOpen(__m[{k}], ({sig_rw}){opts}));",
                             k = js_string(&key),
                         ));
                     }
@@ -1046,7 +1054,7 @@ impl super::TemplateEmitter {
     ) {
         for a in &el.attrs {
             if !matches!(a, AttrInstr::Static { .. }) {
-                self.emit_attr(w, a, el_var, cleanups_var, &el.tag);
+                self.emit_attr(w, a, el_var, cleanups_var, &el.tag, &el.attrs);
             }
         }
 

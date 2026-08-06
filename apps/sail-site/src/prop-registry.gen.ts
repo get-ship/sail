@@ -281,6 +281,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "center"
     },
     {
+      "name": "dismissible",
+      "type": "bool",
+      "default": "true",
+      "desc": "ESC + backdrop can close. Destructive confirms set false so the user must pick an action."
+    },
+    {
       "name": "onClose",
       "type": "() => void"
     },
