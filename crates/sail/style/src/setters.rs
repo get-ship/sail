@@ -3388,12 +3388,11 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
 #[cfg(test)]
 mod tests {
     use super::super::ir::{Style, StyleDiagnostic};
-    use super::super::rewrite::rewrite_source;
     use super::*;
 
-    /// Normalize flat fixtures via codemod, then product parse.
+    /// Product parse (channel-only).
     fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
-        super::super::parse::parse(&rewrite_source(src))
+        super::super::parse::parse(src)
     }
 
     fn only_op(src: &str) -> PaintOp {
@@ -3425,7 +3424,7 @@ mod tests {
 
     #[test]
     fn border_single_arg_unchanged() {
-        let op = only_op("style.border(border)");
+        let op = only_op("style({ paint: border(border) })");
         assert_eq!(op.args.len(), 1);
         let css = lower_op_css(&op).unwrap();
         assert_eq!(
@@ -3433,14 +3432,14 @@ mod tests {
             vec![("border-color".to_string(), "var(--border)".to_string())]
         );
         // width and style by value still work on one arg
-        let op = only_op("style.border(2)");
+        let op = only_op("style({ paint: border(2) })");
         assert!(
             lower_op_css(&op)
                 .unwrap()
                 .iter()
                 .any(|(p, _)| p == "border-width")
         );
-        let op = only_op("style.border(dashed)");
+        let op = only_op("style({ paint: border(dashed) })");
         assert!(
             lower_op_css(&op)
                 .unwrap()
@@ -3451,7 +3450,7 @@ mod tests {
 
     #[test]
     fn border_composite_width_and_color() {
-        let op = only_op("style.border(1, border)");
+        let op = only_op("style({ paint: border(1, border) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-width".to_string(), "1px".to_string())),
@@ -3465,7 +3464,7 @@ mod tests {
 
     #[test]
     fn border_axis_composites() {
-        let op = only_op("style.borderX(2, primary)");
+        let op = only_op("style({ paint: borderX(2, primary) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-left-width".to_string(), "2px".to_string())),
@@ -3482,7 +3481,7 @@ mod tests {
             )),
             "{css:?}"
         );
-        let op = only_op("style.borderT(1, muted)");
+        let op = only_op("style({ paint: borderT(1, muted) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-top-width".to_string(), "1px".to_string())),
@@ -3492,7 +3491,7 @@ mod tests {
             css.contains(&("border-top-color".to_string(), "var(--muted)".to_string())),
             "{css:?}"
         );
-        let op = only_op("style.borderS(1, border)");
+        let op = only_op("style({ paint: borderS(1, border) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-inline-start-width".to_string(), "1px".to_string())),
@@ -3510,7 +3509,7 @@ mod tests {
     #[test]
     fn border_composite_positions_enforced() {
         // width token in the color position fails closed
-        let (_, diags) = parse("style.border(1, 2)");
+        let (_, diags) = parse("style({ paint: border(1, 2) })");
         assert!(
             diags
                 .iter()
@@ -3518,7 +3517,7 @@ mod tests {
             "{diags:?}"
         );
         // color token in the width position fails closed
-        let (_, diags) = parse("style.border(primary, border)");
+        let (_, diags) = parse("style({ paint: border(primary, border) })");
         assert!(
             diags
                 .iter()
@@ -3526,7 +3525,7 @@ mod tests {
             "{diags:?}"
         );
         // non-border setters stay single-arg
-        let (_, diags) = parse("style.bg(primary, muted)");
+        let (_, diags) = parse("style({ paint: bg(primary, muted) })");
         assert!(
             diags
                 .iter()
@@ -3537,7 +3536,7 @@ mod tests {
 
     #[test]
     fn border_composite_binds() {
-        let op = only_op("style.border(bind(strokeW), bind(toneBorder))");
+        let op = only_op("style({ paint: border(bind(strokeW), bind(toneBorder)) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&("border-width".to_string(), "var(--stroke-w)".to_string())),
@@ -3553,33 +3552,33 @@ mod tests {
     fn long_tail_setters_lower_like_their_vocab_utilities() {
         let cases: &[(&str, &str, &str)] = &[
             (
-                "style.decoration(accent)",
+                "style({ text: decoration(accent) })",
                 "text-decoration-color",
                 "var(--accent)",
             ),
-            ("style.indent(2)", "text-indent", "var(--space-2)"),
+            ("style({ text: indent(2) })", "text-indent", "var(--space-2)"),
             (
-                "style.underlineOffset(auto)",
+                "style({ text: underlineOffset(auto) })",
                 "text-underline-offset",
                 "auto",
             ),
             (
-                "style.antialiased(true)",
+                "style({ text: antialiased(true) })",
                 "-webkit-font-smoothing",
                 "antialiased",
             ),
-            ("style.caret(primary)", "caret-color", "var(--primary)"),
-            ("style.accent(accent)", "accent-color", "var(--accent)"),
-            ("style.accent(auto)", "accent-color", "auto"),
-            ("style.objectPosition(top)", "object-position", "top"),
-            ("style.order(first)", "order", "-9999"),
-            ("style.justifySelf(center)", "justify-self", "center"),
-            ("style.bgClip(text)", "background-clip", "text"),
-            ("style.touch(pan-x)", "touch-action", "pan-x"),
-            ("style.resize(y)", "resize", "vertical"),
-            ("style.scroll(smooth)", "scroll-behavior", "smooth"),
-            ("style.willChange(transform)", "will-change", "transform"),
-            ("style.contain(layout)", "contain", "layout"),
+            ("style({ paint: caret(primary) })", "caret-color", "var(--primary)"),
+            ("style({ paint: accent(accent) })", "accent-color", "var(--accent)"),
+            ("style({ paint: accent(auto) })", "accent-color", "auto"),
+            ("style({ paint: objectPosition(top) })", "object-position", "top"),
+            ("style({ box: order(first) })", "order", "-9999"),
+            ("style({ box: justifySelf(center) })", "justify-self", "center"),
+            ("style({ paint: bgClip(text) })", "background-clip", "text"),
+            ("style({ paint: touch(pan-x) })", "touch-action", "pan-x"),
+            ("style({ box: resize(y) })", "resize", "vertical"),
+            ("style({ paint: scroll(smooth) })", "scroll-behavior", "smooth"),
+            ("style({ paint: willChange(transform) })", "will-change", "transform"),
+            ("style({ paint: contain(layout) })", "contain", "layout"),
         ];
         for (src, prop, val) in cases {
             let op = only_op(src);
@@ -3593,29 +3592,29 @@ mod tests {
 
     #[test]
     fn op_slots_narrow_by_arg_value() {
-        let op = only_op("style.outline(solid)");
+        let op = only_op("style({ paint: outline(solid) })");
         assert_eq!(op_slots(&op), vec!["outline-style"]);
-        let op = only_op("style.outline(2)");
+        let op = only_op("style({ paint: outline(2) })");
         assert_eq!(op_slots(&op), vec!["outline-width"]);
-        let op = only_op("style.outline(ring)");
+        let op = only_op("style({ paint: outline(ring) })");
         assert_eq!(op_slots(&op), vec!["outline-color"]);
-        let op = only_op("style.ring(none)");
+        let op = only_op("style({ paint: ring(none) })");
         assert_eq!(op_slots(&op), vec!["outline-style"]);
-        let op = only_op("style.ring(primary)");
+        let op = only_op("style({ paint: ring(primary) })");
         assert_eq!(op_slots(&op), vec!["outline-color"]);
-        let op = only_op("style.bg(none)");
+        let op = only_op("style({ paint: bg(none) })");
         assert_eq!(op_slots(&op), vec!["background-image"]);
-        let op = only_op("style.bg(primary)");
+        let op = only_op("style({ paint: bg(primary) })");
         assert_eq!(op_slots(&op), vec!["background-color"]);
-        let op = only_op("style.border(2)");
+        let op = only_op("style({ paint: border(2) })");
         assert_eq!(op_slots(&op), vec!["border-width"]);
-        let op = only_op("style.border(dashed)");
+        let op = only_op("style({ paint: border(dashed) })");
         assert_eq!(op_slots(&op), vec!["border-style"]);
-        let op = only_op("style.border(primary)");
+        let op = only_op("style({ paint: border(primary) })");
         assert_eq!(op_slots(&op), vec!["border-color"]);
-        let op = only_op("style.border(1, border)");
+        let op = only_op("style({ paint: border(1, border) })");
         assert_eq!(op_slots(&op), vec!["border-width", "border-color"]);
-        let op = only_op("style.borderX(2, primary)");
+        let op = only_op("style({ paint: borderX(2, primary) })");
         assert_eq!(
             op_slots(&op),
             vec![
@@ -3626,7 +3625,7 @@ mod tests {
             ]
         );
         // single-value setters keep their full static slot list
-        let op = only_op("style.truncate()");
+        let op = only_op("style({ text: truncate() })");
         assert_eq!(
             op_slots(&op),
             vec!["overflow", "text-overflow", "white-space"]
@@ -3636,7 +3635,7 @@ mod tests {
     #[test]
     fn outline_style_width_color_triple_write_does_not_clash() {
         let (style, diags) =
-            parse("when({ focus: style.outline(solid).outline(2).outline(ring) })");
+            parse("when({ focus: style({ paint: outline(solid).outline(2).outline(ring) }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -3649,7 +3648,7 @@ mod tests {
 
     #[test]
     fn long_tail_setters_reject_off_scale() {
-        let (_, diags) = parse("style.contain(banana)");
+        let (_, diags) = parse("style({ paint: contain(banana) })");
         assert!(
             diags
                 .iter()
@@ -3660,7 +3659,7 @@ mod tests {
 
     #[test]
     fn border_image_and_backdrop_lower_component_tokens() {
-        let op = only_op("style.borderImage(corner-image)");
+        let op = only_op("style({ paint: borderImage(corner-image) })");
         let css = lower_op_css(&op).unwrap();
         assert_eq!(
             css,
@@ -3669,12 +3668,12 @@ mod tests {
                 "var(--corner-image)".to_string()
             )]
         );
-        let op = only_op("style.borderImage(none)");
+        let op = only_op("style({ paint: borderImage(none) })");
         assert_eq!(
             lower_op_css(&op).unwrap(),
             vec![("border-image".to_string(), "none".to_string())]
         );
-        let op = only_op("style.backdrop(card-backdrop-filter)");
+        let op = only_op("style({ paint: backdrop(card-backdrop-filter) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&(
@@ -3691,14 +3690,14 @@ mod tests {
             "{css:?}"
         );
         // off-table tokens fail closed
-        let (_, diags) = parse("style.backdrop(banana)");
+        let (_, diags) = parse("style({ paint: backdrop(banana) })");
         assert!(
             diags
                 .iter()
                 .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
             "{diags:?}"
         );
-        let (_, diags) = parse("style.borderImage(banana)");
+        let (_, diags) = parse("style({ paint: borderImage(banana) })");
         assert!(
             diags
                 .iter()
@@ -3706,7 +3705,7 @@ mod tests {
             "{diags:?}"
         );
         // bind lowers to the same longhands
-        let op = only_op("style.backdrop(bind(cardBlur))");
+        let op = only_op("style({ paint: backdrop(bind(cardBlur)) })");
         let css = lower_op_css(&op).unwrap();
         assert!(
             css.contains(&(

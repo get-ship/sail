@@ -43,16 +43,14 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    /// Unit fixtures may still embed flat form; normalize via codemod then
-    /// product parse. Prefer authored channel strings; this keeps dual residual
-    /// fixtures green during the multi-cut retarget.
+    /// Product parse (channel-only). Flat fixture strings are retired.
     fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
-        super::parse(&rewrite_source(src))
+        super::parse(src)
     }
 
     #[test]
     fn chain_emits_token_vars() {
-        let (style, diags) = parse("style.bg(primary).padX(2).radius(sm)");
+        let (style, diags) = parse("style({ box: padX(2), paint: bg(primary).radius(sm) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -77,7 +75,7 @@ mod tests {
     #[test]
     fn match_emits_attr_selectors() {
         let (style, diags) =
-            parse("match(variant, { solid: style.bg(primary), soft: style.bg(muted) })");
+            parse("match(variant, { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -90,7 +88,7 @@ mod tests {
 
     #[test]
     fn when_map_emits_hover_pseudo() {
-        let (style, diags) = parse("when({ hover: style.bg(muted) })");
+        let (style, diags) = parse("when({ hover: style({ paint: bg(muted) }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -135,7 +133,7 @@ mod tests {
         }
 
         let (style, diags) = parse(
-            "style.fontSize(sm).when({ tablet: style.fontSize(lg), desktop: style.fontSize(xl) })",
+            "style({ text: fontSize(sm) }).when(tablet, { text: fontSize(lg) }).when(desktop, { text: fontSize(xl) })",
         );
         assert!(
             diags.is_empty(),
@@ -151,7 +149,7 @@ mod tests {
             css.contains("@media (min-width: 1280px)") || css.contains("@media(min-width: 1280px)"),
             "desktop when must emit desktop media: {css}"
         );
-        let (style2, diags2) = parse("when({ motionReduce: style.opacity(100) })");
+        let (style2, diags2) = parse("when({ motionReduce: style({ paint: opacity(100) }) })");
         assert!(diags2.is_empty(), "{:?}", diags2);
         let (_, css2) = lower_style(&style2, &HashMap::new());
         assert!(
@@ -162,7 +160,7 @@ mod tests {
 
     #[test]
     fn compound_emits_multi_attr() {
-        let (style, diags) = parse("compound({ pill: true }, style.radius(full))");
+        let (style, diags) = parse("compound({ pill: true }, style({ paint: radius(full) }))");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -176,7 +174,7 @@ mod tests {
     /// never tokenize into Words that inject spurious Refs or truncate lists.
     #[test]
     fn line_comment_between_list_items_keeps_entries() {
-        let (style, diags) = parse("[ style.bg(primary), // soften the surface\n style.padX(2) ]");
+        let (style, diags) = parse("[ style({ paint: bg(primary) }), // soften the surface\n style({ box: padX(2) }) ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -195,7 +193,7 @@ mod tests {
     #[test]
     fn block_comment_and_trailing_comment_before_bracket_keep_entries() {
         let (style, diags) =
-            parse("[ style.bg(primary) /* block */, style.padX(2) // trailing note\n ]");
+            parse("[ style({ paint: bg(primary) }) /* block */, style({ box: padX(2) }) // trailing note\n ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -214,7 +212,7 @@ mod tests {
     #[test]
     fn comment_inside_compound_arg_map_keeps_conditions() {
         let (style, diags) =
-            parse("compound({ pill: true, // emphasis keys\n tone: primary }, style.radius(full))");
+            parse("compound({ pill: true, // emphasis keys\n tone: primary }, style({ paint: radius(full) }))");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -235,7 +233,7 @@ mod tests {
     fn comment_text_never_reaches_utility_string_gate() {
         // Colons / dashed words inside a comment must not trip the
         // residual-product gate or leak into the token stream.
-        let (style, diags) = parse("/* fixme: switch to tone-primary */ style.bg(primary)");
+        let (style, diags) = parse("/* fixme: switch to tone-primary */ style({ paint: bg(primary) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -249,7 +247,7 @@ mod tests {
 
     #[test]
     fn chain_when_method() {
-        let (style, diags) = parse("style.bg(primary).when({ hover: style.bg(muted) })");
+        let (style, diags) = parse("style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -261,7 +259,7 @@ mod tests {
 
     #[test]
     fn token_fail_closed() {
-        let (_, diags) = parse("style.bg(notARealTokenZzz)");
+        let (_, diags) = parse("style({ paint: bg(notARealTokenZzz) })");
         assert!(
             diags
                 .iter()
@@ -291,7 +289,7 @@ mod tests {
 
     #[test]
     fn clash_on_duplicate_slot() {
-        let (style, _) = parse("style.bg(primary).bg(muted)");
+        let (style, _) = parse("style({ paint: bg(primary).bg(muted) })");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
             diags
@@ -305,7 +303,7 @@ mod tests {
     #[test]
     fn list_shadows_duplicate_slot_silently() {
         // Ordered composition: later items shadow earlier ones — no Clash.
-        let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
+        let (style, diags) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -326,8 +324,8 @@ mod tests {
         // Duplicates across list items from nested Refs resolve through the
         // env walk and shadow silently.
         let mut env = HashMap::new();
-        env.insert("base".into(), parse("style.bg(primary)").0);
-        let (style, _) = parse("[ base, style.bg(muted) ]");
+        env.insert("base".into(), parse("style({ paint: bg(primary) })").0);
+        let (style, _) = parse("[ base, style({ paint: bg(muted) }) ]");
         let diags = clash::detect_clashes(&style, &env);
         assert!(
             !diags
@@ -342,7 +340,7 @@ mod tests {
     fn cross_setter_chain_clash_on_shared_slot() {
         // Different setters writing the same paint slot clash under Chain:
         // `border(1)` writes border-width, same slot as `borderWidth(2)`.
-        let (style, _) = parse("style.border(1).borderWidth(2)");
+        let (style, _) = parse("style({ paint: border(1).borderWidth(2) })");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
             diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { slot, .. } if slot.starts_with("border-width@"))),
@@ -352,7 +350,7 @@ mod tests {
         // Per-arg precision: a color-token `border` writes only border-color,
         // so `borderWidth(1).border(chip-border)` (the stdlib focus-ring
         // idiom) is two disjoint writes, not a clash.
-        let (style, _) = parse("style.borderWidth(1).border(border)");
+        let (style, _) = parse("style({ paint: borderWidth(1).border(border) })");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
             !diags
@@ -366,7 +364,7 @@ mod tests {
     #[test]
     fn chain_inside_list_still_clashes() {
         // A Chain inside a List keeps unordered conjunction semantics.
-        let (style, _) = parse("[ style.bg(primary).bg(muted) ]");
+        let (style, _) = parse("[ style({ paint: bg(primary).bg(muted) }) ]");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
             diags
@@ -381,7 +379,7 @@ mod tests {
     fn list_emits_later_rule_after_earlier() {
         // Stylesheet-order precedence: emit walks items in source order, so
         // the shadowing (later) rule lands after the shadowed one in the CSS.
-        let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
+        let (style, diags) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -398,7 +396,7 @@ mod tests {
 
     #[test]
     fn bind_parses() {
-        let (style, diags) = parse("style.translateY(bind(rowY))");
+        let (style, diags) = parse("style({ paint: translateY(bind(rowY)) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -413,7 +411,7 @@ mod tests {
 
     #[test]
     fn list_composition() {
-        let (style, diags) = parse("[ style.bg(primary), when({ hover: style.bg(muted) }) ]");
+        let (style, diags) = parse("[ style({ paint: bg(primary) }), when({ hover: style({ paint: bg(muted) }) }) ]");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -426,7 +424,7 @@ mod tests {
     #[test]
     fn style_const_ref_resolves() {
         let mut env = HashMap::new();
-        env.insert("filled".into(), parse("style.bg(primary)").0);
+        env.insert("filled".into(), parse("style({ paint: bg(primary) })").0);
         let (style, diags) = parse("filled");
         assert!(diags.is_empty());
         let (_, css) = lower_style(&style, &env);
@@ -447,7 +445,7 @@ mod tests {
     #[test]
     fn malformed_list_finishes_quickly() {
         let start = std::time::Instant::now();
-        let (_style, diags) = parse("[ ( , style.bg(primary) ]");
+        let (_style, diags) = parse("[ ( , style({ paint: bg(primary) }) ]");
         assert!(start.elapsed().as_millis() < 200);
         let _ = diags;
     }
@@ -455,7 +453,7 @@ mod tests {
     #[test]
     fn malformed_chain_finishes_quickly() {
         let start = std::time::Instant::now();
-        let (_style, diags) = parse("style.bg(primary).(");
+        let (_style, diags) = parse("style({ paint: bg(primary) }).(");
         assert!(start.elapsed().as_millis() < 200);
         let _ = diags;
     }
@@ -466,7 +464,7 @@ mod tests {
         let input = format!(
             "{}{}",
             "[[[[",
-            "match(x, {".repeat(40) + "style.bg(primary)"
+            "match(x, {".repeat(40) + "style({ paint: bg(primary) })"
         );
         let (_style, diags) = parse(&input);
         assert!(start.elapsed().as_millis() < 500);
@@ -476,7 +474,7 @@ mod tests {
     #[test]
     fn negative_ms_and_first_when() {
         let (style, diags) = parse(
-            "style.ms(-px).when({ first: style.ms(0).radiusL(md), last: style.radiusR(md) })",
+            "style({ box: ms(-px) }).when(first, { box: ms(0), paint: radiusL(md) }).when(last, { paint: radiusR(md) })",
         );
         assert!(
             diags.is_empty(),
@@ -492,7 +490,7 @@ mod tests {
 
     #[test]
     fn group_required_when_emits_ancestor() {
-        let (style, diags) = parse("when({ group-required: style.display(inline) })");
+        let (style, diags) = parse("when({ group-required: style({ box: display(inline) }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -505,7 +503,7 @@ mod tests {
     #[test]
     fn group_caught_and_group_inline_when_emit_ancestors() {
         let (style, diags) = parse(
-            "style.group().when({ group-caught: style.display(none), group-inline: style.display(none) })",
+            "style({ paint: group() }).when(group-caught, { box: display(none) }).when(group-inline, { box: display(none) })",
         );
         assert!(
             diags.is_empty(),
@@ -520,7 +518,7 @@ mod tests {
 
     #[test]
     fn glyph_fill_and_list_setters_lower() {
-        let (style, diags) = parse("style.list(none).glyphFill(true).isolate()");
+        let (style, diags) = parse("style({ paint: list(none).glyphFill(true).isolate() })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -541,7 +539,7 @@ mod tests {
     #[test]
     fn site_shell_setters_and_state_live() {
         let (style, diags) = parse(
-            "style.truncate().textCase(uppercase).nums(tabular).origin(bottom).textGradient(primary).bgGlow(accent).when({ stateLive: style.bg(primary), current: style.fg(primary-foreground) })",
+            "style({ paint: origin(bottom).textGradient(primary).bgGlow(accent), text: truncate().textCase(uppercase).nums(tabular) }).when(stateLive, { paint: bg(primary) }).when(current, { paint: fg(primary-foreground) })",
         );
         assert!(
             diags.is_empty(),
@@ -575,30 +573,30 @@ mod tests {
     #[test]
     fn site_shell_wave_exprs_parse() {
         let exprs = [
-            "style.w(full).minW(0).overflowX(hidden).bg(surface-0)",
-            "style.bgGlow(accent).left(0).right(0).top(0).h(64).pointerEvents(none).z(base)",
-            "style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)",
-            "style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).fg(foreground)",
-            "style.position(absolute).left(-10).right(-10).top(12).rotate(-2).z(popover)",
-            "style.borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2).padY(3)",
-            "style.h(full).overflow(hidden).bg(muted).borderWidth(1).border(primary)",
-            "style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8)",
-            "style.padX(3).padY(1).radius(full).fontSize(sm).fontWeight(semibold).fg(muted-foreground).when({ hover: style.fg(foreground), current: style.bg(primary).fg(primary-foreground) })",
-            "style.pad(3).borderWidth(1).border(border).opacity(50).when({ stateLive: style.opacity(100).border(primary).bg(muted) })",
-            "style.w(1).radius(sm).bg(primary).origin(bottom)",
-            "style.fontFamily(mono).fontSize(sm).nums(tabular).w(8).textAlign(center)",
-            "style.fontFamily(mono).fontSize(2xl).nums(tabular)",
-            "style.pad(4).w(full).maxW(panel-max-w-sm)",
-            "style.w(full).maxW(breakpoint-desktop).mx(auto)",
-            "style.fontSize(lg).fg(muted-foreground).leading(relaxed).textAlign(center).maxW(breakpoint-mobile)",
-            "style.display(block).underline(none).minW(0)",
-            "style.fg(muted-foreground).when({ hover: style.fg(primary) })",
-            "style.grow(1).minW(0).truncate()",
-            "style.pad(6).grow(1).minW(0)",
-            "style.grow(1).basis(0).minW(0)",
-            "style.grow(1).basis(breakpoint-mobile).minW(0)",
-            "style.translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))",
-            "style.when({ groupCurrent: style.fg(primary), desktop: style.display(block) })",
+            "style({ box: w(full).minW(0).overflowX(hidden), paint: bg(surface-0) })",
+            "style({ box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).pointerEvents(none).z(base) })",
+            "style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })",
+            "style({ paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })",
+            "style({ box: position(absolute).left(-10).right(-10).top(12), paint: rotate(-2).z(popover) })",
+            "style({ box: padY(3), paint: borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2) })",
+            "style({ box: h(full).overflow(hidden), paint: bg(muted).borderWidth(1).border(primary) })",
+            "style({ box: mb(-8), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })",
+            "style({ box: padX(3).padY(1), paint: radius(full).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: fg(foreground) }).when(current, { paint: bg(primary).fg(primary-foreground) })",
+            "style({ box: pad(3), paint: borderWidth(1).border(border).opacity(50) }).when(stateLive, { paint: opacity(100).border(primary).bg(muted) })",
+            "style({ box: w(1), paint: radius(sm).bg(primary).origin(bottom) })",
+            "style({ box: w(8), text: fontFamily(mono).fontSize(sm).nums(tabular).textAlign(center) })",
+            "style({ text: fontFamily(mono).fontSize(2xl).nums(tabular) })",
+            "style({ box: pad(4).w(full).maxW(panel-max-w-sm) })",
+            "style({ box: w(full).maxW(breakpoint-desktop).mx(auto) })",
+            "style({ box: maxW(breakpoint-mobile), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) })",
+            "style({ box: display(block).minW(0), text: underline(none) })",
+            "style({ paint: fg(muted-foreground) }).when(hover, { paint: fg(primary) })",
+            "style({ box: grow(1).minW(0), text: truncate() })",
+            "style({ box: pad(6).grow(1).minW(0) })",
+            "style({ box: grow(1).basis(0).minW(0) })",
+            "style({ box: grow(1).basis(breakpoint-mobile).minW(0) })",
+            "style({ paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })",
+            "style({}).when(groupCurrent, { paint: fg(primary) }).when(desktop, { box: display(block) })",
         ];
         for e in exprs {
             let (_, diags) = parse(e);
@@ -612,7 +610,7 @@ mod tests {
 
     #[test]
     fn basis_and_scale_setters_lower() {
-        let (style, diags) = parse("style.basis(0).scale(100).rotate(bind(tileRotate))");
+        let (style, diags) = parse("style({ box: basis(0), paint: scale(100).rotate(bind(tileRotate)) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -636,7 +634,7 @@ mod tests {
     #[test]
     fn packages_wave_setters_and_dynamic_when() {
         let (style, diags) = parse(
-            "style.srOnly().visibility(hidden).aspect(square).objectFit(cover).cursor(crosshair).italic(true).ml(auto).transform(bind(worldTx))",
+            "style({ box: aspect(square).ml(auto), paint: srOnly().visibility(hidden).objectFit(cover).cursor(crosshair).transform(bind(worldTx)), text: italic(true) })",
         );
         assert!(
             diags.is_empty(),
@@ -686,7 +684,7 @@ mod tests {
             ("busy", "aria-busy"),
             ("sortable", "aria-sort"),
         ] {
-            let expr = format!("when({{ {key}: style.bg(muted) }})");
+            let expr = format!("when({{ {key}: style({{ paint: bg(muted) }}) }})");
             let (st, diags) = parse(&expr);
             assert!(
                 diags.is_empty(),
@@ -702,18 +700,18 @@ mod tests {
 
         // Representative host-component paint from the packages Style conversion wave.
         let packages_exprs = [
-            "style.group().maxW(full).fontFamily(body).fg(foreground)",
-            "style.padY(2).padX(3).radius(lg).fontSize(base).leading(normal).bg(card).borderWidth(1).border(border).fg(foreground).when({ groupStateUser: style.bg(hover-bg).borderWidth(1).border(primary), groupStateSystem: style.bg(muted).fg(muted-foreground), groupStateError: style.borderWidth(1).border(destructive), groupStateSending: style.opacity(75) })",
-            "style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(muted), stateRange: style.bg(selected-bg) })",
-            "style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(primary).bg(hover-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })",
-            "style.group().padY(6).padX(4).borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none).textAlign(center).when({ focus: style.outline(ring), stateOver: style.borderWidth(1).border(ring).bg(muted) })",
-            "style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto)",
-            "style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(primary) })",
-            "style.fontFamily(body).padY(4).padX(5).borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).fontSize(sm).shadow(xs)",
-            "style.h(control-h-sm).radius(sm).textAlign(center).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(primary).fg(primary-foreground), disabled: style.fg(muted-foreground).opacity(50).cursor(not-allowed), stateEmpty: style.visibility(hidden), stateToday: style.outline(border-strong), focus: style.outline(ring) })",
-            "style.cursor(cell)",
-            "style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })",
-            "style.position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })",
+            "style({ box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) })",
+            "style({ box: padY(2).padX(3), paint: radius(lg).bg(card).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal) }).when(groupStateUser, { paint: bg(hover-bg).borderWidth(1).border(primary) }).when(groupStateSystem, { paint: bg(muted).fg(muted-foreground) }).when(groupStateError, { paint: borderWidth(1).border(destructive) }).when(groupStateSending, { paint: opacity(75) })",
+            "style({ box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border) }).when(stateOut, { paint: fg(muted-foreground).bg(muted) }).when(stateWeekend, { paint: bg(muted) }).when(stateRange, { paint: bg(selected-bg) })",
+            "style({ box: position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).padY(half).padX(1).overflow(hidden), paint: cursor(pointer).fg(primary).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density) }).when(selected, { paint: outline(ring) })",
+            "style({ box: padY(6).padX(4), paint: group().borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none), text: textAlign(center) }).when(focus, { paint: outline(ring) }).when(stateOver, { paint: borderWidth(1).border(ring).bg(muted) })",
+            "style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto) })",
+            "style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(sm) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) })",
+            "style({ box: padY(4).padX(5), paint: borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).shadow(xs), text: fontFamily(body).fontSize(sm) })",
+            "style({ box: h(control-h-sm), paint: radius(sm).cursor(pointer).fg(foreground), text: textAlign(center) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(primary).fg(primary-foreground) }).when(disabled, { paint: fg(muted-foreground).opacity(50).cursor(not-allowed) }).when(stateEmpty, { paint: visibility(hidden) }).when(stateToday, { paint: outline(border-strong) }).when(focus, { paint: outline(ring) })",
+            "style({ paint: cursor(cell) })",
+            "style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)) }).when(selected, { paint: outline(primary) })",
+            "style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)).cursor(pointer) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg) }).when(focus, { paint: outline(ring) })",
         ];
         for e in packages_exprs {
             let (_, diags) = parse(e);
@@ -728,7 +726,7 @@ mod tests {
     #[test]
     fn setter_wave_control_and_gap_and_bg_mix() {
         // colorDeepen(token, pct) — two-arg color-mix toward foreground.
-        let (style, diags) = parse("style.colorDeepen(primary, 15)");
+        let (style, diags) = parse("style({ paint: colorDeepen(primary, 15) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -741,7 +739,7 @@ mod tests {
         );
 
         // colorDeepen bind arm for the color token.
-        let (style, diags) = parse("style.colorDeepen(bind(swatch), 25)");
+        let (style, diags) = parse("style({ paint: colorDeepen(bind(swatch), 25) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -752,7 +750,7 @@ mod tests {
         assert!(css.contains("color-mix(in oklch"), "{css}");
 
         // colorDeepen fail-closed: third arg is BadArity.
-        let (_, diags) = parse("style.colorDeepen(primary, 15, extra)");
+        let (_, diags) = parse("style({ paint: colorDeepen(primary, 15, extra) })");
         assert!(
             diags
                 .iter()
@@ -762,7 +760,7 @@ mod tests {
         );
 
         // colorDeepen fail-closed: percent off the 5..95 step-5 ramp.
-        let (_, diags) = parse("style.colorDeepen(primary, 100)");
+        let (_, diags) = parse("style({ paint: colorDeepen(primary, 100) })");
         assert!(
             diags
                 .iter()
@@ -770,7 +768,7 @@ mod tests {
             "colorDeepen must reject 100: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse("style.colorDeepen(primary, 3)");
+        let (_, diags) = parse("style({ paint: colorDeepen(primary, 3) })");
         assert!(
             diags
                 .iter()
@@ -780,7 +778,7 @@ mod tests {
         );
 
         // colorMix(token, pct) — transparent hue wash (soft fill).
-        let (style, diags) = parse("style.colorMix(primary, 15)");
+        let (style, diags) = parse("style({ paint: colorMix(primary, 15) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -793,7 +791,7 @@ mod tests {
         );
 
         // colorMix bind arm for the color token.
-        let (style, diags) = parse("style.colorMix(bind(swatch), 25)");
+        let (style, diags) = parse("style({ paint: colorMix(bind(swatch), 25) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -807,7 +805,7 @@ mod tests {
         );
 
         // colorMix fail-closed: third arg is BadArity.
-        let (_, diags) = parse("style.colorMix(primary, 15, extra)");
+        let (_, diags) = parse("style({ paint: colorMix(primary, 15, extra) })");
         assert!(
             diags
                 .iter()
@@ -817,7 +815,7 @@ mod tests {
         );
 
         // colorMix fail-closed: off-ramp percent.
-        let (_, diags) = parse("style.colorMix(primary, 14)");
+        let (_, diags) = parse("style({ paint: colorMix(primary, 14) })");
         assert!(
             diags
                 .iter()
@@ -828,11 +826,11 @@ mod tests {
 
         // Host-paint gap props for flex/grid containers outside layout keywords.
         for (expr, prop, value) in [
-            ("style.gap(2)", "gap", "var(--space-2)"),
-            ("style.gap(0)", "gap", "0"),
-            ("style.gapX(3)", "column-gap", "var(--space-3)"),
-            ("style.gapY(1)", "row-gap", "var(--space-1)"),
-            ("style.gap(bind(hostGap))", "gap", "var(--host-gap)"),
+            ("style({ box: gap(2) })", "gap", "var(--space-2)"),
+            ("style({ box: gap(0) })", "gap", "0"),
+            ("style({ box: gapX(3) })", "column-gap", "var(--space-3)"),
+            ("style({ box: gapY(1) })", "row-gap", "var(--space-1)"),
+            ("style({ box: gap(bind(hostGap)) })", "gap", "var(--host-gap)"),
         ] {
             let (style, diags) = parse(expr);
             assert!(
@@ -849,7 +847,7 @@ mod tests {
         }
 
         // Tier-2 control chrome / press marker setters.
-        let (style, diags) = parse("style.controlFrame().controlLift().press()");
+        let (style, diags) = parse("style({ paint: controlFrame().controlLift().press() })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -866,7 +864,7 @@ mod tests {
 
     #[test]
     fn enter_motion_config_object_parses_and_collects() {
-        let (style, diags) = parse("style.enter({ opacity: 'fade', stagger: '450ms' })");
+        let (style, diags) = parse("style({ animate: enter({ opacity: 'fade', stagger: '450ms' }) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -881,7 +879,7 @@ mod tests {
     #[test]
     fn enter_then_when_chain_order() {
         let (style, diags) =
-            parse("style.bg(primary).enter({ opacity: 'fade' }).when({ hover: style.bg(muted) })");
+            parse("style({ paint: bg(primary), animate: enter({ opacity: 'fade' }) }).when(hover, { paint: bg(muted) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -959,8 +957,8 @@ mod tests {
     }
 
     #[test]
-    fn channels_old_form_control_still_green() {
-        let (style, diags) = parse("style.pad(4).bg(primary).when({ hover: style.bg(muted) })");
+    fn channels_control_when_hover_still_green() {
+        let (style, diags) = parse("style({ box: pad(4), paint: bg(primary) }).when(hover, { paint: bg(muted) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -973,7 +971,7 @@ mod tests {
 
     #[test]
     fn box_sizing_rename_and_alias_error() {
-        let (style, diags) = parse("style.boxSizing(border)");
+        let (style, diags) = parse("style({ paint: boxSizing(border) })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -1163,8 +1161,14 @@ mod tests {
             "must teach channel spine form: {joined}"
         );
         // Must not teach flat style.method as the fix destination.
-        assert!(!joined.contains("style.pad"), "must not teach style.pad: {joined}");
-        assert!(!joined.contains("style.bg"), "must not teach style.bg: {joined}");
+        assert!(
+            !joined.contains("style.pad"),
+            "must not teach style.pad: {joined}"
+        );
+        assert!(
+            !joined.contains("style.bg"),
+            "must not teach style.bg: {joined}"
+        );
     }
 
     #[test]
