@@ -16,6 +16,8 @@ export const contextMenu: Action<void> = (node) => {
     return root.parentElement
   }
 
+  let pending: ReturnType<typeof setTimeout> | undefined
+
   const onContext = (e: MouseEvent): void => {
     e.preventDefault()
     const px = e.clientX
@@ -26,7 +28,9 @@ export const contextMenu: Action<void> = (node) => {
     // the pointerup still to come — so showing synchronously here means the
     // browser dismisses us the instant the button is released. Defer past the
     // pointer sequence so the menu survives the click that summoned it.
-    setTimeout(() => {
+    if (pending) clearTimeout(pending)
+    pending = setTimeout(() => {
+      pending = undefined
       // `hidePopover()` THROWS when not currently showing — never share its try
       // with the show, or a first right-click would never open.
       try {
@@ -54,6 +58,8 @@ export const contextMenu: Action<void> = (node) => {
 
   return {
     destroy: () => {
+      if (pending) clearTimeout(pending)
+      pending = undefined
       t?.removeEventListener('contextmenu', onContext)
     },
   }

@@ -40,7 +40,12 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
-pub const RECOGNIZED_KEYS: [&str; 12] = [
+///
+/// Layer discipline (SPEC-HARDENING-1 WI5): every key is POLICY (capability /
+/// serve / safety) or TASTE (product preference). No behavior knobs that
+/// change language semantics under the author's feet. See [`CONFIG_KEY_DOCS`]
+/// column "layer" via the 5th field on each row.
+pub const RECOGNIZED_KEYS: [&str; 16] = [
     "preset",
     "sx",
     "variants",
@@ -53,84 +58,130 @@ pub const RECOGNIZED_KEYS: [&str; 12] = [
     "theme",
     "layout",
     "policy",
+    // Serve keys (deck AppServeConfig) — same file, POLICY layer.
+    "render",
+    "entry",
+    "injectGlobals",
+    // Studio product preference (deep-link scheme) — TASTE layer.
+    "editor",
 ];
 
 /// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
-/// when absent, and one line of semantics. The reference generator renders
-/// this table; the test below keeps it in lockstep with the recognized set,
-/// so a key added to the parser without a doc row fails the build.
-pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
+/// when absent, one line of semantics, and layer (`POLICY` | `TASTE`).
+/// The reference generator / RESULT audit renders this table; the test
+/// below keeps it in lockstep with the recognized set.
+pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
     (
         "preset",
         "\"strict\" | \"full\" | \"repair\" | \"off\"",
         "no tier — capabilities opt in individually",
         "select a capability tier above the floor in one word",
+        "POLICY",
     ),
     (
         "sx",
         "boolean",
         "off",
         "capability override: allow the sx surface beyond the floor allowance",
+        "POLICY",
     ),
     (
         "variants",
         "boolean",
         "off",
         "capability override: allow CVA-in-props variance matrices (key→sx maps on props) and compound:",
+        "POLICY",
     ),
     (
         "raw_containers",
         "boolean",
         "off",
         "capability override: allow raw container elements instead of the layout keywords",
+        "POLICY",
     ),
     (
         "compose_rhythm",
         "boolean",
         "true",
         "auto-fix sibling rhythm violations; false warns only",
+        "POLICY",
     ),
     (
         "autofix",
         "\"repair\" | \"strict\" | \"off\"",
         "repair",
         "compose autofix preset: confluent fixes on / all error / pass silent",
+        "POLICY",
     ),
     (
         "stylesheets",
         "string[]",
         "none",
         "the CSS files this package may ship; an undeclared stylesheet fails the floor check",
+        "POLICY",
     ),
     (
         "network",
         "string[] of origins",
         "absent = full refusal",
         "fetch/WebSocket/EventSource allowlist; [] grants nothing explicitly; a wrong-typed value fails closed",
+        "POLICY",
     ),
     (
         "unconfined",
         "boolean",
         "confined",
         "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined",
+        "POLICY",
     ),
     (
         "theme",
         "{ default, defaultMode?, enabled: \"all\" | string[] }",
         "no theme section — thin app emit (no catalog); package generate still full catalog",
         "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit",
+        "POLICY",
     ),
     (
         "layout",
         "\"warn\" | \"error\"",
         "warn — taffy soft findings stay warnings; silent-clip stays Error",
         "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile)",
+        "POLICY",
     ),
     (
         "policy",
         "{ layout.raw_containers?, lint.severity.<rule-id>? }",
         "registry defaults (see `sail-compiler policy`)",
         "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key",
+        "POLICY",
+    ),
+    (
+        "render",
+        "\"csr\" | \"ssr\"",
+        "csr",
+        "first-paint mode the host serves (empty #root vs server HTML); not a language semantic",
+        "POLICY",
+    ),
+    (
+        "entry",
+        "{ clientsModule, exposeNames[] }",
+        "none — host may supply bootstrap another way",
+        "host-owned entry bootstrap for generated entry.gen.ts (client factory map)",
+        "POLICY",
+    ),
+    (
+        "injectGlobals",
+        "{ [windowKey]: valueTemplate }",
+        "none",
+        "host URL-capture → window.<k> injections stamped into index.html",
+        "POLICY",
+    ),
+    (
+        "editor",
+        "string | { scheme, pathTemplate? }",
+        "vscode (studio default when unset)",
+        "studio deep-link preference for open-in-editor — product taste, not language behavior",
+        "TASTE",
     ),
 ];
 
@@ -308,11 +359,11 @@ pub fn grant_hint(path: &Path, key: &str) -> String {
 /// refusal/announcement message.
 ///
 /// **Note:** Capability Policy still prefers pure `.json` package configs
-/// (primitives packs, routes). App-level `.jsonc` often carries serve/theme
-/// keys the Policy tier does not model (`editor`, `render`, `entry`); those
-/// would fail closed to STRICT if read here. Layout severity therefore uses
-/// [`layout_is_error_for`], which may walk past a capability config that has
-/// no `"layout"` key up to an app-level profile.
+/// (primitives packs, routes). App-level `.jsonc` may carry serve/theme keys
+/// (`render`, `entry`, `injectGlobals`, `editor`) which are now recognized
+/// ([`RECOGNIZED_KEYS`]) as POLICY/TASTE and do not fail closed. Layout
+/// severity still uses [`layout_is_error_for`], which may walk past a
+/// capability config that has no `"layout"` key up to an app-level profile.
 pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
     let mut cur = Some(dir);
     while let Some(d) = cur {
@@ -464,11 +515,21 @@ mod config_doc_tests {
 
     #[test]
     fn every_recognized_key_has_a_doc_row_and_no_extras() {
-        let doc_keys: Vec<&str> = CONFIG_KEY_DOCS.iter().map(|(k, _, _, _)| *k).collect();
+        let doc_keys: Vec<&str> = CONFIG_KEY_DOCS.iter().map(|(k, _, _, _, _)| *k).collect();
         assert_eq!(
             doc_keys, RECOGNIZED_KEYS,
             "CONFIG_KEY_DOCS must document exactly RECOGNIZED_KEYS, in the same order"
         );
+    }
+
+    #[test]
+    fn every_key_is_policy_or_taste() {
+        for (key, _, _, _, layer) in CONFIG_KEY_DOCS {
+            assert!(
+                *layer == "POLICY" || *layer == "TASTE",
+                "key `{key}` layer must be POLICY or TASTE, got `{layer}`"
+            );
+        }
     }
 
     #[test]

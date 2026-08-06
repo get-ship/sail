@@ -803,11 +803,17 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     // RECOGNIZED_KEYS by that module's own test).
     let config_keys: Vec<serde_json::Value> = sail_lint::config::CONFIG_KEY_DOCS
         .iter()
-        .map(|(key, ty, default, doc)| {
-            serde_json::json!({ "key": key, "type": ty, "default": default, "doc": doc })
+        .map(|(key, ty, default, doc, layer)| {
+            serde_json::json!({
+                "key": key,
+                "type": ty,
+                "default": default,
+                "doc": doc,
+                "layer": layer,
+            })
         })
         .collect();
-    sf.push_str("export interface ConfigKeyDoc {\n  key: string\n  type: string\n  default: string\n  doc: string\n}\n\n");
+    sf.push_str("export interface ConfigKeyDoc {\n  key: string\n  type: string\n  default: string\n  doc: string\n  layer: \"POLICY\" | \"TASTE\"\n}\n\n");
     sf.push_str("export const CONFIG_KEYS: ConfigKeyDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&config_keys)?);
     sf.push_str("\n\n");

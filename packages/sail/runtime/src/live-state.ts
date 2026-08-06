@@ -12,6 +12,27 @@ export type LiveState<T> =
 export type LiveSignal<T> = Signal<LiveState<T>>
 
 /**
+ * The freeze-locked optimistic write surface (SPEC-HARDENING-1 WI3 / S8).
+ *
+ * A mutation may expose this handle so authors can optimistically patch a
+ * related `LiveSignal` (or a local list) before the network settles.
+ * Implementation may land any time; the TYPE is the freeze artifact:
+ *
+ * - `set` — same shape as `Signal.set`: next value, or an updater of the
+ *   previous **payload** (`T | undefined` when the live value is not yet
+ *   `ok`). Callers never invent a fourth `LiveState` kind.
+ * - `rollback` — restore the `LiveState` captured when the optimistic write
+ *   was applied (or a no-op if nothing was applied). Called on mutation
+ *   failure or explicit cancel.
+ *
+ * No second optimistic API is introduced later without a freeze revision.
+ */
+export interface OptimisticHandle<T> {
+  set(value: T | ((prev: T | undefined) => T)): void
+  rollback(): void
+}
+
+/**
  * PUSH data source (SSE / wss / live store).
  * `subscribe` owns the signal: first push → `ok`, may later → `error`;
  * returned disposer closes the connection. `query()` routes via `isLiveSource`.

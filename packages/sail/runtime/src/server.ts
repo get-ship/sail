@@ -51,6 +51,7 @@ export type {
   LiveSignal,
   LiveState,
   LiveValueOf,
+  OptimisticHandle,
 } from './query'
 export { createMountState, componentMountState, pickSignals, SIGNALS_KEY } from './state-proxy'
 

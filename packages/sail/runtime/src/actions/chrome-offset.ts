@@ -54,6 +54,9 @@ export const chromeOffset: Action<void> = (node) => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('resize', onResize)
       }
+      // Clear the :root publish — leaving a stale offset after unmount would
+      // shrink every h:fill pane by a phantom chrome height (WI4 leak path).
+      root?.style.removeProperty('--chrome-offset')
     },
   }
 }

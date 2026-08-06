@@ -74,6 +74,7 @@
     "LiveSignal": "data",
     "LiveSource": "data",
     "LiveValueOf": "data",
+    "OptimisticHandle": "data",
 
     "theme": "theme",
     "setThemePersist": "theme",

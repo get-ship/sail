@@ -18,7 +18,13 @@ export type { QueryKey } from './native-cache'
 /** Resolves when every in-flight `query()` pull has settled (SSR). */
 export { whenCacheSettled }
 
-export type { LiveState, LiveSignal, LiveSource, LiveValueOf } from './live-state'
+export type {
+  LiveState,
+  LiveSignal,
+  LiveSource,
+  LiveValueOf,
+  OptimisticHandle,
+} from './live-state'
 
 /** Options for `query()`/`queryKeyed()` (`staleTime`/`gcTime`/`retry`). */
 export type QueryOpts = NativeCacheOpts

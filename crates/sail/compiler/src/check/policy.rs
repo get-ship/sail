@@ -456,8 +456,10 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
     }
     let unknown = cfg.unknown_keys();
     if !unknown.is_empty() {
+        // SPEC-HARDENING-1 WI5: validation errors name the allowed keys.
+        let allowed = sail_lint::config::RECOGNIZED_KEYS.join(", ");
         return rejected(format!(
-            "unrecognized key{} {}",
+            "unrecognized key{} {} (allowed keys: {allowed})",
             if unknown.len() == 1 { "" } else { "s" },
             unknown
                 .iter()
