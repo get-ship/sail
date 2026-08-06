@@ -39,7 +39,7 @@ deck mounts routes but owns no data. Your app exposes named clients through one 
   <p>The store lives <em>above</em> the router, so it survives client-side navigation <strong>and</strong> a full reload — unlike a route signal, which resets when you navigate away. A persisted counter (an example) demonstrates the difference: bump it, navigate to another page, come back — the number holds.</p>
 
   <h2>Live server data</h2>
-  <p>A <code>&lt;data source="…" live&gt;</code> binding subscribes a route to live server data. That transport is <strong>host-wired</strong>: a host (like shipd) mounts it and supplies a resolver. Standalone <code>sail dev</code> serves routing, assets, SSR and HMR but not live server data yet — that's the server-functions work (#32). Use a client store for state until then.</p>
+  <p>A <code>&lt;data source="…" live&gt;</code> binding subscribes a route to live server data. That transport is <strong>host-wired</strong>: a host (like shipd) mounts it and supplies a resolver. Standalone <code>sail dev</code> serves routing, assets, SSR and HMR but not live server data yet — that’s the server-functions work (#32). Use a client store for state until then.</p>
 
   <row>
     style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })

@@ -91,9 +91,9 @@ Introduction</p>
         style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })
 
         <p>
-          The compiler checks more than syntax: a colour that isn't a token, a
+          The compiler checks more than syntax: a colour that isn’t a token, a
           stylesheet beside a component, an animation outside the motion
-          system — these don't compile, and every refusal names the correct
+          system — these don’t compile, and every refusal names the correct
           form. How strict is a per-directory contract: the config on the
           right is what these docs pages compile under. Grants reach beyond
           styling — our code-editor declares <code>"unconfined": true</code>
@@ -104,7 +104,7 @@ Introduction</p>
           <code>raw_containers</code>, <code>stylesheets</code>,
           <code>network</code>, <code>unconfined</code> — each a
           per-directory grant, and an unrecognized key refuses loudly. What
-          isn't granted doesn't compile.
+          isn’t granted doesn’t compile.
         </p>
       </column>
       <column gap="2">
@@ -117,7 +117,7 @@ apps/sail-site/routes/sail.config.json</p>
       </column>
     </row>
 
-    <h2>What's in the box</h2>
+    <h2>What’s in the box</h2>
     <p>
       <a href="/components">Interface patterns</a> — dialogs, comboboxes,
       tables, tabs, toasts — are tags, keyboard-complete and accessible,
@@ -141,7 +141,7 @@ apps/sail-site/routes/sail.config.json</p>
       and style without JavaScript, with behavior arriving as progressive
       enhancement over native elements. That matters most compared to the
       usual stack, where the component library and the design system arrive
-      as their own runtime on top of the framework's.
+      as their own runtime on top of the framework’s.
     </p>
 
     <p>

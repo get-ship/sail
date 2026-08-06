@@ -335,7 +335,7 @@ Volume</span>
                     <input type="email" placeholder="you@ship.dev" />
                     <span slot="hint">
                       style(mutedXs)
-We'll never share this.</span>
+We’ll never share this.</span>
                   </field>}{else-if {e.tag === 'label'} => <column gap="1">
                     <label for="demo-label-input">Display name</label>
                     <input id="demo-label-input" placeholder="Ada Lovelace" />
@@ -630,7 +630,7 @@ Build 1837 · shipped · Mon</p>
                   </div>}{else-if {e.tag === 'sail-media-av'} => <sail-media-av></sail-media-av>}{else-if {e.tag === 'sail-code-editor'} => <sail-code-editor value={editorSample()} language="javascript" line-numbers></sail-code-editor>}{else-if {e.tag === 'sail-mermaid'} => <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>}{else-if {e.tag === 'sail-message'} => <column gap="2">
                     style({ box: w(full) })
 
-                    <sail-message from="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
+                    <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
                     <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
                   </column>}{else-if {e.tag === 'sail-citation'} => <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>}{else-if {e.tag === 'sail-composer'} => <sail-composer placeholder="Message the agent…">
                     style({  box: w(full).minW(0)  })

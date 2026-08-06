@@ -69,7 +69,7 @@ AI</p>
   <h2>Why this matters</h2>
   <p>
     The point of the loop is <strong>single-turn confidence</strong>: the agent
-    doesn't guess and submit. It writes, diagnoses, fixes the surfaced issues,
+    doesn’t guess and submit. It writes, diagnoses, fixes the surfaced issues,
     re-diagnoses until clean, then scores. If the score is too low, it
     rewrites — but the compile path is never the blocker.
   </p>

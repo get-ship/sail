@@ -97,7 +97,7 @@ Source</p>
   <p>
     An uncaught throw always lands in the console. In development the dev
     server also overlays it on the page — a fixed panel naming the component
-    and the phase that threw — so a broken effect can't fail invisibly; the
+    and the phase that threw — so a broken effect can’t fail invisibly; the
     overlay ships zero bytes in production. And every route in a deck app is
     wrapped in a default boundary of its own, so a page that throws degrades
     to an error card with a Retry — with the message and stack in
@@ -106,7 +106,7 @@ Source</p>
 
   <h2>Async errors are states, not throws</h2>
   <p>
-    A rejected <code>query()</code> doesn't trip a boundary — it sets the
+    A rejected <code>query()</code> doesn’t trip a boundary — it sets the
     signal to <code>&#123; kind: 'error' &#125;</code>, and the template
     renders that state where it happens:
   </p>
@@ -114,7 +114,7 @@ Source</p>
   <p>
     style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
-    The two systems don't overlap: a failed fetch shows the
+    The two systems don’t overlap: a failed fetch shows the
     <code>&lt;match error arm&gt;</code> branch, never the boundary
     fallback; a synchronous throw trips the boundary, never the error state.
     Expected failures get rendered as states; unexpected ones get contained

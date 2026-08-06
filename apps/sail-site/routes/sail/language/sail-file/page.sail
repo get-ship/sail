@@ -49,14 +49,14 @@ The language</p>
   <p>
     A <code>.sail</code> file has up to three parts, each with one job. The
     template is the markup. <code>&lt;scope&gt;</code> declares the
-    component's contract. <code>&lt;controller&gt;</code> holds its behavior.
+    component’s contract. <code>&lt;controller&gt;</code> holds its behavior.
     Only the template is required — a static component is just markup.
   </p>
   <code-block code={code.shape}></code-block>
 
   <h2>The template</h2>
   <p>
-    The board's template, in full. Braces are expressions:
+    The board’s template, in full. Braces are expressions:
     <code>&#123;departed()&#125;</code> reads a value, and when that value
     changes, only that text node updates. Lists are spelled
     <code>&lt;for&gt;</code> with a required <code>key</code> — as rows
@@ -70,8 +70,8 @@ The language</p>
 
   <h2>The scope</h2>
   <p>
-    <code>&lt;scope&gt;</code> is the component's static surface — everything
-    that is true about it before it runs. The board's scope, in full:
+    <code>&lt;scope&gt;</code> is the component’s static surface — everything
+    that is true about it before it runs. The board’s scope, in full:
   </p>
   <code-block code={code.scope}></code-block>
   <p>
@@ -79,32 +79,32 @@ The language</p>
     used two lines later — <code>seed</code> lets a parent hand the board its
     opening rows. Types live in scope because the contract needs them: a
     prop like <code>seed</code> is meaningless without <code>Flight</code>,
-    and the controller's state (next section) speaks the same type. Declared
+    and the controller’s state (next section) speaks the same type. Declared
     once here, it is usable everywhere in the file without an import.
   </p>
   <p>
     Both props have defaults, so both attributes are optional — the live
     board above sets <code>title</code> and skips <code>seed</code>. Leave
     the default off (<code>airport: string</code>) and the prop becomes
-    required: a parent that doesn't fill it does not compile. Scope has one
-    more member kind, <strong>variants</strong> — a component's named looks —
+    required: a parent that doesn’t fill it does not compile. Scope has one
+    more member kind, <strong>variants</strong> — a component’s named looks —
     covered with the rest of <a href="/sail/language/styling">styling</a>.
   </p>
 
   <h2>The controller</h2>
   <p>
-    The controller owns the component's state and behavior. It runs once per
-    mounted instance, and <strong>whatever it returns is the template's
+    The controller owns the component’s state and behavior. It runs once per
+    mounted instance, and <strong>whatever it returns is the template’s
     entire vocabulary</strong> — the template can read
     <code>flights()</code> and <code>departed()</code> because the controller
-    returned them, and nothing it didn't return is reachable.
+    returned them, and nothing it didn’t return is reachable.
   </p>
   <p>
     The board keeps two signals and one effect. A <strong>signal</strong> is
     a value that knows who reads it. An <strong>effect</strong> is a
     computation that runs once, tracks every signal it read, and re-runs when
     any of them change; if it returns a function, that runs first as cleanup.
-    The board's effect tracks nothing — it just starts the clock, and hands
+    The board’s effect tracks nothing — it just starts the clock, and hands
     back the cleanup that stops it when the board unmounts:
   </p>
   <code-block code={code.controller}></code-block>
@@ -119,7 +119,7 @@ The language</p>
   <h2>The flow</h2>
   <p>
     Here is one tick of the board, live, as a sequence. Watch what lights
-    up — and what doesn't:
+    up — and what doesn’t:
   </p>
   <flow-trace></flow-trace>
   <p>
@@ -135,8 +135,8 @@ The language</p>
     Compiling a <code>.sail</code> file produces a <em>custom element</em> —
     a real HTML tag, registered with the browser itself, that works anywhere
     HTML works. There is no import to wire up and no wrapper to render
-    through: using a component is writing its tag. This page's own source
-    contains exactly what you'd expect:
+    through: using a component is writing its tag. This page’s own source
+    contains exactly what you’d expect:
   </p>
   <code-block code={code.usage}></code-block>
   <p>
@@ -146,7 +146,7 @@ The language</p>
   <code-block code={code.slotDef}></code-block>
   <p>
     …and whoever uses the board projects content into it. The footer line on
-    the live board above is not the board's — it belongs to this page:
+    the live board above is not the board’s — it belongs to this page:
   </p>
   <code-block code={code.slotUse}></code-block>
   <p>

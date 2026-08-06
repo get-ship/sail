@@ -40,7 +40,7 @@ The language</p>
     Familiar spacing and color ideas still apply
     (<code>pad(4)</code>, <code>bg(surface-1)</code>, <code>radius(lg)</code>),
     but the product form is a typed channel spine, not a utility string. Closed and
-    token-backed is what makes the theme switch in this site's header work —
+    token-backed is what makes the theme switch in this site’s header work —
     swap the theme and everything repaints, because nothing held a raw color.
   </p>
 
@@ -88,7 +88,7 @@ active:…</button>
     <code>:focus-visible</code>), <code>focusWithin</code>, <code>active</code>,
     <code>disabled</code>, and ARIA-backed states components already stamp:
     <code>current</code>, <code>selected</code>, <code>expanded</code>,
-    <code>checked</code>, <code>pressed</code>. This site's product switcher:
+    <code>checked</code>, <code>pressed</code>. This site’s product switcher:
   </p>
   <code-block code={code.current}></code-block>
 
@@ -159,7 +159,7 @@ pad(3) on a phone; when tablet → pad(6).</p>
     compile errors in application code. Utility-string hosts
     (<code>sx="…"</code> / <code>style="…"</code>) are refused the same way —
     dead forms; product paint is
-    <code>style&#40;&#123; box: pad(4), paint: bg(muted) &#125;&#41;</code>. When the vocabulary can't express
+    <code>style&#40;&#123; box: pad(4), paint: bg(muted) &#125;&#41;</code>. When the vocabulary can’t express
     something you need, file a gap: the system grows a setter or token, not a
     hole.
   </p>

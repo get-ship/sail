@@ -31,7 +31,7 @@ deck · 0.2.0</p>
 
   <alert tone="info">
     <strong>This site is a deck app.</strong> Every page you read is a file-routed
-    deck route, server-rendered and hydrated. The docs are deck's own canonical
+    deck route, server-rendered and hydrated. The docs are deck’s own canonical
     example — and its release test.
   </alert>
 
@@ -40,7 +40,7 @@ deck · 0.2.0</p>
   <pre>
     style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })
 {quickstart}</pre>
-  <p>That's a running Sail single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
+  <p>That’s a running Sail single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
 
   <h2>Where it sits</h2>
   <pre>

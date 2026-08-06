@@ -20,7 +20,7 @@ Why Sail</p>
 
     Because the author changed. Every mainstream web framework is an
     ergonomics project — built to fit a
-    professional's hands. Hooks, hot reload, clever DX: all of it optimizes
+    professional’s hands. Hooks, hot reload, clever DX: all of it optimizes
     for a person who already knows the territory. Two things happened to that
     assumption at once. Agents started writing a large share of the code. And
     AI put website-building in front of people who have never written any —
@@ -34,8 +34,8 @@ Why Sail</p>
     is excellent in isolation and optimized for a different goal, and making
     them agree is its own skill that has nothing to do with the website. The
     naive alternative — plain HTML and CSS — gets surprisingly far, and then
-    falls apart exactly when the project starts to matter. Agents don't need
-    the ergonomics; they need determinism. Newcomers don't need the decision
+    falls apart exactly when the project starts to matter. Agents don’t need
+    the ergonomics; they need determinism. Newcomers don’t need the decision
     tree; they need it gone. Sail is one system where those are the same
     answer.
   </p>
@@ -53,20 +53,20 @@ Why Sail</p>
   <p>
     That is the bet Sail makes: consistency cannot be a review step or a
     prompt instruction, because variance is a property of the language, not
-    of the author's skill. Close the decisions — one way to hold state, one
+    of the author’s skill. Close the decisions — one way to hold state, one
     way to style, one way to animate — and the five-hundredth page holds the
     system as well as the first, no matter who or what wrote it.
   </p>
 
   <h2>The missing layer is a compiler</h2>
   <p>
-    A person describes, a model writes — and in most stacks, that's the whole
+    A person describes, a model writes — and in most stacks, that’s the whole
     pipeline. There is no oracle: a wrong program renders, plausibly, and
     ships. You find out in review, in production, or never. Sail puts a
     compiler between the model and the artifact. Off-system styling, a
     stylesheet beside a component, an unknown motion trigger — these fail the
-    build, and every refusal names the correct form in the language's own
-    vocabulary. A model doesn't need to have memorized a million lines of
+    build, and every refusal names the correct form in the language’s own
+    vocabulary. A model doesn’t need to have memorized a million lines of
     Sail; it needs to be correctable in one turn, and that is a property we
     can design.
   </p>
@@ -79,13 +79,13 @@ Why Sail</p>
 
   <h2>Built from the platform</h2>
   <p>
-    Sail doesn't wrap the browser — it compiles to it. A dialog is
+    Sail doesn’t wrap the browser — it compiles to it. A dialog is
     <code>&lt;dialog&gt;</code>. A menu is a native <code>popover</code>.
     Components compile to real markup and a stylesheet, so what the model
     writes is the HTML it already knows, and what a user gets is keyboard
     handling, focus management, and ARIA that come with the element — by
-    construction, not because the author remembered. Best practice isn't a
-    checklist here; it's the only form the language offers. The same holds
+    construction, not because the author remembered. Best practice isn’t a
+    checklist here; it’s the only form the language offers. The same holds
     for design: colours, spacing, and type are tokens, themes are data, and
     a rebrand is a data change rather than a rewrite.
   </p>
@@ -97,7 +97,7 @@ Why Sail</p>
     technologies — the front end of the platform. That origin set a hard
     requirement: the framework had to run on a portable toolchain — no Node
     dependency, a compiler that runs in the browser (this site compiles Sail
-    live in your tab) — and that constraint shaped many of the language's
+    live in your tab) — and that constraint shaped many of the language’s
     design decisions.
   </p>
 

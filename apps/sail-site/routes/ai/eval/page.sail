@@ -27,10 +27,10 @@ AI</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
-    <code>@ship/sail-eval</code> runs an agent's output against a behavioural
+    <code>@ship/sail-eval</code> runs an agent’s output against a behavioural
     spec and returns a structured quality score. The sub-scores tell you
     which gate (compile / scope / behaviour) the agent missed, so the next
-    turn's prompt can target the failure.
+    turn’s prompt can target the failure.
   </p>
 
   <h2>The API, in one block</h2>
@@ -65,7 +65,7 @@ AI</p>
   <h2>sniffEscapeHatches</h2>
   <p>
     <code>sniffEscapeHatches(output)</code> returns a separate array of policy
-    violations — things that compile but shouldn't ship:
+    violations — things that compile but shouldn’t ship:
   </p>
   <code-block code={hatchExample} lang="ts"></code-block>
   <p>Detected hatches today:</p>
@@ -73,7 +73,7 @@ AI</p>
     <li>raw <code>&lt;script&gt;</code> tags in templates</li>
     <li><code>@ts-ignore</code> / <code>@ts-expect-error</code> in controllers</li>
     <li><code>eval()</code> calls anywhere</li>
-    <li>imports outside the harness's importmap (e.g. node-only modules)</li>
+    <li>imports outside the harness’s importmap (e.g. node-only modules)</li>
   </ul>
 
   <h2>Why this matters</h2>
