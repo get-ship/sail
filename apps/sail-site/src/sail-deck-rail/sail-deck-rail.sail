@@ -5,11 +5,13 @@
 
 <controller>
 export default controller((ctx) => {
+ // Track route.pathname so current={…} / aria-current updates on SPA nav
+ // while this layout chrome stays mounted across leaf routes.
  const path = derived(() => {
- const r = (ctx as { route?: { pathname?: () => string } }).route
- if (r?.pathname) void r.pathname()
+ const fromRoute = (ctx as { route?: { pathname?: () => string } }).route?.pathname?.()
+ if (typeof fromRoute === 'string' && fromRoute.length > 0) return fromRoute
  if (typeof location !== 'undefined' && location.pathname) return location.pathname
- return r?.pathname?.() ?? '/'
+ return '/'
  })
  const navOpen = signal(false)
  const openNav = (): void => navOpen.set(true)

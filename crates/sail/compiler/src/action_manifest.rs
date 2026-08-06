@@ -308,8 +308,8 @@ pub const ACTIONS: &[ActionEntry] = &[
     },
     ActionEntry {
         name: "syntaxHighlight",
-        param: "void",
-        summary: "Syntax-highlight + copy-button behavior for a <code-block>.",
+        param: "string | null | undefined",
+        summary: "Syntax-highlight source for a <code-block>; prefer use:syntaxHighlight={code()}.",
         auto_import: true,
     },
     ActionEntry {

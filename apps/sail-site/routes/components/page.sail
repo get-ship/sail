@@ -102,10 +102,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       void packSel()
       void visibleList()
       requestAnimationFrame(() => {
-        document.querySelectorAll('[tile]="sail-media-image"] sail-media-image').forEach((el) => {
-          const host = el as HTMLElement & { src?: string }
-          if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
-        })
+        // Free attr on <card tile={…}>; also tolerate data-tile if stamped.
+        // (Prior typo `[tile]="…"]` was an invalid selector and broke all tiles.)
+        document
+          .querySelectorAll(
+            'sail-media-image, [tile="sail-media-image"] sail-media-image, [data-tile="sail-media-image"] sail-media-image',
+          )
+          .forEach((el) => {
+            const host = el as HTMLElement & { src?: string }
+            if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
+          })
       })
     })
 

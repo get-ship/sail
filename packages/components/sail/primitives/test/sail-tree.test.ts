@@ -387,6 +387,22 @@ describe('<sail-tree> — events via host.emit! (behavioral spec #3)', () => {
     const detail = (fn.mock.calls.at(-1)![0] as CustomEvent).detail
     expect(detail.expanded).toMatchObject({ src: true })
   })
+
+  it('invokes onSelect L1 callback with { id } on leaf select (studio explorer seam)', async () => {
+    const { el } = mountTree({}, { selectable: 'single' }, { selectable: true })
+    await flush()
+    const onSelect = vi.fn()
+    ;(el as HTMLElement & { onSelect?: (d: { id?: string }) => void }).onSelect =
+      onSelect
+    const row = (el.shadowRoot ?? el).querySelector(
+      '[data-node-id="readme"]',
+    ) as HTMLElement
+    expect(row).toBeTruthy()
+    row.click()
+    await flush()
+    expect(onSelect).toHaveBeenCalled()
+    expect(onSelect.mock.calls[0]![0]).toMatchObject({ id: 'readme' })
+  })
 })
 
 describe('<sail-tree> — NO parallel engine (behavioral spec #11)', () => {

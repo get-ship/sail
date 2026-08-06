@@ -38,23 +38,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const ticks = signal(0)
     interval(() => ticks.set((n) => n + 1), 1000)
 
-    // grid cols is not responsive in the language — swap 1 vs 3 tracks via matchMedia.
-    const isWide = signal(
-      typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
-    )
-    mount(() => {
-      if (typeof window === 'undefined') return
-      const mq = window.matchMedia('(min-width: 768px)')
-      const onChange = (): void => isWide.set(mq.matches)
-      onChange()
-      mq.addEventListener('change', onChange)
-      return () => mq.removeEventListener('change', onChange)
-    })
+    // Responsive bento: structural <when {tablet}> in the template (not
+    // matchMedia + mount — that threw SailMountOutsideSetupError on /).
 
     return {
       word: () => [WORDS[i()]],
       ticks,
-      isWide,
     }
 })
 </controller>
@@ -200,9 +189,10 @@ NO RAW CSS&nbsp;&nbsp;◆&nbsp;&nbsp;SIGNALS BUILT IN&nbsp;&nbsp;◆&nbsp;&nbsp;
 
     <!--
       <grid cols> is not breakpoint-aware. Duplicate the six cards only to
-      swap track count — language gap, not content gap.
+      swap track count — language gap, not content gap. Structural when
+      (WHEN-1) owns the breakpoint; no matchMedia controller state.
     -->
-    <if {isWide()}>
+    <when {tablet}>
       <grid cols="3" gap="4">
         style(grid)
 
@@ -628,7 +618,7 @@ $</span> sail check app/</p>
             </column>
           </card>
         </a>
-      </grid>}</if>
+      </grid>}</when>
   </section>
 
   <section>
