@@ -88,7 +88,7 @@ for (const m of CEM.modules) {
 
 const OVERLAY_FAMILY = [
   'sail-context-menu', 'sail-select', 'sail-dropdown-menu', 'sail-popover',
-  'sail-dialog', 'sail-alert-dialog', 'sail-hover-card',
+  'sail-dialog', 'sail-hover-card',
   'sail-combobox', 'sail-cmdk', 'sail-drawer', 'sail-sheet',
 ]
 const OVERLAY_FAMILY_SET = new Set(OVERLAY_FAMILY)
@@ -100,7 +100,6 @@ const DRIVE_OVERLAY = {
   'sail-context-menu':  { kind: 'attr',   attr: 'open' },
   'sail-accordion':   { kind: 'click',  trigger: '[slot="trigger"]' },
   'sail-dialog':        { kind: 'attr',   attr: 'open' },
-  'sail-alert-dialog':  { kind: 'attr',   attr: 'open' },
   'sail-drawer':        { kind: 'attr',   attr: 'open' },
   'sail-cmdk':          { kind: 'attr',   attr: 'open' },
   'sail-select':        { kind: 'click',  trigger: '[part="trigger"], [slot="trigger"], button' },

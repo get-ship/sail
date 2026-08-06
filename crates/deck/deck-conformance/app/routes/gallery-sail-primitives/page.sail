@@ -13,7 +13,7 @@ function notify(message: string, tone: string, description?: string) {
 export default controller(() => ({
     // Overlays
     dialogDemo: useDialog(),
-    alertDialogOpen: signal(false),
+    leaveDialogOpen: signal(false),
     drawerOpen: signal(false),
     popoverOpen: signal(false),
     dropdownOpen: signal(false),
@@ -735,27 +735,39 @@ Modal dialog — size=md, backdrop=default</p>
     </row>
   </section>
 
-  <!-- sail-alert-dialog -->
+  <!-- dialog leave / multi-action confirm — pattern of <dialog>, not a second L1 tag -->
   <section>
     <h2>
       style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })
-sail-alert-dialog</h2>
+dialog — leave pattern</h2>
     <row gap="3" align="start">
       <column gap="3">
         style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })
 
         <p>
           style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })
-Destructive confirm dialog with built-in cancel/confirm footer</p>
-        <sail-button variant="outline" tone="destructive" size="sm" on:click={() => alertDialogOpen.set(true)}>Delete item</sail-button>
-        <dialog role="alertdialog"
-          open={alertDialogOpen()}
-          tone="destructive"
-          confirm-label="Delete"
-          cancel-label="Keep it"
+Alert-style modal = plain dialog + author footer (studio leave). Always-mounted; open bind; no confirm-label sugar / no second tag.</p>
+        <button type="button" variant="outline" tone="destructive" size="sm" on:click={() => leaveDialogOpen.set(true)}>Leave with unsaved changes</button>
+        <dialog
+          open={leaveDialogOpen()}
+          size="md"
+          on-close={() => leaveDialogOpen.set(false)}
         >
-          <span slot="title">Delete this item?</span>
-          This action is permanent and cannot be reversed. All associated data will be removed.
+          <header>Unsaved theme changes</header>
+          <section>
+            Save writes the theme to the project. Discard drops in-memory edits.
+          </section>
+          <footer>
+            <button type="button" size="sm" variant="ghost" tone="muted" on:click={() => leaveDialogOpen.set(false)}>
+              Cancel
+            </button>
+            <button type="button" size="sm" variant="outline" tone="destructive" on:click={() => leaveDialogOpen.set(false)}>
+              Discard
+            </button>
+            <button type="button" size="sm" variant="solid" tone="primary" on:click={() => leaveDialogOpen.set(false)}>
+              Save
+            </button>
+          </footer>
         </dialog>
       </column>
     </row>
