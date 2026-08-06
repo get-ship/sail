@@ -57,9 +57,13 @@ export default controller(() => {
   </row>
 
   <while-loading {inbox}>
-    <row gap="2" align="center" sx={loadingRow}>
+    <row gap="2" align="center">
+      style(loadingRow)
+
       <spinner size="sm"></spinner>
-      <small sx={muted}>loading messages…</small>
+      <small>
+        style(muted)
+loading messages…</small>
     </row>
   </while-loading>
 
@@ -70,11 +74,19 @@ export default controller(() => {
   <if {inbox().kind === 'ok'}>
     <column gap="1">
       <for {visible()} as="m" key={m.id}>
-        <row gap="3" align="center" sx={messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })}>
-          <if {!m.read}><span sx={unreadDot}></span></if>
+        <row gap="3" align="center">
+          messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })
+
+          <if {!m.read}><span>
+            style(unreadDot)
+</span></if>
           <column gap="0" grow>
-            <strong sx={from}>{m.from}</strong>
-            <small sx={muted}>{m.subject}</small>
+            <strong>
+              style(from)
+{m.from}</strong>
+            <small>
+              style(muted)
+{m.subject}</small>
           </column>
           <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>

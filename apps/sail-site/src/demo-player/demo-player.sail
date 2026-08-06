@@ -33,26 +33,52 @@ export default controller((ctx: Scope) => {
 })
 </controller>
 
-<card sx={card}>
+<card>
+  style(card)
+
   <row gap="3" align="center" nowrap>
     <column gap="1" grow min-w="0">
-      <strong sx={title}>Signals in the Rain</strong>
-      <p sx={artist}>The Reactive Quartet</p>
+      <strong>
+        style(title)
+Signals in the Rain</strong>
+      <p>
+        style(artist)
+The Reactive Quartet</p>
       <progress value={position()} max="100"></progress>
     </column>
     <if {playing()}>
-      <row gap="1" align="end" sx={eq}>
-        <div sx={[bar, style.h(4).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })]}></div>
-        <div sx={[bar, style.h(6).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })]}></div>
-        <div sx={[bar, style.h(3).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })]}></div>
-        <div sx={[bar, style.h(5).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })]}></div>
+      <row gap="1" align="end">
+        style(eq)
+
+        <div>
+          style([bar, style.h(4).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+</div>
+        <div>
+          style([bar, style.h(6).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+</div>
+        <div>
+          style([bar, style.h(3).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+</div>
+        <div>
+          style([bar, style.h(5).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+</div>
       </row>
     <else>
-      <row gap="1" align="center" sx={eq}>
-        <div sx={rest}></div>
-        <div sx={rest}></div>
-        <div sx={rest}></div>
-        <div sx={rest}></div>
+      <row gap="1" align="center">
+        style(eq)
+
+        <div>
+          style(rest)
+</div>
+        <div>
+          style(rest)
+</div>
+        <div>
+          style(rest)
+</div>
+        <div>
+          style(rest)
+</div>
       </row>
     </else></if>
   </row>

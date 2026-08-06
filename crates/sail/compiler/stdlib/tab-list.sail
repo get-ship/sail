@@ -17,7 +17,8 @@
   const enclosed = style.borderBWidth(1).border(tab-list-border)
 </scope>
 
-<row align="stretch" gap="1" sx={[
+<row align="stretch" gap="1">
+  style([
   base,
   match(variant, {
     line: line,
@@ -27,6 +28,7 @@
   compound({ sticky: true }, style.position(sticky).top(0).z(sticky)),
   compound({ orientation: vertical }, style.borderBWidth(0).borderEWidth(1).border(tab-list-border)),
   compound({ orientation: vertical, variant: pill }, style.borderEWidth(0)),
-]}>
+])
+
   <slot></slot>
 </row>

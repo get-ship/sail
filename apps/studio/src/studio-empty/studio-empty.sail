@@ -16,8 +16,10 @@
   variant={variant()}
   size={size()}
   w="full"
-  sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}
+
 >
+  style.borderWidth(1).border(border-subtle).radius(md).pad(3)
+
   <slot name="icon"></slot>
   <strong slot="title">{title()}</strong>
   <slot></slot>

@@ -33,26 +33,36 @@
   role="status"
   aria-live="polite"
   aria-label={label()}
-  sx={style}
+
 >
+  style(style)
+
   <row
     gap={size() === 'lg' ? '2' : '1'}
     align="center"
     data-state={tone() + ' ' + size()}
-    sx={style.group()}
+
   >
+    style.group()
+
     <span
 aria-hidden="true"
-sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })}
-></span>
+
+>
+      style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })
+</span>
     <span
 aria-hidden="true"
-sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })}
-></span>
+
+>
+      style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })
+</span>
     <span
 aria-hidden="true"
-sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })}
-></span>
+
+>
+      style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })
+</span>
   </row>
 </span>
 </span>

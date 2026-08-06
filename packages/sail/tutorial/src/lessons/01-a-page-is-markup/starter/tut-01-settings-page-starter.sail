@@ -13,5 +13,7 @@
   <!-- 2. A two-column <grid cols="2"> of <card>s: Profile and Notifications. -->
 
   <!-- 3. A Danger zone card with tone="destructive". -->
-  <p sx={style.fg(muted-foreground)}>Nothing here yet — open the lesson prose and build the screen.</p>
+  <p>
+    style.fg(muted-foreground)
+Nothing here yet — open the lesson prose and build the screen.</p>
 </column>

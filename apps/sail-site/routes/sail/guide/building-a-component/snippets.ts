@@ -6,11 +6,11 @@
 export const code = {
   // Step 1 — markup only. No props, no controller: a .sail file with nothing
   // but a template is a valid component.
-  markup: `<card sx={style.pad(4).w(full).maxW(panel-max-w-sm)}>
+  markup: `<card style={style.pad(4).w(full).maxW(panel-max-w-sm)}>
   <column gap="3">
     <row align="center" justify="between" nowrap>
-      <strong sx={style.textCase(uppercase).tracking(wide).fontSize(sm)}>Dinner</strong>
-      <span sx={style.fontFamily(mono).fontSize(sm).fg(muted-foreground)}>$96.00</span>
+      <strong style={style.textCase(uppercase).tracking(wide).fontSize(sm)}>Dinner</strong>
+      <span style={style.fontFamily(mono).fontSize(sm).fg(muted-foreground)}>$96.00</span>
     </row>
   </column>
 </card>`,
@@ -23,11 +23,11 @@ export const code = {
   }
 </scope>
 
-<card sx={style.pad(4).w(full).maxW(panel-max-w-sm)}>
+<card style={style.pad(4).w(full).maxW(panel-max-w-sm)}>
   <column gap="3">
     <row align="center" justify="between" nowrap>
-      <strong sx={style.textCase(uppercase).tracking(wide).fontSize(sm)}>{label()}</strong>
-      <span sx={style.fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{total()}</span>
+      <strong style={style.textCase(uppercase).tracking(wide).fontSize(sm)}>{label()}</strong>
+      <span style={style.fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{total()}</span>
     </row>
   </column>
 </card>`,
@@ -55,10 +55,10 @@ export default controller((ctx) => {
   counterRow: `<row align="center" justify="between" nowrap gap="3">
   <row align="center" gap="2" nowrap>
     <button size="sm" variant="outline" on:click={() => remove()} label="One fewer person">−</button>
-    <span sx={style.fontFamily(mono).fontSize(sm).nums(tabular).w(8).textAlign(center)}>{people()}</span>
+    <span style={style.fontFamily(mono).fontSize(sm).nums(tabular).w(8).textAlign(center)}>{people()}</span>
     <button size="sm" variant="outline" on:click={() => add()} label="One more person">+</button>
   </row>
-  <span sx={style.fontFamily(mono).fontSize(2xl).nums(tabular)}>{share()}</span>
+  <span style={style.fontFamily(mono).fontSize(2xl).nums(tabular)}>{share()}</span>
 </row>`,
 
   // Step 5 — a slot: the hole the caller fills.
@@ -69,7 +69,7 @@ export default controller((ctx) => {
 
   // Step 6 — using the finished component from a page.
   usage: `<bill-split label="Dinner" total="96">
-  <p slot="note" sx={style.fontSize(xs).fg(muted-foreground)}>
+  <p slot="note" style={style.fontSize(xs).fg(muted-foreground)}>
     Tip included. Arguments not.
   </p>
 </bill-split>`,

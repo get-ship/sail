@@ -74,14 +74,13 @@ fn compile_attr(
             return Err(unknown_directive_error(name, value_span, loc));
         }
     }
-    // `sx` is Style product language (`style.fontSize(2xl)`, `style.padX(2_5)`,
-    // `style.fg(sidebar-foreground)`, …) — not a JS expression. Leading-digit
-    // scale tokens and hyphenated token names are valid Style idents and
-    // invalid / differently-parsed JS. Full preprocess validates Style via
-    // `lower_sx`; author parse (`parse_author` / SailInspect) must keep the
-    // tree intact so region join can map layout boxes to author nodes.
+    // `sx=` is retired. Style attaches as a block statement in the element body.
     if name == "sx" {
-        return compile_sx_attr(value, value_span);
+        return Err(CompileError::new(
+            "sx= is retired — attach Style as a block statement:              <el> style.pad(4).bg(primary) … </el>",
+        )
+        .with_span(value_span)
+        .with_category("sx"));
     }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();

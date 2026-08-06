@@ -203,23 +203,35 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </slot>
 </div>
 </else-if><else>
-<div role="tree" sx={style.w(full).fontFamily(body).fontSize(density).fg(foreground)} aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+<div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+  style.w(full).fontFamily(body).fontSize(density).fg(foreground)
+
   <!-- Flow list: parent owns height; overflow scrolls. No absolute virtualizer
        (collapse reflows; row boxes don't share a fixed estimate). -->
-  <div sx={style.w(full).h(full).minH(0).overflowY(auto)}>
+  <div>
+    style.w(full).h(full).minH(0).overflowY(auto)
+
     <for {flowItems()} as="w" key={w.key}>
-      <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent} sx={style.group().w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
+      <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent}>
+        style.group().w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })
+
         <!-- Chevron is paint only (aria-expanded / data-expanded). Expand is the row. -->
         <if {w.canExpand}>
-          <row data-tree-caret aria-hidden="true" align="center" justify="center" sx={style.w(8).h(8).minW(8).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
+          <row data-tree-caret aria-hidden="true" align="center" justify="center">
+            style.w(8).h(8).minW(8).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })
+
             <icon name="chevron-right" size="sm"></icon>
           </row>
         <else>
-          <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>
+          <span aria-hidden="true">
+            style.w(density-icon).minW(density-icon)
+</span>
         </else></if>
 
         <if {selectable() === 'multi'}>
-          <span sx={style}>
+          <span>
+            style(style)
+
             <input
               type="checkbox"
               size="sm"
@@ -230,20 +242,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </span>
         </if>
         <if {w.icon !== ''}>
-          <icon name={w.icon} size="sm" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
+          <icon name={w.icon} size="sm">
+            style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })
+</icon>
         <else>
           <slot name="node-icon"></slot>
         </else></if>
-        <span grow min-w="0" sx={style.truncate()}>{w.label}</span>
-        <span sx={style.ml(auto).fontSize(xs)}>
+        <span grow min-w="0">
+          style.truncate()
+{w.label}</span>
+        <span>
+          style.ml(auto).fontSize(xs)
+
           <if {w.trailing !== ''}>
             <if {w.trailing === '●'}>
-              <span sx={style.fg(warning)} aria-label="Unsaved">●</span>
+              <span aria-label="Unsaved">
+                style.fg(warning)
+●</span>
             <else>
-              <span sx={style.fg(muted-foreground)} aria-label={`Meta ${w.trailing}`}>{w.trailing}</span>
+              <span aria-label={`Meta ${w.trailing}`}>
+                style.fg(muted-foreground)
+{w.trailing}</span>
             </else></if>
           </if>
-          <span sx={style.fg(muted-foreground)}><slot name="node-trailing"></slot></span>
+          <span>
+            style.fg(muted-foreground)
+<slot name="node-trailing"></slot></span>
         </span>
       </row>
     </for>

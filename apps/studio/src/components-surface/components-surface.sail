@@ -24,25 +24,35 @@ export default controller(() => {
   components-library
   gap="0"
   grow
-  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+
 >
+  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+
   <row
     components-workbench
     grow
     gap="0"
     nowrap
     align="stretch"
-    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
+
   >
+    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+
     <column
       components-nav
       grow
       gap="0"
-      sx={style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)}
+
     >
-      <column components-nav-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+      style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)
+
+      <column components-nav-head shrink="0" gap="2">
+        style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)
+
         <row align="center" justify="between" nowrap gap="2">
-          <p sx={eyebrow}>Components</p>
+          <p>
+            style(eyebrow)
+Components</p>
           <button type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen} shrink="0">
             New…
           </button>
@@ -66,18 +76,30 @@ export default controller(() => {
       </column>
 
       <if {library.isLoading()}>
-        <row align="center" gap="2" shrink="0" sx={style.padX(4).padY(2)}>
+        <row align="center" gap="2" shrink="0">
+          style.padX(4).padY(2)
+
           <spinner size="sm"></spinner>
-          <p sx={muted}>{library.loadingLabel()}</p>
+          <p>
+            style(muted)
+{library.loadingLabel()}</p>
         </row>
       </if>
 
-      <scroll-area components-list grow on:click={library.onListClick} sx={style.minH(0).basis(0).h(full)}>
-        <column gap="3" sx={style.pad(3)}>
+      <scroll-area components-list grow on:click={library.onListClick}>
+        style.minH(0).basis(0).h(full)
+
+        <column gap="3">
+          style.pad(3)
+
           <column list-group="project" gap="1">
             <row align="center" justify="between" nowrap>
-              <p sx={eyebrow}>This project</p>
-              <p sx={pathMeta}>{library.projectCountLabel()}</p>
+              <p>
+                style(eyebrow)
+This project</p>
+              <p>
+                style(pathMeta)
+{library.projectCountLabel()}</p>
             </row>
             <if {library.emptyProject()}>
               <studio-empty title="No project components" size="sm">
@@ -104,11 +126,17 @@ export default controller(() => {
 
           <column list-group="packs" gap="1">
             <row align="center" justify="between" nowrap>
-              <p sx={eyebrow}>Installed packs</p>
-              <p sx={pathMeta}>{library.packCountLabel()}</p>
+              <p>
+                style(eyebrow)
+Installed packs</p>
+              <p>
+                style(pathMeta)
+{library.packCountLabel()}</p>
             </row>
             <if {!library.hasPackRows()}>
-              <p sx={muted}>No installed packs</p>
+              <p>
+                style(muted)
+No installed packs</p>
             </if>
             <for {library.packRows()} as="row" key={row.key}>
               <studio-list-row
@@ -125,7 +153,9 @@ export default controller(() => {
             </for>
           </column>
 
-          <p l1-footnote sx={style.fontSize(xs).fg(muted-foreground).leading(snug).padX(1)}>
+          <p l1-footnote>
+            style.fontSize(xs).fg(muted-foreground).leading(snug).padX(1)
+
             Element skins live under Themes → Components — not listed here.
             <button type="button" size="sm" variant="ghost" tone="muted" themes-components on:click={session.goThemesComponents}>
               Open Themes
@@ -139,20 +169,28 @@ export default controller(() => {
       components-detail
       grow
       gap="0"
-      sx={style.minH(0).h(full).minW(0).basis(0).bg(background).overflow(hidden)}
+
     >
+      style.minH(0).h(full).minW(0).basis(0).bg(background).overflow(hidden)
+
       <column
         components-detail-head
         shrink="0"
         gap="3"
-        sx={style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)}
+
       >
+        style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+
         <row align="start" justify="between" gap="3" nowrap>
           <column grow min-w="0" gap="1">
-            <p detail-title sx={style.fontSize(lg).fontWeight(semibold).tracking(tight).truncate()}>
+            <p detail-title>
+              style.fontSize(lg).fontWeight(semibold).tracking(tight).truncate()
+
               {library.detailTitle()}
             </p>
-            <p detail-path sx={pathMeta}>{library.detailPath()}</p>
+            <p detail-path>
+              style(pathMeta)
+{library.detailPath()}</p>
             <row gap="2" align="center" nowrap>
               <if {library.hasSelected()}>
                 <badge tone={library.detailOriginTone()} size="sm" variant="soft" pill>{library.detailOriginLabel()}</badge>
@@ -199,13 +237,23 @@ export default controller(() => {
         </row>
       </column>
 
-      <scroll-area components-detail-body grow sx={style.minH(0).basis(0).h(full)}>
-        <column gap="4" sx={style.pad(5).minW(0)}>
+      <scroll-area components-detail-body grow>
+        style.minH(0).basis(0).h(full)
+
+        <column gap="4">
+          style.pad(5).minW(0)
+
           <if {session.showNewForm()}>
-            <card new-form padding="md" sx={style.minW(0)}>
+            <card new-form padding="md">
+              style.minW(0)
+
               <column gap="3">
-                <p sx={style.fontSize(md).fontWeight(semibold)}>New component</p>
-                <p sx={muted}>Creates a draft brief only — does not write files yet.</p>
+                <p>
+                  style.fontSize(md).fontWeight(semibold)
+New component</p>
+                <p>
+                  style(muted)
+Creates a draft brief only — does not write files yet.</p>
                 <field label="Name">
                   <input type="text" size="sm" placeholder="my-widget" value={session.newName()} on:input={session.onNewNameInput} />
                 </field>
@@ -230,7 +278,9 @@ export default controller(() => {
             </card>
           </if>
 
-          <card components-preview preview-specimen padding="none" sx={style.minW(0).overflow(hidden).shadow(lg)}>
+          <card components-preview preview-specimen padding="none">
+            style.minW(0).overflow(hidden).shadow(lg)
+
             <column gap="0">
               <row
                 specimen-chrome
@@ -238,21 +288,39 @@ export default controller(() => {
                 gap="2"
                 nowrap
                 shrink="0"
-                sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
               >
-                <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
-                  <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
-                  <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
-                  <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
+                style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
+                <row gap="2" align="center" nowrap shrink="0" hidden="true">
+                  style.minW(12)
+
+                  <stack shrink="0">
+                    style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+</stack>
+                  <stack shrink="0">
+                    style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+</stack>
+                  <stack shrink="0">
+                    style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+</stack>
                 </row>
-                <p grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>
+                <p grow min-w="0">
+                  style.fontSize(xs).fg(muted-foreground).truncate()
+
                   {library.previewTitle()}
                 </p>
                 <badge tone="muted" size="sm" variant="outline" pill shrink="0">preview</badge>
               </row>
-              <column mode="dark" specimen-body gap="2" sx={style.pad(6).minH(32).bg(background)}>
-                <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>{library.previewTitle()}</p>
-                <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed)}>{library.previewHint()}</p>
+              <column mode="dark" specimen-body gap="2">
+                style.pad(6).minH(32).bg(background)
+
+                <p>
+                  style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+{library.previewTitle()}</p>
+                <p>
+                  style.fontSize(sm).fg(muted-foreground).leading(relaxed)
+{library.previewHint()}</p>
               </column>
             </column>
           </card>
@@ -263,31 +331,53 @@ export default controller(() => {
               <tab value="contract">Contract</tab>
             </tab-list>
             <tab-panel value="overview">
-              <column gap="3" sx={style.padY(3)}>
+              <column gap="3">
+                style.padY(3)
+
                 <column gap="1">
-                  <p sx={eyebrow}>Intent</p>
-                  <p detail-intent sx={style.fontSize(sm).leading(relaxed)}>{library.detailIntent()}</p>
+                  <p>
+                    style(eyebrow)
+Intent</p>
+                  <p detail-intent>
+                    style.fontSize(sm).leading(relaxed)
+{library.detailIntent()}</p>
                 </column>
                 <column gap="2">
-                  <p sx={eyebrow}>Meta</p>
+                  <p>
+                    style(eyebrow)
+Meta</p>
                   <for {library.kvRows()} as="kv" key={kv.key}>
                     <row kv-row gap="3" align="start" nowrap>
-                      <p shrink="0" sx={style.fontSize(xs).fg(muted-foreground).w(24)}>{kv.label}</p>
-                      <p grow min-w="0" sx={style.fontSize(sm).fontFamily(mono).truncate()}>{kv.value}</p>
+                      <p shrink="0">
+                        style.fontSize(xs).fg(muted-foreground).w(24)
+{kv.label}</p>
+                      <p grow min-w="0">
+                        style.fontSize(sm).fontFamily(mono).truncate()
+{kv.value}</p>
                     </row>
                   </for>
                 </column>
                 <column gap="1">
-                  <p sx={eyebrow}>Composition</p>
-                  <p sx={pathMeta}>{library.compositionLabel()}</p>
-                  <p sx={muted}>Slots: {library.slotsLabel()}</p>
+                  <p>
+                    style(eyebrow)
+Composition</p>
+                  <p>
+                    style(pathMeta)
+{library.compositionLabel()}</p>
+                  <p>
+                    style(muted)
+Slots: {library.slotsLabel()}</p>
                 </column>
               </column>
             </tab-panel>
             <tab-panel value="contract">
-              <column gap="3" sx={style.padY(3)}>
+              <column gap="3">
+                style.padY(3)
+
                 <if {library.schemaNote()}>
-                  <p schema-note sx={muted}>{library.schemaNote()}</p>
+                  <p schema-note>
+                    style(muted)
+{library.schemaNote()}</p>
                 </if>
                 <if {!library.hasProps()}>
                   <studio-empty title="No props in catalog" size="sm">
@@ -296,19 +386,37 @@ export default controller(() => {
                 </if>
                 <if {library.hasProps()}>
                   <column props-table gap="1">
-                    <row gap="3" nowrap sx={style.padY(1).borderBWidth(1).borderB(border-subtle)}>
-                      <p grow sx={eyebrow}>Name</p>
-                      <p sx={eyebrow}>Type</p>
-                      <p sx={eyebrow}>Default</p>
+                    <row gap="3" nowrap>
+                      style.padY(1).borderBWidth(1).borderB(border-subtle)
+
+                      <p grow>
+                        style(eyebrow)
+Name</p>
+                      <p>
+                        style(eyebrow)
+Type</p>
+                      <p>
+                        style(eyebrow)
+Default</p>
                     </row>
                     <for {library.propRows()} as="prop" key={prop.key}>
-                      <row prop-row gap="3" align="start" nowrap sx={style.padY(2).borderBWidth(1).borderB(border-subtle)}>
+                      <row prop-row gap="3" align="start" nowrap>
+                        style.padY(2).borderBWidth(1).borderB(border-subtle)
+
                         <column grow min-w="0" gap="0">
-                          <p sx={style.fontSize(sm).fontFamily(mono)}>{prop.name}</p>
-                          <p sx={style.fontSize(xs).fg(muted-foreground)}>{prop.requiredLabel}</p>
+                          <p>
+                            style.fontSize(sm).fontFamily(mono)
+{prop.name}</p>
+                          <p>
+                            style.fontSize(xs).fg(muted-foreground)
+{prop.requiredLabel}</p>
                         </column>
-                        <p shrink="0" sx={pathMeta}>{prop.type}</p>
-                        <p shrink="0" sx={pathMeta}>{prop.defaultValue}</p>
+                        <p shrink="0">
+                          style(pathMeta)
+{prop.type}</p>
+                        <p shrink="0">
+                          style(pathMeta)
+{prop.defaultValue}</p>
                       </row>
                     </for>
                   </column>

@@ -19,12 +19,18 @@
   align="center"
   nowrap
   min-w="0"
-  sx={style.h(6).padX(3).minW(0).when({ hover: style.bg(hover-bg), selected: style.bg(surface-2) })}
+
 >
+  style.h(6).padX(3).minW(0).when({ hover: style.bg(hover-bg), selected: style.bg(surface-2) })
+
   <slot name="leading"></slot>
-  <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{title()}</p>
+  <p grow min-w="0">
+    style.fontSize(sm).truncate()
+{title()}</p>
   <if {meta()}>
-    <p studio-list-meta shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>
+    <p studio-list-meta shrink="0">
+      style.fontSize(xs).fg(muted-foreground)
+
       {meta()}
     </p>
   </if>

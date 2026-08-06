@@ -8052,7 +8052,7 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
   {
     "syntax": "raw <style>",
     "rule": "sail-no-style-block",
-    "instead": "Style product sx={style.…} and design tokens (floor)"
+    "instead": "Style product style={style.…} and design tokens (floor)"
   },
   {
     "syntax": "raw <script>",
@@ -9235,7 +9235,7 @@ export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   },
   {
     "syntax": "style= / style:<prop>",
-    "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name); paint is Style product sx={style.…}"
+    "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name); paint is Style product style={style.…}"
   },
   {
     "syntax": "part=\"…\"",
@@ -9356,8 +9356,8 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   {
     "form": "Style const",
     "syntax": "const filled = style.bg(primary).padX(2)",
-    "summary": "compile-time Style value (chain / match / when / compound / list / ref); resolved when host sx={name} references it",
-    "example": "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span sx={filled}>{label}</span>"
+    "summary": "compile-time Style value (chain / match / when / compound / list / ref); resolved when host style={name} references it",
+    "example": "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span style={filled}>{label}</span>"
   },
   {
     "form": "Identity type annotation",

@@ -30,7 +30,9 @@
   justify="center"
   gap="3"
   use:variantLive
-  sx={[
+
+>
+  style([
     base,
     match(size, {
       md: sizeMd,
@@ -46,8 +48,8 @@
     when({
       forced-colors: style.border(CanvasText),
     }),
-  ]}
->
+  ])
+
   <row
     inline
     nowrap
@@ -55,7 +57,9 @@
     justify="center"
     hidden="true"
     shrink
-    sx={[
+
+  >
+    style([
       icon,
       match(tone, {
         default: style.bg(muted).fg(muted-foreground),
@@ -71,34 +75,42 @@
         empty: style.display(none),
         forced-colors: style.bg(Canvas).fg(CanvasText),
       }),
-    ]}
-  >
+    ])
+
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" grow min-w="0" sx={copy}>
-    <div sx={[
+  <column align="stretch" gap="1" grow min-w="0">
+    style(copy)
+
+    <div>
+      style([
       title,
       when({
         empty: style.display(none),
       }),
-    ]}>
+    ])
+
       <slot name="title"></slot>
     </div>
-    <div sx={[
+    <div>
+      style([
       desc,
       when({
         empty: style.display(none),
       }),
-    ]}>
+    ])
+
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" sx={[
+  <row align="center" justify="center" gap="2">
+    style([
     actions,
     when({
       empty: style.display(none),
     }),
-  ]}>
+  ])
+
     <slot name="action"></slot>
   </row>
 </column>

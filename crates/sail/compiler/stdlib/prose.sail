@@ -7,4 +7,6 @@
 <scope>
   const host = style.display(block).fontFamily(body).fg(prose-foreground).leading(normal-plus)
 </scope>
-<div sx={host}><slot></slot></div>
+<div>
+  style(host)
+<slot></slot></div>

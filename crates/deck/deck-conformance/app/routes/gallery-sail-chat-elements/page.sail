@@ -60,10 +60,16 @@ export default controller(() => ({
   }))
 </controller>
 
-<column gap="8" sx={style.maxW(breakpoint-tablet).mx(auto).pad(6).fontFamily(body).fg(foreground)}>
+<column gap="8">
+  style.maxW(breakpoint-tablet).mx(auto).pad(6).fontFamily(body).fg(foreground)
+
   <header>
-    <h1 sx={style.fontSize(3xl).fontWeight(bold).mb(2)}>sail/chat-elements</h1>
-    <p sx={style.fontSize(md).fg(muted-foreground)}>
+    <h1>
+      style.fontSize(3xl).fontWeight(bold).mb(2)
+sail/chat-elements</h1>
+    <p>
+      style.fontSize(md).fg(muted-foreground)
+
       Unbound multi-modal chat primitives — message · message-list · composer ·
       thinking-dots · tool-call · citation. Pure framework tier; no SDK reads.
     </p>
@@ -71,29 +77,49 @@ export default controller(() => ({
 
   <!-- ── sail-citation ──────────────────────────────────────────── -->
   <section>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)}>sail-citation</h2>
-    <p sx={style.fontSize(base).fg(muted-foreground).mb(4)}>
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)
+sail-citation</h2>
+    <p>
+      style.fontSize(base).fg(muted-foreground).mb(4)
+
       Numbered source pill. Clicking emits <code>sail-citation-open</code>.
     </p>
 
     <column gap="3">
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>index 1 — short label</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+index 1 — short label</h3>
         <sail-citation source="Ship docs" index={1}></sail-citation>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>index 2 — URL source</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+index 2 — URL source</h3>
         <sail-citation source="https://ship.example.com/reference" index={2}></sail-citation>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>index 3 — long label (truncates)</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+index 3 — long label (truncates)</h3>
         <sail-citation source="A very long citation label that will be clipped by the max-width" index={3}></sail-citation>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>inline inside prose</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+inline inside prose</h3>
         <p>
           The agent used three sources
           <sail-citation source="Ship docs" index={1}></sail-citation>
@@ -106,32 +132,54 @@ export default controller(() => ({
 
   <!-- ── sail-composer ──────────────────────────────────────────── -->
   <section>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)}>sail-composer</h2>
-    <p sx={style.fontSize(base).fg(muted-foreground).mb(4)}>
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)
+sail-composer</h2>
+    <p>
+      style.fontSize(base).fg(muted-foreground).mb(4)
+
       Message input + send control. Single-line by default; <code>multiline</code>
       grows to a textarea. Emits <code>sail-composer-submit</code> on send.
     </p>
 
     <column gap="3">
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>default — single-line, placeholder</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+default — single-line, placeholder</h3>
         <sail-composer placeholder="Message the agent…"></sail-composer>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>multiline — Shift+Enter for newlines</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+multiline — Shift+Enter for newlines</h3>
         <sail-composer placeholder="Write a long message…" multiline></sail-composer>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>disabled</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+disabled</h3>
         <sail-composer placeholder="Sending…" disabled></sail-composer>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>with trailing slot — extra action beside Send</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+with trailing slot — extra action beside Send</h3>
         <sail-composer placeholder="Ask anything…">
-          <button slot="trailing" type="button" sx={style.fontSize(xs).padX(2).padY(1)}>Mic</button>
+          <button slot="trailing" type="button">
+            style.fontSize(xs).padX(2).padY(1)
+Mic</button>
         </sail-composer>
       </column>
     </column>
@@ -139,76 +187,118 @@ export default controller(() => ({
 
   <!-- ── sail-message ────────────────────────────────────────────── -->
   <section>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)}>sail-message</h2>
-    <p sx={style.fontSize(base).fg(muted-foreground).mb(4)}>
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)
+sail-message</h2>
+    <p>
+      style.fontSize(base).fg(muted-foreground).mb(4)
+
       Single chat bubble. Role drives alignment + tone; content-type drives inner
       shape; status tints the border. Trailing slot for per-message actions.
     </p>
 
     <column gap="3">
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>role: assistant — text (default)</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+role: assistant — text (default)</h3>
         <sail-message role="assistant" timestamp="2026-06-05T14:00:00Z">
           Here is the information you requested about Sail components.
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>role: user</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+role: user</h3>
         <sail-message role="user" timestamp="2026-06-05T14:01:00Z">
           Can you show me the chat-elements pack?
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>role: system</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+role: system</h3>
         <sail-message role="system">
           You are a helpful assistant with access to Ship tools.
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>role: tool</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+role: tool</h3>
         <sail-message role="tool" content-type="text">
           Tool output: 42 results found.
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>content-type: code</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+content-type: code</h3>
         <sail-message role="assistant" content-type="code">
           const x = signal(0);
 const doubled = derived(() => x() * 2);
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>content-type: terminal-snapshot</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+content-type: terminal-snapshot</h3>
         <sail-message role="assistant" content-type="terminal-snapshot">
           $ cargo run -p sail-compiler -- build page.sail
 compiled 1 file(s)
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>status: sending</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+status: sending</h3>
         <sail-message role="user" status="sending">
           Sending this message now…
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>status: error</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+status: error</h3>
         <sail-message role="user" status="error">
           This message failed to send.
         </sail-message>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>with trailing slot — copy action</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+with trailing slot — copy action</h3>
         <sail-message role="assistant" timestamp="2026-06-05T14:02:00Z">
           The answer is forty-two.
-          <span slot="trailing" sx={style.fontSize(xs).fg(muted-foreground)}>Copy</span>
+          <span slot="trailing">
+            style.fontSize(xs).fg(muted-foreground)
+Copy</span>
         </sail-message>
       </column>
     </column>
@@ -216,28 +306,46 @@ compiled 1 file(s)
 
   <!-- ── sail-message-list ───────────────────────────────────────── -->
   <section>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)}>sail-message-list</h2>
-    <p sx={style.fontSize(base).fg(muted-foreground).mb(4)}>
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)
+sail-message-list</h2>
+    <p>
+      style.fontSize(base).fg(muted-foreground).mb(4)
+
       Keyed, windowed, auto-scrolling column. Items via <code>items</code>;
       <code>sticky-bottom</code> pins to newest. Empty state via the
       <code>empty</code> slot.
     </p>
 
     <column gap="3">
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>empty state — no items</h3>
-        <column sx={style.h(48).borderWidth(1).border(border).radius(md)}>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+empty state — no items</h3>
+        <column>
+          style.h(48).borderWidth(1).border(border).radius(md)
+
           <sail-message-list items={emptyItems()}>
-            <span slot="empty" sx={style.fg(muted-foreground).fontSize(base)}>
+            <span slot="empty">
+              style.fg(muted-foreground).fontSize(base)
+
               No messages yet. Start the conversation.
             </span>
           </sail-message-list>
         </column>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>sticky-bottom=true — pre-loaded thread</h3>
-        <column sx={style.h(64).borderWidth(1).border(border).radius(md)}>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+sticky-bottom=true — pre-loaded thread</h3>
+        <column>
+          style.h(64).borderWidth(1).border(border).radius(md)
+
           <sail-message-list items={threadItems()}>
             <span slot="empty">No messages.</span>
           </sail-message-list>
@@ -248,15 +356,23 @@ compiled 1 file(s)
 
   <!-- ── sail-thinking-dots ──────────────────────────────────────── -->
   <section>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)}>sail-thinking-dots</h2>
-    <p sx={style.fontSize(base).fg(muted-foreground).mb(4)}>
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)
+sail-thinking-dots</h2>
+    <p>
+      style.fontSize(base).fg(muted-foreground).mb(4)
+
       Three bouncing dots signalling an assistant composing a reply. Pure
       presentational; no controller. Screen-reader-friendly live region.
     </p>
 
     <column gap="3">
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>size: sm | md (default) | lg</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+size: sm | md (default) | lg</h3>
         <row gap="4">
           <sail-thinking-dots size="sm"></sail-thinking-dots>
           <sail-thinking-dots size="md"></sail-thinking-dots>
@@ -264,8 +380,12 @@ compiled 1 file(s)
         </row>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>tone: default | primary | info | success | warning | destructive | accent | muted</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+tone: default | primary | info | success | warning | destructive | accent | muted</h3>
         <row gap="4">
           <sail-thinking-dots tone="default"></sail-thinking-dots>
           <sail-thinking-dots tone="primary"></sail-thinking-dots>
@@ -278,13 +398,21 @@ compiled 1 file(s)
         </row>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>custom label — overrides announced text</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+custom label — overrides announced text</h3>
         <sail-thinking-dots label="Model is composing" size="md" tone="primary"></sail-thinking-dots>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>inline inside a message bubble</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+inline inside a message bubble</h3>
         <sail-message role="assistant">
           <sail-thinking-dots size="sm" tone="muted"></sail-thinking-dots>
         </sail-message>
@@ -294,38 +422,58 @@ compiled 1 file(s)
 
   <!-- ── sail-tool-call ──────────────────────────────────────────── -->
   <section>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)}>sail-tool-call</h2>
-    <p sx={style.fontSize(base).fg(muted-foreground).mb(4)}>
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fontFamily(mono).fg(primary).mb(1)
+sail-tool-call</h2>
+    <p>
+      style.fontSize(base).fg(muted-foreground).mb(4)
+
       Collapsible record of one tool invocation. Header shows name + status dot;
       body shows args (default slot) and result (<code>result</code> slot).
     </p>
 
     <column gap="3">
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>status: running — body collapsed</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+status: running — body collapsed</h3>
         <sail-tool-call name="list_files" status="running">
           { "path": "/workspace/src" }
         </sail-tool-call>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>status: ok — body collapsed</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+status: ok — body collapsed</h3>
         <sail-tool-call name="read_file" status="ok">
           { "path": "/workspace/src/lib.rs" }
           <span slot="result">pub fn hello() -&gt; &amp;'static str { "world" }</span>
         </sail-tool-call>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>status: error — body collapsed</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+status: error — body collapsed</h3>
         <sail-tool-call name="run_tests" status="error">
           { "suite": "unit" }
           <span slot="result">Error: test runner not found</span>
         </sail-tool-call>
       </column>
 
-      <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
-        <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>open=true — body expanded on load</h3>
+      <column gap="3">
+        style.bg(card).borderWidth(1).border(border).radius(md).pad(4)
+
+        <h3>
+          style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)
+open=true — body expanded on load</h3>
         <sail-tool-call name="search_code" status="ok" open>
           { "query": "sail-message", "scope": "packages/" }
           <span slot="result">Found 7 matches in 3 files.</span>

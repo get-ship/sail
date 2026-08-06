@@ -163,7 +163,7 @@ fn fix_display_on_layout(
         .to_string();
     // Pull display(…) expression from sx if present; otherwise wrap with display(none).
     let (inner_without_display, display_expr) = split_display_from_element(&full, &node.tag)?;
-    let wrap = format!("<div sx={{{display_expr}}}>{inner_without_display}</div>");
+    let wrap = format!("<div style={{{display_expr}}}>{inner_without_display}</div>");
     Some(FixPlan {
         rule: "sail-display-on-layout".into(),
         line: d.line,
@@ -176,7 +176,7 @@ fn fix_display_on_layout(
         text_patch: Some(TextPatch {
             start: node.full_span.start,
             end: node.full_span.end,
-            replacement: format!("<div sx={{{display_expr}}}>{inner_without_display}</div>"),
+            replacement: format!("<div style={{{display_expr}}}>{inner_without_display}</div>"),
         }),
         actor: None,
     })
@@ -423,7 +423,7 @@ fn extract_unknown_setter(message: &str) -> Option<String> {
 
 fn replace_sx_setter(open: &str, setter: &str, target: &str) -> Option<String> {
     // If sx already contains `style.setter(...)`, replace the existing call.
-    let sx_key = "sx={";
+    let sx_key = "style={";
     let sx_at = open.find(sx_key)?;
     let expr_start = sx_at + sx_key.len();
     let mut depth = 1i32;
@@ -582,10 +582,10 @@ fn strip_style_call_from_open(open: &str, method: &str, arg: &str) -> Option<Str
         if open.contains(p.as_str()) {
             let mut s = open.replacen(p.as_str(), "", 1);
             // Clean `style.` alone left empty chain edge cases.
-            s = s.replace("sx={style}", "/*sx-cleared*/");
-            s = s.replace("sx={style.}", "sx={style");
+            s = s.replace("style={style}", "/*sx-cleared*/");
+            s = s.replace("style={style.}", "style={style");
             // style.pad(2). → already fine; style. → style needs a method
-            if let Some(idx) = s.find("sx={style}") {
+            if let Some(idx) = s.find("style={style}") {
                 // empty style product — drop sx attr entirely if empty chain.
                 let _ = idx;
             }
@@ -593,12 +593,12 @@ fn strip_style_call_from_open(open: &str, method: &str, arg: &str) -> Option<Str
             while s.contains("..") {
                 s = s.replace("..", ".");
             }
-            s = s.replace("sx={style.}", "sx={style.");
-            // sx={style} with nothing after
-            if s.contains("sx={style}") || s.contains("sx={}") {
-                s = remove_attr_from_open(&s, "sx");
+            s = s.replace("style={style.}", "style={style.");
+            // style={style} with nothing after
+            if s.contains("style={style}") || s.contains("style={}") {
+                s = remove_attr_from_open(&s, "style");
             }
-            // sx={style.pad(2).} trailing dot
+            // style={style.pad(2).} trailing dot
             s = s.replace(".)}", ")}");
             s = s.replace(". }", " }");
             return Some(s);
@@ -623,8 +623,8 @@ fn strip_style_call_from_open(open: &str, method: &str, arg: &str) -> Option<Str
                             s = s.replace("..", ".");
                         }
                         s = s.replace(".)}", ")}");
-                        if s.contains("sx={style}") || s.contains("sx={}") {
-                            s = remove_attr_from_open(&s, "sx");
+                        if s.contains("style={style}") || s.contains("style={}") {
+                            s = remove_attr_from_open(&s, "style");
                         }
                         return Some(s);
                     }
@@ -702,11 +702,11 @@ fn collapse_ws_open(s: &str) -> String {
 }
 
 fn split_display_from_element(full: &str, tag: &str) -> Option<(String, String)> {
-    // Find sx={…} on the open tag and peel display(…) out of the chain.
+    // Find style={…} on the open tag and peel display(…) out of the chain.
     let gt = full.find('>')?;
     let open = &full[..gt + 1];
     let rest = &full[gt + 1..];
-    let sx_key = "sx={";
+    let sx_key = "style={";
     let sx_start = open.find(sx_key)?;
     let expr_start = sx_start + sx_key.len();
     let mut depth = 1i32;
@@ -736,7 +736,7 @@ fn split_display_from_element(full: &str, tag: &str) -> Option<(String, String)>
         // drop sx
         new_open.push_str(&open[j + 1..]);
     } else {
-        new_open.push_str("sx={");
+        new_open.push_str("style={");
         new_open.push_str(&new_expr);
         new_open.push('}');
         new_open.push_str(&open[j + 1..]);
@@ -838,7 +838,7 @@ mod tests {
 
     #[test]
     fn participation_strips_grow() {
-        let open = r#"<div sx={style.pad(2).grow(1).bg(card)}>"#;
+        let open = r#"<div style={style.pad(2).grow(1).bg(card)}>"#;
         let next = strip_style_call_from_open(open, "grow", "1").unwrap();
         assert!(!next.contains("grow"));
         assert!(next.contains("pad(2)"));

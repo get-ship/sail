@@ -14,9 +14,9 @@ const TYPO_SRC: &str = r#"<scope>
     title = ''
   }
 </scope>
-<div sx={style.bg(surfce-2)}>{title()}</div>"#;
+<div style={style.bg(surfce-2)}>{title()}</div>"#;
 
-const UTILITY_STRING_SRC: &str = r#"<div sx="p-4 bg-surface-2">x</div>"#;
+const UTILITY_STRING_SRC: &str = r#"<div style="p-4 bg-surface-2">x</div>"#;
 
 fn opts(component_name: &str) -> CompileOpts {
     CompileOpts {

@@ -1,7 +1,7 @@
 //! Minimal HTML parser for **preprocessed** `.sail` source.
 //!
 //! `sail_compiler::parse::preprocess` has already done the heavy lifting:
-//! `<column>` is `<div class="sail-col …">`, `sx="…"` is `class="sx-…"`. We
+//! `<column>` is `<div class="sail-col …">`, `style="…"` is `class="sx-…"`. We
 //! just need a stream-friendly scanner that produces a flat element tree with
 //! raw `class=` / `style=` / `style:--foo=` attributes — enough for style
 //! resolution, not enough for rendering.

@@ -40,7 +40,9 @@
   align="center"
   gap="4"
   w="full"
-  sx={[
+
+>
+  style([
     base,
     match(placement, {
       top: placeTop,
@@ -60,12 +62,16 @@
     compound({ placement: rail, sticky: true, offset: '16' }, style.top(16)),
     compound({ placement: rail, sticky: true, offset: '20' }, style.top(20)),
     compound({ placement: rail, sticky: true, offset: '24' }, style.top(24)),
-  ]}
->
-  <row inline nowrap align="center" gap="2" shrink="0" sx={brand}>
+  ])
+
+  <row inline nowrap align="center" gap="2" shrink="0">
+    style(brand)
+
     <slot name="brand"></slot>
   </row>
-  <div sx={links}>
+  <div>
+    style(links)
+
     <slot></slot>
   </div>
   <row
@@ -83,8 +89,10 @@
     align="center"
     gap="2"
     shrink="0"
-    sx={actions}
+
   >
+    style(actions)
+
     <slot name="actions"></slot>
   </row>
 </row>

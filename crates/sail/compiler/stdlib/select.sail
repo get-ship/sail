@@ -21,7 +21,8 @@
   const sizeLg = style.minH(control-h-lg).padS(4).fontSize(md)
 </scope>
 
-<select sx={[
+<select>
+  style([
   base,
   match(size, {
     xs: sizeXs,
@@ -30,6 +31,7 @@
     lg: sizeLg,
   }),
   compound({ invalid: true }, style.border(destructive)),
-]}>
+])
+
   <slot></slot>
 </select>

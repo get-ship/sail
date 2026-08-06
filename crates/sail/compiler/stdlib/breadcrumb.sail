@@ -5,7 +5,9 @@
   const list = style.m(0).pad(0).list(none).fontFamily(body).fontSize(sm)
 </scope>
 <nav>
-  <ol sx={list}>
+  <ol>
+    style(list)
+
     <slot></slot>
   </ol>
 </nav>

@@ -15,8 +15,12 @@
 <column gap="5">
   <row align="center" justify="between" gap="4">
     <column gap="1">
-      <h2 sx={title}>Workspace settings</h2>
-      <p sx={muted}>Profile, notifications, and the scary stuff.</p>
+      <h2>
+        style(title)
+Workspace settings</h2>
+      <p>
+        style(muted)
+Profile, notifications, and the scary stuff.</p>
     </column>
     <button variant="solid" tone="primary">Save changes</button>
   </row>
@@ -32,7 +36,9 @@
           <avatar initials="AV" tone="primary" size="lg"></avatar>
           <column gap="1">
             <strong>Avery Vale</strong>
-            <small sx={email}>avery@example.dev</small>
+            <small>
+              style(email)
+avery@example.dev</small>
           </column>
         </row>
         <separator></separator>
@@ -48,22 +54,34 @@
         <h3>Notifications</h3>
         <row align="center" justify="between" gap="3">
           <column gap="1">
-            <strong sx={rowLabel}>Weekly digest</strong>
-            <small sx={email}>One summary email, Monday morning.</small>
+            <strong>
+              style(rowLabel)
+Weekly digest</strong>
+            <small>
+              style(email)
+One summary email, Monday morning.</small>
           </column>
           <switch checked tone="primary"></switch>
         </row>
         <row align="center" justify="between" gap="3">
           <column gap="1">
-            <strong sx={rowLabel}>Mentions</strong>
-            <small sx={email}>When someone @-mentions you.</small>
+            <strong>
+              style(rowLabel)
+Mentions</strong>
+            <small>
+              style(email)
+When someone @-mentions you.</small>
           </column>
           <switch checked tone="primary"></switch>
         </row>
         <row align="center" justify="between" gap="3">
           <column gap="1">
-            <strong sx={rowLabel}>Marketing</strong>
-            <small sx={email}>Product news and tips.</small>
+            <strong>
+              style(rowLabel)
+Marketing</strong>
+            <small>
+              style(email)
+Product news and tips.</small>
           </column>
           <switch tone="primary"></switch>
         </row>
@@ -75,7 +93,9 @@
     <row align="center" justify="between" gap="4">
       <column gap="1">
         <h3>Danger zone</h3>
-        <p sx={muted}>Deleting the workspace removes every project in it.</p>
+        <p>
+          style(muted)
+Deleting the workspace removes every project in it.</p>
       </column>
       <button variant="outline" tone="destructive">Delete workspace</button>
     </row>

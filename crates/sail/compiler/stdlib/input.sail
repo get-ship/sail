@@ -42,7 +42,8 @@
   const hidden = style.display(none)
 </scope>
 
-<input sx={[
+<input>
+  style([
   match(type, {
     text: field,
     email: field,
@@ -86,4 +87,5 @@
     hidden: style.minH(0),
   }),
   compound({ invalid: true }, style.border(destructive)),
-]}>
+])
+

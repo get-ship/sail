@@ -73,8 +73,8 @@ export default controller(({ value }: Scope) => {
   return { canvas, captureViewport, worldTransform }
 })
 </controller>
-<div use:captureViewport sx={style.position(relative)}>
-  <div use:worldTransform={worldTransform()} sx={style.position(absolute)}>
+<div use:captureViewport style={style.position(relative)}>
+  <div use:worldTransform={worldTransform()} style={style.position(absolute)}>
     <slot></slot>
   </div>
 </div>

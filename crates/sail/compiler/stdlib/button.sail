@@ -35,7 +35,8 @@
   const vGhost = style.bg(transparent).fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
 </scope>
 
-<button sx={[
+<button>
+  style([
   base,
   match(variant, {
     default: vDefault,
@@ -78,6 +79,7 @@
   compound({ variant: ghost, tone: destructive }, style.fg(destructive)),
   compound({ variant: ghost, tone: accent }, style.fg(accent)),
   compound({ variant: ghost, tone: muted }, style.fg(muted-foreground)),
-]}>
+])
+
   <slot></slot>
 </button>

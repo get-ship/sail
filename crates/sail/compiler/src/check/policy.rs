@@ -18,7 +18,7 @@
 //! ## The capability keys — the dial
 //!
 //! Three keys, each on/off, gate the styling surface *above* the floor:
-//! - `sx` — the `sx="…"` token utility surface (`sail-no-sx`)
+//! - `sx` — the `style="…"` token utility surface (`sail-no-sx`)
 //! - `variants` — the `<variants>` prop→style table (`sail-no-variants`)
 //! - `raw_containers` — raw `<div>`/`<span>` (`sail-no-raw-container`)
 //!
@@ -74,7 +74,7 @@ use super::lint_overrides::{LintOverride, OverrideSeverity};
 /// key's `sail-no-sx` gate) joined the floor for compiler-stability-audit #100
 /// item 1: an unknown atom must NEVER become a silent-nothing. Before this,
 /// `sail-sx` rode the ordinary override channel, so a host that softened it to
-/// `Warn`/`Off` turned a typo'd atom (`sx="bg-surfce-2"`) into a dead class —
+/// `Warn`/`Off` turned a typo'd atom (`style="bg-surfce-2"`) into a dead class —
 /// pushed into the DOM by `parse::preprocess::lower_sx_value` with no matching
 /// CSS rule, and (at `Off`) no diagnostic anywhere. `lower_sx_value` has no
 /// severity awareness at all (it runs in the parse pass, ahead of the lint
@@ -131,7 +131,7 @@ impl AutofixPreset {
 /// three capability keys and the compose auto-fix key. See the module docs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Policy {
-    /// The `sx="…"` token styling surface.
+    /// The `style="…"` token styling surface.
     pub sx: bool,
     /// The `<variants>` prop→style table.
     pub variants: bool,

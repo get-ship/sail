@@ -66,7 +66,7 @@ pub enum Style {
     },
     /// Scope Style const reference.
     Ref(String),
-    /// `sx={[ a, b, c ]}` composition.
+    /// `style={[ a, b, c ]}` composition.
     List(Vec<Style>),
 }
 

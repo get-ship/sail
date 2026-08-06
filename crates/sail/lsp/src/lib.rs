@@ -950,7 +950,7 @@ fn is_css_token_context(text: &str, line_idx: usize, col: usize) -> bool {
     false
 }
 
-/// Detect whether `pos` is inside an `sx="…"` attribute value. Returns
+/// Detect whether `pos` is inside an `style="…"` attribute value. Returns
 /// the prefix (the partial atom the user is currently typing) so the
 /// completion can scope to it. Mirrors `in_style_attr_value`'s scan but
 /// also returns the prefix on the same line, up to the cursor.
@@ -966,7 +966,7 @@ fn sx_attr_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
                     return None;
                 }
                 // The prefix the user is mid-typing: the last whitespace-
-                // delimited token WITHIN the attribute value (not the `sx="`
+                // delimited token WITHIN the attribute value (not the `style="`
                 // attribute name itself).
                 let start = value_start.unwrap_or(j);
                 let prefix = &line[start..j];
@@ -1470,7 +1470,7 @@ mod tests {
 
     #[test]
     fn code_action_offers_participation_fix() {
-        let src = r#"<div sx={style.grow(1)}>x</div>"#;
+        let src = r#"<div style={style.grow(1)}>x</div>"#;
         let mut docs = Docs::new();
         let uri = Url::parse("file:///t.sail").unwrap();
         docs.insert(uri.clone(), src.into());
@@ -1581,8 +1581,8 @@ mod tests {
 
     #[test]
     fn sx_attr_prefix_detects_inside_quoted_sx() {
-        // Cursor inside `<div sx="p">` — at the `p` (col 10).
-        let src = r#"<div sx="p">x</div>"#;
+        // Cursor inside `<div style="p">` — at the `p` (col 10).
+        let src = r#"<div style="p">x</div>"#;
         let prefix = sx_attr_prefix(src, 0, 10).expect("inside sx attr");
         assert_eq!(prefix, "p", "prefix should be the partial atom");
     }
@@ -1648,7 +1648,7 @@ mod tests {
     fn sx_attr_prefix_picks_last_atom_after_whitespace() {
         // Cursor mid-typing the second atom: typed `bg` already, cursor
         // at col 15 (after the `g`, before the closing quote).
-        let src = r#"<div sx="p-4 bg">x</div>"#;
+        let src = r#"<div style="p-4 bg">x</div>"#;
         let prefix = sx_attr_prefix(src, 0, 15).expect("inside sx attr");
         assert_eq!(prefix, "bg", "prefix should be the typed prefix `bg`");
     }

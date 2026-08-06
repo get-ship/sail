@@ -67,14 +67,22 @@ export default controller(() => {
   checks-panel-mode={panel() ? 'true' : 'false'}
   gap="0"
   grow
-  sx={style.minH(0).h(full).minW(0).overflow(hidden)}
+
 >
+  style.minH(0).h(full).minW(0).overflow(hidden)
+
   <!-- Full-page chrome only (not drawer) -->
   <if {!panel()}>
     <studio-page-header checks-header title="Findings">
-      <p error-count sx={style.fontSize(xs).fg(destructive)}>{errorCountLabel()}</p>
-      <p warning-count sx={style.fontSize(xs).fg(warning)}>{warningCountLabel()}</p>
-      <p last-run sx={style.fontSize(xs).fg(muted-foreground)}>{lastRunLabel()}</p>
+      <p error-count>
+        style.fontSize(xs).fg(destructive)
+{errorCountLabel()}</p>
+      <p warning-count>
+        style.fontSize(xs).fg(warning)
+{warningCountLabel()}</p>
+      <p last-run>
+        style.fontSize(xs).fg(muted-foreground)
+{lastRunLabel()}</p>
       <row slot="actions" gap="2" align="center" nowrap shrink="0">
         <button type="button" size="sm" variant="ghost" tone="muted" recheck on:click={onRecheck}>
           {recheckLabel()}
@@ -93,21 +101,29 @@ export default controller(() => {
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
-      <separator orientation="vertical" sx={style.h(4)} />
+      <separator orientation="vertical">
+        style.h(4)
+      </separator>
       <select filter-file label="Filter by file" value={fileFilterVal()} on:change={onFileFilter} w="28">
         <for {fileOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
-      <separator orientation="vertical" sx={style.h(4)} />
+      <separator orientation="vertical">
+        style.h(4)
+      </separator>
       <select filter-severity label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter} w="28">
         <for {severityOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
-      <separator orientation="vertical" sx={style.h(4)} />
+      <separator orientation="vertical">
+        style.h(4)
+      </separator>
       <row autofix-control align="center" gap="1" nowrap on:click={onAutoFixMode} label={autoFixModeLabel()}>
-        <p sx={style.fontSize(xs).fg(muted-foreground)}>Autofix</p>
+        <p>
+          style.fontSize(xs).fg(muted-foreground)
+Autofix</p>
         <for {autoFixOpts()} as="m" key={m.key}>
           <button
             type="button"
@@ -130,8 +146,10 @@ export default controller(() => {
       findings-panel-tools
       shrink="0"
       gap="2"
-      sx={style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0)}
+
     >
+      style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0)
+
       <row align="center" justify="between" nowrap gap="2" min-w="0">
         <row align="center" gap="2" nowrap grow min-w="0">
           <badge error-count tone="destructive" size="sm" variant="soft" pill>{errorCountLabel()}</badge>
@@ -147,13 +165,17 @@ export default controller(() => {
         value={severityFilterVal()}
         on:change={onSeverityFilter}
         size="sm"
-        sx={style.w(full).minW(0)}
+
       >
+        style.w(full).minW(0)
+
         <for {severityOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
-      <p last-run sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{lastRunLabel()}</p>
+      <p last-run>
+        style.fontSize(xs).fg(muted-foreground).truncate()
+{lastRunLabel()}</p>
     </column>
   </if>
 
@@ -163,9 +185,13 @@ export default controller(() => {
       align="center"
       gap="2"
       shrink="0"
-      sx={style.h(7).padX(3).borderBWidth(1).borderB(border)}
+
     >
-      <p grow min-w="0" sx={style.fontSize(xs).fg(destructive).truncate()}>{checksError()}</p>
+      style.h(7).padX(3).borderBWidth(1).borderB(border)
+
+      <p grow min-w="0">
+        style.fontSize(xs).fg(destructive).truncate()
+{checksError()}</p>
       <button type="button" size="sm" variant="ghost" retry-checks on:click={onRetryChecks}>
         Retry
       </button>
@@ -183,9 +209,13 @@ export default controller(() => {
     grow
     min-w="0"
     on:click={onFindingClick}
-    sx={style.minH(0).h(full).basis(0)}
+
   >
-    <column gap="0" sx={style.padY(1)}>
+    style.minH(0).h(full).basis(0)
+
+    <column gap="0">
+      style.padY(1)
+
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
           <studio-empty
@@ -194,14 +224,18 @@ export default controller(() => {
             title={emptyTitle()}
           >
             {emptyBody()}
-            <p empty-checked sx={style.fontSize(xs).fg(muted-foreground)}>{emptyChecked()}</p>
+            <p empty-checked>
+              style.fontSize(xs).fg(muted-foreground)
+{emptyChecked()}</p>
           </studio-empty>
         </if>
       </if>
       <if {hasFindings()}>
         <!-- Page mode only: ceremonial column headers (list is rule groups below) -->
         <if {!panel()}>
-          <table findings-grid hoverable sx={style.w(full)}>
+          <table findings-grid hoverable>
+            style.w(full)
+
             <thead>
               <tr>
                 <th>Severity</th>
@@ -220,8 +254,10 @@ export default controller(() => {
               nowrap
               rule-header={g.rule}
               group-row-id={g.groupRowId}
-              sx={style.h(6).padX(3).when({ hover: style.bg(hover-bg) })}
+
             >
+              style.h(6).padX(3).when({ hover: style.bg(hover-bg) })
+
               <button
                 type="button"
                 size="sm"
@@ -237,8 +273,10 @@ export default controller(() => {
               <p
                 grow
                 min-w="0"
-                sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).fontFamily(mono).truncate()}
+
               >
+                style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).fontFamily(mono).truncate()
+
                 {g.rule}
               </p>
               <if {g.showErrorBadge}>
@@ -256,7 +294,9 @@ export default controller(() => {
                   {g.infoBadge}
                 </badge>
               </if>
-              <p sx={style.fontSize(xs).fg(muted-foreground)}>{g.countLabel}</p>
+              <p>
+                style.fontSize(xs).fg(muted-foreground)
+{g.countLabel}</p>
               <if {g.showApplyAll}>
                 <button
                   type="button"
@@ -283,8 +323,10 @@ export default controller(() => {
                   gap="2"
                   align="center"
                   nowrap
-                  sx={style.h(6).padX(3).w(full).when({ hover: style.bg(hover-bg) })}
+
                 >
+                  style.h(6).padX(3).w(full).when({ hover: style.bg(hover-bg) })
+
                   <badge
                     severity-pill
                     tone={f.severityTone}
@@ -295,38 +337,54 @@ export default controller(() => {
                   </badge>
                   <p
                     row-rule
-                    sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}
+
                   >
+                    style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+
                     {f.rule}
                   </p>
                   <p
                     file-span
-                    sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}
+
                   >
+                    style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+
                     {f.fileSpan}
                   </p>
-                  <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{f.message}</p>
+                  <p grow min-w="0">
+                    style.fontSize(sm).truncate()
+{f.message}</p>
                   <if {f.showFixChip}>
-                    <p fix-chip sx={style.fontSize(xs).fg(primary)}>fix</p>
+                    <p fix-chip>
+                      style.fontSize(xs).fg(primary)
+fix</p>
                   </if>
                 </row>
                 <column
                   gap="2"
-                  sx={style.padX(2).padB(2)}
+
                   on:click={onFindingAction}
                 >
+                  style.padX(2).padB(2)
+
                   <card finding-detail variant="outline" padding="sm">
                     <column gap="2">
-                      <p sx={style.fontSize(xs).fg(muted-foreground)}>Why</p>
+                      <p>
+                        style.fontSize(xs).fg(muted-foreground)
+Why</p>
                       <pre
                         why-text
-                        sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).minH(0).maxH(40).overflow(auto).whitespace(pre-wrap)}
+
                       >
+                        style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).minH(0).maxH(40).overflow(auto).whitespace(pre-wrap)
+
                         {f.whyText}
                       </pre>
                       <if {f.showDiff}>
                         <column gap="1" why-suggest>
-                          <p sx={style.fontSize(xs).fg(muted-foreground)}>Suggestion</p>
+                          <p>
+                            style.fontSize(xs).fg(muted-foreground)
+Suggestion</p>
                           <sail-diff
                             suggest-diff
                             from={f.diffFrom}
@@ -337,8 +395,10 @@ export default controller(() => {
                       <column
                         why-snippet
                         gap="0"
-                        sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm)}
+
                       >
+                        style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm)
+
                         <for {f.snippet} as="ln" key={ln.key}>
                           <p
                             snippet-line={ln.n}
@@ -401,8 +461,10 @@ export default controller(() => {
     checks-status
     shrink="0"
     align="center"
-    sx={style.h(6).padX(3).borderTWidth(1).borderT(border-subtle).fontSize(xs).fg(muted-foreground)}
+
   >
+    style.h(6).padX(3).borderTWidth(1).borderT(border-subtle).fontSize(xs).fg(muted-foreground)
+
     <p>{checksStatusNote()}</p>
   </row>
 
@@ -417,19 +479,27 @@ export default controller(() => {
       review-sheet
       gap="2"
       shrink="0"
-      sx={style.borderTWidth(1).borderT(border).bg(surface-1).pad(3).minW(0).maxH(56).overflow(auto)}
+
     >
+      style.borderTWidth(1).borderT(border).bg(surface-1).pad(3).minW(0).maxH(56).overflow(auto)
+
       <row align="center" justify="between" nowrap gap="2">
-        <p sx={style.fontSize(sm).fontWeight(semibold)}>Review fixes</p>
+        <p>
+          style.fontSize(sm).fontWeight(semibold)
+Review fixes</p>
         <button type="button" size="sm" variant="ghost" tone="muted" on:click={onCloseReview}>
           Cancel
         </button>
       </row>
-      <p sx={style.fontSize(xs).fg(muted-foreground)}>
+      <p>
+        style.fontSize(xs).fg(muted-foreground)
+
         Accept or skip each automatic fix, then apply.
       </p>
       <if {!reviewItems().length}>
-        <p review-empty sx={style.fontSize(xs).fg(muted-foreground)}>
+        <p review-empty>
+          style.fontSize(xs).fg(muted-foreground)
+
           No automatic fixes — only compiler rewrites appear here.
         </p>
       </if>
@@ -438,9 +508,13 @@ export default controller(() => {
           <column gap="2">
             <row gap="2" align="center" nowrap>
               <badge tone="primary" size="sm" variant="soft">{item.rule}</badge>
-              <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{item.message}</p>
+              <p grow min-w="0">
+                style.fontSize(sm).truncate()
+{item.message}</p>
             </row>
-            <column review-diff gap="1" sx={style.minW(0)}>
+            <column review-diff gap="1">
+              style.minW(0)
+
               <sail-diff from={item.before} to={item.after}></sail-diff>
             </column>
             <row gap="2" on:click={onReviewToggle}>

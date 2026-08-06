@@ -18,4 +18,6 @@
   const host = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).w(max).pad(1_5).fg(dropdown-foreground).bg(dropdown).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
 </scope>
 
-<div popover use:anchor use:menu sx={host}><slot></slot></div>
+<div popover use:anchor use:menu>
+  style(host)
+<slot></slot></div>

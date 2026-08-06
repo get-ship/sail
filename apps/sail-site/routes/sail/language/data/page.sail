@@ -29,10 +29,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
-  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Concepts</p>
+<column gap="5">
+  style.maxW(breakpoint-tablet).mx(auto)
+
+  <p>
+    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+Concepts</p>
   <h1>Data</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
+  <p>
+    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+
     Data that arrives over the network is in one of three states at any
     moment: still loading, failed, or loaded. <code>query()</code> turns an
     async call into a signal that carries which state it is in, and the
@@ -43,14 +49,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>The three states, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — a 900 ms fake API</p>
-      <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="3">
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Live — a 900 ms fake API</p>
+      <column gap="3">
+        style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)
+
         <row gap="2">
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
         <while-loading {users}>
-          <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>loading…</p></row>
+          <row gap="2" align="center"><spinner></spinner> <p>
+            style.fontSize(sm).fg(muted-foreground)
+loading…</p></row>
         </while-loading>
         <while-error {users}> as="err">
           <alert tone="destructive">{err.message}</alert>
@@ -65,7 +77,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
     </column>
     <column>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Source</p>
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </row>
@@ -91,7 +105,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.states}></code-block>
 
-  <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+
     The loaded value is only reachable through <code>kind === 'ok'</code>,
     so a template cannot render data it hasn't confirmed has arrived —
     handling loading and error is built into the shape, not left to
@@ -103,11 +119,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     forms that validate, submit, and carry the same pending and failure
     states — is the <a href="/sail/guide/forms">Forms guide</a>.
   </p>
-  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.mt(4).fontSize(sm).fg(muted-foreground)
+
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
-  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
+  <row justify="between" gap="2">
+    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+
     <a variant="default" href="/sail/language/actions">← Actions</a>
     <a variant="solid" tone="primary" href="/sail/language/capabilities">Capabilities →</a>
   </row>

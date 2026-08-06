@@ -20,11 +20,13 @@
   const sizeLg = style.h(3)
 </scope>
 
-<meter sx={[
+<meter>
+  style([
   base,
   match(size, {
     sm: sizeSm,
     md: sizeMd,
     lg: sizeLg,
   }),
-]}></meter>
+])
+</meter>

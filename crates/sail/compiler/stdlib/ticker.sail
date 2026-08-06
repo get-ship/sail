@@ -21,9 +21,17 @@
   const cell = style.whitespace(nowrap).minW(max)
 </scope>
 
-<div sx={host}>
-  <row nowrap use:marquee sx={track}>
-    <span shrink="0" sx={cell}><slot></slot></span>
-    <span shrink="0" hidden="true" sx={cell}><slot></slot></span>
+<div>
+  style(host)
+
+  <row nowrap use:marquee>
+    style(track)
+
+    <span shrink="0">
+      style(cell)
+<slot></slot></span>
+    <span shrink="0" hidden="true">
+      style(cell)
+<slot></slot></span>
   </row>
 </div>

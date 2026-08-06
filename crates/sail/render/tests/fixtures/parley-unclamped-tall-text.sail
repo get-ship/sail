@@ -3,7 +3,9 @@
   viewport height (viewport-as-max_height removed). Pins: no panic + non-zero
   text-run height. Not a pixel-parity gate vs upstream capped measure.
 -->
-<column w="full" sx={style.pad(2)}>
+<column w="full">
+  style.pad(2)
+
   <span>
     Line one of unclamped body copy that should wrap under a modest width.
     Line two continues the run so taffy/takumi measures multiple lines fully.

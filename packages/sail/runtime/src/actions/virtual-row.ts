@@ -7,7 +7,7 @@ import type { Action } from '../action'
  * — there is no token for "row N of a 50000-row list"). The action writes the
  * number to a custom property; sx reads it as a translate:
  *
- *     <grid use:virtualRow={w.start} sx="translate-y-(--row-y) absolute">…</grid>
+ *     <grid use:virtualRow={w.start} style="translate-y-(--row-y) absolute">…</grid>
  *
  * The atom `translate-y-(--row-y)` lowers to
  *     `.sx-translate-y-rv-rowy { translate: 0 var(--row-y) }`

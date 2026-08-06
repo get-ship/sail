@@ -65,7 +65,7 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
         }
     }
 
-    // Host `sx={…}` / `sx="…"` values.
+    // Host `style={…}` / `style="…"` values.
     for (vstart, val) in crate::parse::preprocess::find_sx_attr_values(source) {
         let (style, _diags) = sail_lint::style::parse(val);
         check_style(&style, &unions, source, vstart, val, &mut out);

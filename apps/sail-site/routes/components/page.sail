@@ -158,29 +158,51 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const catRow = style.overflowX(auto).maxW(full)
 </scope>
 
-<column gap="5" w="full" min-w="0" sx={page}>
+<column gap="5" w="full" min-w="0">
+  style(page)
+
   <column gap="1">
-    <p sx={eyebrow}>Components</p>
-    <h1 sx={style.fontSize(2xl).fontWeight(semibold).tracking(tight)}>Catalog</h1>
-    <p sx={mutedSm}>
+    <p>
+      style(eyebrow)
+Components</p>
+    <h1>
+      style.fontSize(2xl).fontWeight(semibold).tracking(tight)
+Catalog</h1>
+    <p>
+      style(mutedSm)
+
       Every tile is a live element — click a name for API, variants, and usage.
       Packs other than Component primitives load when you select them.
     </p>
   </column>
 
   <column gap="2" w="full" min-w="0">
-    <p sx={eyebrow}>Packs</p>
-    <div sx={packStack} label="Component packs">
+    <p>
+      style(eyebrow)
+Packs</p>
+    <div label="Component packs">
+      style(packStack)
+
       <for {packs()} as="p" key={p.id}>
-        <button shrink="0" sx={packBtn} on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'}>
-          <row gap="2" align="center" sx={tileMeta}>
-            <strong sx={packLabel}>{p.label}</strong>
-            <span sx={packCount}>{p.count}</span>
+        <button shrink="0" on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'}>
+          style(packBtn)
+
+          <row gap="2" align="center">
+            style(tileMeta)
+
+            <strong>
+              style(packLabel)
+{p.label}</strong>
+            <span>
+              style(packCount)
+{p.count}</span>
           </row>
         </button>
       </for>
     </div>
-    <p sx={railNote}>
+    <p>
+      style(railNote)
+
       Primitives compile in with no import. Charts, media, chat, mermaid, and the code editor mount from their pack when selected.
     </p>
   </column>
@@ -189,26 +211,40 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
         <if {countLabel()}>
-          <p sx={count}>{countLabel()}</p>
+          <p>
+            style(count)
+{countLabel()}</p>
         </if>
       </row>
-      <row gap="1" align="center" sx={catRow}>
+      <row gap="1" align="center">
+        style(catRow)
+
         <for {cats()} as="c" key={c}>
           <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)} pressed={catSel() === c ? 'true' : 'false'}>{c}</button>
         </for>
       </row>
     </row>
     <row gap="2" align="center" justify="end">
-      <input type="search" placeholder="Search components…" bind:value={query} sx={search} />
+      <input type="search" placeholder="Search components…" bind:value={query}>
+        style(search)
+      </input>
     </row>
 
     <grid cols="2" gap="3">
         <for {visibleList()} as="e" key={e.key}>
-          <card padding="none" tile={e.tag} live={e.live ? 'true' : null} sx={tile}>
-            <column gap="0" sx={tileCol}>
-              <row align="center" justify="center" grow w="full" sx={preview}>
+          <card padding="none" tile={e.tag} live={e.live ? 'true' : null}>
+            style(tile)
+
+            <column gap="0">
+              style(tileCol)
+
+              <row align="center" justify="center" grow w="full">
+                style(preview)
+
                 <if {!e.live}>
-                  <p sx={dormant}>Select pack in the rail to mount</p>
+                  <p>
+                    style(dormant)
+Select pack in the rail to mount</p>
                 <else-if {e.tag === 'button'}>
                   <row gap="2" align="center">
                     <button variant="solid" tone="primary">Save</button>
@@ -217,17 +253,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </row>
                 </else-if><else-if {e.tag === 'input'}>
                   <column gap="1" w="full">
-                    <label sx={fieldLabel}>Work email</label>
+                    <label>
+                      style(fieldLabel)
+Work email</label>
                     <input type="email" placeholder="you@company.com" bind:value={email} />
                   </column>
                 </else-if><else-if {e.tag === 'textarea'}>
                   <column gap="1" w="full">
-                    <label sx={fieldLabel}>Release notes</label>
+                    <label>
+                      style(fieldLabel)
+Release notes</label>
                     <textarea placeholder="What changed in this ship?" rows="2"></textarea>
                   </column>
                 </else-if><else-if {e.tag === 'select'}>
                   <column gap="1" w="full">
-                    <label sx={fieldLabel}>Team</label>
+                    <label>
+                      style(fieldLabel)
+Team</label>
                     <select bind:value={team}>
                       <option>Engineering</option>
                       <option>Design</option>
@@ -236,7 +278,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>
                 </else-if><else-if {e.tag === 'combobox'}>
                   <column gap="1" w="full">
-                    <label sx={fieldLabel}>Framework</label>
+                    <label>
+                      style(fieldLabel)
+Framework</label>
                     <combobox placeholder="Filter…">
                       <option value="sail">Sail</option>
                       <option value="react">React</option>
@@ -245,29 +289,45 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>
                 </else-if><else-if {e.tag === 'checkbox'}>
                   <column gap="2">
-                    <label sx={style.fontSize(sm)}>
+                    <label>
+                      style.fontSize(sm)
+
                       <input type="checkbox" bind:checked={agreed} /> Email me product updates
                     </label>
-                    <label sx={style.fontSize(sm).fg(muted-foreground)}>
+                    <label>
+                      style.fontSize(sm).fg(muted-foreground)
+
                       <input type="checkbox" disabled /> Admin-only (disabled)
                     </label>
                   </column>
                 </else-if><else-if {e.tag === 'radio-group'}>
                   <radio-group name="catalog-plan" value={plan()}>
-                    <label sx={style.fontSize(sm)}><input type="radio" name="catalog-plan" value="free" /> Free — community</label>
-                    <label sx={style.fontSize(sm)}><input type="radio" name="catalog-plan" value="pro" /> Pro — team seats</label>
-                    <label sx={style.fontSize(sm)}><input type="radio" name="catalog-plan" value="enterprise" /> Enterprise</label>
+                    <label>
+                      style.fontSize(sm)
+<input type="radio" name="catalog-plan" value="free" /> Free — community</label>
+                    <label>
+                      style.fontSize(sm)
+<input type="radio" name="catalog-plan" value="pro" /> Pro — team seats</label>
+                    <label>
+                      style.fontSize(sm)
+<input type="radio" name="catalog-plan" value="enterprise" /> Enterprise</label>
                   </radio-group>
                 </else-if><else-if {e.tag === 'switch'}>
                   <row gap="2" align="center">
                     <switch bind:checked={notify} label="Desktop notifications"></switch>
-                    <p sx={mutedXs}>{notify() ? 'Notifications on' : 'Notifications off'}</p>
+                    <p>
+                      style(mutedXs)
+{notify() ? 'Notifications on' : 'Notifications off'}</p>
                   </row>
                 </else-if><else-if {e.tag === 'slider'}>
                   <column gap="1" w="full">
                     <row justify="between" align="center">
-                      <span sx={fieldLabel}>Volume</span>
-                      <span sx={cat}>{volume()}%</span>
+                      <span>
+                        style(fieldLabel)
+Volume</span>
+                      <span>
+                        style(cat)
+{volume()}%</span>
                     </row>
                     <slider bind:value={volume} tone="primary" w="full"></slider>
                   </column>
@@ -281,7 +341,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <field w="full">
                     <label slot="label">Email</label>
                     <input type="email" placeholder="you@ship.dev" />
-                    <span slot="hint" sx={mutedXs}>We'll never share this.</span>
+                    <span slot="hint">
+                      style(mutedXs)
+We'll never share this.</span>
                   </field>
                 </else-if><else-if {e.tag === 'label'}>
                   <column gap="1">
@@ -292,42 +354,66 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <fieldset>
                     <legend>Billing options</legend>
                     <column gap="1">
-                      <label sx={style.fontSize(sm)}><input type="checkbox" checked /> Include trials</label>
-                      <label sx={style.fontSize(sm)}><input type="checkbox" /> Annual discount</label>
+                      <label>
+                        style.fontSize(sm)
+<input type="checkbox" checked /> Include trials</label>
+                      <label>
+                        style.fontSize(sm)
+<input type="checkbox" /> Annual discount</label>
                     </column>
                   </fieldset>
                 </else-if><else-if {e.tag === 'dropzone'}>
-                  <div dropzone w="full" sx={style.minH(14).w(full).pad(3)}>
-                    <p sx={style.fontSize(sm).fontWeight(medium)}>Drop manifests here</p>
-                    <p sx={mutedXs}>or click to browse · .json, .yaml</p>
+                  <div dropzone w="full">
+                    style.minH(14).w(full).pad(3)
+
+                    <p>
+                      style.fontSize(sm).fontWeight(medium)
+Drop manifests here</p>
+                    <p>
+                      style(mutedXs)
+or click to browse · .json, .yaml</p>
                   </div>
                 </else-if><else-if {e.tag === 'theme-picker'}>
                   <theme-picker></theme-picker>
                 </else-if><else-if {e.tag === 'ticker'}>
-                  <ticker duration="normal" sx={style.w(full).overflow(hidden).bg(muted).padY(2).radius(md)}>
-                    <p sx={style.fontSize(xs).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(3)}>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
+                  <ticker duration="normal">
+                    style.w(full).overflow(hidden).bg(muted).padY(2).radius(md)
+
+                    <p>
+                      style.fontSize(xs).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(3)
+tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
                   </ticker>
                 </else-if><else-if {e.tag === 'alert'}>
                   <alert tone="success"><strong>Deployed.</strong> v0.4.2 is live on production.</alert>
                 </else-if><else-if {e.tag === 'progress'}>
                   <column gap="1" w="full">
-                    <span sx={mutedXs}>Uploading assets… 62%</span>
+                    <span>
+                      style(mutedXs)
+Uploading assets… 62%</span>
                     <progress value="0.62" w="full"></progress>
                   </column>
                 </else-if><else-if {e.tag === 'meter'}>
                   <column gap="1" w="full">
-                    <span sx={mutedXs}>Storage used</span>
+                    <span>
+                      style(mutedXs)
+Storage used</span>
                     <meter value="0.7" min="0" max="1" w="full"></meter>
                   </column>
                 </else-if><else-if {e.tag === 'spinner'}>
                   <row gap="2" align="center">
                     <spinner></spinner>
-                    <span sx={mutedXs}>Syncing…</span>
+                    <span>
+                      style(mutedXs)
+Syncing…</span>
                   </row>
                 </else-if><else-if {e.tag === 'skeleton'}>
                   <column gap="2" w="full">
-                    <span skeleton size="md" sx={style.w(full).h(3)}></span>
-                    <span skeleton size="sm" sx={style.w(28).h(2)}></span>
+                    <span skeleton size="md">
+                      style.w(full).h(3)
+</span>
+                    <span skeleton size="sm">
+                      style.w(28).h(2)
+</span>
                   </column>
                 </else-if><else-if {e.tag === 'empty-state'}>
                   <empty-state>
@@ -341,7 +427,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </error-state>
                 </else-if><else-if {e.tag === 'error-boundary'}>
                   <error-boundary>
-                    <p sx={mutedXs}>Child tree isolated from render faults.</p>
+                    <p>
+                      style(mutedXs)
+Child tree isolated from render faults.</p>
                   </error-boundary>
                 </else-if><else-if {e.tag === 'toast'}>
                   <toast tone="primary" duration="0">Invite sent to ada@ship.dev</toast>
@@ -361,14 +449,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </row>
                 </else-if><else-if {e.tag === 'status-dot'}>
                   <column gap="1">
-                    <row gap="2" align="center"><span dot tone="success"></span><span sx={mutedXs}>Online</span></row>
-                    <row gap="2" align="center"><span dot tone="warning" pulse></span><span sx={mutedXs}>Degraded</span></row>
-                    <row gap="2" align="center"><span dot tone="destructive"></span><span sx={mutedXs}>Down</span></row>
+                    <row gap="2" align="center"><span dot tone="success"></span><span>
+                      style(mutedXs)
+Online</span></row>
+                    <row gap="2" align="center"><span dot tone="warning" pulse></span><span>
+                      style(mutedXs)
+Degraded</span></row>
+                    <row gap="2" align="center"><span dot tone="destructive"></span><span>
+                      style(mutedXs)
+Down</span></row>
                   </column>
                 </else-if><else-if {e.tag === 'card'}>
-                  <card interactive sx={style.pad(3).w(full)}>
+                  <card interactive>
+                    style.pad(3).w(full)
+
                     <strong>Harbor Signals</strong>
-                    <p sx={mutedXs}>4 tracks · last played today</p>
+                    <p>
+                      style(mutedXs)
+4 tracks · last played today</p>
                   </card>
                 </else-if><else-if {e.tag === 'avatar'}>
                   <row gap="2" align="center">
@@ -384,41 +482,61 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </row>
                 </else-if><else-if {e.tag === 'separator'}>
                   <column gap="2" w="full">
-                    <p sx={mutedXs}>Section A</p>
+                    <p>
+                      style(mutedXs)
+Section A</p>
                     <separator w="full"></separator>
-                    <p sx={mutedXs}>Section B</p>
+                    <p>
+                      style(mutedXs)
+Section B</p>
                     <row gap="2" align="center">
-                      <span sx={mutedXs}>Left</span>
+                      <span>
+                        style(mutedXs)
+Left</span>
                       <separator orientation="vertical"></separator>
-                      <span sx={mutedXs}>Right</span>
+                      <span>
+                        style(mutedXs)
+Right</span>
                     </row>
                   </column>
                 </else-if><else-if {e.tag === 'details'}>
                   <details w="full">
                     <summary>Advanced options</summary>
-                    <p sx={mutedXs}>Native disclosure — no JS controller required.</p>
+                    <p>
+                      style(mutedXs)
+Native disclosure — no JS controller required.</p>
                   </details>
                 </else-if><else-if {e.tag === 'collapsible'}>
                   <collapsible w="full">
-                    <span slot="trigger" sx={style.fontSize(sm).fontWeight(semibold)}>Webhook endpoints</span>
-                    <p sx={mutedXs}>POST /v1/hooks · signed with your workspace secret.</p>
+                    <span slot="trigger">
+                      style.fontSize(sm).fontWeight(semibold)
+Webhook endpoints</span>
+                    <p>
+                      style(mutedXs)
+POST /v1/hooks · signed with your workspace secret.</p>
                   </collapsible>
                 </else-if><else-if {e.tag === 'prose'}>
                   <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>
                 </else-if><else-if {e.tag === 'tooltip'}>
                   <!-- placement bottom so the bubble stays inside the tile band -->
                   <tooltip content="Copy URL" placement="bottom">
-                    <span sx={style.fontSize(sm).fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help)}>ship.dev/d/ab12</span>
+                    <span>
+                      style.fontSize(sm).fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help)
+ship.dev/d/ab12</span>
                   </tooltip>
                 </else-if><else-if {e.tag === 'hover-card'}>
                   <column gap="2" align="center">
-                    <a href="#" popovertarget="grid-hc" sx={style.fontSize(sm).fg(primary)}>@ada</a>
+                    <a href="#" popovertarget="grid-hc">
+                      style.fontSize(sm).fg(primary)
+@ada</a>
                     <hover-card id="grid-hc">
                       <row gap="2" align="center">
                         <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&auto=format&q=80" size="sm"></avatar>
                         <column gap="0">
                           <strong>Ada Lovelace</strong>
-                          <p sx={mutedXs}>Mathematician · first programmer</p>
+                          <p>
+                            style(mutedXs)
+Mathematician · first programmer</p>
                         </column>
                       </row>
                     </hover-card>
@@ -428,9 +546,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <button size="sm" variant="outline" popovertarget="grid-pop">Filters</button>
                     <popover id="grid-pop">
                       <column gap="2">
-                        <p sx={style.fontSize(sm).fontWeight(medium)}>Status</p>
-                        <label sx={style.fontSize(sm)}><input type="checkbox" checked /> Healthy</label>
-                        <label sx={style.fontSize(sm)}><input type="checkbox" /> Failed</label>
+                        <p>
+                          style.fontSize(sm).fontWeight(medium)
+Status</p>
+                        <label>
+                          style.fontSize(sm)
+<input type="checkbox" checked /> Healthy</label>
+                        <label>
+                          style.fontSize(sm)
+<input type="checkbox" /> Failed</label>
                       </column>
                     </popover>
                   </column>
@@ -445,7 +569,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>
                 </else-if><else-if {e.tag === 'context-menu'}>
                   <column gap="2" align="center">
-                    <p sx={style.fontSize(sm).fg(muted-foreground).pad(3).borderWidth(1).border(border).border(dashed).radius(md)} id="grid-cm-target">Right-click this card</p>
+                    <p id="grid-cm-target">
+                      style.fontSize(sm).fg(muted-foreground).pad(3).borderWidth(1).border(border).border(dashed).radius(md)
+Right-click this card</p>
                     <context-menu for="grid-cm-target" id="grid-cm">
                       <menu-item value="copy">Copy id</menu-item>
                       <menu-item value="paste">Paste</menu-item>
@@ -475,8 +601,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <tab>Overview</tab>
                       <tab>Metrics</tab>
                     </tab-list>
-                    <tab-panel><p sx={mutedXs}>Uptime 99.98% · 12 deploys this week.</p></tab-panel>
-                    <tab-panel><p sx={mutedXs}>p95 latency 42ms.</p></tab-panel>
+                    <tab-panel><p>
+                      style(mutedXs)
+Uptime 99.98% · 12 deploys this week.</p></tab-panel>
+                    <tab-panel><p>
+                      style(mutedXs)
+p95 latency 42ms.</p></tab-panel>
                   </tabs>
                 </else-if><else-if {e.tag === 'breadcrumb'}>
                   <breadcrumb>
@@ -492,9 +622,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </pagination>
                 </else-if><else-if {e.tag === 'navbar'}>
                   <navbar bordered w="full">
-                    <strong slot="brand" sx={style.fontSize(sm)}>Harbor</strong>
-                    <span sx={style.padX(2).padY(1).radius(md).fontSize(sm).fg(muted-foreground)}>Docs</span>
-                    <span sx={style.padX(2).padY(1).radius(md).fontSize(sm).fontWeight(medium).bg(muted)}>App</span>
+                    <strong slot="brand">
+                      style.fontSize(sm)
+Harbor</strong>
+                    <span>
+                      style.padX(2).padY(1).radius(md).fontSize(sm).fg(muted-foreground)
+Docs</span>
+                    <span>
+                      style.padX(2).padY(1).radius(md).fontSize(sm).fontWeight(medium).bg(muted)
+App</span>
                   </navbar>
                 </else-if><else-if {e.tag === 'table'}>
                   <table w="full">
@@ -506,18 +642,36 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </table>
                 </else-if><else-if {e.tag === 'layout'}>
                   <row gap="2" w="full">
-                    <div grow sx={style.pad(2).bg(muted).radius(sm).fontSize(xs).fontFamily(mono)}>main</div>
-                    <div sx={style.pad(2).bg(muted).radius(sm).fontSize(xs).fontFamily(mono).w(16)}>aside</div>
+                    <div grow>
+                      style.pad(2).bg(muted).radius(sm).fontSize(xs).fontFamily(mono)
+main</div>
+                    <div>
+                      style.pad(2).bg(muted).radius(sm).fontSize(xs).fontFamily(mono).w(16)
+aside</div>
                   </row>
                 </else-if><else-if {e.tag === 'scroll-area'}>
-                  <scroll-area sx={style.h(32).w(full).minH(32).borderWidth(1).border(border).radius(md).pad(3).bg(surface-0)}>
+                  <scroll-area>
+                    style.h(32).w(full).minH(32).borderWidth(1).border(border).radius(md).pad(3).bg(surface-0)
+
                     <column gap="2">
-                      <p sx={mutedXs}>Build 1842 · shipped · 14:02</p>
-                      <p sx={mutedXs}>Build 1841 · shipped · 11:40</p>
-                      <p sx={mutedXs}>Build 1840 · failed · 09:12</p>
-                      <p sx={mutedXs}>Build 1839 · shipped · yesterday</p>
-                      <p sx={mutedXs}>Build 1838 · shipped · yesterday</p>
-                      <p sx={mutedXs}>Build 1837 · shipped · Mon</p>
+                      <p>
+                        style(mutedXs)
+Build 1842 · shipped · 14:02</p>
+                      <p>
+                        style(mutedXs)
+Build 1841 · shipped · 11:40</p>
+                      <p>
+                        style(mutedXs)
+Build 1840 · failed · 09:12</p>
+                      <p>
+                        style(mutedXs)
+Build 1839 · shipped · yesterday</p>
+                      <p>
+                        style(mutedXs)
+Build 1838 · shipped · yesterday</p>
+                      <p>
+                        style(mutedXs)
+Build 1837 · shipped · Mon</p>
                     </column>
                   </scroll-area>
                 </else-if><else-if {e.tag === 'sail-sparkline'}>
@@ -535,8 +689,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 </else-if><else-if {e.tag === 'sail-line-chart'}>
                   <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>
                 </else-if><else-if {e.tag === 'sail-media-image'}>
-                  <div sx={mediaFrame}>
-                    <sail-media-image alt="Mountain lake at dusk" fit="cover" zoomable={false} sx={mediaStage}></sail-media-image>
+                  <div>
+                    style(mediaFrame)
+
+                    <sail-media-image alt="Mountain lake at dusk" fit="cover" zoomable={false}>
+                      style(mediaStage)
+</sail-media-image>
                   </div>
                 </else-if><else-if {e.tag === 'sail-media-av'}>
                   <sail-media-av></sail-media-av>
@@ -552,11 +710,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 </else-if><else-if {e.tag === 'sail-citation'}>
                   <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>
                 </else-if><else-if {e.tag === 'sail-composer'}>
-                  <sail-composer placeholder="Message the agent…" w="full" sx={style.w(full).minW(0)}></sail-composer>
+                  <sail-composer placeholder="Message the agent…" w="full">
+                    style.w(full).minW(0)
+</sail-composer>
                 </else-if><else-if {e.tag === 'sail-thinking-dots'}>
                   <row gap="2" align="center">
                     <sail-thinking-dots></sail-thinking-dots>
-                    <span sx={mutedXs}>Agent is thinking…</span>
+                    <span>
+                      style(mutedXs)
+Agent is thinking…</span>
                   </row>
                 </else-if><else-if {e.tag === 'sail-tool-call'}>
                   <sail-tool-call name="list_deploys" status="ok" open w="full">
@@ -564,14 +726,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <span slot="result">{toolResult()}</span>
                   </sail-tool-call>
                 </else-if><else>
-                  <p sx={dormant}>{e.tag}</p>
+                  <p>
+                    style(dormant)
+{e.tag}</p>
                 </else></if>
               </row>
-              <column gap="1" sx={tileMeta}>
-                <a href={`/components/${e.slug}`} sx={tileName}>{e.tag}</a>
+              <column gap="1">
+                style(tileMeta)
+
+                <a href={`/components/${e.slug}`}>
+                  style(tileName)
+{e.tag}</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone={e.badgeTone} variant="soft">{e.badgeLabel}</badge>
-                  <span sx={cat}>{e.cat}</span>
+                  <span>
+                    style(cat)
+{e.cat}</span>
                 </row>
               </column>
             </column>

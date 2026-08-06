@@ -52,28 +52,42 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <button variant="ghost" size="sm" on:click={() => restock()} sx={style.hover({ rotate: 'spring:bouncy' })}>Restock</button>
+      <button variant="ghost" size="sm" on:click={() => restock()}>
+        style.hover({ rotate: 'spring:bouncy' })
+Restock</button>
       <button variant="outline" tone="primary" size="sm"
-on:click={() => toggle()} sx={style.hover({ scale: 'spring:gentle' }).press({ scale: 'press' })}>
+on:click={() => toggle()}>
+        style.hover({ scale: 'spring:gentle' }).press({ scale: 'press' })
+
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <span sx={unreadDot.loop({ scale: 'pulse' })}></span>
+          <span>
+            unreadDot.loop({ scale: 'pulse' })
+</span>
         </if>
       </button>
     </row>
   </row>
 
   <if {open()}>
-    <column gap="2" sx={style.enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' })}>
+    <column gap="2">
+      style.enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' })
+
       <for {notes()} as="n" key={n.id}>
-        <row gap="3" align="center" sx={noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })}>
+        <row gap="3" align="center">
+          noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })
+
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p grow sx={noteText}>{n.text}</p>
+          <p grow>
+            style(noteText)
+{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>
       <if {notes().length === 0}>
-        <p sx={empty.enter({ opacity: 'fade' })}>All clear.</p>
+        <p>
+          empty.enter({ opacity: 'fade' })
+All clear.</p>
       </if>
     </column>
   </if>

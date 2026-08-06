@@ -1,7 +1,15 @@
-<column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
-  <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>ship/authority — Domain Stubs</h1>
-    <p sx={style.fg(muted-foreground).fontSize(sm)}>
+<column gap="8">
+  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+
+  <header>
+    style.borderBWidth(1).borderB(border).padB(4)
+
+    <h1>
+      style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)
+ship/authority — Domain Stubs</h1>
+    <p>
+      style.fg(muted-foreground).fontSize(sm)
+
       Pack <strong>ship/authority</strong>. Each card below renders the real custom
       element tag with static mock attribute values so the shell registers and
       paints. A visible badge on each card marks it as a domain stub — no
@@ -10,12 +18,22 @@
   </header>
 
   <!-- ship-approval-card -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>
-      <code sx={style.fontFamily(mono)}>ship-approval-card</code>
-      <span sx={style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)}>domain-stub — awaits backend spec</span>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+
+      <code>
+        style.fontFamily(mono)
+ship-approval-card</code>
+      <span>
+        style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)
+domain-stub — awaits backend spec</span>
     </h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Props: <code>request: string</code> (JSON-encoded AuthorityRequest). No slots.
       In production the host owns <code>ship.authority.pending()</code> via
       <code>live()</code> and passes each item via <code>request</code>;
@@ -23,28 +41,50 @@
       <code>ship-inspect</code> custom events.
     </p>
     <column gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=capability · risk=high</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=capability · risk=high</span>
         <ship-approval-card request={'{"id":"req-001","agent":"claude-opus","space":"work","kind":"capability","scope":"read_file","path":"/etc/hosts","why":"Need to read the hosts file to resolve local DNS entries","risk":"high"}'}></ship-approval-card>
       </column>
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=command · risk=medium</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=command · risk=medium</span>
         <ship-approval-card request={'{"id":"req-002","agent":"codex-agent","space":"personal","kind":"command","command":"npm install --global some-cli","why":"Installing a global CLI tool needed for the build pipeline","risk":"medium"}'}></ship-approval-card>
       </column>
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=capability · risk=low</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=capability · risk=low</span>
         <ship-approval-card request={'{"id":"req-003","agent":"cursor-bot","space":"work","kind":"capability","scope":"read_file","path":"./src/config.ts","why":"Checking project config for context","risk":"low"}'}></ship-approval-card>
       </column>
     </column>
   </column>
 
   <!-- ship-capability-request -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>
-      <code sx={style.fontFamily(mono)}>ship-capability-request</code>
-      <span sx={style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)}>domain-stub — awaits backend spec</span>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+
+      <code>
+        style.fontFamily(mono)
+ship-capability-request</code>
+      <span>
+        style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)
+domain-stub — awaits backend spec</span>
     </h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Props: <code>request: string</code>, <code>duration: once|session|always</code>,
       <code>open: bool</code>. Wraps <code>sail-dialog</code> as an alertdialog.
       In production the host opens it when the operator clicks the agent name on
@@ -52,9 +92,15 @@
       <code>ship-dismiss</code>. Shown open here so the dialog chrome is visible.
     </p>
     <column gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>open=true · duration=session</span>
-        <column sx={style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)}>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+open=true · duration=session</span>
+        <column>
+          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+
           <ship-capability-request
             open
             duration="session"
@@ -62,9 +108,15 @@
           ></ship-capability-request>
         </column>
       </column>
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>open=true · duration=once</span>
-        <column sx={style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)}>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+open=true · duration=once</span>
+        <column>
+          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+
           <ship-capability-request
             open
             duration="once"
@@ -76,12 +128,22 @@
   </column>
 
   <!-- sail-auth-dialog -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>
-      <code sx={style.fontFamily(mono)}>sail-auth-dialog</code>
-      <span sx={style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)}>domain-stub — awaits backend spec</span>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+
+      <code>
+        style.fontFamily(mono)
+sail-auth-dialog</code>
+      <span>
+        style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)
+domain-stub — awaits backend spec</span>
     </h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Props: <code>open: bool</code>, <code>mode: sign-in|sign-up</code>,
       <code>loading: bool</code>, <code>backdrop: default|blur|solid</code>.
       Slots: <code>header</code>, <code>harnesses</code>, <code>terms</code>.
@@ -89,9 +151,15 @@
       <code>sail-close</code>. Shown open here so the dialog chrome is visible.
     </p>
     <column gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>mode=sign-in · backdrop=blur · open=true</span>
-        <column sx={style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)}>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+mode=sign-in · backdrop=blur · open=true</span>
+        <column>
+          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+
           <sail-auth-dialog open mode="sign-in" backdrop="blur">
             <span slot="header">Sign in to Ship</span>
             <div slot="harnesses">
@@ -101,18 +169,30 @@
           </sail-auth-dialog>
         </column>
       </column>
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>mode=sign-up · backdrop=solid · open=true</span>
-        <column sx={style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)}>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+mode=sign-up · backdrop=solid · open=true</span>
+        <column>
+          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+
           <sail-auth-dialog open mode="sign-up" backdrop="solid">
             <span slot="header">Create your account</span>
             <span slot="terms">Free during beta. No credit card required.</span>
           </sail-auth-dialog>
         </column>
       </column>
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>loading=true · mode=sign-in · open=true</span>
-        <column sx={style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)}>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+loading=true · mode=sign-in · open=true</span>
+        <column>
+          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+
           <sail-auth-dialog open mode="sign-in" loading backdrop="default">
             <span slot="header">Sign in to Ship</span>
             <span slot="terms">Hang tight…</span>

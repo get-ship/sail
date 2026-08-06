@@ -10,7 +10,9 @@
   shrink="0"
   nowrap
   min-w="0"
-  sx={style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0).overflow(hidden)}
+
 >
+  style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0).overflow(hidden)
+
   <slot></slot>
 </row>

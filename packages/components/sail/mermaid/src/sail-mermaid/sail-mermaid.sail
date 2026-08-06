@@ -176,18 +176,30 @@ export default controller((ctx) => {
   });
 
 </controller>
-<center use:paintDiagram sx={style.w(full).minH(8)} hidden={hasError()}></center>
+<center use:paintDiagram hidden={hasError()}>
+  style.w(full).minH(8)
+</center>
 
 <if {error()}>
-  <column gap="2" sx={style.w(full).pad(3).padX(4).borderWidth(1).border(destructive).radius(md).bg(muted).fontSize(sm)}>
-    <row gap="2" align="center" sx={style.fontWeight(semibold).fg(destructive)}>
+  <column gap="2">
+    style.w(full).pad(3).padX(4).borderWidth(1).border(destructive).radius(md).bg(muted).fontSize(sm)
+
+    <row gap="2" align="center">
+      style.fontWeight(semibold).fg(destructive)
+
       <icon name="alert-triangle" label="" size="sm"></icon>
       Diagram failed to render
     </row>
-    <pre sx={style.fontFamily(mono).fontSize(xs).whitespace(pre-wrap).fg(muted-foreground)}>{error()}</pre>
+    <pre>
+      style.fontFamily(mono).fontSize(xs).whitespace(pre-wrap).fg(muted-foreground)
+{error()}</pre>
     <details>
-      <summary sx={style.cursor(pointer).fontSize(xs).fg(muted-foreground)}>mermaid source</summary>
-      <pre sx={style.mt(2).pad(2).padX(3).bg(surface-2).borderWidth(1).border(border-subtle).radius(sm).fontFamily(mono).fontSize(xs).whitespace(pre-wrap).overflowX(auto)}>{value()}</pre>
+      <summary>
+        style.cursor(pointer).fontSize(xs).fg(muted-foreground)
+mermaid source</summary>
+      <pre>
+        style.mt(2).pad(2).padX(3).bg(surface-2).borderWidth(1).border(border-subtle).radius(sm).fontFamily(mono).fontSize(xs).whitespace(pre-wrap).overflowX(auto)
+{value()}</pre>
     </details>
   </column>
 </if>

@@ -7,7 +7,9 @@ export default controller((_ctx: ControllerScope<any>) => {
 })
 </controller>
 <column gap="4">
-  <card tone="primary" sx={style.pad(6).radius(lg)}>
+  <card tone="primary">
+    style.pad(6).radius(lg)
+
     <h3>Static, by default</h3>
     <p>Every route renders without JavaScript.</p>
     <row gap="2">

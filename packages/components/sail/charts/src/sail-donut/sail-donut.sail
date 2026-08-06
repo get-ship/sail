@@ -82,7 +82,9 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
 </else-if><else-if {chart.isEmpty()}>
   <empty-state></empty-state>
 </else-if><else>
-  <stack sx={style.w(fit)}>
+  <stack>
+    style.w(fit)
+
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
@@ -90,7 +92,9 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       role="img"
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
-      sx={style.display(block)}>
+>
+      style.display(block)
+
       <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
       </circle>
       <for {segments()} as="seg" key={seg.id}>
@@ -99,8 +103,12 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
         </path>
       </for>
     </svg>
-    <center sx={style.fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight).fg(foreground).pointerEvents(none)}><slot></slot></center>
-    <column id="chart-data" sx={style.srOnly()}>
+    <center>
+      style.fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight).fg(foreground).pointerEvents(none)
+<slot></slot></center>
+    <column id="chart-data">
+      style.srOnly()
+
       <slot name="description">
         <table>
           <for {chart.ariaTable()} as="row" key={row[0].id}>

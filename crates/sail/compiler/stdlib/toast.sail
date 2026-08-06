@@ -13,7 +13,8 @@
   const close = style.ms(auto).fg(muted-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer)
 </scope>
 
-<row align="start" gap="3" use:autoDismiss use:dismissControl sx={[
+<row align="start" gap="3" use:autoDismiss use:dismissControl>
+  style([
   base,
   match(tone, {
     default: style.borderS(foreground),
@@ -25,12 +26,15 @@
     accent: style.borderS(accent),
     muted: style.borderS(muted-foreground),
   }),
-]}>
+])
+
   <slot></slot>
-  <button data-toast-close type="button" anatomy label="Dismiss" shrink="0" grow="0" sx={[
+  <button data-toast-close type="button" anatomy label="Dismiss" shrink="0" grow="0">
+    style([
     close,
     when({
       hover: style.fg(foreground).bg(muted),
     }),
-  ]}>✕</button>
+  ])
+✕</button>
 </row>

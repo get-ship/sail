@@ -8,9 +8,9 @@
 //! layout keyword inside.
 //!
 //! Flags:
-//! - direct `sx={style.display(…)}` and mid-chain `.display(` / `when({…})`
+//! - direct `style={style.display(…)}` and mid-chain `.display(` / `when({…})`
 //! - **simple Style const refs** whose defining expression includes `display(`:
-//!   `const hide = style.display(none)` then `<column sx={hide}>`
+//!   `const hide = style.display(none)` then `<column style={hide}>`
 //!
 //! **Known gaps (not yet flagged):** multi-hop refs (`const a = hide`), list
 //! spreads, `match`/`compound` wrappers that only nest a display-bearing const,
@@ -28,7 +28,7 @@ use crate::rules::layout::{self};
 pub const RULE_ID: &str = "sail-display-on-layout";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // Scope consts with display(…) — used when sx={name} is a bare ref.
+    // Scope consts with display(…) — used when style={name} is a bare ref.
     let display_consts = display_bearing_const_names(source);
 
     // Tag scanning is SHARED with the layout rule (`layout::scan_open_tags`):
@@ -41,7 +41,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         if excluded.iter().any(|(s, e)| t.start >= *s && t.start < *e) {
             continue;
         }
-        let Some((_, sx)) = t.attrs.iter().find(|(n, _)| n == "sx") else {
+        let Some((_, sx)) = t.attrs.iter().find(|(n, _)| n == "style") else {
             continue;
         };
         let via_inline = sx_contains_display(sx);
@@ -67,9 +67,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 base = layout_base_class(tag),
             ),
             suggest: Some(format!(
-                "Replace `<{tag} sx={{style.display(none).…}}>` (or a Style \
+                "Replace `<{tag} style={{style.display(none).…}}>` (or a Style \
                  const that sets display) with \
-                 `<div sx={{style.display(none)}}><{tag} …>…</{tag}></div>` \
+                 `<div style={{style.display(none)}}><{tag} …>…</{tag}></div>` \
                  (or hide the host with when/match)."
             )),
         });
@@ -162,7 +162,7 @@ fn display_bearing_const_names(source: &str) -> HashSet<String> {
     out
 }
 
-/// `sx={hide}` / `sx={ hide }` → `Some("hide")`. Chains/calls → None.
+/// `style={hide}` / `style={ hide }` → `Some("hide")`. Chains/calls → None.
 fn sx_bare_const_ref(sx: &str) -> Option<String> {
     let mut s = sx.trim();
     if let Some(inner) = s.strip_prefix('{').and_then(|t| t.strip_suffix('}')) {
@@ -232,7 +232,7 @@ mod tests {
 
     #[test]
     fn flags_display_none_on_column() {
-        let f = run(r#"<column sx={style.display(none).pad(4)}>x</column>"#);
+        let f = run(r#"<column style={style.display(none).pad(4)}>x</column>"#);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
         assert!(f[0].message.contains("sail-col"), "{}", f[0].message);
@@ -241,7 +241,7 @@ mod tests {
 
     #[test]
     fn flags_when_display_on_row() {
-        let f = run(r#"<row sx={style.pad(2).when({ tablet: style.display(none) })}>x</row>"#);
+        let f = run(r#"<row style={style.pad(2).when({ tablet: style.display(none) })}>x</row>"#);
         assert_eq!(f.len(), 1, "{f:?}");
         assert!(
             f[0].message.contains("<row>") || f[0].message.contains("row"),
@@ -252,13 +252,13 @@ mod tests {
 
     #[test]
     fn allows_display_on_plain_div() {
-        let f = run(r#"<div sx={style.display(none)}><column>x</column></div>"#);
+        let f = run(r#"<div style={style.display(none)}><column>x</column></div>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
     #[test]
     fn allows_layout_without_display() {
-        let f = run(r#"<column sx={style.pad(4).bg(surface-2)}>x</column>"#);
+        let f = run(r#"<column style={style.pad(4).bg(surface-2)}>x</column>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
@@ -269,7 +269,7 @@ mod tests {
             <scope>
               const rail = style.display(none).pad(4)
             </scope>
-            <div sx={rail}>x</div>
+            <div style={rail}>x</div>
             "#);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -280,7 +280,7 @@ mod tests {
             <scope>
               const hide = style.display(none)
             </scope>
-            <column sx={hide}>x</column>
+            <column style={hide}>x</column>
             "#);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
@@ -292,7 +292,7 @@ mod tests {
             <scope>
               const paint = style.pad(4).bg(surface-2)
             </scope>
-            <column sx={paint}>x</column>
+            <column style={paint}>x</column>
             "#);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -305,7 +305,7 @@ mod tests {
             <scope>
               const paint = style.pad(4) // …
             </scope>
-            <column sx={paint}>x</column>
+            <column style={paint}>x</column>
             "#);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -313,14 +313,14 @@ mod tests {
     #[test]
     fn utf8_ellipsis_in_sx_attr_does_not_panic() {
         // Comment-like multi-byte in an sx expression without display(.
-        let f = run(r#"<column sx={style.pad(4) /* … */}>x</column>"#);
+        let f = run(r#"<column style={style.pad(4) /* … */}>x</column>"#);
         assert!(f.is_empty(), "{f:?}");
     }
 
     #[test]
     fn flags_all_layout_keywords() {
         for tag in TAGS {
-            let src = format!(r#"<{tag} sx={{style.display(flex)}}>x</{tag}>"#);
+            let src = format!(r#"<{tag} style={{style.display(flex)}}>x</{tag}>"#);
             let f = run(&src);
             assert_eq!(f.len(), 1, "expected flag for <{tag}>: {f:?}");
         }
@@ -332,10 +332,10 @@ mod tests {
     #[test]
     fn self_closing_layout_tag_does_not_hang() {
         for tag in TAGS {
-            let f = run(&format!("<{tag} sx={{style.pad(2)}} />"));
+            let f = run(&format!("<{tag} style={{style.pad(2)}} />"));
             assert!(f.is_empty(), "<{tag}/>: {f:?}");
         }
-        let f = run(r#"<column sx={style.display(none)} />"#);
+        let f = run(r#"<column style={style.display(none)} />"#);
         assert_eq!(
             f.len(),
             1,

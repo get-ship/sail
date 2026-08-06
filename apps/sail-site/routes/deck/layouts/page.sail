@@ -11,10 +11,16 @@ import { layoutFile, layoutChain } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ layoutFile, layoutChain }))
 </controller>
 
-<article sx={style.maxW(breakpoint-tablet).mx(auto)}>
-  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Routing</p>
+<article>
+  style.maxW(breakpoint-tablet).mx(auto)
+
+  <p>
+    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+Routing</p>
   <h1>Layouts</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>A <code>_layout.sail</code> wraps every route beneath it in shared chrome — a header, a nav, a sidebar — that survives navigation.</p>
+  <p>
+    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+A <code>_layout.sail</code> wraps every route beneath it in shared chrome — a header, a nav, a sidebar — that survives navigation.</p>
 
   <h2>A layout is chrome</h2>
   <p>deck reads the layout's <strong>first custom-element tag</strong> as the chrome wrapper, then mounts each route into that element's <code>&lt;slot name="route"&gt;</code>.</p>
@@ -26,9 +32,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ layoutFile, layou
 
   <h2>Layouts compose</h2>
   <p>Nested <code>_layout.sail</code> files form a layout chain: a route is wrapped by every layout above it, outermost first. This page is a live example — the root layout's <code>&lt;sail-site-header&gt;</code> wraps <code>routes/deck/_layout.sail</code>'s <code>&lt;sail-deck-rail&gt;</code>, which wraps this article.</p>
-  <pre sx={style.fontFamily(mono).fontSize(sm).leading(relaxed).bg(surface-1).borderWidth(1).border(border).radius(lg).pad(4).padX(5).whitespace(pre-wrap).break(words)}>{layoutChain}</pre>
+  <pre>
+    style.fontFamily(mono).fontSize(sm).leading(relaxed).bg(surface-1).borderWidth(1).border(border).radius(lg).pad(4).padX(5).whitespace(pre-wrap).break(words)
+{layoutChain}</pre>
 
-  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
+  <row>
+    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+
     <a href="/deck/dynamic-routes">← Dynamic routes</a>
     <a href="/deck/reactivity">Reactivity →</a>
   </row>

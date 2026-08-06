@@ -11,7 +11,7 @@ export default controller(() => {
 </controller>
 
 <button variant="solid" tone="primary"
- on:click={save} sx={style.press({ scale: 'press' })}>
+ on:click={save} style={style.press({ scale: 'press' })}>
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 
@@ -64,7 +64,7 @@ export default controller(() => ({ agreed: signal(false) }))
 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
 <p>{agreed() ? 'thank you' : 'the checkbox is the platform one, skinned'}</p>`,
 
-  'radio-group': `<radio-group label="Billing period" sx={style.enter({ opacity: 'fade' })}>
+  'radio-group': `<radio-group label="Billing period" style={style.enter({ opacity: 'fade' })}>
   <label><input type="radio" name="plan" checked /> Monthly</label>
   <label><input type="radio" name="plan" /> Yearly</label>
 </radio-group>`,
@@ -86,13 +86,13 @@ export default controller(() => ({ load: signal(62) }))
 <progress value={load()} max="100"></progress>
 <p>Two components, one signal — drag it: {load()}%</p>`,
 
-  'toggle-group': `<toggle-group variant="segmented" sx={style.enter({ opacity: 'fade' })}>
+  'toggle-group': `<toggle-group variant="segmented" style={style.enter({ opacity: 'fade' })}>
   <toggle value="left">Left</toggle>
   <toggle value="center">Center</toggle>
   <toggle value="right">Right</toggle>
 </toggle-group>`,
 
-  field: `<field sx={style.enter({ opacity: 'fade' })}>
+  field: `<field style={style.enter({ opacity: 'fade' })}>
   <label for="name">Name</label>
   <input id="name" placeholder="Ada Lovelace" />
 </field>
@@ -102,12 +102,12 @@ export default controller(() => ({ load: signal(62) }))
   <input id="email" value="not-an-email" />
 </field>`,
 
-  label: `<column gap="1" sx={style.enter({ opacity: 'fade' })}>
+  label: `<column gap="1" style={style.enter({ opacity: 'fade' })}>
   <label for="email" required>Email</label>
   <input id="email" placeholder="ada@lovelace.dev" />
 </column>`,
 
-  fieldset: `<fieldset sx={style.enter({ opacity: 'fade' })}>
+  fieldset: `<fieldset style={style.enter({ opacity: 'fade' })}>
   <legend>Account details</legend>
   <column gap="2">
     <input placeholder="Name" />
@@ -115,15 +115,15 @@ export default controller(() => ({ load: signal(62) }))
   </column>
 </fieldset>`,
 
-  dropzone: `<card dropzone sx={style.pad(6).enter({ opacity: 'fade' })}>
+  dropzone: `<card dropzone style={style.pad(6).enter({ opacity: 'fade' })}>
   Drop a file, or click to browse
 </card>`,
 
   'theme-picker': `<!-- the whole switcher: trigger, panel, live previews -->
-<theme-picker sx={style.enter({ opacity: 'fade' })}></theme-picker>`,
+<theme-picker style={style.enter({ opacity: 'fade' })}></theme-picker>`,
 
-  ticker: `<ticker duration="normal" sx={style.w(full).overflow(hidden).bg(muted).padY(2).radius(md)}>
-  <p sx={style.fontSize(sm).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(3)}>
+  ticker: `<ticker duration="normal" style={style.w(full).overflow(hidden).bg(muted).padY(2).radius(md)}>
+  <p style={style.fontSize(sm).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(3)}>
     tokens · signals · a11y · hot reload ·&nbsp;
   </p>
 </ticker>`,
@@ -136,7 +136,7 @@ export default controller(() => {
 </controller>
 
 <if {visible()}>
-  <alert tone="warning" sx={style.exit({ opacity: 'fade-out' })}>
+  <alert tone="warning" style={style.exit({ opacity: 'fade-out' })}>
     <strong>Careful.</strong> This cannot be undone.
   </alert>
 </if>
@@ -149,7 +149,7 @@ export default controller(() => ({ done: signal(64) }))
 <progress value={done()} max="100"></progress>
 <p>{done()}% uploaded — a native element, themed</p>`,
 
-  meter: `<column gap="2" sx={style.enter({ opacity: 'fade' })}>
+  meter: `<column gap="2" style={style.enter({ opacity: 'fade' })}>
   <meter value="0.3"></meter>
   <meter value="0.7"></meter>
   <meter value="0.95"></meter>
@@ -166,31 +166,31 @@ export default controller(() => ({ loading: signal(true) }))
   </row>
 </if>`,
 
-  skeleton: `<row gap="3" align="center" sx={style.enter({ opacity: 'fade' })}>
-  <span skeleton shape="circle" sx={style.w(7).h(7)}></span>
+  skeleton: `<row gap="3" align="center" style={style.enter({ opacity: 'fade' })}>
+  <span skeleton shape="circle" style={style.w(7).h(7)}></span>
   <column gap="2" grow>
     <span skeleton shape="text" size="sm"></span>
     <span skeleton shape="text" size="sm"></span>
   </column>
 </row>`,
 
-  'empty-state': `<empty-state sx={style.enter({ opacity: 'fade' })}>
+  'empty-state': `<empty-state style={style.enter({ opacity: 'fade' })}>
   <strong slot="title">No results</strong>
   Try a different search, or clear a filter.
 </empty-state>`,
 
-  'error-state': `<error-state code="ERR_TIMEOUT" sx={style.enter({ opacity: 'fade' })}>
+  'error-state': `<error-state code="ERR_TIMEOUT" style={style.enter({ opacity: 'fade' })}>
   The request timed out. Retry, or check the connection.
 </error-state>`,
 
   'error-boundary': `<error-boundary message="This panel could not load.">
-  <card sx={style.pad(4).enter({ opacity: 'fade' })}>
+  <card style={style.pad(4).enter({ opacity: 'fade' })}>
     <p>A risky subtree. If a render throw happens inside,
        the fallback takes this card's place — Retry resets it.</p>
   </card>
 </error-boundary>`,
 
-  toast: `<toast-region position="bottom-end" sx={style.enter({ opacity: 'fade' })}>
+  toast: `<toast-region position="bottom-end" style={style.enter({ opacity: 'fade' })}>
   <toast tone="success" duration="0">
     <strong>Saved.</strong> Your changes are live.
     <button data-toast-close variant="ghost" size="sm">×</button>
@@ -198,7 +198,7 @@ export default controller(() => ({ loading: signal(true) }))
 </toast-region>`,
 
   badge: `<row gap="2" align="center">
-  <badge tone="success" sx={style.enter({ opacity: 'fade' })}>Active</badge>
+  <badge tone="success" style={style.enter({ opacity: 'fade' })}>Active</badge>
   <badge tone="warning">Pending</badge>
   <badge tone="destructive" variant="outline">Failed</badge>
   <badge tone="primary" variant="solid" pill>3</badge>
@@ -218,25 +218,25 @@ export default controller(() => {
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
 </if>`,
 
-  'status-dot': `<row gap="2" align="center" sx={style.enter({ opacity: 'fade' })}>
+  'status-dot': `<row gap="2" align="center" style={style.enter({ opacity: 'fade' })}>
   <status-dot tone="success"></status-dot>
   <p>all systems live</p>
 </row>`,
 
-  card: `<card interactive sx={style.pad(5)}>
+  card: `<card interactive style={style.pad(5)}>
   <strong>A surface</strong>
-  <p sx={style.fontSize(sm).fg(muted-foreground)}>
+  <p style={style.fontSize(sm).fg(muted-foreground)}>
     Tone, padding and the hover lift are attributes.
   </p>
 </card>`,
 
-  avatar: `<row gap="2" align="center" sx={style.enter({ opacity: 'fade' })}>
+  avatar: `<row gap="2" align="center" style={style.enter({ opacity: 'fade' })}>
   <avatar name="Ada Lovelace"></avatar>
   <avatar initials="GH" tone="primary"></avatar>
   <avatar name="Alan Turing" size="lg" shape="square"></avatar>
 </row>`,
 
-  icon: `<row gap="3" align="center" sx={style.enter({ opacity: 'fade' })}>
+  icon: `<row gap="3" align="center" style={style.enter({ opacity: 'fade' })}>
   <icon>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5" /></svg>
@@ -247,7 +247,7 @@ export default controller(() => {
   </icon>
 </row>`,
 
-  separator: `<column gap="2" sx={style.enter({ opacity: 'fade' })}>
+  separator: `<column gap="2" style={style.enter({ opacity: 'fade' })}>
   <p>above</p>
   <separator></separator>
   <p>below — and vertical, between inline things:</p>
@@ -258,17 +258,17 @@ export default controller(() => {
   </row>
 </column>`,
 
-  details: `<details sx={style.enter({ opacity: 'fade' })}>
+  details: `<details style={style.enter({ opacity: 'fade' })}>
   <summary>Advanced options</summary>
   <p>Native disclosure. Zero JavaScript.</p>
 </details>`,
 
-  collapsible: `<collapsible sx={style.enter({ opacity: 'fade' })}>
+  collapsible: `<collapsible style={style.enter({ opacity: 'fade' })}>
   <strong slot="trigger">Show the details</strong>
   <p>Animated open and close — and it remembers its state.</p>
 </collapsible>`,
 
-  prose: `<column gap="2" sx={style.enter({ opacity: 'fade' })}>
+  prose: `<column gap="2" style={style.enter({ opacity: 'fade' })}>
   <h2>Plain tags, already styled</h2>
   <p>Body copy sets the baseline — <strong>strong</strong>,
      <em>emphasis</em>, <code>inline_code()</code> and
@@ -277,34 +277,34 @@ export default controller(() => {
 </column>`,
 
   tooltip: `<tooltip content="Deletes the branch — cannot be undone"
- placement="top" sx={style.enter({ opacity: 'fade' })}>
+ placement="top" style={style.enter({ opacity: 'fade' })}>
   <button tone="destructive" variant="outline">Delete branch</button>
 </tooltip>`,
 
   'hover-card': `<button variant="ghost" popovertarget="profile">@ada</button>
 
-<hover-card id="profile" sx={style.enter({ opacity: 'fade' })}>
-  <card sx={style.pad(4)}>
+<hover-card id="profile" style={style.enter({ opacity: 'fade' })}>
+  <card style={style.pad(4)}>
     <strong>Ada Lovelace</strong>
-    <p sx={style.fontSize(sm).fg(muted-foreground)}>wrote the first program.</p>
+    <p style={style.fontSize(sm).fg(muted-foreground)}>wrote the first program.</p>
   </card>
 </hover-card>`,
 
   popover: `<button popovertarget="pop">Open popover</button>
 
-<popover id="pop" placement="bottom" sx={style.enter({ opacity: 'fade' })}>
-  <card sx={style.pad(4)}>Rides the platform top layer — no z-index war.</card>
+<popover id="pop" placement="bottom" style={style.enter({ opacity: 'fade' })}>
+  <card style={style.pad(4)}>Rides the platform top layer — no z-index war.</card>
 </popover>`,
 
   dropdown: `<button popovertarget="menu">Actions ▾</button>
 
-<dropdown id="menu" sx={style.enter({ opacity: 'fade' })}>
+<dropdown id="menu" style={style.enter({ opacity: 'fade' })}>
   <menu-item>Edit</menu-item>
   <menu-item>Duplicate</menu-item>
   <menu-item tone="destructive">Delete</menu-item>
 </dropdown>`,
 
-  'context-menu': `<card id="canvas" sx={style.pad(6).enter({ opacity: 'fade' })}>
+  'context-menu': `<card id="canvas" style={style.pad(6).enter({ opacity: 'fade' })}>
   right-click target
 </card>
 
@@ -321,7 +321,7 @@ export default controller(() => {
 })
 </controller>
 
-<button command="show-modal" commandfor="confirm" sx={style.press({ scale: 'press' })}>Delete project…</button>
+<button command="show-modal" commandfor="confirm" style={style.press({ scale: 'press' })}>Delete project…</button>
 
 <dialog id="confirm">
   <header>Delete project</header>
@@ -339,14 +339,14 @@ export default controller(() => {
     <tab>Activity</tab>
     <tab>Settings</tab>
   </tab-list>
-  <tab-panel sx={style.enter({ opacity: 'fade' })}>
+  <tab-panel style={style.enter({ opacity: 'fade' })}>
     <p>Keyboard-complete: arrows rove, Home/End jump.</p>
   </tab-panel>
   <tab-panel><p>Activity feed.</p></tab-panel>
   <tab-panel><p>Settings.</p></tab-panel>
 </tabs>`,
 
-  breadcrumb: `<breadcrumb sx={style.enter({ opacity: 'fade' })}>
+  breadcrumb: `<breadcrumb style={style.enter({ opacity: 'fade' })}>
   <a href="/">Home</a>
   <a href="/components">Components</a>
   <small>breadcrumb</small>
@@ -366,7 +366,7 @@ export default controller(() => {
 </pagination>
 <p>on page {page()}</p>`,
 
-  navbar: `<navbar bordered sx={style.enter({ opacity: 'fade' })}>
+  navbar: `<navbar bordered style={style.enter({ opacity: 'fade' })}>
   <strong slot="brand">SHIP</strong>
   <a href="/docs">Docs</a>
   <a href="/components">Components</a>
@@ -397,22 +397,22 @@ export default controller(() => ({
   </tbody>
 </table>`,
 
-  layout: `<column gap="3" sx={style.enter({ opacity: 'fade' })}>
+  layout: `<column gap="3" style={style.enter({ opacity: 'fade' })}>
   <row gap="2" align="center" justify="between">
     <strong>row — the x axis</strong>
     <badge tone="primary">end</badge>
   </row>
   <grid cols="3" gap="2">
-    <card sx={style.pad(3)}>1</card>
-    <card sx={style.pad(3)}>2</card>
-    <card sx={style.pad(3)}>3</card>
+    <card style={style.pad(3)}>1</card>
+    <card style={style.pad(3)}>2</card>
+    <card style={style.pad(3)}>3</card>
   </grid>
-  <center sx={style.pad(4).borderWidth(1).border(border-subtle).radius(md)}>
+  <center style={style.pad(4).borderWidth(1).border(border-subtle).radius(md)}>
     <p>center — both axes</p>
   </center>
 </column>`,
 
-  'scroll-area': `<scroll-area sx={style.maxH(panel-max-h-sm).pad(3).borderWidth(1).border(border-subtle).radius(md).enter({ opacity: 'fade' })}>
+  'scroll-area': `<scroll-area style={style.maxH(panel-max-h-sm).pad(3).borderWidth(1).border(border-subtle).radius(md).enter({ opacity: 'fade' })}>
   <p>Constrain it, and the overflow scrolls behind thin,
      themed scrollbars…</p>
   <p>…line after line…</p>

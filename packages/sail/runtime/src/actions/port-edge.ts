@@ -32,7 +32,7 @@ import type { Action } from '../action'
  * `left` it sets `top: parent_h/2 - self_h/2`, `left: -self_w/2`). Then sx
  * just reads the matching property:
  *
- *     sx="absolute w-3 h-3 rounded-full bg-background border border-primary cursor-crosshair state-left:left-(--port-left) state-left:top-(--port-top) state-right:right-(--port-right) state-right:top-(--port-top) state-top:top-(--port-top) state-top:left-(--port-left) state-bottom:bottom-(--port-bottom) state-bottom:left-(--port-left)"
+ *     style="absolute w-3 h-3 rounded-full bg-background border border-primary cursor-crosshair state-left:left-(--port-left) state-left:top-(--port-top) state-right:right-(--port-right) state-right:top-(--port-top) state-top:top-(--port-top) state-top:left-(--port-left) state-bottom:bottom-(--port-bottom) state-bottom:left-(--port-left)"
  *
  * `null`/missing side (or unmount) clears all four properties so the port's
  * natural flow takes over — the same null-vs-empty distinction `rect` uses

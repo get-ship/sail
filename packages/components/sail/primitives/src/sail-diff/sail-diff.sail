@@ -107,28 +107,54 @@ export default controller(({ from, to, value }: Scope) => {
   Flush surface for embed in tutorial/editor chrome — no outer radius/border
   double-boxing. Rows paint add/del distinctly; pre keeps spaces intact.
 -->
-<column role="list" gap="0" sx={style.w(full).minW(0).bg(surface-0).fontFamily(mono).fontSize(xs).leading(normal).overflowX(auto)}>
+<column role="list" gap="0">
+  style.w(full).minW(0).bg(surface-0).fontFamily(mono).fontSize(xs).leading(normal).overflowX(auto)
+
   <for {lines()} as="line" key={line.key}>
     <match {line.kind}>
       <case {'add'}>
-        <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0" sx={style.padX(2).padY(px).colorMix(success, 15).w(full).minW(0)}>
-          <small aria-hidden="true" shrink="0" sx={style.w(4).fg(success).fontWeight(semibold)}>{line.sign}</small>
-          <pre grow sx={style.fontSize(xs).fg(foreground).minW(0)}>{line.text}</pre>
+        <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0">
+          style.padX(2).padY(px).colorMix(success, 15).w(full).minW(0)
+
+          <small aria-hidden="true" shrink="0">
+            style.w(4).fg(success).fontWeight(semibold)
+{line.sign}</small>
+          <pre grow>
+            style.fontSize(xs).fg(foreground).minW(0)
+{line.text}</pre>
         </row>
       </case><case {'del'}>
-        <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0" sx={style.padX(2).padY(px).colorMix(destructive, 15).w(full).minW(0)}>
-          <small aria-hidden="true" shrink="0" sx={style.w(4).fg(destructive).fontWeight(semibold)}>{line.sign}</small>
-          <pre grow sx={style.fontSize(xs).fg(foreground).minW(0)}>{line.text}</pre>
+        <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0">
+          style.padX(2).padY(px).colorMix(destructive, 15).w(full).minW(0)
+
+          <small aria-hidden="true" shrink="0">
+            style.w(4).fg(destructive).fontWeight(semibold)
+{line.sign}</small>
+          <pre grow>
+            style.fontSize(xs).fg(foreground).minW(0)
+{line.text}</pre>
         </row>
       </case><case {'hunk'}>
-        <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0" sx={style.padX(2).padY(px).bg(muted).w(full).minW(0)}>
-          <small aria-hidden="true" shrink="0" sx={style.w(4).fg(info)}>{line.sign}</small>
-          <pre grow sx={style.fontSize(xs).fg(info).minW(0)}>{line.text}</pre>
+        <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0">
+          style.padX(2).padY(px).bg(muted).w(full).minW(0)
+
+          <small aria-hidden="true" shrink="0">
+            style.w(4).fg(info)
+{line.sign}</small>
+          <pre grow>
+            style.fontSize(xs).fg(info).minW(0)
+{line.text}</pre>
         </row>
       </case><default>
-        <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0" sx={style.padX(2).padY(px).w(full).minW(0)}>
-          <small aria-hidden="true" shrink="0" sx={style.w(4).fg(muted-foreground)}>{line.sign}</small>
-          <pre grow sx={style.fontSize(xs).fg(foreground).minW(0)}>{line.text}</pre>
+        <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0">
+          style.padX(2).padY(px).w(full).minW(0)
+
+          <small aria-hidden="true" shrink="0">
+            style.w(4).fg(muted-foreground)
+{line.sign}</small>
+          <pre grow>
+            style.fontSize(xs).fg(foreground).minW(0)
+{line.text}</pre>
         </row>
     </default></match>
   </for>

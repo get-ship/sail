@@ -16,11 +16,13 @@
   const sizeLg = style.h(3)
 </scope>
 
-<progress sx={[
+<progress>
+  style([
   base,
   match(size, {
     sm: sizeSm,
     md: sizeMd,
     lg: sizeLg,
   }),
-]}></progress>
+])
+</progress>

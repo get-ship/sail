@@ -17,7 +17,8 @@
   const dashed = style.bg(transparent).borderWidth(0).pad(0)
 </scope>
 
-<hr sx={[
+<hr>
+  style([
   base,
   match(orientation, {
     horizontal: orientH,
@@ -39,4 +40,5 @@
   compound({ variant: dashed, orientation: vertical, tone: muted }, style.w(0).borderLWidth(1).border(dashed).borderL(border-subtle)),
   compound({ variant: dashed, orientation: vertical, tone: primary }, style.w(0).borderLWidth(1).border(dashed).borderL(primary)),
   compound({ variant: dashed, orientation: vertical, tone: destructive }, style.w(0).borderLWidth(1).border(dashed).borderL(destructive)),
-]}>
+])
+

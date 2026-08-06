@@ -134,7 +134,9 @@ export default controller((ctx) => {
 </scope>
 
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
-<column gap="0" w="full" sx={shell}>
+<column gap="0" w="full">
+  style(shell)
+
   <navbar sticky bordered use:chromeOffset>
     <a slot="brand" href="/" label="SHIP UI home" shrink="0">
       <row gap="2" align="center" nowrap>
@@ -145,26 +147,44 @@ export default controller((ctx) => {
           <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
           <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
         </svg>
-        <strong sx={brandWord}><b sx={brandMark}>SHIP</b> UI</strong>
+        <strong>
+          style(brandWord)
+<b>
+          style(brandMark)
+SHIP</b> UI</strong>
       </row>
     </a>
 
-    <row slot="center" gap="1" align="center" nowrap min-w="0" sx={productSwitch} label="Products">
-      <a href="/sail/overview" shrink="0" sx={productLink} current={product() === 'sail' ? 'page' : null}>Sail</a>
-      <a href="/deck" shrink="0" sx={productLink} current={product() === 'deck' ? 'page' : null}>Deck</a>
-      <a href="/components" shrink="0" sx={productLink} current={product() === 'components' ? 'page' : null}>Components</a>
-      <a href="/ai" shrink="0" sx={productLink} current={product() === 'ai' ? 'page' : null}>AI</a>
+    <row slot="center" gap="1" align="center" nowrap min-w="0" label="Products">
+      style(productSwitch)
+
+      <a href="/sail/overview" shrink="0" current={product() === 'sail' ? 'page' : null}>
+        style(productLink)
+Sail</a>
+      <a href="/deck" shrink="0" current={product() === 'deck' ? 'page' : null}>
+        style(productLink)
+Deck</a>
+      <a href="/components" shrink="0" current={product() === 'components' ? 'page' : null}>
+        style(productLink)
+Components</a>
+      <a href="/ai" shrink="0" current={product() === 'ai' ? 'page' : null}>
+        style(productLink)
+AI</a>
     </row>
 
     <theme-picker slot="actions"></theme-picker>
   </navbar>
 
   <if {landing()}>
-    <main grow min-w="0" w="full" sx={landingMain}>
+    <main grow min-w="0" w="full">
+      style(landingMain)
+
       <slot name="route"></slot>
     </main>
   <else>
-    <main grow min-w="0" w="full" sx={appMain}>
+    <main grow min-w="0" w="full">
+      style(appMain)
+
       <slot name="route"></slot>
     </main>
   </else></if>

@@ -56,16 +56,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   type="button"
   use:openOnClick
   aria-label={'Open citation ' + index() + ': ' + source()}
-  sx={style.minH(0).padY(half).padL(0_75).padR(2).radius(full).fontSize(xs).leading(snug).fontWeight(normal).fg(foreground).bg(muted).borderWidth(1).border(border).shadow(none).cursor(pointer).when({ hover: style.bg(selected-bg).borderWidth(1).border(primary) })}
+
 >
+  style.minH(0).padY(half).padL(0_75).padR(2).radius(full).fontSize(xs).leading(snug).fontWeight(normal).fg(foreground).bg(muted).borderWidth(1).border(border).shadow(none).cursor(pointer).when({ hover: style.bg(selected-bg).borderWidth(1).border(primary) })
+
   <row gap="1" align="center">
     <row
       aria-hidden="true"
       gap="0"
       align="center"
       justify="center"
-      sx={style.minW(4).h(4).padX(1).fontWeight(semibold).fg(primary-foreground).bg(primary).radius(full)}
-    >{index()}</row>
-    <span sx={style.truncate()}>{source()}</span>
+
+    >
+      style.minW(4).h(4).padX(1).fontWeight(semibold).fg(primary-foreground).bg(primary).radius(full)
+{index()}</row>
+    <span>
+      style.truncate()
+{source()}</span>
   </row>
 </button>

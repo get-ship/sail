@@ -12,6 +12,8 @@
 
   const host = style.minW(0)
 </scope>
-<column gap="3" sx={host} use:tabs>
+<column gap="3" use:tabs>
+  style(host)
+
   <slot></slot>
 </column>

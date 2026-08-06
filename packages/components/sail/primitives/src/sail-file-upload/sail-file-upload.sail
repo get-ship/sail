@@ -209,26 +209,48 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} use:dropTarget sx={style.group().padY(6).padX(4).borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none).textAlign(center).when({ focus: style.outline(ring), stateOver: style.borderWidth(1).border(ring).bg(muted) })}>
-  <row align="center" justify="center" gap="0" aria-hidden="true" sx={style.w(9).h(9).minW(9).radius(lg).bg(muted).fg(muted-foreground).fontSize(lg).leading(none).when({ groupStateOver: style.bg(selected-bg).fg(ring) })}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-md).h(icon-size-md)}><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} use:dropTarget>
+  style.group().padY(6).padX(4).borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none).textAlign(center).when({ focus: style.outline(ring), stateOver: style.borderWidth(1).border(ring).bg(muted) })
+
+  <row align="center" justify="center" gap="0" aria-hidden="true">
+    style.w(9).h(9).minW(9).radius(lg).bg(muted).fg(muted-foreground).fontSize(lg).leading(none).when({ groupStateOver: style.bg(selected-bg).fg(ring) })
+
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      style.w(icon-size-md).h(icon-size-md)
+<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
   </row>
-  <span>Drag &amp; drop or <span sx={style.fg(primary)}>browse</span></span>
+  <span>Drag &amp; drop or <span>
+    style.fg(primary)
+browse</span></span>
 </center>
-<input type="file" sx={style.display(none)} accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" use:captureInput />
+<input type="file" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" use:captureInput>
+  style.display(none)
+</input>
 <if {errorMsg()}>
-  <div role="alert" sx={style.fontSize(sm).fg(destructive)}>{errorMsg()}</div>
+  <div role="alert">
+    style.fontSize(sm).fg(destructive)
+{errorMsg()}</div>
 </if>
 <if {displayFiles().length > 0}>
-  <column gap="1" aria-live="polite" sx={style.mt(2)}>
+  <column gap="1" aria-live="polite">
+    style.mt(2)
+
     <for {displayFiles()} as="f" key={f.key}>
       <row align="center" gap="3">
-        <span aria-hidden="true" sx={style.fg(muted-foreground)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-sm).h(icon-size-sm)}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
+        <span aria-hidden="true">
+          style.fg(muted-foreground)
+
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            style.w(icon-size-sm).h(icon-size-sm)
+<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
         <column gap="1" grow min-w="0">
-          <span sx={style.fontSize(sm).fg(foreground).truncate()}>{f.name}</span>
-          <span sx={style.fontSize(xs).fg(muted-foreground)}>{f.sizeStr}</span>
+          <span>
+            style.fontSize(sm).fg(foreground).truncate()
+{f.name}</span>
+          <span>
+            style.fontSize(xs).fg(muted-foreground)
+{f.sizeStr}</span>
         </column>
         <button variant="ghost" size="sm" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
       </row>

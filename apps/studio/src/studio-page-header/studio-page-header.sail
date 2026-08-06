@@ -16,12 +16,16 @@
   shrink="0"
   nowrap
   justify="between"
-  sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
 >
+  style.h(7).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
   <row align="center" gap="2" nowrap grow min-w="0">
     <slot name="leading"></slot>
     <slot name="title">
-      <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+      <p>
+        style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+
         {title()}
       </p>
     </slot>

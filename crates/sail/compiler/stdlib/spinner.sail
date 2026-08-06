@@ -18,7 +18,8 @@
   const ring = style.display(block).size(full).borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin)
 </scope>
 
-<span sx={[
+<span>
+  style([
   base,
   match(size, {
     md: sizeMd,
@@ -36,6 +37,9 @@
     accent: style.fg(accent),
   }),
   compound({ centered: true }, style.display(block).my(8).mx(auto)),
-]}>
-  <span hidden="true" sx={ring}></span>
+])
+
+  <span hidden="true">
+    style(ring)
+</span>
 </span>

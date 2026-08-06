@@ -925,7 +925,7 @@ pub fn is_passthrough_attr(name: &str) -> bool {
         name,
         "class"
             | "id"
-            | "sx"
+            | "style"
             | "title"
             | "role"
             | "tabindex"
@@ -1330,7 +1330,7 @@ mod tests {
     fn passes_through_non_axis_attrs() {
         // id / class / sx / on:click / data-* are fine on a layout element.
         assert!(
-            run(r#"<column id="hero" sx="p-4" on:click={go()} data-x="1">x</column>"#).is_empty()
+            run(r#"<column id="hero" style="p-4" on:click={go()} data-x="1">x</column>"#).is_empty()
         );
     }
 
@@ -1862,7 +1862,7 @@ mod tests {
     #[test]
     fn the_compound_refusal_now_recommends_a_buildable_element() {
         // THE MISSION: a refusal must point at something the author can
-        // actually write. Before this job, `<div sx="inline-flex">` produced
+        // actually write. Before this job, `<div style="inline-flex">` produced
         // a suggestion (`<row inline>`) that did not compile — the compiler
         // recommended an unbuildable element. This test pins both halves:
         // the suggestion is still emitted, and the suggested element is now

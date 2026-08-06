@@ -32,20 +32,30 @@ export default controller((ctx) => {
 })
 </controller>
 
-<card sx={card}>
+<card>
+  style(card)
+
   <column gap="3">
     <row align="center" justify="between" nowrap>
-      <strong sx={title}>{label()}</strong>
-      <span sx={totalText}>{totalLabel()}</span>
+      <strong>
+        style(title)
+{label()}</strong>
+      <span>
+        style(totalText)
+{totalLabel()}</span>
     </row>
 
     <row align="center" justify="between" nowrap gap="3">
       <row align="center" gap="2" nowrap>
         <button size="sm" variant="outline" on:click={() => remove()} label="One fewer person">−</button>
-        <span sx={peopleCount}>{people()}</span>
+        <span>
+          style(peopleCount)
+{people()}</span>
         <button size="sm" variant="outline" on:click={() => add()} label="One more person">+</button>
       </row>
-      <span sx={shareText}>{share()}</span>
+      <span>
+        style(shareText)
+{share()}</span>
     </row>
 
     <slot name="note"></slot>

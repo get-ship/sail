@@ -4,7 +4,7 @@
 //! preprocessed source) so we never pay for a second layout computation.
 //!
 //! **Spacing is resolved structurally** via `sail_lint::style::parse` on each
-//! child's `sx={…}` expression (and parent `gap` attrs) — not by substring
+//! child's `style={…}` expression (and parent `gap` attrs) — not by substring
 //! fingerprinting lowered `sx-mr*` class tokens.
 //!
 //! Rhythm: ≥3 siblings, modal spacing ≥60% → repair outliers to the modal
@@ -419,7 +419,7 @@ fn spacing_pattern(
         return None;
     }
     // Structural: parent sx gap setter also means uniform gap.
-    if let Some(sx) = attr_value(&parent_attrs, "sx") {
+    if let Some(sx) = attr_value(&parent_attrs, "style") {
         if spacing_from_sx_expr(&sx, "gap").is_some() {
             return None;
         }
@@ -446,7 +446,7 @@ fn spacing_pattern(
         let Some((_, _, attrs)) = parse_open_tag(source, span.0) else {
             continue;
         };
-        let Some(sx) = attr_value(&attrs, "sx") else {
+        let Some(sx) = attr_value(&attrs, "style") else {
             continue;
         };
         let Some(val) = spacing_from_sx_expr(&sx, setter) else {
@@ -467,7 +467,7 @@ fn attr_value(attrs: &[(String, String)], name: &str) -> Option<String> {
         .map(|(_, v)| v.clone())
 }
 
-/// Resolve a spacing setter from an `sx={…}` expression using the Style AST.
+/// Resolve a spacing setter from an `style={…}` expression using the Style AST.
 fn spacing_from_sx_expr(sx_raw: &str, setter: &str) -> Option<SpacingValue> {
     let expr = strip_sx_braces(sx_raw);
     if expr.is_empty() {
@@ -776,7 +776,7 @@ fn tag_matches_fingerprint(
     }
     let Some(sx_value) = attrs
         .iter()
-        .find(|(n, _)| n == "sx")
+        .find(|(n, _)| n == "style")
         .map(|(_, v)| v.as_str())
     else {
         return false;
@@ -983,7 +983,7 @@ fn collect_contrast(
         let Some((_, _, attrs)) = parse_open_tag(source, span.0) else {
             continue;
         };
-        let Some(sx) = attr_value(&attrs, "sx") else {
+        let Some(sx) = attr_value(&attrs, "style") else {
             continue;
         };
         let expr = strip_sx_braces(&sx);
@@ -1125,7 +1125,7 @@ fn collect_off_scale_from_source(source: &str, severity: DiagSeverity) -> Vec<Di
             continue;
         };
         skip_to = tag_end;
-        let Some(sx) = attr_value(&attrs, "sx") else {
+        let Some(sx) = attr_value(&attrs, "style") else {
             continue;
         };
         let expr = strip_sx_braces(&sx);
@@ -1326,20 +1326,20 @@ mod tests {
     /// Committed spike fixture (was under gitignored `.artifacts/`).
     const RHYTHM_BROKEN: &str = r#"
 <row>
-  <div sx={style.mr(4)}>card 1</div>
-  <div sx={style.mr(2)}>card 2</div>
-  <div sx={style.mr(4)}>card 3</div>
-  <div sx={style.mr(4)}>card 4</div>
-  <div sx={style.mr(6)}>card 5</div>
+  <div style={style.mr(4)}>card 1</div>
+  <div style={style.mr(2)}>card 2</div>
+  <div style={style.mr(4)}>card 3</div>
+  <div style={style.mr(4)}>card 4</div>
+  <div style={style.mr(6)}>card 5</div>
 </row>
 "#;
 
     const RHYTHM_DELIBERATE: &str = r#"
 <row>
-  <div sx={style.mr(2)}>stage 1</div>
-  <div sx={style.mr(4)}>stage 2</div>
-  <div sx={style.mr(8)}>stage 3</div>
-  <div sx={style.mr(16)}>stage 4</div>
+  <div style={style.mr(2)}>stage 1</div>
+  <div style={style.mr(4)}>stage 2</div>
+  <div style={style.mr(8)}>stage 3</div>
+  <div style={style.mr(16)}>stage 4</div>
 </row>
 "#;
 
@@ -1411,11 +1411,11 @@ mod tests {
     fn structural_spacing_resolves_style_chain_not_class_text() {
         let source = r#"
 <row>
-  <div sx={style.pad(2).mr(4)}>a</div>
-  <div sx={style.mr(2).bg(card)}>b</div>
-  <div sx={style.mr(4)}>c</div>
-  <div sx={style.mr(4)}>d</div>
-  <div sx={style.mr(6)}>e</div>
+  <div style={style.pad(2).mr(4)}>a</div>
+  <div style={style.mr(2).bg(card)}>b</div>
+  <div style={style.mr(4)}>c</div>
+  <div style={style.mr(4)}>d</div>
+  <div style={style.mr(6)}>e</div>
 </row>
 "#;
         let diags = collect(source, None, &[]);
@@ -1431,7 +1431,7 @@ mod tests {
     fn contrast_broken_emits_fix() {
         let source = r#"
 <column>
-  <p sx={style.bg(background).fg(muted)}>low contrast on light bg</p>
+  <p style={style.bg(background).fg(muted)}>low contrast on light bg</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1450,7 +1450,7 @@ mod tests {
     fn contrast_passing_is_silent() {
         let source = r#"
 <column>
-  <p sx={style.bg(background).fg(foreground)}>ok</p>
+  <p style={style.bg(background).fg(foreground)}>ok</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1466,7 +1466,7 @@ mod tests {
     fn contrast_fix_is_idempotent() {
         let source = r#"
 <column>
-  <p sx={style.bg(background).fg(muted)}>low</p>
+  <p style={style.bg(background).fg(muted)}>low</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1507,7 +1507,7 @@ mod tests {
         // Force a primary-family fg that fails AA against primary bg if needed.
         let source = r#"
 <column>
-  <p sx={style.bg(primary).fg(primary)}>same-family low contrast</p>
+  <p style={style.bg(primary).fg(primary)}>same-family low contrast</p>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1536,7 +1536,7 @@ mod tests {
         // than 28 ("7"). Equidistant values (e.g. 13) stay WARN-only.
         let source = r#"
 <column>
-  <div sx={style.mr(25)}>x</div>
+  <div style={style.mr(25)}>x</div>
 </column>
 "#;
         let diags = collect(source, None, &[]);
@@ -1558,7 +1558,7 @@ mod tests {
         // check_all merge, sail-compose-spacing never appears.
         let source = r#"
 <column>
-  <div sx={style.mr(25)}>x</div>
+  <div style={style.mr(25)}>x</div>
 </column>
 "#;
         let diags = crate::check_all(source, None, &[], None);
@@ -1627,7 +1627,7 @@ mod tests {
         let source = r#"
 <column>
   <div>a</div>
-  <div sx={style.ml(1)}>b</div>
+  <div style={style.ml(1)}>b</div>
   <div>c</div>
 </column>
 "#;
@@ -1652,7 +1652,7 @@ mod tests {
     #[test]
     fn raw_container_rewrite_to_column() {
         let source = r#"
-<div sx={style.pad(2)}>body</div>
+<div style={style.pad(2)}>body</div>
 "#;
         let plans = crate::edit::suggest_fixes_for_source(source, "raw.sail", None);
         let raw = plans.iter().find(|p| p.rule == "sail-no-raw-container");
@@ -1719,7 +1719,7 @@ mod tests {
     fn raw_container_refuses_when_class_present() {
         // Floor bans `class=` — refuse rewrite when id present instead.
         let source = r#"
-<div id="box" sx={style.pad(2)}>body</div>
+<div id="box" style={style.pad(2)}>body</div>
 "#;
         let diags = crate::check_all(
             source,
@@ -1740,7 +1740,7 @@ mod tests {
     #[test]
     fn sx_typo_setter_rewrites_to_closest() {
         let source = r#"
-<div sx={style.padd(2)}>x</div>
+<div style={style.padd(2)}>x</div>
 "#;
         // Style unknown setter is a preprocess error with category sail-sx.
         let diags = crate::check_all(source, None, &[], None);
@@ -1774,16 +1774,16 @@ mod tests {
         // fire on the second parent (fingerprint#0 parent-attr bug regression).
         let source = r#"
 <row gap="4">
-  <div sx={style.mr(4)}>a</div>
-  <div sx={style.mr(4)}>b</div>
-  <div sx={style.mr(4)}>c</div>
+  <div style={style.mr(4)}>a</div>
+  <div style={style.mr(4)}>b</div>
+  <div style={style.mr(4)}>c</div>
 </row>
 <row>
-  <div sx={style.mr(4)}>card 1</div>
-  <div sx={style.mr(2)}>card 2</div>
-  <div sx={style.mr(4)}>card 3</div>
-  <div sx={style.mr(4)}>card 4</div>
-  <div sx={style.mr(6)}>card 5</div>
+  <div style={style.mr(4)}>card 1</div>
+  <div style={style.mr(2)}>card 2</div>
+  <div style={style.mr(4)}>card 3</div>
+  <div style={style.mr(4)}>card 4</div>
+  <div style={style.mr(6)}>card 5</div>
 </row>
 "#;
         let diags = collect(source, None, &[]);
@@ -1806,18 +1806,18 @@ mod tests {
     fn multi_parent_two_broken_rows_both_reported() {
         let source = r#"
 <row>
-  <div sx={style.mr(4)}>a1</div>
-  <div sx={style.mr(2)}>a2</div>
-  <div sx={style.mr(4)}>a3</div>
-  <div sx={style.mr(4)}>a4</div>
-  <div sx={style.mr(6)}>a5</div>
+  <div style={style.mr(4)}>a1</div>
+  <div style={style.mr(2)}>a2</div>
+  <div style={style.mr(4)}>a3</div>
+  <div style={style.mr(4)}>a4</div>
+  <div style={style.mr(6)}>a5</div>
 </row>
 <row>
-  <div sx={style.mr(4)}>b1</div>
-  <div sx={style.mr(2)}>b2</div>
-  <div sx={style.mr(4)}>b3</div>
-  <div sx={style.mr(4)}>b4</div>
-  <div sx={style.mr(8)}>b5</div>
+  <div style={style.mr(4)}>b1</div>
+  <div style={style.mr(2)}>b2</div>
+  <div style={style.mr(4)}>b3</div>
+  <div style={style.mr(4)}>b4</div>
+  <div style={style.mr(8)}>b5</div>
 </row>
 "#;
         let diags = collect(source, None, &[]);

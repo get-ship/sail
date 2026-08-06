@@ -130,53 +130,123 @@ export default controller((ctx) => {
 
 <if {workbench()}>
  <!-- Full-bleed workbench: no docs rail, fill the viewport shell. -->
- <row nowrap align="stretch" w="full" grow min-w="0" gap="0" sx={shell}>
- <column grow min-w="0" gap="0" sx={contentCol}>
- <main grow min-w="0" w="full" sx={mainWorkbench}>
+ <row nowrap align="stretch" w="full" grow min-w="0" gap="0">
+   style(shell)
+
+ <column grow min-w="0" gap="0">
+   style(contentCol)
+
+ <main grow min-w="0" w="full">
+   style(mainWorkbench)
+
  <slot name="route"></slot>
  </main>
  </column>
  </row>
 <else>
- <row nowrap align="stretch" w="full" grow min-w="0" gap="0" sx={shell}>
- <nav shrink="0" sx={rail} label="Sail docs">
- <p sx={railLabel}>Getting started</p>
- <a href="/sail/overview" sx={railLink} current={path() === '/sail/overview' ? 'page' : null}>Introduction</a>
- <a href="/sail/getting-started" sx={railLink} current={path() === '/sail/getting-started' ? 'page' : null}>Installation</a>
- <a href="/sail/why" sx={railLink} current={path() === '/sail/why' ? 'page' : null}>Why Sail</a>
- <a href="/sail/tutorial" sx={railLink} current={path().startsWith('/sail/tutorial') ? 'page' : null}>Tutorial</a>
- <a href="/showcase" sx={railLink} current={path() === '/showcase' ? 'page' : null}>Showcase</a>
+ <row nowrap align="stretch" w="full" grow min-w="0" gap="0">
+   style(shell)
 
- <p sx={railLabel}>Concepts</p>
- <a href="/sail/language/sail-file" sx={railLink} current={path() === '/sail/language/sail-file' ? 'page' : null}>Components</a>
- <a href="/sail/language/state" sx={railLink} current={path() === '/sail/language/state' ? 'page' : null}>State</a>
- <a href="/sail/language/templates" sx={railLink} current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
- <a href="/sail/language/styling" sx={railLink} current={path() === '/sail/language/styling' ? 'page' : null}>Styling</a>
- <a href="/sail/language/layout" sx={railLink} current={path() === '/sail/language/layout' ? 'page' : null}>Layout</a>
- <a href="/sail/language/animation" sx={railLink} current={path() === '/sail/language/animation' ? 'page' : null}>Animation</a>
- <a href="/sail/language/actions" sx={railLink} current={path() === '/sail/language/actions' ? 'page' : null}>Actions</a>
- <a href="/sail/language/data" sx={railLink} current={path() === '/sail/language/data' ? 'page' : null}>Data</a>
- <a href="/sail/language/capabilities" sx={railLink} current={path() === '/sail/language/capabilities' ? 'page' : null}>Capabilities</a>
- <a href="/sail/language/errors" sx={railLink} current={path() === '/sail/language/errors' ? 'page' : null}>Errors</a>
- <a href="/sail/language/theming" sx={railLink} current={path() === '/sail/language/theming' ? 'page' : null}>Theming</a>
+ <nav shrink="0" label="Sail docs">
+   style(rail)
 
- <p sx={railLabel}>Guide</p>
- <a href="/sail/elements" sx={railLink} current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
- <a href="/sail/guide/building-a-component" sx={railLink} current={path() === '/sail/guide/building-a-component' ? 'page' : null}>Building a component</a>
- <a href="/sail/guide/forms" sx={railLink} current={path() === '/sail/guide/forms' ? 'page' : null}>Forms</a>
- <a href="/sail/guide/making-a-theme" sx={railLink} current={path() === '/sail/guide/making-a-theme' ? 'page' : null}>Making a theme</a>
- <a href="/sail/guide/embedding-third-party-code" sx={railLink} current={path() === '/sail/guide/embedding-third-party-code' ? 'page' : null}>Embedding third-party code</a>
+ <p>
+   style(railLabel)
+Getting started</p>
+ <a href="/sail/overview" current={path() === '/sail/overview' ? 'page' : null}>
+   style(railLink)
+Introduction</a>
+ <a href="/sail/getting-started" current={path() === '/sail/getting-started' ? 'page' : null}>
+   style(railLink)
+Installation</a>
+ <a href="/sail/why" current={path() === '/sail/why' ? 'page' : null}>
+   style(railLink)
+Why Sail</a>
+ <a href="/sail/tutorial" current={path().startsWith('/sail/tutorial') ? 'page' : null}>
+   style(railLink)
+Tutorial</a>
+ <a href="/showcase" current={path() === '/showcase' ? 'page' : null}>
+   style(railLink)
+Showcase</a>
 
- <p sx={railLabel}>Reference</p>
- <a href="/sail/reference" sx={railLink} current={path() === '/sail/reference' ? 'page' : null}>API reference</a>
+ <p>
+   style(railLabel)
+Concepts</p>
+ <a href="/sail/language/sail-file" current={path() === '/sail/language/sail-file' ? 'page' : null}>
+   style(railLink)
+Components</a>
+ <a href="/sail/language/state" current={path() === '/sail/language/state' ? 'page' : null}>
+   style(railLink)
+State</a>
+ <a href="/sail/language/templates" current={path() === '/sail/language/templates' ? 'page' : null}>
+   style(railLink)
+Templates</a>
+ <a href="/sail/language/styling" current={path() === '/sail/language/styling' ? 'page' : null}>
+   style(railLink)
+Styling</a>
+ <a href="/sail/language/layout" current={path() === '/sail/language/layout' ? 'page' : null}>
+   style(railLink)
+Layout</a>
+ <a href="/sail/language/animation" current={path() === '/sail/language/animation' ? 'page' : null}>
+   style(railLink)
+Animation</a>
+ <a href="/sail/language/actions" current={path() === '/sail/language/actions' ? 'page' : null}>
+   style(railLink)
+Actions</a>
+ <a href="/sail/language/data" current={path() === '/sail/language/data' ? 'page' : null}>
+   style(railLink)
+Data</a>
+ <a href="/sail/language/capabilities" current={path() === '/sail/language/capabilities' ? 'page' : null}>
+   style(railLink)
+Capabilities</a>
+ <a href="/sail/language/errors" current={path() === '/sail/language/errors' ? 'page' : null}>
+   style(railLink)
+Errors</a>
+ <a href="/sail/language/theming" current={path() === '/sail/language/theming' ? 'page' : null}>
+   style(railLink)
+Theming</a>
+
+ <p>
+   style(railLabel)
+Guide</p>
+ <a href="/sail/elements" current={path() === '/sail/elements' ? 'page' : null}>
+   style(railLink)
+Using components</a>
+ <a href="/sail/guide/building-a-component" current={path() === '/sail/guide/building-a-component' ? 'page' : null}>
+   style(railLink)
+Building a component</a>
+ <a href="/sail/guide/forms" current={path() === '/sail/guide/forms' ? 'page' : null}>
+   style(railLink)
+Forms</a>
+ <a href="/sail/guide/making-a-theme" current={path() === '/sail/guide/making-a-theme' ? 'page' : null}>
+   style(railLink)
+Making a theme</a>
+ <a href="/sail/guide/embedding-third-party-code" current={path() === '/sail/guide/embedding-third-party-code' ? 'page' : null}>
+   style(railLink)
+Embedding third-party code</a>
+
+ <p>
+   style(railLabel)
+Reference</p>
+ <a href="/sail/reference" current={path() === '/sail/reference' ? 'page' : null}>
+   style(railLink)
+API reference</a>
  </nav>
 
- <column grow min-w="0" gap="0" sx={contentCol}>
- <div sx={mobileBar}>
+ <column grow min-w="0" gap="0">
+   style(contentCol)
+
+ <div>
+   style(mobileBar)
+
  <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
- <small sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>Sail docs</small>
+ <small>
+   style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+Sail docs</small>
  </div>
- <main grow min-w="0" sx={mainDocs}>
+ <main grow min-w="0">
+   style(mainDocs)
+
  <slot name="route"></slot>
  </main>
  </column>
@@ -193,39 +263,93 @@ export default controller((ctx) => {
 >
  <header>
   <row align="center" justify="between" gap="2" w="full">
-   <strong sx={style.fontSize(sm)}>Sail docs</strong>
+   <strong>
+     style.fontSize(sm)
+Sail docs</strong>
    <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
   </row>
  </header>
  <section>
-  <p sx={railLabel}>Getting started</p>
-  <a href="/sail/overview" sx={railLink} on:click={closeNav} current={path() === '/sail/overview' ? 'page' : null}>Introduction</a>
-  <a href="/sail/getting-started" sx={railLink} on:click={closeNav} current={path() === '/sail/getting-started' ? 'page' : null}>Installation</a>
-  <a href="/sail/why" sx={railLink} on:click={closeNav} current={path() === '/sail/why' ? 'page' : null}>Why Sail</a>
-  <a href="/sail/tutorial" sx={railLink} on:click={closeNav} current={path().startsWith('/sail/tutorial') ? 'page' : null}>Tutorial</a>
-  <a href="/showcase" sx={railLink} on:click={closeNav} current={path() === '/showcase' ? 'page' : null}>Showcase</a>
+  <p>
+    style(railLabel)
+Getting started</p>
+  <a href="/sail/overview" on:click={closeNav} current={path() === '/sail/overview' ? 'page' : null}>
+    style(railLink)
+Introduction</a>
+  <a href="/sail/getting-started" on:click={closeNav} current={path() === '/sail/getting-started' ? 'page' : null}>
+    style(railLink)
+Installation</a>
+  <a href="/sail/why" on:click={closeNav} current={path() === '/sail/why' ? 'page' : null}>
+    style(railLink)
+Why Sail</a>
+  <a href="/sail/tutorial" on:click={closeNav} current={path().startsWith('/sail/tutorial') ? 'page' : null}>
+    style(railLink)
+Tutorial</a>
+  <a href="/showcase" on:click={closeNav} current={path() === '/showcase' ? 'page' : null}>
+    style(railLink)
+Showcase</a>
 
-  <p sx={railLabel}>Concepts</p>
-  <a href="/sail/language/sail-file" sx={railLink} on:click={closeNav} current={path() === '/sail/language/sail-file' ? 'page' : null}>Components</a>
-  <a href="/sail/language/state" sx={railLink} on:click={closeNav} current={path() === '/sail/language/state' ? 'page' : null}>State</a>
-  <a href="/sail/language/templates" sx={railLink} on:click={closeNav} current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
-  <a href="/sail/language/styling" sx={railLink} on:click={closeNav} current={path() === '/sail/language/styling' ? 'page' : null}>Styling</a>
-  <a href="/sail/language/layout" sx={railLink} on:click={closeNav} current={path() === '/sail/language/layout' ? 'page' : null}>Layout</a>
-  <a href="/sail/language/animation" sx={railLink} on:click={closeNav} current={path() === '/sail/language/animation' ? 'page' : null}>Animation</a>
-  <a href="/sail/language/actions" sx={railLink} on:click={closeNav} current={path() === '/sail/language/actions' ? 'page' : null}>Actions</a>
-  <a href="/sail/language/data" sx={railLink} on:click={closeNav} current={path() === '/sail/language/data' ? 'page' : null}>Data</a>
-  <a href="/sail/language/capabilities" sx={railLink} on:click={closeNav} current={path() === '/sail/language/capabilities' ? 'page' : null}>Capabilities</a>
-  <a href="/sail/language/errors" sx={railLink} on:click={closeNav} current={path() === '/sail/language/errors' ? 'page' : null}>Errors</a>
-  <a href="/sail/language/theming" sx={railLink} on:click={closeNav} current={path() === '/sail/language/theming' ? 'page' : null}>Theming</a>
+  <p>
+    style(railLabel)
+Concepts</p>
+  <a href="/sail/language/sail-file" on:click={closeNav} current={path() === '/sail/language/sail-file' ? 'page' : null}>
+    style(railLink)
+Components</a>
+  <a href="/sail/language/state" on:click={closeNav} current={path() === '/sail/language/state' ? 'page' : null}>
+    style(railLink)
+State</a>
+  <a href="/sail/language/templates" on:click={closeNav} current={path() === '/sail/language/templates' ? 'page' : null}>
+    style(railLink)
+Templates</a>
+  <a href="/sail/language/styling" on:click={closeNav} current={path() === '/sail/language/styling' ? 'page' : null}>
+    style(railLink)
+Styling</a>
+  <a href="/sail/language/layout" on:click={closeNav} current={path() === '/sail/language/layout' ? 'page' : null}>
+    style(railLink)
+Layout</a>
+  <a href="/sail/language/animation" on:click={closeNav} current={path() === '/sail/language/animation' ? 'page' : null}>
+    style(railLink)
+Animation</a>
+  <a href="/sail/language/actions" on:click={closeNav} current={path() === '/sail/language/actions' ? 'page' : null}>
+    style(railLink)
+Actions</a>
+  <a href="/sail/language/data" on:click={closeNav} current={path() === '/sail/language/data' ? 'page' : null}>
+    style(railLink)
+Data</a>
+  <a href="/sail/language/capabilities" on:click={closeNav} current={path() === '/sail/language/capabilities' ? 'page' : null}>
+    style(railLink)
+Capabilities</a>
+  <a href="/sail/language/errors" on:click={closeNav} current={path() === '/sail/language/errors' ? 'page' : null}>
+    style(railLink)
+Errors</a>
+  <a href="/sail/language/theming" on:click={closeNav} current={path() === '/sail/language/theming' ? 'page' : null}>
+    style(railLink)
+Theming</a>
 
-  <p sx={railLabel}>Guide</p>
-  <a href="/sail/elements" sx={railLink} on:click={closeNav} current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
-  <a href="/sail/guide/building-a-component" sx={railLink} on:click={closeNav} current={path() === '/sail/guide/building-a-component' ? 'page' : null}>Building a component</a>
-  <a href="/sail/guide/forms" sx={railLink} on:click={closeNav} current={path() === '/sail/guide/forms' ? 'page' : null}>Forms</a>
-  <a href="/sail/guide/making-a-theme" sx={railLink} on:click={closeNav} current={path() === '/sail/guide/making-a-theme' ? 'page' : null}>Making a theme</a>
-  <a href="/sail/guide/embedding-third-party-code" sx={railLink} on:click={closeNav} current={path() === '/sail/guide/embedding-third-party-code' ? 'page' : null}>Embedding third-party code</a>
+  <p>
+    style(railLabel)
+Guide</p>
+  <a href="/sail/elements" on:click={closeNav} current={path() === '/sail/elements' ? 'page' : null}>
+    style(railLink)
+Using components</a>
+  <a href="/sail/guide/building-a-component" on:click={closeNav} current={path() === '/sail/guide/building-a-component' ? 'page' : null}>
+    style(railLink)
+Building a component</a>
+  <a href="/sail/guide/forms" on:click={closeNav} current={path() === '/sail/guide/forms' ? 'page' : null}>
+    style(railLink)
+Forms</a>
+  <a href="/sail/guide/making-a-theme" on:click={closeNav} current={path() === '/sail/guide/making-a-theme' ? 'page' : null}>
+    style(railLink)
+Making a theme</a>
+  <a href="/sail/guide/embedding-third-party-code" on:click={closeNav} current={path() === '/sail/guide/embedding-third-party-code' ? 'page' : null}>
+    style(railLink)
+Embedding third-party code</a>
 
-  <p sx={railLabel}>Reference</p>
-  <a href="/sail/reference" sx={railLink} on:click={closeNav} current={path() === '/sail/reference' ? 'page' : null}>API reference</a>
+  <p>
+    style(railLabel)
+Reference</p>
+  <a href="/sail/reference" on:click={closeNav} current={path() === '/sail/reference' ? 'page' : null}>
+    style(railLink)
+API reference</a>
  </section>
 </dialog>

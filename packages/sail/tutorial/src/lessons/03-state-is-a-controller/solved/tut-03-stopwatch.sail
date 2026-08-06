@@ -62,8 +62,12 @@ export default controller(() => {
 </scope>
 
 <column gap="4">
-  <center sx={face}>
-    <strong sx={clockFace}>{clock()}</strong>
+  <center>
+    style(face)
+
+    <strong>
+      style(clockFace)
+{clock()}</strong>
   </center>
 
   <row gap="2" justify="center">
@@ -77,9 +81,15 @@ export default controller(() => {
   <if {laps().length > 0}>
     <column gap="1">
       <for {laps()} as="lap" key={lap.id}>
-        <row align="center" justify="between" sx={lapRow}>
-          <small sx={lapMeta}>lap {lap.id}</small>
-          <strong sx={lapAt}>{lap.at}</strong>
+        <row align="center" justify="between">
+          style(lapRow)
+
+          <small>
+            style(lapMeta)
+lap {lap.id}</small>
+          <strong>
+            style(lapAt)
+{lap.at}</strong>
         </row>
       </for>
     </column>

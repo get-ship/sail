@@ -52,8 +52,8 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too",
     },
     DirectiveEntry {
-        syntax: "sx={style.…}",
-        summary: "Style product paint — style.bg(…).padX(2), match, when, compound; utility-string sx=\"atom atom\" is a residual compile error",
+        syntax: "style.… / style([…]) / style({…}) block statement",
+        summary: "Style product paint on the element body — not an HTML attribute",
     },
     DirectiveEntry {
         syntax: "(--name) inside Style values",
@@ -842,15 +842,15 @@ pub struct ForeignIdiomEntry {
 pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
     ForeignIdiomEntry {
         syntax: "class= / class:<name>",
-        instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props, closed sx state prefixes, or layout — not a global CSS class toggle",
+        instead: "styling is a block-level style(…) / style.… statement on the element",
     },
     ForeignIdiomEntry {
         syntax: "style= / style:<prop>",
-        instead: "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name); paint is Style product sx={style.…}",
+        instead: "runtime geometry is owned by named, typed actions; paint is a block-level style(…) statement, not an HTML style attribute",
     },
     ForeignIdiomEntry {
         syntax: "part=\"…\"",
-        instead: "style with sx on the element itself — light DOM has no shadow parts",
+        instead: "style with a block-level style(…) statement on the element itself — light DOM has no shadow parts",
     },
     ForeignIdiomEntry {
         syntax: "<div> / <span> for layout structure",
@@ -1034,24 +1034,10 @@ mod tests {
             "active bind: DIRECTIVES row must not list bind:this: {}",
             bind_row.syntax
         );
-        let sx_row = DIRECTIVES
+        let style_row = DIRECTIVES
             .iter()
-            .find(|d| d.syntax.starts_with("sx"))
-            .expect("sx DIRECTIVES row");
-        assert!(
-            sx_row.syntax.contains("style."),
-            "sx DIRECTIVES must teach Style product, got {}",
-            sx_row.syntax
-        );
-        assert!(
-            !sx_row.syntax.contains("atom atom"),
-            "sx DIRECTIVES must not advertise utility-string atoms: {}",
-            sx_row.syntax
-        );
-        assert!(
-            sx_row.summary.contains("utility-string") || sx_row.summary.contains("residual"),
-            "sx summary must call out residual utility-string: {}",
-            sx_row.summary
-        );
+            .find(|d| d.syntax.starts_with("style."))
+            .expect("style block DIRECTIVES row");
+        assert!(!style_row.syntax.contains("sx="), "{}", style_row.syntax);
     }
 }

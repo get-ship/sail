@@ -30,17 +30,21 @@
   const arrow = style.content(empty).position(absolute).w(2).h(2).bg(tooltip).rotate(45).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt))
 </scope>
 
-<span use:tipDescribe sx={host}>
+<span use:tipDescribe>
+  style(host)
+
   <slot></slot>
   <span
     role="tooltip"
-    sx={[
+
+  >
+    style([
       bubble,
       when({
         group-hover: style.opacity(100),
         group-focus-within: style.opacity(100),
         after: arrow,
       }),
-    ]}
-  ></span>
+    ])
+</span>
 </span>

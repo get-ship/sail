@@ -84,10 +84,16 @@ export default controller(() => {
     <!-- TODO 5: this {#for} has no key. Add key={env.id} and compare what
          promote() does to the DOM with and without it. -->
     <for {filtered()} as="env" key={env.id}>
-      <row gap="3" align="center" sx={envRow}>
+      <row gap="3" align="center">
+        style(envRow)
+
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong grow sx={envName}>{env.name}</strong>
-        <small sx={envRegion}>{env.region}</small>
+        <strong grow>
+          style(envName)
+{env.name}</strong>
+        <small>
+          style(envRegion)
+{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>
     </for>

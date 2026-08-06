@@ -76,19 +76,31 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
 
 </controller>
 <if {staged().length === 0}>
-  <p sx={style.fontFamily(body).fontSize(sm).fg(muted-foreground).padY(1).padX(2)}>No staged annotations.</p>
+  <p>
+    style.fontFamily(body).fontSize(sm).fg(muted-foreground).padY(1).padX(2)
+No staged annotations.</p>
 <else>
-  <column role="list" gap="1" sx={style.fontFamily(body).fontSize(sm).fg(foreground)}>
+  <column role="list" gap="1">
+    style.fontFamily(body).fontSize(sm).fg(foreground)
+
     <for {staged()} as="a" key={a.id}>
-      <row role="listitem" data-id={a.id} gap="2" align="center" sx={style.padY(1).padX(2).bg(background).borderWidth(1).border(border).radius(sm)}>
-        <span sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>{a.kind}</span>
-        <span title={a.note ?? ''} grow sx={style.truncate()}>{a.note ?? '(no note)'}</span>
+      <row role="listitem" data-id={a.id} gap="2" align="center">
+        style.padY(1).padX(2).bg(background).borderWidth(1).border(border).radius(sm)
+
+        <span>
+          style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+{a.kind}</span>
+        <span title={a.note ?? ''} grow>
+          style.truncate()
+{a.note ?? '(no note)'}</span>
         <button
           type="button"
           aria-label="Remove annotation"
           on:click={() => emitRemove(a.id)}
-          sx={style.minH(0).padX(1_5).padY(half).fontSize(xs).radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer).when({ hover: style.fg(destructive).borderWidth(1).border(destructive) })}
-        >Remove</button>
+
+        >
+          style.minH(0).padX(1_5).padY(half).fontSize(xs).radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer).when({ hover: style.fg(destructive).borderWidth(1).border(destructive) })
+Remove</button>
       </row>
     </for>
   </column>

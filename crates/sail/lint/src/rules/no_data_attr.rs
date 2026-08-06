@@ -136,7 +136,7 @@ mod tests {
     fn allows_component_tags_without_data_attrs() {
         let f = check(
             Path::new("apps/studio/src/x.sail"),
-            r#"<edit-surface grow sx={style.h(full)} />"#,
+            r#"<edit-surface grow style={style.h(full)} />"#,
         );
         assert!(f.is_empty(), "{f:?}");
     }

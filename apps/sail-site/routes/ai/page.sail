@@ -3,10 +3,16 @@
   agent-first framework. Theme owned by the shell. No controller: static markup only.
 -->
 
-<column sx={style.pad(0).maxW(breakpoint-tablet).mx(auto)}>
-  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>AI</p>
+<column>
+  style.pad(0).maxW(breakpoint-tablet).mx(auto)
+
+  <p>
+    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+AI</p>
   <h1>Sail is built for agents</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
+  <p>
+    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+
     Most UI frameworks optimize for a human at a keyboard. Sail optimizes for a
     model: a narrow grammar, a strict lint that turns design-system violations
     into build errors, a tight compile-check loop, and a batteries-included
@@ -34,13 +40,17 @@
     <li><strong>Eval harness</strong> — a scored Sail-authoring benchmark, so changes to the language or lint are measured against whether agents actually get it right.</li>
   </ul>
 
-  <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+
     <strong>This is the headline, not an appendix.</strong> "Most ergonomic for
     agents" is the thesis of the whole framework; this section is where it gets
     concrete. Instructions, MCP setup, Skills, and the eval harness land here.
   </p>
 
-  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
+  <row>
+    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+
     <a variant="default" href="/">← SHIP UI</a>
   </row>
 </column>

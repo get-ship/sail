@@ -724,4 +724,6 @@ function makeCompletionSource(src: SailCompletionSource) {
 }
 
 </controller>
-<div use:editorMount sx={style.position(relative).overflow(hidden).fontFamily(mono).w(full).h(full).minH(0).when({ focusWithin: style.outline(ring) })}></div>
+<div use:editorMount>
+  style.position(relative).overflow(hidden).fontFamily(mono).w(full).h(full).minH(0).when({ focusWithin: style.outline(ring) })
+</div>

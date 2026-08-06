@@ -45,7 +45,7 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
   const sizeSm = style.fontSize(xs).padX(2)
   const sizeMd = style.fontSize(sm).padX(2_5)
 </scope>
-<span sx={[
+<span style={[
   style.radius(full).borderWidth(1).fontWeight(medium),
   match(variant, {
     soft: soft,
@@ -1416,7 +1416,7 @@ fn theme_picker_host_paint_on_structure_sx() {
             && src.contains("role=\"option\"")
             && src.contains("data-mode-bar")
             && src.contains("<row inline")
-            && !src.contains("sx=\""),
+            && !src.contains("style=\""),
         "theme-picker structure must carry Style product without class anatomy"
     );
     assert!(

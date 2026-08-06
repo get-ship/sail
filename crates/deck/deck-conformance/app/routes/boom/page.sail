@@ -4,15 +4,27 @@ import { call } from 'ship'
 export default controller((_ctx) => ({ result: query(() => call('ship.demo.boom', {})) }))
 </controller>
 
-<column gap="3" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
-  <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>Error Boundary</h1>
+<column gap="3">
+  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+
+  <h1>
+    style.fontSize(2xl).fontWeight(bold).fg(foreground)
+Error Boundary</h1>
   <while-loading {result}>
-  <p sx={style.fg(muted-foreground).fontSize(sm)}>Loading…</p>
+  <p>
+    style.fg(muted-foreground).fontSize(sm)
+Loading…</p>
   </while-loading>
   <while-error as="err" {result}>
-  <p sx={style.fg(muted-foreground).fontSize(sm)}>Something went wrong</p>
+  <p>
+    style.fg(muted-foreground).fontSize(sm)
+Something went wrong</p>
   </while-error>
   <if {result().kind === 'ok'}>
-  <p sx={style.fg(muted-foreground).fontSize(sm)}>Value: <strong sx={style.fg(foreground).fontFamily(mono)}>{result().value.data}</strong></p>
+  <p>
+    style.fg(muted-foreground).fontSize(sm)
+Value: <strong>
+    style.fg(foreground).fontFamily(mono)
+{result().value.data}</strong></p>
   </if>
 </column>

@@ -424,7 +424,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   to 0 in auto grid tracks (2px border-only hit target → "picker does not launch").
 -->
 <if {isSwatchOnly()}>
-  <column gap="0" data-color-picker-root data-variant="swatch" sx={style.position(absolute).top(0).left(0).right(0).bottom(0).minW(0).minH(0)}>
+  <column gap="0" data-color-picker-root data-variant="swatch">
+    style.position(absolute).top(0).left(0).right(0).bottom(0).minW(0).minH(0)
+
     <button
       type="button"
       data-color-trigger
@@ -438,8 +440,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-label="Choose color"
       use:captureInput
       use:swatch={value() || '#000000'}
-      sx={style.w(full).h(full).minW(0).minH(0).radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).pad(0).shadow(none).when({ focusWithin: style.outline(ring) })}
-    ></button>
+
+    >
+      style.w(full).h(full).minW(0).minH(0).radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).pad(0).shadow(none).when({ focusWithin: style.outline(ring) })
+</button>
     <if {open() && !disabled()}>
       <div
         id={panelId()}
@@ -449,14 +453,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         placement="bottom-start"
         role="dialog"
         aria-label="Choose color"
-        sx={style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}
+
       >
+        style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)
+
         <column gap="3">
           <div
             use:swatch={value() || '#000000'}
-            sx={style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)}
+
             aria-hidden="true"
-          ></div>
+          >
+            style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)
+</div>
           <grid cols="6" gap="2">
             <for {swatches()} as="sw" key={sw.hex}>
               <button
@@ -465,13 +473,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 data-hex={sw.hex}
                 aria-label={sw.label}
                 use:swatch={sw.hex}
-                sx={style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })}
-              ></button>
+
+              >
+                style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })
+</button>
             </for>
           </grid>
           <column gap="2">
             <row align="center" gap="2">
-              <label for={hueId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>H</label>
+              <label for={hueId()}>
+                style.w(4).fg(muted-foreground).fontSize(xs)
+H</label>
               <input
                 id={hueId()}
                 type="range"
@@ -485,10 +497,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 min-w="0"
                 aria-label="Hue"
               />
-              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{hue()}°</span>
+              <span>
+                style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)
+{hue()}°</span>
             </row>
             <row align="center" gap="2">
-              <label for={satId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>S</label>
+              <label for={satId()}>
+                style.w(4).fg(muted-foreground).fontSize(xs)
+S</label>
               <input
                 id={satId()}
                 type="range"
@@ -502,10 +518,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 min-w="0"
                 aria-label="Saturation"
               />
-              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{sat()}%</span>
+              <span>
+                style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)
+{sat()}%</span>
             </row>
             <row align="center" gap="2">
-              <label for={lightId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>L</label>
+              <label for={lightId()}>
+                style.w(4).fg(muted-foreground).fontSize(xs)
+L</label>
               <input
                 id={lightId()}
                 type="range"
@@ -519,12 +539,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 min-w="0"
                 aria-label="Lightness"
               />
-              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{light()}%</span>
+              <span>
+                style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)
+{light()}%</span>
             </row>
           </column>
           <!-- Always expose hex — studio shows hex on tokens; picker must accept paste. -->
           <row align="center" gap="2">
-            <span sx={style.fg(muted-foreground).fontSize(xs)}>Hex</span>
+            <span>
+              style.fg(muted-foreground).fontSize(xs)
+Hex</span>
             <input
               type="text"
               bind:value={hexDraft}
@@ -532,8 +556,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               autocomplete="off"
               aria-label="Hex color"
               grow min-w="0"
-              sx={style.fontFamily(mono).textCase(lowercase).fontSize(xs)}
-            />
+
+>
+              style.fontFamily(mono).textCase(lowercase).fontSize(xs)
+            </input>
           </row>
         </column>
       </div>
@@ -541,13 +567,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </column>
 </if>
 <if {!isSwatchOnly()}>
-  <column gap="0" data-color-picker-root data-variant="default" sx={style.position(relative).w(full).minH(0)}>
+  <column gap="0" data-color-picker-root data-variant="default">
+    style.position(relative).w(full).minH(0)
+
     <row
       data-color-trigger
       align="center"
       gap="2"
-      sx={style.w(full).minH(size-h).padY(1).padX(1_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer).when({ focusWithin: style.outline(ring) })}
+
     >
+      style.w(full).minH(size-h).padY(1).padX(1_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer).when({ focusWithin: style.outline(ring) })
+
       <button
         type="button"
         data-color-trigger-btn
@@ -558,22 +588,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:captureInput
         use:swatch={value() || '#000000'}
         shrink="0"
-        sx={style.size(10).minW(10).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer).pad(0)}
-      ></button>
+
+      >
+        style.size(10).minW(10).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer).pad(0)
+</button>
       <if {showHexUi()}>
         <input
           type="text"
           flush
           grow
           min-w="0"
-          sx={style.fontFamily(mono).textCase(lowercase).cursor(pointer)}
+
           name={name()}
           placeholder="#000000"
           disabled={disabled()}
           autocomplete="off"
           aria-label="Hex color"
           bind:value={value}
-        />
+>
+          style.fontFamily(mono).textCase(lowercase).cursor(pointer)
+        </input>
       </if>
     </row>
     <if {open() && !disabled()}>
@@ -585,14 +619,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         placement="bottom-start"
         role="dialog"
         aria-label="Choose color"
-        sx={style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}
+
       >
+        style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)
+
         <column gap="3">
           <div
             use:swatch={value() || '#000000'}
-            sx={style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)}
+
             aria-hidden="true"
-          ></div>
+          >
+            style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)
+</div>
           <grid cols="6" gap="2">
             <for {swatches()} as="sw" key={sw.hex}>
               <button
@@ -601,13 +639,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 data-hex={sw.hex}
                 aria-label={sw.label}
                 use:swatch={sw.hex}
-                sx={style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })}
-              ></button>
+
+              >
+                style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })
+</button>
             </for>
           </grid>
           <column gap="2">
             <row align="center" gap="2">
-              <label for={hueId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>H</label>
+              <label for={hueId()}>
+                style.w(4).fg(muted-foreground).fontSize(xs)
+H</label>
               <input
                 id={hueId()}
                 type="range"
@@ -621,10 +663,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 min-w="0"
                 aria-label="Hue"
               />
-              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{hue()}°</span>
+              <span>
+                style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)
+{hue()}°</span>
             </row>
             <row align="center" gap="2">
-              <label for={satId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>S</label>
+              <label for={satId()}>
+                style.w(4).fg(muted-foreground).fontSize(xs)
+S</label>
               <input
                 id={satId()}
                 type="range"
@@ -638,10 +684,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 min-w="0"
                 aria-label="Saturation"
               />
-              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{sat()}%</span>
+              <span>
+                style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)
+{sat()}%</span>
             </row>
             <row align="center" gap="2">
-              <label for={lightId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>L</label>
+              <label for={lightId()}>
+                style.w(4).fg(muted-foreground).fontSize(xs)
+L</label>
               <input
                 id={lightId()}
                 type="range"
@@ -655,12 +705,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 min-w="0"
                 aria-label="Lightness"
               />
-              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{light()}%</span>
+              <span>
+                style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)
+{light()}%</span>
             </row>
           </column>
           <if {showHexUi()}>
             <row align="center" gap="2">
-              <span sx={style.fg(muted-foreground).fontSize(xs)}>Hex</span>
+              <span>
+                style.fg(muted-foreground).fontSize(xs)
+Hex</span>
               <input
                 type="text"
                 bind:value={hexDraft}
@@ -668,8 +722,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 autocomplete="off"
                 aria-label="Hex color"
                 grow min-w="0"
-                sx={style.fontFamily(mono).textCase(lowercase).fontSize(xs)}
-              />
+
+>
+                style.fontFamily(mono).textCase(lowercase).fontSize(xs)
+              </input>
             </row>
           </if>
         </column>

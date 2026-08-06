@@ -1,17 +1,7 @@
-//! `sail-no-sx` — the `sx=` styling attribute is banned under the `strict` policy.
-//!
-//! `full` blesses `sx` (the token styling surface). The `strict` app tier removes
-//! even that: "here are the primitives — compose them, use their props, no
-//! styling escape at all." It's the maximal "make the wrong thing unrepresentable"
-//! tier for app authors.
-//!
-//! Natural severity `Warn` so an unconfigured / `full` package keeps compiling
-//! silently (that overrides it to Off); `Policy::STRICT` promotes it to a hard
-//! `Error`. Catches both static `sx="…"` and dynamic `sx={…}`. Skips HTML
-//! comments; advances char-safely.
+//! `sail-no-sx` — Style product host `style=` banned under `strict` policy.
+//! Rule id keeps historical `sail-no-sx` (capability key remains `"sx"`).
 
 use std::path::Path;
-
 use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-no-sx";
@@ -23,69 +13,43 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => {
-                    i += end + 3;
-                    continue;
-                }
+                Some(end) => { i += end + 3; continue; }
                 None => break,
             }
         }
-        // An `sx=` attribute: `sx` preceded by whitespace, followed by an
-        // (optionally spaced) `=`. Both `sx="…"` and `sx={…}` match.
         if i > 0
             && bytes[i - 1].is_ascii_whitespace()
-            && source[i..].starts_with("sx")
-            && next_is_eq(&bytes[i + 2..])
+            && source[i..].starts_with("style")
+            && next_is_eq(&bytes[i + 5..])
         {
             let (line, col) = offset_to_line_col(source, i);
             findings.push(Finding {
-                file: path.to_path_buf(),
-                line,
-                col,
-                rule: RULE_ID,
+                file: path.to_path_buf(), line, col, rule: RULE_ID,
                 severity: Severity::Warn,
-                message: "sx= is not allowed under the strict policy — compose primitives and use \
-                     their props; there is no styling escape at this tier."
-                    .to_string(),
+                message: "style= (Style product host) is not allowed under the strict policy — compose primitives and use their props; there is no styling escape at this tier.".into(),
                 suggest: Some(format!(
-                    "Text is already styled: write <h1>-<h6> and <p> plain — they take the type \
-                     scale automatically. For structure use <row>/<column>/<grid>; \
-                     for surface/tone use a primitive prop (padding, tone, size, variant). If \
-                     nothing fits, that's a missing primitive to add, not a reason to keep sx.{}",
+                    "Text is already styled: write <h1>-<h6> and <p> plain. For structure use <row>/<column>/<grid>; for surface/tone use a primitive prop.{}",
                     crate::config::grant_hint(path, "sx")
                 )),
             });
         }
         i += 1;
-        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
-            i += 1;
-        }
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 { i += 1; }
     }
     findings
 }
 
-/// After the `sx` name: optional whitespace, then `=`.
 fn next_is_eq(rest: &[u8]) -> bool {
     let mut k = 0;
-    while k < rest.len() && rest[k].is_ascii_whitespace() {
-        k += 1;
-    }
+    while k < rest.len() && rest[k].is_ascii_whitespace() { k += 1; }
     k < rest.len() && rest[k] == b'='
 }
 
 fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
-    let mut line = 1usize;
-    let mut col = 1usize;
+    let mut line = 1usize; let mut col = 1usize;
     for (idx, b) in source.bytes().enumerate() {
-        if idx == offset {
-            break;
-        }
-        if b == b'\n' {
-            line += 1;
-            col = 1;
-        } else {
-            col += 1;
-        }
+        if idx == offset { break; }
+        if b == b'\n' { line += 1; col = 1; } else { col += 1; }
     }
     (line, col)
 }
@@ -93,37 +57,22 @@ fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn run(src: &str) -> usize {
-        check(Path::new("t.sail"), src).len()
-    }
-
+    fn run(src: &str) -> usize { check(Path::new("t.sail"), src).len() }
     #[test]
-    fn flags_static_and_dynamic_sx() {
-        assert_eq!(run(r#"<sail-card sx="p-4">x</sail-card>"#), 1);
-        assert_eq!(
-            run(r#"<sail-card sx={cond ? 'p-4' : 'p-2'}>x</sail-card>"#),
-            1
-        );
-        assert_eq!(run(r#"<sail-card sx = "p-4">x</sail-card>"#), 1);
+    fn flags_static_and_dynamic_style_host() {
+        assert_eq!(run(r#"<sail-card style="p-4">x</sail-card>"#), 1);
+        assert_eq!(run(r#"<sail-card style={cond ? 'p-4' : 'p-2'}>x</sail-card>"#), 1);
+        assert_eq!(run(r#"<sail-card style = "p-4">x</sail-card>"#), 1);
     }
-
     #[test]
     fn does_not_flag_lookalikes_or_props() {
-        assert_eq!(
-            run(r#"<sail-card padding="lg" data-sx="x">y</sail-card>"#),
-            0
-        );
-        assert_eq!(run(r#"<sail-card sxy="x">y</sail-card>"#), 0);
+        assert_eq!(run(r#"<sail-card padding="lg" data-sx="x">y</sail-card>"#), 0);
+        assert_eq!(run(r#"<sail-card styled="x">y</sail-card>"#), 0);
     }
-
     #[test]
     fn is_warn_and_skips_comments() {
-        let f = check(Path::new("t.sail"), r#"<sail-card sx="p-4">x</sail-card>"#);
+        let f = check(Path::new("t.sail"), r#"<sail-card style="p-4">x</sail-card>"#);
         assert!(matches!(f[0].severity, Severity::Warn));
-        assert_eq!(
-            run(r#"<!-- <sail-card sx="p-9"> --> <sail-card>y</sail-card>"#),
-            0
-        );
+        assert_eq!(run(r#"<!-- <sail-card style="p-9"> --> <sail-card>y</sail-card>"#), 0);
     }
 }

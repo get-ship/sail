@@ -29,15 +29,23 @@ export default controller(() => ({
 </controller>
 
 <!-- FILE_CAP_OVERRIDE: gallery instantiates all 50+ sail/primitives — one card each; cannot be split without losing the gallery contract -->
-<column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
+<column gap="8">
+  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+
   <header>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).mb(2)}>sail/primitives gallery</h1>
-    <p sx={style.fg(muted-foreground)}>Real component instantiations — one card per primitive, representative prop combos.</p>
+    <h1>
+      style.fontSize(2xl).fontWeight(bold).mb(2)
+sail/primitives gallery</h1>
+    <p>
+      style.fg(muted-foreground)
+Real component instantiations — one card per primitive, representative prop combos.</p>
   </header>
 
   <!-- Accordion -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-accordion</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-accordion</h2>
     <row gap="3" align="start">
       <sail-accordion type="single" value="a1">
         <sail-accordion-item value="a1">
@@ -58,7 +66,9 @@ export default controller(() => ({
 
   <!-- Alert -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>alert</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+alert</h2>
     <column gap="3">
       <alert tone="info">
         <span slot="title">Info</span>
@@ -85,7 +95,9 @@ export default controller(() => ({
 
   <!-- Avatar -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>avatar</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+avatar</h2>
     <row gap="3" align="start">
       <avatar name="Alice Hart" size="xs"></avatar>
       <avatar name="Bob Ray" size="sm" tone="primary"></avatar>
@@ -101,7 +113,9 @@ export default controller(() => ({
 
   <!-- Button -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-button</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-button</h2>
     <row gap="3" align="start">
       <sail-button variant="default">Default</sail-button>
       <sail-button variant="solid" tone="primary">Solid primary</sail-button>
@@ -121,22 +135,32 @@ export default controller(() => ({
 
   <!-- Card -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-card</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-card</h2>
     <row gap="3" align="start">
-      <card sx={style.w(48)}>
+      <card>
+        style.w(48)
+
         <span slot="header">Default card</span>
         Content in the default slot.
         <span slot="footer">Footer</span>
       </card>
-      <card tone="primary" variant="outline" sx={style.w(48)}>
+      <card tone="primary" variant="outline">
+        style.w(48)
+
         <span slot="header">Outline primary</span>
         Outline variant with primary tone.
       </card>
-      <card tone="success" accent-bar="static" status-rail sx={style.w(48)}>
+      <card tone="success" accent-bar="static" status-rail>
+        style.w(48)
+
         <span slot="header">Status rail</span>
         Accent bar + status rail active.
       </card>
-      <card tone="info" fill padding="lg" sx={style.w(48)}>
+      <card tone="info" fill padding="lg">
+        style.w(48)
+
         Fill + large padding.
       </card>
     </row>
@@ -144,7 +168,9 @@ export default controller(() => ({
 
   <!-- Checkbox -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-checkbox</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-checkbox</h2>
     <row gap="3" align="start">
       <sail-checkbox label="Default"></sail-checkbox>
       <sail-checkbox label="Checked" checked></sail-checkbox>
@@ -157,7 +183,9 @@ export default controller(() => ({
 
   <!-- Chip -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>chip</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+chip</h2>
     <row gap="3" align="start">
       <chip>Default</chip>
       <chip tone="primary" variant="solid">Solid</chip>
@@ -170,17 +198,31 @@ export default controller(() => ({
 
   <!-- Cluster + Stack layout primitives -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>row / column</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+row / column</h2>
     <column gap="3">
       <row gap="3" align="center">
-        <span tone="primary" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>A</span>
-        <span tone="success" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>B</span>
-        <span tone="accent" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>C</span>
+        <span tone="primary">
+          style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+A</span>
+        <span tone="success">
+          style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+B</span>
+        <span tone="accent">
+          style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+C</span>
       </row>
       <column gap="2">
-        <span tone="info" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>Stack item 1</span>
-        <span tone="warning" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>Stack item 2</span>
-        <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>Stack item 3</span>
+        <span tone="info">
+          style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+Stack item 1</span>
+        <span tone="warning">
+          style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+Stack item 2</span>
+        <span tone="destructive">
+          style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+Stack item 3</span>
       </column>
     </column>
   </section>
@@ -189,18 +231,24 @@ export default controller(() => ({
 
   <!-- Collapsible -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-collapsible</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-collapsible</h2>
     <row gap="3" align="start">
       <collapsible>
         <sail-button slot="trigger" variant="outline" size="sm">Toggle details</sail-button>
-        <column sx={style.padY(2)}>Revealed content when expanded.</column>
+        <column>
+          style.padY(2)
+Revealed content when expanded.</column>
       </collapsible>
     </row>
   </section>
 
   <!-- Empty state + Error state -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-empty-state / sail-error-state</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-empty-state / sail-error-state</h2>
     <row gap="3" align="start">
       <empty-state variant="default" size="sm">
         <icon slot="icon" name="inbox"></icon>
@@ -221,8 +269,12 @@ export default controller(() => ({
 
   <!-- Field + Label -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>field / sail-label / sail-input / sail-textarea</h2>
-    <column gap="3" sx={style.maxW(panel-max-w-sm)}>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+field / sail-label / sail-input / sail-textarea</h2>
+    <column gap="3">
+      style.maxW(panel-max-w-sm)
+
       <field>
         <sail-label slot="label" required>Name</sail-label>
         <input type="text" placeholder="Enter your name" name="demo-name">
@@ -242,7 +294,9 @@ export default controller(() => ({
 
   <!-- Icon -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-icon</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-icon</h2>
     <row gap="3" align="start">
       <icon name="star" size="xs"></icon>
       <icon name="star" size="sm"></icon>
@@ -260,7 +314,9 @@ export default controller(() => ({
 
   <!-- Navigation menu -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-navigation-menu</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-navigation-menu</h2>
     <row gap="3" align="start">
       <nav-top value="home">
         <sail-navigation-item value="home" active>Home</sail-navigation-item>
@@ -273,7 +329,9 @@ export default controller(() => ({
 
   <!-- Pagination -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-pagination</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-pagination</h2>
     <column gap="3">
       <pagination page="1" total="150" page-size="10"></pagination>
       <pagination page="3" total="150" page-size="25" page-size-options="10,25,50"></pagination>
@@ -282,7 +340,9 @@ export default controller(() => ({
 
   <!-- Radio group -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>radio-group / radio</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+radio-group / radio</h2>
     <row gap="3" align="start">
       <radio-group name="demo-radio" value="b" label="Size">
         <radio value="a">Small</radio>
@@ -299,7 +359,9 @@ export default controller(() => ({
 
   <!-- Select + Combobox -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-select</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-select</h2>
     <row gap="3" align="start">
       <select name="demo-select" size="sm">
         <option value="">Pick one…</option>
@@ -321,7 +383,9 @@ export default controller(() => ({
 
   <!-- Separator -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-separator</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-separator</h2>
     <column gap="3">
       <sail-separator orientation="horizontal"></sail-separator>
       <sail-separator orientation="horizontal" variant="dashed" tone="muted"></sail-separator>
@@ -331,8 +395,12 @@ export default controller(() => ({
 
   <!-- Skeleton -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-skeleton</h2>
-    <column gap="3" sx={style.maxW(panel-max-w-sm)}>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-skeleton</h2>
+    <column gap="3">
+      style.maxW(panel-max-w-sm)
+
       <sail-skeleton shape="text" size="md"></sail-skeleton>
       <sail-skeleton shape="line" size="sm"></sail-skeleton>
       <sail-skeleton shape="block" size="lg"></sail-skeleton>
@@ -342,8 +410,12 @@ export default controller(() => ({
 
   <!-- Slider -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-slider</h2>
-    <column gap="3" sx={style.maxW(panel-max-w-sm)}>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-slider</h2>
+    <column gap="3">
+      style.maxW(panel-max-w-sm)
+
       <slider name="demo-slider" value="40" min="0" max="100" aria-label="Volume"></slider>
       <slider name="demo-slider2" value="60" tone="primary" size="lg" aria-label="Primary large"></slider>
       <slider name="demo-slider3" value="20" disabled aria-label="Disabled"></slider>
@@ -352,7 +424,9 @@ export default controller(() => ({
 
   <!-- Spinner -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-spinner</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-spinner</h2>
     <row gap="3" align="start">
       <sail-spinner size="xs"></sail-spinner>
       <sail-spinner size="sm" tone="primary"></sail-spinner>
@@ -363,7 +437,9 @@ export default controller(() => ({
 
   <!-- Status dot -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-status-dot</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-status-dot</h2>
     <row gap="3" align="start">
       <sail-status-dot tone="success" label="Online"></sail-status-dot>
       <sail-status-dot tone="warning" pulse label="Pending"></sail-status-dot>
@@ -375,7 +451,9 @@ export default controller(() => ({
 
   <!-- Switch -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-switch</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-switch</h2>
     <row gap="3" align="start">
       <label><switch name="demo-sw1"></switch> Default</label>
       <label><switch name="demo-sw2" checked></switch> Checked</label>
@@ -387,7 +465,9 @@ export default controller(() => ({
 
   <!-- Tabs -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-tabs</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-tabs</h2>
     <column gap="3">
       <tabs active="tab1" variant="line">
         <sail-tab name="tab1" label="Overview"></sail-tab>
@@ -408,7 +488,9 @@ export default controller(() => ({
 
   <!-- Timeline -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-timeline</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-timeline</h2>
     <row gap="3" align="start">
       <sail-timeline>
         <sail-timeline-item tone="success" at="2026-06-01">
@@ -429,8 +511,12 @@ export default controller(() => ({
 
   <!-- Toast -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-toast (static preview)</h2>
-    <column gap="3" sx={style.maxW(panel-max-w-sm)}>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-toast (static preview)</h2>
+    <column gap="3">
+      style.maxW(panel-max-w-sm)
+
       <toast tone="info">
         <span slot="title">Info toast</span>
         Something happened you should know about.
@@ -448,7 +534,9 @@ export default controller(() => ({
 
   <!-- Toggle group -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-toggle-group</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-toggle-group</h2>
     <column gap="3">
       <toggle-group type="single" value="b" variant="outline" name="demo-tg1">
         <sail-toggle value="a">Left</sail-toggle>
@@ -465,7 +553,9 @@ export default controller(() => ({
 
   <!-- Tooltip -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>tooltip</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+tooltip</h2>
     <row gap="3" align="start">
       <tooltip placement="top" content="Tooltip on top">
         <sail-button variant="outline">Hover me (top)</sail-button>
@@ -481,7 +571,9 @@ export default controller(() => ({
 
   <!-- Tree view -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-tree-view</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-tree-view</h2>
     <row gap="3" align="start">
       <sail-tree>
         <sail-tree-item label="src" expanded>
@@ -500,10 +592,16 @@ export default controller(() => ({
 
   <!-- Scroll area -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-scroll-area</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-scroll-area</h2>
     <row gap="3" align="start">
-      <scroll-area orientation="vertical" sx={style.h(32).w(panel-max-w-sm).borderWidth(1).border(border).radius(md)}>
-        <column gap="1" sx={style.pad(2)}>
+      <scroll-area orientation="vertical">
+        style.h(32).w(panel-max-w-sm).borderWidth(1).border(border).radius(md)
+
+        <column gap="1">
+          style.pad(2)
+
           <p>Line 1</p><p>Line 2</p><p>Line 3</p><p>Line 4</p>
           <p>Line 5</p><p>Line 6</p><p>Line 7</p><p>Line 8</p>
         </column>
@@ -513,7 +611,9 @@ export default controller(() => ({
 
   <!-- JSON view -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-json-view</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-json-view</h2>
     <row gap="3" align="start">
       <sail-json-view data={'{"name":"Sail","version":1,"stable":true}'} depth="2" expanded></sail-json-view>
     </row>
@@ -521,15 +621,21 @@ export default controller(() => ({
 
   <!-- Markdown -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-markdown</h2>
-    <row gap="3" align="start" sx={style.maxW(panel-max-w-md)}>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-markdown</h2>
+    <row gap="3" align="start">
+      style.maxW(panel-max-w-md)
+
       <sail-markdown value="## Hello from **Markdown**&#10;&#10;- Item one&#10;- Item two&#10;- `code` inline"></sail-markdown>
     </row>
   </section>
 
   <!-- Diff -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-diff</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-diff</h2>
     <row gap="3" align="start">
       <sail-diff from="const x = 1;" to="const x = 2;"></sail-diff>
     </row>
@@ -537,20 +643,30 @@ export default controller(() => ({
 
   <!-- Table (slot mode) -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-table (slot mode)</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-table (slot mode)</h2>
     <row gap="3" align="start">
       <table variant="slot" label="Demo table" hoverable>
         <tr slot="head"><th>Name</th><th>Role</th><th>Status</th></tr>
-        <tr><td>Alice</td><td>Engineer</td><td><span tone="success" sx={style.display(inline-block).minH(control-h-2xs).padX(1_5).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>Active</span></td></tr>
-        <tr><td>Bob</td><td>Designer</td><td><span tone="warning" sx={style.display(inline-block).minH(control-h-2xs).padX(1_5).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>Away</span></td></tr>
-        <tr><td>Carol</td><td>PM</td><td><span tone="muted" sx={style.display(inline-block).minH(control-h-2xs).padX(1_5).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)}>Offline</span></td></tr>
+        <tr><td>Alice</td><td>Engineer</td><td><span tone="success">
+          style.display(inline-block).minH(control-h-2xs).padX(1_5).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+Active</span></td></tr>
+        <tr><td>Bob</td><td>Designer</td><td><span tone="warning">
+          style.display(inline-block).minH(control-h-2xs).padX(1_5).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+Away</span></td></tr>
+        <tr><td>Carol</td><td>PM</td><td><span tone="muted">
+          style.display(inline-block).minH(control-h-2xs).padX(1_5).fontSize(xs).fontWeight(semibold).radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg)
+Offline</span></td></tr>
       </table>
     </row>
   </section>
 
   <!-- Color picker -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-color-picker</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-color-picker</h2>
     <row gap="3" align="start">
       <sail-color-picker name="demo-color1" value="#3b82f6"></sail-color-picker>
       <sail-color-picker name="demo-color2" value="#22c55e" size="sm"></sail-color-picker>
@@ -560,7 +676,9 @@ export default controller(() => ({
 
   <!-- Date picker -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-date-picker</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-date-picker</h2>
     <row gap="3" align="start">
       <sail-date-picker name="demo-date1" placeholder="YYYY-MM-DD"></sail-date-picker>
       <sail-date-picker name="demo-date2" value="2026-06-05" tone="primary" size="sm"></sail-date-picker>
@@ -569,8 +687,12 @@ export default controller(() => ({
 
   <!-- File upload -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-file-upload</h2>
-    <column gap="3" sx={style.maxW(panel-max-w-sm)}>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-file-upload</h2>
+    <column gap="3">
+      style.maxW(panel-max-w-sm)
+
       <sail-file-upload accept="image/*,application/pdf" tone="primary"></sail-file-upload>
       <sail-file-upload multiple accept=".json,.csv" tone="muted"></sail-file-upload>
     </column>
@@ -578,7 +700,9 @@ export default controller(() => ({
 
   <!-- Autocomplete -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-autocomplete</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-autocomplete</h2>
     <row gap="3" align="start">
       <combobox name="demo-ac" placeholder="Search fruits…" suggestions='["Apple","Apricot","Banana","Blueberry","Cherry","Date"]' size="md"></combobox>
     </row>
@@ -588,10 +712,16 @@ export default controller(() => ({
 
   <!-- sail-dialog -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-dialog</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-dialog</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Modal dialog — size=md, backdrop=default</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Modal dialog — size=md, backdrop=default</p>
         <sail-button variant="outline" size="sm" on:click={dialogDemo.open}>Open dialog</sail-button>
         <dialog use:dialogDemo>
           <header>Confirm action</header>
@@ -607,10 +737,16 @@ export default controller(() => ({
 
   <!-- sail-alert-dialog -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-alert-dialog</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-alert-dialog</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Destructive confirm dialog with built-in cancel/confirm footer</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Destructive confirm dialog with built-in cancel/confirm footer</p>
         <sail-button variant="outline" tone="destructive" size="sm" on:click={() => alertDialogOpen.set(true)}>Delete item</sail-button>
         <dialog role="alertdialog"
           open={alertDialogOpen()}
@@ -627,10 +763,16 @@ export default controller(() => ({
 
   <!-- sail-drawer -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-drawer</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-drawer</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Side-sheet panel — side=right, size=md</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Side-sheet panel — side=right, size=md</p>
         <sail-button variant="outline" size="sm" on:click={() => drawerOpen.set(true)}>Open drawer</sail-button>
         <dialog side="end" open={drawerOpen()} side="right" size="md">
           <span slot="title">Settings</span>
@@ -656,15 +798,27 @@ export default controller(() => ({
 
   <!-- sail-popover -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-popover</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-popover</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Anchor-positioned popover — placement=bottom</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Anchor-positioned popover — placement=bottom</p>
         <popover placement="bottom">
           <sail-button slot="trigger" variant="outline" size="sm">Open popover</sail-button>
-          <column gap="1" sx={style.pad(3).maxW(56)}>
-            <strong sx={style.fontSize(sm)}>Popover content</strong>
-            <p sx={style.fontSize(xs).fg(muted-foreground)}>
+          <column gap="1">
+            style.pad(3).maxW(56)
+
+            <strong>
+              style.fontSize(sm)
+Popover content</strong>
+            <p>
+              style.fontSize(xs).fg(muted-foreground)
+
               Click outside or press Escape to dismiss. Uses native popover API for top-layer rendering.
             </p>
           </column>
@@ -675,10 +829,16 @@ export default controller(() => ({
 
   <!-- sail-dropdown-menu -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-dropdown-menu</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-dropdown-menu</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Trigger-anchored menu with ARIA role=menu + keyboard navigation</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Trigger-anchored menu with ARIA role=menu + keyboard navigation</p>
         <dropdown>
           <sail-button slot="trigger" variant="outline" size="sm">
             Actions
@@ -695,10 +855,16 @@ export default controller(() => ({
 
   <!-- sail-hover-card -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-hover-card</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-hover-card</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Hover-triggered rich content overlay — placement=bottom, delay=300ms</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Hover-triggered rich content overlay — placement=bottom, delay=300ms</p>
         <hover-card placement="bottom" show-delay="300" hide-delay="150">
           <sail-button slot="trigger" variant="ghost" size="sm">
             <avatar name="Alice Hart" size="sm" tone="primary"></avatar>
@@ -708,11 +874,17 @@ export default controller(() => ({
             <row gap="2">
               <avatar name="Alice Hart" size="md" tone="primary"></avatar>
               <column gap="0">
-                <span sx={style.fontWeight(semibold).fontSize(sm)}>Alice Hart</span>
-                <span sx={style.fontSize(xs).fg(muted-foreground)}>Senior Engineer</span>
+                <span>
+                  style.fontWeight(semibold).fontSize(sm)
+Alice Hart</span>
+                <span>
+                  style.fontSize(xs).fg(muted-foreground)
+Senior Engineer</span>
               </column>
             </row>
-            <p sx={style.fontSize(xs).fg(muted-foreground)}>
+            <p>
+              style.fontSize(xs).fg(muted-foreground)
+
               Joined 2023 · 142 contributions · Rust, TypeScript
             </p>
           </column>
@@ -723,12 +895,20 @@ export default controller(() => ({
 
   <!-- sail-context-menu -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-context-menu</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-context-menu</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Right-click triggered overlay menu — positioned at cursor via show(x,y)</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Right-click triggered overlay menu — positioned at cursor via show(x,y)</p>
         <context-menu>
-          <column slot="trigger" sx={style.padY(4).padX(6).borderWidth(1).border(border).radius(md).textAlign(center).fontSize(sm).fg(muted-foreground).select(none).cursor(context-menu)}>Right-click this area</column>
+          <column slot="trigger">
+            style.padY(4).padX(6).borderWidth(1).border(border).radius(md).textAlign(center).fontSize(sm).fg(muted-foreground).select(none).cursor(context-menu)
+Right-click this area</column>
           <sail-menu-item value="open">Open</sail-menu-item>
           <sail-menu-item value="rename">Rename</sail-menu-item>
           <sail-menu-separator></sail-menu-separator>
@@ -744,10 +924,16 @@ export default controller(() => ({
 
   <!-- sail-combobox -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-combobox</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-combobox</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48).maxW(panel-max-w-sm)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Single-select with type-to-filter — options via JSON</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48).maxW(panel-max-w-sm)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Single-select with type-to-filter — options via JSON</p>
         <combobox
           name="demo-combo"
           placeholder="Search framework…"
@@ -755,8 +941,12 @@ export default controller(() => ({
           size="md"
         ></combobox>
       </column>
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48).maxW(64)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Pre-selected value · size=sm</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48).maxW(64)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Pre-selected value · size=sm</p>
         <combobox
           name="demo-combo2"
           value="sail"
@@ -770,10 +960,16 @@ export default controller(() => ({
 
   <!-- sail-calendar -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-calendar</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-calendar</h2>
     <column gap="3">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Month view with 3 events — focus-date=2026-06-05</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Month view with 3 events — focus-date=2026-06-05</p>
         <sail-calendar
           view="month"
           focus-date="2026-06-05"
@@ -785,10 +981,16 @@ export default controller(() => ({
 
   <!-- sail-tree -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-tree</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-tree</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(panel-min-w-md)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Hierarchical tree — selectable=single, show-guides</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(panel-min-w-md)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Hierarchical tree — selectable=single, show-guides</p>
         <sail-tree
           label="File system"
           selectable="single"
@@ -802,10 +1004,16 @@ export default controller(() => ({
   <!-- sail-tree-view / sail-tree-item — already covered above but was a thin static stub; a full grid follows -->
   <!-- sail-tree-grid -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-tree-grid</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-tree-grid</h2>
     <column gap="3">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Hierarchical tree-grid (role=treegrid) — columns with Name, Size, Kind</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Hierarchical tree-grid (role=treegrid) — columns with Name, Size, Kind</p>
         <sail-tree-grid
           label="Artifact tree"
           selectable="single"
@@ -818,18 +1026,26 @@ export default controller(() => ({
 
   <!-- sail-sheet -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-sheet</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-sheet</h2>
     <column gap="3">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>Spreadsheet primitive — 2-D cell space with A1 addressing and formula bar</p>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+Spreadsheet primitive — 2-D cell space with A1 addressing and formula bar</p>
         <dialog side="end"
           label="Budget sheet"
           show-headers
           show-gridlines
           show-formula-bar
           workbook={'{"sheets":[{"id":"sheet1","name":"Q2 Budget","cells":{"A1":{"v":"Category"},"B1":{"v":"Budget"},"C1":{"v":"Spent"},"A2":{"v":"Engineering"},"B2":{"v":50000},"C2":{"v":42300},"A3":{"v":"Design"},"B3":{"v":20000},"C3":{"v":18750},"A4":{"v":"Marketing"},"B4":{"v":15000},"C4":{"v":9200}}}]}'}
-          sx={style.h(56)}
-        ></dialog>
+
+        >
+          style.h(56)
+</dialog>
       </column>
     </column>
   </section>
@@ -838,28 +1054,44 @@ export default controller(() => ({
 
   <!-- sail-portal -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-portal</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-portal</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+
           Teleports slotted children into a different DOM location (stacking-context escape).
           The portal below appends a labelled marker to <code>body</code> — inspect the
           DOM to confirm it lives outside this view's mount point.
         </p>
-                  <column sx={style.display(none)} data-portal-demo aria-hidden="true">
+                  <column data-portal-demo aria-hidden="true">
+                    style.display(none)
+
             [sail-portal demo — this node lives in &lt;body&gt;, not in the gallery mount]
           </column>
-                <p sx={style.fontSize(xs).fg(muted-foreground).italic(true)}>Portal active — check DevTools &gt; Elements for the marker in &lt;body&gt;.</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).italic(true)
+Portal active — check DevTools &gt; Elements for the marker in &lt;body&gt;.</p>
       </column>
     </row>
   </section>
 
   <!-- sail-toast-container -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-toast-container / sail-toast-host</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-toast-container / sail-toast-host</h2>
     <row gap="3" align="start">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+
           <code>sail-toast-container</code> is the fixed-position stacking host.
           <code>sail-toast-host</code> wraps it and listens for <code>ship:notify</code> events.
           Click the button to dispatch a notify event — the host shows the toast.
@@ -882,10 +1114,16 @@ export default controller(() => ({
 
   <!-- sail-tab-panel -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-tab-panel (inside sail-tabs)</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-tab-panel (inside sail-tabs)</h2>
     <column gap="3">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+
           <code>sail-tab-panel</code> is the companion panel element driven by the parent
           <code>sail-tabs</code> controller. Each panel shows when its <code>name</code>
           matches the active tab.
@@ -895,18 +1133,24 @@ export default controller(() => ({
           <sail-tab name="tp2" label="Details"></sail-tab>
           <sail-tab name="tp3" label="History"></sail-tab>
           <tab-panel name="tp1">
-            <column sx={style.pad(4).fontSize(sm).fg(muted-foreground).bg(surface-2).radius(md)}>
+            <column>
+              style.pad(4).fontSize(sm).fg(muted-foreground).bg(surface-2).radius(md)
+
               Overview panel — rendered when the Overview tab is active.
               Uses <code>animation: sail-tab-panel-fade</code> on transition.
             </column>
           </tab-panel>
           <tab-panel name="tp2">
-            <column sx={style.pad(4).fontSize(sm).fg(muted-foreground).bg(surface-2).radius(md)}>
+            <column>
+              style.pad(4).fontSize(sm).fg(muted-foreground).bg(surface-2).radius(md)
+
               Details panel — secondary content rendered on demand.
             </column>
           </tab-panel>
           <tab-panel name="tp3">
-            <column sx={style.pad(4).fontSize(sm).fg(muted-foreground).bg(surface-2).radius(md)}>
+            <column>
+              style.pad(4).fontSize(sm).fg(muted-foreground).bg(surface-2).radius(md)
+
               History panel — lazy content until the user navigates here.
             </column>
           </tab-panel>
@@ -917,10 +1161,16 @@ export default controller(() => ({
 
   <!-- sail-error-boundary -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-error-boundary</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+sail-error-boundary</h2>
     <column gap="3">
-      <column gap="3" sx={style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)}>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(normal)}>
+      <column gap="3">
+        style.borderWidth(1).border(border).radius(md).bg(surface-1).pad(4).minW(48)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(normal)
+
           Render-fault isolation. Toggle the switch to simulate a subtree error;
           the boundary catches it and shows the fallback. Click Retry to recover.
         </p>
@@ -929,9 +1179,13 @@ export default controller(() => ({
         </row>
         <error-boundary fallback-text="The widget threw an error — click Retry to recover.">
           <if {triggerError()}>
-            <column sx={style.display(none)}>This subtree is broken (error boundary will catch)</column>
+            <column>
+              style.display(none)
+This subtree is broken (error boundary will catch)</column>
           <else>
-            <column sx={style.pad(4).fontSize(sm).bg(surface-2).radius(md).fg(success-foreground)}>
+            <column>
+              style.pad(4).fontSize(sm).bg(surface-2).radius(md).fg(success-foreground)
+
               Subtree is healthy. Toggle the switch above to simulate a fault.
             </column>
           </else></if>
@@ -944,39 +1198,59 @@ export default controller(() => ({
 
   <!-- sail-board / sail-draw / sail-media-av / sail-media-image / sail-media-csv -->
   <section>
-    <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>Blocked by #263 — production-compile gap</h2>
+    <h2>
+      style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)
+Blocked by #263 — production-compile gap</h2>
     <column gap="3">
 
-      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)}>
+      <column gap="2">
+        style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)
+
         <row gap="3">
           <code>sail-board</code>
-          <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>
+          <span tone="destructive">
+            style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)
+blocked by #263 — production-compile gap</span>
         </row>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(relaxed)
+
           <code>sail-board</code> uses <code>Set.prototype.has()</code> inside template
           expressions, which the real (native) Sail compiler rejects. Passes jsdom tests;
           fails <code>cargo run -p sail-compiler -- build</code>. Tracked in #263.
         </p>
       </column>
 
-      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)}>
+      <column gap="2">
+        style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)
+
         <row gap="3">
           <code>sail-draw</code>
-          <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>
+          <span tone="destructive">
+            style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)
+blocked by #263 — production-compile gap</span>
         </row>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(relaxed)
+
           <code>sail-draw</code> uses <code>Set.prototype.has()</code> inside template
           expressions, which the real (native) Sail compiler rejects. Passes jsdom tests;
           fails <code>cargo run -p sail-compiler -- build</code>. Tracked in #263.
         </p>
       </column>
 
-      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)}>
+      <column gap="2">
+        style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)
+
         <row gap="3">
           <code>sail-media-av</code> / <code>sail-media-image</code> / <code>sail-media-csv</code>
-          <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>
+          <span tone="destructive">
+            style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)
+blocked by #263 — production-compile gap</span>
         </row>
-        <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
+        <p>
+          style.fontSize(xs).fg(muted-foreground).leading(relaxed)
+
           All three <code>sail-media-*</code> components capture non-root elements via
           local <code>use:</code> actions inside conditional branches.
           The gallery-sail-media view covers the scalar-attr surface of these components

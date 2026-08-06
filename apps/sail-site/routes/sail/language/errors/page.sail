@@ -23,10 +23,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
-  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Concepts</p>
+<column gap="5">
+  style.maxW(breakpoint-tablet).mx(auto)
+
+  <p>
+    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+Concepts</p>
   <h1>Errors</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
+  <p>
+    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+
     Things fail two ways. Data can fail to arrive — that is a state, and the
     <a href="/sail/language/data">Data</a> chapter renders it with
     <code>&lt;while-error&gt;</code>. Or code can throw — an exception in
@@ -54,8 +60,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>&lt;error-boundary&gt;, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — throw, catch, retry</p>
-      <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="3">
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Live — throw, catch, retry</p>
+      <column gap="3">
+        style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)
+
         <error-boundary on:sail-error-reset={disarm}>
           <if {armed()}><p>{boom()}</p></if>
           <if {!armed()}>
@@ -68,7 +78,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
     </column>
     <column>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Source</p>
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </grid>
@@ -99,7 +111,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     renders that state where it happens:
   </p>
   <code-block code={code.async}></code-block>
-  <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+
     The two systems don't overlap: a failed fetch shows the
     <code>&lt;while-error&gt;</code> branch, never the boundary
     fallback; a synchronous throw trips the boundary, never the error state.
@@ -107,7 +121,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     by boundaries.
   </p>
 
-  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
+  <row justify="between" gap="2">
+    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+
     <a variant="default" href="/sail/language/data">← Data</a>
     <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>
   </row>

@@ -8,6 +8,8 @@
   const base = style.padX(2).fontSize(sm).fontWeight(medium).fg(foreground)
 </scope>
 
-<legend sx={base}>
+<legend>
+  style(base)
+
   <slot></slot>
 </legend>

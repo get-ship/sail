@@ -12,16 +12,16 @@ export const code = {
 
 <card>{title()}</card>`,
 
-  template: `<card sx={style.pad(4).w(full)}>
+  template: `<card style={style.pad(4).w(full)}>
   <row align="center" justify="between" nowrap>
-    <strong sx={style.textCase(uppercase).tracking(wide).fontSize(sm)}>{title()}</strong>
-    <span sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{departed()} departed</span>
+    <strong style={style.textCase(uppercase).tracking(wide).fontSize(sm)}>{title()}</strong>
+    <span style={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{departed()} departed</span>
   </row>
-  <column gap="1" sx={style.mt(3).fontFamily(mono).fontSize(sm)}>
+  <column gap="1" style={style.mt(3).fontFamily(mono).fontSize(sm)}>
     <for {flights()} as="f" key={f.id}>
       <row align="center" gap="3" nowrap>
-        <span grow min-w="0" sx={style.truncate()}>{f.city}</span>
-        <span sx={style.fg(muted-foreground)}>{f.gate}</span>
+        <span grow min-w="0" style={style.truncate()}>{f.city}</span>
+        <span style={style.fg(muted-foreground)}>{f.gate}</span>
         <match {f.status}>
           <case {'boarding'}> <badge tone="success">Boarding</badge>
           </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>
@@ -68,13 +68,13 @@ export default controller((ctx) => {
 
   usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slotDef: `<card sx={style.pad(4).w(full)}>
+  slotDef: `<card style={style.pad(4).w(full)}>
   ...the board...
   <slot name="footer"></slot>
 </card>`,
 
   slotUse: `<departures-board title="Departures — SFO">
-  <p slot="footer" sx={style.mt(3).fontSize(xs).fg(muted-foreground)}>
+  <p slot="footer" style={style.mt(3).fontSize(xs).fg(muted-foreground)}>
     Gate changes are announced. Allegedly.
   </p>
 </departures-board>`,

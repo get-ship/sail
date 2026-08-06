@@ -95,7 +95,7 @@ describe('findings match SailAuthoring/Check 1:1 (sail-site)', () => {
 
   it('inline source with participation violation surfaces 1:1', async () => {
     setChecksOpsClient(cli)
-    const source = '<div sx={style.grow(1)}>x</div>\n'
+    const source = '<div style={style.grow(1)}>x</div>\n'
     const chk = await cli.sailAuthoringCheck({ source })
     expect(chk.count).toBeGreaterThan(0)
     // Use a synthetic path + source so load path works without disk write
@@ -157,7 +157,7 @@ describe('both viewports badge', () => {
   })
 
   it('layout finding gets both-viewports only when LayoutCheck ran both', async () => {
-    const layoutSrc = `<column gap="3" sx={style.h(0)}>
+    const layoutSrc = `<column gap="3" style={style.h(0)}>
   <span>a</span>
   <div>b</div>
 </column>
@@ -269,7 +269,7 @@ describe('editor deep-link', () => {
 
 describe('auto-fix off leaves disk untouched', () => {
   it('autoFixOnSave off/suggest never rewrites', () => {
-    const src = '<div sx={style.grow(1)}>x</div>\n'
+    const src = '<div style={style.grow(1)}>x</div>\n'
     const findings = parseCheckFindings(
       [
         {
@@ -301,7 +301,7 @@ describe('auto-fix off leaves disk untouched', () => {
   it('sourceForSave with mode off does not alter bytes on a temp file path', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'tool6-autofix-'))
     const file = join(dir, 't.sail')
-    const original = '<div sx={style.grow(1)}>keep-me</div>\n'
+    const original = '<div style={style.grow(1)}>keep-me</div>\n'
     writeFileSync(file, original, 'utf8')
     try {
       setChecksOpsClient(cli)
@@ -340,7 +340,7 @@ describe('apply fix ready', () => {
   })
 
   it('applyFix on store applies participation-style rewrite', async () => {
-    const src = '<div sx={style.grow(1)}>x</div>'
+    const src = '<div style={style.grow(1)}>x</div>'
     setChecksOpsClient({
       sailAuthoringCheck: async () => ({
         ok: true,
@@ -487,10 +487,10 @@ describe('severity groups + expandable suggest', () => {
           },
         ],
       }),
-      readSource: async () => '<div sx={style.grow(1)}>x</div>\n',
+      readSource: async () => '<div style={style.grow(1)}>x</div>\n',
     })
     await loadFindings('apps/demo/page.sail', {
-      source: '<div sx={style.grow(1)}>x</div>\n',
+      source: '<div style={style.grow(1)}>x</div>\n',
     })
     const groups = groupBySeverity(getChecksState().findings)
     expect(groups.map((g) => g.severity)).toEqual(['error', 'warning'])
@@ -505,7 +505,7 @@ describe('severity groups + expandable suggest', () => {
 
 describe('Review fixes dialog flow', () => {
   it('openFixReview builds accept/skip diffs; applyFixReview rewrites source + edit buffer', async () => {
-    const src = '<div sx={style.grow(1)}>x</div>'
+    const src = '<div style={style.grow(1)}>x</div>'
     const path = 't.sail'
     let written: { path: string; text: string } | null = null
     seedSourceText(path, src)
@@ -570,7 +570,7 @@ describe('Review fixes dialog flow', () => {
   })
 
   it('skip all → applied 0 and findings retained', async () => {
-    const src = '<div sx={style.grow(1)}>x</div>'
+    const src = '<div style={style.grow(1)}>x</div>'
     setChecksOpsClient({
       sailAuthoringCheck: async () => ({
         ok: true,
@@ -620,7 +620,7 @@ describe('Review fixes dialog flow', () => {
       ],
       { defaultPath: 't.sail' },
     )
-    const srcMap = new Map([['t.sail', '<div sx={style.grow(1)}>x</div>']])
+    const srcMap = new Map([['t.sail', '<div style={style.grow(1)}>x</div>']])
     const items = buildFixReviewItems(findings, srcMap)
     // only participation-style rewrites source; suggest-only raw-container excluded
     expect(items).toHaveLength(1)
@@ -631,7 +631,7 @@ describe('Review fixes dialog flow', () => {
   })
 
   it('single-row applyFix updates edit buffer and drops finding', async () => {
-    const src = '<div sx={style.grow(1)}>x</div>'
+    const src = '<div style={style.grow(1)}>x</div>'
     const path = 'row.sail'
     seedSourceText(path, src)
     setChecksOpsClient({
@@ -741,7 +741,7 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       }),
     })
     await loadFindings('t.sail', {
-      source: '<div sx={style.grow(1)}>x</div>',
+      source: '<div style={style.grow(1)}>x</div>',
     })
     const f = getChecksState().findings[0]!
     expect(f.why).toBe(why)
@@ -750,7 +750,7 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
   })
 
   it('applyRuleFixes applies all machine fixes for one rule + attributes', async () => {
-    const src = '<div sx={style.grow(1)}>x</div>'
+    const src = '<div style={style.grow(1)}>x</div>'
     const path = 'multi.sail'
     seedSourceText(path, src)
     setChecksOpsClient({

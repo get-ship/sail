@@ -32,7 +32,9 @@
   justify="center"
   gap="3"
   use:recoverySurface
-  sx={[
+
+>
+  style([
     base,
     match(size, {
       md: sizeMd,
@@ -46,8 +48,8 @@
     when({
       forced-colors: style.border(CanvasText),
     }),
-  ]}
->
+  ])
+
   <row
     inline
     nowrap
@@ -55,65 +57,83 @@
     justify="center"
     hidden="true"
     shrink
-    sx={[
+
+  >
+    style([
       icon,
       when({
         forced-colors: style.bg(Canvas).fg(CanvasText),
       }),
-    ]}
-  >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" sx={glyph}>
+    ])
+
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      style(glyph)
+
       <circle cx="12" cy="12" r="9"></circle>
       <path d="M12 8v5"></path>
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" grow min-w="0" sx={copy}>
-    <div sx={title}>
+  <column align="stretch" gap="1" grow min-w="0">
+    style(copy)
+
+    <div>
+      style(title)
+
       <slot name="title">Something went wrong</slot>
     </div>
-    <div sx={[
+    <div>
+      style([
       desc,
       when({
         empty: style.display(none),
       }),
-    ]}>
+    ])
+
       <slot></slot>
     </div>
-    <div sx={[
+    <div>
+      style([
       codeBox,
       when({
         empty: style.display(none),
       }),
-    ]}></div>
+    ])
+</div>
     <button
       type="button"
       anatomy
       expanded="false"
-      sx={[
+
+    >
+      style([
         detailsToggle,
         when({
           group-state-has-details: style.display(inline-block),
           hover: style.fg(foreground).bg(muted),
           focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
         }),
-      ]}
-    >Show details</button>
-    <div sx={[
+      ])
+Show details</button>
+    <div>
+      style([
       details,
       when({
         group-state-open: style.display(block),
       }),
-    ]}>
+    ])
+
       <slot name="details"></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" sx={[
+  <row align="center" justify="center" gap="2">
+    style([
     actions,
     when({
       empty: style.display(none),
     }),
-  ]}>
+  ])
+
     <slot name="action"></slot>
   </row>
 </column>

@@ -5,7 +5,7 @@
 //! compile — they lower to the same atomic classes as the attrs — but product
 //! code must use the attrs so there is one spelling for participation. Paint
 //! (pad, color, type, chrome) and intrinsic size stay on Style; when a chain
-//! mixed grow+paint, split: attrs for participation, `sx={…}` for paint only.
+//! mixed grow+paint, split: attrs for participation, `style={…}` for paint only.
 //!
 //! Severity `Error` — the dual path is closed for product after the cutover.
 
@@ -51,7 +51,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     suggest: Some(format!(
                         "Move participation off Style: put `{attr}` / `{attr}=\"0\"|\"1\"` on the \
                          element (and `min-w=\"0\"` / `w=\"full\"` when those were only for flex \
-                         fill). Keep `sx={{…}}` for paint and intrinsic size only."
+                         fill). Keep `style={{…}}` for paint and intrinsic size only."
                     )),
                 });
                 i += 1 + method.len();
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn flags_style_grow_and_shrink() {
-        let f = run(r#"<div sx={style.grow(1)}>x</div>"#);
+        let f = run(r#"<div style={style.grow(1)}>x</div>"#);
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].rule, RULE_ID);
         assert_eq!(f[0].severity, Severity::Error);
@@ -106,17 +106,17 @@ mod tests {
 
     #[test]
     fn flags_mid_chain_grow() {
-        let f = run(r#"<div sx={style.pad(2).grow(1).bg(card)}>x</div>"#);
+        let f = run(r#"<div style={style.pad(2).grow(1).bg(card)}>x</div>"#);
         assert_eq!(f.len(), 1);
         assert!(f[0].message.contains("grow"));
     }
 
     #[test]
     fn allows_participation_attrs_and_paint_style() {
-        assert!(run(r#"<div grow min-w="0" sx={style.truncate()}>x</div>"#).is_empty());
-        assert!(run(r#"<row grow="0" sx={style.pad(2)}>x</row>"#).is_empty());
+        assert!(run(r#"<div grow min-w="0" style={style.truncate()}>x</div>"#).is_empty());
+        assert!(run(r#"<row grow="0" style={style.pad(2)}>x</row>"#).is_empty());
         // Intrinsic width (icon box) stays on Style — not grow/shrink.
-        assert!(run(r#"<span sx={style.w(9).h(9)}>x</span>"#).is_empty());
+        assert!(run(r#"<span style={style.w(9).h(9)}>x</span>"#).is_empty());
     }
 
     #[test]

@@ -66,10 +66,18 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     <match {phase()}>
-      <case {'idle'}> <badge tone="muted" sx={style.enter({ opacity: 'fade' })}>idle</badge>
-      </case><case {'building'}> <badge tone="warning" sx={style.enter({ translate-x: 'spring:snappy' })}>building</badge>
-      </case><case {'live'}> <badge tone="success" sx={style.enter({ scale: 'spring:bouncy' })}>live</badge>
-      </case><default> <badge tone="destructive" sx={style.enter({ opacity: 'fade' })}>failed</badge>
+      <case {'idle'}> <badge tone="muted">
+        style.enter({ opacity: 'fade' })
+idle</badge>
+      </case><case {'building'}> <badge tone="warning">
+        style.enter({ translate-x: 'spring:snappy' })
+building</badge>
+      </case><case {'live'}> <badge tone="success">
+        style.enter({ scale: 'spring:bouncy' })
+live</badge>
+      </case><default> <badge tone="destructive">
+        style.enter({ opacity: 'fade' })
+failed</badge>
     </default></match>
   </row>
 
@@ -88,10 +96,16 @@ export default controller(() => {
 
   <column gap="1">
     <for {filtered()} as="env" key={env.id}>
-      <row gap="3" align="center" sx={envRow}>
+      <row gap="3" align="center">
+        style(envRow)
+
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong grow sx={envName}>{env.name}</strong>
-        <small sx={envRegion}>{env.region}</small>
+        <strong grow>
+          style(envName)
+{env.name}</strong>
+        <small>
+          style(envRegion)
+{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>
     </for>

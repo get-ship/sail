@@ -12,6 +12,8 @@
   const base = style.borderWidth(1).border(border).radius(lg).bg(surface-1)
 </scope>
 
-<details sx={base}>
+<details>
+  style(base)
+
   <slot></slot>
 </details>

@@ -114,124 +114,274 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const wordmark = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8).minW(0).maxW(full)
 </scope>
 
-<column gap="0" sx={page}>
+<column gap="0">
+  style(page)
 
-  <section shrink="0" sx={hero}>
-    <div sx={glow}></div>
 
-    <column gap="8" align="center" sx={heroInner}>
-      <p sx={eyebrow}>SHIP UI · 0.2.0</p>
+  <section shrink="0">
+    style(hero)
 
-      <h1 sx={display}>
-        <span sx={line}>
+    <div>
+      style(glow)
+</div>
+
+    <column gap="8" align="center">
+      style(heroInner)
+
+      <p>
+        style(eyebrow)
+SHIP UI · 0.2.0</p>
+
+      <h1>
+        style(display)
+
+        <span>
+          style(line)
+
           <for {word()} as="w" key={w}>
-            <b sx={style.fg(primary)}>{w}</b>
+            <b>
+              style.fg(primary)
+{w}</b>
           </for>
         </span>
-        <span sx={line}>included.</span>
-        <span sx={line}>All of them.</span>
+        <span>
+          style(line)
+included.</span>
+        <span>
+          style(line)
+All of them.</span>
       </h1>
 
-      <p sx={lead}>
+      <p>
+        style(lead)
+
         One language with the whole interface inside it — built for agents to
         write and humans to review, with no way to drift off the design system.
       </p>
 
-      <row gap="4" justify="center" align="center" sx={ctaRow}>
-        <a variant="solid" tone="primary" href="/sail/getting-started" sx={cta}>Get started</a>
-        <a variant="outline" href="/sail/why" sx={cta}>Why Sail</a>
+      <row gap="4" justify="center" align="center">
+        style(ctaRow)
+
+        <a variant="solid" tone="primary" href="/sail/getting-started">
+          style(cta)
+Get started</a>
+        <a variant="outline" href="/sail/why">
+          style(cta)
+Why Sail</a>
       </row>
     </column>
   </section>
 
-  <section shrink="0" sx={tickerSection}>
-    <div sx={tickerBand}>
-      <ticker duration="slow" reverse sx={tickerDark}>
-        <p sx={tickerMono}>forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;live data&nbsp;&nbsp;·&nbsp;&nbsp;springs + tweens&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;hot reload&nbsp;&nbsp;·&nbsp;&nbsp;design tokens&nbsp;&nbsp;·&nbsp;&nbsp;</p>
+  <section shrink="0">
+    style(tickerSection)
+
+    <div>
+      style(tickerBand)
+
+      <ticker duration="slow" reverse>
+        style(tickerDark)
+
+        <p>
+          style(tickerMono)
+forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;live data&nbsp;&nbsp;·&nbsp;&nbsp;springs + tweens&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;hot reload&nbsp;&nbsp;·&nbsp;&nbsp;design tokens&nbsp;&nbsp;·&nbsp;&nbsp;</p>
       </ticker>
     </div>
-    <div sx={tickerBandTop}>
-      <ticker sx={tickerPrimary}>
-        <p sx={tickerBold}>NO RAW CSS&nbsp;&nbsp;◆&nbsp;&nbsp;SIGNALS BUILT IN&nbsp;&nbsp;◆&nbsp;&nbsp;48 COMPONENTS&nbsp;&nbsp;◆&nbsp;&nbsp;9 THEMES&nbsp;&nbsp;◆&nbsp;&nbsp;A11Y BY CONSTRUCTION&nbsp;&nbsp;◆&nbsp;&nbsp;</p>
+    <div>
+      style(tickerBandTop)
+
+      <ticker>
+        style(tickerPrimary)
+
+        <p>
+          style(tickerBold)
+NO RAW CSS&nbsp;&nbsp;◆&nbsp;&nbsp;SIGNALS BUILT IN&nbsp;&nbsp;◆&nbsp;&nbsp;48 COMPONENTS&nbsp;&nbsp;◆&nbsp;&nbsp;9 THEMES&nbsp;&nbsp;◆&nbsp;&nbsp;A11Y BY CONSTRUCTION&nbsp;&nbsp;◆&nbsp;&nbsp;</p>
       </ticker>
     </div>
   </section>
 
-  <section shrink="0" sx={bento}>
+  <section shrink="0">
+    style(bento)
+
     <!--
       <grid cols> is not breakpoint-aware. Duplicate the six cards only to
       swap track count — language gap, not content gap.
     -->
     <if {isWide()}>
-      <grid cols="3" gap="4" sx={grid}>
-        <a href="/sail/language/animation" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Animation</p>
-              <strong sx={cardTitle}>Motion as a language surface</strong>
-              <p sx={cardBody}>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <row gap="1" align="end" sx={cardFoot} id="landing-motion-bars">
-                <div testid="landing-motion-bar" sx={style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)}></div>
-                <div sx={style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)}></div>
-                <div sx={style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)}></div>
-                <div sx={style.w(1_5).h(14).radius(sm).bg(primary)}></div>
-                <div sx={style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)}></div>
-                <div sx={style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)}></div>
+      <grid cols="3" gap="4">
+        style(grid)
+
+        <a href="/sail/language/animation">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Animation</p>
+              <strong>
+                style(cardTitle)
+Motion as a language surface</strong>
+              <p>
+                style(cardBody)
+Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
+              <row gap="1" align="end" id="landing-motion-bars">
+                style(cardFoot)
+
+                <div testid="landing-motion-bar">
+                  style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)
+</div>
+                <div>
+                  style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)
+</div>
+                <div>
+                  style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)
+</div>
+                <div>
+                  style.w(1_5).h(14).radius(sm).bg(primary)
+</div>
+                <div>
+                  style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)
+</div>
+                <div>
+                  style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)
+</div>
               </row>
             </column>
           </card>
         </a>
-        <a href="/sail/language/theming" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Theming</p>
-              <strong sx={cardTitle}>Nine themes. One token graph.</strong>
-              <p sx={cardBody}>Swap theme and every surface, ink, and control re-resolves.</p>
-              <row gap="2" sx={cardFoot}>
-                <div sx={[swatch, style.bg(primary)]}></div>
-                <div sx={[swatch, style.bg(accent)]}></div>
-                <div sx={[swatch, style.bg(success)]}></div>
-                <div sx={[swatch, style.bg(warning)]}></div>
-                <div sx={[swatch, style.bg(info)]}></div>
-                <div sx={[swatch, style.bg(muted)]}></div>
+        <a href="/sail/language/theming">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Theming</p>
+              <strong>
+                style(cardTitle)
+Nine themes. One token graph.</strong>
+              <p>
+                style(cardBody)
+Swap theme and every surface, ink, and control re-resolves.</p>
+              <row gap="2">
+                style(cardFoot)
+
+                <div>
+                  style([swatch, style.bg(primary)])
+</div>
+                <div>
+                  style([swatch, style.bg(accent)])
+</div>
+                <div>
+                  style([swatch, style.bg(success)])
+</div>
+                <div>
+                  style([swatch, style.bg(warning)])
+</div>
+                <div>
+                  style([swatch, style.bg(info)])
+</div>
+                <div>
+                  style([swatch, style.bg(muted)])
+</div>
               </row>
             </column>
           </card>
         </a>
-        <a href="/sail/language/state" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Reactivity</p>
-              <strong sx={cardTitle}>Signals you can inspect</strong>
-              <p sx={cardBody}>Derived state and effects are first-class — no store glue layer.</p>
-              <row gap="3" align="baseline" sx={cardFoot}>
-                <strong sx={metric}>{ticks()}</strong>
-                <span sx={metricUnit}>ticks · live signal</span>
+        <a href="/sail/language/state">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Reactivity</p>
+              <strong>
+                style(cardTitle)
+Signals you can inspect</strong>
+              <p>
+                style(cardBody)
+Derived state and effects are first-class — no store glue layer.</p>
+              <row gap="3" align="baseline">
+                style(cardFoot)
+
+                <strong>
+                  style(metric)
+{ticks()}</strong>
+                <span>
+                  style(metricUnit)
+ticks · live signal</span>
               </row>
             </column>
           </card>
         </a>
-        <a href="/deck" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Deck</p>
-              <strong sx={cardTitle}>SSR, routes, and HMR</strong>
-              <p sx={cardBody}>The app host is already wired — layouts, data, and hot reload included.</p>
-              <column gap="2" sx={cardFoot}>
-                <row gap="2" align="center"><span dot tone="success"></span><span sx={statusLine}>ssr · streaming</span></row>
-                <row gap="2" align="center"><span dot tone="primary"></span><span sx={statusLine}>file-based routes</span></row>
-                <row gap="2" align="center"><span dot tone="info"></span><span sx={statusLine}>hmr · sub-second</span></row>
+        <a href="/deck">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Deck</p>
+              <strong>
+                style(cardTitle)
+SSR, routes, and HMR</strong>
+              <p>
+                style(cardBody)
+The app host is already wired — layouts, data, and hot reload included.</p>
+              <column gap="2">
+                style(cardFoot)
+
+                <row gap="2" align="center"><span dot tone="success"></span><span>
+                  style(statusLine)
+ssr · streaming</span></row>
+                <row gap="2" align="center"><span dot tone="primary"></span><span>
+                  style(statusLine)
+file-based routes</span></row>
+                <row gap="2" align="center"><span dot tone="info"></span><span>
+                  style(statusLine)
+hmr · sub-second</span></row>
               </column>
             </column>
           </card>
         </a>
-        <a href="/components" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Components</p>
-              <strong sx={cardTitle}>48 primitives, plus packs</strong>
-              <p sx={cardBody}>Forms, overlays, and feedback — themed and accessible by construction.</p>
-              <row gap="2" align="center" sx={cardFoot}>
+        <a href="/components">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Components</p>
+              <strong>
+                style(cardTitle)
+48 primitives, plus packs</strong>
+              <p>
+                style(cardBody)
+Forms, overlays, and feedback — themed and accessible by construction.</p>
+              <row gap="2" align="center">
+                style(cardFoot)
+
                 <badge tone="primary" size="sm">48 L1</badge>
                 <badge tone="muted" size="sm" variant="soft">charts</badge>
                 <badge tone="muted" size="sm" variant="soft">chat</badge>
@@ -240,14 +390,30 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             </column>
           </card>
         </a>
-        <a href="/ai" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>AI</p>
-              <strong sx={cardTitle}>Agents stay inside the language</strong>
-              <p sx={cardBody}>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
-              <div sx={[term, cardFoot]}>
-                <p><span sx={termAccent}>$</span> sail check app/</p>
+        <a href="/ai">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+AI</p>
+              <strong>
+                style(cardTitle)
+Agents stay inside the language</strong>
+              <p>
+                style(cardBody)
+The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
+              <div>
+                style([term, cardFoot])
+
+                <p><span>
+                  style(termAccent)
+$</span> sail check app/</p>
                 <p>ok · 0 refusals · 214 modules</p>
               </div>
             </column>
@@ -255,75 +421,181 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </a>
       </grid>
     <else>
-      <grid cols="1" gap="3" sx={grid}>
-        <a href="/sail/language/animation" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Animation</p>
-              <strong sx={cardTitle}>Motion as a language surface</strong>
-              <p sx={cardBody}>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <row gap="1" align="end" sx={cardFoot} id="landing-motion-bars">
-                <div testid="landing-motion-bar" sx={style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)}></div>
-                <div sx={style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)}></div>
-                <div sx={style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)}></div>
-                <div sx={style.w(1_5).h(14).radius(sm).bg(primary)}></div>
-                <div sx={style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)}></div>
-                <div sx={style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)}></div>
+      <grid cols="1" gap="3">
+        style(grid)
+
+        <a href="/sail/language/animation">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Animation</p>
+              <strong>
+                style(cardTitle)
+Motion as a language surface</strong>
+              <p>
+                style(cardBody)
+Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
+              <row gap="1" align="end" id="landing-motion-bars">
+                style(cardFoot)
+
+                <div testid="landing-motion-bar">
+                  style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)
+</div>
+                <div>
+                  style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)
+</div>
+                <div>
+                  style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)
+</div>
+                <div>
+                  style.w(1_5).h(14).radius(sm).bg(primary)
+</div>
+                <div>
+                  style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)
+</div>
+                <div>
+                  style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)
+</div>
               </row>
             </column>
           </card>
         </a>
-        <a href="/sail/language/theming" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Theming</p>
-              <strong sx={cardTitle}>Nine themes. One token graph.</strong>
-              <p sx={cardBody}>Swap theme and every surface, ink, and control re-resolves.</p>
-              <row gap="2" sx={cardFoot}>
-                <div sx={[swatch, style.bg(primary)]}></div>
-                <div sx={[swatch, style.bg(accent)]}></div>
-                <div sx={[swatch, style.bg(success)]}></div>
-                <div sx={[swatch, style.bg(warning)]}></div>
-                <div sx={[swatch, style.bg(info)]}></div>
-                <div sx={[swatch, style.bg(muted)]}></div>
+        <a href="/sail/language/theming">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Theming</p>
+              <strong>
+                style(cardTitle)
+Nine themes. One token graph.</strong>
+              <p>
+                style(cardBody)
+Swap theme and every surface, ink, and control re-resolves.</p>
+              <row gap="2">
+                style(cardFoot)
+
+                <div>
+                  style([swatch, style.bg(primary)])
+</div>
+                <div>
+                  style([swatch, style.bg(accent)])
+</div>
+                <div>
+                  style([swatch, style.bg(success)])
+</div>
+                <div>
+                  style([swatch, style.bg(warning)])
+</div>
+                <div>
+                  style([swatch, style.bg(info)])
+</div>
+                <div>
+                  style([swatch, style.bg(muted)])
+</div>
               </row>
             </column>
           </card>
         </a>
-        <a href="/sail/language/state" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Reactivity</p>
-              <strong sx={cardTitle}>Signals you can inspect</strong>
-              <p sx={cardBody}>Derived state and effects are first-class — no store glue layer.</p>
-              <row gap="3" align="baseline" sx={cardFoot}>
-                <strong sx={metric}>{ticks()}</strong>
-                <span sx={metricUnit}>ticks · live signal</span>
+        <a href="/sail/language/state">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Reactivity</p>
+              <strong>
+                style(cardTitle)
+Signals you can inspect</strong>
+              <p>
+                style(cardBody)
+Derived state and effects are first-class — no store glue layer.</p>
+              <row gap="3" align="baseline">
+                style(cardFoot)
+
+                <strong>
+                  style(metric)
+{ticks()}</strong>
+                <span>
+                  style(metricUnit)
+ticks · live signal</span>
               </row>
             </column>
           </card>
         </a>
-        <a href="/deck" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Deck</p>
-              <strong sx={cardTitle}>SSR, routes, and HMR</strong>
-              <p sx={cardBody}>The app host is already wired — layouts, data, and hot reload included.</p>
-              <column gap="2" sx={cardFoot}>
-                <row gap="2" align="center"><span dot tone="success"></span><span sx={statusLine}>ssr · streaming</span></row>
-                <row gap="2" align="center"><span dot tone="primary"></span><span sx={statusLine}>file-based routes</span></row>
-                <row gap="2" align="center"><span dot tone="info"></span><span sx={statusLine}>hmr · sub-second</span></row>
+        <a href="/deck">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Deck</p>
+              <strong>
+                style(cardTitle)
+SSR, routes, and HMR</strong>
+              <p>
+                style(cardBody)
+The app host is already wired — layouts, data, and hot reload included.</p>
+              <column gap="2">
+                style(cardFoot)
+
+                <row gap="2" align="center"><span dot tone="success"></span><span>
+                  style(statusLine)
+ssr · streaming</span></row>
+                <row gap="2" align="center"><span dot tone="primary"></span><span>
+                  style(statusLine)
+file-based routes</span></row>
+                <row gap="2" align="center"><span dot tone="info"></span><span>
+                  style(statusLine)
+hmr · sub-second</span></row>
               </column>
             </column>
           </card>
         </a>
-        <a href="/components" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>Components</p>
-              <strong sx={cardTitle}>48 primitives, plus packs</strong>
-              <p sx={cardBody}>Forms, overlays, and feedback — themed and accessible by construction.</p>
-              <row gap="2" align="center" sx={cardFoot}>
+        <a href="/components">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+Components</p>
+              <strong>
+                style(cardTitle)
+48 primitives, plus packs</strong>
+              <p>
+                style(cardBody)
+Forms, overlays, and feedback — themed and accessible by construction.</p>
+              <row gap="2" align="center">
+                style(cardFoot)
+
                 <badge tone="primary" size="sm">48 L1</badge>
                 <badge tone="muted" size="sm" variant="soft">charts</badge>
                 <badge tone="muted" size="sm" variant="soft">chat</badge>
@@ -332,14 +604,30 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             </column>
           </card>
         </a>
-        <a href="/ai" sx={cardLink}>
-          <card interactive sx={cardFill}>
-            <column gap="0" sx={cardCol}>
-              <p sx={cardEyebrow}>AI</p>
-              <strong sx={cardTitle}>Agents stay inside the language</strong>
-              <p sx={cardBody}>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
-              <div sx={[term, cardFoot]}>
-                <p><span sx={termAccent}>$</span> sail check app/</p>
+        <a href="/ai">
+          style(cardLink)
+
+          <card interactive>
+            style(cardFill)
+
+            <column gap="0">
+              style(cardCol)
+
+              <p>
+                style(cardEyebrow)
+AI</p>
+              <strong>
+                style(cardTitle)
+Agents stay inside the language</strong>
+              <p>
+                style(cardBody)
+The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
+              <div>
+                style([term, cardFoot])
+
+                <p><span>
+                  style(termAccent)
+$</span> sail check app/</p>
                 <p>ok · 0 refusals · 214 modules</p>
               </div>
             </column>
@@ -349,20 +637,34 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </else></if>
   </section>
 
-  <section shrink="0" sx={foot}>
-    <row justify="between" align="center" sx={footRow}>
+  <section shrink="0">
+    style(foot)
+
+    <row justify="between" align="center">
+      style(footRow)
+
       <row gap="6" align="center">
-        <a href="/sail/overview" sx={footLink}>Docs</a>
-        <a href="https://github.com/get-ship/sail" sx={footLink}>GitHub</a>
+        <a href="/sail/overview">
+          style(footLink)
+Docs</a>
+        <a href="https://github.com/get-ship/sail">
+          style(footLink)
+GitHub</a>
       </row>
       <row gap="3" align="center">
-        <span sx={diamond}></span>
+        <span>
+          style(diamond)
+</span>
         <span>SHIP UI · 0.2.0</span>
       </row>
     </row>
   </section>
 
-  <div shrink="0" sx={wordmarkWrap}>
-    <p sx={wordmark}>SHIP</p>
+  <div shrink="0">
+    style(wordmarkWrap)
+
+    <p>
+      style(wordmark)
+SHIP</p>
   </div>
 </column>

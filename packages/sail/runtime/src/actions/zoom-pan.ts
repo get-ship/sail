@@ -5,7 +5,7 @@ import type { Action } from '../action'
  * (sail-media-image). `state` carries the cursor-relative translate and
  * scale; the action composes the CSS `transform` string and writes it as
  * a custom property. The consuming element reads it via
- *     sx="transform-(--zoom-tx)"
+ *     style="transform-(--zoom-tx)"
  *
  * The values are user input (wheel zoom, drag pan) or measured (the
  * rect-clamped pan bounds), so they are NOT tokens — there is no
@@ -44,7 +44,7 @@ export const zoomPan: Action<ZoomPanState | null | undefined> = (node, initial) 
  * `use:maxWidth={px}` — runtime max-width (e.g. a viewer stage sized to
  * the host viewport minus chrome). A value the user resized to, not a
  * design decision. Writes `--max-w`; the consuming template uses
- *     sx="max-w-(--max-w)"
+ *     style="max-w-(--max-w)"
  */
 export const maxWidth: Action<number | string | null | undefined> = (
   node,
@@ -72,7 +72,7 @@ export const maxWidth: Action<number | string | null | undefined> = (
  * The colour is user input (#3366ff or `oklch(...)`, whatever they typed);
  * it is not a token. The action writes the value to `--swatch-color`
  * verbatim. The consuming template reads it via
- *     sx="bg-(--swatch-color)"
+ *     style="bg-(--swatch-color)"
  */
 export const swatch: Action<string | null | undefined> = (node, initial) => {
   const el = node as HTMLElement

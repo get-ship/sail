@@ -15,6 +15,8 @@
   const base = style.w(full).fontFamily(body).fontSize(sm).leading(normal).fg(foreground).textAlign(start)
 </scope>
 
-<table sx={base}>
+<table>
+  style(base)
+
   <slot></slot>
 </table>

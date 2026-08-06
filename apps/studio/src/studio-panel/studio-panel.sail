@@ -15,8 +15,10 @@
   gap="0"
   grow
   min-w="0"
-  sx={style.minH(0).minW(0).h(full).borderWidth(1).border(border-subtle).radius(md).bg(surface-1).overflow(hidden)}
+
 >
+  style.minH(0).minW(0).h(full).borderWidth(1).border(border-subtle).radius(md).bg(surface-1).overflow(hidden)
+
   <slot name="header">
     <row
       studio-panel-header
@@ -25,9 +27,13 @@
       shrink="0"
       nowrap
       justify="between"
-      sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)}
+
     >
-      <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+      style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)
+
+      <p>
+        style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+
         {title()}
       </p>
       <row align="center" gap="1" nowrap shrink="0">
@@ -35,7 +41,9 @@
       </row>
     </row>
   </slot>
-  <column studio-panel-body grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden)}>
+  <column studio-panel-body grow gap="0" min-w="0">
+    style.minH(0).basis(0).overflow(hidden)
+
     <slot></slot>
   </column>
   <slot name="footer"></slot>

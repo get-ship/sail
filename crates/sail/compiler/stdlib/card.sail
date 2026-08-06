@@ -54,7 +54,8 @@
   const footerChrome = style.mt(3).mx(-5).mb(-4).padX(5).padY(4).borderT(1, border-subtle)
 </scope>
 
-<div sx={[
+<div>
+  style([
   base,
   match(variant, {
     default: style.bg(card),
@@ -93,12 +94,17 @@
     before: style.content(empty).position(absolute).left(0).right(0).top(0).h(half).bgImage(primary-accent).opacity(0).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out),
     hover: when({ before: style.opacity(100) }),
   })),
-]}>
-  <div sx={[ headerChrome, when({ empty: style.display(none) }) ]}>
+])
+
+  <div>
+    style([ headerChrome, when({ empty: style.display(none) }) ])
+
     <slot name="header"></slot>
   </div>
   <slot></slot>
-  <div sx={[ footerChrome, when({ empty: style.display(none) }) ]}>
+  <div>
+    style([ footerChrome, when({ empty: style.display(none) }) ])
+
     <slot name="footer"></slot>
   </div>
 </div>

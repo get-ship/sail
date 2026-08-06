@@ -58,8 +58,10 @@ export default controller(() => {
   themes-surface
   gap="0"
   grow
-  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+
 >
+  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+
   <!-- Page header — not the compact uppercase chrome strip -->
   <row
     themes-header
@@ -68,13 +70,19 @@ export default controller(() => {
     gap="4"
     shrink="0"
     nowrap
-    sx={style.padX(6).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
   >
+    style.padX(6).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
     <column grow min-w="0" gap="1">
-      <p sx={style.fontSize(lg).fontWeight(semibold).fg(foreground).tracking(tight)}>
+      <p>
+        style.fontSize(lg).fontWeight(semibold).fg(foreground).tracking(tight)
+
         Themes
       </p>
-      <p sx={style.fontSize(sm).fg(muted-foreground).leading(snug)}>
+      <p>
+        style.fontSize(sm).fg(muted-foreground).leading(snug)
+
         Project themes live on disk. Add catalog themes to the project, then open one to edit.
       </p>
     </column>
@@ -86,8 +94,12 @@ export default controller(() => {
   </row>
 
   <if {hasThemesError()}>
-    <row themes-error align="center" gap="2" shrink="0" sx={style.padX(6).padY(2).borderBWidth(1).borderB(border)}>
-      <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{themesError()}</p>
+    <row themes-error align="center" gap="2" shrink="0">
+      style.padX(6).padY(2).borderBWidth(1).borderB(border)
+
+      <p grow min-w="0">
+        style.fontSize(sm).fg(destructive).truncate()
+{themesError()}</p>
       <button type="button" size="sm" variant="ghost" retry-themes on:click={onRetryThemes}>
         Retry
       </button>
@@ -95,9 +107,13 @@ export default controller(() => {
   </if>
 
   <if {isLoading()}>
-    <row themes-loading align="center" gap="2" shrink="0" sx={style.padX(6).padY(2)}>
+    <row themes-loading align="center" gap="2" shrink="0">
+      style.padX(6).padY(2)
+
       <spinner size="sm"></spinner>
-      <p sx={style.fontSize(sm).fg(muted-foreground)}>{loadingLabel()}</p>
+      <p>
+        style.fontSize(sm).fg(muted-foreground)
+{loadingLabel()}</p>
     </row>
   </if>
 
@@ -108,26 +124,40 @@ export default controller(() => {
     gap="0"
     nowrap
     align="stretch"
-    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
+
   >
+    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+
     <!-- LIST -->
     <column
       themes-list-pane
       grow
       gap="0"
-      sx={style.minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1)}
+
     >
-      <column themes-list-head shrink="0" gap="1" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
-        <p sx={style.fontSize(xs).fontWeight(bold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
+      style.minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1)
+
+      <column themes-list-head shrink="0" gap="1">
+        style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)
+
+        <p>
+          style.fontSize(xs).fontWeight(bold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+
           Library
         </p>
-        <p sx={style.fontSize(xs).fg(muted-foreground)}>
+        <p>
+          style.fontSize(xs).fg(muted-foreground)
+
           {projectCountLabel()} in project · {catalogCountLabel()} catalog
         </p>
       </column>
 
-      <scroll-area themes-list grow on:click={onListClick} sx={style.minH(0).basis(0).h(full)}>
-        <column gap="1" sx={style.pad(3)}>
+      <scroll-area themes-list grow on:click={onListClick}>
+        style.minH(0).basis(0).h(full)
+
+        <column gap="1">
+          style.pad(3)
+
           <if {!hasAnyThemes()}>
             <if {!hasThemesError()}>
               <empty-state variant="placeholder" size="sm" w="full" themes-empty>
@@ -140,8 +170,10 @@ export default controller(() => {
           <if {hasProjectRows()}>
             <p
               list-group="project"
-              sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(1).padB(1)}
+
             >
+              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(1).padB(1)
+
               In project
             </p>
             <for {projectRows()} as="row" key={row.key}>
@@ -154,8 +186,10 @@ export default controller(() => {
                 gap="3"
                 align="center"
                 nowrap
-                sx={style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })}
+
               >
+                style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })
+
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
                 <row
                   theme-swatches
@@ -164,17 +198,31 @@ export default controller(() => {
                   shrink="0"
                   gap="0"
                   nowrap
-                  sx={style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)}
+
                   hidden="true"
                 >
-                  <center grow sx={style.bg(background).minW(0).h(full)}></center>
-                  <center grow sx={style.bg(surface-2).minW(0).h(full)}></center>
-                  <center grow sx={style.bg(primary).minW(0).h(full)}></center>
-                  <center grow sx={style.bg(accent).minW(0).h(full)}></center>
+                  style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)
+
+                  <center grow>
+                    style.bg(background).minW(0).h(full)
+</center>
+                  <center grow>
+                    style.bg(surface-2).minW(0).h(full)
+</center>
+                  <center grow>
+                    style.bg(primary).minW(0).h(full)
+</center>
+                  <center grow>
+                    style.bg(accent).minW(0).h(full)
+</center>
                 </row>
                 <column grow min-w="0" gap="0">
-                  <p sx={style.fontSize(sm).fontWeight(semibold).truncate()}>{row.name}</p>
-                  <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{row.meta}</p>
+                  <p>
+                    style.fontSize(sm).fontWeight(semibold).truncate()
+{row.name}</p>
+                  <p>
+                    style.fontSize(xs).fg(muted-foreground).truncate()
+{row.meta}</p>
                 </column>
                 <row gap="1" align="center" shrink="0" nowrap>
                   <button
@@ -203,8 +251,10 @@ export default controller(() => {
           <if {hasCatalogRows()}>
             <p
               list-group="catalog"
-              sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(4).padB(1)}
+
             >
+              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(4).padB(1)
+
               Catalog
             </p>
             <for {catalogRows()} as="row" key={row.key}>
@@ -217,8 +267,10 @@ export default controller(() => {
                 gap="3"
                 align="center"
                 nowrap
-                sx={style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })}
+
               >
+                style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })
+
                 <row
                   theme-swatches
                   theme={row.previewId}
@@ -226,17 +278,31 @@ export default controller(() => {
                   shrink="0"
                   gap="0"
                   nowrap
-                  sx={style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)}
+
                   hidden="true"
                 >
-                  <center grow sx={style.bg(background).minW(0).h(full)}></center>
-                  <center grow sx={style.bg(surface-2).minW(0).h(full)}></center>
-                  <center grow sx={style.bg(primary).minW(0).h(full)}></center>
-                  <center grow sx={style.bg(accent).minW(0).h(full)}></center>
+                  style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)
+
+                  <center grow>
+                    style.bg(background).minW(0).h(full)
+</center>
+                  <center grow>
+                    style.bg(surface-2).minW(0).h(full)
+</center>
+                  <center grow>
+                    style.bg(primary).minW(0).h(full)
+</center>
+                  <center grow>
+                    style.bg(accent).minW(0).h(full)
+</center>
                 </row>
                 <column grow min-w="0" gap="0">
-                  <p sx={style.fontSize(sm).fontWeight(semibold).truncate()}>{row.name}</p>
-                  <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{row.meta}</p>
+                  <p>
+                    style.fontSize(sm).fontWeight(semibold).truncate()
+{row.name}</p>
+                  <p>
+                    style.fontSize(xs).fg(muted-foreground).truncate()
+{row.meta}</p>
                 </column>
                 <badge tone="muted" size="sm" variant="outline" pill shrink="0">Catalog</badge>
                 <row gap="1" align="center" shrink="0" nowrap>
@@ -284,9 +350,13 @@ export default controller(() => {
       theme-preview-pane
       grow
       min-w="0"
-      sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
+
     >
-      <column gap="6" sx={style.padX(8).padT(6).padB(10).maxW(panel-max-w-lg)}>
+      style.minH(0).basis(0).h(full).minW(0).bg(background)
+
+      <column gap="6">
+        style.padX(8).padT(6).padB(10).maxW(panel-max-w-lg)
+
         <if {!hasSelected()}>
           <empty-state variant="placeholder" size="sm" w="full" themes-preview-empty>
             <strong slot="title">Nothing selected</strong>
@@ -297,7 +367,9 @@ export default controller(() => {
         <if {hasSelected()}>
           <column preview-head gap="3">
             <row gap="2" align="center">
-              <p sx={style.fontFamily(display).fontSize(2xl).fontWeight(medium).tracking(tight)}>
+              <p>
+                style.fontFamily(display).fontSize(2xl).fontWeight(medium).tracking(tight)
+
                 {previewTitle()}
               </p>
               <if {previewStatusLabel()}>
@@ -309,14 +381,22 @@ export default controller(() => {
                 {previewModesLabel()}
               </badge>
             </row>
-            <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed)}>{previewDesc()}</p>
-            <p sx={style.fontSize(xs).fg(muted-foreground)}>{previewMeta()}</p>
+            <p>
+              style.fontSize(sm).fg(muted-foreground).leading(relaxed)
+{previewDesc()}</p>
+            <p>
+              style.fontSize(xs).fg(muted-foreground)
+{previewMeta()}</p>
 
             <!-- Mode: one sun/moon switch only (no Light/Dark button segments) -->
             <if {canToggleMode()}>
               <row preview-mode dual-mode gap="2" align="center" nowrap label="Theme mode">
-                <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Mode</p>
-                <icon name="sun" size="sm" label="Light" shrink="0" sx={style.fg(muted-foreground)}></icon>
+                <p>
+                  style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)
+Mode</p>
+                <icon name="sun" size="sm" label="Light" shrink="0">
+                  style.fg(muted-foreground)
+</icon>
                 <switch
                   size="sm"
                   tone="muted"
@@ -325,11 +405,15 @@ export default controller(() => {
                   label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
                   on:change={onPreviewModeSwitch}
                 ></switch>
-                <icon name="moon" size="sm" label="Dark" shrink="0" sx={style.fg(muted-foreground)}></icon>
+                <icon name="moon" size="sm" label="Dark" shrink="0">
+                  style.fg(muted-foreground)
+</icon>
               </row>
             </if>
             <if {!canToggleMode()}>
-              <p mode-fixed sx={style.fontSize(xs).fg(muted-foreground)}>
+              <p mode-fixed>
+                style.fontSize(xs).fg(muted-foreground)
+
                 This theme ships {previewModesLabel().toLowerCase()} — preview uses that table.
               </p>
             </if>
@@ -353,7 +437,9 @@ export default controller(() => {
 
           <!-- Color story -->
           <column color-story gap="3">
-            <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
+            <p>
+              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+
               Color story
             </p>
             <row
@@ -363,24 +449,44 @@ export default controller(() => {
               color-story-grid
             >
               <column grow gap="1" min-w="0">
-                <center sx={style.h(16).radius(md).bg(primary).borderWidth(1).border(border-subtle)}></center>
-                <p sx={style.fontSize(xs).fontWeight(medium)}>Primary</p>
+                <center>
+                  style.h(16).radius(md).bg(primary).borderWidth(1).border(border-subtle)
+</center>
+                <p>
+                  style.fontSize(xs).fontWeight(medium)
+Primary</p>
               </column>
               <column grow gap="1" min-w="0">
-                <center sx={style.h(16).radius(md).bg(secondary).borderWidth(1).border(border-subtle)}></center>
-                <p sx={style.fontSize(xs).fontWeight(medium)}>Secondary</p>
+                <center>
+                  style.h(16).radius(md).bg(secondary).borderWidth(1).border(border-subtle)
+</center>
+                <p>
+                  style.fontSize(xs).fontWeight(medium)
+Secondary</p>
               </column>
               <column grow gap="1" min-w="0">
-                <center sx={style.h(16).radius(md).bg(accent).borderWidth(1).border(border-subtle)}></center>
-                <p sx={style.fontSize(xs).fontWeight(medium)}>Accent</p>
+                <center>
+                  style.h(16).radius(md).bg(accent).borderWidth(1).border(border-subtle)
+</center>
+                <p>
+                  style.fontSize(xs).fontWeight(medium)
+Accent</p>
               </column>
               <column grow gap="1" min-w="0">
-                <center sx={style.h(16).radius(md).bg(background).borderWidth(1).border(border-subtle)}></center>
-                <p sx={style.fontSize(xs).fontWeight(medium)}>Background</p>
+                <center>
+                  style.h(16).radius(md).bg(background).borderWidth(1).border(border-subtle)
+</center>
+                <p>
+                  style.fontSize(xs).fontWeight(medium)
+Background</p>
               </column>
               <column grow gap="1" min-w="0">
-                <center sx={style.h(16).radius(md).bg(surface-1).borderWidth(1).border(border-subtle)}></center>
-                <p sx={style.fontSize(xs).fontWeight(medium)}>Surface</p>
+                <center>
+                  style.h(16).radius(md).bg(surface-1).borderWidth(1).border(border-subtle)
+</center>
+                <p>
+                  style.fontSize(xs).fontWeight(medium)
+Surface</p>
               </column>
             </row>
           </column>
@@ -391,44 +497,72 @@ export default controller(() => {
             theme={previewPaintId()}
             mode={previewModeId()}
             gap="2"
-            sx={style.pad(4).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).fg(foreground)}
+
           >
-            <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
+            style.pad(4).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).fg(foreground)
+
+            <p>
+              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+
               Type · corners
             </p>
-            <p sx={style.fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight)}>
+            <p>
+              style.fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight)
+
               Display / heading sample
             </p>
-            <p sx={style.fontFamily(body).fontSize(sm).leading(relaxed)}>
+            <p>
+              style.fontFamily(body).fontSize(sm).leading(relaxed)
+
               Body — the quick brown fox jumps over the lazy dog. 0123456789
             </p>
-            <p sx={style.fontFamily(mono).fontSize(xs)}>
+            <p>
+              style.fontFamily(mono).fontSize(xs)
+
               mono — const theme = "preview"
             </p>
             <!-- Outline tiles so radius is legible; solid fills read as one blob when steps are close. -->
             <row gap="2" align="end" radius-chips>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(sm)} hidden="true"></center>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>sm</p>
+                <center hidden="true">
+                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(sm)
+</center>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground)
+sm</p>
               </column>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(md)} hidden="true"></center>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>md</p>
+                <center hidden="true">
+                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(md)
+</center>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground)
+md</p>
               </column>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(lg)} hidden="true"></center>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>lg</p>
+                <center hidden="true">
+                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(lg)
+</center>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground)
+lg</p>
               </column>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(xl)} hidden="true"></center>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>xl</p>
+                <center hidden="true">
+                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(xl)
+</center>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground)
+xl</p>
               </column>
             </row>
           </column>
 
           <!-- Live chrome specimen under scoped theme -->
           <column preview-chrome gap="2">
-            <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
+            <p>
+              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+
               Live chrome
             </p>
             <column
@@ -436,23 +570,37 @@ export default controller(() => {
               mode={previewModeId()}
               preview-specimen
               gap="0"
-              sx={style.radius(lg).borderWidth(1).border(border).overflow(hidden).minW(0).shadow(md).bg(background).fg(foreground)}
+
             >
+              style.radius(lg).borderWidth(1).border(border).overflow(hidden).minW(0).shadow(md).bg(background).fg(foreground)
+
               <row
                 align="center"
                 gap="2"
                 nowrap
                 justify="between"
-                sx={style.padX(4).h(9).bg(surface-1).borderBWidth(1).borderB(border-subtle)}
+
               >
-                <p sx={style.fontSize(sm).fontWeight(semibold).truncate()}>{previewTitle()}</p>
+                style.padX(4).h(9).bg(surface-1).borderBWidth(1).borderB(border-subtle)
+
+                <p>
+                  style.fontSize(sm).fontWeight(semibold).truncate()
+{previewTitle()}</p>
                 <badge tone="primary" size="sm" variant="solid" pill>Preview</badge>
               </row>
-              <column gap="4" sx={style.pad(5).bg(background)}>
-                <card sx={style.pad(4)}>
+              <column gap="4">
+                style.pad(5).bg(background)
+
+                <card>
+                  style.pad(4)
+
                   <column gap="3">
-                    <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>Sample card</p>
-                    <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)}>
+                    <p>
+                      style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+Sample card</p>
+                    <p>
+                      style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+
                       Controls, badges, and fields read this theme’s token table.
                     </p>
                     <row gap="2" align="center">

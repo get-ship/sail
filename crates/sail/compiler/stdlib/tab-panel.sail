@@ -11,10 +11,12 @@
   const horizontal = style.padT(4).minW(0)
   const vertical = style.padT(0).padS(4).minW(0)
 </scope>
-<div sx={[
+<div>
+  style([
   base,
   match(orientation, {
     horizontal: horizontal,
     vertical: vertical,
   }),
-]}><slot></slot></div>
+])
+<slot></slot></div>

@@ -32,7 +32,8 @@
   const toneMuted = style.bg(muted).fg(muted-foreground).border(border)
 </scope>
 
-<span sx={[
+<span>
+  style([
   base,
   match(variant, {
     soft: soft,
@@ -60,6 +61,7 @@
     hover: style.opacity(90),
     focus: style.outline(2),
   }),
-]}>
+])
+
   <slot></slot>
 </span>

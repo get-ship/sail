@@ -259,15 +259,25 @@ export default controller((_ctx: Scope) => {
 
 </controller>
 <if {isSvg()}>
-  <center role="img" aria-label={alt()} use:svgInline sx={style.position(relative).w(full).h(full).minH(28).overflow(hidden).bg(surface-1).radius(md)}></center>
+  <center role="img" aria-label={alt()} use:svgInline>
+    style.position(relative).w(full).h(full).minH(28).overflow(hidden).bg(surface-1).radius(md)
+</center>
 <else>
-  <center tabindex="0" use:zoomStage sx={style.position(relative).w(full).h(full).minH(28).overflow(hidden).bg(surface-1).radius(md)}>
-    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} sx={style.display(block).w(full).h(full).maxH(full).objectFit(cover).transform(bind(zoomTx))} />
+  <center tabindex="0" use:zoomStage>
+    style.position(relative).w(full).h(full).minH(28).overflow(hidden).bg(surface-1).radius(md)
+
+    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()}>
+      style.display(block).w(full).h(full).maxH(full).objectFit(cover).transform(bind(zoomTx))
+    </img>
   </center>
   <if {isGallery()}>
-    <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip sx={style.pad(2).overflowX(auto)}>
+    <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip>
+      style.pad(2).overflowX(auto)
+
       <for {galleryItems()} as="item" key={item.id}>
-        <row role="option" gap="0" grow="0" aria-selected={item.selected ? 'true' : 'false'} sx={style.pad(0).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer).when({ selected: style.borderWidth(1).border(primary).shadow(accent) })}>
+        <row role="option" gap="0" grow="0" aria-selected={item.selected ? 'true' : 'false'}>
+          style.pad(0).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer).when({ selected: style.borderWidth(1).border(primary).shadow(accent) })
+
           <img src={item.url} alt="" />
         </row>
       </for>

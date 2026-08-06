@@ -73,16 +73,30 @@ export default controller((ctx) => {
 })
 </controller>
 
-<card sx={card}>
+<card>
+  style(card)
+
   <row align="center" justify="between" nowrap>
-    <strong sx={titleText}>{title()}</strong>
-    <span sx={meta}>{departed()} departed</span>
+    <strong>
+      style(titleText)
+{title()}</strong>
+    <span>
+      style(meta)
+{departed()} departed</span>
   </row>
-  <column gap="1" sx={list}>
+  <column gap="1">
+    style(list)
+
     <for {flights()} as="f" key={f.id}>
-      <row align="center" gap="3" nowrap sx={style.enter({ opacity: 'fade' })}>
-        <span grow min-w="0" sx={city}>{f.city}</span>
-        <span sx={gate}>{f.gate}</span>
+      <row align="center" gap="3" nowrap>
+        style.enter({ opacity: 'fade' })
+
+        <span grow min-w="0">
+          style(city)
+{f.city}</span>
+        <span>
+          style(gate)
+{f.gate}</span>
         <match {f.status}>
           <case {'boarding'}> <badge tone="success">Boarding</badge>
           </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>

@@ -23,11 +23,13 @@
   const sizeLg = style.h(6)
 </scope>
 
-<input type="range" use:rangeFill sx={[
+<input type="range" use:rangeFill>
+  style([
   base,
   match(size, {
     sm: sizeSm,
     md: sizeMd,
     lg: sizeLg,
   }),
-]} />
+])
+</input>

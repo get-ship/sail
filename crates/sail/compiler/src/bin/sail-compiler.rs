@@ -882,19 +882,19 @@ fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
 }
 
 /// Fenced sx demos for `gen_skill`. Product SAIL uses single braces
-/// (`sx={style…}`); this is a plain string for `push_str`, not a format string.
+/// (`style={style…}`); this is a plain string for `push_str`, not a format string.
 ///
 /// `raw_containers`: when false, avoid bare `<div>`/`<span>` (no-raw policy).
 fn sx_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
         "```\n\
-         <div sx={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })} />\n\
-         <span sx={style.fg(muted-foreground).fontSize(sm)} />\n\
+         <div style={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })} />\n\
+         <span style={style.fg(muted-foreground).fontSize(sm)} />\n\
          ```\n\n"
     } else {
         "```\n\
-         <column gap=\"3\" sx={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })}>\n\
-           <p sx={style.fg(muted-foreground).fontSize(sm)}>…</p>\n\
+         <column gap=\"3\" style={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })}>\n\
+           <p style={style.fg(muted-foreground).fontSize(sm)}>…</p>\n\
          </column>\n\
          ```\n\n\
          No bare `<div>`/`<span>` here — use layout keywords + content tags.\n\n"
@@ -1010,7 +1010,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "- NO `<style>` blocks, NO `style=` attributes. NO raw values (px/hex) — spend a token.\n\
          - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is Style:\n  \
-           `sx={{style.pad(4).bg(surface-2)}}` / `when({{…}})` / `match`.\n\
+           `style={{style.pad(4).bg(surface-2)}}` / `when({{…}})` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
            App tests use role / accessible name / visible text, not that stamp.\n\
@@ -1035,14 +1035,14 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     if effective.sx {
         let _ = writeln!(md, "## sx — Style product (core)\n");
         // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
-        // Plain-string demos use product SAIL single braces (`sx={style…}`). Do not
+        // Plain-string demos use product SAIL single braces (`style={style…}`). Do not
         // write `{{` here — that is only for `writeln!` format-string escaping.
         md.push_str(sx_skill_demo(effective.raw_containers));
         let _ = writeln!(
             md,
             "Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
              `bind(name)` for runtime CSS vars. Style is compile-time static — no\n\
-             `sx={{jsExpr}}`. Full closed setter table: MCP `sail_surface` topic `style`.\n\
+             `style={{jsExpr}}`. Full closed setter table: MCP `sail_surface` topic `style`.\n\
              Layout atoms refused by name: MCP topic `layout` (same `sx_vocab::refusals()`).\n"
         );
 
@@ -1127,8 +1127,8 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          Fire-and-forget presets vs `timeline()` scrub lane — full tables + presets:\n\
          MCP `sail_surface` (or compile errors naming allowed presets).\n\n\
          ```\n\
-         <card sx={{style.reveal({{ opacity: 'fade', translate-y: 'spring:gentle' }})}}>reveal</card>\n\
-         <button sx={{style.press({{ scale: 'press' }})}}>tactile</button>\n\
+         <card style={{style.reveal({{ opacity: 'fade', translate-y: 'spring:gentle' }})}}>reveal</card>\n\
+         <button style={{style.press({{ scale: 'press' }})}}>tactile</button>\n\
          ```\n"
     );
 
@@ -1880,11 +1880,11 @@ mod skill_demo_tests {
     fn raw_sx_demo_uses_single_braces_and_div_span() {
         let md = sx_skill_demo(true);
         assert!(
-            md.contains("sx={style."),
+            md.contains("style={style."),
             "product SAIL single-brace sx: {md}"
         );
         assert!(
-            !md.contains("sx={{style."),
+            !md.contains("style={{style."),
             "doubled braces are invalid Style / format-string leak: {md}"
         );
         assert!(
@@ -1899,11 +1899,11 @@ mod skill_demo_tests {
     fn no_raw_sx_demo_uses_layout_keywords_and_single_braces() {
         let md = sx_skill_demo(false);
         assert!(
-            md.contains("sx={style."),
+            md.contains("style={style."),
             "product SAIL single-brace sx: {md}"
         );
         assert!(
-            !md.contains("sx={{style."),
+            !md.contains("style={{style."),
             "doubled braces are invalid Style / format-string leak: {md}"
         );
         assert!(

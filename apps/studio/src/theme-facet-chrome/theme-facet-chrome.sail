@@ -112,7 +112,9 @@ export default controller(() => {
 })
 </controller>
 
-<column theme-facet-chrome-root shrink="0" gap="0" sx={style.minW(0)}>
+<column theme-facet-chrome-root shrink="0" gap="0">
+  style.minW(0)
+
   <row
     theme-facet-chrome
     align="center"
@@ -120,13 +122,19 @@ export default controller(() => {
     gap="3"
     shrink="0"
     nowrap
-    sx={style.padX(4).h(10).minH(10).borderBWidth(1).borderB(border-subtle).bg(background).minW(0)}
+
   >
-    <row align="center" gap="2" grow min-w="0" nowrap sx={style.minW(0)}>
+    style.padX(4).h(10).minH(10).borderBWidth(1).borderB(border-subtle).bg(background).minW(0)
+
+    <row align="center" gap="2" grow min-w="0" nowrap>
+      style.minW(0)
+
       <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes
       </button>
-      <p sx={style.fg(muted-foreground).fontSize(sm)} hidden="true">/</p>
+      <p hidden="true">
+        style.fg(muted-foreground).fontSize(sm)
+/</p>
       <input
         type="text"
         theme-name
@@ -138,9 +146,13 @@ export default controller(() => {
         disabled={!canEdit()}
         on:input={onNameInput}
         on:change={onNameChange}
-        sx={style.maxW(48).fontWeight(semibold).borderWidth(0)}
-      />
-      <p sx={style.fg(muted-foreground).fontSize(sm)} hidden="true">/</p>
+
+>
+        style.maxW(48).fontWeight(semibold).borderWidth(0)
+      </input>
+      <p hidden="true">
+        style.fg(muted-foreground).fontSize(sm)
+/</p>
       <button
         type="button"
         size="sm"
@@ -214,15 +226,25 @@ export default controller(() => {
           </button>
         </if>
         <dropdown id={diffMenuId()} placement="bottom-end">
-          <column gap="2" sx={style.pad(3).minW(panel-min-w-md).maxW(panel-max-w-md)}>
-            <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Unsaved changes</p>
+          <column gap="2">
+            style.pad(3).minW(panel-min-w-md).maxW(panel-max-w-md)
+
+            <p>
+              style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)
+Unsaved changes</p>
             <if {hasDiffRows()}>
-              <scroll-area sx={style.maxH(48)}>
+              <scroll-area>
+                style.maxH(48)
+
                 <column gap="2">
                   <for {diffRows()} as="row" key={row.key}>
                     <column gap="0" diff-row>
-                      <p sx={style.fontSize(xs).fontFamily(mono).fg(foreground).truncate()}>{row.path}</p>
-                      <p sx={style.fontSize(xs).fontFamily(mono).fg(muted-foreground).truncate()}>
+                      <p>
+                        style.fontSize(xs).fontFamily(mono).fg(foreground).truncate()
+{row.path}</p>
+                      <p>
+                        style.fontSize(xs).fontFamily(mono).fg(muted-foreground).truncate()
+
                         {row.from} → {row.to}
                       </p>
                     </column>
@@ -231,7 +253,9 @@ export default controller(() => {
               </scroll-area>
             </if>
             <if {!hasDiffRows()}>
-              <p sx={style.fontSize(xs).fg(muted-foreground)}>Edits pending — save to write theme JSON.</p>
+              <p>
+                style.fontSize(xs).fg(muted-foreground)
+Edits pending — save to write theme JSON.</p>
             </if>
             <button type="button" size="sm" variant="solid" tone="primary" diff-save on:click={onSave}>
               Save
@@ -250,12 +274,16 @@ export default controller(() => {
         </if>
       </row>
 
-      <stack hidden="true" sx={style.w(half).h(5).minW(half).bg(border-subtle)}></stack>
+      <stack hidden="true">
+        style.w(half).h(5).minW(half).bg(border-subtle)
+</stack>
 
       <row mode-cluster align="center" gap="2" shrink="0" nowrap>
         <if {canToggleMode()}>
           <row dual-mode gap="2" align="center" nowrap shrink="0" label="Theme mode">
-            <icon name="sun" size="sm" label="Light" shrink="0" sx={style.fg(muted-foreground)}></icon>
+            <icon name="sun" size="sm" label="Light" shrink="0">
+              style.fg(muted-foreground)
+</icon>
             <switch
               size="sm"
               tone="muted"
@@ -264,7 +292,9 @@ export default controller(() => {
               label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
               on:change={onModeSwitch}
             ></switch>
-            <icon name="moon" size="sm" label="Dark" shrink="0" sx={style.fg(muted-foreground)}></icon>
+            <icon name="moon" size="sm" label="Dark" shrink="0">
+              style.fg(muted-foreground)
+</icon>
           </row>
         </if>
         <if {showAddMode()}>

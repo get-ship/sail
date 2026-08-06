@@ -16,7 +16,8 @@
   const sizeSm = style.fontSize(xs).minW(control-h-sm).h(control-h-sm)
   const sizeLg = style.fontSize(base).minW(control-h-lg).h(control-h-lg)
 </scope>
-<button type="button" sx={[
+<button type="button">
+  style([
   base,
   match(size, {
     md: sizeMd,
@@ -29,6 +30,7 @@
     disabled: style.opacity(50).cursor(not-allowed),
     focus: style.outline(solid).outline(2).outline(ring),
   }),
-]}>
+])
+
   <slot></slot>
 </button>

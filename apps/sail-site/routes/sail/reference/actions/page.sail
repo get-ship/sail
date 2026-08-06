@@ -13,8 +13,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx={style.minW(0)}>
-  <column sx={style.maxW(breakpoint-tablet)} gap="5">
+<column gap="6">
+  style.minW(0)
+
+  <column gap="5">
+    style.maxW(breakpoint-tablet)
+
     <p token="doc-eyebrow">Reference</p>
     <h1>Behavior — {actionCount()} public actions</h1>
     <p token="doc-lead">
@@ -29,13 +33,19 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <grid cols="3" gap="2">
     <for {actions()} as="a" key={a.name}>
-      <card padding="sm" sx={style.minW(0)}>
+      <card padding="sm">
+        style.minW(0)
+
         <column gap="1">
           <row gap="2" align="center">
             <code>use:{a.name}</code>
-            <small sx={style.fg(muted-foreground)}>{a.param}</small>
+            <small>
+              style.fg(muted-foreground)
+{a.param}</small>
           </row>
-          <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{a.summary}</small>
+          <small>
+            style.fg(muted-foreground).maxW(panel-max-w-sm)
+{a.summary}</small>
         </column>
       </card>
     </for>

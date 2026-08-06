@@ -28,11 +28,11 @@ export const code = {
 </grid>`,
 
   stack: `<stack align="start" justify="end">
-  <card sx={style.w(24).h(12).bg(muted).radius(md)}></card>
-  <div sx={style.w(4).h(4).radius(full).bg(primary)}></div>
+  <card style={style.w(24).h(12).bg(muted).radius(md)}></card>
+  <div style={style.w(4).h(4).radius(full).bg(primary)}></div>
 </stack>`,
 
-  center: `<center sx={style.minH(11)}>
+  center: `<center style={style.minH(11)}>
   <badge tone="primary">centered</badge>
 </center>`,
 

@@ -1,7 +1,7 @@
 //! `(--x)` / `bind(name)` resolution law — the seam sx reads use for runtime state.
 //!
 //! Resolution order, checked once per distinct custom-property read found inside
-//! an `sx` attribute value (`sx="…"` utility form or `sx={…}` Style product with
+//! an `sx` attribute value (`style="…"` utility form or `style={…}` Style product with
 //! `bind(camelName)` / residual `(--kebab-name)`): global token vars → declared
 //! props → setup-returned signals → refusal (with a did-you-mean). A name that
 //! never appears as a read gets no CSS wiring at all — this pass only ever
@@ -343,7 +343,7 @@ mod tests {
     #[test]
     fn a_prop_match_returns_a_binding() {
         let program = program_with_props(vec![prop("glowRadius", PropKind::Number)]);
-        let source = r#"<div sx="w-(--glow-radius)"></div>"#;
+        let source = r#"<div style="w-(--glow-radius)"></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "glowRadius");
@@ -359,7 +359,7 @@ mod tests {
             "controller((ctx) => { const hue = signal(220); return { hue }; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div sx="bg-(--hue)"></div>"#;
+        let source = r#"<div style="bg-(--hue)"></div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].scope_name, "hue");
@@ -375,7 +375,7 @@ mod tests {
             "controller((ctx) => { const tileX = signal('0px'); return { tileX }; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div sx={style.translateX(bind(tileX))}></div>"#;
+        let source = r#"<div style={style.translateX(bind(tileX))}></div>"#;
         let out = resolve(source, &program, Some(&controller)).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].css_name, "tile-x");
@@ -386,7 +386,7 @@ mod tests {
     #[test]
     fn a_token_var_is_unaffected_and_wires_nothing() {
         let program = program_with_props(vec![]);
-        let source = r#"<div sx="bg-(--surface-2)"></div>"#;
+        let source = r#"<div style="bg-(--surface-2)"></div>"#;
         let out = resolve(source, &program, None).unwrap();
         assert!(
             out.is_empty(),
@@ -397,7 +397,7 @@ mod tests {
     #[test]
     fn an_unmatched_name_refuses_with_did_you_mean() {
         let program = program_with_props(vec![prop("rowY", PropKind::Number)]);
-        let source = r#"<div sx="top-(--row-x)"></div>"#;
+        let source = r#"<div style="top-(--row-x)"></div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("does not match"));
         assert!(err.message.contains("row-y"), "{}", err.message);
@@ -411,7 +411,7 @@ mod tests {
             "controller((ctx) => { const hue = signal(220); return {}; })".to_string(),
         )
         .unwrap();
-        let source = r#"<div sx="bg-(--hue)"></div>"#;
+        let source = r#"<div style="bg-(--hue)"></div>"#;
         let err = resolve(source, &program, Some(&controller)).unwrap_err();
         assert!(err.message.contains("does not match"));
     }

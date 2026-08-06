@@ -72,7 +72,8 @@
   const ghostMuted = style.fg(muted-foreground).when({ hover: style.opacity(90) })
 </scope>
 
-<a sx={[
+<a>
+  style([
   base,
   match(variant, {
     default: vDefault,
@@ -111,6 +112,7 @@
   compound({ variant: ghost, tone: accent }, ghostAccent),
   compound({ variant: ghost, tone: muted }, ghostMuted),
   when({ disabled: style.opacity(50).cursor(not-allowed) }),
-]}>
+])
+
   <slot></slot>
 </a>

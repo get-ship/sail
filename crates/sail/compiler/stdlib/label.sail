@@ -17,19 +17,23 @@
   const req = style.display(none).fg(label-required).fontWeight(bold).ms(1)
 </scope>
 
-<label sx={[
+<label>
+  style([
   base,
   match(size, {
     md: sizeMd,
     sm: sizeSm,
     lg: sizeLg,
   }),
-]}>
+])
+
   <slot></slot>
-  <span hidden="true" sx={[
+  <span hidden="true">
+    style([
     req,
     when({
       group-required: style.display(inline),
     }),
-  ]}>*</span>
+  ])
+*</span>
 </label>

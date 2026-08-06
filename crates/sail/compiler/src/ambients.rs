@@ -15,7 +15,7 @@
 //! | **tsc / tsgo** | Scope/controller/logic types; Style setter + token types when the source is valid TypeScript; ambient globals (`signal`, `controller`, `style`, …) |
 //! | **sail-compiler** | Template/layout/vocabulary; Style DSL forms that are not valid TS (hyphenated bare tokens, `scale-y:` object keys); structural grammar |
 //!
-//! Style product text inside `sx={…}` is a compile-time DSL. Full hyphenated
+//! Style product text inside `style={…}` is a compile-time DSL. Full hyphenated
 //! bare-token fidelity under tsc requires a virtual rewrite (string form);
 //! the compiler still validates Style. This pack types the builder so wrong
 //! setters and wrong token *types* fail under tsc on valid-TS spelling.

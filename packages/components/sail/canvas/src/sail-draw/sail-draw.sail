@@ -241,7 +241,9 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 
 <!-- `.toolbar` was a flex container; compose a primitive instead — flex
      layout is the floor's boundary, and `<row>` IS the row container. -->
-<row role="toolbar" aria-label="Drawing tools" gap="1" align="center" sx={style.padY(1).padX(2).borderBWidth(1).borderB(border).bg(card)}>
+<row role="toolbar" aria-label="Drawing tools" gap="1" align="center">
+  style.padY(1).padX(2).borderBWidth(1).borderB(border).bg(card)
+
   <slot name="toolbar"></slot>
 </row>
 
@@ -251,9 +253,13 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   canvas={canvas}
   readonly={readonly()}
   on:pointerdown={surfaceDown}
-  sx={style.display(block).position(relative).w(full).h(full).fg(foreground)}
+
 >
-  <svg role="group" aria-label={statusLabel()} sx={style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)}>
+  style.display(block).position(relative).w(full).h(full).fg(foreground)
+
+  <svg role="group" aria-label={statusLabel()}>
+    style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)
+
     <for {rendered()} as="el" key={el.id}>
       <if {el.kind === 'text'}>
         <text
@@ -264,8 +270,10 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           aria-selected={selectedSet().has(el.id) ? 'true' : 'false'}
           on:pointerdown={elementDown}
           pointer-events="fill"
-          sx={style.fontFamily(body).fontSize(base).stroke(none).when({ selected: style.fill(primary) })}
-        >{el.text}</text>
+
+        >
+          style.fontFamily(body).fontSize(base).stroke(none).when({ selected: style.fill(primary) })
+{el.text}</text>
       <else>
         <path
           d={el.path}
@@ -277,8 +285,10 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           vector-effect="non-scaling-stroke"
           pointer-events={el.kind === 'pen' ? 'fill' : 'stroke'}
           stroke-width="2"
-          sx={style.fill(none).cursor(pointer).when({ selected: style.stroke(primary), statePen: style.fill(currentColor).stroke(none) })}
-        ></path>
+
+        >
+          style.fill(none).cursor(pointer).when({ selected: style.stroke(primary), statePen: style.fill(currentColor).stroke(none) })
+</path>
       </else></if>
     </for>
     <if {draftPath()}>
@@ -288,8 +298,10 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         vector-effect="non-scaling-stroke"
         pointer-events="none"
         stroke-width="2"
-        sx={style.fill(none).opacity(85)}
-      ></path>
+
+      >
+        style.fill(none).opacity(85)
+</path>
     </if>
 
     <if {selectionRect()}>
@@ -298,12 +310,16 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         y={selectionRect().y}
         width={selectionRect().w}
         height={selectionRect().h}
-        sx={style.fill(none).stroke(primary).pointerEvents(none)}
+
         stroke-width="1"
         stroke-dasharray="4 3"
-      ></rect>
+      >
+        style.fill(none).stroke(primary).pointerEvents(none)
+</rect>
     </if>
   </svg>
 </sail-canvas>
 
-<div role="status" aria-live="polite" sx={style.position(absolute).bottom(1).left(2).fontSize(xs).fg(muted-foreground).pointerEvents(none)}>{statusLabel()}</div>
+<div role="status" aria-live="polite">
+  style.position(absolute).bottom(1).left(2).fontSize(xs).fg(muted-foreground).pointerEvents(none)
+{statusLabel()}</div>

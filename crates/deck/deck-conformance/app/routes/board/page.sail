@@ -32,19 +32,29 @@ export default controller(() => {
   })
 </controller>
 
-<column gap="3" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
-  <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>Board</h1>
+<column gap="3">
+  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+
+  <h1>
+    style.fontSize(2xl).fontWeight(bold).fg(foreground)
+Board</h1>
   <if {items().length > 0}>
-  <column gap="2" sx={style.list(none).pad(0).m(0)}>
+  <column gap="2">
+    style.list(none).pad(0).m(0)
+
     <for {items()} as="item" key={item.id}>
-    <row gap="2" align="center" sx={style.radius(md).pad(2).borderWidth(1).border(transparent).when({ pressed: style.bg(hover-bg).border(warning) })} aria-pressed={item.flagged}>
+    <row gap="2" align="center" aria-pressed={item.flagged}>
+      style.radius(md).pad(2).borderWidth(1).border(transparent).when({ pressed: style.bg(hover-bg).border(warning) })
+
       <demo-chip>{item.label}</demo-chip>
       <button on:click={() => remove(item.id)}>remove</button>
     </row>
     </for>
   </column>
   <else>
-  <p sx={style.fg(muted-foreground).fontSize(sm).italic(true)}>Nothing on the board.</p>
+  <p>
+    style.fg(muted-foreground).fontSize(sm).italic(true)
+Nothing on the board.</p>
   </else></if>
   <button on:click={() => add()}>add</button>
 </column>

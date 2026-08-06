@@ -22,7 +22,8 @@
   const sizeXl = style.size(control-h-xl).fontSize(2xl)
 </scope>
 
-<row inline nowrap align="center" justify="center" shrink="0" use:mediaFallback sx={[
+<row inline nowrap align="center" justify="center" shrink="0" use:mediaFallback>
+  style([
   base,
   match(size, {
     md: sizeMd,
@@ -45,4 +46,5 @@
     destructive: style.bgImage(none).bg(destructive).fg(destructive-foreground),
     muted: style.bgImage(none).bg(avatar).fg(avatar-foreground),
   }),
-]}></row>
+])
+</row>

@@ -56,23 +56,33 @@
   gap="1"
   align={role() === 'user' ? 'end' : 'stretch'}
   data-state={role() + ' ' + contentType() + ' ' + status()}
-  sx={host}
+
 >
-  <row gap="2" align="baseline" sx={meta}>
-    <span sx={roleLabel}>{role()}</span>
+  style(host)
+
+  <row gap="2" align="baseline">
+    style(meta)
+
+    <span>
+      style(roleLabel)
+{role()}</span>
     <if {timestamp()}>
       <time datetime={timestamp()}>{timestamp()}</time>
     </if>
   </row>
 
-  <div sx={bubble}>
+  <div>
+    style(bubble)
+
     <slot></slot>
   </div>
 
   <!-- display:contents so a message with no actions has no trailing box (the
        column's gap never opens under it) and slotted actions become items of
        the message column, following its alignment. -->
-  <div sx={trailing}>
+  <div>
+    style(trailing)
+
     <slot name="trailing"></slot>
   </div>
 </column>

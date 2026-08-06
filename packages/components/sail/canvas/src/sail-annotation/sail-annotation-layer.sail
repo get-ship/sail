@@ -337,15 +337,21 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
   })
 
 </controller>
-<div sx={style.position(relative).w(full).h(full).fontFamily(body)}>
+<div>
+  style.position(relative).w(full).h(full).fontFamily(body)
+
   <slot></slot>
-  <div use:overlayAction data-state={captureState()} sx={style.position(absolute).top(0).right(0).bottom(0).left(0).z(dropdown).pointerEvents(none).when({ stateCapture: style.pointerEvents(auto) })}>
+  <div use:overlayAction data-state={captureState()}>
+    style.position(absolute).top(0).right(0).bottom(0).left(0).z(dropdown).pointerEvents(none).when({ stateCapture: style.pointerEvents(auto) })
+
     <if {dragVisible()}>
       <div
         aria-hidden="true"
         use:rect={dragRect()}
-        sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm)}
-      ></div>
+
+      >
+        style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm)
+</div>
     </if>
     <for {markers()} as="m" key={m.id}>
       <sail-annotation-marker
@@ -362,12 +368,20 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         gap="2"
         use:rect={popoverPos()}
         on:pointerdown={(e) => e.stopPropagation()}
-        sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).z(sticky).minW(panel-min-w-md).pad(2).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto)}
+
       >
-        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} sx={style.w(full).radius(sm)}></textarea>
+        style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).z(sticky).minW(panel-min-w-md).pad(2).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto)
+
+        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}>
+          style.w(full).radius(sm)
+</textarea>
         <row gap="2" justify="end">
-          <button type="button" on:click={cancelPending} sx={style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)}>Cancel</button>
-          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} sx={style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)}>Send</button>
+          <button type="button" on:click={cancelPending}>
+            style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)
+Cancel</button>
+          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote}>
+            style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)
+Send</button>
         </row>
       </column>
     </if>

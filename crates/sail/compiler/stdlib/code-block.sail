@@ -14,6 +14,10 @@
   const host = style.display(block)
   const pre = style.m(0).fontFamily(mono).fontSize(sm).leading(code).tab(2).bg(code-block).fg(code-block-foreground).borderWidth(1).border(border).radius(lg).padY(4).padX(5).overflowX(auto).whitespace(pre)
 </scope>
-<div use:syntaxHighlight sx={host}>
-  <pre sx={pre}></pre>
+<div use:syntaxHighlight>
+  style(host)
+
+  <pre>
+    style(pre)
+</pre>
 </div>

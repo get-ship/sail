@@ -52,7 +52,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag, severity: Severity) -> Opti
     let sx = t
         .attrs
         .iter()
-        .find(|(n, _)| n == "sx")
+        .find(|(n, _)| n == "style")
         .map(|(_, v)| v.as_str())?;
 
     let axes = detect_overflow_axes(sx)?;
@@ -282,7 +282,7 @@ mod tests {
 
     #[test]
     fn overflow_auto_without_min_warns() {
-        let src = r#"<column sx={style.overflow(auto).grow(true)}></column>"#;
+        let src = r#"<column style={style.overflow(auto).grow(true)}></column>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
@@ -291,19 +291,19 @@ mod tests {
 
     #[test]
     fn overflow_with_minh0_passes() {
-        let src = r#"<column sx={style.overflowY(auto).minH(0).grow(true)}></column>"#;
+        let src = r#"<column style={style.overflowY(auto).minH(0).grow(true)}></column>"#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
 
     #[test]
     fn no_overflow_passes() {
-        let src = r#"<column sx={style.grow(true).bg(surface)}></column>"#;
+        let src = r#"<column style={style.grow(true).bg(surface)}></column>"#;
         assert!(lint(src).is_empty());
     }
 
     #[test]
     fn overflow_y_requires_min_h_not_only_min_w() {
-        let src = r#"<column sx={style.overflowY(auto).minW(0)}></column>"#;
+        let src = r#"<column style={style.overflowY(auto).minW(0)}></column>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "minW alone must not satisfy overflowY: {f:?}");
         assert!(f[0].message.contains("minH(0)"), "{}", f[0].message);
@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     fn overflow_x_requires_min_w_not_only_min_h() {
-        let src = r#"<row sx={style.overflowX(auto).minH(0)}></row>"#;
+        let src = r#"<row style={style.overflowX(auto).minH(0)}></row>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "minH alone must not satisfy overflowX: {f:?}");
         assert!(f[0].message.contains("minW(0)"), "{}", f[0].message);
@@ -319,8 +319,8 @@ mod tests {
 
     #[test]
     fn bare_overflow_accepts_either_min() {
-        let a = r#"<div sx={style.overflow(auto).minW(0)}></div>"#;
-        let b = r#"<div sx={style.overflow(hidden).minH(0)}></div>"#;
+        let a = r#"<div style={style.overflow(auto).minW(0)}></div>"#;
+        let b = r#"<div style={style.overflow(hidden).minH(0)}></div>"#;
         assert!(lint(a).is_empty(), "{:?}", lint(a));
         assert!(lint(b).is_empty(), "{:?}", lint(b));
     }
@@ -328,7 +328,7 @@ mod tests {
     #[test]
     fn viewport_clip_root_with_screen_height_skipped() {
         // Studio chrome shell: definite viewport size + outer clip only.
-        let src = r#"<row sx={style.minH(screen).h(screen).w(full).overflow(hidden)}></row>"#;
+        let src = r#"<row style={style.minH(screen).h(screen).w(full).overflow(hidden)}></row>"#;
         assert!(
             lint(src).is_empty(),
             "viewport clip root must not fire: {:?}",
@@ -339,7 +339,7 @@ mod tests {
     #[test]
     fn viewport_sized_but_scroll_still_flagged() {
         // Scroll owners always need min-size even if h(screen).
-        let src = r#"<column sx={style.h(screen).overflowY(auto)}></column>"#;
+        let src = r#"<column style={style.h(screen).overflowY(auto)}></column>"#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "scroll owner must still flag: {f:?}");
     }
@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn token_overflow_hidden_sm_does_not_over_match() {
         // Word-boundary: longer atom must not count as overflow-hidden.
-        let src = r#"<div sx="overflow-hidden-sm grow"></div>"#;
+        let src = r#"<div style="overflow-hidden-sm grow"></div>"#;
         assert!(
             lint(src).is_empty(),
             "must not treat overflow-hidden-sm as overflow-hidden: {:?}",
@@ -357,7 +357,7 @@ mod tests {
 
     #[test]
     fn token_overflow_hidden_matches() {
-        let src = r#"<div sx="overflow-hidden grow"></div>"#;
+        let src = r#"<div style="overflow-hidden grow"></div>"#;
         assert_eq!(lint(src).len(), 1, "{:?}", lint(src));
     }
 
@@ -374,7 +374,7 @@ mod tests {
             let mut f = std::fs::File::create(&sail).expect("create");
             write!(
                 f,
-                r#"<column sx={{style.overflow(auto).grow(true)}}></column>"#
+                r#"<column style={{style.overflow(auto).grow(true)}}></column>"#
             )
             .expect("write");
         }

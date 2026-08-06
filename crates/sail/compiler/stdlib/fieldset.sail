@@ -13,6 +13,8 @@
   })
 </scope>
 
-<fieldset sx={base}>
+<fieldset>
+  style(base)
+
   <slot></slot>
 </fieldset>

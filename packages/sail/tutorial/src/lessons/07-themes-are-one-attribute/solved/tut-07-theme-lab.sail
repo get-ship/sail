@@ -46,7 +46,9 @@ export default controller(() => {
 <column gap="4">
   <row align="center" justify="between">
     <h3>Theme lab</h3>
-    <small sx={muted}>data-theme = {active()}</small>
+    <small>
+      style(muted)
+data-theme = {active()}</small>
   </row>
 
   <row gap="1" align="center">
@@ -58,15 +60,23 @@ export default controller(() => {
   </row>
 
   <grid cols="2" gap="4">
-    <column theme="paper" gap="2" sx={preview}>
-      <small sx={muted}>pinned: paper</small>
+    <column theme="paper" gap="2">
+      style(preview)
+
+      <small>
+        style(muted)
+pinned: paper</small>
       <card padding="md">
         <column gap="2">
           <row gap="2" align="center">
             <badge tone="success" variant="soft" size="sm">on track</badge>
-            <strong sx={title}>Q3 launch</strong>
+            <strong>
+              style(title)
+Q3 launch</strong>
           </row>
-          <p sx={body}>Same markup as the panel beside me — only the tokens differ.</p>
+          <p>
+            style(body)
+Same markup as the panel beside me — only the tokens differ.</p>
           <row gap="2">
             <button size="sm" variant="solid" tone="primary">Primary</button>
             <button size="sm" variant="outline" tone="primary">Outline</button>
@@ -75,15 +85,23 @@ export default controller(() => {
       </card>
     </column>
 
-    <column theme="console" gap="2" sx={preview}>
-      <small sx={muted}>pinned: console</small>
+    <column theme="console" gap="2">
+      style(preview)
+
+      <small>
+        style(muted)
+pinned: console</small>
       <card padding="md">
         <column gap="2">
           <row gap="2" align="center">
             <badge tone="success" variant="soft" size="sm">on track</badge>
-            <strong sx={title}>Q3 launch</strong>
+            <strong>
+              style(title)
+Q3 launch</strong>
           </row>
-          <p sx={body}>Same markup as the panel beside me — only the tokens differ.</p>
+          <p>
+            style(body)
+Same markup as the panel beside me — only the tokens differ.</p>
           <row gap="2">
             <button size="sm" variant="solid" tone="primary">Primary</button>
             <button size="sm" variant="outline" tone="primary">Outline</button>
@@ -94,7 +112,9 @@ export default controller(() => {
   </grid>
 
   <row gap="2" align="center">
-    <small sx={muted}>the tone contract:</small>
+    <small>
+      style(muted)
+the tone contract:</small>
     <badge tone="default" variant="soft" size="sm">default</badge>
     <badge tone="primary" variant="soft" size="sm">primary</badge>
     <badge tone="info" variant="soft" size="sm">info</badge>

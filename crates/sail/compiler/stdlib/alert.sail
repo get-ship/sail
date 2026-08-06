@@ -25,7 +25,9 @@
   gap="3"
   use:liveRegion
   use:dismissControl
-  sx={[
+
+>
+  style([
     base,
     when({
       before: stripe,
@@ -44,9 +46,10 @@
         before: style.bg(CanvasText),
       }),
     }),
-  ]}
->
-  <row inline nowrap align="center" justify="center" shrink sx={[
+  ])
+
+  <row inline nowrap align="center" justify="center" shrink>
+    style([
     ico,
     match(tone, {
       default: style.bg(muted).fg(muted-foreground),
@@ -59,27 +62,34 @@
     when({
       empty: style.display(none),
     }),
-  ]}>
+  ])
+
     <slot name="icon"></slot>
   </row>
   <column gap="1" grow min-w="0">
-    <div sx={[
+    <div>
+      style([
       title,
       when({
         empty: style.display(none),
       }),
-    ]}>
+    ])
+
       <slot name="title"></slot>
     </div>
-    <div sx={body}>
+    <div>
+      style(body)
+
       <slot></slot>
     </div>
-    <row align="center" gap="2" sx={[
+    <row align="center" gap="2">
+      style([
       actions,
       when({
         empty: style.display(none),
       }),
-    ]}>
+    ])
+
       <slot name="actions"></slot>
     </row>
   </column>
@@ -89,16 +99,20 @@
     anatomy
     label="Dismiss"
     shrink
-    sx={[
+
+  >
+    style([
       close,
       when({
         group-dismissible: style.display(inline-block),
         hover: style.bg(muted).fg(foreground),
         focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
       }),
-    ]}
-  >
-    <svg viewBox="0 0 10 10" hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">
+    ])
+
+    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round">
+      style(xmark)
+
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

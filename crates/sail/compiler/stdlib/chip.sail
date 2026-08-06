@@ -32,7 +32,9 @@
   use:pressable
   use:pressed
   use:dismissible
-  sx={[
+
+>
+  style([
     base,
     match(size, {
       md: sizeMd,
@@ -118,9 +120,11 @@
     compound({ variant: ghost }, when({
       hover: style.bg(hover-bg),
     })),
-  ]}
->
-  <span sx={leading}>
+  ])
+
+  <span>
+    style(leading)
+
     <slot name="leading"></slot>
   </span>
   <slot></slot>
@@ -131,16 +135,20 @@
     label="Remove"
     tabindex="-1"
     shrink="0"
-    sx={[
+
+  >
+    style([
       remove,
       when({
         group-removable: style.display(inline-flex),
         hover: style.bg(muted).fg(foreground),
         focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
       }),
-    ]}
-  >
-    <svg viewBox="0 0 10 10" hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">
+    ])
+
+    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round">
+      style(xmark)
+
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

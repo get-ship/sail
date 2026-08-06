@@ -20,7 +20,8 @@
   const enclosed = style.borderWidth(1).border(transparent).borderBWidth(0).radiusT(md)
 </scope>
 
-<button type="button" sx={[
+<button type="button">
+  style([
   base,
   match(size, {
     md: sizeMd,
@@ -46,6 +47,7 @@
   compound({ variant: enclosed }, when({
     selected: style.fg(tab-selected-foreground).border(border).bg(tab-selected).mb(-px),
   })),
-]}>
+])
+
   <slot></slot>
 </button>

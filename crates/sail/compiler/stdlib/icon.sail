@@ -17,7 +17,8 @@
   const sizeLg = style.size(icon-size-xl)
   const sizeXl = style.size(icon-size-2xl)
 </scope>
-<span use:icon shrink="0" sx={[
+<span use:icon shrink="0">
+  style([
   base,
   match(size, {
     md: sizeMd,
@@ -26,6 +27,7 @@
     lg: sizeLg,
     xl: sizeXl,
   }),
-]}>
+])
+
   <slot></slot>
 </span>

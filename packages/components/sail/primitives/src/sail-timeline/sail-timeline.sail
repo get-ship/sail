@@ -30,5 +30,7 @@ export default controller(() => {
 })
 
 </controller>
-<column gap="1" sx={style.position(relative)}><slot></slot></column>
+<column gap="1">
+  style.position(relative)
+<slot></slot></column>
 

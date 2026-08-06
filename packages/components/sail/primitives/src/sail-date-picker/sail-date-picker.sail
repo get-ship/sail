@@ -371,24 +371,44 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   })
 
 </controller>
-<column gap="0" sx={style.position(relative).w(full)}>
-<row gap="2" align="center" sx={style.w(full).h(control-h-md).padX(2_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).when({ focusWithin: style.outline(ring) })}>
-  <input type="text" flush grow min-w="0" sx={style.fontFamily(body).when({ disabled: style.cursor(not-allowed) })} name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} use:captureInput />
-  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-sm).h(icon-size-sm).minW(icon-size-sm).fg(muted-foreground).pointerEvents(none)}>
+<column gap="0">
+  style.position(relative).w(full)
+
+<row gap="2" align="center">
+  style.w(full).h(control-h-md).padX(2_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).when({ focusWithin: style.outline(ring) })
+
+  <input type="text" flush grow min-w="0" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} use:captureInput>
+    style.fontFamily(body).when({ disabled: style.cursor(not-allowed) })
+  </input>
+  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    style.w(icon-size-sm).h(icon-size-sm).minW(icon-size-sm).fg(muted-foreground).pointerEvents(none)
+
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
 <if {open() && !disabled()}>
-  <div role="dialog" aria-label="Choose date" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-sm).pad(2).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontFamily(body)}>
-    <row align="center" justify="between" sx={style.mb(1)}>
-      <button type="button" data-act="prev" aria-label="Previous month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>‹</button>
-      <span grow sx={style.fontWeight(semibold).textAlign(center)}>{monthLabel()}</span>
-      <button type="button" data-act="next" aria-label="Next month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>›</button>
+  <div role="dialog" aria-label="Choose date">
+    style.position(absolute).left(0).z(popover).w(panel-max-w-sm).pad(2).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontFamily(body)
+
+    <row align="center" justify="between">
+      style.mb(1)
+
+      <button type="button" data-act="prev" aria-label="Previous month">
+        style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })
+‹</button>
+      <span grow>
+        style.fontWeight(semibold).textAlign(center)
+{monthLabel()}</span>
+      <button type="button" data-act="next" aria-label="Next month">
+        style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })
+›</button>
     </row>
     <grid role="grid" cols="7" gap="1">
       <for {dayHeaders()} as="d" key={d.key}>
-        <span role="columnheader" sx={style.fontSize(sm).fg(muted-foreground).padY(1).fontWeight(medium).textAlign(center)}>{d.label}</span>
+        <span role="columnheader">
+          style.fontSize(sm).fg(muted-foreground).padY(1).fontWeight(medium).textAlign(center)
+{d.label}</span>
       </for>
       <for {monthCells()} as="cell" key={cell.key}>
         <button
@@ -399,8 +419,10 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
           tabindex={cell.focused ? '0' : '-1'}
           data-state={cell.state || null}
           data-iso={cell.iso}
-          sx={style.h(control-h-sm).radius(sm).textAlign(center).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(primary).fg(primary-foreground), disabled: style.fg(muted-foreground).opacity(50).cursor(not-allowed), stateEmpty: style.visibility(hidden), stateToday: style.outline(border-strong), focus: style.outline(ring) })}
-        >{cell.empty ? '' : cell.day}</button>
+
+        >
+          style.h(control-h-sm).radius(sm).textAlign(center).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(primary).fg(primary-foreground), disabled: style.fg(muted-foreground).opacity(50).cursor(not-allowed), stateEmpty: style.visibility(hidden), stateToday: style.outline(border-strong), focus: style.outline(ring) })
+{cell.empty ? '' : cell.day}</button>
       </for>
     </grid>
   </div>

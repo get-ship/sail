@@ -271,7 +271,7 @@ fn flex_child_gets_min_width_zero() {
 
 #[test]
 fn sx_width_full_matches_css() {
-    let src = r#"<div sx={style.w(full)}>x</div>"#;
+    let src = r#"<div style={style.w(full)}>x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
@@ -319,7 +319,7 @@ fn min_w_attr_maps_to_taffy_min_width() {
 /// Product `style.pad(4)` → `sx-pad4` (not residual `sx-p4`).
 #[test]
 fn style_pad_maps_to_taffy_padding() {
-    let src = r#"<div sx={style.pad(4)}>x</div>"#;
+    let src = r#"<div style={style.pad(4)}>x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("sx-pad4"),
@@ -333,7 +333,7 @@ fn style_pad_maps_to_taffy_padding() {
 
 #[test]
 fn sx_hidden_matches_css() {
-    let src = r#"<div sx={style.display(none)}>x</div>"#;
+    let src = r#"<div style={style.display(none)}>x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
@@ -390,7 +390,7 @@ fn check_all_emits_layout_warning_with_original_span() {
     // Collapsed parent + sized child: the zero-main-axis contract (an empty
     // child set totaling 0 is suppressed as analyzer noise by the layout
     // crate's gate — see check::layout tests).
-    let src = "\n\n<column sx={style.h(0)}><div sx={style.h(20)}>x</div></column>";
+    let src = "\n\n<column style={style.h(0)}><div style={style.h(20)}>x</div></column>";
     let diags = sail_compiler::check_all(src, None, &[], None);
     let layout = diags
         .iter()

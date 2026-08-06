@@ -19,10 +19,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
-  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
+<column gap="5">
+  style.maxW(breakpoint-tablet).mx(auto)
+
+  <p>
+    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+The language</p>
   <h1>Styling</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
+  <p>
+    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+
     Paint is the <strong>Style</strong> value language on <code>sx</code>:
     <code>style.bg(token)</code> chains, <code>match</code>, <code>when</code>,
     <code>compound</code>, and scope Style consts. Values are design tokens —
@@ -38,8 +44,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <h2>The chain</h2>
-  <card sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm)}>
-    <p sx={style.fg(muted-foreground).fontSize(sm)}>This card is styled by the code below it.</p>
+  <card>
+    style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm)
+
+    <p>
+      style.fg(muted-foreground).fontSize(sm)
+This card is styled by the code below it.</p>
   </card>
   <code-block code={code.sx}></code-block>
   <p>
@@ -57,10 +67,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
-  <row gap="3" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)}>
-    <button sx={when({ hover: style.bg(muted) })}>hover → bg(muted)</button>
-    <button sx={when({ hover: style.fg(primary) })}>hover → fg(primary)</button>
-    <button sx={when({ active: style.bg(primary).fg(primary-foreground) })}>active:…</button>
+  <row gap="3">
+    style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)
+
+    <button>
+      when({ hover: style.bg(muted) })
+hover → bg(muted)</button>
+    <button>
+      when({ hover: style.fg(primary) })
+hover → fg(primary)</button>
+    <button>
+      when({ active: style.bg(primary).fg(primary-foreground) })
+active:…</button>
   </row>
   <code-block code={code.states}></code-block>
   <p>
@@ -80,8 +98,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>when(&#123; tablet: …, desktop: … &#125;)</code>. Resize to see this panel
     pad more from 768px up:
   </p>
-  <column gap="2" sx={style.pad(3).bg(surface-1).borderWidth(1).border(border).radius(lg).when({ tablet: style.pad(6) })}>
-    <p sx={style.fontSize(sm)}>pad(3) on a phone; when tablet → pad(6).</p>
+  <column gap="2">
+    style.pad(3).bg(surface-1).borderWidth(1).border(border).radius(lg).when({ tablet: style.pad(6) })
+
+    <p>
+      style.fontSize(sm)
+pad(3) on a phone; when tablet → pad(6).</p>
   </column>
   <code-block code={code.conditions}></code-block>
   <p>
@@ -108,9 +130,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>bind(name)</code> — the compiler registers the CSS custom property
     and reflects the signal onto the host. Drag:
   </p>
-  <column gap="3" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)}>
-    <input type="range" min="0" max="200" step="1" bind:value={shift} sx={style.minW(0)} />
-    <card sx={style.w(9).h(9).bg(primary).radius(md).translateX(bind(px))}></card>
+  <column gap="3">
+    style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)
+
+    <input type="range" min="0" max="200" step="1" bind:value={shift}>
+      style.minW(0)
+    </input>
+    <card>
+      style.w(9).h(9).bg(primary).radius(md).translateX(bind(px))
+</card>
   </column>
   <code-block code={code.dynamic}></code-block>
   <p>
@@ -132,11 +160,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     hole.
   </p>
 
-  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.mt(4).fontSize(sm).fg(muted-foreground)
+
     For the full surface: <a href="/sail/reference/sx">reference → sx</a>.
   </p>
 
-  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
+  <row justify="between" gap="2">
+    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+
     <a variant="default" href="/sail/language/templates">← Templates</a>
     <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
   </row>

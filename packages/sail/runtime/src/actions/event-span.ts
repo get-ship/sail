@@ -8,7 +8,7 @@ import type { Action } from '../action'
  * "node at (200, 300)"). The action writes each as a custom property; the
  * consuming template reads them through the matching sx atoms:
  *
- *     sx="top-(--evt-top) h-(--evt-h) left-(--evt-left) w-(--evt-w)"
+ *     style="top-(--evt-top) h-(--evt-h) left-(--evt-left) w-(--evt-w)"
  *
  * The atoms do NOT resolve to `var(--space-N)` — the writer is a custom
  * property, the reader is `var(--<custom>)`. That is the ONLY way a

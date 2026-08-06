@@ -72,27 +72,49 @@ export default controller((ctx) => {
   })
 
 </controller>
-<row gap="2" align="stretch" sx={style.position(relative)}>
-  <column align="center" gap="0" sx={style.w(5)}>
+<row gap="2" align="stretch">
+  style.position(relative)
+
+  <column align="center" gap="0">
+    style.w(5)
+
     <if {first()}>
-      <span sx={style.w(half).h(3).visibility(hidden)}></span>
+      <span>
+        style.w(half).h(3).visibility(hidden)
+</span>
     <else>
-      <span sx={style.w(half).h(3).bg(border-subtle)}></span>
+      <span>
+        style.w(half).h(3).bg(border-subtle)
+</span>
     </else></if>
-    <span sx={style.w(2_5).h(2_5).radius(full).bg(foreground)}></span>
+    <span>
+      style.w(2_5).h(2_5).radius(full).bg(foreground)
+</span>
     <if {last()}>
-      <span grow sx={style.w(half).visibility(hidden)}></span>
+      <span grow>
+        style.w(half).visibility(hidden)
+</span>
     <else>
-      <span grow sx={style.w(half).bg(border-subtle)}></span>
+      <span grow>
+        style.w(half).bg(border-subtle)
+</span>
     </else></if>
   </column>
-  <column gap="0" grow min-w="0" sx={style.padY(2)}>
-    <row align="baseline" justify="between" gap="2" sx={style.fontSize(sm).fontWeight(medium).fg(foreground).fontFamily(body)}>
+  <column gap="0" grow min-w="0">
+    style.padY(2)
+
+    <row align="baseline" justify="between" gap="2">
+      style.fontSize(sm).fontWeight(medium).fg(foreground).fontFamily(body)
+
       <slot name="title"></slot>
       <if {at()}>
-        <time sx={style.fg(muted-foreground).fontSize(xs).tracking(wide).fontFamily(mono)}>{at()}</time>
+        <time>
+          style.fg(muted-foreground).fontSize(xs).tracking(wide).fontFamily(mono)
+{at()}</time>
       </if>
     </row>
-    <div sx={style.fontSize(sm).fg(muted-foreground).leading(normal).mt(1)}><slot></slot></div>
+    <div>
+      style.fontSize(sm).fg(muted-foreground).leading(normal).mt(1)
+<slot></slot></div>
   </column>
 </row>

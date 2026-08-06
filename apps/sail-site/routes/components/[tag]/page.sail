@@ -197,7 +197,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="4">
+<column gap="4">
+  style.maxW(breakpoint-tablet).mx(auto)
+
   <if {showViewer()}>
     <breadcrumb>
       <a href="/components">components</a>
@@ -225,22 +227,30 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
               <column gap="3" align="center">
-                <button variant={variant()} tone="primary" size="lg" on:click={press} sx={style.press({ scale: 'press' })}>
+                <button variant={variant()} tone="primary" size="lg" on:click={press}>
+                  style.press({ scale: 'press' })
+
                   Save changes
                 </button>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>press fired ×{presses()}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+press fired ×{presses()}</p>
               </column>
             </if>
             <if {stage.input()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <input placeholder="Ada Lovelace" bind:value={name} />
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>hello, {name() || 'stranger'}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+hello, {name() || 'stranger'}</p>
               </column>
             </if>
             <if {stage.textarea()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{bio().length} characters</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+{bio().length} characters</p>
               </column>
             </if>
             <if {stage.select()}>
@@ -250,7 +260,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <option>Design</option>
                   <option>Research</option>
                 </select>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>team: {team()}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+team: {team()}</p>
               </column>
             </if>
             <if {stage.combobox()}>
@@ -263,13 +275,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <option value="vue">Vue</option>
                   <option value="qwik">Qwik</option>
                 </combobox>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>picked: {fw() || 'nothing yet'}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+picked: {fw() || 'nothing yet'}</p>
               </column>
             </if>
             <if {stage.checkbox()}>
               <column gap="3" align="center">
                 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
               </column>
             </if>
             <if {stage.radioGroup()}>
@@ -281,14 +297,18 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <if {stage.switchToggle()}>
               <row gap="3" align="center">
                 <switch bind:checked={notify} size={variant()} tone="primary"></switch>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{notify() ? 'on' : 'off'} · size {variant()}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+{notify() ? 'on' : 'off'} · size {variant()}</p>
               </row>
             </if>
             <if {stage.slider()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
                 <progress value={load()} max="100"></progress>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>one signal, two components — {load()}%</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+one signal, two components — {load()}%</p>
               </column>
             </if>
             <if {stage.toggleGroup()}>
@@ -326,19 +346,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </fieldset>
             </if>
             <if {stage.dropzone()}>
-              <card dropzone sx={style.pad(6).w(full).maxW(panel-max-w-sm)}>Drop a file, or click to browse</card>
+              <card dropzone>
+                style.pad(6).w(full).maxW(panel-max-w-sm)
+Drop a file, or click to browse</card>
             </if>
             <if {stage.themePicker()}>
               <column gap="4" align="center">
                 <column gap="1" align="center">
-                  <span sx={style.fontSize(xs).fg(muted-foreground)}>Full catalog</span>
+                  <span>
+                    style.fontSize(xs).fg(muted-foreground)
+Full catalog</span>
                   <theme-picker></theme-picker>
                 </column>
                 <column gap="1" align="center">
-                  <span sx={style.fontSize(xs).fg(muted-foreground)}>Mode only</span>
+                  <span>
+                    style.fontSize(xs).fg(muted-foreground)
+Mode only</span>
                   <theme-picker mode-only></theme-picker>
                 </column>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>themes this whole site, no reload</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+themes this whole site, no reload</p>
               </column>
             </if>
 
@@ -352,13 +380,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>one signal drives both — {load()}%</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+one signal drives both — {load()}%</p>
               </column>
             </if>
             <if {stage.meter()}>
               <!-- Fixed width: meter has no intrinsic width, and a percentage
                    can't resolve inside the content-sized <center> stage. -->
-              <column gap="2" sx={style.w(panel-max-w-sm)}>
+              <column gap="2">
+                style.w(panel-max-w-sm)
+
                 <meter value="0.3"></meter>
                 <meter value="0.7"></meter>
                 <meter value="0.95"></meter>
@@ -373,7 +405,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.skeleton()}>
               <row gap="3" align="center" w="full" max-w="panel-max-w-sm">
-                <span skeleton shape={variant()} sx={style.w(7).h(7)}></span>
+                <span skeleton shape={variant()}>
+                  style.w(7).h(7)
+</span>
                 <column gap="2" grow>
                   <span skeleton shape={variant()} size="sm"></span>
                   <span skeleton shape={variant()} size="sm"></span>
@@ -394,8 +428,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <if {stage.errorBoundary()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <error-boundary message="This panel could not load.">
-                  <card variant="outline" sx={style.pad(4)}>
-                    <p sx={style.fontSize(sm).fg(muted-foreground)}>
+                  <card variant="outline">
+                    style.pad(4)
+
+                    <p>
+                      style.fontSize(sm).fg(muted-foreground)
+
                       A healthy boundary is invisible — this card is the wrapped
                       subtree. A render throw inside would swap in the fallback.
                     </p>
@@ -431,19 +469,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
                   </if>
                 </row>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>× or Backspace fires sail-remove</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+× or Backspace fires sail-remove</p>
               </column>
             </if>
             <if {stage.statusDot()}>
               <row gap="2" align="center">
                 <status-dot tone={variant()}></status-dot>
-                <p sx={style.fontSize(sm).fg(muted-foreground)}>the tone is the message</p>
+                <p>
+                  style.fontSize(sm).fg(muted-foreground)
+the tone is the message</p>
               </row>
             </if>
             <if {stage.card()}>
-              <card variant={variant()} interactive sx={style.pad(5)}>
+              <card variant={variant()} interactive>
+                style.pad(5)
+
                 <strong>A surface</strong>
-                <p sx={style.fontSize(sm).fg(muted-foreground)}>the hover lift is one attribute</p>
+                <p>
+                  style.fontSize(sm).fg(muted-foreground)
+the hover lift is one attribute</p>
               </card>
             </if>
             <if {stage.avatar()}>
@@ -468,9 +514,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.separator()}>
               <column gap="2" w="full" max-w="panel-max-w-sm">
-                <p sx={style.fontSize(sm).fg(muted-foreground)}>above</p>
+                <p>
+                  style.fontSize(sm).fg(muted-foreground)
+above</p>
                 <separator variant={variant()}></separator>
-                <p sx={style.fontSize(sm).fg(muted-foreground)}>below — and vertical:</p>
+                <p>
+                  style.fontSize(sm).fg(muted-foreground)
+below — and vertical:</p>
                 <row gap="2" align="center">
                   <span>A</span>
                   <separator orientation="vertical" variant={variant()}></separator>
@@ -510,21 +560,31 @@ export default controller((ctx: ControllerScope<Scope>) => {
               <column gap="3" align="center">
                 <button variant="ghost" popovertarget="stage-hc">@ada</button>
                 <hover-card id="stage-hc">
-                  <card sx={style.pad(4)}>
+                  <card>
+                    style.pad(4)
+
                     <strong>Ada Lovelace</strong>
-                    <p sx={style.fontSize(sm).fg(muted-foreground)}>wrote the first program.</p>
+                    <p>
+                      style.fontSize(sm).fg(muted-foreground)
+wrote the first program.</p>
                   </card>
                 </hover-card>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>focus-triggerable, not just mouse-only</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+focus-triggerable, not just mouse-only</p>
               </column>
             </if>
             <if {stage.popover()}>
               <column gap="3" align="center">
                 <button popovertarget="stage-pop">Open popover</button>
                 <popover id="stage-pop">
-                  <card sx={style.pad(4)}>Rides the platform top layer — Escape or click outside closes it.</card>
+                  <card>
+                    style.pad(4)
+Rides the platform top layer — Escape or click outside closes it.</card>
                 </popover>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>top layer · light dismiss · zero z-index</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+top layer · light dismiss · zero z-index</p>
               </column>
             </if>
             <if {stage.dropdown()}>
@@ -535,13 +595,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <menu-item>Duplicate</menu-item>
                   <menu-item tone="destructive">Delete</menu-item>
                 </dropdown>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>arrows rove · type-ahead · Escape closes</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+arrows rove · type-ahead · Escape closes</p>
               </column>
             </if>
             <if {stage.contextMenu()}>
               <column gap="3" align="center" w="full" max-w="panel-max-w-sm">
-                <card id="stage-ctx" variant="outline" sx={style.pad(6).w(full)}>
-                  <center><p sx={style.fontSize(sm).fg(muted-foreground)}>right-click target</p></center>
+                <card id="stage-ctx" variant="outline">
+                  style.pad(6).w(full)
+
+                  <center><p>
+                    style.fontSize(sm).fg(muted-foreground)
+right-click target</p></center>
                 </card>
                 <context-menu for="stage-ctx">
                   <menu-item value="cut">Cut</menu-item>
@@ -552,10 +618,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.dialog()}>
               <column gap="3" align="center">
-                <button command="show-modal" commandfor="stage-dialog" sx={style.press({ scale: 'press' })}>
+                <button command="show-modal" commandfor="stage-dialog">
+                  style.press({ scale: 'press' })
+
                   Open the {variant()}
                 </button>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>Escape and the backdrop close it — that's the platform</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+Escape and the backdrop close it — that's the platform</p>
                 <dialog id="stage-dialog" side={sheetSide()} size="md">
                   <header>Delete project</header>
                   <section>
@@ -577,9 +647,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <tab>Activity</tab>
                   <tab>Settings</tab>
                 </tab-list>
-                <tab-panel><p sx={style.fontSize(sm).fg(muted-foreground)}>Arrows rove, Home and End jump — wired for you.</p></tab-panel>
-                <tab-panel><p sx={style.fontSize(sm).fg(muted-foreground)}>The activity feed panel.</p></tab-panel>
-                <tab-panel><p sx={style.fontSize(sm).fg(muted-foreground)}>The settings panel.</p></tab-panel>
+                <tab-panel><p>
+                  style.fontSize(sm).fg(muted-foreground)
+Arrows rove, Home and End jump — wired for you.</p></tab-panel>
+                <tab-panel><p>
+                  style.fontSize(sm).fg(muted-foreground)
+The activity feed panel.</p></tab-panel>
+                <tab-panel><p>
+                  style.fontSize(sm).fg(muted-foreground)
+The settings panel.</p></tab-panel>
               </tabs>
             </if>
             <if {stage.breadcrumb()}>
@@ -597,7 +673,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <page value="3">3</page>
                   <page value="4">4</page>
                 </pagination>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>on page {pageNo()}</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+on page {pageNo()}</p>
               </column>
             </if>
             <if {stage.navbar()}>
@@ -635,17 +713,29 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <badge tone="primary">end</badge>
                 </row>
                 <grid cols="3" gap="2">
-                  <card sx={style.pad(3)}><center>1</center></card>
-                  <card sx={style.pad(3)}><center>2</center></card>
-                  <card sx={style.pad(3)}><center>3</center></card>
+                  <card>
+                    style.pad(3)
+<center>1</center></card>
+                  <card>
+                    style.pad(3)
+<center>2</center></card>
+                  <card>
+                    style.pad(3)
+<center>3</center></card>
                 </grid>
-                <center sx={style.pad(4).borderWidth(1).border(border-subtle).radius(md)}>
-                  <p sx={style.fontSize(sm).fg(muted-foreground)}>center — both axes at once</p>
+                <center>
+                  style.pad(4).borderWidth(1).border(border-subtle).radius(md)
+
+                  <p>
+                    style.fontSize(sm).fg(muted-foreground)
+center — both axes at once</p>
                 </center>
               </column>
             </if>
             <if {stage.scrollArea()}>
-              <scroll-area sx={style.maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)}>
+              <scroll-area>
+                style.maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)
+
                 <p>Constrain it, and the overflow scrolls behind thin, themed scrollbars.</p>
                 <p>Line two.</p>
                 <p>Line three.</p>
@@ -659,8 +749,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </scroll-area>
             </if>
             <if {stage.ticker()}>
-              <ticker duration="normal" sx={style.w(full).maxW(panel-max-w-md).overflow(hidden).bg(muted).padY(3).radius(md)}>
-                <p sx={style.fontSize(sm).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(4)}>
+              <ticker duration="normal">
+                style.w(full).maxW(panel-max-w-md).overflow(hidden).bg(muted).padY(3).radius(md)
+
+                <p>
+                  style.fontSize(sm).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(4)
+
                   tokens · signals · a11y · hot reload · forms ·&nbsp;
                 </p>
               </ticker>
@@ -703,8 +797,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.sailMediaImage()}>
-              <column gap="3" align="center" tile-stage="sail-pack-media-image" sx={style.w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden).radius(md)}>
-                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} sx={style.w(full).h(full)}></sail-media-image>
+              <column gap="3" align="center" tile-stage="sail-pack-media-image">
+                style.w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden).radius(md)
+
+                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false}>
+                  style.w(full).h(full)
+</sail-media-image>
               </column>
             </if>
             <if {stage.sailMediaAv()}>
@@ -791,7 +889,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
       </column>
       <if {slotCopy}>
-        <p slot="stage" sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{slotCopy}</p>
+        <p slot="stage">
+          style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+{slotCopy}</p>
       </if>
     </sail-component-viewer>
 
@@ -804,7 +904,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
-    <empty-state sx={style.enter({ opacity: 'fade', translate-y: 'spring:snappy' })}>
+    <empty-state>
+      style.enter({ opacity: 'fade', translate-y: 'spring:snappy' })
+
       <strong slot="title">Nothing named “{tag()}” here</strong>
       Every element on the L1 surface has a detail page. Pack components
       (the 6 un-gated packs) render here too — this looks like a typo.

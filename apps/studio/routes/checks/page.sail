@@ -23,7 +23,11 @@ export default controller(() => {
   grow
   align="center"
   justify="center"
-  sx={style.minH(0).h(full).bg(background)}
+
 >
-  <p sx={style.fontSize(sm).fg(muted-foreground)}>Opening Checks panel…</p>
+  style.minH(0).h(full).bg(background)
+
+  <p>
+    style.fontSize(sm).fg(muted-foreground)
+Opening Checks panel…</p>
 </column>

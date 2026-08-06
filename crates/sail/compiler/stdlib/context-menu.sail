@@ -14,4 +14,6 @@
   const host = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(1).fg(context-menu-foreground).bg(context-menu).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
 </scope>
 
-<div popover use:contextMenu use:menu sx={host}><slot></slot></div>
+<div popover use:contextMenu use:menu>
+  style(host)
+<slot></slot></div>

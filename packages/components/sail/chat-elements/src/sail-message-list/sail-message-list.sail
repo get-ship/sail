@@ -157,11 +157,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <scroll-area
   orientation="vertical"
   use:captureScroll
-  sx={style.position(relative).h(full).minH(0).pad(3).fontFamily(body)}
+
 >
-  <div use:virtualSpacer={totalSize()} sx={style.position(relative).w(full).h(bind(rowsH))}>
+  style.position(relative).h(full).minH(0).pad(3).fontFamily(body)
+
+  <div use:virtualSpacer={totalSize()}>
+    style.position(relative).w(full).h(bind(rowsH))
+
     <for {windowItems()} as="w" key={w.key}>
-      <column gap="0" use:virtualRow={w.start} sx={style.position(absolute).left(3).right(3).translateY(bind(rowY))}>
+      <column gap="0" use:virtualRow={w.start}>
+        style.position(absolute).left(3).right(3).translateY(bind(rowY))
+
         <sail-message
           role={w.item.role || 'assistant'}
           content-type={w.item.contentType || 'text'}

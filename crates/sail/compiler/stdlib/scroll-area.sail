@@ -16,7 +16,8 @@
   const horizontal = style.overflowX(auto).overflowY(hidden)
   const both = style.overflow(auto)
 </scope>
-<div sx={[
+<div>
+  style([
   base,
   match(orientation, {
     vertical: vertical,
@@ -26,4 +27,5 @@
   when({
     hover: style.scrollbarThumb(scroll-area-thumb-hover),
   }),
-]}><slot></slot></div>
+])
+<slot></slot></div>

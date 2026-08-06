@@ -39,21 +39,31 @@ export default controller(() => {
   assets-chrome
   gap="0"
   grow
-  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+
 >
+  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row assets-error align="center" gap="2" shrink="0" sx={bandError}>
-      <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
+    <row assets-error align="center" gap="2" shrink="0">
+      style(bandError)
+
+      <p grow min-w="0">
+        style.fontSize(sm).fg(destructive).truncate()
+{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row assets-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+    <row assets-loading align="center" gap="2" shrink="0">
+      style(bandStatus)
+
       <spinner size="sm"></spinner>
-      <p sx={fieldHint}>Loading…</p>
+      <p>
+        style(fieldHint)
+Loading…</p>
     </row>
   </if>
 
@@ -63,35 +73,57 @@ export default controller(() => {
     gap="0"
     nowrap
     align="stretch"
-    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
+
   >
+    style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+
     <scroll-area
       assets-editor
       grow
       min-w="0"
-      sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
+
     >
-      <column gap="8" sx={editorCol}>
+      style.minH(0).basis(0).h(full).minW(0).bg(background)
+
+      <column gap="8">
+        style(editorCol)
+
         <column assets-header gap="2">
-          <p sx={fieldHint}>Assets facet</p>
-          <p sx={style.fontSize(xl).fontWeight(semibold).tracking(tight)}>Type &amp; icons</p>
-          <p sx={fieldHint}>
+          <p>
+            style(fieldHint)
+Assets facet</p>
+          <p>
+            style.fontSize(xl).fontWeight(semibold).tracking(tight)
+Type &amp; icons</p>
+          <p>
+            style(fieldHint)
+
             Deep type roles and icon pack judgment. Overview keeps shallow teasers only.
           </p>
-          <p sx={pathMeta}>{session.modesMeta()}</p>
+          <p>
+            style(pathMeta)
+{session.modesMeta()}</p>
           <if {session.catalogHint()}>
-            <p catalog-hint sx={fieldHint}>Add to project to edit.</p>
+            <p catalog-hint>
+              style(fieldHint)
+Add to project to edit.</p>
           </if>
         </column>
 
         <column section="type" gap="4">
           <row align="baseline" justify="between" gap="3" nowrap>
-            <p sx={sectionTitle}>Type</p>
-            <p sx={pathMeta}>display · body · mono</p>
+            <p>
+              style(sectionTitle)
+Type</p>
+            <p>
+              style(pathMeta)
+display · body · mono</p>
           </row>
           <column gap="3">
             <column gap="1">
-              <p sx={fieldHint}>Display</p>
+              <p>
+                style(fieldHint)
+Display</p>
               <select type-token="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.displayFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
@@ -99,7 +131,9 @@ export default controller(() => {
               </select>
             </column>
             <column gap="1">
-              <p sx={fieldHint}>Body</p>
+              <p>
+                style(fieldHint)
+Body</p>
               <select type-token="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.bodyFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
@@ -107,7 +141,9 @@ export default controller(() => {
               </select>
             </column>
             <column gap="1">
-              <p sx={fieldHint}>Mono</p>
+              <p>
+                style(fieldHint)
+Mono</p>
               <select type-token="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.monoFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
@@ -118,10 +154,16 @@ export default controller(() => {
 
           <column font-discoverer gap="3">
             <row align="baseline" justify="between" gap="3" nowrap>
-              <p sx={sectionTitle}>Font discoverer</p>
-              <p sx={pathMeta}>{assets.fontCatalogMeta()}</p>
+              <p>
+                style(sectionTitle)
+Font discoverer</p>
+              <p>
+                style(pathMeta)
+{assets.fontCatalogMeta()}</p>
             </row>
-            <p sx={fieldHint}>
+            <p>
+              style(fieldHint)
+
               Full Google Fonts catalog — search, preview, assign to a role, or install (vendor woff2 into the project).
             </p>
             <row gap="2" align="center" nowrap font-search>
@@ -139,7 +181,9 @@ export default controller(() => {
                 Search
               </button>
             </row>
-            <row gap="1" align="center" nowrap font-cats sx={style.overflowX(auto).minW(0)}>
+            <row gap="1" align="center" nowrap font-cats>
+              style.overflowX(auto).minW(0)
+
               <for {assets.fontCategoryOpts()} as="c" key={c.key}>
                 <button
                   type="button"
@@ -150,8 +194,10 @@ export default controller(() => {
                   selected={c.on ? 'true' : null}
                   on:click={assets.onFontCategory}
                   shrink="0"
-                  sx={catChip}
+
                 >
+                  style(catChip)
+
                   {c.label}
                 </button>
               </for>
@@ -159,18 +205,28 @@ export default controller(() => {
             <if {assets.fontSearching()}>
               <row align="center" gap="2" font-loading>
                 <spinner size="sm"></spinner>
-                <p sx={fieldHint}>Searching catalog…</p>
+                <p>
+                  style(fieldHint)
+Searching catalog…</p>
               </row>
             </if>
             <if {assets.hasFontHits()}>
               <column gap="2" font-hits>
                 <for {assets.fontSearchHits()} as="f" key={f.key}>
-                  <column gap="2" font-hit font-family={f.family} sx={fontHit}>
+                  <column gap="2" font-hit font-family={f.family}>
+                    style(fontHit)
+
                     <row align="baseline" justify="between" gap="2" nowrap>
-                      <p sx={doorTitle} grow min-w="0">{f.family}</p>
-                      <p sx={pathMeta} shrink="0">{f.category}</p>
+                      <p grow min-w="0">
+                        style(doorTitle)
+{f.family}</p>
+                      <p shrink="0">
+                        style(pathMeta)
+{f.category}</p>
                     </row>
-                    <p font-sample face={f.family} sx={fontSample}>{f.sample}</p>
+                    <p font-sample face={f.family}>
+                      style(fontSample)
+{f.sample}</p>
                     <row gap="1" align="center">
                       <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Display
@@ -190,25 +246,35 @@ export default controller(() => {
               </column>
             </if>
             <if {!assets.hasFontHits() && !assets.fontSearching()}>
-              <p font-empty sx={fieldHint}>No families match — try another query or category.</p>
+              <p font-empty>
+                style(fieldHint)
+No families match — try another query or category.</p>
             </if>
           </column>
         </column>
 
         <column section="icons" gap="4">
           <row align="baseline" justify="between" gap="3" nowrap>
-            <p sx={sectionTitle}>Icons</p>
-            <p sx={pathMeta}>browse · size scale</p>
+            <p>
+              style(sectionTitle)
+Icons</p>
+            <p>
+              style(pathMeta)
+browse · size scale</p>
           </row>
           <column gap="1">
-            <p sx={fieldHint}>Pack (session until pack token ships)</p>
+            <p>
+              style(fieldHint)
+Pack (session until pack token ships)</p>
             <select icon-pack size="sm" value={assets.iconPack()} disabled={!session.canEdit()} on:change={assets.onIconPack}>
               <option value="lucide">Lucide</option>
               <option value="phosphor">Phosphor</option>
             </select>
           </column>
           <column gap="1">
-            <p sx={fieldHint}>Browse glyphs</p>
+            <p>
+              style(fieldHint)
+Browse glyphs</p>
             <input
               type="search"
               size="sm"
@@ -221,7 +287,9 @@ export default controller(() => {
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs()} as="g" key={g.key}>
-                <center shrink="0" sx={iconCell} title={g.name}>
+                <center shrink="0" title={g.name}>
+                  style(iconCell)
+
                   <icon name={g.name} size="md" label={g.name}></icon>
                 </center>
               </for>
@@ -229,14 +297,24 @@ export default controller(() => {
           </if>
           <column icon-scale gap="2">
             <row align="baseline" justify="between" gap="3" nowrap>
-              <p sx={fieldHint}>Size scale (sm → xl)</p>
-              <p sx={pathMeta}>{assets.iconScaleReadout()}</p>
+              <p>
+                style(fieldHint)
+Size scale (sm → xl)</p>
+              <p>
+                style(pathMeta)
+{assets.iconScaleReadout()}</p>
             </row>
-            <p sx={fieldHint}>Drag master to set the md step; other steps follow when scale-together is on.</p>
+            <p>
+              style(fieldHint)
+Drag master to set the md step; other steps follow when scale-together is on.</p>
             <column gap="1">
               <row align="center" justify="between" gap="2" nowrap>
-                <p sx={fieldHint}>Master</p>
-                <p sx={pathMeta}>{assets.iconScaleMasterPx()}px</p>
+                <p>
+                  style(fieldHint)
+Master</p>
+                <p>
+                  style(pathMeta)
+{assets.iconScaleMasterPx()}px</p>
               </row>
               <input
                 type="range"
@@ -260,43 +338,75 @@ export default controller(() => {
       gap="0"
       grow
       min-w="0"
-      sx={style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)}
+
     >
-      <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
+      style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)
+
+      <column grow gap="0">
+        style.minH(0).h(full).pad(4)
+
         <card
           assets-specimen
           preview-specimen
           mode={session.paintMode()}
           padding="none"
-          sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
+
         >
-          <column gap="0" grow sx={style.minH(0).h(full)}>
+          style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+
+          <column gap="0" grow>
+            style.minH(0).h(full)
+
             <row
               specimen-chrome
               align="center"
               gap="2"
               nowrap
               shrink="0"
-              sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
             >
-              <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
-                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
-                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
-                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
+              style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
+              <row gap="2" align="center" nowrap shrink="0" hidden="true">
+                style.minW(12)
+
+                <stack shrink="0">
+                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+</stack>
+                <stack shrink="0">
+                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+</stack>
+                <stack shrink="0">
+                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+</stack>
               </row>
-              <p grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{session.nameEdit()}</p>
-              <p sx={pathMeta} shrink="0">{session.paintMode()}</p>
+              <p grow min-w="0">
+                style.fontSize(xs).fg(muted-foreground).truncate()
+{session.nameEdit()}</p>
+              <p shrink="0">
+                style(pathMeta)
+{session.paintMode()}</p>
             </row>
-          <scroll-area grow sx={style.minH(0).h(full).bg(background)}>
-            <column specimen-body gap="5" sx={style.pad(5).minW(0)}>
+          <scroll-area grow>
+            style.minH(0).h(full).bg(background)
+
+            <column specimen-body gap="5">
+              style.pad(5).minW(0)
+
               <column gap="2" type-stack>
-                <p sx={style.fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight)}>
+                <p>
+                  style.fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight)
+
                   {assets.typeDisplay()}
                 </p>
-                <p sx={style.fontFamily(body).fontSize(sm).leading(relaxed)}>
+                <p>
+                  style.fontFamily(body).fontSize(sm).leading(relaxed)
+
                   {assets.typeBody()} — body copy for product UI judgment.
                 </p>
-                <p sx={style.fontFamily(mono).fontSize(xs)}>
+                <p>
+                  style.fontFamily(mono).fontSize(xs)
+
                   {assets.typeMono()} — const pack = "lucide"
                 </p>
               </column>
@@ -324,9 +434,13 @@ export default controller(() => {
                 <column gap="2">
                   <row gap="2" align="center" nowrap>
                     <icon name="folder" size="sm"></icon>
-                    <p sx={doorTitle}>Project list row</p>
+                    <p>
+                      style(doorTitle)
+Project list row</p>
                   </row>
-                  <p sx={fieldHint}>Icons inherit currentColor under the theme table.</p>
+                  <p>
+                    style(fieldHint)
+Icons inherit currentColor under the theme table.</p>
                 </column>
               </card>
             </column>

@@ -646,9 +646,8 @@ fn parse_list(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
 
 fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::Word("style"), diags);
-    // Channel spine: `style({ box: …, paint: …, text: … }).when(…)`
     if p.peek() == Some(&Tok::LParen) {
-        return parse_style_channels(p, diags);
+        return parse_style_call(p, diags);
     }
     let mut ops = Vec::new();
     let mut iters = 0usize;
@@ -745,29 +744,45 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     }
 }
 
-/// `style({ box: …, paint: …, text: …, animate: … })` then optional `.when` / motion tails.
-fn parse_style_channels(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::LParen, diags);
-    if p.peek() != Some(&Tok::LBrace) {
-        diags.push(StyleDiagnostic::ParseError {
-            message: "expected `style({ box, paint, text, animate })` channel object".into(),
-            source: p.remainder(),
-        });
-        // Consume to `)` when possible so the rest of the file can still parse.
-        let mut depth = 1i32;
-        while !p.at_end() && depth > 0 {
-            match p.bump() {
-                Some(Tok::LParen) | Some(Tok::LBrace) | Some(Tok::LBrack) => depth += 1,
-                Some(Tok::RParen) | Some(Tok::RBrace) | Some(Tok::RBrack) => depth -= 1,
-                _ => {}
-            }
+    let mut base = match p.peek() {
+        Some(Tok::LBrace) => {
+            let ch = parse_channel_object(p, diags);
+            p.expect(Tok::RParen, diags);
+            ch
         }
-        return Style::Empty;
-    }
-    let mut base = parse_channel_object(p, diags);
-    p.expect(Tok::RParen, diags);
+        Some(Tok::LBrack) => {
+            let list = parse_list(p, diags);
+            p.expect(Tok::RParen, diags);
+            list
+        }
+        Some(Tok::Word(_)) => {
+            let name = match p.bump() {
+                Some(Tok::Word(w)) => w.to_string(),
+                _ => return Style::Empty,
+            };
+            p.expect(Tok::RParen, diags);
+            Style::Ref(name)
+        }
+        _ => {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "expected `style({…})`, `style([…])`, or `style(name)`".into(),
+                source: p.remainder(),
+            });
+            let mut depth = 1i32;
+            while !p.at_end() && depth > 0 {
+                match p.bump() {
+                    Some(Tok::LParen) | Some(Tok::LBrace) | Some(Tok::LBrack) => depth += 1,
+                    Some(Tok::RParen) | Some(Tok::RBrace) | Some(Tok::RBrack) => depth -= 1,
+                    _ => {}
+                }
+            }
+            return Style::Empty;
+        }
+    };
 
-    // Dual tails: `.when(…)` and flat-chain motion (also accepted under `animate:`).
+    // Dual tails: `.when(…)` and flat-chain motion.
     let mut iters = 0usize;
     while p.eat(&Tok::Dot) {
         iters += 1;

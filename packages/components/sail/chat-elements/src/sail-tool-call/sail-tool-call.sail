@@ -56,26 +56,52 @@
   const resultBlock = style.mt(2)
 </scope>
 
-<div data-state={status()} sx={host}>
-  <span aria-hidden="true" sx={[rail, statusBg]}></span>
+<div data-state={status()}>
+  style(host)
 
-  <collapsible open={open()} sx={style.group()}>
-    <row slot="trigger" gap="2" align="center" sx={trigger}>
+  <span aria-hidden="true">
+    style([rail, statusBg])
+</span>
+
+  <collapsible open={open()}>
+    style.group()
+
+    <row slot="trigger" gap="2" align="center">
+      style(trigger)
+
       <span
         dot
         aria-hidden="true"
         pulse={status() === 'running'}
-        sx={[dot, statusBg]}
-      ></span>
-      <span sx={nameText}>{name()}</span>
-      <span sx={[statusLabel, statusFg]}>{status()}</span>
+
+      >
+        style([dot, statusBg])
+</span>
+      <span>
+        style(nameText)
+{name()}</span>
+      <span>
+        style([statusLabel, statusFg])
+{status()}</span>
     </row>
-    <div sx={body}>
-      <span sx={sectionLabel}>Arguments</span>
-      <div sx={pre}><slot></slot></div>
-      <div sx={resultBlock}>
-        <span sx={sectionLabel}>Result</span>
-        <div sx={pre}><slot name="result"></slot></div>
+    <div>
+      style(body)
+
+      <span>
+        style(sectionLabel)
+Arguments</span>
+      <div>
+        style(pre)
+<slot></slot></div>
+      <div>
+        style(resultBlock)
+
+        <span>
+          style(sectionLabel)
+Result</span>
+        <div>
+          style(pre)
+<slot name="result"></slot></div>
       </div>
     </div>
   </collapsible>

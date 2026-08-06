@@ -12,6 +12,8 @@
   })
 </scope>
 
-<summary sx={base}>
+<summary>
+  style(base)
+
   <slot></slot>
 </summary>

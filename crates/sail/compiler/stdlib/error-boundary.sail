@@ -16,35 +16,51 @@
   const message = style.fg(error-boundary-message-foreground).leading(normal)
   const retry = style.self(start).bg(error-boundary-retry-bg).borderWidth(1).border(border).radius(sm).padY(1).padX(3).fontFamily(body).fontSize(xs).fontWeight(semibold).fg(error-boundary-retry-foreground).shadow(xs).cursor(pointer)
 </scope>
-<div use:catchRender sx={root}>
-  <div sx={[
+<div use:catchRender>
+  style(root)
+
+  <div>
+    style([
     content,
     when({
       group-caught: style.display(none),
     }),
-  ]}><slot></slot></div>
-  <div sx={[
+  ])
+<slot></slot></div>
+  <div>
+    style([
     fallback,
     when({
       group-caught: style.display(contents),
     }),
-  ]}>
-    <row align="start" gap="3" role="alert" sx={alert}>
+  ])
+
+    <row align="start" gap="3" role="alert">
+      style(alert)
+
       <slot name="fallback">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden="true" shrink="0" sx={icon}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden="true" shrink="0">
+          style(icon)
+
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
           <path d="M12 9v4"></path>
           <path d="M12 17h.01"></path>
         </svg>
-        <column gap="1" sx={body}>
-          <div sx={message}>Something went wrong</div>
-          <button type="button" anatomy sx={[
+        <column gap="1">
+          style(body)
+
+          <div>
+            style(message)
+Something went wrong</div>
+          <button type="button" anatomy>
+            style([
             retry,
             when({
               hover: style.bg(muted),
               focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
             }),
-          ]}>Retry</button>
+          ])
+Retry</button>
         </column>
       </slot>
     </row>

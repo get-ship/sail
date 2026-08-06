@@ -50,31 +50,69 @@ export default controller((ctx) => {
  })
 </scope>
 
-<row nowrap align="stretch" w="full" grow min-w="0" gap="0" sx={shell}>
- <nav shrink="0" sx={rail} label="Deck docs">
- <p sx={railLabel}>Introduction</p>
- <a href="/deck" sx={railLink} current={path() === '/deck' ? 'page' : null}>Overview</a>
- <a href="/deck/getting-started" sx={railLink} current={path() === '/deck/getting-started' ? 'page' : null}>Getting started</a>
+<row nowrap align="stretch" w="full" grow min-w="0" gap="0">
+  style(shell)
 
- <p sx={railLabel}>Concepts</p>
- <a href="/deck/routing" sx={railLink} current={path() === '/deck/routing' ? 'page' : null}>Routing</a>
- <a href="/deck/dynamic-routes" sx={railLink} current={path() === '/deck/dynamic-routes' ? 'page' : null}>Dynamic routes</a>
- <a href="/deck/layouts" sx={railLink} current={path() === '/deck/layouts' ? 'page' : null}>Layouts</a>
- <a href="/deck/rendering" sx={railLink} current={path() === '/deck/rendering' ? 'page' : null}>Rendering</a>
- <a href="/deck/reactivity" sx={railLink} current={path() === '/deck/reactivity' ? 'page' : null}>Reactivity</a>
- <a href="/deck/data" sx={railLink} current={path() === '/deck/data' ? 'page' : null}>Live data</a>
+ <nav shrink="0" label="Deck docs">
+   style(rail)
 
- <p sx={railLabel}>Tooling</p>
- <a href="/deck/hmr" sx={railLink} current={path() === '/deck/hmr' ? 'page' : null}>HMR</a>
- <a href="/deck/build" sx={railLink} current={path() === '/deck/build' ? 'page' : null}>Build</a>
+ <p>
+   style(railLabel)
+Introduction</p>
+ <a href="/deck" current={path() === '/deck' ? 'page' : null}>
+   style(railLink)
+Overview</a>
+ <a href="/deck/getting-started" current={path() === '/deck/getting-started' ? 'page' : null}>
+   style(railLink)
+Getting started</a>
+
+ <p>
+   style(railLabel)
+Concepts</p>
+ <a href="/deck/routing" current={path() === '/deck/routing' ? 'page' : null}>
+   style(railLink)
+Routing</a>
+ <a href="/deck/dynamic-routes" current={path() === '/deck/dynamic-routes' ? 'page' : null}>
+   style(railLink)
+Dynamic routes</a>
+ <a href="/deck/layouts" current={path() === '/deck/layouts' ? 'page' : null}>
+   style(railLink)
+Layouts</a>
+ <a href="/deck/rendering" current={path() === '/deck/rendering' ? 'page' : null}>
+   style(railLink)
+Rendering</a>
+ <a href="/deck/reactivity" current={path() === '/deck/reactivity' ? 'page' : null}>
+   style(railLink)
+Reactivity</a>
+ <a href="/deck/data" current={path() === '/deck/data' ? 'page' : null}>
+   style(railLink)
+Live data</a>
+
+ <p>
+   style(railLabel)
+Tooling</p>
+ <a href="/deck/hmr" current={path() === '/deck/hmr' ? 'page' : null}>
+   style(railLink)
+HMR</a>
+ <a href="/deck/build" current={path() === '/deck/build' ? 'page' : null}>
+   style(railLink)
+Build</a>
  </nav>
 
- <column grow min-w="0" gap="0" sx={style.minH(0).minW(0)}>
- <div sx={mobileBar}>
+ <column grow min-w="0" gap="0">
+   style.minH(0).minW(0)
+
+ <div>
+   style(mobileBar)
+
  <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
- <small sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>Deck docs</small>
+ <small>
+   style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+Deck docs</small>
  </div>
- <main grow min-w="0" sx={mainDocs}>
+ <main grow min-w="0">
+   style(mainDocs)
+
  <slot name="route"></slot>
  </main>
  </column>
@@ -90,23 +128,51 @@ export default controller((ctx) => {
 >
  <header>
   <row align="center" justify="between" gap="2" w="full">
-   <strong sx={style.fontSize(sm)}>Deck docs</strong>
+   <strong>
+     style.fontSize(sm)
+Deck docs</strong>
    <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
   </row>
  </header>
  <section>
-  <p sx={railLabel}>Introduction</p>
-  <a href="/deck" sx={railLink} on:click={closeNav} current={path() === '/deck' ? 'page' : null}>Overview</a>
-  <a href="/deck/getting-started" sx={railLink} on:click={closeNav} current={path() === '/deck/getting-started' ? 'page' : null}>Getting started</a>
-  <p sx={railLabel}>Concepts</p>
-  <a href="/deck/routing" sx={railLink} on:click={closeNav} current={path() === '/deck/routing' ? 'page' : null}>Routing</a>
-  <a href="/deck/dynamic-routes" sx={railLink} on:click={closeNav} current={path() === '/deck/dynamic-routes' ? 'page' : null}>Dynamic routes</a>
-  <a href="/deck/layouts" sx={railLink} on:click={closeNav} current={path() === '/deck/layouts' ? 'page' : null}>Layouts</a>
-  <a href="/deck/rendering" sx={railLink} on:click={closeNav} current={path() === '/deck/rendering' ? 'page' : null}>Rendering</a>
-  <a href="/deck/reactivity" sx={railLink} on:click={closeNav} current={path() === '/deck/reactivity' ? 'page' : null}>Reactivity</a>
-  <a href="/deck/data" sx={railLink} on:click={closeNav} current={path() === '/deck/data' ? 'page' : null}>Live data</a>
-  <p sx={railLabel}>Tooling</p>
-  <a href="/deck/hmr" sx={railLink} on:click={closeNav} current={path() === '/deck/hmr' ? 'page' : null}>HMR</a>
-  <a href="/deck/build" sx={railLink} on:click={closeNav} current={path() === '/deck/build' ? 'page' : null}>Build</a>
+  <p>
+    style(railLabel)
+Introduction</p>
+  <a href="/deck" on:click={closeNav} current={path() === '/deck' ? 'page' : null}>
+    style(railLink)
+Overview</a>
+  <a href="/deck/getting-started" on:click={closeNav} current={path() === '/deck/getting-started' ? 'page' : null}>
+    style(railLink)
+Getting started</a>
+  <p>
+    style(railLabel)
+Concepts</p>
+  <a href="/deck/routing" on:click={closeNav} current={path() === '/deck/routing' ? 'page' : null}>
+    style(railLink)
+Routing</a>
+  <a href="/deck/dynamic-routes" on:click={closeNav} current={path() === '/deck/dynamic-routes' ? 'page' : null}>
+    style(railLink)
+Dynamic routes</a>
+  <a href="/deck/layouts" on:click={closeNav} current={path() === '/deck/layouts' ? 'page' : null}>
+    style(railLink)
+Layouts</a>
+  <a href="/deck/rendering" on:click={closeNav} current={path() === '/deck/rendering' ? 'page' : null}>
+    style(railLink)
+Rendering</a>
+  <a href="/deck/reactivity" on:click={closeNav} current={path() === '/deck/reactivity' ? 'page' : null}>
+    style(railLink)
+Reactivity</a>
+  <a href="/deck/data" on:click={closeNav} current={path() === '/deck/data' ? 'page' : null}>
+    style(railLink)
+Live data</a>
+  <p>
+    style(railLabel)
+Tooling</p>
+  <a href="/deck/hmr" on:click={closeNav} current={path() === '/deck/hmr' ? 'page' : null}>
+    style(railLink)
+HMR</a>
+  <a href="/deck/build" on:click={closeNav} current={path() === '/deck/build' ? 'page' : null}>
+    style(railLink)
+Build</a>
  </section>
 </dialog>

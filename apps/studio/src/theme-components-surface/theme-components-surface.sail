@@ -46,21 +46,31 @@ export default controller(() => {
   components-chrome
   gap="0"
   grow
-  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+
 >
+  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row components-error align="center" gap="2" shrink="0" sx={bandError}>
-      <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
+    <row components-error align="center" gap="2" shrink="0">
+      style(bandError)
+
+      <p grow min-w="0">
+        style.fontSize(sm).fg(destructive).truncate()
+{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row components-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+    <row components-loading align="center" gap="2" shrink="0">
+      style(bandStatus)
+
       <spinner size="sm"></spinner>
-      <p sx={fieldHint}>Loading…</p>
+      <p>
+        style(fieldHint)
+Loading…</p>
     </row>
   </if>
 
@@ -71,19 +81,31 @@ export default controller(() => {
     gap="0"
     nowrap
     align="stretch"
-    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
+
   >
+    style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+
     <!-- LEFT: component catalog rail -->
     <scroll-area
       components-rail
       shrink="0"
-      sx={style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(background)}
+
     >
-      <column gap="3" sx={railCol}>
+      style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(background)
+
+      <column gap="3">
+        style(railCol)
+
         <column gap="2">
-          <p sx={eyebrow}>Components</p>
-          <p sx={style.fontSize(md).fontWeight(semibold).tracking(tight)}>Theme overrides</p>
-          <p sx={fieldHint} l1-facet-blurb>
+          <p>
+            style(eyebrow)
+Components</p>
+          <p>
+            style.fontSize(md).fontWeight(semibold).tracking(tight)
+Theme overrides</p>
+          <p l1-facet-blurb>
+            style(fieldHint)
+
             Per-element exceptions for this theme — not the project Components library.
           </p>
           <row gap="2" align="center" nowrap>
@@ -112,11 +134,17 @@ export default controller(() => {
               align="center"
               gap="2"
               nowrap
-              sx={listRow}
+
             >
+              style(listRow)
+
               <column gap="0" grow min-w="0">
-                <p sx={doorTitle}>{row.label}</p>
-                <p sx={fieldHint}>{row.hint}</p>
+                <p>
+                  style(doorTitle)
+{row.label}</p>
+                <p>
+                  style(fieldHint)
+{row.hint}</p>
               </column>
               <if {row.hasOverride}>
                 <badge tone="primary" size="sm" variant="solid" pill shrink="0">override</badge>
@@ -134,9 +162,13 @@ export default controller(() => {
       gap="0"
       grow
       min-w="0"
-      sx={style.minW(0).basis(0).minH(0).h(full).bg(background).overflow(hidden)}
+
     >
-      <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
+      style.minW(0).basis(0).minH(0).h(full).bg(background).overflow(hidden)
+
+      <column grow gap="0">
+        style.minH(0).h(full).pad(4)
+
         <!--
           One themed host only. Stage content sits ON background —
           no nested white plate under the live specimen (light-mode clash).
@@ -147,26 +179,44 @@ export default controller(() => {
           preview-specimen
           mode={session.paintMode()}
           padding="none"
-          sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
+
         >
-          <column gap="0" grow sx={style.minH(0).h(full)}>
+          style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+
+          <column gap="0" grow>
+            style.minH(0).h(full)
+
             <row
               specimen-chrome
               align="center"
               gap="2"
               nowrap
               shrink="0"
-              sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
             >
-              <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
-                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
-                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
-                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
+              style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
+              <row gap="2" align="center" nowrap shrink="0" hidden="true">
+                style.minW(12)
+
+                <stack shrink="0">
+                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+</stack>
+                <stack shrink="0">
+                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+</stack>
+                <stack shrink="0">
+                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+</stack>
               </row>
-              <p grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>
+              <p grow min-w="0">
+                style.fontSize(xs).fg(muted-foreground).truncate()
+
                 {session.nameEdit()} · {components.selectedLabel()}
               </p>
-              <p sx={pathMeta} shrink="0">{session.paintMode()}</p>
+              <p shrink="0">
+                style(pathMeta)
+{session.paintMode()}</p>
             </row>
 
             <if {components.hasVariants()}>
@@ -177,9 +227,13 @@ export default controller(() => {
                 nowrap
                 shrink="0"
                 on:click={components.onVariantPick}
-                sx={style.padX(3).padY(2).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
               >
-                <p sx={pathMeta} shrink="0">{components.viewerVariantAttr()}:</p>
+                style.padX(3).padY(2).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
+                <p shrink="0">
+                  style(pathMeta)
+{components.viewerVariantAttr()}:</p>
                 <for {components.variantChips()} as="c" key={c.key}>
                   <button
                     type="button"
@@ -194,22 +248,32 @@ export default controller(() => {
               </row>
             </if>
 
-            <scroll-area grow sx={style.minH(0).basis(0).h(full).bg(background)}>
+            <scroll-area grow>
+              style.minH(0).basis(0).h(full).bg(background)
+
               <column
                 specimen-body
                 l1-live-stage={components.selectedId()}
                 gap="5"
                 align="stretch"
-                sx={style.pad(5).minW(0).minH(full)}
+
               >
+                style.pad(5).minW(0).minH(full)
+
                 <column gap="1">
-                  <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>
+                  <p>
+                    style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+
                     {components.selectedLabel()}
                   </p>
-                  <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)}>
+                  <p>
+                    style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+
                     {components.viewerBlurb()}
                   </p>
-                  <p sx={pathMeta}>{components.registryNote()}</p>
+                  <p>
+                    style(pathMeta)
+{components.registryNote()}</p>
                 </column>
 
                 <column gap="4" align="start" w="full" l1-stage-host>
@@ -226,22 +290,30 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.input()}>
-                    <column gap="2" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <column gap="2" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
                     </column>
                   </if>
                   <if {components.stage.textarea()}>
-                    <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" w="full" sx={style.maxW(panel-max-w-sm)}></textarea>
+                    <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" w="full">
+                      style.maxW(panel-max-w-sm)
+</textarea>
                   </if>
                   <if {components.stage.select()}>
-                    <select size="sm" label="Sample select" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <select size="sm" label="Sample select" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <option>Option A</option>
                       <option>Option B</option>
                       <option>Option C</option>
                     </select>
                   </if>
                   <if {components.stage.combobox()}>
-                    <combobox placeholder="Type to filter…" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <combobox placeholder="Type to filter…" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <option value="sail">Sail</option>
                       <option value="react">React</option>
                       <option value="svelte">Svelte</option>
@@ -251,7 +323,9 @@ export default controller(() => {
                     <radio value="a">Option A</radio>
                   </if>
                   <if {components.stage.radioGroup()}>
-                    <radio-group label="Plan" name="theme-l1-plan" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <radio-group label="Plan" name="theme-l1-plan" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <radio value="monthly">Monthly</radio>
                       <radio value="yearly">Yearly</radio>
                     </radio-group>
@@ -259,13 +333,19 @@ export default controller(() => {
                   <if {components.stage.switchToggle()}>
                     <row gap="3" align="center">
                       <switch size={components.variant() || 'md'} tone="primary" checked={components.notify()} label="Sample switch"></switch>
-                      <p sx={fieldHint}>{components.notify() ? 'on' : 'off'}</p>
+                      <p>
+                        style(fieldHint)
+{components.notify() ? 'on' : 'off'}</p>
                     </row>
                   </if>
                   <if {components.stage.slider()}>
-                    <column gap="2" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <column gap="2" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <slider value={components.load()} min="0" max="100" tone={components.variant() || 'primary'} label="Sample slider"></slider>
-                      <p sx={fieldHint}>{components.load()}%</p>
+                      <p>
+                        style(fieldHint)
+{components.load()}%</p>
                     </column>
                   </if>
                   <if {components.stage.toggle()}>
@@ -279,20 +359,26 @@ export default controller(() => {
                     </toggle-group>
                   </if>
                   <if {components.stage.field()}>
-                    <field w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <field w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <label slot="label" for="theme-l1-field">Name</label>
                       <input id="theme-l1-field" size="sm" placeholder="Ada Lovelace" />
                       <p slot="hint">Hint under the control</p>
                     </field>
                   </if>
                   <if {components.stage.label()}>
-                    <column gap="1" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <column gap="1" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
                       <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
                     </column>
                   </if>
                   <if {components.stage.fieldset()}>
-                    <fieldset w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <fieldset w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <legend>Account</legend>
                       <column gap="2">
                         <input size="sm" placeholder="Name" />
@@ -301,9 +387,13 @@ export default controller(() => {
                     </fieldset>
                   </if>
                   <if {components.stage.legend()}>
-                    <fieldset w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <fieldset w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <legend>Legend specimen</legend>
-                      <p sx={fieldHint}>Legend lives on a fieldset.</p>
+                      <p>
+                        style(fieldHint)
+Legend lives on a fieldset.</p>
                     </fieldset>
                   </if>
                   <if {components.stage.themePicker()}>
@@ -317,10 +407,14 @@ export default controller(() => {
                     </alert>
                   </if>
                   <if {components.stage.progressBar()}>
-                    <progress value={components.load()} max="100" w="full" sx={style.maxW(panel-max-w-sm)}></progress>
+                    <progress value={components.load()} max="100" w="full">
+                      style.maxW(panel-max-w-sm)
+</progress>
                   </if>
                   <if {components.stage.meter()}>
-                    <column gap="2" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <column gap="2" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <meter value="0.3"></meter>
                       <meter value="0.7"></meter>
                       <meter value="0.95"></meter>
@@ -342,17 +436,25 @@ export default controller(() => {
                   </if>
                   <if {components.stage.errorBoundary()}>
                     <error-boundary message="Panel failed to load.">
-                      <p sx={fieldHint}>Healthy boundary is invisible — this is the wrapped tree.</p>
+                      <p>
+                        style(fieldHint)
+Healthy boundary is invisible — this is the wrapped tree.</p>
                     </error-boundary>
                   </if>
                   <if {components.stage.toast()}>
-                    <toast tone="success" duration="0" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <toast tone="success" duration="0" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <strong>Saved.</strong> Sticky toast (duration 0).
                     </toast>
                   </if>
                   <if {components.stage.toastRegion()}>
-                    <column gap="2" w="full" sx={style.maxW(panel-max-w-sm).position(relative).minH(24)}>
-                      <p sx={fieldHint}>Toast region hosts stacked toasts (fixed in product).</p>
+                    <column gap="2" w="full">
+                      style.maxW(panel-max-w-sm).position(relative).minH(24)
+
+                      <p>
+                        style(fieldHint)
+Toast region hosts stacked toasts (fixed in product).</p>
                       <toast tone="info" duration="0">Region child toast</toast>
                     </column>
                   </if>
@@ -372,10 +474,16 @@ export default controller(() => {
                     </row>
                   </if>
                   <if {components.stage.card()}>
-                    <card variant={components.variant() || 'default'} padding="sm" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <card variant={components.variant() || 'default'} padding="sm" w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <column gap="2">
-                        <p sx={doorTitle}>Card surface</p>
-                        <p sx={fieldHint}>Judges component.card.radius when overridden.</p>
+                        <p>
+                          style(doorTitle)
+Card surface</p>
+                        <p>
+                          style(fieldHint)
+Judges component.card.radius when overridden.</p>
                       </column>
                     </card>
                   </if>
@@ -389,37 +497,59 @@ export default controller(() => {
                     <icon size={components.variant() || 'md'} name="sparkles" label="sparkles"></icon>
                   </if>
                   <if {components.stage.separator()}>
-                    <column gap="2" w="full" sx={style.maxW(panel-max-w-sm)}>
-                      <p sx={fieldHint}>above</p>
+                    <column gap="2" w="full">
+                      style.maxW(panel-max-w-sm)
+
+                      <p>
+                        style(fieldHint)
+above</p>
                       <separator variant={components.variant() || 'solid'}></separator>
-                      <p sx={fieldHint}>below</p>
+                      <p>
+                        style(fieldHint)
+below</p>
                     </column>
                   </if>
                   <if {components.stage.details()}>
-                    <details w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <details w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <summary>Advanced options</summary>
-                      <p sx={fieldHint}>Native disclosure body.</p>
+                      <p>
+                        style(fieldHint)
+Native disclosure body.</p>
                     </details>
                   </if>
                   <if {components.stage.summary()}>
-                    <details w="full" sx={style.maxW(panel-max-w-sm)} open>
+                    <details w="full" open>
+                      style.maxW(panel-max-w-sm)
+
                       <summary>Summary specimen</summary>
-                      <p sx={fieldHint}>Summary is the disclosure trigger.</p>
+                      <p>
+                        style(fieldHint)
+Summary is the disclosure trigger.</p>
                     </details>
                   </if>
                   <if {components.stage.collapsible()}>
-                    <collapsible w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <collapsible w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <strong slot="trigger">Show details</strong>
-                      <p sx={fieldHint}>Collapsible body content.</p>
+                      <p>
+                        style(fieldHint)
+Collapsible body content.</p>
                     </collapsible>
                   </if>
                   <if {components.stage.prose()}>
-                    <prose w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <prose w="full">
+                      style.maxW(panel-max-w-sm)
+
                       <p>Body copy with <strong>strong</strong> and <em>emphasis</em>.</p>
                     </prose>
                   </if>
                   <if {components.stage.codeBlock()}>
-                    <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" w="full" sx={style.maxW(panel-max-w-sm)}></code-block>
+                    <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" w="full">
+                      style.maxW(panel-max-w-sm)
+</code-block>
                   </if>
 
                   <!-- ── Overlay ────────────────────────────────────── -->
@@ -432,9 +562,15 @@ export default controller(() => {
                     <column gap="2" align="center">
                       <button type="button" size="sm" variant="ghost" popovertarget="theme-l1-hc">@ada</button>
                       <hover-card id="theme-l1-hc">
-                        <column gap="1" sx={style.pad(3)}>
-                          <p sx={doorTitle}>Ada Lovelace</p>
-                          <p sx={fieldHint}>Hover card body.</p>
+                        <column gap="1">
+                          style.pad(3)
+
+                          <p>
+                            style(doorTitle)
+Ada Lovelace</p>
+                          <p>
+                            style(fieldHint)
+Hover card body.</p>
                         </column>
                       </hover-card>
                     </column>
@@ -443,7 +579,9 @@ export default controller(() => {
                     <column gap="2" align="center">
                       <button type="button" size="sm" popovertarget="theme-l1-pop">Open popover</button>
                       <popover id="theme-l1-pop">
-                        <p sx={style.pad(3)}>Popover panel under theme paint.</p>
+                        <p>
+                          style.pad(3)
+Popover panel under theme paint.</p>
                       </popover>
                     </column>
                   </if>
@@ -458,16 +596,24 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.menuItem()}>
-                    <column gap="1" w="full" sx={style.maxW(panel-max-w-sm).pad(1).borderWidth(1).border(border).radius(md).bg(surface-1)}>
+                    <column gap="1" w="full">
+                      style.maxW(panel-max-w-sm).pad(1).borderWidth(1).border(border).radius(md).bg(surface-1)
+
                       <menu-item>Edit theme</menu-item>
                       <menu-item>Duplicate</menu-item>
                       <menu-item>Export</menu-item>
                     </column>
                   </if>
                   <if {components.stage.contextMenu()}>
-                    <column gap="2" align="center" w="full" sx={style.maxW(panel-max-w-sm)}>
-                      <column id="theme-l1-ctx" gap="1" w="full" sx={style.pad(3).borderWidth(1).border(border).radius(md)}>
-                        <p sx={fieldHint}>Right-click this area</p>
+                    <column gap="2" align="center" w="full">
+                      style.maxW(panel-max-w-sm)
+
+                      <column id="theme-l1-ctx" gap="1" w="full">
+                        style.pad(3).borderWidth(1).border(border).radius(md)
+
+                        <p>
+                          style(fieldHint)
+Right-click this area</p>
                       </column>
                       <context-menu for="theme-l1-ctx">
                         <menu-item value="cut">Cut</menu-item>
@@ -498,9 +644,15 @@ export default controller(() => {
                         <tab>Shape</tab>
                         <tab>Assets</tab>
                       </tab-list>
-                      <tab-panel><p sx={fieldHint}>Overview panel</p></tab-panel>
-                      <tab-panel><p sx={fieldHint}>Shape panel</p></tab-panel>
-                      <tab-panel><p sx={fieldHint}>Assets panel</p></tab-panel>
+                      <tab-panel><p>
+                        style(fieldHint)
+Overview panel</p></tab-panel>
+                      <tab-panel><p>
+                        style(fieldHint)
+Shape panel</p></tab-panel>
+                      <tab-panel><p>
+                        style(fieldHint)
+Assets panel</p></tab-panel>
                     </tabs>
                   </if>
                   <if {components.stage.tabList()}>
@@ -515,7 +667,9 @@ export default controller(() => {
                   </if>
                   <if {components.stage.tabPanel()}>
                     <tab-panel>
-                      <p sx={fieldHint}>Tab panel body.</p>
+                      <p>
+                        style(fieldHint)
+Tab panel body.</p>
                     </tab-panel>
                   </if>
                   <if {components.stage.breadcrumb()}>
@@ -562,21 +716,41 @@ export default controller(() => {
                     </table>
                   </if>
                   <if {components.stage.scrollArea()}>
-                    <scroll-area sx={style.maxH(32).w(full).maxW(panel-max-w-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)}>
+                    <scroll-area>
+                      style.maxH(32).w(full).maxW(panel-max-w-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)
+
                       <column gap="2">
-                        <p sx={fieldHint}>Scroll me — themed scrollbars.</p>
-                        <p sx={fieldHint}>Line 2</p>
-                        <p sx={fieldHint}>Line 3</p>
-                        <p sx={fieldHint}>Line 4</p>
-                        <p sx={fieldHint}>Line 5</p>
-                        <p sx={fieldHint}>Line 6</p>
-                        <p sx={fieldHint}>Line 7</p>
-                        <p sx={fieldHint}>Line 8</p>
+                        <p>
+                          style(fieldHint)
+Scroll me — themed scrollbars.</p>
+                        <p>
+                          style(fieldHint)
+Line 2</p>
+                        <p>
+                          style(fieldHint)
+Line 3</p>
+                        <p>
+                          style(fieldHint)
+Line 4</p>
+                        <p>
+                          style(fieldHint)
+Line 5</p>
+                        <p>
+                          style(fieldHint)
+Line 6</p>
+                        <p>
+                          style(fieldHint)
+Line 7</p>
+                        <p>
+                          style(fieldHint)
+Line 8</p>
                       </column>
                     </scroll-area>
                   </if>
                   <if {components.stage.ticker()}>
-                    <ticker w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <ticker w="full">
+                      style.maxW(panel-max-w-sm)
+
                       Live ticker · theme paint · radius overrides ·
                     </ticker>
                   </if>
@@ -600,33 +774,55 @@ export default controller(() => {
       components-editor
       components-inspector
       shrink="0"
-      sx={style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background)}
+
     >
-      <column gap="5" sx={inspectorCol}>
+      style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background)
+
+      <column gap="5">
+        style(inspectorCol)
+
         <column gap="2">
-          <p sx={eyebrow}>Theme overrides</p>
-          <p sx={style.fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading)}>
+          <p>
+            style(eyebrow)
+Theme overrides</p>
+          <p>
+            style.fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading)
+
             {components.selectedLabel()}
           </p>
-          <p sx={fieldHint}>{components.registryNote()}</p>
+          <p>
+            style(fieldHint)
+{components.registryNote()}</p>
           <if {session.catalogHint()}>
-            <p catalog-hint sx={fieldHint}>Add to project to edit.</p>
+            <p catalog-hint>
+              style(fieldHint)
+Add to project to edit.</p>
           </if>
         </column>
 
         <column section="component-tokens" gap="3">
           <row align="baseline" justify="between" gap="2" nowrap>
-            <p sx={sectionTitle}>Component tokens</p>
-            <p sx={pathMeta}>component.*</p>
+            <p>
+              style(sectionTitle)
+Component tokens</p>
+            <p>
+              style(pathMeta)
+component.*</p>
           </row>
           <if {components.hasComponentKnobs()}>
             <column gap="3" component-knob-list>
               <for {components.componentKnobs()} as="tok" key={tok.key}>
-                <column token-path={tok.path} gap="1" sx={tokenRow}>
+                <column token-path={tok.path} gap="1">
+                  style(tokenRow)
+
                   <row align="center" justify="between" gap="2" nowrap>
                     <column gap="0" grow min-w="0">
-                      <p sx={doorTitle}>{tok.label}</p>
-                      <p sx={pathMeta}>{tok.path}</p>
+                      <p>
+                        style(doorTitle)
+{tok.label}</p>
+                      <p>
+                        style(pathMeta)
+{tok.path}</p>
                     </column>
                     <if {tok.isOverridden}>
                       <button type="button" size="sm" variant="ghost" tone="muted" token-path={tok.path} on:click={components.onClearComponent} disabled={!session.canEdit()}>
@@ -636,62 +832,92 @@ export default controller(() => {
                   </row>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
-                      <stack token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
+                      <stack token-chip shrink="0">
+                        style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)
+
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
                       </stack>
                       <column gap="0" grow min-w="0">
-                        <p sx={pathMeta}>{tok.hexLabel}</p>
+                        <p>
+                          style(pathMeta)
+{tok.hexLabel}</p>
                         <if {!tok.isOverridden}>
-                          <p sx={fieldHint}>Default · pick to override for this component only</p>
+                          <p>
+                            style(fieldHint)
+Default · pick to override for this component only</p>
                         </if>
                       </column>
                     </row>
                   </if>
                   <if {!tok.isColor}>
-                    <p sx={fieldHint}>{tok.raw}</p>
+                    <p>
+                      style(fieldHint)
+{tok.raw}</p>
                   </if>
                 </column>
               </for>
             </column>
           </if>
           <if {!components.hasComponentKnobs()}>
-            <p sx={fieldHint}>No component-scoped tokens for this face in the registry.</p>
+            <p>
+              style(fieldHint)
+No component-scoped tokens for this face in the registry.</p>
           </if>
         </column>
 
         <column section="global-tokens" gap="3">
           <row align="baseline" justify="between" gap="2" nowrap>
-            <p sx={sectionTitle}>Theme tokens this face uses</p>
-            <p sx={pathMeta}>theme-wide</p>
+            <p>
+              style(sectionTitle)
+Theme tokens this face uses</p>
+            <p>
+              style(pathMeta)
+theme-wide</p>
           </row>
-          <p sx={fieldHint}>
+          <p>
+            style(fieldHint)
+
             Edit a shared theme color here, or set a component token above to override only this component.
           </p>
           <if {components.hasGlobalKnobs()}>
             <column gap="3" global-knob-list>
               <for {components.globalKnobs()} as="tok" key={tok.key}>
-                <column token-path={tok.path} gap="1" sx={tokenRow}>
+                <column token-path={tok.path} gap="1">
+                  style(tokenRow)
+
                   <column gap="0">
-                    <p sx={doorTitle}>{tok.label}</p>
-                    <p sx={pathMeta}>{tok.path}</p>
+                    <p>
+                      style(doorTitle)
+{tok.label}</p>
+                    <p>
+                      style(pathMeta)
+{tok.path}</p>
                   </column>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
-                      <stack token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
+                      <stack token-chip shrink="0">
+                        style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)
+
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
                       </stack>
-                      <p sx={pathMeta}>{tok.hexLabel}</p>
+                      <p>
+                        style(pathMeta)
+{tok.hexLabel}</p>
                     </row>
                   </if>
                   <if {!tok.isColor}>
-                    <p sx={fieldHint}>{tok.raw}</p>
+                    <p>
+                      style(fieldHint)
+{tok.raw}</p>
                   </if>
                 </column>
               </for>
             </column>
           </if>
           <if {!components.hasGlobalKnobs()}>
-            <p sx={fieldHint}>No related globals listed for this face.</p>
+            <p>
+              style(fieldHint)
+No related globals listed for this face.</p>
           </if>
         </column>
       </column>

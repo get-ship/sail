@@ -239,7 +239,9 @@ export default controller(() => {
 
   <section>
     <h2>Kanban — bindFor + DnD + transitions</h2>
-    <div data-row="true" sx={style.mb(3)}>
+    <div data-row="true">
+      style.mb(3)
+
       <div>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
       <button on:click={() => chaos()}>chaos × 20</button>
@@ -249,7 +251,9 @@ export default controller(() => {
       <for {columns()} as="col" key={col.id}>
         <section data-col={col.id}>
           <div>
-            <span data-tone="plain" use:swatch={col.tone} sx={style.bg(bind(swatchColor))}></span>
+            <span data-tone="plain" use:swatch={col.tone}>
+              style.bg(bind(swatchColor))
+</span>
             <span>{col.title}</span>
             <span>({col.cards.length})</span>
           </div>
@@ -263,7 +267,9 @@ draggable="true"
 on:dragstart={(e) => onDragStart(e, card.id)}
 on:dragend={onDragEnd}
 on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
-on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)} sx={style.enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' })}>
+on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}>
+                style.enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' })
+
                 <div>
                   {card.title}
                   <if {card.priority === 'high'}>

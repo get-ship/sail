@@ -147,11 +147,17 @@ export default controller(() => {
 })
 </controller>
 
-<center sx={style.pad(6).minH(screen).bg(background)}>
+<center>
+  style.pad(6).minH(screen).bg(background)
+
   <column gap="4" w="full" max-w="panel-max-w-md">
     <column gap="1">
-      <h1 sx={style.fontSize(2xl).fontWeight(semibold).fg(foreground)}>Shipping address</h1>
-      <p sx={style.fontSize(sm).fg(muted-foreground)}>
+      <h1>
+        style.fontSize(2xl).fontWeight(semibold).fg(foreground)
+Shipping address</h1>
+      <p>
+        style.fontSize(sm).fg(muted-foreground)
+
         Enter where we should send your order. State options depend on country.
       </p>
     </column>
@@ -191,7 +197,9 @@ export default controller(() => {
 
     <card w="full">
       <form on:submit={onSubmit}>
-        <column gap="4" sx={style.pad(5)} w="full">
+        <column gap="4" w="full">
+          style.pad(5)
+
           <field invalid={nameInvalid()} w="full">
             <label slot="label" required>Name</label>
             <input
@@ -280,7 +288,9 @@ export default controller(() => {
           </row>
 
           <if {attempted() && !valid() && !pending()}>
-            <p sx={style.fontSize(sm).fg(destructive)} role="alert">
+            <p role="alert">
+              style.fontSize(sm).fg(destructive)
+
               Fix the highlighted fields before saving.
             </p>
           </if>

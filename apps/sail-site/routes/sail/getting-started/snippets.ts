@@ -16,13 +16,13 @@ $ sail dev --project my-app
 
   firstPage: `<!-- routes/page.sail — a page is markup. The components are
      already in the language; there is nothing to import. -->
-<column gap="4" sx={style.pad(6).maxW(panel-max-w-lg)}>
+<column gap="4" style={style.pad(6).maxW(panel-max-w-lg)}>
   <h1>Team</h1>
   <row gap="2">
     <input placeholder="Filter people" />
     <button variant="solid" tone="primary">Invite</button>
   </row>
-  <card sx={style.pad(4)}>
+  <card style={style.pad(4)}>
     <row gap="3" align="center">
       <avatar></avatar>
       <strong>Ada Lovelace</strong>
@@ -94,6 +94,6 @@ export default controller((ctx) => {
 
 <button on:click={() => open.set(!open())}>Toggle</button>
 <if {open()}>
-  <card sx={style.pad(4).enter({ opacity: 'fade' })}>Hello.</card>
+  <card style={style.pad(4).enter({ opacity: 'fade' })}>Hello.</card>
 </if>`,
 }

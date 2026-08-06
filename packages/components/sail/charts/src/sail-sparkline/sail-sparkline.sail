@@ -102,7 +102,9 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     width={viewport.width()}
     height={viewport.height()}
     aria-hidden="true"
-    sx={style.display(inline-block).overflow(visible)}>
+>
+    style.display(inline-block).overflow(visible)
+
   </svg>
 </else-if><else>
   <svg
@@ -111,8 +113,10 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     height={viewport.height()}
     role="img"
     aria-label={ariaLabel()}
-    sx={style.display(inline-block).overflow(visible)}
+
     use:observeViewport>
+    style.display(inline-block).overflow(visible)
+
     <for {seriesPaths()} as="s" key={s.name}>
       <if {fill()}>
         <path d={s.fillD} fill={s.color} fill-opacity="0.18" stroke="none"></path>

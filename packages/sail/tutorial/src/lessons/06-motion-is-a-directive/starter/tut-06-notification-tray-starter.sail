@@ -60,7 +60,9 @@ export default controller(() => {
         <if {unread() > 0}>
           <!-- TODO 3: sx={… .loop({ scale: 'pulse' })} — ambient, and it
                stops under prefers-reduced-motion for free. -->
-          <span sx={unreadDot}></span>
+          <span>
+            style(unreadDot)
+</span>
         </if>
       </button>
     </row>
@@ -75,14 +77,20 @@ export default controller(() => {
       <for {notes()} as="n" key={n.id}>
         <!-- TODO 5: rows should cascade in (style.enter with a stagger
              duration) and fade out on dismiss (style.exit). -->
-        <row gap="3" align="center" sx={noteRow}>
+        <row gap="3" align="center">
+          style(noteRow)
+
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p grow sx={noteText}>{n.text}</p>
+          <p grow>
+            style(noteText)
+{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>
       <if {notes().length === 0}>
-        <p sx={empty}>All clear.</p>
+        <p>
+          style(empty)
+All clear.</p>
       </if>
     </column>
   </if>

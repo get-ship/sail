@@ -37,39 +37,69 @@ export default controller(() => {
   gap="0"
   grow
   min-w="0"
-  sx={style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)}
+
 >
-  <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
+  style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)
+
+  <column grow gap="0">
+    style.minH(0).h(full).pad(4)
+
     <!-- Draft paint = applyScope via theme-session bind (not theme). -->
     <card
       color-specimen
       preview-specimen
       mode={paintMode()}
       padding="none"
-      sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
+
     >
-      <column gap="0" grow sx={style.minH(0).h(full)}>
+      style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+
+      <column gap="0" grow>
+        style.minH(0).h(full)
+
         <row
           specimen-chrome
           align="center"
           gap="2"
           nowrap
           shrink="0"
-          sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+
         >
-          <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
-            <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
-            <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
-            <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
+          style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+
+          <row gap="2" align="center" nowrap shrink="0" hidden="true">
+            style.minW(12)
+
+            <stack shrink="0">
+              style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+</stack>
+            <stack shrink="0">
+              style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+</stack>
+            <stack shrink="0">
+              style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+</stack>
           </row>
-          <p grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{nameEdit()}</p>
-          <p sx={pathMeta} shrink="0">{paintMode()}</p>
+          <p grow min-w="0">
+            style.fontSize(xs).fg(muted-foreground).truncate()
+{nameEdit()}</p>
+          <p shrink="0">
+            style(pathMeta)
+{paintMode()}</p>
         </row>
-        <scroll-area grow sx={style.minH(0).basis(0).h(full).bg(background)}>
-          <column specimen-body gap="4" sx={style.pad(5).minW(0)}>
+        <scroll-area grow>
+          style.minH(0).basis(0).h(full).bg(background)
+
+          <column specimen-body gap="4">
+            style.pad(5).minW(0)
+
             <column gap="1">
-              <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>Product UI</p>
-              <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)}>
+              <p>
+                style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+Product UI</p>
+              <p>
+                style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+
                 Brand + surfaces paint this host. Mode flips the color table, not the editor chrome.
               </p>
             </column>
@@ -84,31 +114,57 @@ export default controller(() => {
               <badge tone="accent" size="sm" variant="solid" pill>Accent</badge>
             </row>
             <column surface-stack gap="2" label="Surface stack">
-              <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(background)}>
-                <p sx={pathMeta}>bg</p>
-                <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-1)}>
-                  <p sx={pathMeta}>surface-1</p>
-                  <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-2)}>
-                    <p sx={pathMeta}>surface-2</p>
-                    <column sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-3)}>
-                      <p sx={pathMeta}>card</p>
+              <column gap="2">
+                style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(background)
+
+                <p>
+                  style(pathMeta)
+bg</p>
+                <column gap="2">
+                  style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-1)
+
+                  <p>
+                    style(pathMeta)
+surface-1</p>
+                  <column gap="2">
+                    style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-2)
+
+                    <p>
+                      style(pathMeta)
+surface-2</p>
+                    <column>
+                      style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-3)
+
+                      <p>
+                        style(pathMeta)
+card</p>
                     </column>
                   </column>
                 </column>
               </column>
             </column>
             <column gap="1">
-              <p sx={style.fontSize(sm).fg(foreground)}>Foreground on surface</p>
-              <p sx={style.fontSize(xs).fg(muted-foreground)}>Muted secondary copy · border + ring below</p>
+              <p>
+                style.fontSize(sm).fg(foreground)
+Foreground on surface</p>
+              <p>
+                style.fontSize(xs).fg(muted-foreground)
+Muted secondary copy · border + ring below</p>
             </column>
             <column gap="1">
-              <p sx={style.fontSize(xs).fg(muted-foreground)}>Email</p>
+              <p>
+                style.fontSize(xs).fg(muted-foreground)
+Email</p>
               <input type="email" size="sm" placeholder="you@company.com" label="Sample email" />
             </column>
             <card padding="sm">
               <column gap="2">
-                <p sx={style.fontSize(sm).fontWeight(semibold)}>Card surface</p>
-                <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
+                <p>
+                  style.fontSize(sm).fontWeight(semibold)
+Card surface</p>
+                <p>
+                  style.fontSize(xs).fg(muted-foreground).leading(relaxed)
+
                   Focus ring uses color.ring. Borders use color.border.
                 </p>
               </column>

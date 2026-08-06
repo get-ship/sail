@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn bans_div_and_span() {
-        assert_eq!(run(r#"<div sx="p-4">x</div>"#), 1);
+        assert_eq!(run(r#"<div style="p-4">x</div>"#), 1);
         assert_eq!(run(r#"<span>hi</span>"#), 1);
     }
 

@@ -36,8 +36,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx={style.minW(0)}>
-  <column sx={style.maxW(breakpoint-tablet)} gap="5">
+<column gap="6">
+  style.minW(0)
+
+  <column gap="5">
+    style.maxW(breakpoint-tablet)
+
     <p token="doc-eyebrow">Reference</p>
     <h1>Elements — {stdlibCount()} stdlib + {reskinCount()} reskins</h1>
     <p token="doc-lead">
@@ -49,17 +53,25 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <grid cols="3" gap="2">
       <for {stdlibElements()} as="e" key={e.tag}>
-        <card padding="sm" sx={style.minW(0)}>
+        <card padding="sm">
+          style.minW(0)
+
           <column gap="1">
-            <a href={e.href}><code>{e.tag}</code> <small sx={style.fg(muted-foreground)}>{e.propCount}</small></a>
-            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.description}</small>
+            <a href={e.href}><code>{e.tag}</code> <small>
+              style.fg(muted-foreground)
+{e.propCount}</small></a>
+            <small>
+              style.fg(muted-foreground).maxW(panel-max-w-sm)
+{e.description}</small>
           </column>
         </card>
       </for>
     </grid>
 
     <h3>Native reskins</h3>
-    <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
+    <p>
+      style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)
+
       Runtime-styled native HTML tags (<code>hr</code>, <code>kbd</code>).
       The tag remains the API; the framework only reskins paint. Prefer
       stdlib <code>separator</code> when you need orientation, variant, or
@@ -67,10 +79,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </p>
     <grid cols="3" gap="2">
       <for {reskinElements()} as="e" key={e.tag}>
-        <card padding="sm" sx={style.minW(0)}>
+        <card padding="sm">
+          style.minW(0)
+
           <column gap="1">
             <a href={e.href}><code>{e.tag}</code></a>
-            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.description}</small>
+            <small>
+              style.fg(muted-foreground).maxW(panel-max-w-sm)
+{e.description}</small>
           </column>
         </card>
       </for>

@@ -13,7 +13,7 @@ import type { Action } from '../action'
  *   ride the natural box.
  *
  * Reader atoms in sx:
- *     sx="top-(--box-top) left-(--box-left) w-(--box-w) h-(--box-h)"
+ *     style="top-(--box-top) left-(--box-left) w-(--box-w) h-(--box-h)"
  *
  * The action distinguishes "null = off" vs "0 = present-but-empty" the same
  * way the css-token rule would: null removes the property so the element's

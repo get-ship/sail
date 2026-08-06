@@ -119,5 +119,7 @@ export default controller((ctx: Scope) => {
 
 </controller>
 <prose>
-  <div sx={style.display(block).fontSize(base)} use:paintMarkdown></div>
+  <div use:paintMarkdown>
+    style.display(block).fontSize(base)
+</div>
 </prose>

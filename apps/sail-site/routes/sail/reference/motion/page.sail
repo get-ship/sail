@@ -17,8 +17,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx={style.minW(0)}>
-  <column sx={style.maxW(breakpoint-tablet)} gap="5">
+<column gap="6">
+  style.minW(0)
+
+  <column gap="5">
+    style.maxW(breakpoint-tablet)
+
     <p token="doc-eyebrow">Reference</p>
     <h1>Motion — one system</h1>
     <p token="doc-lead">
@@ -28,17 +32,33 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </p>
   </column>
 
-  <row gap="3" sx={style.padX(3).padY(2).bg(surface-1).radius(md)}><code sx={style.minW(9)}>triggers</code><small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{motionTriggers()}</small></row>
-  <row gap="3" sx={style.padX(3).padY(2).bg(surface-1).radius(md)}><code sx={style.minW(9)}>properties</code><small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
+  <row gap="3">
+    style.padX(3).padY(2).bg(surface-1).radius(md)
+<code>
+    style.minW(9)
+triggers</code><small>
+    style.fg(muted-foreground).maxW(panel-max-w-sm)
+{motionTriggers()}</small></row>
+  <row gap="3">
+    style.padX(3).padY(2).bg(surface-1).radius(md)
+<code>
+    style.minW(9)
+properties</code><small>
+    style.fg(muted-foreground).maxW(panel-max-w-sm)
+{motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
 
   <column gap="3">
     <h3>Presets</h3>
     <grid cols="3" gap="2">
       <for {motionPresets()} as="p" key={p.name}>
-        <card padding="sm" sx={style.minW(0)}>
+        <card padding="sm">
+          style.minW(0)
+
           <column gap="1">
             <code>{p.name}</code>
-            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>({p.kind}) {p.doc}</small>
+            <small>
+              style.fg(muted-foreground).maxW(panel-max-w-sm)
+({p.kind}) {p.doc}</small>
           </column>
         </card>
       </for>
@@ -47,16 +67,22 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Config value grammar</h3>
-    <p sx={style.maxW(breakpoint-tablet)}>
+    <p>
+      style.maxW(breakpoint-tablet)
+
       Inside a <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> config object, every value
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">
       <for {valueForms()} as="f" key={f.form}>
-        <card padding="sm" sx={style.minW(0)}>
+        <card padding="sm">
+          style.minW(0)
+
           <column gap="1">
             <code>{f.form}</code>
-            <small sx={style.fg(muted-foreground)}>{f.summary}</small>
+            <small>
+              style.fg(muted-foreground)
+{f.summary}</small>
           </column>
         </card>
       </for>

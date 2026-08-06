@@ -21,14 +21,16 @@
 
 <button
   type="button"
-  sx={[
+
+>
+  style([
     base,
     when({
       hover: style.bg(menu-item-hover-bg),
       focus: style.bg(menu-item-hover-bg).outline(solid).outline(2).outline(ring),
       disabled: style.opacity(50).cursor(not-allowed),
     }),
-  ]}
->
+  ])
+
   <slot></slot>
 </button>

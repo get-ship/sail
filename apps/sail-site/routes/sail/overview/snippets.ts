@@ -43,7 +43,7 @@ export default controller(() => {
 
 <input placeholder="Filter people" bind:value={query} />
 <for {filtered()} as="p" key={p.id}>
-  <card sx={style.pad(4).enter({ opacity: 'fade', translate-y: 'spring:snappy' })}>
+  <card style={style.pad(4).enter({ opacity: 'fade', translate-y: 'spring:snappy' })}>
     <row gap="3" align="center">
       <avatar></avatar>
       <strong grow>{p.name}</strong>
@@ -62,8 +62,8 @@ export default controller(() => {
 <badge tone="success">Active</badge>
 <alert tone="info">Saved.</alert>`,
 
-  styling: `<card sx={style.pad(5).bg(surface-1).radius(lg).shadow(sm).when({ hover: style.shadow(md) })}>
-  <p sx={style.fg(muted-foreground).fontSize(sm)}>On the system, or it does not compile.</p>
+  styling: `<card style={style.pad(5).bg(surface-1).radius(lg).shadow(sm).when({ hover: style.shadow(md) })}>
+  <p style={style.fg(muted-foreground).fontSize(sm)}>On the system, or it does not compile.</p>
 </card>`,
 
   state: `const count = signal(0)
@@ -73,7 +73,7 @@ effect(() => console.log(count()))   // re-runs on change`,
   data: `const users = query(() => api.users.list())
 // users() is { kind: 'loading' } | { kind: 'ok', value } | { kind: 'error', error }`,
 
-  fx: `<card sx={style.enter({ opacity: 'fade', translate-y: 'spring:gentle' })}>…</card>`,
+  fx: `<card style={style.enter({ opacity: 'fade', translate-y: 'spring:gentle' })}>…</card>`,
 
   theming: `import { applyTheme } from '@ship/tokens/themes'
 applyTheme('console')   // one attribute; every component follows`,

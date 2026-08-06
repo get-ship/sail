@@ -1,11 +1,17 @@
 <!-- RENDER-0 regression: center > column > field > select with options panicked parley
      via grid min-content measure of padded select option text. -->
-<center sx={style.pad(6).minH(screen).bg(background)}>
+<center>
+  style.pad(6).minH(screen).bg(background)
+
   <column gap="4" w="full" max-w="panel-max-w-md">
-    <h1 sx={style.fontSize(2xl).fontWeight(semibold).fg(foreground)}>Shipping address</h1>
+    <h1>
+      style.fontSize(2xl).fontWeight(semibold).fg(foreground)
+Shipping address</h1>
     <card w="full">
       <form>
-        <column gap="4" sx={style.pad(5)} w="full">
+        <column gap="4" w="full">
+          style.pad(5)
+
           <field w="full">
             <label slot="label" required>Name</label>
             <input type="text" name="name" placeholder="Ada Lovelace" w="full" />

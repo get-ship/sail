@@ -22,10 +22,16 @@
   const content = style.padX(4).padY(3)
 </scope>
 
-<details use:detailsToggle use:detailsDisabled sx={[
+<details use:detailsToggle use:detailsDisabled>
+  style([
   host,
   compound({ disabled: true }, style.opacity(50).cursor(not-allowed)),
-]}>
-  <summary sx={summary}><slot name="trigger"></slot></summary>
-  <div><div sx={content}><slot></slot></div></div>
+])
+
+  <summary>
+    style(summary)
+<slot name="trigger"></slot></summary>
+  <div><div>
+    style(content)
+<slot></slot></div></div>
 </details>

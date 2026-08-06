@@ -47,8 +47,12 @@ export default controller(() => {
 </scope>
 
 <column gap="4">
-  <center sx={face}>
-    <strong sx={clockFace}>{clock()}</strong>
+  <center>
+    style(face)
+
+    <strong>
+      style(clockFace)
+{clock()}</strong>
   </center>
 
   <row gap="2" justify="center">

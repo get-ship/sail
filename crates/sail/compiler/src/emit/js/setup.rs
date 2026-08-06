@@ -70,7 +70,7 @@ pub(super) fn emit_setup_body(
     // an attached shadow root for rare foreign-content containment wrappers
     // (`shadow: true`) — not taught as L1. Golden fixtures lock this form.
     mount_w.line("const __root = container.shadowRoot ?? container;");
-    // The `(--x)` binding: every prop/signal a `sx="…"` read matched gets a
+    // The `(--x)` binding: every prop/signal a `style="…"` read matched gets a
     // CSS `@property` registration (own, unscoped install — see
     // `emit::styles::register_properties_install_js`) and is reflected onto
     // the host as an inline custom property, seeded now and kept live by the

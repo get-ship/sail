@@ -24,10 +24,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
-  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
+<column gap="5">
+  style.maxW(breakpoint-tablet).mx(auto)
+
+  <p>
+    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+The language</p>
   <h1>State</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
+  <p>
+    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+
     State is three primitives. A <strong>signal</strong> holds a value. A
     <strong>derived</strong> computes a value from other state. An
     <strong>effect</strong> runs code when the state it reads changes.
@@ -38,30 +44,52 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>The graph, live</h2>
   <row gap="4" align="start">
-    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live</p>
-      <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="4">
+    <column  grow>
+      style.basis(breakpoint-mobile).minW(0)
+
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Live</p>
+      <column gap="4">
+        style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)
+
         <row gap="5" align="center">
           <button on:click={() => count.set(count() + 1)}>+1</button>
           <column gap="1" align="center">
-            <small sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>signal</small>
-            <strong sx={style.fontSize(lg)}>{count()}</strong>
+            <small>
+              style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+signal</small>
+            <strong>
+              style.fontSize(lg)
+{count()}</strong>
           </column>
           <column gap="1" align="center">
-            <small sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>derived ×2</small>
-            <strong sx={style.fontSize(lg)}>{doubled()}</strong>
+            <small>
+              style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+derived ×2</small>
+            <strong>
+              style.fontSize(lg)
+{doubled()}</strong>
           </column>
         </row>
         <column gap="1">
-          <small sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>effect output</small>
+          <small>
+            style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+effect output</small>
           <for {log()} as="line" key={line}>
-            <p sx={style.fontSize(sm).fg(muted-foreground).fontFamily(mono)}>{line}</p>
+            <p>
+              style.fontSize(sm).fg(muted-foreground).fontFamily(mono)
+{line}</p>
           </for>
         </column>
       </column>
     </column>
-    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Source</p>
+    <column  grow>
+      style.basis(breakpoint-mobile).minW(0)
+
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Source</p>
       <code-block code={code.graph}></code-block>
     </column>
   </row>
@@ -98,7 +126,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     effect started is never left running after it's gone.
   </p>
   <code-block code={code.effect}></code-block>
-  <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+
     An effect subscribes to what it <em>actually read on this run</em> — so
     a read the code never reached is a read the effect never subscribed to.
     If an early <code>return</code> or an <code>if</code> skips past a
@@ -169,9 +199,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component can reach by name.
   </p>
   <row gap="4" align="start">
-    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — click either card</p>
-      <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)} gap="3">
+    <column  grow>
+      style.basis(breakpoint-mobile).minW(0)
+
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+Live — click either card</p>
+      <column gap="3">
+        style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)
+
         <grid cols="2" gap="3">
           <store-counter label="one component"></store-counter>
           <store-counter label="a different instance"></store-counter>
@@ -179,8 +215,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <store-total></store-total>
       </column>
     </column>
-    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
-      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>The store</p>
+    <column  grow>
+      style.basis(breakpoint-mobile).minW(0)
+
+      <p>
+        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+The store</p>
       <code-block code={code.storeDef}></code-block>
     </column>
   </row>
@@ -217,11 +257,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     which is handed the element explicitly.
   </p>
 
-  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
+  <p>
+    style.mt(4).fontSize(sm).fg(muted-foreground)
+
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
-  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
+  <row justify="between" gap="2">
+    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+
     <a variant="default" href="/sail/language/sail-file">← Components</a>
     <a variant="solid" tone="primary" href="/sail/language/templates">Templates →</a>
   </row>

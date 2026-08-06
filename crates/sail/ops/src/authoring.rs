@@ -90,7 +90,7 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(
                 md,
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
-                 - Style product: `sx={{style.pad(4).bg(surface-2)}}` — not utility strings.\n\
+                 - Style product: `style={{style.pad(4).bg(surface-2)}}` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
                  - Participation attrs only: `grow` `shrink` `w` `min-w` `max-w` \
                    (`sail-participation-style` bans `style.grow`/`shrink`).\n\
@@ -1097,7 +1097,7 @@ mod tests {
 
     #[test]
     fn check_flags_display_on_layout() {
-        let src = r#"<column sx={style.display(none)}>x</column>"#;
+        let src = r#"<column style={style.display(none)}>x</column>"#;
         let diags = run_check(None, Some(src)).unwrap();
         assert!(
             diags

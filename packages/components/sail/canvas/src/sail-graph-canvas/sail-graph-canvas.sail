@@ -299,13 +299,17 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 })
 
 </controller>
-<div sx={style.position(relative).w(full).bg(card).borderWidth(1).border(border).radius(md).overflow(hidden)}>
+<div>
+  style.position(relative).w(full).bg(card).borderWidth(1).border(border).radius(md).overflow(hidden)
+
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
     preserveAspectRatio="none"
     aria-hidden="true"
-    sx={style.display(block).w(full).h(auto).pointerEvents(none)}
+
   >
+    style.display(block).w(full).h(auto).pointerEvents(none)
+
     <for {edgeViews()} as="e" key={e.key}>
       <path
         d={e.d}
@@ -321,8 +325,12 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   </svg>
 
   <for {nodeViews()} as="n" key={n.id}>
-    <div use:rect={{left: n.left, top: n.top}} sx={style.position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop))}>
-      <center sx={style.h(0)}>
+    <div use:rect={{left: n.left, top: n.top}}>
+      style.position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop))
+
+      <center>
+        style.h(0)
+
         <column
           gap="0"
           role="button"
@@ -335,17 +343,27 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:click={() => select(n)}
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
-          sx={style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(primary), stateSkill: style.borderLWidth(1).borderL(success), stateMcp: style.borderLWidth(1).borderL(info), stateRule: style.borderLWidth(1).borderL(warning), statePerm: style.borderLWidth(1).borderL(destructive), stateHarness: style.borderLWidth(1).borderL(accent) })}
+
         >
+          style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(primary), stateSkill: style.borderLWidth(1).borderL(success), stateMcp: style.borderLWidth(1).borderL(info), stateRule: style.borderLWidth(1).borderL(warning), statePerm: style.borderLWidth(1).borderL(destructive), stateHarness: style.borderLWidth(1).borderL(accent) })
+
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>
           <else>
-            <row gap="2" align="center" sx={style.mb(1)}>
-              <span sx={style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)}>{n.kind}</span>
+            <row gap="2" align="center">
+              style.mb(1)
+
+              <span>
+                style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)
+{n.kind}</span>
             </row>
-            <div sx={style.fontWeight(semibold).fg(foreground)}>{n.title}</div>
+            <div>
+              style.fontWeight(semibold).fg(foreground)
+{n.title}</div>
             <if {n.sub !== ''}>
-              <div sx={style.fontSize(xs).fg(muted-foreground)}>{n.sub}</div>
+              <div>
+                style.fontSize(xs).fg(muted-foreground)
+{n.sub}</div>
             </if>
           </else></if>
         </column>

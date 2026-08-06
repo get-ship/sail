@@ -577,9 +577,10 @@ fn format_sx_call(setter: &str, args: &[serde_json::Value]) -> String {
 }
 
 fn set_sx_in_open(open: &str, call: &str) -> String {
-    // If sx already present, append `.setter(…)` onto chain; else add sx={call}.
-    if let Some(sx_at) = open.find("sx={") {
-        let expr_start = sx_at + 4;
+    // If sx already present, append `.setter(…)` onto chain; else add style={call}.
+    const STYLE_KEY: &str = "style={";
+    if let Some(sx_at) = open.find(STYLE_KEY) {
+        let expr_start = sx_at + STYLE_KEY.len();
         let mut depth = 1i32;
         let bytes = open.as_bytes();
         let mut j = expr_start;
@@ -616,7 +617,7 @@ fn set_sx_in_open(open: &str, call: &str) -> String {
         }
     }
     // Insert sx= before closing >
-    let insert = format!(" sx={{{call}}}");
+    let insert = format!(" style={{{call}}}");
     if let Some(gt) = open.rfind('>') {
         let self_close = open[..gt].trim_end().ends_with('/');
         if self_close {

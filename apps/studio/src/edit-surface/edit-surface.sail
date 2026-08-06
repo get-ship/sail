@@ -46,16 +46,22 @@ export default controller(() => {
   grow
   nowrap
   align="stretch"
-  sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
+
 >
-  <edit-explorer shrink="0" sx={style.minH(0).h(full).overflow(hidden)} />
+  style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+
+  <edit-explorer shrink="0">
+    style.minH(0).h(full).overflow(hidden)
+  </edit-explorer>
 
   <column
     grow
     min-w="0"
     gap="0"
-    sx={style.minH(0).h(full).basis(0).minW(0).overflow(hidden)}
+
   >
+    style.minH(0).h(full).basis(0).minW(0).overflow(hidden)
+
     <!-- Doc tabs strip -->
     <row
       studio-tabs
@@ -64,8 +70,10 @@ export default controller(() => {
       shrink="0"
       align="stretch"
       nowrap
-      sx={style.h(8).borderBWidth(1).borderB(border).bg(surface-1).minW(0).overflow(hidden)}
+
     >
+      style.h(8).borderBWidth(1).borderB(border).bg(surface-1).minW(0).overflow(hidden)
+
       <row
         edit-tab-list
         label="Open documents"
@@ -76,8 +84,10 @@ export default controller(() => {
         nowrap
         on:click={onTabClick}
         on:mousedown={onTabMiddle}
-        sx={style.minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)}
+
       >
+        style.minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)
+
         <for {docTabs()} as="tab" key={tab.key}>
           <row
             tab-id={tab.id}
@@ -90,12 +100,18 @@ export default controller(() => {
             align="center"
             nowrap
             shrink="0"
-            sx={style.h(full).padX(3).maxW(48).borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).fontSize(sm).cursor(pointer).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-0).fg(foreground).borderT(primary) })}
+
           >
+            style.h(full).padX(3).maxW(48).borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).fontSize(sm).cursor(pointer).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-0).fg(foreground).borderT(primary) })
+
             <icon name="file-code-2" size="sm"></icon>
-            <p grow min-w="0" sx={style.truncate()}>{tab.label}</p>
+            <p grow min-w="0">
+              style.truncate()
+{tab.label}</p>
             <if {tab.dirtyDot}>
-              <p dirty-dot label="Unsaved" sx={style.fontSize(xs).fg(warning)}>
+              <p dirty-dot label="Unsaved">
+                style.fontSize(xs).fg(warning)
+
                 {tab.dirtyDot}
               </p>
             </if>
@@ -106,8 +122,10 @@ export default controller(() => {
                 size="sm"
                 variant="ghost"
                 label="Close tab"
-                sx={style.w(5).h(5)}
+
               >
+                style.w(5).h(5)
+
                 ×
               </button>
             </if>
@@ -118,9 +136,13 @@ export default controller(() => {
         gap="2"
         align="center"
         shrink="0"
-        sx={style.padX(2).h(full).borderLWidth(1).borderL(border-subtle)}
+
       >
-        <p sx={style.fontSize(xs).fg(muted-foreground).maxW(40).truncate()}>
+        style.padX(2).h(full).borderLWidth(1).borderL(border-subtle)
+
+        <p>
+          style.fontSize(xs).fg(muted-foreground).maxW(40).truncate()
+
           {liveRouteLabel()}
         </p>
         <button
@@ -142,9 +164,13 @@ export default controller(() => {
         edit-error
         align="center"
         gap="2"
-        sx={style.padX(3).padY(1).bg(surface-1).borderBWidth(1).borderB(border)}
+
       >
-        <p sx={style.fg(destructive).fontSize(xs)}>{editError()}</p>
+        style.padX(3).padY(1).bg(surface-1).borderBWidth(1).borderB(border)
+
+        <p>
+          style.fg(destructive).fontSize(xs)
+{editError()}</p>
       </row>
     </if>
 
@@ -153,15 +179,19 @@ export default controller(() => {
         grow
         align="center"
         justify="center"
-        sx={style.minH(0).h(full).overflow(hidden).bg(surface-0)}
+
       >
+        style.minH(0).h(full).overflow(hidden).bg(surface-0)
+
         <empty-state
           variant="placeholder"
           size="sm"
           w="full"
           edit-empty
-          sx={style.borderWidth(1).border(border-subtle).radius(md).pad(4)}
+
         >
+          style.borderWidth(1).border(border-subtle).radius(md).pad(4)
+
           <strong slot="title">Open a file</strong>
           Pick a file from the Explorer.
         </empty-state>
@@ -174,8 +204,10 @@ export default controller(() => {
         cm-mode="sail"
         grow
         gap="0"
-        sx={style.minH(0).basis(0).h(full).overflow(hidden).bg(surface-0)}
+
       >
+        style.minH(0).basis(0).h(full).overflow(hidden).bg(surface-0)
+
         <!-- Status lives on tab (dirty) + chrome status bar — no SOURCE toolbar row. -->
         <if {isSourceLoading()}>
           <empty-state
@@ -183,8 +215,10 @@ export default controller(() => {
             variant="placeholder"
             size="sm"
             w="full"
-            sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3).m(3)}
+
           >
+            style.borderWidth(1).border(border-subtle).radius(md).pad(3).m(3)
+
             <strong slot="title">Loading…</strong>
             {sourceStatus()}
           </empty-state>
@@ -196,8 +230,10 @@ export default controller(() => {
             variant="placeholder"
             size="sm"
             w="full"
-            sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3).m(3)}
+
           >
+            style.borderWidth(1).border(border-subtle).radius(md).pad(3).m(3)
+
             <strong slot="title">No source loaded</strong>
             Open a file from the Explorer. Non-Sail text needs a readable ops path.
           </empty-state>
@@ -208,27 +244,35 @@ export default controller(() => {
             source-ready
             grow
             gap="0"
-            sx={style.minH(0).basis(0).h(full).overflow(hidden)}
+
           >
+            style.minH(0).basis(0).h(full).overflow(hidden)
+
             <if {hasChecks()}>
               <column
                 source-gutter
                 gap="0"
                 shrink="0"
-                sx={style.padX(3).padY(1).fontSize(xs).fontFamily(mono).bg(surface-2).maxH(20).minH(0).overflow(auto)}
+
               >
+                style.padX(3).padY(1).fontSize(xs).fontFamily(mono).bg(surface-2).maxH(20).minH(0).overflow(auto)
+
                 <for {checkRows()} as="ck" key={ck.key}>
                   <p
                     check-line={ck.line}
                     severity={ck.severity}
-                    sx={style.fg(destructive).h(5)}
+
                   >
+                    style.fg(destructive).h(5)
+
                     L{ck.line} · {ck.severity}: {ck.message}
                   </p>
                 </for>
               </column>
             </if>
-            <column grow gap="0" sx={style.minH(0).basis(0).h(full).overflow(hidden)}>
+            <column grow gap="0">
+              style.minH(0).basis(0).h(full).overflow(hidden)
+
               <sail-code-editor
                 source-editor
                 language="sail"
@@ -242,8 +286,10 @@ export default controller(() => {
                 on:sail-change={onSourceSailChange}
                 on:sail-save={onSaveSource}
                 label="Source editor"
-                sx={style.w(full).h(full).minH(0)}
-              ></sail-code-editor>
+
+              >
+                style.w(full).h(full).minH(0)
+</sail-code-editor>
             </column>
           </column>
         </if>

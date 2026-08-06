@@ -549,7 +549,7 @@ export default controller((ctx) => ({ count: signal(0) }))
     fn diagnostics_structure_always() {
         let mut intel =
             Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
-        let bad = r#"<column sx={style.display(none)}>x</column>"#;
+        let bad = r#"<column style={style.display(none)}>x</column>"#;
         let diags = intel.diagnostics_sail(bad, None);
         assert!(
             diags

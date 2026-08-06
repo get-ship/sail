@@ -108,9 +108,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <column
   gap="2"
   data-state={disabled() ? 'disabled' : ''}
-  sx={style.pad(2).fontFamily(body).fg(foreground).bg(background).borderWidth(1).border(border).radius(lg).when({ focusWithin: style.borderWidth(1).border(primary).outline(ring), stateDisabled: style.bg(muted).opacity(75) })}
+
 >
-  <div sx={style.display(contents)}>
+  style.pad(2).fontFamily(body).fg(foreground).bg(background).borderWidth(1).border(border).radius(lg).when({ focusWithin: style.borderWidth(1).border(primary).outline(ring), stateDisabled: style.bg(muted).opacity(75) })
+
+  <div>
+    style.display(contents)
+
     <slot name="attachments"></slot>
   </div>
   <!-- nowrap: default row wraps and parks Send under the field in tight tiles. -->
@@ -123,8 +127,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         bind:value={text}
         use:fieldKeys
         grow min-w="0"
-        sx={style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
-      ></textarea>
+
+      >
+        style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)
+</textarea>
     </if>
     <if {!multiline()}>
       <input
@@ -134,8 +140,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         bind:value={text}
         use:fieldKeys
         grow min-w="0"
-        sx={style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
-      />
+
+>
+        style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)
+      </input>
     </if>
     <row nowrap gap="1" align="center" shrink="0">
       <slot name="trailing"></slot>

@@ -297,8 +297,8 @@ export function applyParticipationStyleFix(source: string): string {
     (_m, tag, pre, chain, n, rest, post) => {
       const attr = n === '1' ? ' grow' : ` grow="${n}"`
       const sx = rest.trim()
-        ? ` sx={style.${chain}${rest}}`
-        : ` sx={style.${chain}}`
+        ? ` style={style.${chain}${rest}}`
+        : ` style={style.${chain}}`
       // strip trailing empty
       const cleanSx = sx
         .replace(/sx=\{\s*style\s*\}/, '')

@@ -17,16 +17,22 @@
   studio-sidebar
   shrink="0"
   gap="0"
-  sx={style.w(64).minW(64).minH(0).h(full).borderRWidth(1).borderR(border).bg(surface-1).overflow(hidden)}
+
 >
+  style.w(64).minW(64).minH(0).h(full).borderRWidth(1).borderR(border).bg(surface-1).overflow(hidden)
+
   <slot name="header">
     <row
       studio-sidebar-header
       align="center"
       shrink="0"
-      sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)}
+
     >
-      <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+      style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)
+
+      <p>
+        style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+
         {title()}
       </p>
     </row>
@@ -37,8 +43,10 @@
     grow
     gap="0"
     min-w="0"
-    sx={style.minH(0).h(full).basis(0).overflow(hidden)}
+
   >
+    style.minH(0).h(full).basis(0).overflow(hidden)
+
     <slot></slot>
   </column>
 </column>

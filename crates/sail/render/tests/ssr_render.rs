@@ -115,8 +115,8 @@ export default controller(() => {
   return { heading }
 })
 </controller>
-<div sx={style.pad(3).bg(surface-0)}>
-  <h1 sx={style.fg(foreground)}>{heading()}</h1>
+<div style={style.pad(3).bg(surface-0)}>
+  <h1 style={style.fg(foreground)}>{heading()}</h1>
 </div>
 "#;
     let out = render_source(
@@ -147,14 +147,14 @@ export default controller(() => {
 #[test]
 fn unknown_if_does_not_paint_both_branches() {
     let src = r#"
-<div sx={style.pad(2).bg(surface-0)}>
+<div style={style.pad(2).bg(surface-0)}>
   <if {window.x}>
     <p>yes-branch</p>
     <else>
       <p>no-branch</p>
     </else>
   </if>
-  <p sx={style.fg(foreground)}>anchor</p>
+  <p style={style.fg(foreground)}>anchor</p>
 </div>
 "#;
     let out = render_source(

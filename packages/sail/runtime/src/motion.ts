@@ -758,7 +758,7 @@ function classifyTrigger(trigger: string): Branch {
  *  literal, and a THUNK when any field holds a signal. The thunk form is
  *  the reactive lane:
  *
- *      sx={style.loop({ translate-x: { to: dist() }, duration: speed() })}
+ *      style={style.loop({ translate-x: { to: dist() }, duration: speed() })}
  *
  *  ## Reactive semantics (one rule, deliberately)
  *

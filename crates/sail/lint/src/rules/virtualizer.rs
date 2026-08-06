@@ -47,7 +47,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
     let sx = t
         .attrs
         .iter()
-        .find(|(n, _)| n == "sx")
+        .find(|(n, _)| n == "style")
         .map(|(_, v)| v.as_str())
         .unwrap_or("");
 
@@ -68,7 +68,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             ),
             suggest: Some(
                 "Add sx translate for the row offset, e.g. \
-                 `sx={style.position(absolute).left(0).w(full).translateY(bind(rowY))}` \
+                 `style={style.position(absolute).left(0).w(full).translateY(bind(rowY))}` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -90,7 +90,7 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             ),
             suggest: Some(
                 "Add height from the spacer var, e.g. \
-                 `sx={style.h(bind(rowsH)).position(relative).w(full)}` \
+                 `style={style.h(bind(rowsH)).position(relative).w(full)}` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -171,7 +171,7 @@ mod tests {
     #[test]
     fn virtual_row_without_translate_fails() {
         let src = r#"
-            <div use:virtualRow={w.start} sx={style.position(absolute).left(0).w(full)}>
+            <div use:virtualRow={w.start} style={style.position(absolute).left(0).w(full)}>
               row
             </div>
         "#;
@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn virtual_row_with_translate_passes() {
         let src = r#"
-            <row use:virtualRow={w.start} sx={style.position(absolute).left(0).w(full).translateY(bind(rowY))}>
+            <row use:virtualRow={w.start} style={style.position(absolute).left(0).w(full).translateY(bind(rowY))}>
               row
             </row>
         "#;
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn virtual_spacer_without_height_fails() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} sx={style.position(relative).w(full)}>
+            <div use:virtualSpacer={totalSize()} style={style.position(relative).w(full)}>
             </div>
         "#;
         let f = lint(src);
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn virtual_spacer_with_rows_h_passes() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
+            <div use:virtualSpacer={totalSize()} style={style.h(bind(rowsH)).position(relative).w(full)}>
             </div>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
@@ -215,7 +215,7 @@ mod tests {
     #[test]
     fn token_form_translate_accepted() {
         let src = r#"
-            <grid use:virtualRow={w.start} sx="translate-y-(--row-y) absolute left-0 w-full">
+            <grid use:virtualRow={w.start} style="translate-y-(--row-y) absolute left-0 w-full">
             </grid>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));

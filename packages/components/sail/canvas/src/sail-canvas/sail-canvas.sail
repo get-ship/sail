@@ -152,9 +152,13 @@ export default controller(({ value }: Scope) => {
   on:pointermove={pointerMove}
   on:pointerup={pointerUp}
   on:wheel={wheel}
-  sx={style.position(relative).w(full).h(full).minH(panel-min-w-lg).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).overflow(hidden).cursor(grab)}
+
 >
-  <div use:worldTransform={worldTransformCss()} sx={style.position(absolute).top(0).left(0).transform(bind(worldTx))}>
+  style.position(relative).w(full).h(full).minH(panel-min-w-lg).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).overflow(hidden).cursor(grab)
+
+  <div use:worldTransform={worldTransformCss()}>
+    style.position(absolute).top(0).left(0).transform(bind(worldTx))
+
     <slot></slot>
   </div>
 </div>

@@ -125,11 +125,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   on the navbar). Row defaults to align=center — app panes need stretch so the
   library rail + track list occupy the body instead of floating in dead space.
 -->
-<column theme={theme()} gap="0" sx={style.h(fill).minH(0).overflow(hidden).bg(background).fg(foreground)}>
+<column theme={theme()} gap="0">
+  style.h(fill).minH(0).overflow(hidden).bg(background).fg(foreground)
+
   <!-- ── app chrome: brand + theme picker ─────────────────────────────── -->
-  <row sx={style.pad(3).padX(5).borderBWidth(1).border(border)} align="center" gap="3" shrink>
-    <strong sx={style.fontFamily(mono).fontSize(lg).fg(primary)}>shanty</strong>
-    <p grow sx={style.fontSize(sm).fg(muted-foreground)}>a full app in one .sail file</p>
+  <row align="center" gap="3" shrink>
+    style.pad(3).padX(5).borderBWidth(1).border(border)
+
+    <strong>
+      style.fontFamily(mono).fontSize(lg).fg(primary)
+shanty</strong>
+    <p grow>
+      style.fontSize(sm).fg(muted-foreground)
+a full app in one .sail file</p>
     <row gap="1">
       <for {THEMES} as="t" key={t}>
         <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'outline'} size="sm">{t}</button>
@@ -137,16 +145,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </row>
 
-  <row grow align="stretch" sx={style.minH(0)} gap="0">
+  <row grow align="stretch" gap="0">
+    style.minH(0)
+
     <!-- ── library rail ───────────────────────────────────────────────── -->
-    <column sx={style.w(64).pad(4).borderRWidth(1).border(border).minH(0).overflowY(auto)} gap="3">
+    <column gap="3">
+      style.w(64).pad(4).borderRWidth(1).border(border).minH(0).overflowY(auto)
+
       <input placeholder="Filter playlists" bind:value={query} />
       <column gap="1">
-        <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>Playlists</p>
+        <p>
+          style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+Playlists</p>
         <for {filteredPlaylists()} as="p" key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
                current={activePlaylist() === p.id ? 'true' : null}
-               sx={style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })} align="center" justify="between">
+ align="center" justify="between">
+            style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })
+
             <span>{p.name}</span>
             <badge tone="muted">{p.tracks.length}</badge>
           </row>
@@ -155,50 +171,88 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <separator></separator>
       <row on:click={() => activePlaylist.set('__liked')}
            current={activePlaylist() === '__liked' ? 'true' : null}
-           sx={style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })} align="center" justify="between">
+ align="center" justify="between">
+        style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })
+
         <span>♥ Liked</span>
         <badge tone="primary">{liked().length}</badge>
       </row>
     </column>
 
     <!-- ── playlist main ──────────────────────────────────────────────── -->
-    <column grow min-w="0" gap="0" sx={style.minH(0)}>
-      <column sx={style.pad(6).padB(4).enter({ opacity: 'fade', translate-y: 'spring:gentle' })} gap="1" shrink>
-        <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)}>Playlist</p>
-        <h1 sx={style.fontSize(3xl)}>{activePlaylist() === '__liked' ? 'Liked Tracks' : playlist().name}</h1>
-        <p sx={style.fontSize(sm).fg(muted-foreground)}>
+    <column grow min-w="0" gap="0">
+      style.minH(0)
+
+      <column gap="1" shrink>
+        style.pad(6).padB(4).enter({ opacity: 'fade', translate-y: 'spring:gentle' })
+
+        <p>
+          style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
+Playlist</p>
+        <h1>
+          style.fontSize(3xl)
+{activePlaylist() === '__liked' ? 'Liked Tracks' : playlist().name}</h1>
+        <p>
+          style.fontSize(sm).fg(muted-foreground)
+
           {trackCount()} tracks · click a row to play
         </p>
       </column>
-      <scroll-area grow sx={style.minH(0).padX(6).padB(4)}>
+      <scroll-area grow>
+        style.minH(0).padX(6).padB(4)
+
         <column gap="1">
           <for {visibleTracks()} as="t" key={t.id}>
             <row on:click={() => playTrack(t.id)}
                  current={currentId() === t.id ? 'true' : null}
-                 sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })}
+
                  align="center" gap="3">
-              <div shrink="0" sx={style.position(relative).w(10).h(10).radius(sm).overflow(hidden).bg(muted)}>
-                <img src={t.cover} alt="" sx={style.display(block).w(full).h(full).objectFit(cover)} />
+              style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })
+
+              <div shrink="0">
+                style.position(relative).w(10).h(10).radius(sm).overflow(hidden).bg(muted)
+
+                <img src={t.cover} alt="">
+                  style.display(block).w(full).h(full).objectFit(cover)
+                </img>
                 <if {currentId() === t.id && playing()}>
-                  <center sx={style.position(absolute).inset(0).bg(background).opacity(70)}>
-                    <row gap="1" align="end" justify="center" sx={style.minH(4)}>
-                      <i sx={style.w(1).h(3).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
-                      <i sx={style.w(1).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
-                      <i sx={style.w(1).h(2).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
+                  <center>
+                    style.position(absolute).inset(0).bg(background).opacity(70)
+
+                    <row gap="1" align="end" justify="center">
+                      style.minH(4)
+
+                      <i>
+                        style.w(1).h(3).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })
+</i>
+                      <i>
+                        style.w(1).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })
+</i>
+                      <i>
+                        style.w(1).h(2).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })
+</i>
                     </row>
                   </center>
                 </if>
               </div>
               <column gap="0" grow min-w="0">
-                <strong sx={when({ groupCurrent: style.fg(primary) })}>{t.title}</strong>
-                <p sx={style.fontSize(sm).fg(muted-foreground)}>{t.artist}</p>
+                <strong>
+                  when({ groupCurrent: style.fg(primary) })
+{t.title}</strong>
+                <p>
+                  style.fontSize(sm).fg(muted-foreground)
+{t.artist}</p>
               </column>
-              <p sx={style.fontSize(sm).fg(muted-foreground).display(none).when({ desktop: style.display(block) })}>{t.album}</p>
+              <p>
+                style.fontSize(sm).fg(muted-foreground).display(none).when({ desktop: style.display(block) })
+{t.album}</p>
               <button on:click={(e) => { e.stopPropagation(); toggleLike(t.id) }}
                     variant="ghost" size="sm" tone={liked().includes(t.id) ? 'primary' : 'default'}>
                 ♥
               </button>
-              <span sx={style.fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{t.len}</span>
+              <span>
+                style.fontFamily(mono).fontSize(sm).fg(muted-foreground)
+{t.len}</span>
             </row>
           </for>
         </column>
@@ -207,39 +261,59 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
 
   <!-- ── now-playing bar ──────────────────────────────────────────────── -->
-  <column sx={style.borderTWidth(1).border(border).pad(3).padX(5)} gap="2" shrink>
+  <column gap="2" shrink>
+    style.borderTWidth(1).border(border).pad(3).padX(5)
+
     <row align="center" gap="4">
       <row align="center" gap="3" grow min-w="0">
-        <div shrink="0" sx={style.w(12).h(12).radius(md).overflow(hidden).bg(muted).borderWidth(1).border(border)}>
-          <img src={current().cover} alt="" sx={style.display(block).w(full).h(full).objectFit(cover)} />
+        <div shrink="0">
+          style.w(12).h(12).radius(md).overflow(hidden).bg(muted).borderWidth(1).border(border)
+
+          <img src={current().cover} alt="">
+            style.display(block).w(full).h(full).objectFit(cover)
+          </img>
         </div>
-        <column gap="0" sx={style.minW(0)}>
+        <column gap="0">
+          style.minW(0)
+
           <strong>{current().title}</strong>
-          <p sx={style.fontSize(sm).fg(muted-foreground)}>{current().artist} · {current().album}</p>
+          <p>
+            style.fontSize(sm).fg(muted-foreground)
+{current().artist} · {current().album}</p>
         </column>
       </row>
       <column align="center" gap="1" grow>
         <row gap="2" align="center">
           <button on:click={() => shuffle.set(!shuffle())} variant={shuffle() ? 'solid' : 'ghost'} size="sm">shuffle</button>
           <button on:click={() => advance(-1)} variant="ghost">⏮</button>
-          <button on:click={togglePlay} variant="solid" tone="primary" sx={style.press({ scale: 'press' })}>
+          <button on:click={togglePlay} variant="solid" tone="primary">
+            style.press({ scale: 'press' })
+
             {playing() ? '⏸' : '▶'}
           </button>
           <button on:click={() => advance(1)} variant="ghost">⏭</button>
           <button on:click={() => repeat.set(!repeat())} variant={repeat() ? 'solid' : 'ghost'} size="sm">repeat</button>
         </row>
         <row gap="2" align="center" nowrap w="full" max-w="panel-max-w-md">
-          <span shrink sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{positionLabel()}</span>
+          <span shrink>
+            style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+{positionLabel()}</span>
           <!-- progress host paints w-full; grow shell owns the flex share so times stay on one line -->
-          <row grow min-w="0" sx={style.minW(0)}>
+          <row grow min-w="0">
+            style.minW(0)
+
             <progress value={position()} max={current().secs}></progress>
           </row>
-          <span shrink sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{totalLabel()}</span>
+          <span shrink>
+            style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+{totalLabel()}</span>
         </row>
       </column>
       <row gap="2" align="center" justify="end" nowrap grow min-w="0">
         <button on:click={() => volume.set(Math.max(0, volume() - 10))} variant="ghost" size="sm">−</button>
-        <div sx={style.w(20).minW(20)}>
+        <div>
+          style.w(20).minW(20)
+
           <progress value={volume()} max="100"></progress>
         </div>
         <button on:click={() => volume.set(Math.min(100, volume() + 10))} variant="ghost" size="sm">+</button>

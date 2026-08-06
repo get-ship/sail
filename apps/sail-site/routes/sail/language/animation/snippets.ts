@@ -4,30 +4,30 @@
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">
-    <div sx={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
+    <div style={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
 </if>`,
 
   lifecycle: `<if {open()}>
-  <card sx={style.enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })}>
+  <card style={style.enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })}>
     I animate in, and I animate out.
   </card>
 </if>`,
 
-  express: `<div sx={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })}></div>
-<div sx={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 })}></div>`,
+  express: `<div style={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })}></div>
+<div style={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 })}></div>`,
 
-  reveal: `<card sx={style.reveal({ opacity: 'fade', translate-y: 'spring:gentle' })}>
+  reveal: `<card style={style.reveal({ opacity: 'fade', translate-y: 'spring:gentle' })}>
   This one fades up as it enters the viewport.
 </card>`,
 
-  loop: `<div sx={style.loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
+  loop: `<div style={style.loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
 
-<div sx={style.loop({ rotate: 'spin' })}></div>`,
+<div style={style.loop({ rotate: 'spin' })}></div>`,
 
-  gestures: `<button sx={style.press({ scale: 'press' })}>press me</button>
-<button sx={style.focus-visible({ scale: 'spring:snappy' })}>tab to me</button>`,
+  gestures: `<button style={style.press({ scale: 'press' })}>press me</button>
+<button style={style.focus-visible({ scale: 'spring:snappy' })}>tab to me</button>`,
 
   choreography: `<controller>
 import { timeline } from '@ship/sail-runtime'
@@ -48,7 +48,7 @@ export default controller(() => {
 </controller>
 
 <input type="range" min="0" max="100" bind:value={scrubText} />
-<card sx={style.translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))}></card>`,
+<card style={style.translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))}></card>`,
 
   drivers: `const p = () => Number(scrubText()) / 100  // the slider above
 const p = clock(3600, { loop: true })       // a wall clock: plays itself

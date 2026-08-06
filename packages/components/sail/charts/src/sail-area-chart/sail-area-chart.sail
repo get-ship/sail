@@ -112,8 +112,10 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       role="img"
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
-      sx={style.display(block).w(full).overflow(hidden)}
+
       use:observeViewport>
+      style.display(block).w(full).overflow(hidden)
+
       <for {gridLines()} as="g" key={g.id}>
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
       </for>
@@ -127,7 +129,9 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
         </if>
       </for>
     </svg>
-    <column id="chart-data" sx={style.srOnly()}>
+    <column id="chart-data">
+      style.srOnly()
+
       <slot name="description">
         <table>
           <for {chart.ariaTable()} as="row" key={row[0].id}>
@@ -141,5 +145,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       </slot>
     </column>
   </else></if>
-  <row gap="3" align="stretch" sx={style.mt(1_5).fontFamily(body).fontSize(xs).fg(muted-foreground)}><slot></slot></row>
+  <row gap="3" align="stretch">
+    style.mt(1_5).fontFamily(body).fontSize(xs).fg(muted-foreground)
+<slot></slot></row>
 </column>

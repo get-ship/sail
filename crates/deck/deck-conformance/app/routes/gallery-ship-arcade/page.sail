@@ -1,8 +1,16 @@
 <!-- FILE_CAP_OVERRIDE: gallery covers 8 arcade components × 2-3 variant cards + composed example; declarative markup, no logic. -->
-<column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
-  <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>ship/arcade — Game Engine Primitives</h1>
-    <p sx={style.fg(muted-foreground).fontSize(sm)}>
+<column gap="8">
+  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+
+  <header>
+    style.borderBWidth(1).borderB(border).padB(4)
+
+    <h1>
+      style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)
+ship/arcade — Game Engine Primitives</h1>
+    <p>
+      style.fg(muted-foreground).fontSize(sm)
+
       Pack <strong>ship/arcade</strong>. Each card below instantiates the real
       custom element tag with representative prop combinations. The arcade
       elements are canvas-backed — <code>sail-stage</code> mounts a Pixi
@@ -14,9 +22,17 @@
   </header>
 
   <!-- ─── sail-stage ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-stage</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-stage</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Root canvas host. Props: <code>width</code>, <code>height</code>,
       <code>tick-rate</code>, <code>fps</code>, <code>pixel-ratio</code>,
       <code>paused</code>, <code>background</code>,
@@ -26,16 +42,24 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>renderer=auto bounds=open (default)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+renderer=auto bounds=open (default)</span>
         <sail-stage width="320" height="200" renderer="auto" bounds="open" background="surface">
           <sail-shape kind="rect" x="60" y="80" width="40" height="40" fill="accent"></sail-shape>
           <sail-shape kind="circle" x="200" y="80" radius="28" fill="hover-bg"></sail-shape>
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>renderer=canvas bounds=clamp paused</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+renderer=canvas bounds=clamp paused</span>
         <sail-stage width="320" height="200" renderer="canvas" bounds="clamp" background="surface" paused>
           <sail-shape kind="polygon" x="160" y="100" points="0,-40 38,30 -38,30" fill="accent" stroke="foreground" stroke-width="2"></sail-shape>
         </sail-stage>
@@ -45,9 +69,17 @@
   </column>
 
   <!-- ─── sail-shape ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-shape</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-shape</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Declarative geometric entity. Props: <code>kind: rect|circle|polygon|line</code>,
       <code>width</code>, <code>height</code>, <code>radius</code>,
       <code>points</code>, <code>x</code>, <code>y</code>, <code>z</code>,
@@ -58,16 +90,24 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=rect + kind=circle</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=rect + kind=circle</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-shape kind="rect" x="40" y="60" width="80" height="60" fill="accent" rotation="15"></sail-shape>
           <sail-shape kind="circle" x="220" y="100" radius="45" fill="hover-bg" alpha="0.85"></sail-shape>
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=polygon (triangle) + kind=line</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=polygon (triangle) + kind=line</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-shape kind="polygon" x="90" y="110" points="0,-55 50,40 -50,40" fill="accent" stroke="foreground" stroke-width="2"></sail-shape>
           <sail-shape kind="line" x="180" y="50" points="0,0 100,120" stroke="hover-bg" stroke-width="4"></sail-shape>
@@ -78,9 +118,17 @@
   </column>
 
   <!-- ─── sail-sprite ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-sprite</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-sprite</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Declarative image entity. Props: <code>src</code>, <code>x</code>,
       <code>y</code>, <code>z</code>, <code>vx</code>, <code>vy</code>,
       <code>scale</code>, <code>rotation</code>,
@@ -91,8 +139,12 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>anchor=center (default) + anchor=top-left</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+anchor=center (default) + anchor=top-left</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <!-- Sprite with no src falls back to a placeholder; the entity still spawns. -->
           <sail-sprite src="" x="80" y="100" scale="2" anchor="center" tag="player"></sail-sprite>
@@ -100,8 +152,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>tint + alpha + rotation</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+tint + alpha + rotation</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-sprite src="" x="80" y="100" tint="accent" alpha="0.8" rotation="30" scale="2" tag="tinted-a"></sail-sprite>
           <sail-sprite src="" x="220" y="100" tint="hover-bg" alpha="0.5" rotation="-20" scale="1.8" tag="tinted-b"></sail-sprite>
@@ -112,9 +168,17 @@
   </column>
 
   <!-- ─── sail-collider ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-collider</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-collider</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Declares a hitbox on a parent <code>sail-shape</code> or
       <code>sail-sprite</code>. Props: <code>kind: aabb|circle</code>,
       <code>width</code>, <code>height</code>, <code>radius</code>,
@@ -124,8 +188,12 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>aabb collider on a rect (solid, physical)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+aabb collider on a rect (solid, physical)</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-shape kind="rect" x="80" y="100" width="60" height="60" fill="accent" group="player">
             <sail-collider kind="aabb" width="60" height="60" group="player" collides-with="enemies"></sail-collider>
@@ -136,8 +204,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>circle collider on a circle (trigger only)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+circle collider on a circle (trigger only)</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-shape kind="circle" x="100" y="100" radius="40" fill="accent" group="pickup">
             <sail-collider kind="circle" radius="40" group="pickup" collides-with="player" trigger></sail-collider>
@@ -148,8 +220,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>aabb with offset (hitbox shifted from center)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+aabb with offset (hitbox shifted from center)</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-shape kind="rect" x="160" y="100" width="80" height="80" fill="accent" group="shifted">
             <sail-collider kind="aabb" width="40" height="40" offset-x="20" offset-y="-20" group="shifted" collides-with="wall"></sail-collider>
@@ -160,9 +236,17 @@
   </column>
 
   <!-- ─── sail-emitter ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-emitter</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-emitter</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Declarative particle emitter. Props: <code>kind: radial|cone|line|explosion</code>,
       <code>x</code>, <code>y</code>, <code>rate</code>, <code>burst</code>,
       <code>lifetime</code>, <code>spread</code>, <code>direction</code>,
@@ -172,30 +256,46 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=radial rate=20 continuous</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=radial rate=20 continuous</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-emitter kind="radial" x="160" y="100" rate="20" burst="8" lifetime="800" spread="360" speed="80" speed-jitter="0.4" color="accent" size="4..0" max="80"></sail-emitter>
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=cone direction=-90 (upward fountain)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=cone direction=-90 (upward fountain)</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-emitter kind="cone" x="160" y="170" rate="15" burst="12" lifetime="1000" spread="40" direction="-90" speed="140" speed-jitter="0.3" gravity="60" color="hover-bg" size="5..0" max="64"></sail-emitter>
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=explosion on=fire (burst on action)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=explosion on=fire (burst on action)</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-emitter kind="explosion" x="160" y="100" rate="0" burst="32" lifetime="500" spread="360" speed="160" speed-jitter="0.5" gravity="80" color="hover-bg" size="6..0" max="64" on="fire"></sail-emitter>
           <input map="Space" action="fire">
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=line horizontal sweep</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+kind=line horizontal sweep</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-emitter kind="line" x="160" y="100" rate="25" burst="10" lifetime="600" spread="20" direction="0" speed="100" speed-jitter="0.2" gravity="0" color="accent" size="3..0" max="96"></sail-emitter>
         </sail-stage>
@@ -204,9 +304,17 @@
   </column>
 
   <!-- ─── sail-hud ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-hud</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-hud</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       DOM overlay above the canvas. Props:
       <code>align: top|bottom|left|right|center|corner-tl|corner-tr|corner-bl|corner-br</code>,
       <code>z-layer</code>,
@@ -216,8 +324,12 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>align=corner-tl + align=corner-br</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+align=corner-tl + align=corner-br</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-hud align="corner-tl" z-layer="2">
             <span>Score: 0</span>
@@ -229,8 +341,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>align=top + align=bottom</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+align=top + align=bottom</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-hud align="top">
             <span>LEVEL 1</span>
@@ -242,8 +358,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>align=center (game-over overlay)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+align=center (game-over overlay)</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-hud align="center" pointer-events="auto">
             <column gap="2" align="center">
@@ -257,9 +377,17 @@
   </column>
 
   <!-- ─── sail-input ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-input</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-input</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Declarative key-to-action binding for the enclosing stage. Props:
       <code>map</code> (comma-separated key names, e.g. <code>"ArrowLeft,A"</code>),
       <code>action</code> (logical name the game listens on),
@@ -268,8 +396,12 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>WASD + arrow keys → move actions</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+WASD + arrow keys → move actions</span>
         <sail-stage width="320" height="200" background="surface">
           <input map="ArrowLeft,A" action="move-left">
           <input map="ArrowRight,D" action="move-right">
@@ -281,8 +413,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>Space → fire, Escape → pause (repeat=false)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+Space → fire, Escape → pause (repeat=false)</span>
         <sail-stage width="320" height="200" background="surface">
           <input map="Space" action="fire" repeat="false">
           <input map="Escape" action="pause" repeat="false">
@@ -296,9 +432,17 @@
   </column>
 
   <!-- ─── sail-sfx ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}><code sx={style.fontFamily(mono)}>sail-sfx</code></h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+<code>
+      style.fontFamily(mono)
+sail-sfx</code></h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       Declarative Web Audio one-shot binding. Props: <code>src</code> (audio URL),
       <code>on</code> (action name to trigger playback),
       <code>volume</code>, <code>pitch-range</code> (<code>"lo..hi"</code>),
@@ -307,8 +451,12 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>bus=sfx pitch-range=0.9..1.1 (randomised)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+bus=sfx pitch-range=0.9..1.1 (randomised)</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-sfx src="/sounds/laser.wav" on="fire" volume="0.8" pitch-range="0.9..1.1" bus="sfx"></sail-sfx>
           <input map="Space" action="fire" repeat="false">
@@ -318,8 +466,12 @@
         </sail-stage>
       </column>
 
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
-        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>bus=ui volume=1 (button click feedback)</span>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+
+        <span>
+          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+bus=ui volume=1 (button click feedback)</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-sfx src="/sounds/click.wav" on="ui-click" volume="1" pitch-range="0.95..1.05" bus="ui"></sail-sfx>
           <sail-hud align="center" pointer-events="auto">
@@ -331,9 +483,15 @@
   </column>
 
   <!-- ─── Composed example: a stage with all primitives ─── -->
-  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
-    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>Composed — all primitives in one stage</h2>
-    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
+  <column gap="4">
+    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+
+    <h2>
+      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+Composed — all primitives in one stage</h2>
+    <p>
+      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+
       A single <code>sail-stage</code> composing
       <code>sail-shape</code>, <code>sail-collider</code>,
       <code>sail-emitter</code>, <code>sail-hud</code>, <code>sail-input</code>,
@@ -341,7 +499,9 @@
     </p>
 
     <row gap="4">
-      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2).w(full)}>
+      <column gap="2">
+        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2).w(full)
+
         <sail-stage width="640" height="280" renderer="auto" bounds="wrap" background="surface" tick-rate="60" fps="60">
           <!-- player ship -->
           <sail-shape kind="polygon" x="80" y="140" points="0,-24 20,20 -20,20" fill="accent" tag="player" group="player" vx="0" vy="0">

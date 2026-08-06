@@ -17,12 +17,14 @@
   const segmented = style.pad(1).bg(toggle-group).borderWidth(1).border(toggle-group-border).radius(md)
 </scope>
 
-<row inline gap="0" use:toggleGroup sx={[
+<row inline gap="0" use:toggleGroup>
+  style([
   match(variant, {
     outline: style.bg(transparent),
     ghost: style.bg(transparent),
     segmented: segmented,
   }),
-]}>
+])
+
   <slot></slot>
 </row>

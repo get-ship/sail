@@ -1,9 +1,9 @@
 //! `sail-sx` — the inline style surface.
 //!
-//! Product form is Style: `sx={style.pad(4).bg(surface-2).radius(lg)}`,
-//! `sx={style({ box: pad(4), paint: bg(surface-2) })}`,
-//! `sx={when({ hover: style.bg(muted) })}`, `sx={[ match(…), when(…) ]}`, or a
-//! scope Style const ref. Utility-string atoms (`sx="p-4 bg-surface-2"`) are a
+//! Product form is Style: `style={style.pad(4).bg(surface-2).radius(lg)}`,
+//! `style={style({ box: pad(4), paint: bg(surface-2) })}`,
+//! `style={when({ hover: style.bg(muted) })}`, `style={[ match(…), when(…) ]}`, or a
+//! scope Style const ref. Utility-string atoms (`style="p-4 bg-surface-2"`) are a
 //! **hard residual error** — not architecture.
 //!
 //! THE RULE: every value is a design token or a plain CSS keyword. Never a raw
@@ -22,7 +22,7 @@
 //! mission is never "find another way".
 //!
 //! sx is compile-time and static: it lowers to atomic classes plus injected CSS.
-//! A **runtime** dynamic `sx={expr}` (JS ternary, call, etc.) cannot be lowered
+//! A **runtime** dynamic `style={expr}` (JS ternary, call, etc.) cannot be lowered
 //! and is a hard error — conditional styling goes through a primitive prop
 //! (`tone={…}`) or a `when` / `match` Style guard.
 
@@ -332,7 +332,7 @@ fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
     }
 }
 
-/// Dynamic `sx={…}` — cannot be lowered (sx is compile-time). Reject it loudly
+/// Dynamic `style={…}` — cannot be lowered (sx is compile-time). Reject it loudly
 /// instead of silently emitting `class=""`.
 fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
     Finding {
@@ -341,7 +341,7 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
         col,
         rule: RULE_ID,
         severity: Severity::Error,
-        message: "dynamic `sx={…}` is not supported — sx is a compile-time, static \
+        message: "dynamic `style={…}` is not supported — sx is a compile-time, static \
                   surface style, so a dynamic value silently lowers to nothing"
             .to_string(),
         suggest: Some(
@@ -353,14 +353,14 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
 }
 
 /// One `sx` attribute occurrence: a static Style value (value + offset) to
-/// validate, or a runtime dynamic `sx={…}` binding (offset of the `sx`) to reject.
+/// validate, or a runtime dynamic `style={…}` binding (offset of the `sx`) to reject.
 enum SxHit<'a> {
     Static(&'a str, usize),
     Dynamic(usize),
 }
 
-/// Find every `sx=` attribute — static `sx="…"` / Style `sx={…}`, or runtime
-/// dynamic `sx={jsExpr}`. Skips HTML comments.
+/// Find every `sx=` attribute — static `style="…"` / Style `style={…}`, or runtime
+/// dynamic `style={jsExpr}`. Skips HTML comments.
 fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -375,9 +375,9 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                 None => break,
             }
         }
-        if i > 0 && bytes[i - 1].is_ascii_whitespace() && source[i..].starts_with("sx") {
-            if let Some(rel) = sx_value_delim(&bytes[i + 2..]) {
-                let dpos = i + 2 + rel;
+        if i > 0 && bytes[i - 1].is_ascii_whitespace() && source[i..].starts_with("style") {
+            if let Some(rel) = sx_value_delim(&bytes[i + 5..]) {
+                let dpos = i + 5 + rel;
                 if bytes[dpos] == b'"' {
                     let vstart = dpos + 1;
                     if let Some(q) = source[vstart..].find('"') {
@@ -557,37 +557,37 @@ mod tests {
     #[test]
     fn style_chain_product_passes() {
         assert!(
-            run(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#).is_empty(),
+            run(r#"<div style={style.bg(primary).padX(2)}>x</div>"#).is_empty(),
             "{:?}",
-            run(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#)
+            run(r#"<div style={style.bg(primary).padX(2)}>x</div>"#)
         );
     }
 
     #[test]
     fn style_channel_object_product_passes() {
-        let src = r#"<div sx={style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) })}>x</div>"#;
+        let src = r#"<div style={style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) })}>x</div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_list_match_when_product_passes() {
-        let src = r#"<div sx={[ match(variant, { solid: style.bg(primary) }), when({ hover: style.opacity(90) }) ]}>x</div>"#;
+        let src = r#"<div style={[ match(variant, { solid: style.bg(primary) }), when({ hover: style.opacity(90) }) ]}>x</div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_const_ref_is_static_product_not_dynamic() {
-        // Bare ref is compile-time Style (scope const); not runtime `sx={cls()}`.
+        // Bare ref is compile-time Style (scope const); not runtime `style={cls()}`.
         assert!(
-            run(r#"<div sx={filled}>x</div>"#).is_empty(),
+            run(r#"<div style={filled}>x</div>"#).is_empty(),
             "{:?}",
-            run(r#"<div sx={filled}>x</div>"#)
+            run(r#"<div style={filled}>x</div>"#)
         );
     }
 
     #[test]
     fn utility_string_product_is_residual_error() {
-        let ms = run(r#"<card sx="p-4 bg-surface-2">x</card>"#);
+        let ms = run(r#"<card style="p-4 bg-surface-2">x</card>"#);
         assert!(!ms.is_empty(), "utility-string sx must fail closed");
         assert!(
             ms.iter()
@@ -598,13 +598,13 @@ mod tests {
 
     #[test]
     fn structured_colon_soup_is_residual_error() {
-        let ms = run(r#"<div sx="bg: primary px: 2">x</div>"#);
+        let ms = run(r#"<div style="bg: primary px: 2">x</div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
     }
 
     #[test]
     fn bad_token_fail_closed() {
-        let ms = run(r#"<div sx={style.bg(notARealTokenZzz999)}>x</div>"#);
+        let ms = run(r#"<div style={style.bg(notARealTokenZzz999)}>x</div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
         assert!(
             ms.iter()
@@ -615,14 +615,14 @@ mod tests {
 
     #[test]
     fn unknown_setter_fail_closed() {
-        let ms = run(r#"<div sx={style.notASetter(primary)}>x</div>"#);
+        let ms = run(r#"<div style={style.notASetter(primary)}>x</div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
     }
 
     #[test]
     fn runtime_dynamic_sx_is_an_error() {
-        assert_eq!(run(r#"<card sx={cls()}>x</card>"#).len(), 1);
-        assert_eq!(run(r#"<card sx={ok ? 'a' : 'b'}>x</card>"#).len(), 1);
+        assert_eq!(run(r#"<card style={cls()}>x</card>"#).len(), 1);
+        assert_eq!(run(r#"<card style={ok ? 'a' : 'b'}>x</card>"#).len(), 1);
     }
 
     #[test]

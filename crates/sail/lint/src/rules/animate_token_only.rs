@@ -330,13 +330,13 @@ mod tests {
 
     #[test]
     fn accepts_static_hover_with_known_preset_and_prop() {
-        let f = findings(r#"<button sx={style.hover({ scale: 'spring:snappy' })}>x</button>"#);
+        let f = findings(r#"<button style={style.hover({ scale: 'spring:snappy' })}>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
     #[test]
     fn flags_unknown_property() {
-        let f = findings(r#"<button sx={style.hover({ foo: 'spring:snappy' })}>x</button>"#);
+        let f = findings(r#"<button style={style.hover({ foo: 'spring:snappy' })}>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("foo"));
         assert!(f[0].message.contains("scale"));
@@ -344,7 +344,7 @@ mod tests {
 
     #[test]
     fn flags_unknown_preset() {
-        let f = findings(r#"<button sx={style.hover({ scale: 'mystery' })}>x</button>"#);
+        let f = findings(r#"<button style={style.hover({ scale: 'mystery' })}>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("mystery"));
         assert!(f[0].message.contains("spring:snappy"));
@@ -353,14 +353,14 @@ mod tests {
     #[test]
     fn flags_multiple_in_one_config() {
         let f = findings(
-            r#"<button sx={style.hover({ scale: 'mystery', opacity: 'also-bad' })}>x</button>"#,
+            r#"<button style={style.hover({ scale: 'mystery', opacity: 'also-bad' })}>x</button>"#,
         );
         assert_eq!(f.len(), 2, "expected 2 findings, got {f:?}");
     }
 
     #[test]
     fn ignores_paint_press_without_config_object() {
-        let f = findings(r#"<button sx={style.press().bg(primary)}>x</button>"#);
+        let f = findings(r#"<button style={style.press().bg(primary)}>x</button>"#);
         assert!(
             f.is_empty(),
             "expected no findings for paint press(), got {f:?}"
@@ -382,7 +382,7 @@ mod tests {
     #[test]
     fn handles_utf8_source() {
         let f = findings(
-            "<!-- Loading… -->\n<button sx={style.hover({ foo: 'mystery' })}>x</button>",
+            "<!-- Loading… -->\n<button style={style.hover({ foo: 'mystery' })}>x</button>",
         );
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(
@@ -393,7 +393,7 @@ mod tests {
 
     #[test]
     fn chain_method_form_without_style_prefix() {
-        let f = findings(r#"sx={cta.enter({ opacity: 'fade' })}"#);
+        let f = findings(r#"style={cta.enter({ opacity: 'fade' })}"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 }

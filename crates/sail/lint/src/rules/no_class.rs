@@ -146,7 +146,7 @@ mod tests {
     fn sx_and_semantics_are_the_way() {
         assert!(
             run(
-                r#"<div sx="p-4 bg-surface-2" role="listbox" aria-label="x" use:captureEl></div>"#
+                r#"<div style="p-4 bg-surface-2" role="listbox" aria-label="x" use:captureEl></div>"#
             )
             .is_empty()
         );

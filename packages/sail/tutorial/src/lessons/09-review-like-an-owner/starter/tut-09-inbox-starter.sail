@@ -63,18 +63,28 @@ export default controller(() => {
   <if {inbox().kind === 'ok'}>
     <column gap="1">
       <for {visible()} as="m" key={m.topic}>
-        <row gap="3" align="center" sx={messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' })}>
-          <if {!m.read}><span sx={unreadDot}></span></if>
+        <row gap="3" align="center">
+          messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' })
+
+          <if {!m.read}><span>
+            style(unreadDot)
+</span></if>
           <column gap="0" grow>
-            <strong sx={from}>{m.from}</strong>
-            <small sx={muted}>{m.subject}</small>
+            <strong>
+              style(from)
+{m.from}</strong>
+            <small>
+              style(muted)
+{m.subject}</small>
           </column>
           <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
         </row>
       </for>
       <if {visible().length === 0}>
-        <div sx={emptyImprovised}>Nothing matches this filter.</div>
+        <div>
+          style(emptyImprovised)
+Nothing matches this filter.</div>
       </if>
     </column>
   </if>

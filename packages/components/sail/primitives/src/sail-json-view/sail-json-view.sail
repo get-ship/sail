@@ -130,9 +130,13 @@ export default controller(({ data, expanded, depth }: Scope) => {
   })
 </controller>
 
-<column gap="0" sx={style.fontFamily(mono).fontSize(sm).leading(normal-plus)}>
+<column gap="0">
+  style.fontFamily(mono).fontSize(sm).leading(normal-plus)
+
   <if {parseError() !== ''}>
-    <span role="alert" sx={style.fg(destructive)}>Invalid JSON: {parseError()}</span>
+    <span role="alert">
+      style.fg(destructive)
+Invalid JSON: {parseError()}</span>
   </if>
   <for {rows()} as="row" key={row.k}>
     <match {row.kind}>
@@ -140,41 +144,79 @@ export default controller(({ data, expanded, depth }: Scope) => {
         <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
-             sx={style.group().radius(sm).cursor(pointer).when({ hover: style.bg(hover-bg) })}>
+>
+          style.group().radius(sm).cursor(pointer).when({ hover: style.bg(hover-bg) })
+
           <for {row.pads} as="pad" key={pad.i}>
-            <span sx={style.w(3).borderLWidth(1).borderL(border-subtle)}></span>
+            <span>
+              style.w(3).borderLWidth(1).borderL(border-subtle)
+</span>
           </for>
-          <span aria-hidden="true" sx={style.fg(muted-foreground).fontSize(xs).padX(1).when({ groupExpanded: style.rotate(90) })}>▶</span>
+          <span aria-hidden="true">
+            style.fg(muted-foreground).fontSize(xs).padX(1).when({ groupExpanded: style.rotate(90) })
+▶</span>
           <if {row.label !== ''}>
-            <span sx={style.fontWeight(medium)}>"{row.label}"</span><span sx={style.fg(muted-foreground)}>:&nbsp;</span>
+            <span>
+              style.fontWeight(medium)
+"{row.label}"</span><span>
+              style.fg(muted-foreground)
+:&nbsp;</span>
           </if>
-          <span sx={style.fg(muted-foreground)}>{row.openBracket}</span>
-          <span sx={style.fg(muted-foreground).fontSize(xs).bg(muted).radius(full).padX(1).ml(1)}>{row.meta}</span>
+          <span>
+            style.fg(muted-foreground)
+{row.openBracket}</span>
+          <span>
+            style.fg(muted-foreground).fontSize(xs).bg(muted).radius(full).padX(1).ml(1)
+{row.meta}</span>
           <if {!row.open}>
-            <span sx={style.fg(muted-foreground)}>…{row.closeBracket}</span>
+            <span>
+              style.fg(muted-foreground)
+…{row.closeBracket}</span>
           </if>
         </row>
       </case><case {'close'}>
         <row gap="0" align="center">
           <for {row.pads} as="pad" key={pad.i}>
-            <span sx={style.w(3).borderLWidth(1).borderL(border-subtle)}></span>
+            <span>
+              style.w(3).borderLWidth(1).borderL(border-subtle)
+</span>
           </for>
-          <span sx={style.fg(muted-foreground).padX(1)}>{row.text}</span>
+          <span>
+            style.fg(muted-foreground).padX(1)
+{row.text}</span>
         </row>
       </case><default>
-        <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" sx={style.radius(sm).when({ hover: style.bg(hover-bg) })}>
+        <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center">
+          style.radius(sm).when({ hover: style.bg(hover-bg) })
+
           <for {row.pads} as="pad" key={pad.i}>
-            <span sx={style.w(3).borderLWidth(1).borderL(border-subtle)}></span>
+            <span>
+              style.w(3).borderLWidth(1).borderL(border-subtle)
+</span>
           </for>
           <if {row.label !== ''}>
-            <span sx={style.fontWeight(medium).padX(1)}>"{row.label}"</span><span sx={style.fg(muted-foreground)}>:&nbsp;</span>
+            <span>
+              style.fontWeight(medium).padX(1)
+"{row.label}"</span><span>
+              style.fg(muted-foreground)
+:&nbsp;</span>
           </if>
           <match {row.kind}>
-            <case {'str'}> <span sx={style.fg(success)}>{row.text}</span>
-            </case><case {'num'}> <span sx={style.fg(info)}>{row.text}</span>
-            </case><case {'bool'}> <span sx={style.fg(accent).fontWeight(medium)}>{row.text}</span>
-            </case><case {'null'}> <span sx={style.fg(muted-foreground)}>{row.text}</span>
-            </case><default> <span sx={style.fg(muted-foreground)}>{row.text}</span>
+            <case {'str'}> <span>
+              style.fg(success)
+{row.text}</span>
+            </case><case {'num'}> <span>
+              style.fg(info)
+{row.text}</span>
+            </case><case {'bool'}> <span>
+              style.fg(accent).fontWeight(medium)
+{row.text}</span>
+            </case><case {'null'}> <span>
+              style.fg(muted-foreground)
+{row.text}</span>
+            </case><default> <span>
+              style.fg(muted-foreground)
+{row.text}</span>
           </default></match>
         </row>
     </default></match>

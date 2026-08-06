@@ -10,7 +10,7 @@ import type { Action } from '../action'
  * No token for "the user has panned 47.3px to the right". The action writes
  * the value as a single custom property, and the template reads it through
  *
- *     sx="transform-(--world-tx)"
+ *     style="transform-(--world-tx)"
  *
  * (the CSS `transform` property lowered through the `transform-(--var)` atom).
  *

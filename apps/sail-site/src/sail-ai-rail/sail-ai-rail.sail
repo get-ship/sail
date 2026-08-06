@@ -50,21 +50,43 @@ export default controller((ctx) => {
  })
 </scope>
 
-<row nowrap align="stretch" w="full" grow min-w="0" gap="0" sx={shell}>
- <nav shrink="0" sx={rail} label="AI docs">
- <p sx={railLabel}>AI</p>
- <a href="/ai" sx={railLink} current={path() === '/ai' ? 'page' : null}>Overview</a>
- <a href="/ai/authoring" sx={railLink} current={path() === '/ai/authoring' ? 'page' : null}>Authoring</a>
- <a href="/ai/tooling" sx={railLink} current={path() === '/ai/tooling' ? 'page' : null}>Tooling</a>
- <a href="/ai/eval" sx={railLink} current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
+<row nowrap align="stretch" w="full" grow min-w="0" gap="0">
+  style(shell)
+
+ <nav shrink="0" label="AI docs">
+   style(rail)
+
+ <p>
+   style(railLabel)
+AI</p>
+ <a href="/ai" current={path() === '/ai' ? 'page' : null}>
+   style(railLink)
+Overview</a>
+ <a href="/ai/authoring" current={path() === '/ai/authoring' ? 'page' : null}>
+   style(railLink)
+Authoring</a>
+ <a href="/ai/tooling" current={path() === '/ai/tooling' ? 'page' : null}>
+   style(railLink)
+Tooling</a>
+ <a href="/ai/eval" current={path() === '/ai/eval' ? 'page' : null}>
+   style(railLink)
+Eval</a>
  </nav>
 
- <column grow min-w="0" gap="0" sx={style.minH(0).minW(0)}>
- <div sx={mobileBar}>
+ <column grow min-w="0" gap="0">
+   style.minH(0).minW(0)
+
+ <div>
+   style(mobileBar)
+
  <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
- <small sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>AI docs</small>
+ <small>
+   style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+AI docs</small>
  </div>
- <main grow min-w="0" sx={mainDocs}>
+ <main grow min-w="0">
+   style(mainDocs)
+
  <slot name="route"></slot>
  </main>
  </column>
@@ -80,15 +102,27 @@ export default controller((ctx) => {
 >
  <header>
   <row align="center" justify="between" gap="2" w="full">
-   <strong sx={style.fontSize(sm)}>AI docs</strong>
+   <strong>
+     style.fontSize(sm)
+AI docs</strong>
    <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
   </row>
  </header>
  <section>
-  <p sx={railLabel}>AI</p>
-  <a href="/ai" sx={railLink} on:click={closeNav} current={path() === '/ai' ? 'page' : null}>Overview</a>
-  <a href="/ai/authoring" sx={railLink} on:click={closeNav} current={path() === '/ai/authoring' ? 'page' : null}>Authoring</a>
-  <a href="/ai/tooling" sx={railLink} on:click={closeNav} current={path() === '/ai/tooling' ? 'page' : null}>Tooling</a>
-  <a href="/ai/eval" sx={railLink} on:click={closeNav} current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
+  <p>
+    style(railLabel)
+AI</p>
+  <a href="/ai" on:click={closeNav} current={path() === '/ai' ? 'page' : null}>
+    style(railLink)
+Overview</a>
+  <a href="/ai/authoring" on:click={closeNav} current={path() === '/ai/authoring' ? 'page' : null}>
+    style(railLink)
+Authoring</a>
+  <a href="/ai/tooling" on:click={closeNav} current={path() === '/ai/tooling' ? 'page' : null}>
+    style(railLink)
+Tooling</a>
+  <a href="/ai/eval" on:click={closeNav} current={path() === '/ai/eval' ? 'page' : null}>
+    style(railLink)
+Eval</a>
  </section>
 </dialog>

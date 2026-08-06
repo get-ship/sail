@@ -24,32 +24,46 @@ export default controller(() => {
   components-inspect
   gap="0"
   grow
-  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+
 >
+  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+
   <row
     components-workbench
     grow
     gap="0"
     nowrap
     align="stretch"
-    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
+
   >
+    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+
     <column
       inspect-tree-pane
       grow
       gap="0"
-      sx={style.minH(0).h(full).minW(panel-min-w-lg).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)}
+
     >
-      <column inspect-tree-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+      style.minH(0).h(full).minW(panel-min-w-lg).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)
+
+      <column inspect-tree-head shrink="0" gap="2">
+        style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)
+
         <row align="center" justify="between" nowrap gap="2">
-          <p sx={eyebrow}>Components</p>
+          <p>
+            style(eyebrow)
+Components</p>
         </row>
         <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
           <button type="button" size="sm" mode="library" variant="ghost" tone="muted">Library</button>
           <button type="button" size="sm" mode="inspect" variant="solid" tone="primary" pressed="true">Inspect</button>
         </row>
-        <p sx={pathMeta}>Surface picker · open files & routes</p>
-        <scroll-area surface-picker surface-list sx={style.maxH(28)} on:click={inspect.onSurfacePick}>
+        <p>
+          style(pathMeta)
+Surface picker · open files & routes</p>
+        <scroll-area surface-picker surface-list on:click={inspect.onSurfacePick}>
+          style.maxH(28)
+
           <column gap="1">
             <for {inspect.surfaces()} as="s" key={s.key}>
               <studio-list-row
@@ -71,13 +85,19 @@ export default controller(() => {
       </column>
 
       <if {inspect.isLoading()}>
-        <row align="center" gap="2" shrink="0" sx={style.padX(4).padY(2)}>
+        <row align="center" gap="2" shrink="0">
+          style.padX(4).padY(2)
+
           <spinner size="sm"></spinner>
-          <p sx={muted}>{inspect.loadingLabel()}</p>
+          <p>
+            style(muted)
+{inspect.loadingLabel()}</p>
         </row>
       </if>
 
-      <column grow gap="0" sx={style.minH(0).basis(0).pad(1).overflow(hidden)}>
+      <column grow gap="0">
+        style.minH(0).basis(0).pad(1).overflow(hidden)
+
         <if {!inspect.hasSurface()}>
           <studio-empty title="Select a surface to inspect" size="sm">
             Pick an open file or route surface. Trees come from source IR — not a live DOM clone.
@@ -98,8 +118,10 @@ export default controller(() => {
               size="sm"
               show-guides
               on:sail-select={inspect.onTreeSelect}
-              sx={style.w(full).h(full).minH(0)}
-            ></sail-tree>
+
+            >
+              style.w(full).h(full).minH(0)
+</sail-tree>
           </if>
         </if>
       </column>
@@ -110,17 +132,29 @@ export default controller(() => {
       components-detail
       grow
       gap="0"
-      sx={style.minH(0).h(full).minW(panel-min-w-md).basis(0).bg(background).overflow(hidden)}
+
     >
-      <column shrink="0" gap="3" sx={style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)}>
+      style.minH(0).h(full).minW(panel-min-w-md).basis(0).bg(background).overflow(hidden)
+
+      <column shrink="0" gap="3">
+        style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+
         <if {!inspect.hasNode()}>
-          <p sx={style.fontSize(lg).fontWeight(semibold)}>Instance</p>
-          <p sx={muted}>Select a node in the tree.</p>
+          <p>
+            style.fontSize(lg).fontWeight(semibold)
+Instance</p>
+          <p>
+            style(muted)
+Select a node in the tree.</p>
         </if>
         <if {inspect.hasNode()}>
           <column gap="1">
-            <p node-tag sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono)}>{inspect.nodeTag()}</p>
-            <p sx={pathMeta}>{inspect.nodePath()} · {inspect.nodeSpanLabel()}</p>
+            <p node-tag>
+              style.fontSize(lg).fontWeight(semibold).fontFamily(mono)
+{inspect.nodeTag()}</p>
+            <p>
+              style(pathMeta)
+{inspect.nodePath()} · {inspect.nodeSpanLabel()}</p>
             <row gap="2" nowrap>
               <if {inspect.nodeLayer()}>
                 <badge tone="muted" size="sm" variant="outline" pill>{inspect.nodeLayer()}</badge>
@@ -145,39 +179,65 @@ export default controller(() => {
         </if>
       </column>
 
-      <scroll-area grow sx={style.minH(0).basis(0).h(full)}>
-        <column gap="4" sx={style.pad(5)}>
+      <scroll-area grow>
+        style.minH(0).basis(0).h(full)
+
+        <column gap="4">
+          style.pad(5)
+
           <if {inspect.panelsNote()}>
-            <p sx={muted}>{inspect.panelsNote()}</p>
+            <p>
+              style(muted)
+{inspect.panelsNote()}</p>
           </if>
 
           <column inspect-issues gap="2">
-            <p sx={eyebrow}>Issues</p>
+            <p>
+              style(eyebrow)
+Issues</p>
             <if {!inspect.hasIssues()}>
-              <p sx={muted}>No diagnostics on this surface.</p>
+              <p>
+                style(muted)
+No diagnostics on this surface.</p>
             </if>
             <for {inspect.issueRows()} as="iss" key={iss.key}>
               <row gap="2" align="start" nowrap>
                 <badge tone={iss.tone} size="sm" variant="soft" pill shrink="0">{iss.severity}</badge>
                 <column grow min-w="0" gap="0">
-                  <p sx={style.fontSize(sm)}>{iss.message}</p>
-                  <p sx={pathMeta}>{iss.spanLabel}</p>
+                  <p>
+                    style.fontSize(sm)
+{iss.message}</p>
+                  <p>
+                    style(pathMeta)
+{iss.spanLabel}</p>
                 </column>
               </row>
             </for>
           </column>
 
           <column inspect-layout gap="2">
-            <p sx={eyebrow}>Layout</p>
+            <p>
+              style(eyebrow)
+Layout</p>
             <if {!inspect.hasLayout()}>
-              <p sx={muted}>No layout boxes for this surface yet.</p>
+              <p>
+                style(muted)
+No layout boxes for this surface yet.</p>
             </if>
             <if {inspect.hasLayout()}>
-              <p sx={muted}>Boxes from the compiler model (not browser computed style).</p>
+              <p>
+                style(muted)
+Boxes from the compiler model (not browser computed style).</p>
               <for {inspect.layoutRows()} as="box" key={box.key}>
-                <row gap="2" align="center" nowrap sx={style.padY(1)}>
-                  <p shrink="0" sx={style.fontSize(sm).fontFamily(mono)}>{box.tag}</p>
-                  <p grow min-w="0" sx={pathMeta}>{box.dims}</p>
+                <row gap="2" align="center" nowrap>
+                  style.padY(1)
+
+                  <p shrink="0">
+                    style.fontSize(sm).fontFamily(mono)
+{box.tag}</p>
+                  <p grow min-w="0">
+                    style(pathMeta)
+{box.dims}</p>
                   <if {box.flags}>
                     <badge tone="warning" size="sm" variant="soft" pill shrink="0">{box.flags}</badge>
                   </if>
@@ -187,13 +247,19 @@ export default controller(() => {
           </column>
 
           <column inspect-state gap="2">
-            <p sx={eyebrow}>State</p>
+            <p>
+              style(eyebrow)
+State</p>
             <if {!inspect.hasState()}>
-              <p sx={muted}>No state bindings on this surface.</p>
+              <p>
+                style(muted)
+No state bindings on this surface.</p>
             </if>
             <for {inspect.stateRows()} as="st" key={st.key}>
               <row gap="2" align="center" nowrap>
-                <p grow min-w="0" sx={style.fontSize(sm).fontFamily(mono).truncate()}>{st.name}</p>
+                <p grow min-w="0">
+                  style.fontSize(sm).fontFamily(mono).truncate()
+{st.name}</p>
                 <badge tone="muted" size="sm" variant="outline" pill>{st.kind}</badge>
                 <badge tone={st.tierTone} size="sm" variant="soft" pill>{st.tierLabel}</badge>
               </row>

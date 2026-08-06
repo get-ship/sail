@@ -102,8 +102,8 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "Style const",
         syntax: "const filled = style.bg(primary).padX(2)",
-        summary: "compile-time Style value (chain / match / when / compound / list / ref); resolved when host sx={name} references it",
-        example: "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span sx={filled}>{label}</span>",
+        summary: "compile-time Style value (chain / match / when / compound / list / ref); resolved when host style={name} references it",
+        example: "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span style={filled}>{label}</span>",
     },
     ScopeEntry {
         form: "Identity type annotation",

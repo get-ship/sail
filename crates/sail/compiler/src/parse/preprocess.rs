@@ -7,9 +7,10 @@
 //!  1. Quote unquoted brace attributes — `disabled={x || y}` becomes
 //!     `disabled="{x || y}"` with `"` inside the expression escaped to `&quot;`.
 //!  2. Expand non-void self-closing tags — `<time … />` becomes `<time …></time>`.
-//!  3. Lower `sx="…"` surface attributes → atomic `class`es.
-//!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
-//! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
+//!  3. Lift block-level Style product statements → atomic `class`es on the parent.
+//!  4. Refuse retired `sx=` / attribute Style hosts.
+//!  5. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
+//! Steps 3–5 emit deduped CSS that `preprocess` injects as one `<style>`.
 
 use crate::diagnostics::{CompileError, Span};
 
@@ -18,12 +19,15 @@ const VOID_TAGS: &[&str] = &[
     "wbr",
 ];
 
+/// Framework blocks that are not element bodies for Style attachment.
+const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style"];
+
 pub fn preprocess(source: &str) -> Result<String, CompileError> {
     preprocess_impl(source, true)
 }
 
 /// Light normalize only: brace-attr quoting + self-close expansion.
-/// No sx / layout / stdlib lowering — author tags and near-author spans
+/// No Style / layout / stdlib lowering — author tags and near-author spans
 /// for SailInspect tree identity (TOOL-2).
 pub fn preprocess_author(source: &str) -> Result<String, CompileError> {
     let s = expand_self_close(&quote_brace_attrs(source));
@@ -34,67 +38,30 @@ pub fn preprocess_author(source: &str) -> Result<String, CompileError> {
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).
 pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<String, CompileError> {
-    // Brace-quoting + self-close expansion normalize the raw source first. Then
-    // the two compile-time lowerings run on that HTML: `sx=` attributes → atomic
-    // surface classes, then the layout keywords (`<column>`/`<row>`/…) → `<div>`
-    // + atomic layout classes. Both return the deduped CSS they need; we inject
-    // it as ONE `<style>` at the very end so the brace-attr quoter never sees its
-    // `{…}`-bearing rules. sx runs before layout so a layout element's own `sx=`
-    // is already a `class` that the layout rewrite folds into the div's classes.
-    // Style errors in host `sx=` are returned as CompileErrors here, so they fail
-    // loudly in component AND element mode instead of producing inert empty paint.
+    // Normalize, then lift block Style statements → class (before stdlib so
+    // use-site paint is class attrs when native hosts stamp). Refuse retired
+    // `sx=` attr host. Layout keywords lower after paint classes exist.
     let s = expand_self_close(&quote_brace_attrs(source));
-    // Bare framework-enum shorthand: `<button primary solid sm>` →
-    // tone/variant/size attributes. Framework vocabulary on framework tags
-    // only (L1 controls); userland components stay explicit.
     let s = lower_prop_shorthand(&s);
-    // L1 stdlib elements: `<spinner …>` splices into its structure snippet
-    // (use-site attrs merged onto the root, default-slot children placed),
-    // its skin CSS joining the injected style once per tag.
+    // Scope Style consts (`const filled = style.…`) resolve Refs in host Style.
+    let style_env = super::scope_block::style_env_from_source(&s);
+    let (s, style_css) = lift_block_style(&s, &style_env)?;
+    refuse_sx_attr(&s)?;
+    // L1 stdlib elements: splice structure; skins live in framework sheet.
     let (s, elements_css) = if expand_elements {
         lower_stdlib_elements(&s)
     } else {
         (s, String::new())
     };
-    // Framework-owned host display: the component presents as its root element
-    // naturally would (inheriting the standard, not a per-component knob). Block
-    // is the default, so this only emits an override for inline-natured roots.
-    // Computed now, before lower_layout rewrites <row>/<column> into <div>.
+    // Host display override before lower_layout rewrites row/column.
     let host_display_css = derive_host_display(&s);
-    // The `<host>` tag is retired — root styling is `sx` on the component's root
-    // element (which lowers to a class), not a magic host declaration. A stale
-    // `<host>` now survives to `parse` and is rejected as an unknown element.
-    // Scope Style consts (`const filled = style.…`) resolve Refs in host `sx=`.
-    let style_env = super::scope_block::style_env_from_source(&s);
-    let (s, sx_css) = lower_sx(&s, &style_env)?;
-    // An element that already carried `class="…"` now has a SECOND class attr
-    // from the sx lowering; downstream the DOM emitter would issue two
-    // `setAttribute("class", …)` calls and the sx one clobbers the author's.
-    // Merge them into one attribute here, while the tag text is still flat.
     let s = merge_duplicate_class_attrs(&s);
-    // Child participation attrs (`grow` / `shrink` / `w` / `min-w` / `max-w`)
-    // lower on ANY host to the same atomic classes Style would emit
-    // (`style.grow(1)` → `sx-grow1`, …). Run before `lower_layout` so a
-    // layout keyword carrying `grow` already has a class the layout rewrite
-    // folds into the div.
     let (s, participation_css) = lower_participation_attrs(&s);
     let s = merge_duplicate_class_attrs(&s);
     let (s, layout_css) = lower_layout(&s);
-    // The `<theme>` tag is retired — tone/size are ordinary props (shared
-    // unions, reflected to attributes, mapped to tokens by the skin), not a
-    // per-component channel declaration. A stale `<theme>` now survives to `parse`
-    // and is rejected as an unknown element.
-    // NOTE elements_css rides the per-component injected style for now —
-    // duplicated across components that use the same element. It moves to
-    // the framework sheet with the deck style-delivery work.
-    // ORDER IS THE CONTRACT: skin classes (elements_css) FIRST, author
-    // classes (sx/participation/layout) AFTER. Both share the `sx-*`
-    // atomic namespace at the same specificity in one sheet, so source
-    // order decides — and "use-site wins on collision" (the splice law)
-    // demands author rules land last. Skins-last silently beat author
-    // `sx={style.w(28)}` with the skin's own `sx-wfull` (studio selects).
+    // ORDER: skin classes FIRST, author classes AFTER (use-site wins).
     let css = dedup_css_rules(&format!(
-        "{elements_css}{host_display_css}{sx_css}{participation_css}{layout_css}"
+        "{elements_css}{host_display_css}{style_css}{participation_css}{layout_css}"
     ));
     Ok(if css.is_empty() {
         s
@@ -103,101 +70,22 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     })
 }
 
-/// Find every `sx` attribute VALUE in raw `.sail` source, with its byte
-/// offset (pointing at the first character of the value). Covers:
-/// - `sx="…"` utility / quoted Style forms
-/// - `sx={…}` Style product forms (`bind(name)`, chains, lists)
-///
-/// Read-only twin of [`lower_sx`]'s attribute-recognition walk — used by the
-/// `(--x)` / `bind(name)` resolution check (`check::sx_vars`), which runs on
-/// the pre-preprocess source (before `sx=` is rewritten to `class=`) so it
-/// can still see the literal attribute text and report spans against the
-/// author's source.
+/// Find every block-level Style product expression in raw `.sail` source,
+/// with the byte offset of the expression start. Used by `(--x)` / `bind(name)`
+/// resolution (`check::sx_vars`) against author source.
 pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
-    let bytes = source.as_bytes();
     let mut out = Vec::new();
-    let mut i = 0;
-    while i < bytes.len() {
-        if source[i..].starts_with("<!--") {
-            match source[i..].find("-->") {
-                Some(end) => {
-                    i += end + 3;
-                    continue;
-                }
-                None => break,
-            }
-        }
-        if i > 0
-            && bytes[i - 1].is_ascii_whitespace()
-            && source[i..].starts_with("sx")
-            && is_eq_quote(&bytes[i + 2..])
-        {
-            let mut j = i + 2;
-            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
-                j += 1;
-            }
-            if j < bytes.len() && bytes[j] == b'=' {
-                j += 1;
-                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
-                    j += 1;
-                }
-                if j < bytes.len() && bytes[j] == b'"' {
-                    let vstart = j + 1;
-                    if let Some(rel) = source[vstart..].find('"') {
-                        out.push((vstart, &source[vstart..vstart + rel]));
-                        i = vstart + rel + 1;
-                        continue;
-                    }
-                } else if j < bytes.len() && bytes[j] == b'{' {
-                    let vstart = j + 1;
-                    let mut depth = 1usize;
-                    let mut k = vstart;
-                    while k < bytes.len() && depth > 0 {
-                        match bytes[k] {
-                            b'{' => depth += 1,
-                            b'}' => depth -= 1,
-                            _ => {}
-                        }
-                        k += 1;
-                    }
-                    if depth == 0 {
-                        // value is inside braces; k points past closing `}`
-                        out.push((vstart, &source[vstart..k - 1]));
-                        i = k;
-                        continue;
-                    }
-                }
-            }
-        }
-        let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
-            n += 1;
-        }
-        i = n;
-    }
+    for_each_block_style(source, |abs_start, expr| {
+        out.push((abs_start, expr));
+    });
     out
 }
 
-/// Lower Style product attributes to `class="sx-…"` + atomic CSS.
-///
-/// Accepts:
-/// - `sx={ style.bg(primary)… }` / `sx={[ match(…), when(…) ]}`  (product)
-/// - `sx="style.bg(primary)…"`  (same Style grammar in quotes)
-/// - `sx={ filled }` when `filled` is a scope Style const (via `env`)
-///
-/// A Style error in any `sx=` value is returned as a `CompileError` pointing
-/// at the offending value, so component/element compiles fail loudly instead
-/// of emitting inert empty paint.
-fn lower_sx(
-    source: &str,
-    env: &sail_lint::style::StyleEnv,
-) -> Result<(String, String), CompileError> {
+/// Walk element bodies; invoke `f(expr_abs_start, expr)` for each Style product
+/// statement found as the first non-whitespace body content of an element.
+fn for_each_block_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
     let bytes = source.as_bytes();
-    let mut out = String::with_capacity(source.len() + 256);
-    let mut css = String::new();
-    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut i = 0;
-    let mut last = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
@@ -208,12 +96,249 @@ fn lower_sx(
                 None => break,
             }
         }
+        if bytes[i] == b'<' && i + 1 < bytes.len() {
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                continue;
+            }
+            if !bytes[i + 1].is_ascii_alphabetic() {
+                i += 1;
+                continue;
+            }
+            let tag_start = i + 1;
+            let mut tag_end = tag_start;
+            while tag_end < bytes.len()
+                && (bytes[tag_end].is_ascii_alphanumeric()
+                    || bytes[tag_end] == b'-'
+                    || bytes[tag_end] == b'_'
+                    || bytes[tag_end] == b':')
+            {
+                tag_end += 1;
+            }
+            let tag = &source[tag_start..tag_end];
+            let mut k = tag_end;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k >= bytes.len() {
+                break;
+            }
+            let self_closing = k > 0 && bytes[k - 1] == b'/';
+            let body_start = k + 1;
+            if self_closing || is_void_tag(tag) || SKIP_BODY_TAGS.contains(&tag) {
+                if SKIP_BODY_TAGS.contains(&tag) && !self_closing {
+                    if let Some(end) = matching_close(source, body_start, tag) {
+                        i = end;
+                        continue;
+                    }
+                }
+                i = body_start;
+                continue;
+            }
+            let body = &source[body_start..];
+            if let Some((rel_start, rel_end, expr)) = try_style_statement(body) {
+                f(body_start + rel_start, expr);
+                i = body_start + rel_end;
+                continue;
+            }
+            i = body_start;
+            continue;
+        }
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
+    }
+}
+
+fn is_void_tag(tag: &str) -> bool {
+    VOID_TAGS.iter().any(|t| *t == tag)
+}
+
+/// Lift block-level Style product statements onto the parent open tag as
+/// `class="sx-…"` (+ motion attrs), stripping the statement from the body.
+fn lift_block_style(
+    source: &str,
+    env: &sail_lint::style::StyleEnv,
+) -> Result<(String, String), CompileError> {
+    struct Lift {
+        gt_pos: usize,
+        stmt_lo: usize,
+        stmt_hi: usize,
+        classes: String,
+        motions: Vec<(String, String)>,
+    }
+    let bytes = source.as_bytes();
+    let mut lifts: Vec<Lift> = Vec::new();
+    let mut css = String::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if bytes[i] == b'<' && i + 1 < bytes.len() {
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                continue;
+            }
+            if !bytes[i + 1].is_ascii_alphabetic() {
+                i += 1;
+                continue;
+            }
+            let tag_start = i + 1;
+            let mut tag_end = tag_start;
+            while tag_end < bytes.len()
+                && (bytes[tag_end].is_ascii_alphanumeric()
+                    || bytes[tag_end] == b'-'
+                    || bytes[tag_end] == b'_'
+                    || bytes[tag_end] == b':')
+            {
+                tag_end += 1;
+            }
+            let tag = &source[tag_start..tag_end];
+            let mut k = tag_end;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
+                }
+                k += 1;
+            }
+            if k >= bytes.len() {
+                break;
+            }
+            let self_closing = k > 0 && bytes[k - 1] == b'/';
+            let gt_pos = k;
+            let body_start = k + 1;
+            if SKIP_BODY_TAGS.contains(&tag) && !self_closing {
+                if let Some(end) = matching_close(source, body_start, tag) {
+                    i = end;
+                    continue;
+                }
+                i = body_start;
+                continue;
+            }
+            if self_closing {
+                i = body_start;
+                continue;
+            }
+            // Normal + void open tags: Style product may follow as a block statement.
+            let body = &source[body_start..];
+            if let Some((rel_start, rel_end, expr)) = try_style_statement(body) {
+                let abs_lo = body_start + rel_start;
+                let abs_hi = body_start + rel_end;
+                let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
+                    .map_err(|diags| style_error(diags, abs_lo, abs_hi))?;
+                let mut stmt_hi = abs_hi;
+                if source.as_bytes().get(stmt_hi) == Some(&b'\r') {
+                    stmt_hi += 1;
+                }
+                if source.as_bytes().get(stmt_hi) == Some(&b'\n') {
+                    stmt_hi += 1;
+                }
+                let close = format!("</{tag}>");
+                let after = &source[stmt_hi..];
+                let trim_start = after.len() - after.trim_start().len();
+                let after_trim = after.trim_start();
+                if is_void_tag(tag) && after_trim.starts_with(&close) {
+                    stmt_hi += trim_start + close.len();
+                }
+                lifts.push(Lift {
+                    gt_pos,
+                    stmt_lo: abs_lo,
+                    stmt_hi,
+                    classes,
+                    motions,
+                });
+                i = stmt_hi;
+                continue;
+            }
+            i = body_start;
+            continue;
+        }
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
+    }
+
+    if lifts.is_empty() {
+        return Ok((source.to_string(), css));
+    }
+
+    let mut out = source.to_string();
+    for lift in lifts.into_iter().rev() {
+        out.replace_range(lift.stmt_lo..lift.stmt_hi, "");
+        let mut inject = String::new();
+        inject.push_str(" class=\"");
+        inject.push_str(&lift.classes);
+        inject.push('"');
+        push_motion_attrs(&mut inject, &lift.motions);
+        out.insert_str(lift.gt_pos, &inject);
+    }
+    Ok((out, css))
+}
+
+/// Hard refuse retired `sx=` Style attribute host (and HTML-fiction
+/// `style={Style…}` product forms on the attribute).
+fn refuse_sx_attr(source: &str) -> Result<(), CompileError> {
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if source[i..].starts_with("<style") {
+            if let Some(rel) = source[i..].find("</style>") {
+                i += rel + "</style>".len();
+                continue;
+            }
+            break;
+        }
         if i > 0
             && bytes[i - 1].is_ascii_whitespace()
             && source[i..].starts_with("sx")
-            && is_eq_after_sx(&bytes[i + 2..])
+            && is_eq_after_name(&bytes[i + 2..])
         {
-            let mut j = i + 2;
+            return Err(CompileError::new(
+                "sx= is retired — attach Style as a block statement on the element: \
+                 <el> style.pad(4).bg(primary) … </el>  or  style({ box, paint })  \
+                 or  style([ base, match(…) ])",
+            )
+            .with_span(Span::new(i, i + 2))
+            .with_category("sail-sx"));
+        }
+        if i > 0
+            && bytes[i - 1].is_ascii_whitespace()
+            && source[i..].starts_with("style")
+            && is_eq_after_name(&bytes[i + 5..])
+        {
+            let mut j = i + 5;
             while j < bytes.len() && bytes[j].is_ascii_whitespace() {
                 j += 1;
             }
@@ -222,51 +347,173 @@ fn lower_sx(
                 while j < bytes.len() && bytes[j].is_ascii_whitespace() {
                     j += 1;
                 }
-                if j < bytes.len() && bytes[j] == b'"' {
-                    let vstart = j + 1;
-                    if let Some(rel) = source[vstart..].find('"') {
-                        let val = &source[vstart..vstart + rel];
-                        let (classes, motions) = lower_sx_value(val, env, &mut css, &mut seen)
-                            .map_err(|diags| style_error(diags, vstart, vstart + rel))?;
-                        out.push_str(&source[last..i]);
-                        out.push_str("class=\"");
-                        out.push_str(&classes);
-                        out.push('"');
-                        push_motion_attrs(&mut out, &motions);
-                        i = vstart + rel + 1;
-                        last = i;
-                        continue;
-                    }
-                }
-                if j < bytes.len() && bytes[j] == b'{' {
-                    if let Some(end) = balanced_brace(source.as_bytes(), j) {
-                        let val = &source[j + 1..end];
-                        let (classes, motions) = lower_sx_value(val, env, &mut css, &mut seen)
-                            .map_err(|diags| style_error(diags, j + 1, end))?;
-                        out.push_str(&source[last..i]);
-                        out.push_str("class=\"");
-                        out.push_str(&classes);
-                        out.push('"');
-                        push_motion_attrs(&mut out, &motions);
-                        i = end + 1;
-                        last = i;
-                        continue;
-                    }
+                let val_preview = if j < bytes.len() && bytes[j] == b'{' {
+                    balanced_brace(bytes, j)
+                        .map(|end| &source[j + 1..end])
+                        .unwrap_or("")
+                } else if j < bytes.len() && bytes[j] == b'"' {
+                    source[j + 1..]
+                        .find('"')
+                        .map(|rel| &source[j + 1..j + 1 + rel])
+                        .unwrap_or("")
+                } else {
+                    ""
+                };
+                let stripped = strip_outer_braces(val_preview.trim());
+                if looks_like_style_product(stripped) {
+                    return Err(CompileError::new(
+                        "style={…} as an attribute is not Style attachment — use a block \
+                         statement: <el> style.… </el>  (not an HTML style attribute)",
+                    )
+                    .with_span(Span::new(i, i + 5))
+                    .with_category("sail-sx"));
                 }
             }
         }
-        // Advance one FULL UTF-8 char. A bare `i += 1` lands mid-codepoint on
-        // any multi-byte char (…, emoji, accents) and the next `source[i..]`
-        // slice panics — the crash the async golden fixtures hit. Mirrors the
-        // char-safe stepping in `quote_brace_attrs` / `expand_self_close`.
         let mut n = i + 1;
         while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
             n += 1;
         }
         i = n;
     }
-    out.push_str(&source[last..]);
-    Ok((out, css))
+    Ok(())
+}
+
+fn is_eq_after_name(bytes: &[u8]) -> bool {
+    let mut i = 0;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    i < bytes.len() && bytes[i] == b'='
+}
+
+/// First non-ws body content is a Style product statement?
+/// Returns `(rel_start, rel_end, expr)` where rel offsets are into `body`.
+fn try_style_statement(body: &str) -> Option<(usize, usize, &str)> {
+    let bytes = body.as_bytes();
+    let mut start = 0;
+    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
+        start += 1;
+    }
+    if start >= bytes.len() {
+        return None;
+    }
+    if bytes[start] == b'<' || bytes[start] == b'{' {
+        return None;
+    }
+    let rest = &body[start..];
+    if !looks_like_style_product(rest) {
+        return None;
+    }
+    let end = consume_style_expr(rest)?;
+    let expr = rest[..end].trim_end();
+    if expr.is_empty() {
+        return None;
+    }
+    Some((start, start + end, expr))
+}
+
+fn looks_like_style_product(s: &str) -> bool {
+    let t = s.trim_start();
+    t.starts_with("style.")
+        || t.starts_with("style(")
+        || t.starts_with("match(")
+        || t.starts_with("when(")
+        || t.starts_with("compound(")
+        || t.starts_with('[')
+        || is_ident_dot_call(t)
+}
+
+/// Consume a balanced Style product expression; keep `.method(` chain tails.
+fn consume_style_expr(s: &str) -> Option<usize> {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brack = 0i32;
+    let mut brace = 0i32;
+    let mut saw_group = false;
+
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+                if i < bytes.len() {
+                    i += 1;
+                }
+                continue;
+            }
+            b'(' => {
+                paren += 1;
+                saw_group = true;
+            }
+            b')' => {
+                paren -= 1;
+                if paren < 0 {
+                    return None;
+                }
+            }
+            b'[' => {
+                brack += 1;
+                saw_group = true;
+            }
+            b']' => {
+                brack -= 1;
+                if brack < 0 {
+                    return None;
+                }
+            }
+            b'{' => {
+                brace += 1;
+                saw_group = true;
+            }
+            b'}' => {
+                brace -= 1;
+                if brace < 0 {
+                    return None;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+        if saw_group && paren == 0 && brack == 0 && brace == 0 {
+            let mut j = i;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'.' {
+                let after_dot = j + 1;
+                let mut k = after_dot;
+                while k < bytes.len()
+                    && (bytes[k].is_ascii_alphanumeric() || bytes[k] == b'_' || bytes[k] == b'-')
+                {
+                    k += 1;
+                }
+                if k > after_dot {
+                    let mut m = k;
+                    while m < bytes.len() && bytes[m].is_ascii_whitespace() {
+                        m += 1;
+                    }
+                    if m < bytes.len() && bytes[m] == b'(' {
+                        i = j;
+                        continue;
+                    }
+                }
+            }
+            return Some(i);
+        }
+    }
+    if saw_group && paren == 0 && brack == 0 && brace == 0 {
+        Some(i)
+    } else {
+        None
+    }
 }
 
 fn style_error(
@@ -279,18 +526,9 @@ fn style_error(
         .map(|d| d.message())
         .collect::<Vec<_>>()
         .join("; ");
-    // Category `sail-sx` so edit/fix can attach confluent setter rewrites.
-    CompileError::new(format!("Style error in `sx=`: {message}"))
+    CompileError::new(format!("Style error: {message}"))
         .with_span(Span::new(start, end))
         .with_category("sail-sx")
-}
-
-fn is_eq_after_sx(bytes: &[u8]) -> bool {
-    let mut i = 0;
-    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
-        i += 1;
-    }
-    i < bytes.len() && bytes[i] == b'='
 }
 
 fn balanced_brace(bytes: &[u8], open: usize) -> Option<usize> {
@@ -704,10 +942,16 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
     for (name, value) in attrs {
         match name.as_str() {
             "w" | "min-w" | "max-w" => return true,
-            "sx" => {
+            "class" => {
                 let v = value.trim_matches(['"', '\'']);
-                if v.contains(".w(") || v.contains(".minW(") || v.contains(".maxW(") {
-                    return true;
+                for c in v.split_whitespace() {
+                    let cl = c.to_ascii_lowercase();
+                    if cl.starts_with("sx-w")
+                        || cl.starts_with("sx-minw")
+                        || cl.starts_with("sx-maxw")
+                    {
+                        return true;
+                    }
                 }
             }
             _ => {}
@@ -2734,7 +2978,7 @@ mod tests {
         // Regression: `<span class="badge" sx={…}>` must merge author class +
         // Style classes into one attribute (not two setAttribute("class") writes).
         let out =
-            preprocess(r#"<span class="badge" sx={style.pad(4)}>x</span>"#).expect("preprocess");
+            preprocess(r#"<span class="badge"> style.pad(4) x</span>"#).expect("preprocess");
         assert!(
             out.contains(r#"class="badge "#) && out.contains("sx-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
@@ -2749,7 +2993,7 @@ mod tests {
     #[test]
     fn sx_before_class_also_merges() {
         let out =
-            preprocess(r#"<span sx={style.pad(4)} class="badge">x</span>"#).expect("preprocess");
+            preprocess(r#"<span class="badge"> style.pad(4) x</span>"#).expect("preprocess");
         assert!(
             out.contains("sx-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
@@ -2762,7 +3006,7 @@ mod tests {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static Style classes into an expression it can't evaluate.
         let out =
-            preprocess(r#"<span class={cls()} sx={style.pad(4)}>x</span>"#).expect("preprocess");
+            preprocess(r#"<span class={cls()}> style.pad(4) x</span>"#).expect("preprocess");
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -2772,7 +3016,7 @@ mod tests {
 
     #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x" sx={style.pad(4)}>y</span>"#)
+        let out = preprocess(r#"<span title="a > b" class="x"> style.pad(4) y</span>"#)
             .expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("sx-"),
@@ -3083,7 +3327,7 @@ mod tests {
             "default w(full) dropped for min-w/w: {via_min}"
         );
 
-        let via_sx = preprocess(r#"<select size="sm" sx={style.w(24)}><option>x</option></select>"#)
+        let via_sx = preprocess(r#"<select size="sm"> style.w(24) <option>x</option></select>"#)
             .expect("sx w");
         assert!(
             !via_sx.contains("sx-wfull"),
@@ -3180,7 +3424,7 @@ mod tests {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
         let src =
-            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx={style.pad(4)}>é…‹›</span>";
+            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\"> style.pad(4) é…‹›</span>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("sx-"),
@@ -3243,7 +3487,7 @@ mod tests {
         // Regression: `lower_sx` byte-walked with `i += 1` and sliced
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
-        let src = "<p>Failed — retry…</p>\n<sail-card sx={style.pad(4)}>café ☕</sail-card>";
+        let src = "<p>Failed — retry…</p>\n<sail-card> style.pad(4) café ☕</sail-card>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains("café ☕"),
@@ -3313,7 +3557,7 @@ mod tests {
     fn participation_matches_style_grow_class() {
         // Same class names as Style so cascade stays one system.
         let via_attr = preprocess(r#"<div grow>x</div>"#).expect("attr");
-        let via_style = preprocess(r#"<div sx={style.grow(1)}>x</div>"#).expect("style");
+        let via_style = preprocess(r#"<div> style.grow(1) x</div>"#).expect("style");
         assert!(via_attr.contains("sx-grow1") && via_style.contains("sx-grow1"));
         assert!(via_attr.contains("flex-grow:1") && via_style.contains("flex-grow:1"));
     }
@@ -3322,7 +3566,7 @@ mod tests {
     fn layout_element_sx_merges_into_one_class() {
         // Style lowers first (→ class), then layout folds it into the div's classes.
         let out =
-            preprocess(r#"<column gap="2" sx={style.pad(4)}>x</column>"#).expect("preprocess");
+            preprocess(r#"<column gap="2"> style.pad(4) x</column>"#).expect("preprocess");
         assert!(
             out.contains("sail-col") && out.contains("sail-g-2") && out.contains("sx-"),
             "merged: {out}"
@@ -3656,7 +3900,7 @@ mod tests {
         // Utility-string condition prefixes are residual product (hard error /
         // empty lower). Style product uses when({…}) for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out = preprocess(r#"<div sx={when({ hover: style.shadow(none) })}>x</div>"#)
+        let out = preprocess(r#"<div> when({ hover: style.shadow(none) }) x</div>"#)
             .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
@@ -3729,7 +3973,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn lower_sx_var_ref_binds_an_atomic_class() {
         // Product form: `style.translateY(bind(rowY))` — reactive paint via
         // CSS custom property. JS writes `--row-y`; Style declares the read.
-        let out = preprocess(r#"<grid sx={style.translateY(bind(rowY))}>row</grid>"#)
+        let out = preprocess(r#"<grid> style.translateY(bind(rowY)) row</grid>"#)
             .expect("preprocess");
         assert!(
             out.contains("var(--row-y)") || out.contains("translate"),
@@ -3751,4 +3995,38 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             "error must name the Style diagnostic: {msg}"
         );
     }
+
+    #[test]
+    fn block_style_statement_lowers_to_class() {
+        let out = preprocess(r#"<div>
+  style.bg(primary).padX(2)
+  x
+</div>"#).expect("preprocess");
+        assert!(out.contains("sx-") || out.contains("var(--primary)"), "{out}");
+        assert!(!out.contains("style.bg(primary)"), "{out}");
+    }
+    #[test]
+    fn block_style_const_ref() {
+        let out = preprocess(r#"
+<scope>
+  const base = style.pad(2)
+</scope>
+<div>
+  style(base)
+  x
+</div>"#).expect("preprocess");
+        assert!(out.contains("sx-"), "{out}");
+    }
+    #[test]
+    fn sx_attr_is_refused() {
+        let err = preprocess(r#"<div sx={style.pad(4)}>x</div>"#).expect_err("sx");
+        assert!(format!("{err:?}").contains("retired") || format!("{err:?}").contains("sx="));
+    }
+    #[test]
+    fn style_attr_product_is_refused() {
+        let err = preprocess(r#"<div style={style.pad(4)}>x</div>"#).expect_err("style=");
+        let m = format!("{err:?}");
+        assert!(m.contains("block") || m.contains("style="), "{m}");
+    }
+
 }
