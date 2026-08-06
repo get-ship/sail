@@ -11,7 +11,7 @@
 // `<use-intersection>`. Host-specific hooks (e.g. shell context)
 // belong with the host, not the framework.
 
-import { registerTemplateHook } from '@ship/sail-runtime'
+import { registerTemplateHook } from './registry'
 import { useKbdHook } from './kbd'
 import { useClickOutsideHook } from './click-outside'
 import { useFocusTrapHook } from './focus-trap'

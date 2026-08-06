@@ -2,14 +2,8 @@
 // for {#if} and {#for} blocks.
 
 import { describe, expect, it } from 'vitest'
-import {
-  defineComponent,
-  signal,
-  bindFor,
-  bindIf,
-  bindText,
-  on,
-} from '../src/index'
+import { defineComponent, signal } from '../src/index'
+import { bindFor, bindIf, bindText, on } from '../src/internal'
 
 describe('e2e: {#if} compiled shape', () => {
   it('swaps then/else on signal change', () => {

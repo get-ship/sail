@@ -1,11 +1,12 @@
 /**
- * @ship/sail-runtime — package root.
+ * @ship/sail-runtime — package root (tier B author surface).
  *
- * Pedagogical / intentional author imports (tier B) are listed in
- * `../author-surface.json` and rendered on /sail/reference/runtime.
- * Emit-only ABI is `@ship/sail-runtime/internal` (tier C). Host embedders
- * also reach subpaths (`./server`, `./framework`, `./route`, …) that are
- * not the language surface.
+ * Pedagogical / intentional author imports only. The allowlist lives in
+ * `../author-surface.json` and is rendered on /sail/reference/runtime.
+ * Rule (TS-1 WI2.5 / freeze): if the skill/surface does not teach it, it
+ * is not public — host, emit ABI, and untaught utilities live on
+ * `@ship/sail-runtime/internal` or a dedicated subpath (`./route`,
+ * `./patch`, `./server`, `./framework`, …).
  *
  * @packageDocumentation
  */
@@ -25,7 +26,8 @@
   }
 }
 
-export { signal, derived, effect, batch, untrack, selector, isSignal } from './signal'
+// ── Reactivity ─────────────────────────────────────────────────────────────
+export { signal, derived, effect, batch, untrack, isSignal } from './signal'
 export type { Signal, Derived } from './signal'
 
 export {
@@ -36,28 +38,60 @@ export {
   SailMountOutsideSetupError,
 } from './effect-scope'
 export type { EffectScope, ContextKey } from './effect-scope'
-// Aliased: bare `mount` below is the host route mount entry point.
+// Ambient controller lifecycle: free name `mount` is this export, aliased at inject.
 export { mount as mountAmbient } from './effect-scope'
 
+export { debounce, interval } from './timing'
+export { persisted } from './persisted'
+export type { PersistedOpts } from './persisted'
+
+// ── Controller ─────────────────────────────────────────────────────────────
+export { controller } from './controller-resolver'
+export type { ControllerExport } from './controller-resolver'
+export type {
+  ControllerDef,
+  ControllerSetup,
+  ControllerScope,
+  ReadonlyState,
+  ReadonlyView,
+  MutableState,
+} from './controller'
+
+// Host capability types — generated Scope .d.ts + /sail/language/capabilities.
+export type { Host } from './host'
+export type { RouteSignals } from './route-signals'
+
+// ── Stores ─────────────────────────────────────────────────────────────────
 export {
   defineStore,
   useStore,
   provideStore,
   peekStore,
-  setStoreSSRPayload,
-  clearStoreSSRPayload,
-  readStoreSSRSeed,
-  hydrateStoreSSRPayload,
   snapshotStore,
-  snapshotScopeStores,
-  SSR_PAYLOAD_GLOBAL,
 } from './store'
 export type { StoreDef, StoreInstance } from './store'
 
-export { setHostContext, hostContext } from './host-context'
-export type { HostContext } from './host-context'
-export type { Host } from './host'
+// ── Compositions ───────────────────────────────────────────────────────────
+export { form, selection, filteredList } from './compositions'
+export type { FormOptions, ListSource } from './compositions'
 
+// ── Data ───────────────────────────────────────────────────────────────────
+// `__invalidate` is compiler ambient only — on /internal, not tier B.
+export { query, queryKeyed, mutation, unwrap, unwrapOr } from './query'
+export type {
+  QueryOpts,
+  QueryKey,
+  MutationOpts,
+  MutationState,
+  Mutation,
+  LiveState,
+  LiveSignal,
+  LiveSource,
+  LiveValueOf,
+  OptimisticHandle,
+} from './query'
+
+// ── Theme ──────────────────────────────────────────────────────────────────
 export {
   theme,
   setThemePersist,
@@ -79,12 +113,25 @@ export type {
   LowerThemeResult,
 } from './theme'
 
-export { form, selection, filteredList } from './compositions'
-export type { FormOptions, ListSource } from './compositions'
+// ── Motion (scrub lane; Style motion is template/A) ────────────────────────
+export { timeline, SailTimelineError } from './timeline'
+export type {
+  TimelineValue,
+  TimelineEasing,
+  TimelineEasingName,
+  TimelineStop,
+  TimelineStopOptions,
+  TimelineTrack,
+  TimelineTracks,
+  TimelineSignals,
+  TimelineOptions,
+} from './timeline'
+export { clock, scrollProgress, springValue } from './drivers'
+export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } from './drivers'
 
+// ── Actions (public use: + Action types) ───────────────────────────────────
 export type { Action, ActionResult } from './action'
 export type { Disposer } from './bind'
-
 export {
   anchor,
   autosize,
@@ -102,99 +149,7 @@ export {
 } from './actions'
 export type { AnchorPlacement, ClipboardParam, HotkeyEntry, HotkeyHandler, HotkeysMap } from './actions'
 
-export {
-  focusableWithin,
-  FocusReturn,
-  acquireScrollLock,
-  releaseScrollLock,
-} from './scroll-lock'
-
-export type { ComponentExample } from './component-example'
-
-export {
-  emit,
-  expose,
-  attachHostApi,
-  bindNativeEvent,
-  slotted,
-  bindHostAttr,
-} from './host-api'
-
-export { resolveSlots, snapshotChildren, slotFilled } from './slot'
-export type { SlotDecl } from './slot'
-
-export { defineComponent, camelOf } from './component'
-export { clientRootScope, elementScopeOf } from './element-scope'
-export type { ComponentFactory, ComponentSchema } from './component'
-
-export {
-  decodeString,
-  decodeNumber,
-  decodeBoolean,
-  decodeJson,
-  decodeEnum,
-} from './decode'
-export type { Decoder } from './decode'
-
-// Signal-value debounce stays on `./signal` (import path for existing call
-// sites). Platform lifecycle-bound timing is the author-facing debounce.
-export { debounce, interval } from './timing'
-export { persisted } from './persisted'
-export type { PersistedOpts } from './persisted'
-
-// `__invalidate` is compiler ambient only (authors never type it).
-export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'
-
-export type {
-  QueryOpts,
-  QueryKey,
-  MutationOpts,
-  MutationState,
-  Mutation,
-  LiveState,
-  LiveSignal,
-  LiveSource,
-  LiveValueOf,
-  OptimisticHandle,
-} from './query'
-
-// Test seam — force query cache entries without a backend. Not tier-B
-// author surface; prefer importing via `@ship/sail-test`.
-export { mockQueryState, clearQueryMocks } from './native-cache'
-
-export { component, prop } from './component'
-export type { PropDef, ComponentDef, ComponentSetupContext } from './component'
-
-export type {
-  ControllerDef,
-  ControllerSetup,
-  TemplateHook,
-  TemplateHookAttrKind,
-  TemplateHookContext,
-  ControllerScope,
-  ReadonlyState,
-  ReadonlyView,
-  MutableState,
-} from './controller'
-
-export { controller, resolveController } from './controller-resolver'
-export type {
-  ControllerExport,
-  ResolverContext,
-  ResolvedBindings,
-} from './controller-resolver'
-
-export type { MountContext, MountSetup, MountModule } from './component-mount'
-
-export {
-  registerTemplateHook,
-  getTemplateHook,
-  clearRegistry,
-  listRegisteredHooks,
-} from './template-hooks/registry'
-export type { KbdShortcut } from './template-hooks/kbd'
-import './boundary-elements'
-
+// ── Errors ─────────────────────────────────────────────────────────────────
 export {
   attachBoundary,
   detachBoundary,
@@ -203,42 +158,12 @@ export {
 } from './error-boundary'
 export type { BoundaryHandle, BoundarySource } from './error-boundary'
 
-export { timeline, SailTimelineError } from './timeline'
+// ── Components (pack authors) ──────────────────────────────────────────────
+export { component, prop, defineComponent } from './component'
 export type {
-  TimelineValue,
-  TimelineEasing,
-  TimelineEasingName,
-  TimelineStop,
-  TimelineStopOptions,
-  TimelineTrack,
-  TimelineTracks,
-  TimelineSignals,
-  TimelineOptions,
-} from './timeline'
-
-export { clock, scrollProgress, springValue } from './drivers'
-export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } from './drivers'
-export { mount } from './mount'
-export type { RoutePayload, MountOptions, MountHandle, SailLoader } from './mount'
-
-export type { RouteSignals } from './route-signals'
-
-export { route, routeWithUpdate } from './route'
-export type { RouteHandle } from './route'
-
-export {
-  editModeForRoute, toggleEditMode, setEditMode,
-  annotationModeForRoute, toggleAnnotationMode, setAnnotationMode,
-} from './edit-mode'
-
-export { applyPatch, applyPatches, tokenizePath } from './patch'
-export type { Patch, PatchOp, PathToken } from './patch'
-
-export type {
-  ManifestRail,
-  RailMeta,
-  ResolveError,
-  ResolvedRoute,
-  RouteListEntry,
-  RouteManifest,
-} from './generated'
+  PropDef,
+  ComponentDef,
+  ComponentSetupContext,
+  ComponentFactory,
+  ComponentSchema,
+} from './component'

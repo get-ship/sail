@@ -30,7 +30,7 @@ import * as sailDom from '@ship/sail-dom'
 // owns the *mechanism*. The test harness needs only the mechanism, and
 // `@ship/sail-runtime/route` is sail ⊥ deck by construction.
 import { route as makeRoute } from '@ship/sail-runtime/route'
-import type { RouteSignals } from '@ship/sail-runtime'
+import type { RouteSignals } from '@ship/sail-runtime/route'
 import '@ship/sail-runtime/template-hooks'
 /* ----------------------- native addon load ----------------------- */
 

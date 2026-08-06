@@ -16,6 +16,7 @@
 
 import { signal, type Signal } from '../signal'
 import type { RouteSignals } from '../route-signals'
+export type { RouteSignals } from '../route-signals'
 
 /** Internal: a live `RouteSignals` paired with the hooks a host uses to
  *  re-seed the instance on every navigation. */

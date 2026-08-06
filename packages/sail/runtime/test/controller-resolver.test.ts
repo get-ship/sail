@@ -11,13 +11,8 @@
 // `.set()`, the single idiom `controller_state_set_call` enforces.
 
 import { describe, expect, it, vi } from 'vitest'
-import {
-  controller,
-  resolveController,
-  signal,
-  derived,
-  type Signal,
-} from '../src/index'
+import { controller, signal, derived } from '../src/index'
+import { resolveController, type Signal } from '../src/internal'
 
 /** Build a `ResolverContext` with template-state signals seeded. */
 function withState(

@@ -4,7 +4,8 @@
 // action computes for every placement + the block/inline flip fallbacks.
 
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { anchor, type AnchorPlacement } from '../src/index'
+import { anchor } from '../src/index'
+import { type AnchorPlacement } from '../src/internal'
 
 const VW = 1000
 const VH = 800

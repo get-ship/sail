@@ -12,7 +12,7 @@
 // whose cells carry data-iso + data-minutes, so the pointer→date/time map needs
 // no layout/rect math (works headless + under test).
 
-import { bindNativeEvent } from '@ship/sail-runtime'
+import { bindNativeEvent } from '@ship/sail-runtime/internal'
 import { addDays, addMinutes, diffMinutes } from './engine/date-math'
 import type { Calendar, CalendarEvent, ISODateTime } from './engine'
 

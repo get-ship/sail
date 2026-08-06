@@ -8,26 +8,8 @@
 // handshake is in `store-ssr.test.ts`).
 
 import { afterEach, describe, expect, it } from 'vitest'
-import {
-  createScope,
-  createChildScope,
-  withScope,
-  onCleanup,
-  signal,
-  derived,
-  effect,
-  defineStore,
-  useStore,
-  provideStore,
-  peekStore,
-  snapshotStore,
-  snapshotScopeStores,
-  setStoreSSRPayload,
-  clearStoreSSRPayload,
-  provideContext,
-  injectContext,
-  contextKey,
-} from '../src/index'
+import { onCleanup, signal, derived, effect, defineStore, useStore, provideStore, peekStore, snapshotStore, provideContext, injectContext, contextKey } from '../src/index'
+import { createScope, createChildScope, withScope, snapshotScopeStores, setStoreSSRPayload, clearStoreSSRPayload } from '../src/internal'
 
 afterEach(() => {
   // Defensive: no test leaves an SSR payload behind (the global
