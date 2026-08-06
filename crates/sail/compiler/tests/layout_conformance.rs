@@ -285,10 +285,10 @@ fn sx_width_full_matches_css() {
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
-/// Product participation `grow` / Style emit → `sx-grow1` (not residual `sx-grow`).
+/// Product box-channel `grow(1)` → `sx-grow1` (not residual `sx-grow` / bare attr).
 #[test]
-fn grow_attr_maps_to_taffy_flex_grow() {
-    let src = r#"<column><div grow>body</div></column>"#;
+fn grow_box_channel_maps_to_taffy_flex_grow() {
+    let src = r#"<column><div> style({ box: grow(1) }) body</div></column>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("sx-grow1"),
@@ -302,10 +302,10 @@ fn grow_attr_maps_to_taffy_flex_grow() {
     );
 }
 
-/// Product `style({ box: minW(0) })` / `min-w="0"` → `sx-minW0` (camelCase, not `sx-minw0`).
+/// Product `style({ box: minW(0) })` → `sx-minW0` (camelCase, not `sx-minw0`).
 #[test]
-fn min_w_attr_maps_to_taffy_min_width() {
-    let src = r#"<div min-w="0">x</div>"#;
+fn min_w_box_channel_maps_to_taffy_min_width() {
+    let src = r#"<div> style({ box: minW(0) }) x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("sx-minW0"),

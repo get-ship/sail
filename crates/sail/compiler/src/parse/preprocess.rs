@@ -56,12 +56,13 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // Host display override before lower_layout rewrites row/column.
     let host_display_css = derive_host_display(&s);
     let s = merge_duplicate_class_attrs(&s);
-    let (s, participation_css) = lower_participation_attrs(&s);
-    let s = merge_duplicate_class_attrs(&s);
+    // Participation is box-channel only (`style({ box: grow(1).w(full) })`).
+    // Residual bare attr lower deleted (CHANNELS Phase V DEEMBALM) — lint
+    // `sail-participation-style` refuses bare grow/shrink/w/min-w/max-w.
     let (s, layout_css) = lower_layout(&s);
     // ORDER: skin classes FIRST, author classes AFTER (use-site wins).
     let css = dedup_css_rules(&format!(
-        "{elements_css}{host_display_css}{style_css}{participation_css}{layout_css}"
+        "{elements_css}{host_display_css}{style_css}{layout_css}"
     ));
     Ok(if css.is_empty() {
         s
@@ -1890,132 +1891,13 @@ fn is_eq_quote(rest: &[u8]) -> bool {
 /// `class` (static or dynamic) is merged into the computed classes. Close tags
 /// become `</div>`. The class/CSS mapping is `sail_lint::rules::layout` — the same
 /// vocabulary the `sail-layout` lint validates against the raw source.
-/// Lower `grow` / `shrink` / `w` / `min-w` / `max-w` on any open tag to the
-/// same Style atomic classes (`sx-grow1`, `sx-wfull`, …) + injected CSS.
-/// Attrs are consumed (not left as dead HTML). Invalid values are left alone
-/// so the lint can surface them; the build gate refuses before emit.
-fn lower_participation_attrs(source: &str) -> (String, String) {
-    use sail_lint::rules::layout;
-    let opens = layout::scan_any_open_tags(source);
-    let mut targets: Vec<&layout::OpenTag> = opens
-        .iter()
-        .filter(|t| {
-            t.attrs
-                .iter()
-                .any(|(n, _)| layout::is_participation_attr(n))
-        })
-        .collect();
-    if targets.is_empty() {
-        return (source.to_string(), String::new());
-    }
-    // Splice high-to-low so earlier offsets stay valid.
-    targets.sort_by_key(|t| std::cmp::Reverse(t.start));
-
-    let mut out = source.to_string();
-    let mut css = String::new();
-    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-
-    for t in targets {
-        let mut classes: Vec<String> = Vec::new();
-        let mut rest_attrs: Vec<(String, String)> = Vec::new();
-        let mut had_participation = false;
-        for (name, value) in &t.attrs {
-            if layout::is_participation_attr(name) {
-                match layout::lower_participation(name, value) {
-                    Some((cls, rule_css)) => {
-                        had_participation = true;
-                        for c in cls.split_whitespace() {
-                            if !c.is_empty() && !classes.iter().any(|x| x == c) {
-                                classes.push(c.to_string());
-                            }
-                        }
-                        // `lower_style` may emit multiple rules; each is a full
-                        // selector body. Dedup by exact CSS text.
-                        for rule in split_css_rules(&rule_css) {
-                            if seen.insert(rule.clone()) {
-                                css.push_str(&rule);
-                            }
-                        }
-                    }
-                    None => {
-                        // Invalid — leave the attr for lint / defensive drop.
-                        rest_attrs.push((name.clone(), value.clone()));
-                    }
-                }
-            } else {
-                rest_attrs.push((name.clone(), value.clone()));
-            }
-        }
-        if !had_participation {
-            continue;
-        }
-        // Merge into existing class= if present.
-        let mut static_class = classes;
-        let mut dyn_class: Option<String> = None;
-        rest_attrs.retain(|(n, v)| {
-            if n == "class" {
-                if v.starts_with('{') {
-                    dyn_class = Some(v.clone());
-                } else if !v.is_empty() {
-                    for c in v.split_whitespace() {
-                        if !c.is_empty() && !static_class.iter().any(|x| x == c) {
-                            static_class.push(c.to_string());
-                        }
-                    }
-                }
-                false
-            } else {
-                true
-            }
-        });
-
-        let mut open = String::new();
-        open.push('<');
-        open.push_str(&t.tag);
-        if dyn_class.is_some() {
-            let static_str = static_class.join(" ");
-            let dyn_v = dyn_class.as_ref().unwrap();
-            // dyn_v is `{expr}` or already a full binding; fold as class binding.
-            if dyn_v.starts_with('{') && dyn_v.ends_with('}') {
-                let inner = &dyn_v[1..dyn_v.len() - 1];
-                if static_str.is_empty() {
-                    open.push_str(&format!(" class=\"{{{inner}}}\""));
-                } else {
-                    open.push_str(&format!(" class=\"{{'{static_str} ' + ({inner})}}\""));
-                }
-            } else {
-                open.push_str(&format!(" class=\"{static_str} {dyn_v}\""));
-            }
-        } else if !static_class.is_empty() {
-            open.push_str(&format!(" class=\"{}\"", static_class.join(" ")));
-        }
-        for (name, value) in &rest_attrs {
-            open.push(' ');
-            open.push_str(name);
-            if !value.is_empty() {
-                open.push_str("=\"");
-                open.push_str(value);
-                open.push('"');
-            }
-        }
-        if t.self_closing {
-            open.push_str(" />");
-        } else {
-            open.push('>');
-        }
-        out.replace_range(t.start..t.end, &open);
-    }
-    (out, css)
-}
 
 /// Dedup atomic CSS rules file-wide, first occurrence keeping its slot.
-/// Each lowering pass (sx / participation / layout / stdlib skins) dedups
-/// only within itself, so the same atomic (`sx-wfull`) was emitted once
-/// per pass — and the LAST copy won the shared-layer cascade, letting one
-/// element's participation attr shadow another element's author `sx`
-/// (studio's `w(28)` selects lost to a later `w="full"`). Atomic rules
-/// are identical declarations, so first-occurrence dedup is semantics-
-/// preserving and makes rule ORDER the single, reviewable mechanism.
+/// Each lowering pass (style / layout / stdlib skins) dedups only within
+/// itself, so the same atomic (`sx-wfull`) was emitted once per pass — and
+/// the LAST copy won the shared-layer cascade. Atomic rules are identical
+/// declarations, so first-occurrence dedup is semantics-preserving and
+/// makes rule ORDER the single, reviewable mechanism.
 fn dedup_css_rules(css: &str) -> String {
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut out = String::with_capacity(css.len());
@@ -3372,20 +3254,25 @@ mod tests {
     }
 
     #[test]
-    fn select_drops_default_wfull_when_author_sets_width_participation() {
-        let via_w = preprocess(r#"<select w="28" size="sm"><option>x</option></select>"#)
-            .expect("w attr");
+    fn select_drops_default_wfull_when_author_sets_width_on_box_channel() {
+        // Bare w/min-w attrs are retired — author width is box channel only.
+        let via_w = preprocess(
+            r#"<select size="sm"> style({ box: w(28) }) <option>x</option></select>"#,
+        )
+        .expect("box w");
         assert!(via_w.contains("sx-w28") || via_w.contains("w28"), "author w: {via_w}");
         assert!(
             !via_w.contains("sx-wfull"),
-            "default w(full) dropped for participation w: {via_w}"
+            "default w(full) dropped for box w: {via_w}"
         );
 
-        let via_min = preprocess(r#"<select min-w="ch-16" w="ch-20" size="sm"><option>x</option></select>"#)
-            .expect("min-w");
+        let via_min = preprocess(
+            r#"<select size="sm"> style({ box: minW(ch-16).w(ch-20) }) <option>x</option></select>"#,
+        )
+        .expect("box minW/w");
         assert!(
             !via_min.contains("sx-wfull"),
-            "default w(full) dropped for min-w/w: {via_min}"
+            "default w(full) dropped for minW/w: {via_min}"
         );
 
         let via_sx = preprocess(r#"<select size="sm"> style({ box: w(24) }) <option>x</option></select>"#)
@@ -3580,21 +3467,21 @@ mod tests {
     }
 
     #[test]
-    fn lowers_boolean_grow_on_any_host_to_style_class() {
-        // Participation attrs are legal on every element and mint the same
-        // atomic class Style would (`style({ box: grow(1) })` → `sx-grow1`).
-        let out = preprocess(r#"<div grow>x</div>"#).expect("preprocess");
+    fn box_channel_grow_on_any_host_mints_style_class() {
+        // Participation is box channel only (`style({ box: grow(1) })` → `sx-grow1`).
+        let out = preprocess(r#"<div> style({ box: grow(1) }) x</div>"#).expect("preprocess");
         assert!(out.contains("sx-grow1"), "grow class: {out}");
         assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
         assert!(
             !out.contains(" grow") && !out.contains("grow="),
-            "attr consumed: {out}"
+            "no bare attr: {out}"
         );
     }
 
     #[test]
-    fn lowers_grow_on_layout_keyword_merges_into_div() {
-        let out = preprocess(r#"<column grow gap="2">x</column>"#).expect("preprocess");
+    fn box_channel_grow_on_layout_keyword_merges_into_div() {
+        let out = preprocess(r#"<column gap="2"> style({ box: grow(1) }) x</column>"#)
+            .expect("preprocess");
         assert!(out.contains("sail-col"), "layout base: {out}");
         assert!(out.contains("sx-grow1"), "grow class folded: {out}");
         assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
@@ -3603,8 +3490,9 @@ mod tests {
     }
 
     #[test]
-    fn lowers_w_full_and_shrink_zero() {
-        let out = preprocess(r#"<main w="full" shrink="0">x</main>"#).expect("preprocess");
+    fn box_channel_w_full_and_shrink_zero() {
+        let out = preprocess(r#"<main> style({ box: w(full).shrink(0) }) x</main>"#)
+            .expect("preprocess");
         assert!(out.contains("sx-wfull"), "w full: {out}");
         assert!(out.contains("sx-shrink0"), "shrink 0: {out}");
         assert!(out.contains(".sx-wfull{width:100%}"), "w css: {out}");
@@ -3615,12 +3503,17 @@ mod tests {
     }
 
     #[test]
-    fn participation_matches_style_grow_class() {
-        // Same class names as Style so cascade stays one system.
-        let via_attr = preprocess(r#"<div grow>x</div>"#).expect("attr");
-        let via_style = preprocess(r#"<div> style({ box: grow(1) }) x</div>"#).expect("style");
-        assert!(via_attr.contains("sx-grow1") && via_style.contains("sx-grow1"));
-        assert!(via_attr.contains("flex-grow:1") && via_style.contains("flex-grow:1"));
+    fn bare_participation_attrs_are_not_lowered() {
+        // Residual attr lower deleted — bare grow/w stay unconsumed (lint refuses).
+        let out = preprocess(r#"<div grow w="full">x</div>"#).expect("preprocess");
+        assert!(
+            !out.contains("sx-grow1") && !out.contains("sx-wfull"),
+            "must not mint from bare attrs: {out}"
+        );
+        assert!(
+            out.contains("grow") || out.contains("w="),
+            "attrs left for lint surface: {out}"
+        );
     }
 
     #[test]
