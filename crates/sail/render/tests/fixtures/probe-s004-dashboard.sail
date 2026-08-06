@@ -9,14 +9,11 @@
     </span>
   </navbar>
 
-  <row grow nowrap align="stretch">
-    <column
-      shrink="0"
-      w="56"
-      gap="1"
+  <row nowrap align="stretch">
+    style({ box: grow(1) })
 
-    >
-      style({ box: padY(5).padX(4), paint: bg(sidebar).fg(sidebar-foreground).borderE(sidebar-border) })
+    <column gap="1">
+      style({ box: shrink(0).w(56).padY(5).padX(4), paint: bg(sidebar).fg(sidebar-foreground).borderE(sidebar-border) })
 
       <a
         href="#home"
@@ -44,8 +41,8 @@
       </a>
     </column>
 
-    <column grow gap="6" min-w="0">
-      style({ box: pad(6) })
+    <column gap="6">
+      style({ box: grow(1).minW(0).pad(6) })
 
       <span>
         style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })

@@ -5,27 +5,39 @@
   that matches browser CVA, not a paint miss. Keep this solid so goldens pin
   the anti-steering path (L1 skins, not raw sx fills).
 -->
-<column gap="6" max-w="panel-max-w-md">
-  style({ box: pad(6) })
+<column gap="6">
+  style({ box: maxW(panel-max-w-md).pad(6) })
 
   <h1>
     style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })
 Settings</h1>
 
-  <card w="full">
-    <column gap="4" w="full">
+  <card>
+    style({ box: w(full) })
+
+    <column gap="4">
+      style({ box: w(full) })
+
       <h2>
         style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 Profile</h2>
-      <field w="full">
+      <field>
+        style({ box: w(full) })
+
         <label slot="label">Display name</label>
-        <input type="text" placeholder="Your display name" w="full" />
+        <input type="text" placeholder="Your display name">
+          style({ box: w(full) })
+        </input>
       </field>
     </column>
   </card>
 
-  <card w="full">
-    <column gap="4" w="full">
+  <card>
+    style({ box: w(full) })
+
+    <column gap="4">
+      style({ box: w(full) })
+
       <h2>
         style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 Notifications</h2>
@@ -36,7 +48,9 @@ Notifications</h2>
     </column>
   </card>
 
-  <row justify="end" w="full">
+  <row justify="end">
+    style({ box: w(full) })
+
     <button variant="solid" tone="primary">Save changes</button>
   </row>
 </column>

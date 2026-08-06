@@ -7,8 +7,8 @@ Mid-size route</h1>
   <row>
     style({ box: gap(3).w(full) })
 
-    <div grow>
-      style({ box: pad(3), paint: bg(surface-1).radius(md) })
+    <div>
+      style({ box: grow(1).pad(3), paint: bg(surface-1).radius(md) })
 
       <h2>
         style({ paint: fg(foreground), text: fontSize(lg) })
@@ -17,8 +17,8 @@ Card A</h2>
         style({ paint: fg(muted-foreground) })
 Static projection paint probe.</p>
     </div>
-    <div grow>
-      style({ box: pad(3), paint: bg(surface-2).radius(md) })
+    <div>
+      style({ box: grow(1).pad(3), paint: bg(surface-2).radius(md) })
 
       <h2>
         style({ paint: fg(foreground), text: fontSize(lg) })
@@ -27,8 +27,8 @@ Card B</h2>
         style({ paint: fg(muted-foreground) })
 Theme tokens resolve without CSS scrape.</p>
     </div>
-    <div grow>
-      style({ box: pad(3), paint: bg(primary).radius(md) })
+    <div>
+      style({ box: grow(1).pad(3), paint: bg(primary).radius(md) })
 
       <h2>
         style({ paint: fg(primary-foreground), text: fontSize(lg) })

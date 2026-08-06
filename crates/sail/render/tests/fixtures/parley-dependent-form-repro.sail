@@ -150,7 +150,9 @@ export default controller(() => {
 <center>
   style({ box: pad(6).minH(screen), paint: bg(background) })
 
-  <column gap="4" w="full" max-w="panel-max-w-md">
+  <column gap="4">
+    style({ box: w(full).maxW(panel-max-w-md) })
+
     <column gap="1">
       <h1>
         style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })
@@ -195,12 +197,16 @@ Shipping address</h1>
       </alert>
     </if>
 
-    <card w="full">
-      <form on:submit={onSubmit}>
-        <column gap="4" w="full">
-          style({ box: pad(5) })
+    <card>
+      style({ box: w(full) })
 
-          <field invalid={nameInvalid()} w="full">
+      <form on:submit={onSubmit}>
+        <column gap="4">
+          style({ box: w(full).pad(5) })
+
+          <field invalid={nameInvalid()}>
+            style({ box: w(full) })
+
             <label slot="label" required>Name</label>
             <input
               type="text"
@@ -208,13 +214,16 @@ Shipping address</h1>
               autocomplete="name"
               placeholder="Ada Lovelace"
               bind:value={name}
-              w="full"
               disabled={pending()}
-            />
+            >
+              style({ box: w(full) })
+            </input>
             <span slot="error">{errors().name}</span>
           </field>
 
-          <field invalid={emailInvalid()} w="full">
+          <field invalid={emailInvalid()}>
+            style({ box: w(full) })
+
             <label slot="label" required>Email</label>
             <input
               type="email"
@@ -222,21 +231,25 @@ Shipping address</h1>
               autocomplete="email"
               placeholder="ada@example.com"
               bind:value={email}
-              w="full"
               disabled={pending()}
-            />
+            >
+              style({ box: w(full) })
+            </input>
             <span slot="error">{errors().email}</span>
             <span slot="hint">We use this only for delivery updates.</span>
           </field>
 
-          <field invalid={countryInvalid()} w="full">
+          <field invalid={countryInvalid()}>
+            style({ box: w(full) })
+
             <label slot="label" required>Country</label>
             <select
               name="country"
               bind:value={country}
-              w="full"
               disabled={pending()}
             >
+              style({ box: w(full) })
+
               <option value="">Select a country</option>
               <option value="US">United States</option>
               <option value="CA">Canada</option>
@@ -246,14 +259,17 @@ Shipping address</h1>
           </field>
 
           <if {needsRegion()}>
-            <field invalid={stateInvalid()} w="full">
+            <field invalid={stateInvalid()}>
+              style({ box: w(full) })
+
               <label slot="label" required>{regionLabel()}</label>
               <select
                 name="state"
                 bind:value={state}
-                w="full"
                 disabled={pending()}
               >
+                style({ box: w(full) })
+
                 <option value="">Select {regionLabel()}</option>
                 <for {regions()} as="region" key={region.code}>
                   <option value={region.code}>{region.name}</option>
@@ -262,16 +278,22 @@ Shipping address</h1>
               <span slot="error">{errors().state}</span>
             </field>
           <else>
-            <field w="full">
+            <field>
+              style({ box: w(full) })
+
               <label slot="label">State / Province</label>
-              <select name="state" disabled w="full">
+              <select name="state" disabled>
+                style({ box: w(full) })
+
                 <option value="">Not required for Other</option>
               </select>
               <span slot="hint">Region is not required when country is Other.</span>
             </field>
           </else></if>
 
-          <row gap="2" align="center" justify="end" w="full">
+          <row gap="2" align="center" justify="end">
+            style({ box: w(full) })
+
             <button type="button" variant="outline" on:click={onReset} disabled={pending()}>
               Reset
             </button>

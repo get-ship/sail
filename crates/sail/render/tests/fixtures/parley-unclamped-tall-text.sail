@@ -3,8 +3,8 @@
   viewport height (viewport-as-max_height removed). Pins: no panic + non-zero
   text-run height. Not a pixel-parity gate vs upstream capped measure.
 -->
-<column w="full">
-  style({ box: pad(2) })
+<column>
+  style({ box: w(full).pad(2) })
 
   <span>
     Line one of unclamped body copy that should wrap under a modest width.

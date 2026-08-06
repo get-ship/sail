@@ -1,8 +1,10 @@
 <!-- PARITY-1: wrap row + clipped overflow host. -->
-<column gap="4" w="full">
-  style({ box: pad(4) })
+<column gap="4">
+  style({ box: w(full).pad(4) })
 
-  <row gap="2" w="full">
+  <row gap="2">
+    style({ box: w(full) })
+
     <span>One</span>
     <span>Two</span>
     <span>Three</span>
@@ -12,8 +14,8 @@
     <span>Seven</span>
     <span>Eight</span>
   </row>
-  <column w="full">
-    style({ box: pad(2).h(24).overflow(clip) })
+  <column>
+    style({ box: w(full).pad(2).h(24).overflow(clip) })
 
     <span>Clipped body that may overflow the host height when text wraps longer than expected.</span>
   </column>

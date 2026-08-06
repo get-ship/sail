@@ -1,15 +1,17 @@
 <!-- PARITY-1: sidebar-left row (grow/shrink/nowrap). -->
-<column w="full">
-  style({ box: minH(screen) })
+<column>
+  style({ box: w(full).minH(screen) })
 
-  <row grow nowrap align="stretch" w="full">
-    <column shrink="0" w="48">
-      style({ box: pad(3) })
+  <row nowrap align="stretch">
+    style({ box: grow(1).w(full) })
+
+    <column>
+      style({ box: shrink(0).w(48).pad(3) })
 
       <span>Side</span>
     </column>
-    <column grow min-w="0">
-      style({ box: pad(3) })
+    <column>
+      style({ box: grow(1).minW(0).pad(3) })
 
       <span>Main content</span>
     </column>
