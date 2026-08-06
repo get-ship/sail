@@ -65,15 +65,26 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
         "must name the offending key: {reason}"
     );
     assert!(
+        reason.contains("allowed keys:"),
+        "must name the allowed keys: {reason}"
+    );
+    assert!(
+        reason.contains("preset"),
+        "allowed keys list must include a known key: {reason}"
+    );
+    assert!(
         config_path.ends_with("sail.config.json"),
         "must name the file: {config_path:?}"
     );
 
     // A component that actually uses a stripped capability now fails the
     // build gate — sx is off under the fail-closed strict tier.
+    // `sail-no-sx` gates the Style *attribute host* `style=` (capability key
+    // still named "sx"); the block Style statement is the product form and
+    // is not this capability's refusal surface.
     let (_tmp2, sail_sx) = write_pack(
         r#"{"polcy":"strict"}"#,
-        r#"<sail-card> style({ box: pad(4) }) x</sail-card>"#,
+        r#"<sail-card style="p-4">x</sail-card>"#,
     );
     let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
         .expect_err("sx must be refused under the fail-closed strict tier");
@@ -133,10 +144,10 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // The build-time reproduction of the original bug report: a package with
     // only `stylesheets` declared, and an sx-using component. The compile
     // must refuse and the refusal must point at the missing grant, not
-    // silently drop the sx.
+    // silently drop the sx. Gate surface is `style=` (see sail-no-sx).
     let (_tmp2, sail_sx) = write_pack(
         r#"{"stylesheets": []}"#,
-        r#"<sail-card> style({ box: pad(4) }) hi</sail-card>"#,
+        r#"<sail-card style="p-4">hi</sail-card>"#,
     );
     let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
         .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");

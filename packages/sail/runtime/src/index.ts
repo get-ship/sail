@@ -155,6 +155,7 @@ export type {
   LiveSignal,
   LiveSource,
   LiveValueOf,
+  OptimisticHandle,
 } from './query'
 
 // Test seam — force query cache entries without a backend. Not tier-B

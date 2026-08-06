@@ -183,7 +183,9 @@ pub fn emit_types_dts() -> String {
          \x20 MutationOpts,\n\
          \x20 MutationState,\n\
          \x20 LiveState,\n\
+         \x20 LiveSignal,\n\
          \x20 LiveSource,\n\
+         \x20 OptimisticHandle,\n\
          \x20 QueryKey,\n\
          } from '@ship/sail-runtime'\n\
          \n",
@@ -570,12 +572,14 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     }
 
     // query / mutation — author surface (import or ambient for typecheck).
+    // LiveSignal / OptimisticHandle are imported as types above so TS-1
+    // ambient pack pins the freeze-locked optimistic set/rollback shape (WI3).
     out.push_str(
         "  /** Public read primitive — compiler derives the cache key. */\n\
          \x20 function query<T>(\n\
          \x20\x20  fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,\n\
          \x20\x20  opts?: QueryOpts,\n\
-         \x20\x20): Signal<LiveState<T>>\n\
+         \x20\x20): LiveSignal<T>\n\
          \x20 /** Public write primitive. */\n\
          \x20 function mutation<T>(\n\
          \x20\x20  fn: (input: never) => Promise<T>,\n\
@@ -586,8 +590,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20\x20  keyFn: () => QueryKey,\n\
          \x20\x20  fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,\n\
          \x20\x20  opts?: QueryOpts,\n\
-         \x20\x20): Signal<LiveState<T>>\n\
+         \x20\x20): LiveSignal<T>\n\
          \x20 function invalidate(ref: unknown): void\n\
+         \x20 /** Freeze-locked optimistic write handle (type-only until impl lands). */\n\
+         \x20 type OptimisticWriteHandle<T> = OptimisticHandle<T>\n\
          \n",
     );
 
@@ -641,6 +647,25 @@ mod tests {
                 spec.name
             );
         }
+    }
+
+    #[test]
+    fn pack_exports_live_signal_and_optimistic_handle_types() {
+        // SPEC-HARDENING-1 WI3 — optimistic LiveSignal set/update shape is
+        // visible in the generated ambient pack (TS-1).
+        let dts = emit_types_dts();
+        assert!(
+            dts.contains("LiveSignal"),
+            "ambient pack must import/use LiveSignal"
+        );
+        assert!(
+            dts.contains("OptimisticHandle"),
+            "ambient pack must import OptimisticHandle (freeze lock)"
+        );
+        assert!(
+            dts.contains("type OptimisticWriteHandle"),
+            "ambient pack must surface OptimisticWriteHandle alias"
+        );
     }
 
     #[test]
