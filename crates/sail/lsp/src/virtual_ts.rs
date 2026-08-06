@@ -280,6 +280,12 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
     // Import the controller module under a relative name the session rewrites
     // to the real controller virtual file when materializing on disk.
     view_text.push_str("\n// ── typed scope recovery ────────────────────────────────────\n");
+    // Scope-only props (no controller) still need callable members so
+    // `{title()}` / `{selected()}` typecheck — was Record<string, never>.
+    let scope_props: Vec<String> = scope
+        .as_ref()
+        .map(|(_, _, body)| collect_scope_prop_names(body))
+        .unwrap_or_default();
     if has_controller {
         view_text.push_str("import __sail_authored from \"./__ctrl__.ts\";\n");
         view_text.push_str(
@@ -291,12 +297,38 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
              void scope;\n\
              void __sail_authored;\n",
         );
+    } else if !scope_props.is_empty() {
+        view_text.push_str("const scope = {\n");
+        for name in &scope_props {
+            // Props surface as zero-arg readers in templates (`title()`).
+            view_text.push_str("  ");
+            view_text.push_str(name);
+            view_text.push_str(": (() => null! as any) as (() => any),\n");
+        }
+        view_text.push_str(
+            "};\n\
+             export type Scope = typeof scope;\n\
+             void scope;\n",
+        );
     } else {
         view_text.push_str(
             "const scope: Record<string, never> = {};\n\
              export type Scope = typeof scope;\n",
         );
     }
+
+    // `{#for}` / `<for … as="row">` binders are not controller members —
+    // declare them as free locals so rewrite leaves them bare (not scope.row).
+    let for_bindings = collect_for_binding_names(sail_source);
+    if !for_bindings.is_empty() {
+        view_text.push_str("\n// ── for-binding locals ──────────────────────────────────────\n");
+        for name in &for_bindings {
+            view_text.push_str("declare const ");
+            view_text.push_str(name);
+            view_text.push_str(": any;\n");
+        }
+    }
+    let for_binding_refs: Vec<&str> = for_bindings.iter().map(|s| s.as_str()).collect();
 
     // ── View: expression embeddings ────────────────────────────────────────
     let (stripped, _) = extract_controller_block(sail_source);
@@ -312,11 +344,12 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             // Style expressions use free setters/tokens/when-keys (ambient pack),
             // not controller scope members — do not `scope.`-qualify them.
             // Quote bare hyphen tokens for pure tsc (`hover-bg` → `'hover-bg'`).
-            // Ordinary template exprs still get `scope.` qualification.
+            // Ordinary template exprs still get `scope.` qualification, except
+            // for-binding names which stay bare (declared above).
             let rewritten = if looks_like_style_expr(&emb.source) {
                 quote_style_dsl_for_tsc(&emb.source)
             } else {
-                rewrite_with_prefix(&emb.source, &[], "scope.")
+                rewrite_with_prefix(&emb.source, &for_binding_refs, "scope.")
             };
             view_text.push_str("void (() => (");
             let v_start = view_text.len();
@@ -589,6 +622,119 @@ struct ExprEmbed {
     source: String,
     sail_start: usize,
     sail_end: usize,
+}
+
+/// Prop names from a `<scope>` body `props: { name = … }` block.
+///
+/// Used when there is no controller so template `{title()}` still has a
+/// callable on synthetic `scope` (otherwise `Record<string, never>`).
+fn collect_scope_prop_names(scope_body: &str) -> Vec<String> {
+    let Some(props_at) = scope_body.find("props:") else {
+        return Vec::new();
+    };
+    let after = &scope_body[props_at + "props:".len()..];
+    let Some(brace_rel) = after.find('{') else {
+        return Vec::new();
+    };
+    let open = props_at + "props:".len() + brace_rel;
+    let Some(close) = find_matching_brace(scope_body, open) else {
+        return Vec::new();
+    };
+    let inner = &scope_body[open + 1..close];
+    let mut names = Vec::new();
+    for line in inner.lines() {
+        let t = line.trim();
+        if t.is_empty() || t.starts_with("//") || t.starts_with('#') {
+            continue;
+        }
+        // `title = ''` | `title: string = ''` | `selected = false`
+        let head = t
+            .split_once('=')
+            .map(|(l, _)| l)
+            .or_else(|| t.split_once(':').map(|(l, _)| l))
+            .unwrap_or(t)
+            .trim();
+        if head.is_empty() {
+            continue;
+        }
+        if !head
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$')
+        {
+            continue;
+        }
+        if !head
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+        {
+            continue;
+        }
+        if !names.iter().any(|n| n == head) {
+            names.push(head.to_string());
+        }
+    }
+    names
+}
+
+/// `<for … as="row">` / `as='g'` binding names outside the controller body.
+fn collect_for_binding_names(sail_source: &str) -> Vec<String> {
+    let ctrl = find_controller_raw(sail_source).map(|(s, e, _)| (s, e));
+    let mut names = Vec::new();
+    let bytes = sail_source.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !sail_source.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        // as="name" or as='name'
+        let rest = &sail_source[i..];
+        if !rest.starts_with("as=") {
+            i += 1;
+            continue;
+        }
+        if ctrl.is_some_and(|(s, e)| i >= s && i < e) {
+            i += 3;
+            continue;
+        }
+        // Word boundary before `as` (avoid `has=` etc.)
+        if i > 0 {
+            let prev = bytes[i - 1] as char;
+            if prev.is_ascii_alphanumeric() || prev == '_' || prev == '$' || prev == '-' {
+                i += 1;
+                continue;
+            }
+        }
+        let after = i + 3;
+        let quote = bytes.get(after).copied();
+        if quote != Some(b'"') && quote != Some(b'\'') {
+            i += 3;
+            continue;
+        }
+        let q = quote.unwrap();
+        let name_start = after + 1;
+        let mut j = name_start;
+        while j < bytes.len() && bytes[j] != q {
+            j += 1;
+        }
+        if j > name_start && j < bytes.len() {
+            let name = &sail_source[name_start..j];
+            if name
+                .chars()
+                .next()
+                .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$')
+                && name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+                && !names.iter().any(|n| n == name)
+            {
+                names.push(name.to_string());
+            }
+        }
+        i = j.saturating_add(1);
+    }
+    names
 }
 
 fn collect_template_exprs(original: &str, stripped: &str) -> Vec<ExprEmbed> {
@@ -1215,5 +1361,61 @@ export default controller((ctx) => ({ count: signal(0) }))
         let div = COUNTER.find("<div>").unwrap();
         assert!(!v.is_ts_region(div));
         assert!(v.region_at(div).is_none());
+    }
+
+    #[test]
+    fn scope_only_props_become_callable_scope_members() {
+        let src = r#"<scope>
+  props: {
+    title = ''
+    selected = false
+  }
+</scope>
+<p>{title()}</p>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("title:") && v.view_text.contains("selected:"),
+            "scope props must be members:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("scope.title"),
+            "title() must rewrite under scope:\n{}",
+            v.view_text
+        );
+        assert!(
+            !v.view_text.contains("Record<string, never>"),
+            "must not use empty never scope when props exist:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn for_binding_locals_stay_bare_not_scope_qualified() {
+        let src = r#"<controller>
+import { controller } from '@ship/sail-runtime'
+export default controller(() => ({ items: () => [{ key: 'a', label: 'A' }] }))
+</controller>
+<for {items()} as="row" key={row.key}>
+  <p>{row.label}</p>
+</for>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("declare const row: any"),
+            "for binder declared:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("row.label") && !v.view_text.contains("scope.row"),
+            "row must stay bare, not scope.row:\n{}",
+            v.view_text
+        );
+        assert!(
+            v.view_text.contains("scope.items"),
+            "iterable still scope-qualified:\n{}",
+            v.view_text
+        );
     }
 }
