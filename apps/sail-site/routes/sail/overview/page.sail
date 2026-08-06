@@ -1,8 +1,8 @@
 <!--
   /overview — the Introduction (pairing draft v3).
   v3 rulings applied: query added to the opener's API list; hover feedback is
-  CSS (sx hover: + transition atoms), NOT Style .hover motion — that path ran a full
-  WAAPI pass on enter AND leave (jitter on mouse sweep); prose and demos sit
+  Style .when(hover, …) paint (not animate motion — that path ran a full
+  WAAPI pass on enter AND leave (jitter on mouse sweep)); prose and demos sit
   side by side; the bundle widget is GONE (bundle story ≠ compiler tunability
   — separate artifact, built when we're ready to compare honestly); tuning
   section is prose about the real policy settings.
@@ -35,7 +35,7 @@ Introduction</p>
       Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
       agents: the language provides the APIs an interface needs — signals for
-      state, <code>sx</code> for styling, <code>motion</code> for animation,
+      state, <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> for styling,
       <code>query</code> for data, a component library that already behaves —
       and a strict compiler enforces how they are used. That is how best
       practices and consistency hold across an entire application, not just

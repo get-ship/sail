@@ -43,7 +43,7 @@ Guide</p>
     The smallest useful file is a template and nothing else. Layout is
     elements — <code>&lt;row&gt;</code> and <code>&lt;column&gt;</code> with
     <code>gap</code>, <code>align</code> and <code>justify</code> — and
-    <code>sx</code> carries the finish.
+    <code>style&#40;&#123; box, paint, text &#125;&#41;</code> carries the finish.
   </p>
   <code-block code={code.markup} lang="sail"></code-block>
   <p>
@@ -97,23 +97,27 @@ Guide</p>
 
   <h2>Step 4 — styling, without leaving the tag</h2>
   <p>
-    There is no stylesheet and no <code>&lt;style&gt;</code> block. The
-    <code>sx</code> attribute takes Tailwind's names with this design
-    system's values: <code>text-sm</code> is a size from the type scale,
-    <code>text-muted-foreground</code> is a color token, <code>p-4</code> is
-    a step on the spacing scale.
+    There is no stylesheet and no <code>&lt;style&gt;</code> block. Attach
+    <strong>Style</strong> as a block statement on the host:
+    <code>style&#40;&#123; box: pad(4), paint: fg(muted-foreground), text: fontSize(sm) &#125;&#41;</code>.
+    Channels group the setters — <code>box</code> for space and size,
+    <code>paint</code> for color and border, <code>text</code> for type.
+    Values are design tokens: <code>fontSize(sm)</code>,
+    <code>fg(muted-foreground)</code>, <code>pad(4)</code>.
   </p>
   <p>
-    The values are a closed set. <code>text-muted-foreground</code> compiles;
+    The values are a closed set. <code>fg(muted-foreground)</code> compiles;
     a hex code or a pixel value does not, and the error names what you may
     use instead. That is what keeps a component readable under all nine
-    themes: it never names a color, only a role.
+    themes: it never names a color, only a role. Utility-string hosts
+    (<code>sx="…"</code>) are not the product — they refuse.
   </p>
   <p>
-    Two atoms above are worth naming. <code>font-mono tabular-nums</code>
-    gives digits a fixed width, so the total does not jitter as it
-    recalculates. <code>max-w-panel-max-w-sm</code> stops the card from
-    stretching to the width of the page.
+    Two setters above are worth naming.
+    <code>fontFamily(mono)</code> with <code>nums(tabular)</code> gives
+    digits a fixed width, so the total does not jitter as it recalculates.
+    <code>maxW(panel-max-w-sm)</code> stops the card from stretching to the
+    width of the page.
   </p>
 
   <h2>Step 5 — a slot, so callers can add their own content</h2>

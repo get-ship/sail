@@ -94,21 +94,22 @@ Source</p>
 
   <h2>Render the three states</h2>
   <p>
-    <code>&lt;match &#123;x&#125;&gt;</code> and
-    <code>&lt;match &#123;x&#125; error as err&gt;</code> render the pending and failed
-    states; <code>&lt;if &#123;x().kind === 'ok'&#125;&gt;</code> guards the loaded one,
-    where <code>x().value</code> holds the data. The three cases are structural —
-    you can't render the list without having handled loading and error first.
+    One <code>&lt;match &#123;users()&#125;&gt;</code> carries the three arms:
+    <code>&#123;loading =&gt; …&#125;</code>,
+    <code>&#123;error as err =&gt; …&#125;</code>, and
+    <code>&#123;ok as value =&gt; …&#125;</code>. Arms are structural — you
+    cannot render the list without having handled loading and error first.
+    There is no <code>while-loading</code> / sibling-case form; those are dead.
   </p>
   <code-block code={code.states}></code-block>
 
   <p>
     style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
-    The loaded value is only reachable through <code>kind === 'ok'</code>,
-    so a template cannot render data it hasn't confirmed has arrived —
-    handling loading and error is built into the shape, not left to
-    discipline.
+    The loaded value is only reachable on the <code>ok</code> arm
+    (<code>as value</code>), so a template cannot render data it hasn't
+    confirmed has arrived — handling loading and error is built into the
+    shape, not left to discipline.
   </p>
 
   <p>

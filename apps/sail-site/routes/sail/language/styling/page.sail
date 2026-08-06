@@ -29,16 +29,17 @@ The language</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
-    Paint is the <strong>Style</strong> value language on <code>sx</code>:
-    <code>style&#40;&#123; paint: bg(token) &#125;&#41;</code> chains, <code>match</code>, <code>when</code>,
+    Paint is the <strong>Style</strong> channel language:
+    <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> as a block
+    statement, plus <code>.when()</code>, <code>match</code>,
     <code>compound</code>, and scope Style consts. Values are design tokens —
     never raw hex. The compiler and the
-    <a href="/sail/reference/sx">sx reference</a> share one table.
+    <a href="/sail/reference/sx">Style reference</a> share one table.
   </p>
   <p>
     Familiar spacing and color ideas still apply
     (<code>pad(4)</code>, <code>bg(surface-1)</code>, <code>radius(lg)</code>),
-    but the product form is a typed chain, not a utility string. Closed and
+    but the product form is a typed channel spine, not a utility string. Closed and
     token-backed is what makes the theme switch in this site's header work —
     swap the theme and everything repaints, because nothing held a raw color.
   </p>
@@ -117,9 +118,10 @@ pad(3) on a phone; when tablet → pad(6).</p>
   <p>
     Named looks are data: typed props plus Style fragments composed with
     <code>match</code> and <code>compound</code> — not CVA string maps. Each
-    arm is ordinary Style, same pipeline as host <code>sx</code>. Variance
-    authoring for libraries may still need a directory permit; plain pages
-    usually paint with consts + match only.
+    arm is ordinary Style, same pipeline as a host
+    <code>style&#40;&#123; … &#125;&#41;</code> block. Variance authoring for
+    libraries may still need a directory permit; plain pages usually paint
+    with consts + match only.
   </p>
   <code-block code={code.variants}></code-block>
   <p>Callers pick a look the way they set any field:</p>
@@ -154,8 +156,9 @@ pad(3) on a phone; when tablet → pad(6).</p>
     elements decide how children sit (<a href="/sail/language/layout">layout
     elements</a>). And <strong>authored CSS</strong> —
     <code>&lt;style&gt;</code> blocks and <code>style=</code> attributes are
-    compile errors in application code. Utility-string
-    <code>sx="p-4 bg-muted"</code> is not the product either — use
+    compile errors in application code. Utility-string hosts
+    (<code>sx="…"</code> / <code>style="…"</code>) are refused the same way —
+    dead forms; product paint is
     <code>style&#40;&#123; box: pad(4), paint: bg(muted) &#125;&#41;</code>. When the vocabulary can't express
     something you need, file a gap: the system grows a setter or token, not a
     hole.
@@ -164,7 +167,8 @@ pad(3) on a phone; when tablet → pad(6).</p>
   <p>
     style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
-    For the full surface: <a href="/sail/reference/sx">reference → sx</a>.
+    For the full surface: <a href="/sail/reference/sx">reference → Style</a>
+    · <a href="/sail/reference/regions">region matrix</a>.
   </p>
 
   <row justify="between" gap="2">

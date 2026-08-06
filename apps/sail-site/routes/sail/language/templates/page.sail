@@ -122,9 +122,10 @@ The language</p>
   <code-block code={code.slotUse}></code-block>
 
   <p>
-    Two more blocks — <code>&lt;match&#gt;</code> and
-    <code>&lt;match&#gt;</code> — exist for async state and belong
-    to the <a href="/sail/language/data">data story</a>.
+    The same <code>&lt;match&gt;</code> block also covers async
+    <code>query()</code> state with <code>loading</code> /
+    <code>error</code> / <code>ok</code> arms — that shape belongs to the
+    <a href="/sail/language/data">data story</a>.
   </p>
 
   <p>

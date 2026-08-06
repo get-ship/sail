@@ -221,6 +221,15 @@ Reference</p>
  <a href="/sail/reference" current={path() === '/sail/reference' ? 'page' : null}>
    style(railLink)
 API reference</a>
+ <a href="/sail/reference/sx" current={path() === '/sail/reference/sx' ? 'page' : null}>
+   style(railLink)
+Style</a>
+ <a href="/sail/reference/template" current={path() === '/sail/reference/template' ? 'page' : null}>
+   style(railLink)
+Template / callbacks</a>
+ <a href="/sail/reference/regions" current={path() === '/sail/reference/regions' ? 'page' : null}>
+   style(railLink)
+Region matrix</a>
  </nav>
 
  <column gap="0">
@@ -342,5 +351,14 @@ Reference</p>
   <a href="/sail/reference" on:click={closeNav} current={path() === '/sail/reference' ? 'page' : null}>
     style(railLink)
 API reference</a>
+  <a href="/sail/reference/sx" on:click={closeNav} current={path() === '/sail/reference/sx' ? 'page' : null}>
+    style(railLink)
+Style</a>
+  <a href="/sail/reference/template" on:click={closeNav} current={path() === '/sail/reference/template' ? 'page' : null}>
+    style(railLink)
+Template / callbacks</a>
+  <a href="/sail/reference/regions" on:click={closeNav} current={path() === '/sail/reference/regions' ? 'page' : null}>
+    style(railLink)
+Region matrix</a>
  </section>
 </dialog>
