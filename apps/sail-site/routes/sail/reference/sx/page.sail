@@ -53,8 +53,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h1>Style — block channel attach</h1>
     <p token="doc-lead">
       Paint is Style only, as a <strong>block statement</strong> on the host:
-      <code>style({ box: padX(2), paint: bg(primary) })</code>,
-      <code>style([base, match(…), when(…)])</code>, or <code>style(constRef)</code>.
+      <code>style&#40;&#123; box: padX(2), paint: bg(primary) &#125;&#41;</code>,
+      <code>style&#40;[base, match(…), when(…)]&#41;</code>, or <code>style&#40;constRef&#41;</code>.
       Every setter argument is a design token from a closed scale — the rows
       below list those values. An off-list token is a compile error that names
       the same list.
@@ -65,7 +65,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product.
       Responsive and state paint use
       <code>.when(tablet, &#123; … &#125;)</code> / <code>.when(hover, &#123; … &#125;)</code>
-      or map <code>when(&#123; tablet: style… &#125;)</code>, not
+      or map <code>when&#40;&#123; tablet: style… &#125;&#41;</code>, not
       <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
       {sxCount()} scale entries feed the setters.
     </p>
@@ -78,8 +78,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
       Rows are named by historical atom heads (<code>bg</code>, <code>p</code>,
       <code>rounded</code>, …). In product form you call the Style setter:
-      <code>style({ paint: bg(…) })</code>, <code>style({ box: pad(…) })</code>,
-      <code>style({ paint: radius(…) })</code>, <code>style({ paint: fg(…) })</code>, and so on.
+      <code>style&#40;&#123; paint: bg(…) &#125;&#41;</code>, <code>style&#40;&#123; box: pad(…) &#125;&#41;</code>,
+      <code>style&#40;&#123; paint: radius(…) &#125;&#41;</code>, <code>style&#40;&#123; paint: fg(…) &#125;&#41;</code>, and so on.
     </p>
     <grid cols="2" gap="2">
       <for {sxRows()} as="a" key={a.prop}>
@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>
       style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
-      Product form: <code>when(&#123; hover: style({ paint: bg(muted) }), current: style({ paint: fg(primary) }) &#125;)</code>.
+      Product form: <code>when&#40;&#123; hover: style&#40;&#123; paint: bg(muted) &#125;&#41;, current: style&#40;&#123; paint: fg(primary) &#125;&#41; &#125;&#41;</code>.
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
@@ -149,8 +149,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>
       style({ box: maxW(breakpoint-tablet) })
 
-      Ancestor propagation: mark the ancestor with <code>style({ paint: group() })</code>,
-      then <code>when(&#123; groupHover: … &#125;)</code> on the descendant.
+      Ancestor propagation: mark the ancestor with <code>style&#40;&#123; paint: group() &#125;&#41;</code>,
+      then <code>when&#40;&#123; groupHover: … &#125;&#41;</code> on the descendant.
     </p>
   </column>
 
@@ -160,7 +160,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
       Breakpoints are locked to design-token <code>breakpoint-*</code> lengths.
-      Use <code>when(&#123; tablet: style({ text: fontSize(lg) }), desktop: style({ text: fontSize(xl) }) &#125;)</code>.
+      Use <code>when&#40;&#123; tablet: style&#40;&#123; text: fontSize(lg) &#125;&#41;, desktop: style&#40;&#123; text: fontSize(xl) &#125;&#41; &#125;&#41;</code>.
     </p>
     <grid cols="3" gap="2">
       <for {conditionPrefixes()} as="c" key={c.prefix}>
@@ -183,8 +183,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>
       style({ box: maxW(breakpoint-tablet) })
 
-      <code>match(prop, &#123; … &#125;)</code> branches on a prop value;
-      <code>compound(&#123; … &#125;, style…)</code> intersects prop arms;
+      <code>match&#40;prop, &#123; … &#125;&#41;</code> branches on a prop value;
+      <code>compound&#40;&#123; … &#125;, style…&#41;</code> intersects prop arms;
       <code>bind(signalName)</code> reads a controller signal as a CSS custom
       property (timeline tracks, range-driven paint).
     </p>

@@ -345,7 +345,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:mouseover={() => hover(n)}
 
         >
-          style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(sm) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) }).when(stateSkill, { paint: borderLWidth(1).borderL(success) }).when(stateMcp, { paint: borderLWidth(1).borderL(info) }).when(stateRule, { paint: borderLWidth(1).borderL(warning) }).when(statePerm, { paint: borderLWidth(1).borderL(destructive) }).when(stateHarness, { paint: borderLWidth(1).borderL(accent) })
+          style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) }).when(stateSkill, { paint: borderLWidth(1).borderL(success) }).when(stateMcp, { paint: borderLWidth(1).borderL(info) }).when(stateRule, { paint: borderLWidth(1).borderL(warning) }).when(statePerm, { paint: borderLWidth(1).borderL(destructive) }).when(stateHarness, { paint: borderLWidth(1).borderL(accent) })
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>
@@ -354,13 +354,13 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
               style({ box: mb(1) })
 
               <span>
-                style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
+                style({ paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
 {n.kind}</span>
             </row>
             <div>
               style({ paint: fg(foreground) })
               <span>
-                style({ box: display(contents), text: fontWeight(semibold) })
+                style({ box: display(contents), text: fontFamily(body).fontSize(sm).fontWeight(semibold) })
                 {n.title}
               </span>
 </div>
@@ -368,7 +368,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
               <div>
                 style({ paint: fg(muted-foreground) })
                 <span>
-                  style({ box: display(contents), text: fontSize(xs) })
+                  style({ box: display(contents), text: fontFamily(body).fontSize(xs) })
                   {n.sub}
                 </span>
 </div>

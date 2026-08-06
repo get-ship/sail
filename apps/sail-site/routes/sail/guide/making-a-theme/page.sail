@@ -56,7 +56,7 @@ Guide</p>
 
     <li>
       a block in <code>src/themes.css</code> that assigns the tokens, keyed
-      on <code>[theme='…']</code>;
+      on <code>&#91;theme='…'&#93;</code>;
     </li>
     <li>
       an entry in the <code>THEMES</code> array in <code>src/themes.ts</code>,
@@ -94,7 +94,7 @@ Guide</p>
   <p>
     Two details in there are worth understanding before you copy it. The
     selector is doubled: <code>:root[theme='paper']</code> repaints the
-    document, and <code>[theme='paper']</code> repaints one
+    document, and <code>&#91;theme='paper'&#93;</code> repaints one
     subtree — that is how a swatch shows a theme without switching the page.
     And the brand tokens are written
     <code>oklch(L C var(--brand-hue, 30))</code>: lightness and chroma are

@@ -26,7 +26,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p token="doc-eyebrow">Reference</p>
     <h1>Motion — one system</h1>
     <p token="doc-lead">
-      <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> is the only animation directive;
+      <code>style&#46;&lt;trigger&gt;&#40;&#123;…&#125;&#41;</code> is the only animation directive;
       <code>transition:</code> / <code>in:</code> / <code>out:</code> are
       retired.
     </p>
@@ -70,7 +70,7 @@ properties</code><small>
     <p>
       style({ box: maxW(breakpoint-tablet) })
 
-      Inside a <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> config object, every value
+      Inside a <code>style&#46;&lt;trigger&gt;&#40;&#123;…&#125;&#41;</code> config object, every value
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">

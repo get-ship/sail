@@ -71,7 +71,7 @@ The language</p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Animation is declared on the element via the Style <strong>animate
-    channel</strong>. <code>style({ animate: enter({…}) })</code> /
+    channel</strong>. <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> /
     <code>exit</code> / <code>loop</code> / <code>reveal</code> name a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
     <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
@@ -88,7 +88,7 @@ Replay</button>
     <p>
       style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
-      Five tiles, one <code>style({ animate: enter({…}) }})</code> each;
+      Five tiles, one <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> each;
       <code>stagger</code> is the delay between siblings.
     </p>
   </row>
@@ -280,7 +280,7 @@ tab to me</button>
     keyframes per property, and returns one signal per property. Those
     signals reach Style the way any signal does, through
     <code>bind(name)</code> on a setter
-    (<code>style({ paint: translateX(bind(tileX)) })</code>):
+    (<code>style&#40;&#123; paint: translateX(bind(tileX)) &#125;&#41;</code>):
   </p>
   <code-block code={code.choreography}></code-block>
   <p>

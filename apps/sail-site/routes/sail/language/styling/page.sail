@@ -30,7 +30,7 @@ The language</p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Paint is the <strong>Style</strong> value language on <code>sx</code>:
-    <code>style({ paint: bg(token) })</code> chains, <code>match</code>, <code>when</code>,
+    <code>style&#40;&#123; paint: bg(token) &#125;&#41;</code> chains, <code>match</code>, <code>when</code>,
     <code>compound</code>, and scope Style consts. Values are design tokens —
     never raw hex. The compiler and the
     <a href="/sail/reference/sx">sx reference</a> share one table.
@@ -59,8 +59,8 @@ This card is styled by the code below it.</p>
   <code-block code={code.sxError}></code-block>
   <p>
     Prefer a scope const when the same paint repeats:
-    <code>const card = style({ box: pad(5), paint: bg(surface-1) })…</code> then
-    attach <code>style(card)</code> or <code>style([base, emphasis])</code> as a
+    <code>const card = style&#40;&#123; box: pad(5), paint: bg(surface-1) &#125;&#41;…</code> then
+    attach <code>style&#40;card&#41;</code> or <code>style&#40;[base, emphasis]&#41;</code> as a
     block statement on the host.
   </p>
 
@@ -96,7 +96,7 @@ active:…</button>
     Breakpoints are Style product conditions locked to
     <code>breakpoint-*</code> tokens — not <code>tablet:</code> string
     prefixes. Unprefixed paint is the phone baseline; layer larger steps with
-    <code>when(&#123; tablet: …, desktop: … &#125;)</code>. Resize to see this panel
+    <code>when&#40;&#123; tablet: …, desktop: … &#125;&#41;</code>. Resize to see this panel
     pad more from 768px up:
   </p>
   <column gap="2">
@@ -156,7 +156,7 @@ pad(3) on a phone; when tablet → pad(6).</p>
     <code>&lt;style&gt;</code> blocks and <code>style=</code> attributes are
     compile errors in application code. Utility-string
     <code>sx="p-4 bg-muted"</code> is not the product either — use
-    <code>style({ box: pad(4), paint: bg(muted) })</code>. When the vocabulary can't express
+    <code>style&#40;&#123; box: pad(4), paint: bg(muted) &#125;&#41;</code>. When the vocabulary can't express
     something you need, file a gap: the system grows a setter or token, not a
     hole.
   </p>
