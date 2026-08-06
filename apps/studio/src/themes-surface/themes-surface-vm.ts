@@ -30,6 +30,7 @@ import {
   confirmRemixTheme,
 } from '../theme-session/theme-confirm'
 import {
+  modeInfoFromModes,
   modesForPaintId,
   resolvePaintId,
   type ModeInfo,
@@ -86,6 +87,11 @@ function titleCase(id: string): string {
 function describeTheme(
   id: string,
   forkedFrom?: string | null,
+  opts?: {
+    inProject?: boolean
+    modes?: readonly ('light' | 'dark')[]
+    defaultMode?: 'light' | 'dark'
+  },
 ): {
   name: string
   blurb: string
@@ -94,9 +100,6 @@ function describeTheme(
   paintWarning?: string
 } {
   const reg = THEMES.find((t) => t.id === id)
-  const resolved = resolvePaintId(id, forkedFrom)
-  const previewId = resolved.paintId
-  const parent = THEMES.find((t) => t.id === previewId)
   if (reg) {
     return {
       name: reg.label,
@@ -105,6 +108,24 @@ function describeTheme(
       modeInfo: modesForPaintId(id),
     }
   }
+  // Project themes have app-delivered CSS tables under their own id
+  // (`.deck/themes/themes.css`). Do not fall back to catalog `studio` paint —
+  // that was only correct when package themes-meta was contaminated with project ids.
+  if (opts?.inProject) {
+    const modeInfo = opts.modes?.length
+      ? modeInfoFromModes(opts.modes, opts.defaultMode)
+      : modesForPaintId(id)
+    return {
+      name: titleCase(id),
+      blurb:
+        'Project theme. Open it to edit DTCG tokens in Themes.',
+      previewId: id,
+      modeInfo,
+    }
+  }
+  const resolved = resolvePaintId(id, forkedFrom)
+  const previewId = resolved.paintId
+  const parent = THEMES.find((t) => t.id === previewId)
   return {
     name: titleCase(id),
     blurb: parent
@@ -165,8 +186,10 @@ export function createThemesSurface() {
   /** Avoid re-toasting the same paint fallback on every sync. */
   let paintWarnForId = ''
 
-  const resolvePaintMode = (paintId: string): 'light' | 'dark' => {
-    const info = modesForPaintId(paintId)
+  const resolvePaintMode = (
+    paintId: string,
+    info: ModeInfo = modesForPaintId(paintId),
+  ): 'light' | 'dark' => {
     if (!info.dual) return info.defaultMode
     return modeByPaintId.get(paintId) ?? info.defaultMode
   }
@@ -183,8 +206,12 @@ export function createThemesSurface() {
     // Store forkedFrom applies only to the currently open theme row.
     const rowFork =
       open?.forkedFrom && open.themeId === t.id ? open.forkedFrom : null
-    const d = describeTheme(t.id, rowFork)
-    const paintMode = resolvePaintMode(d.previewId)
+    const d = describeTheme(t.id, rowFork, {
+      inProject,
+      modes: t.modes,
+      defaultMode: t.defaultMode,
+    })
+    const paintMode = resolvePaintMode(d.previewId, d.modeInfo)
     const meta = inProject
       ? d.modeInfo.modesLabel
       : `Catalog · ${d.modeInfo.modesLabel}`
@@ -237,15 +264,20 @@ export function createThemesSurface() {
     const row = allRows().find((r) => r.id === sel) ?? null
     hasSelected.set(!!row)
     if (row) {
-      // Re-resolve for selected preview so forkedFrom + warning apply to detail pane.
+      // Re-describe so forkedFrom + project modes apply to the detail pane.
       const selectedFork =
         open.forkedFrom && row.id === open.themeId ? open.forkedFrom : null
-      const resolved = resolvePaintId(row.id, selectedFork)
-      const previewId = resolved.paintId
-      const info = modesForPaintId(previewId)
-      const mode = resolvePaintMode(previewId)
+      const file = [...ds.projectThemes, ...ds.catalogThemes].find((t) => t.id === row.id)
+      const d = describeTheme(row.id, selectedFork, {
+        inProject: row.inProject,
+        modes: file?.modes,
+        defaultMode: file?.defaultMode,
+      })
+      const previewId = d.previewId
+      const info = d.modeInfo
+      const mode = resolvePaintMode(previewId, info)
       previewTitle.set(row.name)
-      previewDesc.set(row.blurb)
+      previewDesc.set(d.blurb)
       previewMeta.set(row.meta)
       previewStatusLabel.set(row.statusLabel)
       previewStatusTone.set(row.statusTone)
@@ -258,9 +290,9 @@ export function createThemesSurface() {
       canToggleMode.set(info.dual)
       modeLightOn.set(mode === 'light')
       modeDarkOn.set(mode === 'dark')
-      if (resolved.warning && paintWarnForId !== row.id) {
+      if (d.paintWarning && paintWarnForId !== row.id) {
         paintWarnForId = row.id
-        setNote(resolved.warning, 'warning')
+        setNote(d.paintWarning, 'warning')
       }
     } else {
       previewTitle.set('Select a theme')

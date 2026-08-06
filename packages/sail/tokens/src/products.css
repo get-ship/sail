@@ -1,18 +1,23 @@
 /*
-  Product brand hues.
+ * GENERATED FILE — do not edit by hand.
+ *
+ * Source of truth: packages/sail/tokens/model/products.json (system channels).
+ * Regenerate: cargo run -p sail-compiler -- tokens
+ *            (or: pnpm --filter @ship/tokens generate)
+ *
+ * Product brand hues. The two axes compose instead of colliding: a THEME owns
+ * lightness and chroma (its character — how muted, how bright, how glassy), a
+ * PRODUCT owns hue (the brand). Every brand token in tokens.css and themes.css
+ * is written `oklch(L C var(--brand-hue, <theme's own hue>))`, so with no
+ * product set the theme looks exactly as it always did, and with one set only
+ * the hue moves.
+ *
+ * Switch the theme and the whole page repaints. Cross from SAIL into Deck and
+ * only the accent turns violet.
+ */
 
-  The two axes compose instead of colliding: a THEME owns lightness and chroma
-  (its character — how muted, how bright, how glassy), a PRODUCT owns hue (the
-  brand). Every brand token in tokens.css and themes.css is written
-  `oklch(L C var(--brand-hue, <theme's own hue>))`, so with no product set the
-  theme looks exactly as it always did, and with one set only the hue moves.
-
-  Switch the theme and the whole page repaints. Cross from SAIL into Deck and
-  only the accent turns violet.
-*/
-
-:root[data-product='ship']       { --brand-hue: 195; }  /* teal   — umbrella */
-:root[data-product='sail']        { --brand-hue: 27; }   /* red    — the framework */
+:root[data-product='ship']       { --brand-hue: 195; }  /* teal — umbrella */
+:root[data-product='sail']       { --brand-hue: 27; }  /* red — the framework */
 :root[data-product='deck']       { --brand-hue: 285; }  /* violet — the app framework */
-:root[data-product='components'] { --brand-hue: 155; }  /* green  — the library */
-:root[data-product='ai']         { --brand-hue: 255; }  /* blue   — agent tooling */
+:root[data-product='components'] { --brand-hue: 155; }  /* green — the library */
+:root[data-product='ai']         { --brand-hue: 255; }  /* blue — agent tooling */

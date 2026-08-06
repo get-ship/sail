@@ -32,7 +32,7 @@ const TOKEN_REGISTRY_JSON: &str =
 #[derive(Debug, Deserialize)]
 struct RegistryFile {
     /// Public CSS custom-property names (no `--` prefix). Includes legacy
-    /// aliases dual-emitted for PE stability (e.g. `app-accent-*`).
+    /// legacy dual-emit aliases (empty after TOKENS-1 app-accent-* scrub).
     names: Vec<String>,
     colors: Vec<String>,
     /// Optional full map — present for value-aware tests / tooling.

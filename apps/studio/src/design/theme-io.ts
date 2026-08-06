@@ -106,7 +106,43 @@ export async function loadThemesOn(
       state.themesDir,
       false,
     )
-    ctx.setState({ ...ctx.getState(), catalogThemes, projectThemes })
+    // Hydrate project mode tables from DTCG so gallery swatches paint with the
+    // correct data-mode without relying on package themes-meta contamination.
+    const projectWithModes = await Promise.all(
+      projectThemes.map(async (t) => {
+        try {
+          const r = await client.sailThemeRead({ path: t.path })
+          const doc = parseThemeJson(r.content)
+          const modesObj = doc.modes
+          const modes =
+            modesObj && typeof modesObj === 'object' && !Array.isArray(modesObj)
+              ? Object.keys(modesObj as Record<string, unknown>).filter(
+                  (m): m is 'light' | 'dark' => m === 'light' || m === 'dark',
+                )
+              : []
+          const ext = doc.$extensions as Record<string, unknown> | undefined
+          const ship = ext?.ship as Record<string, unknown> | undefined
+          const dmRaw = ship?.defaultMode
+          const defaultMode =
+            dmRaw === 'light' || dmRaw === 'dark' ? dmRaw : undefined
+          if (modes.length || defaultMode) {
+            return {
+              ...t,
+              ...(modes.length ? { modes } : {}),
+              ...(defaultMode ? { defaultMode } : {}),
+            }
+          }
+        } catch {
+          /* list still works; paint falls back to modesForPaintId */
+        }
+        return t
+      }),
+    )
+    ctx.setState({
+      ...ctx.getState(),
+      catalogThemes,
+      projectThemes: projectWithModes,
+    })
     state = ctx.getState()
     const prefer =
       opts?.themeId ||

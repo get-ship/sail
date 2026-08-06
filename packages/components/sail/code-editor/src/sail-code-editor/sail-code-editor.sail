@@ -50,7 +50,7 @@
     /** Active file path for Hover/Complete/diagnostics RPCs. */
     'ops-path' = ''
     size: {
-      md: 'text-sm leading-normal-plus',
+      md: 'text-sm leading-loose',
       sm: 'text-xs leading-normal',
       lg: 'text-base leading-loose',
     }

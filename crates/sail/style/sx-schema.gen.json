@@ -771,7 +771,6 @@
         "loose",
         "none",
         "normal",
-        "normal-plus",
         "relaxed",
         "snug",
         "tight"
@@ -2359,7 +2358,8 @@
         "overlay",
         "popover",
         "sticky",
-        "toast"
+        "toast",
+        "toast-region"
       ]
     }
   ],
@@ -2415,8 +2415,8 @@
     "var-ref"
   ],
   "tokens": {
-    "count": 456,
-    "colors_count": 200,
+    "count": 433,
+    "colors_count": 185,
     "sample_names": [
       "accent",
       "accent-agents",
@@ -2442,22 +2442,22 @@
       "alert-stripe",
       "anchor-left",
       "anchor-top",
-      "app-accent-agents",
-      "app-accent-canvas",
-      "app-accent-chat",
-      "app-accent-collections",
-      "app-accent-dashboard",
-      "app-accent-events",
-      "app-accent-git",
-      "app-accent-mesh",
-      "app-accent-overview",
-      "app-accent-pipelines",
-      "app-accent-settings",
-      "app-accent-setup",
-      "app-accent-skills",
-      "app-accent-specs",
-      "app-accent-theme",
-      "autosize-h"
+      "autosize-h",
+      "avatar",
+      "avatar-foreground",
+      "backdrop",
+      "background",
+      "badge",
+      "badge-border",
+      "badge-foreground",
+      "body-font",
+      "body-weight",
+      "border",
+      "border-strong",
+      "border-subtle",
+      "border-width",
+      "box-h",
+      "box-left"
     ],
     "resolve": "path (dotted → kebab) or cssName (flat registry name); dual resolve"
   },

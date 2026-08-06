@@ -1,0 +1,33 @@
+{
+  "$description": "Product brand-hue system channels. A THEME owns lightness and chroma; a PRODUCT owns hue via --brand-hue. Brand tokens compose as oklch(L C var(--brand-hue, <theme hue>)). Not theme-overridable, not component channels.",
+  "$extensions": {
+    "ship": {
+      "layer": "system",
+      "axis": "product",
+      "channel": "brand-hue",
+      "compositionLaw": "theme owns L/C; product owns hue. Every brand token reads oklch(L C var(--brand-hue, <theme's own hue>)). With no product set the theme looks as authored; with one set only the hue moves."
+    }
+  },
+  "products": {
+    "ship": {
+      "brandHue": 195,
+      "label": "teal — umbrella"
+    },
+    "sail": {
+      "brandHue": 27,
+      "label": "red — the framework"
+    },
+    "deck": {
+      "brandHue": 285,
+      "label": "violet — the app framework"
+    },
+    "components": {
+      "brandHue": 155,
+      "label": "green — the library"
+    },
+    "ai": {
+      "brandHue": 255,
+      "label": "blue — agent tooling"
+    }
+  }
+}

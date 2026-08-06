@@ -499,7 +499,7 @@ pub fn setters() -> &'static [SetterSpec] {
             name: "minW",
             vocab: "min-w",
             scale: Some("size"),
-            keywords: &["0", "full", "menu-min-w", "panel-rail-w"],
+            keywords: &["0", "full", "panel-menu-min-w", "panel-rail-w"],
             negatable: false,
             slots: &["min-width"],
         },
@@ -540,7 +540,7 @@ pub fn setters() -> &'static [SetterSpec] {
                 "auto",
                 "max",
                 "border-width",
-                "toast-region-width",
+                "panel-toast-region-width",
                 "panel-max-w-md",
                 "panel-max-w-sm",
                 "panel-max-w-lg",
@@ -747,7 +747,7 @@ pub fn setters() -> &'static [SetterSpec] {
             name: "z",
             vocab: "z",
             scale: Some("z"),
-            keywords: &["0", "1", "2", "auto", "toast-region-z"],
+            keywords: &["0", "1", "2", "auto"],
             negatable: false,
             slots: &["z-index"],
         },
@@ -2521,11 +2521,8 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 let prop = if spec.name == "w" { "width" } else { "height" };
                 return Ok(vec![(prop.into(), "var(--border-width)".into())]);
             }
-            ("w", "toast-region-width") => {
-                return Ok(vec![("width".into(), "var(--toast-region-width)".into())]);
-            }
-            ("z", "toast-region-z") => {
-                return Ok(vec![("z-index".into(), "var(--toast-region-z)".into())]);
+            ("w", "panel-toast-region-width") => {
+                return Ok(vec![("width".into(), "var(--panel-toast-region-width)".into())]);
             }
             // Closed product keyframe catalog (packages/sail/runtime
             // keyframes-catalog.ts). Style.animate(name) → CSS PE var;
@@ -2621,8 +2618,8 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("flexDir", dir @ ("row" | "column" | "row-reverse" | "column-reverse")) => {
                 return Ok(vec![("flex-direction".into(), dir.into())]);
             }
-            ("minW", "menu-min-w") => {
-                return Ok(vec![("min-width".into(), "var(--menu-min-w)".into())]);
+            ("minW", "panel-menu-min-w") => {
+                return Ok(vec![("min-width".into(), "var(--panel-menu-min-w)".into())]);
             }
             ("minW", "panel-rail-w") => {
                 return Ok(vec![("min-width".into(), "var(--panel-rail-w)".into())]);

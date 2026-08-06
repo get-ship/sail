@@ -14,7 +14,8 @@
     "./tokens.css": "./src/tokens.css",
     "./token-registry.json": "./src/token-registry.json",
     "./sail-base.css": "./src/sail-base.css",
-    "./element-skins.css": "./src/element-skins.css"
+    "./element-skins.css": "./src/element-skins.css",
+    "./products.css": "./src/products.css"
   },
   "files": [
     "src",

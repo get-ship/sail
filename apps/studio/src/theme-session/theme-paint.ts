@@ -31,13 +31,14 @@ function titleCase(id: string): string {
   )
 }
 
-export function modesForPaintId(paintId: string): ModeInfo {
-  const meta = themeMeta(paintId)
-  const reg = THEMES.find((t) => t.id === paintId)
-  const raw = (meta?.modes?.length ? meta.modes : reg?.modes?.length ? reg.modes : ['light', 'dark']) as string[]
-  const modes = raw.filter((m): m is 'light' | 'dark' => m === 'light' || m === 'dark')
+/** Build ModeInfo from a raw mode-name list (project JSON or package meta). */
+export function modeInfoFromModes(
+  rawModes: readonly string[],
+  defaultModeHint?: string | null,
+): ModeInfo {
+  const modes = rawModes.filter((m): m is 'light' | 'dark' => m === 'light' || m === 'dark')
   const list = modes.length ? modes : (['light'] as ('light' | 'dark')[])
-  const defRaw = meta?.defaultMode ?? reg?.defaultMode ?? list[0]
+  const defRaw = defaultModeHint ?? list[0]
   const defaultMode: 'light' | 'dark' =
     defRaw === 'dark' && list.includes('dark')
       ? 'dark'
@@ -51,6 +52,17 @@ export function modesForPaintId(paintId: string): ModeInfo {
       ? 'Dark only'
       : 'Light only'
   return { modes: list, defaultMode, dual, modesLabel }
+}
+
+export function modesForPaintId(paintId: string): ModeInfo {
+  const meta = themeMeta(paintId)
+  const reg = THEMES.find((t) => t.id === paintId)
+  const raw = (meta?.modes?.length
+    ? meta.modes
+    : reg?.modes?.length
+      ? reg.modes
+      : ['light', 'dark']) as string[]
+  return modeInfoFromModes(raw, meta?.defaultMode ?? reg?.defaultMode ?? null)
 }
 
 /**

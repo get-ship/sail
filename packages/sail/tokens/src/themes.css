@@ -922,8 +922,6 @@
   --destructive: oklch(0.60 0.26 25);
   --foreground: oklch(0.95 0.02 100);
   --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent), transparent 60%);
-  --glow-default: radial-gradient(circle, color-mix(in oklch, var(--foreground) 6%, transparent), transparent 60%);
-  --glow-muted: radial-gradient(circle, color-mix(in oklch, var(--muted-foreground) 6%, transparent), transparent 60%);
   --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 60%);
   --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
   --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);

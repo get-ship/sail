@@ -1,7 +1,7 @@
 <!--
   <tab> — paint + variant/size Style match for pill/enclosed and pad scale.
   Paint: idle/selected from component.tab tokens
-         (cssNames tab-foreground, tab-selected-foreground, tab-selected).
+         (cssNames tab-foreground, tab-selected-foreground, tab-selected-bg).
 -->
 
 <scope>
@@ -42,10 +42,10 @@
     disabled: style({ paint: opacity(50).cursor(not-allowed) }),
   }),
   compound({ variant: pill }, when({
-    selected: style({ paint: fg(tab-selected-foreground).bg(tab-selected).shadow(xs).borderB(transparent) }),
+    selected: style({ paint: fg(tab-selected-foreground).bg(tab-selected-bg).shadow(xs).borderB(transparent) }),
   })),
   compound({ variant: enclosed }, when({
-    selected: style({ paint: fg(tab-selected-foreground).border(border).bg(tab-selected).translateY(px) }),
+    selected: style({ paint: fg(tab-selected-foreground).border(border).bg(tab-selected-bg).translateY(px) }),
   })),
 ])
 

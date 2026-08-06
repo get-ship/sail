@@ -56,6 +56,14 @@ export type ThemeFile = {
   /** Workspace-relative path. */
   path: string
   catalog: boolean
+  /**
+   * Mode names from DTCG `modes` (project themes). Catalog rows usually omit
+   * this — paint uses package `themes-meta` instead. Hydrated at list load so
+   * project swatches keep correct light/dark tables without package contamination.
+   */
+  modes?: ('light' | 'dark')[]
+  /** From `$extensions.ship.defaultMode` when present on the project theme JSON. */
+  defaultMode?: 'light' | 'dark'
 }
 
 export type FontRole = 'display' | 'body' | 'mono'

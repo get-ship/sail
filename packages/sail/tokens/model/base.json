@@ -726,7 +726,17 @@
       "$type": "dimension",
       "$extensions": {
         "ship": {
-          "cssName": "menu-min-w"
+          "cssName": "panel-menu-min-w"
+        }
+      }
+    },
+    "toast-region-width": {
+      "$value": "{panel.w-toast}",
+      "$type": "dimension",
+      "$description": "Toast stacking region max width (panel family; was component.toast-region.width).",
+      "$extensions": {
+        "ship": {
+          "cssName": "panel-toast-region-width"
         }
       }
     },
@@ -875,15 +885,6 @@
         "$extensions": {
           "ship": {
             "cssName": "leading-normal"
-          }
-        }
-      },
-      "normal-plus": {
-        "$value": "1.55",
-        "$type": "number",
-        "$extensions": {
-          "ship": {
-            "cssName": "leading-normal-plus"
           }
         }
       },
@@ -1213,15 +1214,6 @@
             "cssName": "body-weight"
           }
         }
-      },
-      "tracking": {
-        "$value": "{tracking-normal}",
-        "$type": "dimension",
-        "$extensions": {
-          "ship": {
-            "cssName": "body-tracking"
-          }
-        }
       }
     },
     "monoFont": {
@@ -1523,66 +1515,6 @@
           "ship": {
             "cssName": "glow-accent",
             "channel": true
-          }
-        }
-      },
-      "default": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
-        "$extensions": {
-          "ship": {
-            "cssName": "glow-default"
-          }
-        }
-      },
-      "muted": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
-        "$extensions": {
-          "ship": {
-            "cssName": "glow-muted"
-          }
-        }
-      },
-      "info": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
-        "$extensions": {
-          "ship": {
-            "cssName": "glow-info"
-          }
-        }
-      },
-      "success": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
-        "$extensions": {
-          "ship": {
-            "cssName": "glow-success"
-          }
-        }
-      },
-      "warning": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
-        "$extensions": {
-          "ship": {
-            "cssName": "glow-warning"
-          }
-        }
-      },
-      "destructive": {
-        "$value": "none",
-        "$type": "string",
-        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
-        "$extensions": {
-          "ship": {
-            "cssName": "glow-destructive"
           }
         }
       }
@@ -2427,6 +2359,16 @@
       "$extensions": {
         "ship": {
           "cssName": "z-toast"
+        }
+      }
+    },
+    "toast-region": {
+      "$value": "{z.toast}",
+      "$type": "number",
+      "$description": "Toast stacking region elevation (closed z scale; was component.toast-region.z).",
+      "$extensions": {
+        "ship": {
+          "cssName": "z-toast-region"
         }
       }
     },
