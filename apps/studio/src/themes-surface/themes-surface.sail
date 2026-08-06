@@ -5,9 +5,24 @@
   Ban-clean: layout keywords + L1. Color identity via theme= + registered tables (no CSSOM).
 -->
 <controller>
+import type { Action } from '@ship/sail-runtime'
 import { createThemesSurface } from './themes-surface-vm'
 export default controller(() => {
   const vm = createThemesSurface()
+  // themes.css cascade bit is data-mode — never author data-* in app .sail
+  // (sail-no-data-attr). Stamp via use: from the mode signal/value.
+  const paintMode: Action<string | null | undefined> = (node, initial) => {
+    const el = node as HTMLElement
+    const apply = (m: string | null | undefined): void => {
+      if (m === 'light' || m === 'dark') el.setAttribute('data-mode', m)
+      else el.removeAttribute('data-mode')
+    }
+    apply(initial)
+    return {
+      update: (next) => apply(next),
+      destroy: () => el.removeAttribute('data-mode'),
+    }
+  }
   return {
     projectRows: vm.projectRows,
     catalogRows: vm.catalogRows,
@@ -39,6 +54,7 @@ export default controller(() => {
     isLoading: vm.isLoading,
     projectCountLabel: vm.projectCountLabel,
     catalogCountLabel: vm.catalogCountLabel,
+    paintMode,
     onListClick: (e: Event) => vm.onListClick(e),
     onMenuOpen: (e: Event) => vm.onMenuOpen(e),
     onAddToProject: (e: Event) => vm.onAddToProject(e),
@@ -170,7 +186,7 @@ export default controller(() => {
                 style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
-                <row theme-swatches theme={row.previewId} data-mode={row.paintMode} gap="0" nowrap hidden="true">
+                <row theme-swatches theme={row.previewId} use:paintMode={row.paintMode} gap="0" nowrap hidden="true">
                   style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })
 
                   <center>
@@ -245,7 +261,7 @@ export default controller(() => {
               >
                 style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
-                <row theme-swatches theme={row.previewId} data-mode={row.paintMode} gap="0" nowrap hidden="true">
+                <row theme-swatches theme={row.previewId} use:paintMode={row.paintMode} gap="0" nowrap hidden="true">
                   style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })
 
                   <center>
@@ -411,7 +427,7 @@ Mode</p>
             </p>
             <row
               theme={previewPaintId()}
-              data-mode={previewModeId()}
+              use:paintMode={previewModeId()}
               gap="2"
               color-story-grid
             >
@@ -472,7 +488,7 @@ Surface</p>
           <column
             type-story
             theme={previewPaintId()}
-            data-mode={previewModeId()}
+            use:paintMode={previewModeId()}
             gap="2"
 
           >
@@ -544,7 +560,7 @@ xl</p>
             </p>
             <column
               theme={previewPaintId()}
-              data-mode={previewModeId()}
+              use:paintMode={previewModeId()}
               preview-specimen
               gap="0"
 

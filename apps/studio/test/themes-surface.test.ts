@@ -212,13 +212,16 @@ describe('themes home — honesty UI contracts (source)', () => {
     expect(sail).not.toMatch(/theme-preview=\{/)
   })
 
-  it('preview mode uses data-mode (themes.css cascade), not bare mode=', () => {
+  it('preview mode stamps data-mode via use:paintMode (not authored data-* / bare mode=)', () => {
     const sail = readFileSync(SURFACE, 'utf8')
-    // themes.css selects [theme=id][data-mode=light|dark] — DOMDEC bare rename of
-    // data-mode→mode broke catalog light/dark toggle paint.
-    expect(sail).toMatch(/data-mode=\{previewModeId\(\)\}/)
-    expect(sail).toMatch(/data-mode=\{row\.paintMode\}/)
-    // Bare mode= on paint hosts is not the cascade bit (filter tabs etc. may differ).
+    // themes.css selects [theme=id][data-mode=light|dark]. App markup must not
+    // author data-mode= (sail-no-data-attr); local use: action stamps the cascade bit.
+    expect(sail).toMatch(/use:paintMode=\{previewModeId\(\)\}/)
+    expect(sail).toMatch(/use:paintMode=\{row\.paintMode\}/)
+    expect(sail).toMatch(/const paintMode:\s*Action/)
+    expect(sail).toMatch(/setAttribute\(['"]data-mode['"]/)
+    // No authored data-* or bare mode= on paint hosts.
+    expect(sail).not.toMatch(/\sdata-mode=\{/)
     expect(sail).not.toMatch(/\smode=\{previewModeId\(\)\}/)
     expect(sail).not.toMatch(/\smode=\{row\.paintMode\}/)
   })
