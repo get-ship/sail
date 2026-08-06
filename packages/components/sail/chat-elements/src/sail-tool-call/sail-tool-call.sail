@@ -1,7 +1,7 @@
 <!--
   <sail-tool-call> — a collapsible record of one tool invocation. The
   header shows the tool name + a status dot; the body (args + result)
-  collapses behind it. Composes <collapsible> for the disclosure
+  collapses behind it. Composes <accordion> for the disclosure
   behavior (click / Enter / Space, animated height) rather than
   reimplementing it.
 
@@ -63,7 +63,7 @@
     style([rail, statusBg])
 </span>
 
-  <collapsible open={open()}>
+  <accordion open={open()}>
     style({ paint: group() })
 
     <row slot="trigger" gap="2" align="center">
@@ -104,5 +104,5 @@ Result</span>
 <slot name="result"></slot></div>
       </div>
     </div>
-  </collapsible>
+  </accordion>
 </div>

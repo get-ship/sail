@@ -287,17 +287,13 @@ export default controller(() => {
   </row>
 </column>`,
 
-  details: `<details>
-    style({ animate: enter({ opacity: 'fade' }) })
-  <summary>Advanced options</summary>
-  <p>Native disclosure. Zero JavaScript.</p>
-</details>`,
-
-  collapsible: `<collapsible>
+  accordion: `<accordion>
     style({ animate: enter({ opacity: 'fade' }) })
   <strong slot="trigger">Show the details</strong>
   <p>Animated open and close — and it remembers its state.</p>
-</collapsible>`,
+</accordion>`,
+
+  kbd: `<p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd>.</p>`,
 
   prose: `<column gap="2">
     style({ animate: enter({ opacity: 'fade' }) })

@@ -42,7 +42,7 @@
 //! primitive library (see `.artifacts/sail-arc/primitives-audit.md`):
 //! the inline-`color-mix` cluster, `sail-color-picker`'s hex palette,
 //! `sail-icon`'s `oklab` color-space, and the `var(--token, fallback)`
-//! patterns in `sail-toast`/`sail-card`/`sail-tab-panel`/`sail-collapsible`/
+//! patterns in `sail-toast`/`sail-card`/`sail-tab-panel`/`sail-accordion`/
 //! `sail-alert`. Promoting this rule to `Error` today would fail every
 //! `.sail` compile that touches those primitives.
 //!

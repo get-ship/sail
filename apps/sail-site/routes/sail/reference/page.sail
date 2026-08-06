@@ -82,8 +82,8 @@ const SECTIONS: SectionCard[] = [
   {
     href: '/sail/reference/elements',
     title: 'Elements',
-    count: `${ELEMENTS.stdlib.length + ELEMENTS.reskins.length} elements`,
-    description: 'Tier A — every stdlib element and native reskin (HTML L1 tags as specified, e.g. <img>), with prop tables.',
+    count: `${ELEMENTS.stdlib.length} elements`,
+    description: 'Tier A — every stdlib L1 element with prop tables (native reskins retired).',
     tier: 'A',
   },
   {
@@ -104,7 +104,7 @@ const SECTIONS: SectionCard[] = [
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   sections: () => SECTIONS,
-  elementCount: () => ELEMENTS.stdlib.length + ELEMENTS.reskins.length,
+  elementCount: () => ELEMENTS.stdlib.length,
   propRegistrySize: () => Object.keys(PROP_REGISTRY).length,
   authorRuntimeCount: () => AUTHOR_RUNTIME_COUNT,
 }))

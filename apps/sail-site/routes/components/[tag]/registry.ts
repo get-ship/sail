@@ -431,26 +431,24 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'variant', desc: 'line style', type: 'solid · dashed' },
     ],
   }),
-  details: lang('details', 'detailsEl', {
+  accordion: lang('accordion', 'accordion', {
     blurb:
-      'Native disclosure — <details>/<summary> with the theme’s chevron, header states and open/close animation. Zero JavaScript.',
-    variants: [],
-    variantAttr: '',
-    props: [
-      { name: '<summary>', desc: 'the always-visible line', type: 'children' },
-      { name: 'open', desc: 'the platform state, reflected', type: 'bool' },
-    ],
-  }),
-  collapsible: lang('collapsible', 'collapsible', {
-    blurb:
-      'Details with manners: a trigger slot, animated open/close, and it remembers its state. The platform still owns the semantics underneath.',
+      'ONE disclosure element (replaces collapsible + details). Trigger slot, disabled, onToggle; exclusive multi-item via shared name.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'slot="trigger"', desc: 'the always-visible line', type: 'slot' },
       { name: 'open', desc: 'initial state, reflected', type: 'bool' },
-      { name: 'disabled', desc: 'locks it — details has no native disabled', type: 'bool' },
+      { name: 'disabled', desc: 'locks activation', type: 'bool' },
+      { name: 'name', desc: 'exclusive group (native details name)', type: 'string' },
+      { name: 'multiple', desc: 'allow several open when not exclusiving via name', type: 'bool' },
     ],
+  }),
+  kbd: lang('kbd', 'kbd', {
+    blurb: 'Mono keycap chip — muted surface, doubled bottom edge.',
+    variants: [],
+    variantAttr: '',
+    props: [],
   }),
   prose: lang('prose', 'prose', {
     heading: 'prose',

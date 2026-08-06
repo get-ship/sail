@@ -1,7 +1,8 @@
 <!--
-  /sail/reference/elements — every stdlib element + native reskin, rendered
-  from src/prop-registry.gen.ts + src/language-surface.gen.ts (emitted by
+  /sail/reference/elements — every stdlib L1 element, rendered from
+  src/prop-registry.gen.ts + src/language-surface.gen.ts (emitted by
   `sail-compiler prop-registry`). Nothing here is hand-listed.
+  Native reskins retired (SPEC-L1-1).
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -26,13 +27,10 @@ function elementRows(docs: { tag: string; description: string }[]): ElementRow[]
 }
 
 const STDLIB_ELEMENTS = elementRows(ELEMENTS.stdlib)
-const RESKIN_ELEMENTS = elementRows(ELEMENTS.reskins)
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   stdlibElements: () => STDLIB_ELEMENTS,
   stdlibCount: () => STDLIB_ELEMENTS.length,
-  reskinElements: () => RESKIN_ELEMENTS,
-  reskinCount: () => RESKIN_ELEMENTS.length,
 }))
 </controller>
 
@@ -43,10 +41,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
-    <h1>Elements — {stdlibCount()} stdlib + {reskinCount()} reskins</h1>
+    <h1>Elements — {stdlibCount()} stdlib</h1>
     <p token="doc-lead">
       Every standard element, with its one-line description and its full
-      prop table on its detail page.
+      prop table on its detail page. Dividers are <code>separator</code>;
+      keycaps are <code>kbd</code>; disclosure is <code>accordion</code>.
     </p>
   </column>
 
@@ -60,30 +59,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
             <a href={e.href}><code>{e.tag}</code> <small>
               style({ paint: fg(muted-foreground) })
 {e.propCount}</small></a>
-            <small>
-              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-{e.description}</small>
-          </column>
-        </card>
-      </for>
-    </grid>
-
-    <h3>Native reskins</h3>
-    <p>
-      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
-
-      Runtime-styled native HTML tags (<code>hr</code>, <code>kbd</code>).
-      The tag remains the API; the framework only reskins paint. Prefer
-      stdlib <code>separator</code> when you need orientation, variant, or
-      tone props.
-    </p>
-    <grid cols="3" gap="2">
-      <for {reskinElements() as e} key={e.tag}>
-        <card padding="sm">
-          style({ box: minW(0) })
-
-          <column gap="1">
-            <a href={e.href}><code>{e.tag}</code></a>
             <small>
               style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {e.description}</small>

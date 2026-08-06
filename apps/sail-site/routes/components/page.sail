@@ -462,14 +462,7 @@ Left</span>
                         style(mutedXs)
 Right</span>
                     </row>
-                  </column>}{else-if {e.tag === 'details'} => <details>
-                    style({ box: w(full) })
-
-                    <summary>Advanced options</summary>
-                    <p>
-                      style(mutedXs)
-Native disclosure — no JS controller required.</p>
-                  </details>}{else-if {e.tag === 'collapsible'} => <collapsible>
+                  </column>}{else-if {e.tag === 'accordion'} => <accordion>
                     style({ box: w(full) })
 
                     <span slot="trigger">
@@ -478,7 +471,10 @@ Webhook endpoints</span>
                     <p>
                       style(mutedXs)
 POST /v1/hooks · signed with your workspace secret.</p>
-                  </collapsible>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
+                  </accordion>}{else-if {e.tag === 'kbd'} => <p>
+                    style(mutedXs)
+                    Press <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                  </p>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
                   <tooltip content="Copy URL" placement="bottom">
                     <span>
                       style({ paint: fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help), text: fontSize(sm) })

@@ -1,5 +1,5 @@
 // Behavioral suite for <sail-tool-call>. AOT registration on import; the
-// disclosure composes <sail-collapsible>, so import that too.
+// disclosure composes <sail-accordion>, so import that too.
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sail-tool-call/sail-tool-call.compiled.js'
 

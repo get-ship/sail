@@ -12,7 +12,7 @@ import { dismissControl } from '../src/actions/dismiss-control'
 
 function makeDetails(attrs: Record<string, string | boolean> = {}): HTMLDetailsElement {
   const el = document.createElement('details')
-  el.className = 'sail-collapsible'
+  el.className = 'sail-accordion'
   for (const [k, v] of Object.entries(attrs)) {
     if (v === false) continue
     if (v === true) el.setAttribute(k, '')

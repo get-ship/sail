@@ -7331,6 +7331,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "native <a>. Bare (no variant) = text link (sail-base color). With"
     },
     {
+      "tag": "accordion",
+      "description": "ONE disclosure element (replaces collapsible + details)."
+    },
+    {
       "tag": "alert",
       "description": "L1 inline status banner. Style value language only."
     },
@@ -7363,20 +7367,12 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "syntax-highlighted source."
     },
     {
-      "tag": "collapsible",
-      "description": "native disclosure. Behavior: use:detailsToggle + use:detailsDisabled."
-    },
-    {
       "tag": "combobox",
       "description": "L1 filtering picker (element mode). A text input"
     },
     {
       "tag": "context-menu",
       "description": "L1 right-click menu. Native [popover] + use:contextMenu"
-    },
-    {
-      "tag": "details",
-      "description": "native disclosure. Style product only."
     },
     {
       "tag": "dialog",
@@ -7417,6 +7413,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     {
       "tag": "input",
       "description": "native field / toggle / range surface. Style product only."
+    },
+    {
+      "tag": "kbd",
+      "description": "mono keycap chip. Style product only."
     },
     {
       "tag": "label",
@@ -7487,10 +7487,6 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 language element. Style value language only:"
     },
     {
-      "tag": "summary",
-      "description": "disclosure trigger inside <details>. Style product only."
-    },
-    {
       "tag": "switch",
       "description": "native checkbox restyled as sliding toggle. No controller."
     },
@@ -7536,7 +7532,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "toggle",
-      "description": "first/last join + variant/orientation/size Style."
+      "description": "pressed-button cell for <toggle-group> only (standalone died)."
     },
     {
       "tag": "toggle-group",
@@ -7547,16 +7543,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "hover/focus text bubble. use:tipDescribe supplies per-instance"
     }
   ],
-  "reskins": [
-    {
-      "tag": "hr",
-      "description": "Native reskin of HTML <hr> — document rule divider. Prefer <separator> for orientation/variant/tone."
-    },
-    {
-      "tag": "kbd",
-      "description": "Native reskin of HTML <kbd> — mono keycap on muted chip, doubled bottom edge."
-    }
-  ]
+  "reskins": []
 }
 
 export interface SemanticPropDoc {

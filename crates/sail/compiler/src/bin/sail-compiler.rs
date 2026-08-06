@@ -609,11 +609,10 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&motion)?);
     sf.push_str("\n\n");
 
-    // ELEMENTS — the L1 manifest (stdlib + native reskins), WITH the
-    // one-line description every entry already carries. The prop tables
-    // themselves live in prop-registry.gen.ts; this is the "what is this
-    // element, in prose" companion.
+    // ELEMENTS — the L1 manifest (stdlib only; reskins array always empty
+    // post SPEC-L1-1). Prop tables live in prop-registry.gen.ts.
     let (stdlib_l1, reskin_l1) = sail_compiler::l1_by_kind();
+    debug_assert!(reskin_l1.is_empty(), "native reskins retired");
     let to_element_row = |e: &sail_compiler::l1_manifest::L1Entry| serde_json::json!({ "tag": e.tag, "description": e.description });
     let elements = serde_json::json!({
         "stdlib": stdlib_l1.iter().map(to_element_row).collect::<Vec<_>>(),
@@ -1189,14 +1188,15 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          ```\n"
     );
 
-    let (stdlib_n, reskin_n) = {
+    let stdlib_n = {
         let (s, r) = sail_compiler::l1_by_kind();
-        (s.len(), r.len())
+        debug_assert!(r.is_empty(), "native reskins retired");
+        s.len()
     };
     let _ = writeln!(md, "## L1 elements (pointer)\n");
     let _ = writeln!(
         md,
-        "{stdlib_n} stdlib + {reskin_n} native reskins. Bare tags are the API\n\
+        "{stdlib_n} stdlib elements (native reskins retired). Bare tags are the API\n\
          (`<button>`, `<card>`, …). Full inventory: MCP `sail_surface` topic `l1`\n\
          (same `l1_manifest` the consistency tests enforce).\n"
     );

@@ -1,36 +1,31 @@
-//! L1 surface manifest — stdlib `.sail` rows + residual native-floor rows.
+//! L1 surface manifest — stdlib `.sail` rows only.
 //! Consistency tests: `crates/sail/compiler/tests/l1_manifest.rs`.
+//!
+//! Native reskins (RESKINS table + sail-base.css tag floors for L1) are
+//! retired. Every L1 element is a compiled stdlib source.
 
 use serde::Serialize;
 use std::sync::LazyLock;
 
-/// One L1 element. `kind` is the source of truth: a `StdlibElement` row
-/// means the .sail compiler registered the element; a `NativeReskin` row
-/// means the runtime styles a native HTML tag. `tag` is the bare author
-/// name (the same string the agent types between `<` and `>`).
+/// One L1 element. `kind` is always `StdlibElement` after the reskin scrub;
+/// the field remains so generated surfaces and older clients keep a stable
+/// shape.
 #[derive(Debug, Clone, Serialize)]
 pub struct L1Entry {
     /// The element's tag name as it appears in markup: `card`, `button`,
     /// `select`. Lowercase, no leading `<`.
     pub tag: String,
-    /// Where this row came from. Determines what "consistency" means for
-    /// the entry: a StdlibElement's `tag` must be in the stdlib registry
-    /// AND its `.sail` must compile; a NativeReskin's `tag` (or attribute
-    /// trigger) must appear as a selector in `sail-base.css`.
+    /// Where this row came from. Post-reskin-scrub, only `StdlibElement`.
     pub kind: L1Kind,
     /// One-line description, surfaced in the agent skill and the
-    /// duplicate report. For stdlib rows this is pulled from the
-    /// `.sail` source's leading docblock; for reskins it is authored here.
+    /// duplicate report. Pulled from the `.sail` source's leading docblock.
     pub description: String,
-    /// Typed props (stdlib) or key attributes (reskin). The shape is
-    /// `{ name, type, default? }` so the agent can read a prop table,
-    /// not a paragraph.
+    /// Typed props. The shape is `{ name, type, default? }` so the agent
+    /// can read a prop table, not a paragraph.
     pub attributes: Vec<L1Attribute>,
 }
 
-/// An L1 element's prop or attribute. For stdlib elements this is the
-/// declared `props:` block; for native reskins it is the attribute(s) the
-/// skin keys on (with the legal values the CSS contract documents).
+/// An L1 element's prop. The declared `props:` block in the stdlib source.
 #[derive(Debug, Clone, Serialize)]
 pub struct L1Attribute {
     pub name: String,
@@ -40,13 +35,11 @@ pub struct L1Attribute {
     #[serde(rename = "type")]
     pub ty: String,
     /// The default value as a string, when the source declares one. Absent
-    /// for `string` defaults of `''` and for reskin attributes (their
-    /// default is the native UA default).
+    /// for `string` defaults of `''`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<String>,
     /// For union types, the closed set of legal values. Empty for
-    /// `string` / `bool` / `number` and for reskin attributes whose values
-    /// are the HTML platform's.
+    /// `string` / `bool` / `number`.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<String>,
 }
@@ -58,6 +51,8 @@ pub enum L1Kind {
     /// runtime tag is the same as the `tag` (spliced) or a native tag
     /// when `native` is true.
     StdlibElement,
+    /// Retired. No rows use it after the reskin scrub; kept so match
+    /// arms in generated tools stay exhaustive without a soft deprecation.
     NativeReskin,
 }
 
@@ -212,78 +207,11 @@ fn strip_tag_emdash(trimmed: &str) -> String {
         .unwrap_or_else(|| trimmed.to_string())
 }
 
-const EMPTY_ATTRS: [(&'static str, &'static [&'static str]); 0] = [];
-
-const RESKINS: &[ReskinRow] = &[
-    ReskinRow {
-        tag: "hr",
-        selectors: &["hr {"],
-        attributes: &EMPTY_ATTRS,
-        description: "Native reskin of HTML <hr> — document rule divider. Prefer <separator> for orientation/variant/tone.",
-    },
-    ReskinRow {
-        tag: "kbd",
-        selectors: &["kbd {"],
-        attributes: &EMPTY_ATTRS,
-        description: "Native reskin of HTML <kbd> — mono keycap on muted chip, doubled bottom edge.",
-    },
-];
-
-/// The row shape we declare statically. The public `L1Entry` uses
-/// `Vec<L1Attribute>` (the public contract); this struct is the
-/// authoring-only shape (slice literals are clearer in source).
-struct ReskinRow {
-    tag: &'static str,
-    /// Selectors the document floor MUST contain for this reskin. At least
-    /// one must match a substring of `sail-base.css` (the consistency test
-    /// enforces this).
-    selectors: &'static [&'static str],
-    /// The attributes the skin keys on. `(name, &VALUES)` where VALUES is
-    /// a const array (e.g. `&VARIANT_BTN`). An empty values array means
-    /// "boolean attribute" / "presence-based".
-    attributes: &'static [(&'static str, &'static [&'static str])],
-    description: &'static str,
-}
-
-fn reskin_entries() -> Vec<L1Entry> {
-    RESKINS
-        .iter()
-        .map(|r| L1Entry {
-            tag: r.tag.to_string(),
-            kind: L1Kind::NativeReskin,
-            description: r.description.to_string(),
-            attributes: r
-                .attributes
-                .iter()
-                .map(|(name, values)| L1Attribute {
-                    name: (*name).to_string(),
-                    ty: if values.is_empty() {
-                        "boolean".to_string()
-                    } else {
-                        values
-                            .iter()
-                            .map(|s| format!("\"{s}\""))
-                            .collect::<Vec<_>>()
-                            .join(" | ")
-                    },
-                    default: None,
-                    values: values.iter().map(|s| s.to_string()).collect(),
-                })
-                .collect(),
-        })
-        .collect()
-}
-
 // ── the public surface ──────────────────────────────────────────────────
 
-/// Every L1 element, sorted by tag, deduplicated (a tag can't be both
-/// stdlib and reskin; a duplicate here is a failure, not a merge — the
-/// consistency test names it).
+/// Every L1 element, sorted by tag.
 pub fn l1_entries() -> Vec<L1Entry> {
-    let mut all: Vec<L1Entry> = STDLIB_ROWS.iter().cloned().collect();
-    all.extend(reskin_entries());
-    all.sort_by(|a, b| a.tag.cmp(&b.tag));
-    all
+    STDLIB_ROWS.iter().cloned().collect()
 }
 
 /// Lookup a tag's kind from the unified surface. `None` if the tag is
@@ -301,33 +229,10 @@ pub fn l1_count() -> usize {
     l1_entries().len()
 }
 
-/// Split the surface by kind.
+/// Split the surface by kind. Reskins are always empty post-scrub; the
+/// second tuple arm stays for call-site compatibility.
 pub fn l1_by_kind() -> (Vec<L1Entry>, Vec<L1Entry>) {
-    let all = l1_entries();
-    let stdlib: Vec<L1Entry> = all
-        .iter()
-        .filter(|e| e.kind == L1Kind::StdlibElement)
-        .cloned()
-        .collect();
-    let reskins: Vec<L1Entry> = all
-        .iter()
-        .filter(|e| e.kind == L1Kind::NativeReskin)
-        .cloned()
-        .collect();
-    (stdlib, reskins)
-}
-
-pub fn reskin_selectors() -> Vec<(&'static str, &'static str)> {
-    RESKINS
-        .iter()
-        .flat_map(|r| r.selectors.iter().map(move |sel| (r.tag, *sel)))
-        .collect()
-}
-
-/// The `tag` of every declared reskin — used by the inverse test to
-/// assert no native tag the runtime styles is missing from the table.
-pub fn reskin_tags() -> Vec<&'static str> {
-    RESKINS.iter().map(|r| r.tag).collect()
+    (l1_entries(), Vec::new())
 }
 
 /// HTML void elements — tags that the parser must treat as self-closing

@@ -32,10 +32,10 @@ export const code = {
   </row>
 </dialog>
 
-<collapsible>
+<accordion>
   <strong slot="trigger">Advanced options</strong>
   <p>Hidden until asked for.</p>
-</collapsible>`,
+</accordion>`,
 
   tabs: `<!-- composite components are small vocabularies: a <tabs> is a
      <tab-list> of <tab>s plus a <tab-panel> per tab, matched by name. -->

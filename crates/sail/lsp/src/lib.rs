@@ -1693,7 +1693,7 @@ mod tests {
     }
 
     #[test]
-    fn l1_completion_items_offers_stdlib_and_reskin() {
+    fn l1_completion_items_offers_stdlib_surface() {
         let empty = l1_completion_items("");
         assert!(
             empty.iter().any(|i| i.label == "card"),
@@ -1703,19 +1703,26 @@ mod tests {
             empty.iter().any(|i| i.label == "button"),
             "<button> must be offered"
         );
-        // Native reskins remaining in the L1 manifest (select/button skins
-        // migrated to stdlib elements; document-floor reskins are thin).
-        assert!(
-            empty.iter().any(|i| i.label == "hr"),
-            "<hr> reskin must be offered"
-        );
+        // Post SPEC-L1-1: kbd is a proper stdlib element; hr reskin is gone
+        // (use <separator>).
         assert!(
             empty.iter().any(|i| i.label == "kbd"),
-            "<kbd> reskin must be offered"
+            "<kbd> stdlib must be offered"
         );
-        // The `kind` is `CLASS`; the `detail` names the L1 source.
-        let hr = empty.iter().find(|i| i.label == "hr").unwrap();
-        assert!(hr.detail.as_deref().unwrap().contains("reskin"));
+        assert!(
+            empty.iter().any(|i| i.label == "separator"),
+            "<separator> must be offered"
+        );
+        assert!(
+            empty.iter().any(|i| i.label == "accordion"),
+            "<accordion> must be offered"
+        );
+        assert!(
+            empty.iter().all(|i| i.label != "hr"),
+            "bare <hr> reskin must not be offered"
+        );
+        let kbd = empty.iter().find(|i| i.label == "kbd").unwrap();
+        assert!(kbd.detail.as_deref().unwrap().contains("stdlib"));
         let card = empty.iter().find(|i| i.label == "card").unwrap();
         assert!(card.detail.as_deref().unwrap().contains("stdlib"));
     }

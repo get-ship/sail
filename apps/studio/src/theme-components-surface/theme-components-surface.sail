@@ -313,10 +313,8 @@ override</badge>
 {components.load()}%</p>
                     </column>
                   </if>
-                  <if {components.stage.toggle()}>
-                    <toggle value="on" size="sm">Toggle</toggle>
-                  </if>
-                  <if {components.stage.toggleGroup()}>
+                  <if {components.stage.toggle() || components.stage.toggleGroup()}>
+                    <!-- standalone toggle died; pressed-button lives only in toggle-group -->
                     <toggle-group variant={components.variant() || 'outline'}>
                       <toggle value="left">Left</toggle>
                       <toggle value="center">Center</toggle>
@@ -480,35 +478,21 @@ above</p>
 below</p>
                     </column>
                   </if>
-                  <if {components.stage.details()}>
-                    <details>
-                      style({  box: w(full).maxW(panel-max-w-sm)  })
-
-                      <summary>Advanced options</summary>
-                      <p>
-                        style(fieldHint)
-Native disclosure body.</p>
-                    </details>
-                  </if>
-                  <if {components.stage.summary()}>
-                    <details open>
-                      style({  box: w(full).maxW(panel-max-w-sm)  })
-
-                      <summary>Summary specimen</summary>
-                      <p>
-                        style(fieldHint)
-Summary is the disclosure trigger.</p>
-                    </details>
-                  </if>
-                  <if {components.stage.collapsible()}>
-                    <collapsible>
+                  <if {components.stage.accordion()}>
+                    <accordion>
                       style({  box: w(full).maxW(panel-max-w-sm)  })
 
                       <strong slot="trigger">Show details</strong>
                       <p>
                         style(fieldHint)
-Collapsible body content.</p>
-                    </collapsible>
+Accordion body content.</p>
+                    </accordion>
+                  </if>
+                  <if {components.stage.kbd()}>
+                    <p>
+                      style(fieldHint)
+                      Press <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                    </p>
                   </if>
                   <if {components.stage.prose()}>
                     <prose>

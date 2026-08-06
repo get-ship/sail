@@ -72,7 +72,7 @@ Display</badge>
       <p>
         style({ paint: fg(muted-foreground), text: fontSize(sm) })
 badge, chip, status-dot, card,
-      avatar, icon, separator, hr, details, collapsible, prose</p>
+      avatar, icon, separator, kbd, accordion, prose</p>
     </row>
     <row gap="3" align="start" nowrap>
       <badge variant="outline">
@@ -169,17 +169,17 @@ row, column, grid, center,
   <p>
     Components contain whatever you put inside them; named slots place
     children where the component expects them —
-    <code>slot="trigger"</code> on a collapsible,
+    <code>slot="trigger"</code> on an accordion,
     <code>slot="brand"</code> and <code>slot="actions"</code> on a navbar,
     <code>slot="fallback"</code> on an error boundary.
   </p>
   <code-block code={code.compose}></code-block>
-  <collapsible>
+  <accordion>
     <strong slot="trigger">Advanced options (click me)</strong>
     <p>
       style({ box: padT(2) })
 Hidden until asked for — and this one is running.</p>
-  </collapsible>
+  </accordion>
   <p>
     Bigger components are small vocabularies of tags rather than
     configuration objects. A tab strip is written as the structure it is:

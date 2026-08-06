@@ -562,21 +562,19 @@ below — and vertical:</p>
                 </row>
               </column>
             </if>
-            <if {stage.detailsEl()}>
-              <details>
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
-                <summary>Advanced options</summary>
-                <p>Native disclosure. Zero JavaScript — open/close is the platform.</p>
-              </details>
-            </if>
-            <if {stage.collapsible()}>
-              <collapsible>
+            <if {stage.accordion()}>
+              <accordion>
                 style({ box: w(full).maxW(panel-max-w-sm) })
 
                 <strong slot="trigger">Show the details</strong>
                 <p>Animated open and close — and it remembers its state.</p>
-              </collapsible>
+              </accordion>
+            </if>
+            <if {stage.kbd()}>
+              <p>
+                style({ paint: fg(muted-foreground), text: fontSize(sm) })
+                Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
+              </p>
             </if>
             <if {stage.prose()}>
               <column gap="2">

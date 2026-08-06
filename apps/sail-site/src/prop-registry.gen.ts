@@ -29,6 +29,32 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
+  "accordion": [
+    {
+      "name": "open",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "multiple",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "onToggle",
+      "type": "(detail: { open: boolean }) => void"
+    }
+  ],
   "alert": [
     {
       "name": "tone",
@@ -211,22 +237,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "sail"
     }
   ],
-  "collapsible": [
-    {
-      "name": "open",
-      "type": "bool",
-      "default": "false"
-    },
-    {
-      "name": "disabled",
-      "type": "bool",
-      "default": "false"
-    },
-    {
-      "name": "onToggle",
-      "type": "(detail: { open: boolean }) => void"
-    }
-  ],
   "combobox": [
     {
       "name": "placeholder",
@@ -252,17 +262,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "onSelect",
       "type": "(detail: { value: string }) => void"
-    }
-  ],
-  "details": [
-    {
-      "name": "open",
-      "type": "bool",
-      "default": "false"
-    },
-    {
-      "name": "onToggle",
-      "type": "(detail: { open: boolean }) => void"
     }
   ],
   "dialog": [
