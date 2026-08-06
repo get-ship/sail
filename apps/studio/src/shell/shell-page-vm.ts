@@ -274,6 +274,8 @@ export function createShellPage(opts?: ShellPageOpts) {
     for (const d of Object.keys(ACTIVITY_BY_DIGIT)) {
       digitMap[`mod+${d}`] = () => go(hrefForActivity(ACTIVITY_BY_DIGIT[d]!))
     }
+    // Root target for catalog hotkeys (shell has no host element ref yet).
+    // sail-allow sail-no-ambient-dom
     const hk = hotkeys(document.documentElement, {
       'mod+s': () => {
         if (getEditState().activePath) void saveActiveSource().then(() => sync())
@@ -310,7 +312,9 @@ export function createShellPage(opts?: ShellPageOpts) {
       unsubChecks()
       hk?.destroy?.()
       if (typeof window !== 'undefined') {
+        // sail-allow sail-no-ambient-events
         window.removeEventListener('message', onMsg)
+        // sail-allow sail-no-ambient-events
         window.removeEventListener('sail-theme-change', onThemeChange)
       }
     }

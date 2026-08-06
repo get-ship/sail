@@ -460,5 +460,8 @@ fn is_keyword(w: &str) -> bool {
             | "super"
             | "void"
             | "delete"
+            // TS assertion / Sail `<for {items as row}>` binding keyword.
+            | "as"
+            | "satisfies"
     )
 }

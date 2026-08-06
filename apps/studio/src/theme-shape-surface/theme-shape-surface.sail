@@ -77,7 +77,7 @@ export default controller(() => {
     const fill = shape.liveCardFill()
     return `border-radius:${r};box-shadow:${sh};border-width:${bw};background:${fill}`
   }
-  const packRadius = (r) => `border-radius:${r}`
+  const packRadius = (r: string) => `border-radius:${r}`
   mountAmbient(() =>
     effect(() => {
       liveCardRadius.set(shape.liveCardRadius())
