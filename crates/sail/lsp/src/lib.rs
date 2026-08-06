@@ -1470,16 +1470,17 @@ mod tests {
 
     #[test]
     fn code_action_offers_participation_fix() {
-        let src = r#"<div style={style.grow(1)}>x</div>"#;
+        // Product form: bare participation attr → box channel (not retired style={style.grow}).
+        let src = r#"<div grow>x</div>"#;
         let mut docs = Docs::new();
         let uri = Url::parse("file:///t.sail").unwrap();
         docs.insert(uri.clone(), src.into());
         let params = CodeActionParams {
             text_document: lsp_types::TextDocumentIdentifier { uri: uri.clone() },
-            range: Range::new(Position::new(0, 0), Position::new(0, 30)),
+            range: Range::new(Position::new(0, 0), Position::new(0, 16)),
             context: lsp_types::CodeActionContext {
                 diagnostics: vec![Diagnostic {
-                    range: Range::new(Position::new(0, 10), Position::new(0, 20)),
+                    range: Range::new(Position::new(0, 5), Position::new(0, 9)),
                     severity: Some(DiagnosticSeverity::ERROR),
                     code: Some(NumberOrString::String("sail-participation-style".into())),
                     message: "grow".into(),
@@ -1499,9 +1500,15 @@ mod tests {
         let CodeActionOrCommand::CodeAction(a) = &actions[0] else {
             panic!("expected CodeAction");
         };
-        assert!(a.title.contains("participation") || a.title.contains("grow"));
+        assert!(
+            a.title.contains("participation")
+                || a.title.contains("grow")
+                || a.title.contains("box"),
+            "title: {}",
+            a.title
+        );
         assert!(a.edit.is_some());
-        // Apply the edit and ensure grow attr lands / style.grow is gone.
+        // Apply the edit and ensure bare attr is gone / box channel lands.
         let edit = a.edit.as_ref().unwrap();
         let changes = edit.document_changes.as_ref().unwrap();
         let lsp_types::DocumentChanges::Edits(edits) = changes else {
@@ -1556,7 +1563,7 @@ mod tests {
         next.push_str(&te.new_text);
         next.push_str(&src[end_off..]);
         assert!(
-            next.contains("grow") && !next.contains("style.grow"),
+            next.contains("box:") && next.contains("grow(1)") && !next.contains("<div grow"),
             "fixed source: {next}"
         );
     }
@@ -1581,8 +1588,9 @@ mod tests {
 
     #[test]
     fn sx_attr_prefix_detects_inside_quoted_sx() {
-        // Cursor inside `<div style="p">` — at the `p` (col 10).
-        let src = r#"<div style="p">x</div>"#;
+        // Detector keys on `sx="…"` (mint / foreign-idiom surface), not `style=`.
+        // Cursor inside `<div sx="p">` — at the `p` (col 10).
+        let src = r#"<div sx="p">x</div>"#;
         let prefix = sx_attr_prefix(src, 0, 10).expect("inside sx attr");
         assert_eq!(prefix, "p", "prefix should be the partial atom");
     }
@@ -1648,7 +1656,7 @@ mod tests {
     fn sx_attr_prefix_picks_last_atom_after_whitespace() {
         // Cursor mid-typing the second atom: typed `bg` already, cursor
         // at col 15 (after the `g`, before the closing quote).
-        let src = r#"<div style="p-4 bg">x</div>"#;
+        let src = r#"<div sx="p-4 bg">x</div>"#;
         let prefix = sx_attr_prefix(src, 0, 15).expect("inside sx attr");
         assert_eq!(prefix, "bg", "prefix should be the typed prefix `bg`");
     }

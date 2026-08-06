@@ -572,10 +572,30 @@ impl TsgoSession {
             let ctrl_name = format!("{}.ctrl.ts", doc_stem(sail_uri));
             view_text =
                 view_text.replace("from \"./__ctrl__.ts\"", &format!("from \"./{ctrl_name}\""));
-            let _ = std::fs::write(&ctrl_path, &virt.controller_text);
-            let _ = std::fs::write(&view_path, &view_text);
             // Keep a mutated copy for position mapping (import path length may differ).
             let mut virt = virt;
+            // Controller lives in a temp work_dir — rewrite relative imports to
+            // absolute paths against the real `.sail` directory so sibling
+            // modules (`../src/shell/shell-rail`) resolve under tsgo.
+            if let Some(sail_path) = uri_to_path(sail_uri) {
+                if let Some(dir) = sail_path.parent() {
+                    let original = virt.controller_text.clone();
+                    let rewritten = rewrite_relative_imports(&original, dir);
+                    if rewritten != original {
+                        let delta = rewritten.len() as isize - original.len() as isize;
+                        for seg in &mut virt.segments {
+                            if seg.file == VirtualFile::Controller {
+                                seg.virtual_end = (seg.virtual_end as isize + delta) as usize;
+                                // Specifier lengths changed — drop 1:1 map.
+                                seg.one_to_one = false;
+                            }
+                        }
+                        virt.controller_text = rewritten;
+                    }
+                }
+            }
+            let _ = std::fs::write(&ctrl_path, &virt.controller_text);
+            let _ = std::fs::write(&view_path, &view_text);
             // Adjust view segment offsets if the import path rewrite shifted text.
             if view_text.len() != virt.view_text.len() {
                 let delta = view_text.len() as isize - virt.view_text.len() as isize;
@@ -733,22 +753,35 @@ fn file_uri(sail_uri: &str, file: VirtualFile, work_dir: &Path) -> String {
     }
 }
 
+/// Framework import specs → monorepo-relative entry paths.
+/// Specs are **import forms** (not always package.json `name`): e.g.
+/// `@ship/deck/router` is the authored alias for `packages/deck/router`
+/// (`@ship/deck-router` on npm).
+const FRAMEWORK_TS_PATHS: &[(&str, &str)] = &[
+    ("@ship/sail-runtime", "packages/sail/runtime/src/index.ts"),
+    ("@ship/sail-runtime/internal", "packages/sail/runtime/src/internal.ts"),
+    ("@ship/deck/router", "packages/deck/router/src/index.ts"),
+    ("@ship/sail-studio-shell", "packages/sail/studio-shell/src/index.ts"),
+    ("@ship/sail-studio-client", "packages/sail/studio-client/src/index.ts"),
+    ("@ship/sail-studio-bridge", "packages/sail/studio-bridge/src/index.ts"),
+    ("@ship/sail-dom", "packages/sail/dom/src/index.ts"),
+];
+
 fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
-    let runtime = find_package_src(workspace_hint, "packages/sail/runtime/src/index.ts");
-    let internal = find_package_src(workspace_hint, "packages/sail/runtime/src/internal.ts");
     let mut paths = String::new();
-    if let Some(r) = runtime {
-        paths.push_str(&format!(
-            "      \"@ship/sail-runtime\": [\"{}\"],\n",
-            escape_json_path(&r)
-        ));
+    for (spec, rel) in FRAMEWORK_TS_PATHS {
+        if let Some(p) = find_package_src(workspace_hint, rel) {
+            paths.push_str(&format!(
+                "      \"{}\": [\"{}\"],\n",
+                spec,
+                escape_json_path(&p)
+            ));
+        }
     }
-    if let Some(i) = internal {
-        paths.push_str(&format!(
-            "      \"@ship/sail-runtime/internal\": [\"{}\"],\n",
-            escape_json_path(&i)
-        ));
-        if let Some(parent) = i.parent() {
+    // Subpath wildcard for runtime internals (`@ship/sail-runtime/foo`).
+    if let Some(internal) = find_package_src(workspace_hint, "packages/sail/runtime/src/internal.ts")
+    {
+        if let Some(parent) = internal.parent() {
             paths.push_str(&format!(
                 "      \"@ship/sail-runtime/*\": [\"{}\"],\n",
                 escape_json_path(parent)
@@ -787,6 +820,103 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
         work_dir.join("sail-types.d.ts"),
         sail_compiler::ambients::emit_types_dts(),
     );
+}
+
+/// Map `file://` / absolute path URIs to a filesystem path (for import rewrite).
+fn uri_to_path(uri: &str) -> Option<PathBuf> {
+    let uri = uri.trim();
+    if uri.is_empty() {
+        return None;
+    }
+    if let Some(rest) = uri.strip_prefix("file://") {
+        // file:///abs  |  file://localhost/abs  |  file://host/abs (rare)
+        let path_str = if let Some(r) = rest.strip_prefix("localhost") {
+            r
+        } else {
+            rest
+        };
+        // percent-decode minimal %20 etc. — paths we mint are unescaped.
+        let pb = PathBuf::from(path_str);
+        return Some(pb);
+    }
+    let pb = PathBuf::from(uri);
+    if pb.is_absolute() {
+        Some(pb)
+    } else {
+        None
+    }
+}
+
+/// Rewrite `from "./x"` / `from '../x'` specs to absolute paths resolved
+/// against `from_dir` (the real `.sail` parent). Virtual controllers live in a
+/// temp work_dir, so bare relative imports cannot resolve siblings otherwise.
+fn rewrite_relative_imports(text: &str, from_dir: &Path) -> String {
+    let bytes = text.as_bytes();
+    let mut replacements: Vec<(usize, usize, String)> = Vec::new();
+    let mut i = 0;
+    while i + 4 < bytes.len() {
+        if &bytes[i..i + 4] == b"from"
+            && (i == 0 || !is_ident_byte(bytes[i - 1]))
+            && (i + 4 >= bytes.len() || !is_ident_byte(bytes[i + 4]))
+        {
+            let mut j = i + 4;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                let q = bytes[j];
+                let start = j + 1;
+                if let Some(rel_end) = text[start..].find(q as char) {
+                    let end = start + rel_end;
+                    let spec = &text[start..end];
+                    if spec.starts_with("./") || spec.starts_with("../") {
+                        if let Some(abs) = resolve_ts_module(from_dir, spec) {
+                            let abs_s = abs.display().to_string().replace('\\', "/");
+                            replacements.push((start, end, abs_s));
+                        }
+                    }
+                    i = end + 1;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    if replacements.is_empty() {
+        return text.to_string();
+    }
+    let mut result = text.to_string();
+    for (start, end, abs) in replacements.into_iter().rev() {
+        result.replace_range(start..end, &abs);
+    }
+    result
+}
+
+fn is_ident_byte(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'_' || b == b'$'
+}
+
+/// Resolve a relative TS module specifier against `from_dir`.
+fn resolve_ts_module(from_dir: &Path, spec: &str) -> Option<PathBuf> {
+    let joined = from_dir.join(spec);
+    let mut candidates = vec![
+        joined.clone(),
+        PathBuf::from(format!("{}.ts", joined.display())),
+        PathBuf::from(format!("{}.tsx", joined.display())),
+        PathBuf::from(format!("{}.d.ts", joined.display())),
+        joined.join("index.ts"),
+        joined.join("index.tsx"),
+    ];
+    // Extension already present — don't double-append on the bare form only.
+    if spec.ends_with(".ts") || spec.ends_with(".tsx") || spec.ends_with(".d.ts") {
+        candidates.truncate(1);
+    }
+    for c in candidates {
+        if c.is_file() {
+            return c.canonicalize().ok().or(Some(c));
+        }
+    }
+    None
 }
 
 fn escape_json_path(p: &Path) -> String {
@@ -1080,5 +1210,77 @@ export default controller((ctx) => ({ count: signal(0) }))
                 diags.len()
             );
         }
+    }
+
+    #[test]
+    fn rewrite_relative_imports_resolves_sibling_ts() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        let from_dir = root.join("apps/studio/routes");
+        let src = "import { appRouteBase } from '../src/shell/shell-rail'\n";
+        let out = rewrite_relative_imports(src, &from_dir);
+        assert!(
+            out.contains("shell-rail.ts") || out.contains("shell-rail"),
+            "expected absolute shell-rail path, got: {out}"
+        );
+        assert!(
+            !out.contains("from '../src/shell/shell-rail'"),
+            "relative spec must be rewritten: {out}"
+        );
+        assert!(
+            out.contains("apps/studio/src/shell/shell-rail"),
+            "path must land under studio shell: {out}"
+        );
+    }
+
+    #[test]
+    fn rewrite_relative_imports_leaves_package_specs() {
+        let dir = PathBuf::from("/tmp");
+        let src = "import { navigate } from '@ship/deck/router'\n";
+        let out = rewrite_relative_imports(src, &dir);
+        assert_eq!(out, src);
+    }
+
+    #[test]
+    fn framework_ts_paths_cover_studio_route_imports() {
+        let specs: Vec<&str> = FRAMEWORK_TS_PATHS.iter().map(|(s, _)| *s).collect();
+        assert!(specs.contains(&"@ship/deck/router"));
+        assert!(specs.contains(&"@ship/sail-studio-shell"));
+        assert!(specs.contains(&"@ship/sail-runtime"));
+    }
+
+    #[test]
+    fn live_session_resolves_deck_router_and_relative() {
+        reset_discovery_state_for_tests();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .unwrap();
+        if discover_tsgo(Some(&root)).is_none() {
+            eprintln!("SKIP live_module_resolve: no tsgo");
+            return;
+        }
+        let mut session = TsgoSession::start(Some(&root));
+        if !session.is_live() {
+            eprintln!("SKIP live_module_resolve: failed to start");
+            return;
+        }
+        // Real studio redirect route — was 3/16 sail-check residual.
+        let page = root.join("apps/studio/routes/page.sail");
+        let src = std::fs::read_to_string(&page).expect("read page.sail");
+        let uri = path_to_uri(&page);
+        session.on_sail_change(&uri, &src);
+        let diags = session.diagnostics_mapped(&uri, &src);
+        let module_miss: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("Cannot find module"))
+            .map(|d| d.message.clone())
+            .collect();
+        assert!(
+            module_miss.is_empty(),
+            "studio page.sail must resolve @ship/deck/router + shell-rail; got: {module_miss:?}"
+        );
     }
 }
