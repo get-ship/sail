@@ -4092,13 +4092,11 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
         );
         // Diagnostic must teach channel block form, not revive flat style.pad chains.
         assert!(
-            msg.contains("style({") || msg.contains("channel"),
+            msg.contains("style({"),
             "must point at block channel spine: {msg}"
         );
-        assert!(
-            !msg.contains("style.pad(4).bg(primary)") || msg.contains("retired"),
-            "must not present flat chain as the fix: {msg}"
-        );
+        assert!(!msg.contains("style.pad"), "must not teach style.pad: {msg}");
+        assert!(!msg.contains("style.bg"), "must not teach style.bg: {msg}");
     }
 
     #[test]
@@ -4110,13 +4108,15 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             "must name retired sx=: {msg}"
         );
         assert!(
-            msg.contains("style({") || msg.contains("block"),
+            msg.contains("style({"),
             "must teach block channel form: {msg}"
         );
         // Must not teach dead flat product form as the migration target.
+        assert!(!msg.contains("style.pad"), "must not teach style.pad: {msg}");
+        assert!(!msg.contains("style.bg"), "must not teach style.bg: {msg}");
         assert!(
-            !msg.contains("style.pad(4).bg(primary)"),
-            "must not teach flat style.method chain: {msg}"
+            !msg.contains("<el> style.…"),
+            "must not teach flat style.… chain: {msg}"
         );
     }
 
@@ -4130,9 +4130,11 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             "must refuse attr Style product: {m}"
         );
         assert!(
-            m.contains("style({") || m.contains("block"),
+            m.contains("style({"),
             "must teach block channel form: {m}"
         );
+        assert!(!m.contains("style.pad"), "must not teach style.pad: {m}");
+        assert!(!m.contains("style.bg"), "must not teach style.bg: {m}");
         assert!(
             !m.contains("<el> style.…"),
             "must not teach flat style.… chain: {m}"

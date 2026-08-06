@@ -1097,28 +1097,21 @@ mod tests {
         )
         .expect("channel spine is product form");
         assert!(
-            classes.split_whitespace().any(|c| c.contains("pad") || c.contains("sx-")),
+            classes.split_whitespace().any(|c| c.contains("pad")),
             "pad mint missing: {classes}"
         );
         assert!(
-            classes.split_whitespace().any(|c| c.contains("gap") || c.contains("sx-")),
+            classes.split_whitespace().any(|c| c.contains("gap")),
             "gap mint missing: {classes}"
         );
         assert!(classes.contains("sx-"), "{classes}");
-        for needle in ["padding", "gap", "background", "border-radius"] {
-            assert!(
-                css.contains(needle)
-                    || css.contains("var(--primary)")
-                    || css.contains("var(--radius"),
-                "expected {needle}-ish in css:\n{css}"
-            );
-        }
-        // Stronger property presence (not only class names).
+        // Property presence — no vacuous OR escapes across unrelated props.
         assert!(
-            css.contains("padding") || css.contains("--spacing"),
-            "pad must emit padding-ish CSS:\n{css}"
+            css.contains("padding"),
+            "pad must emit padding CSS:\n{css}"
         );
-        assert!(css.contains("gap") || css.contains("--spacing"), "gap CSS:\n{css}");
+        // gap must be the property itself — pad also emits --spacing.
+        assert!(css.contains("gap"), "gap CSS:\n{css}");
         assert!(
             css.contains("background") || css.contains("--primary"),
             "bg CSS:\n{css}"
@@ -1138,9 +1131,12 @@ mod tests {
             "flat product must refuse: {joined}"
         );
         assert!(
-            joined.contains("style({") || joined.contains("channel"),
-            "must teach channel spine: {joined}"
+            joined.contains("style({"),
+            "must teach channel spine form: {joined}"
         );
+        // Must not teach flat style.method as the fix destination.
+        assert!(!joined.contains("style.pad"), "must not teach style.pad: {joined}");
+        assert!(!joined.contains("style.bg"), "must not teach style.bg: {joined}");
     }
 
     #[test]
@@ -1160,11 +1156,40 @@ mod tests {
         );
         let joined = msgs.join("; ");
         assert!(
-            joined.contains("state can't gate layout")
-                || joined.contains("cannot appear inside interaction when")
-                || joined.contains("geometry"),
+            joined.contains("state can't gate layout"),
             "geometry under hover must hard-fail product path: {joined}"
         );
+    }
+
+    /// Product-path geometry × interaction sample (mirrors channel unit matrix).
+    #[test]
+    fn product_path_geometry_matrix_sample() {
+        // group-hover + pad refuses.
+        let msgs = product_err_msgs(
+            "style({ box: pad(2) }).when(group-hover, { box: pad(4) })",
+        );
+        let joined = msgs.join("; ");
+        assert!(
+            joined.contains("state can't gate layout"),
+            "group-hover + pad must refuse: {joined}"
+        );
+
+        // focusWithin + pad refuses.
+        let msgs = product_err_msgs(
+            "style({ box: pad(2) }).when(focusWithin, { box: pad(4) })",
+        );
+        let joined = msgs.join("; ");
+        assert!(
+            joined.contains("state can't gate layout"),
+            "focusWithin + pad must refuse: {joined}"
+        );
+
+        // tablet + pad allows (media may gate layout).
+        let (classes, _css) = product_lower(
+            "style({ box: pad(2) }).when(tablet, { box: pad(4) })",
+        )
+        .expect("tablet may gate pad geometry on product path");
+        assert!(classes.contains("sx-"), "{classes}");
     }
 
     #[test]
