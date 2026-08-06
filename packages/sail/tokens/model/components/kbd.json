@@ -1,0 +1,34 @@
+{
+  "$description": "Kbd component tokens (keycap chip). Defaults alias globals; themes may override component.kbd.* only.",
+  "component": {
+    "kbd": {
+      "bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "kbd"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "kbd-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "kbd-border"
+          }
+        }
+      }
+    }
+  }
+}

@@ -28,11 +28,13 @@
   const sizeMd = style({ box: minH(control-h-md).padX(3), text: fontSize(base) })
   const sizeLg = style({ box: minH(control-h-lg).padX(4), text: fontSize(md) })
 
-  const vDefault = style({ paint: bg(background).border(border).fg(foreground).shadow(xs) }).when(hover, { paint: bg(muted).border(border-strong) })
+  // Default rest rides component.button tokens (global fallbacks in the pack).
+  // Branded solid/soft/outline tones still spend the global palette.
+  const vDefault = style({ paint: bg(button).border(button-border).fg(button-foreground).shadow(xs) }).when(hover, { paint: bg(button-hover-bg).border(border-strong) })
   const vSolid = style({ paint: bg(foreground).border(foreground).fg(background).shadow(xs) }).when(hover, { paint: opacity(90).shadow(sm) })
-  const vSoft = style({ paint: bg(hover-bg).border(border).fg(foreground) }).when(hover, { paint: opacity(90) })
-  const vOutline = style({ paint: border(foreground).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
-  const vGhost = style({ paint: bg(transparent).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
+  const vSoft = style({ paint: bg(hover-bg).border(button-border).fg(button-foreground) }).when(hover, { paint: opacity(90) })
+  const vOutline = style({ paint: border(button-foreground).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
+  const vGhost = style({ paint: bg(transparent).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
 </scope>
 
 <button>

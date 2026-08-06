@@ -1,0 +1,25 @@
+{
+  "$description": "Skeleton component tokens (shimmer band). Defaults alias globals / preserve existing color-mix; themes may override component.skeleton.* only.",
+  "component": {
+    "skeleton": {
+      "bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "skeleton"
+          }
+        }
+      },
+      "highlight": {
+        "$value": "color-mix(in oklch, var(--skeleton) 60%, var(--background))",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "skeleton-highlight"
+          }
+        }
+      }
+    }
+  }
+}

@@ -810,8 +810,16 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   it('CONTROL component packs register path → cssName', () => {
     const reg = loadRegistry()
     const expected: Array<[path: string, cssName: string]> = [
+      ['component.field.bg', 'field'],
+      ['component.field.fg', 'field-foreground'],
+      ['component.field.border', 'field-border'],
+      ['component.field.border-hover', 'field-border-hover'],
       ['component.field.hint', 'field-hint'],
       ['component.field.error', 'field-error'],
+      ['component.button.bg', 'button'],
+      ['component.button.fg', 'button-foreground'],
+      ['component.button.border', 'button-border'],
+      ['component.button.hover-bg', 'button-hover-bg'],
       ['component.label.fg', 'label-foreground'],
       ['component.label.required', 'label-required'],
       ['component.switch.track', 'switch'],
@@ -841,9 +849,39 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--switch\s*:\s*var\(--muted\)/)
     expect(css).toMatch(/--label-foreground\s*:\s*var\(--foreground\)/)
     expect(css).toMatch(/--field-hint\s*:\s*var\(--muted-foreground\)/)
+    expect(css).toMatch(/--field\s*:\s*var\(--background\)/)
+    expect(css).toMatch(/--button\s*:\s*var\(--background\)/)
     expect(css).toMatch(/--toggle\s*:\s*var\(--background\)/)
     expect(css).toMatch(/--tab-list\s*:\s*var\(--background\)/)
     expect(css).toMatch(/--scroll-area-thumb\s*:\s*var\(--border\)/)
+  })
+
+  it('L1-token-totality surface packs register path → cssName', () => {
+    const reg = loadRegistry()
+    const expected: Array<[path: string, cssName: string]> = [
+      ['component.dialog.bg', 'dialog'],
+      ['component.dialog.fg', 'dialog-foreground'],
+      ['component.dialog.border', 'dialog-border'],
+      ['component.accordion.bg', 'accordion'],
+      ['component.accordion.fg', 'accordion-foreground'],
+      ['component.accordion.border', 'accordion-border'],
+      ['component.accordion.hover-bg', 'accordion-hover-bg'],
+      ['component.accordion.chevron', 'accordion-chevron'],
+      ['component.skeleton.bg', 'skeleton'],
+      ['component.skeleton.highlight', 'skeleton-highlight'],
+      ['component.kbd.bg', 'kbd'],
+      ['component.kbd.fg', 'kbd-foreground'],
+      ['component.kbd.border', 'kbd-border'],
+    ]
+    for (const [path, cssName] of expected) {
+      expect(reg.paths?.[path], path).toBe(cssName)
+      expect(reg.tokens[cssName]?.path).toBe(path)
+    }
+    const css = loadSrc('../src/tokens.css')
+    expect(css).toMatch(/--dialog\s*:\s*var\(--surface-1\)/)
+    expect(css).toMatch(/--accordion\s*:\s*var\(--surface-1\)/)
+    expect(css).toMatch(/--skeleton\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--kbd\s*:\s*var\(--muted\)/)
   })
 
   it('color surface includes brand + tone tokens and excludes space/text', () => {

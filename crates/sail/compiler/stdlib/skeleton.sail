@@ -1,7 +1,8 @@
 <!--
   <skeleton> — loading placeholder sheen. Style product for geometry;
   SKELETON_MAP owns the shimmer gradient / background-size / animation
-  (Style cannot express that composite). shape + size ordinary props.
+  (Style cannot express that composite) via component.skeleton tokens.
+  shape + size ordinary props.
 -->
 
 <scope>

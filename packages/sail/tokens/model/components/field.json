@@ -1,7 +1,43 @@
 {
-  "$description": "Field component tokens. Defaults alias global design values; themes may override component.field.* only.",
+  "$description": "Field component tokens. Hint/error text + shared control surface (input/select/textarea). Defaults alias globals; themes may override component.field.* only. Global color.input stays the semantic form-border channel (shadcn-compatible); field-* are the L1 control surface.",
   "component": {
     "field": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "field"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "field-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "field-border"
+          }
+        }
+      },
+      "border-hover": {
+        "$value": "{color.border.strong}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "field-border-hover"
+          }
+        }
+      },
       "hint": {
         "$value": "{color.muted.foreground}",
         "$type": "color",
