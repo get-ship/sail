@@ -106,6 +106,19 @@ export async function loadThemesOn(
       state.themesDir,
       false,
     )
+    state = ctx.getState()
+    // Dirty catalog refresh: update lists only — no sailThemeRead / openTheme
+    // so the working doc is preserved (and tests can assert zero reads).
+    if (state.dirty && state.themeDoc && !opts?.themeId) {
+      ctx.setState({
+        ...ctx.getState(),
+        catalogThemes,
+        projectThemes,
+        loading: false,
+      })
+      ctx.emit()
+      return
+    }
     // Hydrate project mode tables from DTCG so gallery swatches paint with the
     // correct data-mode without relying on package themes-meta contamination.
     const projectWithModes = await Promise.all(
@@ -153,11 +166,6 @@ export async function loadThemesOn(
       catalogThemes.find((t) => t.id === 'ship')?.id ||
       catalogThemes[0]?.id ||
       'studio'
-    if (state.dirty && state.themeDoc && !opts?.themeId) {
-      ctx.setState({ ...ctx.getState(), loading: false })
-      ctx.emit()
-      return
-    }
     if (!opts?.themeId && state.themeDoc && state.themeId === prefer) {
       ctx.setState({ ...ctx.getState(), loading: false })
       ctx.emit()

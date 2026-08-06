@@ -44,7 +44,8 @@ describe('STUDIO-2 repairs + bar gates', () => {
     // Spec wants zero pageerrors on load. Full browser harness is optional;
     // this unit-locks the exact symptom: mis-calling route mount as lifecycle
     // reads payload.params of undefined → "reading 'params'".
-    const { mount: routeMount } = await import('@ship/sail-runtime')
+    // Host route mount lives on /internal (tier B root only exports mountAmbient).
+    const { mount: routeMount } = await import('@ship/sail-runtime/internal')
     await expect(
       // @ts-expect-error intentional wrong ambient-style call
       routeMount(() => {}),
