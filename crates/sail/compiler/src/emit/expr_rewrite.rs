@@ -843,6 +843,24 @@ mod tests {
             "(_, i) => i !== $scope.idx"
         );
     }
+
+    #[test]
+    fn as_keyword_never_scope_qualified() {
+        // Sail for-primary / match-arm keyword and TS assertion keyword —
+        // must never rewrite to `$scope.as` (R6 regression lock). The
+        // binder name may still be scope-qualified when not listed as a
+        // local (emit uses extra_locals for for-body); the keyword itself
+        // stays bare either way.
+        let out = rw("markers() as m");
+        assert!(
+            out.contains(" as ") && !out.contains("$scope.as") && !out.contains(".as "),
+            "`as` must stay bare, got: {out}"
+        );
+        assert_eq!(
+            rewrite_for_scope("markers() as m", &["m"]),
+            "$scope.markers() as m"
+        );
+    }
 }
 
 #[cfg(test)]

@@ -94,12 +94,31 @@ fn build_for_header(primary: &str, key: Option<&str>) -> String {
 }
 
 /// Split `iterable as binding` on top-level ` as `.
+///
+/// Accepts a bare primary (`markers() as m`) or a still-braced group
+/// (`{markers() as m}`) — `brace_primary` normally strips braces, but
+/// defense-in-depth here keeps a residual brace group from collapsing
+/// into the default `item` binder (which leaves `as`/`m` free idents).
 fn split_as_binding(src: &str) -> Option<(&str, &str)> {
+    let src = {
+        let s = src.trim();
+        if s.starts_with('{') && s.ends_with('}') && s.len() >= 2 {
+            s[1..s.len() - 1].trim()
+        } else {
+            s
+        }
+    };
     let bytes = src.as_bytes();
     let mut depth = 0i32;
     let mut str_quote: Option<u8> = None;
     let mut i = 0usize;
     while i + 4 <= bytes.len() {
+        // Stay on UTF-8 char boundaries — multi-byte glyphs must not be
+        // sliced mid-codepoint when probing for ` as `.
+        if !src.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
         let c = bytes[i];
         if let Some(q) = str_quote {
             if c == b'\\' {
@@ -127,7 +146,10 @@ fn split_as_binding(src: &str) -> Option<(&str, &str)> {
             i += 1;
             continue;
         }
-        if depth == 0 && &src[i..i + 4] == " as " {
+        if depth == 0
+            && src.is_char_boundary(i + 4)
+            && &src[i..i + 4] == " as "
+        {
             let left = src[..i].trim();
             let right = src[i + 4..].trim();
             if !left.is_empty() && !right.is_empty() {
@@ -286,6 +308,32 @@ mod tests {
             }
             other => panic!("expected OpenFor, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn expands_annotation_layer_for_as_m() {
+        // Exact pack shape that failed under pre-blocks-1 binaries:
+        // `Identifier 'as' is not declared` when the primary was left as
+        // the iterable expression instead of `m of markers()`.
+        let el = parse_el(r#"<for {markers() as m} key={m.id}><span/></for>"#);
+        let mut out = Vec::new();
+        expand_control_element(&el, &mut out);
+        match &out[0].kind {
+            TokenKind::OpenFor { src } => {
+                assert_eq!(
+                    src, "m of markers() key={m.id}",
+                    "for-as must convert to legacy header, got {src}"
+                );
+            }
+            other => panic!("expected OpenFor, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn split_as_binding_strips_residual_braces() {
+        let (it, b) = super::split_as_binding("{markers() as m}").expect("split");
+        assert_eq!(it, "markers()");
+        assert_eq!(b, "m");
     }
 
     #[test]

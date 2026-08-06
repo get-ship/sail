@@ -70,3 +70,34 @@ fn unbound_value_still_flagged() {
         "diag should name the missing ident: {msg}"
     );
 }
+
+#[test]
+fn as_is_keyword_not_free_identifier() {
+    // Defense for for-primary text that still embeds ` as binder` (or a TS
+    // assertion): `as` must never be reported as an unbound scope name.
+    // Regression: pre-R6 treated `as` as a free ident →
+    // `Identifier 'as' is not declared in scope` on `markers() as m`.
+    let mut v = empty_visitor();
+    v.scope.names.insert("markers".into());
+    let expr = Expr::new("markers() as m", Span::new(0, 14), false);
+    check_expr(&expr, &mut v, &[]);
+    assert!(
+        v.errors.iter().all(|e| !e.message.contains("Identifier 'as'")),
+        "keyword `as` must not be flagged unbound: {:?}",
+        v.errors
+    );
+}
+
+#[test]
+fn for_binder_extra_local_shadows() {
+    // Body of `<for {markers() as m}>` checks body exprs with `m` local.
+    let mut v = empty_visitor();
+    v.scope.names.insert("markers".into());
+    let expr = Expr::new("m.id", Span::new(0, 4), false);
+    check_expr(&expr, &mut v, &["m"]);
+    assert!(
+        v.errors.is_empty(),
+        "for binder local must resolve: {:?}",
+        v.errors
+    );
+}
