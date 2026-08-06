@@ -18,7 +18,7 @@
   w="full"
 
 >
-  style.borderWidth(1).border(border-subtle).radius(md).pad(3)
+  style({ box: pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
 
   <slot name="icon"></slot>
   <strong slot="title">{title()}</strong>

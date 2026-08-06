@@ -290,11 +290,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
   <column gap="2">
-    style.position(relative).minH(8).fontFamily(body).fg(foreground)
+    style({ box: position(relative).minH(8), paint: fg(foreground), text: fontFamily(body) })
 
     <if {compiling()}>
       <row align="center" justify="center">
-        style.pad(4)
+        style({ box: pad(4) })
 
         <sail-spinner size="sm" label="Compiling"></sail-spinner>
       </row>
@@ -304,16 +304,16 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
         <div role="region" aria-label="text code block">
-          style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)
+          style({ box: overflow(hidden), paint: bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md) })
 
           <header>
-            style.pad(2).padX(3).fontSize(xs).fg(muted-foreground).bg(muted).fontWeight(medium).tracking(wide)
+            style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted), text: fontSize(xs).fontWeight(medium).tracking(wide) })
 TEXT</header>
           <separator>
-            style.m(0)
+            style({ box: m(0) })
 </separator>
           <pre>
-            style.padY(3).padX(4).overflowX(auto).leading(normal-plus)
+            style({ box: padY(3).padX(4).overflowX(auto), text: leading(normal-plus) })
 {compileErrorBody()}</pre>
         </div>
       </column>
@@ -323,23 +323,23 @@ TEXT</header>
       <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
         <div role="region" aria-label="text code block">
-          style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)
+          style({ box: overflow(hidden), paint: bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md) })
 
           <header>
-            style.pad(2).padX(3).fontSize(xs).fg(muted-foreground).bg(muted).fontWeight(medium).tracking(wide)
+            style({ box: pad(2).padX(3), paint: fg(muted-foreground).bg(muted), text: fontSize(xs).fontWeight(medium).tracking(wide) })
 TEXT</header>
           <separator>
-            style.m(0)
+            style({ box: m(0) })
 </separator>
           <pre>
-            style.padY(3).padX(4).overflowX(auto).leading(normal-plus)
+            style({ box: padY(3).padX(4).overflowX(auto), text: leading(normal-plus) })
 {runtimeError()}</pre>
         </div>
       </column>
     </if>
 
     <div use:captureStage use:maxWidth={stageMaxWidth()}>
-      style.w(full).ml(auto).mr(auto).maxW(bind(maxW))
+      style({ box: w(full).ml(auto).mr(auto).maxW(bind(maxW)) })
 </div>
   </column>
 </error-boundary>

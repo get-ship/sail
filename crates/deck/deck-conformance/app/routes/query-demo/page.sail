@@ -33,13 +33,13 @@ export default controller(() => {
 </controller>
 
 <column gap="3">
-  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
 
   <h1>
-    style.fontSize(2xl).fontWeight(bold).fg(foreground)
+    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 query() demo</h1>
   <p>
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 A real query()/mutation() round-trip against crm-demo.ts.</p>
 
   <row gap="2">
@@ -49,17 +49,17 @@ A real query()/mutation() round-trip against crm-demo.ts.</p>
 
   <if {deals().kind === 'loading'}>
   <p data-testid="deals-loading">
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Loading…</p>
   </if>
   <if {deals().kind === 'error'}>
   <p data-testid="deals-error">
-    style.fg(destructive).fontSize(sm)
+    style({ paint: fg(destructive), text: fontSize(sm) })
 Error</p>
   </if>
   <if {deals().kind === 'ok'}>
   <column gap="1" data-testid="deals-list">
-    style.list(none).pad(0).m(0)
+    style({ box: pad(0).m(0), paint: list(none) })
 
     <for {deals().value.items} as="deal" key={deal.id}>
     <li>{deal.id} — {deal.stage} — {deal.amount}</li>

@@ -20,17 +20,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 The language</p>
   <h1>Styling</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Paint is the <strong>Style</strong> value language on <code>sx</code>:
-    <code>style.bg(token)</code> chains, <code>match</code>, <code>when</code>,
+    <code>style({ paint: bg(token) })</code> chains, <code>match</code>, <code>when</code>,
     <code>compound</code>, and scope Style consts. Values are design tokens —
     never raw hex. The compiler and the
     <a href="/sail/reference/sx">sx reference</a> share one table.
@@ -45,10 +45,10 @@ The language</p>
 
   <h2>The chain</h2>
   <card>
-    style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm)
+    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })
 
     <p>
-      style.fg(muted-foreground).fontSize(sm)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 This card is styled by the code below it.</p>
   </card>
   <code-block code={code.sx}></code-block>
@@ -59,7 +59,7 @@ This card is styled by the code below it.</p>
   <code-block code={code.sxError}></code-block>
   <p>
     Prefer a scope const when the same paint repeats:
-    <code>const card = style.pad(5).bg(surface-1)…</code> then
+    <code>const card = style({ box: pad(5), paint: bg(surface-1) })…</code> then
     <code>sx=&#123;card&#125;</code> or <code>sx=&#123;[base, emphasis]&#125;</code>.
   </p>
 
@@ -68,16 +68,16 @@ This card is styled by the code below it.</p>
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
   <row gap="3">
-    style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)
+    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
 
     <button>
-      when({ hover: style.bg(muted) })
+      when({ hover: style({ paint: bg(muted) }) })
 hover → bg(muted)</button>
     <button>
-      when({ hover: style.fg(primary) })
+      when({ hover: style({ paint: fg(primary) }) })
 hover → fg(primary)</button>
     <button>
-      when({ active: style.bg(primary).fg(primary-foreground) })
+      when({ active: style({ paint: bg(primary).fg(primary-foreground) }) })
 active:…</button>
   </row>
   <code-block code={code.states}></code-block>
@@ -99,10 +99,10 @@ active:…</button>
     pad more from 768px up:
   </p>
   <column gap="2">
-    style.pad(3).bg(surface-1).borderWidth(1).border(border).radius(lg).when({ tablet: style.pad(6) })
+    style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }).when(tablet, { box: pad(6) })
 
     <p>
-      style.fontSize(sm)
+      style({ text: fontSize(sm) })
 pad(3) on a phone; when tablet → pad(6).</p>
   </column>
   <code-block code={code.conditions}></code-block>
@@ -131,13 +131,13 @@ pad(3) on a phone; when tablet → pad(6).</p>
     and reflects the signal onto the host. Drag:
   </p>
   <column gap="3">
-    style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)
+    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
 
     <input type="range" min="0" max="200" step="1" bind:value={shift}>
-      style.minW(0)
+      style({ box: minW(0) })
     </input>
     <card>
-      style.w(9).h(9).bg(primary).radius(md).translateX(bind(px))
+      style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(px)) })
 </card>
   </column>
   <code-block code={code.dynamic}></code-block>
@@ -155,19 +155,19 @@ pad(3) on a phone; when tablet → pad(6).</p>
     <code>&lt;style&gt;</code> blocks and <code>style=</code> attributes are
     compile errors in application code. Utility-string
     <code>sx="p-4 bg-muted"</code> is not the product either — use
-    <code>style.pad(4).bg(muted)</code>. When the vocabulary can't express
+    <code>style({ box: pad(4), paint: bg(muted) })</code>. When the vocabulary can't express
     something you need, file a gap: the system grows a setter or token, not a
     hole.
   </p>
 
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the full surface: <a href="/sail/reference/sx">reference → sx</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/templates">← Templates</a>
     <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>

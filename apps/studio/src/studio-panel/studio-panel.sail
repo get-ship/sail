@@ -17,7 +17,7 @@
   min-w="0"
 
 >
-  style.minH(0).minW(0).h(full).borderWidth(1).border(border-subtle).radius(md).bg(surface-1).overflow(hidden)
+  style({ box: minH(0).minW(0).h(full).overflow(hidden), paint: borderWidth(1).border(border-subtle).radius(md).bg(surface-1) })
 
   <slot name="header">
     <row
@@ -29,10 +29,10 @@
       justify="between"
 
     >
-      style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)
+      style({ box: h(8).minH(8).padX(3), paint: borderBWidth(1).borderB(border-subtle) })
 
       <p>
-        style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+        style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
         {title()}
       </p>
@@ -42,7 +42,7 @@
     </row>
   </slot>
   <column studio-panel-body grow gap="0" min-w="0">
-    style.minH(0).basis(0).overflow(hidden)
+    style({ box: minH(0).basis(0).overflow(hidden) })
 
     <slot></slot>
   </column>

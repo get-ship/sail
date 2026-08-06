@@ -8,10 +8,10 @@
     invalid = false
   }
 
-  const host = style.fontFamily(body).group()
-  const hint = style.mt(1).fontSize(xs).leading(snug).fg(field-hint)
-  const error = style.mt(1).fontSize(xs).leading(snug).fg(field-error).fontWeight(medium)
-  const icon = style.size(icon-size-sm)
+  const host = style({ paint: group(), text: fontFamily(body) })
+  const hint = style({ box: mt(1), paint: fg(field-hint), text: fontSize(xs).leading(snug) })
+  const error = style({ box: mt(1), paint: fg(field-error), text: fontSize(xs).leading(snug).fontWeight(medium) })
+  const icon = style({ box: size(icon-size-sm) })
 </scope>
 
 <column gap="1" use:describedControl>
@@ -23,8 +23,8 @@
     style([
     hint,
     when({
-      empty: style.display(none),
-      group-invalid: style.display(none),
+      empty: style({ box: display(none) }),
+      group-invalid: style({ box: display(none) }),
     }),
   ])
 
@@ -32,9 +32,9 @@
   </div>
   <div>
     style([
-    style.display(none),
+    style({ box: display(none) }),
     when({
-      group-invalid: style.display(contents),
+      group-invalid: style({ box: display(contents) }),
     }),
   ])
 

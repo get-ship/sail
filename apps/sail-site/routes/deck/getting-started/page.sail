@@ -11,14 +11,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, cont
 </controller>
 
 <article>
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Introduction</p>
   <h1>Getting started</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 You need the <code>sail</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
 
   <h2>1. A page is a file</h2>
@@ -36,7 +36,7 @@ You need the <code>sail</code> CLI and a folder. No project scaffold, no install
   </alert>
 
   <row>
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a href="/deck">← Overview</a>
     <a href="/deck/routing">File routing →</a>

@@ -105,7 +105,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
 <column gap="4" w="full">
   <row gap="3" align="center">
     <h2>
-      style.fontFamily(mono).tracking(tight)
+      style({ text: fontFamily(mono).tracking(tight) })
 {name()}</h2>
     <if {pack() !== ''}>
       <badge tone="primary" variant="soft">{pack()}</badge>
@@ -116,18 +116,18 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
   </row>
   <if {blurb() !== ''}>
     <p>
-      style.fg(muted-foreground)
+      style({ paint: fg(muted-foreground) })
 {blurb()}</p>
   </if>
 
   <column gap="4">
-    style.pad(5).radius(lg).borderWidth(1).border(border).bg(surface-0)
+    style({ box: pad(5), paint: radius(lg).borderWidth(1).border(border).bg(surface-0) })
 
     <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
         <if {hasVariants()}>
           <span>
-            style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {variantAttr()}:</span>
           <for {chips()} as="c" key={c.v}>
             <button size="sm" tone="primary" variant={c.variant} data-variant={c.v}>{c.v}</button>
@@ -137,13 +137,13 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
       <row gap="2" align="center">
         <status-dot tone="success"></status-dot>
         <span>
-          style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 live</span>
       </row>
     </row>
 
     <center data-stage grow>
-      style.pad(6).minH(9)
+      style({ box: pad(6).minH(9) })
 
       <slot name="stage"></slot>
     </center>
@@ -152,7 +152,7 @@ live</span>
   <if {hasUsage()}>
     <column gap="2">
       <p>
-        style.fontSize(xs).fg(muted-foreground).textCase(uppercase).tracking(wide)
+        style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 Usage — a complete program</p>
       <code-block code={usage()}></code-block>
     </column>
@@ -160,23 +160,23 @@ Usage — a complete program</p>
 
   <if {hasProps()}>
     <card>
-      style.pad(4)
+      style({ box: pad(4) })
 
       <column gap="3">
         <p>
-          style.fontSize(xs).fg(muted-foreground).textCase(uppercase).tracking(wide)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 Props</p>
         <for {propRows()} as="r" key={r.name}>
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
               <span grow>
-                style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {r.type}</span>
             </row>
             <if {r.desc !== ''}>
               <p>
-                style.fontSize(sm).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(sm) })
 {r.desc}</p>
             </if>
           </column>

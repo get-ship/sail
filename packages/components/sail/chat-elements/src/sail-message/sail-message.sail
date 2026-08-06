@@ -36,20 +36,11 @@
     status: 'sent' | 'sending' | 'error' = 'sent'
   }
 
-  const host = style.group().maxW(full).fontFamily(body).fg(foreground)
-  const meta = style.padX(half).fontSize(xs).fg(muted-foreground)
-  const roleLabel = style.fontWeight(medium)
-  const bubble = style.padY(2).padX(3).radius(lg).fontSize(base).leading(normal).bg(card).borderWidth(1).border(border).fg(foreground).when({
-    groupStateUser: style.bg(hover-bg).borderWidth(1).border(primary),
-    groupStateSystem: style.bg(muted).fg(muted-foreground),
-    groupStateTool: style.bg(hover-bg).borderWidth(1).border(accent),
-    groupStateError: style.borderWidth(1).border(destructive),
-    groupStateSending: style.opacity(75),
-    groupStateCode: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
-    groupStateToolCall: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
-    groupStateTerminalSnapshot: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap).bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle),
-  })
-  const trailing = style.display(contents)
+  const host = style({ box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) })
+  const meta = style({ box: padX(half), paint: fg(muted-foreground), text: fontSize(xs) })
+  const roleLabel = style({ text: fontWeight(medium) })
+  const bubble = style({ box: padY(2).padX(3), paint: radius(lg).bg(card).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal) }).when(groupStateUser, { paint: bg(hover-bg).borderWidth(1).border(primary) }).when(groupStateSystem, { paint: bg(muted).fg(muted-foreground) }).when(groupStateTool, { paint: bg(hover-bg).borderWidth(1).border(accent) }).when(groupStateError, { paint: borderWidth(1).border(destructive) }).when(groupStateSending, { paint: opacity(75) }).when(groupStateCode, { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }).when(groupStateToolCall, { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }).when(groupStateTerminalSnapshot, { paint: bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle), text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) })
+  const trailing = style({ box: display(contents) })
 </scope>
 
 <column

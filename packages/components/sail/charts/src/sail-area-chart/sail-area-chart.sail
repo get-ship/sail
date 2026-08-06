@@ -114,7 +114,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       aria-describedby="chart-data"
 
       use:observeViewport>
-      style.display(block).w(full).overflow(hidden)
+      style({ box: display(block).w(full).overflow(hidden) })
 
       <for {gridLines()} as="g" key={g.id}>
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
@@ -130,7 +130,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       </for>
     </svg>
     <column id="chart-data">
-      style.srOnly()
+      style({ paint: srOnly() })
 
       <slot name="description">
         <table>
@@ -146,6 +146,6 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
     </column>
   </else></if>
   <row gap="3" align="stretch">
-    style.mt(1_5).fontFamily(body).fontSize(xs).fg(muted-foreground)
+    style({ box: mt(1_5), paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs) })
 <slot></slot></row>
 </column>

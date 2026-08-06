@@ -5,6 +5,11 @@ use sail_compiler::parse::preprocess::preprocess;
 use sail_lint::style::{StyleDiagnostic, clash, lower_style, parse};
 use std::collections::HashMap;
 
+
+fn is_style_product(src: &str) -> bool {
+    src.contains("style.") || src.contains("style(")
+}
+
 #[test]
 fn chain_emits_token_vars_on_product_path() {
     let out = preprocess(r#"<div> style.bg(primary).padX(2) x</div>"#).expect("preprocess");
@@ -152,7 +157,7 @@ fn badge_proving_ground_no_cva_no_tone_star() {
         "badge must not use tone-* product paint"
     );
     assert!(
-        src.contains("style.") && src.contains("match(") && src.contains("when("),
+        is_style_product(src) && src.contains("match(") && src.contains("when("),
         "badge must use Style value language"
     );
 }
@@ -179,7 +184,7 @@ fn card_proving_ground_no_cva() {
         "card must not use CVA string maps or scope compound arrays"
     );
     assert!(
-        src.contains("style.") && src.contains("match(") && src.contains("when("),
+        is_style_product(src) && src.contains("match(") && src.contains("when("),
         "card must use Style value language"
     );
     // Component token cssNames stay live (orch component packs).
@@ -259,7 +264,7 @@ fn scope_style_const_in_match_arms() {
 fn badge_uses_scope_style_consts() {
     let src = include_str!("../stdlib/badge.sail");
     assert!(
-        src.contains("const base = style.") && src.contains("const soft = style."),
+        src.contains("const base = style") && src.contains("const soft = style"),
         "badge proving ground should declare scope Style consts"
     );
     assert!(
@@ -283,7 +288,7 @@ fn batch_a_chrome_compile_on_style_path() {
                 && !src.contains("compound: [")
                 && !src.contains("tone-fg")
                 && !src.contains("tone-bg")
-                && src.contains("style.")
+                && is_style_product(src)
                 && (src.contains("match(") || src.contains("when(") || src.contains("compound(")),
             "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
         );
@@ -311,7 +316,7 @@ fn batch_b_controls_compile_on_style_path() {
         assert!(
             !src.contains("md: '")
                 && !src.contains("compound: [")
-                && src.contains("style.")
+                && is_style_product(src)
                 && (src.contains("match(") || src.contains("when(")),
             "{tag} must use Style product (no CVA string maps):\n{src}"
         );
@@ -343,12 +348,12 @@ fn batch_c_surfaces_compile_on_style_path() {
                 && !src.contains("tone-fg")
                 && !src.contains("tone-border")
                 && !src.contains("tone-contrast")
-                && src.contains("style.")
+                && is_style_product(src)
                 && (src.contains("match(")
                     || src.contains("when(")
                     || src.contains("compound(")
                     || src.contains("style(")
-                    || src.contains("style.")),
+                    || is_style_product(src)),
             "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
@@ -389,7 +394,7 @@ fn batch_d_chrome_menus_compile_on_style_path() {
             !src.contains("md: '")
                 && !src.contains("compound: [")
                 && !src.contains("sx=\"")
-                && src.contains("style."),
+                && is_style_product(src),
             "{tag} must use Style product (no CVA string maps / string sx):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
@@ -425,7 +430,7 @@ fn batch_e_residuals_compile_on_style_path() {
                 && !src.contains("sx=\"")
                 && !src.contains("tone-bg")
                 && !src.contains("tone-fg")
-                && src.contains("style."),
+                && is_style_product(src),
             "{tag} must use Style product (no CVA string maps / string sx / tone-*):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));

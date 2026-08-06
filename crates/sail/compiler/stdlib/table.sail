@@ -12,7 +12,7 @@
     bordered = false
   }
 
-  const base = style.w(full).fontFamily(body).fontSize(sm).leading(normal).fg(foreground).textAlign(start)
+  const base = style({ box: w(full), paint: fg(foreground), text: fontFamily(body).fontSize(sm).leading(normal).textAlign(start) })
 </scope>
 
 <table>

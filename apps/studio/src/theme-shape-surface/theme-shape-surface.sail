@@ -4,36 +4,36 @@
   Live geometry via freeform px/shadow bind (not CSS-var product state).
 -->
 <scope>
-  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
-  const fieldHint = style.fontSize(xs).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const monoMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const doorTitle = style.fontWeight(semibold)
-  const eyebrow = style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)
-  const controlsCol = style.padX(4).padT(4).padB(8).minW(0)
-  const bandStatus = style.padX(4).padY(2)
-  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
-  const fullBtn = style.w(full)
-  const chipCol = style.minW(0)
-  const sliderRow = style.minW(0)
-  const sectionPanel = style.pad(3).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1)
-  const tokenStrip = style.fontSize(xs).fontFamily(mono).fg(muted-foreground).padX(2).padY(1).radius(sm).bg(surface-0)
+  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
+  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const doorTitle = style({ text: fontWeight(semibold) })
+  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
+  const controlsCol = style({ box: padX(4).padT(4).padB(8).minW(0) })
+  const bandStatus = style({ box: padX(4).padY(2) })
+  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
+  const fullBtn = style({ box: w(full) })
+  const chipCol = style({ box: minW(0) })
+  const sliderRow = style({ box: minW(0) })
+  const sectionPanel = style({ box: pad(3), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
+  const tokenStrip = style({ box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) })
   // Outline chip shells — continuous radius via use:liveBox (token radius cannot drag continuously).
-  const ladderChip = style.w(9).h(7).minW(9).minH(7).borderWidth(1).border(border).bg(transparent)
-  const ladderChipXl = style.w(10).h(8).minW(10).minH(8).borderWidth(1).border(border).bg(transparent)
-  const cornerChip = style.w(8).h(6).minW(8).minH(6).borderWidth(1).border(border).bg(transparent)
+  const ladderChip = style({ box: w(9).h(7).minW(9).minH(7), paint: borderWidth(1).border(border).bg(transparent) })
+  const ladderChipXl = style({ box: w(10).h(8).minW(10).minH(8), paint: borderWidth(1).border(border).bg(transparent) })
+  const cornerChip = style({ box: w(8).h(6).minW(8).minH(6), paint: borderWidth(1).border(border).bg(transparent) })
   // Elev chip marks — stepped vocabulary (none dashed → xl deep lift).
-  const elevMarkNone = style.w(5).h(4).minW(5).minH(4).radius(sm).borderWidth(1).border(dashed).border(border-subtle).bg(background)
-  const elevMarkXs = style.w(5).h(4).minW(5).minH(4).radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xs)
-  const elevMarkSm = style.w(5).h(4).minW(5).minH(4).radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(sm)
-  const elevMarkMd = style.w(5).h(4).minW(5).minH(4).radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(md)
-  const elevMarkLg = style.w(5).h(4).minW(5).minH(4).radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(lg)
-  const elevMarkXl = style.w(5).h(4).minW(5).minH(4).radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xl)
-  const statCell = style.pad(2_5).radius(sm).borderWidth(1).border(border-subtle).minW(0)
-  const stageSolid = style.minH(0).h(full).bg(background)
+  const elevMarkNone = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(dashed).border(border-subtle).bg(background) })
+  const elevMarkXs = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xs) })
+  const elevMarkSm = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(sm) })
+  const elevMarkMd = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(md) })
+  const elevMarkLg = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(lg) })
+  const elevMarkXl = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xl) })
+  const statCell = style({ box: pad(2_5).minW(0), paint: radius(sm).borderWidth(1).border(border-subtle) })
+  const stageSolid = style({ box: minH(0).h(full), paint: bg(background) })
   // Primary specimen card: radius.lg + elev + border + freeform fill (frost α live).
-  const liveCard = style.border(border).pad(5)
-  const glassMini = style.maxW(panel-max-w-sm).w(full).pad(4).border(border)
+  const liveCard = style({ box: pad(5), paint: border(border) })
+  const glassMini = style({ box: maxW(panel-max-w-sm).w(full).pad(4), paint: border(border) })
 </scope>
 
 <controller>
@@ -130,7 +130,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
@@ -139,7 +139,7 @@ export default controller(() => {
       style(bandError)
 
       <p grow min-w="0">
-        style.fontSize(sm).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" shape-retry on:click={session.onRetry}>
         Retry
@@ -167,14 +167,14 @@ Loading…</p>
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
     <scroll-area
       shape-controls
       shrink="0"
 
     >
-      style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(background)
+      style({ box: minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background) })
 
       <column gap="4">
         style(controlsCol)
@@ -184,7 +184,7 @@ Loading…</p>
             style(eyebrow)
 Globals · character</p>
           <p>
-            style.fontSize(2xl).fontWeight(semibold).tracking(tight).fontFamily(heading)
+            style({ text: fontSize(2xl).fontWeight(semibold).tracking(tight).fontFamily(heading) })
 Shape</p>
           <p>
             style(fieldHint)
@@ -667,10 +667,10 @@ surface</p>
       min-w="0"
 
     >
-      style.minW(0).basis(0).minH(0).h(full).bg(background).overflow(hidden)
+      style({ box: minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background) })
 
       <column grow gap="0">
-        style.minH(0).h(full).pad(4)
+        style({ box: minH(0).h(full).pad(4) })
 
         <!--
           One themed host only. Frame chrome = theme name + mode.
@@ -683,10 +683,10 @@ surface</p>
           padding="none"
 
         >
-          style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+          style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
           <column gap="0" grow>
-            style.minH(0).h(full)
+            style({ box: minH(0).h(full) })
 
             <row
               specimen-chrome
@@ -696,23 +696,23 @@ surface</p>
               shrink="0"
 
             >
-              style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
               <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style.minW(12)
+                style({ box: minW(12) })
 
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
 </stack>
               </row>
               <p grow min-w="0">
-                style.fontSize(xs).fg(muted-foreground).truncate()
+                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 
                 {session.nameEdit()} · Shape
               </p>
@@ -730,16 +730,16 @@ surface</p>
                 align="center"
 
               >
-                style.pad(6).minW(0).w(full)
+                style({ box: pad(6).minW(0).w(full) })
 
                 <column gap="1">
-                  style.maxW(panel-max-w-sm).w(full)
+                  style({ box: maxW(panel-max-w-sm).w(full) })
 
                   <p>
-                    style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                    style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 Studio surface</p>
                   <p>
-                    style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+                    style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })
 
                     Radius + elevation + border as character. Dial left — this card follows.
                   </p>
@@ -750,16 +750,16 @@ Studio surface</p>
                   style(liveCard)
 
                   <column gap="4">
-                    style.maxW(panel-max-w-sm).w(full)
+                    style({ box: maxW(panel-max-w-sm).w(full) })
 
                     <row gap="3" align="center" nowrap>
                       <avatar size="sm" initials="S" tone="primary"></avatar>
                       <column gap="0" grow min-w="0">
                         <p>
-                          style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                          style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 {session.nameEdit()}</p>
                         <p>
-                          style.fontSize(xs).fg(muted-foreground)
+                          style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Radius + elevation + border as character</p>
                       </column>
                       <badge tone="primary" size="sm" variant="soft" pill>shape</badge>
@@ -783,7 +783,7 @@ Project name</p>
                           style(pathMeta)
 radius.md</p>
                         <p>
-                          style.fontSize(sm).fontFamily(mono).fontWeight(semibold)
+                          style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })
 {shape.statRadius()}</p>
                       </column>
                       <column gap="0" grow min-w="0">
@@ -793,7 +793,7 @@ radius.md</p>
                           style(pathMeta)
 shadow</p>
                         <p>
-                          style.fontSize(sm).fontFamily(mono).fontWeight(semibold)
+                          style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })
 {shape.statShadow()}</p>
                       </column>
                       <column gap="0" grow min-w="0">
@@ -803,7 +803,7 @@ shadow</p>
                           style(pathMeta)
 border</p>
                         <p>
-                          style.fontSize(sm).fontFamily(mono).fontWeight(semibold)
+                          style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })
 {shape.statBorder()}</p>
                       </column>
                     </row>
@@ -824,10 +824,10 @@ border</p>
                       style(pathMeta)
 Glass material</p>
                     <p>
-                      style.fontSize(sm).fontWeight(semibold).fontFamily(heading)
+                      style({ text: fontSize(sm).fontWeight(semibold).fontFamily(heading) })
 Frosted pane</p>
                     <p>
-                      style.fontSize(xs).fg(muted-foreground).leading(relaxed)
+                      style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })
 
                       Translucent fill freeform live. Backdrop blur writes to theme; shows after Save.
                     </p>
@@ -883,7 +883,7 @@ xl</p>
                 </column>
 
                 <row align="center" justify="between" gap="2" nowrap>
-                  style.maxW(panel-max-w-md).w(full)
+                  style({ box: maxW(panel-max-w-md).w(full) })
 
                   <p>
                     style(fieldHint)

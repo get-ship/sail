@@ -11,5 +11,5 @@
 -->
 
 <span data-marker="demo-chip-marker">
-  style.radius(md).bg(surface-2).fg(foreground).fontSize(xs).fontFamily(mono).pad(1)
+  style({ box: pad(1), paint: radius(md).bg(surface-2).fg(foreground), text: fontSize(xs).fontFamily(mono) })
 <slot></slot></span>

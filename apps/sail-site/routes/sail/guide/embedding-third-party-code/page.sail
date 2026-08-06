@@ -17,14 +17,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Guide</p>
   <h1>Embedding third-party code</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Sooner or later a component needs something the language does not hand
     it: a library loaded on demand, or a call to a server. Both are
@@ -89,7 +89,7 @@ Guide</p>
     list, so the browser refuses the connection too.
   </p>
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     A URL built at runtime rather than written as a literal is allowed only
     when the allowlist is non-empty; the compiler cannot check a value it
@@ -147,7 +147,7 @@ Guide</p>
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/guide/making-a-theme">← Making a theme</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>

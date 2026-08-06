@@ -111,10 +111,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
     <h1>The language surface</h1>
@@ -135,7 +135,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <for {sections()} as="s" key={s.href}>
       <a href={s.href}>
         <card padding="md">
-          style.minW(0).h(full)
+          style({ box: minW(0).h(full) })
 
           <column gap="2">
             <row justify="between" align="center">
@@ -143,12 +143,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
               <row gap="2" align="center">
                 <badge size="sm">tier {s.tier}</badge>
                 <small>
-                  style.fg(muted-foreground)
+                  style({ paint: fg(muted-foreground) })
 {s.count}</small>
               </row>
             </row>
             <small>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 {s.description}</small>
           </column>
         </card>

@@ -1,14 +1,14 @@
 <column gap="8">
-  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
 
   <header>
-    style.borderBWidth(1).borderB(border).padB(4)
+    style({ box: padB(4), paint: borderBWidth(1).borderB(border) })
 
     <h1>
-      style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)
+      style({ box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 ship/authority — Domain Stubs</h1>
     <p>
-      style.fg(muted-foreground).fontSize(sm)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Pack <strong>ship/authority</strong>. Each card below renders the real custom
       element tag with static mock attribute values so the shell registers and
@@ -19,20 +19,20 @@ ship/authority — Domain Stubs</h1>
 
   <!-- ship-approval-card -->
   <column gap="4">
-    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+    style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
     <h2>
-      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 
       <code>
-        style.fontFamily(mono)
+        style({ text: fontFamily(mono) })
 ship-approval-card</code>
       <span>
-        style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)
+        style({ box: padX(2).padY(1).ms(3), paint: fg(warning-foreground).bg(warning).radius(full), text: fontSize(xs).fontWeight(medium) })
 domain-stub — awaits backend spec</span>
     </h2>
     <p>
-      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+      style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
       Props: <code>request: string</code> (JSON-encoded AuthorityRequest). No slots.
       In production the host owns <code>ship.authority.pending()</code> via
@@ -42,26 +42,26 @@ domain-stub — awaits backend spec</span>
     </p>
     <column gap="4">
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 kind=capability · risk=high</span>
         <ship-approval-card request={'{"id":"req-001","agent":"claude-opus","space":"work","kind":"capability","scope":"read_file","path":"/etc/hosts","why":"Need to read the hosts file to resolve local DNS entries","risk":"high"}'}></ship-approval-card>
       </column>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 kind=command · risk=medium</span>
         <ship-approval-card request={'{"id":"req-002","agent":"codex-agent","space":"personal","kind":"command","command":"npm install --global some-cli","why":"Installing a global CLI tool needed for the build pipeline","risk":"medium"}'}></ship-approval-card>
       </column>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 kind=capability · risk=low</span>
         <ship-approval-card request={'{"id":"req-003","agent":"cursor-bot","space":"work","kind":"capability","scope":"read_file","path":"./src/config.ts","why":"Checking project config for context","risk":"low"}'}></ship-approval-card>
       </column>
@@ -70,20 +70,20 @@ kind=capability · risk=low</span>
 
   <!-- ship-capability-request -->
   <column gap="4">
-    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+    style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
     <h2>
-      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 
       <code>
-        style.fontFamily(mono)
+        style({ text: fontFamily(mono) })
 ship-capability-request</code>
       <span>
-        style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)
+        style({ box: padX(2).padY(1).ms(3), paint: fg(warning-foreground).bg(warning).radius(full), text: fontSize(xs).fontWeight(medium) })
 domain-stub — awaits backend spec</span>
     </h2>
     <p>
-      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+      style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
       Props: <code>request: string</code>, <code>duration: once|session|always</code>,
       <code>open: bool</code>. Wraps <code>sail-dialog</code> as an alertdialog.
@@ -93,13 +93,13 @@ domain-stub — awaits backend spec</span>
     </p>
     <column gap="4">
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 open=true · duration=session</span>
         <column>
-          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+          style({ box: position(relative).overflow(hidden), paint: borderWidth(1).border(dashed).border(border).radius(md) })
 
           <ship-capability-request
             open
@@ -109,13 +109,13 @@ open=true · duration=session</span>
         </column>
       </column>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 open=true · duration=once</span>
         <column>
-          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+          style({ box: position(relative).overflow(hidden), paint: borderWidth(1).border(dashed).border(border).radius(md) })
 
           <ship-capability-request
             open
@@ -129,20 +129,20 @@ open=true · duration=once</span>
 
   <!-- sail-auth-dialog -->
   <column gap="4">
-    style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+    style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
     <h2>
-      style.fontSize(lg).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 
       <code>
-        style.fontFamily(mono)
+        style({ text: fontFamily(mono) })
 sail-auth-dialog</code>
       <span>
-        style.fontSize(xs).fontWeight(medium).fg(warning-foreground).bg(warning).radius(full).padX(2).padY(1).ms(3)
+        style({ box: padX(2).padY(1).ms(3), paint: fg(warning-foreground).bg(warning).radius(full), text: fontSize(xs).fontWeight(medium) })
 domain-stub — awaits backend spec</span>
     </h2>
     <p>
-      style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+      style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
       Props: <code>open: bool</code>, <code>mode: sign-in|sign-up</code>,
       <code>loading: bool</code>, <code>backdrop: default|blur|solid</code>.
@@ -152,13 +152,13 @@ domain-stub — awaits backend spec</span>
     </p>
     <column gap="4">
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 mode=sign-in · backdrop=blur · open=true</span>
         <column>
-          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+          style({ box: position(relative).overflow(hidden), paint: borderWidth(1).border(dashed).border(border).radius(md) })
 
           <sail-auth-dialog open mode="sign-in" backdrop="blur">
             <span slot="header">Sign in to Ship</span>
@@ -170,13 +170,13 @@ mode=sign-in · backdrop=blur · open=true</span>
         </column>
       </column>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 mode=sign-up · backdrop=solid · open=true</span>
         <column>
-          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+          style({ box: position(relative).overflow(hidden), paint: borderWidth(1).border(dashed).border(border).radius(md) })
 
           <sail-auth-dialog open mode="sign-up" backdrop="solid">
             <span slot="header">Create your account</span>
@@ -185,13 +185,13 @@ mode=sign-up · backdrop=solid · open=true</span>
         </column>
       </column>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <span>
-          style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })
 loading=true · mode=sign-in · open=true</span>
         <column>
-          style.position(relative).borderWidth(1).border(dashed).border(border).radius(md).overflow(hidden)
+          style({ box: position(relative).overflow(hidden), paint: borderWidth(1).border(dashed).border(border).radius(md) })
 
           <sail-auth-dialog open mode="sign-in" loading backdrop="default">
             <span slot="header">Sign in to Ship</span>

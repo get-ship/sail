@@ -21,15 +21,15 @@
   min-w="0"
 
 >
-  style.h(6).padX(3).minW(0).when({ hover: style.bg(hover-bg), selected: style.bg(surface-2) })
+  style({ box: h(6).padX(3).minW(0) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2) })
 
   <slot name="leading"></slot>
   <p grow min-w="0">
-    style.fontSize(sm).truncate()
+    style({ text: fontSize(sm).truncate() })
 {title()}</p>
   <if {meta()}>
     <p studio-list-meta shrink="0">
-      style.fontSize(xs).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(xs) })
 
       {meta()}
     </p>

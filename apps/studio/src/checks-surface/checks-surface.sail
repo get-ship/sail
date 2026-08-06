@@ -69,19 +69,19 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden) })
 
   <!-- Full-page chrome only (not drawer) -->
   <if {!panel()}>
     <studio-page-header checks-header title="Findings">
       <p error-count>
-        style.fontSize(xs).fg(destructive)
+        style({ paint: fg(destructive), text: fontSize(xs) })
 {errorCountLabel()}</p>
       <p warning-count>
-        style.fontSize(xs).fg(warning)
+        style({ paint: fg(warning), text: fontSize(xs) })
 {warningCountLabel()}</p>
       <p last-run>
-        style.fontSize(xs).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {lastRunLabel()}</p>
       <row slot="actions" gap="2" align="center" nowrap shrink="0">
         <button type="button" size="sm" variant="ghost" tone="muted" recheck on:click={onRecheck}>
@@ -102,7 +102,7 @@ export default controller(() => {
         </for>
       </select>
       <separator orientation="vertical">
-        style.h(4)
+        style({ box: h(4) })
       </separator>
       <select filter-file label="Filter by file" value={fileFilterVal()} on:change={onFileFilter} w="28">
         <for {fileOpts()} as="opt" key={opt.key}>
@@ -110,7 +110,7 @@ export default controller(() => {
         </for>
       </select>
       <separator orientation="vertical">
-        style.h(4)
+        style({ box: h(4) })
       </separator>
       <select filter-severity label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter} w="28">
         <for {severityOpts()} as="opt" key={opt.key}>
@@ -118,11 +118,11 @@ export default controller(() => {
         </for>
       </select>
       <separator orientation="vertical">
-        style.h(4)
+        style({ box: h(4) })
       </separator>
       <row autofix-control align="center" gap="1" nowrap on:click={onAutoFixMode} label={autoFixModeLabel()}>
         <p>
-          style.fontSize(xs).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Autofix</p>
         <for {autoFixOpts()} as="m" key={m.key}>
           <button
@@ -148,7 +148,7 @@ Autofix</p>
       gap="2"
 
     >
-      style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0)
+      style({ box: padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
       <row align="center" justify="between" nowrap gap="2" min-w="0">
         <row align="center" gap="2" nowrap grow min-w="0">
@@ -167,14 +167,14 @@ Autofix</p>
         size="sm"
 
       >
-        style.w(full).minW(0)
+        style({ box: w(full).minW(0) })
 
         <for {severityOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
       <p last-run>
-        style.fontSize(xs).fg(muted-foreground).truncate()
+        style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {lastRunLabel()}</p>
     </column>
   </if>
@@ -187,10 +187,10 @@ Autofix</p>
       shrink="0"
 
     >
-      style.h(7).padX(3).borderBWidth(1).borderB(border)
+      style({ box: h(7).padX(3), paint: borderBWidth(1).borderB(border) })
 
       <p grow min-w="0">
-        style.fontSize(xs).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(xs).truncate() })
 {checksError()}</p>
       <button type="button" size="sm" variant="ghost" retry-checks on:click={onRetryChecks}>
         Retry
@@ -211,10 +211,10 @@ Autofix</p>
     on:click={onFindingClick}
 
   >
-    style.minH(0).h(full).basis(0)
+    style({ box: minH(0).h(full).basis(0) })
 
     <column gap="0">
-      style.padY(1)
+      style({ box: padY(1) })
 
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
@@ -225,7 +225,7 @@ Autofix</p>
           >
             {emptyBody()}
             <p empty-checked>
-              style.fontSize(xs).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {emptyChecked()}</p>
           </studio-empty>
         </if>
@@ -234,7 +234,7 @@ Autofix</p>
         <!-- Page mode only: ceremonial column headers (list is rule groups below) -->
         <if {!panel()}>
           <table findings-grid hoverable>
-            style.w(full)
+            style({ box: w(full) })
 
             <thead>
               <tr>
@@ -256,7 +256,7 @@ Autofix</p>
               group-row-id={g.groupRowId}
 
             >
-              style.h(6).padX(3).when({ hover: style.bg(hover-bg) })
+              style({ box: h(6).padX(3) }).when(hover, { paint: bg(hover-bg) })
 
               <button
                 type="button"
@@ -275,7 +275,7 @@ Autofix</p>
                 min-w="0"
 
               >
-                style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).fontFamily(mono).truncate()
+                style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).fontFamily(mono).truncate() })
 
                 {g.rule}
               </p>
@@ -295,7 +295,7 @@ Autofix</p>
                 </badge>
               </if>
               <p>
-                style.fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {g.countLabel}</p>
               <if {g.showApplyAll}>
                 <button
@@ -325,7 +325,7 @@ Autofix</p>
                   nowrap
 
                 >
-                  style.h(6).padX(3).w(full).when({ hover: style.bg(hover-bg) })
+                  style({ box: h(6).padX(3).w(full) }).when(hover, { paint: bg(hover-bg) })
 
                   <badge
                     severity-pill
@@ -339,7 +339,7 @@ Autofix</p>
                     row-rule
 
                   >
-                    style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+                    style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 
                     {f.rule}
                   </p>
@@ -347,16 +347,16 @@ Autofix</p>
                     file-span
 
                   >
-                    style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+                    style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 
                     {f.fileSpan}
                   </p>
                   <p grow min-w="0">
-                    style.fontSize(sm).truncate()
+                    style({ text: fontSize(sm).truncate() })
 {f.message}</p>
                   <if {f.showFixChip}>
                     <p fix-chip>
-                      style.fontSize(xs).fg(primary)
+                      style({ paint: fg(primary), text: fontSize(xs) })
 fix</p>
                   </if>
                 </row>
@@ -365,25 +365,25 @@ fix</p>
 
                   on:click={onFindingAction}
                 >
-                  style.padX(2).padB(2)
+                  style({ box: padX(2).padB(2) })
 
                   <card finding-detail variant="outline" padding="sm">
                     <column gap="2">
                       <p>
-                        style.fontSize(xs).fg(muted-foreground)
+                        style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Why</p>
                       <pre
                         why-text
 
                       >
-                        style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).minH(0).maxH(40).overflow(auto).whitespace(pre-wrap)
+                        style({ box: pad(2).minH(0).maxH(40).overflow(auto), paint: bg(surface-0).radius(sm), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })
 
                         {f.whyText}
                       </pre>
                       <if {f.showDiff}>
                         <column gap="1" why-suggest>
                           <p>
-                            style.fontSize(xs).fg(muted-foreground)
+                            style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Suggestion</p>
                           <sail-diff
                             suggest-diff
@@ -397,7 +397,7 @@ Suggestion</p>
                         gap="0"
 
                       >
-                        style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm)
+                        style({ box: pad(2), paint: bg(surface-0).radius(sm), text: fontFamily(mono).fontSize(xs) })
 
                         <for {f.snippet} as="ln" key={ln.key}>
                           <p
@@ -463,7 +463,7 @@ Suggestion</p>
     align="center"
 
   >
-    style.h(6).padX(3).borderTWidth(1).borderT(border-subtle).fontSize(xs).fg(muted-foreground)
+    style({ box: h(6).padX(3), paint: borderTWidth(1).borderT(border-subtle).fg(muted-foreground), text: fontSize(xs) })
 
     <p>{checksStatusNote()}</p>
   </row>
@@ -481,24 +481,24 @@ Suggestion</p>
       shrink="0"
 
     >
-      style.borderTWidth(1).borderT(border).bg(surface-1).pad(3).minW(0).maxH(56).overflow(auto)
+      style({ box: pad(3).minW(0).maxH(56).overflow(auto), paint: borderTWidth(1).borderT(border).bg(surface-1) })
 
       <row align="center" justify="between" nowrap gap="2">
         <p>
-          style.fontSize(sm).fontWeight(semibold)
+          style({ text: fontSize(sm).fontWeight(semibold) })
 Review fixes</p>
         <button type="button" size="sm" variant="ghost" tone="muted" on:click={onCloseReview}>
           Cancel
         </button>
       </row>
       <p>
-        style.fontSize(xs).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(xs) })
 
         Accept or skip each automatic fix, then apply.
       </p>
       <if {!reviewItems().length}>
         <p review-empty>
-          style.fontSize(xs).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(xs) })
 
           No automatic fixes — only compiler rewrites appear here.
         </p>
@@ -509,11 +509,11 @@ Review fixes</p>
             <row gap="2" align="center" nowrap>
               <badge tone="primary" size="sm" variant="soft">{item.rule}</badge>
               <p grow min-w="0">
-                style.fontSize(sm).truncate()
+                style({ text: fontSize(sm).truncate() })
 {item.message}</p>
             </row>
             <column review-diff gap="1">
-              style.minW(0)
+              style({ box: minW(0) })
 
               <sail-diff from={item.before} to={item.after}></sail-diff>
             </column>

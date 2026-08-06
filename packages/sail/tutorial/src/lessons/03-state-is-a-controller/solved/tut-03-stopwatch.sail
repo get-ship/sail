@@ -54,11 +54,11 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const face = style.pad(6).bg(surface-1).borderWidth(1).border(border).radius(lg)
-  const clockFace = style.fontSize(4xl).tracking(tight)
-  const lapRow = style.padX(3).padY(1).bg(surface-1).radius(md)
-  const lapMeta = style.fg(muted-foreground)
-  const lapAt = style.fontSize(sm)
+  const face = style({ box: pad(6), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
+  const clockFace = style({ text: fontSize(4xl).tracking(tight) })
+  const lapRow = style({ box: padX(3).padY(1), paint: bg(surface-1).radius(md) })
+  const lapMeta = style({ paint: fg(muted-foreground) })
+  const lapAt = style({ text: fontSize(sm) })
 </scope>
 
 <column gap="4">

@@ -1,15 +1,15 @@
 <!-- PARITY-1 paint: stacked cards + solid primary button (RENDER-1 s003 path). Static only. -->
 <column gap="6" max-w="panel-max-w-md">
-  style.pad(6)
+  style({ box: pad(6) })
 
   <h1>
-    style.fontSize(2xl).fontWeight(semibold).fg(foreground)
+    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })
 Settings</h1>
 
   <card w="full">
     <column gap="4" w="full">
       <h2>
-        style.fontSize(lg).fontWeight(semibold).fg(foreground)
+        style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 Profile</h2>
       <field w="full">
         <label slot="label">Display name</label>
@@ -21,7 +21,7 @@ Profile</h2>
   <card w="full">
     <column gap="4" w="full">
       <h2>
-        style.fontSize(lg).fontWeight(semibold).fg(foreground)
+        style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })
 Notifications</h2>
       <row gap="3" align="center">
         <switch />

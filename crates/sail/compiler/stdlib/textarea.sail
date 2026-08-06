@@ -13,11 +13,11 @@
     rows = 3
   }
 
-  const base = style.display(block).minH(control-h-md).padY(1_5).padX(3).fontSize(base).fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs).w(full).when({ hover: style.border(border-strong), disabled: style.cursor(not-allowed).opacity(50) })
-  const sizeXs = style.minH(control-h-2xs).padX(2).fontSize(xs)
-  const sizeSm = style.minH(control-h-sm).padX(2_5).fontSize(sm)
-  const sizeMd = style.minH(control-h-md).padX(3).fontSize(base)
-  const sizeLg = style.minH(control-h-lg).padX(4).fontSize(md)
+  const base = style({ box: display(block).minH(control-h-md).padY(1_5).padX(3).w(full), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs), text: fontSize(base) }).when(hover, { paint: border(border-strong) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const sizeXs = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
+  const sizeSm = style({ box: minH(control-h-sm).padX(2_5), text: fontSize(sm) })
+  const sizeMd = style({ box: minH(control-h-md).padX(3), text: fontSize(base) })
+  const sizeLg = style({ box: minH(control-h-lg).padX(4), text: fontSize(md) })
 </scope>
 
 <textarea>
@@ -29,6 +29,6 @@
     md: sizeMd,
     lg: sizeLg,
   }),
-  compound({ invalid: true }, style.border(destructive)),
+  compound({ invalid: true }, style({ paint: border(destructive) })),
 ])
 </textarea>

@@ -14,10 +14,10 @@
     size: 'sm' | 'md' | 'lg' = 'md'
   }
 
-  const base = style.appearance(none).display(inline-block).align(middle).w(full).h(2).borderWidth(0).radius(full).overflow(hidden).bg(muted)
-  const sizeSm = style.h(1_5)
-  const sizeMd = style.h(2)
-  const sizeLg = style.h(3)
+  const base = style({ box: display(inline-block).w(full).h(2).overflow(hidden), paint: appearance(none).align(middle).borderWidth(0).radius(full).bg(muted) })
+  const sizeSm = style({ box: h(1_5) })
+  const sizeMd = style({ box: h(2) })
+  const sizeLg = style({ box: h(3) })
 </scope>
 
 <meter>

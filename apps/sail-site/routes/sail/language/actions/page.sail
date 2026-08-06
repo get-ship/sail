@@ -15,14 +15,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Concepts</p>
   <h1>Actions</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     An action is a function that receives a DOM element, does something to
     it — attach a listener, start an observer, wire a third-party widget —
@@ -38,7 +38,7 @@ Concepts</p>
     when the element leaves the page, the action's cleanup runs with it:
   </p>
   <textarea use:autosize placeholder="Type a few lines here…">
-    style.maxW(panel-max-w-sm)
+    style({ box: maxW(panel-max-w-sm) })
 </textarea>
 
   <h2>Why there is no ref</h2>
@@ -92,13 +92,13 @@ Concepts</p>
   </p>
 
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the full surface: <a href="/sail/reference/actions">reference → Actions</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/animation">← Animation</a>
     <a variant="solid" tone="primary" href="/sail/language/data">Data →</a>

@@ -338,11 +338,11 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
 
 </controller>
 <div>
-  style.position(relative).w(full).h(full).fontFamily(body)
+  style({ box: position(relative).w(full).h(full), text: fontFamily(body) })
 
   <slot></slot>
   <div use:overlayAction data-state={captureState()}>
-    style.position(absolute).top(0).right(0).bottom(0).left(0).z(dropdown).pointerEvents(none).when({ stateCapture: style.pointerEvents(auto) })
+    style({ box: position(absolute).top(0).right(0).bottom(0).left(0), paint: z(dropdown).pointerEvents(none) }).when(stateCapture, { paint: pointerEvents(auto) })
 
     <if {dragVisible()}>
       <div
@@ -350,7 +350,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         use:rect={dragRect()}
 
       >
-        style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm)
+        style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm) })
 </div>
     </if>
     <for {markers()} as="m" key={m.id}>
@@ -370,17 +370,17 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         on:pointerdown={(e) => e.stopPropagation()}
 
       >
-        style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).z(sticky).minW(panel-min-w-md).pad(2).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto)
+        style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).minW(panel-min-w-md).pad(2), paint: z(sticky).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto) })
 
         <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}>
-          style.w(full).radius(sm)
+          style({ box: w(full), paint: radius(sm) })
 </textarea>
         <row gap="2" justify="end">
           <button type="button" on:click={cancelPending}>
-            style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)
+            style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })
 Cancel</button>
           <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote}>
-            style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)
+            style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })
 Send</button>
         </row>
       </column>

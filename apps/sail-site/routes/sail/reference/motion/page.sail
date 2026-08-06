@@ -18,10 +18,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
     <h1>Motion — one system</h1>
@@ -33,18 +33,18 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <row gap="3">
-    style.padX(3).padY(2).bg(surface-1).radius(md)
+    style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
 <code>
-    style.minW(9)
+    style({ box: minW(9) })
 triggers</code><small>
-    style.fg(muted-foreground).maxW(panel-max-w-sm)
+    style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {motionTriggers()}</small></row>
   <row gap="3">
-    style.padX(3).padY(2).bg(surface-1).radius(md)
+    style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
 <code>
-    style.minW(9)
+    style({ box: minW(9) })
 properties</code><small>
-    style.fg(muted-foreground).maxW(panel-max-w-sm)
+    style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {motionProperties()} — plus {motionStagger()}: a duration step between siblings</small></row>
 
   <column gap="3">
@@ -52,12 +52,12 @@ properties</code><small>
     <grid cols="3" gap="2">
       <for {motionPresets()} as="p" key={p.name}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>{p.name}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 ({p.kind}) {p.doc}</small>
           </column>
         </card>
@@ -68,7 +68,7 @@ properties</code><small>
   <column gap="3">
     <h3>Config value grammar</h3>
     <p>
-      style.maxW(breakpoint-tablet)
+      style({ box: maxW(breakpoint-tablet) })
 
       Inside a <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> config object, every value
       takes one of these forms.
@@ -76,12 +76,12 @@ properties</code><small>
     <grid cols="1" gap="2">
       <for {valueForms()} as="f" key={f.form}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>{f.form}</code>
             <small>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 {f.summary}</small>
           </column>
         </card>

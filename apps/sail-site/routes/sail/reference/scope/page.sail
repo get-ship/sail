@@ -16,10 +16,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
     <h1>&lt;scope&gt; grammar</h1>
@@ -36,11 +36,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
         <row gap="3" align="center">
           <h3>{g.form}</h3>
           <code>
-            style.fg(muted-foreground)
+            style({ paint: fg(muted-foreground) })
 {g.syntax}</code>
         </row>
         <p>
-          style.maxW(breakpoint-tablet)
+          style({ box: maxW(breakpoint-tablet) })
 {g.summary}</p>
         <code-block code={g.example} lang="sail"></code-block>
       </column>
@@ -50,7 +50,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Refused</h3>
     <p>
-      style.maxW(breakpoint-tablet)
+      style({ box: maxW(breakpoint-tablet) })
 
       <code>&lt;scope&gt;</code> is types and literals only — these member
       kinds are refused with an error naming the alternative.
@@ -59,10 +59,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <for {refusals()} as="r" key={r.syntax}>
         <column gap="1">
           <code>
-            style.fg(destructive)
+            style({ paint: fg(destructive) })
 {r.syntax}</code>
           <small>
-            style.fg(muted-foreground)
+            style({ paint: fg(muted-foreground) })
 → {r.instead}</small>
         </column>
       </for>

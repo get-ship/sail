@@ -16,12 +16,12 @@
     seed: Flight[] = []
   }
 
-  const card = style.pad(4).w(full)
-  const titleText = style.textCase(uppercase).tracking(wide).fontSize(sm)
-  const meta = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
-  const list = style.mt(3).fontFamily(mono).fontSize(sm)
-  const city = style.truncate()
-  const gate = style.fg(muted-foreground)
+  const card = style({ box: pad(4).w(full) })
+  const titleText = style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })
+  const meta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const list = style({ box: mt(3), text: fontFamily(mono).fontSize(sm) })
+  const city = style({ text: truncate() })
+  const gate = style({ paint: fg(muted-foreground) })
 </scope>
 
 <controller>
@@ -89,7 +89,7 @@ export default controller((ctx) => {
 
     <for {flights()} as="f" key={f.id}>
       <row align="center" gap="3" nowrap>
-        style.enter({ opacity: 'fade' })
+        style({ animate: enter({ opacity: 'fade' }) })
 
         <span grow min-w="0">
           style(city)

@@ -31,6 +31,6 @@ export default controller(() => {
 
 </controller>
 <column gap="1">
-  style.position(relative)
+  style({ box: position(relative) })
 <slot></slot></column>
 

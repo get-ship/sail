@@ -126,17 +126,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   library rail + track list occupy the body instead of floating in dead space.
 -->
 <column theme={theme()} gap="0">
-  style.h(fill).minH(0).overflow(hidden).bg(background).fg(foreground)
+  style({ box: h(fill).minH(0).overflow(hidden), paint: bg(background).fg(foreground) })
 
   <!-- ── app chrome: brand + theme picker ─────────────────────────────── -->
   <row align="center" gap="3" shrink>
-    style.pad(3).padX(5).borderBWidth(1).border(border)
+    style({ box: pad(3).padX(5), paint: borderBWidth(1).border(border) })
 
     <strong>
-      style.fontFamily(mono).fontSize(lg).fg(primary)
+      style({ paint: fg(primary), text: fontFamily(mono).fontSize(lg) })
 shanty</strong>
     <p grow>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 a full app in one .sail file</p>
     <row gap="1">
       <for {THEMES} as="t" key={t}>
@@ -146,22 +146,22 @@ a full app in one .sail file</p>
   </row>
 
   <row grow align="stretch" gap="0">
-    style.minH(0)
+    style({ box: minH(0) })
 
     <!-- ── library rail ───────────────────────────────────────────────── -->
     <column gap="3">
-      style.w(64).pad(4).borderRWidth(1).border(border).minH(0).overflowY(auto)
+      style({ box: w(64).pad(4).minH(0).overflowY(auto), paint: borderRWidth(1).border(border) })
 
       <input placeholder="Filter playlists" bind:value={query} />
       <column gap="1">
         <p>
-          style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Playlists</p>
         <for {filteredPlaylists()} as="p" key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
                current={activePlaylist() === p.id ? 'true' : null}
  align="center" justify="between">
-            style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })
+            style({ box: pad(2), paint: radius(md).cursor(pointer) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })
 
             <span>{p.name}</span>
             <badge tone="muted">{p.tracks.length}</badge>
@@ -172,7 +172,7 @@ Playlists</p>
       <row on:click={() => activePlaylist.set('__liked')}
            current={activePlaylist() === '__liked' ? 'true' : null}
  align="center" justify="between">
-        style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })
+        style({ box: pad(2), paint: radius(md).cursor(pointer) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })
 
         <span>♥ Liked</span>
         <badge tone="primary">{liked().length}</badge>
@@ -181,25 +181,25 @@ Playlists</p>
 
     <!-- ── playlist main ──────────────────────────────────────────────── -->
     <column grow min-w="0" gap="0">
-      style.minH(0)
+      style({ box: minH(0) })
 
       <column gap="1" shrink>
-        style.pad(6).padB(4).enter({ opacity: 'fade', translate-y: 'spring:gentle' })
+        style({ box: pad(6).padB(4), animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) })
 
         <p>
-          style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
+          style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Playlist</p>
         <h1>
-          style.fontSize(3xl)
+          style({ text: fontSize(3xl) })
 {activePlaylist() === '__liked' ? 'Liked Tracks' : playlist().name}</h1>
         <p>
-          style.fontSize(sm).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
           {trackCount()} tracks · click a row to play
         </p>
       </column>
       <scroll-area grow>
-        style.minH(0).padX(6).padB(4)
+        style({ box: minH(0).padX(6).padB(4) })
 
         <column gap="1">
           <for {visibleTracks()} as="t" key={t.id}>
@@ -207,29 +207,29 @@ Playlist</p>
                  current={currentId() === t.id ? 'true' : null}
 
                  align="center" gap="3">
-              style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })
+              style({ box: pad(2).padX(3), paint: radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })
 
               <div shrink="0">
-                style.position(relative).w(10).h(10).radius(sm).overflow(hidden).bg(muted)
+                style({ box: position(relative).w(10).h(10).overflow(hidden), paint: radius(sm).bg(muted) })
 
                 <img src={t.cover} alt="">
-                  style.display(block).w(full).h(full).objectFit(cover)
+                  style({ box: display(block).w(full).h(full), paint: objectFit(cover) })
                 </img>
                 <if {currentId() === t.id && playing()}>
                   <center>
-                    style.position(absolute).inset(0).bg(background).opacity(70)
+                    style({ box: position(absolute).inset(0), paint: bg(background).opacity(70) })
 
                     <row gap="1" align="end" justify="center">
-                      style.minH(4)
+                      style({ box: minH(4) })
 
                       <i>
-                        style.w(1).h(3).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })
+                        style({ box: w(1).h(3), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) })
 </i>
                       <i>
-                        style.w(1).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })
+                        style({ box: w(1).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) })
 </i>
                       <i>
-                        style.w(1).h(2).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })
+                        style({ box: w(1).h(2), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.08s' }) })
 </i>
                     </row>
                   </center>
@@ -237,21 +237,21 @@ Playlist</p>
               </div>
               <column gap="0" grow min-w="0">
                 <strong>
-                  when({ groupCurrent: style.fg(primary) })
+                  when({ groupCurrent: style({ paint: fg(primary) }) })
 {t.title}</strong>
                 <p>
-                  style.fontSize(sm).fg(muted-foreground)
+                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
 {t.artist}</p>
               </column>
               <p>
-                style.fontSize(sm).fg(muted-foreground).display(none).when({ desktop: style.display(block) })
+                style({ box: display(none), paint: fg(muted-foreground), text: fontSize(sm) }).when(desktop, { box: display(block) })
 {t.album}</p>
               <button on:click={(e) => { e.stopPropagation(); toggleLike(t.id) }}
                     variant="ghost" size="sm" tone={liked().includes(t.id) ? 'primary' : 'default'}>
                 ♥
               </button>
               <span>
-                style.fontFamily(mono).fontSize(sm).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
 {t.len}</span>
             </row>
           </for>
@@ -262,23 +262,23 @@ Playlist</p>
 
   <!-- ── now-playing bar ──────────────────────────────────────────────── -->
   <column gap="2" shrink>
-    style.borderTWidth(1).border(border).pad(3).padX(5)
+    style({ box: pad(3).padX(5), paint: borderTWidth(1).border(border) })
 
     <row align="center" gap="4">
       <row align="center" gap="3" grow min-w="0">
         <div shrink="0">
-          style.w(12).h(12).radius(md).overflow(hidden).bg(muted).borderWidth(1).border(border)
+          style({ box: w(12).h(12).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) })
 
           <img src={current().cover} alt="">
-            style.display(block).w(full).h(full).objectFit(cover)
+            style({ box: display(block).w(full).h(full), paint: objectFit(cover) })
           </img>
         </div>
         <column gap="0">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <strong>{current().title}</strong>
           <p>
-            style.fontSize(sm).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontSize(sm) })
 {current().artist} · {current().album}</p>
         </column>
       </row>
@@ -287,7 +287,7 @@ Playlist</p>
           <button on:click={() => shuffle.set(!shuffle())} variant={shuffle() ? 'solid' : 'ghost'} size="sm">shuffle</button>
           <button on:click={() => advance(-1)} variant="ghost">⏮</button>
           <button on:click={togglePlay} variant="solid" tone="primary">
-            style.press({ scale: 'press' })
+            style({ animate: press({ scale: 'press' }) })
 
             {playing() ? '⏸' : '▶'}
           </button>
@@ -296,23 +296,23 @@ Playlist</p>
         </row>
         <row gap="2" align="center" nowrap w="full" max-w="panel-max-w-md">
           <span shrink>
-            style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {positionLabel()}</span>
           <!-- progress host paints w-full; grow shell owns the flex share so times stay on one line -->
           <row grow min-w="0">
-            style.minW(0)
+            style({ box: minW(0) })
 
             <progress value={position()} max={current().secs}></progress>
           </row>
           <span shrink>
-            style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {totalLabel()}</span>
         </row>
       </column>
       <row gap="2" align="center" justify="end" nowrap grow min-w="0">
         <button on:click={() => volume.set(Math.max(0, volume() - 10))} variant="ghost" size="sm">−</button>
         <div>
-          style.w(20).minW(20)
+          style({ box: w(20).minW(20) })
 
           <progress value={volume()} max="100"></progress>
         </div>

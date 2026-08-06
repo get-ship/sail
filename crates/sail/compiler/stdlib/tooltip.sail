@@ -4,7 +4,7 @@
   Escape. Style value language only.
 
   Paint (Style product only):
-    host sx   — style.group() (sail-grp ancestor for the bubble show) +
+    host sx   — style({ paint: group() }) (sail-grp ancestor for the bubble show) +
                 position(relative) positioning context
     bubble sx — absolute + (--tt-*) geometry via bind (the vars tipDescribe
                 publishes, same bridge as use:anchor) + opacity show under
@@ -25,9 +25,9 @@
     content = ''
   }
 
-  const host = style.group().position(relative)
-  const bubble = style.position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).translateX(bind(ttTx)).z(popover).opacity(0).transition(opacity).duration(fast).ease(out).padY(1).padX(2).bg(tooltip).fg(tooltip-foreground).fontFamily(body).fontSize(xs).fontWeight(medium).radius(md).shadow(md).whitespace(nowrap).pointerEvents(none)
-  const arrow = style.content(empty).position(absolute).w(2).h(2).bg(tooltip).rotate(45).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt))
+  const host = style({ box: position(relative), paint: group() })
+  const bubble = style({ box: position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).padY(1).padX(2), paint: translateX(bind(ttTx)).z(popover).opacity(0).transition(opacity).duration(fast).ease(out).bg(tooltip).fg(tooltip-foreground).radius(md).shadow(md).pointerEvents(none), text: fontFamily(body).fontSize(xs).fontWeight(medium).whitespace(nowrap) })
+  const arrow = style({ box: position(absolute).w(2).h(2).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt)), paint: content(empty).bg(tooltip).rotate(45) })
 </scope>
 
 <span use:tipDescribe>
@@ -41,8 +41,8 @@
     style([
       bubble,
       when({
-        group-hover: style.opacity(100),
-        group-focus-within: style.opacity(100),
+        group-hover: style({ paint: opacity(100) }),
+        group-focus-within: style({ paint: opacity(100) }),
         after: arrow,
       }),
     ])

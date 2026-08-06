@@ -6,21 +6,14 @@
   Nothing here is a raw value — a px or a hex would not compile.
 -->
 <scope>
-  const pill = style.padX(3).padY(1).radius(full).fontSize(sm).fontWeight(semibold).fg(muted-foreground).when({
-    hover: style.fg(foreground).bg(surface-2),
-    current: style.bg(primary).fg(primary-foreground),
-  })
-  const card = style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm).when({
-    hover: style.shadow(hover),
-  })
-  const label = style.fontSize(sm).tracking(wide).fg(muted-foreground)
-  const muted = style.fg(muted-foreground)
-  const value = style.fontSize(3xl).tracking(tight)
-  const of = style.fg(muted-foreground).padB(1)
-  const body = style.fontSize(sm).fg(muted-foreground).leading(relaxed)
-  const alertRow = style.pad(2).radius(md).borderWidth(1).border(border-subtle).when({
-    focusWithin: style.border(primary),
-  })
+  const pill = style({ box: padX(3).padY(1), paint: radius(full).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: fg(foreground).bg(surface-2) }).when(current, { paint: bg(primary).fg(primary-foreground) })
+  const card = style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) }).when(hover, { paint: shadow(hover) })
+  const label = style({ paint: fg(muted-foreground), text: fontSize(sm).tracking(wide) })
+  const muted = style({ paint: fg(muted-foreground) })
+  const value = style({ text: fontSize(3xl).tracking(tight) })
+  const of = style({ box: padB(1), paint: fg(muted-foreground) })
+  const body = style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
+  const alertRow = style({ box: pad(2), paint: radius(md).borderWidth(1).border(border-subtle) }).when(focusWithin, { paint: border(primary) })
 </scope>
 
 <column gap="4">

@@ -18,7 +18,7 @@
   components-shell
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden) })
 
   <main
     grow
@@ -27,7 +27,7 @@
     components-scroll
 
   >
-    style.basis(0).minH(0).minW(0).h(full).overflowY(auto).overflowX(hidden)
+    style({ box: basis(0).minH(0).minW(0).h(full).overflowY(auto).overflowX(hidden) })
 
     <slot name="route"></slot>
   </main>

@@ -14,11 +14,11 @@
     reverse = false
   }
 
-  const host = style.overflow(hidden).w(full).minW(0)
+  const host = style({ box: overflow(hidden).w(full).minW(0) })
   // Track must size to dual content (max-content). Row default min-w:0 on
   // children would collapse both copies into the host width and kill the loop.
-  const track = style.w(max)
-  const cell = style.whitespace(nowrap).minW(max)
+  const track = style({ box: w(max) })
+  const cell = style({ box: minW(max), text: whitespace(nowrap) })
 </scope>
 
 <div>

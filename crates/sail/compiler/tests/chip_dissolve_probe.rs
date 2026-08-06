@@ -1,6 +1,11 @@
 //! Paint-source gates for L1 chip/alert dissolve on Style product path.
 use sail_compiler::compile_element;
 
+
+fn is_style_product(src: &str) -> bool {
+    src.contains("style.") || src.contains("style(")
+}
+
 #[test]
 fn chip_compiles_with_style_and_capability_mixins() {
     let src = include_str!("../stdlib/chip.sail");
@@ -19,7 +24,7 @@ fn chip_compiles_with_style_and_capability_mixins() {
         out.structure_html
     );
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && src.contains("match(variant")
             && src.contains("match(tone")
             && src.contains("match(size")
@@ -157,7 +162,7 @@ fn alert_compiles_with_style_capability_mixins() {
         "no element brain"
     );
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && src.contains("when({")
             && src.contains("before:")
             && src.contains("alert-stripe")

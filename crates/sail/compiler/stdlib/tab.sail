@@ -12,12 +12,12 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  const base = style.fontFamily(body).fontWeight(medium).leading(none).fg(tab-foreground).bg(transparent).cursor(pointer).whitespace(nowrap).select(none).fontSize(sm).padY(2).padX(3).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).tapHighlight(none).transition(colors).duration(fast).ease(out)
-  const sizeMd = style.fontSize(sm).padY(2).padX(3)
-  const sizeSm = style.fontSize(xs).padY(1_5).padX(2_5)
-  const sizeLg = style.fontSize(base).padY(2_5).padX(4)
-  const pill = style.borderBWidth(0).radius(sm)
-  const enclosed = style.borderWidth(1).border(transparent).borderBWidth(0).radiusT(md)
+  const base = style({ box: padY(2).padX(3), paint: fg(tab-foreground).bg(transparent).cursor(pointer).select(none).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).tapHighlight(none).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(sm) })
+  const sizeMd = style({ box: padY(2).padX(3), text: fontSize(sm) })
+  const sizeSm = style({ box: padY(1_5).padX(2_5), text: fontSize(xs) })
+  const sizeLg = style({ box: padY(2_5).padX(4), text: fontSize(base) })
+  const pill = style({ paint: borderBWidth(0).radius(sm) })
+  const enclosed = style({ paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) })
 </scope>
 
 <button type="button">
@@ -29,23 +29,23 @@
     lg: sizeLg,
   }),
   match(variant, {
-    line: style.borderB(transparent),
+    line: style({ paint: borderB(transparent) }),
     pill: pill,
     enclosed: enclosed,
   }),
-  compound({ variant: pill }, style.borderBWidth(0).radius(sm)),
-  compound({ variant: enclosed }, style.borderWidth(1).border(transparent).borderBWidth(0).radiusT(md)),
+  compound({ variant: pill }, style({ paint: borderBWidth(0).radius(sm) })),
+  compound({ variant: enclosed }, style({ paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) })),
   when({
-    hover: style.fg(foreground),
-    selected: style.fg(tab-selected-foreground).fontWeight(semibold).borderB(primary),
-    focus: style.outline(solid).outline(ring-width).outline(ring).outlineOffset(ring-inset),
-    disabled: style.opacity(50).cursor(not-allowed),
+    hover: style({ paint: fg(foreground) }),
+    selected: style({ paint: fg(tab-selected-foreground).borderB(primary), text: fontWeight(semibold) }),
+    focus: style({ paint: outline(solid).outline(ring-width).outline(ring).outlineOffset(ring-inset) }),
+    disabled: style({ paint: opacity(50).cursor(not-allowed) }),
   }),
   compound({ variant: pill }, when({
-    selected: style.fg(tab-selected-foreground).bg(tab-selected).shadow(xs).borderB(transparent),
+    selected: style({ paint: fg(tab-selected-foreground).bg(tab-selected).shadow(xs).borderB(transparent) }),
   })),
   compound({ variant: enclosed }, when({
-    selected: style.fg(tab-selected-foreground).border(border).bg(tab-selected).mb(-px),
+    selected: style({ box: mb(-px), paint: fg(tab-selected-foreground).border(border).bg(tab-selected) }),
   })),
 ])
 

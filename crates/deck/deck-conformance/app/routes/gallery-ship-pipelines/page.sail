@@ -1,12 +1,12 @@
 <column gap="8">
-  style.padY(6).padX(8).maxW(breakpoint-tablet)
+  style({ box: padY(6).padX(8).maxW(breakpoint-tablet) })
 
   <header>
     <h1>
-      style.fontSize(xl).fontWeight(bold).fg(foreground).mb(2)
+      style({ box: mb(2), paint: fg(foreground), text: fontSize(xl).fontWeight(bold) })
 ship/pipelines — Gallery</h1>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Pack <strong>ship/pipelines</strong>. Real component instantiations —
       one card per primitive, representative prop combinations across every
@@ -17,10 +17,10 @@ ship/pipelines — Gallery</h1>
   <!-- ── sail-pipeline-step ──────────────────────────────────────────────── -->
   <column gap="4">
     <h2>
-      style.fontSize(base).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(base).fontWeight(semibold) })
 <code>sail-pipeline-step</code></h2>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Props: <code>type: agent|gate|merge|human</code>,
       <code>state: ok|running|awaiting|err|none</code>,
@@ -31,7 +31,7 @@ ship/pipelines — Gallery</h1>
     <column gap="3">
       <!-- type variants, state=none -->
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 type=agent · state=none</span>
       <sail-pipeline-step type="agent" state="none">
         lint-check
@@ -39,7 +39,7 @@ type=agent · state=none</span>
       </sail-pipeline-step>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 type=gate · state=awaiting</span>
       <sail-pipeline-step type="gate" state="awaiting">
         human-review
@@ -48,7 +48,7 @@ type=gate · state=awaiting</span>
       </sail-pipeline-step>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 type=merge · state=ok</span>
       <sail-pipeline-step type="merge" state="ok">
         merge-results
@@ -57,7 +57,7 @@ type=merge · state=ok</span>
       </sail-pipeline-step>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 type=human · state=running</span>
       <sail-pipeline-step type="human" state="running">
         manual-deploy
@@ -65,7 +65,7 @@ type=human · state=running</span>
       </sail-pipeline-step>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 type=agent · state=err</span>
       <sail-pipeline-step type="agent" state="err">
         build-release
@@ -75,7 +75,7 @@ type=agent · state=err</span>
 
       <!-- compact variants -->
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 compact=true — all four types</span>
       <row gap="3">
         <sail-pipeline-step type="agent" state="ok" compact>ci-check</sail-pipeline-step>
@@ -89,10 +89,10 @@ compact=true — all four types</span>
   <!-- ── sail-pipeline-card ─────────────────────────────────────────────── -->
   <column gap="4">
     <h2>
-      style.fontSize(base).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(base).fontWeight(semibold) })
 <code>sail-pipeline-card</code></h2>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Props: <code>state: ok|running|awaiting|err|none</code>,
       <code>interactive: bool</code>.
@@ -102,7 +102,7 @@ compact=true — all four types</span>
 
     <column gap="3">
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=none (default)</span>
       <sail-pipeline-card state="none">
         nightly-build
@@ -111,7 +111,7 @@ state=none (default)</span>
       </sail-pipeline-card>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=running · interactive</span>
       <sail-pipeline-card state="running" interactive>
         deploy-staging
@@ -121,7 +121,7 @@ state=running · interactive</span>
       </sail-pipeline-card>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=awaiting · interactive</span>
       <sail-pipeline-card state="awaiting" interactive>
         release-prod
@@ -131,7 +131,7 @@ state=awaiting · interactive</span>
       </sail-pipeline-card>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=ok</span>
       <sail-pipeline-card state="ok">
         smoke-test
@@ -141,7 +141,7 @@ state=ok</span>
       </sail-pipeline-card>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=err</span>
       <sail-pipeline-card state="err">
         integration-suite
@@ -155,10 +155,10 @@ state=err</span>
   <!-- ── sail-pipeline-run ──────────────────────────────────────────────── -->
   <column gap="4">
     <h2>
-      style.fontSize(base).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(base).fontWeight(semibold) })
 <code>sail-pipeline-run</code></h2>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Props: <code>state: ok|running|awaiting|err|none</code>.
       Slots: default (name), <code>meta</code>, <code>rail</code>.
@@ -166,7 +166,7 @@ state=err</span>
 
     <column gap="3">
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=running</span>
       <sail-pipeline-run state="running">
         deploy-staging / run #42
@@ -179,7 +179,7 @@ state=running</span>
       </sail-pipeline-run>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=awaiting</span>
       <sail-pipeline-run state="awaiting">
         release-prod / run #18
@@ -192,7 +192,7 @@ state=awaiting</span>
       </sail-pipeline-run>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=ok</span>
       <sail-pipeline-run state="ok">
         nightly-build / run #101
@@ -205,7 +205,7 @@ state=ok</span>
       </sail-pipeline-run>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 state=err</span>
       <sail-pipeline-run state="err">
         integration-suite / run #9
@@ -222,10 +222,10 @@ state=err</span>
   <!-- ── sail-pipeline-dag ──────────────────────────────────────────────── -->
   <column gap="4">
     <h2>
-      style.fontSize(base).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(base).fontWeight(semibold) })
 <code>sail-pipeline-dag</code></h2>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Props: <code>steps: string</code> (JSON array of
       <code>&#123; id, type, state?, after?: string[] &#125;</code>).
@@ -234,17 +234,17 @@ state=err</span>
 
     <column gap="3">
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 linear chain — all states</span>
       <sail-pipeline-dag steps='[{"id":"lint","type":"agent","state":"ok"},{"id":"test","type":"agent","state":"ok","after":["lint"]},{"id":"review","type":"gate","state":"awaiting","after":["test"]},{"id":"deploy","type":"agent","state":"none","after":["review"]}]'></sail-pipeline-dag>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 fan-out / fan-in — running</span>
       <sail-pipeline-dag steps='[{"id":"build","type":"agent","state":"ok"},{"id":"unit","type":"agent","state":"ok","after":["build"]},{"id":"e2e","type":"agent","state":"running","after":["build"]},{"id":"merge","type":"merge","state":"none","after":["unit","e2e"]}]'></sail-pipeline-dag>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 human step mid-pipeline — err branch</span>
       <sail-pipeline-dag steps='[{"id":"prepare","type":"agent","state":"ok"},{"id":"sign-off","type":"human","state":"awaiting","after":["prepare"]},{"id":"promote","type":"agent","state":"err","after":["sign-off"]}]'></sail-pipeline-dag>
     </column>
@@ -253,10 +253,10 @@ human step mid-pipeline — err branch</span>
   <!-- ── sail-log-stream ────────────────────────────────────────────────── -->
   <column gap="4">
     <h2>
-      style.fontSize(base).fontWeight(semibold).fg(foreground)
+      style({ paint: fg(foreground), text: fontSize(base).fontWeight(semibold) })
 <code>sail-log-stream</code></h2>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Props: <code>url: string</code>, <code>event: string</code> (default
       <code>log</code>), <code>autoscroll: bool</code>,
@@ -268,17 +268,17 @@ human step mid-pipeline — err branch</span>
 
     <column gap="3">
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 inactive (default) — placeholder state</span>
       <sail-log-stream url="" event="log"></sail-log-stream>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 inactive · autoscroll prop set — no connection opened</span>
       <sail-log-stream url="/_deck/streams/demo-run" event="log" autoscroll></sail-log-stream>
 
       <span>
-        style.fontFamily(mono).fontSize(xs).fg(muted-foreground).padT(2)
+        style({ box: padT(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 inactive · max-bytes=4096 — same placeholder</span>
       <sail-log-stream url="/_deck/streams/demo-run" event="log" max-bytes="4096"></sail-log-stream>
     </column>

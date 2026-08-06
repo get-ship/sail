@@ -11,10 +11,10 @@
     variant: 'line' | 'pill' | 'enclosed' = 'line'
   }
 
-  const base = style.borderBWidth(1).border(tab-list-border).bg(tab-list)
-  const line = style.borderBWidth(1).border(tab-list-border)
-  const pill = style.pad(1).borderWidth(0).radius(md).bg(tab-list-rail).borderBWidth(0)
-  const enclosed = style.borderBWidth(1).border(tab-list-border)
+  const base = style({ paint: borderBWidth(1).border(tab-list-border).bg(tab-list) })
+  const line = style({ paint: borderBWidth(1).border(tab-list-border) })
+  const pill = style({ box: pad(1), paint: borderWidth(0).radius(md).bg(tab-list-rail).borderBWidth(0) })
+  const enclosed = style({ paint: borderBWidth(1).border(tab-list-border) })
 </scope>
 
 <row align="stretch" gap="1">
@@ -25,9 +25,9 @@
     pill: pill,
     enclosed: enclosed,
   }),
-  compound({ sticky: true }, style.position(sticky).top(0).z(sticky)),
-  compound({ orientation: vertical }, style.borderBWidth(0).borderEWidth(1).border(tab-list-border)),
-  compound({ orientation: vertical, variant: pill }, style.borderEWidth(0)),
+  compound({ sticky: true }, style({ box: position(sticky).top(0), paint: z(sticky) })),
+  compound({ orientation: vertical }, style({ paint: borderBWidth(0).borderEWidth(1).border(tab-list-border) })),
+  compound({ orientation: vertical, variant: pill }, style({ paint: borderEWidth(0) })),
 ])
 
   <slot></slot>

@@ -6,18 +6,21 @@
 //! sx machinery (`sx_ir`, `sx_vocab`), token scales, and design-token registry
 //! used by Style lower and layout class resolution.
 
+pub mod channel;
 pub mod clash;
 pub mod conditions;
 pub mod emit;
 pub mod ir;
 pub mod parse;
 pub mod prefixes;
+pub mod rewrite;
 pub mod scales;
 pub mod setters;
 pub mod sx_ir;
 pub mod sx_vocab;
 pub mod tokens;
 
+pub use channel::{Channel, channel_for_setter, is_animate_trigger};
 pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
     CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
@@ -26,6 +29,7 @@ pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
     collect_motion_attaches, looks_like_utility_string_product, parse, parse_style_const_rhs,
 };
+pub use rewrite::{rewrite_source, rewrite_style_expr};
 
 #[cfg(test)]
 mod tests {

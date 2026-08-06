@@ -358,10 +358,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 </controller>
 <div>
-  style.display(block).fontFamily(body).fontSize(density).bg(background).fg(foreground).borderWidth(1).border(border).radius(lg).shadow(xs).overflow(hidden)
+  style({ box: display(block).overflow(hidden), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(lg).shadow(xs), text: fontFamily(body).fontSize(density) })
 
   <row align="center" gap="density">
-    style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border)
+    style({ box: padY(density-row-py).padX(density-row-px), paint: borderBWidth(1).borderB(border) })
 
     <row gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-nav="prev" aria-label="Previous">‹</button>
@@ -369,7 +369,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <button type="button" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
     </row>
     <h2 grow>
-      style.fontWeight(semibold).fontSize(base)
+      style({ text: fontWeight(semibold).fontSize(base) })
 {title()}</h2>
     <row role="group" aria-label="Calendar view" gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
@@ -380,7 +380,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
   <if {isEmpty()}>
     <div role="status">
-      style.fg(muted-foreground).padY(6).padX(density-row-px).textAlign(center)
+      style({ box: padY(6).padX(density-row-px), paint: fg(muted-foreground), text: textAlign(center) })
 
       <slot name="empty">No events</slot>
     </div>
@@ -391,7 +391,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <grid cols="7" gap="0" role="presentation">
       <for {weekdays()} as="d" key={d.key}>
         <span role="columnheader">
-          style.fg(muted-foreground).fontWeight(medium).padY(density-row-py).textAlign(center).fontSize(density).borderBWidth(1).borderB(border)
+          style({ box: padY(density-row-py), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontWeight(medium).textAlign(center).fontSize(density) })
 {d.label}</span>
       </for>
     </grid>
@@ -408,10 +408,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
             gap="1"
 
           >
-            style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(muted), stateRange: style.bg(selected-bg) })
+            style({ box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border) }).when(stateOut, { paint: fg(muted-foreground).bg(muted) }).when(stateWeekend, { paint: bg(muted) }).when(stateRange, { paint: bg(selected-bg) })
 
             <row align="center" justify="center" gap="0">
-              style.fontSize(density).minW(control-h-2xs).h(control-h-2xs).radius(full).when({ groupStateToday: style.fg(primary).fontWeight(semibold).outline(primary) })
+              style({ box: minW(control-h-2xs).h(control-h-2xs), paint: radius(full), text: fontSize(density) }).when(groupStateToday, { paint: fg(primary).outline(primary), text: fontWeight(semibold) })
 {cr.cell.day}</row>
             <for {cr.cell.events} as="ev" key={ev.id}>
               <button
@@ -422,17 +422,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 title={ev.title}
 
               >
-                style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(hover-bg).radius(sm).padY(half).padX(1_5).padL(3).truncate().when({ stateAllday: style.bg(hover-bg), selected: style.outline(ring) })
+                style({ box: position(relative).padY(half).padX(1_5).padL(3), paint: cursor(pointer).fg(foreground).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density).truncate() }).when(stateAllday, { paint: bg(hover-bg) }).when(selected, { paint: outline(ring) })
 
                 <span aria-hidden="true">
-                  style.position(absolute).left(half).top(1).bottom(1).w(half).radius(sm).bg(primary).when({ groupStateAllday: style.bg(accent) })
+                  style({ box: position(absolute).left(half).top(1).bottom(1).w(half), paint: radius(sm).bg(primary) }).when(groupStateAllday, { paint: bg(accent) })
 </span>
                 {ev.title}
               </button>
             </for>
             <if {cr.cell.overflowCount > 0}>
               <span>
-                style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).padX(1)
+                style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
 +{cr.cell.overflowCount} more</span>
             </if>
           </column>
@@ -445,30 +445,30 @@ export default controller((ctx: ControllerScope<Scope>) => {
 <if {isWeek() || isDay()}>
   <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
     <column role="rowgroup" gap="0">
-      style.borderRWidth(1).borderR(border)
+      style({ paint: borderRWidth(1).borderR(border) })
 
       <for {timeSlots()} as="slot" key={slot.key}>
         <div data-slot={slot.minutes} role="rowheader">
-          style.h(control-h-md).fg(muted-foreground).padX(density-row-px).fontSize(density).borderBWidth(1).borderB(border)
+          style({ box: h(control-h-md).padX(density-row-px), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(density) })
 {slot.label}</div>
       </for>
     </column>
     <row gap="0" grow>
       <for {dayColumns()} as="dc" key={dc.key}>
         <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} grow>
-          style.position(relative).minH(panel-min-h-daycol).borderRWidth(1).borderR(border).when({ stateToday: style.bg(selected-bg) })
+          style({ box: position(relative).minH(panel-min-h-daycol), paint: borderRWidth(1).borderR(border) }).when(stateToday, { paint: bg(selected-bg) })
 
           <column gap="0">
-            style.position(absolute).top(0).right(0).bottom(0).left(0)
+            style({ box: position(absolute).top(0).right(0).bottom(0).left(0) })
 
             <for {timeSlots()} as="slot" key={slot.key}>
               <div data-iso={dc.col.iso} data-minutes={slot.minutes} grow>
-                style.minH(control-h-md).cursor(cell).borderBWidth(1).borderB(border).when({ hover: style.bg(hover-bg) })
+                style({ box: minH(control-h-md), paint: cursor(cell).borderBWidth(1).borderB(border) }).when(hover, { paint: bg(hover-bg) })
 </div>
             </for>
           </column>
           <column gap="1">
-            style.position(relative).z(elevated).pad(half)
+            style({ box: position(relative).pad(half), paint: z(elevated) })
 
             <for {dc.col.allDayEvents} as="ev" key={ev.id}>
               <button
@@ -479,7 +479,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 title={ev.title}
 
               >
-                style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(hover-bg).radius(sm).padY(half).padX(1_5).truncate().when({ selected: style.outline(ring) })
+                style({ box: position(relative).padY(half).padX(1_5), paint: cursor(pointer).fg(foreground).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density).truncate() }).when(selected, { paint: outline(ring) })
 {ev.title}</button>
             </for>
           </column>
@@ -492,7 +492,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               title={pe.event.title}
 
             >
-              style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(primary).bg(hover-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })
+              style({ box: position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).padY(half).padX(1).overflow(hidden), paint: cursor(pointer).fg(primary).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density) }).when(selected, { paint: outline(ring) })
 {pe.event.title}</button>
           </for>
         </div>

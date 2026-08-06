@@ -42,10 +42,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
     <h1>Semantics — a11y IR &amp; floor bans</h1>
@@ -59,7 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Semantic props ({semanticCount()})</h3>
     <p>
-      style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)
+      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
       Free <code>aria-*</code> / free ARIA <code>role=</code> are refused
       (<code>sail-no-free-aria</code>). Icon-only buttons require
@@ -68,18 +68,18 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="1" gap="2">
       <for {semanticProps()} as="p" key={p.name}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <row gap="2" align="center">
               <code>{p.name}</code>
               <small>
-                style.fg(muted-foreground)
+                style({ paint: fg(muted-foreground) })
 → {p.aria}</small>
               <badge size="sm">{p.kind}</badge>
             </row>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {p.summary}</small>
           </column>
         </card>
@@ -90,7 +90,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Host anatomy ({anatomyCount()}) — compiler-stamped</h3>
     <p>
-      style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)
+      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
       Fixed roles / live regions / labels on L1 hosts. Authors never write
       these attributes for listed elements — the compiler stamps them.
@@ -101,12 +101,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="2" gap="2">
       <for {anatomyRows()} as="a" key={a.tag}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>{a.tag}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {a.summary}</small>
           </column>
         </card>
@@ -117,7 +117,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Selector contract (app tests)</h3>
     <p>
-      style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)
+      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
       Versioned public API for locating UI in behavioral tests
       (<code>@ship/sail-test</code>). Same tables as above — regenerated
@@ -125,24 +125,24 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>HOST_ANATOMY</code>), not hand lists.
     </p>
     <card padding="sm">
-      style.minW(0)
+      style({ box: minW(0) })
 
       <column gap="2">
         <p>
-          style.fontSize(sm)
+          style({ text: fontSize(sm) })
 
           <strong>Role</strong> — native tags (<code>button</code>,
           <code>nav</code>, <code>h1</code>…) or host anatomy stamps
           (table above). Never free <code>role=</code> in app markup.
         </p>
         <p>
-          style.fontSize(sm)
+          style({ text: fontSize(sm) })
 
           <strong>Name</strong> — <code>label</code> prop →
           <code>aria-label</code>, labelled text, or visible text.
         </p>
         <p>
-          style.fontSize(sm)
+          style({ text: fontSize(sm) })
 
           <strong>State</strong> — semantic props
           <code>expanded</code> / <code>selected</code> /
@@ -150,7 +150,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
           / <code>hidden</code> / <code>live</code>.
         </p>
         <p>
-          style.fontSize(sm).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
           Prefer <code>getByRole(root, role, &#123; name, …state &#125;)</code>.
           Do not query <code>data-sail-host</code> or other
@@ -165,24 +165,24 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Authoring bans ({banCount()})</h3>
     <p>
-      style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)
+      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
       Constructs the language refuses, with the rule id that fails closed.
     </p>
     <grid cols="1" gap="2">
       <for {bans()} as="b" key={b.rule}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <row gap="2" align="center">
               <code>
-                style.fg(destructive)
+                style({ paint: fg(destructive) })
 {b.syntax}</code>
               <badge size="sm">{b.rule}</badge>
             </row>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 → {b.instead}</small>
           </column>
         </card>

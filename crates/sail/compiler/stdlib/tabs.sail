@@ -10,7 +10,7 @@
     orientation: 'horizontal' | 'vertical' = 'horizontal'
   }
 
-  const host = style.minW(0)
+  const host = style({ box: minW(0) })
 </scope>
 <column gap="3" use:tabs>
   style(host)

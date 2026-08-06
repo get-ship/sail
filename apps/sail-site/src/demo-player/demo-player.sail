@@ -10,12 +10,12 @@
     playing = true
   }
 
-  const card = style.pad(3).w(full)
-    const title = style.fontSize(sm).truncate()
-  const artist = style.fontSize(xs).fg(muted-foreground).truncate()
-  const eq = style.minH(6)
-  const bar = style.w(1).radius(sm).bg(primary).origin(bottom)
-  const rest = style.w(1).h(2).radius(full).bg(muted-foreground).opacity(50)
+  const card = style({ box: pad(3).w(full) })
+    const title = style({ text: fontSize(sm).truncate() })
+  const artist = style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
+  const eq = style({ box: minH(6) })
+  const bar = style({ box: w(1), paint: radius(sm).bg(primary).origin(bottom) })
+  const rest = style({ box: w(1).h(2), paint: radius(full).bg(muted-foreground).opacity(50) })
 </scope>
 
 <controller>
@@ -51,16 +51,16 @@ The Reactive Quartet</p>
         style(eq)
 
         <div>
-          style([bar, style.h(4).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+          style([bar, style({ box: h(4), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
 </div>
         <div>
-          style([bar, style.h(6).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+          style([bar, style({ box: h(6), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
 </div>
         <div>
-          style([bar, style.h(3).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+          style([bar, style({ box: h(3), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
 </div>
         <div>
-          style([bar, style.h(5).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })])
+          style([bar, style({ box: h(5), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
 </div>
       </row>
     <else>

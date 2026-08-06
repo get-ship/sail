@@ -113,7 +113,7 @@ export default controller(() => {
 </controller>
 
 <column theme-facet-chrome-root shrink="0" gap="0">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <row
     theme-facet-chrome
@@ -124,16 +124,16 @@ export default controller(() => {
     nowrap
 
   >
-    style.padX(4).h(10).minH(10).borderBWidth(1).borderB(border-subtle).bg(background).minW(0)
+    style({ box: padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background) })
 
     <row align="center" gap="2" grow min-w="0" nowrap>
-      style.minW(0)
+      style({ box: minW(0) })
 
       <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes
       </button>
       <p hidden="true">
-        style.fg(muted-foreground).fontSize(sm)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 /</p>
       <input
         type="text"
@@ -148,10 +148,10 @@ export default controller(() => {
         on:change={onNameChange}
 
 >
-        style.maxW(48).fontWeight(semibold).borderWidth(0)
+        style({ box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) })
       </input>
       <p hidden="true">
-        style.fg(muted-foreground).fontSize(sm)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 /</p>
       <button
         type="button"
@@ -227,23 +227,23 @@ export default controller(() => {
         </if>
         <dropdown id={diffMenuId()} placement="bottom-end">
           <column gap="2">
-            style.pad(3).minW(panel-min-w-md).maxW(panel-max-w-md)
+            style({ box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) })
 
             <p>
-              style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
 Unsaved changes</p>
             <if {hasDiffRows()}>
               <scroll-area>
-                style.maxH(48)
+                style({ box: maxH(48) })
 
                 <column gap="2">
                   <for {diffRows()} as="row" key={row.key}>
                     <column gap="0" diff-row>
                       <p>
-                        style.fontSize(xs).fontFamily(mono).fg(foreground).truncate()
+                        style({ paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() })
 {row.path}</p>
                       <p>
-                        style.fontSize(xs).fontFamily(mono).fg(muted-foreground).truncate()
+                        style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).truncate() })
 
                         {row.from} → {row.to}
                       </p>
@@ -254,7 +254,7 @@ Unsaved changes</p>
             </if>
             <if {!hasDiffRows()}>
               <p>
-                style.fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Edits pending — save to write theme JSON.</p>
             </if>
             <button type="button" size="sm" variant="solid" tone="primary" diff-save on:click={onSave}>
@@ -275,14 +275,14 @@ Edits pending — save to write theme JSON.</p>
       </row>
 
       <stack hidden="true">
-        style.w(half).h(5).minW(half).bg(border-subtle)
+        style({ box: w(half).h(5).minW(half), paint: bg(border-subtle) })
 </stack>
 
       <row mode-cluster align="center" gap="2" shrink="0" nowrap>
         <if {canToggleMode()}>
           <row dual-mode gap="2" align="center" nowrap shrink="0" label="Theme mode">
             <icon name="sun" size="sm" label="Light" shrink="0">
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 </icon>
             <switch
               size="sm"
@@ -293,7 +293,7 @@ Edits pending — save to write theme JSON.</p>
               on:change={onModeSwitch}
             ></switch>
             <icon name="moon" size="sm" label="Dark" shrink="0">
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 </icon>
           </row>
         </if>

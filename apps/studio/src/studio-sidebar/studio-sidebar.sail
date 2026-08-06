@@ -19,7 +19,7 @@
   gap="0"
 
 >
-  style.w(64).minW(64).minH(0).h(full).borderRWidth(1).borderR(border).bg(surface-1).overflow(hidden)
+  style({ box: w(64).minW(64).minH(0).h(full).overflow(hidden), paint: borderRWidth(1).borderR(border).bg(surface-1) })
 
   <slot name="header">
     <row
@@ -28,10 +28,10 @@
       shrink="0"
 
     >
-      style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)
+      style({ box: h(8).minH(8).padX(3), paint: borderBWidth(1).borderB(border-subtle) })
 
       <p>
-        style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+        style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
         {title()}
       </p>
@@ -45,7 +45,7 @@
     min-w="0"
 
   >
-    style.minH(0).h(full).basis(0).overflow(hidden)
+    style({ box: minH(0).h(full).basis(0).overflow(hidden) })
 
     <slot></slot>
   </column>

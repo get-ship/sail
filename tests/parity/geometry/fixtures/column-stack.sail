@@ -1,6 +1,6 @@
 <!-- PARITY-1: column stack + gap. Static text only (no controller signals). -->
 <column gap="4" w="full">
-  style.pad(4)
+  style({ box: pad(4) })
 
   <span>Alpha</span>
   <span>Bravo</span>

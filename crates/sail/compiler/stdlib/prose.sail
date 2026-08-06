@@ -5,7 +5,7 @@
   Paint: fg from component.prose token (cssName prose-foreground).
 -->
 <scope>
-  const host = style.display(block).fontFamily(body).fg(prose-foreground).leading(normal-plus)
+  const host = style({ box: display(block), paint: fg(prose-foreground), text: fontFamily(body).leading(normal-plus) })
 </scope>
 <div>
   style(host)

@@ -28,8 +28,8 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const fieldHint = style.fontSize(xs).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
+  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 </scope>
 
 <column
@@ -39,10 +39,10 @@ export default controller(() => {
   min-w="0"
 
 >
-  style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)
+  style({ box: minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
 
   <column grow gap="0">
-    style.minH(0).h(full).pad(4)
+    style({ box: minH(0).h(full).pad(4) })
 
     <!-- Draft paint = applyScope via theme-session bind (not theme). -->
     <card
@@ -52,10 +52,10 @@ export default controller(() => {
       padding="none"
 
     >
-      style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+      style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
       <column gap="0" grow>
-        style.minH(0).h(full)
+        style({ box: minH(0).h(full) })
 
         <row
           specimen-chrome
@@ -65,40 +65,40 @@ export default controller(() => {
           shrink="0"
 
         >
-          style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+          style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
           <row gap="2" align="center" nowrap shrink="0" hidden="true">
-            style.minW(12)
+            style({ box: minW(12) })
 
             <stack shrink="0">
-              style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+              style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
 </stack>
             <stack shrink="0">
-              style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+              style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
 </stack>
             <stack shrink="0">
-              style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+              style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
 </stack>
           </row>
           <p grow min-w="0">
-            style.fontSize(xs).fg(muted-foreground).truncate()
+            style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {nameEdit()}</p>
           <p shrink="0">
             style(pathMeta)
 {paintMode()}</p>
         </row>
         <scroll-area grow>
-          style.minH(0).basis(0).h(full).bg(background)
+          style({ box: minH(0).basis(0).h(full), paint: bg(background) })
 
           <column specimen-body gap="4">
-            style.pad(5).minW(0)
+            style({ box: pad(5).minW(0) })
 
             <column gap="1">
               <p>
-                style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 Product UI</p>
               <p>
-                style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+                style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })
 
                 Brand + surfaces paint this host. Mode flips the color table, not the editor chrome.
               </p>
@@ -115,25 +115,25 @@ Product UI</p>
             </row>
             <column surface-stack gap="2" label="Surface stack">
               <column gap="2">
-                style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(background)
+                style({ box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(background) })
 
                 <p>
                   style(pathMeta)
 bg</p>
                 <column gap="2">
-                  style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-1)
+                  style({ box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-1) })
 
                   <p>
                     style(pathMeta)
 surface-1</p>
                   <column gap="2">
-                    style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-2)
+                    style({ box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-2) })
 
                     <p>
                       style(pathMeta)
 surface-2</p>
                     <column>
-                      style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-3)
+                      style({ box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-3) })
 
                       <p>
                         style(pathMeta)
@@ -145,25 +145,25 @@ card</p>
             </column>
             <column gap="1">
               <p>
-                style.fontSize(sm).fg(foreground)
+                style({ paint: fg(foreground), text: fontSize(sm) })
 Foreground on surface</p>
               <p>
-                style.fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Muted secondary copy · border + ring below</p>
             </column>
             <column gap="1">
               <p>
-                style.fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Email</p>
               <input type="email" size="sm" placeholder="you@company.com" label="Sample email" />
             </column>
             <card padding="sm">
               <column gap="2">
                 <p>
-                  style.fontSize(sm).fontWeight(semibold)
+                  style({ text: fontSize(sm).fontWeight(semibold) })
 Card surface</p>
                 <p>
-                  style.fontSize(xs).fg(muted-foreground).leading(relaxed)
+                  style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })
 
                   Focus ring uses color.ring. Borders use color.border.
                 </p>

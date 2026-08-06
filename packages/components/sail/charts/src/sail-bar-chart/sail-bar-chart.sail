@@ -115,7 +115,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     aria-describedby="chart-data"
 
     use:observeViewport>
-    style.display(block).w(full).overflow(hidden)
+    style({ box: display(block).w(full).overflow(hidden) })
 
     <for {bars()} as="b" key={b.id}>
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
@@ -124,7 +124,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     </for>
   </svg>
   <column id="chart-data">
-    style.srOnly()
+    style({ paint: srOnly() })
 
     <slot name="description">
       <table>

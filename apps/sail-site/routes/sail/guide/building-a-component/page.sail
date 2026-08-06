@@ -16,14 +16,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Guide</p>
   <h1>Building a component</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     We are going to write one component from an empty file: a bill splitter
     that divides a total between however many people are at the table. Six
@@ -138,13 +138,13 @@ Guide</p>
   <p>And that is the component, running here:</p>
   <bill-split label="Dinner" total="96">
     <p slot="note">
-      style.fontSize(xs).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(xs) })
 
       Tip included. Arguments not.
     </p>
   </bill-split>
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     Press the buttons. The share is a <code>derived</code> value, so it
     follows the headcount without anything being wired between them.
@@ -160,7 +160,7 @@ Guide</p>
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/elements">← Using components</a>
     <a variant="solid" tone="primary" href="/sail/guide/forms">Forms →</a>

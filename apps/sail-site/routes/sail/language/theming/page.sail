@@ -32,14 +32,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column>
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Concepts</p>
   <h1>Theming</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     A theme is a complete aesthetic — palette, surfaces, radii, shadows,
     typography, motion — applied as one attribute. Nine ship with the
@@ -88,7 +88,7 @@ Concepts</p>
     token fits.
   </p>
   <ol>
-    style.list(decimal).padL(6)
+    style({ box: padL(6), paint: list(decimal) })
 
     <li>
       <strong>Semantic surfaces</strong> — <code>--surface-0..3</code>,
@@ -102,7 +102,7 @@ Concepts</p>
       <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
       <code>--muted</code> (and their <code>-foreground</code> partners).
       Status UI spends these directly via Style
-      (<code>style.bg(destructive)</code>, <code>style.colorMix(primary, 15)</code>).
+      (<code>style({ paint: bg(destructive) })</code>, <code>style({ paint: colorMix(primary, 15) })</code>).
       The L1 <code>tone</code> prop selects which hue a component paints —
       it is not a CSS channel and there is no <code>tone-*-bg/fg</code> ramp.
     </li>
@@ -137,13 +137,13 @@ Concepts</p>
   </p>
 
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the full surface: <a href="/sail/reference/config">reference → Config</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/errors">← Errors</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>

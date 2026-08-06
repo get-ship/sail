@@ -41,19 +41,19 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const unreadDot = style.display(inline-block).w(1_5).h(1_5).radius(full).bg(destructive)
-  const noteRow = style.pad(3).bg(surface-1).borderWidth(1).border(border-subtle).radius(md)
-  const noteText = style.fontSize(sm)
-  const empty = style.pad(3).fontSize(sm).fg(muted-foreground)
+  const unreadDot = style({ box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(destructive) })
+  const noteRow = style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) })
+  const noteText = style({ text: fontSize(sm) })
+  const empty = style({ box: pad(3), paint: fg(muted-foreground), text: fontSize(sm) })
 </scope>
 
 <column gap="4">
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <!-- TODO 1: sx={style.hover({ rotate: 'spring:bouncy' })} — a playful hint. -->
+      <!-- TODO 1: sx={style({ animate: hover({ rotate: 'spring:bouncy' }) })} — a playful hint. -->
       <button variant="ghost" size="sm" on:click={() => restock()}>Restock</button>
-      <!-- TODO 2: style.hover({ scale: 'spring:gentle' }) + style.press({ scale:
+      <!-- TODO 2: style({ animate: hover({ scale: 'spring:gentle' }) }) + style({ paint: press({ scale:
            'press') — tactile feedback belongs on the trigger. -->
       <button variant="outline" tone="primary" size="sm" on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
@@ -95,3 +95,4 @@ All clear.</p>
     </column>
   </if>
 </column>
+ })

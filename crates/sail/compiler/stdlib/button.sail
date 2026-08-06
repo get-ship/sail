@@ -21,18 +21,18 @@
   // No base bg(transparent): that class is a cascade landmine (F7). Unlayered
   // product `.sx-bgtransparent` beats layered solid skins and empties primary
   // fills. Variants own background; ghost is the only transparent fill.
-  const base = style.display(inline-flex).appearance(none).fontWeight(medium).leading(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().position(relative).controlFrame().select(none).whitespace(nowrap).cursor(pointer).when({ hover: style.controlLift(), active: style.press(), disabled: style.cursor(not-allowed).opacity(50) })
+  const base = style({ box: display(inline-flex).position(relative), paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().controlFrame().select(none).cursor(pointer), text: fontWeight(medium).leading(none).whitespace(nowrap) }).when(hover, { paint: controlLift() }).when(active, { paint: press() }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
 
-  const sizeXs = style.minH(control-h-2xs).padX(2).fontSize(xs)
-  const sizeSm = style.minH(control-h-sm).padX(2_5).fontSize(sm)
-  const sizeMd = style.minH(control-h-md).padX(3).fontSize(base)
-  const sizeLg = style.minH(control-h-lg).padX(4).fontSize(md)
+  const sizeXs = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
+  const sizeSm = style({ box: minH(control-h-sm).padX(2_5), text: fontSize(sm) })
+  const sizeMd = style({ box: minH(control-h-md).padX(3), text: fontSize(base) })
+  const sizeLg = style({ box: minH(control-h-lg).padX(4), text: fontSize(md) })
 
-  const vDefault = style.bg(background).border(border).fg(foreground).shadow(xs).when({ hover: style.bg(muted).border(border-strong) })
-  const vSolid = style.bg(foreground).border(foreground).fg(background).shadow(xs).when({ hover: style.opacity(90).shadow(sm) })
-  const vSoft = style.bg(hover-bg).border(border).fg(foreground).when({ hover: style.opacity(90) })
-  const vOutline = style.border(foreground).fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
-  const vGhost = style.bg(transparent).fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
+  const vDefault = style({ paint: bg(background).border(border).fg(foreground).shadow(xs) }).when(hover, { paint: bg(muted).border(border-strong) })
+  const vSolid = style({ paint: bg(foreground).border(foreground).fg(background).shadow(xs) }).when(hover, { paint: opacity(90).shadow(sm) })
+  const vSoft = style({ paint: bg(hover-bg).border(border).fg(foreground) }).when(hover, { paint: opacity(90) })
+  const vOutline = style({ paint: border(foreground).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
+  const vGhost = style({ paint: bg(transparent).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
 </scope>
 
 <button>
@@ -51,34 +51,34 @@
     md: sizeMd,
     lg: sizeLg,
   }),
-  compound({ variant: solid, tone: primary }, style.bg(primary).border(primary).fg(primary-foreground)),
-  compound({ variant: solid, tone: info }, style.bg(info).border(info).fg(info-foreground)),
-  compound({ variant: solid, tone: success }, style.bg(success).border(success).fg(success-foreground)),
-  compound({ variant: solid, tone: warning }, style.bg(warning).border(warning).fg(warning-foreground)),
-  compound({ variant: solid, tone: destructive }, style.bg(destructive).border(destructive).fg(destructive-foreground)),
-  compound({ variant: solid, tone: accent }, style.bg(accent).border(accent).fg(accent-foreground)),
-  compound({ variant: solid, tone: muted }, style.bg(muted-foreground).border(muted-foreground).fg(background)),
-  compound({ variant: soft, tone: primary }, style.colorMix(primary, 15).border(primary).fg(primary).when({ hover: style.colorMix(primary, 25) })),
-  compound({ variant: soft, tone: info }, style.colorMix(info, 15).border(info).fg(info).when({ hover: style.colorMix(info, 25) })),
-  compound({ variant: soft, tone: success }, style.colorMix(success, 15).border(success).fg(success).when({ hover: style.colorMix(success, 25) })),
-  compound({ variant: soft, tone: warning }, style.colorMix(warning, 15).border(warning).fg(warning).when({ hover: style.colorMix(warning, 25) })),
-  compound({ variant: soft, tone: destructive }, style.colorMix(destructive, 15).border(destructive).fg(destructive).when({ hover: style.colorMix(destructive, 25) })),
-  compound({ variant: soft, tone: accent }, style.colorMix(accent, 15).border(accent).fg(accent).when({ hover: style.colorMix(accent, 25) })),
-  compound({ variant: soft, tone: muted }, style.bg(muted).border(border).fg(muted-foreground)),
-  compound({ variant: outline, tone: primary }, style.border(primary).fg(primary)),
-  compound({ variant: outline, tone: info }, style.border(info).fg(info)),
-  compound({ variant: outline, tone: success }, style.border(success).fg(success)),
-  compound({ variant: outline, tone: warning }, style.border(warning).fg(warning)),
-  compound({ variant: outline, tone: destructive }, style.border(destructive).fg(destructive)),
-  compound({ variant: outline, tone: accent }, style.border(accent).fg(accent)),
-  compound({ variant: outline, tone: muted }, style.border(muted-foreground).fg(muted-foreground)),
-  compound({ variant: ghost, tone: primary }, style.fg(primary)),
-  compound({ variant: ghost, tone: info }, style.fg(info)),
-  compound({ variant: ghost, tone: success }, style.fg(success)),
-  compound({ variant: ghost, tone: warning }, style.fg(warning)),
-  compound({ variant: ghost, tone: destructive }, style.fg(destructive)),
-  compound({ variant: ghost, tone: accent }, style.fg(accent)),
-  compound({ variant: ghost, tone: muted }, style.fg(muted-foreground)),
+  compound({ variant: solid, tone: primary }, style({ paint: bg(primary).border(primary).fg(primary-foreground) })),
+  compound({ variant: solid, tone: info }, style({ paint: bg(info).border(info).fg(info-foreground) })),
+  compound({ variant: solid, tone: success }, style({ paint: bg(success).border(success).fg(success-foreground) })),
+  compound({ variant: solid, tone: warning }, style({ paint: bg(warning).border(warning).fg(warning-foreground) })),
+  compound({ variant: solid, tone: destructive }, style({ paint: bg(destructive).border(destructive).fg(destructive-foreground) })),
+  compound({ variant: solid, tone: accent }, style({ paint: bg(accent).border(accent).fg(accent-foreground) })),
+  compound({ variant: solid, tone: muted }, style({ paint: bg(muted-foreground).border(muted-foreground).fg(background) })),
+  compound({ variant: soft, tone: primary }, style({ paint: colorMix(primary, 15).border(primary).fg(primary) }).when(hover, { paint: colorMix(primary, 25) })),
+  compound({ variant: soft, tone: info }, style({ paint: colorMix(info, 15).border(info).fg(info) }).when(hover, { paint: colorMix(info, 25) })),
+  compound({ variant: soft, tone: success }, style({ paint: colorMix(success, 15).border(success).fg(success) }).when(hover, { paint: colorMix(success, 25) })),
+  compound({ variant: soft, tone: warning }, style({ paint: colorMix(warning, 15).border(warning).fg(warning) }).when(hover, { paint: colorMix(warning, 25) })),
+  compound({ variant: soft, tone: destructive }, style({ paint: colorMix(destructive, 15).border(destructive).fg(destructive) }).when(hover, { paint: colorMix(destructive, 25) })),
+  compound({ variant: soft, tone: accent }, style({ paint: colorMix(accent, 15).border(accent).fg(accent) }).when(hover, { paint: colorMix(accent, 25) })),
+  compound({ variant: soft, tone: muted }, style({ paint: bg(muted).border(border).fg(muted-foreground) })),
+  compound({ variant: outline, tone: primary }, style({ paint: border(primary).fg(primary) })),
+  compound({ variant: outline, tone: info }, style({ paint: border(info).fg(info) })),
+  compound({ variant: outline, tone: success }, style({ paint: border(success).fg(success) })),
+  compound({ variant: outline, tone: warning }, style({ paint: border(warning).fg(warning) })),
+  compound({ variant: outline, tone: destructive }, style({ paint: border(destructive).fg(destructive) })),
+  compound({ variant: outline, tone: accent }, style({ paint: border(accent).fg(accent) })),
+  compound({ variant: outline, tone: muted }, style({ paint: border(muted-foreground).fg(muted-foreground) })),
+  compound({ variant: ghost, tone: primary }, style({ paint: fg(primary) })),
+  compound({ variant: ghost, tone: info }, style({ paint: fg(info) })),
+  compound({ variant: ghost, tone: success }, style({ paint: fg(success) })),
+  compound({ variant: ghost, tone: warning }, style({ paint: fg(warning) })),
+  compound({ variant: ghost, tone: destructive }, style({ paint: fg(destructive) })),
+  compound({ variant: ghost, tone: accent }, style({ paint: fg(accent) })),
+  compound({ variant: ghost, tone: muted }, style({ paint: fg(muted-foreground) })),
 ])
 
   <slot></slot>

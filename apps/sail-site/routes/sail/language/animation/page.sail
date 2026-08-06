@@ -61,14 +61,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 The language</p>
   <h1>Animation</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Animation is declared on the element via Style chain methods. <code>style.enter</code> / <code>.exit</code> / <code>.loop</code> / <code>.reveal</code> name a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
@@ -81,10 +81,10 @@ The language</p>
 
   <row gap="3" align="center">
     <button on:click={replay}>
-      style.press({ scale: 'press' })
+      style({ animate: press({ scale: 'press' }) })
 Replay</button>
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Five tiles, one <code>style.enter</code> each; <code>stagger</code>
       is the delay between siblings.
@@ -92,22 +92,22 @@ Replay</button>
   </row>
   <if {dealt()}>
     <row gap="3" align="center">
-      style.minH(9)
+      style({ box: minH(9) })
 
       <div>
-        style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })
+        style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })
 </div>
       <div>
-        style.w(9).h(9).radius(md).bg(primary).opacity(75).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })
+        style({ box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })
 </div>
       <div>
-        style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })
+        style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })
 </div>
       <div>
-        style.w(9).h(9).radius(md).bg(primary).opacity(75).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })
+        style({ box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })
 </div>
       <div>
-        style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })
+        style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })
 </div>
     </row>
   </if>
@@ -122,11 +122,11 @@ Replay</button>
     finishes.
   </p>
   <column gap="3">
-    style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)
+    style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
     <row>
       <button on:click={() => open.set(!open())}>
-        style.press({ scale: 'press' })
+        style({ animate: press({ scale: 'press' }) })
 
         {open() ? 'Remove' : 'Add'} the panel
       </button>
@@ -135,11 +135,11 @@ Replay</button>
       <card
 
 >
-        style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })
+        style({ box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
 
         <strong>I animate in, and I animate out.</strong>
         <p>
-          style.fontSize(sm).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Watch me leave before I go.</p>
       </card>
     </if>
@@ -155,13 +155,13 @@ Watch me leave before I go.</p>
     the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
   </p>
   <row gap="5" align="center">
-    style.minH(9)
+    style({ box: minH(9) })
 
     <div testid="inline-demo">
-      style.w(8).h(8).radius(md).bg(primary).loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })
+      style({ box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) })
 </div>
     <div>
-      style.w(8).h(8).radius(md).bg(primary).opacity(75).loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 })
+      style({ box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) })
 </div>
   </row>
   <code-block code={code.express}></code-block>
@@ -181,12 +181,12 @@ Watch me leave before I go.</p>
   </p>
   <column gap="4">
     <card>
-      style.pad(6).reveal({ opacity: 'fade', translate-y: 'spring:gentle' })
+      style({ box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) })
 
       <h3>This one fades up as it enters the viewport.</h3>
     </card>
     <card>
-      style.pad(6).reveal({ scale: 'spring:bouncy', opacity: 'fade' })
+      style({ box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) })
 
       <h3>And this one springs in.</h3>
     </card>
@@ -201,23 +201,23 @@ Watch me leave before I go.</p>
     reduced motion gets none of this, automatically.
   </p>
   <row gap="3" align="center" id="loop-row">
-    style.minH(9)
+    style({ box: minH(9) })
 
     <div testid="ambient-dot">
-      style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })
+      style({ box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })
 </div>
     <div>
-      style.w(4).h(4).radius(full).bg(primary).opacity(75).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })
+      style({ box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })
 </div>
     <div>
-      style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })
+      style({ box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })
 </div>
     <div>
-      style.w(4).h(4).radius(full).bg(primary).opacity(75).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })
+      style({ box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })
 </div>
     <row grow></row>
     <div testid="spin-demo">
-      style.w(8).h(8).radius(md).bg(primary).loop({ rotate: 'spin' })
+      style({ box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) })
 </div>
   </row>
   <code-block code={code.loop}></code-block>
@@ -231,10 +231,10 @@ Watch me leave before I go.</p>
   </p>
   <row gap="3" align="center">
     <button>
-      style.press({ scale: 'press' })
+      style({ animate: press({ scale: 'press' }) })
 press me</button>
     <button>
-      style.focus-visible({ scale: 'spring:snappy' })
+      style({ animate: focus-visible({ scale: 'spring:snappy' }) })
 tab to me</button>
   </row>
   <code-block code={code.gestures}></code-block>
@@ -247,7 +247,7 @@ tab to me</button>
     hold, and pops in place between 54 and 64.
   </p>
   <column gap="4">
-    style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1).minH(11)
+    style({ box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
     <row align="center" gap="3">
       <input
@@ -260,11 +260,11 @@ tab to me</button>
         grow min-w="0"
       />
       <span>
-        style.w(8).textAlign(end).fontFamily(mono).fontSize(sm).fg(muted-foreground)
+        style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) })
 {scrubText()}</span>
     </row>
     <row align="center">
-      style.minH(9)
+      style({ box: minH(9) })
 
       <!--
         Plain div, not <card>: card host always paints bg(card) ≈ surface-1,
@@ -276,7 +276,7 @@ tab to me</button>
         shrink="0"
 
       >
-        style.w(9).h(9).bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))
+        style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })
 </div>
     </row>
   </column>
@@ -286,7 +286,7 @@ tab to me</button>
     keyframes per property, and returns one signal per property. Those
     signals reach Style the way any signal does, through
     <code>bind(name)</code> on a setter
-    (<code>style.translateX(bind(tileX))</code>):
+    (<code>style({ paint: translateX(bind(tileX)) })</code>):
   </p>
   <code-block code={code.choreography}></code-block>
   <p>
@@ -314,30 +314,30 @@ tab to me</button>
     <column gap="1">
       <label>Triggers</label>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 opacity · scale · scale-x · scale-y · translate-x · translate-y · rotate</p>
     </column>
     <column gap="1">
       <label>Springs</label>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
     </column>
     <column gap="1">
       <label>Tweens</label>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 fade · fade-out · press · release · pulse · spin</p>
     </column>
   </grid>
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     Config fields: <code>duration</code> · <code>delay</code> ·
     <code>easing</code> · <code>from</code>/<code>to</code> ·
@@ -346,13 +346,13 @@ fade · fade-out · press · release · pulse · spin</p>
   </p>
 
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the full surface: <a href="/sail/reference/motion">reference → Motion</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/layout">← Layout</a>
     <a variant="solid" tone="primary" href="/sail/language/actions">Actions →</a>

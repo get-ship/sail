@@ -39,10 +39,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
     <h1>Template directives</h1>
@@ -55,14 +55,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="1" gap="2">
       <for {directives()} as="d" key={d.syntax}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <row gap="3" align="center">
             <code>
-              style.minW(40)
+              style({ box: minW(40) })
 {d.syntax}</code>
             <small>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 {d.summary}</small>
           </row>
         </card>
@@ -73,7 +73,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>on: events</h3>
     <p>
-      style.maxW(breakpoint-tablet)
+      style({ box: maxW(breakpoint-tablet) })
 
       Web DOM event names plus framework custom events the runtime fires.
       <code>sail-*</code> / <code>ship-*</code> prefixes and namespaced
@@ -82,12 +82,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="2" gap="2">
       <for {eventNames()} as="e" key={e.name}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>on:{e.name}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {e.summary}</small>
           </column>
         </card>
@@ -98,17 +98,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>on: modifiers</h3>
     <p>
-      style.maxW(breakpoint-tablet)
+      style({ box: maxW(breakpoint-tablet) })
 Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
       <for {modifierRows()} as="m" key={m.key}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>{m.written}{m.arg}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {m.summary}</small>
           </column>
         </card>
@@ -121,12 +121,12 @@ Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="3" gap="2">
       <for {bindTargets()} as="b" key={b.target}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>bind:{b.target}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {b.summary}</small>
           </column>
         </card>
@@ -139,17 +139,17 @@ Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
       <for {blockRows()} as="b" key={b.open}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <row gap="2" align="center">
               <code>{b.open}</code>
               <small>
-                style.fg(muted-foreground)
+                style({ paint: fg(muted-foreground) })
 {b.clauses}</small>
             </row>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {b.summary}</small>
           </column>
         </card>
@@ -160,21 +160,21 @@ Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
   <column gap="3">
     <h3>Foreign idioms</h3>
     <p>
-      style.maxW(breakpoint-tablet)
+      style({ box: maxW(breakpoint-tablet) })
 
       HTML/CSS/JS habits the parser teaches against, with the sail way.
     </p>
     <grid cols="1" gap="2">
       <for {foreignIdioms()} as="r" key={r.syntax}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>
-              style.fg(destructive)
+              style({ paint: fg(destructive) })
 {r.syntax}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 → {r.instead}</small>
           </column>
         </card>

@@ -20,17 +20,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="6">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <column gap="3">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p>
-      style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
+      style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Introduction</p>
     <h1>Sail</h1>
     <p>
-      style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+      style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
       Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
@@ -54,12 +54,12 @@ Introduction</p>
     </p>
     <row gap="6" align="start">
       <column gap="2"  grow>
-        style.basis(breakpoint-mobile).minW(0)
+        style({ box: basis(breakpoint-mobile).minW(0) })
 
         <code-block code={code.hello}></code-block>
       </column>
       <column gap="2"  grow justify="center">
-        style.basis(64).minW(0).pad(4).bg(muted).borderWidth(1).border(border).radius(lg)
+        style({ box: basis(64).minW(0).pad(4), paint: bg(muted).borderWidth(1).border(border).radius(lg) })
 
         <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
@@ -83,12 +83,12 @@ Introduction</p>
   </column>
 
   <column gap="3">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <h2>The compiler pushes back</h2>
     <row gap="6" align="start">
       <column gap="3"  grow>
-        style.basis(breakpoint-mobile).minW(0)
+        style({ box: basis(breakpoint-mobile).minW(0) })
 
         <p>
           The compiler checks more than syntax: a colour that isn't a token, a
@@ -108,10 +108,10 @@ Introduction</p>
         </p>
       </column>
       <column gap="2"  grow>
-        style.basis(breakpoint-mobile).minW(0)
+        style({ box: basis(breakpoint-mobile).minW(0) })
 
         <p>
-          style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 apps/sail-site/routes/sail.config.json</p>
         <sail-json-view data={code.configJson} expanded depth={2}></sail-json-view>
       </column>
@@ -145,14 +145,14 @@ apps/sail-site/routes/sail.config.json</p>
     </p>
 
     <p>
-      style.fontSize(sm).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Sail is in alpha. It builds real websites today — this site is one —
       and the language is still settling.
     </p>
 
     <row gap="2">
-      style.mt(4).padT(4).borderTWidth(1).borderT(border)
+      style({ box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) })
 
       <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
       <a variant="default" href="/sail/tutorial">Tutorial</a>

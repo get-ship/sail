@@ -10,21 +10,21 @@
     code = ''
   }
 
-  const base = style.fontFamily(body).fg(error-state-foreground).textAlign(center).borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs).padY(8).padX(4).group()
-  const sizeMd = style.padY(8).padX(4)
-  const sizeSm = style.padY(7)
-  const sizeLg = style.padY(8).padX(6)
-  const variantDefault = style.textAlign(center).borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs)
-  const variantInline = style.textAlign(start).borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none).padY(3).padX(4)
-  const icon = style.self(center).radius(lg).bg(muted).fg(destructive).size(control-h-xl).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset)
-  const glyph = style.size(control-h-2xs)
-  const copy = style.self(stretch)
-  const title = style.fontFamily(heading).fontWeight(semibold).fg(foreground).leading(tight).fontSize(md)
-  const desc = style.leading(loose).fg(muted-foreground).fontSize(sm).maxW(panel-ch-w-md)
-  const codeBox = style.fontFamily(mono).fontSize(xs).fg(muted-foreground).bg(muted).borderWidth(1).border(border-subtle).radius(sm).padY(1).padX(2).mt(1)
-  const detailsToggle = style.display(none).mt(1).padY(1).padX(2).borderWidth(0).bg(transparent).fg(muted-foreground).fontFamily(body).fontSize(xs).radius(sm).cursor(pointer)
-  const details = style.display(none).mt(2).padY(2).padX(3).bg(muted).radius(sm).fontFamily(mono).fontSize(xs).fg(muted-foreground).whitespace(pre-wrap).break(words).textAlign(start).maxW(panel-ch-w-lg)
-  const actions = style.self(center)
+  const base = style({ box: padY(8).padX(4), paint: fg(error-state-foreground).borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs).group(), text: fontFamily(body).textAlign(center) })
+  const sizeMd = style({ box: padY(8).padX(4) })
+  const sizeSm = style({ box: padY(7) })
+  const sizeLg = style({ box: padY(8).padX(6) })
+  const variantDefault = style({ paint: borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) })
+  const variantInline = style({ box: padY(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none), text: textAlign(start) })
+  const icon = style({ box: self(center).size(control-h-xl), paint: radius(lg).bg(muted).fg(destructive).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset) })
+  const glyph = style({ box: size(control-h-2xs) })
+  const copy = style({ box: self(stretch) })
+  const title = style({ paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) })
+  const desc = style({ box: maxW(panel-ch-w-md), paint: fg(muted-foreground), text: leading(loose).fontSize(sm) })
+  const codeBox = style({ box: padY(1).padX(2).mt(1), paint: fg(muted-foreground).bg(muted).borderWidth(1).border(border-subtle).radius(sm), text: fontFamily(mono).fontSize(xs) })
+  const detailsToggle = style({ box: display(none).mt(1).padY(1).padX(2), paint: borderWidth(0).bg(transparent).fg(muted-foreground).radius(sm).cursor(pointer), text: fontFamily(body).fontSize(xs) })
+  const details = style({ box: display(none).mt(2).padY(2).padX(3).maxW(panel-ch-w-lg), paint: bg(muted).radius(sm).fg(muted-foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap).break(words).textAlign(start) })
+  const actions = style({ box: self(center) })
 </scope>
 
 <column
@@ -46,7 +46,7 @@
       inline: variantInline,
     }),
     when({
-      forced-colors: style.border(CanvasText),
+      forced-colors: style({ paint: border(CanvasText) }),
     }),
   ])
 
@@ -62,7 +62,7 @@
     style([
       icon,
       when({
-        forced-colors: style.bg(Canvas).fg(CanvasText),
+        forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),
       }),
     ])
 
@@ -86,7 +86,7 @@
       style([
       desc,
       when({
-        empty: style.display(none),
+        empty: style({ box: display(none) }),
       }),
     ])
 
@@ -96,7 +96,7 @@
       style([
       codeBox,
       when({
-        empty: style.display(none),
+        empty: style({ box: display(none) }),
       }),
     ])
 </div>
@@ -109,9 +109,9 @@
       style([
         detailsToggle,
         when({
-          group-state-has-details: style.display(inline-block),
-          hover: style.fg(foreground).bg(muted),
-          focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
+          group-state-has-details: style({ box: display(inline-block) }),
+          hover: style({ paint: fg(foreground).bg(muted) }),
+          focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
         }),
       ])
 Show details</button>
@@ -119,7 +119,7 @@ Show details</button>
       style([
       details,
       when({
-        group-state-open: style.display(block),
+        group-state-open: style({ box: display(block) }),
       }),
     ])
 
@@ -130,7 +130,7 @@ Show details</button>
     style([
     actions,
     when({
-      empty: style.display(none),
+      empty: style({ box: display(none) }),
     }),
   ])
 

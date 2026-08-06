@@ -14,14 +14,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Concepts</p>
   <h1>Capabilities</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     A <strong>capability</strong> is a named, typed value that whatever runs your
     app puts on your scope. Props come from the parent that renders you;
@@ -40,22 +40,22 @@ Concepts</p>
   <grid cols="2" gap="4">
     <column>
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Live — read from the real host</p>
       <column gap="2">
-        style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)
+        style({ box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
         <p>
-          style.fontSize(sm).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(sm) })
 ctx.route.pathname() says:</p>
         <p>
-          style.fontFamily(mono).fontSize(lg).fg(accent)
+          style({ paint: fg(accent), text: fontFamily(mono).fontSize(lg) })
 {here()}</p>
       </column>
     </column>
     <column>
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Source</p>
       <code-block code={code.read}></code-block>
     </column>
@@ -136,7 +136,7 @@ Source</p>
   </p>
 
   <p>
-    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     Today, a name your own controller or template declares takes precedence over
     a host capability of the same name — the author's value shadows the granted
@@ -144,7 +144,7 @@ Source</p>
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/data">← Data</a>
     <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>

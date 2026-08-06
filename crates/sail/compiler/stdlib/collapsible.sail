@@ -13,19 +13,17 @@
     disabled = false
   }
 
-  const host = style.display(block).fontFamily(body)
+  const host = style({ box: display(block), text: fontFamily(body) })
   // list(none) + after chevron: same contract as <summary> stdlib.
   // Consumers put their row in the trigger slot; summary is a flex shell.
-  const summary = style.display(flex).padY(0).padX(0).cursor(pointer).list(none).select(none).when({
-    after: style.content(empty).ms(auto).size(4).bg(muted-foreground),
-  })
-  const content = style.padX(4).padY(3)
+  const summary = style({ box: display(flex).padY(0).padX(0), paint: cursor(pointer).list(none).select(none) }).when(after, { box: ms(auto).size(4), paint: content(empty).bg(muted-foreground) })
+  const content = style({ box: padX(4).padY(3) })
 </scope>
 
 <details use:detailsToggle use:detailsDisabled>
   style([
   host,
-  compound({ disabled: true }, style.opacity(50).cursor(not-allowed)),
+  compound({ disabled: true }, style({ paint: opacity(50).cursor(not-allowed) })),
 ])
 
   <summary>

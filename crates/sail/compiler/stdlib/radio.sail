@@ -10,11 +10,8 @@
     disabled = false
   }
 
-  const host = style.fontFamily(body).fontSize(sm).fg(radio-foreground).cursor(pointer).select(none)
-  const input = style.appearance(none).display(inline-block).align(middle).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm).fontSize(base).borderWidth(2).border(foreground).bg(background).shadow(xs).radius(full).cursor(pointer).when({
-    checked: style.bg(primary).border(primary),
-    disabled: style.cursor(not-allowed).opacity(50),
-  })
+  const host = style({ paint: fg(radio-foreground).cursor(pointer).select(none), text: fontFamily(body).fontSize(sm) })
+  const input = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(foreground).bg(background).shadow(xs).radius(full).cursor(pointer), text: fontSize(base) }).when(checked, { paint: bg(primary).border(primary) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
 </scope>
 
 <label>

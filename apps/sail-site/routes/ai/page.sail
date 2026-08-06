@@ -4,14 +4,14 @@
 -->
 
 <column>
-  style.pad(0).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(0).maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 AI</p>
   <h1>Sail is built for agents</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Most UI frameworks optimize for a human at a keyboard. Sail optimizes for a
     model: a narrow grammar, a strict lint that turns design-system violations
@@ -41,7 +41,7 @@ AI</p>
   </ul>
 
   <p>
-    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     <strong>This is the headline, not an appendix.</strong> "Most ergonomic for
     agents" is the thesis of the whole framework; this section is where it gets
@@ -49,7 +49,7 @@ AI</p>
   </p>
 
   <row>
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/">← SHIP UI</a>
   </row>

@@ -8,7 +8,7 @@
                     match(variant/padding), compound(interactive/fill/
                     status-rail/tone/accent-bar)
     structure     — named header/footer slots with chrome Style; unfilled
-                    regions collapse via when({ empty: style.display(none) }).
+                    regions collapse via when({ empty: style({ box: display(none) }) }).
                     The gate repeats per element because stdlib sources compile
                     standalone — no cross-file Style const sharing exists
                     (documented in compiler/src/stdlib.rs).
@@ -44,21 +44,21 @@
     fill = false
   }
 
-  const base = style.position(relative).isolate().overflow(clip).radius(lg).border(1, border).fg(card-foreground).shadow(card-rest).transition(colors).duration(fast).ease(out).bg(card).padY(4).padX(5).backdrop(card-backdrop-filter).borderImage(corner-image)
-  const outline = style.bg(transparent)
-  const padMd = style.padY(4).padX(5)
-  const padNone = style.pad(0)
-  const padSm = style.padY(2).padX(3)
-  const padLg = style.padY(5).padX(6)
-  const headerChrome = style.mt(-4).mx(-5).mb(3).padX(5).padY(4).borderB(1, border-subtle).fontFamily(heading)
-  const footerChrome = style.mt(3).mx(-5).mb(-4).padX(5).padY(4).borderT(1, border-subtle)
+  const base = style({ box: position(relative).overflow(clip).padY(4).padX(5), paint: isolate().radius(lg).border(1, border).fg(card-foreground).shadow(card-rest).transition(colors).duration(fast).ease(out).bg(card).backdrop(card-backdrop-filter).borderImage(corner-image) })
+  const outline = style({ paint: bg(transparent) })
+  const padMd = style({ box: padY(4).padX(5) })
+  const padNone = style({ box: pad(0) })
+  const padSm = style({ box: padY(2).padX(3) })
+  const padLg = style({ box: padY(5).padX(6) })
+  const headerChrome = style({ box: mt(-4).mx(-5).mb(3).padX(5).padY(4), paint: borderB(1, border-subtle), text: fontFamily(heading) })
+  const footerChrome = style({ box: mt(3).mx(-5).mb(-4).padX(5).padY(4), paint: borderT(1, border-subtle) })
 </scope>
 
 <div>
   style([
   base,
   match(variant, {
-    default: style.bg(card),
+    default: style({ paint: bg(card) }),
     outline: outline,
   }),
   match(padding, {
@@ -67,43 +67,37 @@
     sm: padSm,
     lg: padLg,
   }),
-  compound({ interactive: true }, style.cursor(pointer).tapHighlight(none).when({
-    hover: style.border(border-strong).shadow(hover).translateY(-px),
-    active: style.shadow(card-rest).translateY(0).duration(instant),
-    motion-reduce: style.translateY(0),
-    focus: style.outline(2),
-    forced-colors: when({ focus: style.outline(CanvasText) }),
-  })),
-  compound({ fill: true }, style.bg(muted).border(border)),
-  compound({ tone: primary }, style.border(primary)),
-  compound({ tone: info }, style.border(info)),
-  compound({ tone: success }, style.border(success)),
-  compound({ tone: warning }, style.border(warning)),
-  compound({ tone: destructive }, style.border(destructive)),
-  compound({ tone: accent }, style.border(accent)),
-  compound({ tone: muted }, style.border(border)),
-  compound({ status-rail: true }, style.borderS(3, border-strong).padS(4)),
-  compound({ status-rail: true, padding: sm }, style.padS(2)),
-  compound({ status-rail: true, padding: md }, style.padS(4)),
-  compound({ status-rail: true, padding: lg }, style.padS(5)),
-  compound({ status-rail: true, padding: none }, style.padS(0)),
+  compound({ interactive: true }, style({ paint: cursor(pointer).tapHighlight(none) }).when(hover, { paint: border(border-strong).shadow(hover).translateY(-px) }).when(active, { paint: shadow(card-rest).translateY(0).duration(instant) }).when(motion-reduce, { paint: translateY(0) }).when(focus, { paint: outline(2) }).when(forced-colors, when({ focus: style({ paint: outline(CanvasText) }) }))),
+  compound({ fill: true }, style({ paint: bg(muted).border(border) })),
+  compound({ tone: primary }, style({ paint: border(primary) })),
+  compound({ tone: info }, style({ paint: border(info) })),
+  compound({ tone: success }, style({ paint: border(success) })),
+  compound({ tone: warning }, style({ paint: border(warning) })),
+  compound({ tone: destructive }, style({ paint: border(destructive) })),
+  compound({ tone: accent }, style({ paint: border(accent) })),
+  compound({ tone: muted }, style({ paint: border(border) })),
+  compound({ status-rail: true }, style({ box: padS(4), paint: borderS(3, border-strong) })),
+  compound({ status-rail: true, padding: sm }, style({ box: padS(2) })),
+  compound({ status-rail: true, padding: md }, style({ box: padS(4) })),
+  compound({ status-rail: true, padding: lg }, style({ box: padS(5) })),
+  compound({ status-rail: true, padding: none }, style({ box: padS(0) })),
   compound({ accent-bar: static }, when({
-    before: style.content(empty).position(absolute).left(0).right(0).top(0).h(half).bgImage(primary-accent).opacity(100).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out),
+    before: style({ box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).opacity(100).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }),
   })),
   compound({ accent-bar: hover }, when({
-    before: style.content(empty).position(absolute).left(0).right(0).top(0).h(half).bgImage(primary-accent).opacity(0).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out),
-    hover: when({ before: style.opacity(100) }),
+    before: style({ box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).opacity(0).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }),
+    hover: when({ before: style({ paint: opacity(100) }) }),
   })),
 ])
 
   <div>
-    style([ headerChrome, when({ empty: style.display(none) }) ])
+    style([ headerChrome, when({ empty: style({ box: display(none) }) }) ])
 
     <slot name="header"></slot>
   </div>
   <slot></slot>
   <div>
-    style([ footerChrome, when({ empty: style.display(none) }) ])
+    style([ footerChrome, when({ empty: style({ box: display(none) }) }) ])
 
     <slot name="footer"></slot>
   </div>

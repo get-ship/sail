@@ -39,14 +39,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Guide</p>
   <h1>Forms</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Forms are how an app writes. <code>query()</code> turns reading async data
     into a signal with explicit loading and error states; a form is the same
@@ -59,10 +59,10 @@ Guide</p>
   <grid cols="2" gap="4">
     <column>
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Live — saves to a 900 ms fake API</p>
       <column gap="3">
-        style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)
+        style({ box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
         <form on:submit={onSubmit} testid="forms-demo">
           <column gap="3">
@@ -90,7 +90,7 @@ Live — saves to a 900 ms fake API</p>
 
             <if {profile.pending()}>
               <row gap="2" align="center"><spinner></spinner> <p>
-                style.fontSize(sm).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(sm) })
 saving…</p></row>
             </if>
             <if {profile.lastError()}>
@@ -103,7 +103,7 @@ saving…</p></row>
         </form>
       </column>
       <p>
-        style.fontSize(sm).fg(muted-foreground).mt(2)
+        style({ box: mt(2), paint: fg(muted-foreground), text: fontSize(sm) })
 
         Try it: save while empty to see the errors, fill it in and save to
         watch the pending state, and use "Fail the next save" to see the
@@ -112,7 +112,7 @@ saving…</p></row>
     </column>
     <column>
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Source</p>
       <code-block code={code.demo}></code-block>
     </column>
@@ -211,7 +211,7 @@ Source</p>
   <code-block code={code.mutation}></code-block>
 
   <p>
-    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     A Sail page renders its markup before JavaScript arrives, so a form is
     visible and focusable immediately — but submitting needs the runtime
@@ -220,7 +220,7 @@ Source</p>
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/guide/building-a-component">← Building a component</a>
     <a variant="solid" tone="primary" href="/sail/guide/making-a-theme">Making a theme →</a>

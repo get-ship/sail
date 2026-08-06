@@ -110,10 +110,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   data-state={disabled() ? 'disabled' : ''}
 
 >
-  style.pad(2).fontFamily(body).fg(foreground).bg(background).borderWidth(1).border(border).radius(lg).when({ focusWithin: style.borderWidth(1).border(primary).outline(ring), stateDisabled: style.bg(muted).opacity(75) })
+  style({ box: pad(2), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg), text: fontFamily(body) }).when(focusWithin, { paint: borderWidth(1).border(primary).outline(ring) }).when(stateDisabled, { paint: bg(muted).opacity(75) })
 
   <div>
-    style.display(contents)
+    style({ box: display(contents) })
 
     <slot name="attachments"></slot>
   </div>
@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         grow min-w="0"
 
       >
-        style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)
+        style({ box: minW(0).minH(0).padY(1_5).padX(2).overflowY(auto), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal) })
 </textarea>
     </if>
     <if {!multiline()}>
@@ -142,7 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         grow min-w="0"
 
 >
-        style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)
+        style({ box: minW(0).minH(0).padY(1_5).padX(2), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal) })
       </input>
     </if>
     <row nowrap gap="1" align="center" shrink="0">

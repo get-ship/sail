@@ -3,24 +3,24 @@
   Controller composition: session + color domain.
 -->
 <scope>
-  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
-  const fieldHint = style.fontSize(xs).fg(muted-foreground)
-  const monoMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const doorTitle = style.fontWeight(semibold)
-  const editorCol = style.padX(6).padT(6).padB(10).maxW(panel-max-w-lg)
-  const brandCard = style.radius(lg).borderWidth(1).border(border-subtle).overflow(hidden).minW(0).bg(surface-1)
+  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
+  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const doorTitle = style({ text: fontWeight(semibold) })
+  const editorCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
+  const brandCard = style({ box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
-  const brandSwatch = style.position(relative).h(28).minH(28).w(full).overflow(hidden).when({ stateEdit: style.cursor(pointer), stateLocked: style.cursor(default) })
+  const brandSwatch = style({ box: position(relative).h(28).minH(28).w(full).overflow(hidden) }).when(stateEdit, { paint: cursor(pointer) }).when(stateLocked, { paint: cursor(default) })
   // Token-row chip: explicit size + relative so absolute-fill swatch has a real hit target.
-  const tokenChip = style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden)
-  const heroMeta = style.padX(3).padY(2)
-  const tokenRow = style.padY(2).minW(0)
-  const seedDot = style.w(4).h(4).minW(4).minH(4).radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor))
-  const surfaceChip = style.padX(2).padY(1).radius(md).borderWidth(1).border(border-subtle).bg(surface-0)
-  const surfaceDot = style.w(3).h(3).minW(3).minH(3).radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor))
-  const bandStatus = style.padX(4).padY(2)
-  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
+  const tokenChip = style({ box: position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle) })
+  const heroMeta = style({ box: padX(3).padY(2) })
+  const tokenRow = style({ box: padY(2).minW(0) })
+  const seedDot = style({ box: w(4).h(4).minW(4).minH(4), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) })
+  const surfaceChip = style({ box: padX(2).padY(1), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
+  const surfaceDot = style({ box: w(3).h(3).minW(3).minH(3), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) })
+  const bandStatus = style({ box: padX(4).padY(2) })
+  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
 </scope>
 
 <controller>
@@ -99,7 +99,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
@@ -108,7 +108,7 @@ export default controller(() => {
       style(bandError)
 
       <p grow min-w="0">
-        style.fontSize(sm).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" color-retry on:click={session.onRetry}>
         Retry
@@ -135,7 +135,7 @@ Loading…</p>
     align="stretch"
 
   >
-  style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
     <scroll-area
       color-editor
@@ -143,14 +143,14 @@ Loading…</p>
       min-w="0"
 
     >
-      style.minH(0).basis(0).h(full).minW(0).bg(background)
+      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
 
       <column gap="8">
         style(editorCol)
 
         <column color-header gap="2">
           <p>
-            style.fontSize(xl).fontWeight(semibold).tracking(tight)
+            style({ text: fontSize(xl).fontWeight(semibold).tracking(tight) })
 Color</p>
           <p>
             style(fieldHint)
@@ -159,7 +159,7 @@ Brand · surfaces · text · semantic</p>
 
         <!-- Seed strip — Generate deferred (not built yet) -->
         <row seed-strip align="center" gap="3" nowrap>
-          style.pad(3).radius(lg).borderWidth(1).border(border-subtle).bg(surface-0).minW(0)
+          style({ box: pad(3).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-0) })
 
           <p shrink="0">
             style(fieldHint)
@@ -219,7 +219,7 @@ color.primary · secondary · accent</p>
                   on:sail-change={color.onRoleColor}
 
                 >
-                  style.w(full).h(full).minH(full)
+                  style({ box: w(full).h(full).minH(full) })
 </sail-color-picker>
               </stack>
               <row align="center" justify="between">
@@ -254,7 +254,7 @@ color.primary</p>
                   on:sail-change={color.onRoleColor}
 
                 >
-                  style.w(full).h(full).minH(full)
+                  style({ box: w(full).h(full).minH(full) })
 </sail-color-picker>
               </stack>
               <row align="center" justify="between">
@@ -289,7 +289,7 @@ color.secondary</p>
                   on:sail-change={color.onRoleColor}
 
                 >
-                  style.w(full).h(full).minH(full)
+                  style({ box: w(full).h(full).minH(full) })
 </sail-color-picker>
               </stack>
               <row align="center" justify="between">
@@ -737,7 +737,7 @@ color.info</p>
         </column>
 
         <column color-footer gap="2">
-          style.padT(2).borderTWidth(1).borderT(border-subtle)
+          style({ box: padT(2), paint: borderTWidth(1).borderT(border-subtle) })
 
           <p>
             style(fieldHint)

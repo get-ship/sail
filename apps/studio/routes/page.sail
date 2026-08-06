@@ -21,9 +21,9 @@ export default controller(() => {
   justify="center"
 
 >
-  style.minH(0).h(full).bg(background)
+  style({ box: minH(0).h(full), paint: bg(background) })
 
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Opening Edit…</p>
 </column>

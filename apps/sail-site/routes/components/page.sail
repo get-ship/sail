@@ -119,43 +119,38 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <scope>
   // Gutter: catalog was flush to the viewport edge (rail + grid). Real pad.
-  const page = style.maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full).when({
-    tablet: style.padX(6).padY(5),
-  })
+  const page = style({ box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full) }).when(tablet, { box: padX(6).padY(5) })
   // Visible so tooltips/hover-cards can escape the tile; media stages clip themselves.
-  const tile = style.overflow(visible)
-  const tileCol = style.h(full).overflow(visible)
+  const tile = style({ box: overflow(visible) })
+  const tileCol = style({ box: h(full).overflow(visible) })
   // Flex via <row> (not <center>/grid place-items:center): auto grid tracks
   // collapse to max-content, so width:100% bars (progress/meter) measure 0.
   // Flex parent has a definite tile width, so w="full" children get a real track.
-  const preview = style.pad(4).minH(11).borderBWidth(1).borderB(border-subtle).bg(surface-0)
-  const tileMeta = style.padX(3).padY(2)
-  const tileName = style.fontSize(sm).fontWeight(semibold).fontFamily(mono)
-  const cat = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
-  const mutedSm = style.fontSize(sm).fg(muted-foreground).leading(relaxed).maxW(panel-max-w-lg)
-  const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
-  const sectionTitle = style.fontSize(sm).fontWeight(semibold).mt(2)
+  const preview = style({ box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
+  const tileMeta = style({ box: padX(3).padY(2) })
+  const tileName = style({ text: fontSize(sm).fontWeight(semibold).fontFamily(mono) })
+  const cat = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const mutedSm = style({ box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
+  const eyebrow = style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
+  const sectionTitle = style({ box: mt(2), text: fontSize(sm).fontWeight(semibold) })
   // Packs are a wrapping chip strip above the grid (not a side rail).
   // Side-by-side via flexDir(row)+when(tablet) loses the cascade war:
   // base w(full)/flexDir(column) can beat the tablet override, grid → 0 width.
-  const packStack = style.display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full)
-  const packBtn = style.radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).pad(0).overflow(hidden).bg(transparent).textAlign(start).whitespace(nowrap).when({
-    hover: style.bg(hover-bg),
-    pressed: style.bg(muted).border(primary).shadow(sm),
-  })
-  const packLabel = style.fontSize(sm)
-  const packCount = style.fontSize(xs).fg(primary).fontFamily(mono)
-  const railNote = style.fontSize(xs).fg(muted-foreground).leading(relaxed)
-  const search = style.w(full).maxW(panel-max-w-sm)
-  const mutedXs = style.fontSize(xs).fg(muted-foreground)
-  const count = style.fontSize(sm).fg(muted-foreground).fontFamily(mono)
-  const dormant = style.fontSize(xs).fg(muted-foreground).fontFamily(mono).textAlign(center)
-  const fieldLabel = style.fontSize(sm).fontWeight(medium)
+  const packStack = style({ box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) })
+  const packBtn = style({ box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap) }).when(hover, { paint: bg(hover-bg) }).when(pressed, { paint: bg(muted).border(primary).shadow(sm) })
+  const packLabel = style({ text: fontSize(sm) })
+  const packCount = style({ paint: fg(primary), text: fontSize(xs).fontFamily(mono) })
+  const railNote = style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })
+  const search = style({ box: w(full).maxW(panel-max-w-sm) })
+  const mutedXs = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const count = style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })
+  const dormant = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) })
+  const fieldLabel = style({ text: fontSize(sm).fontWeight(medium) })
   // Definite box: CE host is display:contents, so the stage needs a real
   // height or the <img> collapses when the source fails / is aspect-less.
-  const mediaFrame = style.w(full).h(40).minH(40).radius(md).overflow(hidden).bg(muted).borderWidth(1).border(border)
-  const mediaStage = style.w(full).h(full).minH(40)
-  const catRow = style.overflowX(auto).maxW(full)
+  const mediaFrame = style({ box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) })
+  const mediaStage = style({ box: w(full).h(full).minH(40) })
+  const catRow = style({ box: overflowX(auto).maxW(full) })
 </scope>
 
 <column gap="5" w="full" min-w="0">
@@ -166,7 +161,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       style(eyebrow)
 Components</p>
     <h1>
-      style.fontSize(2xl).fontWeight(semibold).tracking(tight)
+      style({ text: fontSize(2xl).fontWeight(semibold).tracking(tight) })
 Catalog</h1>
     <p>
       style(mutedSm)
@@ -290,12 +285,12 @@ Framework</label>
                 </else-if><else-if {e.tag === 'checkbox'}>
                   <column gap="2">
                     <label>
-                      style.fontSize(sm)
+                      style({ text: fontSize(sm) })
 
                       <input type="checkbox" bind:checked={agreed} /> Email me product updates
                     </label>
                     <label>
-                      style.fontSize(sm).fg(muted-foreground)
+                      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
                       <input type="checkbox" disabled /> Admin-only (disabled)
                     </label>
@@ -303,13 +298,13 @@ Framework</label>
                 </else-if><else-if {e.tag === 'radio-group'}>
                   <radio-group name="catalog-plan" value={plan()}>
                     <label>
-                      style.fontSize(sm)
+                      style({ text: fontSize(sm) })
 <input type="radio" name="catalog-plan" value="free" /> Free — community</label>
                     <label>
-                      style.fontSize(sm)
+                      style({ text: fontSize(sm) })
 <input type="radio" name="catalog-plan" value="pro" /> Pro — team seats</label>
                     <label>
-                      style.fontSize(sm)
+                      style({ text: fontSize(sm) })
 <input type="radio" name="catalog-plan" value="enterprise" /> Enterprise</label>
                   </radio-group>
                 </else-if><else-if {e.tag === 'switch'}>
@@ -355,19 +350,19 @@ We'll never share this.</span>
                     <legend>Billing options</legend>
                     <column gap="1">
                       <label>
-                        style.fontSize(sm)
+                        style({ text: fontSize(sm) })
 <input type="checkbox" checked /> Include trials</label>
                       <label>
-                        style.fontSize(sm)
+                        style({ text: fontSize(sm) })
 <input type="checkbox" /> Annual discount</label>
                     </column>
                   </fieldset>
                 </else-if><else-if {e.tag === 'dropzone'}>
                   <div dropzone w="full">
-                    style.minH(14).w(full).pad(3)
+                    style({ box: minH(14).w(full).pad(3) })
 
                     <p>
-                      style.fontSize(sm).fontWeight(medium)
+                      style({ text: fontSize(sm).fontWeight(medium) })
 Drop manifests here</p>
                     <p>
                       style(mutedXs)
@@ -377,10 +372,10 @@ or click to browse · .json, .yaml</p>
                   <theme-picker></theme-picker>
                 </else-if><else-if {e.tag === 'ticker'}>
                   <ticker duration="normal">
-                    style.w(full).overflow(hidden).bg(muted).padY(2).radius(md)
+                    style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })
 
                     <p>
-                      style.fontSize(xs).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(3)
+                      style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).whitespace(nowrap) })
 tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
                   </ticker>
                 </else-if><else-if {e.tag === 'alert'}>
@@ -409,10 +404,10 @@ Syncing…</span>
                 </else-if><else-if {e.tag === 'skeleton'}>
                   <column gap="2" w="full">
                     <span skeleton size="md">
-                      style.w(full).h(3)
+                      style({ box: w(full).h(3) })
 </span>
                     <span skeleton size="sm">
-                      style.w(28).h(2)
+                      style({ box: w(28).h(2) })
 </span>
                   </column>
                 </else-if><else-if {e.tag === 'empty-state'}>
@@ -461,7 +456,7 @@ Down</span></row>
                   </column>
                 </else-if><else-if {e.tag === 'card'}>
                   <card interactive>
-                    style.pad(3).w(full)
+                    style({ box: pad(3).w(full) })
 
                     <strong>Harbor Signals</strong>
                     <p>
@@ -509,7 +504,7 @@ Native disclosure — no JS controller required.</p>
                 </else-if><else-if {e.tag === 'collapsible'}>
                   <collapsible w="full">
                     <span slot="trigger">
-                      style.fontSize(sm).fontWeight(semibold)
+                      style({ text: fontSize(sm).fontWeight(semibold) })
 Webhook endpoints</span>
                     <p>
                       style(mutedXs)
@@ -521,13 +516,13 @@ POST /v1/hooks · signed with your workspace secret.</p>
                   <!-- placement bottom so the bubble stays inside the tile band -->
                   <tooltip content="Copy URL" placement="bottom">
                     <span>
-                      style.fontSize(sm).fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help)
+                      style({ paint: fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help), text: fontSize(sm) })
 ship.dev/d/ab12</span>
                   </tooltip>
                 </else-if><else-if {e.tag === 'hover-card'}>
                   <column gap="2" align="center">
                     <a href="#" popovertarget="grid-hc">
-                      style.fontSize(sm).fg(primary)
+                      style({ paint: fg(primary), text: fontSize(sm) })
 @ada</a>
                     <hover-card id="grid-hc">
                       <row gap="2" align="center">
@@ -547,13 +542,13 @@ Mathematician · first programmer</p>
                     <popover id="grid-pop">
                       <column gap="2">
                         <p>
-                          style.fontSize(sm).fontWeight(medium)
+                          style({ text: fontSize(sm).fontWeight(medium) })
 Status</p>
                         <label>
-                          style.fontSize(sm)
+                          style({ text: fontSize(sm) })
 <input type="checkbox" checked /> Healthy</label>
                         <label>
-                          style.fontSize(sm)
+                          style({ text: fontSize(sm) })
 <input type="checkbox" /> Failed</label>
                       </column>
                     </popover>
@@ -570,7 +565,7 @@ Status</p>
                 </else-if><else-if {e.tag === 'context-menu'}>
                   <column gap="2" align="center">
                     <p id="grid-cm-target">
-                      style.fontSize(sm).fg(muted-foreground).pad(3).borderWidth(1).border(border).border(dashed).radius(md)
+                      style({ box: pad(3), paint: fg(muted-foreground).borderWidth(1).border(border).border(dashed).radius(md), text: fontSize(sm) })
 Right-click this card</p>
                     <context-menu for="grid-cm-target" id="grid-cm">
                       <menu-item value="copy">Copy id</menu-item>
@@ -623,13 +618,13 @@ p95 latency 42ms.</p></tab-panel>
                 </else-if><else-if {e.tag === 'navbar'}>
                   <navbar bordered w="full">
                     <strong slot="brand">
-                      style.fontSize(sm)
+                      style({ text: fontSize(sm) })
 Harbor</strong>
                     <span>
-                      style.padX(2).padY(1).radius(md).fontSize(sm).fg(muted-foreground)
+                      style({ box: padX(2).padY(1), paint: radius(md).fg(muted-foreground), text: fontSize(sm) })
 Docs</span>
                     <span>
-                      style.padX(2).padY(1).radius(md).fontSize(sm).fontWeight(medium).bg(muted)
+                      style({ box: padX(2).padY(1), paint: radius(md).bg(muted), text: fontSize(sm).fontWeight(medium) })
 App</span>
                   </navbar>
                 </else-if><else-if {e.tag === 'table'}>
@@ -643,15 +638,15 @@ App</span>
                 </else-if><else-if {e.tag === 'layout'}>
                   <row gap="2" w="full">
                     <div grow>
-                      style.pad(2).bg(muted).radius(sm).fontSize(xs).fontFamily(mono)
+                      style({ box: pad(2), paint: bg(muted).radius(sm), text: fontSize(xs).fontFamily(mono) })
 main</div>
                     <div>
-                      style.pad(2).bg(muted).radius(sm).fontSize(xs).fontFamily(mono).w(16)
+                      style({ box: pad(2).w(16), paint: bg(muted).radius(sm), text: fontSize(xs).fontFamily(mono) })
 aside</div>
                   </row>
                 </else-if><else-if {e.tag === 'scroll-area'}>
                   <scroll-area>
-                    style.h(32).w(full).minH(32).borderWidth(1).border(border).radius(md).pad(3).bg(surface-0)
+                    style({ box: h(32).w(full).minH(32).pad(3), paint: borderWidth(1).border(border).radius(md).bg(surface-0) })
 
                     <column gap="2">
                       <p>
@@ -711,7 +706,7 @@ Build 1837 · shipped · Mon</p>
                   <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>
                 </else-if><else-if {e.tag === 'sail-composer'}>
                   <sail-composer placeholder="Message the agent…" w="full">
-                    style.w(full).minW(0)
+                    style({ box: w(full).minW(0) })
 </sail-composer>
                 </else-if><else-if {e.tag === 'sail-thinking-dots'}>
                   <row gap="2" align="center">

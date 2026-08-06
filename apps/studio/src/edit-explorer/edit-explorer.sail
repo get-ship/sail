@@ -25,7 +25,7 @@ export default controller(() => {
     gap="2"
 
   >
-    style.pad(2).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+    style({ box: pad(2), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
     <input
       type="search"
@@ -37,11 +37,11 @@ export default controller(() => {
       size="sm"
 
 >
-      style.w(full)
+      style({ box: w(full) })
     </input>
     <row align="center" justify="between" nowrap gap="2">
       <p file-count>
-        style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+        style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 
         {fileCountLabel()}
       </p>
@@ -59,7 +59,7 @@ export default controller(() => {
     gap="0"
 
   >
-    style.minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden).bg(surface-0)
+    style({ box: minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden), paint: bg(surface-0) })
 
     <if {!hasTree()}>
       <empty-state
@@ -69,7 +69,7 @@ export default controller(() => {
         files-empty
 
       >
-        style.borderWidth(1).border(border-subtle).radius(md).pad(3)
+        style({ box: pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
 
         <strong slot="title">No files</strong>
         Open a project to list sources.
@@ -86,7 +86,7 @@ export default controller(() => {
         on:sail-select={onTreeSelect}
 
       >
-        style.w(full).h(full).minH(0)
+        style({ box: w(full).h(full).minH(0) })
 </sail-tree>
     </if>
   </column>

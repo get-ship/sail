@@ -4,24 +4,21 @@
   Defaults resolve via DTCG color paths; overrides write component.* leaves.
 -->
 <scope>
-  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
-  const fieldHint = style.fontSize(xs).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const doorTitle = style.fontWeight(semibold)
-  const bandStatus = style.padX(4).padY(2)
-  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
-  const railCol = style.padX(3).padT(4).padB(6).minW(0)
-  const inspectorCol = style.padX(4).padT(4).padB(8).minW(0)
-  const fullBtn = style.w(full)
-  const chipCol = style.minW(0)
+  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
+  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const doorTitle = style({ text: fontWeight(semibold) })
+  const bandStatus = style({ box: padX(4).padY(2) })
+  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
+  const railCol = style({ box: padX(3).padT(4).padB(6).minW(0) })
+  const inspectorCol = style({ box: padX(4).padT(4).padB(8).minW(0) })
+  const fullBtn = style({ box: w(full) })
+  const chipCol = style({ box: minW(0) })
   // Selected rail row: soft fill + subtle border (no nested cards).
-  const listRow = style.padX(2_5).padY(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({
-    hover: style.bg(hover-bg),
-    selected: style.bg(surface-2).border(border-subtle),
-  })
-  const eyebrow = style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)
-  const tokenStrip = style.fontSize(xs).fontFamily(mono).fg(muted-foreground).padX(2).padY(1).radius(sm).bg(surface-0)
-  const tokenRow = style.padY(1_5).borderBWidth(1).borderB(border-subtle)
+  const listRow = style({ box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2).border(border-subtle) })
+  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
+  const tokenStrip = style({ box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) })
+  const tokenRow = style({ box: padY(1_5), paint: borderBWidth(1).borderB(border-subtle) })
 </scope>
 
 <controller>
@@ -48,7 +45,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
@@ -57,7 +54,7 @@ export default controller(() => {
       style(bandError)
 
       <p grow min-w="0">
-        style.fontSize(sm).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
@@ -83,7 +80,7 @@ Loading…</p>
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
     <!-- LEFT: component catalog rail -->
     <scroll-area
@@ -91,7 +88,7 @@ Loading…</p>
       shrink="0"
 
     >
-      style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(background)
+      style({ box: minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background) })
 
       <column gap="3">
         style(railCol)
@@ -101,7 +98,7 @@ Loading…</p>
             style(eyebrow)
 Components</p>
           <p>
-            style.fontSize(md).fontWeight(semibold).tracking(tight)
+            style({ text: fontSize(md).fontWeight(semibold).tracking(tight) })
 Theme overrides</p>
           <p l1-facet-blurb>
             style(fieldHint)
@@ -164,10 +161,10 @@ Theme overrides</p>
       min-w="0"
 
     >
-      style.minW(0).basis(0).minH(0).h(full).bg(background).overflow(hidden)
+      style({ box: minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background) })
 
       <column grow gap="0">
-        style.minH(0).h(full).pad(4)
+        style({ box: minH(0).h(full).pad(4) })
 
         <!--
           One themed host only. Stage content sits ON background —
@@ -181,10 +178,10 @@ Theme overrides</p>
           padding="none"
 
         >
-          style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+          style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
           <column gap="0" grow>
-            style.minH(0).h(full)
+            style({ box: minH(0).h(full) })
 
             <row
               specimen-chrome
@@ -194,23 +191,23 @@ Theme overrides</p>
               shrink="0"
 
             >
-              style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
               <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style.minW(12)
+                style({ box: minW(12) })
 
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
 </stack>
               </row>
               <p grow min-w="0">
-                style.fontSize(xs).fg(muted-foreground).truncate()
+                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 
                 {session.nameEdit()} · {components.selectedLabel()}
               </p>
@@ -229,7 +226,7 @@ Theme overrides</p>
                 on:click={components.onVariantPick}
 
               >
-                style.padX(3).padY(2).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+                style({ box: padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
                 <p shrink="0">
                   style(pathMeta)
@@ -249,7 +246,7 @@ Theme overrides</p>
             </if>
 
             <scroll-area grow>
-              style.minH(0).basis(0).h(full).bg(background)
+              style({ box: minH(0).basis(0).h(full), paint: bg(background) })
 
               <column
                 specimen-body
@@ -258,16 +255,16 @@ Theme overrides</p>
                 align="stretch"
 
               >
-                style.pad(5).minW(0).minH(full)
+                style({ box: pad(5).minW(0).minH(full) })
 
                 <column gap="1">
                   <p>
-                    style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                    style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 
                     {components.selectedLabel()}
                   </p>
                   <p>
-                    style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+                    style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })
 
                     {components.viewerBlurb()}
                   </p>
@@ -291,19 +288,19 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.input()}>
                     <column gap="2" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
                     </column>
                   </if>
                   <if {components.stage.textarea()}>
                     <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 </textarea>
                   </if>
                   <if {components.stage.select()}>
                     <select size="sm" label="Sample select" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <option>Option A</option>
                       <option>Option B</option>
@@ -312,7 +309,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.combobox()}>
                     <combobox placeholder="Type to filter…" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <option value="sail">Sail</option>
                       <option value="react">React</option>
@@ -324,7 +321,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.radioGroup()}>
                     <radio-group label="Plan" name="theme-l1-plan" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <radio value="monthly">Monthly</radio>
                       <radio value="yearly">Yearly</radio>
@@ -340,7 +337,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.slider()}>
                     <column gap="2" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <slider value={components.load()} min="0" max="100" tone={components.variant() || 'primary'} label="Sample slider"></slider>
                       <p>
@@ -360,7 +357,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.field()}>
                     <field w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <label slot="label" for="theme-l1-field">Name</label>
                       <input id="theme-l1-field" size="sm" placeholder="Ada Lovelace" />
@@ -369,7 +366,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.label()}>
                     <column gap="1" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
                       <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
@@ -377,7 +374,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.fieldset()}>
                     <fieldset w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <legend>Account</legend>
                       <column gap="2">
@@ -388,7 +385,7 @@ Theme overrides</p>
                   </if>
                   <if {components.stage.legend()}>
                     <fieldset w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <legend>Legend specimen</legend>
                       <p>
@@ -408,12 +405,12 @@ Legend lives on a fieldset.</p>
                   </if>
                   <if {components.stage.progressBar()}>
                     <progress value={components.load()} max="100" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 </progress>
                   </if>
                   <if {components.stage.meter()}>
                     <column gap="2" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <meter value="0.3"></meter>
                       <meter value="0.7"></meter>
@@ -443,14 +440,14 @@ Healthy boundary is invisible — this is the wrapped tree.</p>
                   </if>
                   <if {components.stage.toast()}>
                     <toast tone="success" duration="0" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <strong>Saved.</strong> Sticky toast (duration 0).
                     </toast>
                   </if>
                   <if {components.stage.toastRegion()}>
                     <column gap="2" w="full">
-                      style.maxW(panel-max-w-sm).position(relative).minH(24)
+                      style({ box: maxW(panel-max-w-sm).position(relative).minH(24) })
 
                       <p>
                         style(fieldHint)
@@ -475,7 +472,7 @@ Toast region hosts stacked toasts (fixed in product).</p>
                   </if>
                   <if {components.stage.card()}>
                     <card variant={components.variant() || 'default'} padding="sm" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <column gap="2">
                         <p>
@@ -498,7 +495,7 @@ Judges component.card.radius when overridden.</p>
                   </if>
                   <if {components.stage.separator()}>
                     <column gap="2" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <p>
                         style(fieldHint)
@@ -511,7 +508,7 @@ below</p>
                   </if>
                   <if {components.stage.details()}>
                     <details w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <summary>Advanced options</summary>
                       <p>
@@ -521,7 +518,7 @@ Native disclosure body.</p>
                   </if>
                   <if {components.stage.summary()}>
                     <details w="full" open>
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <summary>Summary specimen</summary>
                       <p>
@@ -531,7 +528,7 @@ Summary is the disclosure trigger.</p>
                   </if>
                   <if {components.stage.collapsible()}>
                     <collapsible w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <strong slot="trigger">Show details</strong>
                       <p>
@@ -541,14 +538,14 @@ Collapsible body content.</p>
                   </if>
                   <if {components.stage.prose()}>
                     <prose w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <p>Body copy with <strong>strong</strong> and <em>emphasis</em>.</p>
                     </prose>
                   </if>
                   <if {components.stage.codeBlock()}>
                     <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 </code-block>
                   </if>
 
@@ -563,7 +560,7 @@ Collapsible body content.</p>
                       <button type="button" size="sm" variant="ghost" popovertarget="theme-l1-hc">@ada</button>
                       <hover-card id="theme-l1-hc">
                         <column gap="1">
-                          style.pad(3)
+                          style({ box: pad(3) })
 
                           <p>
                             style(doorTitle)
@@ -580,7 +577,7 @@ Hover card body.</p>
                       <button type="button" size="sm" popovertarget="theme-l1-pop">Open popover</button>
                       <popover id="theme-l1-pop">
                         <p>
-                          style.pad(3)
+                          style({ box: pad(3) })
 Popover panel under theme paint.</p>
                       </popover>
                     </column>
@@ -597,7 +594,7 @@ Popover panel under theme paint.</p>
                   </if>
                   <if {components.stage.menuItem()}>
                     <column gap="1" w="full">
-                      style.maxW(panel-max-w-sm).pad(1).borderWidth(1).border(border).radius(md).bg(surface-1)
+                      style({ box: maxW(panel-max-w-sm).pad(1), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })
 
                       <menu-item>Edit theme</menu-item>
                       <menu-item>Duplicate</menu-item>
@@ -606,10 +603,10 @@ Popover panel under theme paint.</p>
                   </if>
                   <if {components.stage.contextMenu()}>
                     <column gap="2" align="center" w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       <column id="theme-l1-ctx" gap="1" w="full">
-                        style.pad(3).borderWidth(1).border(border).radius(md)
+                        style({ box: pad(3), paint: borderWidth(1).border(border).radius(md) })
 
                         <p>
                           style(fieldHint)
@@ -717,7 +714,7 @@ Tab panel body.</p>
                   </if>
                   <if {components.stage.scrollArea()}>
                     <scroll-area>
-                      style.maxH(32).w(full).maxW(panel-max-w-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)
+                      style({ box: maxH(32).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
 
                       <column gap="2">
                         <p>
@@ -749,7 +746,7 @@ Line 8</p>
                   </if>
                   <if {components.stage.ticker()}>
                     <ticker w="full">
-                      style.maxW(panel-max-w-sm)
+                      style({ box: maxW(panel-max-w-sm) })
 
                       Live ticker · theme paint · radius overrides ·
                     </ticker>
@@ -776,7 +773,7 @@ Line 8</p>
       shrink="0"
 
     >
-      style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background)
+      style({ box: minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
 
       <column gap="5">
         style(inspectorCol)
@@ -786,7 +783,7 @@ Line 8</p>
             style(eyebrow)
 Theme overrides</p>
           <p>
-            style.fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading)
+            style({ text: fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading) })
 
             {components.selectedLabel()}
           </p>
@@ -833,7 +830,7 @@ component.*</p>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
                       <stack token-chip shrink="0">
-                        style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)
+                        style({ box: position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
 
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
                       </stack>
@@ -896,7 +893,7 @@ theme-wide</p>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
                       <stack token-chip shrink="0">
-                        style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)
+                        style({ box: position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
 
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
                       </stack>

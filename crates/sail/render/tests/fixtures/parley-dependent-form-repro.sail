@@ -148,15 +148,15 @@ export default controller(() => {
 </controller>
 
 <center>
-  style.pad(6).minH(screen).bg(background)
+  style({ box: pad(6).minH(screen), paint: bg(background) })
 
   <column gap="4" w="full" max-w="panel-max-w-md">
     <column gap="1">
       <h1>
-        style.fontSize(2xl).fontWeight(semibold).fg(foreground)
+        style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })
 Shipping address</h1>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
         Enter where we should send your order. State options depend on country.
       </p>
@@ -198,7 +198,7 @@ Shipping address</h1>
     <card w="full">
       <form on:submit={onSubmit}>
         <column gap="4" w="full">
-          style.pad(5)
+          style({ box: pad(5) })
 
           <field invalid={nameInvalid()} w="full">
             <label slot="label" required>Name</label>
@@ -289,7 +289,7 @@ Shipping address</h1>
 
           <if {attempted() && !valid() && !pending()}>
             <p role="alert">
-              style.fontSize(sm).fg(destructive)
+              style({ paint: fg(destructive), text: fontSize(sm) })
 
               Fix the highlighted fields before saving.
             </p>

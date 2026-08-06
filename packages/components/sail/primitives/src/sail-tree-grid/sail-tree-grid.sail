@@ -219,7 +219,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <if {error() !== ''}>
 <div role="alert">
-  style.display(block).w(full).fg(foreground)
+  style({ box: display(block).w(full), paint: fg(foreground) })
 
   <error-state>{error()}</error-state>
 </div>
@@ -237,74 +237,74 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </div>
 </else-if><else>
 <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  style.w(full).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(lg).fontFamily(body).fontSize(density)
+  style({ box: w(full).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(body).fontSize(density) })
 
   <grid tracks="--sail-grid-template" gap="0" role="row">
-    style.position(sticky).top(0).z(sticky).bg(surface-2).borderBWidth(1).borderB(border)
+    style({ box: position(sticky).top(0), paint: z(sticky).bg(surface-2).borderBWidth(1).borderB(border) })
 
     <for {headers()} as="h" key={h.id}>
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null}>
-        style.position(relative).padY(density-row-py).padX(density-row-px).fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).fg(foreground).borderBWidth(1).borderB(border-subtle).whitespace(nowrap).when({ sortable: style.cursor(pointer) })
+        style({ box: position(relative).padY(density-row-py).padX(density-row-px), paint: fg(foreground).borderBWidth(1).borderB(border-subtle), text: fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).whitespace(nowrap) }).when(sortable, { paint: cursor(pointer) })
 
         <span grow min-w="0">
-          style.truncate()
+          style({ text: truncate() })
 {h.label}</span>
         <if {h.sorted === 'asc'}>
           <span aria-hidden="true">
-            style.fg(primary)
+            style({ paint: fg(primary) })
 <icon name="chevron-up" size="xs"></icon></span>
         <else-if {h.sorted === 'desc'}>
           <span aria-hidden="true">
-            style.fg(primary)
+            style({ paint: fg(primary) })
 <icon name="chevron-down" size="xs"></icon></span>
         </else-if></if>
         <if {h.canHide}>
           <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options">
-            style.w(density-icon).h(density-icon).pad(0).radius(sm)
+            style({ box: w(density-icon).h(density-icon).pad(0), paint: radius(sm) })
 
             <icon name="more-vertical" size="xs"></icon>
           </button>
         </if>
         <if {h.canResize}>
           <span data-action="resize" data-col-id={h.id} aria-hidden="true">
-            style.position(absolute).top(0).bottom(0).right(0).w(1).cursor(col-resize).when({ hover: style.bg(primary) })
+            style({ box: position(absolute).top(0).bottom(0).right(0).w(1), paint: cursor(col-resize) }).when(hover, { paint: bg(primary) })
 </span>
         </if>
       </row>
     </for>
   </grid>
   <div use:captureViewport>
-    style.position(relative).w(full).h(full).minH(0).overflowY(auto)
+    style({ box: position(relative).w(full).h(full).minH(0).overflowY(auto) })
 
       <for {windowItems()} as="w" key={`${w.key}|${w.cellsKey}`}>
         <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start}>
-          style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })
+          style({ box: position(absolute).left(0).w(full), paint: group().translateY(bind(rowY)).cursor(pointer) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg) }).when(focus, { paint: outline(ring) })
 
           <span aria-hidden="true">
-            style.position(absolute).left(0).top(1).bottom(1).w(half).radius(full).bg(primary).visibility(hidden).when({ groupSelected: style.visibility(visible) })
+            style({ box: position(absolute).left(0).top(1).bottom(1).w(half), paint: radius(full).bg(primary).visibility(hidden) }).when(groupSelected, { paint: visibility(visible) })
 </span>
           <for {w.cells} as="c" key={c.columnId}>
             <if {c.first}>
               <row role="gridcell" use:cellPad={w.indent}>
-                style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0).padS(bind(cellPs))
+                style({ box: padY(density-row-py).padX(density-row-px).minW(0).padS(bind(cellPs)), paint: borderBWidth(1).borderB(border-subtle).fg(foreground) })
 
                 <if {w.canExpand}>
                   <span aria-hidden="true" data-tree-caret>
-                    style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })
+                    style({ box: w(density-icon).h(density-icon).minW(density-icon), paint: fg(muted-foreground) }).when(groupExpanded, { paint: rotate(90) })
 
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
                 </if>
                 <span grow min-w="0">
-                  style.truncate()
+                  style({ text: truncate() })
 {c.value}</span>
               </row>
             <else>
               <row role="gridcell">
-                style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0)
+                style({ box: padY(density-row-py).padX(density-row-px).minW(0), paint: borderBWidth(1).borderB(border-subtle).fg(foreground) })
 
                 <span grow min-w="0">
-                  style.truncate()
+                  style({ text: truncate() })
 {c.value}</span>
               </row>
             </else></if>

@@ -11,10 +11,10 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  const base = style.fontFamily(body).fontWeight(medium).fontSize(sm).fg(page-foreground).bg(transparent).radius(md).cursor(pointer).select(none).minW(control-h-md).h(control-h-md).padX(2).borderWidth(1).border(transparent).transition(colors).duration(fast).ease(out)
-  const sizeMd = style.fontSize(sm).minW(control-h-md).h(control-h-md)
-  const sizeSm = style.fontSize(xs).minW(control-h-sm).h(control-h-sm)
-  const sizeLg = style.fontSize(base).minW(control-h-lg).h(control-h-lg)
+  const base = style({ box: minW(control-h-md).h(control-h-md).padX(2), paint: fg(page-foreground).bg(transparent).radius(md).cursor(pointer).select(none).borderWidth(1).border(transparent).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).fontSize(sm) })
+  const sizeMd = style({ box: minW(control-h-md).h(control-h-md), text: fontSize(sm) })
+  const sizeSm = style({ box: minW(control-h-sm).h(control-h-sm), text: fontSize(xs) })
+  const sizeLg = style({ box: minW(control-h-lg).h(control-h-lg), text: fontSize(base) })
 </scope>
 <button type="button">
   style([
@@ -25,10 +25,10 @@
     lg: sizeLg,
   }),
   when({
-    hover: style.bg(page-hover-bg),
-    current: style.bg(page-current-bg).fg(page-current-foreground).border(page-current-bg),
-    disabled: style.opacity(50).cursor(not-allowed),
-    focus: style.outline(solid).outline(2).outline(ring),
+    hover: style({ paint: bg(page-hover-bg) }),
+    current: style({ paint: bg(page-current-bg).fg(page-current-foreground).border(page-current-bg) }),
+    disabled: style({ paint: opacity(50).cursor(not-allowed) }),
+    focus: style({ paint: outline(solid).outline(2).outline(ring) }),
   }),
 ])
 

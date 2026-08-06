@@ -12,14 +12,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
 </controller>
 
 <article>
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Rendering &amp; build</p>
   <h1>HMR</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
 
   <h2>Routes reload with state intact</h2>
@@ -33,7 +33,7 @@ In dev, editing a route soft-reloads it with signal state preserved — no full 
   <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>
 
   <row>
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a href="/deck/rendering">← Rendering modes</a>
     <a href="/deck/build">Build &amp; deploy →</a>

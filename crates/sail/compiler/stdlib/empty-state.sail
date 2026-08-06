@@ -10,19 +10,19 @@
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
   }
 
-  const base = style.fontFamily(body).fg(empty-state-foreground).textAlign(center).borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs).padY(16).padX(4)
-  const sizeMd = style.padY(16).padX(4)
-  const sizeSm = style.padY(7).padX(4)
-  const sizeLg = style.padY(24).padX(6)
-  const variantDefault = style.textAlign(center).borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs)
-  const variantInline = style.textAlign(start).borderWidth(1).border(dashed).border(empty-state-border).radius(md).bg(muted).shadow(none).padY(3).padX(4)
-  const variantPlaceholder = style.textAlign(center).borderWidth(0).bg(transparent).radius(none).shadow(none).padY(6)
-  const variantConnecting = style.textAlign(center).borderWidth(0).bg(transparent).radius(none).shadow(none).padY(6)
-  const icon = style.self(center).radius(lg).bg(muted).fg(muted-foreground).size(12)
-  const copy = style.self(stretch)
-  const title = style.fontFamily(heading).fontWeight(semibold).fg(foreground).leading(tight).fontSize(md)
-  const desc = style.leading(loose).fg(muted-foreground).fontSize(sm).maxW(panel-ch-w-md)
-  const actions = style.self(center)
+  const base = style({ box: padY(16).padX(4), paint: fg(empty-state-foreground).borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs), text: fontFamily(body).textAlign(center) })
+  const sizeMd = style({ box: padY(16).padX(4) })
+  const sizeSm = style({ box: padY(7).padX(4) })
+  const sizeLg = style({ box: padY(24).padX(6) })
+  const variantDefault = style({ paint: borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs), text: textAlign(center) })
+  const variantInline = style({ box: padY(3).padX(4), paint: borderWidth(1).border(dashed).border(empty-state-border).radius(md).bg(muted).shadow(none), text: textAlign(start) })
+  const variantPlaceholder = style({ box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) })
+  const variantConnecting = style({ box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) })
+  const icon = style({ box: self(center).size(12), paint: radius(lg).bg(muted).fg(muted-foreground) })
+  const copy = style({ box: self(stretch) })
+  const title = style({ paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) })
+  const desc = style({ box: maxW(panel-ch-w-md), paint: fg(muted-foreground), text: leading(loose).fontSize(sm) })
+  const actions = style({ box: self(center) })
 </scope>
 
 <column
@@ -46,7 +46,7 @@
       connecting: variantConnecting,
     }),
     when({
-      forced-colors: style.border(CanvasText),
+      forced-colors: style({ paint: border(CanvasText) }),
     }),
   ])
 
@@ -62,18 +62,18 @@
     style([
       icon,
       match(tone, {
-        default: style.bg(muted).fg(muted-foreground),
-        primary: style.bg(muted).fg(primary),
-        info: style.bg(muted).fg(info),
-        success: style.bg(muted).fg(success),
-        warning: style.bg(muted).fg(warning),
-        destructive: style.bg(muted).fg(destructive),
-        accent: style.bg(muted).fg(accent),
-        muted: style.bg(muted).fg(muted-foreground),
+        default: style({ paint: bg(muted).fg(muted-foreground) }),
+        primary: style({ paint: bg(muted).fg(primary) }),
+        info: style({ paint: bg(muted).fg(info) }),
+        success: style({ paint: bg(muted).fg(success) }),
+        warning: style({ paint: bg(muted).fg(warning) }),
+        destructive: style({ paint: bg(muted).fg(destructive) }),
+        accent: style({ paint: bg(muted).fg(accent) }),
+        muted: style({ paint: bg(muted).fg(muted-foreground) }),
       }),
       when({
-        empty: style.display(none),
-        forced-colors: style.bg(Canvas).fg(CanvasText),
+        empty: style({ box: display(none) }),
+        forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),
       }),
     ])
 
@@ -86,7 +86,7 @@
       style([
       title,
       when({
-        empty: style.display(none),
+        empty: style({ box: display(none) }),
       }),
     ])
 
@@ -96,7 +96,7 @@
       style([
       desc,
       when({
-        empty: style.display(none),
+        empty: style({ box: display(none) }),
       }),
     ])
 
@@ -107,7 +107,7 @@
     style([
     actions,
     when({
-      empty: style.display(none),
+      empty: style({ box: display(none) }),
     }),
   ])
 

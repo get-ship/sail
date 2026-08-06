@@ -48,10 +48,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference · tier B</p>
     <h1>Author runtime — {totalCount()} exports</h1>
@@ -67,7 +67,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h2>Controller — ambient vocabulary (tier A)</h2>
     <p>
-      style.maxW(breakpoint-tablet)
+      style({ box: maxW(breakpoint-tablet) })
 
       A <code>&lt;controller&gt;</code> block may reference these without
       importing them — the compiler injects the import for exactly the
@@ -76,12 +76,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="3" gap="2">
       <for {controllerRows()} as="c" key={c.name}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <code>{c.name}</code>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {c.doc}</small>
           </column>
         </card>
@@ -93,26 +93,26 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <column gap="3">
       <h2>{group.id} — {group.count}</h2>
       <p>
-        style.maxW(breakpoint-tablet).fg(muted-foreground)
+        style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })
 {group.summary}</p>
       <column gap="1">
         <for {group.exports} as="e" key={e.name}>
           <row gap="3" align="start">
-            style.padX(3).padY(2).radius(md).borderWidth(1).border(border)
+            style({ box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) })
 
             <code>
-              style.minW(32)
+              style({ box: minW(32) })
 {e.name}</code>
             <badge size="sm">{e.kind}</badge>
             <column gap="1">
-              style.minW(0)
+              style({ box: minW(0) })
 
               <code>
-                style.fg(muted-foreground).fontFamily(mono)
+                style({ paint: fg(muted-foreground), text: fontFamily(mono) })
 {e.signature}</code>
               <if {e.doc}>
                 <small>
-                  style.fg(muted-foreground)
+                  style({ paint: fg(muted-foreground) })
 {e.doc}</small>
               </if>
             </column>

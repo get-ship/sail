@@ -386,39 +386,39 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <dialog use:dialogBridge size={size()} backdrop="blur">
   <column gap="0">
-    style.minH(0).fg(foreground).fontFamily(body)
+    style({ box: minH(0), paint: fg(foreground), text: fontFamily(body) })
 
     <row align="center" gap="2" grow="0">
-      style.pad(3).padX(4).borderBWidth(1).borderB(border-subtle)
+      style({ box: pad(3).padX(4), paint: borderBWidth(1).borderB(border-subtle) })
 
       <icon name="search" size="sm" grow="0"></icon>
       <input type="text" flush grow min-w="0" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput>
-        style.fontFamily(body).fontSize(base).leading(normal)
+        style({ text: fontFamily(body).fontSize(base).leading(normal) })
       </input>
     </row>
     <ul grow role="listbox" id={listId()} aria-label={label()} use:captureList>
-      style.maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)
+      style({ box: maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0) })
 
       <for {rows()} as="row" key={row.key}>
         <if {row.isHeading}>
           <li role="presentation">
-            style.padY(2).padB(1).fontSize(xs).fontWeight(semibold).tracking(wide).fg(muted-foreground).textCase(uppercase).select(none)
+            style({ box: padY(2).padB(1), paint: fg(muted-foreground).select(none), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
 {row.heading}</li>
         <else>
           <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
-            style.group().pad(2).radius(sm).fontSize(sm).fg(foreground).cursor(pointer).select(none).when({ selected: style.bg(selected-bg), disabled: style.fg(muted-foreground).cursor(default).opacity(50) })
+            style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm) }).when(selected, { paint: bg(selected-bg) }).when(disabled, { paint: fg(muted-foreground).cursor(default).opacity(50) })
 
             <if {row.icon !== ''}>
               <icon name={row.icon} size="sm" grow="0">
-                style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })
+                style({ paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })
 </icon>
             </if>
             <span grow min-w="0">
-              style.truncate()
+              style({ text: truncate() })
 {row.label}</span>
             <if {row.hint !== ''}>
               <span grow="0">
-                style.fontSize(xs).fg(muted-foreground).ml(auto).fontFamily(mono)
+                style({ box: ml(auto), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 {row.hint}</span>
             </if>
           </li>
@@ -426,7 +426,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </for>
       <if {rows().length === 0}>
         <li role="status">
-          style.pad(6).padX(4).fontSize(sm).fg(muted-foreground).textAlign(center)
+          style({ box: pad(6).padX(4), paint: fg(muted-foreground), text: fontSize(sm).textAlign(center) })
 {emptyLabel()}</li>
       </if>
     </ul>

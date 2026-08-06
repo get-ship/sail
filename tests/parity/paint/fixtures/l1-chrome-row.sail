@@ -1,6 +1,6 @@
 <!-- PARITY-1 paint: load-bearing L1 chrome row (skins/tokens/radius/borders). Static only. -->
 <column gap="4" w="full">
-  style.pad(4).bg(background).fg(foreground)
+  style({ box: pad(4), paint: bg(background).fg(foreground) })
 
   <row gap="3" align="center">
     <button variant="solid" tone="primary">Primary</button>
@@ -14,10 +14,10 @@
   </field>
   <card w="full">
     <span slot="header">
-      style.fontWeight(semibold)
+      style({ text: fontWeight(semibold) })
 Card header</span>
     <span>
-      style.fg(muted-foreground)
+      style({ paint: fg(muted-foreground) })
 Card body with chrome.</span>
   </card>
 </column>

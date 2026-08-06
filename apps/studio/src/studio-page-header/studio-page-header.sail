@@ -18,13 +18,13 @@
   justify="between"
 
 >
-  style.h(7).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+  style({ box: h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
   <row align="center" gap="2" nowrap grow min-w="0">
     <slot name="leading"></slot>
     <slot name="title">
       <p>
-        style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+        style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
         {title()}
       </p>

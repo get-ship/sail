@@ -14,14 +14,14 @@
     orientation: 'horizontal' | 'vertical' = 'horizontal'
   }
 
-  const segmented = style.pad(1).bg(toggle-group).borderWidth(1).border(toggle-group-border).radius(md)
+  const segmented = style({ box: pad(1), paint: bg(toggle-group).borderWidth(1).border(toggle-group-border).radius(md) })
 </scope>
 
 <row inline gap="0" use:toggleGroup>
   style([
   match(variant, {
-    outline: style.bg(transparent),
-    ghost: style.bg(transparent),
+    outline: style({ paint: bg(transparent) }),
+    ghost: style({ paint: bg(transparent) }),
     segmented: segmented,
   }),
 ])

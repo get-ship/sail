@@ -4,7 +4,7 @@
   text-run height. Not a pixel-parity gate vs upstream capped measure.
 -->
 <column w="full">
-  style.pad(2)
+  style({ box: pad(2) })
 
   <span>
     Line one of unclamped body copy that should wrap under a modest width.

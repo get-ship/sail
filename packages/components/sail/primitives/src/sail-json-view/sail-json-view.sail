@@ -131,11 +131,11 @@ export default controller(({ data, expanded, depth }: Scope) => {
 </controller>
 
 <column gap="0">
-  style.fontFamily(mono).fontSize(sm).leading(normal-plus)
+  style({ text: fontFamily(mono).fontSize(sm).leading(normal-plus) })
 
   <if {parseError() !== ''}>
     <span role="alert">
-      style.fg(destructive)
+      style({ paint: fg(destructive) })
 Invalid JSON: {parseError()}</span>
   </if>
   <for {rows()} as="row" key={row.k}>
@@ -145,32 +145,32 @@ Invalid JSON: {parseError()}</span>
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
 >
-          style.group().radius(sm).cursor(pointer).when({ hover: style.bg(hover-bg) })
+          style({ paint: group().radius(sm).cursor(pointer) }).when(hover, { paint: bg(hover-bg) })
 
           <for {row.pads} as="pad" key={pad.i}>
             <span>
-              style.w(3).borderLWidth(1).borderL(border-subtle)
+              style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
 </span>
           </for>
           <span aria-hidden="true">
-            style.fg(muted-foreground).fontSize(xs).padX(1).when({ groupExpanded: style.rotate(90) })
+            style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs) }).when(groupExpanded, { paint: rotate(90) })
 ▶</span>
           <if {row.label !== ''}>
             <span>
-              style.fontWeight(medium)
+              style({ text: fontWeight(medium) })
 "{row.label}"</span><span>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 :&nbsp;</span>
           </if>
           <span>
-            style.fg(muted-foreground)
+            style({ paint: fg(muted-foreground) })
 {row.openBracket}</span>
           <span>
-            style.fg(muted-foreground).fontSize(xs).bg(muted).radius(full).padX(1).ml(1)
+            style({ box: padX(1).ml(1), paint: fg(muted-foreground).bg(muted).radius(full), text: fontSize(xs) })
 {row.meta}</span>
           <if {!row.open}>
             <span>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 …{row.closeBracket}</span>
           </if>
         </row>
@@ -178,44 +178,44 @@ Invalid JSON: {parseError()}</span>
         <row gap="0" align="center">
           <for {row.pads} as="pad" key={pad.i}>
             <span>
-              style.w(3).borderLWidth(1).borderL(border-subtle)
+              style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
 </span>
           </for>
           <span>
-            style.fg(muted-foreground).padX(1)
+            style({ box: padX(1), paint: fg(muted-foreground) })
 {row.text}</span>
         </row>
       </case><default>
         <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center">
-          style.radius(sm).when({ hover: style.bg(hover-bg) })
+          style({ paint: radius(sm) }).when(hover, { paint: bg(hover-bg) })
 
           <for {row.pads} as="pad" key={pad.i}>
             <span>
-              style.w(3).borderLWidth(1).borderL(border-subtle)
+              style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
 </span>
           </for>
           <if {row.label !== ''}>
             <span>
-              style.fontWeight(medium).padX(1)
+              style({ box: padX(1), text: fontWeight(medium) })
 "{row.label}"</span><span>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 :&nbsp;</span>
           </if>
           <match {row.kind}>
             <case {'str'}> <span>
-              style.fg(success)
+              style({ paint: fg(success) })
 {row.text}</span>
             </case><case {'num'}> <span>
-              style.fg(info)
+              style({ paint: fg(info) })
 {row.text}</span>
             </case><case {'bool'}> <span>
-              style.fg(accent).fontWeight(medium)
+              style({ paint: fg(accent), text: fontWeight(medium) })
 {row.text}</span>
             </case><case {'null'}> <span>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 {row.text}</span>
             </case><default> <span>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 {row.text}</span>
           </default></match>
         </row>

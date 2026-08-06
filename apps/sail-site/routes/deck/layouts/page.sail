@@ -12,14 +12,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ layoutFile, layou
 </controller>
 
 <article>
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Routing</p>
   <h1>Layouts</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 A <code>_layout.sail</code> wraps every route beneath it in shared chrome — a header, a nav, a sidebar — that survives navigation.</p>
 
   <h2>A layout is chrome</h2>
@@ -33,11 +33,11 @@ A <code>_layout.sail</code> wraps every route beneath it in shared chrome — a 
   <h2>Layouts compose</h2>
   <p>Nested <code>_layout.sail</code> files form a layout chain: a route is wrapped by every layout above it, outermost first. This page is a live example — the root layout's <code>&lt;sail-site-header&gt;</code> wraps <code>routes/deck/_layout.sail</code>'s <code>&lt;sail-deck-rail&gt;</code>, which wraps this article.</p>
   <pre>
-    style.fontFamily(mono).fontSize(sm).leading(relaxed).bg(surface-1).borderWidth(1).border(border).radius(lg).pad(4).padX(5).whitespace(pre-wrap).break(words)
+    style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })
 {layoutChain}</pre>
 
   <row>
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a href="/deck/dynamic-routes">← Dynamic routes</a>
     <a href="/deck/reactivity">Reactivity →</a>

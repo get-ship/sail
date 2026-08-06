@@ -17,14 +17,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 The language</p>
   <h1>Layout</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     The web has accumulated half a dozen ways to lay things out — floats,
     positioning, flexbox, grid, and the properties that tune them. Sail
@@ -50,7 +50,7 @@ The language</p>
     axis, <code>justify</code> distributes them along the row:
   </p>
   <row gap="3" align="center" justify="between">
-    style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)
+    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
     <strong>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
@@ -62,7 +62,7 @@ The language</p>
     as the window narrows:
   </p>
   <row gap="2">
-    style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)
+    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
     <chip>signals</chip>
     <chip>derived</chip>
@@ -88,7 +88,7 @@ The language</p>
     edge instead of stretching:
   </p>
   <column gap="2" align="start">
-    style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)
+    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
     <label>Email</label>
     <input type="email" placeholder="ada@example.com" />
@@ -104,13 +104,13 @@ The language</p>
   </p>
   <grid cols="3" gap="3">
     <card>
-      style.pad(4)
+      style({ box: pad(4) })
 <strong>One</strong></card>
     <card>
-      style.pad(4)
+      style({ box: pad(4) })
 <strong>Two</strong></card>
     <card>
-      style.pad(4)
+      style({ box: pad(4) })
 <strong>Three</strong></card>
   </grid>
   <code-block code={code.grid}></code-block>
@@ -129,13 +129,13 @@ The language</p>
   </p>
   <grid cols="4" gap="3">
     <card col-span="2">
-      style.pad(3)
+      style({ box: pad(3) })
 wide — spans 2</card>
     <card>
-      style.pad(3)
+      style({ box: pad(3) })
 one</card>
     <card>
-      style.pad(3)
+      style({ box: pad(3) })
 two</card>
   </grid>
   <code-block code={code.spans}></code-block>
@@ -147,14 +147,14 @@ two</card>
     icon.
   </p>
   <row>
-    style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)
+    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
     <stack align="start" justify="end">
       <card>
-        style.w(24).h(12).bg(muted).radius(md)
+        style({ box: w(24).h(12), paint: bg(muted).radius(md) })
 </card>
       <div>
-        style.w(4).h(4).radius(full).bg(primary)
+        style({ box: w(4).h(4), paint: radius(full).bg(primary) })
 </div>
     </stack>
   </row>
@@ -166,7 +166,7 @@ two</card>
     element has:
   </p>
   <center>
-    style.minH(11).pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)
+    style({ box: minH(11).pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
     <badge tone="primary">centered</badge>
   </center>
@@ -179,7 +179,7 @@ two</card>
     element, not only layout keywords:
   </p>
   <row gap="3" align="center">
-    style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)
+    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
 
     <strong grow min-w="0">Ada Lovelace</strong>
     <badge tone="success" shrink>Active</badge>
@@ -200,7 +200,7 @@ two</card>
     participation, <code>sx=&#123;…&#125;</code> for paint only. Every child of
     a layout element is also born with <code>min-width: 0</code> — the browser
     default where an item refuses to shrink below its content is corrected at
-    the language level, so <code>style.truncate()</code> works the first time.
+    the language level, so <code>style({ text: truncate() })</code> works the first time.
   </p>
 
   <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>
@@ -221,13 +221,13 @@ two</card>
   </p>
 
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the full surface: <a href="/sail/reference/layout">reference → Layout keywords</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/styling">← Styling</a>
     <a variant="solid" tone="primary" href="/sail/language/animation">Animation →</a>

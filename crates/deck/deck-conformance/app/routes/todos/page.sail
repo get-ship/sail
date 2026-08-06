@@ -5,10 +5,10 @@ export default controller((_ctx) => ({ list: query(() => call('ship.demo.todos',
 </controller>
 
 <column gap="3">
-  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
 
   <h1>
-    style.fontSize(2xl).fontWeight(bold).fg(foreground)
+    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 Todos</h1>
 
   <form mutation="demo.addTodo">
@@ -18,21 +18,21 @@ Todos</h1>
 
   <while-loading {list}>
   <p>
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Loading…</p>
   </while-loading>
   <while-error as="err" {list}>
   <p>
-    style.fg(destructive).fontSize(sm)
+    style({ paint: fg(destructive), text: fontSize(sm) })
 Error: {err.message}</p>
   </while-error>
   <if {list().kind === 'ok'}>
   <column gap="1">
-    style.list(none).pad(0).m(0)
+    style({ box: pad(0).m(0), paint: list(none) })
 
     <for {list().value.items} as="item" key={item.id}>
     <li aria-pressed={item.done}>
-      style.radius(md).pad(1).when({ pressed: style.underline(line-through).fg(muted-foreground) })
+      style({ box: pad(1), paint: radius(md) }).when(pressed, { paint: fg(muted-foreground), text: underline(line-through) })
 {item.text}</li>
     </for>
   </column>

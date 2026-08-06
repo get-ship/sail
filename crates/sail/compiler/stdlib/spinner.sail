@@ -10,12 +10,12 @@
     centered = false
   }
 
-  const base = style.display(inline-block).align(middle).size(icon-size-md).fg(spinner-foreground)
-  const sizeMd = style.size(icon-size-md)
-  const sizeXs = style.size(icon-size-2xs)
-  const sizeSm = style.size(icon-size-sm)
-  const sizeLg = style.size(icon-size-xl)
-  const ring = style.display(block).size(full).borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin)
+  const base = style({ box: display(inline-block).size(icon-size-md), paint: align(middle).fg(spinner-foreground) })
+  const sizeMd = style({ box: size(icon-size-md) })
+  const sizeXs = style({ box: size(icon-size-2xs) })
+  const sizeSm = style({ box: size(icon-size-sm) })
+  const sizeLg = style({ box: size(icon-size-xl) })
+  const ring = style({ box: display(block).size(full), paint: borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin) })
 </scope>
 
 <span>
@@ -28,15 +28,15 @@
     lg: sizeLg,
   }),
   match(tone, {
-    default: style.fg(spinner-foreground),
-    primary: style.fg(primary),
-    info: style.fg(info),
-    success: style.fg(success),
-    warning: style.fg(warning),
-    destructive: style.fg(destructive),
-    accent: style.fg(accent),
+    default: style({ paint: fg(spinner-foreground) }),
+    primary: style({ paint: fg(primary) }),
+    info: style({ paint: fg(info) }),
+    success: style({ paint: fg(success) }),
+    warning: style({ paint: fg(warning) }),
+    destructive: style({ paint: fg(destructive) }),
+    accent: style({ paint: fg(accent) }),
   }),
-  compound({ centered: true }, style.display(block).my(8).mx(auto)),
+  compound({ centered: true }, style({ box: display(block).my(8).mx(auto) })),
 ])
 
   <span hidden="true">

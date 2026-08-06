@@ -168,7 +168,7 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
 >
-    style.display(inline-block).overflow(visible).fontFamily(body)
+    style({ box: display(inline-block).overflow(visible), text: fontFamily(body) })
 
     <for {cells()} as="cell" key={cell.id}>
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
@@ -176,7 +176,7 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     </for>
   </svg>
   <column id="chart-data">
-    style.srOnly()
+    style({ paint: srOnly() })
 
     <slot name="description">
       <table>

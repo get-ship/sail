@@ -5,26 +5,26 @@ export default controller((_ctx) => ({ result: query(() => call('ship.demo.boom'
 </controller>
 
 <column gap="3">
-  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
 
   <h1>
-    style.fontSize(2xl).fontWeight(bold).fg(foreground)
+    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 Error Boundary</h1>
   <while-loading {result}>
   <p>
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Loading…</p>
   </while-loading>
   <while-error as="err" {result}>
   <p>
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Something went wrong</p>
   </while-error>
   <if {result().kind === 'ok'}>
   <p>
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Value: <strong>
-    style.fg(foreground).fontFamily(mono)
+    style({ paint: fg(foreground), text: fontFamily(mono) })
 {result().value.data}</strong></p>
   </if>
 </column>

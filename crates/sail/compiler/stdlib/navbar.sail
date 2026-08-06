@@ -19,19 +19,19 @@
     offset = ''
   }
 
-  const base = style.bg(navbar).fg(navbar-foreground).minH(14).padY(2).padX(4).underline(none)
-  const placeTop = style.minH(14).padY(2).padX(4)
-  const placeBottom = style.minH(14).padY(2).padX(4)
-  const placeRail = style.minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column)
-  const brand = style.fontWeight(semibold)
-  const links = style.display(contents)
+  const base = style({ box: minH(14).padY(2).padX(4), paint: bg(navbar).fg(navbar-foreground), text: underline(none) })
+  const placeTop = style({ box: minH(14).padY(2).padX(4) })
+  const placeBottom = style({ box: minH(14).padY(2).padX(4) })
+  const placeRail = style({ box: minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column) })
+  const brand = style({ text: fontWeight(semibold) })
+  const links = style({ box: display(contents) })
   // Top/bottom: ms(auto) only. mt(auto) on a tall cross-axis drops actions to a
   // second visual row (looks like the nav "wrapped"). Rail needs mt(auto) so
   // actions pin to the foot of the column.
   const actions = match(placement, {
-    rail: style.ms(auto).mt(auto),
-    top: style.ms(auto),
-    bottom: style.ms(auto),
+    rail: style({ box: ms(auto).mt(auto) }),
+    top: style({ box: ms(auto) }),
+    bottom: style({ box: ms(auto) }),
   })
 </scope>
 
@@ -49,19 +49,19 @@
       bottom: placeBottom,
       rail: placeRail,
     }),
-    compound({ sticky: true }, style.position(sticky).top(0).z(sticky)),
-    compound({ bordered: true }, style.borderBWidth(1).border(border)),
-    compound({ placement: bottom, sticky: true }, style.top(auto).bottom(0)),
-    compound({ placement: bottom, bordered: true }, style.borderBWidth(0).borderTWidth(1).border(border)),
-    compound({ placement: rail, bordered: true }, style.borderBWidth(0).borderEWidth(1).border(border)),
-    compound({ placement: rail, sticky: true }, style.position(sticky).top(0).bottom(0).self(start).overflowY(auto).z(dropdown)),
-    compound({ placement: rail, sticky: true, offset: '8' }, style.top(8)),
-    compound({ placement: rail, sticky: true, offset: '10' }, style.top(10)),
-    compound({ placement: rail, sticky: true, offset: '12' }, style.top(12)),
-    compound({ placement: rail, sticky: true, offset: '14' }, style.top(14)),
-    compound({ placement: rail, sticky: true, offset: '16' }, style.top(16)),
-    compound({ placement: rail, sticky: true, offset: '20' }, style.top(20)),
-    compound({ placement: rail, sticky: true, offset: '24' }, style.top(24)),
+    compound({ sticky: true }, style({ box: position(sticky).top(0), paint: z(sticky) })),
+    compound({ bordered: true }, style({ paint: borderBWidth(1).border(border) })),
+    compound({ placement: bottom, sticky: true }, style({ box: top(auto).bottom(0) })),
+    compound({ placement: bottom, bordered: true }, style({ paint: borderBWidth(0).borderTWidth(1).border(border) })),
+    compound({ placement: rail, bordered: true }, style({ paint: borderBWidth(0).borderEWidth(1).border(border) })),
+    compound({ placement: rail, sticky: true }, style({ box: position(sticky).top(0).bottom(0).self(start).overflowY(auto), paint: z(dropdown) })),
+    compound({ placement: rail, sticky: true, offset: '8' }, style({ box: top(8) })),
+    compound({ placement: rail, sticky: true, offset: '10' }, style({ box: top(10) })),
+    compound({ placement: rail, sticky: true, offset: '12' }, style({ box: top(12) })),
+    compound({ placement: rail, sticky: true, offset: '14' }, style({ box: top(14) })),
+    compound({ placement: rail, sticky: true, offset: '16' }, style({ box: top(16) })),
+    compound({ placement: rail, sticky: true, offset: '20' }, style({ box: top(20) })),
+    compound({ placement: rail, sticky: true, offset: '24' }, style({ box: top(24) })),
   ])
 
   <row inline nowrap align="center" gap="2" shrink="0">

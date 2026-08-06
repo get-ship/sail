@@ -50,7 +50,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden) })
 
   <row
     tasks-header
@@ -61,14 +61,14 @@ export default controller(() => {
     nowrap
 
   >
-    style.h(10).padX(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+    style({ box: h(10).padX(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
     <row align="center" gap="3" nowrap grow min-w="0">
       <p>
-        style.fontSize(md).fontWeight(semibold)
+        style({ text: fontSize(md).fontWeight(semibold) })
 Tasks</p>
       <p thread-count>
-        style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+        style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 
         {threadCountLabel()}
       </p>
@@ -80,7 +80,7 @@ Tasks</p>
         label="Open or all"
 
       >
-        style.w(24)
+        style({ box: w(24) })
 
         <option value="open">Open</option>
         <option value="all">All</option>
@@ -93,7 +93,7 @@ Tasks</p>
         label="Last reply"
 
       >
-        style.w(28)
+        style({ box: w(28) })
 
         <option value="all">Anyone</option>
         <option value="human">You</option>
@@ -113,10 +113,10 @@ Tasks</p>
       shrink="0"
 
     >
-      style.padX(3).h(7).borderBWidth(1).borderB(border)
+      style({ box: padX(3).h(7), paint: borderBWidth(1).borderB(border) })
 
       <p grow min-w="0">
-        style.fontSize(xs).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(xs).truncate() })
 {taskError()}</p>
       <button type="button" size="sm" variant="ghost" retry-tasks on:click={onRetryTasks}>
         Retry
@@ -132,7 +132,7 @@ Tasks</p>
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
 
     <column
       threads-list
@@ -141,13 +141,13 @@ Tasks</p>
       gap="0"
 
     >
-      style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1).overflow(hidden)
+      style({ box: minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) })
 
       <scroll-area grow on:click={onTaskThreadClick}>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="0" tasks-table>
-          style.padY(1).padX(1)
+          style({ box: padY(1).padX(1) })
 
           <if {!hasTaskThreads()}>
             <if {!showTaskErrorAlert()}>
@@ -192,11 +192,11 @@ Tasks</p>
       min-w="0"
 
     >
-      style.minH(0).h(full).basis(0).minW(0).bg(surface-0).overflow(hidden)
+      style({ box: minH(0).h(full).basis(0).minW(0).overflow(hidden), paint: bg(surface-0) })
 
       <if {!hasTaskSelected()}>
         <column grow align="center" justify="center">
-          style.minH(0).h(full).pad(4)
+          style({ box: minH(0).h(full).pad(4) })
 
           <empty-state variant="placeholder" size="sm" w="full" task-detail-empty>
             <strong slot="title">Select a task</strong>
@@ -215,11 +215,11 @@ Tasks</p>
           justify="between"
 
         >
-          style.h(10).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0)
+          style({ box: h(10).padX(3).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
           <row align="center" gap="2" nowrap grow min-w="0">
             <strong>
-              style.fontSize(md).truncate()
+              style({ text: fontSize(md).truncate() })
 {taskTitle()}</strong>
             <badge status-detail tone={taskStatusTone()} size="sm" variant="soft" pill>
               {taskStatusLabel()}
@@ -242,7 +242,7 @@ Tasks</p>
             shrink="0"
 
           >
-            style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-0).minW(0)
+            style({ box: padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
 
             <badge
               anchor-drift={taskAnchorStatusRaw()}
@@ -255,7 +255,7 @@ Tasks</p>
               {taskAnchorStatus()}
             </badge>
             <p grow min-w="0">
-              style.fontSize(xs).fontFamily(mono).truncate()
+              style({ text: fontSize(xs).fontFamily(mono).truncate() })
 
               {taskAnchorPath()}
             </p>
@@ -264,7 +264,7 @@ Tasks</p>
 
         <if {hasTaskAttach()}>
           <row attachments gap="2" align="center" shrink="0">
-            style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle)
+            style({ box: padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle) })
 
             <for {taskAttachChips()} as="a" key={a.key}>
               <badge attach-chip attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
@@ -280,17 +280,17 @@ Tasks</p>
           gap="0"
 
         >
-          style.minH(0).basis(0).h(full).overflow(hidden)
+          style({ box: minH(0).basis(0).h(full).overflow(hidden) })
 
           <if {hasThreadMarkdown()}>
             <scroll-area shrink="0">
-              style.maxH(32).minH(0)
+              style({ box: maxH(32).minH(0) })
 
               <column>
-                style.pad(3)
+                style({ box: pad(3) })
 
                 <sail-markdown thread-markdown value={threadMarkdown()}>
-                  style.fontSize(sm)
+                  style({ text: fontSize(sm) })
 </sail-markdown>
               </column>
             </scroll-area>
@@ -302,7 +302,7 @@ Tasks</p>
             grow
 
           >
-            style.minH(0).h(full).w(full).basis(0)
+            style({ box: minH(0).h(full).w(full).basis(0) })
 
             <empty-state slot="empty" variant="inline" size="sm" w="full">
               <strong slot="title">No messages yet</strong>
@@ -317,7 +317,7 @@ Tasks</p>
           shrink="0"
 
         >
-          style.pad(3).borderTWidth(1).borderT(border-subtle).bg(surface-1)
+          style({ box: pad(3), paint: borderTWidth(1).borderT(border-subtle).bg(surface-1) })
 
           <sail-composer
             task-composer
@@ -328,7 +328,7 @@ Tasks</p>
             on:sail-composer-submit={onComposerSubmit}
 
           >
-            style.w(full)
+            style({ box: w(full) })
 
             <row slot="trailing" gap="1" align="center" nowrap>
               <if {canAttachCrop()}>

@@ -242,7 +242,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 <!-- `.toolbar` was a flex container; compose a primitive instead — flex
      layout is the floor's boundary, and `<row>` IS the row container. -->
 <row role="toolbar" aria-label="Drawing tools" gap="1" align="center">
-  style.padY(1).padX(2).borderBWidth(1).borderB(border).bg(card)
+  style({ box: padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(card) })
 
   <slot name="toolbar"></slot>
 </row>
@@ -255,10 +255,10 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   on:pointerdown={surfaceDown}
 
 >
-  style.display(block).position(relative).w(full).h(full).fg(foreground)
+  style({ box: display(block).position(relative).w(full).h(full), paint: fg(foreground) })
 
   <svg role="group" aria-label={statusLabel()}>
-    style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)
+    style({ box: position(absolute).top(0).left(0).overflow(visible), paint: pointerEvents(none) })
 
     <for {rendered()} as="el" key={el.id}>
       <if {el.kind === 'text'}>
@@ -272,7 +272,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           pointer-events="fill"
 
         >
-          style.fontFamily(body).fontSize(base).stroke(none).when({ selected: style.fill(primary) })
+          style({ paint: stroke(none), text: fontFamily(body).fontSize(base) }).when(selected, { paint: fill(primary) })
 {el.text}</text>
       <else>
         <path
@@ -287,7 +287,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           stroke-width="2"
 
         >
-          style.fill(none).cursor(pointer).when({ selected: style.stroke(primary), statePen: style.fill(currentColor).stroke(none) })
+          style({ paint: fill(none).cursor(pointer) }).when(selected, { paint: stroke(primary) }).when(statePen, { paint: fill(currentColor).stroke(none) })
 </path>
       </else></if>
     </for>
@@ -300,7 +300,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         stroke-width="2"
 
       >
-        style.fill(none).opacity(85)
+        style({ paint: fill(none).opacity(85) })
 </path>
     </if>
 
@@ -314,12 +314,12 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         stroke-width="1"
         stroke-dasharray="4 3"
       >
-        style.fill(none).stroke(primary).pointerEvents(none)
+        style({ paint: fill(none).stroke(primary).pointerEvents(none) })
 </rect>
     </if>
   </svg>
 </sail-canvas>
 
 <div role="status" aria-live="polite">
-  style.position(absolute).bottom(1).left(2).fontSize(xs).fg(muted-foreground).pointerEvents(none)
+  style({ box: position(absolute).bottom(1).left(2), paint: fg(muted-foreground).pointerEvents(none), text: fontSize(xs) })
 {statusLabel()}</div>

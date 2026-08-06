@@ -30,14 +30,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Concepts</p>
   <h1>Data</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Data that arrives over the network is in one of three states at any
     moment: still loading, failed, or loaded. <code>query()</code> turns an
@@ -50,10 +50,10 @@ Concepts</p>
   <grid cols="2" gap="4">
     <column>
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Live — a 900 ms fake API</p>
       <column gap="3">
-        style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)
+        style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
         <row gap="2">
           <button on:click={reload}>Reload</button>
@@ -61,7 +61,7 @@ Live — a 900 ms fake API</p>
         </row>
         <while-loading {users}>
           <row gap="2" align="center"><spinner></spinner> <p>
-            style.fontSize(sm).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontSize(sm) })
 loading…</p></row>
         </while-loading>
         <while-error {users}> as="err">
@@ -78,7 +78,7 @@ loading…</p></row>
     </column>
     <column>
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Source</p>
       <code-block code={code.demo}></code-block>
     </column>
@@ -106,7 +106,7 @@ Source</p>
   <code-block code={code.states}></code-block>
 
   <p>
-    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     The loaded value is only reachable through <code>kind === 'ok'</code>,
     so a template cannot render data it hasn't confirmed has arrived —
@@ -120,13 +120,13 @@ Source</p>
     states — is the <a href="/sail/guide/forms">Forms guide</a>.
   </p>
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/actions">← Actions</a>
     <a variant="solid" tone="primary" href="/sail/language/capabilities">Capabilities →</a>

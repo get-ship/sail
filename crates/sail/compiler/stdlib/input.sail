@@ -14,32 +14,24 @@
     placeholder = ''
   }
 
-  const field = style.display(block).minH(control-h-md).padY(1_5).padX(3).fontSize(base).fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs).w(full).when({ hover: style.border(border-strong), disabled: style.cursor(not-allowed).opacity(50) })
-  const sizeXs = style.minH(control-h-2xs).padX(2).fontSize(xs)
-  const sizeSm = style.minH(control-h-sm).padX(2_5).fontSize(sm)
-  const sizeMd = style.minH(control-h-md).padX(3).fontSize(base)
-  const sizeLg = style.minH(control-h-lg).padX(4).fontSize(md)
+  const field = style({ box: display(block).minH(control-h-md).padY(1_5).padX(3).w(full), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs), text: fontSize(base) }).when(hover, { paint: border(border-strong) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const sizeXs = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
+  const sizeSm = style({ box: minH(control-h-sm).padX(2_5), text: fontSize(sm) })
+  const sizeMd = style({ box: minH(control-h-md).padX(3), text: fontSize(base) })
+  const sizeLg = style({ box: minH(control-h-lg).padX(4), text: fontSize(md) })
 
   // Border uses foreground (not border-strong) so checks stay visible on muted/soft surfaces.
   // Explicit border(solid): appearance:none leaves border-style:none in some UAs,
   // so borderWidth alone paints nothing (catalog "barely visible" checkboxes).
-  const check = style.appearance(none).display(inline-block).align(middle).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm).fontSize(base).borderWidth(2).border(solid).border(foreground).bg(background).shadow(xs).radius(sm).cursor(pointer).when({
-    checked: style.bg(primary).border(primary),
-    disabled: style.cursor(not-allowed).opacity(50),
-  })
-  const radio = style.appearance(none).display(inline-block).align(middle).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm).fontSize(base).borderWidth(2).border(solid).border(foreground).bg(background).shadow(xs).radius(full).cursor(pointer).when({
-    checked: style.bg(primary).border(primary),
-    disabled: style.cursor(not-allowed).opacity(50),
-  })
-  const checkSm = style.w(icon-size-xs).h(icon-size-xs)
-  const checkMd = style.w(icon-size-sm).h(icon-size-sm)
-  const checkLg = style.w(icon-size-md).h(icon-size-md)
-  const range = style.appearance(none).w(full).h(5).bg(transparent).cursor(pointer).when({
-    disabled: style.cursor(not-allowed).opacity(50),
-  })
-  const color = style.appearance(none).w(9).h(control-h-md).pad(1).borderWidth(1).border(border).radius(md).bg(background).shadow(xs).cursor(pointer)
-  const file = style.display(flex).minH(control-h-md).padY(1).padX(3).cursor(pointer)
-  const hidden = style.display(none)
+  const check = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(foreground).bg(background).shadow(xs).radius(sm).cursor(pointer), text: fontSize(base) }).when(checked, { paint: bg(primary).border(primary) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const radio = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(foreground).bg(background).shadow(xs).radius(full).cursor(pointer), text: fontSize(base) }).when(checked, { paint: bg(primary).border(primary) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const checkSm = style({ box: w(icon-size-xs).h(icon-size-xs) })
+  const checkMd = style({ box: w(icon-size-sm).h(icon-size-sm) })
+  const checkLg = style({ box: w(icon-size-md).h(icon-size-md) })
+  const range = style({ box: w(full).h(5), paint: appearance(none).bg(transparent).cursor(pointer) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const color = style({ box: w(9).h(control-h-md).pad(1), paint: appearance(none).borderWidth(1).border(border).radius(md).bg(background).shadow(xs).cursor(pointer) })
+  const file = style({ box: display(flex).minH(control-h-md).padY(1).padX(3), paint: cursor(pointer) })
+  const hidden = style({ box: display(none) })
 </scope>
 
 <input>
@@ -80,12 +72,12 @@
     week: match(size, { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg }),
     submit: match(size, { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg }),
     file: match(size, { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg }),
-    color: style.minH(0),
+    color: style({ box: minH(0) }),
     checkbox: match(size, { xs: checkSm, sm: checkSm, md: checkMd, lg: checkLg }),
     radio: match(size, { xs: checkSm, sm: checkSm, md: checkMd, lg: checkLg }),
-    range: style.minH(0),
-    hidden: style.minH(0),
+    range: style({ box: minH(0) }),
+    hidden: style({ box: minH(0) }),
   }),
-  compound({ invalid: true }, style.border(destructive)),
+  compound({ invalid: true }, style({ paint: border(destructive) })),
 ])
 

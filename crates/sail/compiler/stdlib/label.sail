@@ -10,11 +10,11 @@
     required = false
   }
 
-  const base = style.fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fg(label-foreground).cursor(pointer).fontSize(base).group()
-  const sizeMd = style.fontSize(base)
-  const sizeSm = style.fontSize(sm)
-  const sizeLg = style.fontSize(sm)
-  const req = style.display(none).fg(label-required).fontWeight(bold).ms(1)
+  const base = style({ paint: fg(label-foreground).cursor(pointer).group(), text: fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fontSize(base) })
+  const sizeMd = style({ text: fontSize(base) })
+  const sizeSm = style({ text: fontSize(sm) })
+  const sizeLg = style({ text: fontSize(sm) })
+  const req = style({ box: display(none).ms(1), paint: fg(label-required), text: fontWeight(bold) })
 </scope>
 
 <label>
@@ -32,7 +32,7 @@
     style([
     req,
     when({
-      group-required: style.display(inline),
+      group-required: style({ box: display(inline) }),
     }),
   ])
 *</span>

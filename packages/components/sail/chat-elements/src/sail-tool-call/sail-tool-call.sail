@@ -32,28 +32,28 @@
     open = false
   }
 
-  const host = style.group().position(relative).borderWidth(1).border(border).radius(md).bg(card).overflow(hidden)
+  const host = style({ box: position(relative).overflow(hidden), paint: group().borderWidth(1).border(border).radius(md).bg(card) })
   const statusBg = when({
-    groupStateRunning: style.bg(info),
-    groupStateOk: style.bg(success),
-    groupStateError: style.bg(destructive),
+    groupStateRunning: style({ paint: bg(info) }),
+    groupStateOk: style({ paint: bg(success) }),
+    groupStateError: style({ paint: bg(destructive) }),
   })
   const statusFg = when({
-    groupStateRunning: style.fg(info),
-    groupStateOk: style.fg(success),
-    groupStateError: style.fg(destructive),
+    groupStateRunning: style({ paint: fg(info) }),
+    groupStateOk: style({ paint: fg(success) }),
+    groupStateError: style({ paint: fg(destructive) }),
   })
   // Status rail only — collapsible owns the caret (one disclosure chrome).
-  const rail = style.position(absolute).left(0).top(0).bottom(0).w(1)
-  const dot = style.shadow(none)
-  const statusLabel = style.ml(auto).fontSize(xs).textCase(uppercase).tracking(wide)
+  const rail = style({ box: position(absolute).left(0).top(0).bottom(0).w(1) })
+  const dot = style({ paint: shadow(none) })
+  const statusLabel = style({ box: ml(auto), text: fontSize(xs).textCase(uppercase).tracking(wide) })
   // padS clears the absolute rail so the first glyph never sits under it.
-  const trigger = style.padY(2).padS(4).padE(3)
-  const nameText = style.fontFamily(mono).fontSize(sm).fontWeight(medium).fg(foreground).truncate()
-  const body = style.borderTWidth(1).borderT(border).padY(2).padS(4).padE(3).fontFamily(mono).fontSize(sm).leading(normal)
-  const sectionLabel = style.display(block).fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(1)
-  const pre = style.whitespace(pre-wrap)
-  const resultBlock = style.mt(2)
+  const trigger = style({ box: padY(2).padS(4).padE(3) })
+  const nameText = style({ paint: fg(foreground), text: fontFamily(mono).fontSize(sm).fontWeight(medium).truncate() })
+  const body = style({ box: padY(2).padS(4).padE(3), paint: borderTWidth(1).borderT(border), text: fontFamily(mono).fontSize(sm).leading(normal) })
+  const sectionLabel = style({ box: display(block).mb(1), paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide) })
+  const pre = style({ text: whitespace(pre-wrap) })
+  const resultBlock = style({ box: mt(2) })
 </scope>
 
 <div data-state={status()}>
@@ -64,7 +64,7 @@
 </span>
 
   <collapsible open={open()}>
-    style.group()
+    style({ paint: group() })
 
     <row slot="trigger" gap="2" align="center">
       style(trigger)

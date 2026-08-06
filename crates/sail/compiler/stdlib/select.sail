@@ -14,11 +14,11 @@
     multiple = false
   }
 
-  const base = style.display(block).minH(control-h-md).padY(1_5).padS(3).padE(8).fontSize(base).fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs).w(full).cursor(pointer).when({ hover: style.border(border-strong), disabled: style.cursor(not-allowed).opacity(50) })
-  const sizeXs = style.minH(control-h-2xs).padS(2).fontSize(xs)
-  const sizeSm = style.minH(control-h-sm).padS(2_5).fontSize(sm)
-  const sizeMd = style.minH(control-h-md).padS(3).fontSize(base)
-  const sizeLg = style.minH(control-h-lg).padS(4).fontSize(md)
+  const base = style({ box: display(block).minH(control-h-md).padY(1_5).padS(3).padE(8).w(full), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontSize(base) }).when(hover, { paint: border(border-strong) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const sizeXs = style({ box: minH(control-h-2xs).padS(2), text: fontSize(xs) })
+  const sizeSm = style({ box: minH(control-h-sm).padS(2_5), text: fontSize(sm) })
+  const sizeMd = style({ box: minH(control-h-md).padS(3), text: fontSize(base) })
+  const sizeLg = style({ box: minH(control-h-lg).padS(4), text: fontSize(md) })
 </scope>
 
 <select>
@@ -30,7 +30,7 @@
     md: sizeMd,
     lg: sizeLg,
   }),
-  compound({ invalid: true }, style.border(destructive)),
+  compound({ invalid: true }, style({ paint: border(destructive) })),
 ])
 
   <slot></slot>

@@ -7,7 +7,7 @@
   Ban-clean: layout keywords + L1 only.
 -->
 <nav label="Studio activities" shrink="0">
-  style.display(flex).flexDir(column).w(12).minW(12).maxW(12).minH(0).h(full).bg(surface-0).borderRWidth(1).borderR(border).overflow(visible)
+  style({ box: display(flex).flexDir(column).w(12).minW(12).maxW(12).minH(0).h(full).overflow(visible), paint: bg(surface-0).borderRWidth(1).borderR(border) })
 
   <slot name="brand">
     <center
@@ -15,13 +15,13 @@
       hidden="true"
 
     >
-      style.w(full).h(12).minH(12).padX(1).padY(1).borderBWidth(1).borderB(border-subtle)
+      style({ box: w(full).h(12).minH(12).padX(1).padY(1), paint: borderBWidth(1).borderB(border-subtle) })
 
       <center
         studio-brand-mark
 
       >
-        style.w(10).h(10).minW(10).minH(10).radius(md).bg(surface-1).fg(muted-foreground).borderWidth(1).border(border-subtle)
+        style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).bg(surface-1).fg(muted-foreground).borderWidth(1).border(border-subtle) })
 
         <icon name="ship" size="sm"></icon>
       </center>
@@ -34,12 +34,12 @@
     shrink="0"
 
   >
-    style.w(full).padY(2).padX(1)
+    style({ box: w(full).padY(2).padX(1) })
 
     <slot></slot>
   </column>
   <column grow>
-    style.minH(0)
+    style({ box: minH(0) })
 </column>
   <column
     studio-activity-footer
@@ -48,7 +48,7 @@
     gap="1"
 
   >
-    style.w(full).padY(2).padX(1).borderTWidth(1).borderT(border-subtle)
+    style({ box: w(full).padY(2).padX(1), paint: borderTWidth(1).borderT(border-subtle) })
 
     <slot name="footer"></slot>
   </column>

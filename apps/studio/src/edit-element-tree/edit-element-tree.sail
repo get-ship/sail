@@ -23,7 +23,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).basis(0).minW(0).h(full).overflow(hidden)
+  style({ box: minH(0).basis(0).minW(0).h(full).overflow(hidden) })
 
   <row
     align="center"
@@ -31,10 +31,10 @@ export default controller(() => {
     gap="2"
 
   >
-    style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)
+    style({ box: h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle) })
 
     <p>
-      style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)
+      style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
       Components
     </p>
@@ -44,13 +44,13 @@ export default controller(() => {
       min-w="0"
 
     >
-      style.fontSize(xs).fg(muted-foreground).truncate().fontFamily(mono)
+      style({ paint: fg(muted-foreground), text: fontSize(xs).truncate().fontFamily(mono) })
 
       {activePathLabel()}
     </p>
   </row>
   <column grow gap="0">
-    style.minH(0).basis(0).padX(1).padY(1).overflow(hidden)
+    style({ box: minH(0).basis(0).padX(1).padY(1).overflow(hidden) })
 
     <if {!hasElements()}>
       <empty-state
@@ -60,7 +60,7 @@ export default controller(() => {
         elements-empty
 
       >
-        style.borderWidth(1).border(border-subtle).radius(md).pad(3)
+        style({ box: pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
 
         <strong slot="title">No elements yet</strong>
         Open a .sail file to inspect its component tree.
@@ -78,7 +78,7 @@ export default controller(() => {
         on:sail-select={onTreeSelect}
 
       >
-        style.w(full).h(full).minH(0)
+        style({ box: w(full).h(full).minH(0) })
 </sail-tree>
     </if>
   </column>

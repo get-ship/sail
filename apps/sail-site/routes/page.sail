@@ -65,53 +65,49 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   // Do NOT pair overflowX(hidden) with a height-capped flex parent and leave Y
   // visible: CSS coerces Y→auto and sections become independent scrollports.
   // Document shell is content-sized; overflowX alone is fine (no Y scrollport).
-  const page = style.w(full).maxW(full).minW(0).overflowX(hidden).bg(surface-0)
+  const page = style({ box: w(full).maxW(full).minW(0).overflowX(hidden), paint: bg(surface-0) })
   // Marketing sections: overflowX clips tickers/bleed; shrink=0 in markup so
   // they never flex-compress into mini-scrollpanes under residual height locks.
-  const hero = style.position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden).when({
-    tablet: style.padX(8).padT(20).padB(16),
-  })
-  const glow = style.bgGlow(accent).left(0).right(0).top(0).h(64).z(base)
-  const heroInner = style.position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
-  const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
+  const hero = style({ box: position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden) }).when(tablet, { box: padX(8).padT(20).padB(16) })
+  const glow = style({ box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).z(base) })
+  const heroInner = style({ box: position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
+  const eyebrow = style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
   // minW(0) keeps the display word from forcing the page wider than the viewport.
-  const display = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).fg(foreground).minW(0).maxW(full).overflow(hidden)
-  const line = style.display(block).minW(0).overflow(hidden)
-  const lead = style.fontSize(lg).fg(muted-foreground).leading(relaxed).textAlign(center).maxW(breakpoint-mobile).minW(0)
-  const ctaRow = style.w(full).minW(0)
-  const cta = style.radius(full).padX(8)
-  const tickerSection = style.position(relative).w(full).maxW(full).h(44).overflow(hidden).my(8).z(elevated).minW(0)
-  const tickerBand = style.position(absolute).left(-10).right(-10).top(24).rotate(2)
-  const tickerDark = style.borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2).padY(3).overflow(hidden)
-  const tickerMono = style.fontFamily(mono).fontSize(sm).fg(muted-foreground).whitespace(nowrap)
-  const tickerBandTop = style.position(absolute).left(-10).right(-10).top(12).rotate(-2).z(popover)
-  const tickerPrimary = style.bg(primary).padY(3).overflow(hidden)
-  const tickerBold = style.fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).fg(primary-foreground).whitespace(nowrap)
-  const bento = style.padX(4).padT(6).padB(10).minW(0).overflowX(hidden).when({
-    tablet: style.padX(8).padT(8).padB(12),
-  })
-  const grid = style.w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
-  const cardLink = style.display(block).underline(none).minW(0).w(full).fg(foreground).when({ hover: style.fg(foreground) })
+  const display = style({ box: minW(0).maxW(full).overflow(hidden), paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })
+  const line = style({ box: display(block).minW(0).overflow(hidden) })
+  const lead = style({ box: maxW(breakpoint-mobile).minW(0), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) })
+  const ctaRow = style({ box: w(full).minW(0) })
+  const cta = style({ box: padX(8), paint: radius(full) })
+  const tickerSection = style({ box: position(relative).w(full).maxW(full).h(44).overflow(hidden).my(8).minW(0), paint: z(elevated) })
+  const tickerBand = style({ box: position(absolute).left(-10).right(-10).top(24), paint: rotate(2) })
+  const tickerDark = style({ box: padY(3).overflow(hidden), paint: borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2) })
+  const tickerMono = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm).whitespace(nowrap) })
+  const tickerBandTop = style({ box: position(absolute).left(-10).right(-10).top(12), paint: rotate(-2).z(popover) })
+  const tickerPrimary = style({ box: padY(3).overflow(hidden), paint: bg(primary) })
+  const tickerBold = style({ paint: fg(primary-foreground), text: fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).whitespace(nowrap) })
+  const bento = style({ box: padX(4).padT(6).padB(10).minW(0).overflowX(hidden) }).when(tablet, { box: padX(8).padT(8).padB(12) })
+  const grid = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
+  const cardLink = style({ box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none) }).when(hover, { paint: fg(foreground) })
   // Equal-height bento cells — quiet surface, real pad. minH only from tablet up
   // so phone cards don't become full-viewport towers.
-  const cardFill = style.h(full).overflow(hidden).when({ tablet: style.minH(52) })
-  const cardCol = style.h(full).pad(4).when({ tablet: style.pad(5) })
-  const cardEyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
-  const cardTitle = style.fontSize(md).fontWeight(semibold).fg(foreground).leading(snug).mt(1)
-  const cardBody = style.fontSize(sm).fg(muted-foreground).leading(relaxed).mt(2)
-  const cardFoot = style.mt(auto).padT(5)
-  const metric = style.fontFamily(mono).fontSize(2xl).fontWeight(semibold).fg(foreground).nums(tabular).leading(none)
-  const metricUnit = style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
-  const swatch = style.w(6).h(6).radius(sm).borderWidth(1).border(border)
-  const statusLine = style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
-  const term = style.fontFamily(mono).fontSize(xs).bg(surface-0).borderWidth(1).border(border).radius(md).padX(3).padY(2_5).fg(muted-foreground)
-  const termAccent = style.fg(primary)
-  const foot = style.padX(4).padT(8).when({ tablet: style.padX(8).padT(12) })
-  const footRow = style.w(full).maxW(breakpoint-desktop).mx(auto).padB(6).borderBWidth(1).borderB(border).fontFamily(mono).fontSize(sm).fg(muted-foreground).gap(3)
-  const footLink = style.fg(muted-foreground).underline(none).when({ hover: style.fg(primary) })
-  const diamond = style.display(inline-block).w(2).h(2).rotate(45).bg(primary).radius(sm)
-  const wordmarkWrap = style.w(full).maxW(full).minW(0).overflow(hidden)
-  const wordmark = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8).minW(0).maxW(full)
+  const cardFill = style({ box: h(full).overflow(hidden) }).when(tablet, { box: minH(52) })
+  const cardCol = style({ box: h(full).pad(4) }).when(tablet, { box: pad(5) })
+  const cardEyebrow = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
+  const cardTitle = style({ box: mt(1), paint: fg(foreground), text: fontSize(md).fontWeight(semibold).leading(snug) })
+  const cardBody = style({ box: mt(2), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
+  const cardFoot = style({ box: mt(auto).padT(5) })
+  const metric = style({ paint: fg(foreground), text: fontFamily(mono).fontSize(2xl).fontWeight(semibold).nums(tabular).leading(none) })
+  const metricUnit = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
+  const swatch = style({ box: w(6).h(6), paint: radius(sm).borderWidth(1).border(border) })
+  const statusLine = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
+  const term = style({ box: padX(3).padY(2_5), paint: bg(surface-0).borderWidth(1).border(border).radius(md).fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
+  const termAccent = style({ paint: fg(primary) })
+  const foot = style({ box: padX(4).padT(8) }).when(tablet, { box: padX(8).padT(12) })
+  const footRow = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).padB(6).gap(3), paint: borderBWidth(1).borderB(border).fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
+  const footLink = style({ paint: fg(muted-foreground), text: underline(none) }).when(hover, { paint: fg(primary) })
+  const diamond = style({ box: display(inline-block).w(2).h(2), paint: rotate(45).bg(primary).radius(sm) })
+  const wordmarkWrap = style({ box: w(full).maxW(full).minW(0).overflow(hidden) })
+  const wordmark = style({ box: mb(-8).minW(0).maxW(full), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })
 </scope>
 
 <column gap="0">
@@ -140,7 +136,7 @@ SHIP UI · 0.2.0</p>
 
           <for {word()} as="w" key={w}>
             <b>
-              style.fg(primary)
+              style({ paint: fg(primary) })
 {w}</b>
           </for>
         </span>
@@ -232,22 +228,22 @@ Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p
                 style(cardFoot)
 
                 <div testid="landing-motion-bar">
-                  style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)
+                  style({ box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40) })
 </div>
                 <div>
-                  style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)
+                  style({ box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60) })
 </div>
                 <div>
-                  style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)
+                  style({ box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70) })
 </div>
                 <div>
-                  style.w(1_5).h(14).radius(sm).bg(primary)
+                  style({ box: w(1_5).h(14), paint: radius(sm).bg(primary) })
 </div>
                 <div>
-                  style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)
+                  style({ box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) })
 </div>
                 <div>
-                  style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)
+                  style({ box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) })
 </div>
               </row>
             </column>
@@ -275,22 +271,22 @@ Swap theme and every surface, ink, and control re-resolves.</p>
                 style(cardFoot)
 
                 <div>
-                  style([swatch, style.bg(primary)])
+                  style([swatch, style({ paint: bg(primary) })])
 </div>
                 <div>
-                  style([swatch, style.bg(accent)])
+                  style([swatch, style({ paint: bg(accent) })])
 </div>
                 <div>
-                  style([swatch, style.bg(success)])
+                  style([swatch, style({ paint: bg(success) })])
 </div>
                 <div>
-                  style([swatch, style.bg(warning)])
+                  style([swatch, style({ paint: bg(warning) })])
 </div>
                 <div>
-                  style([swatch, style.bg(info)])
+                  style([swatch, style({ paint: bg(info) })])
 </div>
                 <div>
-                  style([swatch, style.bg(muted)])
+                  style([swatch, style({ paint: bg(muted) })])
 </div>
               </row>
             </column>
@@ -446,22 +442,22 @@ Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p
                 style(cardFoot)
 
                 <div testid="landing-motion-bar">
-                  style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)
+                  style({ box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40) })
 </div>
                 <div>
-                  style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)
+                  style({ box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60) })
 </div>
                 <div>
-                  style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)
+                  style({ box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70) })
 </div>
                 <div>
-                  style.w(1_5).h(14).radius(sm).bg(primary)
+                  style({ box: w(1_5).h(14), paint: radius(sm).bg(primary) })
 </div>
                 <div>
-                  style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)
+                  style({ box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) })
 </div>
                 <div>
-                  style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)
+                  style({ box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) })
 </div>
               </row>
             </column>
@@ -489,22 +485,22 @@ Swap theme and every surface, ink, and control re-resolves.</p>
                 style(cardFoot)
 
                 <div>
-                  style([swatch, style.bg(primary)])
+                  style([swatch, style({ paint: bg(primary) })])
 </div>
                 <div>
-                  style([swatch, style.bg(accent)])
+                  style([swatch, style({ paint: bg(accent) })])
 </div>
                 <div>
-                  style([swatch, style.bg(success)])
+                  style([swatch, style({ paint: bg(success) })])
 </div>
                 <div>
-                  style([swatch, style.bg(warning)])
+                  style([swatch, style({ paint: bg(warning) })])
 </div>
                 <div>
-                  style([swatch, style.bg(info)])
+                  style([swatch, style({ paint: bg(info) })])
 </div>
                 <div>
-                  style([swatch, style.bg(muted)])
+                  style([swatch, style({ paint: bg(muted) })])
 </div>
               </row>
             </column>

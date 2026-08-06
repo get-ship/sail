@@ -49,22 +49,22 @@
   <section>
     <h2>sail-badge (dissolved to bare span + sx)</h2>
     <span>
-      style.minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(muted).borderWidth(1).border(border).fg(muted-foreground)
+      style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(muted).borderWidth(1).border(border).fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
 default</span>
     <span>
-      style.minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(primary).borderWidth(1).border(primary).fg(primary-foreground)
+      style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(primary).borderWidth(1).border(primary).fg(primary-foreground), text: fontSize(xs).fontWeight(semibold) })
 primary</span>
     <span>
-      style.minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(success).borderWidth(1).border(success).fg(success-foreground)
+      style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(success).borderWidth(1).border(success).fg(success-foreground), text: fontSize(xs).fontWeight(semibold) })
 success</span>
     <span>
-      style.minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(warning).borderWidth(1).border(warning).fg(warning-foreground)
+      style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(warning).borderWidth(1).border(warning).fg(warning-foreground), text: fontSize(xs).fontWeight(semibold) })
 warning solid</span>
     <span>
-      style.minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(transparent).borderWidth(1).border(info).fg(info)
+      style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(transparent).borderWidth(1).border(info).fg(info), text: fontSize(xs).fontWeight(semibold) })
 info outline</span>
     <span>
-      style.minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(semibold).radius(sm).bg(destructive).borderWidth(1).border(destructive).fg(destructive-foreground)
+      style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(destructive).borderWidth(1).border(destructive).fg(destructive-foreground), text: fontSize(xs).fontWeight(semibold) })
 destructive</span>
   </section>
 

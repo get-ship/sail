@@ -6,10 +6,7 @@
 <scope>
   props: {}
 
-  const base = style.display(flex).padY(3).padX(4).fontSize(sm).fontWeight(semibold).fg(foreground).cursor(pointer).list(none).select(none).radius(lg).transition(colors).duration(fast).ease(out).when({
-    hover: style.bg(hover-bg),
-    after: style.content(empty).ms(auto).size(4).bg(muted-foreground),
-  })
+  const base = style({ box: display(flex).padY(3).padX(4), paint: fg(foreground).cursor(pointer).list(none).select(none).radius(lg).transition(colors).duration(fast).ease(out), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: bg(hover-bg) }).when(after, { box: ms(auto).size(4), paint: content(empty).bg(muted-foreground) })
 </scope>
 
 <summary>

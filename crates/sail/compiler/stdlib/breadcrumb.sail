@@ -2,7 +2,7 @@
   <breadcrumb> — list trail host Style; li/a anatomy via compiler descendant map.
 -->
 <scope>
-  const list = style.m(0).pad(0).list(none).fontFamily(body).fontSize(sm)
+  const list = style({ box: m(0).pad(0), paint: list(none), text: fontFamily(body).fontSize(sm) })
 </scope>
 <nav>
   <ol>

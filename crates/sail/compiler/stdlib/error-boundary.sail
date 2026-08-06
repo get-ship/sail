@@ -7,14 +7,14 @@
     message = ''
   }
 
-  const root = style.display(contents).group()
-  const content = style.display(contents)
-  const fallback = style.display(none)
-  const alert = style.padY(4).padX(5).bg(error-boundary).borderWidth(1).border(error-boundary-border).radius(md).shadow(xs).fg(error-boundary-foreground).fontFamily(body).fontSize(sm)
-  const icon = style.size(icon-size-lg).fg(error-boundary-icon).mt(1)
-  const body = style.minW(0)
-  const message = style.fg(error-boundary-message-foreground).leading(normal)
-  const retry = style.self(start).bg(error-boundary-retry-bg).borderWidth(1).border(border).radius(sm).padY(1).padX(3).fontFamily(body).fontSize(xs).fontWeight(semibold).fg(error-boundary-retry-foreground).shadow(xs).cursor(pointer)
+  const root = style({ box: display(contents), paint: group() })
+  const content = style({ box: display(contents) })
+  const fallback = style({ box: display(none) })
+  const alert = style({ box: padY(4).padX(5), paint: bg(error-boundary).borderWidth(1).border(error-boundary-border).radius(md).shadow(xs).fg(error-boundary-foreground), text: fontFamily(body).fontSize(sm) })
+  const icon = style({ box: size(icon-size-lg).mt(1), paint: fg(error-boundary-icon) })
+  const body = style({ box: minW(0) })
+  const message = style({ paint: fg(error-boundary-message-foreground), text: leading(normal) })
+  const retry = style({ box: self(start).padY(1).padX(3), paint: bg(error-boundary-retry-bg).borderWidth(1).border(border).radius(sm).fg(error-boundary-retry-foreground).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(xs).fontWeight(semibold) })
 </scope>
 <div use:catchRender>
   style(root)
@@ -23,7 +23,7 @@
     style([
     content,
     when({
-      group-caught: style.display(none),
+      group-caught: style({ box: display(none) }),
     }),
   ])
 <slot></slot></div>
@@ -31,7 +31,7 @@
     style([
     fallback,
     when({
-      group-caught: style.display(contents),
+      group-caught: style({ box: display(contents) }),
     }),
   ])
 
@@ -56,8 +56,8 @@ Something went wrong</div>
             style([
             retry,
             when({
-              hover: style.bg(muted),
-              focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
+              hover: style({ paint: bg(muted) }),
+              focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
             }),
           ])
 Retry</button>

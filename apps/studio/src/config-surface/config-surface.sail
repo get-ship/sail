@@ -3,8 +3,8 @@
   Nav: buttons. Fields: table. Product copy only.
 -->
 <scope>
-  const eyebrow = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
-  const muted = style.fontSize(sm).fg(muted-foreground)
+  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
+  const muted = style({ paint: fg(muted-foreground), text: fontSize(sm) })
 </scope>
 
 <controller>
@@ -28,7 +28,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <row
     config-workbench
@@ -38,7 +38,7 @@ export default controller(() => {
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
 
     <column
       config-nav
@@ -46,20 +46,20 @@ export default controller(() => {
       gap="0"
 
     >
-      style.minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1).overflow(hidden)
+      style({ box: minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) })
 
       <column shrink="0">
-        style.padX(3).padT(3).padB(2).borderBWidth(1).borderB(border-subtle)
+        style({ box: padX(3).padT(3).padB(2), paint: borderBWidth(1).borderB(border-subtle) })
 
         <p>
           style(eyebrow)
 Config</p>
       </column>
       <scroll-area config-cat-list grow on:click={onCatClick}>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="1">
-          style.pad(2)
+          style({ box: pad(2) })
 
           <for {categories()} as="cat" key={cat.key}>
             <button
@@ -71,7 +71,7 @@ Config</p>
               current={cat.selected ? 'true' : undefined}
 
             >
-              style.w(full)
+              style({ box: w(full) })
 
               {cat.label}
             </button>
@@ -86,7 +86,7 @@ Config</p>
       gap="0"
 
     >
-      style.minH(0).h(full).minW(0).basis(0).bg(background).overflow(hidden)
+      style({ box: minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) })
 
       <column
         config-head
@@ -94,10 +94,10 @@ Config</p>
         gap="1"
 
       >
-        style.padX(5).padY(3).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+        style({ box: padX(5).padY(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
 
         <p config-section-title>
-          style.fontSize(lg).fontWeight(semibold).tracking(tight)
+          style({ text: fontSize(lg).fontWeight(semibold).tracking(tight) })
 
           {sectionTitle()}
         </p>
@@ -107,10 +107,10 @@ Config</p>
       </column>
 
       <scroll-area config-body grow>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="3">
-          style.pad(4).minW(0)
+          style({ box: pad(4).minW(0) })
 
           <for {sections()} as="sec" key={sec.key}>
             <if {sec.selected}>
@@ -119,20 +119,20 @@ Config</p>
                 gap="0"
 
               >
-                style.minW(0).radius(md).borderWidth(1).border(border-subtle).bg(surface-0).overflow(hidden)
+                style({ box: minW(0).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
 
                 <if {sec.showShipCloud}>
                   <column gap="0">
-                    style.pad(3).borderBWidth(1).borderB(border-subtle)
+                    style({ box: pad(3), paint: borderBWidth(1).borderB(border-subtle) })
 
                     <card plugin="ship-cloud" padding="md">
-                      style.minW(0).borderWidth(1).border(primary).bg(surface-1)
+                      style({ box: minW(0), paint: borderWidth(1).border(primary).bg(surface-1) })
 
                       <row gap="3" align="start" nowrap>
                         <column grow min-w="0" gap="1">
                           <row gap="2" align="center" nowrap>
                             <p>
-                              style.fontSize(md).fontWeight(semibold)
+                              style({ text: fontSize(md).fontWeight(semibold) })
 Ship Cloud</p>
                             <badge tone="primary" size="sm" variant="soft" pill>official</badge>
                           </row>
@@ -158,7 +158,7 @@ Account, sync, and hosted agents when the plugin host is available.</p>
 
                 <if {sec.showDanger}>
                   <column section="danger" gap="3">
-                    style.pad(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+                    style({ box: pad(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
                     <row gap="2" nowrap>
                       <button
@@ -196,7 +196,7 @@ Account, sync, and hosted agents when the plugin host is available.</p>
                     hoverable
 
                   >
-                    style.w(full)
+                    style({ box: w(full) })
 
                     <thead>
                       <tr>
@@ -210,12 +210,12 @@ Account, sync, and hosted agents when the plugin host is available.</p>
                         <tr config-field={f.key}>
                           <td>
                             <p>
-                              style.fontSize(sm).fontWeight(semibold)
+                              style({ text: fontSize(sm).fontWeight(semibold) })
 {f.label}</p>
                           </td>
                           <td>
                             <p>
-                              style.fontSize(sm).fontFamily(mono)
+                              style({ text: fontSize(sm).fontFamily(mono) })
 {f.value}</p>
                           </td>
                           <td>

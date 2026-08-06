@@ -13,13 +13,13 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  const base = style.appearance(none).position(relative).boxSizing(border).display(inline-block).align(middle).m(0).cursor(pointer).bg(none).bg(switch).borderWidth(1).border(switch-border).radius(full).w(control-h-sm).h(icon-size-md).tapHighlight(none).transition(colors).duration(fast).ease(out)
-  const sizeMd = style.w(control-h-sm).h(icon-size-md)
-  const sizeSm = style.w(control-h-xs).h(icon-size-sm)
-  const sizeLg = style.w(7).h(icon-size-lg)
-  const thumbMd = style.size(3)
-  const thumbSm = style.size(2_5)
-  const thumbLg = style.size(icon-size-sm)
+  const base = style({ box: position(relative).display(inline-block).m(0).w(control-h-sm).h(icon-size-md), paint: appearance(none).boxSizing(border).align(middle).cursor(pointer).bg(none).bg(switch).borderWidth(1).border(switch-border).radius(full).tapHighlight(none).transition(colors).duration(fast).ease(out) })
+  const sizeMd = style({ box: w(control-h-sm).h(icon-size-md) })
+  const sizeSm = style({ box: w(control-h-xs).h(icon-size-sm) })
+  const sizeLg = style({ box: w(7).h(icon-size-lg) })
+  const thumbMd = style({ box: size(3) })
+  const thumbSm = style({ box: size(2_5) })
+  const thumbLg = style({ box: size(icon-size-sm) })
 </scope>
 
 <input type="checkbox" shrink="0">
@@ -31,21 +31,21 @@
     lg: sizeLg,
   }),
   match(tone, {
-    default: style.bg(switch),
-    primary: style.bg(switch),
-    info: style.bg(switch),
-    success: style.bg(switch),
-    warning: style.bg(switch),
-    destructive: style.bg(switch),
-    accent: style.bg(switch),
-    muted: style.bg(switch),
+    default: style({ paint: bg(switch) }),
+    primary: style({ paint: bg(switch) }),
+    info: style({ paint: bg(switch) }),
+    success: style({ paint: bg(switch) }),
+    warning: style({ paint: bg(switch) }),
+    destructive: style({ paint: bg(switch) }),
+    accent: style({ paint: bg(switch) }),
+    muted: style({ paint: bg(switch) }),
   }),
   when({
-    hover: style.bg(hover-bg),
-    checked: style.bg(primary).border(selected-border).shadow(xs),
-    focus: style.outline(solid).outline(2).outline(primary).outlineOffset(ring-offset),
-    disabled: style.cursor(not-allowed).bg(switch).border(border).saturate(60).shadow(none),
-    before: style.content(empty).position(absolute).top(0).bottom(0).my(auto).left(px).bg(switch-thumb).radius(full).shadow(sm).size(3).transition(all).duration(fast).ease(out),
+    hover: style({ paint: bg(hover-bg) }),
+    checked: style({ paint: bg(primary).border(selected-border).shadow(xs) }),
+    focus: style({ paint: outline(solid).outline(2).outline(primary).outlineOffset(ring-offset) }),
+    disabled: style({ paint: cursor(not-allowed).bg(switch).border(border).saturate(60).shadow(none) }),
+    before: style({ box: position(absolute).top(0).bottom(0).my(auto).left(px).size(3), paint: content(empty).bg(switch-thumb).radius(full).shadow(sm).transition(all).duration(fast).ease(out) }),
   }),
   match(size, {
     md: when({ before: thumbMd }),
@@ -54,86 +54,86 @@
   }),
   when({
     checked: when({
-      before: style.left(auto).right(px).bg(primary-foreground),
+      before: style({ box: left(auto).right(px), paint: bg(primary-foreground) }),
     }),
   }),
   when({
     disabled: when({
-      before: style.shadow(xs),
+      before: style({ paint: shadow(xs) }),
     }),
   }),
   match(tone, {
     default: when({
-      checked: style.bg(primary),
-      focus: style.outline(primary),
+      checked: style({ paint: bg(primary) }),
+      focus: style({ paint: outline(primary) }),
     }),
     primary: when({
-      checked: style.bg(primary),
-      focus: style.outline(primary),
+      checked: style({ paint: bg(primary) }),
+      focus: style({ paint: outline(primary) }),
     }),
     info: when({
-      checked: style.bg(info),
-      focus: style.outline(info),
+      checked: style({ paint: bg(info) }),
+      focus: style({ paint: outline(info) }),
     }),
     success: when({
-      checked: style.bg(success),
-      focus: style.outline(success),
+      checked: style({ paint: bg(success) }),
+      focus: style({ paint: outline(success) }),
     }),
     warning: when({
-      checked: style.bg(warning),
-      focus: style.outline(warning),
+      checked: style({ paint: bg(warning) }),
+      focus: style({ paint: outline(warning) }),
     }),
     destructive: when({
-      checked: style.bg(destructive),
-      focus: style.outline(destructive),
+      checked: style({ paint: bg(destructive) }),
+      focus: style({ paint: outline(destructive) }),
     }),
     accent: when({
-      checked: style.bg(accent),
-      focus: style.outline(accent),
+      checked: style({ paint: bg(accent) }),
+      focus: style({ paint: outline(accent) }),
     }),
     muted: when({
-      checked: style.bg(muted-foreground),
-      focus: style.outline(muted-foreground),
+      checked: style({ paint: bg(muted-foreground) }),
+      focus: style({ paint: outline(muted-foreground) }),
     }),
   }),
   match(tone, {
     default: when({
-      checked: when({ before: style.bg(primary-foreground) }),
+      checked: when({ before: style({ paint: bg(primary-foreground) }) }),
     }),
     primary: when({
-      checked: when({ before: style.bg(primary-foreground) }),
+      checked: when({ before: style({ paint: bg(primary-foreground) }) }),
     }),
     info: when({
-      checked: when({ before: style.bg(info-foreground) }),
+      checked: when({ before: style({ paint: bg(info-foreground) }) }),
     }),
     success: when({
-      checked: when({ before: style.bg(success-foreground) }),
+      checked: when({ before: style({ paint: bg(success-foreground) }) }),
     }),
     warning: when({
-      checked: when({ before: style.bg(warning-foreground) }),
+      checked: when({ before: style({ paint: bg(warning-foreground) }) }),
     }),
     destructive: when({
-      checked: when({ before: style.bg(destructive-foreground) }),
+      checked: when({ before: style({ paint: bg(destructive-foreground) }) }),
     }),
     accent: when({
-      checked: when({ before: style.bg(accent-foreground) }),
+      checked: when({ before: style({ paint: bg(accent-foreground) }) }),
     }),
     muted: when({
-      checked: when({ before: style.bg(background) }),
+      checked: when({ before: style({ paint: bg(background) }) }),
     }),
   }),
   when({
     motion-reduce: when({
-      before: style.transition(none),
+      before: style({ paint: transition(none) }),
     }),
   }),
   when({
-    forced-colors: style.border(CanvasText),
+    forced-colors: style({ paint: border(CanvasText) }),
   }),
   when({
     forced-colors: when({
-      checked: style.bg(Highlight),
-      focus: style.outline(CanvasText),
+      checked: style({ paint: bg(Highlight) }),
+      focus: style({ paint: outline(CanvasText) }),
     }),
   }),
 ])

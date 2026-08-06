@@ -6,10 +6,10 @@
   the layout keywords, appearance from the tone/variant/size contracts.
 -->
 <scope>
-  const title = style.tracking(tight)
-  const muted = style.fg(muted-foreground).fontSize(sm)
-  const email = style.fg(muted-foreground)
-  const rowLabel = style.fontSize(sm)
+  const title = style({ text: tracking(tight) })
+  const muted = style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  const email = style({ paint: fg(muted-foreground) })
+  const rowLabel = style({ text: fontSize(sm) })
 </scope>
 
 <column gap="5">

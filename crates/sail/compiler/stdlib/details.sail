@@ -9,7 +9,7 @@
     open = false
   }
 
-  const base = style.borderWidth(1).border(border).radius(lg).bg(surface-1)
+  const base = style({ paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 </scope>
 
 <details>

@@ -60,7 +60,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <!-- Page header — not the compact uppercase chrome strip -->
   <row
@@ -72,16 +72,16 @@ export default controller(() => {
     nowrap
 
   >
-    style.padX(6).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+    style({ box: padX(6).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
     <column grow min-w="0" gap="1">
       <p>
-        style.fontSize(lg).fontWeight(semibold).fg(foreground).tracking(tight)
+        style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).tracking(tight) })
 
         Themes
       </p>
       <p>
-        style.fontSize(sm).fg(muted-foreground).leading(snug)
+        style({ paint: fg(muted-foreground), text: fontSize(sm).leading(snug) })
 
         Project themes live on disk. Add catalog themes to the project, then open one to edit.
       </p>
@@ -95,10 +95,10 @@ export default controller(() => {
 
   <if {hasThemesError()}>
     <row themes-error align="center" gap="2" shrink="0">
-      style.padX(6).padY(2).borderBWidth(1).borderB(border)
+      style({ box: padX(6).padY(2), paint: borderBWidth(1).borderB(border) })
 
       <p grow min-w="0">
-        style.fontSize(sm).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
 {themesError()}</p>
       <button type="button" size="sm" variant="ghost" retry-themes on:click={onRetryThemes}>
         Retry
@@ -108,11 +108,11 @@ export default controller(() => {
 
   <if {isLoading()}>
     <row themes-loading align="center" gap="2" shrink="0">
-      style.padX(6).padY(2)
+      style({ box: padX(6).padY(2) })
 
       <spinner size="sm"></spinner>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 {loadingLabel()}</p>
     </row>
   </if>
@@ -126,7 +126,7 @@ export default controller(() => {
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
 
     <!-- LIST -->
     <column
@@ -135,28 +135,28 @@ export default controller(() => {
       gap="0"
 
     >
-      style.minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1)
+      style({ box: minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) })
 
       <column themes-list-head shrink="0" gap="1">
-        style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)
+        style({ box: padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) })
 
         <p>
-          style.fontSize(xs).fontWeight(bold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(bold).textCase(uppercase).tracking(wide) })
 
           Library
         </p>
         <p>
-          style.fontSize(xs).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(xs) })
 
           {projectCountLabel()} in project · {catalogCountLabel()} catalog
         </p>
       </column>
 
       <scroll-area themes-list grow on:click={onListClick}>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="1">
-          style.pad(3)
+          style({ box: pad(3) })
 
           <if {!hasAnyThemes()}>
             <if {!hasThemesError()}>
@@ -172,7 +172,7 @@ export default controller(() => {
               list-group="project"
 
             >
-              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(1).padB(1)
+              style({ box: padX(2).padT(1).padB(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
               In project
             </p>
@@ -188,7 +188,7 @@ export default controller(() => {
                 nowrap
 
               >
-                style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })
+                style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
                 <row
@@ -201,27 +201,27 @@ export default controller(() => {
 
                   hidden="true"
                 >
-                  style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)
+                  style({ box: w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle) })
 
                   <center grow>
-                    style.bg(background).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(background) })
 </center>
                   <center grow>
-                    style.bg(surface-2).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(surface-2) })
 </center>
                   <center grow>
-                    style.bg(primary).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(primary) })
 </center>
                   <center grow>
-                    style.bg(accent).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(accent) })
 </center>
                 </row>
                 <column grow min-w="0" gap="0">
                   <p>
-                    style.fontSize(sm).fontWeight(semibold).truncate()
+                    style({ text: fontSize(sm).fontWeight(semibold).truncate() })
 {row.name}</p>
                   <p>
-                    style.fontSize(xs).fg(muted-foreground).truncate()
+                    style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {row.meta}</p>
                 </column>
                 <row gap="1" align="center" shrink="0" nowrap>
@@ -253,7 +253,7 @@ export default controller(() => {
               list-group="catalog"
 
             >
-              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(4).padB(1)
+              style({ box: padX(2).padT(4).padB(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
               Catalog
             </p>
@@ -269,7 +269,7 @@ export default controller(() => {
                 nowrap
 
               >
-                style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })
+                style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })
 
                 <row
                   theme-swatches
@@ -281,27 +281,27 @@ export default controller(() => {
 
                   hidden="true"
                 >
-                  style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)
+                  style({ box: w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle) })
 
                   <center grow>
-                    style.bg(background).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(background) })
 </center>
                   <center grow>
-                    style.bg(surface-2).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(surface-2) })
 </center>
                   <center grow>
-                    style.bg(primary).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(primary) })
 </center>
                   <center grow>
-                    style.bg(accent).minW(0).h(full)
+                    style({ box: minW(0).h(full), paint: bg(accent) })
 </center>
                 </row>
                 <column grow min-w="0" gap="0">
                   <p>
-                    style.fontSize(sm).fontWeight(semibold).truncate()
+                    style({ text: fontSize(sm).fontWeight(semibold).truncate() })
 {row.name}</p>
                   <p>
-                    style.fontSize(xs).fg(muted-foreground).truncate()
+                    style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {row.meta}</p>
                 </column>
                 <badge tone="muted" size="sm" variant="outline" pill shrink="0">Catalog</badge>
@@ -352,10 +352,10 @@ export default controller(() => {
       min-w="0"
 
     >
-      style.minH(0).basis(0).h(full).minW(0).bg(background)
+      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
 
       <column gap="6">
-        style.padX(8).padT(6).padB(10).maxW(panel-max-w-lg)
+        style({ box: padX(8).padT(6).padB(10).maxW(panel-max-w-lg) })
 
         <if {!hasSelected()}>
           <empty-state variant="placeholder" size="sm" w="full" themes-preview-empty>
@@ -368,7 +368,7 @@ export default controller(() => {
           <column preview-head gap="3">
             <row gap="2" align="center">
               <p>
-                style.fontFamily(display).fontSize(2xl).fontWeight(medium).tracking(tight)
+                style({ text: fontFamily(display).fontSize(2xl).fontWeight(medium).tracking(tight) })
 
                 {previewTitle()}
               </p>
@@ -382,20 +382,20 @@ export default controller(() => {
               </badge>
             </row>
             <p>
-              style.fontSize(sm).fg(muted-foreground).leading(relaxed)
+              style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 {previewDesc()}</p>
             <p>
-              style.fontSize(xs).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {previewMeta()}</p>
 
             <!-- Mode: one sun/moon switch only (no Light/Dark button segments) -->
             <if {canToggleMode()}>
               <row preview-mode dual-mode gap="2" align="center" nowrap label="Theme mode">
                 <p>
-                  style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)
+                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
 Mode</p>
                 <icon name="sun" size="sm" label="Light" shrink="0">
-                  style.fg(muted-foreground)
+                  style({ paint: fg(muted-foreground) })
 </icon>
                 <switch
                   size="sm"
@@ -406,13 +406,13 @@ Mode</p>
                   on:change={onPreviewModeSwitch}
                 ></switch>
                 <icon name="moon" size="sm" label="Dark" shrink="0">
-                  style.fg(muted-foreground)
+                  style({ paint: fg(muted-foreground) })
 </icon>
               </row>
             </if>
             <if {!canToggleMode()}>
               <p mode-fixed>
-                style.fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs) })
 
                 This theme ships {previewModesLabel().toLowerCase()} — preview uses that table.
               </p>
@@ -438,7 +438,7 @@ Mode</p>
           <!-- Color story -->
           <column color-story gap="3">
             <p>
-              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
               Color story
             </p>
@@ -450,42 +450,42 @@ Mode</p>
             >
               <column grow gap="1" min-w="0">
                 <center>
-                  style.h(16).radius(md).bg(primary).borderWidth(1).border(border-subtle)
+                  style({ box: h(16), paint: radius(md).bg(primary).borderWidth(1).border(border-subtle) })
 </center>
                 <p>
-                  style.fontSize(xs).fontWeight(medium)
+                  style({ text: fontSize(xs).fontWeight(medium) })
 Primary</p>
               </column>
               <column grow gap="1" min-w="0">
                 <center>
-                  style.h(16).radius(md).bg(secondary).borderWidth(1).border(border-subtle)
+                  style({ box: h(16), paint: radius(md).bg(secondary).borderWidth(1).border(border-subtle) })
 </center>
                 <p>
-                  style.fontSize(xs).fontWeight(medium)
+                  style({ text: fontSize(xs).fontWeight(medium) })
 Secondary</p>
               </column>
               <column grow gap="1" min-w="0">
                 <center>
-                  style.h(16).radius(md).bg(accent).borderWidth(1).border(border-subtle)
+                  style({ box: h(16), paint: radius(md).bg(accent).borderWidth(1).border(border-subtle) })
 </center>
                 <p>
-                  style.fontSize(xs).fontWeight(medium)
+                  style({ text: fontSize(xs).fontWeight(medium) })
 Accent</p>
               </column>
               <column grow gap="1" min-w="0">
                 <center>
-                  style.h(16).radius(md).bg(background).borderWidth(1).border(border-subtle)
+                  style({ box: h(16), paint: radius(md).bg(background).borderWidth(1).border(border-subtle) })
 </center>
                 <p>
-                  style.fontSize(xs).fontWeight(medium)
+                  style({ text: fontSize(xs).fontWeight(medium) })
 Background</p>
               </column>
               <column grow gap="1" min-w="0">
                 <center>
-                  style.h(16).radius(md).bg(surface-1).borderWidth(1).border(border-subtle)
+                  style({ box: h(16), paint: radius(md).bg(surface-1).borderWidth(1).border(border-subtle) })
 </center>
                 <p>
-                  style.fontSize(xs).fontWeight(medium)
+                  style({ text: fontSize(xs).fontWeight(medium) })
 Surface</p>
               </column>
             </row>
@@ -499,25 +499,25 @@ Surface</p>
             gap="2"
 
           >
-            style.pad(4).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).fg(foreground)
+            style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).fg(foreground) })
 
             <p>
-              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
               Type · corners
             </p>
             <p>
-              style.fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight)
+              style({ text: fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight) })
 
               Display / heading sample
             </p>
             <p>
-              style.fontFamily(body).fontSize(sm).leading(relaxed)
+              style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })
 
               Body — the quick brown fox jumps over the lazy dog. 0123456789
             </p>
             <p>
-              style.fontFamily(mono).fontSize(xs)
+              style({ text: fontFamily(mono).fontSize(xs) })
 
               mono — const theme = "preview"
             </p>
@@ -525,34 +525,34 @@ Surface</p>
             <row gap="2" align="end" radius-chips>
               <column gap="1" align="center">
                 <center hidden="true">
-                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(sm)
+                  style({ box: w(8).h(8), paint: bg(transparent).borderWidth(2).border(primary).radius(sm) })
 </center>
                 <p>
-                  style.fontSize(xs).fg(muted-foreground)
+                  style({ paint: fg(muted-foreground), text: fontSize(xs) })
 sm</p>
               </column>
               <column gap="1" align="center">
                 <center hidden="true">
-                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(md)
+                  style({ box: w(8).h(8), paint: bg(transparent).borderWidth(2).border(primary).radius(md) })
 </center>
                 <p>
-                  style.fontSize(xs).fg(muted-foreground)
+                  style({ paint: fg(muted-foreground), text: fontSize(xs) })
 md</p>
               </column>
               <column gap="1" align="center">
                 <center hidden="true">
-                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(lg)
+                  style({ box: w(8).h(8), paint: bg(transparent).borderWidth(2).border(primary).radius(lg) })
 </center>
                 <p>
-                  style.fontSize(xs).fg(muted-foreground)
+                  style({ paint: fg(muted-foreground), text: fontSize(xs) })
 lg</p>
               </column>
               <column gap="1" align="center">
                 <center hidden="true">
-                  style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(xl)
+                  style({ box: w(8).h(8), paint: bg(transparent).borderWidth(2).border(primary).radius(xl) })
 </center>
                 <p>
-                  style.fontSize(xs).fg(muted-foreground)
+                  style({ paint: fg(muted-foreground), text: fontSize(xs) })
 xl</p>
               </column>
             </row>
@@ -561,7 +561,7 @@ xl</p>
           <!-- Live chrome specimen under scoped theme -->
           <column preview-chrome gap="2">
             <p>
-              style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
 
               Live chrome
             </p>
@@ -572,7 +572,7 @@ xl</p>
               gap="0"
 
             >
-              style.radius(lg).borderWidth(1).border(border).overflow(hidden).minW(0).shadow(md).bg(background).fg(foreground)
+              style({ box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border).shadow(md).bg(background).fg(foreground) })
 
               <row
                 align="center"
@@ -581,25 +581,25 @@ xl</p>
                 justify="between"
 
               >
-                style.padX(4).h(9).bg(surface-1).borderBWidth(1).borderB(border-subtle)
+                style({ box: padX(4).h(9), paint: bg(surface-1).borderBWidth(1).borderB(border-subtle) })
 
                 <p>
-                  style.fontSize(sm).fontWeight(semibold).truncate()
+                  style({ text: fontSize(sm).fontWeight(semibold).truncate() })
 {previewTitle()}</p>
                 <badge tone="primary" size="sm" variant="solid" pill>Preview</badge>
               </row>
               <column gap="4">
-                style.pad(5).bg(background)
+                style({ box: pad(5), paint: bg(background) })
 
                 <card>
-                  style.pad(4)
+                  style({ box: pad(4) })
 
                   <column gap="3">
                     <p>
-                      style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                      style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 Sample card</p>
                     <p>
-                      style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+                      style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })
 
                       Controls, badges, and fields read this theme’s token table.
                     </p>

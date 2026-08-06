@@ -134,11 +134,11 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
     <slot name="fallback"></slot>
   <else>
     <row role="alert" gap="3" align="start">
-      style.fontFamily(body).padY(4).padX(5).borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).fontSize(sm).shadow(xs)
+      style({ box: padY(4).padX(5), paint: borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).shadow(xs), text: fontFamily(body).fontSize(sm) })
 
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
 >
-        style.w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).fg(destructive).mt(1)
+        style({ box: w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).mt(1), paint: fg(destructive) })
 
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>
@@ -146,7 +146,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
       </svg>
       <column gap="1">
         <div>
-          style.fg(muted-foreground).leading(normal)
+          style({ paint: fg(muted-foreground), text: leading(normal) })
 {fallbackText() || 'Something went wrong'}</div>
         <button type="button" variant="outline" size="xs" on:click={reset}>Retry</button>
       </column>

@@ -9,14 +9,14 @@
     dismissible = false
   }
 
-  const base = style.group().position(relative).overflow(hidden).pad(3).borderWidth(1).border(border).radius(md).bg(alert).fg(alert-foreground).fontFamily(body).fontSize(base).leading(normal).shadow(xs)
-  const stripe = style.content(empty).position(absolute).left(0).top(0).bottom(0).w(1).bg(alert-stripe)
-  const ico = style.size(control-h-xs).radius(md).bg(muted).fg(muted-foreground)
-  const title = style.fontWeight(semibold)
-  const body = style.fg(muted-foreground)
-  const actions = style.mt(2)
-  const close = style.display(none).size(control-h-xs).self(start).pad(0).borderWidth(0).radius(sm).bg(transparent).fg(muted-foreground).cursor(pointer).transition(colors).duration(fast).ease(out)
-  const xmark = style.display(block).size(icon-size-sm).stroke(currentColor).fill(none)
+  const base = style({ box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(border).radius(md).bg(alert).fg(alert-foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) })
+  const stripe = style({ box: position(absolute).left(0).top(0).bottom(0).w(1), paint: content(empty).bg(alert-stripe) })
+  const ico = style({ box: size(control-h-xs), paint: radius(md).bg(muted).fg(muted-foreground) })
+  const title = style({ text: fontWeight(semibold) })
+  const body = style({ paint: fg(muted-foreground) })
+  const actions = style({ box: mt(2) })
+  const close = style({ box: display(none).size(control-h-xs).self(start).pad(0), paint: borderWidth(0).radius(sm).bg(transparent).fg(muted-foreground).cursor(pointer).transition(colors).duration(fast).ease(out) })
+  const xmark = style({ box: display(block).size(icon-size-sm), paint: stroke(currentColor).fill(none) })
 </scope>
 
 <row
@@ -31,19 +31,19 @@
     base,
     when({
       before: stripe,
-      forced-colors: style.border(CanvasText),
+      forced-colors: style({ paint: border(CanvasText) }),
     }),
     match(tone, {
-      default: when({ before: style.bg(alert-stripe) }),
-      muted: when({ before: style.bg(alert-stripe) }),
-      info: when({ before: style.bg(info) }),
-      success: when({ before: style.bg(success) }),
-      warning: when({ before: style.bg(warning) }),
-      destructive: when({ before: style.bg(destructive) }),
+      default: when({ before: style({ paint: bg(alert-stripe) }) }),
+      muted: when({ before: style({ paint: bg(alert-stripe) }) }),
+      info: when({ before: style({ paint: bg(info) }) }),
+      success: when({ before: style({ paint: bg(success) }) }),
+      warning: when({ before: style({ paint: bg(warning) }) }),
+      destructive: when({ before: style({ paint: bg(destructive) }) }),
     }),
     when({
       forced-colors: when({
-        before: style.bg(CanvasText),
+        before: style({ paint: bg(CanvasText) }),
       }),
     }),
   ])
@@ -52,15 +52,15 @@
     style([
     ico,
     match(tone, {
-      default: style.bg(muted).fg(muted-foreground),
-      muted: style.bg(muted).fg(muted-foreground),
-      info: style.bg(muted).fg(info),
-      success: style.bg(muted).fg(success),
-      warning: style.bg(muted).fg(warning),
-      destructive: style.bg(muted).fg(destructive),
+      default: style({ paint: bg(muted).fg(muted-foreground) }),
+      muted: style({ paint: bg(muted).fg(muted-foreground) }),
+      info: style({ paint: bg(muted).fg(info) }),
+      success: style({ paint: bg(muted).fg(success) }),
+      warning: style({ paint: bg(muted).fg(warning) }),
+      destructive: style({ paint: bg(muted).fg(destructive) }),
     }),
     when({
-      empty: style.display(none),
+      empty: style({ box: display(none) }),
     }),
   ])
 
@@ -71,7 +71,7 @@
       style([
       title,
       when({
-        empty: style.display(none),
+        empty: style({ box: display(none) }),
       }),
     ])
 
@@ -86,7 +86,7 @@
       style([
       actions,
       when({
-        empty: style.display(none),
+        empty: style({ box: display(none) }),
       }),
     ])
 
@@ -104,9 +104,9 @@
     style([
       close,
       when({
-        group-dismissible: style.display(inline-block),
-        hover: style.bg(muted).fg(foreground),
-        focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
+        group-dismissible: style({ box: display(inline-block) }),
+        hover: style({ paint: bg(muted).fg(foreground) }),
+        focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
       }),
     ])
 

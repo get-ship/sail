@@ -160,7 +160,9 @@ describe('C1 doc tabs strip — mapping + chrome contract', () => {
     expect(src).toMatch(/tab-id=\{tab\.id\}/)
     expect(src).toMatch(/dirty-dot/)
     expect(src).toMatch(/tab-close/)
-    expect(src).toMatch(/when\(\{\s*current:[\s\S]*borderT\(primary\)/)
+    expect(src).toMatch(
+      /when\(\{\s*current:[\s\S]*borderT\(primary\)|when\(current,\s*\{[^}]*borderT\(primary\)/,
+    )
     expect(src).toMatch(/on:mousedown=\{onTabMiddle\}/)
     // Save/actions pinned outside the scroll list
     expect(src).toMatch(/save-source/)

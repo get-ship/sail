@@ -273,7 +273,9 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
   it('rail selection uses selected-bg + primary fg (only the active item is accented)', () => {
     expect(chrome).toMatch(/current=\{item\.active/)
     expect(chrome).toMatch(/active=\{item\.active/)
-    expect(chrome).toMatch(/when\(\{\s*current:\s*style\.bg\(selected-bg\)\.fg\(primary\)/)
+    expect(chrome).toMatch(
+      /when\(\{\s*current:\s*style\.bg\(selected-bg\)\.fg\(primary\)|when\(current,\s*\{\s*paint:\s*bg\(selected-bg\)\.fg\(primary\)/,
+    )
     expect(chrome).toMatch(/fg\(muted-foreground\)/)
     // Distinct icons per activity (not one generic glyph)
     expect(shellRail).toMatch(/icon:\s*'files'/)

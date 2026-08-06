@@ -58,7 +58,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   aria-label={'Open citation ' + index() + ': ' + source()}
 
 >
-  style.minH(0).padY(half).padL(0_75).padR(2).radius(full).fontSize(xs).leading(snug).fontWeight(normal).fg(foreground).bg(muted).borderWidth(1).border(border).shadow(none).cursor(pointer).when({ hover: style.bg(selected-bg).borderWidth(1).border(primary) })
+  style({ box: minH(0).padY(half).padL(0_75).padR(2), paint: radius(full).fg(foreground).bg(muted).borderWidth(1).border(border).shadow(none).cursor(pointer), text: fontSize(xs).leading(snug).fontWeight(normal) }).when(hover, { paint: bg(selected-bg).borderWidth(1).border(primary) })
 
   <row gap="1" align="center">
     <row
@@ -68,10 +68,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       justify="center"
 
     >
-      style.minW(4).h(4).padX(1).fontWeight(semibold).fg(primary-foreground).bg(primary).radius(full)
+      style({ box: minW(4).h(4).padX(1), paint: fg(primary-foreground).bg(primary).radius(full), text: fontWeight(semibold) })
 {index()}</row>
     <span>
-      style.truncate()
+      style({ text: truncate() })
 {source()}</span>
   </row>
 </button>

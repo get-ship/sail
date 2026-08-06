@@ -3,6 +3,11 @@
 
 use sail_compiler::compile_element;
 
+
+fn is_style_product(src: &str) -> bool {
+    src.contains("style.") || src.contains("style(")
+}
+
 #[test]
 fn radio_group_zero_author_style() {
     let src = include_str!("../stdlib/radio-group.sail");
@@ -114,7 +119,7 @@ fn badge_soft_base_on_host_sx() {
     let src = include_str!("../stdlib/badge.sail");
     let out = compile_element(src, "badge").expect("badge compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && (out.structure_html.contains("sx-bgmuted")
                 || out.structure_html.contains("bgmuted")
                 || out.skin_css.contains("var(--muted)")
@@ -284,7 +289,7 @@ fn empty_state_child_paint_on_structure_sx() {
             && !src.contains("tone-bg")
             && !src.contains("compound: [")
             && src.contains("align=\"stretch\"")
-            && src.contains("style.")
+            && is_style_product(src)
             && src.contains("match(size")
             && src.contains("match(variant")
             && src.contains("match(tone")
@@ -370,7 +375,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
     let src = include_str!("../stdlib/tab.sail");
     let out = compile_element(src, "tab").expect("tab compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && src.contains("when({")
             && src.contains("selected:")
             && (src.contains("borderB(primary)") || src.contains("borderB(tone)"))
@@ -476,7 +481,7 @@ fn switch_host_track_paint_on_host_sx() {
     let out = compile_element(src, "switch").expect("switch compiles");
     assert!(
         !src.contains("--sw-")
-            && src.contains("style.appearance(none)")
+            && (src.contains("style.appearance(none)") || src.contains("appearance(none)"))
             && src.contains("bg(none)")
             && src.contains("bg(switch)")
             && src.contains("border(switch-border)")
@@ -876,7 +881,7 @@ fn navbar_host_paint_on_sx_cva() {
             && src.contains("<row")
             && src.contains("nowrap")
             && src.contains("gap=\"4\"")
-            && src.contains("style.")
+            && is_style_product(src)
             && (src.contains("flexDir(column)") || src.contains("dir-column"))
             && (src.contains("bg(navbar)") || src.contains("bg: navbar"))
             && (src.contains("fg(navbar-foreground)") || src.contains("navbar-foreground"))
@@ -998,7 +1003,7 @@ fn error_state_child_paint_on_structure_sx() {
             && !src.contains("tone-destructive")
             && !src.contains("compound: [")
             && src.contains("align=\"stretch\"")
-            && src.contains("style.")
+            && is_style_product(src)
             && (src.contains("grow(1)") || src.contains(" grow") || src.contains("grow min-w"))
             && src.contains("self(stretch)")
             && src.contains("self(center)")
@@ -1100,7 +1105,7 @@ fn radio_nested_row_kills_label_flex_pe() {
     assert!(
         src.contains("<label")
             && src.contains("type=\"radio\"")
-            && src.contains("style.")
+            && is_style_product(src)
             && (src.contains("fontFamily(body)")
                 || src.contains("font-family: body")
                 || src.contains("font-body"))
@@ -1138,7 +1143,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
     assert!(
         !src.contains("'tg-h'")
             && !src.contains("--tg-")
-            && src.contains("style.")
+            && is_style_product(src)
             && (src.contains("bg(toggle-group)") || src.contains("toggle-group"))
             && (src.contains("border(toggle-group-border)") || src.contains("toggle-group-border"))
             && src.contains("<row inline gap=\"0\"")
@@ -1183,7 +1188,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && toggle_src.contains("outline:")
             && toggle_src.contains("ghost:")
             && toggle_src.contains("size:")
-            && toggle_src.contains("style.")
+            && is_style_product(toggle_src)
             && (toggle_src.contains("h(control-h-md)") || toggle_src.contains("h: control-h-md"))
             && (toggle_src.contains("h(control-h-sm)") || toggle_src.contains("h: control-h-sm"))
             && (toggle_src.contains("bg(toggle)") || toggle_src.contains("bg: toggle")),
@@ -1235,7 +1240,7 @@ fn alert_tone_stripe_before_on_host_sx() {
         out.skin_css
     );
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && src.contains("before:")
             && src.contains("content(empty)")
             && src.contains("alert-stripe")
@@ -1249,8 +1254,12 @@ fn alert_tone_stripe_before_on_host_sx() {
         "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
     );
     assert!(
-        src.contains("default: when({ before: style.bg(alert-stripe) })")
-            && src.contains("info: when({ before: style.bg(info) })"),
+        (src.contains("default: when({ before: style.bg(alert-stripe) })")
+            || src.contains("default: when({ before: style({ paint: bg(alert-stripe) }) })")
+            || (src.contains("before:") && src.contains("bg(alert-stripe)")))
+            && (src.contains("info: when({ before: style.bg(info) })")
+                || src.contains("info: when({ before: style({ paint: bg(info) }) })")
+                || (src.contains("before:") && src.contains("bg(info)"))),
         "match(tone) stripe: default alert-stripe; branded semantic tokens"
     );
     assert!(
@@ -1400,7 +1409,7 @@ fn theme_picker_host_paint_on_structure_sx() {
     let src = include_str!("../stdlib/theme-picker.sail");
     let out = compile_element(src, "theme-picker").expect("theme-picker compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && (src.contains("size(control-h-sm)") || src.contains("control-h-sm"))
             && (src.contains("bg(theme-picker)") || src.contains("theme-picker"))
             && (src.contains("selected:") || src.contains("selected:"))
@@ -1494,7 +1503,7 @@ fn prose_host_paint_on_sx_descendants_generated() {
     let src = include_str!("../stdlib/prose.sail");
     let out = compile_element(src, "prose").expect("prose compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && (src.contains("display(block)") || src.contains("block"))
             && (src.contains("fontFamily(body)")
                 || src.contains("font-body")
@@ -1565,7 +1574,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
     assert!(
         src.contains("sticky = false")
-            && src.contains("style.")
+            && is_style_product(src)
             && (src.contains("position(sticky)") || src.contains("sticky"))
             && (src.contains("z(sticky)") || src.contains("z: sticky"))
             && (src.contains("bg(tab-list)") || src.contains("tab-list"))
@@ -1621,7 +1630,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     assert!(
         !tab_src.contains("--tab-")
             && tab_src.contains("size:")
-            && tab_src.contains("style.")
+            && is_style_product(tab_src)
             && (tab_src.contains("fontSize(sm)") || tab_src.contains("font-size: sm"))
             && (tab_src.contains("padY(2)") || tab_src.contains("py: 2"))
             && (tab_src.contains("padX(3)") || tab_src.contains("px: 3"))
@@ -1669,7 +1678,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
     let src = include_str!("../stdlib/scroll-area.sail");
     let out = compile_element(src, "scroll-area").expect("scroll-area compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && (src.contains("scrollbarThin()")
                 || src.contains("scrollbar-thin")
                 || src.contains("scrollbar: thin"))
@@ -1744,7 +1753,7 @@ fn code_block_pre_tab_and_tok_generated() {
     let src = include_str!("../stdlib/code-block.sail");
     let out = compile_element(src, "code-block").expect("code-block compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && (src.contains("tab(2)") || src.contains("tab-2") || src.contains("tab: 2"))
             && (src.contains("leading(code)")
                 || src.contains("leading-code")
@@ -1806,7 +1815,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
     let src = include_str!("../stdlib/field.sail");
     let out = compile_element(src, "field").expect("field compiles");
     assert!(
-        (src.contains(".group()") || src.contains("style.group()"))
+        (src.contains(".group()") || src.contains("style.group()") || src.contains("group()"))
             && src.contains("empty:")
             && src.contains("group-invalid:")
             && !src.contains("class=")
@@ -1911,7 +1920,7 @@ fn pagination_size_cva_on_page() {
     let page = compile_element(page_src, "page").expect("page compiles");
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
     assert!(
-        page_src.contains("style.")
+        is_style_product(page_src)
             && page_src.contains("match(size")
             && (page_src.contains("minW(control-h-md)")
                 || page_src.contains("min-w-control-h-md")
@@ -2035,7 +2044,7 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
     let src = include_str!("../stdlib/combobox.sail");
     let out = compile_element(src, "combobox").expect("combobox compiles");
     assert!(
-        src.contains("style.")
+        is_style_product(src)
             && (src.contains("bind(anchorLeft)")
                 || src.contains("left-(--anchor-left)")
                 || src.contains("left: (--anchor-left)"))

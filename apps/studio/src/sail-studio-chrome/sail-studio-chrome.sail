@@ -56,7 +56,7 @@ export default controller((ctx) => {
   align="stretch"
 
 >
-  style.minH(screen).h(screen).w(full).minW(0).bg(background).fg(foreground).fontFamily(body).fontSize(sm).overflow(hidden)
+  style({ box: minH(screen).h(screen).w(full).minW(0).overflow(hidden), paint: bg(background).fg(foreground), text: fontFamily(body).fontSize(sm) })
 
   <studio-activity-bar studio-rail on:click={onRailClick}>
     <for {rail()} as="item" key={item.key}>
@@ -70,10 +70,10 @@ export default controller((ctx) => {
           title={item.label}
 
         >
-          style.w(10).h(10).minW(10).minH(10).radius(md).fg(muted-foreground).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(selected-bg).fg(primary) })
+          style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground) }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(selected-bg).fg(primary) })
 
           <center>
-            style.w(full).h(full)
+            style({ box: w(full).h(full) })
 
             <icon name={item.icon} size="sm"></icon>
           </center>
@@ -91,10 +91,10 @@ export default controller((ctx) => {
           on:click={onExitStudio}
 
         >
-          style.w(10).h(10).minW(10).minH(10).radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer).when({ hover: style.bg(hover-bg).fg(foreground) })
+          style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer) }).when(hover, { paint: bg(hover-bg).fg(foreground) })
 
           <center>
-            style.w(full).h(full)
+            style({ box: w(full).h(full) })
 
             <icon name="log-out" size="sm"></icon>
           </center>
@@ -104,7 +104,7 @@ export default controller((ctx) => {
   </studio-activity-bar>
 
   <column grow gap="0" min-w="0">
-    style.minH(0).basis(0).overflow(hidden).h(full).minW(0)
+    style({ box: minH(0).basis(0).overflow(hidden).h(full).minW(0) })
 
     <if {hasBatch()}>
       <row
@@ -115,13 +115,13 @@ export default controller((ctx) => {
         nowrap
 
       >
-        style.padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1).h(7).minH(7)
+        style({ box: padX(3).h(7).minH(7), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
         <badge tone="primary" size="sm" variant="soft" batch-count>
           {batchCountLabel()}
         </badge>
         <p>
-          style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
 
           Collected
         </p>
@@ -160,7 +160,7 @@ export default controller((ctx) => {
       min-w="0"
 
     >
-      style.minH(0).basis(0).overflow(hidden).h(full).minW(0)
+      style({ box: minH(0).basis(0).overflow(hidden).h(full).minW(0) })
 
       <column
         grow
@@ -168,7 +168,7 @@ export default controller((ctx) => {
         min-w="0"
 
       >
-        style.minH(0).basis(0).overflow(hidden).h(full).minW(0)
+        style({ box: minH(0).basis(0).overflow(hidden).h(full).minW(0) })
 
         <slot name="route"></slot>
       </column>
@@ -220,16 +220,16 @@ export default controller((ctx) => {
       min-w="0"
 
     >
-      style.h(6).minH(6).padX(3).borderTWidth(1).borderT(border).bg(surface-0).fontSize(xs).fg(muted-foreground).minW(0).overflow(hidden)
+      style({ box: h(6).minH(6).padX(3).minW(0).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground), text: fontSize(xs) })
 
       <p grow min-w="0">
-        style.fontFamily(mono).minW(0).truncate()
+        style({ box: minW(0), text: fontFamily(mono).truncate() })
 {statusLine()}</p>
       <p save-status shrink="0">
-        style.fontSize(xs)
+        style({ text: fontSize(xs) })
 {saveStatusLabel()}</p>
       <p theme-status shrink="0">
-        style.fontSize(xs).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {themeStatusLabel()}</p>
       <!-- Findings status: colored error · warn counts (not a mute "Checks" label) -->
       <button
@@ -247,7 +247,7 @@ export default controller((ctx) => {
         shrink="0"
 
       >
-        style.padX(2).h(5).minH(5)
+        style({ box: padX(2).h(5).minH(5) })
 
         <row findings-status-inner align="center" gap="1" nowrap>
           <if {hasFindingsErrors()}>
@@ -287,7 +287,7 @@ export default controller((ctx) => {
         shrink="0"
 
       >
-        style.padX(1).when({ hover: style.bg(hover-bg) })
+        style({ box: padX(1) }).when(hover, { paint: bg(hover-bg) })
 
         <icon name="activity" size="sm"></icon>
         <badge tone={opsHealthTone()} size="sm" variant="soft" health-tone="ops">
@@ -301,7 +301,7 @@ export default controller((ctx) => {
         shrink="0"
 
       >
-        style.padX(1).when({ hover: style.bg(hover-bg) })
+        style({ box: padX(1) }).when(hover, { paint: bg(hover-bg) })
 
         <icon name="radio" size="sm"></icon>
         <badge tone={watchHealthTone()} size="sm" variant="soft" health-tone="watch">

@@ -83,7 +83,7 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
   <empty-state></empty-state>
 </else-if><else>
   <stack>
-    style.w(fit)
+    style({ box: w(fit) })
 
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
@@ -93,7 +93,7 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
 >
-      style.display(block)
+      style({ box: display(block) })
 
       <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
       </circle>
@@ -104,10 +104,10 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       </for>
     </svg>
     <center>
-      style.fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight).fg(foreground).pointerEvents(none)
+      style({ paint: fg(foreground).pointerEvents(none), text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight) })
 <slot></slot></center>
     <column id="chart-data">
-      style.srOnly()
+      style({ paint: srOnly() })
 
       <slot name="description">
         <table>

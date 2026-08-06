@@ -11,10 +11,10 @@
     orientation: 'vertical' | 'horizontal' | 'both' = 'vertical'
   }
 
-  const base = style.overscroll(contain).scrollbarThin().scrollbarThumb(scroll-area-thumb).scrollbarTrack(transparent)
-  const vertical = style.overflowX(hidden).overflowY(auto)
-  const horizontal = style.overflowX(auto).overflowY(hidden)
-  const both = style.overflow(auto)
+  const base = style({ paint: overscroll(contain).scrollbarThin().scrollbarThumb(scroll-area-thumb).scrollbarTrack(transparent) })
+  const vertical = style({ box: overflowX(hidden).overflowY(auto) })
+  const horizontal = style({ box: overflowX(auto).overflowY(hidden) })
+  const both = style({ box: overflow(auto) })
 </scope>
 <div>
   style([
@@ -25,7 +25,7 @@
     both: both,
   }),
   when({
-    hover: style.scrollbarThumb(scroll-area-thumb-hover),
+    hover: style({ paint: scrollbarThumb(scroll-area-thumb-hover) }),
   }),
 ])
 <slot></slot></div>

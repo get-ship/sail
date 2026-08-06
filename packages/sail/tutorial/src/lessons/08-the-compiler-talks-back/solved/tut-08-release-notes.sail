@@ -1,7 +1,7 @@
 <!--
   Lesson 08 solved — every rejection answered on the compiler's terms.
 
-  style.pad(12px) became the token pad(4); the motion preset is 'fade'
+  style({ box: pad(12px) }) became the token pad(4); the motion preset is 'fade'
   (the closed set); the date is a zero-arg derived read; the <style>
   block is gone — the row surface it hand-painted is Style on sx now.
   No fix fought the language.
@@ -34,10 +34,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const page = style.pad(4)
-  const meta = style.fontSize(sm).fg(muted-foreground)
-  const noteRow = style.padX(3).padY(2).bg(surface-1).radius(md)
-  const noteText = style.fontSize(sm)
+  const page = style({ box: pad(4) })
+  const meta = style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  const noteRow = style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
+  const noteText = style({ text: fontSize(sm) })
 </scope>
 
 <column gap="4">
@@ -46,7 +46,7 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release notes</h3>
     <badge tone="primary" variant="soft">
-      style.enter({ opacity: 'fade' })
+      style({ animate: enter({ opacity: 'fade' }) })
 v2.4.0</badge>
   </row>
 

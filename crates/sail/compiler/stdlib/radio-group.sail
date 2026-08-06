@@ -22,7 +22,7 @@
     required = false
   }
 
-  const host = style.fontFamily(body)
+  const host = style({ text: fontFamily(body) })
 </scope>
 
 <column gap="2" use:radioGroup>

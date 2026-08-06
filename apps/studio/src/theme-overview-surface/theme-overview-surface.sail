@@ -3,23 +3,23 @@
   Controller composition: session + overview domain.
 -->
 <scope>
-  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
-  const fieldHint = style.fontSize(xs).fg(muted-foreground)
-  const monoMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const mutedIcon = style.fg(muted-foreground)
-  const panelCard = style.pad(4).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).minW(0).h(full)
-  const doorCard = style.pad(3).cursor(pointer).when({ hover: style.bg(hover-bg) })
-  const doorTitle = style.fontWeight(semibold)
-  const doorHint = style.fontSize(xs).fg(muted-foreground)
-  const heroCard = style.radius(lg).borderWidth(1).border(border-subtle).overflow(hidden).minW(0).bg(surface-1)
-  const heroSwatch = style.position(relative).h(28).minH(28).w(full).overflow(hidden).bg(bind(swatchColor)).when({ stateEdit: style.cursor(pointer), stateLocked: style.cursor(default) })
-  const heroColorInput = style.position(absolute).top(0).left(0).w(full).h(full).borderWidth(0).pad(0).cursor(pointer).opacity(0).when({ disabled: style.cursor(not-allowed) })
-  const heroMeta = style.padX(3).padY(2)
-  const identityCol = style.padX(6).padT(6).padB(10).maxW(panel-max-w-lg)
-  const iconCell = style.w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).bg(surface-0)
-  const bandStatus = style.padX(4).padY(2)
-  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
-  const fullBtn = style.w(full)
+  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
+  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const mutedIcon = style({ paint: fg(muted-foreground) })
+  const panelCard = style({ box: pad(4).minW(0).h(full), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
+  const doorCard = style({ box: pad(3), paint: cursor(pointer) }).when(hover, { paint: bg(hover-bg) })
+  const doorTitle = style({ text: fontWeight(semibold) })
+  const doorHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const heroCard = style({ box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
+  const heroSwatch = style({ box: position(relative).h(28).minH(28).w(full).overflow(hidden), paint: bg(bind(swatchColor)) }).when(stateEdit, { paint: cursor(pointer) }).when(stateLocked, { paint: cursor(default) })
+  const heroColorInput = style({ box: position(absolute).top(0).left(0).w(full).h(full).pad(0), paint: borderWidth(0).cursor(pointer).opacity(0) }).when(disabled, { paint: cursor(not-allowed) })
+  const heroMeta = style({ box: padX(3).padY(2) })
+  const identityCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
+  const iconCell = style({ box: w(9).h(9).minW(9).minH(9), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
+  const bandStatus = style({ box: padX(4).padY(2) })
+  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
+  const fullBtn = style({ box: w(full) })
 </scope>
 
 <controller>
@@ -64,7 +64,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
@@ -73,7 +73,7 @@ export default controller(() => {
       style(bandError)
 
       <p grow min-w="0">
-        style.fontSize(sm).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" overview-retry on:click={session.onRetry}>
         Retry
@@ -101,7 +101,7 @@ Loading…</p>
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
     <scroll-area
       identity-column
@@ -109,7 +109,7 @@ Loading…</p>
       min-w="0"
 
     >
-      style.minH(0).basis(0).h(full).minW(0).bg(background)
+      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
 
       <column gap="8">
         style(identityCol)
@@ -126,7 +126,7 @@ Color</p>
                 style(heroSwatch)
 
                 <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on:sail-change={overview.onHeroColor}>
-                  style.w(full).h(20).minH(20)
+                  style({ box: w(full).h(20).minH(20) })
 </sail-color-picker>
               </stack>
               <row align="center" justify="between">
@@ -147,7 +147,7 @@ Primary</p>
                 style(heroSwatch)
 
                 <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on:sail-change={overview.onHeroColor}>
-                  style.w(full).h(20).minH(20)
+                  style({ box: w(full).h(20).minH(20) })
 </sail-color-picker>
               </stack>
               <row align="center" justify="between">
@@ -168,7 +168,7 @@ Secondary</p>
                 style(heroSwatch)
 
                 <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on:sail-change={overview.onHeroColor}>
-                  style.w(full).h(20).minH(20)
+                  style({ box: w(full).h(20).minH(20) })
 </sail-color-picker>
               </stack>
               <row align="center" justify="between">
@@ -248,7 +248,7 @@ Pack</p>
             </column>
             <if {overview.hasIconGlyphs()}>
               <grid cols="4" gap="2" icon-sample>
-                style.padT(1)
+                style({ box: padT(1) })
 
                 <for {overview.iconGlyphs()} as="g" key={g.key}>
                   <center shrink="0" title={g.name}>
@@ -324,10 +324,10 @@ More detail</p>
       min-w="0"
 
     >
-      style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)
+      style({ box: minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
 
       <column grow gap="0">
-        style.minH(0).h(full).pad(4)
+        style({ box: minH(0).h(full).pad(4) })
 
         <card
           overview-specimen
@@ -337,10 +337,10 @@ More detail</p>
           padding="none"
 
         >
-          style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+          style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
           <column gap="0" grow>
-            style.minH(0).h(full)
+            style({ box: minH(0).h(full) })
 
             <row
               specimen-chrome
@@ -350,40 +350,40 @@ More detail</p>
               shrink="0"
 
             >
-              style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
               <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style.minW(12)
+                style({ box: minW(12) })
 
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
 </stack>
               </row>
               <p grow min-w="0">
-                style.fontSize(xs).fg(muted-foreground).truncate()
+                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {session.nameEdit()}</p>
               <p shrink="0">
                 style(pathMeta)
 {session.paintMode()}</p>
             </row>
             <scroll-area grow>
-              style.minH(0).basis(0).h(full).bg(background)
+              style({ box: minH(0).basis(0).h(full), paint: bg(background) })
 
               <!--
                 Plain host for density gap bind — layout column always ships sail-g-*
-                which beats sx.gap(bind). stack rejects style.display (owns flex itself).
+                which beats sx.gap(bind). stack rejects style({ box: display(owns flex itself) }).
               -->
               <div
                 specimen-body
 
               >
-                style.display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap))
+                style({ box: display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap)) })
 
                 <row gap="2" align="center" nowrap specimen-buttons>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="primary">Primary</button>
@@ -397,20 +397,20 @@ More detail</p>
                   <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill>Danger</badge>
                 </row>
                 <div type-samples>
-                  style.display(flex).flexDir(column).gap(bind(specimenStackGap))
+                  style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })
 
                   <p>
-                    style.fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight)
+                    style({ text: fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight) })
 
                     {overview.typeDisplay()}
                   </p>
                   <p>
-                    style.fontFamily(body).fontSize(sm).leading(relaxed)
+                    style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })
 
                     {overview.typeBody()} — product body copy.
                   </p>
                   <p>
-                    style.fontFamily(mono).fontSize(xs)
+                    style({ text: fontFamily(mono).fontSize(xs) })
 
                     {overview.typeMono()} — const ok = true
                   </p>
@@ -423,22 +423,22 @@ More detail</p>
                   </row>
                 </if>
                 <div>
-                  style.display(flex).flexDir(column).gap(bind(specimenStackGap))
+                  style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })
 
                   <p>
-                    style.fontSize(xs).fg(muted-foreground)
+                    style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Email</p>
                   <input type="email" size={overview.controlSize()} placeholder="you@company.com" label="Sample email" />
                 </div>
                 <card padding={overview.cardPadding()}>
                   <div>
-                    style.display(flex).flexDir(column).gap(bind(specimenStackGap))
+                    style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })
 
                     <p>
-                      style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                      style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 {session.nameEdit()}</p>
                     <p>
-                      style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)
+                      style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })
 
                       Nested card in this theme.
                     </p>

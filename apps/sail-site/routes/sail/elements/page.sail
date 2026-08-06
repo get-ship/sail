@@ -16,14 +16,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Guide</p>
   <h1>Using components</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     The component library is part of the language: buttons, dialogs, tables,
     comboboxes and the rest are tags, written the way you write HTML. Nothing
@@ -35,7 +35,7 @@ Guide</p>
   <code-block code={code.useThem}></code-block>
   <p>Which is exactly this:</p>
   <card>
-    style.pad(4)
+    style({ box: pad(4) })
 
     <row gap="3" align="center">
       <avatar></avatar>
@@ -56,7 +56,7 @@ Guide</p>
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Inputs</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 button, input, textarea, select,
       combobox, checkbox, radio-group, switch, slider, toggle-group, field,
       label, fieldset, dropzone, theme-picker</p>
@@ -64,47 +64,47 @@ button, input, textarea, select,
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Display</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 badge, chip, status-dot, card,
       avatar, icon, separator, hr, details, collapsible, prose</p>
     </row>
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Feedback</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 alert, progress, meter, spinner,
       skeleton, empty-state, error-state, error-boundary, toast</p>
     </row>
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Overlay</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 tooltip, hover-card, popover,
       dropdown, context-menu, dialog</p>
     </row>
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Navigation</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 tabs, breadcrumb, pagination,
       navbar</p>
     </row>
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Data</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 table</p>
     </row>
     <row gap="3" align="start" nowrap>
       <badge variant="outline"  shrink="0">Layout</badge>
       <p>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 row, column, grid, center,
       scroll-area</p>
     </row>
   </column>
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     A few tags only make sense inside a parent — <code>&lt;tab&gt;</code>
     inside <code>&lt;tabs&gt;</code>, <code>&lt;menu-item&gt;</code> inside
@@ -161,7 +161,7 @@ row, column, grid, center,
   <collapsible>
     <strong slot="trigger">Advanced options (click me)</strong>
     <p>
-      style.padT(2)
+      style({ box: padT(2) })
 Hidden until asked for — and this one is running.</p>
   </collapsible>
   <p>
@@ -191,7 +191,7 @@ Hidden until asked for — and this one is running.</p>
   </p>
   <code-block code={code.behavior}></code-block>
   <combobox placeholder="Pick a framework">
-    style.maxW(panel-max-w-sm)
+    style({ box: maxW(panel-max-w-sm) })
 
     <option value="sail">Sail</option>
     <option value="svelte">Svelte</option>
@@ -230,7 +230,7 @@ Hidden until asked for — and this one is running.</p>
     </button>
   </row>
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     Accessibility is the <code>label</code> field — with it the icon is
     accessible name via semantic prop <code>label</code>; without it the
@@ -253,7 +253,7 @@ Hidden until asked for — and this one is running.</p>
   </p>
   <code-block code={code.prose}></code-block>
   <card>
-    style.pad(4)
+    style({ box: pad(4) })
 
     <prose>
       <h3>Release notes</h3>
@@ -267,7 +267,7 @@ Hidden until asked for — and this one is running.</p>
     </prose>
   </card>
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     It takes no props. This site used to carry 515 lines of hand-written
     reading-column CSS; the framework stylesheet and
@@ -283,7 +283,7 @@ Hidden until asked for — and this one is running.</p>
   </p>
 
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the curious: most of these tags don't exist at runtime — the compiler
     lowers them to native markup with the behavior attached, which is why the
@@ -293,7 +293,7 @@ Hidden until asked for — and this one is running.</p>
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/theming">← Theming</a>
     <a variant="solid" tone="primary" href="/sail/guide/building-a-component">Building a component →</a>

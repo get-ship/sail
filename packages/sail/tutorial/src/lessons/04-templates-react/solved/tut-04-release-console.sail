@@ -57,9 +57,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const envRow = style.padX(3).padY(2).bg(surface-1).radius(md)
-  const envName = style.fontSize(sm)
-  const envRegion = style.fg(muted-foreground)
+  const envRow = style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
+  const envName = style({ text: fontSize(sm) })
+  const envRegion = style({ paint: fg(muted-foreground) })
 </scope>
 
 <column gap="4">
@@ -67,16 +67,16 @@ export default controller(() => {
     <h3>Release console</h3>
     <match {phase()}>
       <case {'idle'}> <badge tone="muted">
-        style.enter({ opacity: 'fade' })
+        style({ animate: enter({ opacity: 'fade' }) })
 idle</badge>
       </case><case {'building'}> <badge tone="warning">
-        style.enter({ translate-x: 'spring:snappy' })
+        style({ animate: enter({ translate-x: 'spring:snappy' }) })
 building</badge>
       </case><case {'live'}> <badge tone="success">
-        style.enter({ scale: 'spring:bouncy' })
+        style({ animate: enter({ scale: 'spring:bouncy' }) })
 live</badge>
       </case><default> <badge tone="destructive">
-        style.enter({ opacity: 'fade' })
+        style({ animate: enter({ opacity: 'fade' }) })
 failed</badge>
     </default></match>
   </row>

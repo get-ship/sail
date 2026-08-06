@@ -3,18 +3,18 @@
   Thin shell: chrome + editor + specimen (draft paint via applyScope bind).
 -->
 <scope>
-  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
-  const fieldHint = style.fontSize(xs).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const doorTitle = style.fontWeight(semibold)
-  const editorCol = style.padX(6).padT(6).padB(10).maxW(panel-max-w-lg)
-  const bandStatus = style.padX(4).padY(2)
-  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
-  const iconCell = style.w(10).h(10).minW(10).minH(10).radius(md).borderWidth(1).border(border-subtle).bg(surface-0)
-  const fullBtn = style.w(full)
-  const fontHit = style.pad(2_5).radius(md).borderWidth(1).border(border-subtle).bg(surface-0).minW(0)
-  const fontSample = style.fontSize(lg).leading(snug).fg(foreground).minW(0)
-  const catChip = style.when({ selected: style.bg(selected-bg).fg(foreground).border(border) })
+  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
+  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const doorTitle = style({ text: fontWeight(semibold) })
+  const editorCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
+  const bandStatus = style({ box: padX(4).padY(2) })
+  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
+  const iconCell = style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
+  const fullBtn = style({ box: w(full) })
+  const fontHit = style({ box: pad(2_5).minW(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
+  const fontSample = style({ box: minW(0), paint: fg(foreground), text: fontSize(lg).leading(snug) })
+  const catChip = style({}).when(selected, { paint: bg(selected-bg).fg(foreground).border(border) })
 </scope>
 
 <controller>
@@ -41,7 +41,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
@@ -50,7 +50,7 @@ export default controller(() => {
       style(bandError)
 
       <p grow min-w="0">
-        style.fontSize(sm).fg(destructive).truncate()
+        style({ paint: fg(destructive), text: fontSize(sm).truncate() })
 {session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
@@ -75,7 +75,7 @@ Loading…</p>
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
     <scroll-area
       assets-editor
@@ -83,7 +83,7 @@ Loading…</p>
       min-w="0"
 
     >
-      style.minH(0).basis(0).h(full).minW(0).bg(background)
+      style({ box: minH(0).basis(0).h(full).minW(0), paint: bg(background) })
 
       <column gap="8">
         style(editorCol)
@@ -93,7 +93,7 @@ Loading…</p>
             style(fieldHint)
 Assets facet</p>
           <p>
-            style.fontSize(xl).fontWeight(semibold).tracking(tight)
+            style({ text: fontSize(xl).fontWeight(semibold).tracking(tight) })
 Type &amp; icons</p>
           <p>
             style(fieldHint)
@@ -182,7 +182,7 @@ Font discoverer</p>
               </button>
             </row>
             <row gap="1" align="center" nowrap font-cats>
-              style.overflowX(auto).minW(0)
+              style({ box: overflowX(auto).minW(0) })
 
               <for {assets.fontCategoryOpts()} as="c" key={c.key}>
                 <button
@@ -340,10 +340,10 @@ Master</p>
       min-w="0"
 
     >
-      style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)
+      style({ box: minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) })
 
       <column grow gap="0">
-        style.minH(0).h(full).pad(4)
+        style({ box: minH(0).h(full).pad(4) })
 
         <card
           assets-specimen
@@ -352,10 +352,10 @@ Master</p>
           padding="none"
 
         >
-          style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)
+          style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
 
           <column gap="0" grow>
-            style.minH(0).h(full)
+            style({ box: minH(0).h(full) })
 
             <row
               specimen-chrome
@@ -365,47 +365,47 @@ Master</p>
               shrink="0"
 
             >
-              style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+              style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
               <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                style.minW(12)
+                style({ box: minW(12) })
 
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
 </stack>
                 <stack shrink="0">
-                  style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+                  style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
 </stack>
               </row>
               <p grow min-w="0">
-                style.fontSize(xs).fg(muted-foreground).truncate()
+                style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {session.nameEdit()}</p>
               <p shrink="0">
                 style(pathMeta)
 {session.paintMode()}</p>
             </row>
           <scroll-area grow>
-            style.minH(0).h(full).bg(background)
+            style({ box: minH(0).h(full), paint: bg(background) })
 
             <column specimen-body gap="5">
-              style.pad(5).minW(0)
+              style({ box: pad(5).minW(0) })
 
               <column gap="2" type-stack>
                 <p>
-                  style.fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight)
+                  style({ text: fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight) })
 
                   {assets.typeDisplay()}
                 </p>
                 <p>
-                  style.fontFamily(body).fontSize(sm).leading(relaxed)
+                  style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })
 
                   {assets.typeBody()} — body copy for product UI judgment.
                 </p>
                 <p>
-                  style.fontFamily(mono).fontSize(xs)
+                  style({ text: fontFamily(mono).fontSize(xs) })
 
                   {assets.typeMono()} — const pack = "lucide"
                 </p>

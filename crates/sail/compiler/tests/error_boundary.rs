@@ -22,6 +22,11 @@ fn js(src: &str) -> String {
 /// A healthy boundary must be invisible to layout. You wrap one around markup you
 /// have already laid out, and it must not disturb it — get this wrong and every
 /// boundary silently breaks a flex row.
+
+fn is_style_product(src: &str) -> bool {
+    src.contains("style.") || src.contains("style(")
+}
+
 #[test]
 fn a_healthy_boundary_does_not_participate_in_layout() {
     let el = compile_element(
@@ -66,7 +71,7 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     assert!(
         (src.contains("group-caught") || src.contains("groupCaught"))
             && (src.contains("style.group()") || src.contains("group()"))
-            && src.contains("style."),
+            && is_style_product(src),
         "structure must express caught swap via Style when group-caught"
     );
     // Both halves of the swap must lower, or a boundary renders its fallback

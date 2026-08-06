@@ -159,14 +159,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   use:captureScroll
 
 >
-  style.position(relative).h(full).minH(0).pad(3).fontFamily(body)
+  style({ box: position(relative).h(full).minH(0).pad(3), text: fontFamily(body) })
 
   <div use:virtualSpacer={totalSize()}>
-    style.position(relative).w(full).h(bind(rowsH))
+    style({ box: position(relative).w(full).h(bind(rowsH)) })
 
     <for {windowItems()} as="w" key={w.key}>
       <column gap="0" use:virtualRow={w.start}>
-        style.position(absolute).left(3).right(3).translateY(bind(rowY))
+        style({ box: position(absolute).left(3).right(3), paint: translateY(bind(rowY)) })
 
         <sail-message
           role={w.item.role || 'assistant'}

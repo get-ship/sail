@@ -1,8 +1,8 @@
 <!--
   Lesson 02 starter — the structure is right, the surface is bare.
 
-  Style this usage card with the Style product alone: style.pad / padX /
-  padY, style.bg / fg, style.radius, style.borderWidth + border, style.shadow,
+  Style this usage card with the Style product alone: style({ box: pad }) / padX /
+  padY, style({ paint: bg }) / fg, style({ paint: radius }), style({ paint: borderWidth }) + border, style({ paint: shadow }),
   type (fontSize / fontWeight / tracking / leading), and when({ hover, …
   focusWithin, current }) for interaction. Prefer a <scope> const when the
   same paint repeats (the three pills share one). Raw values (px, hex) do
@@ -19,7 +19,7 @@
   </row>
 
   <!-- Make this a card: surface bg, border, radius, padding, and a
-       when({ hover: style.shadow(hover) }) lift. -->
+       when({ hover: style({ paint: shadow(hover) }) }) lift. -->
   <column gap="3">
     <row align="center" justify="between">
       <strong>Compute hours</strong>
@@ -30,7 +30,7 @@
       <small>of 500 hrs</small>
     </row>
     <p>Burst capacity unlocks automatically over 90% usage.</p>
-    <!-- when({ focusWithin: style.border(primary) }) should light this
+    <!-- when({ focusWithin: style({ paint: border(primary) }) }) should light this
          row's border up when the input has focus. -->
     <row gap="2" align="center">
       <input placeholder="Set a usage alert (hours)" size="sm" />

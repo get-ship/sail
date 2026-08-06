@@ -1,14 +1,14 @@
 <column gap="2">
-  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
 
   <h1>
-    style.fontSize(2xl).fontWeight(bold).fg(foreground)
+    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 Greet</h1>
   <p>
-    style.fg(muted-foreground).fontSize(sm)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Pick a name to greet:</p>
   <ul>
-    style.list(none).pad(0).m(0)
+    style({ box: pad(0).m(0), paint: list(none) })
 
     <li><a href="/_deck/view/greet/zelda">greet/zelda</a></li>
     <li><a href="/_deck/view/greet/link">greet/link</a></li>

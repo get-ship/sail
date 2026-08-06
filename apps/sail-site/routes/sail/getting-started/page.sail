@@ -8,15 +8,15 @@
   and the Tutorial — never inline here.
 -->
 <column gap="4">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Start here</p>
   <h1>Installation</h1>
 
   <card>
-    style.pad(5).borderWidth(1).border(border).bg(surface-1)
+    style({ box: pad(5), paint: borderWidth(1).border(border).bg(surface-1) })
 
     <column gap="2">
       <row gap="2" align="center">
@@ -31,14 +31,14 @@ Start here</p>
   </card>
 
   <p>
-    style.fontSize(sm).fg(muted-foreground)
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
     In the meantime, the <a href="/sail/tutorial">Tutorial</a> runs entirely in
     your browser — no install required.
   </p>
 
   <row gap="2">
-    style.mt(4).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="solid" tone="primary" href="/sail/tutorial">Tutorial →</a>
     <a variant="default" href="/sail/overview">Introduction</a>

@@ -11,7 +11,7 @@
     for = ''
   }
 
-  const host = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(1).fg(context-menu-foreground).bg(context-menu).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
+  const host = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(1), paint: fg(context-menu-foreground).bg(context-menu).borderWidth(1).border(border).radius(md).shadow(md).z(popover) })
 </scope>
 
 <div popover use:contextMenu use:menu>

@@ -25,14 +25,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 The language</p>
   <h1>State</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     State is three primitives. A <strong>signal</strong> holds a value. A
     <strong>derived</strong> computes a value from other state. An
@@ -45,50 +45,50 @@ The language</p>
   <h2>The graph, live</h2>
   <row gap="4" align="start">
     <column  grow>
-      style.basis(breakpoint-mobile).minW(0)
+      style({ box: basis(breakpoint-mobile).minW(0) })
 
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Live</p>
       <column gap="4">
-        style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)
+        style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
         <row gap="5" align="center">
           <button on:click={() => count.set(count() + 1)}>+1</button>
           <column gap="1" align="center">
             <small>
-              style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 signal</small>
             <strong>
-              style.fontSize(lg)
+              style({ text: fontSize(lg) })
 {count()}</strong>
           </column>
           <column gap="1" align="center">
             <small>
-              style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+              style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 derived ×2</small>
             <strong>
-              style.fontSize(lg)
+              style({ text: fontSize(lg) })
 {doubled()}</strong>
           </column>
         </row>
         <column gap="1">
           <small>
-            style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 effect output</small>
           <for {log()} as="line" key={line}>
             <p>
-              style.fontSize(sm).fg(muted-foreground).fontFamily(mono)
+              style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })
 {line}</p>
           </for>
         </column>
       </column>
     </column>
     <column  grow>
-      style.basis(breakpoint-mobile).minW(0)
+      style({ box: basis(breakpoint-mobile).minW(0) })
 
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Source</p>
       <code-block code={code.graph}></code-block>
     </column>
@@ -127,7 +127,7 @@ Source</p>
   </p>
   <code-block code={code.effect}></code-block>
   <p>
-    style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)
+    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     An effect subscribes to what it <em>actually read on this run</em> — so
     a read the code never reached is a read the effect never subscribed to.
@@ -200,13 +200,13 @@ Source</p>
   </p>
   <row gap="4" align="start">
     <column  grow>
-      style.basis(breakpoint-mobile).minW(0)
+      style({ box: basis(breakpoint-mobile).minW(0) })
 
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Live — click either card</p>
       <column gap="3">
-        style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)
+        style({ box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
         <grid cols="2" gap="3">
           <store-counter label="one component"></store-counter>
@@ -216,10 +216,10 @@ Live — click either card</p>
       </column>
     </column>
     <column  grow>
-      style.basis(breakpoint-mobile).minW(0)
+      style({ box: basis(breakpoint-mobile).minW(0) })
 
       <p>
-        style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)
+        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 The store</p>
       <code-block code={code.storeDef}></code-block>
     </column>
@@ -258,13 +258,13 @@ The store</p>
   </p>
 
   <p>
-    style.mt(4).fontSize(sm).fg(muted-foreground)
+    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
 
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
   <row justify="between" gap="2">
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/sail-file">← Components</a>
     <a variant="solid" tone="primary" href="/sail/language/templates">Templates →</a>

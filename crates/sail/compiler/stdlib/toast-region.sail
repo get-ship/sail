@@ -23,17 +23,17 @@
     }
   }
 
-  const base = style.position(fixed).z(z-toast).pad(4).pointerEvents(none).top(0).right(auto).bottom(auto).left(0).w(panel-w-toast)
+  const base = style({ box: position(fixed).pad(4).top(0).right(auto).bottom(auto).left(0).w(panel-w-toast), paint: z(z-toast).pointerEvents(none) })
 </scope>
 
 <column gap="2">
   style([
   base,
   match(position, {
-    top-start: style.top(0).right(auto).bottom(auto).left(0),
-    top-end: style.top(0).right(0).bottom(auto).left(auto),
-    bottom-start: style.top(auto).right(auto).bottom(0).left(0).flexDir(column-reverse),
-    bottom-end: style.top(auto).right(0).bottom(0).left(auto).flexDir(column-reverse),
+    top-start: style({ box: top(0).right(auto).bottom(auto).left(0) }),
+    top-end: style({ box: top(0).right(0).bottom(auto).left(auto) }),
+    bottom-start: style({ box: top(auto).right(auto).bottom(0).left(0).flexDir(column-reverse) }),
+    bottom-end: style({ box: top(auto).right(0).bottom(0).left(auto).flexDir(column-reverse) }),
   }),
 ])
 

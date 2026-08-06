@@ -12,18 +12,14 @@
     city: string
   }
 
-  const board = style.pad(4)
-  const boardTitle = style.fontSize(sm).textCase(uppercase).tracking(wide)
-  const departedBadge = style.fontSize(xs).fontFamily(mono).fg(muted-foreground).padX(1).radius(sm).when({
-    stateLive: style.bg(primary).fg(primary-foreground),
-  })
-  const list = style.mt(3).fontFamily(mono).fontSize(sm)
-  const city = style.truncate()
-  const stage = style.pad(3).borderWidth(1).border(border).opacity(50).when({
-    stateLive: style.opacity(100).border(primary).bg(muted),
-  })
-  const stageTitle = style.fontSize(sm)
-  const stageBody = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
+  const board = style({ box: pad(4) })
+  const boardTitle = style({ text: fontSize(sm).textCase(uppercase).tracking(wide) })
+  const departedBadge = style({ box: padX(1), paint: fg(muted-foreground).radius(sm), text: fontSize(xs).fontFamily(mono) }).when(stateLive, { paint: bg(primary).fg(primary-foreground) })
+  const list = style({ box: mt(3), text: fontFamily(mono).fontSize(sm) })
+  const city = style({ text: truncate() })
+  const stage = style({ box: pad(3), paint: borderWidth(1).border(border).opacity(50) }).when(stateLive, { paint: opacity(100).border(primary).bg(muted) })
+  const stageTitle = style({ text: fontSize(sm) })
+  const stageBody = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
 </scope>
 
 <controller>
@@ -83,7 +79,7 @@ Board</strong>
 
       <for {rows()} as="r" key={r.id}>
         <row nowrap>
-          style.enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 })
+          style({ animate: enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 }) })
 
           <span>
             style(city)

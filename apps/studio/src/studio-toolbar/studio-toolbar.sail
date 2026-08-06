@@ -12,7 +12,7 @@
   min-w="0"
 
 >
-  style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0).overflow(hidden)
+  style({ box: h(7).padX(2).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
   <slot></slot>
 </row>

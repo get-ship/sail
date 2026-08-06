@@ -3,9 +3,9 @@
   Composition: { session, inspect }. Library is the sibling route surface.
 -->
 <scope>
-  const eyebrow = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const muted = style.fontSize(sm).fg(muted-foreground)
+  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const muted = style({ paint: fg(muted-foreground), text: fontSize(sm) })
 </scope>
 
 <controller>
@@ -26,7 +26,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <row
     components-workbench
@@ -36,7 +36,7 @@ export default controller(() => {
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
 
     <column
       inspect-tree-pane
@@ -44,10 +44,10 @@ export default controller(() => {
       gap="0"
 
     >
-      style.minH(0).h(full).minW(panel-min-w-lg).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)
+      style({ box: minH(0).h(full).minW(panel-min-w-lg).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) })
 
       <column inspect-tree-head shrink="0" gap="2">
-        style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)
+        style({ box: padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) })
 
         <row align="center" justify="between" nowrap gap="2">
           <p>
@@ -62,7 +62,7 @@ Components</p>
           style(pathMeta)
 Surface picker · open files & routes</p>
         <scroll-area surface-picker surface-list on:click={inspect.onSurfacePick}>
-          style.maxH(28)
+          style({ box: maxH(28) })
 
           <column gap="1">
             <for {inspect.surfaces()} as="s" key={s.key}>
@@ -86,7 +86,7 @@ Surface picker · open files & routes</p>
 
       <if {inspect.isLoading()}>
         <row align="center" gap="2" shrink="0">
-          style.padX(4).padY(2)
+          style({ box: padX(4).padY(2) })
 
           <spinner size="sm"></spinner>
           <p>
@@ -96,7 +96,7 @@ Surface picker · open files & routes</p>
       </if>
 
       <column grow gap="0">
-        style.minH(0).basis(0).pad(1).overflow(hidden)
+        style({ box: minH(0).basis(0).pad(1).overflow(hidden) })
 
         <if {!inspect.hasSurface()}>
           <studio-empty title="Select a surface to inspect" size="sm">
@@ -120,7 +120,7 @@ Surface picker · open files & routes</p>
               on:sail-select={inspect.onTreeSelect}
 
             >
-              style.w(full).h(full).minH(0)
+              style({ box: w(full).h(full).minH(0) })
 </sail-tree>
           </if>
         </if>
@@ -134,14 +134,14 @@ Surface picker · open files & routes</p>
       gap="0"
 
     >
-      style.minH(0).h(full).minW(panel-min-w-md).basis(0).bg(background).overflow(hidden)
+      style({ box: minH(0).h(full).minW(panel-min-w-md).basis(0).overflow(hidden), paint: bg(background) })
 
       <column shrink="0" gap="3">
-        style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+        style({ box: padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
 
         <if {!inspect.hasNode()}>
           <p>
-            style.fontSize(lg).fontWeight(semibold)
+            style({ text: fontSize(lg).fontWeight(semibold) })
 Instance</p>
           <p>
             style(muted)
@@ -150,7 +150,7 @@ Select a node in the tree.</p>
         <if {inspect.hasNode()}>
           <column gap="1">
             <p node-tag>
-              style.fontSize(lg).fontWeight(semibold).fontFamily(mono)
+              style({ text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
 {inspect.nodeTag()}</p>
             <p>
               style(pathMeta)
@@ -180,10 +180,10 @@ Select a node in the tree.</p>
       </column>
 
       <scroll-area grow>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="4">
-          style.pad(5)
+          style({ box: pad(5) })
 
           <if {inspect.panelsNote()}>
             <p>
@@ -205,7 +205,7 @@ No diagnostics on this surface.</p>
                 <badge tone={iss.tone} size="sm" variant="soft" pill shrink="0">{iss.severity}</badge>
                 <column grow min-w="0" gap="0">
                   <p>
-                    style.fontSize(sm)
+                    style({ text: fontSize(sm) })
 {iss.message}</p>
                   <p>
                     style(pathMeta)
@@ -230,10 +230,10 @@ No layout boxes for this surface yet.</p>
 Boxes from the compiler model (not browser computed style).</p>
               <for {inspect.layoutRows()} as="box" key={box.key}>
                 <row gap="2" align="center" nowrap>
-                  style.padY(1)
+                  style({ box: padY(1) })
 
                   <p shrink="0">
-                    style.fontSize(sm).fontFamily(mono)
+                    style({ text: fontSize(sm).fontFamily(mono) })
 {box.tag}</p>
                   <p grow min-w="0">
                     style(pathMeta)
@@ -258,7 +258,7 @@ No state bindings on this surface.</p>
             <for {inspect.stateRows()} as="st" key={st.key}>
               <row gap="2" align="center" nowrap>
                 <p grow min-w="0">
-                  style.fontSize(sm).fontFamily(mono).truncate()
+                  style({ text: fontSize(sm).fontFamily(mono).truncate() })
 {st.name}</p>
                 <badge tone="muted" size="sm" variant="outline" pill>{st.kind}</badge>
                 <badge tone={st.tierTone} size="sm" variant="soft" pill>{st.tierLabel}</badge>

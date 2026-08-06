@@ -77,21 +77,21 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
 </controller>
 <if {staged().length === 0}>
   <p>
-    style.fontFamily(body).fontSize(sm).fg(muted-foreground).padY(1).padX(2)
+    style({ box: padY(1).padX(2), paint: fg(muted-foreground), text: fontFamily(body).fontSize(sm) })
 No staged annotations.</p>
 <else>
   <column role="list" gap="1">
-    style.fontFamily(body).fontSize(sm).fg(foreground)
+    style({ paint: fg(foreground), text: fontFamily(body).fontSize(sm) })
 
     <for {staged()} as="a" key={a.id}>
       <row role="listitem" data-id={a.id} gap="2" align="center">
-        style.padY(1).padX(2).bg(background).borderWidth(1).border(border).radius(sm)
+        style({ box: padY(1).padX(2), paint: bg(background).borderWidth(1).border(border).radius(sm) })
 
         <span>
-          style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+          style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 {a.kind}</span>
         <span title={a.note ?? ''} grow>
-          style.truncate()
+          style({ text: truncate() })
 {a.note ?? '(no note)'}</span>
         <button
           type="button"
@@ -99,7 +99,7 @@ No staged annotations.</p>
           on:click={() => emitRemove(a.id)}
 
         >
-          style.minH(0).padX(1_5).padY(half).fontSize(xs).radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer).when({ hover: style.fg(destructive).borderWidth(1).border(destructive) })
+          style({ box: minH(0).padX(1_5).padY(half), paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer), text: fontSize(xs) }).when(hover, { paint: fg(destructive).borderWidth(1).border(destructive) })
 Remove</button>
       </row>
     </for>

@@ -240,7 +240,7 @@ export default controller(() => {
   <section>
     <h2>Kanban — bindFor + DnD + transitions</h2>
     <div data-row="true">
-      style.mb(3)
+      style({ box: mb(3) })
 
       <div>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
@@ -252,7 +252,7 @@ export default controller(() => {
         <section data-col={col.id}>
           <div>
             <span data-tone="plain" use:swatch={col.tone}>
-              style.bg(bind(swatchColor))
+              style({ paint: bg(bind(swatchColor)) })
 </span>
             <span>{col.title}</span>
             <span>({col.cards.length})</span>
@@ -268,7 +268,7 @@ on:dragstart={(e) => onDragStart(e, card.id)}
 on:dragend={onDragEnd}
 on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
 on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}>
-                style.enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' })
+                style({ animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
 
                 <div>
                   {card.title}

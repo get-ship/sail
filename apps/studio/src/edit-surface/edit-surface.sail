@@ -48,10 +48,10 @@ export default controller(() => {
   align="stretch"
 
 >
-  style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+  style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
 
   <edit-explorer shrink="0">
-    style.minH(0).h(full).overflow(hidden)
+    style({ box: minH(0).h(full).overflow(hidden) })
   </edit-explorer>
 
   <column
@@ -60,7 +60,7 @@ export default controller(() => {
     gap="0"
 
   >
-    style.minH(0).h(full).basis(0).minW(0).overflow(hidden)
+    style({ box: minH(0).h(full).basis(0).minW(0).overflow(hidden) })
 
     <!-- Doc tabs strip -->
     <row
@@ -72,7 +72,7 @@ export default controller(() => {
       nowrap
 
     >
-      style.h(8).borderBWidth(1).borderB(border).bg(surface-1).minW(0).overflow(hidden)
+      style({ box: h(8).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border).bg(surface-1) })
 
       <row
         edit-tab-list
@@ -86,7 +86,7 @@ export default controller(() => {
         on:mousedown={onTabMiddle}
 
       >
-        style.minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden)
+        style({ box: minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden) })
 
         <for {docTabs()} as="tab" key={tab.key}>
           <row
@@ -102,15 +102,15 @@ export default controller(() => {
             shrink="0"
 
           >
-            style.h(full).padX(3).maxW(48).borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).fontSize(sm).cursor(pointer).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-0).fg(foreground).borderT(primary) })
+            style({ box: h(full).padX(3).maxW(48), paint: borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).cursor(pointer), text: fontSize(sm) }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(surface-0).fg(foreground).borderT(primary) })
 
             <icon name="file-code-2" size="sm"></icon>
             <p grow min-w="0">
-              style.truncate()
+              style({ text: truncate() })
 {tab.label}</p>
             <if {tab.dirtyDot}>
               <p dirty-dot label="Unsaved">
-                style.fontSize(xs).fg(warning)
+                style({ paint: fg(warning), text: fontSize(xs) })
 
                 {tab.dirtyDot}
               </p>
@@ -124,7 +124,7 @@ export default controller(() => {
                 label="Close tab"
 
               >
-                style.w(5).h(5)
+                style({ box: w(5).h(5) })
 
                 ×
               </button>
@@ -138,10 +138,10 @@ export default controller(() => {
         shrink="0"
 
       >
-        style.padX(2).h(full).borderLWidth(1).borderL(border-subtle)
+        style({ box: padX(2).h(full), paint: borderLWidth(1).borderL(border-subtle) })
 
         <p>
-          style.fontSize(xs).fg(muted-foreground).maxW(40).truncate()
+          style({ box: maxW(40), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 
           {liveRouteLabel()}
         </p>
@@ -166,10 +166,10 @@ export default controller(() => {
         gap="2"
 
       >
-        style.padX(3).padY(1).bg(surface-1).borderBWidth(1).borderB(border)
+        style({ box: padX(3).padY(1), paint: bg(surface-1).borderBWidth(1).borderB(border) })
 
         <p>
-          style.fg(destructive).fontSize(xs)
+          style({ paint: fg(destructive), text: fontSize(xs) })
 {editError()}</p>
       </row>
     </if>
@@ -181,7 +181,7 @@ export default controller(() => {
         justify="center"
 
       >
-        style.minH(0).h(full).overflow(hidden).bg(surface-0)
+        style({ box: minH(0).h(full).overflow(hidden), paint: bg(surface-0) })
 
         <empty-state
           variant="placeholder"
@@ -190,7 +190,7 @@ export default controller(() => {
           edit-empty
 
         >
-          style.borderWidth(1).border(border-subtle).radius(md).pad(4)
+          style({ box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) })
 
           <strong slot="title">Open a file</strong>
           Pick a file from the Explorer.
@@ -206,7 +206,7 @@ export default controller(() => {
         gap="0"
 
       >
-        style.minH(0).basis(0).h(full).overflow(hidden).bg(surface-0)
+        style({ box: minH(0).basis(0).h(full).overflow(hidden), paint: bg(surface-0) })
 
         <!-- Status lives on tab (dirty) + chrome status bar — no SOURCE toolbar row. -->
         <if {isSourceLoading()}>
@@ -217,7 +217,7 @@ export default controller(() => {
             w="full"
 
           >
-            style.borderWidth(1).border(border-subtle).radius(md).pad(3).m(3)
+            style({ box: pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md) })
 
             <strong slot="title">Loading…</strong>
             {sourceStatus()}
@@ -232,7 +232,7 @@ export default controller(() => {
             w="full"
 
           >
-            style.borderWidth(1).border(border-subtle).radius(md).pad(3).m(3)
+            style({ box: pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md) })
 
             <strong slot="title">No source loaded</strong>
             Open a file from the Explorer. Non-Sail text needs a readable ops path.
@@ -246,7 +246,7 @@ export default controller(() => {
             gap="0"
 
           >
-            style.minH(0).basis(0).h(full).overflow(hidden)
+            style({ box: minH(0).basis(0).h(full).overflow(hidden) })
 
             <if {hasChecks()}>
               <column
@@ -255,7 +255,7 @@ export default controller(() => {
                 shrink="0"
 
               >
-                style.padX(3).padY(1).fontSize(xs).fontFamily(mono).bg(surface-2).maxH(20).minH(0).overflow(auto)
+                style({ box: padX(3).padY(1).maxH(20).minH(0).overflow(auto), paint: bg(surface-2), text: fontSize(xs).fontFamily(mono) })
 
                 <for {checkRows()} as="ck" key={ck.key}>
                   <p
@@ -263,7 +263,7 @@ export default controller(() => {
                     severity={ck.severity}
 
                   >
-                    style.fg(destructive).h(5)
+                    style({ box: h(5), paint: fg(destructive) })
 
                     L{ck.line} · {ck.severity}: {ck.message}
                   </p>
@@ -271,7 +271,7 @@ export default controller(() => {
               </column>
             </if>
             <column grow gap="0">
-              style.minH(0).basis(0).h(full).overflow(hidden)
+              style({ box: minH(0).basis(0).h(full).overflow(hidden) })
 
               <sail-code-editor
                 source-editor
@@ -288,7 +288,7 @@ export default controller(() => {
                 label="Source editor"
 
               >
-                style.w(full).h(full).minH(0)
+                style({ box: w(full).h(full).minH(0) })
 </sail-code-editor>
             </column>
           </column>

@@ -14,6 +14,6 @@
 
   <!-- 3. A Danger zone card with tone="destructive". -->
   <p>
-    style.fg(muted-foreground)
+    style({ paint: fg(muted-foreground) })
 Nothing here yet — open the lesson prose and build the screen.</p>
 </column>

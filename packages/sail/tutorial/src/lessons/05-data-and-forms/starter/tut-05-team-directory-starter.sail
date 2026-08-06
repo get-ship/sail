@@ -37,9 +37,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const muteLabel = style.fontSize(sm).fg(muted-foreground)
-  const memberRow = style.padX(3).padY(2).bg(surface-1).radius(md)
-  const memberName = style.fontSize(sm)
+  const muteLabel = style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  const memberRow = style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
+  const memberName = style({ text: fontSize(sm) })
 </scope>
 
 <column gap="4">

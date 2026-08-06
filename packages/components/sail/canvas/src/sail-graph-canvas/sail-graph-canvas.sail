@@ -300,7 +300,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 
 </controller>
 <div>
-  style.position(relative).w(full).bg(card).borderWidth(1).border(border).radius(md).overflow(hidden)
+  style({ box: position(relative).w(full).overflow(hidden), paint: bg(card).borderWidth(1).border(border).radius(md) })
 
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
@@ -308,7 +308,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
     aria-hidden="true"
 
   >
-    style.display(block).w(full).h(auto).pointerEvents(none)
+    style({ box: display(block).w(full).h(auto), paint: pointerEvents(none) })
 
     <for {edgeViews()} as="e" key={e.key}>
       <path
@@ -326,10 +326,10 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 
   <for {nodeViews()} as="n" key={n.id}>
     <div use:rect={{left: n.left, top: n.top}}>
-      style.position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop))
+      style({ box: position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop)) })
 
       <center>
-        style.h(0)
+        style({ box: h(0) })
 
         <column
           gap="0"
@@ -345,24 +345,24 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:mouseover={() => hover(n)}
 
         >
-          style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(primary), stateSkill: style.borderLWidth(1).borderL(success), stateMcp: style.borderLWidth(1).borderL(info), stateRule: style.borderLWidth(1).borderL(warning), statePerm: style.borderLWidth(1).borderL(destructive), stateHarness: style.borderLWidth(1).borderL(accent) })
+          style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(sm) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) }).when(stateSkill, { paint: borderLWidth(1).borderL(success) }).when(stateMcp, { paint: borderLWidth(1).borderL(info) }).when(stateRule, { paint: borderLWidth(1).borderL(warning) }).when(statePerm, { paint: borderLWidth(1).borderL(destructive) }).when(stateHarness, { paint: borderLWidth(1).borderL(accent) })
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>
           <else>
             <row gap="2" align="center">
-              style.mb(1)
+              style({ box: mb(1) })
 
               <span>
-                style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
 {n.kind}</span>
             </row>
             <div>
-              style.fontWeight(semibold).fg(foreground)
+              style({ paint: fg(foreground), text: fontWeight(semibold) })
 {n.title}</div>
             <if {n.sub !== ''}>
               <div>
-                style.fontSize(xs).fg(muted-foreground)
+                style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {n.sub}</div>
             </if>
           </else></if>

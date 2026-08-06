@@ -13,26 +13,26 @@ export default controller(() => {
 </controller>
 
 <column gap="3">
-  style.pad(4).bg(surface-0)
+  style({ box: pad(4), paint: bg(surface-0) })
 
   <h1>
-    style.fontSize(xl).fg(foreground)
+    style({ paint: fg(foreground), text: fontSize(xl) })
 {title()}</h1>
   <if {items().length > 0}>
     <column gap="2">
       <for {items()} as="item" key={item.id}>
         <row gap="2">
-          style.pad(2).bg(surface-1).radius(sm)
+          style({ box: pad(2), paint: bg(surface-1).radius(sm) })
 
           <span>
-            style.fg(foreground)
+            style({ paint: fg(foreground) })
 {item.label}</span>
         </row>
       </for>
     </column>
     <else>
       <p>
-        style.fg(muted-foreground)
+        style({ paint: fg(muted-foreground) })
 Nothing on the board.</p>
     </else>
   </if>

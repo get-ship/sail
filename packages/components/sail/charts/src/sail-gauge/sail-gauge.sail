@@ -103,7 +103,7 @@ export default controller(({
   <error-state></error-state>
 </else-if><else>
   <stack>
-    style.w(fit)
+    style({ box: w(fit) })
 
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
@@ -112,7 +112,7 @@ export default controller(({
       role="img"
       aria-label={ariaLabel()}
 >
-      style.display(block)
+      style({ box: display(block) })
 
       <path d={arc().trackD} fill="none" stroke="var(--muted)" stroke-width={thickness()} stroke-linecap="round">
       </path>
@@ -122,7 +122,7 @@ export default controller(({
       </if>
     </svg>
     <center>
-      style.fontFamily(heading).fontWeight(semibold).fontSize(xl).fg(foreground)
+      style({ paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).fontSize(xl) })
 <slot></slot></center>
   </stack>
 </else></if>

@@ -9,22 +9,22 @@
     duration = ''
   }
 
-  const base = style.fontFamily(body).fontSize(sm).fg(toast-foreground).bg(toast).radius(md).shadow(md).padY(3).padX(4).borderWidth(1).border(toast-border).borderSWidth(3).borderS(foreground).pointerEvents(auto)
-  const close = style.ms(auto).fg(muted-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer)
+  const base = style({ box: padY(3).padX(4), paint: fg(toast-foreground).bg(toast).radius(md).shadow(md).borderWidth(1).border(toast-border).borderSWidth(3).borderS(foreground).pointerEvents(auto), text: fontFamily(body).fontSize(sm) })
+  const close = style({ box: ms(auto), paint: fg(muted-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer) })
 </scope>
 
 <row align="start" gap="3" use:autoDismiss use:dismissControl>
   style([
   base,
   match(tone, {
-    default: style.borderS(foreground),
-    primary: style.borderS(primary),
-    info: style.borderS(info),
-    success: style.borderS(success),
-    warning: style.borderS(warning),
-    destructive: style.borderS(destructive),
-    accent: style.borderS(accent),
-    muted: style.borderS(muted-foreground),
+    default: style({ paint: borderS(foreground) }),
+    primary: style({ paint: borderS(primary) }),
+    info: style({ paint: borderS(info) }),
+    success: style({ paint: borderS(success) }),
+    warning: style({ paint: borderS(warning) }),
+    destructive: style({ paint: borderS(destructive) }),
+    accent: style({ paint: borderS(accent) }),
+    muted: style({ paint: borderS(muted-foreground) }),
   }),
 ])
 
@@ -33,7 +33,7 @@
     style([
     close,
     when({
-      hover: style.fg(foreground).bg(muted),
+      hover: style({ paint: fg(foreground).bg(muted) }),
     }),
   ])
 ✕</button>

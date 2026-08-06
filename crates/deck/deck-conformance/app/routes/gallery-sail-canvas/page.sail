@@ -1,14 +1,14 @@
 <column gap="8">
-  style.pad(6).maxW(breakpoint-tablet).mx(auto)
+  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
 
   <header>
-    style.borderBWidth(1).borderB(border).padB(4)
+    style({ box: padB(4), paint: borderBWidth(1).borderB(border) })
 
     <h1>
-      style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)
+      style({ box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 sail/canvas</h1>
     <p>
-      style.fg(muted-foreground).fontSize(sm)
+      style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
       Pack <strong>sail/canvas</strong> — pan/zoom substrate, SVG diagram board,
       freehand whiteboard, and graph layout surface.
@@ -21,24 +21,24 @@ sail/canvas</h1>
 
     <!-- sail-canvas ─────────────────────────────────────────────── -->
     <column gap="4">
-      style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+      style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
       <row gap="3">
         <span>
-          style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)
+          style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
 sail-canvas</span>
         <span>
-          style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide)
+          style({ box: padX(2).padY(1), paint: fg(warning-foreground).bg(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide) })
 domain-stub — awaits backend spec</span>
       </row>
       <p>
-        style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+        style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
         Bare pan/zoom/infinite-surface substrate. Hosts arbitrary world-space
         content via the default slot; pan and zoom with pointer/wheel.
       </p>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <sail-canvas theme="light" grid="dots" label="Demo canvas">
           <div>Node A</div>
@@ -46,7 +46,7 @@ domain-stub — awaits backend spec</span>
         </sail-canvas>
       </column>
       <dl>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
         <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"dots"</dd>
@@ -57,24 +57,24 @@ domain-stub — awaits backend spec</span>
 
     <!-- sail-board ──────────────────────────────────────────────── -->
     <column gap="4">
-      style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+      style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
       <row gap="3">
         <span>
-          style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)
+          style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
 sail-board</span>
         <span>
-          style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide)
+          style({ box: padX(2).padY(1), paint: fg(warning-foreground).bg(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide) })
 domain-stub — awaits backend spec</span>
       </row>
       <p>
-        style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+        style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
         SVG-native node/edge/port diagram. Nodes are DOM divs; edges are SVG
         paths. Geometry is owned by the board; slot content owns visuals.
       </p>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <sail-board theme="light" grid="dots" layout="none" label="Demo board">
           <div slot="node-a">Agent A</div>
@@ -82,7 +82,7 @@ domain-stub — awaits backend spec</span>
         </sail-board>
       </column>
       <dl>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
         <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"dots"</dd>
@@ -93,31 +93,31 @@ domain-stub — awaits backend spec</span>
 
     <!-- sail-draw ───────────────────────────────────────────────── -->
     <column gap="4">
-      style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+      style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
       <row gap="3">
         <span>
-          style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)
+          style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
 sail-draw</span>
         <span>
-          style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide)
+          style({ box: padX(2).padY(1), paint: fg(warning-foreground).bg(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide) })
 domain-stub — awaits backend spec</span>
       </row>
       <p>
-        style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+        style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
         Excalidraw-class freehand whiteboard. SVG-native strokes + shapes +
         selection. No canvas engine — token-themeable paths throughout.
       </p>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <sail-draw theme="light" grid="lines" tool="select" label="Demo whiteboard">
           <span slot="toolbar">toolbar slot</span>
         </sail-draw>
       </column>
       <dl>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
         <dt>theme</dt><dd>"light"</dd>
         <dt>grid</dt><dd>"lines"</dd>
@@ -129,25 +129,25 @@ domain-stub — awaits backend spec</span>
 
     <!-- sail-graph-canvas ───────────────────────────────────────── -->
     <column gap="4">
-      style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)
+      style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
 
       <row gap="3">
         <span>
-          style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)
+          style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
 sail-graph-canvas</span>
         <span>
-          style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide)
+          style({ box: padX(2).padY(1), paint: fg(warning-foreground).bg(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide) })
 domain-stub — awaits backend spec</span>
       </row>
       <p>
-        style.fg(muted-foreground).fontSize(sm).leading(relaxed)
+        style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 
         Positioned-graph primitive. Renders bezier SVG edges + absolutely-
         positioned node cards. Per-kind node templates via the hidden "node"
         slot.
       </p>
       <column gap="2">
-        style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)
+        style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })
 
         <sail-graph-canvas
           nodes='[{"id":"a","label":"Commander","kind":"agent","x":120,"y":80},{"id":"b","label":"Coder","kind":"agent","x":340,"y":180}]'
@@ -158,7 +158,7 @@ domain-stub — awaits backend spec</span>
         ></sail-graph-canvas>
       </column>
       <dl>
-        style.fontSize(sm).fg(muted-foreground)
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
         <dt>nodes</dt><dd>2 mock nodes (JSON)</dd>
         <dt>edges</dt><dd>1 mock edge (JSON)</dd>

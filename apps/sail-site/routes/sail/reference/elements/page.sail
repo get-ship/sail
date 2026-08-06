@@ -37,10 +37,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="6">
-  style.minW(0)
+  style({ box: minW(0) })
 
   <column gap="5">
-    style.maxW(breakpoint-tablet)
+    style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
     <h1>Elements — {stdlibCount()} stdlib + {reskinCount()} reskins</h1>
@@ -54,14 +54,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="3" gap="2">
       <for {stdlibElements()} as="e" key={e.tag}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <a href={e.href}><code>{e.tag}</code> <small>
-              style.fg(muted-foreground)
+              style({ paint: fg(muted-foreground) })
 {e.propCount}</small></a>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {e.description}</small>
           </column>
         </card>
@@ -70,7 +70,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
     <h3>Native reskins</h3>
     <p>
-      style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)
+      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
 
       Runtime-styled native HTML tags (<code>hr</code>, <code>kbd</code>).
       The tag remains the API; the framework only reskins paint. Prefer
@@ -80,12 +80,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <grid cols="3" gap="2">
       <for {reskinElements()} as="e" key={e.tag}>
         <card padding="sm">
-          style.minW(0)
+          style({ box: minW(0) })
 
           <column gap="1">
             <a href={e.href}><code>{e.tag}</code></a>
             <small>
-              style.fg(muted-foreground).maxW(panel-max-w-sm)
+              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
 {e.description}</small>
           </column>
         </card>

@@ -1,6 +1,6 @@
 <!-- Ten load-bearing L1 surfaces for paint goldens (RENDER-1). -->
 <column gap="4" w="full">
-  style.pad(4).bg(background).fg(foreground)
+  style({ box: pad(4), paint: bg(background).fg(foreground) })
 
   <row gap="3" align="center">
     <button variant="solid" tone="primary">Primary</button>
@@ -16,16 +16,16 @@
 
   <card w="full">
     <span slot="header">
-      style.fontWeight(semibold)
+      style({ text: fontWeight(semibold) })
 Card header</span>
     <span>
-      style.fg(muted-foreground)
+      style({ paint: fg(muted-foreground) })
 Card body with chrome.</span>
   </card>
 
   <navbar placement="top" bordered>
     <span slot="brand">
-      style.fontWeight(semibold).fg(navbar-foreground)
+      style({ paint: fg(navbar-foreground), text: fontWeight(semibold) })
 Nav</span>
   </navbar>
 
@@ -36,12 +36,12 @@ Nav</span>
       gap="1"
 
     >
-      style.bg(sidebar).fg(sidebar-foreground).pad(3).borderE(sidebar-border)
+      style({ box: pad(3), paint: bg(sidebar).fg(sidebar-foreground).borderE(sidebar-border) })
 
       <span>Side</span>
     </column>
     <column grow gap="2" min-w="0">
-      style.pad(3)
+      style({ box: pad(3) })
 
       <span>Main</span>
     </column>

@@ -5,7 +5,7 @@
 <scope>
   props: {}
 
-  const base = style.padX(2).fontSize(sm).fontWeight(medium).fg(foreground)
+  const base = style({ box: padX(2), paint: fg(foreground), text: fontSize(sm).fontWeight(medium) })
 </scope>
 
 <legend>

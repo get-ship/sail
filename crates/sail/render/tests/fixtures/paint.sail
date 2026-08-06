@@ -1,11 +1,11 @@
 <column>
-  style.bg(surface-0).pad(4).radius(md)
+  style({ box: pad(4), paint: bg(surface-0).radius(md) })
 
   <h1>
-    style.fg(foreground).fontSize(xl)
+    style({ paint: fg(foreground), text: fontSize(xl) })
 Hello, Sail</h1>
   <div>
-    style.bg(primary).fg(primary-foreground).pad(3).radius(sm)
+    style({ box: pad(3), paint: bg(primary).fg(primary-foreground).radius(sm) })
 Primary</div>
   <span>{ticks()}</span>
   <my-widget>unknown</my-widget>

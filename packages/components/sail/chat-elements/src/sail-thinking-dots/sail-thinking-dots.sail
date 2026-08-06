@@ -43,25 +43,25 @@
     data-state={tone() + ' ' + size()}
 
   >
-    style.group()
+    style({ paint: group() })
 
     <span
 aria-hidden="true"
 
 >
-      style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })
+      style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { box: w(1_25).h(1_25) }).when(groupStateLg, { box: w(2_5).h(2_5) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })
 </span>
     <span
 aria-hidden="true"
 
 >
-      style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })
+      style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { box: w(1_25).h(1_25) }).when(groupStateLg, { box: w(2_5).h(2_5) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })
 </span>
     <span
 aria-hidden="true"
 
 >
-      style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) }).loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' })
+      style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { box: w(1_25).h(1_25) }).when(groupStateLg, { box: w(2_5).h(2_5) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })
 </span>
   </row>
 </span>

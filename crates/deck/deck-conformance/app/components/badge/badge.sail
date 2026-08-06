@@ -16,7 +16,7 @@ export default controller(() => {
 </controller>
 
 <row gap="1" align="center" justify="center">
-  style.radius(full).bg(surface-2).fg(foreground).fontSize(sm).fontFamily(mono).pad(1)
+  style({ box: pad(1), paint: radius(full).bg(surface-2).fg(foreground), text: fontSize(sm).fontFamily(mono) })
 
   <button on:click={() => bump()}>{count()}</button>
 </row>

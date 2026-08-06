@@ -42,10 +42,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const unreadDot = style.display(inline-block).w(1_5).h(1_5).radius(full).bg(destructive)
-  const noteRow = style.pad(3).bg(surface-1).borderWidth(1).border(border-subtle).radius(md)
-  const noteText = style.fontSize(sm)
-  const empty = style.pad(3).fontSize(sm).fg(muted-foreground)
+  const unreadDot = style({ box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(destructive) })
+  const noteRow = style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) })
+  const noteText = style({ text: fontSize(sm) })
+  const empty = style({ box: pad(3), paint: fg(muted-foreground), text: fontSize(sm) })
 </scope>
 
 <column gap="4">
@@ -53,11 +53,11 @@ export default controller(() => {
     <h3>Notifications</h3>
     <row gap="2" align="center">
       <button variant="ghost" size="sm" on:click={() => restock()}>
-        style.hover({ rotate: 'spring:bouncy' })
+        style({ animate: hover({ rotate: 'spring:bouncy' }) })
 Restock</button>
       <button variant="outline" tone="primary" size="sm"
 on:click={() => toggle()}>
-        style.hover({ scale: 'spring:gentle' }).press({ scale: 'press' })
+        style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })
 
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
@@ -71,7 +71,7 @@ on:click={() => toggle()}>
 
   <if {open()}>
     <column gap="2">
-      style.enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' })
+      style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
 
       <for {notes()} as="n" key={n.id}>
         <row gap="3" align="center">

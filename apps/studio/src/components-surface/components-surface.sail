@@ -3,9 +3,9 @@
   Composition: { session, library }. Inspect is a sibling route surface.
 -->
 <scope>
-  const eyebrow = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
-  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
-  const muted = style.fontSize(sm).fg(muted-foreground)
+  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
+  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  const muted = style({ paint: fg(muted-foreground), text: fontSize(sm) })
 </scope>
 
 <controller>
@@ -26,7 +26,7 @@ export default controller(() => {
   grow
 
 >
-  style.minH(0).h(full).minW(0).overflow(hidden).bg(background)
+  style({ box: minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) })
 
   <row
     components-workbench
@@ -36,7 +36,7 @@ export default controller(() => {
     align="stretch"
 
   >
-    style.minH(0).basis(0).h(full).minW(0).overflow(hidden)
+    style({ box: minH(0).basis(0).h(full).minW(0).overflow(hidden) })
 
     <column
       components-nav
@@ -44,10 +44,10 @@ export default controller(() => {
       gap="0"
 
     >
-      style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)
+      style({ box: minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) })
 
       <column components-nav-head shrink="0" gap="2">
-        style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)
+        style({ box: padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) })
 
         <row align="center" justify="between" nowrap gap="2">
           <p>
@@ -77,7 +77,7 @@ Components</p>
 
       <if {library.isLoading()}>
         <row align="center" gap="2" shrink="0">
-          style.padX(4).padY(2)
+          style({ box: padX(4).padY(2) })
 
           <spinner size="sm"></spinner>
           <p>
@@ -87,10 +87,10 @@ Components</p>
       </if>
 
       <scroll-area components-list grow on:click={library.onListClick}>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="3">
-          style.pad(3)
+          style({ box: pad(3) })
 
           <column list-group="project" gap="1">
             <row align="center" justify="between" nowrap>
@@ -154,7 +154,7 @@ No installed packs</p>
           </column>
 
           <p l1-footnote>
-            style.fontSize(xs).fg(muted-foreground).leading(snug).padX(1)
+            style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs).leading(snug) })
 
             Element skins live under Themes → Components — not listed here.
             <button type="button" size="sm" variant="ghost" tone="muted" themes-components on:click={session.goThemesComponents}>
@@ -171,7 +171,7 @@ No installed packs</p>
       gap="0"
 
     >
-      style.minH(0).h(full).minW(0).basis(0).bg(background).overflow(hidden)
+      style({ box: minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) })
 
       <column
         components-detail-head
@@ -179,12 +179,12 @@ No installed packs</p>
         gap="3"
 
       >
-        style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+        style({ box: padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
 
         <row align="start" justify="between" gap="3" nowrap>
           <column grow min-w="0" gap="1">
             <p detail-title>
-              style.fontSize(lg).fontWeight(semibold).tracking(tight).truncate()
+              style({ text: fontSize(lg).fontWeight(semibold).tracking(tight).truncate() })
 
               {library.detailTitle()}
             </p>
@@ -238,18 +238,18 @@ No installed packs</p>
       </column>
 
       <scroll-area components-detail-body grow>
-        style.minH(0).basis(0).h(full)
+        style({ box: minH(0).basis(0).h(full) })
 
         <column gap="4">
-          style.pad(5).minW(0)
+          style({ box: pad(5).minW(0) })
 
           <if {session.showNewForm()}>
             <card new-form padding="md">
-              style.minW(0)
+              style({ box: minW(0) })
 
               <column gap="3">
                 <p>
-                  style.fontSize(md).fontWeight(semibold)
+                  style({ text: fontSize(md).fontWeight(semibold) })
 New component</p>
                 <p>
                   style(muted)
@@ -279,7 +279,7 @@ Creates a draft brief only — does not write files yet.</p>
           </if>
 
           <card components-preview preview-specimen padding="none">
-            style.minW(0).overflow(hidden).shadow(lg)
+            style({ box: minW(0).overflow(hidden), paint: shadow(lg) })
 
             <column gap="0">
               <row
@@ -290,36 +290,36 @@ Creates a draft brief only — does not write files yet.</p>
                 shrink="0"
 
               >
-                style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)
+                style({ box: padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) })
 
                 <row gap="2" align="center" nowrap shrink="0" hidden="true">
-                  style.minW(12)
+                  style({ box: minW(12) })
 
                   <stack shrink="0">
-                    style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)
+                    style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) })
 </stack>
                   <stack shrink="0">
-                    style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)
+                    style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) })
 </stack>
                   <stack shrink="0">
-                    style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)
+                    style({ box: w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) })
 </stack>
                 </row>
                 <p grow min-w="0">
-                  style.fontSize(xs).fg(muted-foreground).truncate()
+                  style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 
                   {library.previewTitle()}
                 </p>
                 <badge tone="muted" size="sm" variant="outline" pill shrink="0">preview</badge>
               </row>
               <column mode="dark" specimen-body gap="2">
-                style.pad(6).minH(32).bg(background)
+                style({ box: pad(6).minH(32), paint: bg(background) })
 
                 <p>
-                  style.fontSize(md).fontWeight(semibold).fontFamily(heading)
+                  style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
 {library.previewTitle()}</p>
                 <p>
-                  style.fontSize(sm).fg(muted-foreground).leading(relaxed)
+                  style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
 {library.previewHint()}</p>
               </column>
             </column>
@@ -332,14 +332,14 @@ Creates a draft brief only — does not write files yet.</p>
             </tab-list>
             <tab-panel value="overview">
               <column gap="3">
-                style.padY(3)
+                style({ box: padY(3) })
 
                 <column gap="1">
                   <p>
                     style(eyebrow)
 Intent</p>
                   <p detail-intent>
-                    style.fontSize(sm).leading(relaxed)
+                    style({ text: fontSize(sm).leading(relaxed) })
 {library.detailIntent()}</p>
                 </column>
                 <column gap="2">
@@ -349,10 +349,10 @@ Meta</p>
                   <for {library.kvRows()} as="kv" key={kv.key}>
                     <row kv-row gap="3" align="start" nowrap>
                       <p shrink="0">
-                        style.fontSize(xs).fg(muted-foreground).w(24)
+                        style({ box: w(24), paint: fg(muted-foreground), text: fontSize(xs) })
 {kv.label}</p>
                       <p grow min-w="0">
-                        style.fontSize(sm).fontFamily(mono).truncate()
+                        style({ text: fontSize(sm).fontFamily(mono).truncate() })
 {kv.value}</p>
                     </row>
                   </for>
@@ -372,7 +372,7 @@ Slots: {library.slotsLabel()}</p>
             </tab-panel>
             <tab-panel value="contract">
               <column gap="3">
-                style.padY(3)
+                style({ box: padY(3) })
 
                 <if {library.schemaNote()}>
                   <p schema-note>
@@ -387,7 +387,7 @@ Slots: {library.slotsLabel()}</p>
                 <if {library.hasProps()}>
                   <column props-table gap="1">
                     <row gap="3" nowrap>
-                      style.padY(1).borderBWidth(1).borderB(border-subtle)
+                      style({ box: padY(1), paint: borderBWidth(1).borderB(border-subtle) })
 
                       <p grow>
                         style(eyebrow)
@@ -401,14 +401,14 @@ Default</p>
                     </row>
                     <for {library.propRows()} as="prop" key={prop.key}>
                       <row prop-row gap="3" align="start" nowrap>
-                        style.padY(2).borderBWidth(1).borderB(border-subtle)
+                        style({ box: padY(2), paint: borderBWidth(1).borderB(border-subtle) })
 
                         <column grow min-w="0" gap="0">
                           <p>
-                            style.fontSize(sm).fontFamily(mono)
+                            style({ text: fontSize(sm).fontFamily(mono) })
 {prop.name}</p>
                           <p>
-                            style.fontSize(xs).fg(muted-foreground)
+                            style({ paint: fg(muted-foreground), text: fontSize(xs) })
 {prop.requiredLabel}</p>
                         </column>
                         <p shrink="0">

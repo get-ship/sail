@@ -177,28 +177,28 @@ export default controller((ctx) => {
 
 </controller>
 <center use:paintDiagram hidden={hasError()}>
-  style.w(full).minH(8)
+  style({ box: w(full).minH(8) })
 </center>
 
 <if {error()}>
   <column gap="2">
-    style.w(full).pad(3).padX(4).borderWidth(1).border(destructive).radius(md).bg(muted).fontSize(sm)
+    style({ box: w(full).pad(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted), text: fontSize(sm) })
 
     <row gap="2" align="center">
-      style.fontWeight(semibold).fg(destructive)
+      style({ paint: fg(destructive), text: fontWeight(semibold) })
 
       <icon name="alert-triangle" label="" size="sm"></icon>
       Diagram failed to render
     </row>
     <pre>
-      style.fontFamily(mono).fontSize(xs).whitespace(pre-wrap).fg(muted-foreground)
+      style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })
 {error()}</pre>
     <details>
       <summary>
-        style.cursor(pointer).fontSize(xs).fg(muted-foreground)
+        style({ paint: cursor(pointer).fg(muted-foreground), text: fontSize(xs) })
 mermaid source</summary>
       <pre>
-        style.mt(2).pad(2).padX(3).bg(surface-2).borderWidth(1).border(border-subtle).radius(sm).fontFamily(mono).fontSize(xs).whitespace(pre-wrap).overflowX(auto)
+        style({ box: mt(2).pad(2).padX(3).overflowX(auto), paint: bg(surface-2).borderWidth(1).border(border-subtle).radius(sm), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })
 {value()}</pre>
     </details>
   </column>

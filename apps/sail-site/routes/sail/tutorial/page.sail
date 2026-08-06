@@ -19,14 +19,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 </controller>
 
 <column gap="5">
-  style.maxW(breakpoint-tablet).mx(auto)
+  style({ box: maxW(breakpoint-tablet).mx(auto) })
 
   <p>
-    style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
 Tutorial</p>
   <h1>Learn Sail</h1>
   <p>
-    style.fontSize(lg).fg(muted-foreground).leading(relaxed)
+    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
     Nine hands-on lessons — one per decision surface the language kept, then
     the loop it exists for: agents author, humans review. Each lesson pairs a
@@ -40,14 +40,14 @@ Tutorial</p>
         <for {group.lessons} as="lesson" key={lesson.slug}>
           <a href={lesson.href}
 >
-            style.pad(4).radius(lg).borderWidth(1).border(border).bg(surface-1).when({ hover: style.bg(surface-2).borderWidth(1).border(border-strong) })
+            style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1) }).when(hover, { paint: bg(surface-2).borderWidth(1).border(border-strong) })
 
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
               <column gap="1" grow>
                 <strong>{lesson.title}</strong>
                 <small>
-                  style.fg(muted-foreground)
+                  style({ paint: fg(muted-foreground) })
 {lesson.description}</small>
               </column>
             </row>
@@ -58,7 +58,7 @@ Tutorial</p>
   </for>
 
   <row>
-    style.mt(8).padT(4).borderTWidth(1).borderT(border)
+    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
 
     <a variant="default" href="/sail/language/state">← State</a>
     <a variant="solid" tone="primary" href="/sail/tutorial/01-a-page-is-markup">Start lesson 1 →</a>

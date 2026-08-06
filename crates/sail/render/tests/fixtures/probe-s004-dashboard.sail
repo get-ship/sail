@@ -1,9 +1,9 @@
 <column>
-  style.minH(screen).bg(background)
+  style({ box: minH(screen), paint: bg(background) })
 
   <navbar placement="top" sticky bordered>
     <span slot="brand">
-      style.fontSize(lg).fontWeight(semibold).fg(navbar-foreground)
+      style({ paint: fg(navbar-foreground), text: fontSize(lg).fontWeight(semibold) })
 
       Dashboard
     </span>
@@ -16,13 +16,13 @@
       gap="1"
 
     >
-      style.bg(sidebar).fg(sidebar-foreground).padY(5).padX(4).borderE(sidebar-border)
+      style({ box: padY(5).padX(4), paint: bg(sidebar).fg(sidebar-foreground).borderE(sidebar-border) })
 
       <a
         href="#home"
 
       >
-        style.fg(sidebar-foreground).padY(2).padX(3).radius(md).when({ hover: style.bg(sidebar-accent).fg(sidebar-accent-foreground) })
+        style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md) }).when(hover, { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) })
 
         Home
       </a>
@@ -30,7 +30,7 @@
         href="#reports"
 
       >
-        style.fg(sidebar-foreground).padY(2).padX(3).radius(md).when({ hover: style.bg(sidebar-accent).fg(sidebar-accent-foreground) })
+        style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md) }).when(hover, { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) })
 
         Reports
       </a>
@@ -38,35 +38,35 @@
         href="#team"
 
       >
-        style.fg(sidebar-foreground).padY(2).padX(3).radius(md).when({ hover: style.bg(sidebar-accent).fg(sidebar-accent-foreground) })
+        style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md) }).when(hover, { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) })
 
         Team
       </a>
     </column>
 
     <column grow gap="6" min-w="0">
-      style.pad(6)
+      style({ box: pad(6) })
 
       <span>
-        style.fontSize(2xl).fontWeight(semibold).fg(foreground)
+        style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })
 
         Welcome back
       </span>
 
       <card>
         <span slot="header">
-          style.fontWeight(semibold)
+          style({ text: fontWeight(semibold) })
 
           Summary
         </span>
         <column gap="2">
           <span>
-            style.fg(muted-foreground)
+            style({ paint: fg(muted-foreground) })
 
             Here is a quick overview of your workspace activity.
           </span>
           <span>
-            style.fontSize(sm).fg(muted-foreground)
+            style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
             Check Reports for the latest metrics, or visit Team to manage members.
           </span>
