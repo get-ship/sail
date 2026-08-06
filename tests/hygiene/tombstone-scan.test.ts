@@ -64,10 +64,7 @@ const DEAD_MACHINERY: Array<{ name: string; re: RegExp; allow?: RegExp }> = [
     // annotation-mode keys remain; only the retired edit-mode purge string is banned
     allow: /annotation-mode/,
   },
-  {
-    name: 'deck.jsonc migration hard-error message',
-    re: /deck\.jsonc is no longer supported/,
-  },
+  // deck.jsonc hard migration error is LIVING product policy (EXT-1) — not dead.
   {
     name: 'empty schema data fossil field in emitters',
     re: /"data":\s*Value::Array\(Vec::new\(\)\)/,
@@ -152,5 +149,10 @@ describe('tombstone scan: scrubbed dead machinery stays gone', () => {
       noStyle.includes('sail-no-inline-style') || floor.includes('sail-no-inline-style'),
     ).toBe(true)
     expect(foreign.includes('querySelector') || ambient.includes('querySelector')).toBe(true)
+
+    // Living migration policy (not a tombstone): leftover deck.jsonc hard-errors.
+    const deckConfig =
+      readText(join(REPO, 'crates/deck/deck-config/src/lib.rs')) ?? ''
+    expect(deckConfig.includes('deck.jsonc is no longer supported')).toBe(true)
   })
 })
