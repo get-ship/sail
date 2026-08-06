@@ -31,7 +31,8 @@ pub use emit::{
 };
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
-    collect_motion_attaches, looks_like_utility_string_product, parse, parse_style_const_rhs,
+    collect_motion_attaches, looks_like_utility_string_product, parse, parse_flat,
+    parse_style_const_rhs,
 };
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
@@ -41,6 +42,13 @@ pub use rewrite::{
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    /// Unit fixtures may still embed flat form; normalize via codemod then
+    /// product parse. Prefer authored channel strings; this keeps dual residual
+    /// fixtures green during the multi-cut retarget.
+    fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
+        super::parse(&rewrite_source(src))
+    }
 
     #[test]
     fn chain_emits_token_vars() {
@@ -889,9 +897,10 @@ mod tests {
 
     /// Emit identity: old chain vs new channel form must mint the same
     /// classes + CSS + motion attach list (trigger + config).
+    /// Old form uses [`parse_flat`] (migration dual); new form uses product parse.
     fn emit_pair(old: &str, new: &str) {
-        let (s_old, d_old) = parse(old);
-        let (s_new, d_new) = parse(new);
+        let (s_old, d_old) = parse_flat(old);
+        let (s_new, d_new) = super::parse(new);
         assert!(
             d_old.is_empty(),
             "old form diags for `{old}`: {:?}",
@@ -980,7 +989,9 @@ mod tests {
             "{css}"
         );
 
-        let (_, diags) = parse("style.box(border)");
+        // Rename pointer lives on migration dual (`parse_flat`); product parse
+        // refuses any flat `style.*` chain before the box→boxSizing pointer.
+        let (_, diags) = parse_flat("style.box(border)");
         assert!(
             diags.iter().any(|d| {
                 let m = d.message();
@@ -1070,13 +1081,28 @@ mod tests {
     fn channels_when_map_form_still_works_on_spine() {
         emit_pair(
             "style.pad(2).when({ hover: style.bg(muted) })",
-            "style({ box: pad(2) }).when({ hover: style.bg(muted) })",
+            // New form: cond when + channel object (no nested flat style.bg).
+            "style({ box: pad(2) }).when(hover, { paint: bg(muted) })",
         );
     }
 
-    // ── Product-path locks (`lower_style_source`) ──────────────────────────
-    // Unit `parse`+`lower_style` still accept flat form for emit-identity /
-    // codemod dual path. Product entry refuses flat chains (channel spine only).
+    // ── Product-path locks (`lower_style_source` + channel-only `parse`) ──
+    // Flat form is migration-dual only via `parse_flat` (codemod emit-identity).
+    // Product `parse` and `lower_style_source` refuse flat chains.
+
+    #[test]
+    fn parse_refuses_flat_chain() {
+        let (_, diags) = super::parse("style.pad(4)");
+        let joined = diags.iter().map(|d| d.message()).collect::<Vec<_>>().join("; ");
+        assert!(
+            joined.contains("retired") || joined.contains("channel spine"),
+            "product parse must refuse flat: {joined}"
+        );
+        assert!(
+            joined.contains("style({"),
+            "must teach channel spine: {joined}"
+        );
+    }
 
     fn product_lower(src: &str) -> Result<(String, String), Vec<StyleDiagnostic>> {
         let mut css = String::new();
@@ -1204,4 +1230,6 @@ mod tests {
         );
     }
 }
+
+
 

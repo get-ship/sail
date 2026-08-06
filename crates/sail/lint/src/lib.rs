@@ -27,7 +27,8 @@ pub mod style {
         TEXT_BEARING_ELEMENTS, channel_for_setter, clash, collect_motion_attaches, condition_media,
         conditions, emit, emit_style, ir, is_geometry_setter, is_interaction_when_key,
         is_text_bearing, looks_like_utility_string_product, lower_style, lower_style_source,
-        lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes, setters,
+        lower_style_source_with_motion, parse, parse_flat, parse_style_const_rhs, prefixes,
+        setters,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
         text_channel_host_error,
     };

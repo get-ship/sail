@@ -6,8 +6,21 @@ use std::collections::BTreeMap;
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
 
-/// Parse a Style expression. Returns Style + diagnostics (fail-closed flags in diags).
+/// Parse a Style expression (product / channel-only). Flat `style.method(…)`
+/// chains are refused — use `style({ box, paint, text, animate })`.
+///
+/// Codemod emit-identity and rewrite duals use [`parse_flat`].
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
+    parse_with(input, /* allow_flat */ false)
+}
+
+/// Migration dual: accept flat `style.method(…)` chains for codemod
+/// emit-identity and rewrite verification only. Not a product authoring path.
+pub fn parse_flat(input: &str) -> (Style, Vec<StyleDiagnostic>) {
+    parse_with(input, /* allow_flat */ true)
+}
+
+fn parse_with(input: &str, allow_flat: bool) -> (Style, Vec<StyleDiagnostic>) {
     let mut diags = Vec::new();
     // Authors reasonably write `//` / `/* */` comments inside long sx lists.
     // Strip them before tokenizing: the grammar has no division and no string
@@ -23,7 +36,7 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Residual utility-string product → hard error (not architecture).
     if looks_like_utility_string_product(trimmed) {
         diags.push(StyleDiagnostic::ResidualProduct {
-            message: "utility-string sx is not the Style product — use style.… chains, style({ box, paint, text, animate }), match, when, compound"
+            message: "utility-string sx is not the Style product — use style({ box, paint, text, animate }), match, when, compound"
                 .into(),
             source: trimmed.chars().take(80).collect(),
         });
@@ -32,7 +45,7 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Offsets are into `trimmed`; `input_base` maps them back if needed. Motion
     // config capture uses the trimmed slice so quotes/units survive.
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new(trimmed, &tokens);
+    let mut p = Parser::new(trimmed, &tokens, allow_flat);
     let _ = trim_start; // kept for future span mapping into original input
     let style = parse_style_expr(&mut p, &mut diags);
     if !p.at_end() {
@@ -463,14 +476,17 @@ struct Parser<'a> {
     input: &'a str,
     tokens: &'a [SpannedTok<'a>],
     pos: usize,
+    /// When false, `style.method(…)` flat chains are refused (product parse).
+    allow_flat: bool,
 }
 
 impl<'a> Parser<'a> {
-    fn new(input: &'a str, tokens: &'a [SpannedTok<'a>]) -> Self {
+    fn new(input: &'a str, tokens: &'a [SpannedTok<'a>], allow_flat: bool) -> Self {
         Self {
             input,
             tokens,
             pos: 0,
+            allow_flat,
         }
     }
     fn at_end(&self) -> bool {
@@ -692,8 +708,33 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     if p.peek() == Some(&Tok::LParen) {
         return parse_style_call(p, diags);
     }
-    // Flat `style.method(…)` — still parsed for unit/codemod identity.
-    // Product lower (`lower_style_source`) refuses flat form (channel spine only).
+    // Flat `style.method(…)` — product parse refuses; migration dual via parse_flat.
+    if !p.allow_flat {
+        let source = p.remainder();
+        let preview: String = source.chars().take(80).collect();
+        diags.push(StyleDiagnostic::ParseError {
+            message: "flat `style.method(…)` chains are retired — use the channel spine: \
+                      style({ box: pad(4).gap(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+                .into(),
+            source: if preview.is_empty() {
+                "style.".into()
+            } else {
+                format!("style.{preview}")
+            },
+        });
+        // Recovery: consume the flat chain so outer when/match/list can continue.
+        let saved = p.allow_flat;
+        p.allow_flat = true;
+        let mut sink = Vec::new();
+        let _ = parse_flat_style_chain_body(p, &mut sink);
+        p.allow_flat = saved;
+        return Style::Empty;
+    }
+    parse_flat_style_chain_body(p, diags)
+}
+
+/// Body of a flat `style.method(…).…` chain (caller already ate `style`).
+fn parse_flat_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     let mut ops = Vec::new();
     let mut iters = 0usize;
     loop {

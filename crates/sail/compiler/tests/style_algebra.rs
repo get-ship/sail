@@ -75,7 +75,7 @@ fn compound_guard_emits_combined_attribute_selector() {
 
 #[test]
 fn bind_reactive_paint_emits_var() {
-    let src = r#"<div> style({ paint: translateY(bind(rowY) })) </div>"#;
+    let src = r#"<div> style({ paint: translateY(bind(rowY)) }) </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("bind") || js.contains("--row"),

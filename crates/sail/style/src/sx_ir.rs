@@ -1305,7 +1305,10 @@ mod tests {
     #[test]
     fn lower_sx_string_resolves_style_const_env() {
         let mut env = std::collections::HashMap::new();
-        env.insert("filled".into(), crate::parse("style.bg(primary)").0);
+        env.insert(
+            "filled".into(),
+            crate::parse("style({ paint: bg(primary) })").0,
+        );
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
         let classes =

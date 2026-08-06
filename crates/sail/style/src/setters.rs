@@ -3388,8 +3388,13 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
 #[cfg(test)]
 mod tests {
     use super::super::ir::{Style, StyleDiagnostic};
-    use super::super::parse::parse;
+    use super::super::rewrite::rewrite_source;
     use super::*;
+
+    /// Normalize flat fixtures via codemod, then product parse.
+    fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
+        super::super::parse::parse(&rewrite_source(src))
+    }
 
     fn only_op(src: &str) -> PaintOp {
         let (style, diags) = parse(src);

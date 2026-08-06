@@ -275,8 +275,8 @@ pub fn lower_style_source_with_motion(
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
     // Product authoring: channel spine only. Flat `style.pad().bg()` is retired
-    // (corpus codemod + block attachment). Unit tests may still call `parse` +
-    // `lower_style` directly on flat form for emit identity.
+    // (corpus codemod + block attachment). Migration dual is `parse_flat` only.
+    // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {

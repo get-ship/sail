@@ -209,7 +209,8 @@ fn card_compiles_and_emits_token_css() {
 
 #[test]
 fn list_and_bind_parse() {
-    let (style, diags) = parse("[ style({ paint: bg(primary) }), style({ paint: translateY(bind(rowY) })) ]");
+    let (style, diags) =
+        parse("[ style({ paint: bg(primary) }), style({ paint: translateY(bind(rowY)) }) ]");
     assert!(
         diags.is_empty(),
         "{:?}",

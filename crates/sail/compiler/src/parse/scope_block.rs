@@ -177,7 +177,7 @@ fn parse_style_const(
     let (name, after_name) = read_word(s, i);
     if name.is_empty() {
         return Err(CompileError::new(
-            "`const` in `<scope>` needs a name — write `const filled = style.bg(primary)`."
+            "`const` in `<scope>` needs a name — write `const filled = style({ paint: bg(primary) })`."
                 .to_string(),
         )
         .with_span(span));
@@ -185,14 +185,14 @@ fn parse_style_const(
     let mut j = skip_trivia(s, after_name, None);
     if j >= bytes.len() || bytes[j] != b'=' {
         return Err(CompileError::new(format!(
-            "`const {name}` in `<scope>` needs `=` — write `const {name} = style.…`."
+            "`const {name}` in `<scope>` needs `=` — write `const {name} = style({{ … }})`."
         ))
         .with_span(span));
     }
     if j + 1 < bytes.len() && bytes[j + 1] == b'>' {
         return Err(CompileError::new(format!(
             "`const {name}` in `<scope>` is a Style value, not an arrow function — \
-             write `const {name} = style.…`."
+             write `const {name} = style({{ … }})`."
         ))
         .with_span(span));
     }
@@ -1200,7 +1200,7 @@ mod tests {
     #[test]
     fn style_const_is_a_scope_member() {
         let b = block(
-            "const filled = style.bg(primary).fg(primary-foreground)\nprops: {\n  label = ''\n}",
+            "const filled = style({ paint: bg(primary).fg(primary-foreground) })\nprops: {\n  label = ''\n}",
         );
         assert!(
             b.style_env.contains_key("filled"),
@@ -1212,7 +1212,7 @@ mod tests {
     #[test]
     fn style_const_match_rhs_is_accepted() {
         let b = block(
-            "const soft = style.bg(muted)\nconst paint = match(variant, { soft: soft, solid: style.bg(primary) })",
+            "const soft = style({ paint: bg(muted) })\nconst paint = match(variant, { soft: soft, solid: style({ paint: bg(primary) }) })",
         );
         assert!(b.style_env.contains_key("soft"));
         assert!(b.style_env.contains_key("paint"));

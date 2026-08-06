@@ -905,7 +905,8 @@ mod tests {
     }
 
     fn emit_pair(old: &str, new: &str) {
-        let (s_old, d_old) = parse(old);
+        // Old form: migration dual (`parse_flat`). New form: product channel parse.
+        let (s_old, d_old) = crate::parse::parse_flat(old);
         let (s_new, d_new) = parse(new);
         assert!(
             d_old.is_empty() && d_new.is_empty(),

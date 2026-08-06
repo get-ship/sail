@@ -3854,7 +3854,7 @@ mod tests {
         // Utility-string condition prefixes are residual product (hard error /
         // empty lower). Style product uses when({…}) for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out = preprocess(r#"<div> when({ hover: style.shadow(none) }) x</div>"#)
+        let out = preprocess(r#"<div> when({ hover: style({ paint: shadow(none) }) }) x</div>"#)
             .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
