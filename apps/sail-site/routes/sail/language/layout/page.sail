@@ -33,7 +33,7 @@ The language</p>
     <code>&lt;grid&gt;</code>, <code>&lt;stack&gt;</code>,
     <code>&lt;center&gt;</code>. Everything those systems express —
     wrapping, two dimensions, spanning, layering, centering — is still
-    expressible; what's gone is the second and third way to spell it.
+    expressible; what’s gone is the second and third way to spell it.
   </p>
   <p>
     One spelling is the point. When every layout in a codebase is a handful

@@ -77,7 +77,7 @@ Source</p>
   <code-block code={code.scope}></code-block>
   <p>
     Four members, none of them written by hand. <code>route</code> and
-    <code>navigate</code> come from deck. <code>api</code> comes from the app's
+    <code>navigate</code> come from deck. <code>api</code> comes from the app’s
     own manifest — one flat <code>ctx</code> member per declared client, so a
     template reads <code>ctx.api.demo.clock()</code> directly.
   </p>
@@ -104,8 +104,8 @@ Source</p>
       client-side navigation updates them in place. For the shape of those types
       and how routing works, see
       <a href="/deck/routing">deck · Routing</a> and
-      <a href="/deck/reactivity">deck · Reactivity</a> — that is deck's
-      documentation to own, not Sail's.</p>
+      <a href="/deck/reactivity">deck · Reactivity</a> — that is deck’s
+      documentation to own, not Sail’s.</p>
     </card>
     <card padding="md">
       <p><strong>Your app</strong> grants one capability per client it declares
@@ -126,7 +126,7 @@ Source</p>
     the generated <code>Scope</code> produces the runtime scope, so the type you
     code against and the value you receive cannot drift apart. Nothing is
     global, and nothing is ambient by magic — a name is in scope because a host
-    granted it, and the error message names the grantor's absence rather than
+    granted it, and the error message names the grantor’s absence rather than
     leaving you to guess.
   </p>
   <p>
@@ -139,7 +139,7 @@ Source</p>
     style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     Today, a name your own controller or template declares takes precedence over
-    a host capability of the same name — the author's value shadows the granted
+    a host capability of the same name — the author’s value shadows the granted
     one, silently.
   </p>
 

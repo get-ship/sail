@@ -26,9 +26,9 @@ AI</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
-    Sail's language intelligence is the Rust compiler —
+    Sail’s language intelligence is the Rust compiler —
     <code>sail_compiler::analyze</code> (diagnostics + scope symbols + dependencies)
-    and <code>check_all</code> (every diagnostic, not just the first). It's the
+    and <code>check_all</code> (every diagnostic, not just the first). It’s the
     same grammar the build uses, exposed to agents through two binary commands.
   </p>
 
@@ -37,7 +37,7 @@ AI</p>
   <p>
     Exits 1 on findings. Covers grammar errors, missing bindings, unstable-key
     warnings, purity violations, CSS token errors, and prop-value mismatches.
-    Run this in your edit loop — it's the cheapest check and catches the most
+    Run this in your edit loop — it’s the cheapest check and catches the most
     common authoring errors.
   </p>
 
@@ -46,7 +46,7 @@ AI</p>
   <p>
     <code>severity</code> is <code>error</code> (compile-blocking) or
     <code>warning</code> (compiles but suspicious). The rule id is in brackets
-    — useful for filtering or mapping to your editor's diagnostic provider.
+    — useful for filtering or mapping to your editor’s diagnostic provider.
     Positions are 1-based.
   </p>
 
@@ -84,7 +84,7 @@ AI</p>
   <p>
     A human typing in the docs site, an agent running <code>sail-lint</code>,
     and an editor on your laptop all see the <em>same</em> diagnostics —
-    because they're all the same compiler. No second grammar to drift out of
+    because they’re all the same compiler. No second grammar to drift out of
     sync.
   </p>
 

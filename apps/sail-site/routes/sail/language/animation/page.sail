@@ -119,7 +119,7 @@ Replay</button>
   <p>
     <code>enter</code> plays when the element joins the page;
     <code>exit</code> plays when it leaves. Exit is the one that needs the
-    framework's help: remove a node yourself and its animation has nowhere
+    framework’s help: remove a node yourself and its animation has nowhere
     to play, so the runtime keeps the element mounted until the exit
     finishes.
   </p>
@@ -170,7 +170,7 @@ Watch me leave before I go.</p>
   <p>
     Common shapes have names — <code>'fade'</code>,
     <code>'spring:snappy'</code>, <code>'pulse'</code> — and a name is just
-    a config you didn't have to write. Start from one and override any
+    a config you didn’t have to write. Start from one and override any
     field, or skip them entirely. One spelling rule covers every value:
     quoted is a literal, unquoted is code — which is how a signal goes
     anywhere a number can.
@@ -230,7 +230,7 @@ Watch me leave before I go.</p>
   <p>
     <code>press</code> reacts to the press-and-release gesture;
     <code>focus-visible</code> to the keyboard arriving. Hover feedback is
-    not animation — it's a <code>hover:</code> atom in the
+    not animation — it’s a <code>hover:</code> atom in the
     <a href="/sail/language/styling">styling chapter</a>.
   </p>
   <row gap="3" align="center">
@@ -276,7 +276,7 @@ tab to me</button>
   </column>
   <p>
     The program behind it is <code>timeline()</code>: it takes a progress
-    reader — here, the slider's value scaled to 0…1 — and a set of
+    reader — here, the slider’s value scaled to 0…1 — and a set of
     keyframes per property, and returns one signal per property. Those
     signals reach Style the way any signal does, through
     <code>bind(name)</code> on a setter
@@ -295,7 +295,7 @@ tab to me</button>
     Sail does not reimplement animation. The runtime embeds the
     <a href="https://motion.dev">Motion</a> library and compiles your
     declarations onto it — Style motion methods become Motion
-    animations, springs use Motion's spring generator. What Sail adds is the
+    animations, springs use Motion’s spring generator. What Sail adds is the
     declaration layer: the compiler checks every trigger, property, and
     preset name at build, so a typo is a compile error rather than an
     animation that silently never runs. In-editor autocomplete inside the

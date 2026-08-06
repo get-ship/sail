@@ -665,7 +665,7 @@ right-click target</p></center>
                 </button>
                 <p>
                   style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-Escape and the backdrop close it — that's the platform</p>
+Escape and the backdrop close it — that’s the platform</p>
                 <dialog id="stage-dialog" side={sheetSide()} size="md">
                   <header>Delete project</header>
                   <section>
@@ -872,7 +872,7 @@ center — both axes at once</p>
               <column gap="3" tile-stage="sail-pack-message">
                 style({ box: w(full).maxW(panel-max-w-md) })
 
-                <sail-message from="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
+                <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
                 <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
               </column>
             </if>

@@ -23,7 +23,7 @@ Rendering &amp; build</p>
 In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
 
   <h2>Routes reload with state intact</h2>
-  <p>Save a route's <code>.sail</code> and deck swaps the freshly-bundled module into the already-running router — via a <code>globalThis.__deckHmr</code> handle — then re-mounts. Signal state survives the swap, so counters, inputs, and scroll stay put.</p>
+  <p>Save a route’s <code>.sail</code> and deck swaps the freshly-bundled module into the already-running router — via a <code>globalThis.__deckHmr</code> handle — then re-mounts. Signal state survives the swap, so counters, inputs, and scroll stay put.</p>
   <code-block code={devCmd} lang="bash"></code-block>
 
   <h2>Components hot-swap in place</h2>

@@ -86,7 +86,7 @@ Guide</p>
     </for>
   </row>
   <p>
-    Say the target is a warmer, squarer version of Paper. Here is Paper's
+    Say the target is a warmer, squarer version of Paper. Here is Paper’s
     block, abridged — the real one runs about ninety lines and continues
     through shadows, sidebar chrome, typography and interaction tints:
   </p>
@@ -98,7 +98,7 @@ Guide</p>
     subtree — that is how a swatch shows a theme without switching the page.
     And the brand tokens are written
     <code>oklch(L C var(--brand-hue, 30))</code>: lightness and chroma are
-    the theme's, while the hue can be moved from outside. More on that at the
+    the theme’s, while the hue can be moved from outside. More on that at the
     end.
   </p>
 
@@ -137,7 +137,7 @@ Guide</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
-    The two files are kept in step by the token package's own tests: for
+    The two files are kept in step by the token package’s own tests: for
     every id in <code>THEMES</code>, one asserts a matching
     <code>:root[theme]</code> block exists in
     <code>themes.css</code>. Edit one file and forget the other and the suite
@@ -155,7 +155,7 @@ Guide</p>
   <p>
     Three things happen. <code>theme</code> goes on the document, which
     activates your CSS block. The <code>data-mode</code> attribute is set from
-    the entry's <code>dark</code> flag. A <code>ship:theme:change</code>
+    the entry’s <code>dark</code> flag. A <code>ship:theme:change</code>
     event is dispatched, for chrome that needs to react beyond CSS.
   </p>
   <p>
@@ -165,10 +165,10 @@ Guide</p>
     entry, not the CSS.
   </p>
   <p>
-    To restore the reader's choice on boot, read it back and apply it:
+    To restore the reader’s choice on boot, read it back and apply it:
     <code>applyTheme(readStoredTheme())</code>. And the entire switching UI —
     trigger, previews, keyboard, persistence — is one tag,
-    <code>&lt;theme-picker&gt;</code>, the control in this site's top bar.
+    <code>&lt;theme-picker&gt;</code>, the control in this site’s top bar.
   </p>
 
   <h2>The limit, stated plainly</h2>
@@ -184,7 +184,7 @@ Guide</p>
     <code>document.documentElement.setAttribute('theme', 'mine')</code> yourself, never
     calling <code>applyTheme</code>. You then also own the <code>data-mode</code>
     class, the change event and persistence, and your theme will not appear
-    in the picker. Deck's own palette is built this way, so the approach is
+    in the picker. Deck’s own palette is built this way, so the approach is
     proven — but it is a bypass, not a seam.
   </p>
 

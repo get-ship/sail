@@ -35,7 +35,7 @@ Concepts</p>
   <p>
     <code>use:autosize</code> is a built-in. Type a few lines and the box
     grows to fit — the action measures the content and sets the height, and
-    when the element leaves the page, the action's cleanup runs with it:
+    when the element leaves the page, the action’s cleanup runs with it:
   </p>
   <textarea use:autosize placeholder="Type a few lines here…">
     style({ box: maxW(panel-max-w-sm) })
@@ -51,7 +51,7 @@ Concepts</p>
   </p>
   <p>
     An action keeps the job in one place. The element arrives as the
-    function's argument, the work happens right there, and the cleanup is
+    function’s argument, the work happens right there, and the cleanup is
     the return value. There is nothing to store and nothing to forget to
     release.
   </p>
@@ -64,7 +64,7 @@ Concepts</p>
   <code-block code={code.author}></code-block>
   <p>
     An action can also take a parameter. When the parameter is reactive,
-    the action's <code>update</code> runs each time the value changes —
+    the action’s <code>update</code> runs each time the value changes —
     this is how a positioning action follows its anchor:
   </p>
   <code-block code={code.param}></code-block>

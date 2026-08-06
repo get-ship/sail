@@ -107,7 +107,7 @@ Source</p>
     style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     The loaded value is only reachable on the <code>ok</code> arm
-    (<code>as value</code>), so a template cannot render data it hasn't
+    (<code>as value</code>), so a template cannot render data it hasn’t
     confirmed has arrived — handling loading and error is built into the
     shape, not left to discipline.
   </p>
