@@ -27,6 +27,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-controller-purity",
     "sail-controller-redundant-ambient-import",
     "sail-controller-set-value",
+    "sail-controller-size",
     "sail-controller-state-cast",
     "sail-css-content-text",
     "sail-css-literal",

@@ -827,7 +827,22 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("export interface SxExtraFormDoc {\n  form: string\n  doc: string\n}\n\n");
     sf.push_str("export const SX_EXTRA_FORMS: SxExtraFormDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&sx_extras)?);
-    sf.push_str("\n");
+    sf.push_str("\n\n");
+
+    // REGION CAPABILITY MATRIX — CHANNELS-1 WI10 / freeze §1. SSOT is
+    // region_capability::REGION_CAPABILITY_MATRIX (lint + compiler citations).
+    sf.push_str(
+        "export interface RegionCapabilityDoc {\n  region: string\n  capability: string\n  legal: string\n  status: string\n  enforcement: string\n  notes: string\n}\n\n",
+    );
+    sf.push_str("export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(
+        &sail_compiler::region_capability::REGION_CAPABILITY_MATRIX,
+    )?);
+    sf.push_str("\n\n");
+    sf.push_str(&format!(
+        "/** Thin-controller LOC threshold (sail-controller-size). */\nexport const CONTROLLER_SIZE_THRESHOLD = {}\n",
+        sail_compiler::region_capability::CONTROLLER_SIZE_THRESHOLD
+    ));
 
     std::fs::write(&surface_path, sf)?;
     println!(

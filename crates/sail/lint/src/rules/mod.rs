@@ -27,6 +27,7 @@ pub mod controller_no_load_state;
 pub mod controller_purity;
 pub mod controller_redundant_ambient_import;
 pub mod controller_set_value;
+pub mod controller_size;
 pub mod controller_state_cast;
 pub mod controller_state_set_call;
 pub mod css_content_text;
@@ -77,6 +78,7 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
     (controller_purity::RULE_ID, controller_purity::check),
     (controller_empty::RULE_ID, controller_empty::check),
+    (controller_size::RULE_ID, controller_size::check),
     (
         controller_redundant_ambient_import::RULE_ID,
         controller_redundant_ambient_import::check,
