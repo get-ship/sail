@@ -323,10 +323,16 @@ fn empty_state_child_paint_on_structure_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("background-color:var(--muted)")
-            || out.skin_css.contains("background-color: var(--muted)")
-            || out.structure_html.contains("sx-bgmuted"),
-        "icon soft surface via muted (no tone-bg):\n{}",
+        out.skin_css.contains("background-color:var(--empty-state)")
+            || out.skin_css.contains("background-color: var(--empty-state)")
+            || out.structure_html.contains("sx-bgemptystate"),
+        "icon soft surface via empty-state component token (no free muted / tone-bg):\n{}",
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains("var(--empty-state-title)")
+            || out.structure_html.contains("emptystatetitle"),
+        "title must read empty-state-title:\n{}",
         out.skin_css
     );
     assert!(
@@ -648,23 +654,17 @@ fn toast_start_stripe_on_host_sx() {
     );
     assert!(
         out.skin_css
-            .contains("border-inline-start-color:var(--foreground)")
+            .contains("border-inline-start-color:var(--toast-stripe)")
             || out
                 .skin_css
-                .contains("border-inline-start-color: var(--foreground)")
+                .contains("border-inline-start-color: var(--toast-stripe)")
             || out
                 .skin_css
                 .contains("border-inline-start-color:var(--primary)")
             || out
                 .skin_css
-                .contains("border-inline-start-color: var(--primary)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color:var(--tone-fg)")
-            || out
-                .skin_css
-                .contains("border-inline-start-color: var(--tone-fg)"),
-        "start stripe must bind semantic tone color:\n{}",
+                .contains("border-inline-start-color: var(--primary)"),
+        "start stripe default must bind toast-stripe; tone matrices spend brand:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(

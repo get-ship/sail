@@ -774,6 +774,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       ['component.card.bg', 'card'],
       ['component.navbar.bg', 'navbar'],
       ['component.navbar.fg', 'navbar-foreground'],
+      ['component.navbar.border', 'navbar-border'],
       ['component.menu-item.fg', 'menu-item-foreground'],
       ['component.menu-item.hover-bg', 'menu-item-hover-bg'],
       ['component.dropdown.bg', 'dropdown'],
@@ -834,6 +835,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       ['component.tab.fg', 'tab-foreground'],
       ['component.tab.selected-fg', 'tab-selected-foreground'],
       ['component.tab.selected-bg', 'tab-selected-bg'],
+      ['component.tab.border', 'tab-border'],
       ['component.tab-list.bg', 'tab-list'],
       ['component.tab-list.border', 'tab-list-border'],
       ['component.tab-list.rail', 'tab-list-rail'],
@@ -890,6 +892,12 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       ['component.breadcrumb.current', 'breadcrumb-current'],
       ['component.fieldset.border', 'fieldset-border'],
       ['component.legend.fg', 'legend-foreground'],
+      // Slice #3 residual pack extensions
+      ['component.alert.border', 'alert-border'],
+      ['component.toast.stripe', 'toast-stripe'],
+      ['component.navbar.border', 'navbar-border'],
+      ['component.empty-state.title', 'empty-state-title'],
+      ['component.tab.border', 'tab-border'],
     ]
     for (const [path, cssName] of expected) {
       expect(reg.paths?.[path], path).toBe(cssName)
@@ -908,6 +916,11 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--breadcrumb-foreground\s*:\s*var\(--muted-foreground\)/)
     expect(css).toMatch(/--fieldset-border\s*:\s*var\(--border\)/)
     expect(css).toMatch(/--legend-foreground\s*:\s*var\(--foreground\)/)
+    expect(css).toMatch(/--alert-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--toast-stripe\s*:\s*var\(--foreground\)/)
+    expect(css).toMatch(/--navbar-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--empty-state-title\s*:\s*var\(--foreground\)/)
+    expect(css).toMatch(/--tab-border\s*:\s*var\(--border\)/)
   })
 
   it('color surface includes brand + tone tokens and excludes space/text', () => {

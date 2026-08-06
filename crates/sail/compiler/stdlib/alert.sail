@@ -11,13 +11,14 @@
     onDismiss: () => void
 }
 
-  const base = style({ box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(border).radius(md).bg(alert).fg(alert-foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) })
+  const base = style({ box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(alert-border).radius(md).bg(alert).fg(alert-foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) })
   const stripe = style({ box: position(absolute).left(0).top(0).bottom(0).w(1), paint: content(empty).bg(alert-stripe) })
-  const ico = style({ box: size(control-h-xs), paint: radius(md).bg(muted).fg(muted-foreground) })
+  // Icon rest samples alert surface; tone compounds still spend semantic palette for glyph color.
+  const ico = style({ box: size(control-h-xs), paint: radius(md).bg(alert).fg(alert-stripe) })
   const title = style({ text: fontWeight(semibold) })
-  const body = style({ paint: fg(muted-foreground) })
+  const body = style({ paint: fg(alert-stripe) })
   const actions = style({ box: mt(2) })
-  const close = style({ box: display(none).size(control-h-xs).self(start).pad(0), paint: borderWidth(0).radius(sm).bg(transparent).fg(muted-foreground).cursor(pointer).transition(colors).duration(fast).ease(out) })
+  const close = style({ box: display(none).size(control-h-xs).self(start).pad(0), paint: borderWidth(0).radius(sm).bg(transparent).fg(alert-stripe).cursor(pointer).transition(colors).duration(fast).ease(out) })
   const xmark = style({ box: display(block).size(icon-size-sm), paint: stroke(currentColor).fill(none) })
 </scope>
 
@@ -54,12 +55,12 @@
     style([ style({ box: shrink(1) }), 
     ico,
     match(tone, {
-      default: style({ paint: bg(muted).fg(muted-foreground) }),
-      muted: style({ paint: bg(muted).fg(muted-foreground) }),
-      info: style({ paint: bg(muted).fg(info) }),
-      success: style({ paint: bg(muted).fg(success) }),
-      warning: style({ paint: bg(muted).fg(warning) }),
-      destructive: style({ paint: bg(muted).fg(destructive) }),
+      default: style({ paint: bg(alert).fg(alert-stripe) }),
+      muted: style({ paint: bg(alert).fg(alert-stripe) }),
+      info: style({ paint: bg(alert).fg(info) }),
+      success: style({ paint: bg(alert).fg(success) }),
+      warning: style({ paint: bg(alert).fg(warning) }),
+      destructive: style({ paint: bg(alert).fg(destructive) }),
     }),
     when({
       empty: style({ box: display(none) }),
@@ -102,7 +103,7 @@
       close,
       when({
         group-dismissible: style({ box: display(inline-block) }),
-        hover: style({ paint: bg(muted).fg(foreground) }),
+        hover: style({ paint: bg(alert).fg(alert-foreground) }),
         focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
       }),
     ])
