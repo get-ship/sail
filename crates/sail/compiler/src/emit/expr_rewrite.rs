@@ -140,6 +140,9 @@ const KEYWORDS: &[&str] = &[
     "super",
     "void",
     "delete",
+    // TS type assertion / Sail for·match binding keyword — never `$scope.as`.
+    "as",
+    "satisfies",
 ];
 
 /// Rewrite `src` so free identifiers are qualified with `$scope.`.

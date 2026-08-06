@@ -338,7 +338,7 @@ More detail</p>
                 style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
 {session.nameEdit()}</p>
               <p>
-                style([ style(pathMeta), style({ box: shrink(0) }) ])
+                style([ style(monoMeta), style({ box: shrink(0) }) ])
 {session.paintMode()}</p>
             </row>
             <scroll-area>

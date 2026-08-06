@@ -38,7 +38,8 @@ async function writeSourceHttp(
   opts?: ClientOptions,
 ): Promise<void> {
   const base = opts?.baseUrl ?? ''
-  const fetchFn = opts?.fetch ?? fetch
+  // Prefer injected fetch; fall back to host global (not bare ambient `fetch` id).
+  const fetchFn = opts?.fetch ?? globalThis.fetch.bind(globalThis)
   const res = await fetchFn(`${base}/sail.ops.v1.SailAuthoring/Edit`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -73,7 +74,7 @@ async function listFilesHttp(
   opts?: ClientOptions,
 ): Promise<{ ok: boolean; project: string; files: string[] }> {
   const base = opts?.baseUrl ?? ''
-  const fetchFn = opts?.fetch ?? fetch
+  const fetchFn = opts?.fetch ?? globalThis.fetch.bind(globalThis)
   const res = await fetchFn(`${base}/sail.ops.v1.SailAuthoring/ListFiles`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

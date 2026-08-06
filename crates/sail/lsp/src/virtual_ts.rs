@@ -319,16 +319,31 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
 
     // `{#for}` / `<for … as="row">` binders are not controller members —
     // declare them as free locals so rewrite leaves them bare (not scope.row).
+    // Same for `<scope> props` when a controller is present: host-bound props
+    // like `panel` are not always re-exported from the controller return.
     let for_bindings = collect_for_binding_names(sail_source);
-    if !for_bindings.is_empty() {
-        view_text.push_str("\n// ── for-binding locals ──────────────────────────────────────\n");
-        for name in &for_bindings {
-            view_text.push_str("declare const ");
-            view_text.push_str(name);
-            view_text.push_str(": any;\n");
+    let mut bare_locals: Vec<String> = for_bindings;
+    if has_controller {
+        for p in &scope_props {
+            if !bare_locals.iter().any(|n| n == p) {
+                bare_locals.push(p.clone());
+            }
         }
     }
-    let for_binding_refs: Vec<&str> = for_bindings.iter().map(|s| s.as_str()).collect();
+    if !bare_locals.is_empty() {
+        view_text.push_str("\n// ── for-binding / scope-prop locals ─────────────────────────\n");
+        for name in &bare_locals {
+            view_text.push_str("declare const ");
+            view_text.push_str(name);
+            // Props are zero-arg readers in templates (`panel()` / `title()`).
+            if scope_props.iter().any(|p| p == name) {
+                view_text.push_str(": (() => any);\n");
+            } else {
+                view_text.push_str(": any;\n");
+            }
+        }
+    }
+    let bare_local_refs: Vec<&str> = bare_locals.iter().map(|s| s.as_str()).collect();
 
     // ── View: expression embeddings ────────────────────────────────────────
     let (stripped, _) = extract_controller_block(sail_source);
@@ -345,11 +360,11 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             // not controller scope members — do not `scope.`-qualify them.
             // Quote bare hyphen tokens for pure tsc (`hover-bg` → `'hover-bg'`).
             // Ordinary template exprs still get `scope.` qualification, except
-            // for-binding names which stay bare (declared above).
+            // for-binding / host-prop names which stay bare (declared above).
             let rewritten = if looks_like_style_expr(&emb.source) {
                 quote_style_dsl_for_tsc(&emb.source)
             } else {
-                rewrite_with_prefix(&emb.source, &for_binding_refs, "scope.")
+                rewrite_with_prefix(&emb.source, &bare_local_refs, "scope.")
             };
             view_text.push_str("void (() => (");
             let v_start = view_text.len();
@@ -450,9 +465,15 @@ fn quote_bind_idents(src: &str) -> String {
 }
 
 /// Quote JS-reserved Style keyword args: `cursor(default)` → `cursor('default')`.
+/// Also quote DOM-colliding bare size keywords (`screen` is `window.screen: Screen`
+/// under lib.dom, which is not assignable to `TokenOrBind<SailSizeToken>`).
 fn quote_reserved_style_keyword_args(src: &str) -> String {
-    // Only keywords that appear as Style setter args and are JS reserved.
-    const RESERVED_ARGS: &[&str] = &["default", "static", "new", "void", "in", "with"];
+    // Only keywords that appear as Style setter args and are JS reserved
+    // or collide with DOM globals when left bare for pure tsc.
+    const RESERVED_ARGS: &[&str] = &[
+        "default", "static", "new", "void", "in", "with", // JS reserved
+        "screen", // DOM `screen: Screen` vs Style size keyword
+    ];
     let mut out = src.to_string();
     for kw in RESERVED_ARGS {
         // (kw) or (kw, or (kw)  — bare arg form
@@ -528,20 +549,37 @@ fn quote_bare_style_tokens(src: &str) -> String {
             out.push_str(&src[start..i]);
             continue;
         }
-        // Digit underscore token: 2_5, 0_75, 1_25
+        // Digit-led Style tokens that are invalid JS identifiers:
+        //   2_5, 0_75 (space steps) and 2xl, 3xl (text size steps).
         if c.is_ascii_digit() {
             let start = i;
             let mut j = i;
             let mut saw_us = false;
-            while j < bytes.len()
-                && (bytes[j].is_ascii_digit() || bytes[j] == b'_')
-            {
-                if bytes[j] == b'_' {
+            let mut saw_alpha = false;
+            while j < bytes.len() {
+                let b = bytes[j];
+                if b.is_ascii_digit() {
+                    j += 1;
+                } else if b == b'_' {
                     saw_us = true;
+                    j += 1;
+                } else if b.is_ascii_alphabetic() {
+                    // 2xl / 3xl / …
+                    saw_alpha = true;
+                    j += 1;
+                    while j < bytes.len()
+                        && (bytes[j].is_ascii_alphanumeric()
+                            || bytes[j] == b'_'
+                            || bytes[j] == b'$')
+                    {
+                        j += 1;
+                    }
+                    break;
+                } else {
+                    break;
                 }
-                j += 1;
             }
-            // Must be underscore-containing and a full token boundary.
+            // Must be a full token boundary.
             let boundary_before = start == 0
                 || matches!(
                     bytes[start - 1],
@@ -553,18 +591,21 @@ fn quote_bare_style_tokens(src: &str) -> String {
                     b')' | b']' | b',' | b':' | b' ' | b'\t' | b'\n' | b'\r' | b'.' | b';' | b'}'
                         | b'|' | b'&' | b'?'
                 );
-            if saw_us && boundary_before && boundary_after && bytes[start..j].contains(&b'_') {
-                // Reject trailing/leading underscore-only junk: require digit on both sides of each _
-                let s = &src[start..j];
-                if s.split('_').all(|p| !p.is_empty() && p.chars().all(|ch| ch.is_ascii_digit())) {
-                    out.push('\'');
-                    out.push_str(s);
-                    out.push('\'');
-                    i = j;
-                    continue;
-                }
+            let s = &src[start..j];
+            let quote_us = saw_us
+                && boundary_before
+                && boundary_after
+                && s.split('_')
+                    .all(|p| !p.is_empty() && p.chars().all(|ch| ch.is_ascii_digit()));
+            let quote_digit_ident = saw_alpha && boundary_before && boundary_after;
+            if quote_us || quote_digit_ident {
+                out.push('\'');
+                out.push_str(s);
+                out.push('\'');
+                i = j;
+                continue;
             }
-            out.push_str(&src[start..j]);
+            out.push_str(s);
             i = j;
             continue;
         }
@@ -644,34 +685,40 @@ fn collect_scope_prop_names(scope_body: &str) -> Vec<String> {
     let mut names = Vec::new();
     for line in inner.lines() {
         let t = line.trim();
-        if t.is_empty() || t.starts_with("//") || t.starts_with('#') {
+        if t.is_empty() || t.starts_with("//") || t.starts_with('#') || t.starts_with("/**") {
             continue;
         }
-        // `title = ''` | `title: string = ''` | `selected = false`
+        // `title = ''` | `title: string = ''` | `variant: 'a' | 'b' = 'a'`
+        // Only the leading identifier is the prop name.
         let head = t
             .split_once('=')
             .map(|(l, _)| l)
             .or_else(|| t.split_once(':').map(|(l, _)| l))
             .unwrap_or(t)
             .trim();
-        if head.is_empty() {
+        let name = head
+            .split(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == '$'))
+            .next()
+            .unwrap_or("")
+            .trim();
+        if name.is_empty() {
             continue;
         }
-        if !head
+        if !name
             .chars()
             .next()
             .is_some_and(|c| c.is_ascii_alphabetic() || c == '_' || c == '$')
         {
             continue;
         }
-        if !head
+        if !name
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
         {
             continue;
         }
-        if !names.iter().any(|n| n == head) {
-            names.push(head.to_string());
+        if !names.iter().any(|n| n == name) {
+            names.push(name.to_string());
         }
     }
     names
@@ -679,6 +726,92 @@ fn collect_scope_prop_names(scope_body: &str) -> Vec<String> {
 
 /// `<for {items as row}>` / match `{ok as names => …}` binding names outside
 /// the controller body. Collect bare identifiers after top-level ` as `.
+/// Drop Sail for-binding suffix: `items() as row` → `items()`,
+/// `(a) as (item, i)` → `(a)`. Leaves ordinary type-assertion-like
+/// forms alone when the RHS is not a simple binding.
+fn strip_for_as_binding(src: &str) -> &str {
+    let bytes = src.as_bytes();
+    let mut depth = 0i32;
+    let mut str_quote: Option<u8> = None;
+    let mut i = 0usize;
+    while i + 4 <= bytes.len() {
+        // Stay on UTF-8 char boundaries — multi-byte glyphs (▾) must not be
+        // sliced mid-codepoint when probing for ` as `.
+        if !src.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        let c = bytes[i];
+        if let Some(q) = str_quote {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        if c == b'"' || c == b'\'' || c == b'`' {
+            str_quote = Some(c);
+            i += 1;
+            continue;
+        }
+        if matches!(c, b'(' | b'[' | b'{') {
+            depth += 1;
+            i += 1;
+            continue;
+        }
+        if matches!(c, b')' | b']' | b'}') {
+            depth -= 1;
+            i += 1;
+            continue;
+        }
+        if depth == 0
+            && src.is_char_boundary(i + 4)
+            && bytes[i..i + 4] == *b" as "
+        {
+            let right = src[i + 4..].trim();
+            // Match arms: `ok as v => …` — leave intact (not a for-primary).
+            if right.contains("=>") {
+                return src;
+            }
+            if is_for_binding_rhs(right) {
+                return src[..i].trim_end();
+            }
+            return src;
+        }
+        i += 1;
+    }
+    src
+}
+
+fn is_for_binding_rhs(rhs: &str) -> bool {
+    let r = rhs.trim();
+    if r.is_empty() {
+        return false;
+    }
+    // `item` / `item, i` / `(item, i)`
+    let inner = if r.starts_with('(') && r.ends_with(')') {
+        r[1..r.len() - 1].trim()
+    } else {
+        r
+    };
+    if inner.is_empty() {
+        return false;
+    }
+    inner.split(',').all(|part| {
+        let p = part.trim();
+        let b = p.as_bytes();
+        !b.is_empty()
+            && (b[0].is_ascii_alphabetic() || b[0] == b'_' || b[0] == b'$')
+            && b.iter()
+                .skip(1)
+                .all(|c| c.is_ascii_alphanumeric() || *c == b'_' || *c == b'$')
+    })
+}
+
 fn collect_for_binding_names(sail_source: &str) -> Vec<String> {
     let ctrl = find_controller_raw(sail_source).map(|(s, e, _)| (s, e));
     let mut names = Vec::new();
@@ -850,6 +983,14 @@ fn collect_style_product_exprs(original: &str) -> Vec<ExprEmbed> {
             i += 1;
             continue;
         }
+        // Skip HTML comments (docs often contain example `style({…})` text).
+        if bytes[i] == b'<' && original[i..].starts_with("<!--") {
+            if let Some(rel) = original[i + 4..].find("-->") {
+                i = i + 4 + rel + 3;
+                continue;
+            }
+            break;
+        }
         if !original[i..].starts_with("style") {
             i += 1;
             continue;
@@ -972,6 +1113,17 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
     let bytes = original.as_bytes();
     let mut i = 0usize;
     while i < bytes.len() {
+        // Skip HTML comments so `<!-- session={session} -->` docs are not embeds.
+        if bytes[i] == b'<'
+            && original.is_char_boundary(i)
+            && original[i..].starts_with("<!--")
+        {
+            if let Some(rel) = original[i + 4..].find("-->") {
+                i = i + 4 + rel + 3;
+                continue;
+            }
+            break;
+        }
         if bytes[i] != b'{' {
             i += 1;
             continue;
@@ -987,10 +1139,21 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
             let in_style = style.is_some_and(|(s, e, _)| i >= s && i < e);
             if !inner.is_empty() && !in_ctrl && !in_scope && !in_style {
                 if !(inner.contains(';') && inner.contains(':') && !inner.contains("=>")) {
+                    // `<for {items() as row}>` brace-primary embeds the full
+                    // `iterable as binder` text. virtual_ts only typechecks the
+                    // iterable — binding names are declared separately. Leaving
+                    // `as row` in the embed rewrites to a bogus TS assertion.
+                    let source = strip_for_as_binding(inner);
+                    let sail_end = if source.len() == inner.len() {
+                        inner_end
+                    } else {
+                        // Map only the iterable span (trim-adjusted).
+                        inner_start + source.len()
+                    };
                     out.push(ExprEmbed {
-                        source: inner.to_string(),
+                        source: source.to_string(),
                         sail_start: inner_start,
-                        sail_end: inner_end,
+                        sail_end,
                     });
                 }
             }
@@ -1410,6 +1573,18 @@ export default controller(() => ({ items: () => [{ key: 'a', label: 'A' }] }))
         assert!(
             v.view_text.contains("scope.items"),
             "iterable still scope-qualified:\n{}",
+            v.view_text
+        );
+        assert!(
+            !v.view_text.contains("scope.as"),
+            "`as` must not be scope-qualified (for-primary strip):\n{}",
+            v.view_text
+        );
+        // Iterable embed is just `scope.items()`, not a TS assertion.
+        assert!(
+            v.view_text.contains("void (() => (scope.items()))")
+                || v.view_text.contains("void (() => (scope.items() ))"),
+            "for primary should embed iterable only:\n{}",
             v.view_text
         );
     }

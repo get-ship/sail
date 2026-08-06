@@ -481,8 +481,8 @@ export function createThemeSession(opts: ThemeSessionOpts) {
       e.preventDefault()
       e.returnValue = ''
     }
-    // sail-allow sail-no-ambient-events
     if (typeof window !== 'undefined') {
+      // sail-allow sail-no-ambient-events
       window.addEventListener('beforeunload', onBeforeUnload)
     }
     return () => {
@@ -490,6 +490,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
       leaveGuard.reset()
       setThemeLeaveNavigate(null)
       if (typeof window !== 'undefined') {
+        // sail-allow sail-no-ambient-events
         window.removeEventListener('beforeunload', onBeforeUnload)
       }
     }
