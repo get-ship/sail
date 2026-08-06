@@ -202,9 +202,10 @@ Source</p>
     <code>&lt;form&gt;</code> and the runtime intercepts submit, calls that
     client method with the form's <code>FormData</code>, and injects a
     <code>$mutation</code> signal that walks <code>loading → ok | error</code>
-    — the same three-state shape <code>query()</code> uses for reads. The
-    form also fires <code>success</code> and <code>error</code> events for
-    side effects. Reach for <code>form()</code> when you need validation or
+    — the same three-state shape <code>query()</code> uses for reads.
+    Side effects use typed callback props
+    <code>on-success</code> / <code>on-failure</code> — not a custom-event
+    bus. Reach for <code>form()</code> when you need validation or
     field-level state; reach for <code>mutation=</code> when the form is a
     straight post.
   </p>

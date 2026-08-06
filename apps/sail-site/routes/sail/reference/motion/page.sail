@@ -90,7 +90,7 @@ properties</code><small>
   </column>
 
   <row>
-    <a variant="default" href="/sail/reference/sx">← sx</a>
+    <a variant="default" href="/sail/reference/sx">← Style</a>
     <a variant="solid" href="/sail/reference/actions">Actions →</a>
   </row>
 </column>

@@ -54,9 +54,9 @@ const SECTIONS: SectionCard[] = [
   },
   {
     href: '/sail/reference/sx',
-    title: 'sx',
-    count: `${SX_ATOMS.length} atoms`,
-    description: 'Tier A — the closed styling vocabulary — atoms, refusals, state/condition prefixes, custom-property reads.',
+    title: 'Style',
+    count: `${SX_ATOMS.length} scale entries`,
+    description: 'Tier A — channel attach style({ box, paint, text, animate }) + .when(); setter scales, refusals, match/compound/bind.',
     tier: 'A',
   },
   {

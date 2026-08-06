@@ -45,6 +45,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <row>
     <a variant="default" href="/sail/reference/elements">← Elements</a>
-    <a variant="solid" href="/sail/reference/sx">sx →</a>
+    <a variant="solid" href="/sail/reference/sx">Style →</a>
   </row>
 </column>
