@@ -56,11 +56,9 @@ export default controller(() => {
         <for {docTabs()} as="tab" key={tab.key}>
           <row tab-id={tab.id} active={tab.active ? 'true' : 'false'} tab-select selected={tab.active ? 'true' : 'false'} current={tab.active ? 'page' : undefined} title={tab.id} gap="1" align="center" nowrap>
             style({  box: shrink(0).h(full).padX(3).maxW(48), paint: borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).cursor(pointer)  }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(surface-0).fg(foreground).borderT(primary) })
-            <span>
-              style({ box: display(contents), text: fontSize(sm) })
-              <icon name="file-code-2" size="sm"></icon>
+            <icon name="file-code-2" size="sm"></icon>
             <p>
-              style({ box: grow(1).minW(0), text: truncate() })
+              style({ box: grow(1).minW(0), text: fontSize(sm).truncate() })
 {tab.label}</p>
             <if {tab.dirtyDot}>
               <p dirty-dot label="Unsaved">
@@ -83,7 +81,6 @@ export default controller(() => {
                 ×
               </button>
             </if>
-            </span>
 </row>
         </for>
       </row>

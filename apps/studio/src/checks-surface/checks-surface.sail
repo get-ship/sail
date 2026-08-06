@@ -382,17 +382,15 @@ Suggestion</p>
 
                       >
                         style({ box: pad(2), paint: bg(surface-0).radius(sm) })
-                        <span>
-                          style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
-                          <for {f.snippet} as="ln" key={ln.key}>
+                        <for {f.snippet} as="ln" key={ln.key}>
                           <p
                             snippet-line={ln.n}
                             highlight={ln.highlight ? 'true' : 'false'}
                           >
+                            style({ text: fontFamily(mono).fontSize(xs) })
                             {ln.n} {ln.text}
                           </p>
                         </for>
-                        </span>
 </column>
                       <row gap="2" align="center" nowrap>
                         <button
@@ -445,10 +443,10 @@ Suggestion</p>
 
   <row checks-status align="center">
     style({  box: shrink(0).h(6).padX(3), paint: borderTWidth(1).borderT(border-subtle).fg(muted-foreground)  })
-    <span>
-      style({ box: display(contents), text: fontSize(xs) })
-      <p>{checksStatusNote()}</p>
-    </span>
+    <p>
+      style({ text: fontSize(xs) })
+      {checksStatusNote()}
+    </p>
 </row>
 
   <!--

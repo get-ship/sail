@@ -224,12 +224,7 @@ Tasks</p>
               <column>
                 style({ box: pad(3) })
 
-                <sail-markdown thread-markdown value={threadMarkdown()}>
-                  <span>
-                    style({ box: display(contents), text: fontSize(sm) })
-                    
-                  </span>
-</sail-markdown>
+                <sail-markdown thread-markdown value={threadMarkdown()}></sail-markdown>
               </column>
             </scroll-area>
           </if>

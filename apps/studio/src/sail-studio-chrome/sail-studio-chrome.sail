@@ -50,9 +50,7 @@ export default controller((ctx) => {
 
 <row sail-studio-shell gap="0" nowrap align="stretch">
   style({  box: w(full).minH(screen).h(screen).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })
-  <span>
-    style({ box: display(contents), text: fontFamily(body).fontSize(sm) })
-    <studio-activity-bar studio-rail on:click={onRailClick}>
+  <studio-activity-bar studio-rail on:click={onRailClick}>
     <for {rail()} as="item" key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
@@ -190,10 +188,8 @@ export default controller((ctx) => {
 
     <row studio-status align="center" gap="3" nowrap>
       style({  box: shrink(0).minW(0).h(6).minH(6).padX(3).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground)  })
-      <span>
-        style({ box: display(contents), text: fontSize(xs) })
-        <p>
-        style({  box: grow(1).minW(0), text: fontFamily(mono).truncate()  })
+      <p>
+        style({  box: grow(1).minW(0), text: fontFamily(mono).fontSize(xs).truncate()  })
 {statusLine()}</p>
       <p save-status>
         style({ box: shrink(0), text: fontSize(xs) })
@@ -252,8 +248,6 @@ export default controller((ctx) => {
           {watchHealthLabel()}
         </badge>
       </row>
-      </span>
 </row>
   </column>
-  </span>
 </row>

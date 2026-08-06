@@ -300,7 +300,7 @@ More detail</p>
     </scroll-area>
 
     <column specimen-dock gap="0">
-      style({  box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
+      style({  box: grow(1).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
 
       <column gap="0">
         style({  box: grow(1).minH(0).h(full).pad(4)  })
