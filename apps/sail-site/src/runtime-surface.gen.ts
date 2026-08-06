@@ -573,7 +573,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "unwrapOr",
     "kind": "function",
     "signature": "<T>(sig: LiveSignal<T>, fallback: T): T",
-    "doc": "Read a `LiveSignal<T>` and return its value or `fallback`. The fallback applies for both `loading` and `error` states — callers that need to discriminate should keep using the explicit `kind` check or `<while-loading>`/`<while-error>` boundaries.",
+    "doc": "Read a `LiveSignal<T>` and return its value or `fallback`. The fallback applies for both `loading` and `error` states — callers that need to discriminate should use an explicit `kind` check or a `<match {sig()}>` with `{loading}` / `{error}` / `{ok}` arms.",
     "loc": "src/query.ts:229"
   },
   {

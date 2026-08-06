@@ -18,36 +18,32 @@ conformance smoke: full live surface in one document
     </ship-button>
   </header>
 
-  <while-loading of="agents">
-    <p class="loading-copy" data-test="loading">Loading agents&hellip;</p>
-  </while-loading>
-
-  <while-error as="err" of="agents">
-    <p class="loading-copy" data-test="error">Error loading agents: {err.message}</p>
-  </while-error>
-
-  <if cond={agents().kind === 'ok'}>
-    <if cond={items().length === 0}>
-      <ship-empty-state icon="sparkles" variant="default" size="lg" data-test="empty">
-        <span slot="title">No agents yet</span>
-      </ship-empty-state>
-    <else>
-      <div class="agents-grid" data-view-enter data-test="grid" hidden={items().length === 0}>
-        <for as="a" of={items()} key={a.id}>
-          <ship-list-tile variant="card" navigable={'/agents/' + a.id} use:hoverCard>
-            <span class="agents-card-letter">{a.letter}</span>
-            <if cond={a.providers && a.providers.length > 0}>
-              <div class="agents-card-providers">
-                <for as="p" of={a.providers.slice(0, 4)}>
-                  <ship-provider-blob provider={p} title={p}></ship-provider-blob>
-                </for>
-              </div>
-            </if>
-          </ship-list-tile>
-        </for>
-      </div>
-    </else></if>
-  </if>
+  <match on={agents}>
+    {loading => <p class="loading-copy" data-test="loading">Loading agents&hellip;</p>}
+    {error as err => <p class="loading-copy" data-test="error">Error loading agents: {err.message}</p>}
+    {ok as value =>
+      <if cond={items().length === 0}>
+        <ship-empty-state icon="sparkles" variant="default" size="lg" data-test="empty">
+          <span slot="title">No agents yet</span>
+        </ship-empty-state>
+      <else>
+        <div class="agents-grid" data-view-enter data-test="grid" hidden={items().length === 0}>
+          <for as="a" of={items()} key={a.id}>
+            <ship-list-tile variant="card" navigable={'/agents/' + a.id} use:hoverCard>
+              <span class="agents-card-letter">{a.letter}</span>
+              <if cond={a.providers && a.providers.length > 0}>
+                <div class="agents-card-providers">
+                  <for as="p" of={a.providers.slice(0, 4)}>
+                    <ship-provider-blob provider={p} title={p}></ship-provider-blob>
+                  </for>
+                </div>
+              </if>
+            </ship-list-tile>
+          </for>
+        </div>
+      </else></if>
+    }
+  </match>
 </div>
 
 ---
@@ -111,10 +107,11 @@ conformance smoke: full live surface in one document
           event: (attr_local)
           handler: (brace_expression
             (identifier)))
-        (dynamic_attr
-          name: (attr_name)
-          value: (brace_expression
-            (identifier)))
+        (text)
+        (interpolation
+          (identifier)
+          (identifier))
+        (text)
         (element
           tag: (tag_name)
           (static_attr
@@ -127,148 +124,102 @@ conformance smoke: full live surface in one document
         (text)
         close_tag: (tag_name))
       close_tag: (tag_name))
-    (while_loading_block
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (element
-        tag: (tag_name)
-        (static_attr
-          name: (attr_name)
-          value: (string_literal))
-        (static_attr
-          name: (attr_name)
-          value: (string_literal))
-        (text)
-        close_tag: (tag_name)))
-    (while_error_block
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (static_attr
-        name: (attr_name)
-        value: (string_literal))
-      (element
-        tag: (tag_name)
-        (static_attr
-          name: (attr_name)
-          value: (string_literal))
-        (static_attr
-          name: (attr_name)
-          value: (string_literal))
-        (text)
-        (interpolation
-          (identifier))
-        close_tag: (tag_name)))
-    (if_block
+    (match_block
       (dynamic_attr
         name: (attr_name)
         value: (brace_expression
           (identifier)))
-      (if_block
-        (dynamic_attr
-          name: (attr_name)
-          value: (brace_expression
-            (identifier)))
-        (element
-          tag: (tag_name)
-          (static_attr
-            name: (attr_name)
-            value: (string_literal))
-          (static_attr
-            name: (attr_name)
-            value: (string_literal))
-          (static_attr
-            name: (attr_name)
-            value: (string_literal))
-          (static_attr
-            name: (attr_name)
-            value: (string_literal))
-          (element
-            tag: (tag_name)
-            (static_attr
-              name: (attr_name)
-              value: (string_literal))
-            (text)
-            close_tag: (tag_name))
-          close_tag: (tag_name))
-        (else_clause
-          (element
-            tag: (tag_name)
-            (static_attr
-              name: (attr_name)
-              value: (string_literal))
-            (boolean_attr
-              (attr_name))
-            (static_attr
-              name: (attr_name)
-              value: (string_literal))
-            (dynamic_attr
-              name: (attr_name)
-              value: (brace_expression
-                (identifier)))
-            (for_block
-              (static_attr
-                name: (attr_name)
-                value: (string_literal))
-              (dynamic_attr
-                name: (attr_name)
-                value: (brace_expression
-                  (identifier)))
-              (dynamic_attr
-                name: (attr_name)
-                value: (brace_expression
-                  (identifier)))
-              (element
-                tag: (tag_name)
-                (static_attr
-                  name: (attr_name)
-                  value: (string_literal))
-                (dynamic_attr
-                  name: (attr_name)
-                  value: (brace_expression
-                    (identifier)))
-                (use_attr
-                  action: (attr_local))
-                (element
-                  tag: (tag_name)
-                  (static_attr
-                    name: (attr_name)
-                    value: (string_literal))
-                  (interpolation
-                    (identifier))
-                  close_tag: (tag_name))
-                (if_block
-                  (dynamic_attr
-                    name: (attr_name)
-                    value: (brace_expression
-                      (identifier)
-                      (identifier)))
-                  (element
-                    tag: (tag_name)
-                    (static_attr
-                      name: (attr_name)
-                      value: (string_literal))
-                    (for_block
-                      (static_attr
-                        name: (attr_name)
-                        value: (string_literal))
-                      (dynamic_attr
-                        name: (attr_name)
-                        value: (brace_expression
-                          (identifier)))
-                      (element
-                        tag: (tag_name)
-                        (dynamic_attr
-                          name: (attr_name)
-                          value: (brace_expression
-                            (identifier)))
-                        (dynamic_attr
-                          name: (attr_name)
-                          value: (brace_expression
-                            (identifier)))
-                        close_tag: (tag_name)))
-                    close_tag: (tag_name)))
-                close_tag: (tag_name)))
-            close_tag: (tag_name)))))
+      (interpolation
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))
+      (interpolation
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))
+      (interpolation
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)))
     close_tag: (tag_name)))

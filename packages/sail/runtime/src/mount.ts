@@ -312,7 +312,7 @@ export async function mount<Scope = Record<string, unknown>>(
   // `query()`/`queryKeyed()` entries) and
   // returns those signals flattened into `setupRet` via
   // `Object.assign({}, $scope, { __mount, hydrate })`. That `$scope.<name>`
-  // is the signal `bindWhileLoading` / `bindIf` close over; the mount-built
+  // is the signal `bindIf` / match kind arms close over; the mount-built
   // copy in `built.scope.<name>` is a server-rendered seed nobody reads.
   // Patching the seed leaves the template stuck on `loading` while the
   // route's signal idles in `error` (view-host: `ship` is undefined, the

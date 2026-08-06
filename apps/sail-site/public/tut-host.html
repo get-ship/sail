@@ -136,7 +136,7 @@
 
     // Mock-daemon service worker — intercepts /_deck/data/<source> SSE requests
     // and /_deck/api/<path> mutations, serving them from per-step scenarios.
-    // Tutorial steps that exercise live query(), {#while-loading}, or morphs
+    // Tutorial steps that exercise live query(), <match> load arms, or morphs
     // route through this SW. Registration is best-effort.
     async function registerSw() {
       if (!('serviceWorker' in navigator)) return null

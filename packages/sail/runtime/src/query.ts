@@ -217,8 +217,8 @@ export function unwrap<T>(sig: LiveSignal<T>): T | undefined {
 /**
  * Read a `LiveSignal<T>` and return its value or `fallback`. The
  * fallback applies for both `loading` and `error` states — callers
- * that need to discriminate should keep using the explicit `kind`
- * check or `<while-loading>`/`<while-error>` boundaries.
+ * that need to discriminate should use an explicit `kind` check or a
+ * `<match {sig()}>` with `{loading}` / `{error}` / `{ok}` arms.
  *
  * ```ts
  * derived: {

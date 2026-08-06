@@ -1,25 +1,21 @@
-// FILE_CAP_OVERRIDE: five sibling control-flow blocks ({#if}, {#for},
-// {#match}, <match>, ) all share a hoist /
-// hydrate / boundary-key plumbing pattern that's only legible
-// side-by-side. Splitting each into its own file would force the
-// shared `emit_branch` + `emit_boundary_hydrate` helpers behind a
-// `pub(super)` boundary and obscure the structural similarity.
+// FILE_CAP_OVERRIDE: four sibling control-flow blocks (<if>, <for>,
+// <match>, <when>) all share a hoist / hydrate / boundary-key plumbing
+// pattern that's only legible side-by-side. Splitting each into its own
+// file would force the shared `emit_branch` + `emit_boundary_hydrate`
+// helpers behind a `pub(super)` boundary and obscure the structural
+// similarity.
 
-//! Control-flow emit: `{#if}`, `{#for}`, `{#match}`, `<match>`,
-//! and ``.
+//! Control-flow emit: `<if>`, `<for>`, `<match>`, `<when>`.
 //!
 //! Phase 3b.5 (gate H): control-flow boundaries are direct-emit through
 //! the unified `hydrate(root, ctx)` function on the route's setup return.
-//! Each `{#if}` / `{#for}` / `{#match}` boundary still hoists a
+//! Each `<if>` / `<for>` / `<match>` / `<when>` boundary still hoists a
 //! `__wireBoundary_b<N>` const inside `setup(ctx)` so the legacy
 //! `__mount` path can call it inline; the hydrate function looks up the
 //! SSR'd `<sail-{kind} key="b<N>">` element via `collectElementMarkers`,
 //! swaps it for a Comment anchor, and invokes the same hoisted helper.
 //! `__b<N>_attach` named properties are no longer emitted — `attach()`
 //! drives boundaries through hydrate now, not through `wireBoundaries`.
-//!
-//! `<match>` / `` follow the same shape via
-//! `hydrateWhileLoading` / `hydrateWhileError` (gate G).
 
 use super::super::writer::{Writer, js_string};
 use super::TemplateEmitter;

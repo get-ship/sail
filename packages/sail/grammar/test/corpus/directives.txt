@@ -41,51 +41,6 @@ scope directive with declared props
     close_tag: (tag_name)))
 
 ==================
-while-loading boundary (brace block, not an element)
-==================
-
-<while-loading of="agents">
-  <p>loading</p>
-</while-loading>
-
----
-
-(source_file
-  (while_loading_block
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (element
-      tag: (tag_name)
-      (text)
-      close_tag: (tag_name))))
-
-==================
-while-error boundary with bound error var (brace block, not an element)
-==================
-
-<while-error as="err" of="agents">
-  <p>err: {err.message}</p>
-</while-error>
-
----
-
-(source_file
-  (while_error_block
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (static_attr
-      name: (attr_name)
-      value: (string_literal))
-    (element
-      tag: (tag_name)
-      (text)
-      (interpolation
-        (identifier))
-      close_tag: (tag_name))))
-
-==================
 style: attribute is refused syntax — must NOT parse as a directive
 ==================
 

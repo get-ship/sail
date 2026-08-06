@@ -1,10 +1,10 @@
 <!--
   Lesson 05 solved — all three states of a query() handle are explicit.
 
-  {#while-loading} covers the first paint and every refetch;
-  {#while-error} covers rejection; the value is only reachable behind
-  kind === 'ok'. The form writes through bind:value / bind:checked and
-  refetches by bumping a tracked signal read in the query's call args.
+  <match {team()}> covers loading / error / ok arms; the value is only
+  reachable behind `{ok as …}`. The form writes through bind:value /
+  bind:checked and refetches by bumping a tracked signal read in the
+  query's call args.
 -->
 
 <controller>

@@ -36,9 +36,9 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
     if trimmed.contains("__sail_retired_block__") {
         return Err(CompileError::new(
             "brace control-flow is not sail — use element blocks: \
-             <if {…}>…</if>, <for {…} as=\"item\" key={…}>…</for>, \
-             <match {…}>…</match>, <while-loading {sig}>…</while-loading>. \
-             Clauses are <else-if>, <else>, <case {…}>, <default> as children.",
+             <if {…}>…</if>, <for {items as item} key={…}>…</for>, \
+             <match {…}>…</match>, <when {token}>…</when>. \
+             Arms are `{pattern as binding => …}` / `{else => …}` inside the block.",
         )
         .with_category(location.to_string()));
     }

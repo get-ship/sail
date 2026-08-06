@@ -247,10 +247,9 @@ fn classify_layer(tag: &str) -> String {
             | "else-if"
             | "for"
             | "match"
+            | "when"
             | "case"
             | "default"
-            | "while-loading"
-            | "while-error"
     ) {
         return "l1-keyword".into();
     }

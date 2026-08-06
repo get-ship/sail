@@ -68,9 +68,9 @@ a template both reads and writes:
 1. **Track the deps** (TODO 1). Add the `attempt` signal and read both
    `attempt()` and `breakApi()` inside the query's call args. Now the
    "break the API" checkbox refetches on toggle — you never wired that.
-2. **Cover the states** (TODO 4 + 5). Add the `<while-loading>` and
-   `<while-error>` boundaries. Check "break the API", reload, and read
-   your 503 in a proper alert; uncheck and watch it recover.
+2. **Cover the states** (TODO 4 + 5). Add a `<match {team()}>` with
+   `{loading}`, `{error}`, and `{ok}` arms. Check "break the API", reload,
+   and read your 503 in a proper alert; uncheck and watch it recover.
 3. **Finish add()** (TODO 2 + 3). Call `directory.team.add({...})`,
    clear the inputs, bump `attempt`. Notice the roster refreshes through
    the same loading state as first paint — no bespoke "optimistic

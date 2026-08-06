@@ -52,11 +52,6 @@ export { bindIf } from './if'
 export type { BindIfOptions, BranchRender } from './if'
 export { bindWhen, acquireMediaQuery } from './when'
 export type { BindWhenOptions } from './when'
-export { bindWhileLoading, bindWhileError } from './while'
-export type {
-  BindWhileLoadingOptions,
-  BindWhileErrorOptions,
-} from './while'
 export { bindSlotEmpty } from './slot-empty'
 
 // ── ABI-only: action runner (use:) ─────────────────────────────────────────

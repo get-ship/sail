@@ -9,7 +9,7 @@ const counterSetup = (): { count: Signal<number> } => ({ count: signal(0) })
 // The agents fixture's live signal, declared the sanctioned way: the
 // controller seeds an envelope-shaped `queryKeyed` entry from the ship
 // client on ctx. `retry: false` so a rejection surfaces in the
-// `{#while-error}` branch immediately.
+// `<match>` `{error}` arm immediately.
 type AgentsShip = {
   ship: { agents: { summaries: () => Promise<{ items: { id: string; name: string }[] }> } }
 }
@@ -100,7 +100,7 @@ describe('hydrate — counter (state + on:click)', () => {
   })
 })
 
-describe('hydrate — agents (live data + while + if + for)', () => {
+describe('hydrate — agents (live data + match + if + for)', () => {
   it('walks loading → ok and renders the grid', async () => {
     const container = mkContainer()
     let resolveNow!: (v: { items: { id: string; name: string }[] }) => void
@@ -160,7 +160,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
     handle.dispose()
   })
 
-  it('does not flicker while-loading once already in :ok', async () => {
+  it('does not flicker loading once already in :ok', async () => {
     const container = mkContainer()
     const ship = {
       agents: {

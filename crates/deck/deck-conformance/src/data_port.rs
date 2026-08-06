@@ -181,7 +181,7 @@ pub async fn resolve_demo(chain: &str, args: &Value, store: &DemoStore) -> Resul
             Ok(json!({ "done": item.done }))
         }
         // `demo.boom` always returns an error — used by routes/boom to exercise
-        // the {#while-error} error-recovery branch without white-screening.
+        // the <match> {error} arm without white-screening.
         "demo.boom" => {
             Err("demo.boom: intentional error for the error-boundary showcase".to_string())
         }

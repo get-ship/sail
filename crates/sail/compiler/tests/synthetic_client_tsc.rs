@@ -274,7 +274,7 @@ fn client_contract_typechecks_green_across_real_surfaces() {
     // zero-arg setup function recovers correctly too — the `(_ctx)` dodge in
     // `feed`'s controller is no longer load-bearing, just untouched.
     let surfaces = [
-        // feed — <while-loading>/<while-error> + controller-side live() over
+        // feed — <match> load arms + controller-side live() over
         // host-dispatch (the real living-async surface).
         Surface {
             name: "feed",

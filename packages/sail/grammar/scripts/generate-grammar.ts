@@ -42,14 +42,16 @@ function tagFromOpen(open: string): string {
   return m[1]!;
 }
 
-/** Tag from clause like `<else-if {…}>` → `else-if`. */
-function tagFromClause(clause: string): string {
-  const m = clause.match(/^<\/?([a-z][a-z0-9-]*)/i);
-  if (!m) throw new Error(`clause is not element form: ${clause}`);
-  return m[1]!;
+/** Element-form clause open tag (`<else>`) vs arm form (`{else => …}`). */
+function isElementClause(clause: string): boolean {
+  return clause.trimStart().startsWith('<');
 }
 
-const NO_ARG_CLAUSES: Record<string, true> = { '<else>': true, '<default>': true };
+/** Tag from element-form clause like `<else>` → `else`. Arms have no tag. */
+function tagFromClause(clause: string): string | null {
+  const m = clause.match(/^<\/?([a-z][a-z0-9-]*)/i);
+  return m ? m[1]! : null;
+}
 
 function parseArgs(argv: string[]) {
   let vocab: string | undefined;
@@ -87,7 +89,9 @@ function blockRuleName(open: string): string {
 }
 
 function clauseRuleName(clause: string): string {
-  return `${tagFromClause(clause).replace(/-/g, '_')}_clause`;
+  const tag = tagFromClause(clause);
+  if (!tag) throw new Error(`arm clauses have no element rule: ${clause}`);
+  return `${tag.replace(/-/g, '_')}_clause`;
 }
 
 function attributeRuleName(prefix: string): string {
@@ -135,22 +139,25 @@ function generateGrammar(v: Vocabulary): string {
     .join('\n\n');
 
 
-  const allControlRules = [
-    ...v.blocks.map((b) => blockRuleName(b.open)),
-    ...[...new Map(v.blocks.flatMap((b) => b.clauses).map((c) => [c, c])).values()]
-      .map((c) => clauseRuleName(c)),
-  ];
+  // Block opens only — arm clauses (`{else => …}`) parse as interpolations.
+  const allControlRules = v.blocks.map((b) => blockRuleName(b.open));
   const blockNodeChoices = allControlRules
     .map((name) => `      $.${name},`)
     .join('\n');
 
-
-  // Clause rules are defined once each (e.g. `<else>` in both `<if>` and `<for>`).
-  const uniqueClauses = [...new Map(v.blocks.flatMap((b) => b.clauses).map((c) => [c, c])).values()];
-  const clauseRules = uniqueClauses
+  // Residual element-form clauses only (none under BLOCKS-1 arm syntax).
+  const uniqueElementClauses = [
+    ...new Map(
+      v.blocks
+        .flatMap((b) => b.clauses)
+        .filter(isElementClause)
+        .map((c) => [c, c]),
+    ).values(),
+  ];
+  const clauseRules = uniqueElementClauses
     .map((c) => {
       const rule = clauseRuleName(c);
-      const tag = tagFromClause(c);
+      const tag = tagFromClause(c)!;
       return `${rule}: $ => seq(
   ${jsString('<' + tag)},
   repeat($._attribute),
@@ -160,7 +167,6 @@ function generateGrammar(v: Vocabulary): string {
 ),`;
     })
     .join('\n\n');
-
 
   const allBlockRules = clauseRules
     ? `${blockRules}\n\n${clauseRules}`
@@ -428,25 +434,22 @@ function generateHighlights(v: Vocabulary): string {
     .map((p) => `"${p}"${' '.repeat(maxPrefixLen - p.length + 3)}@keyword.directive`)
     .join('\n');
 
-  const controlTags = [
-    ...new Set(
-      v.blocks.flatMap((b) => [tagFromOpen(b.open), ...b.clauses.map(tagFromClause)]),
-    ),
-  ];
-  const controlTagAlt = controlTags.join('|');
+  const controlTags = [...new Set(v.blocks.map((b) => tagFromOpen(b.open)))];
+  // Element-form residual clauses only (arms are brace interpolations).
+  for (const c of v.blocks.flatMap((b) => b.clauses).filter(isElementClause)) {
+    const t = tagFromClause(c);
+    if (t) controlTags.push(t);
+  }
+  const uniqueControlTags = [...new Set(controlTags)];
+  const controlTagAlt = uniqueControlTags.join('|');
   const openCloseMarkers: string[] = [];
-  for (const b of v.blocks) {
-    const tag = tagFromOpen(b.open);
+  for (const tag of uniqueControlTags) {
     openCloseMarkers.push(`<${tag}`, `</${tag}>`);
-    for (const c of b.clauses) {
-      const ct = tagFromClause(c);
-      openCloseMarkers.push(`<${ct}`, `</${ct}>`);
-    }
   }
   const uniqMarkers = [...new Set(openCloseMarkers)];
   const maxMarkerLen = Math.max(...uniqMarkers.map((m) => m.length), 1);
   const blockMarkers =
-    `; control-flow element tags\n((tag_name) @keyword.directive\n  (#match? @keyword.directive "^(${controlTagAlt})$"))\n` +
+    `; control-flow element tags (four blocks: if/for/match/when)\n((tag_name) @keyword.directive\n  (#match? @keyword.directive "^(${controlTagAlt})$"))\n` +
     uniqMarkers
       .map((m) => `"${m}"${' '.repeat(maxMarkerLen - m.length + 3)}@keyword.directive`)
       .join('\n');
@@ -487,9 +490,8 @@ function generateHighlights(v: Vocabulary): string {
 
 ; ── directive elements (recognised by tag name) ──────────────────────
 ; Highlight \`<scope>\` and \`<slot>\` distinctively so authors can see
-; the runtime contract at a glance. \`<data>\`, \`<state>\`, \`<component>\`,
-; \`<prop>\` are retired; element-form \`<while-loading>\`/\`<while-error>\`
-; are retired in favor of the brace-block forms below.
+; the runtime contract at a glance. Retired own-API tags are not listed
+; (DEEMBALM: generic unknown-vocabulary after scrub).
 ((tag_name) @keyword.directive
   (#match? @keyword.directive "^(${directiveElements})$"))
 
@@ -500,8 +502,7 @@ ${directivePrefixLines}
 "|"       @punctuation.delimiter
 
 ; ── template control flow markers ────────────────────────────────────
-; \`{:elif}\` is deliberately absent — the compiler's tokenizer only
-; brace form is retired.
+; Four blocks only: if / for / match / when. Arms are brace interpolations.
 ${blockMarkers}
 
 ; Brace boundaries.
@@ -511,12 +512,8 @@ ${blockMarkers}
 ; ── expression body (inside \`{…}\`) ─────────────────────────────────
 ; Identifiers in expression position are variable reads; member
 ; access shows up as a single \`.foo\` token (the \`_member\` rule).
+; Arm heads (\`{loading => …}\`, \`{ok as x => …}\`) land here too.
 ${identifierTargets.join('\n')}
-
-; For-loop binding pattern names are locals introduced by the loop.
-
-; \`{#while-error <errVar> of <signal>}\` — the error binding is a local
-; introduced by the block, scoped to its body.
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment

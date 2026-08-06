@@ -30,8 +30,6 @@ export {
   hydrateOn,
   hydrateBindValue,
   hydrateBindChecked,
-  hydrateWhileLoading,
-  hydrateWhileError,
 } from './hydrate'
 
 export { registerCustomProperties, isRegisteredThemeToken } from './register-properties'

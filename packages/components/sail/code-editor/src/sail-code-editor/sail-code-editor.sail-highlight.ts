@@ -4,11 +4,9 @@
  * Builds on top of `lang-html` (which already gives us tag/attribute
  * coloring) and adds highlighting for SAIL-specific constructs:
  *
- *   • Block directives — `{#if}`, `{#for x of list key={…}}`,
- *     `{#match}`, `{#while-loading of x}`,
- *     `{#while-error err of x}` and their `:else if` / `{:else}` /
- *     `{:case}` / `{:default}` continuations and `{/if}` / `{/for}` /
- *     `{/match}` / `{/while-loading}` / `{/while-error}` closers.
+ *   • Block directives — `<if>`, `<for>`, `<match>`, `<when>` and arm
+ *     forms `{else => …}` / `{loading => …}` / `{ok as x => …}`; legacy
+ *     brace-sigil scanners (`{#if}`, `{/if}`) remain for residual text.
  *   • Interpolation braces — `{expr}` in text content (distinct from
  *     plain text and from the directive forms above).
  *   • Directive attribute prefixes — `bind:` / `on:` / `class:` /
@@ -44,7 +42,7 @@ import { syntaxTree } from '@codemirror/language'
 // One class per logical token group; the theme below maps each onto a
 // `--syntax-*` design token so light/dark themes flow through.
 const CLS_DIRECTIVE_SIGIL = 'sail-sigil'       // # / : / /
-const CLS_DIRECTIVE_KW = 'sail-directive-kw'   // if / for / match / else / while-loading …
+const CLS_DIRECTIVE_KW = 'sail-directive-kw'   // if / for / match / when / else …
 const CLS_DIRECTIVE_EXPR = 'sail-directive-expr' // inner expression after the keyword
 const CLS_INTERP = 'sail-interp'               // {expr} interpolation
 const CLS_INTERP_BRACE = 'sail-interp-brace'   // the { and } themselves
@@ -75,11 +73,11 @@ const TS_KEYWORDS = new Set([
 
 // ─── Grammar tables (mirrors `crates/sail/compiler`) ──────────────────
 const OPEN_KEYWORDS = [
-  'if', 'for', 'match', 'when', 'while-loading', 'while-error',
+  'if', 'for', 'match', 'when',
 ] as const
 
 const CLOSE_KEYWORDS = [
-  'if', 'for', 'match', 'when', 'while-loading', 'while-error',
+  'if', 'for', 'match', 'when',
 ] as const
 
 const CONTINUATION_KEYWORDS = [
@@ -112,7 +110,7 @@ const ATTR_MODIFIERS_ARG = new Set(['key', 'debounce', 'throttle'])
 function matchOpenBody(inner: string): { keyword: string; bodyStart: number; bodyEnd: number } | null {
   if (inner[0] !== '#') return null
   const afterHash = inner.slice(1)
-  // Longest-first so `while-loading` / `while-error` win over `if`/`for`.
+  // Longest-first so multi-word keywords win over shorter prefixes.
   for (const kw of OPEN_KEYWORDS) {
     if (afterHash === kw) return { keyword: kw, bodyStart: 1, bodyEnd: inner.length }
     if (afterHash.startsWith(kw)) {
@@ -152,8 +150,7 @@ function matchContinuationBody(inner: string): { keyword: string; bodyStart: num
 
 /**
  * Match a closer body (the text after a `/` sigil). Recognises `/if`,
- * `/for`, `/match`, `/while-loading`, `/while-error`. Returns
- * the matched keyword, or `null`.
+ * `/for`, `/match`, `/when`. Returns the matched keyword, or `null`.
  */
 function matchCloseBody(inner: string): string | null {
   if (inner[0] !== '/') return null
@@ -585,8 +582,7 @@ const sailHighlightTheme = EditorView.theme({
     color: 'var(--syntax-punctuation, var(--syntax-operator, var(--syntax-keyword)))',
     fontWeight: '600',
   },
-  // `if`, `for`, `match`, `while-loading`, `while-error`, `else`, `case`,
-  // `default`, etc.
+  // `if`, `for`, `match`, `when`, `else`, `case`, `default`, etc.
   '& .sail-directive-kw': {
     color: 'var(--syntax-keyword)',
     fontWeight: '600',

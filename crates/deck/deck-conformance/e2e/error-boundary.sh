@@ -66,9 +66,9 @@ grep -qi "loading\|boom-fallback\|Error Boundary" "$WORK/boom.html" \
   || fail "SSR body does not contain the fallback content (no Loading/Error Boundary text)"
 ok "boom route SSR contains fallback content"
 
-grep -qi "while-error" "$WORK/boom.html" \
-  || fail "SSR body does not contain the while-error structural placeholder"
-ok "boom route SSR contains while-error placeholder"
+grep -qi "sail-match\|Something went wrong\|Error Boundary" "$WORK/boom.html" \
+  || fail "SSR body does not contain the match/error structural placeholder"
+ok "boom route SSR contains match/error placeholder"
 
 # ── 3. Browser: skip gracefully if no playwright or no browser installed ──────
 if ! command -v "$PW" >/dev/null 2>&1; then
