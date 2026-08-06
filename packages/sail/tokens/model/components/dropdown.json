@@ -19,6 +19,15 @@
             "cssName": "dropdown-foreground"
           }
         }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "dropdown-border"
+          }
+        }
       }
     }
   }

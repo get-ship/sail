@@ -19,6 +19,15 @@
             "cssName": "hover-card-foreground"
           }
         }
+      },
+      "border": {
+        "$value": "{component.popover.border}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "hover-card-border"
+          }
+        }
       }
     }
   }

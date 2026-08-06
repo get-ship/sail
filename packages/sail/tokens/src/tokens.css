@@ -337,11 +337,16 @@
   --combobox-foreground: var(--popover-foreground);
   --context-menu: var(--background);
   --context-menu-foreground: var(--foreground);
+  --context-menu-border: var(--border);
   --dialog: var(--surface-1);
   --dialog-foreground: var(--foreground);
   --dialog-border: var(--border);
+  --dialog-divider: var(--border-subtle);
+  --dialog-footer: var(--muted);
+  --dialog-muted-foreground: var(--muted-foreground);
   --dropdown: var(--background);
   --dropdown-foreground: var(--foreground);
+  --dropdown-border: var(--border);
   --empty-state: var(--muted);
   --empty-state-foreground: var(--muted-foreground);
   --empty-state-border: var(--border);
@@ -365,6 +370,7 @@
   --fieldset-border: var(--border);
   --hover-card: var(--popover);
   --hover-card-foreground: var(--popover-foreground);
+  --hover-card-border: var(--popover-border);
   --kbd: var(--muted);
   --kbd-foreground: var(--foreground);
   --kbd-border: var(--border);
@@ -386,6 +392,7 @@
   --page-current-foreground: var(--primary-foreground);
   --popover: var(--surface-1);
   --popover-foreground: var(--foreground);
+  --popover-border: var(--border);
   --progress: var(--muted);
   --progress-fill: var(--primary);
   --prose-foreground: var(--foreground);

@@ -67,6 +67,7 @@
     "combobox",
     "combobox-foreground",
     "context-menu",
+    "context-menu-border",
     "context-menu-foreground",
     "control-frame",
     "control-h-2xs",
@@ -87,10 +88,14 @@
     "destructive-foreground",
     "dialog",
     "dialog-border",
+    "dialog-divider",
+    "dialog-footer",
     "dialog-foreground",
+    "dialog-muted-foreground",
     "display-font",
     "divider",
     "dropdown",
+    "dropdown-border",
     "dropdown-foreground",
     "duration-deliberate",
     "duration-fast",
@@ -151,6 +156,7 @@
     "heading-weight",
     "hover-bg",
     "hover-card",
+    "hover-card-border",
     "hover-card-foreground",
     "hover-strength",
     "hue-amber",
@@ -247,6 +253,7 @@
     "panel-w-side",
     "panel-w-toast",
     "popover",
+    "popover-border",
     "popover-foreground",
     "press-scale",
     "press-shadow",
@@ -486,14 +493,19 @@
     "combobox",
     "combobox-foreground",
     "context-menu",
+    "context-menu-border",
     "context-menu-foreground",
     "destructive",
     "destructive-foreground",
     "dialog",
     "dialog-border",
+    "dialog-divider",
+    "dialog-footer",
     "dialog-foreground",
+    "dialog-muted-foreground",
     "divider",
     "dropdown",
+    "dropdown-border",
     "dropdown-foreground",
     "empty-state",
     "empty-state-border",
@@ -519,6 +531,7 @@
     "foreground",
     "hover-bg",
     "hover-card",
+    "hover-card-border",
     "hover-card-foreground",
     "hue-amber",
     "hue-blue",
@@ -561,6 +574,7 @@
     "page-foreground",
     "page-hover-bg",
     "popover",
+    "popover-border",
     "popover-foreground",
     "primary",
     "primary-foreground",
@@ -2664,6 +2678,12 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "context-menu-border": {
+      "path": "component.context-menu.border",
+      "cssName": "context-menu-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "dialog": {
       "path": "component.dialog.bg",
       "cssName": "dialog",
@@ -2682,6 +2702,24 @@
       "type": "color",
       "value": "var(--border)"
     },
+    "dialog-divider": {
+      "path": "component.dialog.divider",
+      "cssName": "dialog-divider",
+      "type": "color",
+      "value": "var(--border-subtle)"
+    },
+    "dialog-footer": {
+      "path": "component.dialog.footer",
+      "cssName": "dialog-footer",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "dialog-muted-foreground": {
+      "path": "component.dialog.muted-fg",
+      "cssName": "dialog-muted-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
     "dropdown": {
       "path": "component.dropdown.bg",
       "cssName": "dropdown",
@@ -2693,6 +2731,12 @@
       "cssName": "dropdown-foreground",
       "type": "color",
       "value": "var(--foreground)"
+    },
+    "dropdown-border": {
+      "path": "component.dropdown.border",
+      "cssName": "dropdown-border",
+      "type": "color",
+      "value": "var(--border)"
     },
     "empty-state": {
       "path": "component.empty-state.bg",
@@ -2832,6 +2876,12 @@
       "type": "color",
       "value": "var(--popover-foreground)"
     },
+    "hover-card-border": {
+      "path": "component.hover-card.border",
+      "cssName": "hover-card-border",
+      "type": "color",
+      "value": "var(--popover-border)"
+    },
     "kbd": {
       "path": "component.kbd.bg",
       "cssName": "kbd",
@@ -2957,6 +3007,12 @@
       "cssName": "popover-foreground",
       "type": "color",
       "value": "var(--foreground)"
+    },
+    "popover-border": {
+      "path": "component.popover.border",
+      "cssName": "popover-border",
+      "type": "color",
+      "value": "var(--border)"
     },
     "progress": {
       "path": "component.progress.track",
@@ -3288,6 +3344,7 @@
     "component.combobox.bg": "combobox",
     "component.combobox.fg": "combobox-foreground",
     "component.context-menu.bg": "context-menu",
+    "component.context-menu.border": "context-menu-border",
     "component.context-menu.fg": "context-menu-foreground",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
@@ -3308,10 +3365,14 @@
     "color.destructive.foreground": "destructive-foreground",
     "component.dialog.bg": "dialog",
     "component.dialog.border": "dialog-border",
+    "component.dialog.divider": "dialog-divider",
+    "component.dialog.footer": "dialog-footer",
     "component.dialog.fg": "dialog-foreground",
+    "component.dialog.muted-fg": "dialog-muted-foreground",
     "typography.displayFont": "display-font",
     "color.divider": "divider",
     "component.dropdown.bg": "dropdown",
+    "component.dropdown.border": "dropdown-border",
     "component.dropdown.fg": "dropdown-foreground",
     "motion.duration.deliberate": "duration-deliberate",
     "motion.duration.fast": "duration-fast",
@@ -3372,6 +3433,7 @@
     "typography.heading.weight": "heading-weight",
     "interaction.hover.bg": "hover-bg",
     "component.hover-card.bg": "hover-card",
+    "component.hover-card.border": "hover-card-border",
     "component.hover-card.fg": "hover-card-foreground",
     "interaction.hover.strength": "hover-strength",
     "color.hue.amber": "hue-amber",
@@ -3468,6 +3530,7 @@
     "panel.w-side": "panel-w-side",
     "panel.w-toast": "panel-w-toast",
     "component.popover.bg": "popover",
+    "component.popover.border": "popover-border",
     "component.popover.fg": "popover-foreground",
     "control.press.scale": "press-scale",
     "control.press.shadow": "press-shadow",

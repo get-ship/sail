@@ -19,6 +19,15 @@
             "cssName": "popover-foreground"
           }
         }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "popover-border"
+          }
+        }
       }
     }
   }

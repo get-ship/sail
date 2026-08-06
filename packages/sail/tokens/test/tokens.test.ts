@@ -898,6 +898,14 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
       ['component.navbar.border', 'navbar-border'],
       ['component.empty-state.title', 'empty-state-title'],
       ['component.tab.border', 'tab-border'],
+      // Slice #4 — panel borders + dialog anatomy
+      ['component.popover.border', 'popover-border'],
+      ['component.dropdown.border', 'dropdown-border'],
+      ['component.context-menu.border', 'context-menu-border'],
+      ['component.hover-card.border', 'hover-card-border'],
+      ['component.dialog.divider', 'dialog-divider'],
+      ['component.dialog.footer', 'dialog-footer'],
+      ['component.dialog.muted-fg', 'dialog-muted-foreground'],
     ]
     for (const [path, cssName] of expected) {
       expect(reg.paths?.[path], path).toBe(cssName)
@@ -921,6 +929,13 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--navbar-border\s*:\s*var\(--border\)/)
     expect(css).toMatch(/--empty-state-title\s*:\s*var\(--foreground\)/)
     expect(css).toMatch(/--tab-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--popover-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--dropdown-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--context-menu-border\s*:\s*var\(--border\)/)
+    expect(css).toMatch(/--hover-card-border\s*:\s*var\(--popover-border\)/)
+    expect(css).toMatch(/--dialog-divider\s*:\s*var\(--border-subtle\)/)
+    expect(css).toMatch(/--dialog-footer\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--dialog-muted-foreground\s*:\s*var\(--muted-foreground\)/)
   })
 
   it('color surface includes brand + tone tokens and excludes space/text', () => {
