@@ -544,6 +544,142 @@ fn builds_a_zero_ship_product_app() {
     );
 }
 
+// ── sail create (EXT-1 E8) ──────────────────────────────────────────────────
+
+/// `sail create my-app` writes the external-app 4-entry tree + gitignore
+/// (with `.deck/`), and `sail check` on the result is green.
+#[test]
+fn create_writes_four_entry_tree_and_check_is_green() {
+    let tmp = TempDir::new().expect("tempdir");
+    let name = unique_stem("create-app");
+    let app = tmp.path().join(&name);
+
+    let out = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        out.status.success(),
+        "sail create failed (status {:?}):\nstdout:{}\nstderr:{}",
+        out.status,
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr),
+    );
+
+    // 4-entry tree: package.json, sail.config.jsonc, routes/, themes/
+    for rel in [
+        "package.json",
+        "sail.config.jsonc",
+        "routes/page.sail",
+        "themes/ship.json",
+    ] {
+        let p = app.join(rel);
+        assert!(p.exists(), "missing {rel} after sail create: {}", p.display());
+        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
+        assert!(len > 0, "empty {rel} after sail create");
+    }
+
+    // .gitignore enforces .deck/ never committed
+    let gi = std::fs::read_to_string(app.join(".gitignore")).expect("read .gitignore");
+    assert!(
+        gi.lines().any(|l| {
+            let t = l.trim().trim_start_matches('/');
+            t == ".deck/" || t == ".deck"
+        }),
+        "gitignore missing .deck/:\n{gi}"
+    );
+
+    // Registry-style deps only (no file: / workspace:*)
+    let pkg = std::fs::read_to_string(app.join("package.json")).expect("package.json");
+    assert!(
+        !pkg.contains("file:") && !pkg.contains("workspace:"),
+        "create package.json must use registry deps, not file:/workspace:\n{pkg}"
+    );
+    assert!(
+        pkg.contains("@ship/sail-runtime"),
+        "package.json missing @ship/sail-runtime:\n{pkg}"
+    );
+
+    // create → check path green
+    let check = Command::new(sail_bin())
+        .args(["check", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail check");
+    assert!(
+        check.status.success(),
+        "sail check after create failed (status {:?}):\nstdout:{}\nstderr:{}",
+        check.status,
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr),
+    );
+    let stderr = String::from_utf8_lossy(&check.stderr);
+    assert!(
+        !stderr.contains(".deck/ is tracked"),
+        "fresh create must not warn about tracked .deck:\n{stderr}"
+    );
+}
+
+/// `sail check` warns (does not fail) when `.deck/` is git-tracked.
+#[test]
+fn check_warns_when_deck_is_tracked() {
+    let tmp = TempDir::new().expect("tempdir");
+    let name = unique_stem("deck-tracked");
+    let app = tmp.path().join(&name);
+
+    let create = Command::new(sail_bin())
+        .args(["create", app.to_str().unwrap()])
+        .current_dir(tmp.path())
+        .output()
+        .expect("spawn sail create");
+    assert!(
+        create.status.success(),
+        "sail create failed: {}",
+        String::from_utf8_lossy(&create.stderr)
+    );
+
+    // Init a git repo in the app and force-add a .deck artifact despite gitignore.
+    let git = |args: &[&str]| {
+        let st = Command::new("git")
+            .args(args)
+            .current_dir(&app)
+            .output()
+            .expect("git");
+        assert!(
+            st.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&st.stderr)
+        );
+    };
+    git(&["init"]);
+    git(&["config", "user.email", "test@example.com"]);
+    git(&["config", "user.name", "test"]);
+    std::fs::create_dir_all(app.join(".deck")).expect("mkdir .deck");
+    std::fs::write(app.join(".deck").join("index.html"), "<html></html>\n").expect("write");
+    // -f forces through .gitignore so we can simulate a bad commit of build output.
+    git(&["add", "-f", ".deck/index.html"]);
+    git(&["commit", "-m", "track .deck by mistake"]);
+
+    let check = Command::new(sail_bin())
+        .args(["check", "."])
+        .current_dir(&app)
+        .output()
+        .expect("spawn sail check");
+    assert!(
+        check.status.success(),
+        "sail check must still succeed (warning only); status {:?}:\nstdout:{}\nstderr:{}",
+        check.status,
+        String::from_utf8_lossy(&check.stdout),
+        String::from_utf8_lossy(&check.stderr),
+    );
+    let stderr = String::from_utf8_lossy(&check.stderr);
+    assert!(
+        stderr.contains(".deck/ is tracked") || stderr.contains(".deck is tracked"),
+        "expected .deck tracked warning, got:\n{stderr}"
+    );
+}
+
 // ── sail surface (C-pack) ───────────────────────────────────────────────────
 
 #[test]
@@ -580,8 +716,8 @@ fn sail_help_lists_mvp_subcommands() {
     assert!(out.status.success());
     let help = String::from_utf8_lossy(&out.stdout);
     for cmd in [
-        "dev", "build", "scaffold", "tokens", "compile", "check", "lsp", "mcp", "op", "layout",
-        "doctor", "version",
+        "create", "dev", "build", "scaffold", "tokens", "compile", "check", "lsp", "mcp", "op",
+        "layout", "doctor", "version",
     ] {
         assert!(
             help.contains(cmd),

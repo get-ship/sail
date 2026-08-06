@@ -224,6 +224,10 @@ fn parse_op_target(target: &str) -> Result<(String, String)> {
 /// (ACTIONS-1 regime). That closes the escape hatch where a side module
 /// under studio carried `cssText` / `createElement` because only `.sail`
 /// templates were walked.
+///
+/// EXT-1 E8: when checking a directory (or a file inside a Sail project),
+/// warn if any path under `.deck/` is git-tracked — build output must never
+/// be committed. Warning only; does not fail the check.
 pub fn check(input: PathBuf, fix: String) -> Result<()> {
     let path = if input.is_absolute() {
         input
@@ -237,6 +241,9 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
             check_app_ts(&path)?;
         } else {
             check_one(&path, &fix)?;
+        }
+        if let Some(project) = find_project_root_for_hygiene(&path) {
+            warn_if_deck_tracked(&project);
         }
     } else if path.is_dir() {
         let mut files = Vec::new();
@@ -264,6 +271,8 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
                 failed += 1;
             }
         }
+        // Repo hygiene (EXT-1 E8): warn if `.deck/` is git-tracked.
+        warn_if_deck_tracked(&path);
         if failed > 0 {
             bail!("{failed}/{total} file(s) failed check");
         }
@@ -275,6 +284,110 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
         bail!("not a file or directory: {}", path.display());
     }
     Ok(())
+}
+
+/// Walk up from `start` looking for a Sail project root (`package.json` +
+/// `routes/` or sail.config). Used only for the `.deck` tracked warning.
+fn find_project_root_for_hygiene(start: &Path) -> Option<PathBuf> {
+    let mut cur = if start.is_file() {
+        start.parent()?
+    } else {
+        start
+    };
+    for _ in 0..16 {
+        let has_pkg = cur.join("package.json").is_file();
+        let has_routes = cur.join("routes").is_dir();
+        let has_cfg = cur.join("sail.config.jsonc").is_file()
+            || cur.join("sail.config.json").is_file();
+        if has_pkg && (has_routes || has_cfg) {
+            return Some(cur.to_path_buf());
+        }
+        cur = cur.parent()?;
+    }
+    None
+}
+
+/// If `project` is inside a git work tree and any path under `.deck/` is
+/// tracked, print a warning to stderr. Never fails; missing git is a no-op.
+fn warn_if_deck_tracked(project: &Path) {
+    let tracked = git_tracked_under_deck(project);
+    if tracked.is_empty() {
+        return;
+    }
+    let sample = tracked
+        .iter()
+        .take(3)
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(", ");
+    let more = if tracked.len() > 3 {
+        format!(" (+{} more)", tracked.len() - 3)
+    } else {
+        String::new()
+    };
+    eprintln!(
+        "sail check: warning: .deck/ is tracked by git ({sample}{more}) — \
+         build output must not be committed. Add `.deck/` to .gitignore \
+         and `git rm -r --cached .deck`."
+    );
+}
+
+/// Return paths under `<project>/.deck/` that git currently tracks.
+/// Empty when not a git work tree, git is missing, or nothing is tracked.
+///
+/// Pathspecs are repo-root relative so monorepo sub-apps (`apps/foo/.deck`)
+/// and external app roots (`.deck` at the work-tree root) both work.
+fn git_tracked_under_deck(project: &Path) -> Vec<String> {
+    let top = match std::process::Command::new("git")
+        .args(["-C"])
+        .arg(project)
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+    {
+        Ok(out) if out.status.success() => {
+            let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if s.is_empty() {
+                return Vec::new();
+            }
+            PathBuf::from(s)
+        }
+        _ => return Vec::new(),
+    };
+
+    // Repo-relative prefix of the project ("" when project is the work-tree root).
+    let project_abs = project
+        .canonicalize()
+        .unwrap_or_else(|_| project.to_path_buf());
+    let top_abs = top.canonicalize().unwrap_or(top);
+    let rel = project_abs
+        .strip_prefix(&top_abs)
+        .map(|p| p.to_path_buf())
+        .unwrap_or_default();
+    let deck_prefix = if rel.as_os_str().is_empty() {
+        PathBuf::from(".deck")
+    } else {
+        rel.join(".deck")
+    };
+    let deck_str = deck_prefix.to_string_lossy().replace('\\', "/");
+    let glob = format!("{deck_str}/**");
+
+    let output = std::process::Command::new("git")
+        .args(["-C"])
+        .arg(&top_abs)
+        .args(["ls-files", "--", deck_str.as_str(), glob.as_str()])
+        .output();
+    let Ok(out) = output else {
+        return Vec::new();
+    };
+    if !out.status.success() {
+        return Vec::new();
+    }
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(|l| l.to_string())
+        .collect()
 }
 
 /// Lint a plain `apps/*/src/**/*.ts` module via sail-lint dispatch.
