@@ -316,6 +316,11 @@
         ],
         "default": "default"
       },
+      "dismissible": {
+        "type": "bool",
+        "default": "true",
+        "description": "ESC + backdrop can close. Destructive confirms set false so the user must pick an action."
+      },
       "side": {
         "values": [
           "center",

@@ -238,3 +238,23 @@ pub fn dialog_open_signal_expr(source: &str) -> String {
     }
     t.to_string()
 }
+
+/// True when a dialog's `dismissible` attr is a compile-time false literal.
+///
+/// Author forms: `dismissible={false}` or `dismissible="false"`. Presence,
+/// `true`, omitted, and non-literal expressions keep the runtime default
+/// (`true`) — emit stays two-arg `bindOpen(el, sig)`.
+pub fn dialog_dismissible_is_false(attrs: &[AttrInstr]) -> bool {
+    for a in attrs {
+        match a {
+            AttrInstr::Static { name, value, .. } if name == "dismissible" => {
+                return value.trim().eq_ignore_ascii_case("false");
+            }
+            AttrInstr::Expr { name, expr, .. } if name == "dismissible" => {
+                return expr.source.trim() == "false";
+            }
+            _ => {}
+        }
+    }
+    false
+}

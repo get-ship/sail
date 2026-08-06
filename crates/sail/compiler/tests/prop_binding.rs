@@ -102,6 +102,59 @@ fn dialog_open_emits_bind_open_not_prop() {
         "must not wrap open in a getter thunk:\n{}",
         r.js
     );
+    // Default / omitted dismissible → two-arg bindOpen (runtime default true).
+    assert!(
+        !r.js.contains("dismissible: false"),
+        "omitted dismissible must not pass opts:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn dialog_dismissible_false_emits_bind_open_opts() {
+    // Destructive confirm: author writes dismissible={false}; emit wires
+    // bindOpen third-arg opts so ESC/backdrop cannot close.
+    let src = r#"<dialog open={open()} dismissible={false}>confirm</dialog>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains("bindOpen(") && r.js.contains("{ dismissible: false }"),
+        "expected bindOpen(..., {{ dismissible: false }}), got:\n{}",
+        r.js
+    );
+    // Signal cell still stripped — opts are the third arg, not a getter wrap.
+    assert!(
+        r.js.contains("bindOpen(__e0, ($scope.open), { dismissible: false })")
+            || r.js.contains("bindOpen(__e0, (open), { dismissible: false })"),
+        "expected three-arg bindOpen with signal cell + opts, got:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn dialog_dismissible_true_stays_two_arg_bind_open() {
+    let src = r#"<dialog open={open()} dismissible={true}>ok</dialog>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains("bindOpen(") && !r.js.contains("dismissible: false"),
+        "true must not emit false opts:\n{}",
+        r.js
+    );
+    assert!(
+        !r.js.contains("{ dismissible:"),
+        "true stays two-arg (runtime default), got:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn dialog_dismissible_static_false_emits_opts() {
+    let src = r#"<dialog open={open()} dismissible="false">confirm</dialog>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains("{ dismissible: false }"),
+        "static dismissible=\"false\" must wire opts:\n{}",
+        r.js
+    );
 }
 
 #[test]

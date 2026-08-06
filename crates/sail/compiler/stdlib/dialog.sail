@@ -1,6 +1,7 @@
 <!--
   <dialog> — native modal / sheet. Style product only.
-  showModal() owns top-layer, ESC, focus-trap. size / backdrop / side are props.
+  showModal() owns top-layer, ESC, focus-trap. size / backdrop / side / dismissible
+  are props. dismissible=false → bindOpen opts (no ESC/backdrop dismiss).
   Structure (header/section/footer/::backdrop) + side docking: DIALOG_MAP.
 -->
 
@@ -9,6 +10,8 @@
     size: 'sm' | 'md' | 'lg' | 'full' = 'md'
     backdrop: 'default' | 'blur' | 'solid' = 'default'
     side: 'center' | 'start' | 'end' | 'top' | 'bottom' = 'center'
+    /** ESC + backdrop can close. Destructive confirms set false so the user must pick an action. */
+    dismissible = true
   
     onClose: () => void
     onDismiss: () => void
