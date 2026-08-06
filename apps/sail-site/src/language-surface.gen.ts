@@ -9458,7 +9458,7 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "key": "theme",
     "type": "{ default, defaultMode?, enabled: \"all\" | string[] }",
     "default": "no theme section — thin app emit (no catalog); package generate still full catalog",
-    "doc": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit"
+    "doc": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project themes/ always emit"
   },
   {
     "key": "layout",

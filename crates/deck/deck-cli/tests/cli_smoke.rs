@@ -383,7 +383,7 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
 // ── scaffold theme (C5) ─────────────────────────────────────────────────────
 
 /// `deck scaffold theme --project <tmp>` copies one catalog theme into
-/// `tokens/themes/` and writes a thin `sail.config.jsonc` theme section.
+/// `themes/` and writes a thin `sail.config.jsonc` theme section.
 #[test]
 fn scaffold_theme_copies_default_and_writes_config() {
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -399,8 +399,8 @@ fn scaffold_theme_copies_default_and_writes_config() {
     .status;
     assert!(status.success(), "deck scaffold theme exited {status:?}");
 
-    // Phase D default is modes-in-file primary `ship` (not residual twin ship-light).
-    let theme = project.join("tokens/themes/ship.json");
+    // Modern external layout: <project>/themes/<id>.json (EXT-1 E4).
+    let theme = project.join("themes/ship.json");
     assert!(
         theme.is_file(),
         "missing {} after scaffold theme",

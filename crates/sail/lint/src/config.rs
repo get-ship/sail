@@ -138,7 +138,7 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "theme",
         "{ default, defaultMode?, enabled: \"all\" | string[] }",
         "no theme section — thin app emit (no catalog); package generate still full catalog",
-        "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit",
+        "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project themes/ always emit",
         "POLICY",
     ),
     (

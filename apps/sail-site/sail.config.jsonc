@@ -1,5 +1,5 @@
 {
-  // App-level Sail config (theme + serve). Project themes: tokens/themes/*.json.
+  // App-level Sail config (theme + serve). Project themes: themes/*.json.
   // `enabled` catalog allowlist:
   //   omit / []  → thin (no catalog themes)
   //   ["ship"]   → only those catalog ids

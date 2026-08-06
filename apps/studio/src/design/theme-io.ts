@@ -421,7 +421,7 @@ export async function deleteThemeOn(
 export function emptyDesignState(): DesignSurfaceState {
   return {
     projectRoot: '',
-    themesDir: 'apps/studio/tokens/themes',
+    themesDir: 'apps/studio/themes',
     groupId: DEFAULT_GROUP_ID,
     decisionId: 'color',
     density: 'default',

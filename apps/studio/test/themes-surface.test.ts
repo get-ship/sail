@@ -88,7 +88,7 @@ function wireProjectAndCatalog(opts?: {
   setDesignOpsClient(
     mockClient({
       sailThemeList: async ({ path }) => {
-        if (String(path).includes('apps/studio/tokens/themes')) {
+        if (String(path).includes('apps/studio/themes')) {
           return { files: [...projectFiles] }
         }
         // Catalog = package model themes (ship is dual-mode and always registered).
@@ -175,7 +175,7 @@ describe('themes home — delete behavior (store)', () => {
 
     const ok = await deleteTheme('my-ship')
     expect(ok).toBe(true)
-    expect(deleted).toEqual(['apps/studio/tokens/themes/my-ship.json'])
+    expect(deleted).toEqual(['apps/studio/themes/my-ship.json'])
     const after = getDesignState()
     expect(after.themeId === '' || after.themeId === 'ship').toBe(true)
     if (after.themeId === '') {
@@ -271,7 +271,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     // Wait microtasks for deleteTheme promise
     await new Promise((r) => setTimeout(r, 20))
     expect(confirms.some((m) => /Delete project theme/i.test(m))).toBe(true)
-    expect(deleted).toEqual(['apps/studio/tokens/themes/my-ship.json'])
+    expect(deleted).toEqual(['apps/studio/themes/my-ship.json'])
   })
 
   it('delete confirm false → never calls delete', async () => {

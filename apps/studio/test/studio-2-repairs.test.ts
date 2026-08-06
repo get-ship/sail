@@ -52,8 +52,8 @@ describe('STUDIO-2 repairs + bar gates', () => {
   })
 
   it('R4/R5/B1: workbench theme + neutral empty borders', () => {
-    expect(existsSync(join(REPO, 'apps/studio/tokens/themes/studio.json'))).toBe(true)
-    const theme = readFileSync(join(REPO, 'apps/studio/tokens/themes/studio.json'), 'utf8')
+    expect(existsSync(join(REPO, 'apps/studio/themes/studio.json'))).toBe(true)
+    const theme = readFileSync(join(REPO, 'apps/studio/themes/studio.json'), 'utf8')
     expect(theme).toMatch(/"themeId":\s*"studio"/)
     expect(theme).toMatch(/Fraunces/)
     // Warm shadows (not cool hue 250)

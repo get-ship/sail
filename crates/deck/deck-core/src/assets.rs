@@ -1153,7 +1153,7 @@ mod tests {
             "missing sail-project meta: {html}"
         );
         assert!(
-            html.contains("name=\"sail-project-themes\" content=\"apps/my-app/tokens/themes\""),
+            html.contains("name=\"sail-project-themes\" content=\"apps/my-app/themes\""),
             "missing sail-project-themes meta: {html}"
         );
     }
