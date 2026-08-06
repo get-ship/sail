@@ -309,6 +309,7 @@
   --accordion-chevron: var(--muted-foreground);
   --alert: var(--surface-1);
   --alert-foreground: var(--foreground);
+  --alert-border: var(--border);
   --alert-stripe: var(--muted-foreground);
   --avatar: var(--muted);
   --avatar-foreground: var(--foreground);
@@ -344,6 +345,7 @@
   --empty-state: var(--muted);
   --empty-state-foreground: var(--muted-foreground);
   --empty-state-border: var(--border);
+  --empty-state-title: var(--foreground);
   --error-boundary: var(--muted);
   --error-boundary-border: var(--destructive);
   --error-boundary-foreground: var(--foreground);
@@ -377,6 +379,7 @@
   --meter-sub-suboptimum: var(--destructive);
   --navbar: var(--background);
   --navbar-foreground: var(--foreground);
+  --navbar-border: var(--border);
   --page-foreground: var(--foreground);
   --page-hover-bg: var(--muted);
   --page-current-bg: var(--primary);
@@ -405,6 +408,7 @@
   --tab-foreground: var(--muted-foreground);
   --tab-selected-foreground: var(--foreground);
   --tab-selected-bg: var(--background);
+  --tab-border: var(--border);
   --table-foreground: var(--foreground);
   --table-muted-foreground: var(--muted-foreground);
   --table-stripe: var(--surface-2);
@@ -417,6 +421,7 @@
   --toast: var(--background);
   --toast-foreground: var(--foreground);
   --toast-border: var(--border);
+  --toast-stripe: var(--foreground);
   --toggle-group: var(--muted);
   --toggle-group-border: var(--border);
   --toggle: var(--background);

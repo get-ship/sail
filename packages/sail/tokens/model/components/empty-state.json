@@ -1,5 +1,5 @@
 {
-  "$description": "Empty-state component tokens. Defaults alias muted surface ramp.",
+  "$description": "Empty-state component tokens. Defaults alias muted surface ramp; title aliases foreground for contrast.",
   "component": {
     "empty-state": {
       "bg": {
@@ -26,6 +26,15 @@
         "$extensions": {
           "ship": {
             "cssName": "empty-state-border"
+          }
+        }
+      },
+      "title": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "empty-state-title"
           }
         }
       }

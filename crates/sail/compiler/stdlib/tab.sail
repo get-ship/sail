@@ -36,7 +36,7 @@
   compound({ variant: pill }, style({ paint: borderBWidth(0).radius(sm) })),
   compound({ variant: enclosed }, style({ paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) })),
   when({
-    hover: style({ paint: fg(foreground) }),
+    hover: style({ paint: fg(tab-selected-foreground) }),
     selected: style({ paint: fg(tab-selected-foreground).borderB(primary), text: fontWeight(semibold) }),
     focus: style({ paint: outline(solid).outline(ring-width).outline(ring).outlineOffset(ring-inset) }),
     disabled: style({ paint: opacity(50).cursor(not-allowed) }),
@@ -45,7 +45,7 @@
     selected: style({ paint: fg(tab-selected-foreground).bg(tab-selected-bg).shadow(xs).borderB(transparent) }),
   })),
   compound({ variant: enclosed }, when({
-    selected: style({ paint: fg(tab-selected-foreground).border(border).bg(tab-selected-bg).translateY(px) }),
+    selected: style({ paint: fg(tab-selected-foreground).border(tab-border).bg(tab-selected-bg).translateY(px) }),
   })),
 ])
 

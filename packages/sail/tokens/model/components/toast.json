@@ -1,5 +1,5 @@
 {
-  "$description": "Toast component tokens. Defaults alias globals; themes may override component.toast.* only.",
+  "$description": "Toast component tokens. Defaults alias globals; themes may override component.toast.* only. Default start-stripe aliases foreground; tone matrices still spend the semantic palette.",
   "component": {
     "toast": {
       "bg": {
@@ -26,6 +26,15 @@
         "$extensions": {
           "ship": {
             "cssName": "toast-border"
+          }
+        }
+      },
+      "stripe": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toast-stripe"
           }
         }
       }

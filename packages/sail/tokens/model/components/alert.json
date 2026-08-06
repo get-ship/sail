@@ -20,6 +20,15 @@
           }
         }
       },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "alert-border"
+          }
+        }
+      },
       "stripe": {
         "$value": "{color.muted.foreground}",
         "$type": "color",

@@ -28,6 +28,7 @@
     "active-bg",
     "active-strength",
     "alert",
+    "alert-border",
     "alert-foreground",
     "alert-stripe",
     "avatar",
@@ -106,6 +107,7 @@
     "empty-state",
     "empty-state-border",
     "empty-state-foreground",
+    "empty-state-title",
     "error-boundary",
     "error-boundary-border",
     "error-boundary-foreground",
@@ -209,6 +211,7 @@
     "muted",
     "muted-foreground",
     "navbar",
+    "navbar-border",
     "navbar-foreground",
     "page-current-bg",
     "page-current-foreground",
@@ -373,6 +376,7 @@
     "syntax-tag",
     "syntax-type",
     "syntax-variable",
+    "tab-border",
     "tab-foreground",
     "tab-list",
     "tab-list-border",
@@ -401,6 +405,7 @@
     "toast",
     "toast-border",
     "toast-foreground",
+    "toast-stripe",
     "toggle",
     "toggle-border",
     "toggle-foreground",
@@ -452,6 +457,7 @@
     "accordion-hover-bg",
     "active-bg",
     "alert",
+    "alert-border",
     "alert-foreground",
     "alert-stripe",
     "avatar",
@@ -492,6 +498,7 @@
     "empty-state",
     "empty-state-border",
     "empty-state-foreground",
+    "empty-state-title",
     "error-boundary",
     "error-boundary-border",
     "error-boundary-foreground",
@@ -547,6 +554,7 @@
     "muted",
     "muted-foreground",
     "navbar",
+    "navbar-border",
     "navbar-foreground",
     "page-current-bg",
     "page-current-foreground",
@@ -615,6 +623,7 @@
     "syntax-tag",
     "syntax-type",
     "syntax-variable",
+    "tab-border",
     "tab-foreground",
     "tab-list",
     "tab-list-border",
@@ -633,6 +642,7 @@
     "toast",
     "toast-border",
     "toast-foreground",
+    "toast-stripe",
     "toggle",
     "toggle-border",
     "toggle-foreground",
@@ -2486,6 +2496,12 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "alert-border": {
+      "path": "component.alert.border",
+      "cssName": "alert-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "alert-stripe": {
       "path": "component.alert.stripe",
       "cssName": "alert-stripe",
@@ -2696,6 +2712,12 @@
       "type": "color",
       "value": "var(--border)"
     },
+    "empty-state-title": {
+      "path": "component.empty-state.title",
+      "cssName": "empty-state-title",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
     "error-boundary": {
       "path": "component.error-boundary.bg",
       "cssName": "error-boundary",
@@ -2894,6 +2916,12 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "navbar-border": {
+      "path": "component.navbar.border",
+      "cssName": "navbar-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "page-foreground": {
       "path": "component.page.fg",
       "cssName": "page-foreground",
@@ -3068,6 +3096,12 @@
       "type": "color",
       "value": "var(--background)"
     },
+    "tab-border": {
+      "path": "component.tab.border",
+      "cssName": "tab-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "table-foreground": {
       "path": "component.table.fg",
       "cssName": "table-foreground",
@@ -3140,6 +3174,12 @@
       "type": "color",
       "value": "var(--border)"
     },
+    "toast-stripe": {
+      "path": "component.toast.stripe",
+      "cssName": "toast-stripe",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
     "toggle-group": {
       "path": "component.toggle-group.bg",
       "cssName": "toggle-group",
@@ -3209,6 +3249,7 @@
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
     "component.alert.bg": "alert",
+    "component.alert.border": "alert-border",
     "component.alert.fg": "alert-foreground",
     "component.alert.stripe": "alert-stripe",
     "component.avatar.bg": "avatar",
@@ -3287,6 +3328,7 @@
     "component.empty-state.bg": "empty-state",
     "component.empty-state.border": "empty-state-border",
     "component.empty-state.fg": "empty-state-foreground",
+    "component.empty-state.title": "empty-state-title",
     "component.error-boundary.bg": "error-boundary",
     "component.error-boundary.border": "error-boundary-border",
     "component.error-boundary.fg": "error-boundary-foreground",
@@ -3390,6 +3432,7 @@
     "color.muted.default": "muted",
     "color.muted.foreground": "muted-foreground",
     "component.navbar.bg": "navbar",
+    "component.navbar.border": "navbar-border",
     "component.navbar.fg": "navbar-foreground",
     "component.page.current-bg": "page-current-bg",
     "component.page.current-fg": "page-current-foreground",
@@ -3554,6 +3597,7 @@
     "color.syntax.tag": "syntax-tag",
     "color.syntax.type": "syntax-type",
     "color.syntax.variable": "syntax-variable",
+    "component.tab.border": "tab-border",
     "component.tab.fg": "tab-foreground",
     "component.tab-list.bg": "tab-list",
     "component.tab-list.border": "tab-list-border",
@@ -3582,6 +3626,7 @@
     "component.toast.bg": "toast",
     "component.toast.border": "toast-border",
     "component.toast.fg": "toast-foreground",
+    "component.toast.stripe": "toast-stripe",
     "component.toggle.bg": "toggle",
     "component.toggle.border": "toggle-border",
     "component.toggle.fg": "toggle-foreground",

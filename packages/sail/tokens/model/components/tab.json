@@ -1,5 +1,5 @@
 {
-  "$description": "Tab component tokens (idle/selected paint). Defaults alias globals; themes may override component.tab.* only.",
+  "$description": "Tab component tokens (idle/selected paint). Defaults alias globals; themes may override component.tab.* only. Line selected rail still spends primary (brand).",
   "component": {
     "tab": {
       "fg": {
@@ -26,6 +26,15 @@
         "$extensions": {
           "ship": {
             "cssName": "tab-selected-bg"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "tab-border"
           }
         }
       }

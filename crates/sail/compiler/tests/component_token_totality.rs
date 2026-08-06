@@ -106,6 +106,58 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
             "button-hover-bg",
         ],
     ),
+    // Slice #3 — residual pack-bearing surfaces + shared field control face.
+    (
+        "alert",
+        &["alert", "alert-foreground", "alert-border", "alert-stripe"],
+    ),
+    (
+        "empty-state",
+        &[
+            "empty-state",
+            "empty-state-foreground",
+            "empty-state-border",
+            "empty-state-title",
+        ],
+    ),
+    (
+        "toast",
+        &["toast", "toast-foreground", "toast-border", "toast-stripe"],
+    ),
+    (
+        "navbar",
+        &["navbar", "navbar-foreground", "navbar-border"],
+    ),
+    (
+        "page",
+        &[
+            "page-foreground",
+            "page-hover-bg",
+            "page-current-bg",
+            "page-current-foreground",
+        ],
+    ),
+    (
+        "scroll-area",
+        &["scroll-area-thumb", "scroll-area-thumb-hover"],
+    ),
+    ("spinner", &["spinner-foreground", "spinner-track"]),
+    (
+        "tab",
+        &[
+            "tab-foreground",
+            "tab-selected-foreground",
+            "tab-selected-bg",
+            "tab-border",
+        ],
+    ),
+    // <radio> control face shares field surface with freeform input type=radio.
+    ("radio", &["radio-foreground", "field", "field-foreground"]),
+    // Combobox text field shares field pack (listbox still combobox*).
+    (
+        "combobox-field",
+        &["field", "field-foreground", "field-border", "field-border-hover"],
+    ),
 ];
 
 /// Default-rest free globals that a slice element must NOT use for its owned
@@ -155,6 +207,19 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* legend */", &["foreground"]),
     // Button-link default rest (shared button pack)
     ("/* a */", &["background", "foreground"]),
+    // Slice #3 residual defaults
+    ("/* alert */", &["border", "muted", "muted-foreground", "surface-1"]),
+    (
+        "/* empty-state */",
+        &["muted", "muted-foreground", "foreground"],
+    ),
+    ("/* toast */", &["background", "foreground", "muted", "muted-foreground"]),
+    ("/* navbar */", &["background", "foreground", "border"]),
+    ("/* page */", &["foreground", "muted", "primary", "background"]),
+    ("/* spinner */", &["muted-foreground", "border-subtle"]),
+    ("/* tab */", &["foreground", "border", "muted-foreground"]),
+    ("/* radio */", &["foreground", "background"]),
+    ("/* combobox */", &["background", "foreground"]),
 ];
 
 fn component_packs() -> BTreeMap<String, BTreeSet<String>> {
