@@ -937,12 +937,47 @@ mod tests {
     }
 
     #[test]
+    fn rewrite_box_only() {
+        let old = "style.pad(4).gap(2)";
+        let new = rewrite_style_expr(old);
+        assert_eq!(new, "style({ box: pad(4).gap(2) })");
+        emit_pair(old, &new);
+    }
+
+    #[test]
+    fn rewrite_paint_only() {
+        let old = "style.bg(primary).radius(md)";
+        let new = rewrite_style_expr(old);
+        assert_eq!(new, "style({ paint: bg(primary).radius(md) })");
+        emit_pair(old, &new);
+    }
+
+    #[test]
     fn rewrite_box_paint() {
         let old = "style.pad(4).gap(2).bg(primary).radius(md)";
         let new = rewrite_style_expr(old);
         assert_eq!(
             new,
             "style({ box: pad(4).gap(2), paint: bg(primary).radius(md) })"
+        );
+        emit_pair(old, &new);
+    }
+
+    #[test]
+    fn rewrite_animate_enter_only() {
+        let old = "style.enter({ opacity: 'fade' })";
+        let new = rewrite_style_expr(old);
+        assert_eq!(new, "style({ animate: enter({ opacity: 'fade' }) })");
+        emit_pair(old, &new);
+    }
+
+    #[test]
+    fn rewrite_animate_enter_exit_only() {
+        let old = "style.enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })";
+        let new = rewrite_style_expr(old);
+        assert_eq!(
+            new,
+            "style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })"
         );
         emit_pair(old, &new);
     }

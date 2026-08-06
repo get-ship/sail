@@ -893,68 +893,8 @@ mod tests {
         assert!(!css.contains("fade"), "{css}");
     }
 
-    /// Emit identity: old chain vs new channel form must mint the same
-    /// classes + CSS + motion attach list (trigger + config).
-    /// Old form uses [`parse_flat`] (migration dual); new form uses product parse.
-    fn emit_pair(old: &str, new: &str) {
-        let (s_old, d_old) = parse_flat(old);
-        let (s_new, d_new) = super::parse(new);
-        assert!(
-            d_old.is_empty(),
-            "old form diags for `{old}`: {:?}",
-            d_old.iter().map(|d| d.message()).collect::<Vec<_>>()
-        );
-        assert!(
-            d_new.is_empty(),
-            "new form diags for `{new}`: {:?}",
-            d_new.iter().map(|d| d.message()).collect::<Vec<_>>()
-        );
-        let (c_old, css_old) = lower_style(&s_old, &HashMap::new());
-        let (c_new, css_new) = lower_style(&s_new, &HashMap::new());
-        assert_eq!(
-            c_old, c_new,
-            "class list identity failed\nold: {old}\nnew: {new}\nold classes: {c_old}\nnew classes: {c_new}"
-        );
-        assert_eq!(
-            css_old, css_new,
-            "CSS identity failed\nold: {old}\nnew: {new}\nold css:\n{css_old}\nnew css:\n{css_new}"
-        );
-        let m_old = collect_motion_attaches(&s_old);
-        let m_new = collect_motion_attaches(&s_new);
-        assert_eq!(
-            m_old, m_new,
-            "motion attach identity failed\nold: {old}\nnew: {new}\nold motions: {m_old:?}\nnew motions: {m_new:?}"
-        );
-    }
-
-    #[test]
-    fn channels_emit_identity_box_only() {
-        emit_pair("style.pad(4).gap(2)", "style({ box: pad(4).gap(2) })");
-    }
-
-    #[test]
-    fn channels_emit_identity_paint_only() {
-        emit_pair(
-            "style.bg(primary).radius(md)",
-            "style({ paint: bg(primary).radius(md) })",
-        );
-    }
-
-    #[test]
-    fn channels_emit_identity_box_and_paint() {
-        emit_pair(
-            "style.pad(4).gap(2).bg(primary).radius(md)",
-            "style({ box: pad(4).gap(2), paint: bg(primary).radius(md) })",
-        );
-    }
-
-    #[test]
-    fn channels_emit_identity_when_hover_paint() {
-        emit_pair(
-            "style.bg(primary).when({ hover: style.bg(muted) })",
-            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })",
-        );
-    }
+    /// Codemod emit-identity (flat → channel) lives in `rewrite` tests via
+    /// `emit_pair` + `parse_flat`. Product tests below lock channel form only.
 
     #[test]
     fn channels_control_when_hover_still_green() {
@@ -1013,42 +953,45 @@ mod tests {
     #[test]
     fn channels_flatten_order_paint_after_box() {
         // Author may write paint before box; flatten order is always box then paint.
-        emit_pair(
-            "style.pad(4).bg(primary)",
-            "style({ paint: bg(primary), box: pad(4) })",
+        let (s_a, d_a) = parse("style({ paint: bg(primary), box: pad(4) })");
+        let (s_b, d_b) = parse("style({ box: pad(4), paint: bg(primary) })");
+        assert!(
+            d_a.is_empty() && d_b.is_empty(),
+            "diags a={:?} b={:?}",
+            d_a.iter().map(|d| d.message()).collect::<Vec<_>>(),
+            d_b.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
+        let (c_a, css_a) = lower_style(&s_a, &HashMap::new());
+        let (c_b, css_b) = lower_style(&s_b, &HashMap::new());
+        assert_eq!(c_a, c_b, "class order identity\na={c_a}\nb={c_b}");
+        assert_eq!(css_a, css_b, "css identity\na:\n{css_a}\nb:\n{css_b}");
     }
 
     #[test]
-    fn channels_emit_identity_animate_enter() {
-        emit_pair(
-            "style.enter({ opacity: 'fade' })",
-            "style({ animate: enter({ opacity: 'fade' }) })",
+    fn channels_motion_tail_after_spine_matches_animate_channel() {
+        // Flat motion tail after channel spine remains dual-accept with animate:.
+        // Both sides are product parse (no migration dual).
+        let (s_tail, d_tail) =
+            parse("style({ paint: bg(primary) }).enter({ opacity: 'fade' })");
+        let (s_ch, d_ch) =
+            parse("style({ paint: bg(primary), animate: enter({ opacity: 'fade' }) })");
+        assert!(
+            d_tail.is_empty() && d_ch.is_empty(),
+            "diags tail={:?} channel={:?}",
+            d_tail.iter().map(|d| d.message()).collect::<Vec<_>>(),
+            d_ch.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-    }
-
-    #[test]
-    fn channels_emit_identity_animate_enter_exit() {
-        emit_pair(
-            "style.enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })",
-            "style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })",
+        let (c_tail, css_tail) = lower_style(&s_tail, &HashMap::new());
+        let (c_ch, css_ch) = lower_style(&s_ch, &HashMap::new());
+        assert_eq!(c_tail, c_ch, "classes\ntail={c_tail}\nchannel={c_ch}");
+        assert_eq!(
+            css_tail, css_ch,
+            "css\ntail:\n{css_tail}\nchannel:\n{css_ch}"
         );
-    }
-
-    #[test]
-    fn channels_emit_identity_paint_plus_animate() {
-        emit_pair(
-            "style.bg(primary).enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })",
-            "style({ paint: bg(primary), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })",
-        );
-    }
-
-    #[test]
-    fn channels_emit_identity_flat_motion_tail_still_dual() {
-        // Flat motion after channel spine remains dual-accept with animate:.
-        emit_pair(
-            "style({ paint: bg(primary) }).enter({ opacity: 'fade' })",
-            "style({ paint: bg(primary), animate: enter({ opacity: 'fade' }) })",
+        assert_eq!(
+            collect_motion_attaches(&s_tail),
+            collect_motion_attaches(&s_ch),
+            "motion attach identity"
         );
     }
 
@@ -1075,17 +1018,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn channels_when_map_form_still_works_on_spine() {
-        emit_pair(
-            "style.pad(2).when({ hover: style.bg(muted) })",
-            // New form: cond when + channel object (no nested flat style.bg).
-            "style({ box: pad(2) }).when(hover, { paint: bg(muted) })",
-        );
-    }
-
     // ── Product-path locks (`lower_style_source` + channel-only `parse`) ──
-    // Flat form is migration-dual only via `parse_flat` (codemod emit-identity).
+    // Flat form is migration-dual only via `parse_flat` (codemod / rewrite tests).
     // Product `parse` and `lower_style_source` refuse flat chains.
 
     #[test]
