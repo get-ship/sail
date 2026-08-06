@@ -98,7 +98,7 @@ export default controller(({
 
 </controller>
 <if {loading()}>
-  <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
+  <skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
 {else-if {chart.error()} => <error-state></error-state>}{else => <stack>
     style({ box: w(fit) })
 

@@ -137,7 +137,7 @@ describe('<sail-gauge>', () => {
     // sail-skeleton via the engine isLoading discriminator.
     const { el } = mount(reg, 'sail-gauge', { value: '50', loading: true })
     await flush()
-    expect(root(el).querySelector('[skeleton]')).not.toBeNull()
+    expect(root(el).querySelector('.sail-skeleton')).not.toBeNull()
     expect(root(el).querySelector('svg[role="img"]')).toBeNull()
   })
 

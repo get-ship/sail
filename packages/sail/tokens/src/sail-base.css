@@ -152,7 +152,7 @@ a.sail-a:not([variant]):not(.sx-displayinlineflex):not(.sx-displayblock) {
   color: var(--foreground);
 }
 
-/* Status dot + skeleton — attribute floor (no L1 host; dissolved residual skins live here). */
+/* Status dot — attribute floor (no L1 host). Skeleton is L1 stdlib (.sail-skeleton). */
 :where(span[dot]) { display: inline-block; vertical-align: middle; flex-shrink: 0; width: var(--icon-size-3xs, 0.5rem); height: var(--icon-size-3xs, 0.5rem); border-radius: 999px; background: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
 :where(span[dot][size='sm']) { width: var(--space-1_5, 0.375rem); height: var(--space-1_5, 0.375rem); }
 :where(span[dot][size='md']) { width: var(--icon-size-3xs, 0.5rem); height: var(--icon-size-3xs, 0.5rem); }
@@ -165,18 +165,8 @@ a.sail-a:not([variant]):not(.sx-displayinlineflex):not(.sx-displayblock) {
 :where(span[dot][tone='accent']) { background: var(--accent); }
 :where(span[dot][tone='muted']) { background: var(--muted-foreground); }
 :where(span[dot][pulse]) { animation: var(--animate-pulse); }
-:where(span[skeleton]) { display: inline-block; vertical-align: middle; min-width: var(--space-8, 2rem); min-height: var(--space-3, 0.75rem); background: linear-gradient(90deg, var(--muted) 0%, color-mix(in oklch, var(--muted) 60%, var(--background)) 50%, var(--muted) 100%); background-size: 200% 100%; animation: var(--animate-shimmer); border-radius: var(--radius-sm); }
-:where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 5rem; }
-:where(span[skeleton][shape='circle']) { border-radius: 999px; aspect-ratio: 1; min-width: var(--space-7, 1.75rem); min-height: var(--space-7, 1.75rem); }
-:where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; height: var(--space-3, 0.75rem); min-height: 0; }
-:where(span[skeleton][shape='text'][size='sm'], span[skeleton][shape='line'][size='sm']) { height: var(--space-2); }
-:where(span[skeleton][shape='text'][size='md'], span[skeleton][shape='line'][size='md']) { height: var(--space-3); }
-:where(span[skeleton][shape='text'][size='lg'], span[skeleton][shape='line'][size='lg']) { height: var(--space-4); }
-:where(span[skeleton][shape='circle'][size='sm']) { width: var(--icon-size-2xl, 2rem); height: var(--icon-size-2xl, 2rem); min-width: 0; min-height: 0; }
-:where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); min-width: 0; min-height: 0; }
-:where(span[skeleton][shape='circle'][size='lg']) { width: 3rem; height: 3rem; min-width: 0; min-height: 0; }
 @media (prefers-reduced-motion: reduce) {
-  :where(span[dot][pulse]), :where(span[skeleton]) { animation: none !important; }
+  :where(span[dot][pulse]), :where(.sail-skeleton) { animation: none !important; }
 }
 :where(input, textarea, select) { appearance: none; }
 /* Listbox floor: ul reset + option anatomy for role='listbox' popovers

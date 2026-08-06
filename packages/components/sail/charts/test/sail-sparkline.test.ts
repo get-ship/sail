@@ -109,7 +109,7 @@ describe('<sail-sparkline>', () => {
     const { el } = mount(reg, 'sail-sparkline', { data: '1,2,3', loading: true })
     await flush()
     expect(root(el).querySelector('.sail-spinner')).not.toBeNull()
-    expect(root(el).querySelector('[skeleton]')).toBeNull()
+    expect(root(el).querySelector('.sail-skeleton')).toBeNull()
   })
 
   it('loading reflects to host attribute', () => {

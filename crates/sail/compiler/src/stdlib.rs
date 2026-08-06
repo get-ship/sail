@@ -26,6 +26,7 @@ pub struct StdlibElement {
 
 const SOURCES: &[(&str, &str)] = &[
     ("spinner", include_str!("../stdlib/spinner.sail")),
+    ("skeleton", include_str!("../stdlib/skeleton.sail")),
     ("button", include_str!("../stdlib/button.sail")),
     ("input", include_str!("../stdlib/input.sail")),
     ("textarea", include_str!("../stdlib/textarea.sail")),
@@ -169,9 +170,24 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
         "select" => Some(SELECT_MAP),
         "slider" => Some(RANGE_MAP),
         "radio" => Some(RADIO_INPUT_MAP),
+        // Shimmer composite (gradient + bg-size + animation) is not Style PE.
+        "skeleton" => Some(SKELETON_MAP),
         _ => None,
     }
 }
+
+/// Skeleton sheen — host self only. Geometry lives in skeleton.sail Style.
+const SKELETON_SHIMMER: &str =
+    "linear-gradient(90deg, var(--muted) 0%, color-mix(in oklch, var(--muted) 60%, var(--background)) 50%, var(--muted) 100%)";
+
+const SKELETON_MAP: &[DescRule] = &[DescRule {
+    sel: "",
+    paint: DescPaint(&[
+        ("background", SKELETON_SHIMMER),
+        ("background-size", "200% 100%"),
+        ("animation", "var(--animate-shimmer)"),
+    ]),
+}];
 
 // White check / dash on tone fill (product marks — not Style bgImage vocab).
 const CHECK_MARK: &str = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E\")";

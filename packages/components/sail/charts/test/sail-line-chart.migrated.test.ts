@@ -60,7 +60,7 @@ describe('<sail-line-chart> migration — engine-driven states', () => {
   it('loading attribute composes a sail-skeleton', async () => {
     const { el } = mount(reg, 'sail-line-chart', { series: TWO_SERIES, loading: true })
     await flush()
-    expect(root(el).querySelector('[skeleton]')).not.toBeNull()
+    expect(root(el).querySelector('.sail-skeleton')).not.toBeNull()
   })
 
   it('loading hides the data SVG', async () => {

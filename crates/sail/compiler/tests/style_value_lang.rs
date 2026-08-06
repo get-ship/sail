@@ -416,6 +416,7 @@ fn batch_e_residuals_compile_on_style_path() {
         ("breadcrumb", include_str!("../stdlib/breadcrumb.sail")),
         ("accordion", include_str!("../stdlib/accordion.sail")),
         ("kbd", include_str!("../stdlib/kbd.sail")),
+        ("skeleton", include_str!("../stdlib/skeleton.sail")),
         (
             "error-boundary",
             include_str!("../stdlib/error-boundary.sail"),
