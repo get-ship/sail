@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 import { signal, derived, effect, batch } from '../src/signal'
-import { mount, hostContext } from '../src/index'
-import type { RoutePayload } from '../src/index'
+import { mount, hostContext } from '../src/internal'
+import type { RoutePayload } from '../src/internal'
 
 // JSDOM has no EventSource; stub so mount() construction never fails on it.
 if (typeof (globalThis as { EventSource?: unknown }).EventSource === 'undefined') {

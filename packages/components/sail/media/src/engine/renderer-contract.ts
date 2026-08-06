@@ -12,7 +12,7 @@
 //
 // Authority: build-spec §"Backbone #2 — the ViewerRenderer contract".
 
-import { emit } from '@ship/sail-runtime'
+import { emit } from '@ship/sail-runtime/internal'
 import type { ViewerSource } from './types'
 
 export interface ViewerRendererProps {

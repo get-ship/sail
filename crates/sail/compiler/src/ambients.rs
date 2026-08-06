@@ -174,12 +174,20 @@ pub fn emit_types_dts() -> String {
     out.push_str(HEADER);
 
     // ── Runtime type imports (module so we can import; then augment global) ──
+    // Every tier-B public export from author-surface.json is either imported
+    // here (types) or declared under `declare global` below (values). Drift
+    // test: `pack_covers_author_surface_exports`.
     out.push_str(
         "import type {\n\
          \x20 Signal,\n\
          \x20 Derived,\n\
          \x20 ControllerDef,\n\
          \x20 ControllerScope,\n\
+         \x20 ControllerSetup,\n\
+         \x20 ControllerExport,\n\
+         \x20 ReadonlyState,\n\
+         \x20 ReadonlyView,\n\
+         \x20 MutableState,\n\
          \x20 QueryOpts,\n\
          \x20 Mutation,\n\
          \x20 MutationOpts,\n\
@@ -187,8 +195,56 @@ pub fn emit_types_dts() -> String {
          \x20 LiveState,\n\
          \x20 LiveSignal,\n\
          \x20 LiveSource,\n\
+         \x20 LiveValueOf,\n\
          \x20 OptimisticHandle,\n\
          \x20 QueryKey,\n\
+         \x20 StoreDef,\n\
+         \x20 StoreInstance,\n\
+         \x20 FormOptions,\n\
+         \x20 ListSource,\n\
+         \x20 Action,\n\
+         \x20 ActionResult,\n\
+         \x20 Disposer,\n\
+         \x20 TimelineValue,\n\
+         \x20 TimelineEasing,\n\
+         \x20 TimelineEasingName,\n\
+         \x20 TimelineStop,\n\
+         \x20 TimelineStopOptions,\n\
+         \x20 TimelineTrack,\n\
+         \x20 TimelineTracks,\n\
+         \x20 TimelineSignals,\n\
+         \x20 TimelineOptions,\n\
+         \x20 ClockOptions,\n\
+         \x20 ClockSignal,\n\
+         \x20 ScrollProgressOptions,\n\
+         \x20 SpringOptions,\n\
+         \x20 Theme,\n\
+         \x20 ThemePatch,\n\
+         \x20 ThemeTokenName,\n\
+         \x20 ThemeState,\n\
+         \x20 ThemePersist,\n\
+         \x20 ThemeDoc,\n\
+         \x20 ThemeApplyScopeOptions,\n\
+         \x20 ThemeScopePatch,\n\
+         \x20 LoweredThemeToken,\n\
+         \x20 LowerThemeResult,\n\
+         \x20 BoundaryHandle,\n\
+         \x20 BoundarySource,\n\
+         \x20 PropDef,\n\
+         \x20 ComponentDef,\n\
+         \x20 ComponentSetupContext,\n\
+         \x20 ComponentFactory,\n\
+         \x20 ComponentSchema,\n\
+         \x20 EffectScope,\n\
+         \x20 ContextKey,\n\
+         \x20 PersistedOpts,\n\
+         \x20 AnchorPlacement,\n\
+         \x20 ClipboardParam,\n\
+         \x20 HotkeyEntry,\n\
+         \x20 HotkeyHandler,\n\
+         \x20 HotkeysMap,\n\
+         \x20 Host,\n\
+         \x20 RouteSignals,\n\
          } from '@ship/sail-runtime'\n\
          \n",
     );
@@ -631,8 +687,79 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20\x20  opts?: QueryOpts,\n\
          \x20\x20): LiveSignal<T>\n\
          \x20 function invalidate(ref: unknown): void\n\
+         \x20 function unwrap<T>(live: LiveSignal<T>): T | undefined\n\
+         \x20 function unwrapOr<T>(live: LiveSignal<T>, fallback: T): T\n\
          \x20 /** Freeze-locked optimistic write handle (type-only until impl lands). */\n\
          \x20 type OptimisticWriteHandle<T> = OptimisticHandle<T>\n\
+         \n",
+    );
+
+    // Stores, timeline, compositions, theme, components — public author
+    // surface (TS-1 WI2.5). Import-or-ambient for typecheck; runtime still
+    // requires explicit import except RUNTIME_AMBIENT inject names.
+    out.push_str(
+        "  // ── Public author runtime (tier B; author-surface.json) ──\n\
+         \x20 function defineStore<Shape>(id: string, setup: () => Shape): StoreDef<Shape>\n\
+         \x20 function useStore<Shape>(def: StoreDef<Shape>): Shape\n\
+         \x20 function provideStore<Shape>(def: StoreDef<Shape>): Shape\n\
+         \x20 function peekStore<Shape>(def: StoreDef<Shape>): Shape | null\n\
+         \x20 function snapshotStore(inst: object): Record<string, unknown>\n\
+         \x20 function form<T extends Record<string, unknown>>(opts: FormOptions<T>): unknown\n\
+         \x20 function selection<T>(source: () => T[], keyOf?: (item: T) => string): unknown\n\
+         \x20 function filteredList<T>(source: () => T[], matches?: (item: T, q: string) => boolean): unknown\n\
+         \x20 function timeline<const T extends TimelineTracks>(\n\
+         \x20\x20  progress: () => number,\n\
+         \x20\x20  tracks: T,\n\
+         \x20\x20  options?: TimelineOptions,\n\
+         \x20\x20): TimelineSignals<T>\n\
+         \x20 function clock(durationMs: number, options?: ClockOptions): ClockSignal\n\
+         \x20 function scrollProgress(el: Element, options?: ScrollProgressOptions): Signal<number>\n\
+         \x20 function springValue(target: () => number, options?: SpringOptions): Signal<number>\n\
+         \x20 function debounce<Args extends unknown[]>(fn: (...args: Args) => void, ms: number): (...args: Args) => void\n\
+         \x20 function interval(fn: () => void, ms: number): void\n\
+         \x20 function persisted<T>(key: string, initial: T, opts?: PersistedOpts): Signal<T>\n\
+         \x20 function isSignal(v: unknown): v is Signal<unknown>\n\
+         \x20 function provideContext<T>(key: ContextKey<T>, value: T): void\n\
+         \x20 function injectContext<T>(key: ContextKey<T>): T | null\n\
+         \x20 function contextKey<T>(description: string): ContextKey<T>\n\
+         \x20 const theme: Theme\n\
+         \x20 function setThemePersist(persist: ThemePersist): void\n\
+         \x20 function hydrateTheme(): void\n\
+         \x20 function clearThemeOverrides(): void\n\
+         \x20 function clearThemeScope(scope?: string): void\n\
+         \x20 function lowerThemeDoc(doc: ThemeDoc): LowerThemeResult\n\
+         \x20 function attachBoundary(el: Element, handle: BoundaryHandle): void\n\
+         \x20 function detachBoundary(el: Element): void\n\
+         \x20 function findNearestBoundary(el: Element): BoundaryHandle | null\n\
+         \x20 function runProtected<T>(node: Element, source: BoundarySource, fn: () => T): T\n\
+         \x20 function component(def: ComponentDef): ComponentFactory\n\
+         \x20 function prop<T>(def: PropDef<T>): PropDef<T>\n\
+         \x20 function defineComponent(\n\
+         \x20\x20  tag: string,\n\
+         \x20\x20  schema: ComponentSchema,\n\
+         \x20\x20  factory: ComponentFactory,\n\
+         \x20\x20): void\n\
+         \x20 type ActionFn<P = unknown> = Action<P>\n\
+         \x20 type ActionResultType<P = unknown> = ActionResult<P>\n\
+         \x20 type DisposerType = Disposer\n\
+         \x20 const SailTimelineError: { new (message: string): Error }\n\
+         \x20 const SailMountOutsideSetupError: { new (message?: string): Error }\n\
+         \x20 // Public use: actions (import-or-ambient typecheck; use: still via compiler).\n\
+         \x20 const anchor: Action<unknown>\n\
+         \x20 const autosize: Action<void>\n\
+         \x20 const clipboard: Action<ClipboardParam | string | undefined>\n\
+         \x20 const clickOutside: Action<(() => void) | undefined>\n\
+         \x20 const contextMenu: Action<unknown>\n\
+         \x20 const dropzone: Action<unknown>\n\
+         \x20 const hotkeys: Action<HotkeysMap | HotkeyEntry[] | undefined>\n\
+         \x20 const icon: Action<string | undefined>\n\
+         \x20 function primeIconCache(map: Record<string, string>): void\n\
+         \x20 const rect: Action<string | undefined>\n\
+         \x20 const tipDescribe: Action<string | undefined>\n\
+         \x20 const virtualRow: Action<unknown>\n\
+         \x20 const zoomPan: Action<unknown>\n\
+         \x20 // mountAmbient is the package export; free name `mount` is ambient above.\n\
+         \x20 function mountAmbient(fn: (el: Element) => void | (() => void)): void\n\
          \n",
     );
 
@@ -957,6 +1084,52 @@ mod tests {
             dts.contains("type OptimisticWriteHandle"),
             "ambient pack must surface OptimisticWriteHandle alias"
         );
+    }
+
+    #[test]
+    fn pack_covers_author_surface_exports() {
+        // TS-1 WI2.5: every remaining public export (author-surface.json)
+        // appears in the ambient pack — type import or global declaration.
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
+        let path = root.join("packages/sail/runtime/author-surface.json");
+        let raw = fs::read_to_string(&path).expect("author-surface.json readable");
+        let v: serde_json::Value =
+            serde_json::from_str(&raw).expect("author-surface.json is JSON");
+        let exports = v
+            .get("exports")
+            .and_then(|e| e.as_object())
+            .expect("exports object");
+        assert!(
+            exports.len() >= 50,
+            "expected >=50 author-surface exports, got {}",
+            exports.len()
+        );
+        let dts = emit_types_dts();
+        let mut missing = Vec::new();
+        for name in exports.keys() {
+            if !dts.contains(name.as_str()) {
+                missing.push(name.clone());
+            }
+        }
+        assert!(
+            missing.is_empty(),
+            "ambient pack missing author-surface names:\n  {}",
+            missing.join("\n  ")
+        );
+        // Freeze list called out in SPEC-TS-1 WI2.5.
+        for must in [
+            "defineStore",
+            "useStore",
+            "provideStore",
+            "timeline",
+            "Action",
+            "query",
+            "mutation",
+            "signal",
+            "controller",
+        ] {
+            assert!(dts.contains(must), "freeze public name missing: {must}");
+        }
     }
 
     #[test]

@@ -20,13 +20,13 @@ export interface RuntimeCategoryDoc {
 }
 
 /** Documented tier-B allowlist size (author-surface.json). */
-export const AUTHOR_RUNTIME_COUNT = 108
+export const AUTHOR_RUNTIME_COUNT = 126
 
 export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
     "id": "reactivity",
     "summary": "Signals, effects, context, ambient lifecycle",
-    "count": 18
+    "count": 20
   },
   {
     "id": "controller",
@@ -46,12 +46,12 @@ export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
     "id": "data",
     "summary": "Query / mutation live values",
-    "count": 14
+    "count": 15
   },
   {
     "id": "theme",
     "summary": "Runtime theme state",
-    "count": 9
+    "count": 16
   },
   {
     "id": "motion",
@@ -61,7 +61,7 @@ export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
     "id": "actions",
     "summary": "Public use: actions + Action types (full use: table also on /sail/reference/actions)",
-    "count": 15
+    "count": 21
   },
   {
     "id": "errors",
@@ -72,6 +72,11 @@ export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
     "id": "components",
     "summary": "Declarative component() / defineComponent for pack authors",
     "count": 8
+  },
+  {
+    "id": "host",
+    "summary": "Host capability types on generated Scope (capabilities language page)",
+    "count": 2
   }
 ]
 
@@ -108,9 +113,9 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "category": "reactivity",
     "name": "debounce",
     "kind": "function",
-    "signature": "<T>(input: Signal<T>, ms: number): Signal<T>",
-    "doc": "A signal that lags `input` by `ms` milliseconds. Each write to `input` restarts the timer; the returned signal only updates after `ms` have elapsed without further writes.",
-    "loc": "src/signal.ts:730"
+    "signature": "<Args extends unknown[]>(fn: (...args: Args) => void, ms: number): (...args: Args) => void",
+    "doc": "Debounce `fn` by `ms`. Returns a function that delays each call until `ms` of quiet. Clears any pending timer when the current effect scope disposes.",
+    "loc": "src/timing.ts:22"
   },
   {
     "subpath": ".",
@@ -160,6 +165,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "reactivity",
+    "name": "interval",
+    "kind": "function",
+    "signature": "(fn: () => void, ms: number): void",
+    "doc": "Call `fn` every `ms` milliseconds for the life of the current effect scope. Clears the interval on dispose. No-op when `setInterval` is unavailable (SSR / non-browser hosts).",
+    "loc": "src/timing.ts:53"
+  },
+  {
+    "subpath": ".",
+    "category": "reactivity",
     "name": "isSignal",
     "kind": "function",
     "signature": "(v: unknown): v is Signal<unknown>",
@@ -187,6 +201,24 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "reactivity",
+    "name": "persisted",
+    "kind": "function",
+    "signature": "<T>(name: string, initial: T, opts?: PersistedOpts): Signal<T>",
+    "doc": "A writable signal that rehydrates from and writes through to web storage under `name` (JSON-serialized).",
+    "loc": "src/persisted.ts:43"
+  },
+  {
+    "subpath": ".",
+    "category": "reactivity",
+    "name": "PersistedOpts",
+    "kind": "type",
+    "signature": "export type PersistedOpts = { storage?: 'local' | 'session' debounceMs?: number }",
+    "doc": "",
+    "loc": "src/persisted.ts:12"
+  },
+  {
+    "subpath": ".",
+    "category": "reactivity",
     "name": "provideContext",
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, value: T, scope?: EffectScope): void",
@@ -201,15 +233,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "typeof SailMountOutsideSetupError",
     "doc": "Thrown by `mount()` when called outside a setup window — no scope is current. Named so authoring tooling and tests can match on it (`error.name === 'SailMountOutsideSetupError'`), unlike `onCleanup`, which silently no-ops outside a scope.",
     "loc": "src/effect-scope.ts:106"
-  },
-  {
-    "subpath": ".",
-    "category": "reactivity",
-    "name": "selector",
-    "kind": "function",
-    "signature": "<T>(source: Signal<T>): (key: T) => boolean",
-    "doc": "Membership selector — a derived-shaped accessor returning whether `key` matches `source()`'s current value. The point: when the source changes, only the two affected buckets (the OLD value and the NEW value) re-notify their subscribers. Other keys are left alone — no re-evaluation, no DOM thrash.",
-    "loc": "src/signal.ts:611"
   },
   {
     "subpath": ".",
@@ -434,7 +457,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface LiveSource<T> { subscribe: (sig: LiveSignal<T>) => () => void }",
     "doc": "PUSH data source (SSE / wss / live store). `subscribe` owns the signal: first push → `ok`, may later → `error`; returned disposer closes the connection. `query()` routes via `isLiveSource`.",
-    "loc": "src/live-state.ts:19"
+    "loc": "src/live-state.ts:40"
   },
   {
     "subpath": ".",
@@ -452,7 +475,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type LiveValueOf<R> = R extends LiveSource<infer U> ? U : Awaited<R>",
     "doc": "The value a client method call yields, unwrapping the push/pull union: a `LiveSource<U>` yields `U`, a `Promise<U>` yields `U`, else the value itself. The compiler-generated `Scope` uses this to type a `query()` signal's payload from its client method's declared return — e.g. `feed.clock(): LiveSource<Tick>` ⇒ `LiveValueOf<ReturnType<…>> = Tick`.",
-    "loc": "src/live-state.ts:30"
+    "loc": "src/live-state.ts:51"
   },
   {
     "subpath": ".",
@@ -461,7 +484,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(fn: (signal: AbortSignal) => Promise<T>, opts?: MutationOpts, __compilerAutoInvalidate?: QueryKey, __compilerInvalidates?: QueryKey[]): Mutation<T>",
     "doc": "Public write primitive. On success, invalidates `__compilerAutoInvalidate` (namespace of the mutated method) plus any `__compilerInvalidates` prefixes.",
-    "loc": "src/query.ts:129"
+    "loc": "src/query.ts:135"
   },
   {
     "subpath": ".",
@@ -470,7 +493,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface Mutation<T> { state: Signal<MutationState<T>> mutate: () => Promise<T> reset: () => void }",
     "doc": "",
-    "loc": "src/query.ts:104"
+    "loc": "src/query.ts:110"
   },
   {
     "subpath": ".",
@@ -479,7 +502,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface MutationOpts { invalidates?: unknown[] }",
     "doc": "Author-facing options. `invalidates` is method REFERENCES (never strings); the compiler erases it and passes resolved prefixes via `__compilerInvalidates`.",
-    "loc": "src/query.ts:100"
+    "loc": "src/query.ts:106"
   },
   {
     "subpath": ".",
@@ -488,7 +511,16 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type MutationState<T> = | { kind: 'idle' } | { kind: 'loading' } | { kind: 'ok'; value: T } | { kind: 'error'; error: Error }",
     "doc": "Mutation lifecycle: four states. Unlike `LiveState` (reads start fetching immediately), mutations need `idle` before the first call so \"about to run\" and \"running\" stay distinct for submit gating.",
-    "loc": "src/query.ts:90"
+    "loc": "src/query.ts:96"
+  },
+  {
+    "subpath": ".",
+    "category": "data",
+    "name": "OptimisticHandle",
+    "kind": "interface",
+    "signature": "export interface OptimisticHandle<T> { set(value: T | ((prev: T | undefined) => T)): void rollback(): void }",
+    "doc": "The freeze-locked optimistic write surface (SPEC-HARDENING-1 WI3 / S8).",
+    "loc": "src/live-state.ts:30"
   },
   {
     "subpath": ".",
@@ -497,7 +529,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>, opts?: QueryOpts, __compilerKeyFn?: () => QueryKey): Signal<LiveState<T>>",
     "doc": "Public read primitive. Compiled code supplies a hidden key-fn as the third arg; uncompiled calls without it throw (use `queryKeyed`).",
-    "loc": "src/query.ts:64"
+    "loc": "src/query.ts:70"
   },
   {
     "subpath": ".",
@@ -515,7 +547,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(keyFn: () => QueryKey, fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>, opts?: QueryOpts): Signal<LiveState<T>>",
     "doc": "Explicit-key read: tracked `keyFn`; each new key attaches to a different cache entry. Outer `Signal<LiveState<T>>` identity is stable across key changes. `Promise` → pull; `LiveSource` → push.",
-    "loc": "src/query.ts:31"
+    "loc": "src/query.ts:37"
   },
   {
     "subpath": ".",
@@ -524,7 +556,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type QueryOpts = NativeCacheOpts",
     "doc": "Options for `query()`/`queryKeyed()` (`staleTime`/`gcTime`/`retry`).",
-    "loc": "src/query.ts:24"
+    "loc": "src/query.ts:30"
   },
   {
     "subpath": ".",
@@ -533,7 +565,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: LiveSignal<T>): T | undefined",
     "doc": "Read a `LiveSignal<T>` and return its value or `undefined`.",
-    "loc": "src/query.ts:206"
+    "loc": "src/query.ts:212"
   },
   {
     "subpath": ".",
@@ -542,7 +574,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: LiveSignal<T>, fallback: T): T",
     "doc": "Read a `LiveSignal<T>` and return its value or `fallback`. The fallback applies for both `loading` and `error` states — callers that need to discriminate should keep using the explicit `kind` check or `<while-loading>`/`<while-error>` boundaries.",
-    "loc": "src/query.ts:223"
+    "loc": "src/query.ts:229"
   },
   {
     "subpath": ".",
@@ -551,7 +583,16 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): void",
     "doc": "Wipe ALL runtime theme overrides — both this session's previews and the committed overrides held in memory — and remove them from `:root`. Does NOT touch localStorage or the host backend (a full \"forget the persisted theme\" is `theme.commit({})` semantics plus a storage clear the host owns). Useful for a host tearing down / switching workspaces, and for test isolation.",
-    "loc": "src/theme.ts:217"
+    "loc": "src/theme.ts:213"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "clearThemeScope",
+    "kind": "function",
+    "signature": "(host: HTMLElement): void",
+    "doc": "Teardown a prior {@link theme.applyScope} on `host` — removes written custom properties and the theme/mode attrs this API set. Safe if never applied.",
+    "loc": "src/theme.ts:621"
   },
   {
     "subpath": ".",
@@ -560,7 +601,34 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): void",
     "doc": "Rehydrate committed overrides from localStorage and apply them to `:root`. The live-persistence boot step: a host's pre-paint script calls this so a committed live-preview survives a reload (the dev path needs no boot — the theme data file IS the source, and HMR re-themes). Safe to call server-side (no-op) and idempotent.",
-    "loc": "src/theme.ts:234"
+    "loc": "src/theme.ts:230"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "LoweredThemeToken",
+    "kind": "interface",
+    "signature": "export interface LoweredThemeToken { path: string cssName: string value: string cssValue: string type: string }",
+    "doc": "Leaf from the DTCG walk (mirrors compiler Token before css_value resolve).",
+    "loc": "src/theme.ts:284"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "lowerThemeDoc",
+    "kind": "function",
+    "signature": "(doc: ThemeDoc, mode?: string | null): LowerThemeResult",
+    "doc": "Lower a DTCG theme document for one mode into CSS custom-property writes.",
+    "loc": "src/theme.ts:438"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "LowerThemeResult",
+    "kind": "interface",
+    "signature": "export interface LowerThemeResult { mode: string themeId: string tokens: LoweredThemeToken[] patch: ThemeScopePatch }",
+    "doc": "",
+    "loc": "src/theme.ts:292"
   },
   {
     "subpath": ".",
@@ -569,16 +637,16 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(hook: ThemePersist | null): void",
     "doc": "Register (or clear) the host persistence hook. Call once at host startup. Same seam shape as `@ship/tokens`' `setThemeTransport` — the runtime names no daemon URL; the host plugs one in.",
-    "loc": "src/theme.ts:58"
+    "loc": "src/theme.ts:54"
   },
   {
     "subpath": ".",
     "category": "theme",
     "name": "theme",
     "kind": "const",
-    "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; }",
-    "doc": "`theme` — the sanctioned runtime theme-write hatch. A plain ambient API (`import { theme } from '@ship/sail-runtime'`), NOT `ctx`-scoped: a theme write is a GLOBAL `:root` write, so it needs no route scope.",
-    "loc": "src/theme.ts:262"
+    "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; readonly applyScope: (host: HTMLElement, options: ThemeApplyScopeOptions) => () => void; readonly clearScope: (host: HTMLElement) => void; }",
+    "doc": "`theme` — the sanctioned runtime theme-write hatch.",
+    "loc": "src/theme.ts:644"
   },
   {
     "subpath": ".",
@@ -587,7 +655,25 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Theme = typeof theme",
     "doc": "",
-    "loc": "src/theme.ts:269"
+    "loc": "src/theme.ts:654"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "ThemeApplyScopeOptions",
+    "kind": "interface",
+    "signature": "export interface ThemeApplyScopeOptions { doc: ThemeDoc mode?: string | null }",
+    "doc": "Options for {@link theme.applyScope}.",
+    "loc": "src/theme.ts:270"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "ThemeDoc",
+    "kind": "type",
+    "signature": "export type ThemeDoc = Record<string, unknown>",
+    "doc": "Loose DTCG theme document (modes-in-file or flat).",
+    "loc": "src/theme.ts:267"
   },
   {
     "subpath": ".",
@@ -596,7 +682,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemePatch = Record<ThemeTokenName, string>",
     "doc": "",
-    "loc": "src/theme.ts:31"
+    "loc": "src/theme.ts:27"
   },
   {
     "subpath": ".",
@@ -605,7 +691,16 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemePersist = (patch: ThemePatch) => void | Promise<void>",
     "doc": "Host persistence hook. Registered once at host startup via `setThemePersist`. - dev: serialize the patch into the app's theme data file (the `themes.ts` fork) so HMR re-themes and it round-trips in source. - live: write-through to a host-configured backend. Omitted ⇒ persistence is localStorage-only (the default, owner-recommended). Fire-and-forget; a rejected promise is swallowed (the local cache is still correct).",
-    "loc": "src/theme.ts:51"
+    "loc": "src/theme.ts:47"
+  },
+  {
+    "subpath": ".",
+    "category": "theme",
+    "name": "ThemeScopePatch",
+    "kind": "type",
+    "signature": "export type ThemeScopePatch = Record<string, string>",
+    "doc": "One lowered token: css custom-property name (`--x`) → CSS value.",
+    "loc": "src/theme.ts:281"
   },
   {
     "subpath": ".",
@@ -614,7 +709,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ThemeState { id: string tokens: Record<string, string> }",
     "doc": "What `theme.current()` reports.",
-    "loc": "src/theme.ts:34"
+    "loc": "src/theme.ts:30"
   },
   {
     "subpath": ".",
@@ -623,7 +718,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ThemeTokenName = string",
     "doc": "A patch maps token names (`--foo`) to CSS values. TokenName is validated at write time against the registered `@property` tokens (or a declared `:root` var); a non-token key is refused.",
-    "loc": "src/theme.ts:30"
+    "loc": "src/theme.ts:26"
   },
   {
     "subpath": ".",
@@ -829,8 +924,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "autosize",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Make a `<textarea>` grow to fit its content. Reflows on input and once on mount. `use:autosize` — no parameter.",
-    "loc": "src/actions/autosize.ts:19"
+    "doc": "Make a `<textarea>` grow in height, or a single-line `<input>` grow in width, to fit its content. Reflows on input and once on mount. `use:autosize` — no parameter.",
+    "loc": "src/actions/autosize.ts:23"
   },
   {
     "subpath": ".",
@@ -844,10 +939,28 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "actions",
+    "name": "clipboard",
+    "kind": "function",
+    "signature": "(node: Element, param: ClipboardParam): void | ActionResult<ClipboardParam>",
+    "doc": "Copy param text (or host text content) to the clipboard on click.",
+    "loc": "src/actions/clipboard.ts:47"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
+    "name": "ClipboardParam",
+    "kind": "type",
+    "signature": "export type ClipboardParam = | string | (() => string) | { text?: string | (() => string) onCopy?: () => void } | undefined",
+    "doc": "",
+    "loc": "src/actions/clipboard.ts:13"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
     "name": "contextMenu",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from the widget closed impl; light-dismiss + top-layer come from the native popover.",
+    "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from `use:menu`; light-dismiss + top-layer come from the native popover.",
     "loc": "src/actions/context-menu.ts:10"
   },
   {
@@ -871,11 +984,47 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "actions",
+    "name": "HotkeyEntry",
+    "kind": "type",
+    "signature": "export type HotkeyEntry = | HotkeyHandler | { run: HotkeyHandler allowInInputs?: boolean }",
+    "doc": "",
+    "loc": "src/actions/hotkeys.ts:13"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
+    "name": "HotkeyHandler",
+    "kind": "type",
+    "signature": "export type HotkeyHandler = (e: KeyboardEvent) => void",
+    "doc": "",
+    "loc": "src/actions/hotkeys.ts:11"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
+    "name": "hotkeys",
+    "kind": "function",
+    "signature": "(node: Element, param: HotkeysMap | undefined): void | ActionResult<HotkeysMap | undefined>",
+    "doc": "Listen for key combos on the document while the host is mounted. Handlers receive the KeyboardEvent; default prevented when a match fires.",
+    "loc": "src/actions/hotkeys.ts:44"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
+    "name": "HotkeysMap",
+    "kind": "type",
+    "signature": "export type HotkeysMap = Record<string, HotkeyEntry>",
+    "doc": "Map of key-spec → handler (or handler + opts).",
+    "loc": "src/actions/hotkeys.ts:22"
+  },
+  {
+    "subpath": ".",
+    "category": "actions",
     "name": "icon",
     "kind": "function",
     "signature": "(node: Element): { destroy: () => void; }",
     "doc": "",
-    "loc": "src/actions/icon.ts:50"
+    "loc": "src/actions/icon.ts:80"
   },
   {
     "subpath": ".",
@@ -884,7 +1033,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(glyphs: Record<string, string>): void",
     "doc": "",
-    "loc": "src/actions/icon.ts:24"
+    "loc": "src/actions/icon.ts:20"
   },
   {
     "subpath": ".",
@@ -1047,5 +1196,23 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export interface PropDef<T> { type: 'string' | 'bool' | 'number' | 'union' | 'property' default?: T reflect?: boolean bindable?: boolean values?: readonly string[] }",
     "doc": "Declarative description of a component prop.",
     "loc": "src/component-factory.ts:24"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "Host",
+    "kind": "interface",
+    "signature": "export interface Host {}",
+    "doc": "",
+    "loc": "src/host.ts:25"
+  },
+  {
+    "subpath": ".",
+    "category": "host",
+    "name": "RouteSignals",
+    "kind": "interface",
+    "signature": "export interface RouteSignals { params: Record<string, Signal<string | undefined>> query: Record<string, Signal<string | undefined>> pathname: Signal<string> hash: Signal<string> }",
+    "doc": "The reactive URL handle exposed to route scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the route's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
+    "loc": "src/route-signals.ts:26"
   }
 ]

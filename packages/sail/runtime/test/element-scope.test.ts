@@ -8,15 +8,8 @@
 // shared per-document client root.
 
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  defineComponent,
-  defineStore,
-  useStore,
-  provideStore,
-  signal,
-  clientRootScope,
-  elementScopeOf,
-} from '../src/index'
+import { defineComponent, defineStore, useStore, provideStore, signal } from '../src/index'
+import { clientRootScope, elementScopeOf } from '../src/internal'
 import { _resetClientRootScope } from '../src/element-scope'
 
 let tagCounter = 0

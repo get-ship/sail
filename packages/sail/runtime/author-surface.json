@@ -12,7 +12,8 @@
     "motion": "Timeline + drivers (scrub lane; Style motion is template/A)",
     "actions": "Public use: actions + Action types (full use: table also on /sail/reference/actions)",
     "errors": "Error boundary handles",
-    "components": "Declarative component() / defineComponent for pack authors"
+    "components": "Declarative component() / defineComponent for pack authors",
+    "host": "Host capability types on generated Scope (capabilities language page)"
   },
   "exports": {
     "signal": "reactivity",
@@ -20,7 +21,6 @@
     "effect": "reactivity",
     "batch": "reactivity",
     "untrack": "reactivity",
-    "selector": "reactivity",
     "isSignal": "reactivity",
     "debounce": "reactivity",
     "interval": "reactivity",
@@ -148,6 +148,9 @@
     "ComponentSetupContext": "components",
     "defineComponent": "components",
     "ComponentFactory": "components",
-    "ComponentSchema": "components"
+    "ComponentSchema": "components",
+
+    "Host": "host",
+    "RouteSignals": "host"
   }
 }

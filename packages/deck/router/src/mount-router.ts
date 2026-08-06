@@ -13,7 +13,7 @@
 //   - deck → sail only: this imports the runtime's `mount()`; the runtime never
 //     imports this.
 
-import { mount, type MountHandle, type RoutePayload } from '@ship/sail-runtime'
+import { mount, type MountHandle, type RoutePayload } from '@ship/sail-runtime/internal'
 import {
   installScrollRestoration,
   onNavigate,

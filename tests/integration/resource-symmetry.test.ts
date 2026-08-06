@@ -33,13 +33,12 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { readdirSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  mount,
-  live,
   signal,
+  queryKeyed,
   type LiveSource,
   type LiveState,
-  type RoutePayload,
 } from '@ship/sail-runtime'
+import { mount, type RoutePayload } from '@ship/sail-runtime/internal'
 import {
   installWrappers,
   snapshot,
@@ -81,25 +80,32 @@ function emptyPayload(name = 'test'): RoutePayload {
 }
 
 describe('resource-symmetry — synthetic leak-class scenarios', () => {
-  it('live(LiveSource) closes its EventSource on dispose [87cf3223]', async () => {
+  it('query(LiveSource) closes its EventSource on dispose [87cf3223]', async () => {
     // Synthetic LiveSource that opens an EventSource on subscribe and
-    // closes it on disposer. live() must register the disposer with
-    // the mount's effect scope; a regression of 87cf3223 would skip
+    // closes it on disposer. query's push path must register the disposer
+    // with the mount's effect scope; a regression of 87cf3223 would skip
     // that registration and the EventSource would leak.
     const before = snapshot(counters)
     const target = makeContainer()
     const mod: SimpleModule = {
       default: {
         setup: () => {
-          const sig = live<string>(() => ({
-            subscribe: (out) => {
-              const es = new EventSource('/test/sse')
-              es.addEventListener('message', (e) => {
-                out.set({ kind: 'ok', value: String((e as MessageEvent).data) } as LiveState<string>)
-              })
-              return () => es.close()
-            },
-          }))
+          const sig = queryKeyed<string>(
+            () => ['resource-symmetry', 'sse'],
+            () =>
+              ({
+                subscribe: (out) => {
+                  const es = new EventSource('/test/sse')
+                  es.addEventListener('message', (e) => {
+                    out.set({
+                      kind: 'ok',
+                      value: String((e as MessageEvent).data),
+                    } as LiveState<string>)
+                  })
+                  return () => es.close()
+                },
+              }) satisfies LiveSource<string>,
+          )
           return { sig }
         },
       },

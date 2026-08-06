@@ -22,7 +22,7 @@ import * as sailActions from '@ship/sail-runtime/actions'
 import * as sailDom from '@ship/sail-dom'
 import * as sailRoute from '@ship/sail-runtime/route'
 import '@ship/sail-runtime/template-hooks'
-import type { MountModule } from '@ship/sail-runtime'
+import type { MountModule } from '@ship/sail-runtime/internal'
 
 /** A user setup the host injects for a view-mode specimen (the throwing-setup
  *  diagnostic path, or a future ctx-bearing view). */

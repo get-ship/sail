@@ -52,7 +52,7 @@
 // Authority: build-spec Slice 7, §"Backbone #2 — ViewerRenderer contract",
 // §"Props" (sail-media-av), §Accessibility, behavioral spec #5.
 
-import { emit } from '@ship/sail-runtime'
+import { emit } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'

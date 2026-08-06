@@ -4,13 +4,8 @@
 // into a working custom element.
 
 import { describe, expect, it } from 'vitest'
-import {
-  defineComponent,
-  signal,
-  derived,
-  bindText,
-  on,
-} from '../src/index'
+import { defineComponent, signal, derived } from '../src/index'
+import { bindText, on } from '../src/internal'
 
 describe('e2e: compiled counter', () => {
   it('mounts, updates on click, runs cleanup', () => {

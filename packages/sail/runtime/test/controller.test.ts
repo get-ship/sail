@@ -7,15 +7,8 @@
 // `mount-leak.test.ts`), not a section.
 
 import { describe, expect, it } from 'vitest'
-import {
-  controller,
-  signal,
-  derived,
-  type ControllerDef,
-  type Signal,
-  type TemplateHook,
-  type ControllerScope,
-} from '../src/index'
+import { controller, signal, derived } from '../src/index'
+import { type ControllerDef, type Signal, type TemplateHook, type ControllerScope } from '../src/internal'
 
 /** Build a `ResolverContext`-shaped harness with template state seeded. */
 function withState(state: Record<string, unknown>): {

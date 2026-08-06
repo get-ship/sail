@@ -6,9 +6,10 @@
 // idiomatic test seam (mirrors how `attach()` tests inject modules).
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { mount, mountAmbient, onCleanup, signal } from '../src/index'
+import { mountAmbient, onCleanup, signal } from '../src/index'
+import { mount } from '../src/internal'
 import { queryKeyed } from '../src/query'
-import type { RoutePayload } from '../src/index'
+import type { RoutePayload } from '../src/internal'
 
 // JSDOM doesn't implement EventSource — stub minimally for live-channel paths.
 class FakeEventSource {
