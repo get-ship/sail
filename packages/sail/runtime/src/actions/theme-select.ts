@@ -20,7 +20,7 @@ import type { Action } from '../action'
  * `use:themeSelect` — product theme picker:
  *
  * Product grid uses the **effective emit set** (not always full `THEMES`):
- *   effective = project tokens/themes/*  ∪  allowlist(theme.enabled)
+ *   effective = project themes/*  ∪  allowlist(theme.enabled)
  * Grid rows = effective ∩ `@ship/tokens` `THEMES` presentation catalog
  * (project-only ids without presentation metadata are stamped server-side but
  * omitted from the product grid until they have THEMES entries).

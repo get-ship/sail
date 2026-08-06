@@ -156,7 +156,7 @@ describe('specimen source', () => {
 
 describe('ops SailTheme write + monotonicity parity', () => {
   it('ops refuses non-monotonic scale (named NonMonotonicScale)', async () => {
-    const themesDir = 'apps/studio/tokens/themes'
+    const themesDir = 'apps/studio/themes'
     const path = `${themesDir}/__tool7-bad-radius.json`
     const bad = {
       $extensions: { ship: { themeId: 'tool7-bad-radius' } },
@@ -177,7 +177,7 @@ describe('ops SailTheme write + monotonicity parity', () => {
   }, 60_000)
 
   it('ops accepts monotonic radius write then read roundtrip', async () => {
-    const path = 'apps/studio/tokens/themes/__tool7-good-radius.json'
+    const path = 'apps/studio/themes/__tool7-good-radius.json'
     const good = {
       $extensions: { ship: { themeId: 'tool7-good-radius' } },
       radius: {
@@ -628,7 +628,7 @@ describe('brand color + mode-aware paths + decisions', () => {
     __setWorkingDocForTests({
       $extensions: { ship: { themeId: 'save-gate', density: 'default' } },
     })
-    __setThemePathForTests('apps/studio/tokens/themes/save-gate.json')
+    __setThemePathForTests('apps/studio/themes/save-gate.json')
     let writes = 0
     setDesignOpsClient({
       sailThemeList: async () => ({ files: [] }),

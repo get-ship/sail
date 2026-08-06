@@ -722,12 +722,18 @@ export function themeFilesFromList(
 
 export function projectThemesDir(projectRoot: string): string {
   // projectRoot may be apps/studio or absolute; keep workspace-relative when possible.
+  // Modern layout: <project>/themes (EXT-1 E4). Dual-read of legacy
+  // tokens/themes is compiler/ops-side; studio write/list path is modern.
   const norm = projectRoot.replace(/\\/g, '/').replace(/\/$/, '')
-  if (norm.startsWith('apps/')) return `${norm}/tokens/themes`
-  const m = norm.match(/\/(apps\/[^/]+)$/)
-  if (m) return `${m[1]}/tokens/themes`
-  // Fallback: studio
-  return 'apps/studio/tokens/themes'
+  if (norm.startsWith('apps/')) return `${norm}/themes`
+  const m = norm.match(/\/(apps\/[^/]+(?:\/[^/]+)*)$/)
+  if (m) return `${m[1]}/themes`
+  if (norm && !norm.startsWith('/') && !norm.includes(':')) {
+    // Workspace-relative external or monorepo project root.
+    return `${norm}/themes`
+  }
+  // Fallback: studio dogfood
+  return 'apps/studio/themes'
 }
 
 export { formatPx, parseDimensionPx }

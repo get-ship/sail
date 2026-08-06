@@ -222,38 +222,39 @@ fn find_theme_file(theme_id: &str, workspace: Option<&Path>) -> Option<PathBuf> 
         v
     });
     for root in roots {
-        let candidates = [
-            root.join(format!("apps/sail-site/tokens/themes/{theme_id}.json")),
-            root.join(format!("packages/sail/tokens/model/themes/{theme_id}.json")),
-            root.join(format!(
-                "packages/sail/tokens/model/themes/{theme_id}-light.json"
-            )),
-        ];
-        for c in candidates {
+        // Project themes: modern `<root>/themes` then legacy `tokens/themes`.
+        for sub in ["themes", "tokens/themes"] {
+            let p = root.join(sub).join(format!("{theme_id}.json"));
+            if p.is_file() {
+                return Some(p);
+            }
+        }
+        // Catalog model (monorepo disk) — not a project theme path.
+        for rel in [
+            format!("packages/sail/tokens/model/themes/{theme_id}.json"),
+            format!("packages/sail/tokens/model/themes/{theme_id}-light.json"),
+        ] {
+            let c = root.join(&rel);
             if c.is_file() {
                 return Some(c);
             }
         }
-        // Walk apps/*/tokens/themes/{id}.json
+        // Monorepo apps: apps/*/{themes,tokens/themes}/{id}.json
         let apps = root.join("apps");
         if let Ok(entries) = std::fs::read_dir(&apps) {
             for e in entries.flatten() {
-                let p = e
-                    .path()
-                    .join("tokens/themes")
-                    .join(format!("{theme_id}.json"));
-                if p.is_file() {
-                    return Some(p);
+                let app = e.path();
+                for sub in ["themes", "tokens/themes"] {
+                    let p = app.join(sub).join(format!("{theme_id}.json"));
+                    if p.is_file() {
+                        return Some(p);
+                    }
                 }
             }
         }
-        // Walk up from cwd-style roots.
+        // Walk up for catalog model only (no named-app hardcode).
         let mut dir = root;
         for _ in 0..6 {
-            let c = dir.join(format!("apps/sail-site/tokens/themes/{theme_id}.json"));
-            if c.is_file() {
-                return Some(c);
-            }
             let c = dir.join(format!("packages/sail/tokens/model/themes/{theme_id}.json"));
             if c.is_file() {
                 return Some(c);

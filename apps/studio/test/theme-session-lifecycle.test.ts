@@ -76,7 +76,7 @@ describe('theme draft lifecycle', () => {
       }),
     )
     __setWorkingDocForTests(structuredClone(LIGHT_DOC) as Record<string, unknown>)
-    __setThemePathForTests('apps/studio/tokens/themes/my-ship.json')
+    __setThemePathForTests('apps/studio/themes/my-ship.json')
     expect(getDesignState().dirty).toBe(false)
 
     await setTokenValue('modes.light.color.primary.default.$value', 'oklch(0.5 0.12 30)')
@@ -109,7 +109,7 @@ describe('theme draft lifecycle', () => {
       }),
     )
     __setWorkingDocForTests(structuredClone(LIGHT_DOC) as Record<string, unknown>)
-    __setThemePathForTests('apps/studio/tokens/themes/my-ship.json')
+    __setThemePathForTests('apps/studio/themes/my-ship.json')
     await setTokenValue('modes.light.color.primary.default.$value', 'oklch(0.4 0.1 20)')
     expect(getDesignState().dirty).toBe(true)
 
@@ -117,7 +117,7 @@ describe('theme draft lifecycle', () => {
     expect(ok).toBe(true)
     expect(getDesignState().dirty).toBe(false)
     expect(writes).toHaveLength(1)
-    expect(writes[0]!.path).toBe('apps/studio/tokens/themes/my-ship.json')
+    expect(writes[0]!.path).toBe('apps/studio/themes/my-ship.json')
     expect(writes[0]!.content).toMatch(/oklch\(0\.4/)
     expect(generates).toEqual([{ mode: 'app', project: 'apps/studio' }])
   })
@@ -132,7 +132,7 @@ describe('theme draft lifecycle', () => {
       }),
     )
     __setWorkingDocForTests(structuredClone(LIGHT_DOC) as Record<string, unknown>)
-    __setThemePathForTests('apps/studio/tokens/themes/my-ship.json')
+    __setThemePathForTests('apps/studio/themes/my-ship.json')
     await setTokenValue('modes.light.color.primary.default.$value', 'oklch(0.1 0.1 1)')
     expect(getDesignState().dirty).toBe(true)
     expect(getDesignState().canUndo).toBe(true)
@@ -158,7 +158,7 @@ describe('theme draft lifecycle', () => {
       }),
     )
     __setWorkingDocForTests(structuredClone(LIGHT_DOC) as Record<string, unknown>)
-    __setThemePathForTests('apps/studio/tokens/themes/my-ship.json')
+    __setThemePathForTests('apps/studio/themes/my-ship.json')
     await setTokenValue('modes.light.color.primary.default.$value', 'oklch(0.2 0.1 10)')
     expect(getDesignState().canUndo).toBe(true)
     undoThemeEdit()
@@ -280,7 +280,7 @@ describe('dirty leave guard', () => {
       }),
     )
     __setWorkingDocForTests(structuredClone(LIGHT_DOC) as Record<string, unknown>)
-    __setThemePathForTests('apps/studio/tokens/themes/my-ship.json')
+    __setThemePathForTests('apps/studio/themes/my-ship.json')
     await setBrandColor('#ff0000')
     expect(getDesignState().dirty).toBe(true)
     const ok = await saveThemeForLeave()
@@ -337,7 +337,7 @@ describe('theme-draft-paint adapter', () => {
     const host = document.createElement('div')
     bindPreviewHost(host)
     __setWorkingDocForTests(structuredClone(LIGHT_DOC) as Record<string, unknown>)
-    __setThemePathForTests('apps/studio/tokens/themes/my-ship.json')
+    __setThemePathForTests('apps/studio/themes/my-ship.json')
     setDesignOpsClient(
       mockClient({
         sailThemeList: async () => ({ files: [] }),
@@ -360,7 +360,7 @@ describe('add to project + confirm', () => {
     setDesignOpsClient(
       mockClient({
         sailThemeList: async ({ path }) => {
-          if (String(path).includes('tokens/themes')) {
+          if (String(path).includes('apps/studio/themes')) {
             return { files: ['my-studio.json'] }
           }
           return { files: ['studio.json'] }

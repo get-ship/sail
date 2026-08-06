@@ -100,7 +100,7 @@ export const DECISION_IDS: DecisionId[] = [
 
 export type DesignSurfaceState = {
   projectRoot: string
-  /** apps/<app>/tokens/themes */
+  /** apps/<app>/themes (modern; legacy tokens/themes dual-read in compiler/ops) */
   themesDir: string
   /** Active token group (color / space / radius / …). */
   groupId: string

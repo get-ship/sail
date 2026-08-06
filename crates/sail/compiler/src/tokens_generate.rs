@@ -482,8 +482,8 @@ pub fn should_generate_package_delivery(workspace_root: &Path) -> bool {
 
 /// Project theme directories: `<project>/themes` then legacy `tokens/themes`.
 ///
-/// Only existing directories are returned. Modern external layout is `themes/`;
-/// in-tree apps still use `tokens/themes` until E4 flatten.
+/// Only existing directories are returned. Modern layout is `themes/`;
+/// legacy `tokens/themes` remains dual-read for external apps mid-transition.
 pub fn project_theme_dirs(project_dir: &Path) -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     let modern = project_dir.join("themes");

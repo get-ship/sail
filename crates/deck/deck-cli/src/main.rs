@@ -180,7 +180,7 @@ enum Command {
     /// Invoke a sail-ops RPC in-process (`Service/Method`), or `gen` for codegen.
     ///
     /// Same handlers as MCP tools and Connect HTTP under `sail dev`.
-    /// Example: `sail op SailTheme/List --json '{"path":"apps/sail-site/tokens/themes"}'`
+    /// Example: `sail op SailTheme/List --json '{"path":"apps/sail-site/themes"}'`
     /// Codegen: `sail op gen` → packages/sail/studio-client + schema snapshots.
     Op {
         /// `Service/Method` (e.g. `SailAuthoring/Surface`) or `gen`.
@@ -267,7 +267,7 @@ enum Scaffold {
     },
 
     /// Seed project theme SSOT: copy one Sail default theme into
-    /// `<project>/tokens/themes/` and write a thin `sail.config.jsonc`
+    /// `<project>/themes/` and write a thin `sail.config.jsonc`
     /// theme section when absent (C5). Apps do not ship the full catalog.
     Theme {
         /// Project root (`routes/` + `package.json`). Default: cwd.
@@ -876,7 +876,8 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let cfg = deck_config::DeckConfig::defaults();
 
         // Cold-start tokens generate when the project has theme SSOT on disk
-        // (tokens/themes/*.json or sail.config theme section). Without this,
+        // (themes/*.json, legacy tokens/themes, or sail.config theme section).
+        // Without this,
         // project DTCG only re-enters the emit set after a watch event — first
         // paint after restart would stay catalog-only package CSS.
         if sail_compiler::tokens_generate::project_wants_theme_generate(&project_dir) {
@@ -1068,9 +1069,10 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // document reload. (Module-granular reload is the next layer.)
         //
         // Watch roots:
-        // - project `routes/` + `src/` + `public/` + `tokens/` (never project
-        //   root / `.deck/` — regenerated `routes.gen.ts` / out dir must not
-        //   self-trigger). `tokens/themes/**` is the project theme SSOT.
+        // - project `routes/` + `src/` + `public/` + `themes/` (+ legacy
+        //   `tokens/`) — never project root / `.deck/` (regenerated
+        //   `routes.gen.ts` / out dir must not self-trigger). Project theme
+        //   SSOT is `themes/**` (legacy dual-read: `tokens/themes/**`).
         // - workspace component pack `src/` trees (and package root if no `src/`)
         //   so edits under `packages/components/...` HMR like local rails —
         //   previously only the app tree was watched and pack edits needed a
@@ -1080,8 +1082,8 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         //   are outputs of `sail-compiler tokens`).
         //
         // Live theme edit path (only supported path):
-        //   save DTCG under tokens/themes or model/themes (or project sail.config
-        //   theme section) → dual tokens generate:
+        //   save DTCG under themes/ (or legacy tokens/themes) or model/themes
+        //   (or project sail.config theme section) → dual tokens generate:
         //     package: full catalog + project → packages/sail/tokens/src
         //     app:     T0 effective set → <project>/.deck/themes/themes.css (B1)
         //   → HMR swaps CSS. No client IR / :root setProperty.
@@ -1245,7 +1247,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
                 watched.push(stdlib);
             }
             // Catalog DTCG SSOT (framework themes + base/dark/density/…).
-            // Live edit = save JSON here (or apps/*/tokens/themes) → generate → HMR.
+            // Live edit = save JSON here (or apps/*/themes) → generate → HMR.
             let tokens_model = workspace_root.join("packages/sail/tokens/model");
             if tokens_model.is_dir() {
                 watched.push(tokens_model);
@@ -1517,23 +1519,24 @@ fn is_structural_change(kind: &notify::EventKind) -> bool {
     )
 }
 
-/// Project theme SSOT: `**/tokens/themes/**` (and the `tokens` / `tokens/themes`
-/// dirs themselves so Create events from mid-session scaffold fire generate).
+/// Project theme SSOT: `**/themes/**` and legacy `**/tokens/themes/**`
+/// (and the parent `tokens` / `themes` dirs so Create events from mid-session
+/// scaffold fire generate).
 fn is_project_theme_path(path: &Path) -> bool {
     let norm = format!("/{}", path.to_string_lossy().replace('\\', "/"));
     // Never treat monorepo catalog model as project themes.
     if norm.contains("/packages/sail/tokens/model/") {
         return false;
     }
-    // Legacy monorepo layout: <project>/tokens/themes/**
+    // Legacy layout: <project>/tokens/themes/**
     if norm.contains("/tokens/themes/")
         || norm.ends_with("/tokens/themes")
         || norm.ends_with("/tokens")
     {
         return true;
     }
-    // Modern external layout: <project>/themes/** — require a project segment
-    // before /themes (not bare catalog model paths).
+    // Modern layout: <project>/themes/** — require a project segment before
+    // /themes (not bare catalog model paths).
     if let Some(i) = norm.rfind("/themes/") {
         let before = &norm[..i];
         // Reject packages/sail/tokens/model/themes (already gated above) and
@@ -1628,7 +1631,7 @@ fn is_catalog_model_path(path: &Path) -> bool {
 /// before rebuild.
 ///
 /// Live theme edit = save DTCG + HMR only:
-/// - project: `**/tokens/themes/**`
+/// - project: `**/themes/**` (+ legacy `**/tokens/themes/**`)
 /// - project theme config: `sail.config.json(c)`
 /// - catalog: `packages/sail/tokens/model/**` (themes + base/dark/density/…)
 fn is_theme_source_path(path: &Path) -> bool {
@@ -1743,6 +1746,14 @@ mod tests {
 
     #[test]
     fn theme_source_paths_include_project_and_catalog() {
+        // Modern monorepo + external layout (EXT-1 E4 primary).
+        assert!(is_theme_source_path(Path::new(
+            "apps/sail-site/themes/custom.json"
+        )));
+        assert!(is_project_theme_path(Path::new("apps/sail-site/themes")));
+        assert!(is_project_theme_path(Path::new("my-app/themes/ship.json")));
+        assert!(is_project_theme_path(Path::new("my-app/themes")));
+        // Legacy dual-read still watched during transition.
         assert!(is_theme_source_path(Path::new(
             "apps/sail-site/tokens/themes/custom.json"
         )));
@@ -1750,8 +1761,6 @@ mod tests {
         assert!(is_project_theme_path(Path::new(
             "apps/sail-site/tokens/themes"
         )));
-        assert!(is_project_theme_path(Path::new("my-app/themes/ship.json")));
-        assert!(is_project_theme_path(Path::new("my-app/themes")));
         assert!(is_theme_source_path(Path::new(
             "apps/sail-site/sail.config.jsonc"
         )));
