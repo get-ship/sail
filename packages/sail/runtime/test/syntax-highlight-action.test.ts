@@ -61,4 +61,29 @@ describe('syntaxHighlight action', () => {
     scope.dispose()
     host.remove()
   })
+
+  it('re-highlights when bindProp sets host.code after the action mounts', async () => {
+    const host = document.createElement('div')
+    host.className = 'sail-code-block'
+    host.setAttribute('data-sail-host', 'code-block')
+    const inner = document.createElement('div')
+    const pre = document.createElement('pre')
+    inner.appendChild(pre)
+    host.appendChild(inner)
+    document.body.appendChild(host)
+
+    const scope = createScope()
+    withScope(scope, () => {
+      runAction(inner, syntaxHighlight)
+    })
+    // Empty first paint — then bindProp-style identity write (no attribute).
+    expect(pre.textContent ?? '').toBe('')
+    ;(host as HTMLElement & { code?: string }).code = 'const later = true'
+    // Property interceptor + microtask/rAF
+    await new Promise((r) => queueMicrotask(() => r(undefined)))
+    expect(pre.innerHTML).toContain('tok-')
+    expect(pre.textContent).toContain('later')
+    scope.dispose()
+    host.remove()
+  })
 })

@@ -66,7 +66,8 @@
   compound({ variant: soft, tone: warning }, style({ paint: colorMix(warning, 15).border(warning).fg(warning) }).when(hover, { paint: colorMix(warning, 25) })),
   compound({ variant: soft, tone: destructive }, style({ paint: colorMix(destructive, 15).border(destructive).fg(destructive) }).when(hover, { paint: colorMix(destructive, 25) })),
   compound({ variant: soft, tone: accent }, style({ paint: colorMix(accent, 15).border(accent).fg(accent) }).when(hover, { paint: colorMix(accent, 25) })),
-  compound({ variant: soft, tone: muted }, style({ paint: bg(muted).border(border).fg(muted-foreground) })),
+  // soft+muted must stay readable on dark themes (muted-foreground on muted fails).
+  compound({ variant: soft, tone: muted }, style({ paint: bg(muted).border(border-strong).fg(foreground) })),
   compound({ variant: outline, tone: primary }, style({ paint: border(primary).fg(primary) })),
   compound({ variant: outline, tone: info }, style({ paint: border(info).fg(info) })),
   compound({ variant: outline, tone: success }, style({ paint: border(success).fg(success) })),
