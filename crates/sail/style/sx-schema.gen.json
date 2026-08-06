@@ -2466,7 +2466,7 @@
     "Token values from registry; keywords for display/position physics.",
     "Raw colors/lengths require raw: prefix.",
     "States use existing hover:/focus:/… prefixes mapped into IR.",
-    "Static compile-time only — no dynamic sx={…}.",
+    "Static compile-time only — no dynamic style={…}.",
     "tone/size are not sx properties (context attrs / variant axes)."
   ]
 }

@@ -421,7 +421,36 @@ fn looks_like_style_product(s: &str) -> bool {
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
-        || is_ident_dot_call(t)
+        // Const-ref motion/paint: `cta.press({…})` — method must follow the
+        // first `.` immediately (not prose like `Saved. Sticky (hint).`).
+        || is_style_const_method_call(t)
+}
+
+/// `name.method(…)` with method starting right after the first `.`.
+fn is_style_const_method_call(s: &str) -> bool {
+    let Some((head, rest)) = s.split_once('.') else {
+        return false;
+    };
+    if head.is_empty()
+        || !head
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return false;
+    }
+    let r = rest.trim_start().as_bytes();
+    let mut i = 0;
+    while i < r.len() && (r[i].is_ascii_alphanumeric() || r[i] == b'_' || r[i] == b'-') {
+        i += 1;
+    }
+    if i == 0 {
+        return false;
+    }
+    let mut j = i;
+    while j < r.len() && r[j].is_ascii_whitespace() {
+        j += 1;
+    }
+    j < r.len() && r[j] == b'('
 }
 
 /// Consume a balanced Style product expression; keep `.method(` chain tails.
