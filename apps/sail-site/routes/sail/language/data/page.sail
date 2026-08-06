@@ -59,21 +59,18 @@ Live — a 900 ms fake API</p>
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
-        <while-loading {users}>
-          <row gap="2" align="center"><spinner></spinner> <p>
+        <match {users()}>
+  {loading => <row gap="2" align="center"><spinner></spinner> <p>
             style({ paint: fg(muted-foreground), text: fontSize(sm) })
-loading…</p></row>
-        </while-loading>
-        <while-error {users}> as="err">
-          <alert tone="destructive">{err.message}</alert>
-        </while-error>
-        <if {users().kind === 'ok'}>
-          <row gap="2">
-            <for {users().value} as="name" key={name}>
+loading…</p></row>}
+  {error as err =>
+          <alert tone="destructive">{err.message}</alert>}
+  {ok as value => <row gap="2">
+            <for {value as name} key={name}>
               <badge>{name}</badge>
             </for>
-          </row>
-        </if>
+          </row>}
+</match>
       </column>
     </column>
     <column>
@@ -97,8 +94,8 @@ Source</p>
 
   <h2>Render the three states</h2>
   <p>
-    <code>&lt;while-loading &#123;x&#125;&gt;</code> and
-    <code>&lt;while-error &#123;x&#125; as="err"&gt;</code> render the pending and failed
+    <code>&lt;match &#123;x&#125;&gt;</code> and
+    <code>&lt;match &#123;x&#125; error as err&gt;</code> render the pending and failed
     states; <code>&lt;if &#123;x().kind === 'ok'&#125;&gt;</code> guards the loaded one,
     where <code>x().value</code> holds the data. The three cases are structural —
     you can't render the list without having handled loading and error first.

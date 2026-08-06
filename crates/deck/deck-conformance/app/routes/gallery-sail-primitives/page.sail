@@ -1192,15 +1192,13 @@ sail-error-boundary</h2>
             <column>
               style({ box: display(none) })
 This subtree is broken (error boundary will catch)</column>
-          <else>
-            <column>
+          {else => <column>
               style({ box: pad(4), paint: bg(surface-2).radius(md).fg(success-foreground) })
               <span>
                 style({ box: display(contents), text: fontSize(sm) })
                 Subtree is healthy. Toggle the switch above to simulate a fault.
               </span>
-</column>
-          </else></if>
+</column>}</if>
         </error-boundary>
       </column>
     </column>

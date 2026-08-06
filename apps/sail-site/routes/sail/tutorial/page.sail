@@ -33,11 +33,11 @@ Tutorial</p>
     starter to edit with a solved screen running live.
   </p>
 
-  <for {groups()} as="group" key={group.chapter}>
+  <for {groups() as group} key={group.chapter}>
     <column gap="3">
       <h2>{group.title}</h2>
       <column gap="2">
-        <for {group.lessons} as="lesson" key={lesson.slug}>
+        <for {group.lessons as lesson} key={lesson.slug}>
           <a href={lesson.href}
 >
             style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1) }).when(hover, { paint: bg(surface-2).borderWidth(1).border(border-strong) })

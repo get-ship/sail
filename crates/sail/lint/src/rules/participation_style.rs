@@ -272,7 +272,7 @@ mod tests {
     fn skips_control_brace_expr_with_w_binding() {
         // `<if {w.canExpand}>` must not flag bare `w` (for-as binding).
         assert!(run(
-            r#"<for {items()} as="w" key={w.key}>
+            r#"<for {items() as w} key={w.key}>
   <if {w.canExpand}>
     <row>x</row>
   </if>

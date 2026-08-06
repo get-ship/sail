@@ -49,7 +49,7 @@ export default controller(() => {
   </section>
 
   <ol data-test="log">
-    <for {log()} as="line" key={line.k}>
+    <for {log() as line} key={line.k}>
       <li>{line.text}</li>
     </for>
   </ol>

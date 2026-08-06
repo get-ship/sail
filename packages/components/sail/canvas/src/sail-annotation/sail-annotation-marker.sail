@@ -89,13 +89,11 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
 </row>
     </center>
   </div>
-<else-if {hasBox()}>
-  <div
+{else-if {hasBox()} => <div
     role="button"
     tabindex="0"
     use:rect={box()}
 
   >
     style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto) })
-</div>
-</else-if></if>
+</div>}</if>

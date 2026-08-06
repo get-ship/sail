@@ -152,7 +152,9 @@ fn a_bad_stagger_duration_fails_the_build() {
 #[test]
 fn the_animation_vocabulary_has_exactly_one_source() {
     for prop in sail_lint::rules::animate_token_only::MOTION_PROPERTIES {
-        let src = format!(r#"<card> {style({ animate: hover({{ {prop}: 'spring:snappy' }}) })} x</card>"#);
+        let src = format!(
+            r#"<card> style({{ animate: hover({{ {prop}: 'spring:snappy' }}) }}) x</card>"#
+        );
         assert!(
             compile(&src, opts()).is_ok(),
             "lint publishes `{prop}` but the parser rejects it — the lists have drifted"
@@ -180,7 +182,9 @@ fn the_animation_vocabulary_has_exactly_one_source() {
 #[test]
 fn reveal_and_scroll_are_triggers_like_any_other() {
     for trigger in ["reveal", "scroll"] {
-        let src = format!(r#"<card> {style.{trigger}({{ opacity: 'fade' }})} x</card>"#);
+        let src = format!(
+            r#"<card> style({{ animate: {trigger}({{ opacity: 'fade' }}) }}) x</card>"#
+        );
         let js = compile(&src, opts()).expect("compiles").js;
         assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
         assert!(
@@ -209,7 +213,9 @@ fn parallax_is_one_directive() {
 fn every_advertised_trigger_can_actually_be_written() {
     let mut unwritable = Vec::new();
     for trigger in sail_lint::rules::animate_token_only::MOTION_TRIGGERS {
-        let src = format!(r#"<card> {style.{trigger}({{ opacity: 'fade' }})} x</card>"#);
+        let src = format!(
+            r#"<card> style({{ animate: {trigger}({{ opacity: 'fade' }}) }}) x</card>"#
+        );
         match compile(&src, opts()) {
             Ok(out) => assert!(
                 out.js.contains(&format!(r#"trigger: "{trigger}""#)),

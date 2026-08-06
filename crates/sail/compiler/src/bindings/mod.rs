@@ -48,11 +48,6 @@ struct Builder {
     /// are marked `suppressed` — they appear in the registry for debug-assert
     /// alignment but are excluded from the emitted JS manifest.
     suppress_depth: usize,
-    /// Sequential counters for while-loading/while-error render-callback names.
-    /// Must stay in lockstep with `TemplateEmitter::while_loading_idx` /
-    /// `while_error_idx` so both passes generate the same render-key strings.
-    while_loading_idx: usize,
-    while_error_idx: usize,
 }
 
 impl Builder {
@@ -85,8 +80,6 @@ impl Builder {
             Instr::For(for_instr) => self.walk_for(for_instr),
             Instr::Match(match_instr) => self.walk_match(match_instr),
             Instr::When(when_instr) => self.walk_when(when_instr),
-            Instr::WhileLoading(wl) => self.walk_while_loading(wl),
-            Instr::WhileError(we) => self.walk_while_error(we),
         }
     }
 
@@ -195,44 +188,4 @@ impl Builder {
         }
     }
 
-    /// `{#while-loading" of={<sig>}>`: one boundary entry (with `renderKey`);
-    /// body walked under suppression so the render walker's key counter
-    /// stays in sync but no flat manifest entries are emitted for body content.
-    fn walk_while_loading(&mut self, instr: &WhileLoadingInstr) {
-        let idx = self.while_loading_idx;
-        self.while_loading_idx += 1;
-        let render_key = format!("__renderWhileLoading_{idx}");
-        let boundary_key = self.keys.alloc();
-        self.bindings.push(Binding {
-            key: boundary_key,
-            kind: BindingKind::WhileLoading,
-            expr: instr.bind.clone(),
-            deps: vec![instr.bind.clone()],
-            render_key: Some(render_key),
-            suppressed: self.suppress_depth > 0,
-        });
-        self.suppress_depth += 1;
-        self.walk_block(&instr.body);
-        self.suppress_depth -= 1;
-    }
-
-    /// `{#while-error <errVar> of <sig>}`: one boundary entry (with `renderKey`);
-    /// body walked under suppression for key-counter parity.
-    fn walk_while_error(&mut self, instr: &WhileErrorInstr) {
-        let idx = self.while_error_idx;
-        self.while_error_idx += 1;
-        let render_key = format!("__renderWhileError_{idx}");
-        let boundary_key = self.keys.alloc();
-        self.bindings.push(Binding {
-            key: boundary_key,
-            kind: BindingKind::WhileError,
-            expr: instr.bind.clone(),
-            deps: vec![instr.bind.clone()],
-            render_key: Some(render_key),
-            suppressed: self.suppress_depth > 0,
-        });
-        self.suppress_depth += 1;
-        self.walk_block(&instr.body);
-        self.suppress_depth -= 1;
-    }
 }

@@ -76,7 +76,7 @@ Guide</p>
     between them here to find it — every button repaints this page:
   </p>
   <row gap="2">
-    <for {themes()} as="t" key={t.id}>
+    <for {themes() as t} key={t.id}>
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}

@@ -52,7 +52,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <grid cols="3" gap="2">
-      <for {stdlibElements()} as="e" key={e.tag}>
+      <for {stdlibElements() as e} key={e.tag}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -78,7 +78,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       tone props.
     </p>
     <grid cols="3" gap="2">
-      <for {reskinElements()} as="e" key={e.tag}>
+      <for {reskinElements() as e} key={e.tag}>
         <card padding="sm">
           style({ box: minW(0) })
 

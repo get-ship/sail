@@ -129,11 +129,9 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
 </controller>
 <if {caughtError() === null}>
   <slot></slot>
-<else>
-  <if {hasFallbackSlot()}>
+{else => <if {hasFallbackSlot()}>
     <slot name="fallback"></slot>
-  <else>
-    <row role="alert" gap="3" align="start">
+  {else => <row role="alert" gap="3" align="start">
       style({ box: padY(4).padX(5), paint: borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).shadow(xs) })
       <span>
         style({ box: display(contents), text: fontFamily(body).fontSize(sm) })
@@ -156,6 +154,4 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
         <button type="button" variant="outline" size="xs" on:click={reset}>Retry</button>
       </column>
       </span>
-</row>
-  </else></if>
-</else></if>
+</row>}</if>}</if>

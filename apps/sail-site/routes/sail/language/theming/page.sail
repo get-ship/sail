@@ -54,7 +54,7 @@ Concepts</p>
     themselves — is the preview.
   </p>
   <row gap="2">
-    <for {themes()} as="t" key={t.id}>
+    <for {themes() as t} key={t.id}>
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}

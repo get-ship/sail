@@ -10,17 +10,24 @@ export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})
   <h1>
     style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 Live Feed</h1>
-  <while-loading {t}>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Loading…</p>
-  </while-loading>
-  <while-error as="err" {t}>
-  <p>
-    style({ paint: fg(destructive), text: fontSize(sm) })
-Error: {err.message}</p>
-  </while-error>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })
-state: {t().kind}</p>
+  <match {t()}>
+    {loading =>
+      <p>
+        style({ paint: fg(muted-foreground), text: fontSize(sm) })
+        Loading…
+      </p>
+    }
+    {error as err =>
+      <p>
+        style({ paint: fg(destructive), text: fontSize(sm) })
+        Error: {err.message}
+      </p>
+    }
+    {else =>
+      <p>
+        style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })
+        state: {t().kind}
+      </p>
+    }
+  </match>
 </column>

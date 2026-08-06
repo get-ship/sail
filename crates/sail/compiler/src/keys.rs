@@ -52,14 +52,11 @@ pub struct Binding {
     /// Identifier names read in the expression. De-duplicated, in
     /// first-encounter order. Property accesses chain to the root.
     pub deps: Vec<String>,
-    /// For `WhileLoading` / `WhileError` boundaries: the name of the
-    /// render-callback export on the compiled module (e.g.
-    /// `"__renderWhileLoading_b3"`). `None` for all other kinds.
+    /// Optional render-callback name for boundary helpers. Unused for the
+    /// four-block surface (if/for/match/when); retained for manifest shape.
     pub render_key: Option<String>,
-    /// When `true`, this entry was allocated for key-counter parity
-    /// (inside a while-loading/while-error body) but must not appear
-    /// in the emitted JS manifest — the content is rendered imperatively
-    /// by the boundary's render callback.
+    /// When `true`, this entry was allocated for key-counter parity but must
+    /// not appear in the emitted JS manifest.
     pub suppressed: bool,
 }
 
@@ -88,10 +85,6 @@ pub enum BindingKind {
     When,
     /// `<form mutation="client.method">` — form mutation directive.
     Mutation,
-    /// `{#while-loading of <signal>}` boundary.
-    WhileLoading,
-    /// `{#while-error <errVar> of <signal>}` boundary.
-    WhileError,
 }
 
 impl BindingKind {
@@ -109,8 +102,6 @@ impl BindingKind {
             BindingKind::Match => "match".into(),
             BindingKind::When => "when".into(),
             BindingKind::Mutation => "mutation".into(),
-            BindingKind::WhileLoading => "while-loading".into(),
-            BindingKind::WhileError => "while-error".into(),
         }
     }
 }

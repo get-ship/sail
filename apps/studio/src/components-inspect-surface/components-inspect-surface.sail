@@ -46,7 +46,7 @@ Surface picker · open files & routes</p>
           style({ box: maxH(28) })
 
           <column gap="1">
-            <for {inspect.surfaces()} as="s" key={s.key}>
+            <for {inspect.surfaces() as s} key={s.key}>
               <studio-list-row
                 surface-path={s.value}
                 title={s.label}
@@ -175,7 +175,7 @@ Issues</p>
                 style(muted)
 No diagnostics on this surface.</p>
             </if>
-            <for {inspect.issueRows()} as="iss" key={iss.key}>
+            <for {inspect.issueRows() as iss} key={iss.key}>
               <row gap="2" align="start" nowrap>
                 <badge tone={iss.tone} size="sm" variant="soft" pill>
                   style({ box: shrink(0) })
@@ -207,7 +207,7 @@ No layout boxes for this surface yet.</p>
               <p>
                 style(muted)
 Boxes from the compiler model (not browser computed style).</p>
-              <for {inspect.layoutRows()} as="box" key={box.key}>
+              <for {inspect.layoutRows() as box} key={box.key}>
                 <row gap="2" align="center" nowrap>
                   style({ box: padY(1) })
 
@@ -236,7 +236,7 @@ State</p>
                 style(muted)
 No state bindings on this surface.</p>
             </if>
-            <for {inspect.stateRows()} as="st" key={st.key}>
+            <for {inspect.stateRows() as st} key={st.key}>
               <row gap="2" align="center" nowrap>
                 <p>
                   style({ box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() })
@@ -252,7 +252,7 @@ No state bindings on this surface.</p>
   </row>
 
   <toast-region position="bottom-end" components-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>

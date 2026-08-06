@@ -102,12 +102,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
 </controller>
 <if {loading()}>
   <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-<else-if {chart.error()}>
-  <error-state></error-state>
-</else-if><else-if {chart.isEmpty()}>
-  <empty-state></empty-state>
-</else-if><else>
-  <svg
+{else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
     height={height()}
     role="img"
@@ -117,7 +112,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     use:observeViewport>
     style({ box: display(block).w(full).overflow(hidden) })
 
-    <for {bars()} as="b" key={b.id}>
+    <for {bars() as b} key={b.id}>
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
         <title>{b.title}</title>
       </rect>
@@ -128,14 +123,13 @@ export default controller(({ data, labels, tone, orientation, max, width, height
 
     <slot name="description">
       <table>
-        <for {chart.ariaTable()} as="row" key={row[0].id}>
+        <for {chart.ariaTable() as row} key={row[0].id}>
           <tr>
-            <for {row} as="cell" key={cell.id}>
+            <for {row as cell} key={cell.id}>
               <td>{cell.text}</td>
             </for>
           </tr>
         </for>
       </table>
     </slot>
-  </column>
-</else></if>
+  </column>}</if>

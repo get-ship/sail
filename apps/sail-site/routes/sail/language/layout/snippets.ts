@@ -55,9 +55,7 @@ export const code = {
 
   when: `<when {tablet}>
   <row nowrap>…side-by-side workbench…</row>
-  <else>
-    <column>…stacked mobile layout…</column>
-  </else>
+  {else => <column>…stacked mobile layout…</column>}
 </when>`,
 
 }

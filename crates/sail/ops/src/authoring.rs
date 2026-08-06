@@ -297,30 +297,26 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(md, "# Sail surface — control flow\n");
             let _ = writeln!(
                 md,
-                "Element blocks (brace `{{#if}}` / `{{#for}}` are retired).\n\
-                 **Product form is brace-primary** — no `cond=` / `on=` / `of=` tax:\n\n\
+                "Four blocks only: if / for / match / when. Arms use brace form\n\
+                 `{{pattern as binding => …}}`; binding lives in-brace.\n\n\
                  ```\n\
-                 <if {{open()}}>…\
-                 <else-if {{x()}}>…</else-if>\
-                 <else>…</else></if>\n\
-                 <for {{items()}} as=\"item\" key={{item.id}}>…</for>\n\
+                 <if {{open()}}>…{{else-if {{x()}} => …}}{{else => …}}</if>\n\
+                 <for {{items() as item}} key={{item.id}}>…{{else => …}}</for>\n\
                  <match {{status()}}>\n  \
-                   <case {{'ok'}}>…</case>\n  \
-                   <default>…</default>\n\
+                   {{ok as value => …}}\n  \
+                   {{error as err => …}}\n  \
+                   {{loading => …}}\n\
                  </match>\n\
-                 <when {{tablet}}>…wide…\
-                 <else>…mobile-first default…</else></when>\n\
-                 <while-loading {{sig}}>…</while-loading>\n\
-                 <while-error as=\"err\" {{sig}}>…</while-error>\n\
+                 <when {{tablet}}>…wide…{{else => …mobile-first default…}}</when>\n\
                  ```\n\n\
-                 Residual named attrs (`cond=`, `on=`, `of=`) still parse.\n\
                  `key=` is required on `<for>` — without it the reconciler falls back to\n\
                  positional matching and loses DOM identity on reorder.\n\
                  `<when {{token}}>` is structural responsiveness (different trees per\n\
-                 theme breakpoint: mobile/tablet/desktop). SSR emits the `<else>` /\n\
-                 default branch only (mobile-first); the client matchMedia-swaps when\n\
+                 theme breakpoint: mobile/tablet/desktop). SSR emits the `{{else => …}}`\n\
+                 / default branch only (mobile-first); the client matchMedia-swaps when\n\
                  the query matches. Paint-level Style `.when({{ tablet: style.… }})` is\n\
-                 separate and unchanged.\n"
+                 separate and unchanged.\n\
+                 Match on LiveState/MutationState with a missing arm is a compile error.\n"
             );
         }
     }

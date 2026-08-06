@@ -61,7 +61,7 @@ Error</p>
   <column gap="1" data-testid="deals-list">
     style({ box: pad(0).m(0), paint: list(none) })
 
-    <for {deals().value.items} as="deal" key={deal.id}>
+    <for {deals().value.items as deal} key={deal.id}>
     <li>{deal.id} — {deal.stage} — {deal.amount}</li>
     </for>
   </column>

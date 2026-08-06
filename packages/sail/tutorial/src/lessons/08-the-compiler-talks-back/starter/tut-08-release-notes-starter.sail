@@ -51,7 +51,7 @@ v2.4.0</badge>
 published {formatDate(publishedAt())}</p>
 
   <column gap="1">
-    <for {notes()} as="note" key={note.id}>
+    <for {notes() as note} key={note.id}>
       <row gap="3" align="center">
         style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
 

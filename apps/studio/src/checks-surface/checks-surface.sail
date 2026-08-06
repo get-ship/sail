@@ -94,7 +94,7 @@ export default controller(() => {
       <select filter-rule label="Filter by rule" value={ruleFilterVal()} on:change={onRuleFilter}>
         style({ box: w(28) })
 
-        <for {ruleOpts()} as="opt" key={opt.key}>
+        <for {ruleOpts() as opt} key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
@@ -104,7 +104,7 @@ export default controller(() => {
       <select filter-file label="Filter by file" value={fileFilterVal()} on:change={onFileFilter}>
         style({ box: w(28) })
 
-        <for {fileOpts()} as="opt" key={opt.key}>
+        <for {fileOpts() as opt} key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
@@ -114,7 +114,7 @@ export default controller(() => {
       <select filter-severity label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter}>
         style({ box: w(28) })
 
-        <for {severityOpts()} as="opt" key={opt.key}>
+        <for {severityOpts() as opt} key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
@@ -125,7 +125,7 @@ export default controller(() => {
         <p>
           style({ paint: fg(muted-foreground), text: fontSize(xs) })
 Autofix</p>
-        <for {autoFixOpts()} as="m" key={m.key}>
+        <for {autoFixOpts() as m} key={m.key}>
           <button
             type="button"
             size="sm"
@@ -171,7 +171,7 @@ Autofix</p>
       >
         style({ box: w(full).minW(0) })
 
-        <for {severityOpts()} as="opt" key={opt.key}>
+        <for {severityOpts() as opt} key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
@@ -234,7 +234,7 @@ Autofix</p>
             </thead>
           </table>
         </if>
-        <for {ruleGroups()} as="g" key={g.key}>
+        <for {ruleGroups() as g} key={g.key}>
           <column gap="0" rule-group={g.rule} severity-group="rule">
             <row
               align="center"
@@ -294,7 +294,7 @@ Autofix</p>
                 </button>
               </if>
             </row>
-            <for {g.rows} as="f" key={f.key}>
+            <for {g.rows as f} key={f.key}>
               <collapsible
                 open={f.expanded}
                 finding-id={f.id}
@@ -382,7 +382,7 @@ Suggestion</p>
 
                       >
                         style({ box: pad(2), paint: bg(surface-0).radius(sm) })
-                        <for {f.snippet} as="ln" key={ln.key}>
+                        <for {f.snippet as ln} key={ln.key}>
                           <p
                             snippet-line={ln.n}
                             highlight={ln.highlight ? 'true' : 'false'}
@@ -478,7 +478,7 @@ Review fixes</p>
           No automatic fixes — only compiler rewrites appear here.
         </p>
       </if>
-      <for {reviewItems()} as="item" key={item.key}>
+      <for {reviewItems() as item} key={item.key}>
         <card review-item={item.findingId} variant="outline" padding="sm">
           <column gap="2">
             <row gap="2" align="center" nowrap>

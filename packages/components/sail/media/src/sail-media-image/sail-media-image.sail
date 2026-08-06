@@ -262,8 +262,7 @@ export default controller((_ctx: Scope) => {
   <center role="img" aria-label={alt()} use:svgInline>
     style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })
 </center>
-<else>
-  <center tabindex="0" use:zoomStage>
+{else => <center tabindex="0" use:zoomStage>
     style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })
 
     <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()}>
@@ -274,7 +273,7 @@ export default controller((_ctx: Scope) => {
     <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip>
       style({ box: pad(2).overflowX(auto) })
 
-      <for {galleryItems()} as="item" key={item.id}>
+      <for {galleryItems() as item} key={item.id}>
         <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'}>
           style({  box: grow(0).pad(0).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer)  }).when(selected, { paint: borderWidth(1).border(primary).shadow(accent) })
 
@@ -282,5 +281,4 @@ export default controller((_ctx: Scope) => {
         </row>
       </for>
     </row>
-  </if>
-</else></if>
+  </if>}</if>

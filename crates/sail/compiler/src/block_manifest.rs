@@ -1,13 +1,10 @@
 //! The template-block vocabulary — one source of truth for element control
-//! flow (`<if>`, `<for>`, `<match>`, `<when>`, `<while-loading>`,
-//! `<while-error>`) and every sub-clause each block accepts. Brace form
-//! (`{#if}`, …) is retired.
+//! flow (`<if>`, `<for>`, `<match>`, `<when>`). Brace form (`{#if}`, …) is
+//! retired. Arms use `{pattern as binding => subtree}` inside the block.
 //!
 //! The parser (`parse::template::blocks` + `control_elements`) enumerates
-//! these same block and clause kinds as `Discriminant` variants with no
-//! attached prose, so this table is authored here rather than derived —
-//! but the set of rows is kept in lockstep with the parser's `IF_TERMS` /
-//! `FOR_TERMS` / `MATCH_TERMS` / `WHEN_TERMS` by the test below.
+//! these same block kinds; this table stays in lockstep with grammar /
+//! surface drift tests.
 
 use serde::Serialize;
 
@@ -15,7 +12,7 @@ use serde::Serialize;
 /// one-line summary of what it does.
 #[derive(Debug, Clone, Serialize)]
 pub struct BlockEntry {
-    /// The opening directive as authored: `{#if}`, `{#for}`.
+    /// The opening directive as authored: `<if {…}>`.
     pub open: &'static str,
     /// Sub-clauses this block accepts, in the order they may appear.
     /// Empty for blocks with none.
@@ -25,38 +22,27 @@ pub struct BlockEntry {
     pub summary: &'static str,
 }
 
-/// The template block registry, in authoring order (control flow first,
-/// then async blocks).
+/// The template block registry — four blocks only.
 pub const BLOCKS: &[BlockEntry] = &[
     BlockEntry {
         open: "<if {…}>",
-        clauses: &["<else-if {…}>", "<else>"],
-        summary: "conditional branches; brace-primary predicate; any number of <else-if>, optional trailing <else> as direct children",
+        clauses: &["{else-if {…} => …}", "{else => …}"],
+        summary: "conditional branches; brace-primary predicate; free then-body; optional {else-if {cond} => …} and trailing {else => …} arms",
     },
     BlockEntry {
-        open: "<for {…} as=\"item\" key={…}>",
-        clauses: &["<else>"],
-        summary: "iterate a list; brace-primary iterable; `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty",
+        open: "<for {items as item} key={…}>",
+        clauses: &["{else => …}"],
+        summary: "iterate a list; brace-primary `iterable as item[, index]`; `key` required for stable DOM; optional {else => …} when empty",
     },
     BlockEntry {
         open: "<match {…}>",
-        clauses: &["<case {…}>", "<default>"],
-        summary: "pattern branches over a brace-primary discriminant; cases use brace-primary; optional <default>",
+        clauses: &["{pattern as binding => …}", "{else => …}"],
+        summary: "pattern arms over a brace-primary discriminant; kind arms (`ok`/`error`/`loading`/`idle`) bind payloads; optional {else => …}; missing LiveState/MutationState arm is a compile error",
     },
     BlockEntry {
         open: "<when {token}>",
-        clauses: &["<else>"],
-        summary: "structural viewport branch on a theme breakpoint token (mobile/tablet/desktop); optional <else> is the SSR/mobile-first default; matchMedia swap on the client",
-    },
-    BlockEntry {
-        open: "<while-loading {sig}>",
-        clauses: &[],
-        summary: "renders while an async query signal is pending; brace-primary signal name",
-    },
-    BlockEntry {
-        open: "<while-error as=\"err\" {sig}>",
-        clauses: &[],
-        summary: "renders while an async query signal is rejected; `as` names the error binding; brace-primary signal name",
+        clauses: &["{else => …}"],
+        summary: "structural viewport branch on a theme breakpoint token (mobile/tablet/desktop); optional {else => …} is the SSR/mobile-first default; matchMedia swap on the client",
     },
 ];
 
@@ -66,21 +52,17 @@ mod tests {
 
     #[test]
     fn covers_every_known_clause() {
-        // Kept in lockstep by hand with blocks.rs's IF_TERMS/FOR_TERMS/
-        // MATCH_TERMS/WHEN_TERMS (the parser's Discriminant variants carry
-        // no prose, so this table can't be derived from them — see module docs).
         let all_clauses: Vec<&str> = BLOCKS
             .iter()
             .flat_map(|b| b.clauses.iter().copied())
             .collect();
-        assert!(all_clauses.contains(&"<else-if {…}>"));
-        assert!(all_clauses.contains(&"<else>"));
-        assert!(all_clauses.contains(&"<case {…}>"));
-        assert!(all_clauses.contains(&"<default>"));
+        assert!(all_clauses.iter().any(|c| c.contains("else-if")));
+        assert!(all_clauses.iter().any(|c| c.contains("{else =>")));
+        assert!(all_clauses.iter().any(|c| c.contains("pattern as binding")));
         assert_eq!(
             BLOCKS.len(),
-            6,
-            "one row per block kind: if, for, match, when, while-loading, while-error"
+            4,
+            "one row per block kind: if, for, match, when"
         );
     }
 

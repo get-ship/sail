@@ -1,7 +1,7 @@
 <!--
   /errors — what happens when component code throws. One boundary element,
   one dev overlay, one default route boundary; async errors are the Data
-  chapter's {#while-error} and stay out of this system. Every claim here is
+  chapter's {#match error arm} and stay out of this system. Every claim here is
   checked against the runtime sources and their tests.
 -->
 
@@ -35,7 +35,7 @@ Concepts</p>
 
     Things fail two ways. Data can fail to arrive — that is a state, and the
     <a href="/sail/language/data">Data</a> chapter renders it with
-    <code>&lt;while-error&gt;</code>. Or code can throw — an exception in
+    <code>&lt;match error arm&gt;</code>. Or code can throw — an exception in
     a component. This chapter is about the second kind: what catches a throw,
     and what the page shows instead of nothing.
   </p>
@@ -115,7 +115,7 @@ Source</p>
     style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
 
     The two systems don't overlap: a failed fetch shows the
-    <code>&lt;while-error&gt;</code> branch, never the boundary
+    <code>&lt;match error arm&gt;</code> branch, never the boundary
     fallback; a synchronous throw trips the boundary, never the error state.
     Expected failures get rendered as states; unexpected ones get contained
     by boundaries.

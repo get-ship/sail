@@ -229,7 +229,7 @@ export default controller(() => {
   <section>
     <h2>Live tick log (effect re-fires each tick)</h2>
     <div>
-      <for {recentTicks()} as="row" key={row.id}>
+      <for {recentTicks() as row} key={row.id}>
         <div data-ticks-row="true" aria-current={row.id === ticks() ? 'fresh' : (row.id % 7 === 0 ? 'warn' : 'false')}>
           tick {row.id} @ {row.label}
         </div>
@@ -248,7 +248,7 @@ export default controller(() => {
       <button on:click={() => resetBoard()}>reset board</button>
     </div>
     <div>
-      <for {columns()} as="col" key={col.id}>
+      <for {columns() as col} key={col.id}>
         <section data-col={col.id}>
           <div>
             <span data-tone="plain" use:swatch={col.tone}>
@@ -260,7 +260,7 @@ export default controller(() => {
           <ol data-col-cards={col.id}
               on:dragover|preventDefault={(e) => onDragOver(e)}
               on:drop|preventDefault={(e) => onDrop(e, col.id, null)}>
-            <for {col.cards} as="card" key={card.id}>
+            <for {col.cards as card} key={card.id}>
               <li data-card="true"
 data-card={card.id}
 draggable="true"
@@ -274,9 +274,7 @@ on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}>
                   {card.title}
                   <if {card.priority === 'high'}>
                     <span>high</span>
-                  <else-if {card.priority === 'low'}>
-                    <span>low</span>
-                  </else-if></if>
+                  {else-if {card.priority === 'low'} => <span>low</span>}</if>
                 </div>
                 <div>owner: {card.owner} · #{card.id}</div>
               </li>

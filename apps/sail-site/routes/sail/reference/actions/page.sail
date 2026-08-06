@@ -32,7 +32,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <grid cols="3" gap="2">
-    <for {actions()} as="a" key={a.name}>
+    <for {actions() as a} key={a.name}>
       <card padding="sm">
         style({ box: minW(0) })
 

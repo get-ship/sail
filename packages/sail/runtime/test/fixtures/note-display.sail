@@ -28,7 +28,7 @@ export default controller(({ title, body, tags }: { title: () => string; body: (
   <if {expanded()}>
     <div data-testid="body">{body()}</div>
     <ul data-testid="tags">
-      <for {parsedTags()} as="tag" key={tag}>
+      <for {parsedTags() as tag} key={tag}>
         <li>{tag}</li>
       </for>
     </ul>

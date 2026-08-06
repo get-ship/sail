@@ -105,7 +105,7 @@ Theme overrides</p>
           />
         </column>
         <column l1-list gap="1" on:click={components.onSelect}>
-          <for {components.componentRows()} as="row" key={row.key}>
+          <for {components.componentRows() as row} key={row.key}>
             <row
               l1={row.id}
               selected={row.selected ? 'true' : 'false'}
@@ -195,7 +195,7 @@ override</badge>
                 <p>
                   style([ style(pathMeta), style({ box: shrink(0) }) ])
 {components.viewerVariantAttr()}:</p>
-                <for {components.variantChips()} as="c" key={c.key}>
+                <for {components.variantChips() as c} key={c.key}>
                   <button
                     type="button"
                     size="sm"
@@ -783,7 +783,7 @@ component.*</p>
           </row>
           <if {components.hasComponentKnobs()}>
             <column gap="3" component-knob-list>
-              <for {components.componentKnobs()} as="tok" key={tok.key}>
+              <for {components.componentKnobs() as tok} key={tok.key}>
                 <column token-path={tok.path} gap="1">
                   style(tokenRow)
 
@@ -857,7 +857,7 @@ theme-wide</p>
           </p>
           <if {components.hasGlobalKnobs()}>
             <column gap="3" global-knob-list>
-              <for {components.globalKnobs()} as="tok" key={tok.key}>
+              <for {components.globalKnobs() as tok} key={tok.key}>
                 <column token-path={tok.path} gap="1">
                   style(tokenRow)
 
@@ -901,7 +901,7 @@ No related globals listed for this face.</p>
   </row>
 
   <toast-region position="bottom-end" components-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>

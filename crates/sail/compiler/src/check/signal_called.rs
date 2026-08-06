@@ -108,7 +108,9 @@ impl Cx<'_> {
                 Instr::Match(m) => {
                     self.rendered(&m.discriminant);
                     for c in &m.cases {
-                        self.rendered(&c.test);
+                        if let crate::ir::MatchTest::Expr(e) = &c.test {
+                            self.rendered(e);
+                        }
                         self.walk_instrs(&c.body);
                     }
                     if let Some(d) = &m.default {
@@ -121,8 +123,6 @@ impl Cx<'_> {
                         self.walk_instrs(e);
                     }
                 }
-                                Instr::WhileLoading(wl) => self.walk_instrs(&wl.body),
-                Instr::WhileError(we) => self.walk_instrs(&we.body),
                 Instr::StaticText { .. } | Instr::Comment { .. } => {}
             }
         }

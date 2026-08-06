@@ -16,25 +16,21 @@ Todos</h1>
     <button type="submit">Add</button>
   </form>
 
-  <while-loading {list}>
-  <p>
+  <match {list()}>
+  {loading => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Loading…</p>
-  </while-loading>
-  <while-error as="err" {list}>
-  <p>
+Loading…</p>}
+  {error as err => <p>
     style({ paint: fg(destructive), text: fontSize(sm) })
-Error: {err.message}</p>
-  </while-error>
-  <if {list().kind === 'ok'}>
-  <column gap="1">
+Error: {err.message}</p>}
+  {ok as value => <column gap="1">
     style({ box: pad(0).m(0), paint: list(none) })
 
-    <for {list().value.items} as="item" key={item.id}>
+    <for {value.items as item} key={item.id}>
     <li aria-pressed={item.done}>
       style({ box: pad(1), paint: radius(md) }).when(pressed, { paint: fg(muted-foreground), text: underline(line-through) })
 {item.text}</li>
     </for>
-  </column>
-  </if>
+  </column>}
+</match>
 </column>

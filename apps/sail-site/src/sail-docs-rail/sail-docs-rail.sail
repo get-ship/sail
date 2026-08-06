@@ -134,8 +134,7 @@ export default controller((ctx) => {
  </main>
  </column>
  </row>
-<else>
- <row nowrap align="stretch" gap="0">
+{else => <row nowrap align="stretch" gap="0">
    style([ style(shell), style({ box: w(full).grow(1).minW(0) }) ])
 
  <nav label="Sail docs">
@@ -241,8 +240,7 @@ Sail docs</small>
  <slot name="route"></slot>
  </main>
  </column>
- </row>
-</else></if>
+ </row>}</if>
 
 <dialog
  id="sail-docs-drawer"

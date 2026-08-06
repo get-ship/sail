@@ -54,16 +54,50 @@ impl<'a> Parser<'a> {
                 out.push(Node::Element(self.parse_element()?));
                 continue;
             }
-            // Text run — read up to the next `<`. A stray `<` that wasn't
-            // recognized as a tag start (e.g. the JS less-than operator inside
-            // a `{#if x < y}` template expression) must be consumed as text;
-            // otherwise the loop body below never advances `self.i` and we
-            // spin forever pushing empty text nodes.
+            // Text run. Inside an unclosed `{…}` arm/expr, tags are text so
+            // match/if arms can carry subtrees: `{ok as x => <p>{x}</p>}`.
+            // Outside braces, stop at the next real tag start (stray `<` that
+            // is not a tag — e.g. `x < y` in an expression already handled
+            // via brace depth — is still consumed as text so we don't spin).
             let start = self.i;
             if self.bytes[self.i] == b'<' {
                 self.i += 1;
             }
-            while self.i < self.bytes.len() && self.bytes[self.i] != b'<' {
+            let mut brace_depth = 0i32;
+            let mut str_quote: Option<u8> = None;
+            while self.i < self.bytes.len() {
+                let c = self.bytes[self.i];
+                if let Some(q) = str_quote {
+                    if c == b'\\' {
+                        self.i = (self.i + 2).min(self.bytes.len());
+                        continue;
+                    }
+                    if c == q {
+                        str_quote = None;
+                    }
+                    self.i += 1;
+                    continue;
+                }
+                if c == b'"' || c == b'\'' || c == b'`' {
+                    str_quote = Some(c);
+                    self.i += 1;
+                    continue;
+                }
+                if c == b'{' {
+                    brace_depth += 1;
+                    self.i += 1;
+                    continue;
+                }
+                if c == b'}' {
+                    if brace_depth > 0 {
+                        brace_depth -= 1;
+                    }
+                    self.i += 1;
+                    continue;
+                }
+                if c == b'<' && brace_depth == 0 {
+                    break;
+                }
                 self.i += 1;
             }
             // Don't decode HTML entities here — the text chunk may contain
@@ -180,7 +214,7 @@ impl<'a> Parser<'a> {
                 break;
             }
             // Brace-primary attribute: `<if {open()}>`, `<match {status()}>`,
-            // `<for {items()} as="item">`. Stored as name `@primary` with the
+            // `<for {items() as item}>`. Stored as name `@primary` with the
             // raw `{…}` value (including braces) so control-flow can resolve it
             // without a `cond=` / `on=` / `of=` name.
             if c == b'{' {
@@ -453,5 +487,35 @@ mod tests {
         let _ = parse_fragment(r#"<div use:clickOutside={h}></div>"#);
         // A non-ASCII char immediately after a valid `use:` prefix.
         let _ = parse_fragment("<div use:—>x</div>");
+    }
+
+    #[test]
+    fn arm_brace_depth_keeps_nested_tags_as_text() {
+        let nodes = parse_fragment(
+            "<when {tablet}><p>w</p>{else => <if {x()}><span>n</span></if>}</when>",
+        )
+        .expect("parse");
+        let when = match &nodes[0] {
+            super::super::Node::Element(e) => e,
+            _ => panic!("expected element"),
+        };
+        let kinds: Vec<&str> = when
+            .children
+            .iter()
+            .map(|n| match n {
+                super::super::Node::Element(e) => e.tag.as_str(),
+                super::super::Node::Text(t) => {
+                    eprintln!("TEXT {:?}", t.data);
+                    "text"
+                }
+                _ => "other",
+            })
+            .collect();
+        eprintln!("kinds={kinds:?}");
+        assert!(kinds.iter().any(|k| *k == "text"), "expected text arm");
+        assert!(
+            !kinds.iter().any(|k| *k == "if"),
+            "if must stay inside arm text, not sibling element: {kinds:?}"
+        );
     }
 }

@@ -297,7 +297,7 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
     // diff needed.
     use sail_compiler::compile;
     let src = r#"<ul>
-  <for {[{id: 1}, {id: 2}]} as="row" index="i" key={row.id}>
+  <for {[{id: 1}, {id: 2}] as row, i} key={row.id}>
     <li>{i}</li>
   </for>
 </ul>

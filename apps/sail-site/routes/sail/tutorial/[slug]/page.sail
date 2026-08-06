@@ -357,21 +357,15 @@ TUTORIAL</p>
       </row>
 
       <row gap="1" label="Lesson progress">
-        <for {steps()} as="step" key={step.slug}>
+        <for {steps() as step} key={step.slug}>
           <match {step.state}>
-            <case {'done'}>
-              <a href={step.href} title={step.title}>
+            {'done' => <a href={step.href} title={step.title}>
                 style({  box: grow(1).h(1), paint: radius(full).bg(primary)  })
-</a>
-            </case><case {'current'}>
-              <a href={step.href} title={step.title} current="step">
+</a>}{'current' => <a href={step.href} title={step.title} current="step">
                 style({  box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50)  })
-</a>
-            </case><default>
-              <a href={step.href} title={step.title}>
+</a>}{else => <a href={step.href} title={step.title}>
                 style({  box: grow(1).h(1), paint: radius(full).bg(surface-2)  })
-</a>
-          </default></match>
+</a>}</match>
         </for>
       </row>
 
@@ -507,43 +501,34 @@ PREVIEW</small>
         style({  box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })
         <span>
           style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
-          <for {logs()} as="line" key={line.id}>
+          <for {logs() as line} key={line.id}>
           <match {line.kind}>
-            <case {'success'}>
-              <row gap="2"><small>
+            {'success' => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(success) })
-{line.msg}</small></row>
-            </case><case {'warn'}>
-              <row gap="2"><small>
+{line.msg}</small></row>}{'warn' => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(warning) })
-{line.msg}</small></row>
-            </case><case {'error'}>
-              <row gap="2">
+{line.msg}</small></row>}{'error' => <row gap="2">
                 style({ box: pad(1).padX(2), paint: bg(muted).radius(sm) })
 <small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(destructive) })
-{line.msg}</small></row>
-            </case><default>
-              <row gap="2"><small>
+{line.msg}</small></row>}{else => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(muted-foreground) })
-{line.msg}</small></row>
-          </default></match>
+{line.msg}</small></row>}</match>
         </for>
         </span>
 </column>
     </column>
   </column>
 </row>
-<else>
-<!-- Mobile: stacked — short lesson header + full-width playground -->
+{else => <!-- Mobile: stacked — short lesson header + full-width playground -->
 <column gap="0">
   style({  box: w(full).h(fill).minH(0).overflow(hidden)  })
 
@@ -646,38 +631,29 @@ All lessons</a>
         style({  box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })
         <span>
           style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
-          <for {logs()} as="line" key={line.id}>
+          <for {logs() as line} key={line.id}>
           <match {line.kind}>
-            <case {'success'}>
-              <row gap="2"><small>
+            {'success' => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(success) })
-{line.msg}</small></row>
-            </case><case {'warn'}>
-              <row gap="2"><small>
+{line.msg}</small></row>}{'warn' => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(warning) })
-{line.msg}</small></row>
-            </case><case {'error'}>
-              <row gap="2"><small>
+{line.msg}</small></row>}{'error' => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(destructive) })
-{line.msg}</small></row>
-            </case><default>
-              <row gap="2"><small>
+{line.msg}</small></row>}{else => <row gap="2"><small>
                 style({ paint: fg(muted-foreground).opacity(50) })
 {line.ts}</small><small>
                 style({ paint: fg(muted-foreground) })
-{line.msg}</small></row>
-          </default></match>
+{line.msg}</small></row>}</match>
         </for>
         </span>
 </column>
     </column>
   </column>
-</column>
-</else></when>
+</column>}</when>
 

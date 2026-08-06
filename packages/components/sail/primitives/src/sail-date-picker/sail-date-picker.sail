@@ -406,12 +406,12 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
 ›</button>
     </row>
     <grid role="grid" cols="7" gap="1">
-      <for {dayHeaders()} as="d" key={d.key}>
+      <for {dayHeaders() as d} key={d.key}>
         <span role="columnheader">
           style({ box: padY(1), paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium).textAlign(center) })
 {d.label}</span>
       </for>
-      <for {monthCells()} as="cell" key={cell.key}>
+      <for {monthCells() as cell} key={cell.key}>
         <button
           type="button"
           disabled={cell.disabled}

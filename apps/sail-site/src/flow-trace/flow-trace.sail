@@ -77,7 +77,7 @@ Board</strong>
     <column gap="1">
       style(list)
 
-      <for {rows()} as="r" key={r.id}>
+      <for {rows() as r} key={r.id}>
         <row nowrap>
           style({ animate: enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 }) })
 

@@ -131,7 +131,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
           <span>
             style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
 {variantAttr()}:</span>
-          <for {chips()} as="c" key={c.v}>
+          <for {chips() as c} key={c.v}>
             <button size="sm" tone="primary" variant={c.variant} data-variant={c.v}>{c.v}</button>
           </for>
         </if>
@@ -168,7 +168,7 @@ Usage — a complete program</p>
         <p>
           style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 Props</p>
-        <for {propRows()} as="r" key={r.name}>
+        <for {propRows() as r} key={r.name}>
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>

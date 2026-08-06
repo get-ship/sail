@@ -1,22 +1,20 @@
 //! Expand reserved control-flow **elements** into the flat token stream
-//! used by `blocks.rs`. Author form (brace-primary only for the primary
-//! expression):
+//! used by `blocks.rs`. Author form:
 //!
 //! ```sail
-//! <if {open()}>…<else-if {x()}>…</else-if><else>…</else></if>
-//! <for {items()} as="item" key={item.id}>…<else>…</else></for>
-//! <match {kind()}>
-//!   <case {'a'}>…</case>
-//!   <default>…</default>
+//! <if {open()}>…{else-if {x()} => …}{else => …}</if>
+//! <for {items as item} key={item.id}>…{else => …}</for>
+//! <match {state()}>
+//!   {loading => …}
+//!   {error as err => …}
+//!   {ok as value => …}
 //! </match>
-//! <while-loading {users}>…</while-loading>
-//! <while-error as="err" {users}>…</while-error>
+//! <when {tablet}>…{else => …}</when>
 //! ```
 //!
-//! Named attrs that remain: `as=`, `key=`, `index=` (and `as=` on
-//! while-error). Primary expressions are brace-primary only.
-//!
-//! Brace blocks (`{#if}`, …) are rejected at classify time.
+//! Four blocks only: if / for / match / when. Binding lives in-brace
+//! (`items as item`, `error as err`); `as=` attributes and sibling
+//! `<else>` / `<case>` / `<default>` / `<while-*>` elements are gone.
 
 use crate::parse::html::{Element, Node, PRIMARY_BRACE_ATTR};
 
@@ -24,64 +22,17 @@ use super::tokenize::{Token, TokenKind};
 
 /// Tags that are control-flow, never HTML elements.
 pub fn is_control_tag(tag: &str) -> bool {
-    matches!(
-        tag,
-        "if" | "else-if"
-            | "else"
-            | "for"
-            | "match"
-            | "when"
-            | "case"
-            | "default"
-            | "while-loading"
-            | "while-error"
-    )
+    matches!(tag, "if" | "for" | "match" | "when")
 }
 
-/// Expand a control element into Open/branch/Close tokens. Recurses for nested
-/// control and normal elements via `flatten_nodes`.
+/// Expand a control element into Open/Close tokens. Nested content
+/// (including arm braces) is flattened via `flatten_nodes`.
 pub fn expand_control_element(el: &Element, out: &mut Vec<Token>) {
     match el.tag.as_str() {
         "if" => expand_if(el, out),
         "for" => expand_for(el, out),
         "match" => expand_match(el, out),
         "when" => expand_when(el, out),
-        "while-loading" => expand_while_loading(el, out),
-        "while-error" => expand_while_error(el, out),
-        // Stray clause tags at this level become errors later as unexpected tokens
-        // if someone writes <else> alone — emit as markers with empty/malformed src.
-        "else-if" => {
-            out.push(Token {
-                kind: TokenKind::ElseIf {
-                    src: brace_primary(el).unwrap_or_default(),
-                },
-                span: el.span,
-            });
-            flatten_nodes(&el.children, out);
-        }
-        "else" => {
-            out.push(Token {
-                kind: TokenKind::Else,
-                span: el.span,
-            });
-            flatten_nodes(&el.children, out);
-        }
-        "case" => {
-            out.push(Token {
-                kind: TokenKind::Case {
-                    src: brace_primary(el).unwrap_or_default(),
-                },
-                span: el.span,
-            });
-            flatten_nodes(&el.children, out);
-        }
-        "default" => {
-            out.push(Token {
-                kind: TokenKind::Default,
-                span: el.span,
-            });
-            flatten_nodes(&el.children, out);
-        }
         _ => unreachable!("is_control_tag guard"),
     }
 }
@@ -92,84 +43,132 @@ fn expand_if(el: &Element, out: &mut Vec<Token>) {
         kind: TokenKind::OpenIf { src: cond },
         span: el.span,
     });
-    flatten_if_children(&el.children, out);
+    flatten_nodes(&el.children, out);
     out.push(Token {
         kind: TokenKind::CloseIf,
         span: el.span,
     });
 }
 
-/// Body of `<if>`: normal nodes, then optional `<else-if>` / `<else>` elements
-/// as **direct** children (not nested inside other elements).
-fn flatten_if_children(nodes: &[Node], out: &mut Vec<Token>) {
-    for n in nodes {
-        match n {
-            Node::Element(child) if child.tag == "else-if" => {
-                out.push(Token {
-                    kind: TokenKind::ElseIf {
-                        src: brace_primary(child).unwrap_or_default(),
-                    },
-                    span: child.span,
-                });
-                flatten_nodes(&child.children, out);
-            }
-            Node::Element(child) if child.tag == "else" => {
-                out.push(Token {
-                    kind: TokenKind::Else,
-                    span: child.span,
-                });
-                flatten_nodes(&child.children, out);
-            }
-            other => flatten_node(other, out),
-        }
-    }
-}
-
 fn expand_for(el: &Element, out: &mut Vec<Token>) {
-    // Build the legacy header string parse_for_header already understands:
-    //   `item of items()` or `(item, i) of items() key={…}`
-    let as_name = attr_raw(el, "as").unwrap_or_else(|| "item".into());
-    let index = attr_raw(el, "index");
-    let iterable = brace_primary(el).unwrap_or_default();
+    // Header form understood by parse_for_header:
+    //   `item of items()` / `(item, i) of items() key={…}`
+    // Author form is brace-primary `items as item` (+ optional `, i`) with
+    // optional `key=` attr. Legacy `as=` is rejected at blocks parse.
+    let primary = brace_primary(el).unwrap_or_default();
     let key = attr_expr(el, "key");
-
-    let left = match index {
-        Some(i) if !i.is_empty() => format!("({as_name}, {i})"),
-        _ => as_name,
-    };
-    let mut header = format!("{left} of {iterable}");
-    if let Some(k) = key {
-        if !k.is_empty() {
-            header.push_str(" key={");
-            header.push_str(&k);
-            header.push('}');
-        }
-    }
+    let header = build_for_header(&primary, key.as_deref());
 
     out.push(Token {
         kind: TokenKind::OpenFor { src: header },
         span: el.span,
     });
-    flatten_for_children(&el.children, out);
+    flatten_nodes(&el.children, out);
     out.push(Token {
         kind: TokenKind::CloseFor,
         span: el.span,
     });
 }
 
-fn flatten_for_children(nodes: &[Node], out: &mut Vec<Token>) {
-    for n in nodes {
-        match n {
-            Node::Element(child) if child.tag == "else" => {
-                out.push(Token {
-                    kind: TokenKind::Else,
-                    span: child.span,
-                });
-                flatten_nodes(&child.children, out);
-            }
-            other => flatten_node(other, out),
+/// Convert author `{iterable as item[, idx]}` (+ optional key attr) into the
+/// legacy `item of iterable key={…}` header string.
+fn build_for_header(primary: &str, key: Option<&str>) -> String {
+    let primary = primary.trim();
+    let (iterable, binding) = split_as_binding(primary).unwrap_or((primary, "item"));
+    let left = binding.trim();
+    let mut header = if left.starts_with('(') {
+        format!("{left} of {iterable}")
+    } else if let Some((item, idx)) = split_top_comma(left) {
+        format!("({item}, {idx}) of {iterable}")
+    } else {
+        format!("{left} of {iterable}")
+    };
+    if let Some(k) = key {
+        if !k.is_empty() {
+            header.push_str(" key={");
+            header.push_str(k);
+            header.push('}');
         }
     }
+    header
+}
+
+/// Split `iterable as binding` on top-level ` as `.
+fn split_as_binding(src: &str) -> Option<(&str, &str)> {
+    let bytes = src.as_bytes();
+    let mut depth = 0i32;
+    let mut str_quote: Option<u8> = None;
+    let mut i = 0usize;
+    while i + 4 <= bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = str_quote {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        if c == b'"' || c == b'\'' || c == b'`' {
+            str_quote = Some(c);
+            i += 1;
+            continue;
+        }
+        if matches!(c, b'(' | b'[' | b'{') {
+            depth += 1;
+            i += 1;
+            continue;
+        }
+        if matches!(c, b')' | b']' | b'}') {
+            depth -= 1;
+            i += 1;
+            continue;
+        }
+        if depth == 0 && &src[i..i + 4] == " as " {
+            let left = src[..i].trim();
+            let right = src[i + 4..].trim();
+            if !left.is_empty() && !right.is_empty() {
+                return Some((left, right));
+            }
+            return None;
+        }
+        i += 1;
+    }
+    None
+}
+
+fn split_top_comma(src: &str) -> Option<(&str, &str)> {
+    let bytes = src.as_bytes();
+    let mut depth = 0i32;
+    let mut str_quote: Option<u8> = None;
+    for (i, &c) in bytes.iter().enumerate() {
+        if let Some(q) = str_quote {
+            if c == q {
+                str_quote = None;
+            }
+            continue;
+        }
+        if c == b'"' || c == b'\'' || c == b'`' {
+            str_quote = Some(c);
+            continue;
+        }
+        if matches!(c, b'(' | b'[' | b'{') {
+            depth += 1;
+        } else if matches!(c, b')' | b']' | b'}') {
+            depth -= 1;
+        } else if c == b',' && depth == 0 {
+            let a = src[..i].trim();
+            let b = src[i + 1..].trim();
+            if !a.is_empty() && !b.is_empty() {
+                return Some((a, b));
+            }
+            return None;
+        }
+    }
+    None
 }
 
 fn expand_match(el: &Element, out: &mut Vec<Token>) {
@@ -178,28 +177,7 @@ fn expand_match(el: &Element, out: &mut Vec<Token>) {
         kind: TokenKind::OpenMatch { src: disc },
         span: el.span,
     });
-    for n in &el.children {
-        match n {
-            Node::Element(child) if child.tag == "case" => {
-                out.push(Token {
-                    kind: TokenKind::Case {
-                        src: brace_primary(child).unwrap_or_default(),
-                    },
-                    span: child.span,
-                });
-                flatten_nodes(&child.children, out);
-            }
-            Node::Element(child) if child.tag == "default" => {
-                out.push(Token {
-                    kind: TokenKind::Default,
-                    span: child.span,
-                });
-                flatten_nodes(&child.children, out);
-            }
-            Node::Text(t) if t.data.chars().all(|c| c.is_ascii_whitespace()) => {}
-            other => flatten_node(other, out),
-        }
-    }
+    flatten_nodes(&el.children, out);
     out.push(Token {
         kind: TokenKind::CloseMatch,
         span: el.span,
@@ -207,76 +185,19 @@ fn expand_match(el: &Element, out: &mut Vec<Token>) {
 }
 
 fn expand_when(el: &Element, out: &mut Vec<Token>) {
-    // Token is a theme breakpoint name, not an expression — same brace-primary
-    // surface as other blocks (`<when {tablet}>`).
     let token = brace_primary(el).unwrap_or_default();
     out.push(Token {
         kind: TokenKind::OpenWhen { src: token },
         span: el.span,
     });
-    flatten_when_children(&el.children, out);
+    flatten_nodes(&el.children, out);
     out.push(Token {
         kind: TokenKind::CloseWhen,
         span: el.span,
     });
 }
 
-fn flatten_when_children(nodes: &[Node], out: &mut Vec<Token>) {
-    for n in nodes {
-        match n {
-            Node::Element(child) if child.tag == "else" => {
-                out.push(Token {
-                    kind: TokenKind::Else,
-                    span: child.span,
-                });
-                flatten_nodes(&child.children, out);
-            }
-            other => flatten_node(other, out),
-        }
-    }
-}
-
-fn expand_while_loading(el: &Element, out: &mut Vec<Token>) {
-    // Header: `of <signalName>` — signal is a bare identifier from brace-primary.
-    let name = brace_primary(el)
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .unwrap_or_default();
-    out.push(Token {
-        kind: TokenKind::OpenWhileLoading {
-            src: format!("of {name}"),
-        },
-        span: el.span,
-    });
-    flatten_nodes(&el.children, out);
-    out.push(Token {
-        kind: TokenKind::CloseWhileLoading,
-        span: el.span,
-    });
-}
-
-fn expand_while_error(el: &Element, out: &mut Vec<Token>) {
-    // Header: `<errVar> of <signalName>`
-    let err = attr_raw(el, "as").unwrap_or_else(|| "err".into());
-    let name = brace_primary(el)
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .unwrap_or_default();
-    out.push(Token {
-        kind: TokenKind::OpenWhileError {
-            src: format!("{err} of {name}"),
-        },
-        span: el.span,
-    });
-    flatten_nodes(&el.children, out);
-    out.push(Token {
-        kind: TokenKind::CloseWhileError,
-        span: el.span,
-    });
-}
-
 fn flatten_nodes(nodes: &[Node], out: &mut Vec<Token>) {
-    // Re-enter the same whitespace rules as tokenize_children for this sublist.
     let has_element_sibling = nodes.iter().any(|n| matches!(n, Node::Element(_)));
     for n in nodes {
         match n {
@@ -311,10 +232,6 @@ fn attr_expr(el: &Element, name: &str) -> Option<String> {
     Some(strip_attr_expr(&raw).to_string())
 }
 
-fn attr_raw(el: &Element, name: &str) -> Option<String> {
-    el.get_attribute(name).map(|s| s.trim().to_string())
-}
-
 /// Brace-primary `{expr}` on the open tag — the only primary-expression form.
 fn brace_primary(el: &Element) -> Option<String> {
     let raw = el.get_attribute(PRIMARY_BRACE_ATTR)?;
@@ -328,8 +245,6 @@ fn brace_primary(el: &Element) -> Option<String> {
 
 fn strip_attr_expr(raw: &str) -> &str {
     let s = raw.trim();
-    // preprocess may leave `"…"` quotes on the attr value already stripped by parser
-    // into Attr.value without outer quotes. Values are often `{expr}` or plain.
     if s.starts_with('{') && s.ends_with('}') && s.len() >= 2 {
         return s[1..s.len() - 1].trim();
     }
@@ -350,74 +265,18 @@ mod tests {
     }
 
     #[test]
-    fn expands_if_else() {
-        let el = parse_el("<if {a()}><p>y</p><else><p>n</p></else></if>");
+    fn expands_if_with_else_arm() {
+        let el = parse_el("<if {a()}><p>y</p>{else => <p>n</p>}</if>");
         let mut out = Vec::new();
         expand_control_element(&el, &mut out);
         assert!(matches!(out[0].kind, TokenKind::OpenIf { .. }));
-        assert!(out.iter().any(|t| matches!(t.kind, TokenKind::Else)));
+        assert!(out.iter().any(|t| matches!(t.kind, TokenKind::Arm { .. })));
         assert!(matches!(out.last().unwrap().kind, TokenKind::CloseIf));
     }
 
     #[test]
-    fn residual_cond_named_attr_is_ignored() {
-        // Named residual form must not supply the primary expression.
-        let el = parse_el("<if cond={a()}><p>y</p></if>");
-        let mut out = Vec::new();
-        expand_control_element(&el, &mut out);
-        match &out[0].kind {
-            TokenKind::OpenIf { src } => {
-                assert!(src.is_empty(), "cond= must not supply primary, got {src}")
-            }
-            other => panic!("expected OpenIf, got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn expands_if_brace_primary() {
-        let el = parse_el(
-            "<if {a()}><p>y</p><else-if {b()}><p>m</p></else-if><else><p>n</p></else></if>",
-        );
-        let mut out = Vec::new();
-        expand_control_element(&el, &mut out);
-        match &out[0].kind {
-            TokenKind::OpenIf { src } => assert_eq!(src, "a()"),
-            other => panic!("expected OpenIf, got {other:?}"),
-        }
-        let else_if = out
-            .iter()
-            .find(|t| matches!(t.kind, TokenKind::ElseIf { .. }))
-            .expect("else-if");
-        match &else_if.kind {
-            TokenKind::ElseIf { src } => assert_eq!(src, "b()"),
-            _ => unreachable!(),
-        }
-    }
-
-    #[test]
-    fn expands_match_case_brace_primary() {
-        let el = parse_el(
-            "<match {kind()}><case {'ok'}><p>y</p></case><default><p>n</p></default></match>",
-        );
-        let mut out = Vec::new();
-        expand_control_element(&el, &mut out);
-        match &out[0].kind {
-            TokenKind::OpenMatch { src } => assert_eq!(src, "kind()"),
-            other => panic!("expected OpenMatch, got {other:?}"),
-        }
-        let case = out
-            .iter()
-            .find(|t| matches!(t.kind, TokenKind::Case { .. }))
-            .expect("case");
-        match &case.kind {
-            TokenKind::Case { src } => assert_eq!(src, "'ok'"),
-            _ => unreachable!(),
-        }
-    }
-
-    #[test]
-    fn expands_for_brace_primary_iterable() {
-        let el = parse_el(r#"<for {items()} as="row" key={row.id}><p>{row.id}</p></for>"#);
+    fn expands_for_in_brace_binding() {
+        let el = parse_el(r#"<for {items() as row} key={row.id}><p>{row.id}</p></for>"#);
         let mut out = Vec::new();
         expand_control_element(&el, &mut out);
         match &out[0].kind {
@@ -430,13 +289,53 @@ mod tests {
     }
 
     #[test]
-    fn brace_primary_with_spaces_inside() {
-        let el = parse_el("<if { open() && ready() }><p>y</p></if>");
+    fn expands_match_arms() {
+        let el = parse_el(
+            "<match {kind()}>{ok as v => <p>y</p>}{error as e => <p>n</p>}{loading => <p>…</p>}</match>",
+        );
         let mut out = Vec::new();
         expand_control_element(&el, &mut out);
         match &out[0].kind {
-            TokenKind::OpenIf { src } => assert_eq!(src, "open() && ready()"),
+            TokenKind::OpenMatch { src } => assert_eq!(src, "kind()"),
+            other => panic!("expected OpenMatch, got {other:?}"),
+        }
+        let arms: Vec<_> = out
+            .iter()
+            .filter(|t| matches!(t.kind, TokenKind::Arm { .. }))
+            .collect();
+        assert_eq!(arms.len(), 3, "three arms: {out:?}");
+    }
+
+    #[test]
+    fn residual_cond_named_attr_is_ignored() {
+        let el = parse_el("<if cond={a()}><p>y</p></if>");
+        let mut out = Vec::new();
+        expand_control_element(&el, &mut out);
+        match &out[0].kind {
+            TokenKind::OpenIf { src } => {
+                assert!(src.is_empty(), "cond= must not supply primary, got {src}")
+            }
             other => panic!("expected OpenIf, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn expands_when_multiline_else_arm() {
+        let el = parse_el(
+            "<when {tablet}><p>wide</p>{else =>\n  <if {open()}><span>n</span></if>\n}</when>",
+        );
+        let mut out = Vec::new();
+        expand_control_element(&el, &mut out);
+        eprintln!(
+            "tokens: {:?}",
+            out.iter().map(|t| t.kind.label()).collect::<Vec<_>>()
+        );
+        for t in &out {
+            if let TokenKind::Arm { head, body_src } = &t.kind {
+                eprintln!("ARM head={head:?} body={body_src:?}");
+            }
+        }
+        assert!(out.iter().any(|t| matches!(t.kind, TokenKind::Arm { .. })));
+        assert!(matches!(out.last().unwrap().kind, TokenKind::CloseWhen));
     }
 }

@@ -1169,7 +1169,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            MCP `sail_surface` topic `control-flow`.\n\
          - **Structural responsiveness** is `<when {{token}}>` (theme breakpoints:\n  \
            mobile/tablet/desktop). Different trees per viewport; SSR paints the\n  \
-           `<else>` / default branch only (mobile-first), then hydrates with matchMedia.\n\
+           `{{else => …}}` / default branch only (mobile-first), then hydrates with matchMedia.\n\
          - Style `.when({{ tablet: style.… }})` stays paint-level (density, color) — not trees.\n\
          - **No layout `matchMedia` in controllers** (`sail-controller-matchmedia-layout`):\n  \
            do not drive template-visible layout from `window.matchMedia('(min-width:…)')`\n  \
@@ -1185,7 +1185,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            }})\n\
          </controller>\n\
          <if {{open()}}><column gap=\"4\">…</column></if>\n\
-         <when {{tablet}}><row>…wide…</row><else><column>…narrow…</column></else></when>\n\
+         <when {{tablet}}><row>…wide…</row>{{else => <column>…narrow…</column>}}</when>\n\
          ```\n"
     );
 

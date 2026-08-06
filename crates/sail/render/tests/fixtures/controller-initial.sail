@@ -20,7 +20,7 @@ export default controller(() => {
 {title()}</h1>
   <if {items().length > 0}>
     <column gap="2">
-      <for {items()} as="item" key={item.id}>
+      <for {items() as item} key={item.id}>
         <row gap="2">
           style({ box: pad(2), paint: bg(surface-1).radius(sm) })
 
@@ -30,10 +30,8 @@ export default controller(() => {
         </row>
       </for>
     </column>
-    <else>
-      <p>
+    {else => <p>
         style({ paint: fg(muted-foreground) })
-Nothing on the board.</p>
-    </else>
+Nothing on the board.</p>}
   </if>
 </column>

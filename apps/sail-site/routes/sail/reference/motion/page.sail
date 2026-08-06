@@ -50,7 +50,7 @@ properties</code><small>
   <column gap="3">
     <h3>Presets</h3>
     <grid cols="3" gap="2">
-      <for {motionPresets()} as="p" key={p.name}>
+      <for {motionPresets() as p} key={p.name}>
         <card padding="sm">
           style({ box: minW(0) })
 
@@ -74,7 +74,7 @@ properties</code><small>
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">
-      <for {valueForms()} as="f" key={f.form}>
+      <for {valueForms() as f} key={f.form}>
         <card padding="sm">
           style({ box: minW(0) })
 

@@ -24,7 +24,7 @@ export default controller(() => {
   <if {filtered().length === 0}>
     <p data-testid="empty">No results for {query()}</p>
   </if>
-  <for {filtered()} as="item" key={item}>
+  <for {filtered() as item} key={item}>
     <span data-testid="result">{item}</span>
   </for>
 </div>

@@ -42,7 +42,7 @@ export default controller(() => {
 </controller>
 
 <input placeholder="Filter people" bind:value={query} />
-<for {filtered()} as="p" key={p.id}>
+<for {filtered() as p} key={p.id}>
   <card>
     style({ box: pad(4), animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })
     <row gap="3" align="center">

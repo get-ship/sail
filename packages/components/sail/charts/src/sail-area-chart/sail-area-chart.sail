@@ -103,12 +103,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
 
   <if {loading()}>
     <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-  <else-if {chart.error()}>
-    <error-state></error-state>
-  </else-if><else-if {chart.isEmpty()}>
-    <empty-state></empty-state>
-  </else-if><else>
-    <svg
+  {else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <svg
       viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
       height={height()}
       role="img"
@@ -118,14 +113,14 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       use:observeViewport>
       style({ box: display(block).w(full).overflow(hidden) })
 
-      <for {gridLines()} as="g" key={g.id}>
+      <for {gridLines() as g} key={g.id}>
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
       </for>
-      <for {seriesPaths()} as="s" key={s.name}>
+      <for {seriesPaths() as s} key={s.name}>
         <path d={s.fillD} fill={s.color} fill-opacity="0.3" stroke="none"></path>
         <path d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
         <if {points()}>
-          <for {s.pts} as="p" key={p.id}>
+          <for {s.pts as p} key={p.id}>
             <circle cx={p.cx} cy={p.cy} r="2.5" fill={s.color}></circle>
           </for>
         </if>
@@ -136,17 +131,16 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
 
       <slot name="description">
         <table>
-          <for {chart.ariaTable()} as="row" key={row[0].id}>
+          <for {chart.ariaTable() as row} key={row[0].id}>
             <tr>
-              <for {row} as="cell" key={cell.id}>
+              <for {row as cell} key={cell.id}>
                 <td>{cell.text}</td>
               </for>
             </tr>
           </for>
         </table>
       </slot>
-    </column>
-  </else></if>
+    </column>}</if>
   <row gap="3" align="stretch">
     style({ box: mt(1_5), paint: fg(muted-foreground) })
     <span>

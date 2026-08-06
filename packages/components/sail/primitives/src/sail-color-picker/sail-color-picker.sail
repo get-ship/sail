@@ -467,7 +467,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             style({ box: w(full).h(16), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm) })
 </div>
           <grid cols="6" gap="2">
-            <for {swatches()} as="sw" key={sw.hex}>
+            <for {swatches() as sw} key={sw.hex}>
               <button
                 type="button"
                 aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
@@ -574,7 +574,7 @@ Hex</span>
             style({ box: w(full).h(16), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm) })
 </div>
           <grid cols="6" gap="2">
-            <for {swatches()} as="sw" key={sw.hex}>
+            <for {swatches() as sw} key={sw.hex}>
               <button
                 type="button"
                 aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}

@@ -10,21 +10,17 @@ export default controller((_ctx) => ({ result: query(() => call('ship.demo.boom'
   <h1>
     style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
 Error Boundary</h1>
-  <while-loading {result}>
-  <p>
+  <match {result()}>
+  {loading => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Loading…</p>
-  </while-loading>
-  <while-error as="err" {result}>
-  <p>
+Loading…</p>}
+  {error as err => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Something went wrong</p>
-  </while-error>
-  <if {result().kind === 'ok'}>
-  <p>
+Something went wrong</p>}
+  {ok as value => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
 Value: <strong>
     style({ paint: fg(foreground), text: fontFamily(mono) })
-{result().value.data}</strong></p>
-  </if>
+{value.data}</strong></p>}
+</match>
 </column>

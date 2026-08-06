@@ -310,7 +310,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   >
     style({ box: display(block).w(full).h(auto), paint: pointerEvents(none) })
 
-    <for {edgeViews()} as="e" key={e.key}>
+    <for {edgeViews() as e} key={e.key}>
       <path
         d={e.d}
         data-kind={e.kind}
@@ -324,7 +324,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
     </for>
   </svg>
 
-  <for {nodeViews()} as="n" key={n.id}>
+  <for {nodeViews() as n} key={n.id}>
     <div use:rect={{left: n.left, top: n.top}}>
       style({ box: position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop)) })
 
@@ -349,8 +349,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>
-          <else>
-            <row gap="2" align="center">
+          {else => <row gap="2" align="center">
               style({ box: mb(1) })
 
               <span>
@@ -372,8 +371,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
                   {n.sub}
                 </span>
 </div>
-            </if>
-          </else></if>
+            </if>}</if>
         </column>
       </center>
     </div>

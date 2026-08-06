@@ -475,8 +475,6 @@ fn check_mutations_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
                     check_mutations_instrs(e)?;
                 }
             }
-            Instr::WhileLoading(wl) => check_mutations_instrs(&wl.body)?,
-            Instr::WhileError(we) => check_mutations_instrs(&we.body)?,
             _ => {}
         }
     }
@@ -584,7 +582,7 @@ where
         }) => {
             f(discriminant)?;
             for c in cases {
-                f(&c.test)?;
+                if let MatchTest::Expr(e) = &c.test { f(e)?; }
                 visit_instrs(&c.body, f)?;
             }
             if let Some(d) = default {
@@ -597,8 +595,6 @@ where
                 visit_instrs(e, f)?;
             }
         }
-        Instr::WhileLoading(wl) => visit_instrs(&wl.body, f)?,
-        Instr::WhileError(we) => visit_instrs(&we.body, f)?,
     }
     Ok(())
 }

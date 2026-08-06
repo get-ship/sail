@@ -1,12 +1,12 @@
-//! Block parsers for `{#if}`, `{#for}`, `{#match}`, `{#while-loading}`,
-//! `{#while-error}`. Mirrors `packages/sail/dom/src/template/compile-blocks.ts`.
+//! Block parsers for `<if>`, `<for>`, `<match>`, `<when>`.
 //!
-//! `for_header.rs` owns the gnarly header tokenization
-//! (`X of items key={…}`) so this file stays under the line cap.
+//! Arms use brace form `{pattern as binding => body}` inside the block.
+//! `for_header.rs` owns header tokenization (`X of items key={…}`).
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::*;
 use crate::parse::expr;
+use crate::parse::html;
 
 use super::ParseResult;
 use super::tokenize::{Discriminant, Token, TokenKind};
@@ -14,8 +14,7 @@ use super::tokenize::{Discriminant, Token, TokenKind};
 mod for_header;
 use for_header::parse_for_header;
 
-/// Callback that re-enters the top-level parser. Avoids a circular
-/// module dependency between blocks and the recursive parse driver.
+/// Callback that re-enters the top-level parser.
 pub(crate) struct ParseScope {
     #[allow(clippy::type_complexity)]
     pub body: fn(&[Token], usize, &[Discriminant]) -> Result<ParseResult, CompileError>,
@@ -26,21 +25,9 @@ pub(crate) struct InstrResult {
     pub end: usize,
 }
 
-const WHILE_LOADING_TERMS: &[Discriminant] = &[Discriminant::CloseWhileLoading];
-const WHILE_ERROR_TERMS: &[Discriminant] = &[Discriminant::CloseWhileError];
-
-const IF_TERMS: &[Discriminant] = &[
-    Discriminant::ElseIf,
-    Discriminant::Else,
-    Discriminant::CloseIf,
-];
-const FOR_TERMS: &[Discriminant] = &[Discriminant::Else, Discriminant::CloseFor];
-const MATCH_TERMS: &[Discriminant] = &[
-    Discriminant::Case,
-    Discriminant::Default,
-    Discriminant::CloseMatch,
-];
-const WHEN_TERMS: &[Discriminant] = &[Discriminant::Else, Discriminant::CloseWhen];
+const BODY_THEN_ARMS: &[Discriminant] = &[Discriminant::Arm, Discriminant::CloseIf];
+const FOR_BODY_TERMS: &[Discriminant] = &[Discriminant::Arm, Discriminant::CloseFor];
+const WHEN_BODY_TERMS: &[Discriminant] = &[Discriminant::Arm, Discriminant::CloseWhen];
 
 pub(crate) fn parse_if(
     tokens: &[Token],
@@ -52,46 +39,85 @@ pub(crate) fn parse_if(
         TokenKind::OpenIf { src } => src.clone(),
         _ => unreachable!(),
     };
-    expr::validate_at(&head_src, false, "{#if}", head_span)?;
+    expr::validate_at(&head_src, false, "<if>", head_span)?;
     let mut branches: Vec<IfBranch> = Vec::new();
     let mut else_body: Option<Vec<Instr>> = None;
-    let mut cur_cond = Expr::new(head_src, head_span, false);
+
+    // Free children before the first arm = then-body of the opening cond.
     let mut i = start + 1;
-    loop {
-        let body = (scope.body)(tokens, i, IF_TERMS)?;
-        branches.push(IfBranch {
-            cond: cur_cond.clone(),
-            body: body.instrs,
-        });
-        i = body.end;
-        let term = tokens
-            .get(i)
-            .ok_or_else(|| CompileError::new("missing {/if}").with_span(head_span))?;
-        match &term.kind {
+    let then_body = (scope.body)(tokens, i, BODY_THEN_ARMS)?;
+    branches.push(IfBranch {
+        cond: Expr::new(head_src, head_span, false),
+        body: then_body.instrs,
+    });
+    i = then_body.end;
+
+    while let Some(t) = tokens.get(i) {
+        match &t.kind {
             TokenKind::CloseIf => {
                 i += 1;
                 break;
             }
-            TokenKind::ElseIf { src } => {
-                expr::validate_at(src, false, "{:else if}", term.span)?;
-                cur_cond = Expr::new(src.clone(), term.span, false);
-                i += 1;
-            }
-            TokenKind::Else => {
-                i += 1;
-                let eb = (scope.body)(tokens, i, &[Discriminant::CloseIf])?;
-                else_body = Some(eb.instrs);
-                i = eb.end;
-                let closer = tokens
-                    .get(i)
-                    .ok_or_else(|| CompileError::new("missing {/if}").with_span(head_span))?;
-                if !matches!(closer.kind, TokenKind::CloseIf) {
-                    return Err(CompileError::new("missing {/if}").with_span(head_span));
+            TokenKind::Text(s) if s.trim().is_empty() => i += 1,
+            TokenKind::Arm { head, body_src } => {
+                let head_trim = head.trim();
+                if head_trim == "else" {
+                    if else_body.is_some() {
+                        return Err(
+                            CompileError::new("<if>: duplicate {else => …} arm").with_span(t.span)
+                        );
+                    }
+                    else_body = Some(parse_arm_body(body_src, t.span)?);
+                    i += 1;
+                    while let Some(n) = tokens.get(i) {
+                        match &n.kind {
+                            TokenKind::Text(s) if s.trim().is_empty() => i += 1,
+                            TokenKind::CloseIf => {
+                                i += 1;
+                                return Ok(InstrResult {
+                                    instr: Instr::If(IfInstr {
+                                        branches,
+                                        else_body,
+                                        span: head_span,
+                                    }),
+                                    end: i,
+                                });
+                            }
+                            _ => {
+                                return Err(CompileError::new(
+                                    "<if>: {else => …} must be the last arm before </if>",
+                                )
+                                .with_span(n.span));
+                            }
+                        }
+                    }
+                    return Err(CompileError::new("missing </if>").with_span(head_span));
                 }
-                i += 1;
-                break;
+                if let Some(cond_src) = strip_else_if(head_trim) {
+                    if else_body.is_some() {
+                        return Err(CompileError::new("<if>: {else-if} cannot follow {else}")
+                            .with_span(t.span));
+                    }
+                    expr::validate_at(cond_src, false, "{else-if}", t.span)?;
+                    branches.push(IfBranch {
+                        cond: Expr::new(cond_src.to_string(), t.span, false),
+                        body: parse_arm_body(body_src, t.span)?,
+                    });
+                    i += 1;
+                    continue;
+                }
+                return Err(CompileError::new(format!(
+                    "<if>: unknown arm {{{head_trim} => …}}; use {{else-if {{cond}} => …}} or {{else => …}}"
+                ))
+                .with_span(t.span));
             }
-            _ => unreachable!(),
+            other => {
+                return Err(CompileError::new(format!(
+                    "<if>: unexpected {}; use {{else-if}}/{{else}} arms or </if>",
+                    other.label()
+                ))
+                .with_span(t.span));
+            }
         }
     }
     Ok(InstrResult {
@@ -102,6 +128,25 @@ pub(crate) fn parse_if(
         }),
         end: i,
     })
+}
+
+fn strip_else_if(head: &str) -> Option<&str> {
+    let h = head.trim();
+    let rest = if let Some(r) = h.strip_prefix("else-if") {
+        r
+    } else if let Some(r) = h.strip_prefix("else if") {
+        r
+    } else {
+        return None;
+    };
+    let rest = rest.trim();
+    if rest.starts_with('{') && rest.ends_with('}') && rest.len() >= 2 {
+        return Some(rest[1..rest.len() - 1].trim());
+    }
+    if !rest.is_empty() {
+        return Some(rest);
+    }
+    None
 }
 
 pub(crate) fn parse_for(
@@ -116,24 +161,37 @@ pub(crate) fn parse_for(
     };
     let header = parse_for_header(&head_src, head_span)?;
     let mut i = start + 1;
-    let body = (scope.body)(tokens, i, FOR_TERMS)?;
+    let body = (scope.body)(tokens, i, FOR_BODY_TERMS)?;
     i = body.end;
     let mut else_body: Option<Vec<Instr>> = None;
-    if let Some(t) = tokens.get(i)
-        && matches!(t.kind, TokenKind::Else)
-    {
-        i += 1;
-        let eb = (scope.body)(tokens, i, &[Discriminant::CloseFor])?;
-        else_body = Some(eb.instrs);
-        i = eb.end;
+    loop {
+        match tokens.get(i).map(|t| &t.kind) {
+            Some(TokenKind::Text(s)) if s.trim().is_empty() => i += 1,
+            Some(TokenKind::Arm { head, body_src }) => {
+                if head.trim() != "else" {
+                    return Err(CompileError::new(format!(
+                        "<for>: only {{else => …}} arm is allowed, got {{{} => …}}",
+                        head.trim()
+                    ))
+                    .with_span(tokens[i].span));
+                }
+                else_body = Some(parse_arm_body(body_src, tokens[i].span)?);
+                i += 1;
+            }
+            Some(TokenKind::CloseFor) => {
+                i += 1;
+                break;
+            }
+            Some(other) => {
+                return Err(CompileError::new(format!(
+                    "<for>: unexpected {} before </for>",
+                    other.label()
+                ))
+                .with_span(tokens[i].span));
+            }
+            None => return Err(CompileError::new("missing </for>").with_span(head_span)),
+        }
     }
-    let closer = tokens
-        .get(i)
-        .ok_or_else(|| CompileError::new("missing {/for}").with_span(head_span))?;
-    if !matches!(closer.kind, TokenKind::CloseFor) {
-        return Err(CompileError::new("missing {/for}").with_span(head_span));
-    }
-    i += 1;
     Ok(InstrResult {
         instr: Instr::For(ForInstr {
             var_name: header.var_name,
@@ -146,138 +204,6 @@ pub(crate) fn parse_for(
         }),
         end: i,
     })
-}
-
-pub(crate) fn parse_while_loading(
-    tokens: &[Token],
-    start: usize,
-    scope: &ParseScope,
-) -> Result<InstrResult, CompileError> {
-    let head_span = tokens[start].span;
-    let head_src = match &tokens[start].kind {
-        TokenKind::OpenWhileLoading { src } => src.clone(),
-        _ => unreachable!(),
-    };
-    let bind = parse_of_binding(&head_src, head_span)?;
-    let mut i = start + 1;
-    let body = (scope.body)(tokens, i, WHILE_LOADING_TERMS)?;
-    i = body.end;
-    expect_close(
-        tokens,
-        i,
-        TokenKind::CloseWhileLoading,
-        "{/while-loading}",
-        head_span,
-    )?;
-    i += 1;
-    Ok(InstrResult {
-        instr: Instr::WhileLoading(WhileLoadingInstr {
-            bind,
-            body: body.instrs,
-            span: head_span,
-        }),
-        end: i,
-    })
-}
-
-pub(crate) fn parse_while_error(
-    tokens: &[Token],
-    start: usize,
-    scope: &ParseScope,
-) -> Result<InstrResult, CompileError> {
-    let head_span = tokens[start].span;
-    let head_src = match &tokens[start].kind {
-        TokenKind::OpenWhileError { src } => src.clone(),
-        _ => unreachable!(),
-    };
-    let (error_var, bind) = parse_error_of_binding(&head_src, head_span)?;
-    let mut i = start + 1;
-    let body = (scope.body)(tokens, i, WHILE_ERROR_TERMS)?;
-    i = body.end;
-    expect_close(
-        tokens,
-        i,
-        TokenKind::CloseWhileError,
-        "{/while-error}",
-        head_span,
-    )?;
-    i += 1;
-    Ok(InstrResult {
-        instr: Instr::WhileError(WhileErrorInstr {
-            bind,
-            error_var,
-            body: body.instrs,
-            span: head_span,
-        }),
-        end: i,
-    })
-}
-
-/// Parse `of <name>` from the header of `{#while-loading of <name>}`.
-fn parse_of_binding(src: &str, span: Span) -> Result<String, CompileError> {
-    let s = src.trim();
-    let rest = s.strip_prefix("of").ok_or_else(|| {
-        CompileError::new(
-            "{#while-loading} requires `of <signal>` (e.g. `{#while-loading of overview}`)",
-        )
-        .with_span(span)
-    })?;
-    let name = rest.trim();
-    if name.is_empty() || !is_identifier(name) {
-        return Err(CompileError::new(format!(
-            "{{#while-loading}}: expected signal name after `of`, got {:?}",
-            name
-        ))
-        .with_span(span));
-    }
-    Ok(name.to_string())
-}
-
-/// Parse `<err> of <name>` from the header of `{#while-error err of <name>}`.
-fn parse_error_of_binding(src: &str, span: Span) -> Result<(String, String), CompileError> {
-    let s = src.trim();
-    let err_msg = || {
-        CompileError::new(
-        "{#while-error} requires `<errVar> of <signal>` (e.g. `{#while-error err of overview}`)"
-    ).with_span(span)
-    };
-    let space = s.find(char::is_whitespace).ok_or_else(err_msg)?;
-    let error_var = s[..space].trim().to_string();
-    let rest = s[space..].trim();
-    let name_part = rest.strip_prefix("of").ok_or_else(err_msg)?;
-    let bind = name_part.trim();
-    if error_var.is_empty() || !is_identifier(&error_var) {
-        return Err(err_msg());
-    }
-    if bind.is_empty() || !is_identifier(bind) {
-        return Err(err_msg());
-    }
-    Ok((error_var, bind.to_string()))
-}
-
-fn is_identifier(s: &str) -> bool {
-    let mut chars = s.chars();
-    match chars.next() {
-        Some(c) if c.is_alphabetic() || c == '_' || c == '$' => {}
-        _ => return false,
-    }
-    chars.all(|c| c.is_alphanumeric() || c == '_' || c == '$')
-}
-
-fn expect_close(
-    tokens: &[Token],
-    i: usize,
-    expected: TokenKind,
-    label: &'static str,
-    head_span: Span,
-) -> Result<(), CompileError> {
-    let tok = tokens
-        .get(i)
-        .ok_or_else(|| CompileError::new(format!("missing {label}")).with_span(head_span))?;
-    if tok.kind.discriminant() != expected.discriminant() {
-        return Err(CompileError::new(format!("missing {label}")).with_span(head_span));
-    }
-    Ok(())
 }
 
 pub(crate) fn parse_when(
@@ -293,19 +219,43 @@ pub(crate) fn parse_when(
     let token = head_src.trim();
     let media_query = resolve_when_token(token, head_span)?;
     let mut i = start + 1;
-    let body = (scope.body)(tokens, i, WHEN_TERMS)?;
+    let body = (scope.body)(tokens, i, WHEN_BODY_TERMS)?;
     i = body.end;
     let mut else_body: Option<Vec<Instr>> = None;
-    if let Some(t) = tokens.get(i)
-        && matches!(t.kind, TokenKind::Else)
-    {
-        i += 1;
-        let eb = (scope.body)(tokens, i, &[Discriminant::CloseWhen])?;
-        else_body = Some(eb.instrs);
-        i = eb.end;
+    loop {
+        match tokens.get(i).map(|t| &t.kind) {
+            Some(TokenKind::Text(s)) if s.trim().is_empty() => {
+                i += 1;
+                continue;
+            }
+            Some(TokenKind::Arm { head, body_src }) => {
+                if head.trim() != "else" {
+                    return Err(CompileError::new(format!(
+                        "<when>: only {{else => …}} arm is allowed, got {{{} => …}}",
+                        head.trim()
+                    ))
+                    .with_span(tokens[i].span));
+                }
+                else_body = Some(parse_arm_body(body_src, tokens[i].span)?);
+                i += 1;
+                continue;
+            }
+            Some(TokenKind::CloseWhen) => {
+                i += 1;
+                break;
+            }
+            Some(other) => {
+                return Err(CompileError::new(format!(
+                    "<when>: unexpected {} before </when>",
+                    other.label()
+                ))
+                .with_span(tokens[i].span));
+            }
+            None => {
+                return Err(CompileError::new("missing </when>").with_span(head_span));
+            }
+        }
     }
-    expect_close(tokens, i, TokenKind::CloseWhen, "</when>", head_span)?;
-    i += 1;
     Ok(InstrResult {
         instr: Instr::When(WhenInstr {
             token: token.to_string(),
@@ -326,7 +276,6 @@ fn resolve_when_token(token: &str, span: Span) -> Result<&'static str, CompileEr
         ))
         .with_span(span));
     }
-    // Raw length or media query — never accepted (theme tokens only).
     if token.chars().any(|c| c.is_ascii_digit())
         || token.contains('(')
         || token.contains(':')
@@ -348,14 +297,14 @@ fn resolve_when_token(token: &str, span: Span) -> Result<&'static str, CompileEr
 pub(crate) fn parse_match(
     tokens: &[Token],
     start: usize,
-    scope: &ParseScope,
+    _scope: &ParseScope,
 ) -> Result<InstrResult, CompileError> {
     let head_span = tokens[start].span;
     let head_src = match &tokens[start].kind {
         TokenKind::OpenMatch { src } => src.clone(),
         _ => unreachable!(),
     };
-    expr::validate_at(&head_src, false, "{#match}", head_span)?;
+    expr::validate_at(&head_src, false, "<match>", head_span)?;
     let discriminant = Expr::new(head_src, head_span, false);
     let mut i = start + 1;
     while let Some(t) = tokens.get(i) {
@@ -372,27 +321,31 @@ pub(crate) fn parse_match(
                 i += 1;
                 break;
             }
-            TokenKind::Case { src } => {
-                expr::validate_at(src, false, "{:case}", t.span)?;
-                let test = Expr::new(src.clone(), t.span, false);
-                i += 1;
-                let body = (scope.body)(tokens, i, MATCH_TERMS)?;
+            TokenKind::Arm { head, body_src } => {
+                let head_trim = head.trim();
+                if head_trim == "else" {
+                    if default.is_some() {
+                        return Err(CompileError::new("<match>: duplicate {else => …} arm")
+                            .with_span(t.span));
+                    }
+                    default = Some(parse_arm_body(body_src, t.span)?);
+                    i += 1;
+                    continue;
+                }
+                let (test, binding) = parse_match_arm_head(head_trim, t.span)?;
+                let body = parse_arm_body(body_src, t.span)?;
                 cases.push(MatchCase {
                     test,
-                    body: body.instrs,
+                    binding,
+                    body,
                 });
-                i = body.end;
-            }
-            TokenKind::Default => {
                 i += 1;
-                let body = (scope.body)(tokens, i, &[Discriminant::CloseMatch])?;
-                default = Some(body.instrs);
-                i = body.end;
             }
-            _ => {
+            TokenKind::Text(s) if s.trim().is_empty() => i += 1,
+            other => {
                 return Err(CompileError::new(format!(
-                    "unexpected token in {{#match}}: {}",
-                    t.kind.label()
+                    "unexpected token in <match>: {}; arms are {{pattern as binding => …}}",
+                    other.label()
                 ))
                 .with_span(t.span));
             }
@@ -408,3 +361,104 @@ pub(crate) fn parse_match(
         end: i,
     })
 }
+
+fn parse_match_arm_head(
+    head: &str,
+    span: Span,
+) -> Result<(MatchTest, Option<String>), CompileError> {
+    let head = head.trim();
+    if head.is_empty() {
+        return Err(CompileError::new("<match> arm needs a pattern before =>").with_span(span));
+    }
+    if let Some(as_at) = find_top_level_as(head) {
+        let pat = head[..as_at].trim();
+        let binding = head[as_at + 4..].trim();
+        if !is_identifier(binding) {
+            return Err(CompileError::new(format!(
+                "<match> arm binding must be an identifier, got {binding:?}"
+            ))
+            .with_span(span));
+        }
+        return Ok((pattern_to_test(pat, span)?, Some(binding.to_string())));
+    }
+    Ok((pattern_to_test(head, span)?, None))
+}
+
+fn pattern_to_test(pat: &str, span: Span) -> Result<MatchTest, CompileError> {
+    let pat = pat.trim();
+    if is_identifier(pat) {
+        return Ok(MatchTest::Kind(pat.to_string()));
+    }
+    expr::validate_at(pat, false, "<match> arm pattern", span)?;
+    Ok(MatchTest::Expr(Expr::new(pat.to_string(), span, false)))
+}
+
+fn find_top_level_as(s: &str) -> Option<usize> {
+    let bytes = s.as_bytes();
+    let mut depth = 0i32;
+    let mut str_quote: Option<u8> = None;
+    let mut i = 0usize;
+    while i + 4 <= bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = str_quote {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        if c == b'"' || c == b'\'' || c == b'`' {
+            str_quote = Some(c);
+            i += 1;
+            continue;
+        }
+        if matches!(c, b'(' | b'[' | b'{') {
+            depth += 1;
+            i += 1;
+            continue;
+        }
+        if matches!(c, b')' | b']' | b'}') {
+            depth -= 1;
+            i += 1;
+            continue;
+        }
+        if depth == 0 && &s[i..i + 4] == " as " {
+            return Some(i);
+        }
+        i += 1;
+    }
+    None
+}
+
+fn parse_arm_body(body_src: &str, span: Span) -> Result<Vec<Instr>, CompileError> {
+    let src = body_src.trim();
+    if src.is_empty() {
+        return Ok(Vec::new());
+    }
+    let nodes = html::parse_fragment(src).map_err(|e| {
+        CompileError::new(format!("arm body parse error: {}", e.message)).with_span(span)
+    })?;
+    super::compile_children(&nodes).map_err(|e| {
+        let mut err = CompileError::new(e.message.clone());
+        if let Some(s) = e.span {
+            err = err.with_span(s);
+        } else {
+            err = err.with_span(span);
+        }
+        err
+    })
+}
+
+fn is_identifier(s: &str) -> bool {
+    let mut chars = s.chars();
+    match chars.next() {
+        Some(c) if c.is_alphabetic() || c == '_' || c == '$' => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_alphanumeric() || c == '_' || c == '$')
+}
+

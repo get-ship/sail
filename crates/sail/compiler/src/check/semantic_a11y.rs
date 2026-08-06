@@ -49,8 +49,6 @@ fn walk_collect(instrs: &[Instr], out: &mut Vec<CompileError>) {
                     walk_collect(body, out);
                 }
             }
-            Instr::WhileLoading(w) => walk_collect(&w.body, out),
-            Instr::WhileError(w) => walk_collect(&w.body, out),
             Instr::When(w) => {
                 walk_collect(&w.body, out);
                 if let Some(body) = &w.else_body {
@@ -102,16 +100,6 @@ fn check_instr(instr: &Instr) -> Result<(), CompileError> {
                 for c in body {
                     check_instr(c)?;
                 }
-            }
-        }
-        Instr::WhileLoading(w) => {
-            for c in &w.body {
-                check_instr(c)?;
-            }
-        }
-        Instr::WhileError(w) => {
-            for c in &w.body {
-                check_instr(c)?;
             }
         }
         Instr::When(w) => {

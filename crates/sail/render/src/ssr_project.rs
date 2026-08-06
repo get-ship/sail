@@ -844,7 +844,7 @@ fn expand_for(
 }
 
 fn split_if_branches(body: &str) -> (&str, &str) {
-    // Find a top-level <else>…</else> or bare <else>… at the end.
+    // Find a top-level {else => …} or bare {else => … at the end.
     // Also handle <else-if> by treating first false path chain simply: only plain <else>.
     let bytes = body.as_bytes();
     let mut i = 0;
@@ -897,7 +897,7 @@ fn split_if_branches(body: &str) -> (&str, &str) {
 fn strip_else_wrapper(s: &str) -> &str {
     let s = s.trim_start();
     if let Some(rest) = s.strip_prefix("<else>") {
-        if let Some(idx) = rest.rfind("</else>") {
+        if let Some(idx) = rest.rfind("}") {
             return &rest[..idx];
         }
         return rest;
@@ -1227,7 +1227,7 @@ export default controller(() => {
 })
 </controller>
 <ul>
-  <for {items()} as="item" key={item.id}>
+  <for {items() as item} key={item.id}>
     <li>{item.label}</li>
   </for>
 </ul>
@@ -1251,7 +1251,7 @@ export default controller(() => {
 </controller>
 <div>
   <if {show()}><p>visible</p></if>
-  <if {hide()}><p>nope</p><else><p>fallback</p></else></if>
+  <if {hide()}><p>nope</p>{else => <p>fallback</p>}</if>
 </div>
 "#;
         let p = project(src);
@@ -1285,7 +1285,7 @@ export default controller(() => {
     fn unknown_if_drops_both_branches() {
         let src = r#"
 <div>
-  <if {window.x}><p>yes-branch</p><else><p>no-branch</p></else></if>
+  <if {window.x}><p>yes-branch</p>{else => <p>no-branch</p>}</if>
   <p>after</p>
 </div>
 "#;
@@ -1307,7 +1307,7 @@ export default controller(() => {
     fn unknown_for_drops_template_body() {
         let src = r#"
 <ul>
-  <for {window.list} as="item" key={item}>
+  <for {window.list as item} key={item}>
     <li>row-shell</li>
   </for>
 </ul>

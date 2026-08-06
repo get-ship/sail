@@ -2,7 +2,7 @@
   Lesson 05 starter — the roster renders, but only in the happy path.
 
   A query() handle has THREE states, and this template handles one. Add the
-  {#while-loading} and {#while-error} boundaries, then wire the form.
+  <match> loading arm and error arm boundaries, then wire the form.
 -->
 
 <controller>
@@ -55,15 +55,15 @@ export default controller(() => {
     </row>
   </row>
 
-  <!-- TODO 4: <while-loading {team}> — a spinner row, so the first
+  <!-- TODO 4: <match {team()}> {loading => — a spinner row, so the first
        paint isn't blank. -->
 
-  <!-- TODO 5: <while-error {team}> as="err"> — an <alert tone="destructive">
+  <!-- TODO 5: {error as err => — an <alert tone="destructive">
        showing err.message. -->
 
   <if {team().kind === 'ok'}>
     <column gap="1">
-      <for {team().value} as="m" key={m.id}>
+      <for {team().value as m} key={m.id}>
         <row gap="3" align="center">
           style(memberRow)
 

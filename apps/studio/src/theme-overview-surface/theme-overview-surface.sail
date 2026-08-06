@@ -183,7 +183,7 @@ Type</p>
                   style(fieldHint)
 Display</p>
                 <select type-token="display" size="sm" value={overview.typeDisplay()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
-                  <for {overview.displayFontOpts()} as="o" key={o.key}>
+                  <for {overview.displayFontOpts() as o} key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
                 </select>
@@ -193,7 +193,7 @@ Display</p>
                   style(fieldHint)
 Body</p>
                 <select type-token="body" size="sm" value={overview.typeBody()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
-                  <for {overview.bodyFontOpts()} as="o" key={o.key}>
+                  <for {overview.bodyFontOpts() as o} key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
                 </select>
@@ -203,7 +203,7 @@ Body</p>
                   style(fieldHint)
 Mono</p>
                 <select type-token="mono" size="sm" value={overview.typeMono()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
-                  <for {overview.monoFontOpts()} as="o" key={o.key}>
+                  <for {overview.monoFontOpts() as o} key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
                 </select>
@@ -230,7 +230,7 @@ Pack</p>
               <grid cols="4" gap="2" icon-sample>
                 style({ box: padT(1) })
 
-                <for {overview.iconGlyphs()} as="g" key={g.key}>
+                <for {overview.iconGlyphs() as g} key={g.key}>
                   <center title={g.name}>
                     style([ style(iconCell), style({ box: shrink(0) }) ])
 
@@ -248,7 +248,7 @@ Pack</p>
               style(sectionTitle)
 Density</p>
             <column density-seg gap="2" on:click={overview.onDensityClick}>
-              <for {overview.densityOptions()} as="d" key={d.key}>
+              <for {overview.densityOptions() as d} key={d.key}>
                 <button
                   type="button"
                   size="sm"
@@ -273,7 +273,7 @@ Density</p>
             style(sectionTitle)
 More detail</p>
           <grid cols="2" gap="3" facet-doors on:click={session.onFacet}>
-            <for {overview.facetDoors()} as="door" key={door.key}>
+            <for {overview.facetDoors() as door} key={door.key}>
               <card facet={door.facet}>
                 style(doorCard)
 
@@ -386,7 +386,7 @@ More detail</p>
                 </div>
                 <if {overview.hasIconGlyphs()}>
                   <row specimen-icons gap="2" align="center" nowrap>
-                    <for {overview.iconGlyphs()} as="g" key={g.key}>
+                    <for {overview.iconGlyphs() as g} key={g.key}>
                       <icon name={g.name} size={overview.iconSize()} label={g.name}>
                         style({ box: shrink(0) })
 </icon>
@@ -428,7 +428,7 @@ Email</p>
   </row>
 
   <toast-region position="bottom-end" overview-toast-region>
-    <for {session.toastItems()} as="t" key={t.key}>
+    <for {session.toastItems() as t} key={t.key}>
       <toast tone={t.tone} overview-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>

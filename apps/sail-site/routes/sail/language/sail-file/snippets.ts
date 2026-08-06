@@ -24,7 +24,7 @@ export const code = {
   </row>
   <column gap="1">
     style({ box: mt(3) })
-    <for {flights()} as="f" key={f.id}>
+    <for {flights() as f} key={f.id}>
       <row align="center" gap="3" nowrap>
         <span>
           style({ box: grow(1).minW(0), text: truncate().fontFamily(mono).fontSize(sm) })
@@ -33,10 +33,7 @@ export const code = {
           style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
           {f.gate}</span>
         <match {f.status}>
-          <case {'boarding'}> <badge tone="success">Boarding</badge>
-          </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>
-          </case><default>         <badge tone="muted">On time</badge>
-        </default></match>
+          {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
       </row>
     </for>
   </column>

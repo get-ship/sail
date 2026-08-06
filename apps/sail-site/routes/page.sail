@@ -134,7 +134,7 @@ SHIP UI · 0.2.0</p>
         <span>
           style(line)
 
-          <for {word()} as="w" key={w}>
+          <for {word() as w} key={w}>
             <b>
               style({ paint: fg(primary) })
 {w}</b>
@@ -416,8 +416,7 @@ $</span> sail check app/</p>
           </card>
         </a>
       </grid>
-    <else>
-      <grid cols="1" gap="3">
+    {else => <grid cols="1" gap="3">
         style(grid)
 
         <a href="/sail/language/animation">
@@ -629,8 +628,7 @@ $</span> sail check app/</p>
             </column>
           </card>
         </a>
-      </grid>
-    </else></if>
+      </grid>}</if>
   </section>
 
   <section>

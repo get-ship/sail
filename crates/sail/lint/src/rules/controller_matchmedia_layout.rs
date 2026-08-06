@@ -129,7 +129,7 @@ impl MatchMediaVisitor<'_> {
                  imperative."
                 .to_string(),
             suggest: Some(
-                "Structure: `<when {tablet}>…wide…<else>…mobile…</else></when>` \
+                "Structure: `<when {tablet}>…wide…{else => …mobile…}</when>` \
                  (theme tokens: mobile/tablet/desktop; SSR emits else). Paint: \
                  `style.….when({ tablet: style.… })`. Do not swap trees with \
                  `<if {isWide()}>` from matchMedia."

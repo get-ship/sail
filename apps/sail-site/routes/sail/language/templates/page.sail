@@ -60,7 +60,7 @@ The language</p>
   </p>
   <code-block code={code.matchBlock}></code-block>
   <p>
-    <code>&lt;for &#123;items()&#125; as="item" key=&#123;…&#125;&gt;</code> renders a list. <code>key</code> identifies
+    <code>&lt;for &#123;items() as item&#125; key=&#123;…&#125;&gt;</code> renders a list. <code>key</code> identifies
     each row, so a reorder moves DOM nodes instead of rewriting them —
     focus, selection, and in-place edits survive. Leaving it off is a
     compile error.
@@ -108,8 +108,8 @@ The language</p>
   <code-block code={code.slotUse}></code-block>
 
   <p>
-    Two more blocks — <code>&lt;while-loading&#gt;</code> and
-    <code>&lt;while-error&#gt;</code> — exist for async state and belong
+    Two more blocks — <code>&lt;match&#gt;</code> and
+    <code>&lt;match&#gt;</code> — exist for async state and belong
     to the <a href="/sail/language/data">data story</a>.
   </p>
 

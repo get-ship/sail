@@ -49,7 +49,7 @@ interface MessageItem {
 }
 
 /** A windowed message: the virtual-item geometry zipped with its source item so
- *  the template renders `<for {windowItems()} as="w" key={w.key}>` with no index
+ *  the template renders `<for {windowItems() as w} key={w.key}>` with no index
  *  arithmetic — only the ~viewport+overscan slice allocates, never the whole
  *  thread. */
 interface WindowMessage {
@@ -165,7 +165,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <div use:virtualSpacer={totalSize()}>
     style({ box: position(relative).w(full).h(bind(rowsH)) })
 
-    <for {windowItems()} as="w" key={w.key}>
+    <for {windowItems() as w} key={w.key}>
       <column gap="0" use:virtualRow={w.start}>
         style({ box: position(absolute).left(3).right(3), paint: translateY(bind(rowY)) })
 

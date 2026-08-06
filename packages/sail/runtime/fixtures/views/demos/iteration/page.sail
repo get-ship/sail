@@ -47,14 +47,12 @@ export default controller(() => {
 
   <if {items().length === 0}>
     <p data-muted="true" data-test="empty">List is empty.</p>
-  <else>
-    <ul data-test="todos">
-      <for {items()} as="t" key={t.id}>
+  {else => <ul data-test="todos">
+      <for {items() as t} key={t.id}>
         <li>
           <span>{t.text}</span>
           <button data-test="remove" on:click={() => remove(t.id)}>×</button>
         </li>
       </for>
-    </ul>
-  </else></if>
+    </ul>}</if>
 </div>

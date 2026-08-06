@@ -39,7 +39,7 @@ export default controller(() => {
   <button data-testid="add" on:click={() => addItem()}>add</button>
   <span data-testid="count">{items().length} item(s)</span>
   <ul data-testid="list">
-    <for {items()} as="item" key={item.id}>
+    <for {items() as item} key={item.id}>
       <li data-testid="item">
         <button data-testid="toggle" on:click={() => toggleItem(item.id)}>
           {item.done ? 'X' : 'O'}

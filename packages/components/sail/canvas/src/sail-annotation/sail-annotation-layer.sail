@@ -354,7 +354,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm) })
 </div>
     </if>
-    <for {markers()} as="m" key={m.id}>
+    <for {markers() as m} key={m.id}>
       <sail-annotation-marker
         kind={m.kind}
         index={m.index}

@@ -272,30 +272,6 @@ impl<'a> TreeBuild<'a> {
                 self.parent_stack.pop();
                 Some(id)
             }
-            Instr::WhileLoading(wl) => {
-                let content = format!("while-loading|{}", wl.bind);
-                let id = node_id(self.file, &path, &content);
-                self.nodes.push(TreeNodeRef {
-                    id: id.clone(),
-                    tag: "while-loading".into(),
-                });
-                self.parent_stack.push(id.clone());
-                let _ = self.walk_block(&wl.body, &path);
-                self.parent_stack.pop();
-                Some(id)
-            }
-            Instr::WhileError(we) => {
-                let content = format!("while-error|{}", we.bind);
-                let id = node_id(self.file, &path, &content);
-                self.nodes.push(TreeNodeRef {
-                    id: id.clone(),
-                    tag: "while-error".into(),
-                });
-                self.parent_stack.push(id.clone());
-                let _ = self.walk_block(&we.body, &path);
-                self.parent_stack.pop();
-                Some(id)
-            }
             _ => None,
         }
     }

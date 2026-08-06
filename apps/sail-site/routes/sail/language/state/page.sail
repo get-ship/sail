@@ -76,7 +76,7 @@ derived ×2</small>
           <small>
             style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
 effect output</small>
-          <for {log()} as="line" key={line}>
+          <for {log() as line} key={line}>
             <p>
               style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })
 {line}</p>

@@ -79,12 +79,11 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
   <p>
     style({ box: padY(1).padX(2), paint: fg(muted-foreground), text: fontFamily(body).fontSize(sm) })
 No staged annotations.</p>
-<else>
-  <column role="list" gap="1">
+{else => <column role="list" gap="1">
     style({ paint: fg(foreground) })
     <span>
       style({ box: display(contents), text: fontFamily(body).fontSize(sm) })
-      <for {staged()} as="a" key={a.id}>
+      <for {staged() as a} key={a.id}>
       <row role="listitem" data-id={a.id} gap="2" align="center">
         style({ box: padY(1).padX(2), paint: bg(background).borderWidth(1).border(border).radius(sm) })
 
@@ -105,5 +104,4 @@ Remove</button>
       </row>
     </for>
     </span>
-</column>
-</else></if>
+</column>}</if>

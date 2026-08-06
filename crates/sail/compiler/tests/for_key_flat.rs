@@ -35,7 +35,7 @@ fn key_line(js: &str) -> &str {
 
 #[test]
 fn scope_free_key_emits_flat_closure() {
-    let src = r#"<ul><for {rows()} as="row" key={row.id}><li>{row.label}</li></for></ul>"#;
+    let src = r#"<ul><for {rows() as row} key={row.id}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
@@ -50,7 +50,7 @@ fn scope_free_key_emits_flat_closure() {
 
 #[test]
 fn index_binding_key_emits_flat_closure() {
-    let src = r#"<ul><for {rows()} as="row" index="i" key={i}><li>{row.label}</li></for></ul>"#;
+    let src = r#"<ul><for {rows() as row, i} key={i}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
@@ -62,7 +62,7 @@ fn index_binding_key_emits_flat_closure() {
 
 #[test]
 fn template_literal_key_over_loop_bindings_is_flat() {
-    let src = r#"<ul><for {rows()} as="row" index="i" key={`${row.id}-${i}`}><li>{row.label}</li></for></ul>"#;
+    let src = r#"<ul><for {rows() as row, i} key={`${row.id}-${i}`}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
@@ -79,7 +79,7 @@ fn builtin_ident_key_is_flat() {
     // `String(row.id)` are rejected upstream by the renderable-expr
     // subset and never reach the emitter.)
     let src =
-        r#"<ul><for {rows()} as="row" key={row.id ?? Infinity}><li>{row.label}</li></for></ul>"#;
+        r#"<ul><for {rows() as row} key={row.id ?? Infinity}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
@@ -92,7 +92,7 @@ fn builtin_ident_key_is_flat() {
 #[test]
 fn scoped_key_falls_back_to_child_scope() {
     let src =
-        r#"<ul><for {rows()} as="row" key={prefix() + row.id}><li>{row.label}</li></for></ul>"#;
+        r#"<ul><for {rows() as row} key={prefix() + row.id}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(

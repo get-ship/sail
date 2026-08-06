@@ -158,7 +158,7 @@ export default controller(() => {
         <icon name="chevron-down" size="sm"></icon>
       </button>
       <dropdown id={pathMenuId()} placement="bottom-start" on:sail-menu-select={onPathSelect}>
-        <for {pathNav()} as="item" key={item.key}>
+        <for {pathNav() as item} key={item.key}>
           <menu-item value={item.value}>
             <icon name={item.icon} size="sm">
               style({ box: shrink(0) })
@@ -214,7 +214,7 @@ Unsaved changes</p>
                 style({ box: maxH(48) })
 
                 <column gap="2">
-                  <for {diffRows()} as="row" key={row.key}>
+                  <for {diffRows() as row} key={row.key}>
                     <column gap="0" diff-row>
                       <p>
                         style({ paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() })

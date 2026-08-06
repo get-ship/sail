@@ -478,48 +478,6 @@ impl<'a> TreeBuild<'a> {
                 });
                 Some(id)
             }
-            Instr::WhileLoading(wl) => {
-                let content = format!("while-loading|{}", wl.bind);
-                let id = node_id(self.file, &path, &content);
-                let kids = self.walk_block(&wl.body, &path);
-                let span = self.author_span_for_tag("while-loading");
-                self.by_start.insert(span.start, id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
-                    span,
-                    tag: "while-loading".into(),
-                    layer: "l1-keyword".into(),
-                    attrs: BTreeMap::new(),
-                    control_flow: Some(ControlFlowEdge {
-                        kind: "while-loading".into(),
-                        expr: Some(wl.bind.clone()),
-                    }),
-                    children: kids,
-                });
-                Some(id)
-            }
-            Instr::WhileError(we) => {
-                let content = format!("while-error|{}", we.bind);
-                let id = node_id(self.file, &path, &content);
-                let kids = self.walk_block(&we.body, &path);
-                let span = self.author_span_for_tag("while-error");
-                self.by_start.insert(span.start, id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
-                    span,
-                    tag: "while-error".into(),
-                    layer: "l1-keyword".into(),
-                    attrs: BTreeMap::new(),
-                    control_flow: Some(ControlFlowEdge {
-                        kind: "while-error".into(),
-                        expr: Some(we.bind.clone()),
-                    }),
-                    children: kids,
-                });
-                Some(id)
-            }
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => None,
         }
     }
@@ -1072,44 +1030,6 @@ fn collect_state_edges(
                         source, file, d, meta, readers, writers, expr_occ, &path, &mut o,
                     );
                 }
-            }
-            Instr::WhileLoading(wl) => {
-                let span = author_expr_span(source, &wl.bind, wl.span);
-                readers.entry(wl.bind.clone()).or_default().push(StateEdge {
-                    id: meta
-                        .by_start
-                        .range(..=span.start)
-                        .next_back()
-                        .map(|(_, id)| id.clone())
-                        .unwrap_or_else(|| node_id(file, &path, "wl")),
-                    file: file.to_string(),
-                    span,
-                    kind: "template-read".into(),
-                    expr: Some(wl.bind.clone()),
-                });
-                let mut o = 0;
-                collect_state_edges(
-                    source, file, &wl.body, meta, readers, writers, expr_occ, &path, &mut o,
-                );
-            }
-            Instr::WhileError(we) => {
-                let span = author_expr_span(source, &we.bind, we.span);
-                readers.entry(we.bind.clone()).or_default().push(StateEdge {
-                    id: meta
-                        .by_start
-                        .range(..=span.start)
-                        .next_back()
-                        .map(|(_, id)| id.clone())
-                        .unwrap_or_else(|| node_id(file, &path, "we")),
-                    file: file.to_string(),
-                    span,
-                    kind: "template-read".into(),
-                    expr: Some(we.bind.clone()),
-                });
-                let mut o = 0;
-                collect_state_edges(
-                    source, file, &we.body, meta, readers, writers, expr_occ, &path, &mut o,
-                );
             }
             _ => {}
         }

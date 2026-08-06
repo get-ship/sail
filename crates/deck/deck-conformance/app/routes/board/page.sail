@@ -42,7 +42,7 @@ Board</h1>
   <column gap="2">
     style({ box: pad(0).m(0), paint: list(none) })
 
-    <for {items()} as="item" key={item.id}>
+    <for {items() as item} key={item.id}>
     <row gap="2" align="center" aria-pressed={item.flagged}>
       style({ box: pad(2), paint: radius(md).borderWidth(1).border(transparent) }).when(pressed, { paint: bg(hover-bg).border(warning) })
 
@@ -51,10 +51,8 @@ Board</h1>
     </row>
     </for>
   </column>
-  <else>
-  <p>
+  {else => <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm).italic(true) })
-Nothing on the board.</p>
-  </else></if>
+Nothing on the board.</p>}</if>
   <button on:click={() => add()}>add</button>
 </column>

@@ -171,7 +171,7 @@ export default controller(() => {
 
               In project
             </p>
-            <for {projectRows()} as="row" key={row.key}>
+            <for {projectRows() as row} key={row.key}>
               <row
                 theme-row
                 theme-id={row.id}
@@ -247,7 +247,7 @@ export default controller(() => {
 
               Catalog
             </p>
-            <for {catalogRows()} as="row" key={row.key}>
+            <for {catalogRows() as row} key={row.key}>
               <row
                 theme-row
                 theme-id={row.id}
@@ -621,7 +621,7 @@ Sample card</p>
 
   <!-- Ephemeral notes: fixed overlay — does not reflow master–detail -->
   <toast-region position="bottom-end" themes-toast-region>
-    <for {toastItems()} as="t" key={t.key}>
+    <for {toastItems() as t} key={t.key}>
       <toast tone={t.tone} themes-toast on:sail-toast-dismiss={onToastDismiss}>
         {t.message}
       </toast>

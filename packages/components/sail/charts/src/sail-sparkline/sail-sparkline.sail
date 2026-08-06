@@ -96,8 +96,7 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
 </controller>
 <if {loading()}>
   <spinner></spinner>
-<else-if {chart.isEmpty()}>
-  <svg
+{else-if {chart.isEmpty()} => <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
     width={viewport.width()}
     height={viewport.height()}
@@ -105,9 +104,7 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
 >
     style({ box: display(inline-block).overflow(visible) })
 
-  </svg>
-</else-if><else>
-  <svg
+  </svg>}{else => <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
     width={viewport.width()}
     height={viewport.height()}
@@ -117,12 +114,11 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     use:observeViewport>
     style({ box: display(inline-block).overflow(visible) })
 
-    <for {seriesPaths()} as="s" key={s.name}>
+    <for {seriesPaths() as s} key={s.name}>
       <if {fill()}>
         <path d={s.fillD} fill={s.color} fill-opacity="0.18" stroke="none"></path>
       </if>
       <path d={s.strokeD} fill="none" stroke={s.color} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       </path>
     </for>
-  </svg>
-</else></if>
+  </svg>}</if>

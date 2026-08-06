@@ -66,8 +66,6 @@ fn visit(instrs: &[Instr], found: &mut BTreeSet<String>) {
                     visit(e, found);
                 }
             }
-                        Instr::WhileLoading(wl) => visit(&wl.body, found),
-            Instr::WhileError(we) => visit(&we.body, found),
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => {}
         }
     }
@@ -138,8 +136,8 @@ mod tests {
     fn nested_control_flow() {
         let got = icons(
             r#"<div>
-            <if {c()}><icon name="check"></icon><else><icon name="x"></icon></else></if>
-            <for {items()} as="i"><icon name="circle"></icon></for>
+            <if {c()}><icon name="check"></icon>{else => <icon name="x"></icon>}</if>
+            <for {items() as i}><icon name="circle"></icon></for>
           </div>"#,
         );
         assert_eq!(

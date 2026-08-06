@@ -99,10 +99,7 @@ export default controller(({
 </controller>
 <if {loading()}>
   <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-<else-if {chart.error()}>
-  <error-state></error-state>
-</else-if><else>
-  <stack>
+{else-if {chart.error()} => <error-state></error-state>}{else => <stack>
     style({ box: w(fit) })
 
     <svg
@@ -128,5 +125,4 @@ export default controller(({
         <slot></slot>
       </span>
 </center>
-  </stack>
-</else></if>
+  </stack>}</if>

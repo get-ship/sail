@@ -742,7 +742,7 @@ on page {pageNo()}</p>
                   <tr><th>Name</th><th>Team</th><th>Status</th></tr>
                 </thead>
                 <tbody>
-                  <for {people()} as="p" key={p.id}>
+                  <for {people() as p} key={p.id}>
                     <tr>
                       <td>{p.name}</td>
                       <td>{p.team}</td>
@@ -951,8 +951,7 @@ center — both axes at once</p>
       <a variant="default" href="/components">← All components</a>
       <a variant="solid" tone="primary" href="/sail/reference">API reference</a>
     </row>
-  <else>
-    <breadcrumb>
+  {else => <breadcrumb>
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
@@ -965,6 +964,5 @@ center — both axes at once</p>
     </empty-state>
     <row gap="2">
       <a variant="solid" tone="primary" href="/components">← All components</a>
-    </row>
-  </else></if>
+    </row>}</if>
 </column>

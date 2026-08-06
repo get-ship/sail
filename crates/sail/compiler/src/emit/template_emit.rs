@@ -62,10 +62,6 @@ pub struct TemplateEmitter {
     pub(super) delegated_events: std::collections::BTreeSet<String>,
     /// Sequential counters for while-loading/while-error render-callback names.
     /// Both the bindings pass and this emit pass walk the IR in the same source
-    /// order, so the N-th while-loading gets the same `__renderWhileLoading_<N>`
-    /// name in both.
-    pub(super) while_loading_idx: usize,
-    pub(super) while_error_idx: usize,
     /// Render callbacks for `{#while-loading}` / `{#while-error}` blocks,
     /// emitted as named properties on the setup return object (outside
     /// `__mount`) so `attach()` can look them up by `renderKey`.
@@ -186,8 +182,6 @@ impl TemplateEmitter {
             module_hoists: Writer::new(),
             tpl_id: 0,
             delegated_events: std::collections::BTreeSet::new(),
-            while_loading_idx: 0,
-            while_error_idx: 0,
             render_callbacks: Writer::new(),
             boundary_hoists: Writer::new(),
             hydrate_calls: Writer::new(),
@@ -543,18 +537,11 @@ impl TemplateEmitter {
             Instr::For(for_instr) => self.emit_for(w, for_instr, parent_var, cleanups_var),
             Instr::Match(match_instr) => self.emit_match(w, match_instr, parent_var, cleanups_var),
             Instr::When(when_instr) => self.emit_when(w, when_instr, parent_var, cleanups_var),
-            // While-loading/while-error: the render callback is emitted as a
-            // named property on the setup return object (via `render_callbacks`
-            // buffer). `__mount` emits an inline call for the legacy path.
-            Instr::WhileLoading(wl) => {
-                self.emit_while_loading_block(w, wl, parent_var, cleanups_var)
-            }
-            Instr::WhileError(we) => self.emit_while_error_block(w, we, parent_var, cleanups_var),
         }
     }
 
-    /// Emit a `{ nodes, cleanup }` branch result. Used by `bindIf`,
-    /// `bindFor`, and the `<while-*>` helpers.
+    /// Emit a `{ nodes, cleanup }` branch result. Used by `bindIf` /
+    /// `bindFor` / `bindWhen` / match arms.
     ///
     /// D5's static-inline path collects per-row update statements into
     /// `self.inline_update_stmts` so the surrounding `{#for}`'s

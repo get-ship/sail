@@ -434,7 +434,7 @@ export default controller(() => ({
     <tr><th>Name</th><th>Team</th><th>Status</th></tr>
   </thead>
   <tbody>
-    <for {people()} as="p" key={p.id}>
+    <for {people() as p} key={p.id}>
       <tr>
         <td>{p.name}</td>
         <td>{p.team}</td>

@@ -21,16 +21,18 @@ type Profile = { name: string }
 
 const TEMPLATE = `
 <column>
-  <while-loading {profile}>
-    <div role="status" aria-label="Loading profile">Loading…</div>
-  </while-loading>
-  <while-error {profile} as="err">
-    <div role="alert">{err.message}</div>
-  </while-error>
-  <if {profile().kind === 'ok'}>
-    <h1>{profile().value.name}</h1>
-    <button type="button">Refresh</button>
-  </if>
+  <match {profile()}>
+    {loading =>
+      <div role="status" aria-label="Loading profile">Loading…</div>
+    }
+    {error as err =>
+      <div role="alert">{err.message}</div>
+    }
+    {ok as value =>
+      <h1>{value.name}</h1>
+      <button type="button">Refresh</button>
+    }
+  </match>
 </column>
 `
 

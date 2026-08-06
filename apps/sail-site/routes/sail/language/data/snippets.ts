@@ -1,7 +1,7 @@
 // Code snippets for the Data page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by patterns inside these strings.
-// The query() controller + the while-loading/while-error/if-ok template are
-// compile-checked against the in-repo sail-compiler.
+// The query() controller + match-on-LiveState template are compile-checked
+// against the in-repo sail-compiler.
 export const code = {
   demo: `<controller>
 import { query } from '@ship/sail-runtime'
@@ -17,17 +17,15 @@ export default controller(() => {
 
 <button on:click={reload}>Reload</button>
 
-<while-loading {users}>
-  <spinner></spinner>
-</while-loading>
-<while-error {users}> as="err">
-  <alert tone="destructive">{err.message}</alert>
-</while-error>
-<if {users().kind === 'ok'}>
-  <for {users().value} as="name" key={name}>
-    <badge>{name}</badge>
-  </for>
-</if>`,
+<match {users()}>
+  {loading => <spinner></spinner>}
+  {error as err => <alert tone="destructive">{err.message}</alert>}
+  {ok as value =>
+    <for {value as name} key={name}>
+      <badge>{name}</badge>
+    </for>
+  }
+</match>`,
 
   source: `// the <controller> block body (inline in users.sail)
 import { query } from '@ship/sail-runtime'
@@ -43,15 +41,9 @@ export default controller(() => {
 })`,
 
   states: `<!-- users.sail — the three states are explicit, never forgotten -->
-<while-loading {users}>
-  <spinner></spinner>
-</while-loading>
-
-<while-error {users}> as="err">
-  <alert tone="destructive">{err.message}</alert>
-</while-error>
-
-<if {users().kind === 'ok'}>
-  <ul><for {users().value} as="u" key={u.id}><li>{u.name}</li></for></ul>
-</if>`,
+<match {users()}>
+  {loading => <spinner></spinner>}
+  {error as err => <alert tone="destructive">{err.message}</alert>}
+  {ok as value => <ul><for {value as u} key={u.id}><li>{u.name}</li></for></ul>}
+</match>`,
 }

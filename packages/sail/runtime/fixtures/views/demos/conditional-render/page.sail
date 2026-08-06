@@ -22,9 +22,7 @@ export default controller(() => ({ enabled: signal(false) }))
       <h2>Panel is visible.</h2>
       <p>Toggling the checkbox unmounts this branch and mounts the other.</p>
     </section>
-  <else>
-    <section data-test="panel-off">
+  {else => <section data-test="panel-off">
       <p>Hidden — flip the box to reveal.</p>
-    </section>
-  </else></if>
+    </section>}</if>
 </div>

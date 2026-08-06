@@ -392,15 +392,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <if {isMonth()}>
   <div role="grid" aria-label={label() || 'Calendar month'}>
     <grid cols="7" gap="0" role="presentation">
-      <for {weekdays()} as="d" key={d.key}>
+      <for {weekdays() as d} key={d.key}>
         <span role="columnheader">
           style({ box: padY(density-row-py), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontWeight(medium).textAlign(center).fontSize(density) })
 {d.label}</span>
       </for>
     </grid>
-    <for {weekRows()} as="wk" key={wk.key}>
+    <for {weekRows() as wk} key={wk.key}>
       <grid cols="7" gap="0" role="row">
-        <for {wk.cells} as="cr" key={cr.key}>
+        <for {wk.cells as cr} key={cr.key}>
           <column
             role="gridcell"
             data-iso={cr.cell.iso}
@@ -420,7 +420,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 {cr.cell.day}
               </span>
 </row>
-            <for {cr.cell.events} as="ev" key={ev.id}>
+            <for {cr.cell.events as ev} key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
@@ -454,7 +454,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <column role="rowgroup" gap="0">
       style({ paint: borderRWidth(1).borderR(border) })
 
-      <for {timeSlots()} as="slot" key={slot.key}>
+      <for {timeSlots() as slot} key={slot.key}>
         <div data-slot={slot.minutes} role="rowheader">
           style({ box: h(control-h-md).padX(density-row-px), paint: fg(muted-foreground).borderBWidth(1).borderB(border) })
           <span>
@@ -467,14 +467,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <row gap="0">
       style({ box: grow(1) })
 
-      <for {dayColumns()} as="dc" key={dc.key}>
+      <for {dayColumns() as dc} key={dc.key}>
         <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso}>
           style({  box: grow(1).position(relative).minH(panel-min-h-daycol), paint: borderRWidth(1).borderR(border)  }).when(stateToday, { paint: bg(selected-bg) })
 
           <column gap="0">
             style({ box: position(absolute).top(0).right(0).bottom(0).left(0) })
 
-            <for {timeSlots()} as="slot" key={slot.key}>
+            <for {timeSlots() as slot} key={slot.key}>
               <div data-iso={dc.col.iso} data-minutes={slot.minutes}>
                 style({  box: grow(1).minH(control-h-md), paint: cursor(cell).borderBWidth(1).borderB(border)  }).when(hover, { paint: bg(hover-bg) })
 </div>
@@ -483,7 +483,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           <column gap="1">
             style({ box: position(relative).pad(half), paint: z(elevated) })
 
-            <for {dc.col.allDayEvents} as="ev" key={ev.id}>
+            <for {dc.col.allDayEvents as ev} key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
@@ -496,7 +496,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 {ev.title}</button>
             </for>
           </column>
-          <for {dc.col.laidOut} as="pe" key={pe.event.id}>
+          <for {dc.col.laidOut as pe} key={pe.event.id}>
             <button
               type="button"
               data-event-id={pe.event.id}
