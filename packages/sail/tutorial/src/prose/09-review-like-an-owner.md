@@ -41,7 +41,7 @@ is intent:
   missing. Arrival was designed; departure was forgotten. *Check: every
   list that animates in should say what leaving looks like.*
 - **Is that div a component the system already has?** The empty case
-  is a hand-rolled `<div sx={style…}>Nothing matches…</div>`. It works;
+  is a hand-rolled `<div> style({…}) Nothing matches… </div>`. It works;
   it also skips the semantics, sizing, and tone contract of
   `<empty-state>` — the component that exists precisely so empty never
   gets improvised. *Check: before approving a styled div, ask what

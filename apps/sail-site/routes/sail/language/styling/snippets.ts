@@ -2,25 +2,42 @@
 // (crates/sail/compiler/tests/site_snippets_compile.rs); the two diagnostic
 // samples are real compiler output, captured verbatim.
 export const code = {
-  sx: `<card style={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm)}>
-  <p style={style.fg(muted-foreground).fontSize(sm)}>On the system, or it does not compile.</p>
+  sx: `<card>
+    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })
+  <p>
+    style({ paint: fg(muted-foreground), text: fontSize(sm) })
+    On the system, or it does not compile.</p>
 </card>`,
 
   sxError: `error: [sail-sx] unknown Style token on setter \`radius\`: huge
   \`radius\` accepts scale tokens (none, sm, md, lg, xl, full, …); did you mean \`full\`?`,
 
-  current: `<row gap="1" align="center" style={style.pad(1).bg(surface-2).borderWidth(1).border(border).radius(full)}>
-  <a href="/docs" style={style.padX(3).padY(1).radius(full).fontSize(sm).when({ current: style.bg(primary).fg(primary-foreground) })} current={onDocs() ? 'page' : null}>Docs</a>
-  <a href="/blog" style={style.padX(3).padY(1).radius(full).fontSize(sm).when({ current: style.bg(primary).fg(primary-foreground) })} current={onDocs() ? null : 'page'}>Blog</a>
+  current: `<row gap="1" align="center">
+    style({ box: pad(1), paint: bg(surface-2).borderWidth(1).border(border).radius(full) })
+  <a href="/docs" current={onDocs() ? 'page' : null}>
+    style({ box: padX(3).padY(1), paint: radius(full), text: fontSize(sm) }).when(current, { paint: bg(primary).fg(primary-foreground) })
+    Docs</a>
+  <a href="/blog" current={onDocs() ? null : 'page'}>
+    style({ box: padX(3).padY(1), paint: radius(full), text: fontSize(sm) }).when(current, { paint: bg(primary).fg(primary-foreground) })
+    Blog</a>
 </row>`,
 
-  conditions: `<column gap="2" style={style.pad(3).bg(surface-1).borderWidth(1).border(border).radius(lg).when({ tablet: style.pad(6) })}>
-  <p style={style.fontSize(sm)}>pad(3) on a phone; when({ tablet: style.pad(6) }) from 768px up.</p>
+  conditions: `<column gap="2">
+    style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }).when(tablet, { box: pad(6) })
+  <p>
+    style({ text: fontSize(sm) })
+    pad(3) on a phone; when({ tablet: style({ box: pad(6) }) }) from 768px up.</p>
 </column>`,
 
-  states: `<button style={when({ hover: style.bg(muted) })}>hover → bg(muted)</button>
-<button style={when({ hover: style.fg(primary) })}>hover → fg(primary)</button>
-<button style={when({ active: style.bg(primary).fg(primary-foreground) })}>active:…</button>`,
+  states: `<button>
+    when({ hover: style({ paint: bg(muted) }) })
+    hover → bg(muted)</button>
+<button>
+  when({ hover: style({ paint: fg(primary) }) })
+  hover → fg(primary)</button>
+<button>
+  when({ active: style({ paint: bg(primary).fg(primary-foreground) }) })
+  active:…</button>`,
 
   variants: `<scope>
   props: {
@@ -28,20 +45,22 @@ export const code = {
     emphasis: 'solid' | 'soft' | 'outline' = 'solid'
   }
 
-  const base = style.padX(3).padY(1).radius(md)
-  const solid = style.bg(primary).fg(primary-foreground)
-  const soft = style.bg(muted).fg(foreground)
-  const outline = style.borderWidth(1).border(border)
+  const base = style({ box: padX(3).padY(1), paint: radius(md) })
+  const solid = style({ paint: bg(primary).fg(primary-foreground) })
+  const soft = style({ paint: bg(muted).fg(foreground) })
+  const outline = style({ paint: borderWidth(1).border(border) })
 </scope>
 
-<button style={[
+<button>
+  style([
   base,
   match(emphasis, {
     solid: solid,
     soft: soft,
     outline: outline,
   }),
-]}>{label()}</button>`,
+])
+  {label()}</button>`,
 
   variantUse: `<my-button label="Save" emphasis="outline"></my-button>`,
 
@@ -55,7 +74,9 @@ export default controller(() => {
 </controller>
 
 <input type="range" min="0" max="200" bind:value={shift} />
-<card style={style.w(9).h(9).bg(primary).radius(md).translateX(bind(px))}></card>`,
+<card>
+  style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(px)) })
+</card>`,
 
   layout: `<row gap="3" align="center">...</row>
 <column gap="2">...</column>

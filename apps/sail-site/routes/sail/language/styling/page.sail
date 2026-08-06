@@ -60,7 +60,8 @@ This card is styled by the code below it.</p>
   <p>
     Prefer a scope const when the same paint repeats:
     <code>const card = style({ box: pad(5), paint: bg(surface-1) })…</code> then
-    <code>sx=&#123;card&#125;</code> or <code>sx=&#123;[base, emphasis]&#125;</code>.
+    attach <code>style(card)</code> or <code>style([base, emphasis])</code> as a
+    block statement on the host.
   </p>
 
   <h2>States with when</h2>

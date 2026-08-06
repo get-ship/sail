@@ -12,16 +12,26 @@ export const code = {
 
 <card>{title()}</card>`,
 
-  template: `<card style={style.pad(4).w(full)}>
+  template: `<card>
+    style({ box: pad(4).w(full) })
   <row align="center" justify="between" nowrap>
-    <strong style={style.textCase(uppercase).tracking(wide).fontSize(sm)}>{title()}</strong>
-    <span style={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{departed()} departed</span>
+    <strong>
+      style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })
+      {title()}</strong>
+    <span>
+      style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+      {departed()} departed</span>
   </row>
-  <column gap="1" style={style.mt(3).fontFamily(mono).fontSize(sm)}>
+  <column gap="1">
+    style({ box: mt(3) })
     <for {flights()} as="f" key={f.id}>
       <row align="center" gap="3" nowrap>
-        <span grow min-w="0" style={style.truncate()}>{f.city}</span>
-        <span style={style.fg(muted-foreground)}>{f.gate}</span>
+        <span>
+          style({ box: grow(1).minW(0), text: truncate().fontFamily(mono).fontSize(sm) })
+          {f.city}</span>
+        <span>
+          style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
+          {f.gate}</span>
         <match {f.status}>
           <case {'boarding'}> <badge tone="success">Boarding</badge>
           </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>
@@ -68,13 +78,15 @@ export default controller((ctx) => {
 
   usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slotDef: `<card style={style.pad(4).w(full)}>
+  slotDef: `<card>
+    style({ box: pad(4).w(full) })
   ...the board...
   <slot name="footer"></slot>
 </card>`,
 
   slotUse: `<departures-board title="Departures — SFO">
-  <p slot="footer" style={style.mt(3).fontSize(xs).fg(muted-foreground)}>
+  <p slot="footer">
+    style({ box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) })
     Gate changes are announced. Allegedly.
   </p>
 </departures-board>`,

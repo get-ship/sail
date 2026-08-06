@@ -52,8 +52,7 @@ describe('CodeMirror sail mode tokenizer', () => {
         "attrName:gap",
         "tagName:card",
         "attrName:tone",
-        "sx:sx",
-        "sx:{style.pad(6).radius(lg)}",
+        "expr:{ box: pad(6), paint: radius(lg) }",
         "tagName:h3",
         "tagName:h3",
         "tagName:p",
@@ -77,7 +76,7 @@ describe('CodeMirror sail mode tokenizer', () => {
   })
 
   it('skipBrace respects nested braces and quotes', () => {
-    const s = '{style.pad(6).when({ focus: "a}" })}'
+    const s = '{style({ box: pad(6) }).when(focus, "a}")}'
     expect(skipBrace(s, 0)).toBe(s.length)
   })
 })

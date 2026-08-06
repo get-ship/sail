@@ -85,21 +85,26 @@ Fix the colour and it objects to the block itself:
 ```
 Error: tut-08-release-notes-starter.sail: line 64 col 1: [sail-no-style-block]
 raw <style> is not the floor styling surface — the floor is one way to do CSS:
-Style on sx (`sx={style.pad(4).bg(surface-2)}`). Motion/variants/responsive are
-becoming language elements, not raw CSS. This is the opinionated floor;
-primitives use it too.
+Style as a block statement (`style({ box: pad(4), paint: bg(surface-2) })`).
+Motion/variants/responsive are becoming language elements, not raw CSS.
+This is the opinionated floor; primitives use it too.
   suggest: Text elements (<h1>-<h6>, <p>) are styled from the type scale
-  automatically — write them plain. Everything else: Style chains on sx=
-  (`style.bg(…)` / when / match), <column>/<row>/<grid> for structure. A gap
+  automatically — write them plain. Everything else: Style block attach
+  (`style({ paint: bg(…) })` / when / match), <column>/<row>/<grid> for structure. A gap
   here is a missing language element to add, not a reason to hand-author CSS.
 ```
 
 That order is the point. Tokenising the colour was a real improvement
 and still not enough — the block was never a legal surface. Delete it.
-Whatever it was painting, the answer is Style on `sx` or a component;
-and if the vocabulary genuinely cannot express the design, that is a
-**language gap to report**, never a reason to smuggle CSS. Product form:
-`sx={style.pad(4).bg(surface-2)}`.
+Whatever it was painting, the answer is Style as a block attach or a
+component; and if the vocabulary genuinely cannot express the design,
+that is a **language gap to report**, never a reason to smuggle CSS.
+Product form:
+```
+<div>
+  style({ box: pad(4), paint: bg(surface-2) })
+</div>
+```
 
 Run 5: `compiled 1 file(s)`.
 

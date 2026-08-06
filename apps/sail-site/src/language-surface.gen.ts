@@ -8052,7 +8052,7 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
   {
     "syntax": "raw <style>",
     "rule": "sail-no-style-block",
-    "instead": "Style product style={style.…} and design tokens (floor)"
+    "instead": "Style product block style({ box: …, paint: … }) and design tokens (floor)"
   },
   {
     "syntax": "raw <script>",
@@ -8552,8 +8552,8 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too"
   },
   {
-    "syntax": "sx={style.…}",
-    "summary": "Style product paint — style.bg(…).padX(2), match, when, compound; utility-string sx=\"atom atom\" is a residual compile error"
+    "syntax": "style.… / style([…]) / style({…}) block statement",
+    "summary": "Style product paint on the element body — not an HTML attribute"
   },
   {
     "syntax": "(--name) inside Style values",
@@ -9231,15 +9231,15 @@ export interface ForeignIdiomDoc {
 export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   {
     "syntax": "class= / class:<name>",
-    "instead": "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props, closed sx state prefixes, or layout — not a global CSS class toggle"
+    "instead": "styling is a block-level style(…) / style.… statement on the element"
   },
   {
     "syntax": "style= / style:<prop>",
-    "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name); paint is Style product style={style.…}"
+    "instead": "runtime geometry is owned by named, typed actions; paint is a block-level style(…) statement, not an HTML style attribute"
   },
   {
     "syntax": "part=\"…\"",
-    "instead": "style with sx on the element itself — light DOM has no shadow parts"
+    "instead": "style with a block-level style(…) statement on the element itself — light DOM has no shadow parts"
   },
   {
     "syntax": "<div> / <span> for layout structure",
@@ -9355,9 +9355,9 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   },
   {
     "form": "Style const",
-    "syntax": "const filled = style.bg(primary).padX(2)",
-    "summary": "compile-time Style value (chain / match / when / compound / list / ref); resolved when host style={name} references it",
-    "example": "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span style={filled}>{label}</span>"
+    "syntax": "const filled = style({ paint: bg(primary), box: padX(2) })",
+    "summary": "compile-time Style value (channel / match / when / compound / list / ref); attach with block style(name) on the host",
+    "example": "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span>\n  style(filled)\n  {label}\n</span>"
   },
   {
     "form": "Identity type annotation",

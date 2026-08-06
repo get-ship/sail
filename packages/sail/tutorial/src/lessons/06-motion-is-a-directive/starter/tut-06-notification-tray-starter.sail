@@ -51,18 +51,18 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <!-- TODO 1: sx={style({ animate: hover({ rotate: 'spring:bouncy' }) })} — a playful hint. -->
+      <!-- TODO 1: style({ animate: hover({ rotate: 'spring:bouncy' }) }) as a block — a playful hint. -->
       <button variant="ghost" size="sm" on:click={() => restock()}>Restock</button>
       <!-- TODO 2: style({ animate: hover({ scale: 'spring:gentle' }) }) + style({ paint: press({ scale:
            'press') — tactile feedback belongs on the trigger. -->
       <button variant="outline" tone="primary" size="sm" on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <!-- TODO 3: sx={… .loop({ scale: 'pulse' })} — ambient, and it
+          <!-- TODO 3: style({ animate: loop({ scale: 'pulse' }) }) — ambient, and it
                stops under prefers-reduced-motion for free. -->
           <span>
             style(unreadDot)
-</span>
+          </span>
         </if>
       </button>
     </row>

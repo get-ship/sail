@@ -50,10 +50,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     style({ box: maxW(breakpoint-tablet) })
 
     <p token="doc-eyebrow">Reference</p>
-    <h1>Style — paint on sx</h1>
+    <h1>Style — block channel attach</h1>
     <p token="doc-lead">
-      Paint is Style only: <code>sx=&#123;style({ box: padX(2), paint: bg(primary) })&#125;</code>,
-      <code>sx=&#123;[base, match(…), when(…)]&#125;</code>, or a scope const.
+      Paint is Style only, as a <strong>block statement</strong> on the host:
+      <code>style({ box: padX(2), paint: bg(primary) })</code>,
+      <code>style([base, match(…), when(…)])</code>, or <code>style(constRef)</code>.
       Every setter argument is a design token from a closed scale — the rows
       below list those values. An off-list token is a compile error that names
       the same list.
@@ -61,8 +62,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>
       style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
-      Utility-string <code>sx="…"</code> is not product. Responsive and state
-      paint use <code>when(&#123; tablet: style…, hover: style… &#125;)</code>, not
+      Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product.
+      Responsive and state paint use
+      <code>.when(tablet, &#123; … &#125;)</code> / <code>.when(hover, &#123; … &#125;)</code>
+      or map <code>when(&#123; tablet: style… &#125;)</code>, not
       <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
       {sxCount()} scale entries feed the setters.
     </p>

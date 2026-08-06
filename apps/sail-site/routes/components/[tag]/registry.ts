@@ -85,7 +85,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'tone', desc: 'semantic colour token', type: TONES },
       { name: 'size', desc: 'control height', type: 'sm · md · lg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
-      { name: 'style.press / when({ active })', desc: 'press feedback on Style', type: 'preset' },
+      { name: 'style({ paint: press }) / when({ active })', desc: 'press feedback on Style', type: 'preset' },
     ],
   }),
   input: lang('input', 'input', {

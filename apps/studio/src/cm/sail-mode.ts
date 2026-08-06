@@ -21,7 +21,7 @@ export type SailToken = {
 
 /**
  * Tokenize a .sail source slice into a flat token list (deterministic).
- * Covers: HTML-like tags, attributes, style={…}, {expr}, control-flow tags,
+ * Covers: HTML-like tags, attributes, block style({…}), {expr}, control-flow tags,
  * comments, and string literals.
  */
 export function tokenizeSail(source: string): SailToken[] {

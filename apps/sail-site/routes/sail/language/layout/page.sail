@@ -197,11 +197,11 @@ Active</badge>
     Style setters — so tools and agents see the same words in every file.
   </p>
   <p>
-    Layout attrs are the product home for participation in a flex/grid parent.
-    Style still owns paint (pad, color, type, chrome), intrinsic box size
+    Participation lives on the <strong>box channel</strong>
+    (<code>style({ box: grow(1).minW(0) })</code>), not bare attrs.
+    Style also owns paint (pad, color, type, chrome), intrinsic box size
     (<code>h</code>, icon <code>w</code>/<code>size</code>), and chrome like
-    <code>minH</code> on badges. When a child needs both, split: attrs for
-    participation, <code>sx=&#123;…&#125;</code> for paint only. Every child of
+    <code>minH</code> on badges — all as a block Style statement. Every child of
     a layout element is also born with <code>min-width: 0</code> — the browser
     default where an item refuses to shrink below its content is corrected at
     the language level, so <code>style({ text: truncate() })</code> works the first time.

@@ -3,7 +3,8 @@
 // one is the source of the live demo it sits next to.
 export const code = {
   useThem: `<!-- components are tags. Write them like HTML. -->
-<card style={style.pad(4)}>
+<card>
+  style({ box: pad(4) })
   <row gap="3" align="center">
     <avatar></avatar>
     <strong grow>Ada Lovelace</strong>

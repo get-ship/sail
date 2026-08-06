@@ -272,7 +272,13 @@ export function autoFixOnSave(
   let text = source
   let applied = 0
   for (const f of findings) {
-    if (f.rule === 'sail-participation-style' && text.includes('.grow(')) {
+    if (
+      f.rule === 'sail-participation-style' &&
+      (/\sgrow(?:[=\s>]|$)/.test(text) ||
+        /\sshrink(?:[=\s>]|$)/.test(text) ||
+        text.includes('.grow(') ||
+        text.includes('.shrink('))
+    ) {
       const next = applyParticipationStyleFix(text)
       if (next !== text) {
         text = next
@@ -283,29 +289,26 @@ export function autoFixOnSave(
   return { text, changed: applied > 0, applied }
 }
 
-/** Client-side participation-style rewrite (grow/shrink → attr). */
+/** Client-side participation-style rewrite: bare `grow` / `grow="N"` attrs →
+ *  block `style({ box: grow(N) })` (product is the box channel, not attrs). */
 export function applyParticipationStyleFix(source: string): string {
-  // Simplest high-signal rewrite: style.grow(1) → grow attr on the host open tag.
-  return source.replace(
-    /<([a-zA-Z][\w-]*)([^>]*?)\s+sx=\{\s*style\.grow\((\d+)\)\s*\}([^>]*)>/g,
-    (_m, tag, pre, n, post) => {
-      const attr = n === '1' ? ' grow' : ` grow="${n}"`
-      return `<${tag}${pre}${attr}${post}>`
-    },
-  ).replace(
-    /<([a-zA-Z][\w-]*)([^>]*?)sx=\{\s*style\.([^.]+(?:\.[^(]+)*?)\.grow\((\d+)\)([^}]*)\}([^>]*)>/g,
-    (_m, tag, pre, chain, n, rest, post) => {
-      const attr = n === '1' ? ' grow' : ` grow="${n}"`
-      const sx = rest.trim()
-        ? ` style={style.${chain}${rest}}`
-        : ` style={style.${chain}}`
-      // strip trailing empty
-      const cleanSx = sx
-        .replace(/sx=\{\s*style\s*\}/, '')
-        .replace(/\.\s*\}/, '}')
-      return `<${tag}${pre}${attr}${cleanSx}${post}>`
-    },
-  )
+  return source
+    .replace(
+      /<([a-zA-Z][\w-]*)([^>]*?)\s+grow(?:="(\d+)"|=\{(\d+)\})?([^>]*)>/g,
+      (_m, tag, pre, nQuoted, nBrace, post) => {
+        const n = nQuoted ?? nBrace ?? '1'
+        const indent = '  '
+        return `<${tag}${pre}${post}>\n${indent}style({ box: grow(${n}) })\n`
+      },
+    )
+    .replace(
+      /<([a-zA-Z][\w-]*)([^>]*?)\s+shrink(?:="(\d+)"|=\{(\d+)\})?([^>]*)>/g,
+      (_m, tag, pre, nQuoted, nBrace, post) => {
+        const n = nQuoted ?? nBrace ?? '1'
+        const indent = '  '
+        return `<${tag}${pre}${post}>\n${indent}style({ box: shrink(${n}) })\n`
+      },
+    )
 }
 
 /** Apply one finding's known rewrite when possible. */

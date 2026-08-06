@@ -1,30 +1,37 @@
-//! `sail-sx` — the inline style surface.
+//! `sail-sx` — the Style paint surface.
 //!
-//! Product form is Style: `style={style.pad(4).bg(surface-2).radius(lg)}`,
-//! `style={style({ box: pad(4), paint: bg(surface-2) })}`,
-//! `style={when({ hover: style.bg(muted) })}`, `style={[ match(…), when(…) ]}`, or a
-//! scope Style const ref. Utility-string atoms (`style="p-4 bg-surface-2"`) are a
-//! **hard residual error** — not architecture.
+//! Product form is a **block** Style statement on the element body:
+//! ```text
+//! <div>
+//!   style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })
+//!   children
+//! </div>
+//! ```
+//! Also: `style([ match(…), when(…) ])`, `style(constRef)`, or channel spines
+//! with `.when(key, { … })` tails. Attribute hosts `style={…}` / `sx={…}` are
+//! **not** the product attach form (compiler refuses Style product on attrs).
+//! Utility-string atoms (`style="p-4 bg-surface-2"`) are a **hard residual
+//! error** — not architecture.
 //!
 //! THE RULE: every value is a design token or a plain CSS keyword. Never a raw
 //! number, never a colour, never a unit. There is no bracket escape (cf.
 //! Tailwind's `p-[13px]`).
 //!
 //! The vocabulary is a TABLE (`sx-vocabulary.json`, read by `crate::sx_vocab`),
-//! not code. Style setters re-home the same closed heads (`style.bg`, `style.pad`,
-//! …). A scale-valued setter spends a token and nothing else; a keyword-valued
-//! one takes its CSS keywords. The value discipline is the point.
+//! not code. Style setters re-home the same closed heads (`bg`, `pad`, …) inside
+//! channels. A scale-valued setter spends a token and nothing else; a
+//! keyword-valued one takes its CSS keywords. The value discipline is the point.
 //!
-//! SCOPE — sx styles ONE box. How its children sit is a layout element
+//! SCOPE — Style paints ONE box. How its children sit is a layout element
 //! (`<row>`, `<column>`, `<grid>`), which carries the semantics, the a11y and
 //! the overflow handling a hand-rolled flex box loses. Every layout atom is
 //! REFUSED BY NAME, and the refusal names the element to use instead: the
 //! mission is never "find another way".
 //!
-//! sx is compile-time and static: it lowers to atomic classes plus injected CSS.
-//! A **runtime** dynamic `style={expr}` (JS ternary, call, etc.) cannot be lowered
-//! and is a hard error — conditional styling goes through a primitive prop
-//! (`tone={…}`) or a `when` / `match` Style guard.
+//! Style is compile-time and static: it lowers to atomic classes plus injected
+//! CSS. A **runtime** dynamic expression cannot be lowered and is a hard error
+//! — conditional styling goes through a primitive prop (`tone={…}`) or a
+//! `when` / `match` Style guard.
 
 use std::path::Path;
 
@@ -176,6 +183,25 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             SxHit::Dynamic(offset) => {
                 let (line, col) = offset_to_line_col(source, offset);
                 findings.push(mk_dynamic(path, line, col));
+                continue;
+            }
+            SxHit::AttrHost(offset) => {
+                let (line, col) = offset_to_line_col(source, offset);
+                findings.push(Finding {
+                    file: path.to_path_buf(),
+                    line,
+                    col,
+                    rule: RULE_ID,
+                    severity: Severity::Error,
+                    message: "style={…} as an attribute is not Style attachment — use a block \
+                              statement: style({ box: …, paint: … }).when(hover, { paint: … })  \
+                              or  style([ base, match(…) ])"
+                        .to_string(),
+                    suggest: Some(
+                        "Attach Style as the first block statement after `>` on the element."
+                            .to_string(),
+                    ),
+                });
                 continue;
             }
             SxHit::Static(val, offset) => (val, offset),
@@ -352,15 +378,18 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
     }
 }
 
-/// One `sx` attribute occurrence: a static Style value (value + offset) to
-/// validate, or a runtime dynamic `style={…}` binding (offset of the `sx`) to reject.
+/// One Style host occurrence: a static Style value (value + offset) to validate,
+/// a runtime dynamic `style={jsExpr}` to reject, or a product Style attr host
+/// that must migrate to block attach.
 enum SxHit<'a> {
     Static(&'a str, usize),
     Dynamic(usize),
+    /// `style={StyleProduct}` / `sx={…}` — not product attach form.
+    AttrHost(usize),
 }
 
-/// Find every `sx=` attribute — static `style="…"` / Style `style={…}`, or runtime
-/// dynamic `style={jsExpr}`. Skips HTML comments.
+/// Find Style hosts: block statements after `>`, residual `style="…"`, dynamic
+/// `style={js}`, and retired product attr hosts. Skips HTML comments.
 fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -375,30 +404,135 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                 None => break,
             }
         }
-        if i > 0 && bytes[i - 1].is_ascii_whitespace() && source[i..].starts_with("style") {
-            if let Some(rel) = sx_value_delim(&bytes[i + 5..]) {
-                let dpos = i + 5 + rel;
-                if bytes[dpos] == b'"' {
-                    let vstart = dpos + 1;
-                    if let Some(q) = source[vstart..].find('"') {
-                        out.push(SxHit::Static(&source[vstart..vstart + q], vstart));
-                        i = vstart + q + 1;
+        // Open tag → optional block Style statement after `>`.
+        if bytes[i] == b'<'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] != b'/'
+            && bytes[i + 1] != b'!'
+        {
+            let tag_start = i + 1;
+            let mut tag_end = tag_start;
+            while tag_end < bytes.len()
+                && (bytes[tag_end].is_ascii_alphanumeric()
+                    || bytes[tag_end] == b'-'
+                    || bytes[tag_end] == b'_'
+                    || bytes[tag_end] == b':')
+            {
+                tag_end += 1;
+            }
+            if tag_end > tag_start {
+                let mut k = tag_end;
+                // Scan attrs on this open tag for style=/sx= hosts.
+                while k < bytes.len() {
+                    while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
+                    if k >= bytes.len() {
+                        break;
+                    }
+                    if bytes[k] == b'>' {
+                        break;
+                    }
+                    if bytes[k] == b'/' && k + 1 < bytes.len() && bytes[k + 1] == b'>' {
+                        break;
+                    }
+                    let name_lo = k;
+                    while k < bytes.len()
+                        && (bytes[k].is_ascii_alphanumeric()
+                            || bytes[k] == b'-'
+                            || bytes[k] == b'_'
+                            || bytes[k] == b':'
+                            || bytes[k] == b'.')
+                    {
+                        k += 1;
+                    }
+                    if k == name_lo {
+                        k += 1;
                         continue;
                     }
-                } else if bytes[dpos] == b'{' {
-                    if let Some(close) = balanced_brace_end(bytes, dpos) {
-                        let val = &source[dpos + 1..close];
-                        if is_style_product_value(val) {
-                            // Compile-time Style: chain / match / when / compound / list / const ref.
-                            out.push(SxHit::Static(val, dpos + 1));
-                        } else {
-                            // Runtime JS expression — cannot lower.
-                            out.push(SxHit::Dynamic(i));
+                    let name = &source[name_lo..k];
+                    while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
+                    if k >= bytes.len() || bytes[k] != b'=' {
+                        continue;
+                    }
+                    k += 1;
+                    while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
+                    if k >= bytes.len() {
+                        break;
+                    }
+                    if bytes[k] == b'"' {
+                        let vstart = k + 1;
+                        if let Some(q) = source[vstart..].find('"') {
+                            if name == "style" || name == "sx" {
+                                out.push(SxHit::Static(
+                                    &source[vstart..vstart + q],
+                                    vstart,
+                                ));
+                            }
+                            k = vstart + q + 1;
+                            continue;
                         }
-                        i = close + 1;
-                        continue;
+                    } else if bytes[k] == b'\'' {
+                        let vstart = k + 1;
+                        if let Some(q) = source[vstart..].find('\'') {
+                            if name == "style" || name == "sx" {
+                                out.push(SxHit::Static(
+                                    &source[vstart..vstart + q],
+                                    vstart,
+                                ));
+                            }
+                            k = vstart + q + 1;
+                            continue;
+                        }
+                    } else if bytes[k] == b'{' {
+                        if let Some(close) = balanced_brace_end(bytes, k) {
+                            let val = &source[k + 1..close];
+                            if name == "style" || name == "sx" {
+                                if is_style_product_value(val) {
+                                    out.push(SxHit::AttrHost(name_lo));
+                                } else {
+                                    out.push(SxHit::Dynamic(name_lo));
+                                }
+                            }
+                            k = close + 1;
+                            continue;
+                        }
+                    } else {
+                        // Unquoted value.
+                        while k < bytes.len()
+                            && !bytes[k].is_ascii_whitespace()
+                            && bytes[k] != b'>'
+                            && bytes[k] != b'/'
+                        {
+                            k += 1;
+                        }
                     }
-                    out.push(SxHit::Dynamic(i));
+                }
+                if k < bytes.len() && (bytes[k] == b'>' || bytes[k] == b'/') {
+                    let gt = if bytes[k] == b'/' { k + 1 } else { k };
+                    let self_closing = bytes[k] == b'/';
+                    let body_start = if gt < bytes.len() && bytes[gt] == b'>' {
+                        gt + 1
+                    } else {
+                        k + 1
+                    };
+                    if !self_closing {
+                        if let Some((rel_lo, rel_hi, _expr)) =
+                            try_block_style_statement(&source[body_start..])
+                        {
+                            let abs_lo = body_start + rel_lo;
+                            let abs_hi = body_start + rel_hi;
+                            out.push(SxHit::Static(&source[abs_lo..abs_hi], abs_lo));
+                            i = abs_hi;
+                            continue;
+                        }
+                    }
+                    i = body_start;
+                    continue;
                 }
             }
         }
@@ -410,6 +544,129 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
         }
     }
     out
+}
+
+/// First non-ws body content is a Style product statement?
+fn try_block_style_statement(body: &str) -> Option<(usize, usize, &str)> {
+    let bytes = body.as_bytes();
+    let mut start = 0;
+    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
+        start += 1;
+    }
+    if start >= bytes.len() {
+        return None;
+    }
+    if bytes[start] == b'<' || bytes[start] == b'{' {
+        return None;
+    }
+    let rest = &body[start..];
+    if !is_style_product_value(rest) {
+        return None;
+    }
+    let end = consume_style_expr_len(rest)?;
+    let expr = rest[..end].trim_end();
+    if expr.is_empty() {
+        return None;
+    }
+    Some((start, start + end, expr))
+}
+
+/// Balanced Style product expression length (includes `.method(` chain tails).
+fn consume_style_expr_len(s: &str) -> Option<usize> {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brack = 0i32;
+    let mut brace = 0i32;
+    let mut saw_group = false;
+
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+                if i < bytes.len() {
+                    i += 1;
+                }
+                continue;
+            }
+            b'(' => {
+                paren += 1;
+                saw_group = true;
+            }
+            b')' => {
+                paren -= 1;
+                if paren < 0 {
+                    return None;
+                }
+            }
+            b'[' => {
+                brack += 1;
+                saw_group = true;
+            }
+            b']' => {
+                brack -= 1;
+                if brack < 0 {
+                    return None;
+                }
+            }
+            b'{' => {
+                brace += 1;
+                saw_group = true;
+            }
+            b'}' => {
+                brace -= 1;
+                if brace < 0 {
+                    return None;
+                }
+            }
+            b'.' if paren == 0 && brack == 0 && brace == 0 && saw_group => {
+                // Chain tail `.when(` / `.press(` — continue.
+                i += 1;
+                while i < bytes.len()
+                    && (bytes[i].is_ascii_alphanumeric()
+                        || bytes[i] == b'_'
+                        || bytes[i] == b'-')
+                {
+                    i += 1;
+                }
+                continue;
+            }
+            c if paren == 0 && brack == 0 && brace == 0 && saw_group => {
+                if c.is_ascii_whitespace() || c == b'<' || c == b'{' || c == b'/' {
+                    return Some(i);
+                }
+                // Bare ident / text — end of statement.
+                if !c.is_ascii_alphanumeric() && c != b'_' {
+                    return Some(i);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+        if paren == 0 && brack == 0 && brace == 0 && saw_group {
+            // Peek end after closing the root group.
+            let mut j = i;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'.' {
+                continue;
+            }
+            return Some(i);
+        }
+    }
+    if saw_group && paren == 0 && brack == 0 && brace == 0 {
+        Some(i)
+    } else {
+        None
+    }
 }
 
 /// Offset of the `}` matching `{` at `open`, or None if unbalanced.
@@ -476,28 +733,6 @@ fn is_style_product_value(val: &str) -> bool {
         }
 }
 
-/// After `sx`: `(ws)* = (ws)*` then `"` (static) or `{` (dynamic). Returns the
-/// byte offset (within `rest`) of that delimiter, or None if this isn't an
-/// `sx=`-valued attribute (e.g. `sxy=`, or `sx` with no following `=`).
-fn sx_value_delim(rest: &[u8]) -> Option<usize> {
-    let mut k = 0;
-    while k < rest.len() && rest[k].is_ascii_whitespace() {
-        k += 1;
-    }
-    if k >= rest.len() || rest[k] != b'=' {
-        return None;
-    }
-    k += 1;
-    while k < rest.len() && rest[k].is_ascii_whitespace() {
-        k += 1;
-    }
-    if k < rest.len() && (rest[k] == b'"' || rest[k] == b'{') {
-        Some(k)
-    } else {
-        None
-    }
-}
-
 fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
     let mut line = 1usize;
     let mut col = 1usize;
@@ -555,33 +790,47 @@ mod tests {
     }
 
     #[test]
-    fn style_chain_product_passes() {
-        assert!(
-            run(r#"<div style={style.bg(primary).padX(2)}>x</div>"#).is_empty(),
-            "{:?}",
-            run(r#"<div style={style.bg(primary).padX(2)}>x</div>"#)
-        );
-    }
-
-    #[test]
-    fn style_channel_object_product_passes() {
-        let src = r#"<div style={style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) })}>x</div>"#;
+    fn style_block_channel_product_passes() {
+        let src = r#"<div>
+  style({ paint: bg(primary), box: padX(2) })
+  x
+</div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
-    fn style_list_match_when_product_passes() {
-        let src = r#"<div style={[ match(variant, { solid: style.bg(primary) }), when({ hover: style.opacity(90) }) ]}>x</div>"#;
+    fn style_block_channel_with_when_passes() {
+        let src = r#"<div>
+  style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) }).when(hover, { paint: bg(muted) })
+  x
+</div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
-    fn style_const_ref_is_static_product_not_dynamic() {
-        // Bare ref is compile-time Style (scope const); not runtime `style={cls()}`.
+    fn style_block_list_match_when_product_passes() {
+        let src = r#"<div>
+  style([ match(variant, { solid: style({ paint: bg(primary) }) }), when({ hover: style({ paint: opacity(90) }) }) ])
+  x
+</div>"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
+    }
+
+    #[test]
+    fn style_block_const_ref_is_static_product() {
+        let src = r#"<div>
+  style(filled)
+  x
+</div>"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
+    }
+
+    #[test]
+    fn style_attr_host_is_not_product_happy_path() {
+        let ms = run(r#"<div style={style({ paint: bg(primary) })}>x</div>"#);
         assert!(
-            run(r#"<div style={filled}>x</div>"#).is_empty(),
-            "{:?}",
-            run(r#"<div style={filled}>x</div>"#)
+            ms.iter().any(|m| m.contains("block") || m.contains("attribute")),
+            "attr host must not green as product: {ms:?}"
         );
     }
 
@@ -604,7 +853,12 @@ mod tests {
 
     #[test]
     fn bad_token_fail_closed() {
-        let ms = run(r#"<div style={style.bg(notARealTokenZzz999)}>x</div>"#);
+        let ms = run(
+            r#"<div>
+  style({ paint: bg(notARealTokenZzz999) })
+  x
+</div>"#,
+        );
         assert!(!ms.is_empty(), "{ms:?}");
         assert!(
             ms.iter()
@@ -615,7 +869,12 @@ mod tests {
 
     #[test]
     fn unknown_setter_fail_closed() {
-        let ms = run(r#"<div style={style.notASetter(primary)}>x</div>"#);
+        let ms = run(
+            r#"<div>
+  style({ paint: notASetter(primary) })
+  x
+</div>"#,
+        );
         assert!(!ms.is_empty(), "{ms:?}");
     }
 

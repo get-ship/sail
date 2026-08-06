@@ -881,20 +881,28 @@ fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
     )
 }
 
-/// Fenced sx demos for `gen_skill`. Product SAIL uses single braces
-/// (`style={style…}`); this is a plain string for `push_str`, not a format string.
+/// Fenced Style demos for `gen_skill`. Product attach is a **block statement**
+/// (`style({…})` after `>`), not an HTML attribute. Plain string for `push_str`.
 ///
 /// `raw_containers`: when false, avoid bare `<div>`/`<span>` (no-raw policy).
 fn sx_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
         "```\n\
-         <div style={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })} />\n\
-         <span style={style.fg(muted-foreground).fontSize(sm)} />\n\
+         <div>\n\
+           style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })\n\
+         </div>\n\
+         <span>\n\
+           style({ paint: fg(muted-foreground), text: fontSize(sm) })\n\
+         </span>\n\
          ```\n\n"
     } else {
         "```\n\
-         <column gap=\"3\" style={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })}>\n\
-           <p style={style.fg(muted-foreground).fontSize(sm)}>…</p>\n\
+         <column gap=\"3\">\n\
+           style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })\n\
+           <p>\n\
+             style({ paint: fg(muted-foreground), text: fontSize(sm) })\n\
+             …\n\
+           </p>\n\
          </column>\n\
          ```\n\n\
          No bare `<div>`/`<span>` here — use layout keywords + content tags.\n\n"
@@ -1008,9 +1016,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(
         md,
-        "- NO `<style>` blocks, NO `style=` attributes. NO raw values (px/hex) — spend a token.\n\
-         - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is Style:\n  \
-           `style={{style.pad(4).bg(surface-2)}}` / `when({{…}})` / `match`.\n\
+        "- NO `<style>` blocks, NO product Style as an HTML attribute. NO raw values (px/hex) — spend a token.\n\
+         - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is a **block** Style attach:\n  \
+           `style({{ box: pad(4), paint: bg(surface-2) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
            App tests use role / accessible name / visible text, not that stamp.\n\
@@ -1034,17 +1042,19 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            `<scope>` (`props: {{ … }}`). If it computes, it is controller code.\n"
     );
     if effective.sx {
-        let _ = writeln!(md, "## sx — Style product (core)\n");
+        let _ = writeln!(md, "## Style product (core)\n");
         // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
-        // Plain-string demos use product SAIL single braces (`style={style…}`). Do not
-        // write `{{` here — that is only for `writeln!` format-string escaping.
+        // Block channel form is a plain string (sx_skill_demo). In writeln! format
+        // strings, `{{` / `}}` escape to single braces in the skill markdown.
         md.push_str(sx_skill_demo(effective.raw_containers));
         let _ = writeln!(
             md,
-            "Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
+            "Attach Style as a **block statement** after `>` — not `style=` / `sx=`.\n\
+             Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
              `bind(name)` for runtime CSS vars. Style is compile-time static — no\n\
-             `style={{jsExpr}}`. Full closed setter table: MCP `sail_surface` topic `style`.\n\
-             Layout atoms refused by name: MCP topic `layout` (same `sx_vocab::refusals()`).\n"
+             dynamic JS in the Style host. Full closed setter table: MCP `sail_surface`\n\
+             topic `style`. Layout atoms refused by name: MCP topic `layout`\n\
+             (same `sx_vocab::refusals()`).\n"
         );
 
         // Core setters only — no full table dump.
@@ -1123,13 +1133,19 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## Motion (pointer)\n");
     let _ = writeln!(
         md,
-        "Style chain: `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` / `.hover` /\n\
-         `.press` / `.focus` / `.focus-visible` (public `fx:` is a compile error).\n\
+        "Style animate channel: `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` /\n\
+         `.hover` / `.press` / `.focus` / `.focus-visible` (public `fx:` is a compile error).\n\
          Fire-and-forget presets vs `timeline()` scrub lane — full tables + presets:\n\
          MCP `sail_surface` (or compile errors naming allowed presets).\n\n\
          ```\n\
-         <card style={{style.reveal({{ opacity: 'fade', translate-y: 'spring:gentle' }})}}>reveal</card>\n\
-         <button style={{style.press({{ scale: 'press' }})}}>tactile</button>\n\
+         <card>\n\
+           style({{ animate: reveal({{ opacity: 'fade', translate-y: 'spring:gentle' }}) }})\n\
+           reveal\n\
+         </card>\n\
+         <button>\n\
+           style({{ animate: press({{ scale: 'press' }}) }})\n\
+           tactile\n\
+         </button>\n\
          ```\n"
     );
 
@@ -1878,11 +1894,19 @@ mod skill_demo_tests {
     use super::sx_skill_demo;
 
     #[test]
-    fn raw_sx_demo_uses_single_braces_and_div_span() {
+    fn raw_sx_demo_uses_block_channel_and_div_span() {
         let md = sx_skill_demo(true);
         assert!(
-            md.contains("style={style."),
-            "product SAIL single-brace sx: {md}"
+            md.contains("style({"),
+            "product Style is block channel form: {md}"
+        );
+        assert!(
+            !md.contains("style={style."),
+            "must not teach attr host style={{style.…}}: {md}"
+        );
+        assert!(
+            !md.contains("sx="),
+            "must not teach retired sx=: {md}"
         );
         assert!(
             !md.contains("style={{style."),
@@ -1892,16 +1916,24 @@ mod skill_demo_tests {
             !md.contains("when({{"),
             "nested when({{ is format-string leak: {md}"
         );
-        assert!(md.contains("<div "), "full policy demos use raw div");
-        assert!(md.contains("<span "), "full policy demos use raw span");
+        assert!(md.contains("<div>"), "full policy demos use raw div");
+        assert!(md.contains("<span>"), "full policy demos use raw span");
     }
 
     #[test]
-    fn no_raw_sx_demo_uses_layout_keywords_and_single_braces() {
+    fn no_raw_sx_demo_uses_layout_keywords_and_block_channel() {
         let md = sx_skill_demo(false);
         assert!(
-            md.contains("style={style."),
-            "product SAIL single-brace sx: {md}"
+            md.contains("style({"),
+            "product Style is block channel form: {md}"
+        );
+        assert!(
+            !md.contains("style={style."),
+            "must not teach attr host style={{style.…}}: {md}"
+        );
+        assert!(
+            !md.contains("sx="),
+            "must not teach retired sx=: {md}"
         );
         assert!(
             !md.contains("style={{style."),
@@ -1912,12 +1944,15 @@ mod skill_demo_tests {
             "nested when({{ is format-string leak: {md}"
         );
         assert!(
-            md.contains("<column ") && md.contains("<p "),
+            md.contains("<column ") && md.contains("<p>"),
             "no-raw demos use layout + content tags: {md}"
         );
         assert!(
-            !md.contains("<div ") && !md.contains("<span "),
-            "no-raw demos must not teach bare div/span: {md}"
+            !md.contains("<div ")
+                && !md.contains("<span ")
+                && !md.lines().any(|l| l.trim_start().starts_with("<div>")
+                    || l.trim_start().starts_with("<span>")),
+            "no-raw demos must not teach bare div/span tags: {md}"
         );
         assert!(
             md.contains("No bare"),
