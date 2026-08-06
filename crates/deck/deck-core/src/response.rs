@@ -79,12 +79,9 @@ const CSP_SUFFIX: &str = "frame-ancestors 'self'";
 /// CSP `'self'` keyword; any other entry (`"https://api.example.com"`) is
 /// already an origin and is emitted verbatim.
 ///
-/// NOT YET WIRED to `html_route`/`DeckResponse` — deck-core's request path
-/// (`assets.rs`'s `serve_shell`/`html_route` call, deck-core/src/assets.rs:316)
-/// has no per-package resolved `"network"` list in hand today; the SPA shell
-/// HTML deck-core serves isn't scoped to one `.sail` package, so the seam that
-/// would supply this list does not exist yet. This function is the
-/// correctly-parameterized piece; wiring it in is a follow-up.
+/// Live path: [`DeckResponse::html_route_for`] + `serve_scaffold` resolve the
+/// app project's list via `Policy::network_for` and pass it here so the served
+/// SPA shell CSP honors `sail.config` `"network"` (EXT-1 E6).
 pub fn connect_src_directive(network: &[String]) -> String {
     if network.is_empty() {
         return "connect-src 'self'".to_string();
@@ -206,12 +203,25 @@ impl DeckResponse {
     pub fn font_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "font/woff2", CachePolicy::Asset, mode, body)
     }
+    /// HTML response with the default security header set (`connect-src 'self'`).
+    /// Equivalent to [`Self::html_route_for`] with an empty `network` list —
+    /// byte-identical to [`HTML_SECURITY_HEADERS`]. Prefer `html_route_for`
+    /// when the call site has a resolved package `"network"` allowlist (the
+    /// live SPA shell path does).
     pub fn html_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        // All HTML responses carry the deck-defined security header set. The
-        // values live in `HTML_SECURITY_HEADERS` (top of file) — the single
-        // mint point, with a behavior test pinning the bytes so a half-edit
-        // is caught before it ships. The error responses (`not_found`/
-        // `render_error`) carry the same set via `carrying_security_headers`.
+        Self::html_route_for(body, mode, &[])
+    }
+
+    /// HTML response whose CSP `connect-src` is derived from `network` via
+    /// [`html_security_headers_for`]. Empty `network` reproduces
+    /// [`HTML_SECURITY_HEADERS`] byte-for-byte; non-empty lists name the
+    /// granted origins. Used by `serve_scaffold` with the project's resolved
+    /// `sail.config` `"network"` list.
+    pub fn html_route_for(body: impl Into<Vec<u8>>, mode: DaemonMode, network: &[String]) -> Self {
+        // All HTML responses carry the deck-defined security header set.
+        // `html_security_headers_for` is the mint point (generalizes
+        // `HTML_SECURITY_HEADERS`); error responses (`not_found`/`render_error`)
+        // carry the empty-network default via `carrying_security_headers`.
         Self::new(
             200,
             "text/html; charset=utf-8",
@@ -219,7 +229,7 @@ impl DeckResponse {
             mode,
             body,
         )
-        .carrying_security_headers()
+        .carrying_security_headers(network)
     }
     pub fn json_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(
@@ -264,7 +274,8 @@ impl DeckResponse {
         // `format!("invalid asset path: {file}")`, etc.), so it MUST carry the
         // security header set — above all `nosniff`, so a browser never MIME-
         // sniffs the text/plain body as HTML and runs reflected markup.
-        r.carrying_security_headers()
+        // Empty network: errors are not package-scoped; keep default `'self'`.
+        r.carrying_security_headers(&[])
     }
 
     /// 500 — in Production the message is hidden; in Development it's surfaced.
@@ -282,7 +293,7 @@ impl DeckResponse {
             mode,
             body.into_bytes(),
         )
-        .carrying_security_headers()
+        .carrying_security_headers(&[])
     }
 
     pub fn with_header(mut self, name: &'static str, value: impl Into<String>) -> Self {
@@ -290,17 +301,19 @@ impl DeckResponse {
         self
     }
 
-    /// Apply deck's security header set (`HTML_SECURITY_HEADERS`, the single mint
-    /// point) to this response. Used by `html_route` AND the error responses
+    /// Apply deck's security header set to this response, with CSP `connect-src`
+    /// derived from `network` via [`html_security_headers_for`]. Empty `network`
+    /// is byte-identical to [`HTML_SECURITY_HEADERS`]. Used by
+    /// `html_route`/`html_route_for` AND the error responses
     /// (`not_found`/`render_error`): a text/plain error body reflects request-
     /// derived detail in Development, so it MUST send `X-Content-Type-Options:
     /// nosniff` to stop a browser MIME-sniffing it as HTML and executing
     /// reflected markup; X-Frame-Options + CSP ride along as defence-in-depth.
     /// Assets deliberately skip this — a JS/CSS asset is not an HTML execution
     /// context (see `js_asset_does_not_carry_html_security_headers`).
-    fn carrying_security_headers(mut self) -> Self {
-        for (name, value) in HTML_SECURITY_HEADERS {
-            self = self.with_header(name, *value);
+    fn carrying_security_headers(mut self, network: &[String]) -> Self {
+        for (name, value) in html_security_headers_for(network) {
+            self = self.with_header(name, value);
         }
         self
     }
@@ -485,6 +498,28 @@ mod tests {
             .unwrap()
             .1;
         assert!(csp.contains("connect-src 'self'"), "{csp}");
+    }
+
+    /// `html_route_for` is the live mint point: a non-empty network must land
+    /// on the response's CSP, and empty network must match `html_route`.
+    #[test]
+    fn html_route_for_emits_network_connect_src() {
+        let network = vec!["https://api.example.com".to_string()];
+        let resp =
+            DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &network);
+        let csp = header_value(&resp, "Content-Security-Policy").expect("CSP present");
+        assert!(
+            csp.contains("connect-src https://api.example.com"),
+            "html_route_for must emit the granted origin: {csp}"
+        );
+        // Empty network path is the default html_route bytes.
+        let empty = DeckResponse::html_route("<html></html>", DaemonMode::Development);
+        let via_for =
+            DeckResponse::html_route_for("<html></html>", DaemonMode::Development, &[]);
+        assert_eq!(
+            empty.extra_headers, via_for.extra_headers,
+            "html_route and html_route_for(&[]) must be byte-identical"
+        );
     }
 
     #[test]

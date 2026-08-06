@@ -4,23 +4,22 @@
 //! SAME declaration — drift between the two is a test failure here, not a
 //! discovery in production.
 //!
-//! Both assertions below derive from ONE Rust-level origin list
-//! (`GRANTED_ORIGIN`), used to:
+//! Assertions derive from ONE Rust-level origin list (`GRANTED_ORIGIN`), used to:
 //!   (a) build the fixture `sail.config.json` body that the real compiler
 //!       resolver (`sail_compiler::check::policy::Policy`) reads, driving the
 //!       `sail-controller-no-ambient-authority` lint through the real
 //!       `compile()` build gate — same path `config_loud_strict.rs` exercises;
-//!   (b) build the `connect-src` header via `deck_core::connect_src_directive`
-//!       — the same list, not two independently hardcoded origin strings.
-//!
-//! If a follow-up threads `connect_src_directive` into `DeckResponse::html_route`
-//! (currently NOT wired — see `response.rs`'s `connect_src_directive` doc
-//! comment for the exact missing seam), this test's part (b) already proves
-//! the function itself is correct; only the plumbing remains.
+//!   (b) build the `connect-src` header via `deck_core::html_security_headers_for`
+//!       — the same list, not two independently hardcoded origin strings;
+//!   (c) serve a live SPA shell via `serve_scaffold` with that config on disk
+//!       and assert the response CSP carries the granted origin (EXT-1 E6 wire).
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
+use deck_config::{AppServeConfig, RenderMode};
+use deck_core::{DaemonMode, HTML_SECURITY_HEADERS, serve_scaffold};
 use sail_compiler::check::policy::Policy;
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
@@ -127,4 +126,108 @@ fn resolved_config_network_list_drives_the_csp_header_directly() {
         csp.contains(&format!("connect-src {GRANTED_ORIGIN}")),
         "{csp}"
     );
+}
+
+/// Live SPA shell path (EXT-1 E6): `serve_scaffold` must resolve the project's
+/// `sail.config` `"network"` and emit it on the response CSP. If the wire is
+/// broken (shell still uses the constant `'self'` headers only), this fails.
+#[test]
+fn serve_scaffold_csp_honors_package_network() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    fs::write(
+        root.join("sail.config.json"),
+        format!(r#"{{"network": ["{GRANTED_ORIGIN}"]}}"#),
+    )
+    .unwrap();
+    // Built shell the serve path reads.
+    fs::create_dir_all(root.join(".deck")).unwrap();
+    fs::write(
+        root.join(".deck/index.html"),
+        "<!doctype html><html><head></head><body><div id=\"root\"></div></body></html>",
+    )
+    .unwrap();
+
+    let scaffold = AppServeConfig {
+        name: "app".to_string(),
+        route: "/".to_string(),
+        source: ".deck".to_string(),
+        inject_globals: BTreeMap::new(),
+        render: RenderMode::Csr,
+        entry: None,
+        ops_project: None,
+    };
+    let resolution = deck_core::Resolution::new().with_root(root);
+    let resp = serve_scaffold(
+        DaemonMode::Development,
+        &scaffold,
+        &[],
+        None,
+        Some(&resolution),
+        None,
+    );
+    assert_eq!(resp.status, 200, "shell must serve");
+
+    let csp = resp
+        .extra_headers
+        .iter()
+        .find(|(k, _)| *k == "Content-Security-Policy")
+        .map(|(_, v)| v.as_str())
+        .expect("CSP on SPA shell");
+    assert!(
+        csp.contains(&format!("connect-src {GRANTED_ORIGIN}")),
+        "live shell CSP must name the package network grant; got: {csp}"
+    );
+    assert!(
+        !csp.contains(EVIL_ORIGIN),
+        "refused origin must never appear: {csp}"
+    );
+}
+
+/// Empty / absent network on the live path must stay byte-identical to the
+/// historical default security header set (no silent connect-src change).
+#[test]
+fn serve_scaffold_empty_network_matches_default_security_headers() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // No sail.config at all.
+    fs::create_dir_all(root.join(".deck")).unwrap();
+    fs::write(
+        root.join(".deck/index.html"),
+        "<!doctype html><html><head></head><body><div id=\"root\"></div></body></html>",
+    )
+    .unwrap();
+
+    let scaffold = AppServeConfig {
+        name: "app".to_string(),
+        route: "/".to_string(),
+        source: ".deck".to_string(),
+        inject_globals: BTreeMap::new(),
+        render: RenderMode::Csr,
+        entry: None,
+        ops_project: None,
+    };
+    let resolution = deck_core::Resolution::new().with_root(root);
+    let resp = serve_scaffold(
+        DaemonMode::Development,
+        &scaffold,
+        &[],
+        None,
+        Some(&resolution),
+        None,
+    );
+    assert_eq!(resp.status, 200);
+    assert_eq!(
+        resp.extra_headers.len(),
+        HTML_SECURITY_HEADERS.len(),
+        "empty network must emit the full default set"
+    );
+    for (i, (name, value)) in HTML_SECURITY_HEADERS.iter().enumerate() {
+        let (got_name, got_value) = &resp.extra_headers[i];
+        assert_eq!(got_name, name);
+        assert_eq!(
+            got_value, value,
+            "empty network must be byte-identical to HTML_SECURITY_HEADERS for `{name}`"
+        );
+    }
 }

@@ -383,7 +383,15 @@ pub fn serve_scaffold(
     } else {
         html
     };
-    DeckResponse::html_route(html, mode)
+    // Live CSP honors package `network` (EXT-1 E6). Resolve via the SAME
+    // walk-up the compiler lint uses (`Policy::network_for`) so connect-src
+    // and the static allowlist never drift. Empty list (no config / no
+    // grant) ⇒ byte-identical to the historical `'self'` headers.
+    // Synthetic path under the project root: only the walk-up parent chain
+    // matters; the leaf need not exist on disk.
+    let network =
+        sail_compiler::check::policy::Policy::network_for(&root.join("page.sail"));
+    DeckResponse::html_route_for(html, mode, &network)
 }
 
 /// Serve a static asset from `<deck_out>/<source>/assets/<file>`.
