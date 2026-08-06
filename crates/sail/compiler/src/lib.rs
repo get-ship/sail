@@ -51,6 +51,7 @@ pub mod lower;
 pub mod out_layout;
 pub mod parse;
 pub mod policy;
+pub mod region_capability;
 pub mod runtime_ambient;
 pub(crate) mod scan;
 pub mod scope_manifest;
@@ -75,6 +76,9 @@ pub use l1_manifest::{
     L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
 };
 pub use authoring_bans::{AUTHORING_BANS, AuthoringBan};
+pub use region_capability::{
+    CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,
+};
 pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lower_attr_name_str, lookup as lookup_semantic_prop,

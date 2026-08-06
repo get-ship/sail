@@ -18,6 +18,7 @@ import {
   CONFIG_KEYS,
   SEMANTIC_PROPS,
   AUTHORING_BANS,
+  REGION_CAPABILITY_MATRIX,
 } from '../../../src/language-surface.gen'
 import { AUTHOR_RUNTIME_COUNT, RUNTIME_CATEGORIES } from '../../../src/runtime-surface.gen'
 
@@ -98,6 +99,13 @@ const SECTIONS: SectionCard[] = [
     title: 'Config',
     count: `${CONFIG_KEYS.length} keys`,
     description: 'Tier A — every sail.config.json key, its type, its default, and its semantics.',
+    tier: 'A',
+  },
+  {
+    href: '/sail/reference/regions',
+    title: 'Region matrix',
+    count: `${REGION_CAPABILITY_MATRIX.length} cells`,
+    description: 'Tier A — scope / controller / template / chain capability matrix + thin-controller size policy (CHANNELS-1 WI10).',
     tier: 'A',
   },
 ]
