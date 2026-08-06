@@ -11,7 +11,9 @@
   props: {
     open = false
     disabled = false
-  }
+  
+    onToggle: (detail: { open: boolean }) => void
+}
 
   const host = style({ box: display(block), text: fontFamily(body) })
   // list(none) + after chevron: same contract as <summary> stdlib.

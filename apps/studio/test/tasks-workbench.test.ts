@@ -301,7 +301,7 @@ describe('tasks workbench (ops + store)', () => {
     expect(surface).toMatch(/<sail-message-list\b/)
     expect(surface).toMatch(/messages-host/)
     expect(surface).toMatch(/task-composer/)
-    expect(surface).toMatch(/on:sail-composer-submit/)
+    expect(surface).toMatch(/on-submit/)
     // Removed scaffold junk actions / diary
     expect(surface).not.toMatch(/commit-intent/)
     expect(surface).not.toMatch(/>\s*Commit\s*</)

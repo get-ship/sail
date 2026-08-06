@@ -94,54 +94,55 @@ describe('chip behaviors (use: actions)', () => {
     expect(off.getAttribute('aria-pressed')).toBe('false')
   })
 
-  it('dismissible: Backspace/Delete with [removable] fires sail-remove and bubbles; without it does not fire', () => {
-    const el = makeHost({ removable: true })
+  it('dismissible: Backspace/Delete with [removable] invokes onRemove; without it does not fire', () => {
+    const el = makeHost({ removable: true }) as HTMLElement & { onRemove?: () => void }
+    let calls = 0
+    el.onRemove = () => {
+      calls++
+    }
     dismissible(el)
-    const events: Event[] = []
-    el.addEventListener('sail-remove', (e) => events.push(e))
-    const bubbled: Event[] = []
-    document.body.addEventListener('sail-remove', (e) => bubbled.push(e))
 
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
-    expect(events).toHaveLength(1)
+    expect(calls).toBe(1)
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
-    expect(events).toHaveLength(2)
-    expect(bubbled).toHaveLength(2)
+    expect(calls).toBe(2)
 
-    const plain = makeHost()
+    const plain = makeHost() as HTMLElement & { onRemove?: () => void }
+    let none = 0
+    plain.onRemove = () => {
+      none++
+    }
     dismissible(plain)
-    const none: Event[] = []
-    plain.addEventListener('sail-remove', (e) => none.push(e))
     plain.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
     plain.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
-    expect(none).toHaveLength(0)
+    expect(none).toBe(0)
   })
 
-  it('dismissible: Remove button click fires sail-remove and stops propagation to the host', () => {
+  it('dismissible: Remove button click invokes onRemove and stops propagation to the host', () => {
     const el = makeHost({ removable: true })
     dismissible(el)
-    const removes: Event[] = []
+    let removes = 0
     let hostClicks = 0
-    el.addEventListener('sail-remove', (e) => removes.push(e))
+    ;(el as any).onRemove = () => { removes++ }
     el.addEventListener('click', () => {
       hostClicks++
     })
     const btn = el.querySelector('button[aria-label="Remove"]') as HTMLElement
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(removes).toHaveLength(1)
+    expect(removes).toBe(1)
     expect(hostClicks).toBe(0)
   })
 
   it('dismissible: disabled suppresses both paths', () => {
     const el = makeHost({ removable: true, disabled: true })
     dismissible(el)
-    const removes: Event[] = []
-    el.addEventListener('sail-remove', (e) => removes.push(e))
+    let removes = 0
+    ;(el as any).onRemove = () => { removes++ }
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
     const btn = el.querySelector('button[aria-label="Remove"]') as HTMLElement
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(removes).toHaveLength(0)
+    expect(removes).toBe(0)
   })
 
   it('destroy: keys/clicks are inert and observers disconnected', async () => {
@@ -151,11 +152,13 @@ describe('chip behaviors (use: actions)', () => {
     const dismissibleResult = dismissible(el)
 
     let clicks = 0
-    const removes: Event[] = []
+    let removes = 0
     el.addEventListener('click', () => {
       clicks++
     })
-    el.addEventListener('sail-remove', (e) => removes.push(e))
+    ;(el as HTMLElement & { onRemove?: () => void }).onRemove = () => {
+      removes++
+    }
 
     pressableResult?.destroy?.()
     pressedResult?.destroy?.()
@@ -164,12 +167,12 @@ describe('chip behaviors (use: actions)', () => {
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
     expect(clicks).toBe(0)
-    expect(removes).toHaveLength(0)
-    // Remove button click no longer fires sail-remove; with the action's
+    expect(removes).toBe(0)
+    // Remove button click no longer invokes onRemove; with the action's
     // stopPropagation gone the click bubbles to the host (platform behavior).
     const btn = el.querySelector('button[aria-label="Remove"]') as HTMLElement
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(removes).toHaveLength(0)
+    expect(removes).toBe(0)
     expect(clicks).toBe(1)
 
     // Observers disconnected: attribute flips no longer sync ARIA.
@@ -199,13 +202,13 @@ describe('chip behaviors (use: actions)', () => {
     expect(clicks).toBe(1)
 
     // Dismiss via keyboard and via Remove button (with stopPropagation).
-    const removes: Event[] = []
-    el.addEventListener('sail-remove', (e) => removes.push(e))
+    let removes = 0
+    ;(el as any).onRemove = () => { removes++ }
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
-    expect(removes).toHaveLength(1)
+    expect(removes).toBe(1)
     const btn = el.querySelector('button[aria-label="Remove"]') as HTMLElement
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(removes).toHaveLength(2)
+    expect(removes).toBe(2)
     expect(clicks).toBe(1)
 
     // Toggle reflection + disabled gating, controller-style.
@@ -219,7 +222,7 @@ describe('chip behaviors (use: actions)', () => {
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
     expect(clicks).toBe(1)
-    expect(removes).toHaveLength(2)
+    expect(removes).toBe(2)
 
     for (const r of results) r?.destroy?.()
   })

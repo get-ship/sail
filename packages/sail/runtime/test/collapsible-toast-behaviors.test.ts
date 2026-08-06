@@ -56,14 +56,16 @@ describe('detailsToggle / detailsDisabled (use: actions)', () => {
     document.body.replaceChildren()
   })
 
-  it('detailsToggle: open flip → sail-toggle detail.open', () => {
-    const el = makeDetails()
+  it('detailsToggle: open flip → onToggle({ open })', () => {
+    const el = makeDetails() as HTMLDetailsElement & {
+      onToggle?: (d: { open: boolean }) => void
+    }
     detailsToggle(el)
 
     const events: Array<{ open: boolean }> = []
-    el.addEventListener('sail-toggle', ((e: CustomEvent<{ open: boolean }>) => {
-      events.push(e.detail)
-    }) as EventListener)
+    el.onToggle = (d) => {
+      events.push(d)
+    }
 
     el.open = true
     el.dispatchEvent(new Event('toggle'))
@@ -72,17 +74,6 @@ describe('detailsToggle / detailsDisabled (use: actions)', () => {
     el.open = false
     el.dispatchEvent(new Event('toggle'))
     expect(events).toEqual([{ open: true }, { open: false }])
-
-    // composed + bubbles so hosts outside the tree can listen
-    const composed = new CustomEvent('probe')
-    let saw = false
-    document.addEventListener('sail-toggle', () => {
-      saw = true
-    })
-    el.open = true
-    el.dispatchEvent(new Event('toggle'))
-    expect(saw).toBe(true)
-    void composed
   })
 
   it('detailsDisabled: disabled blocks click activation path', () => {
@@ -129,14 +120,12 @@ describe('autoDismiss / dismissControl (use: actions)', () => {
     document.body.replaceChildren()
   })
 
-  it('autoDismiss: timer dismisses with sail-toast-dismiss + remove', () => {
+  it('autoDismiss: timer dismisses with onDismiss + remove', () => {
     const el = makeToast({ duration: '1000' })
     autoDismiss(el)
 
     let dismissed = 0
-    el.addEventListener('sail-toast-dismiss', () => {
-      dismissed++
-    })
+    ;(el as any).onDismiss = () => { dismissed++ }
 
     vi.advanceTimersByTime(999)
     expect(document.body.contains(el)).toBe(true)
@@ -179,14 +168,12 @@ describe('autoDismiss / dismissControl (use: actions)', () => {
     expect(document.body.contains(el)).toBe(false)
   })
 
-  it('dismissControl: data-toast-close click → sail-toast-dismiss + removed', () => {
+  it('dismissControl: data-toast-close click → onDismiss + removed', () => {
     const el = makeToast({ duration: '0' })
     dismissControl(el)
 
     let dismissed = 0
-    el.addEventListener('sail-toast-dismiss', () => {
-      dismissed++
-    })
+    ;(el as any).onDismiss = () => { dismissed++ }
 
     const close = el.querySelector('[data-toast-close]') as HTMLElement
     close.click()
@@ -200,9 +187,7 @@ describe('autoDismiss / dismissControl (use: actions)', () => {
     dismissControl(el)
 
     let dismissed = 0
-    el.addEventListener('sail-toast-dismiss', () => {
-      dismissed++
-    })
+    ;(el as any).onDismiss = () => { dismissed++ }
 
     const close = el.querySelector('[data-toast-close]') as HTMLElement
     close.click()

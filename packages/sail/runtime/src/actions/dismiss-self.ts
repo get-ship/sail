@@ -1,6 +1,8 @@
 // dismiss-self — shared dismiss path for autoDismiss + dismissControl.
 // Not a `use:` action; keeps dual stamps from double-firing / double-removing.
-// Callers pick the event name (toast → sail-toast-dismiss, alert → sail-dismiss).
+// Invokes the host's `onDismiss` callback prop, then removes the node.
+
+import { invokeCallback } from '../callback'
 
 const dismissed = new WeakSet<Element>()
 
@@ -10,16 +12,13 @@ export function isDismissed(el: Element): boolean {
 }
 
 /**
- * Emit a composed dismiss event then remove the element. Idempotent: a second
- * call on the same node is a no-op.
+ * Invoke `onDismiss` then remove the element. Idempotent: a second call on
+ * the same node is a no-op.
  */
-export function dismissSelf(
-  el: HTMLElement,
-  eventName = 'sail-toast-dismiss',
-): boolean {
+export function dismissSelf(el: HTMLElement): boolean {
   if (dismissed.has(el)) return false
   dismissed.add(el)
-  el.dispatchEvent(new CustomEvent(eventName, { bubbles: true, composed: true }))
+  invokeCallback(el, 'onDismiss')
   el.remove()
   return true
 }

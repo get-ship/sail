@@ -42,20 +42,18 @@ describe('<sail-date-picker>', () => {
     expect(el.getAttribute('value')).toBe('2026-12-31')
   })
 
-  it('clicking a day commits the ISO value and dispatches sail-change', async () => {
+  it('clicking a day commits the ISO value and invokes onChange', async () => {
     const { el } = mount(reg, 'sail-date-picker', { value: '2026-05-18' })
     await flush()
     inputOf(el).click()
     await flush()
     const events: CustomEvent[] = []
-    el.addEventListener('sail-change', (e) => { events.push(e as CustomEvent) })
+    ;(el as any).onChange = (d: any) => { events.push({ detail: d } as any) }
     const target = days(el).find((d) => d.dataset.iso === '2026-05-20') as HTMLButtonElement
     target.click()
     await flush()
     const last = events.at(-1)!
     expect(last.detail).toEqual({ value: '2026-05-20' })
-    expect(last.bubbles).toBe(true)
-    expect(last.composed).toBe(true)
     expect(inputOf(el).value).toBe('2026-05-20')
   })
 

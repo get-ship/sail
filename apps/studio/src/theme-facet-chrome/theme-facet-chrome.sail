@@ -68,7 +68,7 @@ export default controller(() => {
   const onUndo = () => s()?.onUndo?.()
   const onRedo = () => s()?.onRedo?.()
   const onAddToProject = () => s()?.onAddToProject()
-  const onPathSelect = (e: Event) => s()?.onPathSelect(e)
+  const onPathSelect = (detail: { value?: string }) => s()?.onPathSelect(detail)
   const onLeaveSave = () => s()?.onLeaveSave()
   const onLeaveDiscard = () => s()?.onLeaveDiscard()
   const onLeaveCancel = () => s()?.onLeaveCancel()
@@ -157,7 +157,7 @@ export default controller(() => {
         {pathCrumb()}
         <icon name="chevron-down" size="sm"></icon>
       </button>
-      <dropdown id={pathMenuId()} placement="bottom-start" on:sail-menu-select={onPathSelect}>
+      <dropdown id={pathMenuId()} placement="bottom-start" on-select={onPathSelect}>
         <for {pathNav() as item} key={item.key}>
           <menu-item value={item.value}>
             <icon name={item.icon} size="sm">
@@ -305,7 +305,7 @@ Edits pending — save to write theme JSON.</p>
     theme-leave-dialog
     open={leaveOpen()}
     size="md"
-    on:sail-close={onLeaveCancel}
+    on-close={onLeaveCancel}
   >
     <header id="theme-leave-title">Unsaved theme changes</header>
     <section>

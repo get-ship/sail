@@ -373,8 +373,8 @@ export function createComponentsInspect(session: ComponentsSession) {
     void loadTree(v)
   }
 
-  const onTreeSelect = (e: Event) => {
-    const id = (e as CustomEvent<{ id?: string }>).detail?.id
+  const onTreeSelect = (detail: { id?: string }) => {
+    const id = detail?.id
     if (!id) return
     selectedNodeId = id
     publishNode(flattenTree(dataSig()).find((n) => n.id === id) ?? null, selectedSurface())

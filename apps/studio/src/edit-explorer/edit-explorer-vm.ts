@@ -110,9 +110,8 @@ export function createEditExplorer() {
     sync()
   }
 
-  const onTreeSelect = (e: Event) => {
-    const ce = e as CustomEvent<{ id?: string }>
-    const id = ce.detail?.id
+  const onTreeSelect = (detail: { id?: string }) => {
+    const id = detail?.id
     if (!id) return
     if (isTreeMetaId(id)) {
       syncSelection(getEditState().activePath)

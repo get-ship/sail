@@ -17,7 +17,9 @@
     value = ''
     inline = false
     modeOnly = false
-  }
+  
+    onThemeChange: (detail: { theme: string; mode: string; preference: string }) => void
+}
 
   const host = style({ paint: group() })
 

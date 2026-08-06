@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 const host = (name: string) => `[data-sail-host="${name}"]`
 
@@ -74,13 +75,9 @@ export const menu: Action<void> = (node) => {
       e.stopPropagation()
       return
     }
-    root.dispatchEvent(
-      new CustomEvent('sail-menu-select', {
-        detail: { value: item.getAttribute('value') ?? item.textContent?.trim() ?? '' },
-        bubbles: true,
-        composed: true,
-      }),
-    )
+    invokeCallback(root, 'onSelect', {
+      value: item.getAttribute('value') ?? item.textContent?.trim() ?? '',
+    })
     close()
   }
 

@@ -412,7 +412,7 @@ Child tree isolated from render faults.</p>
                     <badge tone="destructive" variant="outline">3 errors</badge>
                   </row>}{else-if {e.tag === 'chip'} => <row gap="2" align="center">
                     <if {kept()}>
-                      <chip size="sm" tone="primary" removable on:sail-dismiss={dropChip}>typescript</chip>
+                      <chip size="sm" tone="primary" removable on-dismiss={dropChip}>typescript</chip>
                     </if>
                     <chip size="sm" variant="outline">a11y</chip>
                     <chip size="sm" variant="outline">ssr</chip>

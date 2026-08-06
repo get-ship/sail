@@ -884,7 +884,7 @@ Globals only — dial once, surfaces follow.</p>
 
   <toast-region position="bottom-end" shape-toast-region>
     <for {session.toastItems() as t} key={t.key}>
-      <toast tone={t.tone} shape-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} shape-toast on-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

@@ -410,7 +410,7 @@ Icons inherit currentColor under the theme table.</p>
 
   <toast-region position="bottom-end" assets-toast-region>
     <for {session.toastItems() as t} key={t.key}>
-      <toast tone={t.tone} assets-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} assets-toast on-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

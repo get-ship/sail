@@ -131,7 +131,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'placeholder', desc: 'hint text in the empty field', type: 'string' },
       { name: 'value', desc: 'the committed value, reflected', type: 'string' },
       { name: '<option>', desc: 'the list — plain option children', type: 'children' },
-      { name: 'on:sail-combobox-select', desc: 'commit event, { value, label }', type: 'event' },
+      { name: 'on-select', desc: 'commit callback, { value, label }', type: 'callback' },
     ],
   }),
   checkbox: lang('checkbox', 'checkbox', {
@@ -247,7 +247,7 @@ export const DETAILS: Record<string, DetailEntry> = {
     variantAttr: '',
     props: [
       { name: 'value', desc: 'the active theme, reflected', type: 'string' },
-      { name: 'ship:theme:change', desc: 'announced on selection', type: 'event' },
+      { name: 'ship:theme:change', desc: 'announced on selection', type: 'callback' },
     ],
   }),
 
@@ -335,7 +335,7 @@ export const DETAILS: Record<string, DetailEntry> = {
     props: [
       { name: 'message', desc: 'what the user reads — not the raw error', type: 'string' },
       { name: 'slot="fallback"', desc: 'your own fallback markup', type: 'slot' },
-      { name: 'sail-error-caught', desc: 'the real error, for telemetry', type: 'event' },
+      { name: 'sail-error-caught', desc: 'the real error, for telemetry', type: 'callback' },
     ],
   }),
   toast: lang('toast', 'toast', {
@@ -374,7 +374,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'variant', desc: 'fill strength', type: 'solid · soft · outline · ghost' },
       { name: 'selected', desc: 'pressed state, ARIA-synced', type: 'bool' },
       { name: 'removable', desc: 'the × button + Backspace/Delete', type: 'bool' },
-      { name: 'on:sail-remove', desc: 'fired by × and the keyboard', type: 'event' },
+      { name: 'on-remove', desc: 'remove callback (× and keyboard)', type: 'callback' },
     ],
   }),
   'status-dot': lang('status-dot', 'statusDot', {
@@ -571,7 +571,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'value', desc: 'the current page', type: 'string' },
       { name: '<page value>', desc: 'each control — prev/next are pages too', type: 'children' },
       { name: 'size', desc: 'control scale', type: 'sm · md · lg' },
-      { name: 'on:sail-page-change', desc: 'navigation event, { value }', type: 'event' },
+      { name: 'on-page-change', desc: 'page-change callback, { page }', type: 'callback' },
     ],
   }),
   navbar: lang('navbar', 'navbar', {

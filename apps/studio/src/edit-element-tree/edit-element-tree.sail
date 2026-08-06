@@ -11,7 +11,7 @@ export default controller(() => {
     tree: vm.tree,
     hasElements: vm.hasElements,
     activePathLabel: vm.activePathLabel,
-    onTreeSelect: (e: Event) => vm.onTreeSelect(e),
+    onTreeSelect: (detail: { id?: string }) => vm.onTreeSelect(detail),
   }
 })
 </controller>
@@ -53,7 +53,7 @@ export default controller(() => {
         selectable="single"
         size="sm"
         show-guides
-        on:sail-select={onTreeSelect}
+        on-select={onTreeSelect}
 
       >
         style({ box: w(full).h(full).minH(0) })

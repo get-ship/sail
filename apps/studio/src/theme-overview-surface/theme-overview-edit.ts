@@ -158,20 +158,11 @@ export function createOverviewEdit(session: ThemeSession) {
   session.onSync(sync)
   sync()
 
-  const colorFromEvent = (e: Event): string => {
-    const ce = e as CustomEvent<{ value?: string }>
-    const t = e.target as HTMLElement & { value?: string }
-    return String(ce.detail?.value ?? t?.value ?? '').trim()
-  }
-
-  const onHeroColor = (e: Event) => {
+  const onHeroColor = (detail: { value?: string; token?: string }) => {
     if (!session.guardEdit()) return
-    const hex = colorFromEvent(e)
+    const hex = String(detail?.value ?? '').trim()
     if (!hex) return
-    const host = e.target as HTMLElement | null
-    const role =
-      host?.getAttribute('token') ||
-      host?.closest?.('[token]')?.getAttribute('token')
+    const role = detail?.token
     if (role === 'primary') {
       primaryHex.set(hex)
       void setBrandColor(hex).then(() => session.sync())

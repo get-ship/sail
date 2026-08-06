@@ -36,13 +36,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     // not the host.
     const openOnClick: Action<void> = (node) => {
       const onClick = () => {
-        node.dispatchEvent(
-          new CustomEvent('sail-citation-open', {
-            detail: { source: _ctx.source(), index: _ctx.index() },
-            bubbles: true,
-            composed: true,
-          }),
-        )
+        ;(node as any).onOpen?.({ source: _ctx.source(), index: _ctx.index() })
       }
       node.addEventListener('click', onClick)
       return { destroy: () => node.removeEventListener('click', onClick) }

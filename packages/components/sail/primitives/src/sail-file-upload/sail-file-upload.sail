@@ -93,13 +93,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 
     const emitChange = (list: File[]) => {
-      hostEl?.dispatchEvent(
-        new CustomEvent('sail-change', {
-          detail: { files: [...list] },
-          bubbles: true,
-          composed: true,
-        }),
-      )
+      ;(hostEl as any)?.onChange?.({ files: [...list] })
     }
 
     const addFiles = (incoming: File[]) => {

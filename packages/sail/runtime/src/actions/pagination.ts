@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 const host = (name: string) => `[data-sail-host="${name}"]`
 
@@ -6,7 +7,7 @@ const host = (name: string) => `[data-sail-host="${name}"]`
  * Internal: L1 `<pagination>` closed behavior (not a public `use:`).
  * Authors use `<pagination>`, not `use:pagination`. Marks the page host whose
  * value matches the element's `value` with `aria-current="page"`, and on click
- * of a page sets `value` + emits `sail-page-change`. Prev/next are just pages
+ * of a page sets `value` + invokes `onPageChange`. Prev/next are just pages
  * whose value is the target page. Structure (which pages/ellipsis to show) is
  * authored; this owns the state contract.
  *
@@ -33,9 +34,7 @@ export const pagination: Action<void> = (node) => {
     if (!v || v === current()) return
     root.setAttribute('value', v)
     sync()
-    root.dispatchEvent(
-      new CustomEvent('sail-page-change', { detail: { page: v }, bubbles: true, composed: true }),
-    )
+    invokeCallback(root, 'onPageChange', { page: v })
   }
 
   const pageFrom = (e: Event): HTMLElement | null => {

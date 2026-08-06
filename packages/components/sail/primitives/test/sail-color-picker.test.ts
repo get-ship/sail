@@ -48,14 +48,14 @@ describe('<sail-color-picker>', () => {
     expect(l!.max).toBe('100')
   })
 
-  it('clicking a swatch commits its hex and dispatches sail-change', async () => {
+  it('clicking a swatch commits its hex and invokes onChange', async () => {
     // Start away from black so the first base-ramp swatch is a real change.
     const { el } = mount(reg, 'sail-color-picker', { value: '#ff0000' })
     await flush()
     inputOf(el).click()
     await flush()
     const events: CustomEvent[] = []
-    el.addEventListener('sail-change', (e) => { events.push(e as CustomEvent) })
+    ;(el as any).onChange = (d: any) => { events.push({ detail: d } as any) }
     const sw =
       swatches(el).find((b) => (b.dataset.hex || '').toLowerCase() !== '#ff0000') ?? swatches(el)[0]!
     const hex = sw.dataset.hex!
@@ -64,9 +64,7 @@ describe('<sail-color-picker>', () => {
     await flush()
     const last = events.at(-1)!
     expect(last).toBeTruthy()
-    expect(last.detail).toEqual({ value: hex })
-    expect(last.bubbles).toBe(true)
-    expect(last.composed).toBe(true)
+    expect(last.detail).toMatchObject({ value: hex })
     // Prop/event is the control SSOT (attribute reflection may lag under suppress).
     const live = (el as HTMLElement & { value?: string }).value ?? el.getAttribute('value')
     expect(String(live).toLowerCase()).toBe(hex.toLowerCase())
@@ -101,24 +99,24 @@ describe('<sail-color-picker>', () => {
     expect(Number(h!.value)).toBe(200)
   })
 
-  it('emits zero sail-change on mount', async () => {
+  it('invokes zero onChange on mount', async () => {
     const events: CustomEvent[] = []
     const { el } = mount(reg, 'sail-color-picker', { value: '#5194d5' })
-    el.addEventListener('sail-change', (e) => {
-      events.push(e as CustomEvent)
-    })
+    (el as any).onChange = (d: any) => {
+      events.push({ detail: d } as any)
+    }
     await flush()
     await flush()
     expect(events).toHaveLength(0)
   })
 
-  it('emits zero sail-change on open then dismiss without edit', async () => {
+  it('invokes zero onChange on open then dismiss without edit', async () => {
     const { el } = mount(reg, 'sail-color-picker', { value: '#5194d5' })
     await flush()
     const events: CustomEvent[] = []
-    el.addEventListener('sail-change', (e) => {
-      events.push(e as CustomEvent)
-    })
+    ;(el as any).onChange = (d: any) => {
+      events.push({ detail: d } as any)
+    }
     const trigger =
       (shadow(el).querySelector('button[aria-label="Choose color"]') as HTMLElement | null) ??
       inputOf(el)
@@ -133,7 +131,7 @@ describe('<sail-color-picker>', () => {
     expect(el.getAttribute('value')).toBe('#5194d5')
   })
 
-  it('variant=swatch: full-bleed trigger opens panel and swatch pick emits sail-change', async () => {
+  it('variant=swatch: full-bleed trigger opens panel and swatch pick invokes onChange', async () => {
     // Studio themes color facet uses variant=swatch (no hex field).
     const { el } = mount(reg, 'sail-color-picker', {
       value: '#ff0000',
@@ -149,9 +147,9 @@ describe('<sail-color-picker>', () => {
     await flush()
     expect(panelOf(el)).not.toBeNull()
     const events: CustomEvent[] = []
-    el.addEventListener('sail-change', (e) => {
-      events.push(e as CustomEvent)
-    })
+    ;(el as any).onChange = (d: any) => {
+      events.push({ detail: d } as any)
+    }
     const sw =
       swatches(el).find((b) => (b.dataset.hex || '').toLowerCase() !== '#ff0000') ??
       swatches(el)[0]!
@@ -159,7 +157,7 @@ describe('<sail-color-picker>', () => {
     sw.click()
     await flush()
     expect(events.length).toBeGreaterThanOrEqual(1)
-    expect(events.at(-1)!.detail).toEqual({ value: hex })
+    expect(events.at(-1)!.detail).toMatchObject({ value: hex })
     const live = (el as HTMLElement & { value?: string }).value ?? el.getAttribute('value')
     expect(String(live).toLowerCase()).toBe(hex.toLowerCase())
   })

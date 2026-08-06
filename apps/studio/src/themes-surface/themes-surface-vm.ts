@@ -469,9 +469,8 @@ export function createThemesSurface() {
     })
   }
 
-  const onRowMenu = (e: Event) => {
-    const ce = e as CustomEvent<{ value?: string }>
-    const cmd = ce.detail?.value || ''
+  const onRowMenu = (detail: { value?: string }) => {
+    const cmd = detail?.value || ''
     const id = menuTargetId() || selectedId()
     if (!cmd || !id) return
     selectTheme(id)

@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 const host = (name: string) => `[data-sail-host="${name}"]`
 
@@ -8,7 +9,7 @@ const host = (name: string) => `[data-sail-host="${name}"]`
  *
  * Wires the ARIA tablist contract (role, aria-selected, aria-controls /
  * aria-labelledby), roving tabindex, keyboard nav (Arrow per orientation,
- * Home/End, Enter/Space), panel show/hide, and emits `sail-tab-change`. The
+ * Home/End, Enter/Space), panel show/hide, and invokes `onTabChange`. The
  * active tab is the element's `active` attribute (the name of the active tab);
  * unset defaults to the first tab.
  *
@@ -98,13 +99,7 @@ export const tabs: Action<void> = (node) => {
     if (name !== activeName()) {
       root.setAttribute('active', name)
       sync()
-      root.dispatchEvent(
-        new CustomEvent('sail-tab-change', {
-          detail: { name },
-          bubbles: true,
-          composed: true,
-        }),
-      )
+      invokeCallback(root, 'onTabChange', { name })
     }
     focusTab(name)
   }

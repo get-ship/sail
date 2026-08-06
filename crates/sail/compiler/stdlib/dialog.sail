@@ -9,7 +9,10 @@
     size: 'sm' | 'md' | 'lg' | 'full' = 'md'
     backdrop: 'default' | 'blur' | 'solid' = 'default'
     side: 'center' | 'start' | 'end' | 'top' | 'bottom' = 'center'
-  }
+  
+    onClose: () => void
+    onDismiss: () => void
+}
 
   // pad 0 — air lives on >header / >section / >footer (DIALOG_MAP). Flat
   // content without those gets a :has() floor in the map so demos never

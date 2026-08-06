@@ -146,13 +146,7 @@ export default controller((ctx) => {
         void renderMermaid(src, dk).then((res) => {
           if (mine !== seq) return; // a newer render started — drop this one
           if (!res.ok) {
-            host.dispatchEvent(
-              new CustomEvent("sail-mermaid-error", {
-                detail: { message: res.error, source: src },
-                bubbles: true,
-                composed: true,
-              }),
-            );
+            ;(host as any).onError?.({ message: res.error, source: src });
           }
           html.set(res.ok ? res.svg : "");
           error.set(res.ok ? "" : res.error);

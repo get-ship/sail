@@ -5,7 +5,10 @@
 <scope>
   props: {
     message = ''
-  }
+  
+    onErrorReset: () => void
+    onErrorCaught: (detail: { error: Error; source: string }) => void
+}
 
   const root = style({ box: display(contents), paint: group() })
   const content = style({ box: display(contents) })

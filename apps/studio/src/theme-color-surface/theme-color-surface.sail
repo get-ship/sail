@@ -199,7 +199,7 @@ color.primary · secondary · accent</p>
                   variant="swatch"
                   showHex={false}
                   label="Primary"
-                  on:sail-change={color.onRoleColor}
+                  on-change={color.onRoleColor}
 
                 >
                   style({ box: w(full).h(full).minH(full) })
@@ -236,7 +236,7 @@ color.primary</p>
                   variant="swatch"
                   showHex={false}
                   label="Secondary"
-                  on:sail-change={color.onRoleColor}
+                  on-change={color.onRoleColor}
 
                 >
                   style({ box: w(full).h(full).minH(full) })
@@ -273,7 +273,7 @@ color.secondary</p>
                   variant="swatch"
                   showHex={false}
                   label="Accent"
-                  on:sail-change={color.onRoleColor}
+                  on-change={color.onRoleColor}
 
                 >
                   style({ box: w(full).h(full).minH(full) })
@@ -329,7 +329,7 @@ color.bg · surface · card</p>
                 variant="swatch"
                 showHex={false}
                 label="Background"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -359,7 +359,7 @@ color.bg</p>
                 variant="swatch"
                 showHex={false}
                 label="Surface 1"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -389,7 +389,7 @@ color.surface.1</p>
                 variant="swatch"
                 showHex={false}
                 label="Surface 2"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -419,7 +419,7 @@ color.surface.2</p>
                 variant="swatch"
                 showHex={false}
                 label="Card"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -505,7 +505,7 @@ color.fg · muted · border · ring</p>
                 variant="swatch"
                 showHex={false}
                 label="Foreground"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -535,7 +535,7 @@ color.foreground</p>
                 variant="swatch"
                 showHex={false}
                 label="Muted"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -565,7 +565,7 @@ color.muted</p>
                 variant="swatch"
                 showHex={false}
                 label="Border"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -595,7 +595,7 @@ color.border</p>
                 variant="swatch"
                 showHex={false}
                 label="Ring"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -639,7 +639,7 @@ color.success · warning · danger · info</p>
                 variant="swatch"
                 showHex={false}
                 label="Success"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -669,7 +669,7 @@ color.success</p>
                 variant="swatch"
                 showHex={false}
                 label="Warning"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -699,7 +699,7 @@ color.warning</p>
                 variant="swatch"
                 showHex={false}
                 label="Danger"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -729,7 +729,7 @@ color.danger</p>
                 variant="swatch"
                 showHex={false}
                 label="Info"
-                on:sail-change={color.onRoleColor}
+                on-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
               <column gap="0">
@@ -766,7 +766,7 @@ color.info</p>
 
   <toast-region position="bottom-end" color-toast-region>
     <for {session.toastItems() as t} key={t.key}>
-      <toast tone={t.tone} color-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} color-toast on-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

@@ -165,15 +165,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
     }
 
     // ── Template handlers ────────────────────────────────────────────────
-    const onSourceChange = (e: Event): void => {
-      const v = (e as CustomEvent<{ value: string }>).detail?.value
+    const onSourceChange = (detail: { value: string }): void => {
+      const v = detail?.value
       if (typeof v !== 'string') return
       srcValue.set(v)
       setStatus('typing', 'editing…')
       schedule(runNow)
     }
-    const onTabChange = (e: Event): void => {
-      const name = (e as CustomEvent<{ name: string }>).detail?.name
+    const onTabChange = (detail: { name: string }): void => {
+      const name = detail?.name
       if (name) tab.set(name)
     }
     const reset = (): void => {
@@ -405,7 +405,7 @@ TUTORIAL</p>
       <row align="center" justify="between" gap="2">
         style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
-        <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
+        <tabs active="source" size="sm" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
             <tab name="diff">diff</tab>
@@ -436,7 +436,7 @@ TUTORIAL</p>
               chrome="flush"
               wasm-url="/sail_compiler_bg.wasm"
               use:captureEditor
-              on:sail-change={onSourceChange}
+              on-change={onSourceChange}
             ></sail-code-editor>
           </column>
         </if>
@@ -562,7 +562,7 @@ All lessons</a>
       <row align="center" justify="between" gap="2">
         style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
 
-        <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
+        <tabs active="source" size="sm" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
             <tab name="diff">diff</tab>
@@ -587,7 +587,7 @@ All lessons</a>
               chrome="flush"
               wasm-url="/sail_compiler_bg.wasm"
               use:captureEditor
-              on:sail-change={onSourceChange}
+              on-change={onSourceChange}
             ></sail-code-editor>
           </column>
         </if>

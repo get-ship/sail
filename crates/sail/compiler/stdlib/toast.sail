@@ -7,7 +7,9 @@
   props: {
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
     duration = ''
-  }
+  
+    onDismiss: () => void
+}
 
   const base = style({ box: padY(3).padX(4), paint: fg(toast-foreground).bg(toast).radius(md).shadow(md).borderWidth(1).border(toast-border).borderSWidth(3).borderS(foreground).pointerEvents(auto), text: fontFamily(body).fontSize(sm) })
   const close = style({ box: ms(auto), paint: fg(muted-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer) })

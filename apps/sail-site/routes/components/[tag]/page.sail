@@ -62,8 +62,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const pick = (v: string): void => variant.set(v)
     // The shared viewer owns the chips; the page keeps its own variant signal
     // because every specimen stage reads it.
-    const onVariantChange = (e: CustomEvent<{ variant: string }>): void =>
-      variant.set(e.detail?.variant ?? '')
+    const onVariantChange = (detail: { variant: string }): void =>
+      variant.set(detail?.variant ?? '')
 
     // Pack media: `src` is a JS identity property (not a reflect attr).
     // Real Unsplash photo — deck CSP must allow https: for img-src.
@@ -173,9 +173,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const bio = signal('')
     const team = signal('Design')
     const fw = signal('')
-    const pickFw = (e: CustomEvent<{ value: string }>): void => fw.set(e.detail?.value ?? '')
+    const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
     const pageNo = signal('2')
-    const goPage = (e: CustomEvent<{ value: string }>): void => pageNo.set(e.detail?.value ?? '1')
+    const goPage = (detail: { page?: string; value?: string }): void => pageNo.set(detail?.page ?? detail?.value ?? '1')
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
     const restoreChip = (): void => kept.set(true)
@@ -221,7 +221,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       usage={usageCode()}
       variants={variants()}
       rows={knownPack() ? packProps() : props()}
-      on:sail-variant-change={onVariantChange}
+      on-variant-change={onVariantChange}
     >
       <column slot="stage" gap="4" align="center">
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
@@ -275,7 +275,7 @@ team: {team()}</p>
               <column gap="3">
                 style({ box: w(full).maxW(panel-max-w-sm) })
 
-                <combobox placeholder="Pick a framework — type to filter" on:sail-combobox-select={(e) => pickFw(e)}>
+                <combobox placeholder="Pick a framework — type to filter" on-select={pickFw}>
                   <option value="sail">Sail</option>
                   <option value="react">React</option>
                   <option value="svelte">Svelte</option>
@@ -495,7 +495,7 @@ one signal drives both — {load()}%</p>
                 <row gap="2" align="center">
                   <chip variant={variant()} selected>Selected</chip>
                   <if {kept()}>
-                    <chip variant={variant()} removable on:sail-remove={dropChip}>Removable</chip>
+                    <chip variant={variant()} removable on-remove={dropChip}>Removable</chip>
                   </if>
                   <if {!kept()}>
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
@@ -711,7 +711,7 @@ The settings panel.</p></tab-panel>
             </if>
             <if {stage.pagination()}>
               <column gap="3" align="center">
-                <pagination value={pageNo()} size={variant()} on:sail-page-change={(e) => goPage(e)}>
+                <pagination value={pageNo()} size={variant()} on-page-change={goPage}>
                   <page value="1">1</page>
                   <page value="2">2</page>
                   <page value="3">3</page>

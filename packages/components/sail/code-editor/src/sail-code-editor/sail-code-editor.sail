@@ -252,9 +252,7 @@ export default controller((ctx: Scope) => {
         node.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
-          node.dispatchEvent(new CustomEvent('sail-change', {
-            detail: { value: newValue }, bubbles: true, composed: true,
-          }))
+          ;(node as any).onChange?.({ value: newValue })
         }, DEBOUNCE_MS)
       }
 
@@ -278,17 +276,14 @@ export default controller((ctx: Scope) => {
             key: 'Mod-s',
             preventDefault: true,
             run: () => {
-              node.dispatchEvent(new CustomEvent('sail-save', {
-                detail: { value: view?.state.doc.toString() ?? '' },
-                bubbles: true, composed: true,
-              }))
+              ;(node as any).onSave?.({ value: view?.state.doc.toString() ?? '' })
               return true
             },
           },
           {
             key: 'Escape',
             run: () => {
-              node.dispatchEvent(new CustomEvent('sail-cancel', { bubbles: true, composed: true }))
+              ;(node as any).onCancel?.()
               return false
             },
           },

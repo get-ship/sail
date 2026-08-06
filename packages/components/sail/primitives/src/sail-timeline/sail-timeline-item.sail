@@ -43,9 +43,7 @@ export default controller((ctx) => {
       })
 
       const emit = () => {
-        host.dispatchEvent(
-          new CustomEvent('sail-select', { bubbles: true, composed: true, detail: {} }),
-        )
+        ;(host as any).onSelect?.({})
       }
 
       const onClick = () => { if (ctx.interactive()) emit() }

@@ -7778,7 +7778,7 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "autoDismiss",
     "param": "void",
-    "summary": "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; emits a dismiss event then removes the host.",
+    "summary": "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; invokes `onDismiss` then removes the host.",
     "public": false
   },
   {
@@ -7844,19 +7844,19 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "detailsToggle",
     "param": "void",
-    "summary": "Re-emit a native <details> `toggle` as composed `sail-toggle` with `{open}`.",
+    "summary": "On native <details> `toggle`, invoke `onToggle` with `{ open }`.",
     "public": false
   },
   {
     "name": "dismissControl",
     "param": "void",
-    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
+    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) invokes `onDismiss` then removes the host; non-toast hosts gate on [dismissible].",
     "public": false
   },
   {
     "name": "dismissible",
     "param": "void",
-    "summary": "Emit `sail-remove` from a `[removable]` host on Backspace/Delete or `.remove` click — the attr-gated dismiss mix-in.",
+    "summary": "Invoke `onRemove` on a `[removable]` host for Backspace/Delete or remove-button click — the attr-gated dismiss mix-in.",
     "public": false
   },
   {
@@ -7892,8 +7892,8 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "icon",
     "param": "void",
-    "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>.",
-    "public": true
+    "summary": "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
+    "public": false
   },
   {
     "name": "liveBox",
@@ -8107,12 +8107,6 @@ export const PUBLIC_ACTIONS: ActionDoc[] = [
     "name": "hotkeys",
     "param": "HotkeysMap | undefined",
     "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
-    "public": true
-  },
-  {
-    "name": "icon",
-    "param": "void",
-    "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>.",
     "public": true
   },
   {
@@ -8680,162 +8674,6 @@ export const EVENT_NAMES: EventDoc[] = [
   {
     "name": "storage",
     "summary": "another document changed localStorage/sessionStorage"
-  },
-  {
-    "name": "success",
-    "summary": "form mutation settled ok — fired by <form mutation=…> on its host"
-  },
-  {
-    "name": "failure",
-    "summary": "form mutation settled with an error — fired by <form mutation=…> on its host"
-  },
-  {
-    "name": "sail-change",
-    "summary": "generic value change from a sail control"
-  },
-  {
-    "name": "sail-combobox-select",
-    "summary": "combobox option selected"
-  },
-  {
-    "name": "sail-tab-change",
-    "summary": "active tab changed"
-  },
-  {
-    "name": "sail-page-change",
-    "summary": "pagination page changed"
-  },
-  {
-    "name": "sail-variant-change",
-    "summary": "variant selection changed"
-  },
-  {
-    "name": "sail-remove",
-    "summary": "item remove requested"
-  },
-  {
-    "name": "sail-error-reset",
-    "summary": "error boundary reset requested"
-  },
-  {
-    "name": "sail-toggle",
-    "summary": "toggle pressed"
-  },
-  {
-    "name": "sail-toggle-change",
-    "summary": "toggle checked state changed"
-  },
-  {
-    "name": "sail-select",
-    "summary": "selection changed"
-  },
-  {
-    "name": "sail-menu-select",
-    "summary": "menu item selected"
-  },
-  {
-    "name": "sail-dismiss",
-    "summary": "overlay/toast dismissed"
-  },
-  {
-    "name": "sail-toast-dismiss",
-    "summary": "toast dismissed"
-  },
-  {
-    "name": "sail-cancel",
-    "summary": "cancel action (e.g. composer)"
-  },
-  {
-    "name": "sail-save",
-    "summary": "save action"
-  },
-  {
-    "name": "sail-composer-submit",
-    "summary": "chat composer submitted"
-  },
-  {
-    "name": "sail-citation-open",
-    "summary": "citation pill activated"
-  },
-  {
-    "name": "sail-theme-change",
-    "summary": "theme selection changed"
-  },
-  {
-    "name": "sail-date-change",
-    "summary": "date picker value changed"
-  },
-  {
-    "name": "sail-range-change",
-    "summary": "range control value changed"
-  },
-  {
-    "name": "sail-view-change",
-    "summary": "view mode changed"
-  },
-  {
-    "name": "sail-error-caught",
-    "summary": "error boundary caught an error"
-  },
-  {
-    "name": "sail-mermaid-error",
-    "summary": "mermaid diagram failed to render"
-  },
-  {
-    "name": "sail-canvas-viewport",
-    "summary": "canvas pan/zoom viewport changed"
-  },
-  {
-    "name": "sail-board-change",
-    "summary": "board model mutated"
-  },
-  {
-    "name": "sail-node-select",
-    "summary": "board node selection changed"
-  },
-  {
-    "name": "sail-edge-create",
-    "summary": "board edge created via port drag"
-  },
-  {
-    "name": "sail-draw-change",
-    "summary": "draw scene mutated"
-  },
-  {
-    "name": "sail-draw-select",
-    "summary": "draw selection changed"
-  },
-  {
-    "name": "sail-annotation-staged",
-    "summary": "annotation staged for send"
-  },
-  {
-    "name": "sail-annotation-sent",
-    "summary": "annotation POST succeeded"
-  },
-  {
-    "name": "sail-annotation-error",
-    "summary": "annotation POST failed"
-  },
-  {
-    "name": "sail-annotation-remove",
-    "summary": "annotation remove requested"
-  },
-  {
-    "name": "sail-event-click",
-    "summary": "calendar event clicked"
-  },
-  {
-    "name": "sail-event-select",
-    "summary": "calendar event selected"
-  },
-  {
-    "name": "sail-event-move",
-    "summary": "calendar event moved"
-  },
-  {
-    "name": "sail-event-create-intent",
-    "summary": "calendar empty-slot create intent"
   }
 ]
 

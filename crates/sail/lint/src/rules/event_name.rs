@@ -1,29 +1,17 @@
-//! `sail-event-name` — `on:<event>` event names must be valid DOM
-//! events (or a known custom-event prefix). Catches typos like
-//! `on:Click` (capital C) which today bind a listener for a
-//! never-fired event.
+//! `sail-event-name` — `on:<event>` event names must be standard DOM
+//! events. Catches typos like `on:Click` (capital C) which would bind
+//! a listener for a never-fired event.
 //!
-//! The whitelist is the set of standard browser events most templates
-//! use, plus four openings:
-//!   - `sail-*` — framework-emitted custom events (e.g. `sail-rail:toggle`)
-//!   - `ship-*` — Ship product custom events
-//!   - `<tag>:` prefix — namespaced events from custom elements
-//!   - a small set of bare SAIL framework custom events that carry no
-//!     prefix — `success` (and `failure`) emitted by `<form mutation=…>`
-//!     after the mutation settles. These are real emitted events, not
-//!     DOM events, so they live in their own allowlist rather than the
-//!     DOM `KNOWN_EVENTS` table.
+//! Component moments are typed `on-*` callback props (not CustomEvents).
+//! Form mutation moments are `on-success` / `on-failure` callback props.
+//! There is no author-facing custom-event bus.
 //!
 //! Suggests the closest whitelisted name via Levenshtein when a typo
-//! is detected. False negatives are acceptable (any custom event with
-//! a `-`/`:` in the name passes); false positives are not — when in
-//! doubt, allow.
+//! is detected.
 //!
 //! **Severity: Error.** Every `on:<event>` across the components/views
-//! tree resolves to a known DOM event, a prefixed/namespaced custom
-//! event, or a SAIL framework custom event (verified by the repo-wide
-//! scan). Error hard-fails a typo'd handler that would silently never
-//! fire.
+//! tree resolves to a known DOM event. Error hard-fails a typo'd
+//! handler that would silently never fire.
 
 use std::path::Path;
 
@@ -150,13 +138,6 @@ const KNOWN_EVENTS: &[&str] = &[
     "storage",
 ];
 
-/// SAIL framework custom events that carry NO prefix. `<form mutation=…>`
-/// emits `success` / `failure` on its host once the mutation settles, so
-/// `on:success=` / `on:failure=` are legitimate even though they aren't DOM
-/// events and lack a `sail-`/`ship-` prefix. Keep this list tight — it's the
-/// escape hatch for bare custom events the framework genuinely fires.
-const SUI_CUSTOM_EVENTS: &[&str] = &["success", "failure"];
-
 /// First index at or after `from` where `needle` occurs.
 fn find(haystack: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
     if from >= haystack.len() {
@@ -239,29 +220,8 @@ fn is_acceptable_event_name(name: &str) -> bool {
     if name.is_empty() {
         return false;
     }
-    // Known DOM events.
-    if KNOWN_EVENTS.contains(&name) {
-        return true;
-    }
-    // Bare SAIL framework custom events (`success`/`failure` from <form mutation>).
-    if SUI_CUSTOM_EVENTS.contains(&name) {
-        return true;
-    }
-    // Framework / product custom-event prefixes.
-    if name.starts_with("sail-") || name.starts_with("ship-") {
-        return true;
-    }
-    // Namespaced custom-element event (`sail-rail:toggle`, `dialog:open`, …).
-    if name.contains(':') {
-        return true;
-    }
-    // Author-defined kebab-case event with a hyphen we don't recognize —
-    // accept rather than scream. The `-` is the convention for non-DOM
-    // custom events.
-    if name.contains('-') && name.chars().all(|c| c.is_ascii_lowercase() || c == '-') {
-        return true;
-    }
-    false
+    // Known DOM events only — custom-event bus is retired (CALLBACKS-1).
+    KNOWN_EVENTS.contains(&name)
 }
 
 fn nearest_event(name: &str) -> Option<String> {
@@ -348,15 +308,17 @@ mod tests {
     }
 
     #[test]
-    fn sail_prefixed_event_passes() {
-        let src = r#"<sail-rail on:sail-rail:toggle={fire}></sail-rail>"#;
-        assert_eq!(lint(src).len(), 0);
+    fn sail_prefixed_event_refused() {
+        let src = r#"<div on:sail-remove={fire}></div>"#;
+        let findings = lint(src);
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("sail-remove"));
     }
 
     #[test]
-    fn ship_prefixed_event_passes() {
-        let src = r#"<ship-thing on:ship-thing:done={fire}></ship-thing>"#;
-        assert_eq!(lint(src).len(), 0);
+    fn ship_prefixed_event_refused() {
+        let src = r#"<div on:ship-thing:done={fire}></div>"#;
+        assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
@@ -374,13 +336,12 @@ mod tests {
     }
 
     #[test]
-    fn form_mutation_success_event_passes() {
-        // `<form mutation=…>` emits `success`/`failure` — bare framework
-        // custom events, not DOM events. Both must be accepted.
+    fn form_mutation_success_event_refused_use_callback_props() {
+        // Form moments are on-success / on-failure callback props, not on: events.
         let src = r#"<form mutation="demo.update" on:success={() => ok()}></form>"#;
-        assert_eq!(lint(src).len(), 0, "{:?}", lint(src));
+        assert_eq!(lint(src).len(), 1, "{:?}", lint(src));
         let f = r#"<form mutation="demo.update" on:failure={() => bad()}></form>"#;
-        assert_eq!(lint(f).len(), 0, "{:?}", lint(f));
+        assert_eq!(lint(f).len(), 1, "{:?}", lint(f));
     }
 
     #[test]

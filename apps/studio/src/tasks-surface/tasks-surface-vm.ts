@@ -221,9 +221,8 @@ export function createTasksSurface() {
     }
   }, 1200)
 
-  const onComposerSubmit = (e: Event) => {
-    const ce = e as CustomEvent<{ text?: string; attachments?: unknown[] }>
-    const text = (ce.detail?.text ?? '').trim()
+  const onComposerSubmit = (detail: { text?: string; attachments?: unknown[] }) => {
+    const text = (detail?.text ?? '').trim()
     if (!text || !getTasksState().selectedId) return
     setReplyDraft(text)
     composerStatus.set('sending')

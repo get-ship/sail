@@ -15,6 +15,7 @@ import {
   type ModePreference,
 } from '@ship/tokens/themes'
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 /**
  * `use:themeSelect` — product theme picker:
@@ -622,17 +623,11 @@ export const themeSelect: Action<void> = (node) => {
     // Keep storage coherent with the filter intent used for this selection.
     persistMode(intent)
     sync()
-    root.dispatchEvent(
-      new CustomEvent('sail-theme-change', {
-        detail: {
-          theme: v,
-          mode: paintMode(document.documentElement.dataset.mode),
-          preference: readModePreference(),
-        },
-        bubbles: true,
-        composed: true,
-      }),
-    )
+    invokeCallback(root, 'onThemeChange', {
+      theme: v,
+      mode: paintMode(document.documentElement.dataset.mode),
+      preference: readModePreference(),
+    })
     // Keep the catalog open so users can compare themes (product request).
   }
 
@@ -672,17 +667,11 @@ export const themeSelect: Action<void> = (node) => {
     }
     const paint = applyMode(next)
     sync()
-    root.dispatchEvent(
-      new CustomEvent('sail-theme-change', {
-        detail: {
-          theme: currentTheme(),
-          mode: paint,
-          preference: readModePreference(),
-        },
-        bubbles: true,
-        composed: true,
-      }),
-    )
+    invokeCallback(root, 'onThemeChange', {
+      theme: currentTheme(),
+      mode: paint,
+      preference: readModePreference(),
+    })
   }
 
   const optionFrom = (e: Event): HTMLElement | null => {
@@ -792,17 +781,11 @@ export const themeSelect: Action<void> = (node) => {
     if (rootEl.dataset.mode !== nextPaint) {
       applyTheme(theme, rootEl, 'system')
       sync()
-      root.dispatchEvent(
-        new CustomEvent('sail-theme-change', {
-          detail: {
-            theme,
-            mode: nextPaint,
-            preference: 'system',
-          },
-          bubbles: true,
-          composed: true,
-        }),
-      )
+      invokeCallback(root, 'onThemeChange', {
+        theme,
+        mode: nextPaint,
+        preference: 'system',
+      })
     }
   })
 

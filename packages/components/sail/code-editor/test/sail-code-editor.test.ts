@@ -1,10 +1,9 @@
-// <sail-code-editor> tests — render, prop sync, change event contract.
+// <sail-code-editor> tests — render, prop sync, change callback contract.
 //
 // jsdom can't drive a real CodeMirror user edit (contenteditable + Selection
-// are stubbed), so the change-event path is asserted via the public host
-// seam: the `sail-change` CustomEvent is the public contract a consumer
-// (sail-tutorial, sail-site) binds against, and its event-shape is verified by
-// inspecting the controller's debounce machinery. Programmatic value
+// are stubbed), so the change path is asserted via the public host seam:
+// the `onChange` callback prop is the public contract a consumer
+// (tutorial, sail-site) binds with `on-change={fn}`. Programmatic value
 // round-trips and the `language` prop reflection are the directly
 // observable surfaces.
 
@@ -114,7 +113,9 @@ describe('<sail-code-editor> — value prop sync', () => {
   it('host.value setter is a no-op when the new value equals the current doc', async () => {
     const m = mount({ value: 'same' })
     let changes = 0
-    m.el.addEventListener('sail-change', () => changes++)
+    ;(m.el as HTMLElement & { onChange?: () => void }).onChange = () => {
+      changes++
+    }
     hostApi(m).value = 'same'
     await m.flush()
     // Programmatic writes are suppressUpdate-gated, so the controller's
@@ -159,37 +160,28 @@ describe('<sail-code-editor> — ops-url degrade', () => {
   })
 })
 
-describe('<sail-code-editor> — change event contract', () => {
-  it('sail-change detail shape is { value } and crosses the shadow boundary', () => {
+describe('<sail-code-editor> — change callback contract', () => {
+  it('onChange payload shape is { value }', () => {
     const m = mount({ value: '' })
     let detail: { value: string } | null = null
-    m.root.addEventListener('sail-change', (e) => {
-      const ev = e as CustomEvent<{ value: string }>
-      detail = ev.detail
+    ;(m.el as HTMLElement & { onChange?: (d: { value: string }) => void }).onChange = (d) => {
+      detail = d
+    }
+    ;(m.el as HTMLElement & { onChange?: (d: { value: string }) => void }).onChange?.({
+      value: 'manual',
     })
-    m.el.dispatchEvent(
-      new CustomEvent('sail-change', {
-        detail: { value: 'manual' },
-        bubbles: true,
-        composed: true,
-      }),
-    )
     expect(detail).toEqual({ value: 'manual' })
   })
 
-  it('the change event bubbles + is composed (crosses shadow DOM)', () => {
+  it('onChange is a direct host property (no event bus)', () => {
     const m = mount({ value: '' })
-    let caught: Event | null = null
-    m.root.addEventListener('sail-change', (e) => { caught = e })
-    const ev = new CustomEvent('sail-change', {
-      detail: { value: 'x' },
-      bubbles: true,
-      composed: true,
-    })
-    m.el.dispatchEvent(ev)
-    expect(caught).not.toBeNull()
-    expect(caught!.bubbles).toBe(true)
-    expect(caught!.composed).toBe(true)
+    let called = 0
+    const host = m.el as HTMLElement & { onChange?: (d: { value: string }) => void }
+    host.onChange = () => {
+      called++
+    }
+    host.onChange?.({ value: 'x' })
+    expect(called).toBe(1)
   })
 })
 

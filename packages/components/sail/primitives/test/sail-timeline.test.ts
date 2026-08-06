@@ -76,51 +76,48 @@ describe('<sail-timeline-item>', () => {
     expect(el.getAttribute('tabindex')).toBe('0')
   })
 
-  it('dispatches sail-select on click when interactive (bubbles + composed, empty detail)', async () => {
+  it('invokes onSelect on click when interactive (empty detail)', async () => {
     const { el } = mount(reg, 'sail-timeline-item', { interactive: true })
     await flush()
     const fn = vi.fn()
-    el.addEventListener('sail-select', fn)
+    (el as any).onSelect = (d: any) => { fn(d) }
     el.click()
     expect(fn).toHaveBeenCalledOnce()
-    const evt = fn.mock.calls[0]![0] as CustomEvent
-    expect(evt.detail).toEqual({})
-    expect(evt.bubbles).toBe(true)
-    expect(evt.composed).toBe(true)
+    expect(fn.mock.calls[0]![0]).toEqual({})
   })
 
-  it('does not dispatch sail-select on click when not interactive', async () => {
+  it('does not invoke onSelect on click when not interactive', async () => {
     const { el } = mount(reg, 'sail-timeline-item')
     await flush()
     const fn = vi.fn()
-    el.addEventListener('sail-select', fn)
+    (el as any).onSelect = (d: any) => { fn(d) }
     el.click()
     expect(fn).not.toHaveBeenCalled()
   })
 
-  it('dispatches sail-select on Enter when interactive', async () => {
+  it('invokes onSelect on Enter when interactive', async () => {
     const { el } = mount(reg, 'sail-timeline-item', { interactive: true })
     await flush()
     const fn = vi.fn()
-    el.addEventListener('sail-select', fn)
+    (el as any).onSelect = (d: any) => { fn(d) }
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     expect(fn).toHaveBeenCalledOnce()
   })
 
-  it('dispatches sail-select on Space when interactive', async () => {
+  it('invokes onSelect on Space when interactive', async () => {
     const { el } = mount(reg, 'sail-timeline-item', { interactive: true })
     await flush()
     const fn = vi.fn()
-    el.addEventListener('sail-select', fn)
+    (el as any).onSelect = (d: any) => { fn(d) }
     el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
     expect(fn).toHaveBeenCalledOnce()
   })
 
-  it('does not dispatch sail-select on Enter when not interactive', async () => {
+  it('does not invoke onSelect on Enter when not interactive', async () => {
     const { el } = mount(reg, 'sail-timeline-item')
     await flush()
     const fn = vi.fn()
-    el.addEventListener('sail-select', fn)
+    (el as any).onSelect = (d: any) => { fn(d) }
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     expect(fn).not.toHaveBeenCalled()
   })

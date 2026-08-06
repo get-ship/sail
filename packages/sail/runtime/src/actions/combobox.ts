@@ -1,4 +1,5 @@
 import type { Action } from '../action'
+import { invokeCallback } from '../callback'
 
 /**
  * Internal: L1 `<combobox>` closed behavior (not a public `use:`).
@@ -130,13 +131,7 @@ export const combobox: Action<void> = (node) => {
     // leaves the text in the field, so its filter correctly survives.)
     for (const opt of options()) opt.hidden = false
     close()
-    root.dispatchEvent(
-      new CustomEvent('sail-combobox-select', {
-        detail: { value, label: input.value },
-        bubbles: true,
-        composed: true,
-      }),
-    )
+    invokeCallback(root, 'onSelect', { value, label: input.value })
   }
 
   const move = (delta: number): void => {

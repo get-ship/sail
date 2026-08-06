@@ -374,25 +374,10 @@ export function createComponentsEdit(session: ThemeSession) {
   const componentKnobs = componentKnobList
   const globalKnobs = globalKnobList
 
-  const colorFromEvent = (e: Event): string => {
-    const ce = e as CustomEvent<{ value?: string }>
-    const t = e.target as HTMLElement & { value?: string }
-    return String(ce.detail?.value ?? t?.value ?? '').trim()
-  }
-
-  const pathFromEvent = (e: Event): string | null => {
-    const t = e.target as HTMLElement | null
-    return (
-      t?.getAttribute('token-path') ||
-      t?.closest?.('[token-path]')?.getAttribute('token-path') ||
-      null
-    )
-  }
-
-  const onComponentColor = (e: Event) => {
+  const onComponentColor = (detail: { value?: string; token?: string }) => {
     if (!session.guardEdit()) return
-    const path = pathFromEvent(e)
-    const hex = colorFromEvent(e)
+    const path = detail?.token ?? null
+    const hex = String(detail?.value ?? '').trim()
     if (!path || !hex) return
     void setTokenValue(path, hex).then(() => {
       session.setNote(`Updated ${path}`, 'success')
@@ -400,10 +385,10 @@ export function createComponentsEdit(session: ThemeSession) {
     })
   }
 
-  const onGlobalColor = (e: Event) => {
+  const onGlobalColor = (detail: { value?: string; token?: string }) => {
     if (!session.guardEdit()) return
-    const path = pathFromEvent(e)
-    const hex = colorFromEvent(e)
+    const path = detail?.token ?? null
+    const hex = String(detail?.value ?? '').trim()
     if (!path || !hex) return
     void setTokenValue(path, hex).then(() => {
       session.setNote(`Global ${path} updated`, 'success')
@@ -508,6 +493,11 @@ export function createComponentsEdit(session: ThemeSession) {
       : 'No component-scoped tokens in registry — edit related globals below'
   }
 
+  const pageNo = signal('1')
+  const onPageChange = (detail: { page?: string }) => {
+    if (detail?.page) pageNo.set(String(detail.page))
+  }
+
   return {
     filter,
     selectedId,
@@ -522,6 +512,8 @@ export function createComponentsEdit(session: ThemeSession) {
     onComponentColor,
     onGlobalColor,
     onClearComponent,
+    pageNo,
+    onPageChange,
     variant,
     size,
     tone,

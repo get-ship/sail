@@ -161,7 +161,7 @@ export default controller((ctx) => {
       side="end"
       size="lg"
       label="Findings"
-      on:sail-close={onCloseChecksPanel}
+      on-close={onCloseChecksPanel}
     >
       <header findings-panel-head checks-panel-head>
         Findings

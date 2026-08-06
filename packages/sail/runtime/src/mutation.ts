@@ -9,6 +9,7 @@
 
 import { signal } from './signal'
 import type { LiveState } from './live-state'
+import { invokeCallback } from './callback'
 
 const toError = (err: unknown): Error =>
   err instanceof Error ? err : new Error(String(err))
@@ -31,8 +32,9 @@ function resolveChain(
  *
  * Injects `$mutation` into `scope`, intercepts submit events, calls the
  * resolved client method with `FormData`, and updates `$mutation` through
- * the `loading → ok | error` lifecycle. Fires `success` / `error`
- * `CustomEvent`s on the form for `on:success` / `on:error` handlers.
+ * the `loading → ok | error` lifecycle. Invokes `onSuccess` / `onFailure`
+ * callback props on the form (moments are callbacks — do not react to
+ * moments via the MutationState signal; it persists and re-fires).
  *
  * @returns A cleanup disposer that removes the submit listener.
  */
@@ -53,7 +55,7 @@ export function wireFormMutation(
       const error = new Error(`[sail] mutation chain "${chain}" not found in scope`)
       console.error(error)
       mut.set({ kind: 'error', error })
-      el.dispatchEvent(new CustomEvent('error', { detail: { error }, bubbles: true }))
+      invokeCallback(el, 'onFailure', { error })
       return
     }
 
@@ -61,11 +63,11 @@ export function wireFormMutation(
     try {
       const value = await Promise.resolve(fn(formData))
       mut.set({ kind: 'ok', value })
-      el.dispatchEvent(new CustomEvent('success', { detail: { value }, bubbles: true }))
+      invokeCallback(el, 'onSuccess', { value })
     } catch (err) {
       const error = toError(err)
       mut.set({ kind: 'error', error })
-      el.dispatchEvent(new CustomEvent('error', { detail: { error }, bubbles: true }))
+      invokeCallback(el, 'onFailure', { error })
     }
   }
 

@@ -2,13 +2,12 @@
 //
 // Capability mix-in: a click on a descendant matching `[data-toast-close]`,
 // `[data-dismiss]`, or `button[aria-label="Dismiss"]` runs the shared
-// dismiss-self path (event + remove). Stacked with `use:autoDismiss` on L1
+// dismiss-self path (callback + remove). Stacked with `use:autoDismiss` on L1
 // <toast> and with `use:liveRegion` on L1 <alert>. Idempotent with the timer
 // path via dismiss-self.
 //
-// Event name: toast hosts (`duration` attr or `data-sail-host="toast"`)
-// emit `sail-toast-dismiss`; everything else emits `sail-dismiss`. Gate:
-// non-toast hosts require `[dismissible]` (alert); toast close always works.
+// Gate: non-toast hosts require `[dismissible]` (alert); toast close always
+// works.
 
 import type { Action } from '../action'
 import { dismissSelf, isDismissed } from './dismiss-self'
@@ -20,9 +19,9 @@ function isToastHost(el: HTMLElement): boolean {
 }
 
 /**
- * Click on a descendant close control dismisses the host: composed dismiss
- * event, then `el.remove()`. Toast → `sail-toast-dismiss` (no dismissible
- * gate). Alert / other → `sail-dismiss`, only while `[dismissible]`.
+ * Click on a descendant close control dismisses the host: `onDismiss`
+ * callback, then `el.remove()`. Toast has no dismissible gate. Alert / other
+ * require `[dismissible]`.
  */
 export const dismissControl: Action<void> = (node) => {
   const el = node as HTMLElement
@@ -35,7 +34,7 @@ export const dismissControl: Action<void> = (node) => {
     const toast = isToastHost(el)
     if (!toast && !el.hasAttribute('dismissible')) return
 
-    dismissSelf(el, toast ? 'sail-toast-dismiss' : 'sail-dismiss')
+    dismissSelf(el)
   }
 
   el.addEventListener('click', onClick)

@@ -8,7 +8,9 @@
     size: 'sm' | 'md' | 'lg' = 'md'
     tone = 'default'
     orientation: 'horizontal' | 'vertical' = 'horizontal'
-  }
+  
+    onTabChange: (detail: { name: string }) => void
+}
 
   const host = style({ box: minW(0) })
 </scope>

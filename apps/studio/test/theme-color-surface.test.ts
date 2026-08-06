@@ -168,11 +168,11 @@ describe('color pick pipeline (hex → oklch write)', () => {
  * Proves the facet event adapter can extract hex + role without the Sail mount.
  */
 describe('color facet event adapter (sail-change shape)', () => {
-  it('reads detail.value from sail-change CustomEvent (picker contract)', () => {
+  it('reads value from on-change callback payload (picker contract)', () => {
     const detail = { value: '#a855f7' }
-    const e = new CustomEvent('sail-change', { detail, bubbles: true, composed: true })
+    const e = detail
     const hex = String(
-      (e as CustomEvent<{ value?: string }>).detail?.value ?? '',
+      e.value ?? '',
     ).trim()
     expect(hex).toBe('#a855f7')
     expect(hexToOklchString(hex)).toMatch(/^oklch\(/)

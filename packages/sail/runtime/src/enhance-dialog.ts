@@ -99,12 +99,13 @@ export function bindOpen(
 
   // native close (ESC / backdrop / a close button / form method=dialog /
   // .close()) → signal. Guarded so the programmatic close above doesn't loop.
-  // Also emit sail-close / sail-dismiss so author templates that listened to the
-  // retired CE events still sync parent state (claim capture, mission create).
+  // Also invoke onClose / onDismiss callback props for parent state sync.
   const onClose = () => {
     if (sig()) sig.set(false)
-    el.dispatchEvent(new CustomEvent('sail-close', { bubbles: true, composed: true }))
-    el.dispatchEvent(new CustomEvent('sail-dismiss', { bubbles: true, composed: true }))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const host = el as any
+    if (typeof host.onClose === 'function') host.onClose()
+    if (typeof host.onDismiss === 'function') host.onDismiss()
   }
   el.addEventListener('close', onClose)
 

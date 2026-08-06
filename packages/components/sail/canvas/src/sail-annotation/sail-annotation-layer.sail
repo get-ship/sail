@@ -136,31 +136,17 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
           body: JSON.stringify(ev),
         })
         if (!resp.ok) {
-          hostEl()?.dispatchEvent(
-            new CustomEvent('sail-annotation-error', {
-              detail: { code: `http_${resp.status}`, id: ev.id },
-              bubbles: true,
-              composed: true,
-            }),
-          )
+          ;(hostEl() as any)?.onError?.({ code: `http_${resp.status}`, id: ev.id })
           return
         }
         staged.set(staged().filter((s) => s.id !== ev.id))
-        hostEl()?.dispatchEvent(
-          new CustomEvent('sail-annotation-sent', {
-            detail: { id: ev.id, status: resp.status },
-            bubbles: true,
-            composed: true,
-          }),
-        )
+        ;(hostEl() as any)?.onSent?.({ id: ev.id, status: resp.status })
       } catch (e) {
-        hostEl()?.dispatchEvent(
-          new CustomEvent('sail-annotation-error', {
-            detail: { code: 'network_error', message: String(e), id: ev.id },
-            bubbles: true,
-            composed: true,
-          }),
-        )
+        ;(hostEl() as any)?.onError?.({
+          code: 'network_error',
+          message: String(e),
+          id: ev.id,
+        })
       }
     }
 
@@ -182,13 +168,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       })
       _positions[ev.id] = { x: p.x, y: p.y }
       staged.set([...staged(), ev])
-      hostEl()?.dispatchEvent(
-        new CustomEvent('sail-annotation-staged', {
-          detail: ev,
-          bubbles: true,
-          composed: true,
-        }),
-      )
+      ;(hostEl() as any)?.onStaged?.(ev)
       pending.set(null)
       noteText.set('')
       if (!stagingProp()) void sendOne(ev)
