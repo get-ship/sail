@@ -921,7 +921,8 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       expanded: {},
     })
 
-    // Bare toggle under expand-all is the bug; prove expand-all still no-ops.
+    // Expand-all bare toggle demotes to a sparse map (engine no longer no-ops).
+    // Surface still uses explicit maps so collapsedRules control is deterministic.
     const expandAll = createTable<Row>({
       data,
       columns: [
@@ -935,8 +936,8 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     })
     const gAll = expandAll.rows().find((r) => r.getIsGrouped())!
     expect(gAll.getIsExpanded()).toBe(true)
-    expandAll.toggleExpanded(gAll.id) // bare — no-op
-    expect(gAll.getIsExpanded()).toBe(true)
+    expandAll.toggleExpanded(gAll.id) // demotes expand-all → sparse; this group collapses
+    expect(gAll.getIsExpanded()).toBe(false)
 
     // Explicit map path used by the surface.
     let collapsed = new Set<string>()

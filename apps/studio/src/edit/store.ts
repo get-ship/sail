@@ -212,16 +212,14 @@ export function writeSignalValue(name: string, value: string): void {
   // template/controller (ref/prop) via setLivePreviewWindow — no ambient lookup.
   const win = livePreviewWindow
   if (!win) return
+  // Prefer the registered window's origin (not ambient location) so postMessage
+  // is scoped when the preview frame origin is known; fall back to '*'.
   let targetOrigin = '*'
   try {
-    const o = '*' /* DOMDEC: no location.origin */
+    const o = win.location?.origin
     if (o && o !== 'null') targetOrigin = o
   } catch {
-    try {
-      targetOrigin = '*'
-    } catch {
-      targetOrigin = '*'
-    }
+    targetOrigin = '*'
   }
   try {
     win.postMessage({ type: 'sail-studio-signal', name, value }, targetOrigin)
