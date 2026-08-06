@@ -128,7 +128,7 @@ fn forbid_motion_inside_when(style: &Style) -> Result<(), StyleDiagnostic> {
                 if style_contains_motion(body) {
                     return Err(StyleDiagnostic::ParseError {
                         message: format!(
-                            "`.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` cannot appear inside when({{ {key}: … }}) — lifecycle and ambient motion are not pseudo-state. Put motion methods on the rest chain: style.…rest….enter({{…}}).when({{…}})"
+                            "`.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` cannot appear inside when({{ {key}: … }}) — lifecycle and ambient motion are not pseudo-state. Put motion in the `animate:` channel on the head: style({{ …, animate: enter({{…}}) }}).when({{…}})"
                         ),
                         source: format!("when.{{ {key} }}"),
                     });
@@ -882,7 +882,9 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
         }
     };
 
-    // Dual tails: `.when(…)` and flat-chain motion.
+    // Product tail: `.when(…)` only. Motion after `style({…})` is retired —
+    // authors put triggers in the `animate:` channel. Style-const refs still
+    // accept `name.enter({…})` (parse_style_expr Word branch).
     let mut iters = 0usize;
     while p.eat(&Tok::Dot) {
         iters += 1;
@@ -897,7 +899,7 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
             Some(Tok::Word(w)) => w,
             _ => {
                 diags.push(StyleDiagnostic::ParseError {
-                    message: "expected `.when(…)` or motion method after `style({…})`".into(),
+                    message: "expected `.when(…)` after `style({…})`".into(),
                     source: p.remainder(),
                 });
                 break;
@@ -909,14 +911,20 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
             continue;
         }
         if is_motion_chain_method(method) {
-            if let Some(m) = parse_motion_call(p, method, diags) {
-                base = Style::chain(vec![base, m]);
-            }
+            diags.push(StyleDiagnostic::ParseError {
+                message: format!(
+                    "`.{method}({{…}})` after `style({{…}})` is retired — put motion in the \
+                     `animate:` channel: style({{ …, animate: {method}({{…}}) }})"
+                ),
+                source: format!(".{method}"),
+            });
+            // Recovery: consume the motion call so later `.when` / EOF stay parseable.
+            let _ = parse_motion_call(p, method, diags);
             continue;
         }
         diags.push(StyleDiagnostic::ParseError {
             message: format!(
-                "only `.when(…)` / motion methods may follow `style({{…}})`; found `.{method}`"
+                "only `.when(…)` may follow `style({{…}})` (motion lives in `animate:`); found `.{method}`"
             ),
             source: p.remainder(),
         });
@@ -1057,7 +1065,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         };
         if motion_object {
             diags.push(StyleDiagnostic::ParseError {
-                message: "motion methods belong in the `animate:` channel or after `style({…})` — not inside box/paint/text"
+                message: "motion methods belong in the `animate:` channel — not inside box/paint/text"
                     .into(),
                 source: method.to_string(),
             });

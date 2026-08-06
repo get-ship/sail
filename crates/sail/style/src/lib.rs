@@ -968,30 +968,40 @@ mod tests {
     }
 
     #[test]
-    fn channels_motion_tail_after_spine_matches_animate_channel() {
-        // Flat motion tail after channel spine remains dual-accept with animate:.
-        // Both sides are product parse (no migration dual).
-        let (s_tail, d_tail) =
-            parse("style({ paint: bg(primary) }).enter({ opacity: 'fade' })");
+    fn parse_refuses_motion_tail_after_channel_spine() {
+        // Flat motion tail after style({…}) is retired — animate: channel only.
+        let (_, diags) = parse("style({ paint: bg(primary) }).enter({ opacity: 'fade' })");
+        let joined = diags.iter().map(|d| d.message()).collect::<Vec<_>>().join("; ");
+        assert!(
+            joined.contains("retired") || joined.contains("animate:"),
+            "product parse must refuse motion tail: {joined}"
+        );
+        assert!(
+            joined.contains("animate:"),
+            "must teach animate: channel: {joined}"
+        );
+        assert!(
+            !joined.contains("style.enter"),
+            "must not re-teach flat style.method: {joined}"
+        );
+    }
+
+    #[test]
+    fn channels_animate_channel_motion_attaches() {
         let (s_ch, d_ch) =
             parse("style({ paint: bg(primary), animate: enter({ opacity: 'fade' }) })");
         assert!(
-            d_tail.is_empty() && d_ch.is_empty(),
-            "diags tail={:?} channel={:?}",
-            d_tail.iter().map(|d| d.message()).collect::<Vec<_>>(),
+            d_ch.is_empty(),
+            "animate: channel must parse clean: {:?}",
             d_ch.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (c_tail, css_tail) = lower_style(&s_tail, &HashMap::new());
-        let (c_ch, css_ch) = lower_style(&s_ch, &HashMap::new());
-        assert_eq!(c_tail, c_ch, "classes\ntail={c_tail}\nchannel={c_ch}");
-        assert_eq!(
-            css_tail, css_ch,
-            "css\ntail:\n{css_tail}\nchannel:\n{css_ch}"
-        );
-        assert_eq!(
-            collect_motion_attaches(&s_tail),
-            collect_motion_attaches(&s_ch),
-            "motion attach identity"
+        let attaches = collect_motion_attaches(&s_ch);
+        assert_eq!(attaches.len(), 1, "one enter attach: {attaches:?}");
+        assert_eq!(attaches[0].0, "enter");
+        assert!(
+            attaches[0].1.contains("opacity"),
+            "config preserved: {:?}",
+            attaches[0].1
         );
     }
 

@@ -54,10 +54,10 @@ pub enum Style {
     },
     /// Lifecycle / ambient motion attach — lowers to `AttrInstr::Motion`.
     ///
-    /// Author form: `style.… .enter({…})` / `.exit({…})` / `.loop({…})` /
-    /// `.reveal({…})` / `.scroll({…})`. The `config` is the raw object body
-    /// (including braces). Paint emit ignores these nodes; preprocess injects
-    /// a compiler-private `_sail_m_<trigger>` attribute for AttrInstr::Motion.
+    /// Author form: `style({ animate: enter({…}).exit({…}) })` (and Style-const
+    /// tails `name.enter({…})`). The `config` is the raw object body (including
+    /// braces). Paint emit ignores these nodes; preprocess injects a
+    /// compiler-private `_sail_m_<trigger>` attribute for AttrInstr::Motion.
     MotionAttach {
         /// enter | exit | loop | reveal | scroll
         trigger: String,
