@@ -524,7 +524,7 @@ const DIALOG_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("flex", "0 0 auto"),
             ("padding", "var(--space-4_5) var(--space-6)"),
-            ("border-bottom", "1px solid var(--border-subtle)"),
+            ("border-bottom", "1px solid var(--dialog-divider)"),
             ("font-size", "var(--text-lg)"),
             ("font-weight", "var(--font-weight-semibold)"),
             ("color", "var(--dialog-foreground)"),
@@ -540,7 +540,7 @@ const DIALOG_MAP: &[DescRule] = &[
             ("padding", "var(--space-4) var(--space-6)"),
             ("font-size", "var(--text-base)"),
             ("line-height", "var(--leading-normal)"),
-            ("color", "var(--muted-foreground)"),
+            ("color", "var(--dialog-muted-foreground)"),
         ]),
     },
     DescRule {
@@ -552,8 +552,8 @@ const DIALOG_MAP: &[DescRule] = &[
             ("align-items", "center"),
             ("justify-content", "flex-end"),
             ("padding", "var(--space-4) var(--space-6)"),
-            ("border-top", "1px solid var(--border-subtle)"),
-            ("background", "var(--muted)"),
+            ("border-top", "1px solid var(--dialog-divider)"),
+            ("background", "var(--dialog-footer)"),
         ]),
     },
 ];

@@ -19,6 +19,15 @@
             "cssName": "context-menu-foreground"
           }
         }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "context-menu-border"
+          }
+        }
       }
     }
   }

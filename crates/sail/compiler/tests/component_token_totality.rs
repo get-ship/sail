@@ -42,7 +42,17 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
             "button-hover-bg",
         ],
     ),
-    ("dialog", &["dialog", "dialog-foreground", "dialog-border"]),
+    (
+        "dialog",
+        &[
+            "dialog",
+            "dialog-foreground",
+            "dialog-border",
+            "dialog-divider",
+            "dialog-footer",
+            "dialog-muted-foreground",
+        ],
+    ),
     (
         "accordion",
         &[
@@ -158,6 +168,27 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "combobox-field",
         &["field", "field-foreground", "field-border", "field-border-hover"],
     ),
+    // Slice #4 — panel free borders + dialog anatomy + badge soft compound.
+    (
+        "popover",
+        &["popover", "popover-foreground", "popover-border"],
+    ),
+    (
+        "dropdown",
+        &["dropdown", "dropdown-foreground", "dropdown-border"],
+    ),
+    (
+        "context-menu",
+        &["context-menu", "context-menu-foreground", "context-menu-border"],
+    ),
+    (
+        "hover-card",
+        &["hover-card", "hover-card-foreground", "hover-card-border"],
+    ),
+    (
+        "badge",
+        &["badge", "badge-foreground", "badge-border"],
+    ),
 ];
 
 /// Default-rest free globals that a slice element must NOT use for its owned
@@ -184,7 +215,10 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
         "/* button */",
         &["background", "foreground"], // default rest is button*
     ),
-    ("/* dialog */", &["surface-1", "card-foreground"]),
+    (
+        "/* dialog */",
+        &["surface-1", "card-foreground", "border-subtle", "muted", "muted-foreground"],
+    ),
     ("/* accordion */", &["surface-1"]),
     ("/* skeleton */", &["muted"]),
     ("/* kbd */", &["muted", "foreground"]),
@@ -218,6 +252,12 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* page */", &["foreground", "muted", "primary", "background"]),
     ("/* spinner */", &["muted-foreground", "border-subtle"]),
     ("/* tab */", &["foreground", "border", "muted-foreground"]),
+    // Slice #4 residual defaults
+    ("/* popover */", &["border"]),
+    ("/* dropdown */", &["border"]),
+    ("/* context-menu */", &["border"]),
+    ("/* hover-card */", &["border"]),
+    ("/* badge */", &["muted", "muted-foreground", "border"]),
     ("/* radio */", &["foreground", "background"]),
     ("/* combobox */", &["background", "foreground"]),
 ];

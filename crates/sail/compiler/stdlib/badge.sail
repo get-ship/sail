@@ -57,7 +57,7 @@
     muted: toneMuted,
   }),
   compound({ pill: true }, style({ paint: radius(full) })),
-  compound({ variant: soft, tone: default }, style({ paint: bg(muted).fg(muted-foreground).border(border) })),
+  compound({ variant: soft, tone: default }, style({ paint: bg(badge).fg(badge-foreground).border(badge-border) })),
   when({
     hover: style({ paint: opacity(90) }),
     focus: style({ paint: outline(2) }),
