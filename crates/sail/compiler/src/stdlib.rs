@@ -177,8 +177,9 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
 }
 
 /// Skeleton sheen — host self only. Geometry lives in skeleton.sail Style.
+/// Band colors ride component.skeleton tokens (global fallbacks in the pack).
 const SKELETON_SHIMMER: &str =
-    "linear-gradient(90deg, var(--muted) 0%, color-mix(in oklch, var(--muted) 60%, var(--background)) 50%, var(--muted) 100%)";
+    "linear-gradient(90deg, var(--skeleton) 0%, var(--skeleton-highlight) 50%, var(--skeleton) 100%)";
 
 const SKELETON_MAP: &[DescRule] = &[DescRule {
     sel: "",
@@ -221,7 +222,7 @@ const INPUT_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "[type='radio']:checked",
-        paint: DescPaint(&[("box-shadow", "inset 0 0 0 0.22em var(--background)")]),
+        paint: DescPaint(&[("box-shadow", "inset 0 0 0 0.22em var(--field)")]),
     },
     // Range: vendor track/thumb (Style cannot express these pseudos).
     DescRule {
@@ -287,7 +288,7 @@ const INPUT_MAP: &[DescRule] = &[
                 "calc((var(--rng-track) - var(--rng-thumb)) / 2)",
             ),
             ("border-radius", "50%"),
-            ("background", "var(--surface-1, var(--background))"),
+            ("background", "var(--field)"),
             ("border", "2px solid var(--primary)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
@@ -299,7 +300,7 @@ const INPUT_MAP: &[DescRule] = &[
             ("width", "var(--rng-thumb)"),
             ("height", "var(--rng-thumb)"),
             ("border-radius", "50%"),
-            ("background", "var(--surface-1, var(--background))"),
+            ("background", "var(--field)"),
             ("border", "2px solid var(--primary)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
@@ -325,8 +326,8 @@ const SELECT_MAP: &[DescRule] = &[
     DescRule {
         sel: "option",
         paint: DescPaint(&[
-            ("color", "var(--foreground)"),
-            ("background", "var(--background)"),
+            ("color", "var(--field-foreground)"),
+            ("background", "var(--field)"),
         ]),
     },
 ];
@@ -335,7 +336,7 @@ const SELECT_MAP: &[DescRule] = &[
 const RADIO_INPUT_MAP: &[DescRule] = &[
     DescRule {
         sel: "input:checked, input[aria-checked='true']",
-        paint: DescPaint(&[("box-shadow", "inset 0 0 0 0.22em var(--background)")]),
+        paint: DescPaint(&[("box-shadow", "inset 0 0 0 0.22em var(--field)")]),
     },
     DescRule {
         sel: "input[invalid], input[aria-invalid='true']",
@@ -408,7 +409,7 @@ const RANGE_MAP: &[DescRule] = &[
                 "calc((var(--rng-track) - var(--rng-thumb)) / 2)",
             ),
             ("border-radius", "50%"),
-            ("background", "var(--surface-1, var(--background))"),
+            ("background", "var(--field)"),
             ("border", "2px solid var(--primary)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
@@ -420,7 +421,7 @@ const RANGE_MAP: &[DescRule] = &[
             ("width", "var(--rng-thumb)"),
             ("height", "var(--rng-thumb)"),
             ("border-radius", "50%"),
-            ("background", "var(--surface-1, var(--background))"),
+            ("background", "var(--field)"),
             ("border", "2px solid var(--primary)"),
             ("box-shadow", "var(--shadow-sm)"),
         ]),
@@ -526,7 +527,7 @@ const DIALOG_MAP: &[DescRule] = &[
             ("border-bottom", "1px solid var(--border-subtle)"),
             ("font-size", "var(--text-lg)"),
             ("font-weight", "var(--font-weight-semibold)"),
-            ("color", "var(--foreground)"),
+            ("color", "var(--dialog-foreground)"),
         ]),
     },
     DescRule {

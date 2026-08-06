@@ -1,0 +1,43 @@
+{
+  "$description": "Button component tokens (default rest paint). Defaults alias globals; themes may override component.button.* only. Branded solid/soft/outline tones still spend the global palette.",
+  "component": {
+    "button": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "button"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "button-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "button-border"
+          }
+        }
+      },
+      "hover-bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "button-hover-bg"
+          }
+        }
+      }
+    }
+  }
+}

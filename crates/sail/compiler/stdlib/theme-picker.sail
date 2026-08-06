@@ -38,7 +38,7 @@
   // Filter tabs — ALWAYS readable on popover chrome.
   // Selected: strong fill using hover-bg + primary underline (never primary fill — breaks on brut).
   const modeSeg = style({ box: w(full).minW(0).gap(0).padX(1), paint: borderBWidth(1).borderB(border) })
-  const modeSegBtn = style({ box: minW(0).padY(2).padX(2), paint: fg(muted-foreground).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) })
+  const modeSegBtn = style({ box: minW(0).padY(2).padX(2), paint: fg(theme-picker-option-foreground).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) })
 
   const catalogHead = style({ box: w(full).minW(0).padX(3).padT(2).padB(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform) })
 

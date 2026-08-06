@@ -13,7 +13,8 @@
     rows = 3
   }
 
-  const base = style({ box: display(block).minH(control-h-md).padY(1_5).padX(3).w(full), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs), text: fontSize(base) }).when(hover, { paint: border(border-strong) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  // Shares component.field surface with input/select (global fallbacks in the pack).
+  const base = style({ box: display(block).minH(control-h-md).padY(1_5).padX(3).w(full), paint: fg(field-foreground).bg(field).borderWidth(1).border(field-border).radius(md).shadow(xs), text: fontSize(base) }).when(hover, { paint: border(field-border-hover) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
   const sizeXs = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
   const sizeSm = style({ box: minH(control-h-sm).padX(2_5), text: fontSize(sm) })
   const sizeMd = style({ box: minH(control-h-md).padX(3), text: fontSize(base) })

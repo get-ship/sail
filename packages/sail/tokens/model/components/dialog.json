@@ -1,0 +1,34 @@
+{
+  "$description": "Dialog component tokens (panel shell). Defaults alias globals; themes may override component.dialog.* only.",
+  "component": {
+    "dialog": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "dialog"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "dialog-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "dialog-border"
+          }
+        }
+      }
+    }
+  }
+}

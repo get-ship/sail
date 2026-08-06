@@ -20,6 +20,11 @@
     "accent-skills",
     "accent-specs",
     "accent-theme",
+    "accordion",
+    "accordion-border",
+    "accordion-chevron",
+    "accordion-foreground",
+    "accordion-hover-bg",
     "active-bg",
     "active-strength",
     "alert",
@@ -41,6 +46,10 @@
     "breakpoint-desktop",
     "breakpoint-mobile",
     "breakpoint-tablet",
+    "button",
+    "button-border",
+    "button-foreground",
+    "button-hover-bg",
     "card",
     "card-backdrop-filter",
     "card-foreground",
@@ -73,6 +82,9 @@
     "density-text",
     "destructive",
     "destructive-foreground",
+    "dialog",
+    "dialog-border",
+    "dialog-foreground",
     "display-font",
     "divider",
     "dropdown",
@@ -102,7 +114,11 @@
     "error-state",
     "error-state-border",
     "error-state-foreground",
+    "field",
+    "field-border",
+    "field-border-hover",
     "field-error",
+    "field-foreground",
     "field-hint",
     "focus-ring",
     "focus-ring-offset",
@@ -160,6 +176,9 @@
     "info",
     "info-foreground",
     "input",
+    "kbd",
+    "kbd-border",
+    "kbd-foreground",
     "label-font",
     "label-foreground",
     "label-required",
@@ -273,6 +292,8 @@
     "sidebar-primary",
     "sidebar-primary-foreground",
     "sidebar-ring",
+    "skeleton",
+    "skeleton-highlight",
     "space-0_75",
     "space-1",
     "space-10",
@@ -407,6 +428,11 @@
     "accent-skills",
     "accent-specs",
     "accent-theme",
+    "accordion",
+    "accordion-border",
+    "accordion-chevron",
+    "accordion-foreground",
+    "accordion-hover-bg",
     "active-bg",
     "alert",
     "alert-foreground",
@@ -421,6 +447,10 @@
     "border",
     "border-strong",
     "border-subtle",
+    "button",
+    "button-border",
+    "button-foreground",
+    "button-hover-bg",
     "card",
     "card-foreground",
     "chip",
@@ -434,6 +464,9 @@
     "context-menu-foreground",
     "destructive",
     "destructive-foreground",
+    "dialog",
+    "dialog-border",
+    "dialog-foreground",
     "divider",
     "dropdown",
     "dropdown-foreground",
@@ -450,7 +483,11 @@
     "error-state",
     "error-state-border",
     "error-state-foreground",
+    "field",
+    "field-border",
+    "field-border-hover",
     "field-error",
+    "field-foreground",
     "field-hint",
     "foreground",
     "hover-bg",
@@ -475,6 +512,9 @@
     "info",
     "info-foreground",
     "input",
+    "kbd",
+    "kbd-border",
+    "kbd-foreground",
     "label-foreground",
     "label-required",
     "menu-item-foreground",
@@ -514,6 +554,8 @@
     "sidebar-primary",
     "sidebar-primary-foreground",
     "sidebar-ring",
+    "skeleton",
+    "skeleton-highlight",
     "spinner-foreground",
     "spinner-track",
     "status-amber",
@@ -2368,6 +2410,36 @@
       "type": "dimension",
       "value": "999px"
     },
+    "accordion": {
+      "path": "component.accordion.bg",
+      "cssName": "accordion",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "accordion-foreground": {
+      "path": "component.accordion.fg",
+      "cssName": "accordion-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "accordion-border": {
+      "path": "component.accordion.border",
+      "cssName": "accordion-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "accordion-hover-bg": {
+      "path": "component.accordion.hover-bg",
+      "cssName": "accordion-hover-bg",
+      "type": "color",
+      "value": "var(--hover-bg)"
+    },
+    "accordion-chevron": {
+      "path": "component.accordion.chevron",
+      "cssName": "accordion-chevron",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
     "alert": {
       "path": "component.alert.bg",
       "cssName": "alert",
@@ -2415,6 +2487,30 @@
       "cssName": "badge-border",
       "type": "color",
       "value": "var(--border)"
+    },
+    "button": {
+      "path": "component.button.bg",
+      "cssName": "button",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "button-foreground": {
+      "path": "component.button.fg",
+      "cssName": "button-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "button-border": {
+      "path": "component.button.border",
+      "cssName": "button-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "button-hover-bg": {
+      "path": "component.button.hover-bg",
+      "cssName": "button-hover-bg",
+      "type": "color",
+      "value": "var(--muted)"
     },
     "card": {
       "path": "component.card.bg",
@@ -2506,6 +2602,24 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "dialog": {
+      "path": "component.dialog.bg",
+      "cssName": "dialog",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "dialog-foreground": {
+      "path": "component.dialog.fg",
+      "cssName": "dialog-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "dialog-border": {
+      "path": "component.dialog.border",
+      "cssName": "dialog-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "dropdown": {
       "path": "component.dropdown.bg",
       "cssName": "dropdown",
@@ -2596,6 +2710,30 @@
       "type": "color",
       "value": "var(--border)"
     },
+    "field": {
+      "path": "component.field.bg",
+      "cssName": "field",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "field-foreground": {
+      "path": "component.field.fg",
+      "cssName": "field-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "field-border": {
+      "path": "component.field.border",
+      "cssName": "field-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "field-border-hover": {
+      "path": "component.field.border-hover",
+      "cssName": "field-border-hover",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
     "field-hint": {
       "path": "component.field.hint",
       "cssName": "field-hint",
@@ -2619,6 +2757,24 @@
       "cssName": "hover-card-foreground",
       "type": "color",
       "value": "var(--popover-foreground)"
+    },
+    "kbd": {
+      "path": "component.kbd.bg",
+      "cssName": "kbd",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "kbd-foreground": {
+      "path": "component.kbd.fg",
+      "cssName": "kbd-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "kbd-border": {
+      "path": "component.kbd.border",
+      "cssName": "kbd-border",
+      "type": "color",
+      "value": "var(--border)"
     },
     "label-foreground": {
       "path": "component.label.fg",
@@ -2721,6 +2877,18 @@
       "cssName": "separator-line",
       "type": "color",
       "value": "var(--border)"
+    },
+    "skeleton": {
+      "path": "component.skeleton.bg",
+      "cssName": "skeleton",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "skeleton-highlight": {
+      "path": "component.skeleton.highlight",
+      "cssName": "skeleton-highlight",
+      "type": "color",
+      "value": "color-mix(in oklch, var(--skeleton) 60%, var(--background))"
     },
     "spinner-foreground": {
       "path": "component.spinner.fg",
@@ -2897,6 +3065,11 @@
     "color.accent.skills": "accent-skills",
     "color.accent.specs": "accent-specs",
     "color.accent.theme": "accent-theme",
+    "component.accordion.bg": "accordion",
+    "component.accordion.border": "accordion-border",
+    "component.accordion.chevron": "accordion-chevron",
+    "component.accordion.fg": "accordion-foreground",
+    "component.accordion.hover-bg": "accordion-hover-bg",
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
     "component.alert.bg": "alert",
@@ -2918,6 +3091,10 @@
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
+    "component.button.bg": "button",
+    "component.button.border": "button-border",
+    "component.button.fg": "button-foreground",
+    "component.button.hover-bg": "button-hover-bg",
     "component.card.bg": "card",
     "component.card.backdrop-filter": "card-backdrop-filter",
     "component.card.fg": "card-foreground",
@@ -2950,6 +3127,9 @@
     "density.text": "density-text",
     "color.destructive.default": "destructive",
     "color.destructive.foreground": "destructive-foreground",
+    "component.dialog.bg": "dialog",
+    "component.dialog.border": "dialog-border",
+    "component.dialog.fg": "dialog-foreground",
     "typography.displayFont": "display-font",
     "color.divider": "divider",
     "component.dropdown.bg": "dropdown",
@@ -2979,7 +3159,11 @@
     "component.error-state.bg": "error-state",
     "component.error-state.border": "error-state-border",
     "component.error-state.fg": "error-state-foreground",
+    "component.field.bg": "field",
+    "component.field.border": "field-border",
+    "component.field.border-hover": "field-border-hover",
     "component.field.error": "field-error",
+    "component.field.fg": "field-foreground",
     "component.field.hint": "field-hint",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
@@ -3037,6 +3221,9 @@
     "color.info.default": "info",
     "color.info.foreground": "info-foreground",
     "color.input": "input",
+    "component.kbd.bg": "kbd",
+    "component.kbd.border": "kbd-border",
+    "component.kbd.fg": "kbd-foreground",
     "typography.label.font": "label-font",
     "component.label.fg": "label-foreground",
     "component.label.required": "label-required",
@@ -3150,6 +3337,8 @@
     "color.sidebar.primary": "sidebar-primary",
     "color.sidebar.primary-foreground": "sidebar-primary-foreground",
     "color.sidebar.ring": "sidebar-ring",
+    "component.skeleton.bg": "skeleton",
+    "component.skeleton.highlight": "skeleton-highlight",
     "space.0_75": "space-0_75",
     "space.1": "space-1",
     "space.10": "space-10",

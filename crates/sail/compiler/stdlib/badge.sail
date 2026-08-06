@@ -14,15 +14,16 @@
 
   const base = style({ box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px), paint: borderWidth(1).radius(sm), text: fontFamily(body).fontWeight(semibold).leading(none).whitespace(nowrap).fontSize(xs) })
 
-  const soft = style({ paint: bg(muted).fg(muted-foreground).border(border) })
+  // Soft + tone=default ride component.badge tokens (pack defaults alias muted).
+  const soft = style({ paint: bg(badge).fg(badge-foreground).border(badge-border) })
   const solid = style({ paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) })
-  const outline = style({ paint: bg(transparent).fg(foreground).border(border) })
+  const outline = style({ paint: bg(transparent).fg(badge-foreground).border(badge-border) })
 
   const sizeMd = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
   const sizeSm = style({ box: minH(4).padX(1_5), text: fontSize(xs) })
   const sizeLg = style({ box: minH(control-h-xs).padX(2_5), text: fontSize(xs) })
 
-  const toneDefault = style({ paint: bg(muted).fg(muted-foreground).border(border) })
+  const toneDefault = style({ paint: bg(badge).fg(badge-foreground).border(badge-border) })
   const tonePrimary = style({ paint: bg(primary).fg(primary-foreground).border(primary) })
   const toneInfo = style({ paint: bg(info).fg(info-foreground).border(info) })
   const toneSuccess = style({ paint: bg(success).fg(success-foreground).border(success) })

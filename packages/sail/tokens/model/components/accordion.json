@@ -1,0 +1,52 @@
+{
+  "$description": "Accordion component tokens (disclosure shell). Defaults alias globals; themes may override component.accordion.* only.",
+  "component": {
+    "accordion": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "accordion"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "accordion-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "accordion-border"
+          }
+        }
+      },
+      "hover-bg": {
+        "$value": "{interaction.hover.bg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "accordion-hover-bg"
+          }
+        }
+      },
+      "chevron": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "accordion-chevron"
+          }
+        }
+      }
+    }
+  }
+}
