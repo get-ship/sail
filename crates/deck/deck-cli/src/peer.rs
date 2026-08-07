@@ -870,6 +870,13 @@ pub fn mcp() {
     sail_mcp::run_stdio();
 }
 
+/// `sail mcp install` — write MCP server entries into agent host configs.
+pub fn mcp_install(project: PathBuf) -> Result<()> {
+    let report = sail_mcp::install(&project).map_err(|e| anyhow::anyhow!(e))?;
+    print!("{}", sail_mcp::format_report(&report));
+    Ok(())
+}
+
 /// `sail layout` — static box-tree diagnostics.
 ///
 /// Non-zero exit when any `Severity::Error` is present (CI-friendly).

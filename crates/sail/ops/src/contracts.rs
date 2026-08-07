@@ -26,8 +26,11 @@ pub struct SurfaceRet {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct CheckArgs {
+    /// Workspace-relative path (WI4: path escape refused). Prefer with no
+    /// `source` to read disk; absolute / `..` paths are PermissionDenied.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
+    /// Inline source — unrestricted (source mode; WI4 leaves this unchanged).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
     /// Auto-fix: `off` | `suggest` | `apply`. Default `off` (unattended).
@@ -868,7 +871,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailAuthoring",
         "Check",
         "sail_check",
-        "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).",
+        "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` is workspace-relative only (path escape refused — WI4).",
         CheckArgs,
         CheckRet,
         "CheckArgs",

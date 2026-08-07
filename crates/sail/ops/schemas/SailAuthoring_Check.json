@@ -27,12 +27,14 @@
         ]
       },
       "path": {
+        "description": "Workspace-relative path (WI4: path escape refused). Prefer with no `source` to read disk; absolute / `..` paths are PermissionDenied.",
         "type": [
           "string",
           "null"
         ]
       },
       "source": {
+        "description": "Inline source — unrestricted (source mode; WI4 leaves this unchanged).",
         "type": [
           "string",
           "null"

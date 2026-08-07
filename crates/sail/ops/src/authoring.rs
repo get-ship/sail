@@ -364,7 +364,7 @@ pub fn surface(args: &Value) -> Result<Value, OpError> {
 }
 
 pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
-    let path = args.get("path").and_then(|v| v.as_str()).map(Path::new);
+    let path_raw = args.get("path").and_then(|v| v.as_str());
     let source = args.get("source").and_then(|v| v.as_str());
     let fix = args.get("fix").and_then(|v| v.as_str()).unwrap_or("off");
     let actor = args.get("actor").and_then(|v| v.as_str());
@@ -375,7 +375,8 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         .or_else(|| args.get("include_ts"))
         .and_then(|v| v.as_bool())
         .unwrap_or(true);
-    let (mut src, src_path) = load_source(path, source)?;
+    // Path mode is workspace-scoped (WI4). Source mode is unchanged.
+    let (mut src, src_path) = load_source_scoped(path_raw, source, ctx)?;
     let file_key = src_path
         .as_ref()
         .map(|p| relativize_path(p, ctx))
@@ -569,6 +570,8 @@ pub fn run_check(path: Option<&Path>, source: Option<&str>) -> Result<Vec<CheckD
     run_check_on(&src, src_path.as_deref())
 }
 
+/// Unscoped load (library / unit tests). MCP/RPC path mode uses
+/// [`load_source_scoped`] for workspace confinement (WI4).
 fn load_source(
     path: Option<&Path>,
     source: Option<&str>,
@@ -581,6 +584,28 @@ fn load_source(
         }
         (None, Some(s)) => Ok((s.to_string(), None)),
         (Some(p), Some(s)) => Ok((s.to_string(), Some(p.to_path_buf()))),
+        (None, None) => Err(OpError::InvalidArgument(
+            "Check requires `path` and/or `source`".into(),
+        )),
+    }
+}
+
+/// MCP/RPC check load: `path` alone is workspace-scoped; inline `source` is free.
+fn load_source_scoped(
+    path: Option<&str>,
+    source: Option<&str>,
+    ctx: &Ctx,
+) -> Result<(String, Option<PathBuf>), OpError> {
+    match (path, source) {
+        (Some(p), None) => {
+            let abs = ctx.resolve_workspace_read_path(p)?;
+            let text = std::fs::read_to_string(&abs)
+                .map_err(|e| OpError::NotFound(format!("read {}: {e}", abs.display())))?;
+            Ok((text, Some(abs)))
+        }
+        // Source mode: path is an optional label only (not read) — unchanged (WI4).
+        (None, Some(s)) => Ok((s.to_string(), None)),
+        (Some(p), Some(s)) => Ok((s.to_string(), Some(PathBuf::from(p)))),
         (None, None) => Err(OpError::InvalidArgument(
             "Check requires `path` and/or `source`".into(),
         )),
@@ -1672,5 +1697,66 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(is_ignored_dir("dist"));
         assert!(is_ignored_dir(".deck"));
         assert!(!is_ignored_dir("src"));
+    }
+
+    /// TOOLING-1 WI4: sail_check path mode refuses workspace escape.
+    #[test]
+    fn check_path_escape_refused() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+
+        let dir = tempfile::tempdir().unwrap();
+        let ws = dir.path();
+        std::fs::create_dir_all(ws.join("routes")).unwrap();
+        std::fs::write(ws.join("routes/page.sail"), "<column></column>\n").unwrap();
+        // Outside workspace — must not be readable via path escape.
+        let outside = dir.path().parent().unwrap().join("outside-secret.sail");
+        let _ = std::fs::write(&outside, "<column>secret</column>\n");
+
+        let ctx = Ctx::new(ws, ws, ws);
+
+        let err_dotdot = call_rpc(
+            "SailAuthoring",
+            "Check",
+            &json!({ "path": "../outside-secret.sail", "includeTs": false }),
+            &ctx,
+        )
+        .unwrap_err();
+        assert!(
+            matches!(err_dotdot, OpError::PermissionDenied(_)),
+            "dotdot escape: {err_dotdot}"
+        );
+
+        let err_abs = call_rpc(
+            "SailAuthoring",
+            "Check",
+            &json!({ "path": "/etc/passwd", "includeTs": false }),
+            &ctx,
+        )
+        .unwrap_err();
+        assert!(
+            matches!(err_abs, OpError::PermissionDenied(_)),
+            "absolute path: {err_abs}"
+        );
+
+        // In-workspace path still works.
+        let ok = call_rpc(
+            "SailAuthoring",
+            "Check",
+            &json!({ "path": "routes/page.sail", "includeTs": false }),
+            &ctx,
+        )
+        .expect("in-workspace check");
+        assert_eq!(ok["ok"], true, "{ok}");
+
+        // Source mode is unrestricted (WI4 leaves source unchanged).
+        let src_ok = call_rpc(
+            "SailAuthoring",
+            "Check",
+            &json!({ "source": "<column></column>", "includeTs": false }),
+            &ctx,
+        )
+        .expect("source mode");
+        assert_eq!(src_ok["ok"], true, "{src_ok}");
     }
 }

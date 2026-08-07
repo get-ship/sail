@@ -225,8 +225,18 @@ enum Command {
     /// Language server (stdio) — same protocol as the `sail-lsp` package binary.
     Lsp,
 
-    /// MCP server (stdio) — same protocol as the `sail-mcp` package binary.
-    Mcp,
+    /// MCP server (stdio) or install into agent hosts.
+    ///
+    /// Default (no subcommand): run the stdio MCP server (same as `sail-mcp`).
+    /// `sail mcp install` writes host config entries (Claude Code `.mcp.json`,
+    /// Cursor `.cursor/mcp.json` when detected).
+    Mcp {
+        #[command(subcommand)]
+        cmd: Option<McpCmd>,
+        /// Print tool descriptors as JSON and exit (stdio server flag).
+        #[arg(long = "list-tools")]
+        list_tools: bool,
+    },
 
     /// Invoke a sail-ops RPC in-process (`Service/Method`), or `gen` for codegen.
     ///
@@ -282,6 +292,19 @@ enum Command {
 
     /// Print version + install hints (also available as `--version`).
     Version,
+}
+
+#[derive(Subcommand)]
+enum McpCmd {
+    /// Detect agent hosts and write the Sail MCP server entry (no manual JSON).
+    ///
+    /// Always writes Claude Code project `.mcp.json`. Also writes Cursor
+    /// `.cursor/mcp.json` when Cursor is detected.
+    Install {
+        /// Project root for config files. Default: cwd.
+        #[arg(long, default_value = ".")]
+        project: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
@@ -426,10 +449,21 @@ fn run() -> Result<()> {
             node_id,
         } => peer::inspect(topic, path, viewport, token, theme_id, node_id),
         Command::Lsp => peer::lsp(),
-        Command::Mcp => {
-            peer::mcp();
-            Ok(())
-        }
+        Command::Mcp { cmd, list_tools } => match cmd {
+            Some(McpCmd::Install { project }) => peer::mcp_install(project),
+            None if list_tools => {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&sail_mcp::tool_descriptors())
+                        .unwrap_or_else(|_| "[]".into())
+                );
+                Ok(())
+            }
+            None => {
+                peer::mcp();
+                Ok(())
+            }
+        },
         Command::Op { target, json } => peer::op(&target, &json),
         Command::Layout {
             input,

@@ -2,6 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::error::OpError;
+
 /// Roots and policy for a single ops invocation / server lifetime.
 #[derive(Debug, Clone)]
 pub struct Ctx {
@@ -56,6 +58,56 @@ impl Ctx {
 
     pub fn project(&self) -> &Path {
         &self.project_root
+    }
+
+    /// Resolve a **workspace-scoped** read path (TOOLING-1 WI4 / sail_check path mode).
+    ///
+    /// Rules:
+    /// - relative only (absolute paths refused)
+    /// - no `..` components
+    /// - resolved file (or parent chain) must sit under [`Self::workspace_root`]
+    /// - tries `workspace_root/raw` first, then `project_root/raw`
+    ///
+    /// Returns the canonical absolute path on success.
+    pub fn resolve_workspace_read_path(&self, raw: &str) -> Result<PathBuf, OpError> {
+        let raw = raw.trim();
+        if raw.is_empty() {
+            return Err(OpError::InvalidArgument("path is required".into()));
+        }
+        if raw.contains("..") {
+            return Err(OpError::PermissionDenied(
+                "path must not contain `..`".into(),
+            ));
+        }
+        if Path::new(raw).is_absolute() {
+            return Err(OpError::PermissionDenied(
+                "path must be workspace-relative (absolute paths refused)".into(),
+            ));
+        }
+        let under_ws = self.workspace_root.join(raw);
+        let candidate = if under_ws.exists() {
+            under_ws
+        } else {
+            self.project_root.join(raw)
+        };
+        let canon_root = self
+            .workspace_root
+            .canonicalize()
+            .map_err(|e| OpError::Internal(format!("workspace root: {e}")))?;
+        if let Ok(partial) = candidate.canonicalize() {
+            if !partial.starts_with(&canon_root) {
+                return Err(OpError::PermissionDenied("path escapes workspace".into()));
+            }
+            return Ok(partial);
+        }
+        // Missing file: still require the parent chain sits under workspace.
+        let parent = candidate.parent().unwrap_or(candidate.as_path());
+        if let Ok(cp) = parent.canonicalize() {
+            if !cp.starts_with(&canon_root) {
+                return Err(OpError::PermissionDenied("path escapes workspace".into()));
+            }
+        }
+        Err(OpError::NotFound(format!("read {raw}: not found")))
     }
 }
 

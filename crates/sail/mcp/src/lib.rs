@@ -3,11 +3,16 @@
 //! All tool logic lives in `sail_ops` (same handlers as CLI `sail op` and
 //! Connect HTTP under `sail dev`). This crate only maps MCP tool names to
 //! RPCs and frames stdio messages.
+//!
+//! Also: [`install`] for `sail mcp install` (agent host config writers).
+
+pub mod install;
 
 use sail_ops::{Ctx, call_mcp_tool, mcp_tool_descriptors};
 use serde_json::{Value, json};
 
 // Re-exports for tests / downstream that still import sail_mcp surface types.
+pub use install::{InstallReport, format_report, install};
 pub use sail_ops::authoring::{run_check as sail_check, sail_layout_check};
 pub use sail_ops::{CheckDiag, SurfaceTopic, surface_markdown};
 
@@ -118,6 +123,28 @@ mod tests {
             assert!(e.get("platforms").is_none(), "{e}");
         }
     }
+
+    /// TOOLING-1 WI4 core tool names on the live MCP surface.
+    #[test]
+    fn wi4_core_tools_present_apply_absent() {
+        let tools = tool_descriptors();
+        let names: Vec<_> = tools
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|t| t.get("name").and_then(|n| n.as_str()))
+            .collect();
+        for expected in [
+            "sail_check",
+            "sail_surface",
+            "sail_render",
+            "sail_inspect",
+            "sail_edit",
+        ] {
+            assert!(names.contains(&expected), "missing core tool {expected}: {names:?}");
+        }
+        assert!(!names.contains(&"sail_apply"), "sail_apply must stay retired");
+    }
 }
 
 // ── stdio JSON-RPC MCP server (also used by `sail mcp`) ─────────────────────
@@ -194,13 +221,14 @@ pub fn run_stdio() {
 fn print_stdio_help() {
     eprintln!(
         "sail mcp — MCP server for Sail authoring (stdio JSON-RPC)\n\n\
-         Tools: sail_surface, sail_check, sail_edit, sail_layout_check,\n\
-                sail_policy, sail_theme_list/read/write/fork, sail_tokens_generate,\n\
-                sail_dev_server_start/status/stop\n\
+         Core agent tools (WI4): sail_check, sail_surface, sail_render,\n\
+                                 sail_inspect, sail_edit\n\
+         Also: sail_layout_check, sail_policy, theme/task/dev-server tools…\n\
          Handlers: sail-ops (same as CLI `sail op` and Connect HTTP).\n\n\
          Usage:\n  \
-           sail mcp                 # unified CLI\n  \
+           sail mcp                 # stdio server (unified CLI)\n  \
            sail mcp --list-tools    # print tool descriptors as JSON\n  \
+           sail mcp install         # write .mcp.json / Cursor host config\n  \
            sail-mcp                 # package binary (`cargo run -p sail-mcp`)\n\n\
          Bare JSON objects accepted without trailing newline (Grok-compatible).\n"
     );

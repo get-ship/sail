@@ -474,6 +474,88 @@ mod tests {
         codegen::assert_no_drift(&paths).expect("run `sail op gen` to refresh client/schemas");
     }
 
+    /// TOOLING-1 WI4 — core agent MCP tools are a forever contract.
+    ///
+    /// House names (not retired sail_apply):
+    /// sail_check | sail_surface | sail_render | sail_inspect | sail_edit
+    ///
+    /// Pins each tool's input+output schema snapshot and mcp-tools descriptor.
+    #[test]
+    fn wi4_core_mcp_schema_drift() {
+        /// Forever agent-facing MCP surface (SPEC-TOOLING-1 §WI4, house names).
+        const CORE_MCP_TOOLS: &[&str] = &[
+            "sail_check",
+            "sail_surface",
+            "sail_render",
+            "sail_inspect",
+            "sail_edit",
+        ];
+
+        let root = codegen::find_workspace_root();
+        let schema_dir = root.join("crates/sail/ops/schemas");
+        let mcp_tools_path = schema_dir.join("mcp-tools.json");
+        let committed_mcp: Value = serde_json::from_str(
+            &std::fs::read_to_string(&mcp_tools_path)
+                .unwrap_or_else(|e| panic!("missing {}: {e}", mcp_tools_path.display())),
+        )
+        .expect("mcp-tools.json");
+
+        let names: Vec<&str> = committed_mcp
+            .as_array()
+            .expect("mcp-tools array")
+            .iter()
+            .filter_map(|t| t.get("name").and_then(|n| n.as_str()))
+            .collect();
+        assert!(
+            !names.contains(&"sail_apply"),
+            "sail_apply is retired; house write path is sail_edit"
+        );
+
+        for tool in CORE_MCP_TOOLS {
+            let contract = METHOD_CONTRACTS
+                .iter()
+                .find(|c| c.mcp_tool == *tool)
+                .unwrap_or_else(|| panic!("core tool {tool} missing from METHOD_CONTRACTS"));
+
+            // Full method snapshot (inputSchema + outputSchema) is committed.
+            let snap_name = format!("{}_{}.json", contract.service, contract.method);
+            let snap_path = schema_dir.join(&snap_name);
+            let expected = format!("{}\n", typed::method_schema_snapshot(contract));
+            let actual = std::fs::read_to_string(&snap_path)
+                .unwrap_or_else(|e| panic!("missing schema snapshot {}: {e}", snap_path.display()));
+            assert_eq!(
+                actual, expected,
+                "WI4 schema drift on {tool}: run `sail op gen`"
+            );
+
+            // tools/list descriptor row matches live generation.
+            let live = (contract.input_schema)();
+            let row = committed_mcp
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|t| t.get("name").and_then(|n| n.as_str()) == Some(*tool))
+                .unwrap_or_else(|| panic!("{tool} missing from mcp-tools.json"));
+            assert_eq!(
+                row.get("inputSchema").cloned().unwrap_or(Value::Null),
+                live,
+                "WI4 mcp-tools inputSchema drift on {tool}"
+            );
+            // Output schema is the forever agent return contract.
+            let out = (contract.output_schema)();
+            assert!(
+                out.get("type").is_some() || out.get("$schema").is_some() || out.is_object(),
+                "{tool} outputSchema must be object-shaped"
+            );
+            let snap_v: Value = serde_json::from_str(actual.trim()).expect("snap json");
+            assert_eq!(
+                snap_v.get("outputSchema").cloned().unwrap_or(Value::Null),
+                out,
+                "WI4 outputSchema pin on {tool}"
+            );
+        }
+    }
+
     #[test]
     fn call_rpc_covers_every_contract() {
         // Exhaustiveness: every contract is dispatchable (may fail validation, not NotFound).
