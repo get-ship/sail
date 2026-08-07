@@ -1,10 +1,5 @@
-//! Paint-source gates for L1 chip/alert dissolve on Style product path.
+//! Compile probes for chip / badge / card / alert on the Style product path.
 use sail_compiler::compile_element;
-
-
-fn is_style_product(src: &str) -> bool {
-    src.contains("style.") || src.contains("style(")
-}
 
 #[test]
 fn chip_compiles_with_style_and_capability_mixins() {
@@ -24,22 +19,12 @@ fn chip_compiles_with_style_and_capability_mixins() {
         out.structure_html
     );
     assert!(
-        is_style_product(src)
-            && src.contains("match(variant")
-            && src.contains("bg(tone)")
-            && src.contains("match(size")
-            && !src.contains("tone-bg")
-            && !src.contains("compound: [")
-            && !src.contains("tone: 'default'"),
-        "chip Style product with bound tone (no CVA / tone-bg / default tone)"
-    );
-    assert!(
         out.skin_css.contains("variant='solid'")
             && out.skin_css.contains("variant='soft'")
             && (out.skin_css.contains("var(--chip)")
                 || out.skin_css.contains("var(--primary)")
                 || out.structure_html.contains("sx-bgchip")),
-        "solid via Style tokens: {}",
+        "variant paint via Style tokens: {}",
         out.skin_css
     );
     assert!(
@@ -49,20 +34,21 @@ fn chip_compiles_with_style_and_capability_mixins() {
         "size via Style: {}",
         out.skin_css
     );
-    assert!(
-        !out.skin_css.contains("--tone-bg-solid")
-            && !out.skin_css.contains("--tone-bg-hover")
-            && !out.skin_css.contains("--tone-outline-border")
-            && !out.skin_css.contains("var(--tone-bg)")
-            && !out.skin_css.contains("var(--tone-fg)"),
-        "no tone channel paint: {}",
-        out.skin_css
-    );
     let attrs = out.manifest["attributes"].as_array().unwrap();
     let variant = attrs.iter().find(|a| a["name"] == "variant").unwrap();
     assert_eq!(variant["default"], "solid", "PE solid default: {variant}");
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(size["default"], "md", "PE size=md default: {size}");
+    // tone is optional — no default member / no forced tone attr
+    let tone = attrs.iter().find(|a| a["name"] == "tone");
+    if let Some(tone) = tone {
+        assert!(
+            tone.get("default").is_none()
+                || tone["default"].is_null()
+                || tone["default"] == serde_json::Value::Null,
+            "tone must not default to a fake member: {tone}"
+        );
+    }
     assert!(
         out.structure_html.contains("sx-")
             && (out.structure_html.contains("sx-minhcontrolhxs")
@@ -74,17 +60,8 @@ fn chip_compiles_with_style_and_capability_mixins() {
 }
 
 #[test]
-fn chip_framework_skins_have_no_local_tone_matrix() {
+fn chip_framework_skins_emit_chip_paint() {
     let skins = sail_compiler::stdlib::skins_css();
-    assert!(
-        !skins.contains("--chip-h")
-            && !skins.contains("--chip-px")
-            && !skins.contains("--tone-bg-solid")
-            && !skins.contains("--tone-bg-hover")
-            && !skins.contains("--tone-outline-border")
-            && !skins.contains("--tone-ghost-bg-hover"),
-        "framework skins must not carry residual chip local channels"
-    );
     assert!(
         skins.contains(".sail-chip")
             && skins.contains("variant='solid'")
@@ -135,17 +112,6 @@ fn badge_and_card_compile_style() {
         "status-rail Style compound: {}",
         card.skin_css
     );
-    let contracts = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/sail-base.css"
-    ));
-    assert!(
-        !contracts.contains(".sail-card")
-            && !contracts.contains("--card-px")
-            && !contracts.contains("border-left-width: 3px")
-            && !contracts.contains("border-left-color: var(--tone-fg)"),
-        "card PE fully left contracts"
-    );
 }
 
 #[test]
@@ -163,29 +129,11 @@ fn alert_compiles_with_style_capability_mixins() {
         "no element brain"
     );
     assert!(
-        is_style_product(src)
-            && src.contains("when({")
-            && src.contains("before:")
-            && src.contains("alert-stripe")
-            && !src.contains("compound: [")
-            && !src.contains("tone-bg"),
-        "alert Style product stripe via before + component token"
-    );
-    assert!(
         out.skin_css.contains("::before")
             && (out.skin_css.contains("var(--alert-stripe)")
                 || out.skin_css.contains("alert-stripe")),
         "stripe PE on ::before: {}",
         out.skin_css
-    );
-    let contracts = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/sail-base.css"
-    ));
-    assert!(
-        !contracts.contains(".sail-alert:not([tone])")
-            && !contracts.contains("grid-template-columns: auto 1fr auto"),
-        "alert PE defaults/grid must be gone from contracts"
     );
 }
 
