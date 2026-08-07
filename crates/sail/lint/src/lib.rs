@@ -18,7 +18,7 @@ pub mod source;
 // CHANNELS-1: Style pipeline lives in `sail-style`. Re-export under the
 // historical `sail_lint::{style,sx_ir,sx_vocab,scales,tokens}` paths so
 // compiler/layout/ops/lsp keep compiling without a fan-out import thrash.
-pub use sail_style::{scales, sx_ir, sx_vocab, tokens};
+pub use sail_style::{scales, sx_ir, sx_vocab, token_groups, tokens};
 
 /// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
 pub mod style {
@@ -29,6 +29,7 @@ pub mod style {
         is_text_bearing, looks_like_utility_string_product, lower_style, lower_style_source,
         lower_style_source_with_motion, parse, parse_flat, parse_style_const_rhs, prefixes,
         setters,
+        token_groups,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
         text_channel_host_error,
     };

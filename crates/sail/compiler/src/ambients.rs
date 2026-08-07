@@ -28,6 +28,7 @@ use anyhow::{Context, Result};
 
 use sail_lint::scales;
 use sail_lint::style::setters::{SetterSpec, setters};
+use sail_lint::token_groups::{self, TONE_FAMILY, TONE_GROUP_NAMES, TONE_GROUPS};
 
 /// Relative path of the ambient pack inside a sail project.
 pub const PROJECT_TYPES_REL: &str = ".sail/types.d.ts";
@@ -39,6 +40,7 @@ const HEADER: &str = "\
 // Sail ambient pack. Source of truth:
 //   crates/sail/compiler/src/runtime_ambient.rs
 //   crates/sail/style/src/setters.rs (+ scales / token registry)
+//   crates/sail/style/src/token_groups.rs (Tone + group.member paint paths)
 // Regenerate: cargo run -p sail-compiler -- types [--project <dir>]
 //             (or: sail types --project <dir>)
 //
@@ -425,10 +427,129 @@ fn emit_token_unions(out: &mut String) -> BTreeSet<String> {
          \n",
     );
 
+    emit_tone_group_types(out);
+
     all_bare
         .into_iter()
         .filter(|t| is_ambient_const_name(t))
         .collect()
+}
+
+/// Emit Tone allowlist + static/bound group member path unions for Style paint.
+///
+/// Same graph as validate/emit ([`TONE_GROUPS`] / [`TONE_FAMILY`]) so authors
+/// complete `fg(tone.foreground)` / `bg(primary)` / `'primary.foreground'`.
+fn emit_tone_group_types(out: &mut String) {
+    out.push_str("// ── Tone + token-group member paths (token_groups SSOT) ──\n");
+    out.push_str(
+        "/** Semantic paint Tone allowlist (Style bound `tone` / host prop). No `'default'`.\n\
+         \x20*  Rest paint = omit the tone attribute (component pack tokens). */\n         type Tone =\n",
+    );
+    for name in TONE_GROUP_NAMES {
+        out.push_str(&format!("  | '{name}'\n"));
+    }
+    out.push('\n');
+
+    // Static group.member paths (non-default members only — default is the bare stem).
+    out.push_str(
+        "/** Static token-group member paths — product: `fg(primary.foreground)`.\n\
+         \x20*  Resolves to public leaf tokens at compile (same as validate). */\n         type SailStaticGroupMemberPath =\n",
+    );
+    let mut any_static = false;
+    for g in TONE_GROUPS {
+        for m in g.members {
+            if m.name == "default" {
+                continue;
+            }
+            any_static = true;
+            out.push_str(&format!("  | '{}.{}'\n", g.name, m.name));
+        }
+    }
+    if !any_static {
+        out.push_str("  | never\n");
+    }
+    out.push('\n');
+
+    // Bound prop paths for the tone family (root + members present on every group).
+    out.push_str(
+        "/** Bound `tone` prop paths — product: `bg(tone)`, `fg(tone.foreground)`.\n\
+         \x20*  Expands attr-gated over the Tone table at emit. */\n         type SailBoundTonePath =\n         \x20 | 'tone'\n",
+    );
+    // Members that exist on *every* group (bound_member_valid) — default is bare `tone`.
+    let common_members = common_bound_member_names();
+    for m in &common_members {
+        if *m == "default" {
+            continue;
+        }
+        out.push_str(&format!("  | 'tone.{m}'\n"));
+    }
+    out.push('\n');
+
+    out.push_str(
+        "/** Closed Style paint color args: leaf tokens + group paths + bound tone.\n\
+         \x20*  Used by bg/fg/border/… so completion offers Tone members, not free text. */\n         type SailColorPaintArg =\n         \x20 | SailColorToken\n         \x20 | SailStaticGroupMemberPath\n         \x20 | SailBoundTonePath\n         \n",
+    );
+
+    // Document TONE table shape for hover/docs (mirrors packages/sail/tokens unions).
+    out.push_str("/** Tone group → members → public token name (informational; paint uses paths above). */\n");
+    out.push_str("type SailToneTable = {\n");
+    for g in TONE_GROUPS {
+        out.push_str(&format!("  {}: {{\n", g.name));
+        for m in g.members {
+            out.push_str(&format!(
+                "    {}: '{}'\n",
+                m.name, m.public_name
+            ));
+        }
+        out.push_str("  }\n");
+    }
+    out.push_str("}\n\n");
+
+    let _ = TONE_FAMILY; // keep family import load-bearing for docs/parity
+}
+
+/// Member names present on every group in the bound Tone family (excl. gaps like hover).
+fn common_bound_member_names() -> Vec<&'static str> {
+    let Some(first) = TONE_GROUPS.first() else {
+        return Vec::new();
+    };
+    first
+        .members
+        .iter()
+        .map(|m| m.name)
+        .filter(|name| {
+            TONE_GROUPS.iter().all(|g| g.members.iter().any(|m| m.name == *name))
+        })
+        .collect()
+}
+
+/// Nested ambient type for a static group stem (`primary` → `.foreground`, `.hover`).
+fn static_group_member_object_type(group_name: &str) -> Option<String> {
+    let group = token_groups::static_token_group(group_name)?;
+    let mut fields = Vec::new();
+    for m in group.members {
+        if m.name == "default" {
+            continue;
+        }
+        fields.push(format!(
+            "readonly {}: '{}.{}'",
+            m.name, group.name, m.name
+        ));
+    }
+    if fields.is_empty() {
+        return None;
+    }
+    Some(format!("{{ {} }}", fields.join("; ")))
+}
+
+/// Ambient type expression for a bare color/group token (leaf ∩ optional members).
+fn bare_token_type_expr(tok: &str) -> String {
+    let lit = ts_literal(tok);
+    if let Some(obj) = static_group_member_object_type(tok) {
+        format!("{lit} & {obj}")
+    } else {
+        lit
+    }
 }
 
 fn scale_type_name(scale: &str) -> String {
@@ -591,6 +712,14 @@ fn emit_setter_method(out: &mut String, spec: &SetterSpec) {
         return;
     }
 
+    // colorMix / colorDeepen: color paint arg + closed percent ramp
+    if matches!(name, "colorMix" | "colorDeepen") {
+        out.push_str(&format!(
+            "  {name}(token: TokenOrBind<SailColorPaintArg>, pct: TokenOrBind<SailPercentToken | number>): SailStyleChain\n"
+        ));
+        return;
+    }
+
     let arg = arg_type_for_setter(spec);
     // border composites accept 1 or 2 args
     if matches!(
@@ -618,7 +747,12 @@ fn emit_setter_method(out: &mut String, spec: &SetterSpec) {
 fn arg_type_for_setter(spec: &SetterSpec) -> String {
     let mut parts: Vec<String> = Vec::new();
     if let Some(scale) = spec.scale {
-        parts.push(scale_type_name(scale));
+        // Color paint setters accept leaf tokens + group.member + bound tone paths.
+        if scale == "color" {
+            parts.push("SailColorPaintArg".into());
+        } else {
+            parts.push(scale_type_name(scale));
+        }
     }
     for kw in spec.keywords {
         // Avoid duplicating scale members that are also keywords.
@@ -674,9 +808,17 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
             continue;
         }
         out.push_str(&format!(
-            "  const {tok}: {lit}\n",
-            lit = ts_literal(tok)
+            "  const {tok}: {ty}\n",
+            ty = bare_token_type_expr(tok)
         ));
+    }
+
+    // Bound tone prop root — not a leaf color token; nested `.foreground` for paint.
+    // Product: `bg(tone)`, `fg(tone.foreground)`.
+    if !bare_tokens.contains("tone") && !hybrid_names.contains("tone") {
+        out.push_str(
+            "  /** Bound Tone prop — omit attribute for rest; paint via group paths. */\n             \x20 const tone: 'tone' & { readonly foreground: 'tone.foreground' }\n",
+        );
     }
     out.push('\n');
 
@@ -992,6 +1134,12 @@ fn emit_free_setter(out: &mut String, spec: &SetterSpec, bare_tokens: &BTreeSet<
         out.push_str(&format!("  function {name}(): SailStyleChain\n"));
         return;
     }
+    if matches!(name, "colorMix" | "colorDeepen") {
+        out.push_str(&format!(
+            "  function {name}(token: TokenOrBind<SailColorPaintArg>, pct: TokenOrBind<SailPercentToken | number>): SailStyleChain\n"
+        ));
+        return;
+    }
     let arg = arg_type_for_setter(spec);
     if matches!(
         name,
@@ -1028,8 +1176,9 @@ fn free_reserved_alias(name: &str) -> String {
 
 fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
     let name = spec.name;
+    let tok_ty = bare_token_type_expr(tok);
     if name.contains('-') {
-        out.push_str(&format!("  const {tok}: {lit}\n", lit = ts_literal(tok)));
+        out.push_str(&format!("  const {tok}: {tok_ty}\n"));
         return;
     }
     if ZERO_ARG_SETTERS.contains(&name) {
@@ -1042,8 +1191,15 @@ fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
             "  const {name}: {{\n\
              \x20\x20 (): SailStyleChain\n\
              {motion}\
-             \x20 }} & {lit}\n",
-            lit = ts_literal(tok)
+             \x20 }} & {tok_ty}\n"
+        ));
+        return;
+    }
+    if matches!(name, "colorMix" | "colorDeepen") {
+        out.push_str(&format!(
+            "  const {name}: {{\n\
+             \x20\x20 (token: TokenOrBind<SailColorPaintArg>, pct: TokenOrBind<SailPercentToken | number>): SailStyleChain\n\
+             \x20 }} & {tok_ty}\n"
         ));
         return;
     }
@@ -1065,8 +1221,7 @@ fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
         out.push_str(&format!(
             "  const {name}: {{\n\
              \x20\x20 (a: {arg}, b?: {arg}): SailStyleChain\n\
-             \x20 }} & {lit}\n",
-            lit = ts_literal(tok)
+             \x20 }} & {tok_ty}\n"
         ));
         return;
     }
@@ -1079,8 +1234,7 @@ fn emit_hybrid_token_setter(out: &mut String, spec: &SetterSpec, tok: &str) {
         "  const {name}: {{\n\
          \x20\x20 (token: {arg}): SailStyleChain\n\
          {motion}\
-         \x20 }} & {lit}\n",
-        lit = ts_literal(tok)
+         \x20 }} & {tok_ty}\n"
     ));
 }
 
@@ -1245,6 +1399,57 @@ mod tests {
     fn scale_type_names_are_stable() {
         assert_eq!(scale_type_name("color"), "SailColorToken");
         assert_eq!(scale_type_name("border-width"), "SailBorderWidthToken");
+    }
+
+    #[test]
+    fn pack_documents_tone_and_group_member_paint_paths() {
+        // T0 / SPEC-L1-TONE-ROLL-1 — ambient paint args closed over Tone graph.
+        let dts = emit_types_dts();
+        assert!(
+            dts.contains("type Tone ="),
+            "ambient must declare Tone allowlist:\n{dts}"
+        );
+        assert!(
+            !dts.contains("| 'default'\n") || dts.contains("type Tone ="),
+            "sanity"
+        );
+        // No fake default Tone member in the Tone union block.
+        let tone_idx = dts.find("type Tone =").expect("Tone");
+        let tone_end = dts[tone_idx..]
+            .find("\ntype ")
+            .map(|i| tone_idx + i)
+            .unwrap_or(dts.len());
+        let tone_block = &dts[tone_idx..tone_end];
+        assert!(
+            !tone_block.contains("'default'"),
+            "Tone must not include 'default':\n{tone_block}"
+        );
+        for name in TONE_GROUP_NAMES {
+            assert!(
+                tone_block.contains(&format!("'{name}'")),
+                "Tone missing {name}:\n{tone_block}"
+            );
+        }
+        assert!(
+            dts.contains("tone.foreground") && dts.contains("primary.foreground"),
+            "ambient must include bound + static foreground member forms"
+        );
+        assert!(
+            dts.contains("type SailColorPaintArg ="),
+            "paint arg union missing"
+        );
+        assert!(
+            dts.contains("SailColorPaintArg"),
+            "bg/fg must reference SailColorPaintArg"
+        );
+        assert!(
+            dts.contains("const tone:") && dts.contains("foreground: 'tone.foreground'"),
+            "nested tone.foreground ambient const missing"
+        );
+        assert!(
+            dts.contains("foreground: 'primary.foreground'"),
+            "nested primary.foreground ambient missing"
+        );
     }
 
     #[test]

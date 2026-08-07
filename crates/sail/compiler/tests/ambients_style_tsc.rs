@@ -85,7 +85,12 @@ const c = match('solid', { solid: style({ paint: bg(primary) }), soft: style({ p
 const d = compound({ pill: true }, style({ paint: radius(full) }))
 const e = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
 const f = style({ box: pad(4).gap(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })
-const g = [a, b, c, d, e, f]
+// T0: bound tone + static group.member + string-form paths typecheck as paint args
+const tonePaint = style({ paint: bg(tone).fg(tone.foreground).border(tone) })
+const staticMember = style({ paint: fg(primary.foreground) })
+const stringPaths = style({ paint: bg('tone' as const).fg('primary.foreground') })
+const softWash = style({ paint: colorMix(tone, 15) })
+const g = [a, b, c, d, e, f, tonePaint, staticMember, stringPaths, softWash]
 void g
 void signal(0)
 void controller(() => ({ n: signal(1) }))
