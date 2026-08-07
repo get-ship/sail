@@ -55,9 +55,10 @@
         muted: style({ paint: bg(muted).fg(muted-foreground).border(border) }),
       }),
       // soft/outline/ghost key on variant so freeform hosts without tone= still paint.
-      soft: style({ paint: bg(muted).fg(muted-foreground).border(border) }),
-      outline: style({ paint: bg(transparent).fg(foreground).border(border) }),
-      ghost: style({ paint: bg(transparent).fg(foreground).border(transparent) }),
+      // Soft rest rides component.chip (pack aliases muted) — same gate as solid default.
+      soft: style({ paint: bg(chip).fg(chip-foreground).border(chip-border) }),
+      outline: style({ paint: bg(transparent).fg(chip-foreground).border(chip-border) }),
+      ghost: style({ paint: bg(transparent).fg(chip-foreground).border(transparent) }),
     }),
     compound({ variant: soft, tone: primary }, style({ paint: fg(primary) })),
     compound({ variant: soft, tone: info }, style({ paint: fg(info) })),
@@ -83,7 +84,7 @@
     compound({ selected: true, tone: muted }, style({ paint: bg(primary).fg(primary-foreground).border(primary) })),
     when({
       pressed: style({ paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs), text: fontWeight(semibold) }),
-      disabled: style({ paint: cursor(not-allowed).bg(muted).border(border-subtle).fg(muted-foreground).saturate(65).shadow(none) }),
+      disabled: style({ paint: cursor(not-allowed).bg(chip).border(border-subtle).fg(chip-foreground).saturate(65).shadow(none) }),
       focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
     }),
     compound({ variant: solid, tone: default }, when({
@@ -130,7 +131,7 @@
       remove,
       when({
         group-removable: style({ box: display(inline-flex) }),
-        hover: style({ paint: bg(muted).fg(foreground) }),
+        hover: style({ paint: bg(chip).fg(chip-foreground) }),
         focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
       }),
     ])>

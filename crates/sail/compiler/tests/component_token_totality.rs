@@ -65,6 +65,8 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
     ),
     ("skeleton", &["skeleton", "skeleton-highlight"]),
     ("kbd", &["kbd", "kbd-foreground", "kbd-border"]),
+    // L1-POLISH-E — line stroke pack (default solid rest).
+    ("separator", &["separator-line"]),
     // Shared field surface — any of the three consumers counts as a reader,
     // but the tokens must appear (input/select/textarea all stamp them).
     (
@@ -201,6 +203,11 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "badge",
         &["badge", "badge-foreground", "badge-border"],
     ),
+    // L1-POLISH-E — chip soft/outline/ghost rest + solid default via chip*.
+    (
+        "chip",
+        &["chip", "chip-foreground", "chip-border"],
+    ),
     // L1-POLISH-C — menu row + panel hosts already on component tokens.
     (
         "menu-item",
@@ -239,6 +246,8 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* accordion */", &["surface-1"]),
     ("/* skeleton */", &["muted"]),
     ("/* kbd */", &["muted", "foreground"]),
+    // L1-POLISH-E — default solid line from separator-line (not free border).
+    ("/* separator */", &["border", "border-subtle"]),
     ("/* input */", &["background", "foreground"]),
     ("/* select */", &["background", "foreground"]),
     ("/* textarea */", &["background", "foreground"]),
@@ -283,6 +292,12 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     // Tooltip rest is inverted PE via tooltip / tooltip-foreground — not free fg/bg.
     ("/* tooltip */", &["foreground", "background"]),
     ("/* badge */", &["muted", "muted-foreground", "border"]),
+    // L1-POLISH-E — chip soft/outline/ghost + disabled/remove rest from pack
+    // (not free muted / foreground / border). Tone solid matrices still brand.
+    (
+        "/* chip */",
+        &["muted", "muted-foreground", "border", "foreground"],
+    ),
     ("/* radio */", &["foreground", "background"]),
     ("/* combobox */", &["background", "foreground"]),
     // L1-POLISH-C — menu-item rest ink/hover from pack (not free foreground/muted).

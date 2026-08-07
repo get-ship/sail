@@ -1,8 +1,11 @@
 // L1 conformance spec: <separator> (mechanism-1, compiles-away). horizontal /
 // tone / dashed / vertical. Probe asserts each renders as a thin line and is
-// visible (background OR dashed border).
+// visible (background OR dashed border). Paint stamps separator-line (not free
+// border) for default solid rest.
 
-const sep = (a = '') => `<div class="sail-separator" ${a}></div>`
+const SEP =
+  'sail-separator sx-displayblock sx-wfull sx-hborderwidth sx-my2 sx-pad0 sx-borderWidth0 sx-bgseparatorline'
+const sep = (a = '') => `<div class="${SEP}" ${a}></div>`
 
 export default {
   tag: 'separator',
@@ -30,6 +33,10 @@ export default {
       const cs = getComputedStyle(el)
       const visible = !clear(cs.backgroundColor) || cs.borderTopStyle === 'dashed' || cs.borderLeftStyle === 'dashed'
       if (!visible) bad.push({ why: 'not-visible-in-light', bg: cs.backgroundColor })
+      // Default solid rest: separator-line token resolves to a paint color.
+      if ((el.getAttribute('variant') || 'solid') === 'solid' && !el.getAttribute('tone') && clear(cs.backgroundColor)) {
+        bad.push({ why: 'no-token-line' })
+      }
     })
     return { count: document.querySelectorAll('.sail-separator').length, bad: bad.slice(0, 8) }
   },
