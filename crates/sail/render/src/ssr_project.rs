@@ -1111,6 +1111,18 @@ fn substitute_text_exprs(
             i += 1;
             continue;
         }
+        // Style products in text position (`style({…})`, `when({…})`,
+        // `match({…})`, `compound({…})`, const-ref `name.method({…})`) wrap
+        // their payload in braces that are NOT template expressions. Copy the
+        // whole call verbatim so preprocess can lower it; otherwise the brace
+        // group is gutted as an "unresolved expr" and paint silently drops.
+        if b.is_ascii_alphabetic() {
+            if let Some(end) = skip_style_call(src, i) {
+                out.push_str(&src[i..end]);
+                i = end;
+                continue;
+            }
+        }
         if b == b'{' {
             let mut j = i + 1;
             let mut depth = 1i32;
@@ -1162,6 +1174,87 @@ fn looks_like_expr(s: &str) -> bool {
     }
     let first = t.chars().next().unwrap();
     first.is_ascii_alphabetic() || first == '_' || first == '(' || first == '[' || first == '!'
+}
+
+/// If `src[start..]` begins a Style product call — a keyword form
+/// (`style(`, `when(`, `match(`, `compound(`) or a const-ref method call
+/// (`name.method(`, chains allowed) — return the end offset just past the
+/// balanced `(...)` group. Strings and nested `(){}[]` are honored so
+/// braces inside the payload do not leak into expression scanning.
+fn skip_style_call(src: &str, start: usize) -> Option<usize> {
+    let bytes = src.as_bytes();
+    let mut i = start;
+    // First identifier.
+    let id_start = i;
+    while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
+        i += 1;
+    }
+    if i == id_start {
+        return None;
+    }
+    let first_ident = &src[id_start..i];
+    let keyword_form = matches!(first_ident, "style" | "when" | "match" | "compound");
+    // Optional `.method` chain (const-ref form requires at least one).
+    let mut saw_method = false;
+    loop {
+        let save = i;
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i < bytes.len() && bytes[i] == b'.' {
+            i += 1;
+            let m_start = i;
+            while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
+                i += 1;
+            }
+            if i == m_start {
+                return None;
+            }
+            saw_method = true;
+        } else {
+            i = save;
+            break;
+        }
+    }
+    if !keyword_form && !saw_method {
+        return None;
+    }
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    if i >= bytes.len() || bytes[i] != b'(' {
+        return None;
+    }
+    // Balanced scan over (){}[] with string-literal skipping.
+    let mut depth = 0i32;
+    let mut quote: Option<u8> = None;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if let Some(q) = quote {
+            if b == b'\\' {
+                i += 2;
+                continue;
+            }
+            if b == q {
+                quote = None;
+            }
+        } else {
+            match b {
+                b'"' | b'\'' | b'`' => quote = Some(b),
+                b'(' | b'{' | b'[' => depth += 1,
+                b')' | b'}' | b']' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some(i + 1);
+                    }
+                }
+                b'<' => return None, // tag start: not a style call
+                _ => {}
+            }
+        }
+        i += 1;
+    }
+    None
 }
 
 fn html_escape_text(s: &str) -> String {
@@ -1331,5 +1424,39 @@ export default controller(() => {
         let p = project(src);
         assert!(!p.had_controller);
         assert!(p.source.contains("static"));
+    }
+
+    #[test]
+    fn style_block_survives_projection() {
+        // Regression: substitute_text_exprs gutted `style({…})` payloads as
+        // "unresolved expressions", leaving `style()` → empty class → paint
+        // silently dropped (golden paint fixtures caught it).
+        let src = "<div>\n  style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })\nhello</div>";
+        let p = project(src);
+        assert!(
+            p.source.contains("style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })"),
+            "style payload must survive verbatim: {}",
+            p.source
+        );
+        assert!(!p.unresolved.iter().any(|u| u.contains("pad")), "{:?}", p.unresolved);
+    }
+
+    #[test]
+    fn when_and_const_ref_calls_survive_projection() {
+        let src = "<div>\n  style({ box: pad(2) }).when(hover, { paint: bg(accent) })\nx</div>";
+        let p = project(src);
+        assert!(p.source.contains(".when(hover, { paint: bg(accent) })"), "{}", p.source);
+        let src2 = "<div>\n  cta.press({ paint: bg(primary) })\ny</div>";
+        let p2 = project(src2);
+        assert!(p2.source.contains("cta.press({ paint: bg(primary) })"), "{}", p2.source);
+    }
+
+    #[test]
+    fn plain_text_expr_still_strips() {
+        // The skip must not swallow real text interpolations.
+        let src = "<span>{window.innerWidth}</span>";
+        let p = project(src);
+        assert!(!p.source.contains("window.innerWidth"), "{}", p.source);
+        assert!(p.unresolved.iter().any(|u| u.contains("window.innerWidth")));
     }
 }
