@@ -265,6 +265,80 @@
     }
   },
   {
+    "name": "sail_inspect",
+    "description": "IR query interface (TOOLING-1 WI5). Pass topic: tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes. Read-only projections; tree nodes carry WI7 identity. Optional path, viewport (geometry), token (cascade), themeId, nodeId.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "nodeId": {
+          "description": "Optional filter to one tree node id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Workspace-relative `.sail` path (required for file topics).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "themeId": {
+          "description": "Cascade / themes: theme id filter.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token": {
+          "description": "Cascade: design token path or cssName tail.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topic": {
+          "description": "tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes",
+          "type": "string"
+        },
+        "viewport": {
+          "description": "Geometry viewport `{ width, height }`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/InspectViewport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "definitions": {
+        "InspectViewport": {
+          "type": "object",
+          "required": [
+            "height",
+            "width"
+          ],
+          "properties": {
+            "height": {
+              "type": "number",
+              "format": "double"
+            },
+            "width": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
     "name": "sail_inspect_model",
     "description": "Canonical per-file Sail model (tree, layout, state, diagnostics, data, theme). Source-derived; modelVersion 1.",
     "inputSchema": {

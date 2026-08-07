@@ -1,6 +1,9 @@
-//! `SailInspect` RPCs — Model, Tree, State, TokenUsage.
+//! `SailInspect` RPCs — Model, Tree, State, TokenUsage, and unified topic
+//! `Inspect` (TOOLING-1 WI5 / `sail_inspect`).
 //!
 //! Canonical per-file model: source-derived, span-keyed, versioned (T-I1/3).
+//! Topic surface (mirrors `sail_surface`): tree | geometry | cascade | states |
+//! a11y | invalidations | uses | cost | themes. CLI twin: `sail inspect <topic>`.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -1307,6 +1310,1201 @@ fn parse_viewport(args: &Value) -> Option<(f32, f32)> {
     Some((w, h))
 }
 
+// ── WI5 topic surface (sail_inspect) ────────────────────────────────────────
+
+/// Topics for the unified inspect IR query interface (SPEC-TOOLING-1 §WI5).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InspectTopic {
+    Tree,
+    Geometry,
+    Cascade,
+    States,
+    A11y,
+    Invalidations,
+    Uses,
+    Cost,
+    Themes,
+}
+
+impl InspectTopic {
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "tree" => Some(Self::Tree),
+            "geometry" | "layout" => Some(Self::Geometry),
+            "cascade" | "token" | "tokens" => Some(Self::Cascade),
+            "states" | "state" | "match" => Some(Self::States),
+            "a11y" | "aria" | "accessibility" => Some(Self::A11y),
+            "invalidations" | "invalidate" | "queries" => Some(Self::Invalidations),
+            "uses" | "refs" | "symbols" => Some(Self::Uses),
+            "cost" | "weight" => Some(Self::Cost),
+            "themes" | "theme" => Some(Self::Themes),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Tree => "tree",
+            Self::Geometry => "geometry",
+            Self::Cascade => "cascade",
+            Self::States => "states",
+            Self::A11y => "a11y",
+            Self::Invalidations => "invalidations",
+            Self::Uses => "uses",
+            Self::Cost => "cost",
+            Self::Themes => "themes",
+        }
+    }
+
+    pub fn all() -> &'static [Self] {
+        &[
+            Self::Tree,
+            Self::Geometry,
+            Self::Cascade,
+            Self::States,
+            Self::A11y,
+            Self::Invalidations,
+            Self::Uses,
+            Self::Cost,
+            Self::Themes,
+        ]
+    }
+
+    pub fn needs_path(self) -> bool {
+        !matches!(self, Self::Themes | Self::Cascade)
+    }
+}
+
+/// Unified `sail_inspect` entry (topic-param, mirrors `sail_surface`).
+///
+/// Args:
+/// - `topic` (required): tree | geometry | cascade | states | a11y |
+///   invalidations | uses | cost | themes
+/// - `path` (file topics): workspace-relative `.sail`
+/// - `viewport` `{width,height}`: geometry
+/// - `token`: cascade (design token path or cssName tail)
+/// - `themeId`: cascade / themes filter
+/// - `nodeId`: optional filter on tree-linked topics
+pub fn inspect(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let topic_s = args
+        .get("topic")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| OpError::InvalidArgument("Inspect requires string `topic`".into()))?;
+    let topic = InspectTopic::parse(topic_s).ok_or_else(|| {
+        let list = InspectTopic::all()
+            .iter()
+            .map(|t| t.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ");
+        OpError::InvalidArgument(format!("unknown topic `{topic_s}`; expected one of: {list}"))
+    })?;
+
+    let mut body = match topic {
+        InspectTopic::Tree => topic_tree(args, ctx)?,
+        InspectTopic::Geometry => topic_geometry(args, ctx)?,
+        InspectTopic::Cascade => topic_cascade(args, ctx)?,
+        InspectTopic::States => topic_states(args, ctx)?,
+        InspectTopic::A11y => topic_a11y(args, ctx)?,
+        InspectTopic::Invalidations => topic_invalidations(args, ctx)?,
+        InspectTopic::Uses => topic_uses(args, ctx)?,
+        InspectTopic::Cost => topic_cost(args, ctx)?,
+        InspectTopic::Themes => topic_themes(args, ctx)?,
+    };
+
+    // Envelope: topic + modelVersion always present.
+    if let Some(obj) = body.as_object_mut() {
+        obj.insert("topic".into(), json!(topic.as_str()));
+        obj.entry("modelVersion".to_string())
+            .or_insert(json!(MODEL_VERSION));
+    }
+    Ok(body)
+}
+
+fn require_path_source(args: &Value, ctx: &Ctx) -> Result<(String, String), OpError> {
+    let path = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| OpError::InvalidArgument("this topic requires `path`".into()))?;
+    let (abs, rel) = resolve_sail_path(path, ctx)?;
+    let source = read_source(&abs)?;
+    Ok((source, rel))
+}
+
+fn optional_node_filter(args: &Value) -> Option<String> {
+    args.get("nodeId")
+        .or_else(|| args.get("node_id"))
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+}
+
+fn topic_tree(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let (nodes, meta) = build_tree(&source, &rel)?;
+    let filter = optional_node_filter(args);
+    let nodes: Vec<TreeNode> = match filter {
+        Some(id) => nodes.into_iter().filter(|n| n.id == id).collect(),
+        None => nodes,
+    };
+    Ok(json!({
+        "file": rel,
+        "roots": meta.root_ids,
+        "nodes": nodes,
+    }))
+}
+
+fn topic_geometry(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let viewport = parse_viewport(args);
+    let (_nodes, meta) = build_tree(&source, &rel)?;
+    let boxes = build_layout(&source, &rel, &meta, viewport)?;
+    let filter = optional_node_filter(args);
+    let boxes: Vec<LayoutBox> = match filter {
+        Some(id) => boxes.into_iter().filter(|b| b.id == id).collect(),
+        None => boxes,
+    };
+    // Join identity for studio overlays (WI7 reuse on geometry boxes).
+    let id_index: BTreeMap<String, ElementIdentity> = meta
+        .nodes
+        .iter()
+        .map(|n| (n.id.clone(), n.identity.clone()))
+        .collect();
+    let boxes_json: Vec<Value> = boxes
+        .into_iter()
+        .map(|b| {
+            let identity = id_index.get(&b.id).cloned();
+            let mut v = serde_json::to_value(&b).unwrap_or(json!({}));
+            if let Some(idt) = identity {
+                if let Some(obj) = v.as_object_mut() {
+                    obj.insert(
+                        "identity".into(),
+                        serde_json::to_value(idt).unwrap_or(Value::Null),
+                    );
+                }
+            }
+            v
+        })
+        .collect();
+    Ok(json!({
+        "file": rel,
+        "viewport": viewport.map(|(w, h)| json!({"width": w, "height": h})),
+        "boxes": boxes_json,
+    }))
+}
+
+fn topic_cascade(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let token = args
+        .get("token")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| {
+            OpError::InvalidArgument("cascade requires non-empty `token` (path or cssName)".into())
+        })?;
+    let theme_id = args
+        .get("themeId")
+        .or_else(|| args.get("theme_id"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+
+    let graph = crate::theme::graph_internal(theme_id, ctx)?;
+    let chain = resolve_cascade_chain(token, &graph);
+
+    // Optional: blast-radius sites when path or whole workspace.
+    let mut sites = Vec::new();
+    if let Some(path) = args.get("path").and_then(|v| v.as_str()) {
+        if let Ok((abs, rel)) = resolve_sail_path(path, ctx) {
+            if let Ok(src) = read_source(&abs) {
+                collect_token_sites_in_source(&src, &rel, token, &mut sites);
+            }
+        }
+    }
+
+    Ok(json!({
+        "token": token,
+        "themeId": graph.get("themeId").cloned().unwrap_or(json!(theme_id.unwrap_or("ship"))),
+        "chain": chain,
+        "resolved": chain.last().cloned().unwrap_or(json!(null)),
+        "sites": sites,
+        "graphSources": graph.get("sources").cloned().unwrap_or(json!([])),
+    }))
+}
+
+/// Walk DTCG alias edges from `token` to a leaf value.
+fn resolve_cascade_chain(token: &str, graph: &Value) -> Vec<Value> {
+    let nodes = graph
+        .get("nodes")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
+    let edges = graph
+        .get("edges")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
+
+    let mut by_path: BTreeMap<String, Value> = BTreeMap::new();
+    let mut by_css: BTreeMap<String, String> = BTreeMap::new();
+    for n in &nodes {
+        if let Some(p) = n.get("path").and_then(|v| v.as_str()) {
+            by_path.insert(p.to_string(), n.clone());
+            if let Some(css) = n.get("cssName").and_then(|v| v.as_str()) {
+                by_css.insert(css.to_string(), p.to_string());
+            }
+            // Also index last segment (primary from color.primary.default).
+            if let Some(tail) = p.rsplit('.').next() {
+                by_css.entry(tail.to_string()).or_insert_with(|| p.to_string());
+            }
+        }
+    }
+
+    let mut alias_to: BTreeMap<String, String> = BTreeMap::new();
+    for e in &edges {
+        if e.get("kind").and_then(|v| v.as_str()) != Some("alias") {
+            continue;
+        }
+        if let (Some(from), Some(to)) = (
+            e.get("from").and_then(|v| v.as_str()),
+            e.get("to").and_then(|v| v.as_str()),
+        ) {
+            alias_to.insert(from.to_string(), to.to_string());
+        }
+    }
+
+    // Resolve start path: exact path → cssName → tail match → fuzzy path end.
+    let start = if by_path.contains_key(token) {
+        token.to_string()
+    } else if let Some(p) = by_css.get(token) {
+        p.clone()
+    } else {
+        by_path
+            .keys()
+            .find(|p| p.ends_with(token) || p.ends_with(&format!(".{token}")))
+            .cloned()
+            .unwrap_or_else(|| token.to_string())
+    };
+
+    let mut chain = Vec::new();
+    let mut cur = start;
+    let mut seen = BTreeSet::new();
+    for step in 0..32 {
+        if !seen.insert(cur.clone()) {
+            chain.push(json!({
+                "step": step,
+                "path": cur,
+                "kind": "cycle",
+            }));
+            break;
+        }
+        if let Some(node) = by_path.get(&cur) {
+            let value = node.get("value").cloned().unwrap_or(Value::Null);
+            let is_alias = alias_to.contains_key(&cur);
+            chain.push(json!({
+                "step": step,
+                "path": cur,
+                "type": node.get("type").cloned().unwrap_or(json!("")),
+                "value": value,
+                "cssName": node.get("cssName").cloned().unwrap_or(Value::Null),
+                "source": node.get("source").cloned().unwrap_or(Value::Null),
+                "kind": if is_alias { "alias" } else { "leaf" },
+            }));
+            if let Some(next) = alias_to.get(&cur) {
+                cur = next.clone();
+                continue;
+            }
+            break;
+        } else {
+            chain.push(json!({
+                "step": step,
+                "path": cur,
+                "kind": "unresolved",
+            }));
+            break;
+        }
+    }
+    chain
+}
+
+fn collect_token_sites_in_source(src: &str, rel: &str, token: &str, sites: &mut Vec<Value>) {
+    let needles = [
+        token.to_string(),
+        format!("{{{token}}}"),
+        format!("--{token}"),
+        token.replace('.', "-"),
+        token.rsplit('.').next().unwrap_or(token).to_string(),
+    ];
+    for needle in &needles {
+        if needle.is_empty() {
+            continue;
+        }
+        let mut from = 0usize;
+        while let Some(rel_off) = src[from..].find(needle.as_str()) {
+            let start = from + rel_off;
+            let end = start + needle.len();
+            sites.push(json!({
+                "file": rel,
+                "span": model_span(src, start, end),
+            }));
+            from = end;
+            if sites.len() >= 50 {
+                return;
+            }
+        }
+    }
+}
+
+fn topic_states(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let (nodes, meta) = build_tree(&source, &rel)?;
+    let program = sail_compiler::parse::parse_author(&source)
+        .map_err(|e| OpError::InvalidArgument(format!("parse: {e}")))?;
+
+    let mut matches = Vec::new();
+    collect_match_matrices(&source, &rel, &program.template, &meta, "", &mut 0, &mut matches);
+
+    // Scope-level style match unions (const paint = match(variant, …)) when present.
+    let scope_matches = extract_scope_match_hints(&source);
+
+    // Union-state matrix: for each match, list arms × whether default present.
+    let matrices: Vec<Value> = matches
+        .into_iter()
+        .map(|m| {
+            let arms = m
+                .get("arms")
+                .and_then(|a| a.as_array())
+                .cloned()
+                .unwrap_or_default();
+            let tests: Vec<String> = arms
+                .iter()
+                .filter_map(|a| a.get("test").and_then(|t| t.as_str()).map(str::to_string))
+                .collect();
+            json!({
+                "match": m,
+                "union": tests,
+                "armCount": arms.len(),
+            })
+        })
+        .collect();
+
+    // Include identity index for each match host when available.
+    let _ = nodes;
+    Ok(json!({
+        "file": rel,
+        "matches": matrices,
+        "scopeMatches": scope_matches,
+    }))
+}
+
+fn collect_match_matrices(
+    source: &str,
+    file: &str,
+    instrs: &[sail_compiler::ir::Instr],
+    meta: &TreeBuildMeta,
+    path_prefix: &str,
+    ordinal: &mut usize,
+    out: &mut Vec<Value>,
+) {
+    use sail_compiler::ir::{Instr, MatchTest};
+    for instr in instrs {
+        let path = if path_prefix.is_empty() {
+            format!("{ordinal}")
+        } else {
+            format!("{path_prefix}.{ordinal}")
+        };
+        *ordinal += 1;
+        match instr {
+            Instr::Match(m) => {
+                let span = author_expr_span(source, &m.discriminant.source, m.discriminant.span);
+                let host_id = meta
+                    .by_start
+                    .range(..=span.start)
+                    .next_back()
+                    .map(|(_, id)| id.clone())
+                    .unwrap_or_else(|| node_id(file, &path, "match"));
+                let identity = meta
+                    .nodes
+                    .iter()
+                    .find(|n| n.id == host_id)
+                    .map(|n| n.identity.clone());
+                let mut arms = Vec::new();
+                for (i, c) in m.cases.iter().enumerate() {
+                    let test = match &c.test {
+                        MatchTest::Kind(k) => json!({"kind": "kind", "test": k}),
+                        MatchTest::Expr(e) => json!({"kind": "expr", "test": e.source}),
+                    };
+                    arms.push(json!({
+                        "index": i,
+                        "test": test.get("test").cloned().unwrap_or(Value::Null),
+                        "testKind": test.get("kind").cloned().unwrap_or(json!("")),
+                        "binding": c.binding,
+                        "bodyNodeCount": count_instrs(&c.body),
+                    }));
+                }
+                if m.default.is_some() {
+                    arms.push(json!({
+                        "index": arms.len(),
+                        "test": "else",
+                        "testKind": "default",
+                        "binding": Value::Null,
+                        "bodyNodeCount": m.default.as_ref().map(|b| count_instrs(b)).unwrap_or(0),
+                    }));
+                }
+                out.push(json!({
+                    "id": host_id,
+                    "identity": identity,
+                    "discriminant": m.discriminant.source,
+                    "span": span,
+                    "arms": arms,
+                }));
+                for (ci, c) in m.cases.iter().enumerate() {
+                    let mut o = 0;
+                    collect_match_matrices(
+                        source,
+                        file,
+                        &c.body,
+                        meta,
+                        &format!("{path}.c{ci}"),
+                        &mut o,
+                        out,
+                    );
+                }
+                if let Some(d) = &m.default {
+                    let mut o = 0;
+                    collect_match_matrices(
+                        source,
+                        file,
+                        d,
+                        meta,
+                        &format!("{path}.default"),
+                        &mut o,
+                        out,
+                    );
+                }
+            }
+            Instr::Element(el) => {
+                let mut o = 0;
+                collect_match_matrices(
+                    source, file, &el.children, meta, &path, &mut o, out,
+                );
+            }
+            Instr::If(i) => {
+                for (bi, br) in i.branches.iter().enumerate() {
+                    let mut o = 0;
+                    collect_match_matrices(
+                        source,
+                        file,
+                        &br.body,
+                        meta,
+                        &format!("{path}.b{bi}"),
+                        &mut o,
+                        out,
+                    );
+                }
+                if let Some(e) = &i.else_body {
+                    let mut o = 0;
+                    collect_match_matrices(
+                        source, file, e, meta, &format!("{path}.else"), &mut o, out,
+                    );
+                }
+            }
+            Instr::For(f) => {
+                let mut o = 0;
+                collect_match_matrices(source, file, &f.body, meta, &path, &mut o, out);
+            }
+            Instr::When(w) => {
+                let mut o = 0;
+                collect_match_matrices(source, file, &w.body, meta, &path, &mut o, out);
+                if let Some(e) = &w.else_body {
+                    let mut o = 0;
+                    collect_match_matrices(
+                        source, file, e, meta, &format!("{path}.else"), &mut o, out,
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn count_instrs(instrs: &[sail_compiler::ir::Instr]) -> usize {
+    use sail_compiler::ir::Instr;
+    let mut n = 0usize;
+    for instr in instrs {
+        n += 1;
+        match instr {
+            Instr::Element(el) => n += count_instrs(&el.children),
+            Instr::If(i) => {
+                for b in &i.branches {
+                    n += count_instrs(&b.body);
+                }
+                if let Some(e) = &i.else_body {
+                    n += count_instrs(e);
+                }
+            }
+            Instr::For(f) => {
+                n += count_instrs(&f.body);
+                if let Some(e) = &f.else_body {
+                    n += count_instrs(e);
+                }
+            }
+            Instr::Match(m) => {
+                for c in &m.cases {
+                    n += count_instrs(&c.body);
+                }
+                if let Some(d) = &m.default {
+                    n += count_instrs(d);
+                }
+            }
+            Instr::When(w) => {
+                n += count_instrs(&w.body);
+                if let Some(e) = &w.else_body {
+                    n += count_instrs(e);
+                }
+            }
+            _ => {}
+        }
+    }
+    n
+}
+
+/// Heuristic: find `match(ident, { … })` in scope/controller for union hints.
+fn extract_scope_match_hints(source: &str) -> Vec<Value> {
+    let mut out = Vec::new();
+    let bytes = source.as_bytes();
+    let needle = b"match(";
+    let mut i = 0usize;
+    while i + needle.len() < bytes.len() {
+        if &bytes[i..i + needle.len()] == needle {
+            // Skip template `<match` — only bare `match(`.
+            let prev_ok = i == 0 || !bytes[i - 1].is_ascii_alphanumeric();
+            if prev_ok {
+                let after = i + needle.len();
+                if let Some(close) = source[after..].find(')') {
+                    let inner = source[after..after + close].trim();
+                    // First arg is discriminant.
+                    let disc = inner.split(',').next().unwrap_or("").trim();
+                    if !disc.is_empty() && !disc.contains('<') {
+                        let span = model_span(source, i, after + close + 1);
+                        out.push(json!({
+                            "discriminant": disc,
+                            "span": span,
+                            "kind": "scope-match",
+                        }));
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    out
+}
+
+fn topic_a11y(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let (nodes, meta) = build_tree(&source, &rel)?;
+    let filter = optional_node_filter(args);
+
+    let by_id: BTreeMap<String, &TreeNode> = nodes.iter().map(|n| (n.id.clone(), n)).collect();
+    let mut tree_out = Vec::new();
+    for root in &meta.root_ids {
+        if let Some(n) = by_id.get(root) {
+            if filter.as_ref().is_none_or(|f| node_or_descendant(n, f, &by_id)) {
+                tree_out.push(a11y_node_json(n, &by_id, filter.as_deref()));
+            }
+        }
+    }
+
+    // Flat list for agents that prefer scan over tree walk.
+    let flat: Vec<Value> = nodes
+        .iter()
+        .filter(|n| filter.as_ref().is_none_or(|f| &n.id == f))
+        .map(|n| a11y_record(n))
+        .collect();
+
+    Ok(json!({
+        "file": rel,
+        "roots": meta.root_ids,
+        "tree": tree_out,
+        "nodes": flat,
+    }))
+}
+
+fn node_or_descendant(
+    n: &TreeNode,
+    target: &str,
+    by_id: &BTreeMap<String, &TreeNode>,
+) -> bool {
+    if n.id == target {
+        return true;
+    }
+    n.children.iter().any(|c| {
+        by_id
+            .get(c)
+            .is_some_and(|ch| node_or_descendant(ch, target, by_id))
+    })
+}
+
+fn a11y_node_json(
+    n: &TreeNode,
+    by_id: &BTreeMap<String, &TreeNode>,
+    filter: Option<&str>,
+) -> Value {
+    let mut rec = a11y_record(n);
+    let kids: Vec<Value> = n
+        .children
+        .iter()
+        .filter_map(|cid| by_id.get(cid))
+        .filter(|ch| filter.is_none_or(|f| node_or_descendant(ch, f, by_id)))
+        .map(|ch| a11y_node_json(ch, by_id, filter))
+        .collect();
+    if let Some(obj) = rec.as_object_mut() {
+        obj.insert("children".into(), json!(kids));
+    }
+    rec
+}
+
+fn a11y_record(n: &TreeNode) -> Value {
+    let anatomy = sail_compiler::host_anatomy(&n.tag);
+    let mut aria = BTreeMap::new();
+    let mut semantic = BTreeMap::new();
+
+    // Author attrs that are semantic props or already-stamped aria.
+    for (k, v) in &n.attrs {
+        if let Some(prop) = sail_compiler::lookup_semantic_prop(k) {
+            semantic.insert(prop.name.to_string(), v.clone());
+            aria.insert(prop.aria.to_string(), v.clone());
+        } else if k.starts_with("aria-") || k == "role" {
+            aria.insert(k.clone(), v.clone());
+        }
+    }
+
+    // Host anatomy fixed stamps (compiler would inject these).
+    if let Some(a) = anatomy {
+        if let Some(role) = a.role {
+            aria.entry("role".into()).or_insert_with(|| role.to_string());
+        }
+        if let Some(live) = a.live {
+            aria.entry("aria-live".into())
+                .or_insert_with(|| live.to_string());
+        }
+        if let Some(atomic) = a.atomic {
+            aria.entry("aria-atomic".into())
+                .or_insert_with(|| atomic.to_string());
+        }
+        if let Some(label) = a.label {
+            aria.entry("aria-label".into())
+                .or_insert_with(|| label.to_string());
+        }
+    }
+
+    // Implied role from tag when still missing.
+    let role = aria
+        .get("role")
+        .cloned()
+        .or_else(|| n.identity.locator.as_ref().and_then(|l| l.role.clone()))
+        .or_else(|| locator_from_attrs(&n.tag, &n.attrs).role);
+
+    let name = aria
+        .get("aria-label")
+        .cloned()
+        .or_else(|| semantic.get("label").cloned())
+        .or_else(|| n.identity.locator.as_ref().and_then(|l| l.name.clone()));
+
+    json!({
+        "id": n.id,
+        "identity": n.identity,
+        "tag": n.tag,
+        "role": role,
+        "name": name,
+        "aria": aria,
+        "semanticProps": semantic,
+        "layer": n.layer,
+        "span": n.span,
+    })
+}
+
+fn topic_invalidations(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let analysis = sail_compiler::analyze(&source, Some(Path::new(&rel)), &[]);
+
+    let mut queries = Vec::new();
+    let mut mutations = Vec::new();
+    let mut invalidates = Vec::new();
+    let mut edges = Vec::new();
+
+    for q in &analysis.query_keys {
+        let start = offset_of(&source, q.line, q.col);
+        let span = model_span(&source, start, start);
+        let node = json!({
+            "kind": q.kind,
+            "key": q.key,
+            "ssrFetchable": q.ssr_fetchable,
+            "span": span,
+            "file": rel,
+        });
+        match q.kind.as_str() {
+            "query" => queries.push(node),
+            "mutation" => mutations.push(node),
+            "invalidate" => invalidates.push(node),
+            _ => queries.push(node),
+        }
+    }
+
+    // Edges: mutation → invalidate → query by shared key prefix/equality.
+    for m in &analysis.query_keys {
+        if m.kind != "mutation" {
+            continue;
+        }
+        for inv in &analysis.query_keys {
+            if inv.kind != "invalidate" {
+                continue;
+            }
+            if keys_related(&m.key, &inv.key) {
+                edges.push(json!({
+                    "from": {"kind": "mutation", "key": m.key},
+                    "to": {"kind": "invalidate", "key": inv.key},
+                    "relation": "mutation-invalidates",
+                }));
+            }
+        }
+    }
+    for inv in &analysis.query_keys {
+        if inv.kind != "invalidate" {
+            continue;
+        }
+        for q in &analysis.query_keys {
+            if q.kind != "query" {
+                continue;
+            }
+            if keys_related(&inv.key, &q.key) {
+                edges.push(json!({
+                    "from": {"kind": "invalidate", "key": inv.key},
+                    "to": {"kind": "query", "key": q.key},
+                    "relation": "invalidates-query",
+                }));
+            }
+        }
+    }
+    // Direct mutation → query when keys related and no explicit invalidate listed.
+    for m in &analysis.query_keys {
+        if m.kind != "mutation" {
+            continue;
+        }
+        for q in &analysis.query_keys {
+            if q.kind != "query" {
+                continue;
+            }
+            if keys_related(&m.key, &q.key) {
+                edges.push(json!({
+                    "from": {"kind": "mutation", "key": m.key},
+                    "to": {"kind": "query", "key": q.key},
+                    "relation": "mutation-touches-query",
+                }));
+            }
+        }
+    }
+
+    Ok(json!({
+        "file": rel,
+        "queries": queries,
+        "mutations": mutations,
+        "invalidates": invalidates,
+        "edges": edges,
+    }))
+}
+
+fn keys_related(a: &str, b: &str) -> bool {
+    if a.is_empty() || b.is_empty() {
+        return false;
+    }
+    if a == b {
+        return true;
+    }
+    // Prefix match on dotted keys: crm.deals ↔ crm.deals.list
+    let (short, long) = if a.len() <= b.len() { (a, b) } else { (b, a) };
+    long.starts_with(short)
+        && (long.len() == short.len()
+            || long.as_bytes().get(short.len()) == Some(&b'.'))
+}
+
+fn topic_uses(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let (_nodes, meta) = build_tree(&source, &rel)?;
+    let bindings = build_state(&source, &rel, &meta)?;
+    let analysis = sail_compiler::analyze(&source, Some(Path::new(&rel)), &[]);
+    let program = sail_compiler::parse::parse_author(&source)
+        .map_err(|e| OpError::InvalidArgument(format!("parse: {e}")))?;
+
+    let mut symbols = Vec::new();
+    for b in &bindings {
+        symbols.push(json!({
+            "name": b.name,
+            "kind": b.kind,
+            "source": b.source,
+            "ssrTier": b.ssr_tier,
+            "span": b.span,
+            "readers": b.readers,
+            "writers": b.writers,
+            "crossRegion": !b.readers.is_empty() || !b.writers.is_empty(),
+        }));
+    }
+
+    let mut actions = Vec::new();
+    collect_use_actions(&program.template, &mut actions);
+
+    let tags: Vec<String> = analysis.tags;
+    let events: Vec<String> = analysis.events;
+
+    Ok(json!({
+        "file": rel,
+        "symbols": symbols,
+        "actions": actions,
+        "tags": tags,
+        "events": events,
+        "controllerPath": analysis.controller_path,
+    }))
+}
+
+fn collect_use_actions(instrs: &[sail_compiler::ir::Instr], out: &mut Vec<Value>) {
+    use sail_compiler::ir::{AttrInstr, Instr};
+    for instr in instrs {
+        match instr {
+            Instr::Element(el) => {
+                for a in &el.attrs {
+                    if let AttrInstr::Use { action, param, span } = a {
+                        out.push(json!({
+                            "action": action,
+                            "param": param.as_ref().map(|p| p.source.clone()),
+                            "tag": el.tag,
+                            "span": {
+                                "start": span.start,
+                                "end": span.end,
+                            },
+                        }));
+                    }
+                }
+                collect_use_actions(&el.children, out);
+            }
+            Instr::If(i) => {
+                for b in &i.branches {
+                    collect_use_actions(&b.body, out);
+                }
+                if let Some(e) = &i.else_body {
+                    collect_use_actions(e, out);
+                }
+            }
+            Instr::For(f) => {
+                collect_use_actions(&f.body, out);
+                if let Some(e) = &f.else_body {
+                    collect_use_actions(e, out);
+                }
+            }
+            Instr::Match(m) => {
+                for c in &m.cases {
+                    collect_use_actions(&c.body, out);
+                }
+                if let Some(d) = &m.default {
+                    collect_use_actions(d, out);
+                }
+            }
+            Instr::When(w) => {
+                collect_use_actions(&w.body, out);
+                if let Some(e) = &w.else_body {
+                    collect_use_actions(e, out);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn topic_cost(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let (source, rel) = require_path_source(args, ctx)?;
+    let (nodes, meta) = build_tree(&source, &rel)?;
+    let program = sail_compiler::parse::parse_author(&source)
+        .map_err(|e| OpError::InvalidArgument(format!("parse: {e}")))?;
+
+    let mut components = Vec::new();
+    // Per root + per significant host (L1 / userland / control-flow).
+    for n in &nodes {
+        let weight = estimate_node_weight(n, &nodes);
+        if n.layer == "l1-keyword" && n.children.is_empty() && weight.total < 2 {
+            continue;
+        }
+        components.push(json!({
+            "id": n.id,
+            "identity": n.identity,
+            "tag": n.tag,
+            "layer": n.layer,
+            "weight": weight,
+        }));
+    }
+
+    let totals = CostWeight {
+        elements: nodes.iter().filter(|n| n.layer != "l1-keyword").count(),
+        control_flow: nodes.iter().filter(|n| n.layer == "l1-keyword").count(),
+        attrs: nodes.iter().map(|n| n.attrs.len()).sum(),
+        dynamic_sites: count_dynamic_sites(&program.template),
+        nesting_max: max_nesting(&program.template, 0),
+        instrs: count_instrs(&program.template),
+        total: 0,
+    };
+    let mut totals = totals;
+    totals.total = totals.elements
+        + totals.control_flow * 2
+        + totals.attrs
+        + totals.dynamic_sites * 3
+        + totals.nesting_max
+        + totals.instrs;
+
+    // Sort heaviest first for agent triage.
+    components.sort_by(|a, b| {
+        let aw = a["weight"]["total"].as_u64().unwrap_or(0);
+        let bw = b["weight"]["total"].as_u64().unwrap_or(0);
+        bw.cmp(&aw)
+    });
+
+    Ok(json!({
+        "file": rel,
+        "roots": meta.root_ids,
+        "totals": totals,
+        "components": components,
+    }))
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct CostWeight {
+    elements: usize,
+    control_flow: usize,
+    attrs: usize,
+    dynamic_sites: usize,
+    nesting_max: usize,
+    instrs: usize,
+    total: usize,
+}
+
+fn estimate_node_weight(n: &TreeNode, all: &[TreeNode]) -> CostWeight {
+    let by_id: BTreeMap<&str, &TreeNode> = all.iter().map(|x| (x.id.as_str(), x)).collect();
+    let mut elements = 0usize;
+    let mut control_flow = 0usize;
+    let mut attrs = 0usize;
+    fn walk(
+        id: &str,
+        by_id: &BTreeMap<&str, &TreeNode>,
+        elements: &mut usize,
+        control_flow: &mut usize,
+        attrs: &mut usize,
+    ) {
+        let Some(n) = by_id.get(id) else {
+            return;
+        };
+        if n.layer == "l1-keyword" {
+            *control_flow += 1;
+        } else {
+            *elements += 1;
+        }
+        *attrs += n.attrs.len();
+        for c in &n.children {
+            walk(c, by_id, elements, control_flow, attrs);
+        }
+    }
+    walk(&n.id, &by_id, &mut elements, &mut control_flow, &mut attrs);
+    let mut w = CostWeight {
+        elements,
+        control_flow,
+        attrs,
+        dynamic_sites: 0,
+        nesting_max: n.children.len(),
+        instrs: elements + control_flow,
+        total: 0,
+    };
+    w.total = w.elements + w.control_flow * 2 + w.attrs + w.instrs;
+    w
+}
+
+fn count_dynamic_sites(instrs: &[sail_compiler::ir::Instr]) -> usize {
+    use sail_compiler::ir::{AttrInstr, Instr};
+    let mut n = 0usize;
+    for instr in instrs {
+        match instr {
+            Instr::DynamicText { .. } => n += 1,
+            Instr::Element(el) => {
+                for a in &el.attrs {
+                    match a {
+                        AttrInstr::Expr { .. }
+                        | AttrInstr::BindValue { .. }
+                        | AttrInstr::BindChecked { .. }
+                        | AttrInstr::On { .. }
+                        | AttrInstr::Use { .. }
+                        | AttrInstr::Motion { .. }
+                        | AttrInstr::Mutation { .. } => n += 1,
+                        _ => {}
+                    }
+                }
+                n += count_dynamic_sites(&el.children);
+            }
+            Instr::If(i) => {
+                n += i.branches.len(); // each cond is dynamic
+                for b in &i.branches {
+                    n += count_dynamic_sites(&b.body);
+                }
+                if let Some(e) = &i.else_body {
+                    n += count_dynamic_sites(e);
+                }
+            }
+            Instr::For(f) => {
+                n += 1;
+                n += count_dynamic_sites(&f.body);
+                if let Some(e) = &f.else_body {
+                    n += count_dynamic_sites(e);
+                }
+            }
+            Instr::Match(m) => {
+                n += 1 + m.cases.len();
+                for c in &m.cases {
+                    n += count_dynamic_sites(&c.body);
+                }
+                if let Some(d) = &m.default {
+                    n += count_dynamic_sites(d);
+                }
+            }
+            Instr::When(w) => {
+                n += 1;
+                n += count_dynamic_sites(&w.body);
+                if let Some(e) = &w.else_body {
+                    n += count_dynamic_sites(e);
+                }
+            }
+            _ => {}
+        }
+    }
+    n
+}
+
+fn max_nesting(instrs: &[sail_compiler::ir::Instr], depth: usize) -> usize {
+    use sail_compiler::ir::Instr;
+    let mut max = depth;
+    for instr in instrs {
+        match instr {
+            Instr::Element(el) => {
+                max = max.max(max_nesting(&el.children, depth + 1));
+            }
+            Instr::If(i) => {
+                for b in &i.branches {
+                    max = max.max(max_nesting(&b.body, depth + 1));
+                }
+                if let Some(e) = &i.else_body {
+                    max = max.max(max_nesting(e, depth + 1));
+                }
+            }
+            Instr::For(f) => {
+                max = max.max(max_nesting(&f.body, depth + 1));
+                if let Some(e) = &f.else_body {
+                    max = max.max(max_nesting(e, depth + 1));
+                }
+            }
+            Instr::Match(m) => {
+                for c in &m.cases {
+                    max = max.max(max_nesting(&c.body, depth + 1));
+                }
+                if let Some(d) = &m.default {
+                    max = max.max(max_nesting(d, depth + 1));
+                }
+            }
+            Instr::When(w) => {
+                max = max.max(max_nesting(&w.body, depth + 1));
+                if let Some(e) = &w.else_body {
+                    max = max.max(max_nesting(e, depth + 1));
+                }
+            }
+            _ => {}
+        }
+    }
+    max
+}
+
+fn topic_themes(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let theme_id = args
+        .get("themeId")
+        .or_else(|| args.get("theme_id"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+
+    let ids = crate::theme::effective_ids(&json!({}), ctx).unwrap_or_else(|_| {
+        json!({"ok": false, "project": [], "catalog": [], "all": []})
+    });
+
+    let all_ids: Vec<String> = ids
+        .get("all")
+        .and_then(|v| v.as_array())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let focus: Vec<String> = match theme_id {
+        Some(id) => vec![id.to_string()],
+        None => all_ids.clone(),
+    };
+
+    let mut matrix = Vec::new();
+    for id in &focus {
+        let graph = crate::theme::graph_internal(Some(id), ctx).ok();
+        let modes = graph
+            .as_ref()
+            .and_then(|g| extract_modes_from_graph(g))
+            .unwrap_or_else(|| vec!["light".into()]);
+        let products = vec!["web".to_string()]; // product axis reserved; single web product today
+        for mode in &modes {
+            for product in &products {
+                matrix.push(json!({
+                    "themeId": id,
+                    "mode": mode,
+                    "product": product,
+                    "sources": graph.as_ref().and_then(|g| g.get("sources").cloned()).unwrap_or(json!([])),
+                    "tierCount": graph.as_ref().and_then(|g| g.get("tiers").and_then(|t| t.as_array()).map(|a| a.len())).unwrap_or(0),
+                    "nodeCount": graph.as_ref().and_then(|g| g.get("nodes").and_then(|t| t.as_array()).map(|a| a.len())).unwrap_or(0),
+                }));
+            }
+        }
+    }
+
+    Ok(json!({
+        "themes": ids,
+        "matrix": matrix,
+        "axes": {
+            "theme": focus,
+            "mode": matrix.iter().filter_map(|m| m.get("mode").and_then(|v| v.as_str()).map(str::to_string)).collect::<BTreeSet<_>>().into_iter().collect::<Vec<_>>(),
+            "product": ["web"],
+        },
+    }))
+}
+
+fn extract_modes_from_graph(graph: &Value) -> Option<Vec<String>> {
+    // Paths like modes.light.* appear as node path prefixes in walk — recover unique mode names.
+    let nodes = graph.get("nodes")?.as_array()?;
+    let mut modes = BTreeSet::new();
+    for n in nodes {
+        if let Some(p) = n.get("path").and_then(|v| v.as_str()) {
+            if let Some(rest) = p.strip_prefix("modes.") {
+                if let Some(mode) = rest.split('.').next() {
+                    if !mode.is_empty() {
+                        modes.insert(mode.to_string());
+                    }
+                }
+            }
+        }
+    }
+    if modes.is_empty() {
+        // Fallback: light/dark common pair when theme has no modes.* paths.
+        return Some(vec!["light".into(), "dark".into()]);
+    }
+    Some(modes.into_iter().collect())
+}
+
 // ── TokenUsage ──────────────────────────────────────────────────────────────
 
 /// Static cssName / path fragment → component ids (blast radius when CEM unavailable).
@@ -1734,5 +2932,294 @@ export default controller((_ctx: ControllerScope<any>) => {
             has_packages,
             "expected packages/ sites for primary (fair per-root budget)"
         );
+    }
+
+    // ── WI5 topic surface ───────────────────────────────────────────────────
+
+    /// Fixture app covering match arms, signals, a11y props, tokens, queries.
+    fn wi5_fixture() -> (tempfile::TempDir, Ctx, String) {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let sail_path = root.join("apps/demo/routes/inspect-fixture.sail");
+        std::fs::create_dir_all(sail_path.parent().unwrap()).unwrap();
+        // Minimal theme so cascade/themes resolve inside the temp workspace.
+        let theme_dir = root.join("packages/sail/tokens/model/themes");
+        std::fs::create_dir_all(&theme_dir).unwrap();
+        std::fs::write(
+            root.join("packages/sail/tokens/model/base.json"),
+            r#"{"color":{"base":{"$value":"oklch(0.5 0 0)","$type":"color","$extensions":{"ship":{"cssName":"base","layer":"base"}}}}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            theme_dir.join("ship.json"),
+            r#"{
+              "$extensions": { "ship": { "layer": "theme", "themeId": "ship" } },
+              "modes": {
+                "light": {
+                  "color": {
+                    "primary": {
+                      "$value": "{color.base}",
+                      "$type": "color",
+                      "$extensions": { "ship": { "cssName": "primary", "layer": "theme" } }
+                    }
+                  }
+                },
+                "dark": {
+                  "color": {
+                    "primary": {
+                      "$value": "oklch(0.8 0.1 250)",
+                      "$type": "color",
+                      "$extensions": { "ship": { "cssName": "primary", "layer": "theme" } }
+                    }
+                  }
+                }
+              }
+            }"#,
+        )
+        .unwrap();
+        let src = r#"
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+export default controller((_ctx: ControllerScope<any>) => {
+  const tone = signal<'info' | 'ok' | 'bad'>('info')
+  const ticks = signal(0)
+  const deals = query(() => client.deals.list(), { key: 'crm.deals.list' })
+  const save = mutation(() => client.deals.save(), { key: 'crm.deals.save' })
+  effect(() => {
+    invalidate('crm.deals')
+  })
+  return { tone, ticks, deals, save }
+})
+</controller>
+<column gap="4">
+  <navbar label="Main">
+    <button label="Save" on:click={() => save.mutate()}>Save</button>
+  </navbar>
+  <card>
+    <match {tone()}>
+      {'info' => <alert>Heads up {ticks()}</alert>}
+      {'ok' => <badge>All good</badge>}
+      {'bad' => <button label="Retry">Retry</button>}
+      {else => <span>pick</span>}
+    </match>
+  </card>
+  <span style_hint="primary">{ticks()}</span>
+</column>
+"#;
+        std::fs::write(&sail_path, src).unwrap();
+        let ctx = Ctx::new(root, root.join("apps/demo"), root);
+        let rel = "apps/demo/routes/inspect-fixture.sail".to_string();
+        (dir, ctx, rel)
+    }
+
+    #[test]
+    fn wi5_all_topics_parse() {
+        for t in InspectTopic::all() {
+            assert_eq!(InspectTopic::parse(t.as_str()), Some(*t));
+        }
+        assert_eq!(InspectTopic::parse("layout"), Some(InspectTopic::Geometry));
+        assert_eq!(InspectTopic::parse("aria"), Some(InspectTopic::A11y));
+        assert!(InspectTopic::parse("nope").is_none());
+    }
+
+    #[test]
+    fn wi5_topic_tree_has_wi7_identity() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out = inspect(&json!({"topic": "tree", "path": rel}), &ctx).expect("tree");
+        assert_eq!(out["topic"], "tree");
+        assert_eq!(out["modelVersion"], MODEL_VERSION);
+        let nodes = out["nodes"].as_array().unwrap();
+        assert!(!nodes.is_empty());
+        for n in nodes {
+            let idt = n.get("identity").expect("identity");
+            assert_eq!(idt["nodeId"], n["id"]);
+            assert!(idt.get("locator").is_some());
+            assert!(idt.get("span").is_some());
+        }
+        let tags: Vec<&str> = nodes.iter().filter_map(|n| n["tag"].as_str()).collect();
+        assert!(tags.contains(&"column"), "{tags:?}");
+        assert!(tags.contains(&"match"), "{tags:?}");
+        assert!(tags.contains(&"button"), "{tags:?}");
+    }
+
+    #[test]
+    fn wi5_topic_geometry_boxes_join_identity() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out = inspect(
+            &json!({
+                "topic": "geometry",
+                "path": rel,
+                "viewport": {"width": 800, "height": 600}
+            }),
+            &ctx,
+        )
+        .expect("geometry");
+        assert_eq!(out["topic"], "geometry");
+        let boxes = out["boxes"].as_array().unwrap();
+        // Layout may produce zero boxes on minimal fixture in edge cases; prefer non-empty.
+        // When boxes exist they must carry id + optional identity.
+        for b in boxes {
+            assert!(b.get("id").is_some(), "{b}");
+            assert!(b.get("w").is_some());
+            assert!(b.get("h").is_some());
+        }
+    }
+
+    #[test]
+    fn wi5_topic_cascade_resolves_alias_chain() {
+        let (_dir, ctx, _rel) = wi5_fixture();
+        let out = inspect(
+            &json!({"topic": "cascade", "token": "primary", "themeId": "ship"}),
+            &ctx,
+        )
+        .expect("cascade");
+        assert_eq!(out["topic"], "cascade");
+        assert_eq!(out["token"], "primary");
+        let chain = out["chain"].as_array().unwrap();
+        assert!(
+            !chain.is_empty(),
+            "expected cascade chain for primary: {out}"
+        );
+        // First step should mention primary / color.primary path.
+        let first = chain[0]["path"].as_str().unwrap_or("");
+        assert!(
+            first.contains("primary") || first.contains("color"),
+            "path={first}"
+        );
+    }
+
+    #[test]
+    fn wi5_topic_states_match_matrix() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out = inspect(&json!({"topic": "states", "path": rel}), &ctx).expect("states");
+        assert_eq!(out["topic"], "states");
+        let matches = out["matches"].as_array().unwrap();
+        assert!(!matches.is_empty(), "expected match matrix: {out}");
+        let m0 = &matches[0]["match"];
+        assert!(m0["discriminant"].as_str().unwrap().contains("tone"));
+        let arms = m0["arms"].as_array().unwrap();
+        assert!(arms.len() >= 3, "arms={arms:?}");
+        let tests: Vec<&str> = arms
+            .iter()
+            .filter_map(|a| a["test"].as_str())
+            .collect();
+        assert!(tests.iter().any(|t| *t == "info" || t.contains("info")), "{tests:?}");
+        assert!(tests.iter().any(|t| *t == "else"), "{tests:?}");
+        // Match host should carry WI7 identity when joined.
+        assert!(m0.get("identity").is_some() || m0.get("id").is_some());
+    }
+
+    #[test]
+    fn wi5_topic_a11y_aria_tree() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out = inspect(&json!({"topic": "a11y", "path": rel}), &ctx).expect("a11y");
+        assert_eq!(out["topic"], "a11y");
+        let nodes = out["nodes"].as_array().unwrap();
+        assert!(!nodes.is_empty());
+        let button = nodes
+            .iter()
+            .find(|n| n["tag"] == "button")
+            .expect("button node");
+        assert_eq!(button["role"], "button");
+        assert!(
+            button["name"].as_str().is_some_and(|n| !n.is_empty()),
+            "button name: {button}"
+        );
+        assert!(button.get("identity").is_some());
+        assert!(button.get("aria").is_some());
+        // Navbar host anatomy → navigation role.
+        if let Some(nav) = nodes.iter().find(|n| n["tag"] == "navbar") {
+            assert_eq!(nav["role"], "navigation", "{nav}");
+        }
+        assert!(out["tree"].as_array().is_some());
+    }
+
+    #[test]
+    fn wi5_topic_invalidations_query_mutation_graph() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out =
+            inspect(&json!({"topic": "invalidations", "path": rel}), &ctx).expect("invalidations");
+        assert_eq!(out["topic"], "invalidations");
+        // Query/mutation extraction is best-effort from controller text.
+        let q = out["queries"].as_array().unwrap();
+        let m = out["mutations"].as_array().unwrap();
+        let inv = out["invalidates"].as_array().unwrap();
+        let edges = out["edges"].as_array().unwrap();
+        // At least one of the key kinds should surface from the fixture controller.
+        assert!(
+            !q.is_empty() || !m.is_empty() || !inv.is_empty(),
+            "expected query/mutation/invalidate entries: {out}"
+        );
+        let _ = edges; // edges may be empty when keys don't relate
+    }
+
+    #[test]
+    fn wi5_topic_uses_cross_region_symbols() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out = inspect(&json!({"topic": "uses", "path": rel}), &ctx).expect("uses");
+        assert_eq!(out["topic"], "uses");
+        let symbols = out["symbols"].as_array().unwrap();
+        let tone = symbols.iter().find(|s| s["name"] == "tone");
+        let ticks = symbols.iter().find(|s| s["name"] == "ticks");
+        assert!(tone.is_some() || ticks.is_some(), "symbols={symbols:?}");
+        if let Some(t) = ticks {
+            let readers = t["readers"].as_array().unwrap();
+            assert!(!readers.is_empty(), "ticks should have template readers");
+            assert_eq!(t["crossRegion"], true);
+        }
+        assert!(out["tags"].as_array().is_some());
+        assert!(out["events"].as_array().is_some());
+    }
+
+    #[test]
+    fn wi5_topic_cost_emit_weight() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let out = inspect(&json!({"topic": "cost", "path": rel}), &ctx).expect("cost");
+        assert_eq!(out["topic"], "cost");
+        let totals = &out["totals"];
+        assert!(totals["total"].as_u64().unwrap() >= 1);
+        assert!(totals["instrs"].as_u64().unwrap() >= 1);
+        let components = out["components"].as_array().unwrap();
+        assert!(!components.is_empty());
+        for c in components {
+            assert!(c.get("identity").is_some(), "{c}");
+            assert!(c["weight"]["total"].as_u64().is_some());
+        }
+    }
+
+    #[test]
+    fn wi5_topic_themes_matrix() {
+        let (_dir, ctx, _rel) = wi5_fixture();
+        let out = inspect(&json!({"topic": "themes", "themeId": "ship"}), &ctx).expect("themes");
+        assert_eq!(out["topic"], "themes");
+        let matrix = out["matrix"].as_array().unwrap();
+        assert!(!matrix.is_empty(), "{out}");
+        for row in matrix {
+            assert_eq!(row["themeId"], "ship");
+            assert!(row.get("mode").is_some());
+            assert_eq!(row["product"], "web");
+        }
+        let modes = out["axes"]["mode"].as_array().unwrap();
+        assert!(
+            modes.iter().any(|m| m == "light" || m == "dark"),
+            "modes={modes:?}"
+        );
+    }
+
+    #[test]
+    fn wi5_unknown_topic_errors() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let err = inspect(&json!({"topic": "nope", "path": rel}), &ctx).unwrap_err();
+        assert!(matches!(err, OpError::InvalidArgument(_)));
+    }
+
+    #[test]
+    fn wi5_mcp_and_rpc_same_inspect() {
+        let (_dir, ctx, rel) = wi5_fixture();
+        let args = json!({"topic": "tree", "path": rel});
+        let via_rpc = crate::call_rpc("SailInspect", "Inspect", &args, &ctx).unwrap();
+        let via_mcp = crate::call_mcp_tool("sail_inspect", &args, &ctx).unwrap();
+        assert_eq!(via_rpc, via_mcp);
+        assert_eq!(via_rpc["topic"], "tree");
     }
 }

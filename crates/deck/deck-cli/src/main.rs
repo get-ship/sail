@@ -34,7 +34,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (create, dev, build, scaffold, compile, tokens, types, check, fmt, lsp, mcp, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (create, dev, build, scaffold, compile, tokens, types, check, fmt, inspect, lsp, mcp, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -189,6 +189,37 @@ enum Command {
         /// Check only — exit 1 if any file would change (CI).
         #[arg(long)]
         check: bool,
+    },
+
+    /// Read-only IR projections (TOOLING-1 WI5). Twin of MCP `sail_inspect`.
+    ///
+    /// Topics: tree | geometry | cascade | states | a11y | invalidations |
+    /// uses | cost | themes. JSON on stdout.
+    ///
+    /// Examples:
+    ///   sail inspect tree apps/demo/routes/page.sail
+    ///   sail inspect geometry apps/demo/routes/page.sail --viewport 1440x900
+    ///   sail inspect cascade --token primary
+    ///   sail inspect themes
+    Inspect {
+        /// Inspect topic (tree | geometry | cascade | states | a11y |
+        /// invalidations | uses | cost | themes).
+        topic: String,
+        /// Workspace-relative `.sail` path (required for most topics).
+        #[arg(default_value = "")]
+        path: String,
+        /// Geometry viewport `WxH` (e.g. 1440x900).
+        #[arg(long, value_parser = parse_render_viewport)]
+        viewport: Option<(u32, u32)>,
+        /// Cascade: design token path or cssName tail.
+        #[arg(long)]
+        token: Option<String>,
+        /// Cascade / themes: theme id filter.
+        #[arg(long = "theme-id")]
+        theme_id: Option<String>,
+        /// Optional tree node id filter.
+        #[arg(long = "node-id")]
+        node_id: Option<String>,
     },
 
     /// Language server (stdio) — same protocol as the `sail-lsp` package binary.
@@ -386,6 +417,14 @@ fn run() -> Result<()> {
         } => peer::types(project, out, tsconfig_out),
         Command::Check { input, fix } => peer::check(input, fix),
         Command::Fmt { input, check } => peer::fmt(input, check),
+        Command::Inspect {
+            topic,
+            path,
+            viewport,
+            token,
+            theme_id,
+            node_id,
+        } => peer::inspect(topic, path, viewport, token, theme_id, node_id),
         Command::Lsp => peer::lsp(),
         Command::Mcp => {
             peer::mcp();

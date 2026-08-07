@@ -153,6 +153,20 @@ export interface PolicyRet {
   [key: string]: JsonValue | undefined
 }
 
+export interface InspectArgs {
+  nodeId?: string
+  path?: string
+  themeId?: string
+  token?: string
+  topic: string
+  viewport?: InspectViewport
+}
+
+export interface InspectRet {
+  modelVersion: number
+  topic: string
+}
+
 export interface InspectModelArgs {
   path: string
   viewport?: InspectViewport
@@ -634,6 +648,14 @@ export async function sailAuthoringPolicy(
   opts?: ClientOptions,
 ): Promise<PolicyRet> {
   return postJson<PolicyRet>('/sail.ops.v1.SailAuthoring/Policy', args ?? {}, opts)
+}
+
+// SailInspect/Inspect — IR query interface (TOOLING-1 WI5). Pass topic: tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes. Read-only projections; tree nodes carry WI7 identity. Optional path, viewport (geometry), token (cascade), themeId, nodeId.
+export async function sailInspectInspect(
+  args: InspectArgs,
+  opts?: ClientOptions,
+): Promise<InspectRet> {
+  return postJson<InspectRet>('/sail.ops.v1.SailInspect/Inspect', args ?? {}, opts)
 }
 
 // SailInspect/Model — Canonical per-file Sail model (tree, layout, state, diagnostics, data, theme). Source-derived; modelVersion 1.

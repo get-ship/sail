@@ -22,6 +22,7 @@ pub mod typed;
 pub mod watch;
 
 pub use authoring::{CheckDiag, SurfaceTopic, surface_markdown};
+pub use inspect::InspectTopic;
 pub use contracts::METHOD_CONTRACTS;
 pub use ctx::Ctx;
 pub use error::OpError;
@@ -105,6 +106,10 @@ pub fn call_rpc(
         ("SailAuthoring", "Policy") => {
             let _a: contracts::PolicyArgs = parse_args(args_json)?;
             authoring::policy(args_json, ctx)
+        }
+        ("SailInspect", "Inspect") => {
+            let _a: contracts::InspectArgs = parse_args(args_json)?;
+            inspect::inspect(args_json, ctx)
         }
         ("SailInspect", "Model") => {
             let _a: contracts::InspectModelArgs = parse_args(args_json)?;

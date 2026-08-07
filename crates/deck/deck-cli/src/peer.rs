@@ -22,7 +22,7 @@ pub fn print_version(brand: &str) {
     println!("{brand} {pkg}");
     println!("  package: deck-cli {pkg}");
     // Peer crates share workspace versioning discipline; surface names only.
-    println!("  peers: compiler, lsp, mcp, layout (in-process via sail subcommands)");
+    println!("  peers: compiler, lsp, mcp, layout, inspect (in-process via sail subcommands)");
     println!("  install: cargo install --path crates/deck/deck-cli --bin sail");
     println!("  docs:    README.md § Build / CLI; `sail doctor` for local health");
 }
@@ -51,6 +51,7 @@ pub fn doctor(brand: &str) -> Result<()> {
 
     // Peer libraries linked into this binary — not PATH probes.
     println!("  sail compile/tokens/check/fmt: in-process (sail-compiler)");
+    println!("  sail inspect: in-process (sail-ops SailInspect/Inspect)");
     println!("  sail lsp: in-process (sail-lsp)");
     println!("  sail mcp: in-process (sail-mcp → sail-ops)");
     println!("  sail op: in-process (sail-ops Connect handlers)");
@@ -215,6 +216,56 @@ fn parse_op_target(target: &str) -> Result<(String, String)> {
         bail!("expected Service/Method, got `{target}`");
     }
     Ok((service.to_string(), method.to_string()))
+}
+
+/// `sail inspect <topic>` — read-only IR projections (TOOLING-1 WI5).
+///
+/// Same handlers as MCP `sail_inspect` / SailInspect/Inspect.
+pub fn inspect(
+    topic: String,
+    path: String,
+    viewport: Option<(u32, u32)>,
+    token: Option<String>,
+    theme_id: Option<String>,
+    node_id: Option<String>,
+) -> Result<()> {
+    let ctx = sail_ops::default_ctx();
+    let mut args = serde_json::json!({ "topic": topic });
+    let obj = args.as_object_mut().expect("object");
+    let path = path.trim();
+    if !path.is_empty() {
+        // Prefer workspace-relative path: strip cwd prefix when absolute under workspace.
+        let rel = {
+            let p = PathBuf::from(path);
+            if p.is_absolute() {
+                p.strip_prefix(&ctx.workspace_root)
+                    .map(|r| r.to_string_lossy().replace('\\', "/"))
+                    .unwrap_or_else(|_| path.to_string())
+            } else {
+                path.to_string()
+            }
+        };
+        obj.insert("path".into(), serde_json::json!(rel));
+    }
+    if let Some((w, h)) = viewport {
+        obj.insert(
+            "viewport".into(),
+            serde_json::json!({ "width": w, "height": h }),
+        );
+    }
+    if let Some(t) = token {
+        obj.insert("token".into(), serde_json::json!(t));
+    }
+    if let Some(t) = theme_id {
+        obj.insert("themeId".into(), serde_json::json!(t));
+    }
+    if let Some(n) = node_id {
+        obj.insert("nodeId".into(), serde_json::json!(n));
+    }
+    let out = sail_ops::call_rpc("SailInspect", "Inspect", &args, &ctx)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    println!("{}", serde_json::to_string_pretty(&out)?);
+    Ok(())
 }
 
 /// `sail fmt` — pretty-print `.sail` files (CST template + oxfmt TS regions).

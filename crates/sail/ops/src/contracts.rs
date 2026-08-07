@@ -281,6 +281,50 @@ pub struct InspectTokenUsageRet {
     pub sites: Vec<Json>,
 }
 
+/// Unified WI5 inspect (topic-param, mirrors sail_surface).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct InspectArgs {
+    /// tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes
+    pub topic: String,
+    /// Workspace-relative `.sail` path (required for file topics).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    /// Geometry viewport `{ width, height }`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viewport: Option<InspectViewport>,
+    /// Cascade: design token path or cssName tail.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub token: Option<String>,
+    /// Cascade / themes: theme id filter.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "themeId",
+        alias = "theme_id"
+    )]
+    pub theme_id: Option<String>,
+    /// Optional filter to one tree node id.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "nodeId",
+        alias = "node_id"
+    )]
+    pub node_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct InspectRet {
+    pub topic: String,
+    #[serde(rename = "modelVersion")]
+    pub model_version: u32,
+    /// Topic-specific payload keys are merged at the top level in the live
+    /// handler (`file`, `nodes`, `boxes`, `chain`, …). This field documents
+    /// the open object for schema consumers.
+    #[serde(flatten)]
+    pub body: Json,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ThemeGraphArgs {
     #[serde(
@@ -903,6 +947,18 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "PolicyRet",
         "  mode: string\n  project?: string\n",
         "  [key: string]: JsonValue | undefined\n"
+    ),
+    contract!(
+        "SailInspect",
+        "Inspect",
+        "sail_inspect",
+        "IR query interface (TOOLING-1 WI5). Pass topic: tree | geometry | cascade | states | a11y | invalidations | uses | cost | themes. Read-only projections; tree nodes carry WI7 identity. Optional path, viewport (geometry), token (cascade), themeId, nodeId.",
+        InspectArgs,
+        InspectRet,
+        "InspectArgs",
+        "InspectRet",
+        "  topic: string\n  path?: string\n  viewport?: { width: number; height: number }\n  token?: string\n  themeId?: string\n  nodeId?: string\n",
+        "  topic: string\n  modelVersion: number\n  [key: string]: JsonValue | undefined\n"
     ),
     contract!(
         "SailInspect",

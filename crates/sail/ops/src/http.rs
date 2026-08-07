@@ -48,6 +48,7 @@ pub fn connect_router_with_ctx(ctx: Ctx) -> Router {
         .route("/sail.ops.v1.SailAuthoring/LayoutCheck", post(unary))
         .route("/sail.ops.v1.SailAuthoring/ListFiles", post(unary))
         .route("/sail.ops.v1.SailAuthoring/Policy", post(unary))
+        .route("/sail.ops.v1.SailInspect/Inspect", post(unary))
         .route("/sail.ops.v1.SailInspect/Model", post(unary))
         .route("/sail.ops.v1.SailInspect/Tree", post(unary))
         .route("/sail.ops.v1.SailInspect/State", post(unary))
