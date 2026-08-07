@@ -33,7 +33,10 @@
   const vDefault = style({ paint: bg(button).border(button-border).fg(button-foreground).shadow(xs) }).when(hover, { paint: bg(button-hover-bg).border(border-strong) })
   const vSolid = style({ paint: bg(foreground).border(foreground).fg(background).shadow(xs) }).when(hover, { paint: opacity(90).shadow(sm) })
   const vSoft = style({ paint: bg(hover-bg).border(button-border).fg(button-foreground) }).when(hover, { paint: opacity(90) })
-  const vOutline = style({ paint: border(button-foreground).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
+  // Outline rest MUST set bg(transparent). Without it, UA buttonface (light gray)
+  // shows through on dark themes even with appearance(none) — looks unthemed.
+  // Scoped to [variant=outline] only — not base — so F7 cascade landmine stays dead.
+  const vOutline = style({ paint: bg(transparent).border(button-foreground).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
   const vGhost = style({ paint: bg(transparent).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
 </scope>
 

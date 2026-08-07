@@ -1,5 +1,5 @@
 {
-  "$description": "SHIP theme — light/dark modes in one file (modes-in-file).",
+  "$description": "SHIP theme \u2014 light/dark modes in one file (modes-in-file).",
   "$extensions": {
     "ship": {
       "layer": "theme",
@@ -191,6 +191,26 @@
                 "cssName": "surface-1"
               }
             }
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.95 0.003 106.424)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.147 0.004 49.25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
           }
         }
       },
@@ -626,6 +646,26 @@
               }
             },
             "$type": "number"
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.2 0.01 50)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.98 0.001 106)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
           }
         }
       },

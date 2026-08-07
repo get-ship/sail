@@ -405,6 +405,26 @@
             },
             "$type": "color"
           }
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.20 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
+          }
         }
       },
       "interaction": {

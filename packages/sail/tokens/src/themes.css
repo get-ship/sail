@@ -6,7 +6,7 @@
  * Regenerate: cargo run -p sail-compiler -- tokens
  */
 
-/* ─── theme:ship (themes/ship.json#mode=light) ─── */
+/* ─── theme:ship (project-themes/ship.json#mode=light) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
 :root[theme='ship'][data-mode='light'],
 :root[theme='ship']:not([data-mode]),
@@ -32,8 +32,8 @@
   --surface-0: oklch(0.97 0.004 80);
   --surface-1: oklch(1 0 0);
   --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: var(--font-display);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -57,7 +57,7 @@
   --selected-strength: 14%;
 }
 
-/* ─── theme:ship (themes/ship.json#mode=dark) ─── */
+/* ─── theme:ship (project-themes/ship.json#mode=dark) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
 :root[theme='ship'][data-mode='dark'],
 [theme='ship'][data-mode='dark'] {
@@ -81,8 +81,8 @@
   --surface-overlay-blend: normal;
   --surface-overlay-opacity: 1;
   --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: var(--font-display);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -504,6 +504,8 @@
   --syntax-tag: oklch(0.78 0.18 145);
   --syntax-type: oklch(0.78 0.14 180);
   --warning: oklch(0.85 0.18 90);
+  --secondary: oklch(0.20 0.012 220);
+  --secondary-foreground: oklch(0.92 0.06 145);
   --active-strength: 18%;
   --hover-strength: 12%;
   --selected-strength: 22%;
@@ -590,6 +592,8 @@
   --syntax-type: oklch(0.92 0.16 195);
   --syntax-variable: oklch(0.98 0 0);
   --warning: oklch(0.87 0.18 85);
+  --secondary: oklch(0.20 0 0);
+  --secondary-foreground: oklch(0.99 0 0);
   --active-strength: 22%;
   --hover-strength: 14%;
   --selected-strength: 30%;
@@ -861,6 +865,8 @@
   --surface-overlay-blend: overlay;
   --surface-overlay-opacity: 0.6;
   --warning: oklch(0.85 0.20 95);
+  --secondary: oklch(0.30 0.05 265);
+  --secondary-foreground: oklch(0.95 0.02 265);
   --active-strength: 26%;
   --hover-strength: 18%;
   --selected-strength: 32%;
@@ -942,6 +948,8 @@
   --surface-overlay-blend: screen;
   --surface-overlay-opacity: 0.35;
   --warning: oklch(0.82 0.20 95);
+  --secondary: oklch(0.30 0.06 285);
+  --secondary-foreground: oklch(0.95 0.02 100);
   --control-lift: -2px;
   --press-scale: 0.98;
   --press-translate: 1px;
@@ -991,6 +999,8 @@
   --surface-2: oklch(1 0 0);
   --surface-0: oklch(0.97 0.010 250);
   --surface-1: oklch(1 0 0);
+  --secondary: oklch(0.95 0.012 250);
+  --secondary-foreground: oklch(0.22 0.035 255);
   --body-font: var(--font-body);
   --font-body: var(--font-body-app);
   --heading-font: var(--font-display);
@@ -1040,6 +1050,8 @@
   --surface-overlay: none;
   --surface-overlay-blend: normal;
   --surface-overlay-opacity: 1;
+  --secondary: oklch(0.22 0.035 255);
+  --secondary-foreground: oklch(0.97 0.01 250);
   --body-font: var(--font-body);
   --font-body: var(--font-body-app);
   --heading-font: var(--font-display);

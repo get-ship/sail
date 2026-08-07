@@ -1,5 +1,5 @@
 {
-  "$description": "Sail brand theme — dual-mode with cooler electric primary (framework default).",
+  "$description": "Sail brand theme \u2014 dual-mode with cooler electric primary (framework default).",
   "$extensions": {
     "ship": {
       "layer": "theme",
@@ -191,6 +191,26 @@
                 "cssName": "surface-1"
               }
             }
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.95 0.012 250)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.22 0.035 255)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
           }
         }
       },
@@ -626,6 +646,26 @@
               }
             },
             "$type": "number"
+          }
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.22 0.035 255)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.97 0.01 250)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
           }
         }
       },
