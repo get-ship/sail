@@ -1,7 +1,7 @@
 {
   "$description": "Retro-future neon. Modes-in-file (light/dark).",
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "synthwave",
       "defaultMode": "dark",
@@ -16,305 +16,150 @@
         "brandAccent": {
           "default": {
             "$value": "oklch(0.75 0.22 190)",
-            "$extensions": {
-              "ship": {
-                "cssName": "accent"
-              }
-            },
             "$type": "color"
           },
           "foreground": {
             "$value": "oklch(0.14 0.03 190)",
-            "$extensions": {
-              "ship": {
-                "cssName": "accent-foreground"
-              }
-            },
             "$type": "color"
           }
         },
         "background": {
           "$value": "oklch(0.16 0.06 285)",
-          "$extensions": {
-            "ship": {
-              "cssName": "background"
-            }
-          },
           "$type": "color"
         },
         "border": {
           "default": {
             "$value": "oklch(0.95 0.05 320 / 30%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "border"
-              }
-            },
             "$type": "color"
           },
           "strong": {
             "$value": "oklch(0.95 0.05 320 / 45%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "border-strong"
-              }
-            },
             "$type": "color"
           },
           "subtle": {
             "$value": "oklch(0.95 0.05 320 / 18%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "border-subtle"
-              }
-            },
             "$type": "color"
           }
         },
         "destructive": {
           "default": {
             "$value": "oklch(0.60 0.26 25)",
-            "$extensions": {
-              "ship": {
-                "cssName": "destructive"
-              }
-            },
             "$type": "color"
           }
         },
         "foreground": {
           "$value": "oklch(0.95 0.02 100)",
-          "$extensions": {
-            "ship": {
-              "cssName": "foreground"
-            }
-          },
           "$type": "color"
         },
         "glow": {
           "accent": {
             "$value": "radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent), transparent 60%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "glow-accent"
-              }
-            },
             "$type": "dimension"
           },
           "primary": {
             "$value": "radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 60%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "glow-primary"
-              }
-            },
             "$type": "dimension"
           }
         },
         "gradient": {
           "accent": {
             "$value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "gradient-accent"
-              }
-            },
             "$type": "dimension"
           },
           "primary": {
             "$value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "gradient-primary"
-              }
-            },
             "$type": "dimension"
           },
           "surface": {
             "$value": "linear-gradient(180deg, oklch(0.22 0.08 285) 0%, oklch(0.16 0.06 285) 100%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "gradient-surface"
-              }
-            },
             "$type": "string"
           }
         },
         "info": {
           "default": {
             "$value": "oklch(0.70 0.18 230)",
-            "$extensions": {
-              "ship": {
-                "cssName": "info"
-              }
-            },
             "$type": "color"
           }
         },
         "input": {
           "$value": "oklch(0.95 0.05 320 / 30%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "input"
-            }
-          },
           "$type": "color"
         },
         "muted": {
           "default": {
             "$value": "oklch(0.30 0.06 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "muted"
-              }
-            },
             "$type": "color"
           },
           "foreground": {
             "$value": "oklch(0.72 0.04 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "muted-foreground"
-              }
-            },
             "$type": "color"
           }
         },
         "primary": {
           "default": {
             "$value": "oklch(0.65 0.28 340)",
-            "$extensions": {
-              "ship": {
-                "cssName": "primary"
-              }
-            },
             "$type": "color"
           },
           "foreground": {
             "$value": "oklch(0.14 0.03 340)",
-            "$extensions": {
-              "ship": {
-                "cssName": "primary-foreground"
-              }
-            },
             "$type": "color"
           }
         },
         "ring": {
           "default": {
             "$value": "oklch(0.75 0.22 190 / 70%)",
-            "$extensions": {
-              "ship": {
-                "cssName": "ring"
-              }
-            },
             "$type": "color"
           }
         },
         "success": {
           "default": {
             "$value": "oklch(0.70 0.20 145)",
-            "$extensions": {
-              "ship": {
-                "cssName": "success"
-              }
-            },
             "$type": "color"
           }
         },
         "surface": {
           "0": {
             "$value": "oklch(0.16 0.06 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-0"
-              }
-            },
             "$type": "color"
           },
           "1": {
             "$value": "oklch(0.22 0.08 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-1"
-              }
-            },
             "$type": "color"
           },
           "2": {
             "$value": "oklch(0.30 0.08 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-2"
-              }
-            },
             "$type": "color"
           },
           "3": {
             "$value": "oklch(0.38 0.08 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-3"
-              }
-            },
             "$type": "color"
           },
           "overlay": {
             "$value": "repeating-linear-gradient( 0deg, transparent 0 23px, oklch(0.65 0.28 340 / 5%) 23px 24px, transparent 24px 47px, oklch(0.75 0.22 190 / 5%) 47px 48px )",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-overlay"
-              }
-            },
             "$type": "string"
           },
           "overlay-blend": {
             "$value": "screen",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-overlay-blend"
-              }
-            },
             "$type": "string"
           },
           "overlay-opacity": {
             "$value": "0.35",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-overlay-opacity"
-              }
-            },
             "$type": "number"
           }
         },
         "warning": {
           "default": {
             "$value": "oklch(0.82 0.20 95)",
-            "$extensions": {
-              "ship": {
-                "cssName": "warning"
-              }
-            },
             "$type": "color"
           }
         },
         "secondary": {
           "default": {
             "$value": "oklch(0.30 0.06 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "secondary"
-              }
-            },
             "$type": "color"
           },
           "foreground": {
             "$value": "oklch(0.95 0.02 100)",
-            "$extensions": {
-              "ship": {
-                "cssName": "secondary-foreground"
-              }
-            },
             "$type": "color"
           }
         }
@@ -322,30 +167,15 @@
       "control": {
         "lift": {
           "$value": "-2px",
-          "$extensions": {
-            "ship": {
-              "cssName": "control-lift"
-            }
-          },
           "$type": "dimension"
         },
         "press": {
           "scale": {
             "$value": "0.98",
-            "$extensions": {
-              "ship": {
-                "cssName": "press-scale"
-              }
-            },
             "$type": "number"
           },
           "translate": {
             "$value": "1px",
-            "$extensions": {
-              "ship": {
-                "cssName": "press-translate"
-              }
-            },
             "$type": "dimension"
           }
         }
@@ -353,121 +183,56 @@
       "scrollbar": {
         "thumb": {
           "$value": "oklch(0.65 0.28 340)",
-          "$extensions": {
-            "ship": {
-              "cssName": "scrollbar-thumb"
-            }
-          },
           "$type": "color"
         },
         "thumb-hover": {
           "$value": "oklch(0.75 0.22 190)",
-          "$extensions": {
-            "ship": {
-              "cssName": "scrollbar-thumb-hover"
-            }
-          },
           "$type": "color"
         }
       },
       "shadow": {
         "accent": {
           "$value": "0 0 0 3px oklch(0.75 0.22 190 / 55%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-accent"
-            }
-          },
           "$type": "shadow"
         },
         "card-rest": {
           "$value": "0 4px 16px oklch(0.14 0.03 285 / 45%), 0 1px 1px oklch(0.14 0.03 285 / 20%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-card-rest"
-            }
-          },
           "$type": "shadow"
         },
         "edge-top": {
           "$value": "0 -8px 24px -8px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-edge-top"
-            }
-          },
           "$type": "shadow"
         },
         "hover": {
           "$value": "0 8px 24px oklch(0.14 0.03 285 / 55%), 0 2px 2px oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-hover"
-            }
-          },
           "$type": "shadow"
         },
         "inset-soft": {
           "$value": "inset 0 1px 2px oklch(0 0 0 / 15%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-inset-soft"
-            }
-          },
           "$type": "shadow"
         },
         "lg": {
           "$value": "0 8px 24px oklch(0.14 0.03 285 / 45%), 0 4px 4px oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-lg"
-            }
-          },
           "$type": "shadow"
         },
         "md": {
           "$value": "0 4px 12px oklch(0.14 0.03 285 / 40%), 0 2px 2px oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-md"
-            }
-          },
           "$type": "shadow"
         },
         "sm": {
           "$value": "0 2px 4px oklch(0.14 0.03 285 / 35%), 0 1px 1px oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-sm"
-            }
-          },
           "$type": "shadow"
         },
         "sticky": {
           "$value": "0 3px 10px -2px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-sticky"
-            }
-          },
           "$type": "shadow"
         },
         "xl": {
           "$value": "0 16px 48px oklch(0.14 0.03 285 / 50%), 0 8px 8px oklch(0.14 0.03 285 / 25%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-xl"
-            }
-          },
           "$type": "shadow"
         },
         "xs": {
           "$value": "0 1px 2px oklch(0.14 0.03 285 / 35%)",
-          "$extensions": {
-            "ship": {
-              "cssName": "shadow-xs"
-            }
-          },
           "$type": "shadow"
         }
       },
@@ -475,64 +240,34 @@
         "card": {
           "backdrop-filter": {
             "$value": "none",
-            "$extensions": {
-              "ship": {
-                "cssName": "card-backdrop-filter"
-              }
-            },
             "$type": "string"
           },
           "texture": {
             "$value": "none",
-            "$extensions": {
-              "ship": {
-                "cssName": "card-texture"
-              }
-            },
             "$type": "string"
           },
           "fg": {
             "$value": "oklch(0.95 0.02 100)",
-            "$extensions": {
-              "ship": {
-                "cssName": "card-foreground"
-              }
-            },
             "$type": "color"
           },
           "bg": {
             "$value": "oklch(0.22 0.08 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "card"
-              }
-            },
             "$type": "color"
           }
         },
         "popover": {
           "bg": {
             "$value": "oklch(0.22 0.08 285)",
-            "$extensions": {
-              "ship": {
-                "cssName": "popover"
-              }
-            },
             "$type": "color"
           },
           "fg": {
             "$value": "oklch(0.95 0.02 100)",
-            "$extensions": {
-              "ship": {
-                "cssName": "popover-foreground"
-              }
-            },
             "$type": "color"
           }
         }
       },
       "$extensions": {
-        "ship": {
+        "sail": {
           "dark": true
         }
       }

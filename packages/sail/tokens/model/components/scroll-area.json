@@ -4,21 +4,11 @@
     "scroll-area": {
       "thumb": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "scroll-area-thumb"
-          }
-        }
+        "$type": "color"
       },
       "thumb-hover": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "scroll-area-thumb-hover"
-          }
-        }
+        "$type": "color"
       }
     }
   }

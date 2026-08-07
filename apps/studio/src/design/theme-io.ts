@@ -134,7 +134,7 @@ export async function loadThemesOn(
                 )
               : []
           const ext = doc.$extensions as Record<string, unknown> | undefined
-          const ship = ext?.ship as Record<string, unknown> | undefined
+          const ship = ext?.sail as Record<string, unknown> | undefined
           const dmRaw = ship?.defaultMode
           const defaultMode =
             dmRaw === 'light' || dmRaw === 'dark' ? dmRaw : undefined

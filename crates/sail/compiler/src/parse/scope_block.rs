@@ -46,7 +46,7 @@ pub(crate) struct ScopeBlock {
     pub style_env: StyleEnv,
 }
 
-const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accent|muted";
+const TONE_VOCAB: &str = "primary|info|success|warning|destructive|accent|muted";
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, type/Style-value \
@@ -981,7 +981,7 @@ fn classify_field(
 
     if let Some(ann) = annotation {
         // Union of string literals — the ONLY annotation shape that is not
-        // Identity. Default must be explicit and a member (no first-member magic).
+        // Identity. Default is optional; when present it must be a member (no first-member magic).
         if let Some(members) = union_of_string_literals(ann) {
             let default = match value {
                 Some(v) => {
@@ -992,18 +992,12 @@ fn classify_field(
                         ))
                         .with_span(span));
                     }
-                    d
+                    Some(d)
                 }
-                None => {
-                    return Err(CompileError::new(format!(
-                        "union prop `{name}` needs an explicit default — write \
-                         `{name}: {ann} = '{first}'`.",
-                        first = members.first().map(String::as_str).unwrap_or_default()
-                    ))
-                    .with_span(span));
-                }
+                // Optional union: omit attribute = rest path (no first-member magic).
+                None => None,
             };
-            return Ok(decl(PropKind::Union(members), Some(default), true));
+            return Ok(decl(PropKind::Union(members), default, true));
         }
         return Ok(match ann {
             "string" => decl(
@@ -1466,10 +1460,14 @@ mod tests {
     }
 
     #[test]
-    fn union_without_default_is_refused_with_the_fix() {
-        let e = err("props: {\n  kind: 'a' | 'b'\n}");
-        assert!(e.message.contains("explicit default"), "{}", e.message);
-        assert!(e.message.contains("= 'a'"), "names the fix: {}", e.message);
+    fn union_without_default_is_optional() {
+        let b = block("props: {\n  kind: 'a' | 'b'\n}");
+        assert_eq!(
+            prop(&b, "kind").kind,
+            PropKind::Union(vec!["a".into(), "b".into()])
+        );
+        assert_eq!(prop(&b, "kind").default, None);
+        assert!(prop(&b, "kind").reflect);
     }
 
     #[test]
@@ -1562,7 +1560,10 @@ mod tests {
     fn tone_and_size_bare_defaults_expand_shared_unions() {
         let b = block("props: {\n  tone = 'primary'\n  size = 'md'\n}");
         match &prop(&b, "tone").kind {
-            PropKind::Union(v) => assert_eq!(v.len(), 8),
+            PropKind::Union(v) => {
+                assert_eq!(v.len(), 7);
+                assert!(!v.iter().any(|x| x == "default"));
+            }
             k => panic!("tone must be the shared union, got {k:?}"),
         }
         assert_eq!(prop(&b, "tone").default.as_deref(), Some("primary"));

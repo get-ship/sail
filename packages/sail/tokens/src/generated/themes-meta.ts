@@ -11,9 +11,9 @@
 export const THEME_ROOT_KEYS = ['$description', '$extensions', 'modes'] as const
 export type ThemeRootKey = (typeof THEME_ROOT_KEYS)[number]
 
-/** Allowed keys under `$extensions.ship` on a theme. */
-export const THEME_SHIP_KEYS = ['layer', 'themeId', 'defaultMode', 'supportedModes', 'density', 'ordered'] as const
-export type ThemeShipKey = (typeof THEME_SHIP_KEYS)[number]
+/** Allowed keys under `$extensions.sail` on a theme. */
+export const THEME_SAIL_KEYS = ['layer', 'themeId', 'defaultMode', 'supportedModes', 'density', 'ordered'] as const
+export type ThemeSailKey = (typeof THEME_SAIL_KEYS)[number]
 
 /** Allowed paint mode names (`data-mode` values). */
 export const THEME_PAINT_MODES = ['light', 'dark'] as const

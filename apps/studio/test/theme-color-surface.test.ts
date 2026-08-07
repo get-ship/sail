@@ -141,21 +141,20 @@ describe('color pick pipeline (hex → oklch write)', () => {
     expect(a).toMatch(/^oklch\(/)
   })
 
-  it('semantic role write stamps registry cssName (lowerer → --success not path-join)', async () => {
+  it('semantic role write lowers via publicName without leaf cssName stamp', async () => {
     seedLightTheme()
     const path = COLOR_ROLES.success.path
     await setTokenValue(path, '#16a34a')
     const doc = getDesignState().themeDoc
     expect(doc).toBeTruthy()
-    // Walk modes.light.color.success.default for $extensions.ship.cssName
     const modes = (doc as { modes?: { light?: Record<string, unknown> } }).modes?.light
     const success = (modes?.color as Record<string, unknown> | undefined)?.success as
-      | { default?: { $extensions?: { ship?: { cssName?: string } }; $value?: string } }
+      | { default?: { $extensions?: { sail?: { cssName?: string } }; $value?: string } }
       | undefined
     const leaf = success?.default
     expect(leaf?.$value, 'written oklch').toMatch(/^oklch\(/)
-    expect(leaf?.$extensions?.ship?.cssName, 'public cssName must be stamped').toBe('success')
-    // lowerThemeDoc twin of applyScope must emit --success
+    expect(leaf?.$extensions?.sail?.cssName, 'no cssName stamp').toBeUndefined()
+    // lowerThemeDoc twin of applyScope must emit --success via publicName(path)
     const { lowerThemeDoc } = await import('@ship/sail-runtime')
     const lowered = lowerThemeDoc(doc as Record<string, unknown>, 'light')
     expect(lowered.patch['--success']).toMatch(/^oklch\(/)

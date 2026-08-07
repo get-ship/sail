@@ -4,57 +4,27 @@
     "card": {
       "bg": {
         "$value": "{color.surface.1}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "card"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-foreground"
-          }
-        }
+        "$type": "color"
       },
       "backdrop-filter": {
         "$value": "none",
-        "$type": "string",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-backdrop-filter"
-          }
-        }
+        "$type": "string"
       },
       "texture": {
         "$value": "none",
-        "$type": "string",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture"
-          }
-        }
+        "$type": "string"
       },
       "texture-blend": {
         "$value": "overlay",
-        "$type": "string",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture-blend"
-          }
-        }
+        "$type": "string"
       },
       "texture-opacity": {
         "$value": "1",
-        "$type": "number",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture-opacity"
-          }
-        }
+        "$type": "number"
       }
     }
   }

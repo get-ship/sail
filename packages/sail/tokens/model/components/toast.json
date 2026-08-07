@@ -4,39 +4,19 @@
     "toast": {
       "bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "toast"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "toast-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "toast-border"
-          }
-        }
+        "$type": "color"
       },
       "stripe": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "toast-stripe"
-          }
-        }
+        "$type": "color"
       }
     }
   }

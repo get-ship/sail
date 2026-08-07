@@ -7,6 +7,7 @@ export * from './themes'
 export {
   TONE_NAMES_SOURCE,
   TONE_NAMES,
+  TONE,
   THEME_IDS,
   CONTROL_HEIGHT_STEPS,
   CONTROL_HEIGHT_TOKENS,
@@ -17,9 +18,13 @@ export {
   DURATION_TOKENS,
   SEMANTIC_COLOR_TOKENS,
 } from './generated/unions'
+export { publicName } from './public-name'
 // ThemeId is re-exported via ./themes (sourced from generated/unions).
 export type {
+  Tone,
   ToneName,
+  ToneGroup,
+  ToneMember,
   ControlHeight,
   ControlHeightToken,
   TextSize,

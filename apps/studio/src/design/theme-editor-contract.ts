@@ -6,7 +6,7 @@
  * Nothing in the themes surfaces may write outside this set.
  *
  * Schema envelope: packages/sail/tokens theme-schema / generated themes-meta
- * (THEME_ROOT_KEYS, THEME_SHIP_KEYS, THEME_MODE_GROUP_KEYS).
+ * (THEME_ROOT_KEYS, THEME_SAIL_KEYS, THEME_MODE_GROUP_KEYS).
  */
 
 import type { ThemeFacet } from '../compositions/theme-session/theme-nav'
@@ -30,7 +30,7 @@ export type ThemeEditorControl = {
   kind: SchemaFieldKind
   /**
    * DTCG / envelope path written (dot path).
-   * `modes.{mode}.…` for mode-scoped scales; `$extensions.ship.…` for meta.
+   * `modes.{mode}.…` for mode-scoped scales; `$extensions.sail.…` for meta.
    */
   schemaPath: string
   /** THEME_MODE_GROUP_KEYS entry when kind is scale|component. */
@@ -48,28 +48,28 @@ export const THEME_EDITOR_CONTROLS: readonly ThemeEditorControl[] = [
     facet: 'overview',
     label: 'Theme id',
     kind: 'identity',
-    schemaPath: '$extensions.ship.themeId',
+    schemaPath: '$extensions.sail.themeId',
   },
   {
     id: 'overview.defaultMode',
     facet: 'overview',
     label: 'Default mode',
     kind: 'mode',
-    schemaPath: '$extensions.ship.defaultMode',
+    schemaPath: '$extensions.sail.defaultMode',
   },
   {
     id: 'overview.supportedModes',
     facet: 'overview',
     label: 'Supported modes',
     kind: 'mode',
-    schemaPath: '$extensions.ship.supportedModes',
+    schemaPath: '$extensions.sail.supportedModes',
   },
   {
     id: 'overview.density',
     facet: 'overview',
     label: 'Density',
     kind: 'meta',
-    schemaPath: '$extensions.ship.density',
+    schemaPath: '$extensions.sail.density',
   },
   {
     id: 'overview.primary',
@@ -228,8 +228,8 @@ export function isContractWritePath(path: string): boolean {
   const p = path.trim()
   if (!p) return false
   // Envelope / meta
-  if (p.startsWith('$extensions.ship.')) {
-    const key = p.slice('$extensions.ship.'.length).split('.')[0]
+  if (p.startsWith('$extensions.sail.')) {
+    const key = p.slice('$extensions.sail.'.length).split('.')[0]
     return (
       key === 'themeId' ||
       key === 'defaultMode' ||
@@ -257,8 +257,8 @@ export function contractSchemaCoverage(): {
   component: boolean
 } {
   return {
-    identity: ['$extensions.ship.themeId'],
-    mode: ['$extensions.ship.defaultMode', '$extensions.ship.supportedModes'],
+    identity: ['$extensions.sail.themeId'],
+    mode: ['$extensions.sail.defaultMode', '$extensions.sail.supportedModes'],
     scaleGroups: [
       ...new Set(
         THEME_EDITOR_CONTROLS.map((c) => c.modeGroup).filter(

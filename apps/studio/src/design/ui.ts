@@ -92,7 +92,7 @@ export function displayValue(value: string, path: string, cssName?: string): str
 export function displayPathLabel(path: string): string {
   const knob = getKnob(path)
   if (knob?.label) return knob.label
-  if (path === '$extensions.ship.density') return 'Density'
+  if (path === '$extensions.sail.density') return 'Density'
   if (path.startsWith('$extensions.')) return humanPath(path.replace(/^\$extensions\./, ''))
   return humanLabel(path) || humanPath(path)
 }

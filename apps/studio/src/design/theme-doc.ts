@@ -29,7 +29,7 @@ export function stringifyTheme(doc: Record<string, unknown>): string {
 
 export function themeIdOf(doc: Record<string, unknown>, fallback: string): string {
   const ext = doc.$extensions as Record<string, unknown> | undefined
-  const ship = ext?.ship as Record<string, unknown> | undefined
+  const ship = ext?.sail as Record<string, unknown> | undefined
   const id = ship?.themeId
   return typeof id === 'string' && id ? id : fallback
 }
@@ -40,11 +40,11 @@ export function setThemeId(doc: Record<string, unknown>, id: string): Record<str
     ...((next.$extensions as object) ?? {}),
   } as Record<string, unknown>
   const ship = {
-    ...((ext.ship as object) ?? {}),
+    ...((ext.sail as object) ?? {}),
     themeId: id,
-    layer: (ext.ship as Record<string, unknown> | undefined)?.layer ?? 'theme',
+    layer: (ext.sail as Record<string, unknown> | undefined)?.layer ?? 'theme',
   }
-  ext.ship = ship
+  ext.sail = ship
   next.$extensions = ext
   return next
 }
@@ -52,7 +52,7 @@ export function setThemeId(doc: Record<string, unknown>, id: string): Record<str
 export function densityOf(doc: Record<string, unknown> | null): DensityId {
   if (!doc) return 'default'
   const ext = doc.$extensions as Record<string, unknown> | undefined
-  const ship = ext?.ship as Record<string, unknown> | undefined
+  const ship = ext?.sail as Record<string, unknown> | undefined
   const d = ship?.density
   if (d === 'compact' || d === 'spacious' || d === 'default') return d
   return 'default'
@@ -67,10 +67,10 @@ export function setDensity(
     ...((next.$extensions as object) ?? {}),
   } as Record<string, unknown>
   const ship = {
-    ...((ext.ship as object) ?? {}),
+    ...((ext.sail as object) ?? {}),
     density,
   }
-  ext.ship = ship
+  ext.sail = ship
   next.$extensions = ext
   return next
 }
@@ -331,15 +331,18 @@ export function resolveWritePath(
   return path
 }
 
-/** Set $value at dotted path, creating intermediate objects. Mode-aware. */
+/** Set $value at dotted path, creating intermediate objects. Mode-aware.
+ * Public CSS names come from generator `publicName(path)` at lower time —
+ * do not stamp `$extensions.*.cssName` on theme leaves.
+ */
 export function setPathValue(
   doc: Record<string, unknown>,
   path: string,
   value: string,
   type = 'dimension',
   modeId: 'light' | 'dark' = 'light',
-  /** Optional `$extensions.ship.cssName` so lower/emit hit framework token names (e.g. font-display-app). */
-  cssName?: string,
+  /** @deprecated Ignored — public names are generator-owned. */
+  _cssName?: string,
 ): Record<string, unknown> {
   const target = resolveWritePath(doc, path, modeId)
   const next = structuredClone(doc) as Record<string, unknown>
@@ -355,26 +358,41 @@ export function setPathValue(
   }
   const leaf = parts[parts.length - 1]
   const prev = (cur[leaf] as Record<string, unknown> | undefined) ?? {}
+  // Preserve non-cssName extensions if present; never stamp cssName.
   const prevExt =
     prev.$extensions && typeof prev.$extensions === 'object' && !Array.isArray(prev.$extensions)
-      ? (prev.$extensions as Record<string, unknown>)
-      : {}
-  const prevShip =
-    prevExt.ship && typeof prevExt.ship === 'object' && !Array.isArray(prevExt.ship)
-      ? (prevExt.ship as Record<string, unknown>)
-      : {}
-  const ship = cssName
-    ? { ...prevShip, cssName }
-    : prevShip
-  const extensions =
-    cssName || Object.keys(prevExt).length > 0
-      ? { ...prevExt, ...(Object.keys(ship).length ? { ship } : {}) }
-      : prev.$extensions
-  cur[leaf] = {
-    ...prev,
-    $value: value,
-    $type: prev.$type ?? type,
-    ...(extensions ? { $extensions: extensions } : {}),
+      ? { ...(prev.$extensions as Record<string, unknown>) }
+      : undefined
+  if (prevExt) {
+    const sail = prevExt.sail
+    if (sail && typeof sail === 'object' && !Array.isArray(sail)) {
+      const nextSail = { ...(sail as Record<string, unknown>) }
+      delete nextSail.cssName
+      if (Object.keys(nextSail).length === 0) delete prevExt.sail
+      else prevExt.sail = nextSail
+    }
+    if (Object.keys(prevExt).length === 0) {
+      cur[leaf] = {
+        ...prev,
+        $value: value,
+        $type: prev.$type ?? type,
+      }
+      delete (cur[leaf] as Record<string, unknown>).$extensions
+    } else {
+      cur[leaf] = {
+        ...prev,
+        $value: value,
+        $type: prev.$type ?? type,
+        $extensions: prevExt,
+      }
+    }
+  } else {
+    cur[leaf] = {
+      ...prev,
+      $value: value,
+      $type: prev.$type ?? type,
+    }
+    delete (cur[leaf] as Record<string, unknown>).$extensions
   }
   return next
 }
@@ -622,7 +640,7 @@ export function diffThemeDocs(
 
 /**
  * Flatten DTCG leaves for export/diff.
- * Includes `$value` tokens and intentional ship extensions (`$extensions.ship.density`).
+ * Includes `$value` tokens and intentional ship extensions (`$extensions.sail.density`).
  * Never reads CSS.
  */
 export function flattenValues(
@@ -634,13 +652,13 @@ export function flattenValues(
   for (const [k, v] of Object.entries(doc)) {
     // Intentional ship density mode — density done-when requires this path in diffs.
     if (k === '$extensions' && v && typeof v === 'object' && !Array.isArray(v)) {
-      const ship = (v as Record<string, unknown>).ship
+      const ship = (v as Record<string, unknown>).sail
       if (ship && typeof ship === 'object' && !Array.isArray(ship)) {
         const dens = (ship as Record<string, unknown>).density
         if (typeof dens === 'string' && dens) {
           const densPath = prefix
-            ? `${prefix}.$extensions.ship.density`
-            : '$extensions.ship.density'
+            ? `${prefix}.$extensions.sail.density`
+            : '$extensions.sail.density'
           out.set(densPath, dens)
         }
       }
@@ -694,7 +712,7 @@ export function listTokenRows(
     const isOverride =
       baseline != null
         ? dirty
-        : path.startsWith('component.') || path === '$extensions.ship.density'
+        : path.startsWith('component.') || path === '$extensions.sail.density'
     if (opts?.overridesOnly && !isOverride) continue
     if (q && !path.toLowerCase().includes(q) && !value.toLowerCase().includes(q)) continue
     rows.push({ path, value, dirty: baseline != null ? dirty : isOverride })

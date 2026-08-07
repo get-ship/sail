@@ -4,39 +4,19 @@
     "meter": {
       "track": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "meter"
-          }
-        }
+        "$type": "color"
       },
       "optimum": {
         "$value": "{color.success.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "meter-optimum"
-          }
-        }
+        "$type": "color"
       },
       "suboptimum": {
         "$value": "{color.warning.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "meter-suboptimum"
-          }
-        }
+        "$type": "color"
       },
       "sub-suboptimum": {
         "$value": "{color.destructive.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "meter-sub-suboptimum"
-          }
-        }
+        "$type": "color"
       }
     }
   }

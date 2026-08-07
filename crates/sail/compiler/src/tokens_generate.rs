@@ -108,8 +108,8 @@ const THEME_ORDER: &[&str] = &[
 /// Allowed top-level keys on a theme document.
 const THEME_ROOT_KEYS: &[&str] = &["$description", "$extensions", "modes"];
 
-/// Allowed keys under `$extensions.ship` on a theme document.
-const THEME_SHIP_KEYS: &[&str] = &[
+/// Allowed keys under `$extensions.sail` on a theme document.
+const THEME_SAIL_KEYS: &[&str] = &[
     "layer",
     "themeId",
     "defaultMode",
@@ -148,7 +148,6 @@ const THEME_OVERRIDE_ORDER: &[&str] = &["instance", "component", "global", "bake
 /// Preferred L1 tone axis order. Membership itself comes from DTCG
 /// `color.tone.<name>.{fg,bg,...}` ramps when present; this only sorts the set.
 const TONE_ORDER: &[&str] = &[
-    "default",
     "primary",
     "info",
     "success",
@@ -158,8 +157,7 @@ const TONE_ORDER: &[&str] = &[
     "muted",
 ];
 
-/// Fallback tone membership when the model has no `color.tone.*` ramps.
-/// SOURCE string in generated unions documents the intended DTCG path for later.
+/// Fallback tone membership (no `'default'` — rest = omit tone).
 const TONE_FALLBACK: &[&str] = TONE_ORDER;
 
 /// Special layers loaded from `model/<name>.json`. Dark is a **mode inside
@@ -199,7 +197,7 @@ struct Token {
     r#type: String,
     value: String,
     css_value: String,
-    /// `$extensions.ship.channel` — a Tier-2 expression channel. Channel
+    /// `$extensions.sail.channel` — a Tier-2 expression channel. Channel
     /// tokens are partitioned out of the base `:root` block at emission and
     /// re-emitted under the `Expression channels (Tier 2)` banner so the
     /// channel-integrity tests can find (and police) the full set.
@@ -222,7 +220,7 @@ struct LayerMeta {
     /// Mode name when this layer is a modes-in-file emit (Phase D). `None` =
     /// legacy single-block theme (twin light/dark ids).
     mode: Option<String>,
-    /// Default mode for the theme id (from `$extensions.ship.defaultMode`).
+    /// Default mode for the theme id (from `$extensions.sail.defaultMode`).
     default_mode: Option<String>,
 }
 
@@ -843,16 +841,16 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     ));
     out.push_str("export type ThemeRootKey = (typeof THEME_ROOT_KEYS)[number]\n\n");
 
-    out.push_str("/** Allowed keys under `$extensions.ship` on a theme. */\n");
+    out.push_str("/** Allowed keys under `$extensions.sail` on a theme. */\n");
     out.push_str(&format!(
-        "export const THEME_SHIP_KEYS = [{}] as const\n",
-        THEME_SHIP_KEYS
+        "export const THEME_SAIL_KEYS = [{}] as const\n",
+        THEME_SAIL_KEYS
             .iter()
             .map(|k| format!("'{k}'"))
             .collect::<Vec<_>>()
             .join(", ")
     ));
-    out.push_str("export type ThemeShipKey = (typeof THEME_SHIP_KEYS)[number]\n\n");
+    out.push_str("export type ThemeSailKey = (typeof THEME_SAIL_KEYS)[number]\n\n");
 
     out.push_str("/** Allowed paint mode names (`data-mode` values). */\n");
     out.push_str(&format!(
@@ -994,6 +992,109 @@ fn is_group(node: &Value) -> bool {
         .unwrap_or(false)
 }
 
+
+/// Generator-owned public short name for a DTCG path.
+///
+/// Design identity is the path; CSS/Style public names (`primary`, `chip`, …)
+/// are derived here — not stamped as `$extensions.*.cssName` in the model.
+/// Rules reproduce the historical cssName map (bit-identical).
+pub fn public_name(path: &str) -> String {
+    if path == "component.error-boundary.icon-fg" {
+        return "error-boundary-icon".into();
+    }
+    if path == "radius.default" {
+        return "radius".into();
+    }
+    let parts: Vec<&str> = path.split('.').collect();
+    if parts.is_empty() || (parts.len() == 1 && parts[0].is_empty()) {
+        return String::new();
+    }
+    let root = parts[0];
+    if root == "component" && parts.len() >= 2 {
+        let pack = parts[1];
+        let rest = &parts[2..];
+        if rest.is_empty() {
+            return pack.to_string();
+        }
+        if rest.len() == 1 && rest[0] == "bg" {
+            return pack.to_string();
+        }
+        if rest.len() == 1 && rest[0] == "fg" {
+            return format!("{pack}-foreground");
+        }
+        if rest.len() == 1 && rest[0] == "track" && matches!(pack, "meter" | "progress" | "switch")
+        {
+            return pack.to_string();
+        }
+        let mapped: Vec<String> = rest
+            .iter()
+            .map(|seg| {
+                if *seg == "fg" {
+                    "foreground".to_string()
+                } else if let Some(stem) = seg.strip_suffix("-fg") {
+                    format!("{stem}-foreground")
+                } else {
+                    camel_to_kebab(seg)
+                }
+            })
+            .collect();
+        return format!("{pack}-{}", mapped.join("-"));
+    }
+    if root == "color" {
+        let rest = &parts[1..];
+        if !rest.is_empty() && rest[0] == "brandAccent" {
+            if rest.len() == 2 && rest[1] == "default" {
+                return "accent".into();
+            }
+            let tail: Vec<String> = rest[1..].iter().map(|s| camel_to_kebab(s)).collect();
+            return format!("accent-{}", tail.join("-"));
+        }
+        if rest.len() == 2 && rest[0] == "mix" {
+            let leaf = rest[1];
+            if let Some(stem) = leaf.strip_suffix("Mix") {
+                return format!("mix-{}", camel_to_kebab(stem));
+            }
+        }
+        let mut segs: Vec<String> = rest.iter().map(|s| camel_to_kebab(s)).collect();
+        if segs.len() >= 2 && segs.last().map(|s| s.as_str()) == Some("default") {
+            segs.pop();
+        }
+        return segs.join("-");
+    }
+    if matches!(root, "typography" | "motion" | "interaction") {
+        return parts[1..].iter().map(|s| camel_to_kebab(s)).collect::<Vec<_>>().join("-");
+    }
+    if root == "control" && parts.len() >= 2 && parts[1] == "press" {
+        return parts[1..].iter().map(|s| camel_to_kebab(s)).collect::<Vec<_>>().join("-");
+    }
+    if root == "icon" && parts.len() == 2 {
+        return format!("icon-size-{}", parts[1]);
+    }
+    parts.iter().map(|s| camel_to_kebab(s)).collect::<Vec<_>>().join("-")
+}
+
+fn camel_to_kebab(s: &str) -> String {
+    let bytes = s.as_bytes();
+    let mut out = String::with_capacity(s.len() + 4);
+    for (i, &b) in bytes.iter().enumerate() {
+        let is_upper = b.is_ascii_uppercase();
+        if is_upper {
+            let prev = if i > 0 { bytes[i - 1] } else { 0 };
+            let next = bytes.get(i + 1).copied().unwrap_or(0);
+            let prev_lower_or_digit = i > 0 && (prev.is_ascii_lowercase() || prev.is_ascii_digit());
+            let next_lower = next.is_ascii_lowercase();
+            let prev_upper = i > 0 && prev.is_ascii_uppercase();
+            if prev_lower_or_digit || (prev_upper && next_lower) {
+                out.push('-');
+            }
+            out.push((b as char).to_ascii_lowercase());
+        } else {
+            out.push(b as char);
+        }
+    }
+    out
+}
+
 /// Flatten a DTCG document into ordered leaves.
 fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&str>) -> Vec<Token> {
     let mut out = Vec::new();
@@ -1011,11 +1112,8 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
             let mut path_parts = path_prefix.to_vec();
             path_parts.push(key.clone());
             let path = path_parts.join(".");
-            let css_name = node
-                .pointer("/$extensions/ship/cssName")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| path_parts.join("-"));
+            // Public short name is generator policy — ignore any leftover cssName stamps.
+            let css_name = public_name(&path);
             let ty = node
                 .get("$type")
                 .and_then(|v| v.as_str())
@@ -1031,7 +1129,8 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                 None => continue,
             };
             let channel = node
-                .pointer("/$extensions/ship/channel")
+                .pointer("/$extensions/sail/channel")
+                .or_else(|| node.pointer("/$extensions/ship/channel"))
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false);
             let description = node
@@ -1113,7 +1212,7 @@ fn load_json(path: &Path) -> Result<Value> {
 
 fn layer_meta(doc: &Value, file: &str, fallback_layer: &str) -> LayerMeta {
     let ext = doc
-        .pointer("/$extensions/ship")
+        .pointer("/$extensions/sail")
         .and_then(|v| v.as_object())
         .cloned()
         .unwrap_or_default();
@@ -1418,7 +1517,7 @@ fn load_theme_layers_from_dir(
         // Modes-in-file only — one theme id, mode blocks under `modes`.
         // No twin-id / flat-theme dual path.
         // Single-mode themes are allowed (e.g. glass light-only, synthwave dark-only)
-        // via a single key under `modes` and/or `$extensions.ship.supportedModes`.
+        // via a single key under `modes` and/or `$extensions.sail.supportedModes`.
         let modes = doc
             .get("modes")
             .and_then(|v| v.as_object())
@@ -1428,14 +1527,14 @@ fn load_theme_layers_from_dir(
                 "theme {label}: modes-in-file required (non-empty object `modes`). \
                  Twin light/dark theme ids are not supported. \
                  Single-mode themes declare one key under modes (and optional \
-                 $extensions.ship.supportedModes)."
+                 $extensions.sail.supportedModes)."
             );
         };
 
         // Resolve declared mode set: keys under `modes`, optionally intersected
-        // with `$extensions.ship.supportedModes` (must be a subset of modes keys).
+        // with `$extensions.sail.supportedModes` (must be a subset of modes keys).
         let supported_ext: Option<Vec<String>> = doc
-            .pointer("/$extensions/ship/supportedModes")
+            .pointer("/$extensions/sail/supportedModes")
             .and_then(|v| v.as_array())
             .map(|arr| {
                 arr.iter()
@@ -1450,7 +1549,7 @@ fn load_theme_layers_from_dir(
             for m in supported {
                 if !modes.contains_key(m) {
                     bail!(
-                        "theme {label}: $extensions.ship.supportedModes includes {m:?} \
+                        "theme {label}: $extensions.sail.supportedModes includes {m:?} \
                          but modes.{m} is missing (found modes: {:?})",
                         modes.keys().cloned().collect::<Vec<_>>()
                     );
@@ -1556,7 +1655,7 @@ fn load_theme_layers_from_dir(
                 .cloned()
                 .unwrap_or(Value::Object(Map::new()));
             let mode_ext_dark = mode_doc
-                .pointer("/$extensions/ship/dark")
+                .pointer("/$extensions/sail/dark")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(mode_name == "dark");
             let mut meta = base_meta.clone();
@@ -1778,7 +1877,7 @@ fn unknown_key_error(label: &str, where_: &str, key: &str, valid: &[&str]) -> an
 
 /// THEMES-1 schema lock: refuse out-of-schema theme documents.
 ///
-/// Checks root keys, `$extensions.ship` keys, paint mode names, and mode-body
+/// Checks root keys, `$extensions.sail` keys, paint mode names, and mode-body
 /// scale/component group keys. Nested DTCG token leaves are not re-enumerated
 /// (registry paths own that surface); this locks the **authoring envelope**.
 pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
@@ -1802,26 +1901,26 @@ pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
             bail!("theme {label}: $extensions must be an object");
         };
         for key in ext_obj.keys() {
-            if key != "ship" {
+            if key != "sail" {
                 return Err(unknown_key_error(
                     label,
                     "$extensions",
                     key,
-                    &["ship"],
+                    &["sail"],
                 ));
             }
         }
-        if let Some(ship) = ext_obj.get("ship") {
+        if let Some(ship) = ext_obj.get("sail") {
             let Some(ship_obj) = ship.as_object() else {
-                bail!("theme {label}: $extensions.ship must be an object");
+                bail!("theme {label}: $extensions.sail must be an object");
             };
             for key in ship_obj.keys() {
-                if !THEME_SHIP_KEYS.contains(&key.as_str()) {
+                if !THEME_SAIL_KEYS.contains(&key.as_str()) {
                     return Err(unknown_key_error(
                         label,
-                        "$extensions.ship",
+                        "$extensions.sail",
                         key,
-                        THEME_SHIP_KEYS,
+                        THEME_SAIL_KEYS,
                     ));
                 }
             }
@@ -1853,7 +1952,7 @@ pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
             if let Some(layer) = ship_obj.get("layer").and_then(|v| v.as_str()) {
                 if layer != "theme" {
                     bail!(
-                        "theme {label}: $extensions.ship.layer must be \"theme\" (got {layer:?})"
+                        "theme {label}: $extensions.sail.layer must be \"theme\" (got {layer:?})"
                     );
                 }
             }
@@ -1869,7 +1968,7 @@ pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
                         .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
                 {
                     bail!(
-                        "theme {label}: invalid $extensions.ship.themeId {id:?} \
+                        "theme {label}: invalid $extensions.sail.themeId {id:?} \
                          (expected /^[a-z0-9][a-z0-9-]*$/)"
                     );
                 }
@@ -1877,7 +1976,7 @@ pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
             if let Some(d) = ship_obj.get("density").and_then(|v| v.as_str()) {
                 if d != "compact" && d != "default" && d != "spacious" {
                     bail!(
-                        "theme {label}: $extensions.ship.density must be \
+                        "theme {label}: $extensions.sail.density must be \
                          compact|default|spacious (got {d:?})"
                     );
                 }
@@ -2453,12 +2552,12 @@ fn load_products(model_dir: &Path) -> Result<Option<ProductsAxis>> {
     }
     let doc = load_json(&p)?;
     let channel = doc
-        .pointer("/$extensions/ship/channel")
+        .pointer("/$extensions/sail/channel")
         .and_then(|v| v.as_str())
         .unwrap_or("brand-hue")
         .to_string();
     let composition_law = doc
-        .pointer("/$extensions/ship/compositionLaw")
+        .pointer("/$extensions/sail/compositionLaw")
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
@@ -2625,7 +2724,7 @@ const CHANNELS_BANNER: &str = "\
  * Themes opt in; components never change. That is the whole thesis —
  * a theme should be a token block, not a patch.
  *
- * SSOT: `$extensions.ship.channel` + `$description` on the token in
+ * SSOT: `$extensions.sail.channel` + `$description` on the token in
  * packages/sail/tokens/model/**. Do not hand-edit this block.
  */";
 
@@ -2835,15 +2934,77 @@ fn registry_string_list(registry: &Value, key: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// L1 host `tone` prop axis (component-library convention — not a token family).
-/// Historically derived from removed `color.tone.*` ramp tokens; membership is
-/// the fixed [`TONE_FALLBACK`] list so props/docs stay aligned without ramp tokens.
+/// Tone allowlist for host props + Style bound groups.
+/// Membership mirrors curated semantic color groups (not `color.tone.*` ramps).
+/// `'default'` is not a Tone member — rest paint = component tokens when tone is omitted.
 fn tone_names_from_tokens(_tokens: &[Token]) -> (Vec<String>, &'static str) {
     (
         TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect(),
-        "l1-convention:TONE_FALLBACK (host prop axis; not design-token ramps)",
+        "dtcg-groups:color.{primary,info,success,warning,destructive,brandAccent→accent,muted}",
     )
 }
+
+/// Build the Style/author `TONE` table: group → members → publicName.
+fn tone_group_table(tokens: &[Token]) -> Vec<(String, Vec<(String, String)>)> {
+    let (names, _) = tone_names_from_tokens(tokens);
+    let path_to_css: HashMap<&str, &str> = tokens
+        .iter()
+        .map(|t| (t.path.as_str(), t.css_name.as_str()))
+        .collect();
+    let mut out = Vec::new();
+    for name in &names {
+        let dtcg_stem = if name == "accent" {
+            "brandAccent"
+        } else {
+            name.as_str()
+        };
+        let mut members = Vec::new();
+        // default member
+        let default_paths = [
+            format!("color.{dtcg_stem}.default"),
+            format!("color.{dtcg_stem}"),
+        ];
+        let default_public = default_paths
+            .iter()
+            .find_map(|p| path_to_css.get(p.as_str()).copied())
+            .unwrap_or(name.as_str());
+        members.push(("default".to_string(), default_public.to_string()));
+        // foreground
+        let fg_path = format!("color.{dtcg_stem}.foreground");
+        let fg_public = path_to_css
+            .get(fg_path.as_str())
+            .copied()
+            .unwrap_or_else(|| {
+                // brandAccent.foreground → accent-foreground via public_name
+                let _ = dtcg_stem;
+                if name == "accent" {
+                    "accent-foreground"
+                } else {
+                    // leak a static by formatting into members below
+                    ""
+                }
+            });
+        let fg = if fg_public.is_empty() {
+            format!("{name}-foreground")
+        } else {
+            fg_public.to_string()
+        };
+        members.push(("foreground".to_string(), fg));
+        // hover only when present
+        let hover_path = format!("color.{dtcg_stem}.hover");
+        if let Some(h) = path_to_css.get(hover_path.as_str()) {
+            members.push(("hover".to_string(), (*h).to_string()));
+        } else if name == "primary" {
+            // ensure primary-hover if registry has it under public name
+            if tokens.iter().any(|t| t.css_name == "primary-hover") {
+                members.push(("hover".to_string(), "primary-hover".to_string()));
+            }
+        }
+        out.push((name.clone(), members));
+    }
+    out
+}
+
 
 /// Prefer `preferred` order for known members; append unknowns sorted.
 fn order_with_preferred(set: &BTreeSet<String>, preferred: &[&str]) -> Vec<String> {
@@ -2998,7 +3159,7 @@ fn build_unions_ts(base_tokens: &[Token], registry: &Value, theme_ids: &[String]
     let mut out = String::new();
     out.push_str(UNIONS_HEADER);
 
-    // Tone — data set (not a language feature); membership from DTCG or fallback.
+    // Tone — curated semantic paint groups (no `'default'`; rest = omit tone).
     out.push_str("/** Where {@link TONE_NAMES} membership is sourced from. */\n");
     out.push_str("export const TONE_NAMES_SOURCE = ");
     out.push_str(&ts_quote(tone_source));
@@ -3006,10 +3167,32 @@ fn build_unions_ts(base_tokens: &[Token], registry: &Value, theme_ids: &[String]
     emit_const_and_type(
         &mut out,
         "TONE_NAMES",
-        "ToneName",
+        "Tone",
         &tone_names,
-        "L1 host tone prop axis (component convention). Not design-token ramps.",
+        "Semantic paint tone groups (Style bound `tone` / host prop). No `'default'`.",
     );
+    out.push_str("/** @deprecated Use {@link Tone}. */\n");
+    out.push_str("export type ToneName = Tone\n\n");
+    // TONE table: group → members → publicName
+    let tone_table = tone_group_table(base_tokens);
+    out.push_str("/** Tone group → members → public token name (Style / tokens.css). */\n");
+    out.push_str("export const TONE = {\n");
+    for (group, members) in &tone_table {
+        out.push_str("  ");
+        out.push_str(group);
+        out.push_str(": {\n");
+        for (member, public) in members {
+            out.push_str("    ");
+            out.push_str(member);
+            out.push_str(": ");
+            out.push_str(&ts_quote(public));
+            out.push_str(",\n");
+        }
+        out.push_str("  },\n");
+    }
+    out.push_str("} as const\n");
+    out.push_str("export type ToneGroup = keyof typeof TONE\n");
+    out.push_str("export type ToneMember<G extends ToneGroup = ToneGroup> = keyof (typeof TONE)[G]\n\n");
 
     emit_const_and_type(
         &mut out,
@@ -3118,7 +3301,7 @@ mod tests {
                 "$type": "dimension",
                 "4": {
                     "$value": "16px",
-                    "$extensions": { "ship": { "cssName": "space-4" } }
+                    "$extensions": { "sail": { "cssName": "space-4" } }
                 }
             },
             "color": {
@@ -3126,13 +3309,13 @@ mod tests {
                     "default": {
                         "$value": "oklch(0.5 0.1 250)",
                         "$type": "color",
-                        "$extensions": { "ship": { "cssName": "primary" } }
+                        "$extensions": { "sail": { "cssName": "primary" } }
                     }
                 },
                 "brand": {
                     "$value": "{color.primary.default}",
                     "$type": "color",
-                    "$extensions": { "ship": { "cssName": "brand" } }
+                    "$extensions": { "sail": { "cssName": "brand" } }
                 }
             }
         });
@@ -3157,55 +3340,55 @@ mod tests {
             &model.join("base.json"),
             r#"{
   "$description": "test base",
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "space": {
     "4": {
       "$value": "16px",
       "$type": "dimension",
-      "$extensions": { "ship": { "cssName": "space-4" } }
+      "$extensions": { "sail": { "cssName": "space-4" } }
     }
   },
   "control": {
     "h-sm": {
       "$value": "28px",
       "$type": "dimension",
-      "$extensions": { "ship": { "cssName": "control-h-sm" } }
+      "$extensions": { "sail": { "cssName": "control-h-sm" } }
     },
     "h-md": {
       "$value": "34px",
       "$type": "dimension",
-      "$extensions": { "ship": { "cssName": "control-h-md" } }
+      "$extensions": { "sail": { "cssName": "control-h-md" } }
     }
   },
   "color": {
     "primary": {
       "$value": "oklch(0.5 0.1 250)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "primary" } }
+      "$extensions": { "sail": { "cssName": "primary" } }
     },
     "tone": {
       "default": {
         "fg": {
           "$value": "oklch(0.2 0 0)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "foreground" } }
+          "$extensions": { "sail": { "cssName": "foreground" } }
         },
         "bg": {
           "$value": "oklch(0.9 0 0)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "muted" } }
+          "$extensions": { "sail": { "cssName": "muted" } }
         }
       },
       "primary": {
         "fg": {
           "$value": "{primary}",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         },
         "bg": {
           "$value": "{primary}",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "hover-bg" } }
+          "$extensions": { "sail": { "cssName": "hover-bg" } }
         }
       }
     }
@@ -3222,7 +3405,7 @@ mod tests {
             r#"{
   "$description": "paper theme",
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "paper",
       "defaultMode": "light"
@@ -3234,17 +3417,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.4 0.05 75)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.7 0.08 75)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -3347,8 +3530,7 @@ mod tests {
     }
 
     #[test]
-    fn tone_names_are_l1_host_convention_not_token_ramps() {
-        // color.tone.* ramps are gone — ToneName is the fixed L1 host prop list.
+    fn tone_names_are_dtcg_groups_without_default() {
         let tokens = vec![Token {
             path: "color.primary".into(),
             css_name: "primary".into(),
@@ -3366,23 +3548,29 @@ mod tests {
                 .map(|s| (*s).to_string())
                 .collect::<Vec<_>>()
         );
-        assert!(source.contains("l1-convention"), "source={source}");
-        assert!(source.contains("not design-token"), "source={source}");
-        // Even if a caller stuffed tone paths into the token list, membership
-        // stays the fixed convention (no dual-path derivation from ramps).
-        let with_stale_ramp = vec![Token {
-            path: "color.tone.primary.bg".into(),
-            css_name: "tone-primary-bg".into(),
-            r#type: "color".into(),
-            value: "oklch(0.9 0.05 250)".into(),
-            css_value: "oklch(0.9 0.05 250)".into(),
-            channel: false,
-            description: None,
-        }];
-        let (names2, source2) = tone_names_from_tokens(&with_stale_ramp);
-        assert_eq!(names2, names);
-        assert_eq!(source2, source);
+        assert!(!names.iter().any(|n| n == "default"), "no default tone");
+        assert!(source.contains("dtcg-groups"), "source={source}");
     }
+
+    #[test]
+    fn public_name_matches_historical_map() {
+        // Spot-check rules against known historical cssNames (bit-identical policy).
+        assert_eq!(public_name("color.primary.default"), "primary");
+        assert_eq!(public_name("color.primary.foreground"), "primary-foreground");
+        assert_eq!(public_name("color.brandAccent.default"), "accent");
+        assert_eq!(public_name("color.brandAccent.foreground"), "accent-foreground");
+        assert_eq!(public_name("component.chip.bg"), "chip");
+        assert_eq!(public_name("component.chip.fg"), "chip-foreground");
+        assert_eq!(public_name("component.chip.border"), "chip-border");
+        assert_eq!(public_name("radius.default"), "radius");
+        assert_eq!(public_name("space.4"), "space-4");
+        assert_eq!(public_name("component.error-boundary.icon-fg"), "error-boundary-icon");
+        assert_eq!(public_name("control.press.translate"), "press-translate");
+        assert_eq!(public_name("icon.sm"), "icon-size-sm");
+        assert_eq!(public_name("color.mix.surfaceMix"), "mix-surface");
+    }
+
+
 
     #[test]
     fn component_sources_merge_into_base_with_stable_css_names() {
@@ -3392,19 +3580,19 @@ mod tests {
         write_file(
             &model.join("base.json"),
             r#"{
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "surface": {
       "1": {
         "$value": "oklch(0.98 0 0)",
         "$type": "color",
-        "$extensions": { "ship": { "cssName": "surface-1" } }
+        "$extensions": { "sail": { "cssName": "surface-1" } }
       }
     },
     "foreground": {
       "$value": "oklch(0.2 0 0)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "foreground" } }
+      "$extensions": { "sail": { "cssName": "foreground" } }
     }
   }
 }
@@ -3418,12 +3606,12 @@ mod tests {
       "bg": {
         "$value": "{color.surface.1}",
         "$type": "color",
-        "$extensions": { "ship": { "cssName": "card" } }
+        "$extensions": { "sail": { "cssName": "card" } }
       },
       "fg": {
         "$value": "{color.foreground}",
         "$type": "color",
-        "$extensions": { "ship": { "cssName": "card-foreground" } }
+        "$extensions": { "sail": { "cssName": "card-foreground" } }
       }
     }
   }
@@ -3434,7 +3622,7 @@ mod tests {
             &model.join("themes/glass.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "glass",
       "defaultMode": "light"
@@ -3447,19 +3635,19 @@ mod tests {
           "bg": {
             "$value": "oklch(1 0 0 / 55%)",
             "$type": "color",
-            "$extensions": { "ship": { "cssName": "card" } }
+            "$extensions": { "sail": { "cssName": "card" } }
           }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "component": {
         "card": {
           "bg": {
             "$value": "oklch(0.2 0 0 / 55%)",
             "$type": "color",
-            "$extensions": { "ship": { "cssName": "card" } }
+            "$extensions": { "sail": { "cssName": "card" } }
           }
         }
       }
@@ -3499,12 +3687,12 @@ mod tests {
         write_file(
             &model.join("base.json"),
             r#"{
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "foreground": {
       "$value": "oklch(0.2 0 0)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "foreground" } }
+      "$extensions": { "sail": { "cssName": "foreground" } }
     }
   },
   "control": {
@@ -3512,7 +3700,7 @@ mod tests {
       "$value": "0 0 0 0 transparent",
       "$type": "string",
       "$description": "Control framing — transparent-shadow no-op.",
-      "$extensions": { "ship": { "cssName": "control-frame", "channel": true } }
+      "$extensions": { "sail": { "cssName": "control-frame", "channel": true } }
     }
   }
 }
@@ -3651,12 +3839,12 @@ mod tests {
         write_file(
             &model.join("base.json"),
             r#"{
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "primary": {
       "$value": "oklch(0.5 0.1 250)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "primary" } }
+      "$extensions": { "sail": { "cssName": "primary" } }
     }
   }
 }
@@ -3665,16 +3853,16 @@ mod tests {
         write_file(
             &model.join("themes/paper.json"),
             r#"{
-  "$extensions": { "ship": { "layer": "theme", "themeId": "paper", "defaultMode": "light" } },
-  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.4 0.05 75)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "ship": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.7 0.1 75)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } } } }
+  "$extensions": { "sail": { "layer": "theme", "themeId": "paper", "defaultMode": "light" } },
+  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.4 0.05 75)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.7 0.1 75)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } } }
 }
 "#,
         );
         write_file(
             &project.join("tokens/themes/custom.json"),
             r#"{
-  "$extensions": { "ship": { "layer": "theme", "themeId": "custom", "defaultMode": "light" } },
-  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.55 0.2 140)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "ship": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.6 0.15 140)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } } } }
+  "$extensions": { "sail": { "layer": "theme", "themeId": "custom", "defaultMode": "light" } },
+  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.55 0.2 140)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.6 0.15 140)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } } }
 }
 "#,
         );
@@ -3711,8 +3899,8 @@ mod tests {
         write_file(
             &model.join("themes/ship.json"),
             r#"{
-  "$extensions": { "ship": { "layer": "theme", "themeId": "ship", "defaultMode": "light" } },
-  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.5 0.1 250)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "ship": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.3 0.05 250)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } } } }
+  "$extensions": { "sail": { "layer": "theme", "themeId": "ship", "defaultMode": "light" } },
+  "modes": { "light": { "color": { "primary": { "$value": "oklch(0.5 0.1 250)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } }, "dark": { "$extensions": { "sail": { "dark": true } }, "color": { "primary": { "$value": "oklch(0.3 0.05 250)", "$type": "color", "$extensions": { "sail": { "cssName": "primary" } } } } } }
 }
 "#,
         );
@@ -3756,12 +3944,12 @@ mod tests {
         write_file(
             &model.join("base.json"),
             r#"{
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "primary": {
       "$value": "oklch(0.5 0.1 250)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "primary" } }
+      "$extensions": { "sail": { "cssName": "primary" } }
     }
   }
 }
@@ -3771,7 +3959,7 @@ mod tests {
             &model.join("themes/paper.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "paper",
       "defaultMode": "light"
@@ -3783,17 +3971,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.4 0.05 75)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.4 0.05 75)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -3805,7 +3993,7 @@ mod tests {
             &model.join("themes/glass.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "glass",
       "defaultMode": "light"
@@ -3817,17 +4005,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.8 0.05 200)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.8 0.05 200)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -3840,7 +4028,7 @@ mod tests {
             &project.join("tokens/themes/paper.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "paper",
       "defaultMode": "light"
@@ -3852,17 +4040,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.12 0.34 99)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.12 0.34 99)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -3874,7 +4062,7 @@ mod tests {
             &project.join("tokens/themes/custom.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "custom",
       "defaultMode": "light"
@@ -3886,17 +4074,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.55 0.2 140)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.55 0.2 140)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -3957,7 +4145,7 @@ mod tests {
         let project = dir.path().join("app");
         write_file(
             &catalog.join("ship.json"),
-            r#"{ "$extensions": { "ship": { "themeId": "ship", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
+            r#"{ "$extensions": { "sail": { "themeId": "ship", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
         );
         let dest = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert!(dest.is_file());
@@ -4166,7 +4354,7 @@ mod tests {
         );
         write_file(
             &dir.path().join("tokens/themes/x.json"),
-            r#"{ "$extensions": { "ship": { "themeId": "x", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
+            r#"{ "$extensions": { "sail": { "themeId": "x", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
         );
         assert!(project_wants_theme_generate(dir.path()));
         let bare = tempfile::tempdir().unwrap();
@@ -4194,14 +4382,14 @@ mod tests {
         let out = dir.path().join("src");
         write_file(
             &model.join("base.json"),
-            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "base" } } }"#,
         );
 
         // Missing `modes` (valid root keys only) → modes-in-file required.
         write_file(
             &model.join("themes/ship.json"),
             r#"{
-  "$extensions": { "ship": { "themeId": "ship", "layer": "theme" } }
+  "$extensions": { "sail": { "themeId": "ship", "layer": "theme" } }
 }
 "#,
         );
@@ -4217,7 +4405,7 @@ mod tests {
             &model.join("themes/ship-light.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "themeId": "ship-light",
       "defaultMode": "light",
       "layer": "theme"
@@ -4229,7 +4417,7 @@ mod tests {
         "primary": {
           "$value": "oklch(0.5 0.1 50)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -4253,13 +4441,13 @@ mod tests {
         let out = dir.path().join("src");
         write_file(
             &model.join("base.json"),
-            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "base" } } }"#,
         );
         write_file(
             &model.join("themes/glass.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "themeId": "glass",
       "defaultMode": "light",
       "supportedModes": ["light"]
@@ -4271,7 +4459,7 @@ mod tests {
         "primary": {
           "$value": "oklch(0.62 0.16 50)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -4313,19 +4501,19 @@ mod tests {
         let out = dir.path().join("src");
         write_file(
             &model.join("base.json"),
-            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "base" } } }"#,
         );
         write_file(
             &model.join("themes/bad.json"),
             r#"{
-  "$extensions": { "ship": { "themeId": "bad", "defaultMode": "light" } },
+  "$extensions": { "sail": { "themeId": "bad", "defaultMode": "light" } },
   "modes": {
     "light": {
       "color": {
         "primary": {
           "$value": "oklch(0.5 0.1 50)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -4352,19 +4540,19 @@ mod tests {
         let out = dir.path().join("src");
         write_file(
             &model.join("base.json"),
-            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "base" } } }"#,
         );
         write_file(
             &model.join("themes/bad-group.json"),
             r#"{
-  "$extensions": { "ship": { "themeId": "bad-group", "defaultMode": "light" } },
+  "$extensions": { "sail": { "themeId": "bad-group", "defaultMode": "light" } },
   "modes": {
     "light": {
       "colour": {
         "primary": {
           "$value": "oklch(0.5 0.1 50)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -4387,7 +4575,7 @@ mod tests {
     fn validate_theme_doc_schema_ok_for_minimal() {
         let doc: Value = serde_json::from_str(
             r#"{
-  "$extensions": { "ship": { "themeId": "x", "defaultMode": "dark", "layer": "theme" } },
+  "$extensions": { "sail": { "themeId": "x", "defaultMode": "dark", "layer": "theme" } },
   "modes": { "dark": { "color": {} } }
 }"#,
         )
@@ -4408,13 +4596,13 @@ mod tests {
         let out = dir.path().join("src");
         write_file(
             &model.join("base.json"),
-            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "base" } } }"#,
         );
         write_file(
             &model.join("themes/broken.json"),
             r#"{
   "$extensions": {
-    "ship": {
+    "sail": {
       "themeId": "broken",
       "defaultMode": "dark",
       "supportedModes": ["dark"]
@@ -4438,35 +4626,35 @@ mod tests {
         let out = dir.path().join("src");
         write_file(
             &model.join("base.json"),
-            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+            r#"{ "$extensions": { "sail": { "selector": ":root", "layer": "base" } } }"#,
         );
         write_file(
             &model.join("themes/uneven.json"),
             r#"{
-  "$extensions": { "ship": { "themeId": "uneven", "defaultMode": "light" } },
+  "$extensions": { "sail": { "themeId": "uneven", "defaultMode": "light" } },
   "modes": {
     "light": {
       "color": {
         "primary": {
           "$value": "oklch(0.7 0.1 100)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.3 0.1 100)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         },
         "surface": {
           "0": {
             "$value": "oklch(0.2 0.02 250)",
             "$type": "color",
-            "$extensions": { "ship": { "cssName": "surface-0" } }
+            "$extensions": { "sail": { "cssName": "surface-0" } }
           }
         }
       }
@@ -4490,12 +4678,12 @@ mod tests {
         write_file(
             &model.join("base.json"),
             r#"{
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "primary": {
       "$value": "oklch(0.5 0.1 250)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "primary" } }
+      "$extensions": { "sail": { "cssName": "primary" } }
     }
   }
 }
@@ -4505,7 +4693,7 @@ mod tests {
             &model.join("themes/ship.json"),
             r#"{
   "$extensions": {
-    "ship": { "layer": "theme", "themeId": "ship", "defaultMode": "light" }
+    "sail": { "layer": "theme", "themeId": "ship", "defaultMode": "light" }
   },
   "modes": {
     "light": {
@@ -4513,17 +4701,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.7 0.16 58)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.77 0.16 70)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } }
+          "$extensions": { "sail": { "cssName": "primary" } }
         }
       }
     }
@@ -4567,12 +4755,12 @@ mod tests {
         write_file(
             &model.join("base.json"),
             r#"{
-  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
   "color": {
     "primary": {
       "$value": "oklch(0.5 0.1 250)",
       "$type": "color",
-      "$extensions": { "ship": { "cssName": "primary" } }
+      "$extensions": { "sail": { "cssName": "primary" } }
     }
   }
 }
@@ -4583,7 +4771,7 @@ mod tests {
             r#"{
   // project-style comment in theme DTCG
   "$extensions": {
-    "ship": {
+    "sail": {
       "layer": "theme",
       "themeId": "paper",
       "defaultMode": "light",
@@ -4595,17 +4783,17 @@ mod tests {
         "primary": {
           "$value": "oklch(0.4 0.05 75)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } },
+          "$extensions": { "sail": { "cssName": "primary" } },
         },
       },
     },
     "dark": {
-      "$extensions": { "ship": { "dark": true } },
+      "$extensions": { "sail": { "dark": true } },
       "color": {
         "primary": {
           "$value": "oklch(0.7 0.08 75)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "primary" } },
+          "$extensions": { "sail": { "cssName": "primary" } },
         },
       },
     },

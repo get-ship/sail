@@ -52,7 +52,7 @@ export type BlastRadius = {
 export type ThemeFile = {
   /** Basename e.g. ship.json */
   file: string
-  /** Theme id (stem or $extensions.ship.themeId). */
+  /** Theme id (stem or $extensions.sail.themeId). */
   id: string
   /** Workspace-relative path. */
   path: string
@@ -63,7 +63,7 @@ export type ThemeFile = {
    * project swatches keep correct light/dark tables without package contamination.
    */
   modes?: ('light' | 'dark')[]
-  /** From `$extensions.ship.defaultMode` when present on the project theme JSON. */
+  /** From `$extensions.sail.defaultMode` when present on the project theme JSON. */
   defaultMode?: 'light' | 'dark'
 }
 

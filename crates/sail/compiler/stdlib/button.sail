@@ -5,12 +5,15 @@
   Tier-2 chrome (control-frame / corner-image / lift / press) that Style already
   owns live here too. Focus ring + disabled opacity stay on the shared document
   baseline — not a parallel BUTTON_SKIN_CSS residual.
+
+  Rest paint = component.button tokens when tone is omitted.
+  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
   props: {
     variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost' = 'default'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
     disabled = false
   }
@@ -29,15 +32,20 @@
   const sizeLg = style({ box: minH(control-h-lg).padX(4), text: fontSize(md) })
 
   // Default rest rides component.button tokens (global fallbacks in the pack).
-  // Branded solid/soft/outline tones still spend the global palette.
+  // Branded solid/soft/outline tones spend the bound Tone table.
   const vDefault = style({ paint: bg(button).border(button-border).fg(button-foreground).shadow(xs) }).when(hover, { paint: bg(button-hover-bg).border(border-strong) })
+  // Solid without tone: inverted fg/bg. Solid + tone: bound group paint.
   const vSolid = style({ paint: bg(foreground).border(foreground).fg(background).shadow(xs) }).when(hover, { paint: opacity(90).shadow(sm) })
+  const vSolidTone = style({ paint: bg(tone).border(tone).fg(tone.foreground).shadow(xs) }).when(hover, { paint: opacity(90).shadow(sm) })
   const vSoft = style({ paint: bg(hover-bg).border(button-border).fg(button-foreground) }).when(hover, { paint: opacity(90) })
+  const vSoftTone = style({ paint: colorMix(tone, 15).border(tone).fg(tone) }).when(hover, { paint: colorMix(tone, 25) })
   // Outline rest MUST set bg(transparent). Without it, UA buttonface (light gray)
   // shows through on dark themes even with appearance(none) — looks unthemed.
   // Scoped to [variant=outline] only — not base — so F7 cascade landmine stays dead.
   const vOutline = style({ paint: bg(transparent).border(button-foreground).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
+  const vOutlineTone = style({ paint: bg(transparent).border(tone).fg(tone) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
   const vGhost = style({ paint: bg(transparent).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
+  const vGhostTone = style({ paint: bg(transparent).fg(tone) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
 </scope>
 
 <button style([
@@ -49,40 +57,23 @@
     outline: vOutline,
     ghost: vGhost,
   }),
+  // Brand override when tone is set — attr-gated expansion over Tone groups.
+  match(variant, {
+    solid: vSolidTone,
+    soft: vSoftTone,
+    outline: vOutlineTone,
+    ghost: vGhostTone,
+  }),
   match(size, {
     xs: sizeXs,
     sm: sizeSm,
     md: sizeMd,
     lg: sizeLg,
   }),
-  compound({ variant: solid, tone: primary }, style({ paint: bg(primary).border(primary).fg(primary-foreground) })),
-  compound({ variant: solid, tone: info }, style({ paint: bg(info).border(info).fg(info-foreground) })),
-  compound({ variant: solid, tone: success }, style({ paint: bg(success).border(success).fg(success-foreground) })),
-  compound({ variant: solid, tone: warning }, style({ paint: bg(warning).border(warning).fg(warning-foreground) })),
-  compound({ variant: solid, tone: destructive }, style({ paint: bg(destructive).border(destructive).fg(destructive-foreground) })),
-  compound({ variant: solid, tone: accent }, style({ paint: bg(accent).border(accent).fg(accent-foreground) })),
+  // Muted specials — not pure group-member paint for all variants.
   compound({ variant: solid, tone: muted }, style({ paint: bg(muted-foreground).border(muted-foreground).fg(background) })),
-  compound({ variant: soft, tone: primary }, style({ paint: colorMix(primary, 15).border(primary).fg(primary) }).when(hover, { paint: colorMix(primary, 25) })),
-  compound({ variant: soft, tone: info }, style({ paint: colorMix(info, 15).border(info).fg(info) }).when(hover, { paint: colorMix(info, 25) })),
-  compound({ variant: soft, tone: success }, style({ paint: colorMix(success, 15).border(success).fg(success) }).when(hover, { paint: colorMix(success, 25) })),
-  compound({ variant: soft, tone: warning }, style({ paint: colorMix(warning, 15).border(warning).fg(warning) }).when(hover, { paint: colorMix(warning, 25) })),
-  compound({ variant: soft, tone: destructive }, style({ paint: colorMix(destructive, 15).border(destructive).fg(destructive) }).when(hover, { paint: colorMix(destructive, 25) })),
-  compound({ variant: soft, tone: accent }, style({ paint: colorMix(accent, 15).border(accent).fg(accent) }).when(hover, { paint: colorMix(accent, 25) })),
-  // soft+muted must stay readable on dark themes (muted-foreground on muted fails).
   compound({ variant: soft, tone: muted }, style({ paint: bg(muted).border(border-strong).fg(foreground) })),
-  compound({ variant: outline, tone: primary }, style({ paint: border(primary).fg(primary) })),
-  compound({ variant: outline, tone: info }, style({ paint: border(info).fg(info) })),
-  compound({ variant: outline, tone: success }, style({ paint: border(success).fg(success) })),
-  compound({ variant: outline, tone: warning }, style({ paint: border(warning).fg(warning) })),
-  compound({ variant: outline, tone: destructive }, style({ paint: border(destructive).fg(destructive) })),
-  compound({ variant: outline, tone: accent }, style({ paint: border(accent).fg(accent) })),
   compound({ variant: outline, tone: muted }, style({ paint: border(muted-foreground).fg(muted-foreground) })),
-  compound({ variant: ghost, tone: primary }, style({ paint: fg(primary) })),
-  compound({ variant: ghost, tone: info }, style({ paint: fg(info) })),
-  compound({ variant: ghost, tone: success }, style({ paint: fg(success) })),
-  compound({ variant: ghost, tone: warning }, style({ paint: fg(warning) })),
-  compound({ variant: ghost, tone: destructive }, style({ paint: fg(destructive) })),
-  compound({ variant: ghost, tone: accent }, style({ paint: fg(accent) })),
   compound({ variant: ghost, tone: muted }, style({ paint: fg(muted-foreground) })),
 ])>
   <slot></slot>

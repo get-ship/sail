@@ -4,21 +4,11 @@
     "menu-item": {
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "menu-item-foreground"
-          }
-        }
+        "$type": "color"
       },
       "hover-bg": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "menu-item-hover-bg"
-          }
-        }
+        "$type": "color"
       }
     }
   }

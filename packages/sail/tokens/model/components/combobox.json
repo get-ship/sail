@@ -4,21 +4,11 @@
     "combobox": {
       "bg": {
         "$value": "{popover}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "combobox"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{popover-foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "combobox-foreground"
-          }
-        }
+        "$type": "color"
       }
     }
   }

@@ -4,21 +4,11 @@
     "progress": {
       "track": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "progress"
-          }
-        }
+        "$type": "color"
       },
       "fill": {
         "$value": "{color.primary.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "progress-fill"
-          }
-        }
+        "$type": "color"
       }
     }
   }

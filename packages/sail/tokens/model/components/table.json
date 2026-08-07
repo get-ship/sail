@@ -4,39 +4,19 @@
     "table": {
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "table-foreground"
-          }
-        }
+        "$type": "color"
       },
       "muted-fg": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "table-muted-foreground"
-          }
-        }
+        "$type": "color"
       },
       "stripe": {
         "$value": "{color.surface.2}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "table-stripe"
-          }
-        }
+        "$type": "color"
       },
       "sticky-bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "table-sticky-bg"
-          }
-        }
+        "$type": "color"
       }
     }
   }

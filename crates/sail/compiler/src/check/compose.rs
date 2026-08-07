@@ -727,7 +727,7 @@ fn collect_paint_ops<'a>(
 fn paint_arg_to_spacing(arg: &sail_lint::style::PaintArg) -> Option<SpacingValue> {
     use sail_lint::style::PaintArg;
     match arg {
-        PaintArg::Bind(_) => Some(SpacingValue::Expression),
+        PaintArg::Bind(_) | PaintArg::MemberPath { .. } => Some(SpacingValue::Expression),
         PaintArg::Token(t) => {
             let t = t.trim();
             if t.is_empty() {

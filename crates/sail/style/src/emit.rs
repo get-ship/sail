@@ -2,8 +2,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use super::ir::{PaintOp, Style};
+use super::ir::{PaintArg, PaintOp, Style};
 use super::setters::{WhenTarget, lower_op_css, when_target};
+use super::token_groups::{bound_group_family, bound_public_name};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -155,6 +156,12 @@ fn emit_inner(
 }
 
 fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<String>) {
+    // Bound token-group paths (`bg(tone)`, `fg(tone.foreground)`) expand over
+    // the family with attribute-gated selectors — same mint as match/compound.
+    if let Some(family_prop) = first_bound_family_prop(op) {
+        expand_bound_group_op(op, family_prop, ctx, out, seen);
+        return;
+    }
     // group marker: sail-grp class, no CSS rule body required.
     if op.setter == "group" {
         let class = "sail-grp".to_string();
@@ -206,12 +213,18 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     let mut arg = String::new();
     for a in &op.args {
         match a {
-            super::ir::PaintArg::Token(t) => {
+            PaintArg::Token(t) => {
                 arg.extend(t.chars().filter(|c| c.is_ascii_alphanumeric()))
             }
-            super::ir::PaintArg::Bind(n) => {
+            PaintArg::Bind(n) => {
                 arg.push_str("bind");
                 arg.extend(n.chars().filter(|c| c.is_ascii_alphanumeric()));
+            }
+            PaintArg::MemberPath { root, path } => {
+                arg.extend(root.chars().filter(|c| c.is_ascii_alphanumeric()));
+                for seg in path {
+                    arg.extend(seg.chars().filter(|c| c.is_ascii_alphanumeric()));
+                }
             }
         }
     }
@@ -250,6 +263,61 @@ fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
         pseudo = ctx.pseudo,
         child = child
     )
+}
+
+
+/// Prop name of the first bound group MemberPath in `op`, if any.
+fn first_bound_family_prop(op: &PaintOp) -> Option<&'static str> {
+    for a in &op.args {
+        if let PaintArg::MemberPath { root, .. } = a {
+            if let Some(f) = bound_group_family(root) {
+                return Some(f.prop);
+            }
+        }
+    }
+    None
+}
+
+/// Expand `bg(tone)` / `fg(tone.foreground)` / `colorMix(tone, 15)` over the
+/// Tone table: one attr-gated rule per group member.
+fn expand_bound_group_op(
+    op: &PaintOp,
+    family_prop: &str,
+    ctx: &Ctx,
+    out: &mut Vec<CssRule>,
+    seen: &mut HashSet<String>,
+) {
+    let Some(family) = bound_group_family(family_prop) else {
+        return;
+    };
+    for group in family.groups {
+        let mut args = Vec::with_capacity(op.args.len());
+        let mut ok = true;
+        for a in &op.args {
+            match a {
+                PaintArg::MemberPath { root, path } if root == family.prop => {
+                    match bound_public_name(family, group.name, path) {
+                        Some(public) => args.push(PaintArg::Token(public.to_string())),
+                        None => {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+                other => args.push(other.clone()),
+            }
+        }
+        if !ok {
+            continue;
+        }
+        let resolved = PaintOp {
+            setter: op.setter.clone(),
+            args,
+            source: op.source.clone(),
+        };
+        let next = ctx.with_attr(family.prop, group.name);
+        emit_op(&resolved, &next, out, seen);
+    }
 }
 
 /// Product entry: parse Style expression → classes + CSS.

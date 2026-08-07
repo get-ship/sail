@@ -26,11 +26,12 @@ fn chip_compiles_with_style_and_capability_mixins() {
     assert!(
         is_style_product(src)
             && src.contains("match(variant")
-            && src.contains("match(tone")
+            && src.contains("bg(tone)")
             && src.contains("match(size")
             && !src.contains("tone-bg")
-            && !src.contains("compound: ["),
-        "chip Style product only (no CVA / tone-bg)"
+            && !src.contains("compound: [")
+            && !src.contains("tone: 'default'"),
+        "chip Style product with bound tone (no CVA / tone-bg / default tone)"
     );
     assert!(
         out.skin_css.contains("variant='solid'")

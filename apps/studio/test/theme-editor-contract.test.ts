@@ -35,9 +35,9 @@ describe('THEMES-1 theme editor contract', () => {
 
   it('schema coverage includes identity, modes, scales, component overrides', () => {
     const cov = contractSchemaCoverage()
-    expect(cov.identity).toContain('$extensions.ship.themeId')
-    expect(cov.mode).toContain('$extensions.ship.defaultMode')
-    expect(cov.mode).toContain('$extensions.ship.supportedModes')
+    expect(cov.identity).toContain('$extensions.sail.themeId')
+    expect(cov.mode).toContain('$extensions.sail.defaultMode')
+    expect(cov.mode).toContain('$extensions.sail.supportedModes')
     expect(cov.scaleGroups).toContain('color')
     expect(cov.scaleGroups).toContain('radius')
     expect(cov.scaleGroups).toContain('typography')
@@ -52,8 +52,8 @@ describe('THEMES-1 theme editor contract', () => {
     expect(isContractWritePath('modes.light.shadow.sm')).toBe(true)
     expect(isContractWritePath('modes.light.icon.size')).toBe(true)
     expect(isContractWritePath('modes.light.interaction.strength')).toBe(true)
-    expect(isContractWritePath('$extensions.ship.themeId')).toBe(true)
-    expect(isContractWritePath('$extensions.ship.density')).toBe(true)
+    expect(isContractWritePath('$extensions.sail.themeId')).toBe(true)
+    expect(isContractWritePath('$extensions.sail.density')).toBe(true)
     expect(isContractWritePath('')).toBe(false)
     expect(isContractWritePath('not-a-path')).toBe(false)
   })

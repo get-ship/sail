@@ -4,21 +4,11 @@
     "skeleton": {
       "bg": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "skeleton"
-          }
-        }
+        "$type": "color"
       },
       "highlight": {
         "$value": "color-mix(in oklch, var(--skeleton) 60%, var(--background))",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "skeleton-highlight"
-          }
-        }
+        "$type": "color"
       }
     }
   }

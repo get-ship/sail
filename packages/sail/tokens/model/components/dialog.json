@@ -4,57 +4,27 @@
     "dialog": {
       "bg": {
         "$value": "{color.surface.1}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "dialog"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "dialog-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "dialog-border"
-          }
-        }
+        "$type": "color"
       },
       "divider": {
         "$value": "{color.border.subtle}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "dialog-divider"
-          }
-        }
+        "$type": "color"
       },
       "footer": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "dialog-footer"
-          }
-        }
+        "$type": "color"
       },
       "muted-fg": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "dialog-muted-foreground"
-          }
-        }
+        "$type": "color"
       }
     }
   }

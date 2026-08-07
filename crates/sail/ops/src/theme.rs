@@ -324,7 +324,7 @@ fn ordered_keys(obj: &serde_json::Map<String, Value>) -> Option<Vec<String>> {
     let arr = ext
         .get("ordered")
         .or_else(|| {
-            ext.get("ship")
+            ext.get("sail")
                 .and_then(|s| s.as_object())
                 .and_then(|s| s.get("ordered"))
         })?
@@ -490,10 +490,10 @@ fn rewrite_theme_id(content: &str, new_id: &str) -> Result<String, String> {
     let ext_obj = ext
         .as_object_mut()
         .ok_or_else(|| "$extensions must be an object".to_string())?;
-    let ship = ext_obj.entry("ship").or_insert_with(|| json!({}));
+    let ship = ext_obj.entry("sail").or_insert_with(|| json!({}));
     let ship_obj = ship
         .as_object_mut()
-        .ok_or_else(|| "$extensions.ship must be an object".to_string())?;
+        .ok_or_else(|| "$extensions.sail must be an object".to_string())?;
     ship_obj.insert("themeId".into(), json!(new_id));
     serde_json::to_string_pretty(&v)
         .map(|s| s + "\n")
@@ -775,7 +775,7 @@ fn walk_dtcg_graph(
         return;
     };
     if let Some(ext) = obj.get("$extensions").and_then(|v| v.as_object()) {
-        if let Some(ship) = ext.get("ship").and_then(|v| v.as_object()) {
+        if let Some(ship) = ext.get("sail").and_then(|v| v.as_object()) {
             if let Some(layer) = ship.get("layer").and_then(|v| v.as_str()) {
                 tiers.insert(layer.to_string());
             }
@@ -788,15 +788,8 @@ fn walk_dtcg_graph(
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-        let mut css_name = None;
-        if let Some(ext) = obj.get("$extensions").and_then(|v| v.as_object()) {
-            if let Some(ship) = ext.get("ship").and_then(|v| v.as_object()) {
-                css_name = ship
-                    .get("cssName")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string());
-            }
-        }
+        // Public short name is generator policy (same as tokens_generate).
+        let css_name = Some(sail_compiler::tokens_generate::public_name(path));
         let value_str = match &value {
             Value::String(s) => s.clone(),
             other => other.to_string(),
@@ -938,7 +931,7 @@ mod tests {
         let ws = dir.path();
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         let theme = r#"{
-          "$extensions": { "ship": { "layer": "theme", "themeId": "toy" } },
+          "$extensions": { "sail": { "layer": "theme", "themeId": "toy" } },
           "modes": {
             "light": {
               "color": {
@@ -984,7 +977,7 @@ mod tests {
 
         // THEMES-1: radius lives under modes.*; envelope must be schema-valid.
         let bad = r#"{
-          "$extensions": { "ship": { "themeId": "bad-radius", "defaultMode": "light", "layer": "theme" } },
+          "$extensions": { "sail": { "themeId": "bad-radius", "defaultMode": "light", "layer": "theme" } },
           "modes": {
             "light": {
               "radius": {
@@ -1013,7 +1006,7 @@ mod tests {
         assert!(!ws.join("apps/demo/tokens/themes/bad-radius.json").exists());
 
         let good = r#"{
-          "$extensions": { "ship": { "themeId": "good-radius", "defaultMode": "light", "layer": "theme" } },
+          "$extensions": { "sail": { "themeId": "good-radius", "defaultMode": "light", "layer": "theme" } },
           "modes": {
             "light": {
               "radius": {
@@ -1100,7 +1093,7 @@ mod tests {
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             ws.join("packages/sail/tokens/model/themes/ship.json"),
-            r#"{"$extensions":{"ship":{"themeId":"ship"}}}"#,
+            r#"{"$extensions":{"sail":{"themeId":"ship"}}}"#,
         )
         .unwrap();
 
@@ -1115,7 +1108,7 @@ mod tests {
         );
         assert!(matches!(denied, Err(OpError::PermissionDenied(_))));
 
-        let body = r#"{"$extensions":{"ship":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#;
+        let body = r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#;
         let ok = write(
             &json!({
                 "path": "apps/demo/tokens/themes/custom.json",
@@ -1176,7 +1169,7 @@ mod tests {
         std::fs::write(project.join("package.json"), r#"{"name":"ext-app"}"#).unwrap();
         std::fs::write(
             project.join("themes/ship.json"),
-            r#"{"$extensions":{"ship":{"themeId":"ship"}}}"#,
+            r#"{"$extensions":{"sail":{"themeId":"ship"}}}"#,
         )
         .unwrap();
 
@@ -1194,7 +1187,7 @@ mod tests {
         let w = write(
             &json!({
                 "path": "themes/custom.json",
-                "content": r#"{"$extensions":{"ship":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
+                "content": r#"{"$extensions":{"sail":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
             }),
             &ctx,
         )
@@ -1217,7 +1210,7 @@ mod tests {
         let ok = write(
             &json!({
                 "path": "tokens/themes/legacy.json",
-                "content": r#"{"$extensions":{"ship":{"themeId":"legacy","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
+                "content": r#"{"$extensions":{"sail":{"themeId":"legacy","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
             }),
             &ctx,
         )
@@ -1237,7 +1230,7 @@ mod tests {
         std::fs::create_dir_all(ws.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             ws.join("packages/sail/tokens/model/themes/ship.json"),
-            r#"{"$extensions":{"ship":{"themeId":"ship"}},"modes":{"light":{},"dark":{}}}"#,
+            r#"{"$extensions":{"sail":{"themeId":"ship"}},"modes":{"light":{},"dark":{}}}"#,
         )
         .unwrap();
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
@@ -1289,7 +1282,7 @@ mod tests {
         std::fs::create_dir_all(project.join("packages/sail/tokens/model/themes")).unwrap();
         std::fs::write(
             project.join("packages/sail/tokens/model/themes/ship.json"),
-            r#"{"$extensions":{"ship":{"themeId":"ship"}},"modes":{"light":{},"dark":{}}}"#,
+            r#"{"$extensions":{"sail":{"themeId":"ship"}},"modes":{"light":{},"dark":{}}}"#,
         )
         .unwrap();
         let ctx = Ctx::new(project, project, project);

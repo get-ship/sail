@@ -4,48 +4,23 @@
     "theme-picker": {
       "bg": {
         "$value": "{popover}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "theme-picker"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{popover-foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "theme-picker-foreground"
-          }
-        }
+        "$type": "color"
       },
       "trigger-fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "theme-picker-trigger-foreground"
-          }
-        }
+        "$type": "color"
       },
       "option-fg": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "theme-picker-option-foreground"
-          }
-        }
+        "$type": "color"
       },
       "option-hover-bg": {
         "$value": "{interaction.hover.bg}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "theme-picker-option-hover-bg"
-          }
-        }
+        "$type": "color"
       }
     }
   }

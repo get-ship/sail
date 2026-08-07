@@ -465,7 +465,7 @@
  * Themes opt in; components never change. That is the whole thesis —
  * a theme should be a token block, not a patch.
  *
- * SSOT: `$extensions.ship.channel` + `$description` on the token in
+ * SSOT: `$extensions.sail.channel` + `$description` on the token in
  * packages/sail/tokens/model/**. Do not hand-edit this block.
  */
 :root {

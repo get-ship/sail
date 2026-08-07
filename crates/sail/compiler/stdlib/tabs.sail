@@ -6,7 +6,7 @@
   props: {
     active = ''
     size: 'sm' | 'md' | 'lg' = 'md'
-    tone = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     orientation: 'horizontal' | 'vertical' = 'horizontal'
   
     onTabChange: (detail: { name: string }) => void

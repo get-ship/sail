@@ -4,30 +4,15 @@
     "hover-card": {
       "bg": {
         "$value": "{component.popover.bg}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "hover-card"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{component.popover.fg}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "hover-card-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{component.popover.border}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "hover-card-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

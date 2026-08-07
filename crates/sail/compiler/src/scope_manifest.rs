@@ -60,13 +60,13 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "union prop",
         syntax: "variant: 'solid' | 'soft' = 'solid'",
-        summary: "a union of string literals, reflected as an attribute; the default is required and must be a member — there is no first-member magic",
+        summary: "a union of string literals, reflected as an attribute; default is optional (omit = rest) and when present must be a member — no first-member magic",
         example: "<scope>\n  props: { variant: 'solid' | 'soft' = 'solid' }\n</scope>\n<p>{variant}</p>",
     },
     ScopeEntry {
         form: "shared tone/size prop",
         syntax: "tone = 'primary'  ·  size = 'md'",
-        summary: "Bare tone/size defaults type as the shared stdlib unions (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
+        summary: "Bare tone/size defaults type as the shared stdlib unions (tone: primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
         example: "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>",
     },
     ScopeEntry {

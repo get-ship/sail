@@ -12,11 +12,10 @@
  */
 
 /** Where {@link TONE_NAMES} membership is sourced from. */
-export const TONE_NAMES_SOURCE = 'l1-convention:TONE_FALLBACK (host prop axis; not design-token ramps)' as const
+export const TONE_NAMES_SOURCE = 'dtcg-groups:color.{primary,info,success,warning,destructive,brandAccent→accent,muted}' as const
 
-/** L1 host tone prop axis (component convention). Not design-token ramps. */
+/** Semantic paint tone groups (Style bound `tone` / host prop). No `'default'`. */
 export const TONE_NAMES = [
-  'default',
   'primary',
   'info',
   'success',
@@ -25,7 +24,45 @@ export const TONE_NAMES = [
   'accent',
   'muted',
 ] as const
-export type ToneName = (typeof TONE_NAMES)[number]
+export type Tone = (typeof TONE_NAMES)[number]
+
+/** @deprecated Use {@link Tone}. */
+export type ToneName = Tone
+
+/** Tone group → members → public token name (Style / tokens.css). */
+export const TONE = {
+  primary: {
+    default: 'primary',
+    foreground: 'primary-foreground',
+    hover: 'primary-hover',
+  },
+  info: {
+    default: 'info',
+    foreground: 'info-foreground',
+  },
+  success: {
+    default: 'success',
+    foreground: 'success-foreground',
+  },
+  warning: {
+    default: 'warning',
+    foreground: 'warning-foreground',
+  },
+  destructive: {
+    default: 'destructive',
+    foreground: 'destructive-foreground',
+  },
+  accent: {
+    default: 'accent',
+    foreground: 'accent-foreground',
+  },
+  muted: {
+    default: 'muted',
+    foreground: 'muted-foreground',
+  },
+} as const
+export type ToneGroup = keyof typeof TONE
+export type ToneMember<G extends ToneGroup = ToneGroup> = keyof (typeof TONE)[G]
 
 /** Theme catalog ids from packages/sail/tokens/model/themes/*.json. */
 export const THEME_IDS = [

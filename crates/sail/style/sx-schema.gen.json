@@ -32,7 +32,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -133,7 +133,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -172,7 +172,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -310,7 +310,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -423,7 +423,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -488,7 +488,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -1757,7 +1757,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -1908,7 +1908,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -1937,7 +1937,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -2056,7 +2056,7 @@
         "accent-skills",
         "accent-specs",
         "accent-theme",
-        "active-bg"
+        "accordion"
       ]
     },
     {
@@ -2415,8 +2415,8 @@
     "var-ref"
   ],
   "tokens": {
-    "count": 433,
-    "colors_count": 185,
+    "count": 483,
+    "colors_count": 235,
     "sample_names": [
       "accent",
       "accent-agents",
@@ -2435,9 +2435,15 @@
       "accent-skills",
       "accent-specs",
       "accent-theme",
+      "accordion",
+      "accordion-border",
+      "accordion-chevron",
+      "accordion-foreground",
+      "accordion-hover-bg",
       "active-bg",
       "active-strength",
       "alert",
+      "alert-border",
       "alert-foreground",
       "alert-stripe",
       "anchor-left",
@@ -2451,13 +2457,7 @@
       "badge-border",
       "badge-foreground",
       "body-font",
-      "body-weight",
-      "border",
-      "border-strong",
-      "border-subtle",
-      "border-width",
-      "box-h",
-      "box-left"
+      "body-weight"
     ],
     "resolve": "path (dotted → kebab) or cssName (flat registry name); dual resolve"
   },

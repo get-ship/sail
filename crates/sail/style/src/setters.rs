@@ -1720,8 +1720,8 @@ pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
     }
     if is_border_composite(spec.name) {
         return match op.first_arg() {
-            // bind probes resolve through the color entry.
-            PaintArg::Bind(_) => slots_part(spec, "color"),
+            // bind / bound group paths resolve through the color entry.
+            PaintArg::Bind(_) | PaintArg::MemberPath { .. } => slots_part(spec, "color"),
             PaintArg::Token(tok) => {
                 let bare = strip_neg(tok).1;
                 if scales::contains("border-width", bare)
@@ -1742,7 +1742,7 @@ pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
     match spec.name {
         "outline" => {
             return match op.first_arg() {
-                PaintArg::Bind(_) => vec!["outline-color"],
+                PaintArg::Bind(_) | PaintArg::MemberPath { .. } => vec!["outline-color"],
                 PaintArg::Token(tok) => {
                     let bare = strip_neg(tok).1;
                     if bare == "ring-width" || scales::contains("border-width", bare) {
@@ -1958,6 +1958,8 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
     }
     match op.first_arg() {
         PaintArg::Bind(_) => Ok(()),
+        // Bound paths validated at parse; emit expands before lower.
+        PaintArg::MemberPath { .. } => Ok(()),
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if neg && !spec.negatable {
@@ -2175,6 +2177,13 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 let css = css_name_for_bind(name);
                 return Ok(vec![("transform".into(), format!("var(--{css})"))]);
             }
+            PaintArg::MemberPath { .. } => {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: arg.display(),
+                    source: op.source.clone(),
+                });
+            }
         }
     }
     // italic / not-italic.
@@ -2318,6 +2327,13 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     })?
                 }
             }
+            PaintArg::MemberPath { .. } => {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: arg.display(),
+                    source: op.source.clone(),
+                });
+            }
         };
         let prop = match spec.name {
             "gap" => "gap",
@@ -2349,6 +2365,14 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         PaintArg::Bind(name) => {
             let css = css_name_for_bind(name);
             return Ok(bind_css_props(spec, &css));
+        }
+        // Bound member paths must be expanded at emit; static paths resolve at parse.
+        PaintArg::MemberPath { .. } => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: op.setter.clone(),
+                value: arg.display(),
+                source: op.source.clone(),
+            });
         }
     };
     // Axis overflow / overscroll / text-align / tab-size / underline / list keywords
@@ -2737,10 +2761,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         Some(pairs) => Ok(pairs),
         None => Err(StyleDiagnostic::BadToken {
             setter: op.setter.clone(),
-            value: match arg {
-                PaintArg::Token(t) => t.clone(),
-                PaintArg::Bind(n) => format!("bind({n})"),
-            },
+            value: arg.display(),
             source: op.source.clone(),
         }),
     }
@@ -2774,6 +2795,13 @@ fn lower_gap_key_css(
                 "containerType" | "container" => vec![("container-type".into(), var)],
                 "containerName" => vec![("container-name".into(), var)],
                 _ => return None,
+            }));
+        }
+        PaintArg::MemberPath { .. } => {
+            return Some(Err(StyleDiagnostic::BadToken {
+                setter: op.setter.clone(),
+                value: arg.display(),
+                source: op.source.clone(),
             }));
         }
     };
@@ -2994,6 +3022,11 @@ fn validate_border_width_arg(
 ) -> Result<(), StyleDiagnostic> {
     match arg {
         PaintArg::Bind(_) => Ok(()),
+        PaintArg::MemberPath { .. } => Err(StyleDiagnostic::BadToken {
+            setter: op.setter.clone(),
+            value: arg.display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if !neg
@@ -3020,7 +3053,7 @@ fn validate_border_color_arg(
     arg: &PaintArg,
 ) -> Result<(), StyleDiagnostic> {
     match arg {
-        PaintArg::Bind(_) => Ok(()),
+        PaintArg::Bind(_) | PaintArg::MemberPath { .. } => Ok(()),
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if !neg
@@ -3079,6 +3112,11 @@ fn lower_border_width_arg(
                 .map(|p| (p, var.clone()))
                 .collect())
         }
+        PaintArg::MemberPath { .. } => Err(StyleDiagnostic::BadToken {
+            setter: op.setter.clone(),
+            value: arg.display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Token(tok) => {
             let bare = strip_neg(tok).1;
             if spec.name == "border" && bare == "control-stroke" {
@@ -3114,6 +3152,11 @@ fn lower_border_color_arg(
                 .map(|p| (p, var.clone()))
                 .collect())
         }
+        PaintArg::MemberPath { .. } => Err(StyleDiagnostic::BadToken {
+            setter: op.setter.clone(),
+            value: arg.display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Token(tok) => {
             let bare = strip_neg(tok).1;
             for cand in token_candidates(bare) {
@@ -3137,7 +3180,7 @@ fn lower_border_color_arg(
 fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
     // Position 0: color token or bind.
     match &op.args[0] {
-        PaintArg::Bind(_) => {}
+        PaintArg::Bind(_) | PaintArg::MemberPath { .. } => {}
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if neg
@@ -3155,6 +3198,13 @@ fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), St
     // Position 1: closed percent ramp 5..95 step 5, or bind.
     match &op.args[1] {
         PaintArg::Bind(_) => {}
+        PaintArg::MemberPath { .. } => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: op.setter.clone(),
+                value: op.args[1].display(),
+                source: op.source.clone(),
+            });
+        }
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if neg {
@@ -3195,10 +3245,24 @@ fn lower_color_deepen_arg(
                 _ => format!("var(--{bare})"),
             }
         }
+        PaintArg::MemberPath { .. } => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "colorDeepen".into(),
+                value: token_arg.display(),
+                source: _op.source.clone(),
+            });
+        }
     };
     let pct = match pct_arg {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
         PaintArg::Token(t) => t.clone(),
+        PaintArg::MemberPath { .. } => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "colorDeepen".into(),
+                value: pct_arg.display(),
+                source: _op.source.clone(),
+            });
+        }
     };
     Ok(vec![(
         "background-color".into(),
@@ -3224,10 +3288,24 @@ fn lower_color_mix_wash_arg(
                 _ => format!("var(--{bare})"),
             }
         }
+        PaintArg::MemberPath { .. } => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "colorMix".into(),
+                value: token_arg.display(),
+                source: _op.source.clone(),
+            });
+        }
     };
     let pct = match pct_arg {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
         PaintArg::Token(t) => t.clone(),
+        PaintArg::MemberPath { .. } => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "colorMix".into(),
+                value: pct_arg.display(),
+                source: _op.source.clone(),
+            });
+        }
     };
     Ok(vec![(
         "background-color".into(),

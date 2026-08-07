@@ -3,53 +3,28 @@
   "density": {
     "row-py": {
       "$value": "{space-3}",
-      "$type": "dimension",
-      "$extensions": {
-        "ship": {
-          "cssName": "density-row-py"
-        }
-      }
+      "$type": "dimension"
     },
     "row-px": {
       "$value": "{space-4}",
-      "$type": "dimension",
-      "$extensions": {
-        "ship": {
-          "cssName": "density-row-px"
-        }
-      }
+      "$type": "dimension"
     },
     "row-gap": {
       "$value": "{space-3}",
-      "$type": "dimension",
-      "$extensions": {
-        "ship": {
-          "cssName": "density-row-gap"
-        }
-      }
+      "$type": "dimension"
     },
     "text": {
       "$value": "{text-md}",
-      "$type": "dimension",
-      "$extensions": {
-        "ship": {
-          "cssName": "density-text"
-        }
-      }
+      "$type": "dimension"
     },
     "icon": {
       "$value": "18px",
-      "$type": "dimension",
-      "$extensions": {
-        "ship": {
-          "cssName": "density-icon"
-        }
-      }
+      "$type": "dimension"
     },
     "$type": "dimension"
   },
   "$extensions": {
-    "ship": {
+    "sail": {
       "selector": ":root[data-density='spacious']",
       "layer": "density-spacious"
     }

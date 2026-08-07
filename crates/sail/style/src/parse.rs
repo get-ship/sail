@@ -1218,13 +1218,7 @@ fn parse_paren_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec
 }
 
 fn format_arg_text(args: &[PaintArg]) -> String {
-    args.iter()
-        .map(|a| match a {
-            PaintArg::Token(t) => t.clone(),
-            PaintArg::Bind(n) => format!("bind({n})"),
-        })
-        .collect::<Vec<_>>()
-        .join(", ")
+    args.iter().map(PaintArg::display).collect::<Vec<_>>().join(", ")
 }
 
 fn push_paint_op(
@@ -1290,14 +1284,92 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Pain
             PaintArg::Bind(name)
         }
         // Negatable token: style.ms(-px) tokenizes as Word("-px") after we allow leading '-'.
-        Some(Tok::Word(w)) => PaintArg::Token(w.to_string()),
+        // Member path: tone / tone.foreground / primary.foreground (root + optional .segments).
+        Some(Tok::Word(w)) => {
+            let root = w.to_string();
+            let mut path = Vec::new();
+            while p.peek() == Some(&Tok::Dot) {
+                p.bump();
+                match p.bump() {
+                    Some(Tok::Word(seg)) => path.push(seg.to_string()),
+                    _ => {
+                        diags.push(StyleDiagnostic::ParseError {
+                            message: "member path expects an identifier after `.`".into(),
+                            source: p.remainder(),
+                        });
+                        break;
+                    }
+                }
+            }
+            normalize_paint_arg(root, path, p.remainder(), diags)
+        }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected token or bind(name)".into(),
+                message: "expected token, member path, or bind(name)".into(),
                 source: p.remainder(),
             });
             PaintArg::Token(String::new())
         }
+    }
+}
+
+/// Resolve paint arg identity:
+/// - bound family root (`tone`, `tone.foreground`) → MemberPath
+/// - static group path (`primary.foreground`) → Token(public name)
+/// - bare non-group word → Token (legacy)
+fn normalize_paint_arg(
+    root: String,
+    path: Vec<String>,
+    source: String,
+    diags: &mut Vec<StyleDiagnostic>,
+) -> PaintArg {
+    use super::token_groups::{
+        bound_group_family, bound_member_valid, resolve_static_member_path, static_token_group,
+    };
+
+    if let Some(family) = bound_group_family(&root) {
+        if let Err(msg) = bound_member_valid(family, &path) {
+            diags.push(StyleDiagnostic::BadToken {
+                setter: String::new(),
+                value: if path.is_empty() {
+                    root.clone()
+                } else {
+                    format!("{root}.{}", path.join("."))
+                },
+                source: source.clone(),
+            });
+            // Still keep MemberPath so emit can no-op fail closed on bad member.
+            let _ = msg;
+        }
+        return PaintArg::MemberPath { root, path };
+    }
+
+    if path.is_empty() {
+        // Bare `primary` stays Token for back-compat (also a group stem).
+        return PaintArg::Token(root);
+    }
+
+    if static_token_group(&root).is_some() {
+        match resolve_static_member_path(&root, &path) {
+            Ok(public) => PaintArg::Token(public),
+            Err(_) => {
+                let value = format!("{root}.{}", path.join("."));
+                diags.push(StyleDiagnostic::BadToken {
+                    setter: String::new(),
+                    value: value.clone(),
+                    source,
+                });
+                PaintArg::Token(value)
+            }
+        }
+    } else {
+        let value = format!("{root}.{}", path.join("."));
+        diags.push(StyleDiagnostic::BadToken {
+            setter: String::new(),
+            value: value.clone(),
+            source,
+        });
+        PaintArg::Token(value)
     }
 }
 

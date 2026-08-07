@@ -4,30 +4,15 @@
     "context-menu": {
       "bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "context-menu"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "context-menu-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "context-menu-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

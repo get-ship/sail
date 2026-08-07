@@ -4,39 +4,19 @@
     "empty-state": {
       "bg": {
         "$value": "{muted}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "empty-state"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "empty-state-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "empty-state-border"
-          }
-        }
+        "$type": "color"
       },
       "title": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "empty-state-title"
-          }
-        }
+        "$type": "color"
       }
     }
   }

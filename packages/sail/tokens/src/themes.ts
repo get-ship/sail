@@ -22,7 +22,7 @@ import {
 export type { ThemeId, ThemeMeta, ModeCapability }
 export {
   THEME_ROOT_KEYS,
-  THEME_SHIP_KEYS,
+  THEME_SAIL_KEYS,
   THEME_PAINT_MODES,
   THEME_MODE_GROUP_KEYS,
   THEME_OVERRIDE_ORDER,

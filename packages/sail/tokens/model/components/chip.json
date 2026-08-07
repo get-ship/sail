@@ -4,30 +4,15 @@
     "chip": {
       "bg": {
         "$value": "{muted}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "chip"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "chip-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{border}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "chip-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

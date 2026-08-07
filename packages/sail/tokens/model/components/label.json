@@ -4,21 +4,11 @@
     "label": {
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "label-foreground"
-          }
-        }
+        "$type": "color"
       },
       "required": {
         "$value": "{color.destructive.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "label-required"
-          }
-        }
+        "$type": "color"
       }
     }
   }

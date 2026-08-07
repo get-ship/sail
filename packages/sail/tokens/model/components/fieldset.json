@@ -4,12 +4,7 @@
     "fieldset": {
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "fieldset-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

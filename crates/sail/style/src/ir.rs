@@ -9,6 +9,31 @@ pub enum PaintArg {
     Token(String),
     /// Reactive CSS var binding: `bind(rowY)` → `var(--row-y)`.
     Bind(String),
+    /// Token-group member path: `tone`, `tone.foreground`, `primary.foreground`.
+    ///
+    /// Static roots resolve to a public token id before CSS lower. Bound roots
+    /// (`tone`) expand over the group family at emit with attr-gated classes.
+    MemberPath {
+        root: String,
+        path: Vec<String>,
+    },
+}
+
+impl PaintArg {
+    /// Author-facing display (`tone.foreground`, `primary`, `bind(x)`).
+    pub fn display(&self) -> String {
+        match self {
+            PaintArg::Token(t) => t.clone(),
+            PaintArg::Bind(n) => format!("bind({n})"),
+            PaintArg::MemberPath { root, path } => {
+                if path.is_empty() {
+                    root.clone()
+                } else {
+                    format!("{root}.{}", path.join("."))
+                }
+            }
+        }
+    }
 }
 
 /// One chained paint setter (never a guard).

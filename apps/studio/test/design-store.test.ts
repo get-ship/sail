@@ -87,7 +87,7 @@ describe('theme doc density + inheritance + diff', () => {
     __setWorkingDocForTests(base)
     expect(getDesignState().diffRows.length).toBe(0)
     // flattenValues surfaces ship density for export
-    expect(flattenValues(base).get('$extensions.ship.density')).toBe('default')
+    expect(flattenValues(base).get('$extensions.sail.density')).toBe('default')
     await setDesignDensity('compact')
     const s = getDesignState()
     expect(s.density).toBe('compact')
@@ -95,7 +95,7 @@ describe('theme doc density + inheritance + diff', () => {
     // Exactly the density mode write — no CSS paths
     expect(s.diffRows).toEqual([
       {
-        path: '$extensions.ship.density',
+        path: '$extensions.sail.density',
         from: 'default',
         to: 'compact',
       },
@@ -110,7 +110,7 @@ describe('theme doc density + inheritance + diff', () => {
     const rows = diffThemeDocs(a, b)
     expect(rows).toEqual([
       {
-        path: '$extensions.ship.density',
+        path: '$extensions.sail.density',
         from: 'default',
         to: 'spacious',
       },
@@ -770,6 +770,6 @@ describe('preview in app + token filters', () => {
     const listed = listTokenRows(getDesignState().themeDoc, base, {
       overridesOnly: true,
     })
-    expect(listed.some((r) => r.path === '$extensions.ship.density')).toBe(true)
+    expect(listed.some((r) => r.path === '$extensions.sail.density')).toBe(true)
   })
 })

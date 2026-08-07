@@ -4,30 +4,15 @@
     "kbd": {
       "bg": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "kbd"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "kbd-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "kbd-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

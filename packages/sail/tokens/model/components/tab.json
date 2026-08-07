@@ -4,39 +4,19 @@
     "tab": {
       "fg": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-foreground"
-          }
-        }
+        "$type": "color"
       },
       "selected-fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-selected-foreground"
-          }
-        }
+        "$type": "color"
       },
       "selected-bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-selected-bg"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

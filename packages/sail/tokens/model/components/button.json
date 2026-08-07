@@ -4,39 +4,19 @@
     "button": {
       "bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "button"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "button-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "button-border"
-          }
-        }
+        "$type": "color"
       },
       "hover-bg": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "button-hover-bg"
-          }
-        }
+        "$type": "color"
       }
     }
   }

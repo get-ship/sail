@@ -4,21 +4,11 @@
     "tooltip": {
       "bg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tooltip"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tooltip-foreground"
-          }
-        }
+        "$type": "color"
       }
     }
   }

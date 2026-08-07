@@ -4,63 +4,33 @@
     "duration": {
       "instant": {
         "$value": "0.01ms",
-        "$type": "duration",
-        "$extensions": {
-          "ship": {
-            "cssName": "duration-instant"
-          }
-        }
+        "$type": "duration"
       },
       "fast": {
         "$value": "0.01ms",
-        "$type": "duration",
-        "$extensions": {
-          "ship": {
-            "cssName": "duration-fast"
-          }
-        }
+        "$type": "duration"
       },
       "medium": {
         "$value": "0.01ms",
-        "$type": "duration",
-        "$extensions": {
-          "ship": {
-            "cssName": "duration-medium"
-          }
-        }
+        "$type": "duration"
       },
       "slow": {
         "$value": "0.01ms",
-        "$type": "duration",
-        "$extensions": {
-          "ship": {
-            "cssName": "duration-slow"
-          }
-        }
+        "$type": "duration"
       },
       "deliberate": {
         "$value": "0.01ms",
-        "$type": "duration",
-        "$extensions": {
-          "ship": {
-            "cssName": "duration-deliberate"
-          }
-        }
+        "$type": "duration"
       },
       "glacial": {
         "$value": "0.01ms",
-        "$type": "duration",
-        "$extensions": {
-          "ship": {
-            "cssName": "duration-glacial"
-          }
-        }
+        "$type": "duration"
       }
     },
     "$type": "duration"
   },
   "$extensions": {
-    "ship": {
+    "sail": {
       "selector": ":root",
       "media": "(prefers-reduced-motion: reduce)",
       "layer": "reduced-motion"

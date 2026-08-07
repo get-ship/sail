@@ -4,57 +4,27 @@
     "field": {
       "bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "field"
-          }
-        }
+        "$type": "color"
       },
       "fg": {
         "$value": "{color.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "field-foreground"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "field-border"
-          }
-        }
+        "$type": "color"
       },
       "border-hover": {
         "$value": "{color.border.strong}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "field-border-hover"
-          }
-        }
+        "$type": "color"
       },
       "hint": {
         "$value": "{color.muted.foreground}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "field-hint"
-          }
-        }
+        "$type": "color"
       },
       "error": {
         "$value": "{color.destructive.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "field-error"
-          }
-        }
+        "$type": "color"
       }
     }
   }

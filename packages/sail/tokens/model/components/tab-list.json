@@ -4,30 +4,15 @@
     "tab-list": {
       "bg": {
         "$value": "{color.background}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-list"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-list-border"
-          }
-        }
+        "$type": "color"
       },
       "rail": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "tab-list-rail"
-          }
-        }
+        "$type": "color"
       }
     }
   }

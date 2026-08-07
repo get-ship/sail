@@ -4,30 +4,15 @@
     "switch": {
       "track": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "switch"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.strong}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "switch-border"
-          }
-        }
+        "$type": "color"
       },
       "thumb": {
         "$value": "{color.surface.1}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "switch-thumb"
-          }
-        }
+        "$type": "color"
       }
     }
   }

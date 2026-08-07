@@ -18,6 +18,7 @@ pub mod scales;
 pub mod setters;
 pub mod sx_ir;
 pub mod sx_vocab;
+pub mod token_groups;
 pub mod tokens;
 
 pub use channel::{

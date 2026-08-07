@@ -17,7 +17,7 @@
 
 import {
   THEME_ROOT_KEYS,
-  THEME_SHIP_KEYS,
+  THEME_SAIL_KEYS,
   THEME_PAINT_MODES,
   THEME_MODE_GROUP_KEYS,
   THEME_OVERRIDE_ORDER,
@@ -30,7 +30,7 @@ import {
 
 export {
   THEME_ROOT_KEYS,
-  THEME_SHIP_KEYS,
+  THEME_SAIL_KEYS,
   THEME_PAINT_MODES,
   THEME_MODE_GROUP_KEYS,
   THEME_OVERRIDE_ORDER,
@@ -108,65 +108,65 @@ export function validateThemeDoc(doc: unknown, label = 'theme'): ThemeSchemaErro
     } else {
       const extObj = ext as Record<string, unknown>
       for (const key of Object.keys(extObj)) {
-        if (key !== 'ship') {
+        if (key !== 'sail') {
           errors.push({
             path: `$extensions.${key}`,
-            message: `${label}: ${unknownKeyMessage('$extensions', key, ['ship'])}`,
+            message: `${label}: ${unknownKeyMessage('$extensions', key, ['sail'])}`,
           })
         }
       }
-      const ship = extObj.ship
-      if (ship !== undefined) {
-        if (!ship || typeof ship !== 'object' || Array.isArray(ship)) {
+      const sail = extObj.sail
+      if (sail !== undefined) {
+        if (!sail || typeof sail !== 'object' || Array.isArray(sail)) {
           errors.push({
-            path: '$extensions.ship',
-            message: `${label}: $extensions.ship must be an object`,
+            path: '$extensions.sail',
+            message: `${label}: $extensions.sail must be an object`,
           })
         } else {
-          const shipObj = ship as Record<string, unknown>
-          const shipValid = THEME_SHIP_KEYS as readonly string[]
-          for (const key of Object.keys(shipObj)) {
-            if (!shipValid.includes(key)) {
+          const sailObj = sail as Record<string, unknown>
+          const sailValid = THEME_SAIL_KEYS as readonly string[]
+          for (const key of Object.keys(sailObj)) {
+            if (!sailValid.includes(key)) {
               errors.push({
-                path: `$extensions.ship.${key}`,
-                message: `${label}: ${unknownKeyMessage('$extensions.ship', key, shipValid)}`,
+                path: `$extensions.sail.${key}`,
+                message: `${label}: ${unknownKeyMessage('$extensions.sail', key, sailValid)}`,
               })
             }
           }
-          const dm = shipObj.defaultMode
+          const dm = sailObj.defaultMode
           if (typeof dm === 'string' && !(THEME_PAINT_MODES as readonly string[]).includes(dm)) {
             errors.push({
-              path: '$extensions.ship.defaultMode',
+              path: '$extensions.sail.defaultMode',
               message: `${label}: ${unknownKeyMessage('defaultMode', dm, THEME_PAINT_MODES)}`,
             })
           }
-          const sm = shipObj.supportedModes
+          const sm = sailObj.supportedModes
           if (Array.isArray(sm)) {
             for (const m of sm) {
               if (typeof m !== 'string') {
                 errors.push({
-                  path: '$extensions.ship.supportedModes',
+                  path: '$extensions.sail.supportedModes',
                   message: `${label}: supportedModes entries must be strings`,
                 })
               } else if (!(THEME_PAINT_MODES as readonly string[]).includes(m)) {
                 errors.push({
-                  path: '$extensions.ship.supportedModes',
+                  path: '$extensions.sail.supportedModes',
                   message: `${label}: ${unknownKeyMessage('supportedModes', m, THEME_PAINT_MODES)}`,
                 })
               }
             }
           }
-          if (typeof shipObj.layer === 'string' && shipObj.layer !== 'theme') {
+          if (typeof sailObj.layer === 'string' && sailObj.layer !== 'theme') {
             errors.push({
-              path: '$extensions.ship.layer',
-              message: `${label}: $extensions.ship.layer must be "theme" (got ${JSON.stringify(shipObj.layer)})`,
+              path: '$extensions.sail.layer',
+              message: `${label}: $extensions.sail.layer must be "theme" (got ${JSON.stringify(sailObj.layer)})`,
             })
           }
-          if (typeof shipObj.density === 'string') {
-            if (!['compact', 'default', 'spacious'].includes(shipObj.density)) {
+          if (typeof sailObj.density === 'string') {
+            if (!['compact', 'default', 'spacious'].includes(sailObj.density)) {
               errors.push({
-                path: '$extensions.ship.density',
-                message: `${label}: density must be compact|default|spacious (got ${JSON.stringify(shipObj.density)})`,
+                path: '$extensions.sail.density',
+                message: `${label}: density must be compact|default|spacious (got ${JSON.stringify(sailObj.density)})`,
               })
             }
           }

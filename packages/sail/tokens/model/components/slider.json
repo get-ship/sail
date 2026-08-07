@@ -4,30 +4,15 @@
     "slider": {
       "track": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "slider-track"
-          }
-        }
+        "$type": "color"
       },
       "fill": {
         "$value": "{color.primary.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "slider-fill"
-          }
-        }
+        "$type": "color"
       },
       "track-border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "slider-track-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }

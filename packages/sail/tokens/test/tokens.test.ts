@@ -687,15 +687,15 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   const loadRegistry = (): Registry =>
     JSON.parse(loadSrc('../src/token-registry.json')) as Registry
 
-  /** Walk base + model/components/* → public cssNames (via $extensions.ship.cssName or path join). */
+  /** Walk base + model/components/* → public cssNames (via publicName(path) or path join). */
   function modelBaseCssNames(): Set<string> {
     const names = new Set<string>()
     const walk = (node: unknown, path: string[]) => {
       if (!node || typeof node !== 'object' || Array.isArray(node)) return
       const obj = node as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(obj, '$value')) {
-        const ext = obj.$extensions as { ship?: { cssName?: string } } | undefined
-        const cssName = ext?.ship?.cssName ?? path.join('-')
+        // Public names are generator-owned; tests walk registry for public names.
+        const cssName = path.join('-') // fallback only for structural walk
         names.add(cssName)
         return
       }

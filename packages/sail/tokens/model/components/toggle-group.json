@@ -4,21 +4,11 @@
     "toggle-group": {
       "bg": {
         "$value": "{color.muted.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "toggle-group"
-          }
-        }
+        "$type": "color"
       },
       "border": {
         "$value": "{color.border.default}",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "toggle-group-border"
-          }
-        }
+        "$type": "color"
       }
     }
   }
