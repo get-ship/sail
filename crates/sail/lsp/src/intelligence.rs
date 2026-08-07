@@ -144,10 +144,23 @@ impl Intelligence {
     }
 
     /// Structure diagnostics merged with mapped tsgo diagnostics when live.
+    /// Full stream ([`sail_compiler::DiagnosticTier::OnSave`]) — for explicit
+    /// checks. For typing / on-type, use [`Self::diagnostics_sail_tier`].
     pub fn diagnostics_sail(&mut self, source: &str, path: Option<&str>) -> Vec<DiagPayload> {
+        self.diagnostics_sail_tier(source, path, sail_compiler::DiagnosticTier::OnSave)
+    }
+
+    /// Diagnostics at an explicit [`sail_compiler::DiagnosticTier`]
+    /// (SPEC-TOOLING-1 §WI6).
+    pub fn diagnostics_sail_tier(
+        &mut self,
+        source: &str,
+        path: Option<&str>,
+        tier: sail_compiler::DiagnosticTier,
+    ) -> Vec<DiagPayload> {
         let key = doc_key(path, "diag.sail");
         self.open_or_update(&key, source);
-        diagnostics_with_session(&mut self.tsgo, source, path.map(Path::new), &key)
+        diagnostics_with_session(&mut self.tsgo, source, path.map(Path::new), &key, tier)
     }
 }
 
@@ -193,10 +206,20 @@ pub fn complete_sail(
 }
 
 /// Diagnostics convenience: uses the process-local session.
+/// Full (OnSave) stream — for MCP/agent-style explicit checks.
 pub fn diagnostics_sail(source: &str, path: Option<&str>) -> Vec<DiagPayload> {
+    diagnostics_sail_tier(source, path, sail_compiler::DiagnosticTier::OnSave)
+}
+
+/// Diagnostics convenience with explicit tier (SPEC-TOOLING-1 §WI6).
+pub fn diagnostics_sail_tier(
+    source: &str,
+    path: Option<&str>,
+    tier: sail_compiler::DiagnosticTier,
+) -> Vec<DiagPayload> {
     let hint = path.and_then(|p| Path::new(p).parent().map(|d| d.to_path_buf()));
     with_global_session(hint.as_deref(), |intel| {
-        intel.diagnostics_sail(source, path)
+        intel.diagnostics_sail_tier(source, path, tier)
     })
 }
 
@@ -281,30 +304,32 @@ pub fn complete_with_session(
         .collect()
 }
 
-/// Structure + mapped tsgo diagnostics.
+/// Structure + mapped tsgo diagnostics at `tier` (SPEC-TOOLING-1 §WI6).
 pub fn diagnostics_with_session(
     tsgo: &mut TsgoSession,
     source: &str,
     path: Option<&Path>,
     uri_key: &str,
+    tier: sail_compiler::DiagnosticTier,
 ) -> Vec<DiagPayload> {
-    let mut out: Vec<DiagPayload> = sail_compiler::check_all(source, path, &[], None)
-        .into_iter()
-        .map(|d| DiagPayload {
-            line: d.line,
-            col: d.col,
-            end_line: Some(d.end_line),
-            end_col: Some(d.end_col),
-            severity: match d.severity {
-                sail_compiler::DiagSeverity::Error => "error".into(),
-                sail_compiler::DiagSeverity::Warning => "warning".into(),
-                sail_compiler::DiagSeverity::Fix => "fix".into(),
-            },
-            message: d.message,
-            source: Some("sail".into()),
-            rule: d.rule,
-        })
-        .collect();
+    let mut out: Vec<DiagPayload> =
+        sail_compiler::check_all_with_tier(source, path, &[], None, tier)
+            .into_iter()
+            .map(|d| DiagPayload {
+                line: d.line,
+                col: d.col,
+                end_line: Some(d.end_line),
+                end_col: Some(d.end_col),
+                severity: match d.severity {
+                    sail_compiler::DiagSeverity::Error => "error".into(),
+                    sail_compiler::DiagSeverity::Warning => "warning".into(),
+                    sail_compiler::DiagSeverity::Fix => "fix".into(),
+                },
+                message: d.message,
+                source: Some("sail".into()),
+                rule: d.rule,
+            })
+            .collect();
 
     if tsgo.is_live() {
         for d in tsgo.diagnostics_mapped(uri_key, source) {

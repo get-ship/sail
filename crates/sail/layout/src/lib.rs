@@ -63,6 +63,42 @@ pub use taffy_tree::Layout;
 /// hooks) build trees and call compute_layout through this alias.
 pub use taffy;
 
+use std::sync::atomic::{AtomicU64, Ordering};
+
+/// Process-wide count of taffy layout computations (each `taffy_tree::build`).
+/// Test/hook surface for SPEC-TOOLING-1 §WI6: LSP on-type must not increment
+/// this while typing.
+static LAYOUT_PASS_COUNT: AtomicU64 = AtomicU64::new(0);
+
+/// Number of taffy layout passes since process start (or last
+/// [`reset_layout_pass_count`]).
+pub fn layout_pass_count() -> u64 {
+    LAYOUT_PASS_COUNT.load(Ordering::SeqCst)
+}
+
+/// Reset the layout-pass counter (tests).
+pub fn reset_layout_pass_count() {
+    LAYOUT_PASS_COUNT.store(0, Ordering::SeqCst);
+}
+
+pub(crate) fn record_layout_pass() {
+    LAYOUT_PASS_COUNT.fetch_add(1, Ordering::SeqCst);
+}
+
+#[cfg(test)]
+mod layout_pass_counter_tests {
+    use super::*;
+
+    #[test]
+    fn build_increments_layout_pass_count() {
+        reset_layout_pass_count();
+        let before = layout_pass_count();
+        let elems = parse_source("<div>hi</div>");
+        let _ = taffy_tree::build(elems, (400.0, 300.0));
+        assert!(layout_pass_count() > before);
+    }
+}
+
 /// Compute a layout for an already-preprocessed `.sail` template at `viewport`
 /// px and emit diagnostics. This is the primary entry point for callers that
 /// already have a preprocessor (e.g. `sail-compiler`).

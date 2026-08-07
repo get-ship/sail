@@ -12,6 +12,13 @@
 //! are pushed diagnostics on open/change/save, plus hover / completion /
 //! go-to-definition, code actions (auto-fix), and icon-name completion.
 //!
+//! ## Diagnostic tiering (SPEC-TOOLING-1 §WI6)
+//!
+//! - **On-type** (`didOpen` / `didChange`): parse + vocabulary + semantic —
+//!   never runs the taffy layout pass.
+//! - **On-save** (`didSave`): full stream including taffy layout + compose.
+//! - **Render**: on-demand only (MCP/CLI) — never part of this push path.
+//!
 //! When `tsgo` is missing the server degrades to structure-only (one log line).
 //!
 //! Library callers (Studio via sail-ops) use [`intelligence`] — the same
@@ -24,7 +31,7 @@ mod virtual_ts;
 /// Public library API: hover / complete / diagnostics without stdio LSP.
 pub use intelligence::{
     CompletionItemPayload, DiagPayload, HoverPayload, Intelligence, RangePayload, complete_sail,
-    complete_with_session, completion_payloads_from_tsgo, diagnostics_sail,
+    complete_with_session, completion_payloads_from_tsgo, diagnostics_sail, diagnostics_sail_tier,
     diagnostics_with_session, doc_key, hover_payload_from_tsgo, hover_sail, hover_with_session,
     with_global_session,
 };
@@ -57,6 +64,7 @@ use lsp_types::{
     TextEdit, Url, WorkspaceEdit,
 };
 
+use sail_compiler::DiagnosticTier;
 use tsgo::TsgoSession;
 
 type Docs = HashMap<Url, String>;
@@ -124,7 +132,8 @@ fn handle_notification(
             let uri = p.text_document.uri.clone();
             docs.insert(uri.clone(), p.text_document.text.clone());
             tsgo.on_sail_change(uri.as_str(), &p.text_document.text);
-            publish_diagnostics(conn, tsgo, &uri, &p.text_document.text)?;
+            // On-type tier: parse/vocabulary only (no taffy).
+            publish_diagnostics(conn, tsgo, &uri, &p.text_document.text, DiagnosticTier::OnType)?;
         }
         "textDocument/didChange" => {
             let p: lsp_types::DidChangeTextDocumentParams = serde_json::from_value(note.params)?;
@@ -133,14 +142,16 @@ fn handle_notification(
                 let uri = p.text_document.uri.clone();
                 docs.insert(uri.clone(), change.text.clone());
                 tsgo.on_sail_change(uri.as_str(), &change.text);
-                publish_diagnostics(conn, tsgo, &uri, &change.text)?;
+                // On-type tier: never trigger layout while typing.
+                publish_diagnostics(conn, tsgo, &uri, &change.text, DiagnosticTier::OnType)?;
             }
         }
         "textDocument/didSave" => {
             let p: lsp_types::DidSaveTextDocumentParams = serde_json::from_value(note.params)?;
             let uri = p.text_document.uri;
             if let Some(text) = docs.get(&uri).cloned() {
-                publish_diagnostics(conn, tsgo, &uri, &text)?;
+                // On-save tier: full stream including taffy layout.
+                publish_diagnostics(conn, tsgo, &uri, &text, DiagnosticTier::OnSave)?;
             }
         }
         "textDocument/didClose" => {
@@ -158,11 +169,13 @@ fn publish_diagnostics(
     tsgo: &mut TsgoSession,
     uri: &Url,
     text: &str,
+    tier: DiagnosticTier,
 ) -> anyhow::Result<()> {
     let path = uri.to_file_path().ok();
-    let analysis = sail_compiler::analyze(text, path.as_deref(), &[]);
+    let analysis = sail_compiler::analyze_with_tier(text, path.as_deref(), &[], tier);
     let mut diagnostics: Vec<Diagnostic> = analysis.diagnostics.iter().map(diag_to_lsp).collect();
     // Merge mapped tsgo diagnostics (controller / template expression typos).
+    // TS intelligence is on-type (cheap relative to taffy); both tiers include it.
     if tsgo.is_live() {
         diagnostics.extend(tsgo.diagnostics_mapped(uri.as_str(), text));
     }

@@ -42,7 +42,7 @@ pub mod tscheck;
 
 use std::path::Path;
 
-use crate::diagnostics::{CompileError, DiagSeverity, Diagnostic};
+use crate::diagnostics::{CompileError, DiagSeverity, Diagnostic, DiagnosticTier};
 use crate::ir::*;
 
 /// Run every post-parse check. Returns the first error, or `Ok(())`.
@@ -179,6 +179,7 @@ pub fn gate(
         controller,
         overrides,
         route_params,
+        DiagnosticTier::OnSave,
     )
     .into_iter()
     .find(|d| d.severity == DiagSeverity::Error);
@@ -221,6 +222,10 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 /// `run()` (above) stays the build-time gate — it short-circuits because a
 /// failed build only needs one reason. `collect()` is the editor/agent view.
 ///
+/// `tier` (SPEC-TOOLING-1 §WI6) selects the stream:
+/// - [`DiagnosticTier::OnType`] — parse / vocabulary / semantic; **no taffy**
+/// - [`DiagnosticTier::OnSave`] — full stream including layout + compose
+///
 /// Coverage today: every `expr-subset` violation (the common class) plus the
 /// first error from each remaining structural/semantic pass, merged with the
 /// full multi-finding `sail-lint` stream. `css_token` / `controller_purity`
@@ -235,6 +240,7 @@ pub fn collect(
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
+    tier: DiagnosticTier,
 ) -> Vec<Diagnostic> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
@@ -372,22 +378,29 @@ pub fn collect(
         }
     }
 
-    // Layout diagnostics — build the same box tree the runtime will build and
-    // report collapsed / overflow findings. Soft findings stay warnings unless
-    // the package sets `"layout": "error"` (studio profile) — then gate-gap
-    // kinds promote to Error and fail `compile` / `sail check`. Must run on
-    // the preprocessed source so class tokens line up with the CSS the
-    // compiler emits; spans map back to the author's original source.
-    diags.extend(layout::collect_for(source, source_path));
+    // Layout + compose (taffy) — SPEC-TOOLING-1 §WI6: OnSave only.
+    // On-type must never compute a box tree; typing a 500-line buffer must
+    // not pay for multi-viewport layout. Compose rebuilds taffy today, so
+    // it rides the same gate (not a separate "reuse" of layout's tree).
+    if tier.includes_layout() {
+        // Layout diagnostics — build the same box tree the runtime will build
+        // and report collapsed / overflow findings. Soft findings stay
+        // warnings unless the package sets `"layout": "error"` (studio
+        // profile) — then gate-gap kinds promote to Error and fail
+        // `compile` / `sail check`. Must run on the preprocessed source so
+        // class tokens line up with the CSS the compiler emits; spans map
+        // back to the author's original source.
+        diags.extend(layout::collect_for(source, source_path));
 
-    // Compose auto-fix — sibling rhythm (spacing) consistency. Reuses the same
-    // taffy tree the layout pass just built; emits `Fix` severity diagnostics
-    // that the `sail_edit` path turns into source rewrites.
-    diags.extend(compose::collect(source, source_path, overrides));
+        // Compose auto-fix — sibling rhythm (spacing) consistency. Emits
+        // `Fix` severity diagnostics that the `sail_edit` path turns into
+        // source rewrites.
+        diags.extend(compose::collect(source, source_path, overrides));
+    }
 
     // Style match exhaustiveness — a `match` on a closed-union scope prop
     // that leaves members arm-less warns (never gates; partial matches are a
-    // legitimate way to leave a variant unstyled).
+    // legitimate way to leave a variant unstyled). Cheap; runs on-type too.
     diags.extend(match_exhaustiveness::collect(program, source));
 
     diags.sort_by(|a, b| a.line.cmp(&b.line).then(a.col.cmp(&b.col)));

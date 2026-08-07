@@ -107,6 +107,33 @@ pub enum DiagSeverity {
     Fix,
 }
 
+/// SPEC-TOOLING-1 §WI6 — when a diagnostic stream is computed.
+///
+/// Doctrine:
+/// - **OnType** — parse + vocabulary + semantic checks (LSP `didOpen` /
+///   `didChange`). Never runs the taffy layout / compose pass.
+/// - **OnSave** — full stream including taffy layout + compose (LSP
+///   `didSave`, `sail check`, MCP `sail_check`, compile gate).
+///
+/// Render stays **on-demand** outside this enum (MCP `sail_render` / CLI) —
+/// never part of the push-diagnostic pipeline.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DiagnosticTier {
+    /// Parse + vocabulary + semantic checks. No taffy.
+    OnType,
+    /// Full diagnostics including taffy layout + compose.
+    #[default]
+    OnSave,
+}
+
+impl DiagnosticTier {
+    /// Whether this tier runs the taffy layout (and taffy-backed compose) pass.
+    pub const fn includes_layout(self) -> bool {
+        matches!(self, Self::OnSave)
+    }
+}
+
 /// One diagnostic with a resolved **1-based** line/col range. This is the
 /// shared currency of [`crate::check_all`] — it merges compiler check-pass
 /// errors ([`CompileError`]) and `sail-lint` findings into one stream so an
@@ -180,5 +207,12 @@ mod tests {
         assert!(rendered.contains("line 2"));
         assert!(rendered.contains("[expr]"));
         assert!(rendered.contains("oops"));
+    }
+
+    #[test]
+    fn diagnostic_tier_layout_gate() {
+        assert!(!DiagnosticTier::OnType.includes_layout());
+        assert!(DiagnosticTier::OnSave.includes_layout());
+        assert!(DiagnosticTier::default().includes_layout());
     }
 }

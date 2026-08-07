@@ -48,6 +48,9 @@ pub fn build<I>(elements: I, viewport: (f32, f32)) -> Result<Layout>
 where
     I: IntoIterator<Item = Element>,
 {
+    // SPEC-TOOLING-1 §WI6: every taffy compute is a countable "layout pass".
+    crate::record_layout_pass();
+
     let elements: Vec<Element> = elements.into_iter().collect();
 
     let mut taffy: TaffyTree<NodeContext> = TaffyTree::new();

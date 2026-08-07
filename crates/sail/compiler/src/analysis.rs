@@ -111,12 +111,32 @@ pub struct Analysis {
 
 /// Full analysis of a `.sail` source: diagnostics + scope symbols + the tag /
 /// event dependency surface. `source_path` locates the paired controller.
+///
+/// Diagnostics use [`crate::DiagnosticTier::OnSave`] (includes taffy). For
+/// LSP on-type, call [`analyze_with_tier`] with
+/// [`crate::DiagnosticTier::OnType`].
 pub fn analyze(
     source: &str,
     source_path: Option<&Path>,
     overrides: &[crate::LintOverride],
 ) -> Analysis {
-    let diagnostics = crate::check_all(source, source_path, overrides, None);
+    analyze_with_tier(
+        source,
+        source_path,
+        overrides,
+        crate::DiagnosticTier::OnSave,
+    )
+}
+
+/// Like [`analyze`], with an explicit [`crate::DiagnosticTier`]
+/// (SPEC-TOOLING-1 §WI6).
+pub fn analyze_with_tier(
+    source: &str,
+    source_path: Option<&Path>,
+    overrides: &[crate::LintOverride],
+    tier: crate::DiagnosticTier,
+) -> Analysis {
+    let diagnostics = crate::check_all_with_tier(source, source_path, overrides, None, tier);
     let Ok(program) = crate::parse::parse(source) else {
         // Without an AST we can still return the parse diagnostic.
         return Analysis {

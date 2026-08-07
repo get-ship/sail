@@ -66,12 +66,12 @@ pub mod used_tags;
 pub mod wasm;
 
 pub use analysis::{
-    Analysis, Hover, QueryKeyInfo, SsrTier, Symbol, analyze, classify_ssr_tier, completions_at,
-    extract_query_keys, hover_at,
+    Analysis, Hover, QueryKeyInfo, SsrTier, Symbol, analyze, analyze_with_tier, classify_ssr_tier,
+    completions_at, extract_query_keys, hover_at,
 };
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
-pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
+pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, DiagnosticTier, Span};
 pub use fmt::{FormatError, FormatOpts, FormatResult, format_source, format_source_with, is_formatted};
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
@@ -249,9 +249,10 @@ pub struct CompileOutput {
 }
 
 /// Check a `.sail` source string and return **every** diagnostic, not just
-/// the first. This is the entry point for the LSP + agent tooling — it
-/// parses, runs all check passes collecting (rather than short-circuiting
-/// like [`compile`]), and merges the full `sail-lint` findings.
+/// the first. Full stream ([`DiagnosticTier::OnSave`]) — taffy layout +
+/// compose included. Entry point for CLI / MCP / compile-adjacent tooling.
+///
+/// Prefer [`check_all_with_tier`] for the LSP push path (OnType vs OnSave).
 ///
 /// A fatal parse error returns a single diagnostic (nothing else can run
 /// without an AST). `source_path` locates the paired `.controller.ts` for
@@ -261,6 +262,24 @@ pub fn check_all(
     source_path: Option<&std::path::Path>,
     overrides: &[LintOverride],
     route_params: Option<&[String]>,
+) -> Vec<Diagnostic> {
+    check_all_with_tier(
+        source,
+        source_path,
+        overrides,
+        route_params,
+        DiagnosticTier::OnSave,
+    )
+}
+
+/// Like [`check_all`], with an explicit [`DiagnosticTier`] (SPEC-TOOLING-1
+/// §WI6). [`DiagnosticTier::OnType`] skips taffy layout + compose.
+pub fn check_all_with_tier(
+    source: &str,
+    source_path: Option<&std::path::Path>,
+    overrides: &[LintOverride],
+    route_params: Option<&[String]>,
+    tier: DiagnosticTier,
 ) -> Vec<Diagnostic> {
     // SFC: strip the inline `<controller>` block (else it parses as a template)
     // and resolve the controller (inline body wins, else paired file) for the
@@ -283,18 +302,20 @@ pub fn check_all(
             controller.as_ref(),
             overrides,
             route_params,
+            tier,
         ),
         Err(e) => {
             // Fatal parse/preprocess error — still surface confluent off-scale
-            // spacing rewrites from raw author tags. `mr(25)` fails as a space
-            // BadToken before compose would run; without this merge the
-            // `sail-compose-spacing` gate is unreachable on the product path.
+            // spacing rewrites from raw author tags on the full (OnSave) path.
+            // OnType stays parse-only for this fatal branch (no compose).
             let mut diags = vec![Diagnostic::from_compile_error(&e, &stripped)];
-            diags.extend(check::compose::collect_off_scale_for_check(
-                &stripped,
-                source_path,
-                overrides,
-            ));
+            if tier.includes_layout() {
+                diags.extend(check::compose::collect_off_scale_for_check(
+                    &stripped,
+                    source_path,
+                    overrides,
+                ));
+            }
             diags
         }
     }
