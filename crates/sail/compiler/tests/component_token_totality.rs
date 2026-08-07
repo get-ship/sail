@@ -185,6 +185,8 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "hover-card",
         &["hover-card", "hover-card-foreground", "hover-card-border"],
     ),
+    // L1-POLISH-A — inverted tip bubble (tooltip / tooltip-foreground).
+    ("tooltip", &["tooltip", "tooltip-foreground"]),
     (
         "badge",
         &["badge", "badge-foreground", "badge-border"],
@@ -256,7 +258,9 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* popover */", &["border"]),
     ("/* dropdown */", &["border"]),
     ("/* context-menu */", &["border"]),
-    ("/* hover-card */", &["border"]),
+    ("/* hover-card */", &["border", "foreground", "surface-1", "background"]),
+    // Tooltip rest is inverted PE via tooltip / tooltip-foreground — not free fg/bg.
+    ("/* tooltip */", &["foreground", "background"]),
     ("/* badge */", &["muted", "muted-foreground", "border"]),
     ("/* radio */", &["foreground", "background"]),
     ("/* combobox */", &["background", "foreground"]),

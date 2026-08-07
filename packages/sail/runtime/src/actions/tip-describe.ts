@@ -14,7 +14,8 @@ const applyPlacement = (el: HTMLElement, raw: string | null): void => {
   const p = (raw === 'bottom' || raw === 'left' || raw === 'right' ? raw : 'top') as Placement
   const gap = 'calc(100% + var(--space-2))'
   const arrow = 'calc(-1 * var(--space-1))'
-  const shift = '-3.5px'
+  // Half of arrow size (w/h = space-2) so left/top 50% centers the diamond.
+  const shift = 'calc(-1 * var(--space-1))'
 
   // Reset box + arrow sides.
   for (const side of ['top', 'bottom', 'left', 'right'] as const) {

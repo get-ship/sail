@@ -26,6 +26,10 @@ describe('tipDescribe action', () => {
     expect(bubble.getAttribute('role')).toBe('tooltip')
     expect(bubble.textContent).toBe('Hello tip')
     expect(host.style.getPropertyValue('--tt-bottom')).toBeTruthy()
+    // Arrow centering uses space-1 half-shift (token), not a free px literal.
+    expect(host.style.getPropertyValue('--tt-arrow-ml')).toBe(
+      'calc(-1 * var(--space-1))',
+    )
     dispose()
   })
 

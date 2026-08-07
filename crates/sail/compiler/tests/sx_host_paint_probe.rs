@@ -1972,7 +1972,7 @@ fn overlay_family_anchor_geometry_on_host_sx() {
     for (tag, extra) in [
         ("dropdown", "use:menu"),
         ("context-menu", "use:contextMenu"),
-        ("hover-card", "panel-rail-w"),
+        ("hover-card", "panel-max-w-sm"),
         ("popover", "panel-menu-min-w"),
     ] {
         let src = sail_compiler::stdlib::sources()

@@ -17,6 +17,11 @@ export default {
       if (r.width <= 0 || r.height <= 0) bad.push({ i, why: 'not-rendered' })
       if (cs.boxShadow === 'none') bad.push({ i, why: 'no-elevation' })
       if (cs.borderTopWidth === '0px') bad.push({ i, why: 'no-border' })
+      // Token-backed paint: rest surface must resolve (not transparent / free inherit).
+      if (cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent') {
+        bad.push({ i, why: 'no-token-bg' })
+      }
+      if (!cs.color || cs.color === 'rgba(0, 0, 0, 0)') bad.push({ i, why: 'no-token-fg' })
     })
     return { count: document.querySelectorAll('.sail-hover-card').length, bad: bad.slice(0, 8) }
   },

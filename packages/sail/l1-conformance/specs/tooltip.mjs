@@ -27,6 +27,12 @@ export default {
       const textOk = (bubble.textContent || '').trim().length > 0
       const ariaOk = !!trig && trig.getAttribute('aria-describedby') === bubble.id
       if (!textOk || !ariaOk) bad.push({ textOk, ariaOk, content: el.getAttribute('content') })
+      // Token-backed bubble paint (tooltip / tooltip-foreground) must resolve when open.
+      const cs = getComputedStyle(bubble)
+      if (cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent') {
+        bad.push({ id, why: 'no-token-bg' })
+      }
+      if (!cs.color || cs.color === 'rgba(0, 0, 0, 0)') bad.push({ id, why: 'no-token-fg' })
     })
     return { count: document.querySelectorAll('.sail-tooltip').length, bad }
   },
