@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 
 use crate::ctx::Ctx;
 use crate::error::OpError;
+use crate::identity::{ElementIdentity, SemanticLocator, SourceSpan};
 use crate::watch::relativize_watch_path;
 
 pub const MODEL_VERSION: u32 = 1;
@@ -38,6 +39,8 @@ pub struct TreeNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub control_flow: Option<ControlFlowEdge>,
     pub children: Vec<String>,
+    /// WI7 element identity (component id + semantic locator + file/span).
+    pub identity: ElementIdentity,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -231,6 +234,93 @@ fn node_id(file: &str, ordinal_path: &str, content: &str) -> String {
     format!("{file}#{ordinal_path}#{h}")
 }
 
+fn model_span_to_source(span: &ModelSpan) -> SourceSpan {
+    SourceSpan {
+        start: span.start as u64,
+        end: span.end as u64,
+        line: Some(span.line as u64),
+        col: Some(span.col as u64),
+        end_line: Some(span.end_line as u64),
+        end_col: Some(span.end_col as u64),
+    }
+}
+
+fn locator_from_attrs(tag: &str, attrs: &BTreeMap<String, String>) -> SemanticLocator {
+    let name = attrs
+        .get("aria-label")
+        .or_else(|| attrs.get("label"))
+        .or_else(|| attrs.get("name"))
+        .or_else(|| attrs.get("id"))
+        .or_else(|| attrs.get("data-demo-node"))
+        .cloned();
+    let role = attrs.get("role").cloned().or_else(|| {
+        // Mirror identity::implied_role for the small common set.
+        let t = tag.to_ascii_lowercase();
+        match t.as_str() {
+            "button" => Some("button".into()),
+            "a" | "link" => Some("link".into()),
+            "nav" | "navbar" => Some("navigation".into()),
+            "dialog" | "alert-dialog" => Some("dialog".into()),
+            "checkbox" | "switch" => Some("checkbox".into()),
+            "input" | "text-field" | "textarea" => Some("textbox".into()),
+            _ => None,
+        }
+    });
+    SemanticLocator {
+        tag: tag.to_string(),
+        role,
+        name,
+    }
+}
+
+fn identity_for_node(
+    id: &str,
+    file: &str,
+    span: &ModelSpan,
+    tag: &str,
+    attrs: &BTreeMap<String, String>,
+) -> ElementIdentity {
+    let locator = locator_from_attrs(tag, attrs);
+    let base = file.rsplit('/').next().unwrap_or(file);
+    let element_path = match locator.name.as_deref() {
+        Some(n) if !n.is_empty() => format!("{base} › {tag} {n}"),
+        _ => format!("{base} › {tag}"),
+    };
+    let content_hash = id.rsplit('#').next().unwrap_or(id).to_string();
+    ElementIdentity {
+        node_id: id.to_string(),
+        element_path,
+        content_hash,
+        file: Some(file.to_string()),
+        span: Some(model_span_to_source(span)),
+        locator: Some(locator),
+    }
+}
+
+fn tree_node(
+    id: String,
+    file: &str,
+    span: ModelSpan,
+    tag: String,
+    layer: String,
+    attrs: BTreeMap<String, String>,
+    control_flow: Option<ControlFlowEdge>,
+    children: Vec<String>,
+) -> TreeNode {
+    let identity = identity_for_node(&id, file, &span, &tag, &attrs);
+    TreeNode {
+        id,
+        file: file.to_string(),
+        span,
+        tag,
+        layer,
+        attrs,
+        control_flow,
+        children,
+        identity,
+    }
+}
+
 // ── layer classification ────────────────────────────────────────────────────
 
 fn classify_layer(tag: &str) -> String {
@@ -343,16 +433,16 @@ impl<'a> TreeBuild<'a> {
                     .entry(el.tag.to_ascii_lowercase())
                     .or_default()
                     .push(id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
+                self.nodes.push(tree_node(
+                    id.clone(),
+                    self.file,
                     span,
-                    tag: el.tag.clone(),
-                    layer: classify_layer(&el.tag),
+                    el.tag.clone(),
+                    classify_layer(&el.tag),
                     attrs,
-                    control_flow: None,
+                    None,
                     children,
-                });
+                ));
                 Some(id)
             }
             Instr::If(i) => {
@@ -375,19 +465,19 @@ impl<'a> TreeBuild<'a> {
                 let span = self.author_span_for_tag("if");
                 self.by_start.insert(span.start, id.clone());
                 self.by_tag.entry("if".into()).or_default().push(id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
+                self.nodes.push(tree_node(
+                    id.clone(),
+                    self.file,
                     span,
-                    tag: "if".into(),
-                    layer: "l1-keyword".into(),
-                    attrs: BTreeMap::new(),
-                    control_flow: Some(ControlFlowEdge {
+                    "if".into(),
+                    "l1-keyword".into(),
+                    BTreeMap::new(),
+                    Some(ControlFlowEdge {
                         kind: "if".into(),
                         expr: i.branches.first().map(|b| b.cond.source.clone()),
                     }),
-                    children: kids,
-                });
+                    kids,
+                ));
                 Some(id)
             }
             Instr::For(f) => {
@@ -403,19 +493,19 @@ impl<'a> TreeBuild<'a> {
                     .entry("for".into())
                     .or_default()
                     .push(id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
+                self.nodes.push(tree_node(
+                    id.clone(),
+                    self.file,
                     span,
-                    tag: "for".into(),
-                    layer: "l1-keyword".into(),
-                    attrs: BTreeMap::new(),
-                    control_flow: Some(ControlFlowEdge {
+                    "for".into(),
+                    "l1-keyword".into(),
+                    BTreeMap::new(),
+                    Some(ControlFlowEdge {
                         kind: "for".into(),
                         expr: Some(f.iterable.source.clone()),
                     }),
-                    children: kids,
-                });
+                    kids,
+                ));
                 Some(id)
             }
             Instr::Match(m) => {
@@ -434,19 +524,19 @@ impl<'a> TreeBuild<'a> {
                     .entry("match".into())
                     .or_default()
                     .push(id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
+                self.nodes.push(tree_node(
+                    id.clone(),
+                    self.file,
                     span,
-                    tag: "match".into(),
-                    layer: "l1-keyword".into(),
-                    attrs: BTreeMap::new(),
-                    control_flow: Some(ControlFlowEdge {
+                    "match".into(),
+                    "l1-keyword".into(),
+                    BTreeMap::new(),
+                    Some(ControlFlowEdge {
                         kind: "match".into(),
                         expr: Some(m.discriminant.source.clone()),
                     }),
-                    children: kids,
-                });
+                    kids,
+                ));
                 Some(id)
             }
             Instr::When(w) => {
@@ -462,19 +552,19 @@ impl<'a> TreeBuild<'a> {
                     .entry("when".into())
                     .or_default()
                     .push(id.clone());
-                self.nodes.push(TreeNode {
-                    id: id.clone(),
-                    file: self.file.to_string(),
+                self.nodes.push(tree_node(
+                    id.clone(),
+                    self.file,
                     span,
-                    tag: "when".into(),
-                    layer: "l1-keyword".into(),
-                    attrs: BTreeMap::new(),
-                    control_flow: Some(ControlFlowEdge {
+                    "when".into(),
+                    "l1-keyword".into(),
+                    BTreeMap::new(),
+                    Some(ControlFlowEdge {
                         kind: "when".into(),
                         expr: Some(w.token.clone()),
                     }),
-                    children: kids,
-                });
+                    kids,
+                ));
                 Some(id)
             }
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => None,
@@ -574,6 +664,24 @@ fn build_tree(source: &str, file: &str) -> Result<(Vec<TreeNode>, TreeBuildMeta)
         nodes: b.nodes.clone(),
     };
     Ok((b.nodes, meta))
+}
+
+/// Build tree node JSON values from author source (WI7 identity resolve without disk).
+pub fn tree_nodes_from_source(source: &str, file: &str) -> Result<Vec<Value>, OpError> {
+    let (nodes, _) = build_tree(source, file)?;
+    nodes
+        .iter()
+        .map(|n| {
+            serde_json::to_value(n)
+                .map_err(|e| OpError::Internal(format!("serialize tree node: {e}")))
+        })
+        .collect()
+}
+
+/// Emit WI7 identity for every tree node in `source`.
+pub fn identities_from_source(source: &str, file: &str) -> Result<Vec<ElementIdentity>, OpError> {
+    let (nodes, _) = build_tree(source, file)?;
+    Ok(nodes.into_iter().map(|n| n.identity).collect())
 }
 
 struct TreeBuildMeta {
@@ -1392,6 +1500,18 @@ mod tests {
             assert!(n.get("id").and_then(|v| v.as_str()).is_some());
             assert!(n.get("span").is_some());
             assert!(n.get("file").and_then(|v| v.as_str()).is_some());
+            // WI7: every tree node carries the shared identity scheme.
+            let idt = n
+                .get("identity")
+                .expect("identity on inspect tree node");
+            assert_eq!(
+                idt["nodeId"].as_str(),
+                n["id"].as_str(),
+                "identity.nodeId must match tree id"
+            );
+            assert!(idt.get("locator").is_some(), "locator required: {idt}");
+            assert!(idt.get("file").is_some());
+            assert!(idt.get("span").is_some());
             let span = &n["span"];
             let start = span["start"].as_u64().unwrap() as usize;
             let end = span["end"].as_u64().unwrap() as usize;

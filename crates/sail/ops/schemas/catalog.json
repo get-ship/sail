@@ -264,7 +264,7 @@
       "service": "SailAuthoring",
       "method": "Edit",
       "mcp_tool": "sail_edit",
-      "description": "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Response: applied, modelRevision, diagnostics, autoFixed[].",
+      "description": "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].",
       "path": "/sail.ops.v1.SailAuthoring/Edit",
       "inputSchema": {
         "type": "object",
@@ -290,6 +290,17 @@
               "null"
             ]
           },
+          "identity": {
+            "description": "WI7 element identity target. Scopes the edit to the resolved component (path from `identity.file`; ops nodeIds rewritten when the element moved).",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "ops": {
             "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`).",
             "type": "array",
@@ -298,8 +309,11 @@
             }
           },
           "path": {
-            "description": "Workspace-relative `.sail` path (required to write; used for node identity).",
-            "type": "string"
+            "description": "Workspace-relative `.sail` path. Optional when `identity.file` is set (WI7 identity-scoped target).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "source": {
             "description": "Optional inline source (else file is read). Dry-run without write when combined with dryRun.",
@@ -310,8 +324,7 @@
           }
         },
         "required": [
-          "ops",
-          "path"
+          "ops"
         ],
         "definitions": {
           "Json": {}
@@ -342,6 +355,17 @@
             "items": {
               "$ref": "#/definitions/Json"
             }
+          },
+          "identity": {
+            "description": "Resolved live identity when an identity-scoped edit was requested.",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "message": {
             "type": [
@@ -1452,7 +1476,7 @@
             ]
           },
           "anchor": {
-            "description": "A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.",
+            "description": "WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.",
             "anyOf": [
               {
                 "$ref": "#/definitions/Json"
@@ -1860,7 +1884,7 @@
       "service": "SailTask",
       "method": "ThreadCreate",
       "mcp_tool": "sail_task_thread_create",
-      "description": "Create an A-anchored thread (required anchor { nodeId, elementPath?, contentHash? }). Same store as Create.",
+      "description": "Create an A-anchored thread (required WI7 identity anchor { nodeId, elementPath?, contentHash?, locator? }). Same store as Create.",
       "path": "/sail.ops.v1.SailTask/ThreadCreate",
       "inputSchema": {
         "type": "object",
@@ -1876,7 +1900,7 @@
             ]
           },
           "anchor": {
-            "description": "Required A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.",
+            "description": "Required WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.",
             "allOf": [
               {
                 "$ref": "#/definitions/Json"

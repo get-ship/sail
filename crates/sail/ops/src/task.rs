@@ -1,12 +1,12 @@
 //! `SailTask` RPCs under `<project>/.sail/tasks/<id>/task.json` + `artifacts/`.
 //!
-//! Threads are A-anchored: `{ nodeId, elementPath, contentHash }` with drift
-//! `ok | moved | lost` (lost never silently rebinds). Storage is gitignored;
-//! `CommitIntent` exports a decision record into the repo explicitly.
+//! Threads are A-anchored with WI7 [`crate::identity::ElementIdentity`]
+//! (`nodeId` + semantic locator + file/span). Drift: `ok | moved | lost`
+//! (lost never silently rebinds). Storage is gitignored; `CommitIntent`
+//! exports a decision record into the repo explicitly.
 //!
 //! Read–modify–write with temp file + atomic rename (no flock; last writer wins).
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,9 @@ use ulid::Ulid;
 
 use crate::ctx::Ctx;
 use crate::error::OpError;
+use crate::identity::{
+    Anchor, ElementIdentity, ResolveStatus, ResolvedIdentity, parse_identity, resolve_identity,
+};
 use crate::inspect;
 use crate::project_store;
 
@@ -75,59 +78,6 @@ impl Actor {
     }
 }
 
-/// Source span for an anchored node (byte offsets + optional line/col).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-struct AnchorSpan {
-    start: u64,
-    end: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    line: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    col: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    end_line: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    end_col: Option<u64>,
-}
-
-impl AnchorSpan {
-    fn from_model_span(v: &Value) -> Option<Self> {
-        let start = v.get("start")?.as_u64()?;
-        let end = v.get("end")?.as_u64()?;
-        Some(Self {
-            start,
-            end,
-            line: v.get("line").and_then(|x| x.as_u64()),
-            col: v.get("col").and_then(|x| x.as_u64()),
-            end_line: v.get("end_line").and_then(|x| x.as_u64()),
-            end_col: v.get("end_col").and_then(|x| x.as_u64()),
-        })
-    }
-
-    fn display(&self) -> String {
-        match (self.line, self.end_line) {
-            (Some(a), Some(b)) if a != b => format!("{a}–{b}"),
-            (Some(a), _) => format!("{a}"),
-            _ => format!("{}–{}", self.start, self.end),
-        }
-    }
-}
-
-/// A-anchor: node identity + path + content hash (drift: ok | moved | lost).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct Anchor {
-    #[serde(rename = "nodeId")]
-    node_id: String,
-    #[serde(rename = "elementPath")]
-    element_path: String,
-    #[serde(rename = "contentHash")]
-    content_hash: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    file: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    span: Option<AnchorSpan>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ArtifactRef {
     id: String,
@@ -178,37 +128,6 @@ struct TaskDoc {
     artifacts: Vec<ArtifactRef>,
     #[serde(default)]
     events: Vec<Event>,
-}
-
-/// Drift resolution result (computed; not always persisted).
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum DriftStatus {
-    Ok,
-    Moved,
-    Lost,
-    /// No anchor on the task.
-    None,
-}
-
-impl DriftStatus {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::Ok => "ok",
-            Self::Moved => "moved",
-            Self::Lost => "lost",
-            Self::None => "none",
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct DriftResolved {
-    status: DriftStatus,
-    /// Current span when ok/moved; None when lost/none.
-    span: Option<AnchorSpan>,
-    /// Live node id when ok/moved (may differ from stored when moved).
-    live_node_id: Option<String>,
-    live_hash: Option<String>,
 }
 
 // ── Path policy ─────────────────────────────────────────────────────────────
@@ -478,169 +397,10 @@ fn save_task(project: &Path, task: &TaskDoc) -> Result<(), OpError> {
     Ok(())
 }
 
-// ── Anchor / drift ──────────────────────────────────────────────────────────
-
-/// Extract content hash segment from a model node id (`file#path#hash`).
-pub fn content_hash_from_node_id(node_id: &str) -> String {
-    node_id
-        .rsplit('#')
-        .next()
-        .filter(|s| !s.is_empty())
-        .unwrap_or(node_id)
-        .to_string()
-}
-
-/// Human element path from a model node JSON.
-pub fn element_path_from_node(node: &Value) -> String {
-    let file = node.get("file").and_then(|f| f.as_str()).unwrap_or("");
-    let base = file.rsplit('/').next().unwrap_or(file);
-    let tag = node.get("tag").and_then(|t| t.as_str()).unwrap_or("?");
-    let attrs = node.get("attrs").and_then(|a| a.as_object());
-    let label = attrs
-        .and_then(|a| {
-            a.get("name")
-                .or_else(|| a.get("id"))
-                .or_else(|| a.get("data-demo-node"))
-                .and_then(|v| v.as_str())
-        })
-        .unwrap_or("");
-    if label.is_empty() {
-        format!("{base} › {tag}")
-    } else {
-        format!("{base} › {tag} {label}")
-    }
-}
+// ── Anchor / drift (WI7 ElementIdentity) ────────────────────────────────────
 
 fn parse_anchor(v: &Value) -> Result<Anchor, OpError> {
-    let node_id = v
-        .get("nodeId")
-        .or_else(|| v.get("node_id"))
-        .and_then(|x| x.as_str())
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .ok_or_else(|| OpError::InvalidArgument("anchor requires non-empty `nodeId`".into()))?
-        .to_string();
-    let content_hash = v
-        .get("contentHash")
-        .or_else(|| v.get("content_hash"))
-        .and_then(|x| x.as_str())
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .map(str::to_string)
-        .unwrap_or_else(|| content_hash_from_node_id(&node_id));
-    let element_path = v
-        .get("elementPath")
-        .or_else(|| v.get("element_path"))
-        .and_then(|x| x.as_str())
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .map(str::to_string)
-        .unwrap_or_else(|| {
-            // Fallback: use node id tail for path label.
-            format!("? › {node_id}")
-        });
-    let file = v
-        .get("file")
-        .and_then(|x| x.as_str())
-        .map(str::to_string)
-        .or_else(|| {
-            // node id often starts with workspace-relative file path before first #
-            let before = node_id.split('#').next()?;
-            if before.ends_with(".sail") {
-                Some(before.to_string())
-            } else {
-                None
-            }
-        });
-    let span = v.get("span").and_then(AnchorSpan::from_model_span);
-    Ok(Anchor {
-        node_id,
-        element_path,
-        content_hash,
-        file,
-        span,
-    })
-}
-
-/// Resolve anchor drift against a set of live model nodes.
-///
-/// - exact `nodeId` match → `ok` (span from live model)
-/// - unique match by `elementPath` or content hash → `moved` (new span; does **not**
-///   mutate stored anchor — caller may re-anchor explicitly)
-/// - no match → `lost` (never rebinds to a different element silently)
-fn resolve_anchor_drift(anchor: &Anchor, nodes: &[Value]) -> DriftResolved {
-    let by_id: HashMap<&str, &Value> = nodes
-        .iter()
-        .filter_map(|n| n.get("id").and_then(|i| i.as_str()).map(|id| (id, n)))
-        .collect();
-
-    if let Some(n) = by_id.get(anchor.node_id.as_str()) {
-        let span = n.get("span").and_then(AnchorSpan::from_model_span);
-        let live_hash = content_hash_from_node_id(anchor.node_id.as_str());
-        return DriftResolved {
-            status: DriftStatus::Ok,
-            span,
-            live_node_id: Some(anchor.node_id.clone()),
-            live_hash: Some(live_hash),
-        };
-    }
-
-    // Prefer unique elementPath match.
-    let path_matches: Vec<&Value> = nodes
-        .iter()
-        .filter(|n| element_path_from_node(n) == anchor.element_path)
-        .collect();
-    if path_matches.len() == 1 {
-        let n = path_matches[0];
-        let id = n
-            .get("id")
-            .and_then(|i| i.as_str())
-            .unwrap_or("")
-            .to_string();
-        return DriftResolved {
-            status: DriftStatus::Moved,
-            span: n.get("span").and_then(AnchorSpan::from_model_span),
-            live_node_id: Some(id.clone()),
-            live_hash: Some(content_hash_from_node_id(&id)),
-        };
-    }
-
-    // Unique content-hash match within same file (when known).
-    let hash_matches: Vec<&Value> = nodes
-        .iter()
-        .filter(|n| {
-            let id = n.get("id").and_then(|i| i.as_str()).unwrap_or("");
-            if content_hash_from_node_id(id) != anchor.content_hash {
-                return false;
-            }
-            if let Some(f) = anchor.file.as_deref() {
-                let nf = n.get("file").and_then(|x| x.as_str()).unwrap_or("");
-                return nf == f || nf.ends_with(f) || f.ends_with(nf);
-            }
-            true
-        })
-        .collect();
-    if hash_matches.len() == 1 {
-        let n = hash_matches[0];
-        let id = n
-            .get("id")
-            .and_then(|i| i.as_str())
-            .unwrap_or("")
-            .to_string();
-        return DriftResolved {
-            status: DriftStatus::Moved,
-            span: n.get("span").and_then(AnchorSpan::from_model_span),
-            live_node_id: Some(id.clone()),
-            live_hash: Some(content_hash_from_node_id(&id)),
-        };
-    }
-
-    DriftResolved {
-        status: DriftStatus::Lost,
-        span: None,
-        live_node_id: None,
-        live_hash: None,
-    }
+    parse_identity(v)
 }
 
 fn load_nodes_for_file(file: &str, ctx: &Ctx) -> Result<Vec<Value>, OpError> {
@@ -652,13 +412,14 @@ fn load_nodes_for_file(file: &str, ctx: &Ctx) -> Result<Vec<Value>, OpError> {
         .unwrap_or_default())
 }
 
-fn resolve_task_drift(task: &TaskDoc, ctx: &Ctx) -> DriftResolved {
+fn resolve_task_drift(task: &TaskDoc, ctx: &Ctx) -> ResolvedIdentity {
     let Some(anchor) = task.anchor.as_ref() else {
-        return DriftResolved {
-            status: DriftStatus::None,
+        return ResolvedIdentity {
+            status: ResolveStatus::None,
             span: None,
             live_node_id: None,
             live_hash: None,
+            live: None,
         };
     };
     let Some(file) = anchor.file.as_deref().or_else(|| {
@@ -666,26 +427,29 @@ fn resolve_task_drift(task: &TaskDoc, ctx: &Ctx) -> DriftResolved {
         before.ends_with(".sail").then_some(before)
     }) else {
         // No file to inspect — treat as ok with stored span (offline).
-        return DriftResolved {
-            status: DriftStatus::Ok,
+        return ResolvedIdentity {
+            status: ResolveStatus::Ok,
             span: anchor.span.clone(),
             live_node_id: Some(anchor.node_id.clone()),
             live_hash: Some(anchor.content_hash.clone()),
+            live: Some(anchor.clone()),
         };
     };
     match load_nodes_for_file(file, ctx) {
-        Ok(nodes) => resolve_anchor_drift(anchor, &nodes),
-        Err(_) => DriftResolved {
+        Ok(nodes) => resolve_identity(anchor, &nodes),
+        Err(_) => ResolvedIdentity {
             // File missing → lost (element/source gone).
-            status: DriftStatus::Lost,
+            status: ResolveStatus::Lost,
             span: None,
             live_node_id: None,
             live_hash: None,
+            live: None,
         },
     }
 }
 
-fn drift_json(d: &DriftResolved) -> Value {
+fn drift_json(d: &ResolvedIdentity) -> Value {
+    // Keep the historical drift payload shape (no `live` object) for studio.
     json!({
         "status": d.status.as_str(),
         "span": d.span,
@@ -705,7 +469,7 @@ fn last_conversational_actor(task: &TaskDoc) -> &Actor {
         .unwrap_or(&task.created_by)
 }
 
-fn summary(task: &TaskDoc, drift: Option<&DriftResolved>) -> Value {
+fn summary(task: &TaskDoc, drift: Option<&ResolvedIdentity>) -> Value {
     let mut v = json!({
         "id": task.id,
         "title": task.title,
@@ -898,6 +662,7 @@ pub fn create(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
                 "nodeId": a.node_id,
                 "elementPath": a.element_path,
                 "contentHash": a.content_hash,
+                "locator": a.locator,
             })
         }),
     }];
@@ -1104,6 +869,7 @@ pub fn reanchor(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
                 "nodeId": anchor.node_id,
                 "elementPath": anchor.element_path,
                 "contentHash": anchor.content_hash,
+                "locator": anchor.locator,
             }
         })),
     });
@@ -1650,16 +1416,10 @@ mod tests {
             42,
             58,
         );
-        let anchor = Anchor {
-            node_id: "routes/page.sail#0.1#abcd1234".into(),
-            element_path: element_path_from_node(&n1),
-            content_hash: "abcd1234".into(),
-            file: Some(file.into()),
-            span: AnchorSpan::from_model_span(&n1["span"]),
-        };
+        let anchor = ElementIdentity::from_tree_node(&n1);
         // same id → ok
-        let r = resolve_anchor_drift(&anchor, &[n1.clone()]);
-        assert_eq!(r.status, DriftStatus::Ok);
+        let r = resolve_identity(&anchor, &[n1.clone()]);
+        assert_eq!(r.status, ResolveStatus::Ok);
         assert_eq!(r.span.as_ref().unwrap().start, 42);
 
         // moved: same element path, new id + span
@@ -1671,8 +1431,8 @@ mod tests {
             100,
             120,
         );
-        let r2 = resolve_anchor_drift(&anchor, &[n2.clone()]);
-        assert_eq!(r2.status, DriftStatus::Moved);
+        let r2 = resolve_identity(&anchor, &[n2.clone()]);
+        assert_eq!(r2.status, ResolveStatus::Moved);
         assert_eq!(r2.span.as_ref().unwrap().start, 100);
         assert_eq!(
             r2.live_node_id.as_deref(),
@@ -1680,8 +1440,8 @@ mod tests {
         );
 
         // lost: empty model — never rebinds
-        let r3 = resolve_anchor_drift(&anchor, &[]);
-        assert_eq!(r3.status, DriftStatus::Lost);
+        let r3 = resolve_identity(&anchor, &[]);
+        assert_eq!(r3.status, ResolveStatus::Lost);
         assert!(r3.live_node_id.is_none());
 
         // lost: different element present — must NOT rebind
@@ -1693,8 +1453,8 @@ mod tests {
             1,
             2,
         );
-        let r4 = resolve_anchor_drift(&anchor, &[other]);
-        assert_eq!(r4.status, DriftStatus::Lost);
+        let r4 = resolve_identity(&anchor, &[other]);
+        assert_eq!(r4.status, ResolveStatus::Lost);
     }
 
     #[test]
@@ -1982,28 +1742,22 @@ mod tests {
         // Pure drift across two synthetic model revisions (ops test contract).
         let file = "routes/page.sail";
         let rev1 = node("routes/page.sail#0.1#hash1", file, "card", "hero", 42, 58);
-        let anchor = Anchor {
-            node_id: "routes/page.sail#0.1#hash1".into(),
-            element_path: element_path_from_node(&rev1),
-            content_hash: "hash1".into(),
-            file: Some(file.into()),
-            span: AnchorSpan::from_model_span(&rev1["span"]),
-        };
+        let anchor = ElementIdentity::from_tree_node(&rev1);
         assert_eq!(
-            resolve_anchor_drift(&anchor, &[rev1]).status,
-            DriftStatus::Ok
+            resolve_identity(&anchor, &[rev1]).status,
+            ResolveStatus::Ok
         );
 
         // Edit moves element (new ordinal + span); path label preserved → moved
         let rev2 = node("routes/page.sail#0.3#hash1", file, "card", "hero", 200, 240);
-        let moved = resolve_anchor_drift(&anchor, &[rev2]);
-        assert_eq!(moved.status, DriftStatus::Moved);
+        let moved = resolve_identity(&anchor, &[rev2]);
+        assert_eq!(moved.status, ResolveStatus::Moved);
         assert_eq!(moved.span.as_ref().unwrap().start, 200);
 
         // Element deleted → lost, never rebound to sibling
         let sibling = node("routes/page.sail#0.0#other", file, "card", "sidebar", 1, 10);
-        let lost = resolve_anchor_drift(&anchor, &[sibling]);
-        assert_eq!(lost.status, DriftStatus::Lost);
+        let lost = resolve_identity(&anchor, &[sibling]);
+        assert_eq!(lost.status, ResolveStatus::Lost);
         assert!(lost.live_node_id.is_none());
     }
 

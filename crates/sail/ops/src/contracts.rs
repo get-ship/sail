@@ -62,8 +62,10 @@ pub struct CheckRet {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct EditArgs {
-    /// Workspace-relative `.sail` path (required to write; used for node identity).
-    pub path: String,
+    /// Workspace-relative `.sail` path. Optional when `identity.file` is set
+    /// (WI7 identity-scoped target).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
     /// Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/
     /// `removeAttr`/`setSx`/`move`).
     pub ops: Vec<Json>,
@@ -81,6 +83,10 @@ pub struct EditArgs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "dryRun")]
     pub dry_run: Option<bool>,
+    /// WI7 element identity target. Scopes the edit to the resolved component
+    /// (path from `identity.file`; ops nodeIds rewritten when the element moved).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identity: Option<Json>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -97,6 +103,9 @@ pub struct EditRet {
     pub path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    /// Resolved live identity when an identity-scoped edit was requested.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identity: Option<Json>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -537,7 +546,7 @@ pub struct TaskCreateArgs {
     /// Optional initial comment body.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub body: Option<String>,
-    /// A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.
+    /// WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub anchor: Option<Json>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -623,7 +632,7 @@ pub struct TaskThreadCreateArgs {
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub body: Option<String>,
-    /// Required A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.
+    /// Required WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.
     pub anchor: Json,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub labels: Option<Vec<String>>,
@@ -842,13 +851,13 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailAuthoring",
         "Edit",
         "sail_edit",
-        "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Response: applied, modelRevision, diagnostics, autoFixed[].",
+        "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].",
         EditArgs,
         EditRet,
         "EditArgs",
         "EditRet",
-        "  path: string\n  ops: JsonValue[]\n  source?: string\n  autofix?: string\n  actor?: string\n  dryRun?: boolean\n",
-        "  applied: boolean\n  modelRevision: string\n  diagnostics: JsonValue[]\n  autoFixed: JsonValue[]\n  source?: string\n  path?: string\n  message?: string\n"
+        "  path?: string\n  ops: JsonValue[]\n  source?: string\n  autofix?: string\n  actor?: string\n  dryRun?: boolean\n  identity?: JsonValue\n",
+        "  applied: boolean\n  modelRevision: string\n  diagnostics: JsonValue[]\n  autoFixed: JsonValue[]\n  source?: string\n  path?: string\n  message?: string\n  identity?: JsonValue\n"
     ),
     contract!(
         "SailAuthoring",
@@ -1179,7 +1188,7 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTask",
         "ThreadCreate",
         "sail_task_thread_create",
-        "Create an A-anchored thread (required anchor { nodeId, elementPath?, contentHash? }). Same store as Create.",
+        "Create an A-anchored thread (required WI7 identity anchor { nodeId, elementPath?, contentHash?, locator? }). Same store as Create.",
         TaskThreadCreateArgs,
         TaskThreadCreateRet,
         "TaskThreadCreateArgs",

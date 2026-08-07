@@ -16,7 +16,7 @@
         ]
       },
       "anchor": {
-        "description": "Required A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.",
+        "description": "Required WI7 identity / A-anchor `{ nodeId, elementPath?, contentHash?, file?, span?, locator? }`.",
         "allOf": [
           {
             "$ref": "#/definitions/Json"

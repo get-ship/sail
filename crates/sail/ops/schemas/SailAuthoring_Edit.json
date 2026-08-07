@@ -26,6 +26,17 @@
           "null"
         ]
       },
+      "identity": {
+        "description": "WI7 element identity target. Scopes the edit to the resolved component (path from `identity.file`; ops nodeIds rewritten when the element moved).",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "ops": {
         "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`).",
         "type": "array",
@@ -34,8 +45,11 @@
         }
       },
       "path": {
-        "description": "Workspace-relative `.sail` path (required to write; used for node identity).",
-        "type": "string"
+        "description": "Workspace-relative `.sail` path. Optional when `identity.file` is set (WI7 identity-scoped target).",
+        "type": [
+          "string",
+          "null"
+        ]
       },
       "source": {
         "description": "Optional inline source (else file is read). Dry-run without write when combined with dryRun.",
@@ -46,8 +60,7 @@
       }
     },
     "required": [
-      "ops",
-      "path"
+      "ops"
     ],
     "definitions": {
       "Json": {}
@@ -78,6 +91,17 @@
         "items": {
           "$ref": "#/definitions/Json"
         }
+      },
+      "identity": {
+        "description": "Resolved live identity when an identity-scoped edit was requested.",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
       "message": {
         "type": [

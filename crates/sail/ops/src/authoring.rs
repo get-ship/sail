@@ -619,16 +619,34 @@ fn relativize_path(p: &Path, ctx: &Ctx) -> String {
 }
 
 /// Structured SailAuthoring/Edit.
+///
+/// Accepts path and/or WI7 `identity` (identity-scoped target). When identity
+/// is set, resolves against the live inspect tree; on `moved`, rewrites ops
+/// nodeIds from the stored id to the live id before applying.
 pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
-    let path_s = args
+    let identity_arg = args.get("identity").filter(|v| !v.is_null());
+    let parsed_identity = identity_arg
+        .map(crate::identity::parse_identity)
+        .transpose()?;
+
+    let path_from_args = args
         .get("path")
         .and_then(|v| v.as_str())
-        .filter(|p| !p.trim().is_empty())
-        .ok_or_else(|| OpError::InvalidArgument("Edit requires non-empty `path`".into()))?;
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .map(str::to_string);
+    let path_s = path_from_args
+        .or_else(|| parsed_identity.as_ref().and_then(|i| i.file.clone()))
+        .ok_or_else(|| {
+            OpError::InvalidArgument(
+                "Edit requires non-empty `path` or `identity` with file".into(),
+            )
+        })?;
+
     let ops_v = args
         .get("ops")
         .ok_or_else(|| OpError::InvalidArgument("Edit requires `ops` array".into()))?;
-    let ops = sail_compiler::edit::parse_ops(ops_v).map_err(|e| OpError::InvalidArgument(e))?;
+    let mut ops_json = ops_v.clone();
     let dry_run = args
         .get("dryRun")
         .or_else(|| args.get("dry_run"))
@@ -648,7 +666,53 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let actor = args.get("actor").and_then(|v| v.as_str());
 
     let target =
-        resolve_write_path(path_s, &ctx.apply_root).map_err(|e| OpError::PermissionDenied(e))?;
+        resolve_write_path(&path_s, &ctx.apply_root).map_err(|e| OpError::PermissionDenied(e))?;
+
+    // Resolve WI7 identity against live tree; rewrite ops when the element moved.
+    let mut resolved_identity_json: Option<Value> = None;
+    if let Some(ref stored) = parsed_identity {
+        let file_key = path_s.trim().trim_start_matches("./");
+        let nodes = if let Some(s) = args.get("source").and_then(|v| v.as_str()) {
+            crate::inspect::tree_nodes_from_source(s, file_key)?
+        } else if target.is_file() {
+            let disk = std::fs::read_to_string(&target).map_err(|e| {
+                OpError::NotFound(format!("read {}: {e}", target.display()))
+            })?;
+            crate::inspect::tree_nodes_from_source(&disk, file_key)?
+        } else {
+            // Fall back to workspace-relative inspect path.
+            let tree = crate::inspect::tree(&json!({ "path": path_s }), ctx)?;
+            tree.get("nodes")
+                .and_then(|n| n.as_array())
+                .cloned()
+                .unwrap_or_default()
+        };
+        let resolved = crate::identity::resolve_identity(stored, &nodes);
+        match resolved.status {
+            crate::identity::ResolveStatus::Lost => {
+                return Err(OpError::NotFound(format!(
+                    "identity lost: nodeId {} no longer resolves in {path_s}",
+                    stored.node_id
+                )));
+            }
+            crate::identity::ResolveStatus::Ok | crate::identity::ResolveStatus::Moved => {
+                if let Some(to) = resolved.live_node_id.as_deref() {
+                    if let Some(arr) = ops_json.as_array_mut() {
+                        crate::identity::rewrite_ops_node_id(arr, &stored.node_id, to);
+                    }
+                }
+                resolved_identity_json = resolved
+                    .live
+                    .as_ref()
+                    .map(|i| i.to_json())
+                    .or_else(|| Some(stored.to_json()));
+            }
+            crate::identity::ResolveStatus::None => {}
+        }
+    }
+
+    let ops =
+        sail_compiler::edit::parse_ops(&ops_json).map_err(|e| OpError::InvalidArgument(e))?;
 
     // Studio freeform Source save: empty ops + full `source` body + writeSource.
     // Still validate-before-write via check_all so disk never holds broken Sail.
@@ -675,6 +739,7 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
                 "source": body,
                 "path": target.display().to_string(),
                 "message": "writeSource refused: source has error diagnostics",
+                "identity": resolved_identity_json,
             }));
         }
         if !dry_run {
@@ -689,6 +754,7 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
             "source": body,
             "path": target.display().to_string(),
             "message": "writeSource ok",
+            "identity": resolved_identity_json,
         }));
     }
 
@@ -733,6 +799,7 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         "source": result.source,
         "path": target.display().to_string(),
         "message": result.message,
+        "identity": resolved_identity_json,
     }))
 }
 
@@ -1254,6 +1321,93 @@ export default controller((ctx) => ({ count: signal(0) }))
         .unwrap();
         assert_eq!(v2["applied"], false, "{v2}");
         assert_eq!(std::fs::read_to_string(&full).unwrap(), before);
+    }
+
+    /// WI7: annotation identity → in-file move (span shift) → edit still hits
+    /// the same element via semantic locator / content hash resolve.
+    #[test]
+    fn identity_scoped_edit_survives_in_file_move() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        use crate::identity::{ElementIdentity, resolve_identity};
+
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let rel = "routes/page.sail";
+        let full = root.join(rel);
+        std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+
+        let v1 = r#"<column gap="2">
+  <button name="Save">Save</button>
+  <card name="other">x</card>
+</column>
+"#;
+        std::fs::write(&full, v1).unwrap();
+
+        let mut ctx = Ctx::from_env();
+        ctx.apply_root = root.to_path_buf();
+        ctx.workspace_root = root.to_path_buf();
+        ctx.project_root = root.to_path_buf();
+
+        let nodes_v1 = crate::inspect::tree_nodes_from_source(v1, rel).unwrap();
+        let button = nodes_v1
+            .iter()
+            .find(|n| n["tag"] == "button")
+            .expect("button node");
+        let identity = ElementIdentity::from_tree_node(button);
+        assert_eq!(identity.locator.as_ref().unwrap().name.as_deref(), Some("Save"));
+        let stored_node_id = identity.node_id.clone();
+
+        // In-file move: prepend a sibling so ordinal path + span shift.
+        let v2 = r#"<column gap="2">
+  <card name="banner">moved above</card>
+  <button name="Save">Save</button>
+  <card name="other">x</card>
+</column>
+"#;
+        std::fs::write(&full, v2).unwrap();
+        let nodes_v2 = crate::inspect::tree_nodes_from_source(v2, rel).unwrap();
+        let resolved = resolve_identity(&identity, &nodes_v2);
+        assert_eq!(
+            resolved.status,
+            crate::identity::ResolveStatus::Moved,
+            "span/ordinal shift must report moved, not lost"
+        );
+        let live_id = resolved.live_node_id.as_deref().unwrap();
+        assert_ne!(live_id, stored_node_id);
+
+        // Identity-scoped edit: ops still carry the *old* nodeId; edit rewrites.
+        let v = call_rpc(
+            "SailAuthoring",
+            "Edit",
+            &json!({
+                "identity": identity,
+                "ops": [{
+                    "op": "setAttr",
+                    "nodeId": stored_node_id,
+                    "name": "disabled",
+                }],
+                "dryRun": true,
+                "source": v2,
+            }),
+            &ctx,
+        )
+        .expect("identity edit");
+        assert_eq!(v["applied"], true, "{v}");
+        assert!(
+            v["source"].as_str().unwrap_or("").contains("disabled"),
+            "attr applied on resolved element: {}",
+            v["source"]
+        );
+        assert_eq!(
+            v["identity"]["nodeId"].as_str(),
+            Some(live_id),
+            "response returns live identity"
+        );
+        assert_eq!(
+            v["identity"]["locator"]["name"].as_str(),
+            Some("Save")
+        );
     }
 
     #[test]

@@ -107,8 +107,9 @@ export interface EditArgs {
   actor?: string
   autofix?: string
   dryRun?: boolean
+  identity?: JsonValue
   ops: JsonValue[]
-  path: string
+  path?: string
   source?: string
 }
 
@@ -116,6 +117,7 @@ export interface EditRet {
   applied: boolean
   autoFixed: JsonValue[]
   diagnostics: JsonValue[]
+  identity?: JsonValue
   message?: string
   modelRevision: string
   path?: string
@@ -601,7 +603,7 @@ export async function sailAuthoringComplete(
   return postJson<CompleteRet>('/sail.ops.v1.SailAuthoring/Complete', args ?? {}, opts)
 }
 
-// SailAuthoring/Edit — Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Response: applied, modelRevision, diagnostics, autoFixed[].
+// SailAuthoring/Edit — Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].
 export async function sailAuthoringEdit(
   args: EditArgs,
   opts?: ClientOptions,
@@ -825,7 +827,7 @@ export async function sailTaskAgentNote(
   return postJson<TaskAgentNoteRet>('/sail.ops.v1.SailTask/AgentNote', args ?? {}, opts)
 }
 
-// SailTask/ThreadCreate — Create an A-anchored thread (required anchor { nodeId, elementPath?, contentHash? }). Same store as Create.
+// SailTask/ThreadCreate — Create an A-anchored thread (required WI7 identity anchor { nodeId, elementPath?, contentHash?, locator? }). Same store as Create.
 export async function sailTaskThreadCreate(
   args: TaskThreadCreateArgs,
   opts?: ClientOptions,
