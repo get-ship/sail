@@ -6,8 +6,10 @@
 // (a real modal is top-layer, so it can't sit in a 7-up grid).
 // BEHAVIOR: the real thing — invoker opens it modally, invoker + Escape close it.
 
+// Paint classes mirror lowered Style: dialog / dialog-foreground / dialog-border
+// (not free surface-1 / card-foreground / border).
 const DL =
-  'sail-dialog sx-positionfixed sx-inset0 sx-mauto sx-pad0 sx-wfull sx-maxWpanelmaxwmd sx-overflowhidden sx-borderWidth1 sx-borderborder sx-radiusxl sx-bgsurface1 sx-fgcardforeground sx-shadowxl sx-fontFamilybody sx-open-displayflex sx-open-flexDircolumn sx-sizesm-maxWpanelmaxwsm sx-sizemd-maxWpanelmaxwmd sx-sizelg-maxWpanelmaxwlg sx-sizefull-maxWfull sx-sizefull-maxHfull sx-sidecenter-mauto sx-sidestart-inset0 sx-sidestart-maxWpanelmaxwsm sx-sidestart-radiusnone sx-sidestart-m0 sx-sideend-inset0 sx-sideend-maxWpanelmaxwsm sx-sideend-radiusnone sx-sideend-m0 sx-sidetop-inset0 sx-sidetop-wfull sx-sidetop-maxWnone sx-sidetop-radiusnone sx-sidetop-m0 sx-sidebottom-inset0 sx-sidebottom-wfull sx-sidebottom-maxWnone sx-sidebottom-radiusnone sx-sidebottom-m0'
+  'sail-dialog sx-positionfixed sx-inset0 sx-mauto sx-pad0 sx-wfull sx-maxWpanelmaxwmd sx-minWpanelmaxwsm sx-overflowhidden sx-borderWidth1 sx-borderdialogborder sx-radiusxl sx-bgdialog sx-fgdialogforeground sx-shadowxl sx-fontFamilybody sx-open-displayflex sx-open-flexDircolumn sx-open-hfit sx-open-maxHpanelvhmd sx-sizesm-maxWpanelmaxwsm sx-sizemd-maxWpanelmaxwmd sx-sizelg-maxWpanelmaxwlg sx-sizefull-maxWfull sx-sizefull-maxHfull sx-sidecenter-mauto sx-sidestart-inset0 sx-sidestart-maxWpanelmaxwsm sx-sidestart-radiusnone sx-sidestart-m0 sx-sideend-inset0 sx-sideend-maxWpanelmaxwsm sx-sideend-radiusnone sx-sideend-m0 sx-sidetop-inset0 sx-sidetop-wfull sx-sidetop-maxWnone sx-sidetop-radiusnone sx-sidetop-m0 sx-sidebottom-inset0 sx-sidebottom-wfull sx-sidebottom-maxWnone sx-sidebottom-radiusnone sx-sidebottom-m0'
 
 const shell = (attrs = '') => {
   const m = attrs.match(/class="([^"]*)"/)
@@ -35,12 +37,16 @@ export default {
   probe() {
     const bad = []
     const cs = (el, p) => getComputedStyle(el)[p]
+    const clear = (v) => v === 'rgba(0, 0, 0, 0)' || v === 'transparent' || v === ''
     document.querySelectorAll('dialog').forEach((el, i) => {
       const r = el.getBoundingClientRect()
       if (r.width <= 0 || r.height <= 0) return bad.push({ i, why: 'not-rendered' })
       // an open dialog is a flex column: header / scrollable body / footer
       if (cs(el, 'display') !== 'flex') bad.push({ i, why: 'open-not-flex', display: cs(el, 'display') })
       if (cs(el, 'boxShadow') === 'none') bad.push({ i, why: 'no-elevation' })
+      // Token-backed shell (dialog / dialog-foreground / dialog-border).
+      if (clear(cs(el, 'backgroundColor'))) bad.push({ i, why: 'no-token-bg' })
+      if (clear(cs(el, 'color'))) bad.push({ i, why: 'no-token-fg' })
       const head = el.querySelector('header')
       const body = el.querySelector('section')
       const foot = el.querySelector('footer')
@@ -48,6 +54,8 @@ export default {
       // the header/footer must be visually separated from the body
       if (cs(head, 'borderBottomWidth') === '0px') bad.push({ i, why: 'header-not-divided' })
       if (cs(foot, 'borderTopWidth') === '0px') bad.push({ i, why: 'footer-not-divided' })
+      // anatomy muted/divider channels resolve (dialog-muted-foreground / dialog-divider)
+      if (clear(cs(body, 'color'))) bad.push({ i, why: 'body-no-token-fg' })
       // the body is the ONLY part that scrolls
       if (cs(body, 'overflowY') !== 'auto') bad.push({ i, why: 'body-not-scrollable' })
     })

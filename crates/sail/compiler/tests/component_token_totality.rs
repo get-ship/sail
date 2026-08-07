@@ -161,12 +161,22 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
             "tab-border",
         ],
     ),
+    // L1-POLISH-D — strip chrome pack (line/pill/enclosed rail).
+    (
+        "tab-list",
+        &["tab-list", "tab-list-border", "tab-list-rail"],
+    ),
     // <radio> control face shares field surface with freeform input type=radio.
     ("radio", &["radio-foreground", "field", "field-foreground"]),
     // Combobox text field shares field pack (listbox still combobox*).
     (
         "combobox-field",
         &["field", "field-foreground", "field-border", "field-border-hover"],
+    ),
+    // L1-POLISH-D — field hint/error channels (surface pack already gated).
+    (
+        "field-chrome",
+        &["field-hint", "field-error"],
     ),
     // Slice #4 — panel free borders + dialog anatomy + badge soft compound.
     (
@@ -259,6 +269,8 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* page */", &["foreground", "muted", "primary", "background"]),
     ("/* spinner */", &["muted-foreground", "border-subtle"]),
     ("/* tab */", &["foreground", "border", "muted-foreground"]),
+    // L1-POLISH-D — tab-list strip rest from pack (not free background/border/muted rail).
+    ("/* tab-list */", &["background", "border", "muted"]),
     // Slice #4 residual defaults
     // L1-POLISH-C — popover rest bans free surface ink (pack owns bg/fg/border).
     (
@@ -275,6 +287,8 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* combobox */", &["background", "foreground"]),
     // L1-POLISH-C — menu-item rest ink/hover from pack (not free foreground/muted).
     ("/* menu-item */", &["foreground", "muted", "hover-bg"]),
+    // L1-POLISH-D — field hint/error channels (not free muted-foreground / destructive).
+    ("/* field */", &["muted-foreground", "destructive"]),
 ];
 
 fn component_packs() -> BTreeMap<String, BTreeSet<String>> {

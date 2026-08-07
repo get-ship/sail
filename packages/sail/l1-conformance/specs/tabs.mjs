@@ -3,17 +3,37 @@
 // buttons + .sail-tab-panel panels) across variants / sizes / orientation, with
 // the active tab + shown panel baked in (the static shape use:tabs maintains).
 // The probe asserts the tablist contract: exactly one selected tab, roving
-// tabindex, roles, and that only the active panel renders.
+// tabindex, roles, only the active panel renders, and component-token paint
+// (tab* / tab-list*) on idle vs selected chrome.
 
-const tab = (name, label, sel, extra = '') =>
-  `<button class="sail-tab" name="${name}" role="tab" aria-selected="${sel ? 'true' : 'false'}" tabindex="${sel ? '0' : '-1'}" ${extra}>${label}</button>`
+// Lowered Style stamps — component.tab + component.tab-list packs (not free globals).
+const TAB =
+  'sail-tab sx-padY2 sx-padX3 sx-fgtabforeground sx-bgtransparent sx-cursorpointer sx-selectnone sx-borderWidth0 sx-borderBWidth2 sx-borderBtransparent sx-radiusTsm sx-tapHighlightnone sx-transitioncolors sx-durationfast sx-easeout sx-fontFamilybody sx-fontWeightmedium sx-leadingnone sx-whitespacenowrap sx-fontSizesm sx-hover-fgtabselectedforeground sx-selected-fgtabselectedforeground sx-selected-borderBprimary sx-selected-fontWeightsemibold sx-disabled-opacity50 sx-disabled-cursornotallowed'
+const TAB_PILL =
+  `${TAB} sx-variantpill-borderBWidth0 sx-variantpill-radiussm sx-variantpillselected-fgtabselectedforeground sx-variantpillselected-bgtabselectedbg sx-variantpillselected-shadowxs sx-variantpillselected-borderBtransparent`
+const TAB_ENCLOSED =
+  `${TAB} sx-variantenclosed-borderWidth1 sx-variantenclosed-bordertransparent sx-variantenclosed-borderBWidth0 sx-variantenclosed-radiusTmd sx-variantenclosedselected-fgtabselectedforeground sx-variantenclosedselected-bordertabborder sx-variantenclosedselected-bgtabselectedbg sx-variantenclosedselected-translateYpx`
+const LIST =
+  'sail-tab-list sx-borderBWidth1 sx-bordertablistborder sx-bgtablist'
+const LIST_LINE = `${LIST} sx-variantline-borderBWidth1 sx-variantline-bordertablistborder`
+const LIST_PILL =
+  `${LIST} sx-variantpill-pad1 sx-variantpill-borderWidth0 sx-variantpill-radiusmd sx-variantpill-bgtablistrail sx-variantpill-borderBWidth0`
+const LIST_ENCLOSED = `${LIST} sx-variantenclosed-borderBWidth1 sx-variantenclosed-bordertablistborder`
+
+const tabCls = (variant) =>
+  variant === 'pill' ? TAB_PILL : variant === 'enclosed' ? TAB_ENCLOSED : TAB
+const listCls = (variant) =>
+  variant === 'pill' ? LIST_PILL : variant === 'enclosed' ? LIST_ENCLOSED : LIST_LINE
+
+const tab = (name, label, sel, variant, extra = '') =>
+  `<button class="${tabCls(variant)}" name="${name}" role="tab" aria-selected="${sel ? 'true' : 'false'}" tabindex="${sel ? '0' : '-1'}" ${extra}>${label}</button>`
 const panel = (name, sel) =>
-  `<div class="sail-tab-panel" name="${name}" role="tabpanel" ${sel ? '' : 'hidden'}>${name} panel</div>`
+  `<div class="sail-tab-panel sx-minW0 sx-orientationhorizontal-padT4" name="${name}" role="tabpanel" ${sel ? '' : 'hidden'}>${name} panel</div>`
 
 const tabs = (variant, attrs, active, items) =>
   `<div class="sail-tabs" active="${active}" ${attrs}>` +
-  `<div class="sail-tab-list" role="tablist" variant="${variant}">` +
-  items.map(([n, l, x]) => tab(n, l, n === active, x || '')).join('') +
+  `<div class="${listCls(variant)}" role="tablist" variant="${variant}">` +
+  items.map(([n, l, x]) => tab(n, l, n === active, variant, x || '')).join('') +
   `</div>` +
   items.map(([n]) => panel(n, n === active)).join('') +
   `</div>`
@@ -30,7 +50,7 @@ export default {
   width: 760,
   rows() {
     return [
-      tabs('line', 'tone="primary"', 'overview', set),
+      tabs('line', 'tone="primary" class="l1-mark"', 'overview', set),
       tabs('pill', 'tone="primary"', 'activity', set),
       tabs('enclosed', 'tone="primary"', 'settings', set),
       tabs('line', 'size="sm"', 'overview', set.slice(0, 3)) +
@@ -40,9 +60,11 @@ export default {
   },
   probe() {
     const bad = []
+    const clear = (v) => v === 'rgba(0, 0, 0, 0)' || v === 'transparent' || v === ''
     document.querySelectorAll('.sail-tabs').forEach((el, ti) => {
       const tabs = [...el.querySelectorAll('.sail-tab')]
       const panels = [...el.querySelectorAll('.sail-tab-panel')]
+      const list = el.querySelector('.sail-tab-list')
       const selected = tabs.filter((t) => t.getAttribute('aria-selected') === 'true')
       if (selected.length !== 1) bad.push({ ti, why: 'selected-count', n: selected.length })
       tabs.forEach((t) => {
@@ -51,6 +73,8 @@ export default {
         if (t.getAttribute('tabindex') !== (sel ? '0' : '-1')) bad.push({ ti, why: 'roving-tabindex' })
         const r = t.getBoundingClientRect()
         if (r.width <= 0 || r.height <= 0) bad.push({ ti, why: 'tab-not-rendered' })
+        // Idle tabs paint via tab-foreground (token); color must resolve.
+        if (clear(getComputedStyle(t).color)) bad.push({ ti, why: 'no-token-fg', name: t.getAttribute('name') })
       })
       const activeName = selected[0]?.getAttribute('name')
       panels.forEach((p) => {
@@ -71,6 +95,12 @@ export default {
           a.borderBottomColor === b.borderBottomColor &&
           a.backgroundColor === b.backgroundColor
         if (same) bad.push({ ti, why: 'active-not-distinct' })
+      }
+      // tab-list strip border channel (tab-list-border) on line/enclosed.
+      if (list && list.getAttribute('variant') !== 'pill') {
+        const bw = getComputedStyle(list).borderBottomWidth
+        if (bw === '0px' && list.getAttribute('orientation') !== 'vertical')
+          bad.push({ ti, why: 'list-no-token-border' })
       }
     })
     return { count: document.querySelectorAll('.sail-tabs').length, bad: bad.slice(0, 8) }
