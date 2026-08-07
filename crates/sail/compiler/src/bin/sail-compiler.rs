@@ -1084,7 +1084,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md.push_str(sx_skill_demo(effective.raw_containers));
         let _ = writeln!(
             md,
-            "Attach Style as a **tag call** `style({…})` on the open tag — not `style=` / `sx=`.\n\
+            "Attach Style as a **tag call** `style({{…}})` on the open tag — not `style=` / `sx=`.\n\
              Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
              `bind(name)` for runtime CSS vars. Style is compile-time static — no\n\
              dynamic JS in the Style host. Full closed setter table: MCP `sail_surface`\n\

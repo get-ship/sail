@@ -191,6 +191,11 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "badge",
         &["badge", "badge-foreground", "badge-border"],
     ),
+    // L1-POLISH-C — menu row + panel hosts already on component tokens.
+    (
+        "menu-item",
+        &["menu-item-foreground", "menu-item-hover-bg"],
+    ),
 ];
 
 /// Default-rest free globals that a slice element must NOT use for its owned
@@ -255,7 +260,11 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* spinner */", &["muted-foreground", "border-subtle"]),
     ("/* tab */", &["foreground", "border", "muted-foreground"]),
     // Slice #4 residual defaults
-    ("/* popover */", &["border"]),
+    // L1-POLISH-C — popover rest bans free surface ink (pack owns bg/fg/border).
+    (
+        "/* popover */",
+        &["border", "foreground", "surface-1", "background"],
+    ),
     ("/* dropdown */", &["border"]),
     ("/* context-menu */", &["border"]),
     ("/* hover-card */", &["border", "foreground", "surface-1", "background"]),
@@ -264,6 +273,8 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* badge */", &["muted", "muted-foreground", "border"]),
     ("/* radio */", &["foreground", "background"]),
     ("/* combobox */", &["background", "foreground"]),
+    // L1-POLISH-C — menu-item rest ink/hover from pack (not free foreground/muted).
+    ("/* menu-item */", &["foreground", "muted", "hover-bg"]),
 ];
 
 fn component_packs() -> BTreeMap<String, BTreeSet<String>> {

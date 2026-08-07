@@ -2,10 +2,11 @@
 // picker IS the L1 select — it gets the platform's keyboard, typeahead, mobile
 // sheet and form participation for free. A styled listbox with arbitrary item
 // content is a <combobox>, a different primitive; this is not it.
-// Markup mirrors freeform host stamp: sail-select + Style field classes.
+// Markup mirrors lowered Style stamp: sail-select + component.field surface atoms
+// (field / field-foreground / field-border / field-border-hover) — not free globals.
 
 const SEL =
-  'sail-select sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padS3 sx-padE8 sx-fontSizebase sx-fgforeground sx-bgbackground sx-borderWidth1 sx-borderborder sx-radiusmd sx-shadowxs sx-wfull sx-cursorpointer sx-hover-borderborderstrong sx-disabled-cursornotallowed sx-disabled-opacity50 sx-sizexs-minHcontrolh2xs sx-sizexs-padS2 sx-sizexs-fontSizexs sx-sizesm-minHcontrolhsm sx-sizesm-padS25 sx-sizesm-fontSizesm sx-sizemd-minHcontrolhmd sx-sizemd-padS3 sx-sizemd-fontSizebase sx-sizelg-minHcontrolhlg sx-sizelg-padS4 sx-sizelg-fontSizemd sx-invalidtrue-borderdestructive'
+  'sail-select sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padS3 sx-padE8 sx-wfull sx-fgfieldforeground sx-bgfield sx-borderWidth1 sx-borderfieldborder sx-radiusmd sx-shadowxs sx-cursorpointer sx-fontSizebase sx-hover-borderfieldborderhover sx-disabled-cursornotallowed sx-disabled-opacity50 sx-sizexs-minHcontrolh2xs sx-sizexs-padS2 sx-sizexs-fontSizexs sx-sizesm-minHcontrolhsm sx-sizesm-padS25 sx-sizesm-fontSizesm sx-sizemd-minHcontrolhmd sx-sizemd-padS3 sx-sizemd-fontSizebase sx-sizelg-minHcontrolhlg sx-sizelg-padS4 sx-sizelg-fontSizemd sx-invalidtrue-borderdestructive'
 
 const sel = (attrs = '') => {
   const m = attrs.match(/class="([^"]*)"/)
@@ -39,6 +40,9 @@ export default {
       if (clear(cs(el, 'borderTopColor')) && cs(el, 'boxShadow') === 'none')
         bad.push({ i, why: 'field-not-visible' })
       if (el.options.length < 3) bad.push({ i, why: 'options-missing' })
+      // Token-backed field surface (field / field-foreground / field-border).
+      if (clear(cs(el, 'backgroundColor'))) bad.push({ i, why: 'no-token-bg' })
+      if (clear(cs(el, 'color'))) bad.push({ i, why: 'no-token-fg' })
     })
 
     const scope = "[theme='ship'] "

@@ -1,11 +1,20 @@
 // L1 conformance spec: <context-menu> (native [popover] + use:contextMenu + use:menu).
 // RENDER: the menu surface in-flow across 7 themes. BEHAVIOR: right-click on the
 // target opens it AT THE POINTER; Escape closes.
+// Paint classes mirror lowered Style: context-menu* panel + menu-item* rows.
+
+const CM =
+  'sail-context-menu sx-pad1 sx-fgcontextmenuforeground sx-bgcontextmenu sx-borderWidth1 sx-bordercontextmenuborder sx-radiusmd sx-shadowmd sx-zpopover'
+const MI =
+  'sail-menu-item sx-displayflex sx-gap25 sx-padY2 sx-padX3 sx-wfull sx-borderWidth0 sx-fgmenuitemforeground sx-bgtransparent sx-radiussm sx-cursorpointer sx-textAlignstart sx-fontFamilybody sx-fontSizesm sx-leadingtight sx-whitespacenowrap sx-hover-bgmenuitemhoverbg sx-focus-bgmenuitemhoverbg sx-focus-outlinesolid sx-focus-outline2 sx-focus-outlinering sx-disabled-opacity50 sx-disabled-cursornotallowed'
+
+const item = (value, label) =>
+  `<button type="button" class="${MI}" role="menuitem" value="${value}">${label}</button>`
 
 const menu = () =>
-  `<div class="sail-context-menu" role="menu" style="position:static">` +
-  `<button class="sail-menu-item" role="menuitem" value="cut">Cut</button>` +
-  `<button class="sail-menu-item" role="menuitem" value="copy">Copy</button>` +
+  `<div class="${CM}" role="menu" style="position:static">` +
+  item('cut', 'Cut') +
+  item('copy', 'Copy') +
   `</div>`
 
 export default {
@@ -18,11 +27,16 @@ export default {
       const cs = getComputedStyle(el)
       if (el.getAttribute('role') !== 'menu') bad.push({ i, why: 'menu-role' })
       if (cs.boxShadow === 'none') bad.push({ i, why: 'no-elevation' })
+      if (cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent') {
+        bad.push({ i, why: 'no-token-panel-bg' })
+      }
       const items = [...el.querySelectorAll('.sail-menu-item')]
       if (!items.length) bad.push({ i, why: 'no-items' })
       items.forEach((it) => {
         const r = it.getBoundingClientRect()
         if (r.width <= 0 || r.height <= 0) bad.push({ i, why: 'item-not-rendered' })
+        const ics = getComputedStyle(it)
+        if (!ics.color || ics.color === 'rgba(0, 0, 0, 0)') bad.push({ i, why: 'no-token-item-fg' })
       })
     })
     return { count: document.querySelectorAll('.sail-context-menu').length, bad: bad.slice(0, 8) }
@@ -31,9 +45,9 @@ export default {
     rows() {
       return [
         `<div id="canvas" style="width:300px;height:80px;border:1px dashed var(--border);display:grid;place-items:center">right-click me</div>` +
-        `<div class="sail-context-menu" id="cm1" popover for="canvas">` +
-        `<button class="sail-menu-item" value="cut">Cut</button>` +
-        `<button class="sail-menu-item" value="copy">Copy</button>` +
+        `<div class="${CM}" id="cm1" popover for="canvas">` +
+        item('cut', 'Cut') +
+        item('copy', 'Copy') +
         `</div>`,
       ]
     },
