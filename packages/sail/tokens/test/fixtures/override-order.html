@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>THEMES-1 override order — instance &gt; component &gt; global &gt; baked</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      THEMES-1 / freeze §6 override order demo.
+
+      Same element kind (probe swatch that paints with --probe-bg).
+      Four layers, highest wins:
+
+        instance  (inline style / channels on the host)
+        component (theme modes.*.component.* → component CSS vars)
+        global    (theme modes.*.color|radius|… scale leaves)
+        baked     (tokens.css model defaults)
+
+      Unique marker colors per layer so getComputedStyle proves the winner.
+      Open this file in a browser, or run packages/sail/tokens override-order tests.
+    -->
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        line-height: 1.45;
+        --page-bg: #f6f4ef;
+        --page-fg: #1c1914;
+        --muted: #6b645a;
+        --line: #d9d2c5;
+        /* ── baked defaults (tokens.css analogue) ─────────────────────── */
+        --surface-1: #e8e4da; /* global scale leaf default */
+        --probe-bg: var(--surface-1); /* component token aliases global */
+        --baked-marker: #e8e4da;
+        --global-marker: #3d7ea6;
+        --component-marker: #c45c26;
+        --instance-marker: #5b2d8e;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem clamp(1rem, 4vw, 3rem) 3rem;
+        background: var(--page-bg);
+        color: var(--page-fg);
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.35rem;
+      }
+
+      .lede {
+        color: var(--muted);
+        max-width: 48rem;
+        margin: 0 0 1.75rem;
+      }
+
+      .order {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0 0 1.75rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8rem;
+      }
+
+      .order span {
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 1rem;
+        max-width: 56rem;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 0.75rem;
+        padding: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .meta {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      /* Probe: same element kind everywhere — paints from --probe-bg */
+      .probe {
+        height: 4.5rem;
+        border-radius: 0.55rem;
+        border: 1px solid color-mix(in srgb, #000 12%, transparent);
+        background-color: var(--probe-bg);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 35%, transparent);
+      }
+
+      /* ── Layer scaffolding (mirrors theme generate emit) ────────────── */
+
+      /* global only: theme scale overrides --surface-1; component still aliases it */
+      [data-layer-scope='global'] {
+        --surface-1: var(--global-marker);
+      }
+
+      /* component + global: theme sets component.probe.bg → --probe-bg explicitly */
+      [data-layer-scope='component'] {
+        --surface-1: var(--global-marker);
+        --probe-bg: var(--component-marker);
+      }
+
+      /* instance wins over component: host style sets --probe-bg (or direct paint) */
+      [data-layer-scope='instance'] {
+        --surface-1: var(--global-marker);
+        --probe-bg: var(--component-marker);
+      }
+
+      .legend {
+        margin-top: 2rem;
+        max-width: 40rem;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .legend code {
+        font-size: 0.8em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Override order</h1>
+    <p class="lede">
+      THEMES-1 fixed order for any token: the highest layer that supplies a value
+      wins. Same probe element in every card; only which layers are active changes.
+    </p>
+    <div class="order" aria-label="Override order highest first">
+      <span>1 · instance</span>
+      <span>2 · component</span>
+      <span>3 · global</span>
+      <span>4 · baked</span>
+    </div>
+
+    <div class="grid">
+      <article class="card" data-demo="baked">
+        <h2>Baked defaults</h2>
+        <p>Model / <code>tokens.css</code> only. Component token aliases global scale.</p>
+        <div
+          class="probe"
+          data-probe="baked"
+          data-expect-layer="baked"
+          data-expect-color="#e8e4da"
+          aria-label="Probe baked"
+        ></div>
+        <div class="meta">layer: baked · --probe-bg → --surface-1</div>
+      </article>
+
+      <article class="card" data-demo="global" data-layer-scope="global">
+        <h2>Global theme</h2>
+        <p>Theme scale overrides <code>--surface-1</code>; component still aliases it.</p>
+        <div
+          class="probe"
+          data-probe="global"
+          data-expect-layer="global"
+          data-expect-color="#3d7ea6"
+          aria-label="Probe global"
+        ></div>
+        <div class="meta">layer: global · scale leaf wins via alias</div>
+      </article>
+
+      <article class="card" data-demo="component" data-layer-scope="component">
+        <h2>Component tokens</h2>
+        <p>Theme <code>modes.*.component.*</code> sets <code>--probe-bg</code> directly.</p>
+        <div
+          class="probe"
+          data-probe="component"
+          data-expect-layer="component"
+          data-expect-color="#c45c26"
+          aria-label="Probe component"
+        ></div>
+        <div class="meta">layer: component · beats global alias</div>
+      </article>
+
+      <article class="card" data-demo="instance" data-layer-scope="instance">
+        <h2>Instance (style/channels)</h2>
+        <p>Host style / channels override the component CSS var on this element only.</p>
+        <div
+          class="probe"
+          data-probe="instance"
+          data-expect-layer="instance"
+          data-expect-color="#5b2d8e"
+          style="--probe-bg: #5b2d8e"
+          aria-label="Probe instance"
+        ></div>
+        <div class="meta">layer: instance · host wins</div>
+      </article>
+    </div>
+
+    <p class="legend">
+      Studio Components facet shows the resolved layer for each token
+      (<code>Layer · {layer}</code>). Helpers:
+      <code>THEME_OVERRIDE_ORDER</code>, <code>resolveOverrideLayer</code>,
+      <code>resolveTokenLayer</code> in <code>@ship/tokens/theme-schema</code>.
+    </p>
+  </body>
+</html>

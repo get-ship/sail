@@ -311,6 +311,62 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     ).toBe('component')
   })
 
+  /**
+   * Cheap edit → registry → CSS chain (full studio screenshot round-trip
+   * remains residual). Studio writes DTCG leaves; generate emits CSS vars
+   * keyed by registry path→cssName. Assert the three artifacts agree for a
+   * representative global scale leaf.
+   */
+  it('THEMES-1 residual: theme DTCG leaf maps registry path → generated CSS var', () => {
+    const paperPath = resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      '../model/themes/paper.json',
+    )
+    const paper = JSON.parse(readFileSync(paperPath, 'utf8')) as {
+      modes: {
+        light: {
+          color: { primary: { default: { $value: string } } }
+          component?: { card?: { bg?: { $value: string } } }
+        }
+      }
+    }
+    const primaryValue = paper.modes.light.color.primary.default.$value
+    expect(primaryValue.length).toBeGreaterThan(0)
+
+    const reg = JSON.parse(loadSrc('../src/token-registry.json')) as {
+      paths?: Record<string, string>
+      tokens?: Record<string, { path?: string; value?: string }>
+    }
+    expect(reg.paths?.['color.primary.default']).toBe('primary')
+    expect(reg.tokens?.primary?.path).toBe('color.primary.default')
+
+    const themesCss = loadSrc('../src/themes.css')
+    // paper light block must emit the same leaf the theme JSON authors.
+    expect(themesCss).toMatch(
+      new RegExp(
+        `theme=['"]paper['"]\\][\\s\\S]*?--primary\\s*:\\s*${primaryValue.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&',
+        )}`,
+      ),
+    )
+
+    // Component override chain: paper component.card.bg → --card
+    const cardBg = paper.modes.light.component?.card?.bg?.$value
+    if (cardBg) {
+      expect(reg.paths?.['component.card.bg']).toBe('card')
+      expect(reg.tokens?.card?.path).toBe('component.card.bg')
+      expect(themesCss).toMatch(
+        new RegExp(
+          `theme=['"]paper['"]\\][\\s\\S]*?--card\\s*:\\s*${cardBg.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&',
+          )}`,
+        ),
+      )
+    }
+  })
+
   it('every THEMES id is also a `:root[theme="id"]` selector in themes.css', () => {
     const selectors = extractThemeSelectors(loadSrc('../src/themes.css'))
     for (const t of THEMES) {

@@ -220,6 +220,9 @@ export function controlsForFacet(facet: ThemeFacet): ThemeEditorControl[] {
 /**
  * True when a write path is allowed by the editor contract.
  * Accepts concrete paths (modes.light.color.primary.default) or template forms.
+ *
+ * Mode-scoped paths require an explicit control with `modeGroup === group`.
+ * Controls that omit `modeGroup` (identity/mode/meta) never authorize modes.*.
  */
 export function isContractWritePath(path: string): boolean {
   const p = path.trim()
@@ -236,11 +239,11 @@ export function isContractWritePath(path: string): boolean {
       key === 'ordered'
     )
   }
-  // Mode-scoped groups
+  // Mode-scoped groups — only groups with a contract control (not every schema group)
   const m = /^modes\.(light|dark)\.([a-z][a-z0-9-]*)/.exec(p)
   if (!m) return false
   const group = m[2]!
-  return THEME_EDITOR_CONTROLS.some((c) => c.modeGroup === group || c.modeGroup === undefined)
+  return THEME_EDITOR_CONTROLS.some((c) => c.modeGroup === group)
 }
 
 /**

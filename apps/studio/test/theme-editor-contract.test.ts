@@ -48,10 +48,26 @@ describe('THEMES-1 theme editor contract', () => {
     expect(isContractWritePath('modes.light.color.primary.default')).toBe(true)
     expect(isContractWritePath('modes.dark.component.button.bg')).toBe(true)
     expect(isContractWritePath('modes.light.radius.md')).toBe(true)
+    expect(isContractWritePath('modes.light.typography.fontFamily.body')).toBe(true)
+    expect(isContractWritePath('modes.light.shadow.sm')).toBe(true)
+    expect(isContractWritePath('modes.light.icon.size')).toBe(true)
+    expect(isContractWritePath('modes.light.interaction.strength')).toBe(true)
     expect(isContractWritePath('$extensions.ship.themeId')).toBe(true)
     expect(isContractWritePath('$extensions.ship.density')).toBe(true)
     expect(isContractWritePath('')).toBe(false)
     expect(isContractWritePath('not-a-path')).toBe(false)
+  })
+
+  it('contract write path refuses schema groups with no editor control', () => {
+    // THEME_MODE_GROUP_KEYS includes these; editor contract product subset does not.
+    expect(isContractWritePath('modes.light.motion.duration.fast')).toBe(false)
+    expect(isContractWritePath('modes.dark.space.4')).toBe(false)
+    expect(isContractWritePath('modes.light.scrollbar.thumb')).toBe(false)
+    expect(isContractWritePath('modes.light.density.compact')).toBe(false)
+    expect(isContractWritePath('modes.light.panel.min-w')).toBe(false)
+    expect(isContractWritePath('modes.light.z.modal')).toBe(false)
+    expect(isContractWritePath('modes.light.breakpoint.tablet')).toBe(false)
+    expect(isContractWritePath('modes.light.control.h-md')).toBe(false)
   })
 
   it('components facet exposes global fallback control (L1 pack hook)', () => {
