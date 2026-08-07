@@ -236,20 +236,45 @@ fn tsgo_hover_in_template_expression() {
     std::thread::sleep(std::time::Duration::from_millis(300));
     // Hover on `count` inside `{count()}`.
     let count_at = COUNTER.find("{count()}").unwrap() + 1;
+    // Source-map must land on the free ident in `scope.count`, not on `scope`
+    // (the pre-fix always returned segment start → `const scope: object`).
+    if let Some(virt) = session.virtual_for(uri) {
+        let (file, v_off) = virt.sail_to_virtual(count_at).expect("map count");
+        assert_eq!(file, VirtualFile::View);
+        assert!(
+            virt.view_text[v_off..].starts_with("count"),
+            "sail→virtual must hit `count` not `scope`; got {:?}",
+            &virt.view_text[v_off.saturating_sub(6)..(v_off + 12).min(virt.view_text.len())]
+        );
+        assert!(
+            virt.view_text
+                .contains("typeof __sail_authored.__def extends (...a: never[]) => infer R"),
+            "view must use synthetic-parity Scope recovery"
+        );
+    }
     let hover = session.hover_mapped(uri, COUNTER, count_at);
-    // May be None if scope recovery fails against missing runtime types;
-    // soft-assert with a clear message rather than hard-fail the suite.
+    // Soft-skip only when hover is wholly unavailable (runtime path missing);
+    // do not soft-pass a weak `scope: object` result — that is the bug.
     if hover.is_none() {
         eprintln!(
-            "NOTE: template expression hover returned None — scope recovery \
-             may lack full @ship/sail-runtime types in the virtual project. \
-             Source-map + controller hover still covered."
+            "NOTE: template expression hover returned None — @ship/sail-runtime \
+             types may be missing from the virtual tsconfig paths. Map + recovery \
+             emit still asserted above."
         );
         return;
     }
     let text = hover.unwrap().to_string();
+    // Must not be the residual weak hover that landed on `const scope: object`.
     assert!(
-        text.contains("count") || text.contains("Signal") || text.contains("number"),
-        "expected typed hover for count; got {text}"
+        !(text.contains("const scope") && text.contains("object")),
+        "template count hover must not resolve as `const scope: object`; got {text}"
+    );
+    // Recoverable success: property/member typing for controller Scope field.
+    assert!(
+        text.contains("count")
+            && (text.contains("number")
+                || text.to_ascii_lowercase().contains("signal")
+                || text.contains("property")),
+        "expected typed Scope member hover for count; got {text}"
     );
 }

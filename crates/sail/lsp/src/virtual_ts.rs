@@ -42,6 +42,10 @@ pub struct MapSegment {
     pub sail_end: usize,
     /// When true, virtual and sail lengths match and offsets translate 1:1.
     pub one_to_one: bool,
+    /// When rewrite inserts prefixes (`scope.`) or other fixed text, a
+    /// per-byte sail-relative → virtual-relative map (length = sail span).
+    /// Absent → proportional / start fallback for non-1:1 segments.
+    pub sail_to_virt_rel: Option<Vec<usize>>,
 }
 
 /// A TS-bearing region of the `.sail` source (for cursor routing).
@@ -97,7 +101,29 @@ impl VirtualTs {
                     let rel = sail_offset - seg.sail_start;
                     return Some((seg.file, seg.virtual_start + rel));
                 }
-                return Some((seg.file, seg.virtual_start));
+                let sail_rel = sail_offset - seg.sail_start;
+                if let Some(ref m) = seg.sail_to_virt_rel {
+                    if let Some(&v_rel) = m.get(sail_rel) {
+                        return Some((seg.file, seg.virtual_start + v_rel));
+                    }
+                    // Cursor on the exclusive end of a non-empty span: use last map entry.
+                    if sail_rel == m.len() && !m.is_empty() {
+                        let last = *m.last().unwrap();
+                        return Some((seg.file, seg.virtual_start + last));
+                    }
+                }
+                // Proportional fallback (better than always landing on segment start,
+                // which made `{count()}` hover hit `scope` in `scope.count()`).
+                let virt_len = seg.virtual_end - seg.virtual_start;
+                let sail_len = seg.sail_end - seg.sail_start;
+                if sail_len == 0 || virt_len == 0 {
+                    return Some((seg.file, seg.virtual_start));
+                }
+                let v_rel = (sail_rel * virt_len) / sail_len;
+                return Some((
+                    seg.file,
+                    seg.virtual_start + v_rel.min(virt_len.saturating_sub(1)),
+                ));
             }
         }
         None
@@ -114,13 +140,28 @@ impl VirtualTs {
                     let rel = virtual_offset - seg.virtual_start;
                     return Some(seg.sail_start + rel);
                 }
+                let v_rel = virtual_offset - seg.virtual_start;
+                if let Some(ref m) = seg.sail_to_virt_rel {
+                    // Invert: first sail-rel whose virt-rel == v_rel (or nearest ≤).
+                    let mut best: Option<usize> = None;
+                    for (s_rel, &vr) in m.iter().enumerate() {
+                        if vr == v_rel {
+                            return Some(seg.sail_start + s_rel);
+                        }
+                        if vr <= v_rel {
+                            best = Some(s_rel);
+                        }
+                    }
+                    if let Some(s_rel) = best {
+                        return Some(seg.sail_start + s_rel);
+                    }
+                }
                 let virt_len = seg.virtual_end - seg.virtual_start;
                 let sail_len = seg.sail_end - seg.sail_start;
                 if virt_len == 0 {
                     return Some(seg.sail_start);
                 }
-                let rel = virtual_offset - seg.virtual_start;
-                let mapped = seg.sail_start + (rel * sail_len) / virt_len;
+                let mapped = seg.sail_start + (v_rel * sail_len) / virt_len;
                 return Some(mapped.min(seg.sail_end));
             }
         }
@@ -224,6 +265,7 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             sail_start,
             sail_end,
             one_to_one: true,
+            sail_to_virt_rel: None,
         });
     }
 
@@ -258,6 +300,7 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
                     sail_start: sail_line_start,
                     sail_end: sail_line_start + content_len,
                     one_to_one: true,
+                    sail_to_virt_rel: None,
                 });
             }
         }
@@ -288,9 +331,17 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
         .unwrap_or_default();
     if has_controller {
         view_text.push_str("import __sail_authored from \"./__ctrl__.ts\";\n");
+        // Recover the controller factory's return type the same way the
+        // synthetic emitter does (`typeof __authored.__def extends
+        // (...a: never[]) => infer R`). Direct `__def` access — not
+        // `extends { __def: infer D }` — keeps setup-added members; the
+        // `ControllerExport<Scope>` generic is often pinned empty and
+        // would erase them (see emit/synthetic G4).
+        // `(...a: never[]) => infer R` matches any arity (plain
+        // `ReturnType` fails when params are required).
         view_text.push_str(
-            "type __AuthScope = typeof __sail_authored extends { __def: infer D } \
-             ? D extends (...a: never[]) => infer R ? R : object \
+            "type __AuthScope = typeof __sail_authored.__def extends (...a: never[]) => infer R \
+             ? R \
              : object;\n\
              const scope: __AuthScope = null! as __AuthScope;\n\
              export type Scope = __AuthScope;\n\
@@ -366,6 +417,15 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             } else {
                 rewrite_with_prefix(&emb.source, &bare_local_refs, "scope.")
             };
+            let one_to_one = rewritten.len() == emb.source.len() && rewritten == emb.source;
+            // Prefer a precise byte map when the only rewrite is `scope.`
+            // prefix insertion — so hover on `count` in `{count()}` lands on
+            // `count` in `scope.count()`, not on `scope` (segment start).
+            let sail_to_virt_rel = if one_to_one {
+                None
+            } else {
+                build_prefix_insertion_map(&emb.source, &rewritten, "scope.")
+            };
             view_text.push_str("void (() => (");
             let v_start = view_text.len();
             view_text.push_str(&rewritten);
@@ -377,7 +437,8 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
                 virtual_end: v_end,
                 sail_start: emb.sail_start,
                 sail_end: emb.sail_end,
-                one_to_one: rewritten.len() == emb.source.len() && rewritten == emb.source,
+                one_to_one,
+                sail_to_virt_rel,
             });
         }
     }
@@ -397,6 +458,51 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
         controller_sail_span,
         scope_sail_span,
     })
+}
+
+// ── Rewrite source maps ────────────────────────────────────────────────────
+
+/// Build a sail-relative → virtual-relative byte map when `rewritten` is
+/// `src` with zero or more insertions of a fixed `prefix` (typically
+/// `"scope."` before free idents).
+///
+/// Returns `None` when the two strings are not related by prefix-only
+/// insertion (type-annotation strip, style quoting, …) so callers can
+/// fall back to proportional mapping.
+fn build_prefix_insertion_map(src: &str, rewritten: &str, prefix: &str) -> Option<Vec<usize>> {
+    if prefix.is_empty() {
+        return None;
+    }
+    let sb = src.as_bytes();
+    let rb = rewritten.as_bytes();
+    let pb = prefix.as_bytes();
+    let mut map = Vec::with_capacity(sb.len());
+    let mut si = 0usize;
+    let mut vi = 0usize;
+    while si < sb.len() {
+        // Insertion of `prefix` immediately before matching residual text.
+        if vi + pb.len() <= rb.len()
+            && &rb[vi..vi + pb.len()] == pb
+            && rb.get(vi + pb.len()) == Some(&sb[si])
+            // Avoid treating a real authoring of the prefix as an insertion
+            // when src itself continues with the same bytes (no insertion).
+            && (si + pb.len() > sb.len() || &sb[si..si + pb.len()] != pb)
+        {
+            vi += pb.len();
+            continue;
+        }
+        if vi >= rb.len() || rb[vi] != sb[si] {
+            return None;
+        }
+        map.push(vi);
+        si += 1;
+        vi += 1;
+    }
+    // Trailing pure insertions are unexpected for scope. rewrite; require full consume.
+    if vi != rb.len() {
+        return None;
+    }
+    Some(map)
 }
 
 // ── Style DSL → valid TS (tsc/tsgo surface) ────────────────────────────────
@@ -1398,6 +1504,65 @@ export default controller((ctx) => ({ count: signal(0) }))
             v.view_text
         );
         assert!(v.view_text.contains("import __sail_authored"));
+    }
+
+    #[test]
+    fn auth_scope_recovers_via_direct_def_return() {
+        // Align with synthetic emit G4 — not `extends { __def: infer D }`.
+        let v = build_virtual_ts(COUNTER).expect("virtual");
+        assert!(
+            v.view_text
+                .contains("typeof __sail_authored.__def extends (...a: never[]) => infer R"),
+            "must recover Scope from __def return (synthetic parity):\n{}",
+            v.view_text
+        );
+        assert!(
+            !v.view_text
+                .contains("typeof __sail_authored extends { __def: infer D }"),
+            "legacy weak recovery pattern must not remain:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn prefix_insertion_map_aligns_scope_dot_idents() {
+        let src = "count()";
+        let rewritten = "scope.count()";
+        let m = build_prefix_insertion_map(src, rewritten, "scope.").expect("map");
+        assert_eq!(m.len(), src.len());
+        // `c` of count → index of `c` in scope.count (after "scope.")
+        assert_eq!(m[0], "scope.".len());
+        assert_eq!(&rewritten[m[0]..m[0] + 5], "count");
+        // `(` stays after count
+        assert_eq!(rewritten.as_bytes()[m[5]], b'(');
+
+        let multi = "() => count.set(count() + 1)";
+        let multi_rw = rewrite_with_prefix(multi, &[], "scope.");
+        assert_eq!(multi_rw, "() => scope.count.set(scope.count() + 1)");
+        let m2 = build_prefix_insertion_map(multi, &multi_rw, "scope.").expect("multi map");
+        let first_count = multi.find("count").unwrap();
+        assert_eq!(&multi_rw[m2[first_count]..m2[first_count] + 5], "count");
+        // Must not land on the `scope.` prefix.
+        assert_ne!(&multi_rw[m2[first_count]..m2[first_count] + 5], "scope");
+    }
+
+    #[test]
+    fn template_count_hover_offset_lands_on_ident_not_scope() {
+        let v = build_virtual_ts(COUNTER).expect("virtual");
+        // Cursor on `count` inside first `{count()}`.
+        let count_at = COUNTER.find("{count()}").unwrap() + 1;
+        let (file, virt) = v.sail_to_virtual(count_at).expect("map");
+        assert_eq!(file, VirtualFile::View);
+        let slice = &v.view_text[virt..];
+        assert!(
+            slice.starts_with("count"),
+            "hover offset must land on `count`, not `scope`; virtual@{}: {:?}",
+            virt,
+            &v.view_text[virt.saturating_sub(6)..(virt + 12).min(v.view_text.len())]
+        );
+        // Round-trip should stay on the free ident span.
+        let back = v.virtual_to_sail(file, virt).expect("back");
+        assert_eq!(back, count_at);
     }
 
     #[test]
