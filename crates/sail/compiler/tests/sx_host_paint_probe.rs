@@ -1253,14 +1253,19 @@ fn alert_tone_stripe_before_on_host_sx() {
             && !src.contains("compound: ["),
         "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
     );
+    // Rest stripe = alert-stripe; brand via bound tone (attr-gated), not hand match matrix.
     assert!(
-        (src.contains("default: when({ before: style({ paint: bg(alert-stripe) }) })")
-            || src.contains("default: when({ before: style({ paint: bg(alert-stripe) }) })")
-            || (src.contains("before:") && src.contains("bg(alert-stripe)")))
-            && (src.contains("info: when({ before: style({ paint: bg(info) }) })")
-                || src.contains("info: when({ before: style({ paint: bg(info) }) })")
-                || (src.contains("before:") && src.contains("bg(info)"))),
-        "match(tone) stripe: default alert-stripe; branded semantic tokens"
+        src.contains("bg(alert-stripe)")
+            && (src.contains("bg(tone)") || out.skin_css.contains("tone='info'")),
+        "stripe rest alert-stripe + bound tone brand"
+    );
+    assert!(
+        out.skin_css.contains("var(--alert-stripe)")
+            && (out.skin_css.contains("tone='info'")
+                || out.skin_css.contains("var(--info)")
+                || out.skin_css.contains("background-color:var(--info)")),
+        "compiled stripe: rest alert-stripe + branded tone gates:\n{}",
+        out.skin_css
     );
     assert!(
         out.structure_html.contains("before")

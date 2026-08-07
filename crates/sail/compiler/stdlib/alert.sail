@@ -1,11 +1,13 @@
 <!--
   <alert> — L1 inline status banner. Style value language only.
-  Stripe via when(before) + match(tone) semantic tokens.
+  Stripe / icon rest = alert tokens when tone is omitted.
+  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
+  Host subset: muted | info | success | warning | destructive (no primary/accent product use).
 -->
 
 <scope>
   props: {
-    tone: 'default' | 'muted' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
+    tone: 'muted' | 'info' | 'success' | 'warning' | 'destructive'
     dismissible = false
   
     onDismiss: () => void
@@ -13,7 +15,7 @@
 
   const base = style({ box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(alert-border).radius(md).bg(alert).fg(alert-foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) })
   const stripe = style({ box: position(absolute).left(0).top(0).bottom(0).w(1), paint: content(empty).bg(alert-stripe) })
-  // Icon rest samples alert surface; tone compounds still spend semantic palette for glyph color.
+  // Icon rest samples alert surface; brand tones recolor the glyph via bound tone.
   const ico = style({ box: size(control-h-xs), paint: radius(md).bg(alert).fg(alert-stripe) })
   const title = style({ text: fontWeight(semibold) })
   const body = style({ paint: fg(alert-stripe) })
@@ -33,14 +35,10 @@
       before: stripe,
       forced-colors: style({ paint: border(CanvasText) }),
     }),
-    match(tone, {
-      default: when({ before: style({ paint: bg(alert-stripe) }) }),
-      muted: when({ before: style({ paint: bg(alert-stripe) }) }),
-      info: when({ before: style({ paint: bg(info) }) }),
-      success: when({ before: style({ paint: bg(success) }) }),
-      warning: when({ before: style({ paint: bg(warning) }) }),
-      destructive: when({ before: style({ paint: bg(destructive) }) }),
-    }),
+    // Bound tone expands stripe over Tone groups; omit tone → alert-stripe rest.
+    when({ before: style({ paint: bg(tone) }) }),
+    // Muted keeps alert-stripe (not pure muted group fill).
+    compound({ tone: muted }, when({ before: style({ paint: bg(alert-stripe) }) })),
     when({
       forced-colors: when({
         before: style({ paint: bg(CanvasText) }),
@@ -49,14 +47,8 @@
   ])>
   <row inline nowrap align="center" justify="center" style([ style({ box: shrink(1) }), 
     ico,
-    match(tone, {
-      default: style({ paint: bg(alert).fg(alert-stripe) }),
-      muted: style({ paint: bg(alert).fg(alert-stripe) }),
-      info: style({ paint: bg(alert).fg(info) }),
-      success: style({ paint: bg(alert).fg(success) }),
-      warning: style({ paint: bg(alert).fg(warning) }),
-      destructive: style({ paint: bg(alert).fg(destructive) }),
-    }),
+    style({ paint: fg(tone) }),
+    compound({ tone: muted }, style({ paint: bg(alert).fg(alert-stripe) })),
     when({
       empty: style({ box: display(none) }),
     }),

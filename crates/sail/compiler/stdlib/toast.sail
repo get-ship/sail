@@ -1,11 +1,12 @@
 <!--
   <toast> — auto-dismiss + close. Style value language only.
-  Start stripe via borderSWidth + semantic tone tokens.
+  Start stripe rest = toast-stripe when tone is omitted.
+  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
   props: {
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     duration = ''
   
     onDismiss: () => void
@@ -17,16 +18,10 @@
 
 <row align="start" gap="3" use:autoDismiss use:dismissControl style([
   base,
-  match(tone, {
-    default: style({ paint: borderS(toast-stripe) }),
-    primary: style({ paint: borderS(primary) }),
-    info: style({ paint: borderS(info) }),
-    success: style({ paint: borderS(success) }),
-    warning: style({ paint: borderS(warning) }),
-    destructive: style({ paint: borderS(destructive) }),
-    accent: style({ paint: borderS(accent) }),
-    muted: style({ paint: borderS(muted-foreground) }),
-  }),
+  // Bound tone recolors the start stripe; omit tone → toast-stripe rest.
+  style({ paint: borderS(tone) }),
+  // Muted uses muted-foreground (stronger than muted fill) — not pure default member.
+  compound({ tone: muted }, style({ paint: borderS(muted-foreground) })),
 ])>
   <slot></slot>
   <button data-toast-close type="button" anatomy label="Dismiss" style([ style({ box: shrink(0).grow(0) }), 
