@@ -111,6 +111,7 @@ export interface EditArgs {
   ops: JsonValue[]
   path?: string
   source?: string
+  writeSource?: boolean
 }
 
 export interface EditRet {
@@ -603,7 +604,7 @@ export async function sailAuthoringComplete(
   return postJson<CompleteRet>('/sail.ops.v1.SailAuthoring/Complete', args ?? {}, opts)
 }
 
-// SailAuthoring/Edit — Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].
+// SailAuthoring/Edit — Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move) or full-content check-guarded write (writeSource + empty ops + source body). Atomic; validates before write so the file never holds an uncompilable intermediate (applied:false leaves bytes unchanged). Supersedes retired sail_apply. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].
 export async function sailAuthoringEdit(
   args: EditArgs,
   opts?: ClientOptions,

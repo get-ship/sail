@@ -38,7 +38,7 @@
         ]
       },
       "ops": {
-        "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`).",
+        "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`). For full-content write pass `[]` with `writeSource: true` and the complete body in `source` (WI3 check-guard).",
         "type": "array",
         "items": {
           "$ref": "#/definitions/Json"
@@ -52,9 +52,16 @@
         ]
       },
       "source": {
-        "description": "Optional inline source (else file is read). Dry-run without write when combined with dryRun.",
+        "description": "Optional inline source (else file is read). With `writeSource: true` and empty `ops`, this is the full file body to check-guard and commit. Combined with dryRun for validate-only.",
         "type": [
           "string",
+          "null"
+        ]
+      },
+      "writeSource": {
+        "description": "Full-content check-guarded write (WI3). When true with empty `ops` and a string `source`, run check on the body; on error diagnostics leave the file byte-identical and return `applied: false`; on success write and return diagnostics for the new state. Prefer over any patch DSL.",
+        "type": [
+          "boolean",
           "null"
         ]
       }

@@ -714,13 +714,19 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let ops =
         sail_compiler::edit::parse_ops(&ops_json).map_err(|e| OpError::InvalidArgument(e))?;
 
-    // Studio freeform Source save: empty ops + full `source` body + writeSource.
-    // Still validate-before-write via check_all so disk never holds broken Sail.
+    // WI3 full-content check-guarded write (studio freeform Source save):
+    // empty ops + full `source` body + writeSource. check_all before disk so
+    // failure leaves the file byte-identical (no partial / broken intermediate).
     if write_source && ops.is_empty() {
         let Some(body) = args.get("source").and_then(|v| v.as_str()) else {
             return Err(OpError::InvalidArgument(
                 "writeSource requires string `source`".into(),
             ));
+        };
+        let prior_on_disk = if target.is_file() {
+            std::fs::read(&target).ok()
+        } else {
+            None
         };
         let diags = run_check_on(body, Some(target.as_path()))?;
         let has_error = diags
@@ -731,9 +737,16 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
             .map(|d| serde_json::to_value(d).unwrap_or(json!({})))
             .collect();
         if has_error {
+            // Refuse write entirely — caller still sees diags for the proposed body;
+            // disk bytes are never opened for write on this path.
+            let rev = prior_on_disk
+                .as_ref()
+                .and_then(|b| std::str::from_utf8(b).ok())
+                .map(sail_compiler::edit::model_revision)
+                .unwrap_or_else(|| sail_compiler::edit::model_revision(""));
             return Ok(json!({
                 "applied": false,
-                "modelRevision": 0,
+                "modelRevision": rev,
                 "diagnostics": diags_json,
                 "autoFixed": [],
                 "source": body,
@@ -748,7 +761,7 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         }
         return Ok(json!({
             "applied": true,
-            "modelRevision": 1,
+            "modelRevision": sail_compiler::edit::model_revision(body),
             "diagnostics": diags_json,
             "autoFixed": [],
             "source": body,
@@ -1279,6 +1292,8 @@ export default controller((ctx) => ({ count: signal(0) }))
         let idx = sail_compiler::edit::build_node_index(&src, rel).unwrap();
         let col = idx.values().find(|n| n.tag == "column").unwrap();
 
+        // Valid structured edit: setAttr on a layout-keyword axis attr (gap stays
+        // on row|column|grid). Bare `grow` is participation and must use style box.
         let v = call_rpc(
             "SailAuthoring",
             "Edit",
@@ -1287,7 +1302,8 @@ export default controller((ctx) => ({ count: signal(0) }))
                 "ops": [{
                     "op": "setAttr",
                     "nodeId": col.id,
-                    "name": "grow",
+                    "name": "gap",
+                    "value": "4",
                 }]
             }),
             &ctx,
@@ -1295,9 +1311,9 @@ export default controller((ctx) => ({ count: signal(0) }))
         .unwrap();
         assert_eq!(v["applied"], true, "{v}");
         let after = std::fs::read_to_string(&full).unwrap();
-        assert!(after.contains("grow"), "{after}");
+        assert!(after.contains("gap=\"4\"") || after.contains("gap='4'"), "{after}");
 
-        // Off-vocab setSx leaves file untouched
+        // Off-vocab setSx leaves file untouched (check-guard refuse).
         let before = after.clone();
         let col2 = sail_compiler::edit::build_node_index(&before, rel)
             .unwrap()
@@ -1321,6 +1337,163 @@ export default controller((ctx) => ({ count: signal(0) }))
         .unwrap();
         assert_eq!(v2["applied"], false, "{v2}");
         assert_eq!(std::fs::read_to_string(&full).unwrap(), before);
+    }
+
+    /// WI3: full-content writeSource with error diagnostics refuses the write
+    /// and leaves the on-disk file byte-identical to the pre-call content.
+    #[test]
+    fn write_source_breaking_refuses_and_keeps_bytes() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let rel = "routes/page.sail";
+        let full = root.join(rel);
+        std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+        let good = "<column gap=\"2\"><div>ok</div></column>\n";
+        std::fs::write(&full, good).unwrap();
+        let before = std::fs::read(&full).unwrap();
+
+        let mut ctx = Ctx::from_env();
+        ctx.apply_root = root.to_path_buf();
+        ctx.workspace_root = root.to_path_buf();
+        ctx.project_root = root.to_path_buf();
+
+        // Broken Sail: unknown / foreign idiom that check_all errors on.
+        let broken = "<column style=\"display:flex\"><div>bad</div></column>\n";
+        let v = call_rpc(
+            "SailAuthoring",
+            "Edit",
+            &json!({
+                "path": rel,
+                "ops": [],
+                "writeSource": true,
+                "source": broken,
+            }),
+            &ctx,
+        )
+        .expect("writeSource rpc");
+        assert_eq!(v["applied"], false, "breaking body must refuse: {v}");
+        let diags = v["diagnostics"].as_array().expect("diagnostics array");
+        assert!(
+            diags.iter().any(|d| {
+                d["severity"]
+                    .as_str()
+                    .map(|s| s.eq_ignore_ascii_case("error"))
+                    .unwrap_or(false)
+            }),
+            "expected error diagnostics: {diags:?}"
+        );
+        let after = std::fs::read(&full).unwrap();
+        assert_eq!(
+            after, before,
+            "file must stay byte-identical on refused writeSource"
+        );
+        assert_eq!(
+            std::str::from_utf8(&after).unwrap(),
+            good,
+            "content text must match original good source"
+        );
+    }
+
+    /// WI3: good full-content writeSource commits and returns diagnostics for
+    /// the new state.
+    #[test]
+    fn write_source_good_commits_and_returns_diags() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let rel = "routes/page.sail";
+        let full = root.join(rel);
+        std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+        let v1 = "<column gap=\"2\"><div>v1</div></column>\n";
+        std::fs::write(&full, v1).unwrap();
+
+        let mut ctx = Ctx::from_env();
+        ctx.apply_root = root.to_path_buf();
+        ctx.workspace_root = root.to_path_buf();
+        ctx.project_root = root.to_path_buf();
+
+        let v2 = "<column gap=\"4\"><div name=\"next\">v2</div></column>\n";
+        let v = call_rpc(
+            "SailAuthoring",
+            "Edit",
+            &json!({
+                "path": rel,
+                "ops": [],
+                "writeSource": true,
+                "source": v2,
+            }),
+            &ctx,
+        )
+        .expect("writeSource rpc");
+        assert_eq!(v["applied"], true, "good body must apply: {v}");
+        assert!(v["diagnostics"].is_array(), "diagnostics present: {v}");
+        let on_disk = std::fs::read_to_string(&full).unwrap();
+        assert_eq!(on_disk, v2, "disk must match committed body");
+        assert_eq!(
+            v["source"].as_str(),
+            Some(v2),
+            "response source is the new body"
+        );
+        let expected_rev = sail_compiler::edit::model_revision(v2);
+        assert_eq!(
+            v["modelRevision"].as_str(),
+            Some(expected_rev.as_str()),
+            "modelRevision hashes the committed body"
+        );
+    }
+
+    /// WI3: MCP `sail_edit` is the public name for check-guarded write (no
+    /// `sail_apply`); MCP and RPC share one handler for writeSource.
+    #[test]
+    fn write_source_mcp_parity_with_rpc() {
+        use crate::call_mcp_tool;
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let rel = "routes/mcp.sail";
+        let full = root.join(rel);
+        std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+        let good = "<column gap=\"2\"><div>ok</div></column>\n";
+        std::fs::write(&full, good).unwrap();
+        let before = std::fs::read(&full).unwrap();
+
+        let mut ctx = Ctx::from_env();
+        ctx.apply_root = root.to_path_buf();
+        ctx.workspace_root = root.to_path_buf();
+        ctx.project_root = root.to_path_buf();
+
+        let broken = "<div style=\"color:red\">nope</div>\n";
+        let args = json!({
+            "path": rel,
+            "ops": [],
+            "writeSource": true,
+            "source": broken,
+        });
+        let via_rpc = call_rpc("SailAuthoring", "Edit", &args, &ctx).unwrap();
+        // Reset bytes (rpc already refused; re-assert MCP does the same).
+        assert_eq!(std::fs::read(&full).unwrap(), before);
+        let via_mcp = call_mcp_tool("sail_edit", &args, &ctx).unwrap();
+        assert_eq!(via_rpc["applied"], false);
+        assert_eq!(via_mcp["applied"], false);
+        assert_eq!(
+            via_rpc["applied"], via_mcp["applied"],
+            "MCP and RPC must agree"
+        );
+        assert_eq!(std::fs::read(&full).unwrap(), before);
+        // Descriptor surface still exposes sail_edit only.
+        let tools = crate::mcp_tool_descriptors();
+        let names: Vec<_> = tools
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|t| t.get("name").and_then(|n| n.as_str()))
+            .collect();
+        assert!(names.contains(&"sail_edit"), "{names:?}");
+        assert!(!names.contains(&"sail_apply"), "sail_apply must stay retired");
     }
 
     /// WI7: annotation identity → in-file move (span shift) → edit still hits

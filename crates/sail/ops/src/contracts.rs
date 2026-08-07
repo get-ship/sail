@@ -67,10 +67,12 @@ pub struct EditArgs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
     /// Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/
-    /// `removeAttr`/`setSx`/`move`).
+    /// `removeAttr`/`setSx`/`move`). For full-content write pass `[]` with
+    /// `writeSource: true` and the complete body in `source` (WI3 check-guard).
     pub ops: Vec<Json>,
-    /// Optional inline source (else file is read). Dry-run without write when
-    /// combined with dryRun.
+    /// Optional inline source (else file is read). With `writeSource: true` and
+    /// empty `ops`, this is the full file body to check-guard and commit.
+    /// Combined with dryRun for validate-only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
     /// Auto-fix mode: `off` | `suggest` | `apply` (default `off`).
@@ -83,6 +85,13 @@ pub struct EditArgs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "dryRun")]
     pub dry_run: Option<bool>,
+    /// Full-content check-guarded write (WI3). When true with empty `ops` and a
+    /// string `source`, run check on the body; on error diagnostics leave the
+    /// file byte-identical and return `applied: false`; on success write and
+    /// return diagnostics for the new state. Prefer over any patch DSL.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "writeSource")]
+    pub write_source: Option<bool>,
     /// WI7 element identity target. Scopes the edit to the resolved component
     /// (path from `identity.file`; ops nodeIds rewritten when the element moved).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -851,12 +860,12 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailAuthoring",
         "Edit",
         "sail_edit",
-        "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].",
+        "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move) or full-content check-guarded write (writeSource + empty ops + source body). Atomic; validates before write so the file never holds an uncompilable intermediate (applied:false leaves bytes unchanged). Supersedes retired sail_apply. Optional WI7 `identity` scopes the edit to a component (path from identity.file; nodeIds rewritten on drift). Response: applied, modelRevision, diagnostics, autoFixed[].",
         EditArgs,
         EditRet,
         "EditArgs",
         "EditRet",
-        "  path?: string\n  ops: JsonValue[]\n  source?: string\n  autofix?: string\n  actor?: string\n  dryRun?: boolean\n  identity?: JsonValue\n",
+        "  path?: string\n  ops: JsonValue[]\n  source?: string\n  autofix?: string\n  actor?: string\n  dryRun?: boolean\n  writeSource?: boolean\n  identity?: JsonValue\n",
         "  applied: boolean\n  modelRevision: string\n  diagnostics: JsonValue[]\n  autoFixed: JsonValue[]\n  source?: string\n  path?: string\n  message?: string\n  identity?: JsonValue\n"
     ),
     contract!(
