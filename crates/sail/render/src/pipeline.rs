@@ -345,16 +345,10 @@ fn build_node(
         return Ok(None);
     }
 
-    let mut child_nodes = Vec::new();
-    for &child_idx in &elem.children {
-        if let Some(child) = build_node(elements, layout, sheet, palette, child_idx)? {
-            child_nodes.push(child);
-        }
-    }
-
     // Collapse `:empty { display:none }` chrome (card header/footer slots).
     // Layout taffy does not model :empty; skip paint so empty slots don't
     // reserve padded chrome. Regions still come from the shared layout pass.
+    // Only the explicit product class — not every empty decorative box.
     if class_has(&elem.class, "sx-empty-displaynone")
         && elem.children.is_empty()
         && elem.text.trim().is_empty()
@@ -363,13 +357,77 @@ fn build_node(
     }
 
     let paint = Paint::from_decls(&sheet.decls_for_element(elem), palette);
+    let phrasing = is_phrasing_tag(&elem.tag);
 
-    if !elem.text.is_empty() {
-        child_nodes.push(text_node(elem, &paint, palette));
+    // Build element children first (keyed by index for flow interleaving).
+    let mut child_by_idx: std::collections::HashMap<usize, Node> =
+        std::collections::HashMap::new();
+    for &child_idx in &elem.children {
+        if let Some(child) = build_node(elements, layout, sheet, palette, child_idx)? {
+            child_by_idx.insert(child_idx, child);
+        }
+    }
+
+    let mut child_nodes = Vec::new();
+    if !elem.flow.is_empty() {
+        use sail_layout::html::FlowItem;
+        for item in &elem.flow {
+            match item {
+                FlowItem::Text(t) => {
+                    if t.trim().is_empty() {
+                        continue;
+                    }
+                    // Host text runs inherit the element's text paint; always
+                    // inline so they share a line box with sibling spans.
+                    child_nodes.push(text_node_for(t, elem, &paint, palette));
+                }
+                FlowItem::Child(ci) => {
+                    if let Some(child) = child_by_idx.remove(ci) {
+                        child_nodes.push(child);
+                    }
+                }
+            }
+        }
+        // Any leftover (should not happen) still paint.
+        for (_, child) in child_by_idx {
+            child_nodes.push(child);
+        }
+    } else {
+        for &child_idx in &elem.children {
+            if let Some(child) = child_by_idx.remove(&child_idx) {
+                child_nodes.push(child);
+            }
+        }
+        if !elem.text.is_empty() {
+            child_nodes.push(text_node_for(&elem.text, elem, &paint, palette));
+        }
+    }
+
+    // Phrasing hosts that only wrap text and have no box paint: promote to a
+    // single text node so takumi does not block-box the span in a parent line.
+    let box_paint = paint.background_color.is_some()
+        || paint.border_width.is_some()
+        || paint.box_shadow.is_some();
+    if phrasing
+        && elem.children.is_empty()
+        && !elem.text.is_empty()
+        && child_nodes.len() == 1
+        && !box_paint
+        && !has_explicit_block_display(&elem.class)
+    {
+        return Ok(Some(text_node_for(&elem.text, elem, &paint, palette)));
     }
 
     let node = Node::container(child_nodes);
     let mut style = convert::style(&resolved.style);
+    if phrasing && !has_explicit_block_display(&elem.class) {
+        // Taffy has no true inline; force takumi Inline so spans inside h1/p
+        // participate in the parent line box instead of full-width blocks.
+        style = style
+            .with(StyleDeclaration::display(Display::Inline))
+            .with(StyleDeclaration::width(Length::Auto))
+            .with(StyleDeclaration::height(Length::Auto));
+    }
     style = paint.apply(style);
     Ok(Some(node.with_style(style)))
 }
@@ -378,9 +436,56 @@ fn class_has(class_attr: &str, needle: &str) -> bool {
     class_attr.split_whitespace().any(|c| c == needle)
 }
 
-fn text_node(elem: &Element, paint: &Paint, palette: &ThemePalette) -> Node {
+/// HTML phrasing content that should paint as inline (not block).
+fn is_phrasing_tag(tag: &str) -> bool {
+    matches!(
+        tag,
+        "span"
+            | "a"
+            | "strong"
+            | "em"
+            | "b"
+            | "i"
+            | "u"
+            | "s"
+            | "small"
+            | "code"
+            | "kbd"
+            | "samp"
+            | "var"
+            | "mark"
+            | "abbr"
+            | "cite"
+            | "dfn"
+            | "q"
+            | "sub"
+            | "sup"
+            | "time"
+            | "label"
+            | "br"
+            | "wbr"
+    )
+}
+
+fn has_explicit_block_display(class_attr: &str) -> bool {
+    class_attr.split_whitespace().any(|c| {
+        matches!(
+            c,
+            "sx-displayblock"
+                | "sx-displayflex"
+                | "sx-displayinlineflex"
+                | "sx-displaygrid"
+                | "sail-col"
+                | "sail-row"
+                | "sail-grid"
+        ) || c.starts_with("sx-displayblock")
+            || c == "sx-block"
+    })
+}
+
+fn text_style_for(elem: &Element, paint: &Paint, palette: &ThemePalette) -> Style {
     let (family, size) = resolve_family_size(elem);
-    let font_size_px = size.px();
+    let font_size_px = paint.font_size_px.unwrap_or_else(|| size.px());
     let color = paint
         .color
         .or_else(|| {
@@ -391,16 +496,23 @@ fn text_node(elem: &Element, paint: &Paint, palette: &ThemePalette) -> Node {
                 .unwrap_or(Color::black())
         });
 
-    Node::text(elem.text.clone()).with_style(
-        Style::default()
-            .with(StyleDeclaration::color(ColorInput::Value(color)))
-            .with(StyleDeclaration::font_size(FontSize::Length(Length::Px(
-                font_size_px,
-            ))))
-            .with(StyleDeclaration::font_family(FontFamily::from_names([
-                family_name(family),
-            ]))),
-    )
+    let mut style = Style::default()
+        .with(StyleDeclaration::display(Display::Inline))
+        .with(StyleDeclaration::color(ColorInput::Value(color)))
+        .with(StyleDeclaration::font_size(FontSize::Length(Length::Px(
+            font_size_px,
+        ))));
+
+    if paint.font_family.is_none() {
+        style = style.with(StyleDeclaration::font_family(FontFamily::from_names([
+            family_name(family),
+        ])));
+    }
+    paint.apply_text(style)
+}
+
+fn text_node_for(text: &str, elem: &Element, paint: &Paint, palette: &ThemePalette) -> Node {
+    Node::text(text.to_string()).with_style(text_style_for(elem, paint, palette))
 }
 
 fn resolve_family_size(
@@ -413,17 +525,10 @@ fn resolve_family_size(
 
     for c in elem.class.split_whitespace() {
         if family.is_none() {
-            family = match c {
-                "font-mono" => Some(Family::Mono),
-                "font-display" => Some(Family::Display),
-                "font-press-start" => Some(Family::PressStart),
-                _ => None,
-            };
+            family = sail_layout::metrics::family_from_class(c);
         }
         if size.is_none() {
-            if let Some(tok) = c.strip_prefix("text-") {
-                size = Some(Size::from_class_token(tok));
-            }
+            size = sail_layout::metrics::size_from_class(c);
         }
     }
 
@@ -437,10 +542,14 @@ fn resolve_family_size(
 fn tag_default_size(tag: &str) -> Option<sail_layout::metrics::Size> {
     use sail_layout::metrics::Size;
     match tag {
-        "h1" => Some(Size::Xxl),
-        "h2" => Some(Size::Xl),
-        "h3" => Some(Size::Lg),
+        "h1" => Some(Size::Xxxxl),
+        "h2" => Some(Size::Xxl),
+        "h3" => Some(Size::Xl),
+        "h4" => Some(Size::Lg),
+        "h5" => Some(Size::Md),
+        "h6" => Some(Size::Sm),
         "small" => Some(Size::Sm),
+        "code" => Some(Size::Sm),
         _ => None,
     }
 }

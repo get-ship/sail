@@ -67,17 +67,10 @@ pub fn resolve_family_size(elem_index: usize, all: &[Element]) -> (Family, Size)
         let node = &all[i];
         for c in node.class.split_whitespace() {
             if family.is_none() {
-                family = match c {
-                    "font-mono" => Some(Family::Mono),
-                    "font-display" => Some(Family::Display),
-                    "font-press-start" => Some(Family::PressStart),
-                    _ => None,
-                };
+                family = family_from_class(c);
             }
             if size.is_none() {
-                if let Some(tok) = c.strip_prefix("text-") {
-                    size = Some(Size::from_class_token(tok));
-                }
+                size = size_from_class(c);
             }
         }
         if size.is_none() {
@@ -99,6 +92,50 @@ fn tag_default_size(tag: &str) -> Option<Size> {
         "h6" => Some(Size::Sm),
         "small" => Some(Size::Sm),
         "code" => Some(Size::Sm),
+        _ => None,
+    }
+}
+
+/// Product `sx-fontSize4xl` / legacy `text-4xl`.
+pub fn size_from_class(c: &str) -> Option<Size> {
+    if let Some(tok) = c.strip_prefix("sx-fontSize") {
+        return Some(Size::from_class_token(tok));
+    }
+    if let Some(tok) = c.strip_prefix("text-") {
+        // Avoid matching text-align / text-transform utility leftovers.
+        if matches!(
+            tok,
+            "xs" | "sm"
+                | "base"
+                | "md"
+                | "lg"
+                | "xl"
+                | "2xl"
+                | "3xl"
+                | "4xl"
+                | "display"
+        ) {
+            return Some(Size::from_class_token(tok));
+        }
+    }
+    None
+}
+
+/// Product `sx-fontFamilydisplay` / legacy `font-mono`.
+pub fn family_from_class(c: &str) -> Option<Family> {
+    if let Some(tok) = c.strip_prefix("sx-fontFamily") {
+        return match tok {
+            "mono" | "monofont" => Some(Family::Mono),
+            "display" | "displayfont" => Some(Family::Display),
+            "body" | "bodyfont" => Some(Family::Body),
+            "pressstart" | "pressstart2p" => Some(Family::PressStart),
+            _ => None,
+        };
+    }
+    match c {
+        "font-mono" => Some(Family::Mono),
+        "font-display" => Some(Family::Display),
+        "font-press-start" => Some(Family::PressStart),
         _ => None,
     }
 }
@@ -199,5 +236,19 @@ mod tests {
         all.push(code);
         let (family, _) = resolve_family_size(1, &all);
         assert_eq!(family, Family::Mono);
+    }
+
+    #[test]
+    fn resolve_family_size_reads_product_sx_font_atoms() {
+        let mut all = vec![Element::default()];
+        let span = Element {
+            tag: "span".to_string(),
+            class: "sx-fontSize4xl sx-fontFamilydisplay".to_string(),
+            ..Default::default()
+        };
+        all.push(span);
+        let (family, size) = resolve_family_size(1, &all);
+        assert_eq!(family, Family::Display);
+        assert_eq!(size, Size::Xxxxl);
     }
 }

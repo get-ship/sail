@@ -14,6 +14,15 @@
 
 use std::collections::HashMap;
 
+/// Ordered mixed-content piece: text run or element child index.
+/// Preserves source order so paint can interleave styled spans with host text
+/// (`Hero <span>accent</span> word`) instead of hoisting all text after children.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FlowItem {
+    Text(String),
+    Child(usize),
+}
+
 /// A single element (or pseudo-element — text and comments are skipped).
 /// `children` are indices into the parent parse's vec so it round-trips as a
 /// tree without reallocation.
@@ -49,7 +58,11 @@ pub struct Element {
     /// Text content directly inside this element (between its open tag and
     /// the first child or close tag). Whitespace is collapsed to a single
     /// space the way a browser would; an empty string means "no text leaf".
+    /// Concatenation of all `FlowItem::Text` runs (layout measure uses this).
     pub text: String,
+    /// Source-order flow of text runs and element children. Empty only for
+    /// nodes with neither text nor children.
+    pub flow: Vec<FlowItem>,
 }
 
 impl Element {
@@ -124,6 +137,14 @@ pub fn parse_source(source: &str) -> Vec<Element> {
                         out[top].text.push(' ');
                     }
                     out[top].text.push_str(trimmed);
+                    // Preserve order relative to element children (mixed content).
+                    match out[top].flow.last_mut() {
+                        Some(FlowItem::Text(t)) => {
+                            t.push(' ');
+                            t.push_str(trimmed);
+                        }
+                        _ => out[top].flow.push(FlowItem::Text(trimmed.to_string())),
+                    }
                 }
             }
             pos = rel_lt;
@@ -153,6 +174,7 @@ pub fn parse_source(source: &str) -> Vec<Element> {
                     e.parent = Some(parent);
                     out.push(e);
                     out[parent].children.push(idx);
+                    out[parent].flow.push(FlowItem::Child(idx));
                     // Void / self-closing tags must not stay on the
                     // stack — otherwise later siblings nest inside
                     // `<input/>` / `<switch/>` and L1 cards "stack"
@@ -497,6 +519,24 @@ mod tests {
         let p = tree.iter().find(|e| e.tag == "p").unwrap();
         assert_eq!(h1.text, "Hello World");
         assert_eq!(p.text, "foo bar");
+    }
+
+    #[test]
+    fn mixed_content_preserves_text_child_order() {
+        let src = r#"<h1>Hero <span class="accent">accent</span> word</h1>"#;
+        let tree = parse_source(src);
+        let h1 = tree.iter().find(|e| e.tag == "h1").unwrap();
+        assert_eq!(h1.text, "Hero word");
+        assert_eq!(h1.children.len(), 1);
+        assert_eq!(
+            h1.flow,
+            vec![
+                FlowItem::Text("Hero".into()),
+                FlowItem::Child(h1.children[0]),
+                FlowItem::Text("word".into()),
+            ]
+        );
+        assert_eq!(tree[h1.children[0]].text, "accent");
     }
 
     #[test]

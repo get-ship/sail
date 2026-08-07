@@ -149,7 +149,8 @@ fn base_registry_values() -> HashMap<String, String> {
                     m.insert((*name).to_string(), v.to_string());
                 }
             }
-            // Dimensions: radius, space, control heights, shadows (by prefix scan of registry).
+            // Dimensions + type tokens: radius, space, control heights, shadows,
+            // font/text/tracking/leading (text channel needs the full set).
             for prefix in [
                 "radius-",
                 "space-",
@@ -157,6 +158,8 @@ fn base_registry_values() -> HashMap<String, String> {
                 "shadow-",
                 "font-",
                 "text-",
+                "tracking-",
+                "leading-",
                 "opacity-",
                 "border-width",
             ] {
@@ -170,6 +173,26 @@ fn base_registry_values() -> HashMap<String, String> {
                     }
                 } else if let Some(v) = sail_lint::tokens::token_value(prefix) {
                     m.insert(prefix.to_string(), v.to_string());
+                }
+            }
+            // Font family aliases used by `fontFamily(body|display|mono)`.
+            for name in [
+                "body-font",
+                "display-font",
+                "mono-font",
+                "heading-font",
+                "label-font",
+                "font-body",
+                "font-body-app",
+                "font-display",
+                "font-display-app",
+                "font-mono",
+                "font-mono-app",
+                "font-press-start",
+                "font-press-start-app",
+            ] {
+                if let Some(v) = sail_lint::tokens::token_value(name) {
+                    m.entry(name.to_string()).or_insert_with(|| v.to_string());
                 }
             }
             // Ensure critical surface tokens even if not in color_values (aliases).

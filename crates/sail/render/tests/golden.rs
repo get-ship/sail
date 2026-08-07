@@ -248,6 +248,111 @@ fn assert_visible_png(result: &sail_render::RenderOutput, min_non_bg: usize) {
     );
 }
 
+/// RENDER-TEXT-1: fontSize / weight / tracking / textCase paint, size cascade,
+/// and inline accent span inside h1 (not block-hoisted).
+#[test]
+fn text_channel_ladder_golden_and_behavior() {
+    let result = render_file(&fixture("text-channel.sail"), opts((480, 520))).unwrap();
+    assert!(
+        !result.html.contains('{'),
+        "expression leak in html: {}",
+        result.html
+    );
+
+    // Layout heights must cascade with sx-fontSize (xs < 4xl).
+    let spans: Vec<_> = result
+        .regions
+        .iter()
+        .filter(|r| r.tag.as_deref() == Some("span"))
+        .collect();
+    assert!(
+        spans.len() >= 8,
+        "expected size ladder + styled + accent spans, got {}",
+        spans.len()
+    );
+    let xs_h = spans[0].h;
+    let four_xl_h = spans[6].h;
+    assert!(
+        four_xl_h > xs_h + 10.0,
+        "4xl height ({four_xl_h}) must exceed xs ({xs_h}) — text channel ignored?"
+    );
+
+    // Inline accent: primary-colored glyphs exist and are localized (not a
+    // full-width block strip). Layout regions still report taffy boxes; assert
+    // on raster ink.
+    let rgba = result.image.as_raw();
+    let w = result.image.width() as usize;
+    let mut primary_xs: Vec<usize> = Vec::new();
+    for (i, c) in rgba.chunks_exact(4).enumerate() {
+        // ship primary ≈ rgb(220, 119, 2)
+        if c[0] > 180 && c[1] > 80 && c[1] < 160 && c[2] < 60 {
+            primary_xs.push(i % w);
+        }
+    }
+    assert!(
+        primary_xs.len() > 40,
+        "expected primary-colored accent glyphs, got {}",
+        primary_xs.len()
+    );
+    let pmin = *primary_xs.iter().min().unwrap();
+    let pmax = *primary_xs.iter().max().unwrap();
+    assert!(
+        pmax - pmin < w * 2 / 3,
+        "accent paint must be localized, not full-bleed (span {}..{} of {w})",
+        pmin,
+        pmax
+    );
+
+    ensure_or_compare("text-channel-480x520", &result);
+}
+
+/// RENDER-TEXT-1: empty decorative divs with size()/w()/h() + paint must keep
+/// non-zero boxes inside a flex row (no silent drop).
+#[test]
+fn empty_decorative_div_golden_and_behavior() {
+    let result = render_file(&fixture("empty-div.sail"), opts((400, 200))).unwrap();
+
+    let boxes: Vec<_> = result
+        .regions
+        .iter()
+        .filter(|r| r.tag.as_deref() == Some("div") && r.w > 0.0 && r.h > 0.0)
+        .collect();
+    assert!(
+        boxes.len() >= 6,
+        "expected ≥6 non-zero empty decorative divs, got {} (regions={:?})",
+        boxes.len(),
+        result
+            .regions
+            .iter()
+            .map(|r| (r.tag.clone(), r.w, r.h))
+            .collect::<Vec<_>>()
+    );
+    // size(2) → 8×8, size(4) → 16×16
+    assert!(
+        boxes.iter().any(|r| (r.w - 8.0).abs() < 0.5 && (r.h - 8.0).abs() < 0.5),
+        "size(2) must resolve to 8×8: {:?}",
+        boxes.iter().map(|r| (r.w, r.h)).collect::<Vec<_>>()
+    );
+    assert!(
+        boxes
+            .iter()
+            .any(|r| (r.w - 16.0).abs() < 0.5 && (r.h - 16.0).abs() < 0.5),
+        "size(4) must resolve to 16×16"
+    );
+    // At least one painted background on an empty div.
+    assert!(
+        boxes.iter().any(|r| {
+            r.style
+                .as_ref()
+                .and_then(|s| s.background_color.as_ref())
+                .is_some()
+        }),
+        "empty decorative divs must resolve paint backgrounds"
+    );
+
+    ensure_or_compare("empty-div-400x200", &result);
+}
+
 /// RENDER-0: zero-width padded text used to panic parley (line_break assert).
 #[test]
 fn parley_zero_width_padded_text_does_not_panic() {

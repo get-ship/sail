@@ -183,17 +183,10 @@ fn resolve_family_size(elem_index: usize, all: &[Element]) -> (Family, TextSize)
         let node = &all[i];
         for c in node.class.split_whitespace() {
             if family.is_none() {
-                family = match c {
-                    "font-mono" => Some(Family::Mono),
-                    "font-display" => Some(Family::Display),
-                    "font-press-start" => Some(Family::PressStart),
-                    _ => None,
-                };
+                family = crate::metrics::family_from_class(c);
             }
             if size.is_none() {
-                if let Some(tok) = c.strip_prefix("text-") {
-                    size = Some(TextSize::from_class_token(tok));
-                }
+                size = crate::metrics::size_from_class(c);
             }
         }
         if size.is_none() {

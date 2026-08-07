@@ -240,7 +240,8 @@ fn is_plausible_scale_tail(tail: &str, rule: SxScaleRule) -> bool {
                 || tail.parse::<u32>().is_ok()
                 || space_fraction_token(tail).is_some()
         }
-        SxScaleRule::Width
+        SxScaleRule::Size
+        | SxScaleRule::Width
         | SxScaleRule::Height
         | SxScaleRule::MinWidth
         | SxScaleRule::MinHeight
@@ -279,6 +280,11 @@ fn apply_sx_scale(style: &mut Style, rule: SxScaleRule, value: &str) {
         SxScaleRule::Padding(side) => {
             let px = padding_token_to_px(value);
             apply_padding(style, map_padding_side(side), px);
+        }
+        SxScaleRule::Size => {
+            let d = size_token_to_dimension(value);
+            style.size.width = d;
+            style.size.height = d;
         }
         SxScaleRule::Width => style.size.width = size_token_to_dimension(value),
         SxScaleRule::Height => style.size.height = size_token_to_dimension(value),
@@ -480,6 +486,27 @@ mod tests {
     use super::*;
     use crate::html::Element;
     use crate::style::resolve;
+
+    #[test]
+    fn sx_size_sets_width_and_height() {
+        let e = Element {
+            tag: "div".into(),
+            class: "sx-size2".into(),
+            ..Default::default()
+        };
+        let all = vec![Element::default(), e.clone()];
+        let resolved = resolve(&e, &all, 800.0);
+        assert_eq!(
+            length_px(resolved.style.size.width),
+            Some(8.0),
+            "size(2) → space-2 = 8px width"
+        );
+        assert_eq!(
+            length_px(resolved.style.size.height),
+            Some(8.0),
+            "size(2) → space-2 = 8px height"
+        );
+    }
 
     #[test]
     fn switch_skin_size_classes_resolve_nonzero() {

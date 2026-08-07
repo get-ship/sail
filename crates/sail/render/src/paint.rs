@@ -1,4 +1,7 @@
-//! Resolve paint (bg/fg/border/radius/shadow/opacity) from lowered CSS + theme.
+//! Resolve paint + text channel from lowered CSS + theme.
+//!
+//! Paint: bg/fg/border/radius/shadow/opacity.
+//! Text: font-size/weight/family, letter-spacing, line-height, text-transform.
 //!
 //! Author page CSS (preprocess `<style>`) and L1 element skins share one
 //! stylesheet. Attribute-qualified rules (`[tone='primary'].sx-…`) match the
@@ -387,7 +390,7 @@ fn skip_balanced(bytes: &[u8], open_brace_at: usize) -> usize {
     bytes.len()
 }
 
-/// Paint properties resolved for one node.
+/// Paint + text-channel properties resolved for one node.
 #[derive(Debug, Default, Clone)]
 pub struct Paint {
     pub background_color: Option<Color>,
@@ -399,6 +402,13 @@ pub struct Paint {
     pub box_shadow: Option<BoxShadow>,
     /// When true, bg mapping was requested but could not be resolved (test hooks).
     pub missing_bg: bool,
+    // --- text channel (annex E) — resolved from sx atoms via the sheet ---
+    pub font_size_px: Option<f32>,
+    pub font_weight: Option<f32>,
+    pub letter_spacing: Option<Length>,
+    pub line_height: Option<LineHeight>,
+    pub text_transform: Option<TextTransform>,
+    pub font_family: Option<FontFamily>,
 }
 
 impl Paint {
@@ -463,10 +473,65 @@ impl Paint {
                         paint.box_shadow = Some(shadow);
                     }
                 }
+                "font-size" => {
+                    if let Some(px) = parse_font_size_px(&resolved) {
+                        paint.font_size_px = Some(px);
+                    }
+                }
+                "font-weight" => {
+                    if let Some(w) = parse_font_weight(&resolved) {
+                        paint.font_weight = Some(w);
+                    }
+                }
+                "letter-spacing" => {
+                    if let Ok(len) = Length::from_css_str(resolved.trim()) {
+                        paint.letter_spacing = Some(len);
+                    } else if resolved.trim() == "0" {
+                        paint.letter_spacing = Some(Length::Px(0.0));
+                    }
+                }
+                "line-height" => {
+                    if let Ok(lh) = LineHeight::from_css_str(resolved.trim()) {
+                        paint.line_height = Some(lh);
+                    }
+                }
+                "text-transform" => {
+                    if let Ok(tt) = TextTransform::from_css_str(resolved.trim()) {
+                        paint.text_transform = Some(tt);
+                    }
+                }
+                "font-family" => {
+                    if let Ok(ff) = FontFamily::from_css_str(resolved.trim()) {
+                        paint.font_family = Some(ff);
+                    }
+                }
                 _ => {}
             }
         }
         paint
+    }
+
+    /// Apply text-channel decls onto a takumi Style (used by `text_node`).
+    pub fn apply_text(&self, mut style: Style) -> Style {
+        if let Some(px) = self.font_size_px {
+            style = style.with(StyleDeclaration::font_size(FontSize::Length(Length::Px(px))));
+        }
+        if let Some(w) = self.font_weight {
+            style = style.with(StyleDeclaration::font_weight(FontWeight::from(w)));
+        }
+        if let Some(ls) = self.letter_spacing {
+            style = style.with(StyleDeclaration::letter_spacing(ls));
+        }
+        if let Some(lh) = self.line_height {
+            style = style.with(StyleDeclaration::line_height(lh));
+        }
+        if let Some(tt) = self.text_transform {
+            style = style.with(StyleDeclaration::text_transform(tt));
+        }
+        if let Some(ref ff) = self.font_family {
+            style = style.with(StyleDeclaration::font_family(ff.clone()));
+        }
+        style
     }
 
     /// Serialize resolved paint for region sidecar / PARITY-1 paint compare.
@@ -712,6 +777,53 @@ pub fn parse_px(css: &str) -> Option<f32> {
         return None;
     }
     css.parse().ok()
+}
+
+/// Parse `font-size` CSS into device px for static render.
+/// Handles `px`, `rem`, and `clamp(min, preferred, max)` (uses max for hero fidelity).
+pub fn parse_font_size_px(css: &str) -> Option<f32> {
+    let css = css.trim();
+    if let Some(px) = parse_css_length_px(css) {
+        return Some(px);
+    }
+    // clamp(3rem, 9vw, 8.5rem) — prefer the max length for static display type.
+    if let Some(inner) = css
+        .strip_prefix("clamp(")
+        .and_then(|s| s.strip_suffix(')'))
+    {
+        let mut best: Option<f32> = None;
+        for part in inner.split(',') {
+            if let Some(px) = parse_css_length_px(part.trim()) {
+                best = Some(best.map_or(px, |b| b.max(px)));
+            }
+        }
+        return best;
+    }
+    None
+}
+
+fn parse_css_length_px(css: &str) -> Option<f32> {
+    let css = css.trim();
+    if let Some(n) = css.strip_suffix("px") {
+        return n.trim().parse().ok();
+    }
+    if let Some(n) = css.strip_suffix("rem") {
+        return n.trim().parse::<f32>().ok().map(|v| v * 16.0);
+    }
+    if let Some(n) = css.strip_suffix("em") {
+        // Relative to an unknown parent — treat as root 16px for static paint.
+        return n.trim().parse::<f32>().ok().map(|v| v * 16.0);
+    }
+    None
+}
+
+fn parse_font_weight(css: &str) -> Option<f32> {
+    let css = css.trim();
+    match css {
+        "normal" => Some(400.0),
+        "bold" => Some(700.0),
+        _ => css.parse().ok(),
+    }
 }
 
 #[cfg(test)]

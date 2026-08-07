@@ -714,6 +714,8 @@ const DISPLAY_CENTER_INLINE: &[Declaration] = &[
 #[derive(Debug, Clone, Copy)]
 pub enum SxScaleRule {
     Padding(SideSet),
+    /// `style.size(N)` → `sx-sizeN` sets both width and height.
+    Size,
     Width,
     Height,
     MinWidth,
@@ -769,6 +771,8 @@ pub static SX_SCALE_RULES: &[(&'static str, SxScaleRule)] = &[
     ("sx-minh", SxScaleRule::MinHeight),
     ("sx-maxw", SxScaleRule::MaxWidth),
     ("sx-maxh", SxScaleRule::MaxHeight),
+    // Product `style.size(N)` → width+height (before bare w/h).
+    ("sx-size", SxScaleRule::Size),
     ("sx-w", SxScaleRule::Width),
     ("sx-h", SxScaleRule::Height),
 ];
