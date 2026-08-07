@@ -1,13 +1,15 @@
 <!--
   <empty-state> — L1 centered empty placeholder.
-  Style value language only. size/variant/tone ordinary props.
+  Style value language only. size/variant ordinary props.
+  Icon rest = empty-state tokens when tone is omitted.
+  Semantic paint = bound tone (icon fg). Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
   props: {
     variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'default'
     size: 'md' | 'sm' | 'lg' = 'md'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
   }
 
   const base = style({ box: padY(16).padX(4), paint: fg(empty-state-foreground).borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs), text: fontFamily(body).textAlign(center) })
@@ -48,16 +50,10 @@
   ])>
   <row inline nowrap align="center" justify="center" hidden="true" style([ style({ box: shrink(1) }), 
       icon,
-      match(tone, {
-        default: style({ paint: bg(empty-state).fg(empty-state-foreground) }),
-        primary: style({ paint: bg(empty-state).fg(primary) }),
-        info: style({ paint: bg(empty-state).fg(info) }),
-        success: style({ paint: bg(empty-state).fg(success) }),
-        warning: style({ paint: bg(empty-state).fg(warning) }),
-        destructive: style({ paint: bg(empty-state).fg(destructive) }),
-        accent: style({ paint: bg(empty-state).fg(accent) }),
-        muted: style({ paint: bg(empty-state).fg(empty-state-foreground) }),
-      }),
+      // Bound tone recolors icon glyph; omit tone → empty-state rest.
+      style({ paint: bg(empty-state).fg(tone) }),
+      // Muted keeps empty-state-foreground (not pure muted-foreground).
+      compound({ tone: muted }, style({ paint: bg(empty-state).fg(empty-state-foreground) })),
       when({
         empty: style({ box: display(none) }),
         forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),

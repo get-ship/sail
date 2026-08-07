@@ -1,12 +1,14 @@
 <!--
-  <spinner> — L1 language element. Style value language only:
-  style.* chain + match + compound + scope Style consts.
+  <spinner> — L1 language element. Style value language only.
+  Rest paint = spinner-foreground when tone is omitted.
+  Semantic paint = bound tone (fg-only). Authors omit tone for rest (never tone="default").
+  Host subset: no muted product use historically.
 -->
 
 <scope>
   props: {
     size: 'md' | 'xs' | 'sm' | 'lg' = 'md'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent'
     centered = false
   }
 
@@ -26,15 +28,8 @@
     sm: sizeSm,
     lg: sizeLg,
   }),
-  match(tone, {
-    default: style({ paint: fg(spinner-foreground) }),
-    primary: style({ paint: fg(primary) }),
-    info: style({ paint: fg(info) }),
-    success: style({ paint: fg(success) }),
-    warning: style({ paint: fg(warning) }),
-    destructive: style({ paint: fg(destructive) }),
-    accent: style({ paint: fg(accent) }),
-  }),
+  // Bound tone recolors the spinner glyph; omit tone → spinner-foreground rest.
+  style({ paint: fg(tone) }),
   compound({ centered: true }, style({ box: display(block).my(8).mx(auto) })),
 ])>
   <span hidden="true" style(ring)></span>

@@ -1,6 +1,8 @@
 <!--
   <avatar> — L1 language element. Style value language only.
   avatarMedia child pack sizes injected img.
+  Rest paint = primary-accent gradient when tone is omitted.
+  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
@@ -9,7 +11,7 @@
     'icon-slug' = ''
     name = ''
     initials = ''
-    tone: 'default' | 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'destructive' | 'muted' = 'default'
+    tone: 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'destructive' | 'muted'
     size: 'md' | 'xs' | 'sm' | 'lg' | 'xl' = 'md'
     shape: 'round' | 'square' = 'round'
   }
@@ -35,14 +37,8 @@
     round: style({ paint: radius(full) }),
     square: style({ paint: radius(sm) }),
   }),
-  match(tone, {
-    default: style({ paint: bgImage(primary-accent).fg(avatar-foreground) }),
-    primary: style({ paint: bgImage(none).bg(primary).fg(primary-foreground) }),
-    accent: style({ paint: bgImage(none).bg(accent).fg(accent-foreground) }),
-    info: style({ paint: bgImage(none).bg(info).fg(info-foreground) }),
-    success: style({ paint: bgImage(none).bg(success).fg(success-foreground) }),
-    warning: style({ paint: bgImage(none).bg(warning).fg(warning-foreground) }),
-    destructive: style({ paint: bgImage(none).bg(destructive).fg(destructive-foreground) }),
-    muted: style({ paint: bgImage(none).bg(avatar).fg(avatar-foreground) }),
-  }),
+  // Bound tone solid fill replaces rest gradient when tone is set.
+  style({ paint: bgImage(none).bg(tone).fg(tone.foreground) }),
+  // Muted uses avatar component tokens (not pure muted group fill).
+  compound({ tone: muted }, style({ paint: bgImage(none).bg(avatar).fg(avatar-foreground) })),
 ])></row>

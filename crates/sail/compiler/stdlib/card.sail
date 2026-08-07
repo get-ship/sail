@@ -6,36 +6,18 @@
     host sx={[…]} — base surface from component.card tokens (cssNames card,
                     card-foreground) + corner-image/backdrop treatment,
                     match(variant/padding), compound(interactive/fill/
-                    status-rail/tone/accent-bar)
+                    status-rail/accent-bar), bound tone border
     structure     — named header/footer slots with chrome Style; unfilled
                     regions collapse via when({ empty: style({ box: display(none) }) }).
-                    The gate repeats per element because stdlib sources compile
-                    standalone — no cross-file Style const sharing exists
-                    (documented in compiler/src/stdlib.rs).
   Zero CVA-in-props paint maps. Zero scope compound: arrays.
 
-  Legacy utility-atom spellings this Style paint replaces (pinned by
-  sx_host_paint_probe::card_host_paint_bulk_on_host_sx):
-    host        backdrop-(--card-backdrop-filter) border-image-(--corner-image)
-    rail        border-s-3 border-s-border-strong ps-4
-                (branded tones recolored border-s-tone-fg — tone-* attribute
-                channel removed; direct per-tone tokens are the product form)
-    lift        hover:-translate-y-px active:translate-y-0
-                active:duration-instant motion-reduce:translate-y-0
-                forced-colors:focus:outline-CanvasText
-    accent bar  before:content-empty before:bg-gradient-to-r
-                before:from-primary before:to-accent before:h-half
-                before:opacity-0 hover:before:opacity-100
-                (Style spends the bgImage(primary-accent) token gradient —
-                same stops, token-disciplined angle)
-    chrome      empty:hidden font-heading font-(--heading-weight)
-                border-border-subtle -mt-4 -mx-5 -mb-4
-                (heading weight has no Style weight-scale token; family only)
+  Rest border = border token when tone is omitted.
+  Semantic border = bound tone. Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
   props: {
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     variant: 'default' | 'outline' = 'default'
     padding: 'md' | 'none' | 'sm' | 'lg' = 'md'
     interactive = false
@@ -68,12 +50,9 @@
   }),
   compound({ interactive: true }, style({ paint: cursor(pointer).tapHighlight(none) }).when(hover, { paint: border(border-strong).shadow(hover).translateY(-px) }).when(active, { paint: shadow(card-rest).translateY(0).duration(instant) }).when(motion-reduce, { paint: translateY(0) }).when(focus, { paint: outline(2) }).when(forced-colors, when({ focus: style({ paint: outline(CanvasText) }) }))),
   compound({ fill: true }, style({ paint: bg(muted).border(border) })),
-  compound({ tone: primary }, style({ paint: border(primary) })),
-  compound({ tone: info }, style({ paint: border(info) })),
-  compound({ tone: success }, style({ paint: border(success) })),
-  compound({ tone: warning }, style({ paint: border(warning) })),
-  compound({ tone: destructive }, style({ paint: border(destructive) })),
-  compound({ tone: accent }, style({ paint: border(accent) })),
+  // Bound tone border (omit tone → base border token).
+  style({ paint: border(tone) }),
+  // Muted special uses border (not pure muted group fill).
   compound({ tone: muted }, style({ paint: border(border) })),
   compound({ status-rail: true }, style({ box: padS(4), paint: borderS(3, border-strong) })),
   compound({ status-rail: true, padding: sm }, style({ box: padS(2) })),

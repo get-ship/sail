@@ -1,12 +1,15 @@
 <!--
   <separator> — native <hr>. Style value language only.
-  Line paint via separator-line + semantic tones (no tone channel).
+  Rest paint = separator-line when tone is omitted.
+  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
+  Host subset: muted | primary | destructive (product never used full Tone).
+  Orientation × dashed compounds remain (not pure group-member paint).
 -->
 
 <scope>
   props: {
     orientation: 'horizontal' | 'vertical' = 'horizontal'
-    tone: 'default' | 'muted' | 'primary' | 'destructive' = 'default'
+    tone: 'muted' | 'primary' | 'destructive'
     variant: 'solid' | 'dashed' = 'solid'
   }
 
@@ -27,16 +30,18 @@
     solid: solid,
     dashed: dashed,
   }),
-  compound({ variant: solid, tone: default }, style({ paint: bg(separator-line) })),
+  // Solid brand via bound tone (omit tone → separator-line rest).
+  match(variant, {
+    solid: style({ paint: bg(tone) }),
+  }),
+  // Dashed rest geometry + separator-line color (orientation specials).
+  compound({ variant: dashed, orientation: horizontal }, style({ box: h(0), paint: borderTWidth(1).border(dashed).borderT(separator-line) })),
+  compound({ variant: dashed, orientation: vertical }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(separator-line) })),
+  // Dashed brand via bound tone.
+  compound({ variant: dashed, orientation: horizontal }, style({ paint: borderT(tone) })),
+  compound({ variant: dashed, orientation: vertical }, style({ paint: borderL(tone) })),
+  // Muted specials use border-subtle (not pure muted group fill).
   compound({ variant: solid, tone: muted }, style({ paint: bg(border-subtle) })),
-  compound({ variant: solid, tone: primary }, style({ paint: bg(primary) })),
-  compound({ variant: solid, tone: destructive }, style({ paint: bg(destructive) })),
-  compound({ variant: dashed, orientation: horizontal, tone: default }, style({ box: h(0), paint: borderTWidth(1).border(dashed).borderT(separator-line) })),
-  compound({ variant: dashed, orientation: horizontal, tone: muted }, style({ box: h(0), paint: borderTWidth(1).border(dashed).borderT(border-subtle) })),
-  compound({ variant: dashed, orientation: horizontal, tone: primary }, style({ box: h(0), paint: borderTWidth(1).border(dashed).borderT(primary) })),
-  compound({ variant: dashed, orientation: horizontal, tone: destructive }, style({ box: h(0), paint: borderTWidth(1).border(dashed).borderT(destructive) })),
-  compound({ variant: dashed, orientation: vertical, tone: default }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(separator-line) })),
-  compound({ variant: dashed, orientation: vertical, tone: muted }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(border-subtle) })),
-  compound({ variant: dashed, orientation: vertical, tone: primary }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(primary) })),
-  compound({ variant: dashed, orientation: vertical, tone: destructive }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(destructive) })),
+  compound({ variant: dashed, orientation: horizontal, tone: muted }, style({ paint: borderT(border-subtle) })),
+  compound({ variant: dashed, orientation: vertical, tone: muted }, style({ paint: borderL(border-subtle) })),
 ])>
