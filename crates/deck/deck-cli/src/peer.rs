@@ -3,7 +3,7 @@
 //! Wraps existing crates — does not invent second protocols:
 //! - `compile` / `tokens` / `check` → `sail-compiler` library
 //! - `lsp` → `sail-lsp` library (stdio LSP)
-//! - `mcp` → `sail-mcp` library (stdio MCP)
+//! - `mcp` → `sail-mcp` library (stdio / Streamable HTTP, MCP 2026-07-28)
 //! - `layout` → `sail-layout` library
 //! - `doctor` / `version` → local diagnostics
 
@@ -866,8 +866,10 @@ pub fn lsp() -> Result<()> {
 }
 
 /// `sail mcp` — in-process MCP server (same protocol as `sail-mcp`).
+///
+/// Stdio by default; `--http [ADDR]` for Streamable HTTP (MCP 2026-07-28).
 pub fn mcp() {
-    sail_mcp::run_stdio();
+    sail_mcp::run();
 }
 
 /// `sail mcp install` — write MCP server entries into agent host configs.

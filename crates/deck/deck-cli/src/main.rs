@@ -225,15 +225,17 @@ enum Command {
     /// Language server (stdio) — same protocol as the `sail-lsp` package binary.
     Lsp,
 
-    /// MCP server (stdio) or install into agent hosts.
+    /// MCP server (stdio / Streamable HTTP) or install into agent hosts.
     ///
-    /// Default (no subcommand): run the stdio MCP server (same as `sail-mcp`).
-    /// `sail mcp install` writes host config entries (Claude Code `.mcp.json`,
-    /// Cursor `.cursor/mcp.json` when detected).
+    /// Default (no subcommand): run MCP (stdio; pass `--http [ADDR]` through
+    /// for Streamable HTTP — MCP 2026-07-28 stateless). Tools are a generated
+    /// projection of sail-ops METHOD_CONTRACTS.
+    /// `sail mcp install` writes host config (Claude Code `.mcp.json`, Cursor
+    /// when detected).
     Mcp {
         #[command(subcommand)]
         cmd: Option<McpCmd>,
-        /// Print tool descriptors as JSON and exit (stdio server flag).
+        /// Print tool descriptors as JSON and exit.
         #[arg(long = "list-tools")]
         list_tools: bool,
     },

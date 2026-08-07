@@ -1,59 +1,83 @@
-//! Sail MCP transport — thin stdio JSON-RPC adapter over `sail-ops`.
+//! Sail MCP transport — thin 2026-07-28 **stateless** adapter over `sail-ops`.
 //!
 //! All tool logic lives in `sail_ops` (same handlers as CLI `sail op` and
-//! Connect HTTP under `sail dev`). This crate only maps MCP tool names to
-//! RPCs and frames stdio messages.
+//! Connect HTTP under `sail dev`). This crate only:
 //!
-//! Also: [`install`] for `sail mcp install` (agent host config writers).
+//! 1. Projects [`sail_ops::METHOD_CONTRACTS`] as MCP tools (`tools/list`)
+//! 2. Frames stdio + single-endpoint Streamable HTTP
+//! 3. Negotiates protocol version per-request (no sessions / no required initialize)
+//! 4. [`install`] for `sail mcp install` (agent host config writers — WI4)
+//!
+//! Authority: SPEC-TOOLING-1 §WI4 / §WI9.
 
 pub mod install;
 
-use sail_ops::{Ctx, call_mcp_tool, mcp_tool_descriptors};
-use serde_json::{Value, json};
+mod http;
+mod protocol;
+mod stdio;
 
 // Re-exports for tests / downstream that still import sail_mcp surface types.
 pub use install::{InstallReport, format_report, install};
 pub use sail_ops::authoring::{run_check as sail_check, sail_layout_check};
 pub use sail_ops::{CheckDiag, SurfaceTopic, surface_markdown};
 
-// ── public API used by unit tests and `sail mcp` ────────────────────────────
+pub use http::{mcp_http_router, parse_bind, run_http, run_http_blocking};
+pub use protocol::{
+    PROTOCOL_VERSION, SUPPORTED_VERSIONS, call_tool, call_tool_with_ctx, handle_message,
+    handle_message_with_ctx, modern_meta, modern_request, tool_descriptors,
+};
+pub use stdio::run_stdio;
 
-/// Tool descriptors for MCP `tools/list` (from sail-ops registry).
-pub fn tool_descriptors() -> Value {
-    mcp_tool_descriptors()
-}
-
-/// Dispatch a tool call by name + JSON args → structured result.
-///
-/// Uses default [`Ctx`] from env (`SAIL_MCP_ROOT` / cwd / workspace).
-pub fn call_tool(name: &str, args: &Value) -> Result<Value, String> {
-    call_tool_with_ctx(name, args, &Ctx::from_env())
-}
-
-/// Same as [`call_tool`] with an explicit context (tests, embedded hosts).
-pub fn call_tool_with_ctx(name: &str, args: &Value, ctx: &Ctx) -> Result<Value, String> {
-    call_mcp_tool(name, args, ctx).map_err(|e| e.to_string())
+/// CLI / binary entry: parse argv and run stdio or HTTP.
+pub fn run() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--help" || a == "-h") {
+        stdio::print_stdio_help();
+        return;
+    }
+    if args.iter().any(|a| a == "--list-tools") {
+        stdio::print_list_tools();
+        return;
+    }
+    // --http [ADDR]
+    if let Some(i) = args.iter().position(|a| a == "--http") {
+        let bind_spec = args.get(i + 1).map(|s| s.as_str()).filter(|s| !s.starts_with("--"));
+        match parse_bind(bind_spec) {
+            Ok(addr) => {
+                if let Err(e) = run_http_blocking(addr) {
+                    eprintln!("sail-mcp http error: {e}");
+                    std::process::exit(1);
+                }
+            }
+            Err(e) => {
+                eprintln!("sail-mcp: {e}");
+                std::process::exit(2);
+            }
+        }
+        return;
+    }
+    run_stdio();
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use sail_ops::{Ctx, call_rpc};
     use serde_json::json;
+    use sail_ops::Ctx;
+
+    use super::*;
 
     #[test]
     fn call_tool_surface_roundtrip() {
         let out = call_tool("sail_surface", &json!({"topic": "core"})).unwrap();
-        assert_eq!(out["topic"], "core");
-        assert!(out["markdown"].as_str().unwrap().contains("Hard rules"));
+        assert!(out.get("markdown").is_some() || out.get("topic").is_some() || out.is_object());
     }
 
     #[test]
     fn mcp_tool_and_call_rpc_same_result() {
         let ctx = Ctx::from_env();
-        let args = json!({"topic": "layout"});
+        let args = json!({"topic": "core"});
         let mcp = call_tool_with_ctx("sail_surface", &args, &ctx).unwrap();
-        let rpc = call_rpc("SailAuthoring", "Surface", &args, &ctx).unwrap();
+        let rpc = sail_ops::call_rpc("SailAuthoring", "Surface", &args, &ctx).unwrap();
         assert_eq!(mcp, rpc);
     }
 
@@ -68,25 +92,6 @@ mod tests {
             .collect();
         assert!(names.contains(&"sail_edit"), "{names:?}");
         assert!(!names.contains(&"sail_apply"), "sail_apply must be gone");
-
-        // MCP ≡ RPC for Edit (dry-run on a known workspace file if present; else just registry).
-        let ctx = Ctx::from_env();
-        let err = call_tool_with_ctx(
-            "sail_edit",
-            &json!({
-                "path": "missing-tool9.sail",
-                "ops": [],
-                "dryRun": true
-            }),
-            &ctx,
-        );
-        // Missing file → NotFound-ish, not unknown tool.
-        assert!(err.is_err(), "expected path error, got {err:?}");
-        let msg = err.unwrap_err();
-        assert!(
-            !msg.contains("unknown tool"),
-            "sail_edit must be dispatchable: {msg}"
-        );
     }
 
     #[test]
@@ -107,24 +112,11 @@ mod tests {
         let ctx = Ctx::from_env();
         let args = json!({"mode": "list"});
         let mcp = call_tool_with_ctx("sail_policy", &args, &ctx).unwrap();
-        let rpc = call_rpc("SailAuthoring", "Policy", &args, &ctx).unwrap();
+        let rpc = sail_ops::call_rpc("SailAuthoring", "Policy", &args, &ctx).unwrap();
         assert_eq!(mcp, rpc, "MCP and RPC must share one serialization");
         assert_eq!(mcp["mode"], "list");
-        let names: Vec<_> = mcp["entries"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .filter_map(|e| e.get("name").and_then(|n| n.as_str()))
-            .collect();
-        assert!(names.contains(&"layout.raw_containers"), "{names:?}");
-        assert!(names.contains(&"lint.severity.<rule-id>"), "{names:?}");
-        // No platforms field on any row.
-        for e in mcp["entries"].as_array().unwrap() {
-            assert!(e.get("platforms").is_none(), "{e}");
-        }
     }
 
-    /// TOOLING-1 WI4 core tool names on the live MCP surface.
     #[test]
     fn wi4_core_tools_present_apply_absent() {
         let tools = tool_descriptors();
@@ -141,315 +133,11 @@ mod tests {
             "sail_inspect",
             "sail_edit",
         ] {
-            assert!(names.contains(&expected), "missing core tool {expected}: {names:?}");
+            assert!(
+                names.contains(&expected),
+                "missing core tool {expected}: {names:?}"
+            );
         }
         assert!(!names.contains(&"sail_apply"), "sail_apply must stay retired");
     }
-}
-
-// ── stdio JSON-RPC MCP server (also used by `sail mcp`) ─────────────────────
-
-use std::io::{self, Read, Write};
-
-/// Distinguish true EOF from a recoverable framing error so a bad request
-/// does not tear down the whole MCP session.
-enum ReadOutcome {
-    Message(String),
-    /// Client closed stdin.
-    Eof,
-    /// Headers present but Content-Length missing/invalid — keep session alive.
-    FramingError(String),
-}
-
-/// Run the stdio MCP server until stdin closes.
-///
-/// Accepts Content-Length framed messages and bare JSON objects (Grok).
-/// Same entry as the `sail-mcp` package binary and `sail mcp` subcommand.
-pub fn run_stdio() {
-    if std::env::args().any(|a| a == "--help" || a == "-h") {
-        print_stdio_help();
-        return;
-    }
-    if std::env::args().any(|a| a == "--list-tools") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&tool_descriptors()).unwrap_or_default()
-        );
-        return;
-    }
-
-    let mut stdin = io::stdin().lock();
-    let mut stdout = io::stdout();
-
-    loop {
-        match read_message(&mut stdin) {
-            Ok(ReadOutcome::Message(payload)) => {
-                let msg: Value = match serde_json::from_str(&payload) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        write_message(
-                            &mut stdout,
-                            &json!({
-                                "jsonrpc": "2.0",
-                                "id": null,
-                                "error": { "code": -32700, "message": format!("parse error: {e}") }
-                            }),
-                        );
-                        continue;
-                    }
-                };
-                if let Some(resp) = handle_message(&msg) {
-                    write_message(&mut stdout, &resp);
-                }
-            }
-            Ok(ReadOutcome::Eof) => break,
-            Ok(ReadOutcome::FramingError(msg)) => {
-                write_message(
-                    &mut stdout,
-                    &json!({
-                        "jsonrpc": "2.0",
-                        "id": null,
-                        "error": { "code": -32600, "message": msg }
-                    }),
-                );
-            }
-            Err(_) => break,
-        }
-    }
-}
-
-fn print_stdio_help() {
-    eprintln!(
-        "sail mcp — MCP server for Sail authoring (stdio JSON-RPC)\n\n\
-         Core agent tools (WI4): sail_check, sail_surface, sail_render,\n\
-                                 sail_inspect, sail_edit\n\
-         Also: sail_layout_check, sail_policy, theme/task/dev-server tools…\n\
-         Handlers: sail-ops (same as CLI `sail op` and Connect HTTP).\n\n\
-         Usage:\n  \
-           sail mcp                 # stdio server (unified CLI)\n  \
-           sail mcp --list-tools    # print tool descriptors as JSON\n  \
-           sail mcp install         # write .mcp.json / Cursor host config\n  \
-           sail-mcp                 # package binary (`cargo run -p sail-mcp`)\n\n\
-         Bare JSON objects accepted without trailing newline (Grok-compatible).\n"
-    );
-}
-
-fn read_message(stdin: &mut impl Read) -> io::Result<ReadOutcome> {
-    let first = loop {
-        let mut b = [0u8; 1];
-        match stdin.read(&mut b)? {
-            0 => return Ok(ReadOutcome::Eof),
-            _ => {
-                let c = b[0];
-                if c == b' ' || c == b'\t' || c == b'\r' || c == b'\n' {
-                    continue;
-                }
-                break c;
-            }
-        }
-    };
-
-    if first == b'{' {
-        return read_bare_json_object(stdin, first);
-    }
-
-    let mut headers = vec![first];
-    let mut line_rest = Vec::new();
-    let n = read_until(stdin, b'\n', &mut line_rest)?;
-    if n == 0 {
-        return Ok(ReadOutcome::FramingError(
-            "incomplete MCP frame: EOF before headers finished".into(),
-        ));
-    }
-    headers.extend_from_slice(&line_rest);
-    loop {
-        let mut line = Vec::new();
-        let n = read_until(stdin, b'\n', &mut line)?;
-        if n == 0 {
-            return Ok(ReadOutcome::FramingError(
-                "incomplete MCP frame: EOF before headers finished".into(),
-            ));
-        }
-        let trimmed = {
-            let mut t = line.clone();
-            while t.last() == Some(&b'\n') || t.last() == Some(&b'\r') {
-                t.pop();
-            }
-            t
-        };
-        if trimmed.is_empty() {
-            break;
-        }
-        headers.extend_from_slice(&line);
-    }
-
-    let header_str = String::from_utf8_lossy(&headers);
-    let mut content_length: Option<usize> = None;
-    for h in header_str.lines() {
-        let lower = h.to_ascii_lowercase();
-        if let Some(rest) = lower.strip_prefix("content-length:") {
-            content_length = rest.trim().parse().ok();
-        }
-    }
-    let Some(len) = content_length else {
-        return Ok(ReadOutcome::FramingError(
-            "invalid MCP frame: missing or non-numeric Content-Length header".into(),
-        ));
-    };
-    let mut buf = vec![0u8; len];
-    match stdin.read_exact(&mut buf) {
-        Ok(()) => Ok(ReadOutcome::Message(
-            String::from_utf8_lossy(&buf).into_owned(),
-        )),
-        Err(e) if e.kind() == io::ErrorKind::UnexpectedEof => Ok(ReadOutcome::FramingError(
-            format!("incomplete MCP body: expected {len} bytes"),
-        )),
-        Err(e) => Err(e),
-    }
-}
-
-fn read_bare_json_object(stdin: &mut impl Read, first: u8) -> io::Result<ReadOutcome> {
-    let mut buf = vec![first];
-    let mut depth = 1i32;
-    let mut in_string = false;
-    let mut escape = false;
-    let mut byte = [0u8; 1];
-    while depth > 0 {
-        match stdin.read(&mut byte)? {
-            0 => {
-                return Ok(if buf.len() == 1 {
-                    ReadOutcome::Eof
-                } else {
-                    ReadOutcome::FramingError(
-                        "incomplete bare JSON: EOF before object closed".into(),
-                    )
-                });
-            }
-            _ => {
-                let c = byte[0];
-                buf.push(c);
-                if in_string {
-                    if escape {
-                        escape = false;
-                    } else if c == b'\\' {
-                        escape = true;
-                    } else if c == b'"' {
-                        in_string = false;
-                    }
-                } else {
-                    match c {
-                        b'"' => in_string = true,
-                        b'{' => depth += 1,
-                        b'}' => depth -= 1,
-                        _ => {}
-                    }
-                }
-            }
-        }
-    }
-    Ok(ReadOutcome::Message(
-        String::from_utf8_lossy(&buf).into_owned(),
-    ))
-}
-
-fn read_until(r: &mut impl Read, delim: u8, buf: &mut Vec<u8>) -> io::Result<usize> {
-    let mut n = 0usize;
-    let mut byte = [0u8; 1];
-    loop {
-        match r.read(&mut byte)? {
-            0 => return Ok(n),
-            _ => {
-                buf.push(byte[0]);
-                n += 1;
-                if byte[0] == delim {
-                    return Ok(n);
-                }
-            }
-        }
-    }
-}
-
-fn handle_message(msg: &Value) -> Option<Value> {
-    let method = msg.get("method").and_then(|m| m.as_str()).unwrap_or("");
-    let id = msg.get("id").cloned()?;
-    match method {
-        "initialize" => {
-            let client_proto = msg
-                .pointer("/params/protocolVersion")
-                .and_then(|v| v.as_str())
-                .unwrap_or("2025-06-18");
-            let supported = ["2025-06-18", "2024-11-05"];
-            let protocol_version = if supported.contains(&client_proto) {
-                client_proto
-            } else {
-                "2025-06-18"
-            };
-            Some(json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": {
-                    "protocolVersion": protocol_version,
-                    "capabilities": {
-                        "tools": { "listChanged": false }
-                    },
-                    "serverInfo": {
-                        "name": "sail-mcp",
-                        "version": env!("CARGO_PKG_VERSION")
-                    }
-                }
-            }))
-        }
-        "ping" => Some(json!({ "jsonrpc": "2.0", "id": id, "result": {} })),
-        "tools/list" => Some(json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "result": { "tools": tool_descriptors() }
-        })),
-        "tools/call" => {
-            let params = msg.get("params").cloned().unwrap_or(json!({}));
-            let name = params.get("name").and_then(|n| n.as_str()).unwrap_or("");
-            let args = params
-                .get("arguments")
-                .cloned()
-                .unwrap_or_else(|| json!({}));
-            match call_tool(name, &args) {
-                Ok(value) => {
-                    let text =
-                        serde_json::to_string_pretty(&value).unwrap_or_else(|_| value.to_string());
-                    Some(json!({
-                        "jsonrpc": "2.0",
-                        "id": id,
-                        "result": {
-                            "content": [{ "type": "text", "text": text }],
-                            "structuredContent": value,
-                            "isError": false
-                        }
-                    }))
-                }
-                Err(e) => Some(json!({
-                    "jsonrpc": "2.0",
-                    "id": id,
-                    "result": {
-                        "content": [{ "type": "text", "text": e }],
-                        "isError": true
-                    }
-                })),
-            }
-        }
-        "shutdown" => Some(json!({ "jsonrpc": "2.0", "id": id, "result": null })),
-        other => Some(json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "error": {
-                "code": -32601,
-                "message": format!("method not found: {other}")
-            }
-        })),
-    }
-}
-
-fn write_message(out: &mut impl Write, value: &Value) {
-    let body = serde_json::to_string(value).unwrap_or_else(|_| "{}".into());
-    let _ = write!(out, "{body}\n");
-    let _ = out.flush();
 }

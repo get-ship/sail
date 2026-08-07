@@ -46,7 +46,9 @@ pub use registry::{
     MethodDesc, ServiceDesc, cli_methods_help, mcp_tool_descriptors, mcp_tool_to_rpc,
     method_contracts, method_table, rpc_methods,
 };
-pub use typed::{EmptyArgs, Json, MethodContract, generate_ts_client, schema_catalog};
+pub use typed::{
+    EmptyArgs, Json, MethodContract, generate_ts_client, mcp_descriptors_from, schema_catalog,
+};
 pub use watch::{
     WatchEvent, WatchHub, WatchKind, publish as publish_watch, publish_file, publish_file_under,
     relativize_watch_path,

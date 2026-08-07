@@ -130,4 +130,33 @@ mod tests {
         let live_arr = live.as_array().unwrap();
         assert!(live_arr.len() >= arr.len());
     }
+
+    /// WI9 drift: MCP tools ≡ contract methods (1:1 by mcp_tool name + schema).
+    #[test]
+    fn mcp_tools_equiv_contract_methods_wi9() {
+        let tools = mcp_tool_descriptors_core();
+        let arr = tools.as_array().expect("tools array");
+        assert_eq!(
+            arr.len(),
+            METHOD_CONTRACTS.len(),
+            "MCP tool count must equal METHOD_CONTRACTS (generator projection)"
+        );
+        for (i, c) in METHOD_CONTRACTS.iter().enumerate() {
+            let t = &arr[i];
+            assert_eq!(
+                t.get("name").and_then(|n| n.as_str()),
+                Some(c.mcp_tool),
+                "order+name drift at index {i}"
+            );
+            assert_eq!(
+                t.get("description").and_then(|d| d.as_str()),
+                Some(c.description)
+            );
+            let input = t.get("inputSchema").expect("inputSchema");
+            assert_eq!(input, &(c.input_schema)(), "inputSchema drift for {}", c.mcp_tool);
+        }
+        // Adding a contract without hand-editing MCP is proven: descriptors are
+        // solely `mcp_descriptors_from(METHOD_CONTRACTS)`.
+        assert_eq!(tools, mcp_descriptors_from(METHOD_CONTRACTS));
+    }
 }

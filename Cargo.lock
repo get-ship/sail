@@ -4693,10 +4693,15 @@ dependencies = [
 name = "sail-mcp"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "base64",
+ "http-body-util",
  "sail-ops",
  "serde",
  "serde_json",
  "tempfile",
+ "tokio",
+ "tower",
 ]
 
 [[package]]
@@ -6836,6 +6841,10 @@ name = "sail-compiler"
 version = "0.1.0"
 
 [[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6857,8 +6866,4 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
 version = "0.1.0"
