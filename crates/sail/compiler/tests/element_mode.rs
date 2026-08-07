@@ -342,3 +342,23 @@ fn native_label_folds_host_sx_into_tag_rule() {
         out.skin_css
     );
 }
+
+#[test]
+fn toggle_skin_vertical_outline_not_variant_variant() {
+    let src = sail_compiler::stdlib::sources()
+        .iter()
+        .find(|(t, _)| *t == "toggle")
+        .map(|(_, s)| *s)
+        .expect("toggle");
+    let el = compile_element(src, "toggle").expect("toggle compiles");
+    assert!(
+        !el.skin_css.contains("variant='variant'"),
+        "prop-shorthand must not rewrite Style compound values to variant=variant:\n{}",
+        el.skin_css
+    );
+    assert!(
+        el.skin_css.contains("[orientation='vertical'][variant='outline']"),
+        "vertical+outline compound must survive: {}",
+        el.skin_css
+    );
+}

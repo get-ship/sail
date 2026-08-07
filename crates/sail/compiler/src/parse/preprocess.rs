@@ -1679,6 +1679,11 @@ fn desugar_tag(tag: &str, tones: &[&str], sizes: &[&str], variants: &[&str]) -> 
     let mut out = String::with_capacity(tag.len() + 24);
     let mut i = 0;
     let mut quote: Option<u8> = None;
+    // Only desugar bare tone/size/variant shorthands at *attribute* depth.
+    // Tag-position `style([…])` / compound maps can contain bare words like
+    // `outline` / `ghost` as Style condition values — rewriting those into
+    // `variant="outline"` poisons compound CSS to `[variant='variant']`.
+    let mut depth: i32 = 0;
     while i < bytes.len() {
         match (quote, bytes[i]) {
             (Some(q), b) if b == q => {
@@ -1703,10 +1708,26 @@ fn desugar_tag(tag: &str, tones: &[&str], sizes: &[&str], variants: &[&str]) -> 
                 i += 1;
                 continue;
             }
+            (None, b'(' | b'{' | b'[') => {
+                depth += 1;
+                out.push(bytes[i] as char);
+                i += 1;
+                continue;
+            }
+            (None, b')' | b'}' | b']') => {
+                depth = (depth - 1).max(0);
+                out.push(bytes[i] as char);
+                i += 1;
+                continue;
+            }
             _ => {}
         }
-        // A bare word starts after whitespace.
-        if i > 0 && bytes[i - 1].is_ascii_whitespace() && bytes[i].is_ascii_alphabetic() {
+        // A bare word starts after whitespace — attribute level only.
+        if depth == 0
+            && i > 0
+            && bytes[i - 1].is_ascii_whitespace()
+            && bytes[i].is_ascii_alphabetic()
+        {
             let mut j = i;
             while j < bytes.len() && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'-') {
                 j += 1;
@@ -1743,6 +1764,7 @@ fn desugar_tag(tag: &str, tones: &[&str], sizes: &[&str], variants: &[&str]) -> 
     }
     out
 }
+
 
 /// Merge every open tag's duplicate static `class="…"` attributes into the
 /// first one (values space-joined, source order). `lower_sx` rewrites `sx=` to
@@ -3320,6 +3342,27 @@ mod tests {
         assert!(out.contains(r#"tone="primary""#), "{out}");
         assert!(out.contains(r#"variant="solid""#), "{out}");
         assert!(out.contains(r#"size="sm""#), "{out}");
+    }
+
+    #[test]
+    fn bare_enum_shorthand_does_not_rewrite_inside_style_product() {
+        // Regression: `<button style([ compound({ variant: outline }, …) ])>`
+        // must keep condition value `outline` — not rewrite to variant="outline"
+        // which parses as compound value "variant" → CSS [variant='variant'].
+        let src = r#"
+<button style([
+  compound({ orientation: vertical, variant: outline }, style({ box: mt(-px) })),
+])>x</button>
+"#;
+        let out = preprocess(src).expect("preprocess");
+        assert!(
+            !out.contains("variant='variant'"),
+            "skin CSS poisoned: {out}"
+        );
+        assert!(
+            out.contains("variant='outline'") || out.contains("orientationverticalvariantoutline"),
+            "expected vertical+outline compound classes: {out}"
+        );
     }
 
     #[test]
