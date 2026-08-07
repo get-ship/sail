@@ -1,8 +1,8 @@
 <!--
   /deck/data — adapted from packages/deck/docs/routes/data/page.sail. The
   source site exercises a live `store` client (with a `visits` counter
-  persisted to localStorage); that client lives in packages/deck/docs's
-  own clients.ts. The sail-site doesn't expose a `store` client (its
+  persisted to localStorage); that client lives in packages/deck/docs’s
+  own clients.ts. The sail-site doesn’t expose a `store` client (its
   clients seam is intentionally empty), so the live demo is omitted
   here — the prose + config + usage snippets still document the seam.
 -->

@@ -1,6 +1,6 @@
 <!--
   /sail/reference/scope — every <scope> grammar construct, with a worked
-  example that actually compiles (compiled by scope_manifest's own Rust
+  example that actually compiles (compiled by scope_manifest’s own Rust
   tests, never merely asserted here). Rendered from
   src/language-surface.gen.ts (emitted by `sail-compiler prop-registry`).
 -->

@@ -1,7 +1,7 @@
 <!--
   /deck — Deck overview. The shell sets theme="deck" (violet); this page
   is pure content. Adapted from packages/deck/docs/routes/page.sail to the
-  sail-site's .doc prose convention (eyebrow / h1 / lead / h2).
+  sail-site’s .doc prose convention (eyebrow / h1 / lead / h2).
 -->
 
 <controller>

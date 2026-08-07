@@ -52,7 +52,7 @@ Ada Lovelace</strong>
     ships as <code>.sail</code> sources — the same language you write — plus
     twenty-eight bare HTML tags the framework restyles, so a plain
     <code>&lt;button&gt;</code> or <code>&lt;table&gt;</code> is already the
-    design system's. The catalog groups them like this:
+    design system’s. The catalog groups them like this:
   </p>
   <column gap="4">
     <column gap="2">
@@ -224,7 +224,7 @@ Hidden until asked for — and this one is running.</p>
     semantic <code>selected</code> / tab anatomy themselves. A
     dropdown closes on Escape and supports type-ahead. A switch is a real
     <code>&lt;switch&gt;</code> (L1 anatomy stamps role=switch), so Space, Tab
-    and form submission are the platform's own. You write the options; the
+    and form submission are the platform’s own. You write the options; the
     component does the rest. Try it:
   </p>
   <code-block code={code.behavior}></code-block>
@@ -276,14 +276,14 @@ Hidden until asked for — and this one is running.</p>
     screen reader. <code>size</code> runs <code>xs</code> to
     <code>xl</code>, <code>spin</code> rotates (and respects reduced-motion),
     and <code>src=</code> fetches any SVG URL when you need a glyph that
-    isn't in the set.
+    isn’t in the set.
   </p>
 
   <h2>Prose</h2>
   <p>
-    Templates you author don't need typography classes — bare
+    Templates you author don’t need typography classes — bare
     <code>h1</code>, <code>p</code> and <code>code</code> already take the
-    design system's type scale. <code>&lt;prose&gt;</code> is for content you
+    design system’s type scale. <code>&lt;prose&gt;</code> is for content you
     <em>render</em>: markdown output, a doc blob, anything that arrives as
     flowing text at runtime. Wrap it and the whole subtree gets reading
     typography — heading rhythm, list indentation, quote bars, inline code
@@ -323,7 +323,7 @@ Hidden until asked for — and this one is running.</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(sm) })
 
-    For the curious: most of these tags don't exist at runtime — the compiler
+    For the curious: most of these tags don’t exist at runtime — the compiler
     lowers them to native markup with the behavior attached, which is why the
     library adds almost nothing to a page. A dialog ships as a real
     <code>&lt;dialog&gt;</code>. If that interests you, the

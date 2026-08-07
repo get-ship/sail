@@ -1,7 +1,7 @@
 <!--
   /errors — what happens when component code throws. One boundary element,
   one dev overlay, one default route boundary; async errors are the Data
-  chapter's match error arm and stay out of this system. Every claim here is
+  chapter’s match error arm and stay out of this system. Every claim here is
   checked against the runtime sources and their tests.
 -->
 

@@ -2,7 +2,7 @@
   /ai/tooling — the LSP and the CLI, adapted from
   packages/sail/tutorial/src/prose/10-lsp-cli/index.md. The source frames the
   tooling as "one Rust grammar, two binary delivery channels — the sail-lint
-  fast check and the sail-compiler full compile"; that's the spine here.
+  fast check and the sail-compiler full compile"; that’s the spine here.
 -->
 
 <controller>

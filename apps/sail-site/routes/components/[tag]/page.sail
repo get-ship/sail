@@ -407,7 +407,7 @@ one signal drives both — {load()}%</p>
             </if>
             <if {stage.meter()}>
               <!-- Fixed width: meter has no intrinsic width, and a percentage
-                   can't resolve inside the content-sized <center> stage. -->
+                   can’t resolve inside the content-sized <center> stage. -->
               <column gap="2">
                 style({ box: w(panel-max-w-sm) })
 

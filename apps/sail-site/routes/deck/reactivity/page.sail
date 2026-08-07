@@ -1,6 +1,6 @@
 <!--
-  /deck/reactivity — deck's role in the reactive update path. Reactivity
-  itself (signal / derived / effect, the glitch-free update pass) is Sail's;
+  /deck/reactivity — deck’s role in the reactive update path. Reactivity
+  itself (signal / derived / effect, the glitch-free update pass) is Sail’s;
   that model lives at /reactivity and is not re-taught here. This page is
   about the sources deck owns and feeds into the graph: the URL, live server
   data, durable app state, and dev edits. Code blocks are highlighted via
@@ -24,8 +24,8 @@ Reactivity</p>
   <p>
     style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
 
-    Reactivity is Sail's, not deck's. Sail gives a route signals, derived values,
-    and effects; deck's job is to keep that graph fed from the things a
+    Reactivity is Sail’s, not deck’s. Sail gives a route signals, derived values,
+    and effects; deck’s job is to keep that graph fed from the things a
     framework owns and changes — the URL, live server data, and state that
     outlives a route.
   </p>
@@ -63,16 +63,16 @@ Reactivity</p>
   <code-block code={code.liveData}></code-block>
   <p>
     Standalone <code>sail dev</code> serves routing, assets, SSR and HMR, but not
-    live server data yet — that's the server-functions work (#32). Until then,
+    live server data yet — that’s the server-functions work (#32). Until then,
     use a client store for shared state; the <a href="/deck/data">data seam</a>
     covers both.
   </p>
 
   <h2>State that outlives a route</h2>
   <p>
-    A signal declared in a route's <code>&lt;controller&gt;</code> block is scoped to that
+    A signal declared in a route’s <code>&lt;controller&gt;</code> block is scoped to that
     route — it resets when you navigate away. State that must survive navigation
-    lives <em>above</em> the router, on deck's clients seam, where it persists
+    lives <em>above</em> the router, on deck’s clients seam, where it persists
     across navigations and full reloads. The <a href="/deck/data">data seam</a>
     page shows the wiring.
   </p>
@@ -81,7 +81,7 @@ Reactivity</p>
   <p>
     In dev, saving a route swaps the freshly-bundled module into the running
     router and re-mounts it — <strong>signal state survives the swap</strong>, so
-    counters, inputs, and scroll stay put. That's deck's
+    counters, inputs, and scroll stay put. That’s deck’s
     <a href="/deck/hmr">HMR</a>, not a reactive primitive: the graph is simply
     never torn down.
   </p>

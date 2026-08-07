@@ -51,7 +51,7 @@ Guide</p>
   </p>
   <p>
     A confined package declares no grant at all. This is the primitives
-    pack's whole config — styling capabilities, nothing else:
+    pack’s whole config — styling capabilities, nothing else:
   </p>
   <code-block code={code.confined} lang="json"></code-block>
   <p>
@@ -60,7 +60,7 @@ Guide</p>
     file and uses the first one it finds, so the grant lives with the package
     that needs it rather than in a project-wide setting. There are exactly
     seven recognized keys, and an unrecognized one is rejected outright —
-    with the whole file's grants voided rather than partially honored:
+    with the whole file’s grants voided rather than partially honored:
   </p>
   <code-block code={code.keys} lang="rust"></code-block>
 

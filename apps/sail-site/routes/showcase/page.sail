@@ -140,7 +140,7 @@ shanty</strong>
 a full app in one .sail file</p>
     <row gap="1">
       <for {THEMES as t} key={t}>
-        <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'outline'} size="sm">{t}</button>
+        <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'soft'} tone="primary" size="sm">{t}</button>
       </for>
     </row>
   </row>

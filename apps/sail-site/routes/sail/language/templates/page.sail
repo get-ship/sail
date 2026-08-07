@@ -1,5 +1,5 @@
 <!--
-  /sail/language/templates — chapter 3, round 2 per owner review: teach, don't
+  /sail/language/templates — chapter 3, round 2 per owner review: teach, don’t
   sell. Lede says what the chapter IS. "Control flow", not "Branching". The
   keyed-for requirement is mentioned, not staged. Events and bind: are taught
   neutrally. bind unification question filed as a claim
@@ -74,7 +74,7 @@ The language</p>
   </p>
   <p>
     <code>on:</code> attaches a real DOM event (click, input, submit, …).
-    The handler is an expression over the controller's returned scope:
+    The handler is an expression over the controller’s returned scope:
   </p>
   <code-block code={code.events}></code-block>
   <p>
@@ -101,7 +101,7 @@ The language</p>
   <h2>Form bindings</h2>
   <p>
     <code>bind:</code> connects a form control to a signal in both
-    directions: the signal's value sets the control, and user input writes
+    directions: the signal’s value sets the control, and user input writes
     the signal back. <code>bind:value</code> is for text-valued controls —
     inputs, textareas, selects — and syncs on the <code>input</code> event;
     <code>bind:checked</code> is for checkboxes and radios, on
@@ -111,7 +111,7 @@ The language</p>
 
   <h2>Children and slots</h2>
   <p>
-    Whatever you write between a component's tags is its
+    Whatever you write between a component’s tags is its
     <strong>children</strong>, and the component decides where children land
     by placing <code>&lt;slot&gt;</code>. Named slots give it more than one
     landing place — this is the stdlib <code>&lt;field&gt;</code>'s

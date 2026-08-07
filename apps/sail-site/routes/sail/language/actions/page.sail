@@ -1,7 +1,7 @@
 <!--
   /sail/language/actions — Concepts chapter. What an action is, how to attach
   one, feel one work, how to write one, and the fact that the standard
-  library is built on the same mechanism. Voice: explain, don't perform.
+  library is built on the same mechanism. Voice: explain, don’t perform.
 -->
 
 <controller>

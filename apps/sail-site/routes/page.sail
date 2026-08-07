@@ -4,13 +4,13 @@
 
     · a GIANT rotating headline — one teal word cycles ("Batteries · Components ·
       Styling · State · Motion · Themes") in front of the fixed "included. All of
-      them." The cycle is the previous landing's proven WORDS + {#for}+style.enter
+      them." The cycle is the previous landing’s proven WORDS + {#for}+style.enter
       fade word-cycler, blown up to display size.
     · the signature TWO CROSSING DIAGONAL TICKER BANDS — a bright teal band tilted
       one way OVER a dark mono band tilted the other, overlapping so they visually
       cross, both running continuously (the stdlib <ticker> owns the loop).
     · a bento of SIX cards, each a real <a href> to an existing section, carrying
-      that section's real headline and an on-brand micro-animation (spring bars,
+      that section’s real headline and an on-brand micro-animation (spring bars,
       pulsing swatches, a live signal counter, deploy dots, live components, an
       agent terminal).
     · a closing giant SHIP wordmark in a teal→void gradient, cropped at the bottom.
@@ -78,7 +78,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const grid = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
   const cardLink = style({ box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none) }).when(hover, { paint: fg(foreground) })
   // Equal-height bento cells — quiet surface, real pad. minH only from tablet up
-  // so phone cards don't become full-viewport towers.
+  // so phone cards don’t become full-viewport towers.
   const cardFill = style({ box: h(full).overflow(hidden) }).when(tablet, { box: minH(52) })
   const cardCol = style({ box: h(full).pad(4) }).when(tablet, { box: pad(5) })
   const cardEyebrow = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })

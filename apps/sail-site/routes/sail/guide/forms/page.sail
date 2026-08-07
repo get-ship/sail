@@ -1,7 +1,7 @@
 <!--
   /sail/guide/forms — the write side of the data story. query() is how a Sail
   app reads; a form is how it writes. The live demo is the curriculum: every
-  snippet on this page is the demo's code.
+  snippet on this page is the demo’s code.
 -->
 
 <controller>
@@ -147,7 +147,7 @@ Source</p>
   <p>
     The <code>&lt;field&gt;</code> element wraps a control with a label, a
     hint, and an error slot. It does more than lay them out: it points the
-    control's field anatomy association at whichever message is showing
+    control’s field anatomy association at whichever message is showing
     — the hint normally, the error when <code>invalid</code> is set — keeps
     semantic prop <code>invalid</code> in sync, and announces the error region
     politely to screen readers. You get all of that by filling in the slots.
@@ -169,7 +169,7 @@ Source</p>
 
   <h2>Submit: pending, failure, success</h2>
   <p>
-    Put <code>profile.submit</code> (or a wrapper, as here) on the form's
+    Put <code>profile.submit</code> (or a wrapper, as here) on the form’s
     <code>on:submit</code>. It calls <code>preventDefault()</code> itself —
     forgetting that is a full page reload, so the composition owns it. Then
     it runs the lifecycle: <code>pending()</code> is <code>true</code> while
@@ -197,10 +197,10 @@ Source</p>
   <h2>The declarative shortcut</h2>
   <p>
     In a deck app with a typed <code>ship</code> client, a plain form post
-    doesn't need a controller at all: put
+    doesn’t need a controller at all: put
     <code>mutation="&lt;client&gt;.&lt;method&gt;"</code> on the
     <code>&lt;form&gt;</code> and the runtime intercepts submit, calls that
-    client method with the form's <code>FormData</code>, and injects a
+    client method with the form’s <code>FormData</code>, and injects a
     <code>$mutation</code> signal that walks <code>loading → ok | error</code>
     — the same three-state shape <code>query()</code> uses for reads.
     Side effects use typed callback props

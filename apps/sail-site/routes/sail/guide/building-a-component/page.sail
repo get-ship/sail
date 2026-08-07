@@ -61,7 +61,7 @@ Guide</p>
   <p>
     In the template a prop is <em>called</em>, not read:
     <code>&#123;label()&#125;</code>. Props are signals, and calling one is how
-    you read a signal's current value. That is the same everywhere in the
+    you read a signal’s current value. That is the same everywhere in the
     language, so there is only one rule to remember.
   </p>
   <code-block code={code.scope} lang="sail"></code-block>
@@ -72,7 +72,7 @@ Guide</p>
   <p>
     Props come from outside. Anything the component owns itself lives in a
     <code>&lt;controller&gt;</code> block, which is ordinary TypeScript.
-    Whatever the controller returns becomes the template's vocabulary —
+    Whatever the controller returns becomes the template’s vocabulary —
     values and event handlers alike.
   </p>
   <p>

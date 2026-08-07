@@ -77,7 +77,7 @@ Concepts</p>
     a destructive alert reads <code>--destructive</code>. A theme is the set
     of values behind those names, so applying one restyles every component at
     once — including components written long before the theme existed.
-    Components read tokens, themes define them, and neither knows the other's
+    Components read tokens, themes define them, and neither knows the other’s
     name.
   </p>
 
@@ -125,7 +125,7 @@ Concepts</p>
     into <code>@ship/tokens</code>. To make your own, start from the
     built-in closest to what you want, copy its file, and change the values;
     because a theme is data rather than CSS rules, the tooling can check it,
-    and nothing in it can conflict with a component's own styles.
+    and nothing in it can conflict with a component’s own styles.
     <a href="/sail/guide/making-a-theme">Making a theme</a> walks the exact
     mechanics, start to finish.
   </p>

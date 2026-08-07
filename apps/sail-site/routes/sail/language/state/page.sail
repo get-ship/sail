@@ -123,7 +123,7 @@ Source</p>
     world outside the graph: the document, a network call, storage. If the
     effect returns a function, that function is the undo: it runs before the
     next run and when the effect is disposed, so a timer or listener the
-    effect started is never left running after it's gone.
+    effect started is never left running after it’s gone.
   </p>
   <code-block code={code.effect}></code-block>
   <p>
@@ -147,7 +147,7 @@ Source</p>
   <code-block code={code.template}></code-block>
   <p>
     When <code>count</code> changes, the two bindings that read it update,
-    the derived's binding updates, and nothing else runs. There is no
+    the derived’s binding updates, and nothing else runs. There is no
     re-render to think about, because there is no re-render.
   </p>
 
@@ -161,9 +161,9 @@ Source</p>
     leaves.
   </p>
   <p>
-    Here that pattern watches the component's own size, using
+    Here that pattern watches the component’s own size, using
     <code>ResizeObserver</code> — a browser API that calls you whenever an
-    element's measured size changes:
+    element’s measured size changes:
   </p>
   <code-block code={code.lifecycle}></code-block>
 
@@ -194,7 +194,7 @@ Source</p>
     Sooner or later two components on opposite ends of a page need the same
     value: the cart total in the header and in the checkout pane, the
     signed-in user everywhere. Threading it through props means every
-    component between them carries state it doesn't care about. A store is
+    component between them carries state it doesn’t care about. A store is
     the way out: state declared <em>outside</em> any component, that any
     component can reach by name.
   </p>
@@ -251,7 +251,7 @@ The store</p>
   <p>
     The contract is worth saying precisely: a composition has access to
     <em>exactly what you pass it</em> — its arguments, and the primitives.
-    It cannot see the caller's template, its props, or its element. That
+    It cannot see the caller’s template, its props, or its element. That
     boundary is what makes one reusable anywhere. Logic that needs the DOM
     is the other kind of reuse — an <a href="/sail/language/actions">action</a>,
     which is handed the element explicitly.

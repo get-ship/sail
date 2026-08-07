@@ -21,8 +21,8 @@ AI</p>
 
   <h2>Why agent-first changes the design</h2>
   <p>
-    An agent doesn't need ergonomic sugar; it needs fast, unambiguous feedback
-    and guardrails it can't drift past. Sail leans into that:
+    An agent doesn’t need ergonomic sugar; it needs fast, unambiguous feedback
+    and guardrails it can’t drift past. Sail leans into that:
   </p>
   <ul>
     <li><strong>Strict lint as build errors</strong> — off-token color, ad-hoc spacing, a raw <code>&lt;div&gt;</code> where a real primitive exists: rejected at compile time, not review time.</li>
@@ -35,8 +35,8 @@ AI</p>
   <p>The tools that make an agent fluent in Sail — usable together or on their own:</p>
   <ul>
     <li><strong>MCP server</strong> — serves the live docs and runs static analysis to catch common generative pitfalls before they ship.</li>
-    <li><strong>Skills</strong> — lazy-loaded briefs that teach an agent Sail's idioms and when to reach for which primitive.</li>
-    <li><strong>LSP</strong> — the compiler's diagnostics in-editor, for the human half of the loop.</li>
+    <li><strong>Skills</strong> — lazy-loaded briefs that teach an agent Sail’s idioms and when to reach for which primitive.</li>
+    <li><strong>LSP</strong> — the compiler’s diagnostics in-editor, for the human half of the loop.</li>
     <li><strong>Eval harness</strong> — a scored Sail-authoring benchmark, so changes to the language or lint are measured against whether agents actually get it right.</li>
   </ul>
 

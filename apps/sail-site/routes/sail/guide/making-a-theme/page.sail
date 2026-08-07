@@ -77,11 +77,11 @@ Guide</p>
   </p>
   <row gap="2">
     <for {themes() as t} key={t.id}>
-      <!-- solid primary active; default rest inactive — soft+muted is low-contrast on dark -->
+      <!-- always primary chroma: solid when active, soft tint when idle — readable on dark + light -->
       <button
         on:click={() => pick(t.id)}
-        variant={active() === t.id ? 'solid' : 'default'}
-        tone={active() === t.id ? 'primary' : 'default'}
+        variant={active() === t.id ? 'solid' : 'soft'}
+        tone="primary"
         pressed={active() === t.id ? 'true' : 'false'}
       >{t.label}</button>
     </for>
