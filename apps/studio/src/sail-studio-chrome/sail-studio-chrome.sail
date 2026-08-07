@@ -6,7 +6,7 @@
   Exit matches activity item geometry. Ban-clean: layout + L1 only.
 -->
 <controller>
-import { createShellPage } from '../shell/shell-page-vm'
+import { createShellPage } from '../compositions/shell/shell-page-vm'
 export default controller((ctx) => {
   // Live pathname from deck layout injection — chrome is reused across leaf
   // navigations; popstate alone does not fire for SPA pushState.

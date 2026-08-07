@@ -11,7 +11,7 @@ import {
 import {
   requestThemeLeaveNavigate,
   setThemeLeaveNavigate,
-} from '../src/theme-session/theme-leave-bridge'
+} from '../src/compositions/theme-session/theme-leave-bridge'
 
 afterEach(() => {
   __resetDesignForTests()

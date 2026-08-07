@@ -38,9 +38,9 @@
 
 <controller>
 import { effect, mountAmbient, signal } from '@ship/sail-runtime'
-import { createThemeSession } from '../theme-session/theme-session'
-import { watchPreviewHost } from '../theme-session/bind-preview-host'
-import { createShapeEdit } from './theme-shape-edit'
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
+import { createShapeEdit } from '../compositions/theme-shape-surface/theme-shape-edit'
 export default controller(() => {
   const session = createThemeSession({
     facet: 'shape',

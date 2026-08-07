@@ -4,8 +4,8 @@
 -->
 <controller>
 import { signal } from '@ship/sail-runtime'
-import type { ThemeSession } from '../theme-session/theme-session'
-import { watchPreviewHost } from '../theme-session/bind-preview-host'
+import type { ThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
 
 export default controller(() => {
   const sessionSig = signal<ThemeSession | null>(null)

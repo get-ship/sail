@@ -14,7 +14,7 @@ import {
   toPickerHex,
   hexToOklchString,
 } from '../src/design'
-import { COLOR_ROLES } from '../src/theme-color-surface/theme-color-edit'
+import { COLOR_ROLES } from '../src/compositions/theme-color-surface/theme-color-edit'
 
 afterEach(() => {
   __resetDesignForTests()

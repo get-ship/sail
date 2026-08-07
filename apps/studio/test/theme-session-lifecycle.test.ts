@@ -19,7 +19,7 @@ import {
   undoThemeEdit,
   type DesignOpsClient,
 } from '../src/design'
-import { createLeaveGuard } from '../src/theme-session/theme-leave-guard'
+import { createLeaveGuard } from '../src/compositions/theme-session/theme-leave-guard'
 import {
   __draftPaintHostCountForTests,
   __resetDraftPaintForTests,
@@ -27,8 +27,8 @@ import {
   flushDraftPaint,
   setDraftPaintApplier,
   unbindPreviewHost,
-} from '../src/theme-session/theme-draft-paint'
-import { setThemeConfirm } from '../src/theme-session/theme-confirm'
+} from '../src/compositions/theme-session/theme-draft-paint'
+import { setThemeConfirm } from '../src/compositions/theme-session/theme-confirm'
 
 afterEach(() => {
   __resetDesignForTests()
@@ -386,7 +386,7 @@ describe('add to project + confirm', () => {
 
   it('confirm can block delete path (injected)', async () => {
     setThemeConfirm(() => false)
-    const { confirmDeleteTheme } = await import('../src/theme-session/theme-confirm')
+    const { confirmDeleteTheme } = await import('../src/compositions/theme-session/theme-confirm')
     expect(confirmDeleteTheme('My Ship')).toBe(false)
   })
 })
@@ -423,7 +423,7 @@ describe('chrome contracts (hygiene, not product proof)', () => {
     const { fileURLToPath } = await import('node:url')
     const repo = join(dirname(fileURLToPath(import.meta.url)), '../../..')
     const actions = readFileSync(
-      join(repo, 'apps/studio/src/theme-session/theme-session-actions.ts'),
+      join(repo, 'apps/studio/src/compositions/theme-session/theme-session-actions.ts'),
       'utf8',
     )
     expect(actions).not.toMatch(/onOverflow/)

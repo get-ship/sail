@@ -5,7 +5,7 @@
 -->
 <controller>
 import type { Action } from '@ship/sail-runtime'
-import { createEditSurface } from './edit-surface-vm'
+import { createEditSurface } from '../compositions/edit-surface/edit-surface-vm'
 export default controller(() => {
   const vm = createEditSurface()
   const captureEditor: Action<void> = (node) => {

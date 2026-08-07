@@ -24,9 +24,9 @@
 
 <controller>
 import { effect, mountAmbient, signal } from '@ship/sail-runtime'
-import { createThemeSession } from '../theme-session/theme-session'
-import { watchPreviewHost } from '../theme-session/bind-preview-host'
-import { createOverviewEdit } from './theme-overview-edit'
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
+import { createOverviewEdit } from '../compositions/theme-overview-surface/theme-overview-edit'
 export default controller(() => {
   const session = createThemeSession({
     facet: 'overview',

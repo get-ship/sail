@@ -8,7 +8,7 @@
 </scope>
 
 <controller>
-import { createConfigSurface } from '../config/config-surface-vm'
+import { createConfigSurface } from '../compositions/config/config-surface-vm'
 export default controller(() => {
   const c = createConfigSurface()
   return {

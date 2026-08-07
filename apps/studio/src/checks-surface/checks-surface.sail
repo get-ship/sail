@@ -12,7 +12,7 @@
 </scope>
 
 <controller>
-import { createChecksSurface } from './checks-surface-vm'
+import { createChecksSurface } from '../compositions/checks-surface/checks-surface-vm'
 export default controller(() => {
   const c = createChecksSurface()
   return {

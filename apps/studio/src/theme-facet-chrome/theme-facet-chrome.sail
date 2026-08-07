@@ -7,7 +7,7 @@
 -->
 <controller>
 import { mountAmbient } from '@ship/sail-runtime'
-import type { ThemeSession } from '../theme-session/theme-session'
+import type { ThemeSession } from '../compositions/theme-session/theme-session'
 
 export default controller(() => {
   const sessionSig = signal<ThemeSession | null>(null)

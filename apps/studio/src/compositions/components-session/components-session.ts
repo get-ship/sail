@@ -11,12 +11,12 @@ import {
 } from '@ship/studio/edit'
 import { createThread } from '@ship/studio/tasks'
 import { getShellState } from '@ship/sail-studio-shell'
-import { buildAgentBrief, buildNewComponentBrief } from '../components/brief'
+import { buildAgentBrief, buildNewComponentBrief } from '../../components/brief'
 import type {
   ComponentMode,
   ComponentRecord,
   DetailTabId,
-} from '../components/types'
+} from '../../components/types'
 import {
   readComponentsActivity,
   writeComponentsActivity,

@@ -12,7 +12,7 @@ import {
   createConfigSurfaceCore,
   liveShellChanged,
   type ConfigCatId,
-} from '../src/config/config-surface-vm'
+} from '../src/compositions/config/config-surface-vm'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 
@@ -22,7 +22,7 @@ describe('config-surface', () => {
     expect(existsSync(join(REPO, 'apps/studio/src/config-surface/config-surface.sail'))).toBe(
       true,
     )
-    expect(existsSync(join(REPO, 'apps/studio/src/config/config-surface-vm.ts'))).toBe(true)
+    expect(existsSync(join(REPO, 'apps/studio/src/compositions/config/config-surface-vm.ts'))).toBe(true)
   })
 
   it('surface uses button nav + table fields (no diary chrome)', () => {

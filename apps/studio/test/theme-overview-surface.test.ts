@@ -13,20 +13,20 @@ const SURFACE = join(
 )
 const VM = join(
   REPO,
-  'apps/studio/src/theme-overview-surface/theme-overview-surface-vm.ts',
+  'apps/studio/src/compositions/theme-overview-surface/theme-overview-surface-vm.ts',
 )
 const EDIT = join(
   REPO,
-  'apps/studio/src/theme-overview-surface/theme-overview-edit.ts',
+  'apps/studio/src/compositions/theme-overview-surface/theme-overview-edit.ts',
 )
-const SESSION = join(REPO, 'apps/studio/src/theme-session/theme-session.ts')
-const NAV = join(REPO, 'apps/studio/src/theme-session/theme-nav.ts')
+const SESSION = join(REPO, 'apps/studio/src/compositions/theme-session/theme-session.ts')
+const NAV = join(REPO, 'apps/studio/src/compositions/theme-session/theme-nav.ts')
 const CHROME = join(
   REPO,
   'apps/studio/src/theme-facet-chrome/theme-facet-chrome.sail',
 )
 const PAGE = join(REPO, 'apps/studio/routes/themes/[id]/page.sail')
-const THEMES_VM = join(REPO, 'apps/studio/src/themes-surface/themes-surface-vm.ts')
+const THEMES_VM = join(REPO, 'apps/studio/src/compositions/themes-surface/themes-surface-vm.ts')
 const ROUTES_GEN = join(REPO, 'apps/studio/routes.gen.ts')
 
 describe('theme-overview-surface', () => {
@@ -83,7 +83,7 @@ describe('theme-overview-surface', () => {
   it('session + domain use design store ops + toast + mode-aware paint', () => {
     const session = readFileSync(SESSION, 'utf8')
     const actions = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-session-actions.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-session-actions.ts'),
       'utf8',
     )
     const edit = readFileSync(EDIT, 'utf8')
@@ -128,7 +128,7 @@ describe('theme-overview-surface', () => {
   })
 
   it('activityFromPath treats /themes/* as themes', () => {
-    const shellRail = readFileSync(join(REPO, 'apps/studio/src/shell/shell-rail.ts'), 'utf8')
+    const shellRail = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-rail.ts'), 'utf8')
     expect(shellRail).toMatch(/p === '\/themes' \|\| p\.startsWith\('\/themes\/'\)/)
   })
 

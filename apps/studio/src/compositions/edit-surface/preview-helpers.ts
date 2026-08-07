@@ -4,7 +4,7 @@ import { activeDoc, getEditState, refreshPreview } from '@ship/studio/edit'
 import {
   paintRegionOverlay,
   type RegionBoxUi,
-} from '../edit/region-overlay'
+} from '../../edit/region-overlay'
 
 export type PreviewFlight = {
   inflight: string | null

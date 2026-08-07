@@ -9,17 +9,17 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
-const SHELL_VM = join(REPO, 'apps/studio/src/shell/shell-page-vm.ts')
+const SHELL_VM = join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts')
 
 const SURFACE_VMS = [
-  'apps/studio/src/shell/shell-page-vm.ts',
-  'apps/studio/src/edit-surface/edit-surface-vm.ts',
-  'apps/studio/src/edit-explorer/edit-explorer-vm.ts',
-  'apps/studio/src/edit-element-tree/edit-element-tree-vm.ts',
-  'apps/studio/src/checks-surface/checks-surface-vm.ts',
-  'apps/studio/src/themes-surface/themes-surface-vm.ts',
-  'apps/studio/src/tasks-surface/tasks-surface-vm.ts',
-  'apps/studio/src/theme-session/theme-session.ts',
+  'apps/studio/src/compositions/shell/shell-page-vm.ts',
+  'apps/studio/src/compositions/edit-surface/edit-surface-vm.ts',
+  'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts',
+  'apps/studio/src/compositions/edit-element-tree/edit-element-tree-vm.ts',
+  'apps/studio/src/compositions/checks-surface/checks-surface-vm.ts',
+  'apps/studio/src/compositions/themes-surface/themes-surface-vm.ts',
+  'apps/studio/src/compositions/tasks-surface/tasks-surface-vm.ts',
+  'apps/studio/src/compositions/theme-session/theme-session.ts',
 ] as const
 
 describe('STUDIO-2 repairs + bar gates', () => {
@@ -93,7 +93,7 @@ describe('STUDIO-2 repairs + bar gates', () => {
   })
 
   it('B3: explorer sail-tree labels stay short (no size meta — stacked-text fix)', () => {
-    const vm = readFileSync(join(REPO, 'apps/studio/src/edit-explorer/edit-explorer-vm.ts'), 'utf8')
+    const vm = readFileSync(join(REPO, 'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts'), 'utf8')
     const explorer = readFileSync(join(REPO, 'apps/studio/src/edit/explorer.ts'), 'utf8')
     expect(vm).toMatch(/fileSailTreeNodes|createTable/)
     expect(explorer).toMatch(/fileSailTreeNodes/)

@@ -11,12 +11,12 @@ import {
   pathForActivity,
   railLabel,
   railRowsForPath,
-} from '../src/shell/shell-page-vm'
+} from '../src/compositions/shell/shell-page-vm'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const CHROME = join(REPO, 'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail')
-const SHELL_VM = join(REPO, 'apps/studio/src/shell/shell-page-vm.ts')
-const SHELL_RAIL = join(REPO, 'apps/studio/src/shell/shell-rail.ts')
+const SHELL_VM = join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts')
+const SHELL_RAIL = join(REPO, 'apps/studio/src/compositions/shell/shell-rail.ts')
 const ROUTES_GEN = join(REPO, 'apps/studio/routes.gen.ts')
 
 describe('Studio routes + chrome (STUDIO-1)', () => {
@@ -294,7 +294,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(chrome).toMatch(/exit-studio/)
     expect(chrome).toMatch(/Back to app/)
     expect(chrome).toMatch(/onExitStudio|on:click=\{onExitStudio\}/)
-    const exitVm = readFileSync(join(REPO, 'apps/studio/src/shell/exit.ts'), 'utf8')
+    const exitVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/exit.ts'), 'utf8')
     expect(exitVm).toMatch(/export function exitStudio/)
     expect(exitVm).toMatch(/type: 'close'/)
     expect(exitVm).toMatch(/postMessage/)
@@ -305,13 +305,13 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
   it('page + shell + edit files stay ≤400 LOC', () => {
     const files = [
       'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail',
-      'apps/studio/src/shell/shell-page-vm.ts',
+      'apps/studio/src/compositions/shell/shell-page-vm.ts',
       'apps/studio/src/edit-surface/edit-surface.sail',
-      'apps/studio/src/edit-surface/edit-surface-vm.ts',
+      'apps/studio/src/compositions/edit-surface/edit-surface-vm.ts',
       'apps/studio/src/edit-explorer/edit-explorer.sail',
-      'apps/studio/src/edit-explorer/edit-explorer-vm.ts',
+      'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts',
       'apps/studio/src/edit-element-tree/edit-element-tree.sail',
-      'apps/studio/src/edit-element-tree/edit-element-tree-vm.ts',
+      'apps/studio/src/compositions/edit-element-tree/edit-element-tree-vm.ts',
     ]
     for (const rel of files) {
       const src = readFileSync(join(REPO, rel), 'utf8')
@@ -325,7 +325,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       'utf8',
     )
     const surfaceVm = readFileSync(
-      join(REPO, 'apps/studio/src/edit-surface/edit-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-vm.ts'),
       'utf8',
     )
     expect(surface).toMatch(/edit-surface/)
@@ -349,7 +349,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).not.toMatch(/struct-op|edit-rail|structured-edit/)
     expect(surface).not.toMatch(/toggle-group|onViewport|viewport picker/i)
     const tabsMod = readFileSync(
-      join(REPO, 'apps/studio/src/edit-surface/edit-surface-tabs.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-tabs.ts'),
       'utf8',
     )
     expect(tabsMod).toMatch(/showClose/)
@@ -366,11 +366,11 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       'utf8',
     )
     const surfaceVm = readFileSync(
-      join(REPO, 'apps/studio/src/edit-surface/edit-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-vm.ts'),
       'utf8',
     )
     const tabsMod = readFileSync(
-      join(REPO, 'apps/studio/src/edit-surface/edit-surface-tabs.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-tabs.ts'),
       'utf8',
     )
     const sailMode = readFileSync(join(REPO, 'apps/studio/src/cm/sail-mode.ts'), 'utf8')
@@ -413,7 +413,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       'utf8',
     )
     const explorerVm = readFileSync(
-      join(REPO, 'apps/studio/src/edit-explorer/edit-explorer-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts'),
       'utf8',
     )
     expect(explorer).toMatch(/edit-explorer/)
@@ -470,15 +470,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
 
   it('edit surface VMs do not dual-load ops/openDocument on mount', () => {
     const surfaceVm = readFileSync(
-      join(REPO, 'apps/studio/src/edit-surface/edit-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-vm.ts'),
       'utf8',
     )
     const treeVm = readFileSync(
-      join(REPO, 'apps/studio/src/edit-element-tree/edit-element-tree-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-element-tree/edit-element-tree-vm.ts'),
       'utf8',
     )
     const explorerVm = readFileSync(
-      join(REPO, 'apps/studio/src/edit-explorer/edit-explorer-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts'),
       'utf8',
     )
     for (const vm of [surfaceVm, treeVm]) {
@@ -526,7 +526,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       'utf8',
     )
     const vm = readFileSync(
-      join(REPO, 'apps/studio/src/checks-surface/checks-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/checks-surface/checks-surface-vm.ts'),
       'utf8',
     )
     expect(surface).toMatch(/checks-surface/)
@@ -592,7 +592,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       'utf8',
     )
     const vm = readFileSync(
-      join(REPO, 'apps/studio/src/themes-surface/themes-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/themes-surface/themes-surface-vm.ts'),
       'utf8',
     )
     expect(surface).toMatch(/themes-surface/)
@@ -657,7 +657,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
   it('viewport picker absent from studio app sources', () => {
     const roots = [
       'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail',
-      'apps/studio/src/shell/shell-page-vm.ts',
+      'apps/studio/src/compositions/shell/shell-page-vm.ts',
       'apps/studio/src/edit-surface/edit-surface.sail',
       'apps/studio/routes/page.sail',
       'apps/studio/routes/edit/page.sail',

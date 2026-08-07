@@ -25,8 +25,8 @@
 
 <controller>
 import { effect, mountAmbient, signal } from '@ship/sail-runtime'
-import { createThemeSession } from '../theme-session/theme-session'
-import { createColorEdit } from './theme-color-edit'
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { createColorEdit } from '../compositions/theme-color-surface/theme-color-edit'
 // createThemeColorSurface() lives in theme-color-surface-vm for tests
 export default controller(() => {
   const session = createThemeSession({

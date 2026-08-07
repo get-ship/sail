@@ -271,7 +271,7 @@ describe('tasks workbench (ops + store)', () => {
       join(REPO, 'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail'),
       'utf8',
     )
-    const shellVm = readFileSync(join(REPO, 'apps/studio/src/shell/shell-page-vm.ts'), 'utf8')
+    const shellVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts'), 'utf8')
     expect(leaf).toMatch(/<tasks-surface\b/)
     expect(chrome).toMatch(/batch-tray/)
     expect(shellVm).toMatch(/from ['"]@ship\/studio\/tasks['"]/)
@@ -283,10 +283,15 @@ describe('tasks workbench (ops + store)', () => {
   })
 
   it('tasks-surface carries markers, store imports, no raw containers', () => {
-    // App-local layout (monorepo-discoverable under apps/studio/src/)
-    const root = join(REPO, 'apps/studio/src/tasks-surface')
-    const surface = readFileSync(join(root, 'tasks-surface.sail'), 'utf8')
-    const ctrl = readFileSync(join(root, 'tasks-surface-vm.ts'), 'utf8')
+    // App-local layout: .sail host + compositions VM (L3 import convention)
+    const surface = readFileSync(
+      join(REPO, 'apps/studio/src/tasks-surface/tasks-surface.sail'),
+      'utf8',
+    )
+    const ctrl = readFileSync(
+      join(REPO, 'apps/studio/src/compositions/tasks-surface/tasks-surface-vm.ts'),
+      'utf8',
+    )
     expect(surface).toMatch(/tasks-surface/)
     expect(surface).toMatch(/surface="tasks"/)
     expect(surface).toMatch(/threads-list/)
@@ -333,7 +338,9 @@ describe('tasks workbench (ops + store)', () => {
     // Dead bindings removed after composer cutover
     expect(ctrl).not.toMatch(/\btaskReply\b/)
     expect(ctrl).not.toMatch(/\bbatchAvailable\b/)
-    expect(existsSync(join(root, 'tasks-surface.sail'))).toBe(true)
+    expect(
+      existsSync(join(REPO, 'apps/studio/src/tasks-surface/tasks-surface.sail')),
+    ).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/components/tasks-surface'))).toBe(false)
   })
 

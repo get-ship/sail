@@ -6,7 +6,7 @@
 -->
 <controller>
 import type { Action } from '@ship/sail-runtime'
-import { createThemesSurface } from './themes-surface-vm'
+import { createThemesSurface } from '../compositions/themes-surface/themes-surface-vm'
 export default controller(() => {
   const vm = createThemesSurface()
   // themes.css cascade bit is data-mode — never author data-* in app .sail

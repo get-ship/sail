@@ -5,7 +5,7 @@
 <controller>
 import { navigate } from '@ship/deck/router'
 import { setChecksPanelOpen } from '@ship/sail-studio-shell'
-import { appRouteBase } from '../../src/shell/shell-rail'
+import { appRouteBase } from '../../src/compositions/shell/shell-rail'
 
 export default controller(() => {
   mount(() => {

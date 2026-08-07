@@ -9,8 +9,8 @@
 </scope>
 
 <controller>
-import { createComponentsSession } from '../components-session/components-session'
-import { createComponentsInspect } from '../components-inspect/components-inspect'
+import { createComponentsSession } from '../compositions/components-session/components-session'
+import { createComponentsInspect } from '../compositions/components-inspect/components-inspect'
 export default controller(() => {
   const session = createComponentsSession({ mode: 'inspect' })
   const inspect = createComponentsInspect(session)

@@ -26,7 +26,7 @@ import {
   openShellTabDocument,
   resolveDocTabs,
   tabIdFromEvent,
-} from '../src/edit-surface/edit-surface-tabs'
+} from '../src/compositions/edit-surface/edit-surface-tabs'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const FIX_A = 'apps/studio/test/fixtures/sample.sail'

@@ -3,7 +3,7 @@
  * Single path authority: gen-owned loadCatalog replaces; edit ticks only union.
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
-import { COMPONENTS_CATALOG } from '../../components.gen'
+import { COMPONENTS_CATALOG } from '../../../components.gen'
 import {
   filterRecords,
   mergeComponentRecords,
@@ -11,13 +11,13 @@ import {
   recordById,
   recordsFromCatalog,
   recordsFromProjectPaths,
-} from '../components/catalog'
+} from '../../components/catalog'
 import type {
   ComponentRecord,
   ComponentRowUi,
   KvRowUi,
   PropRowUi,
-} from '../components/types'
+} from '../../components/types'
 import type { ComponentsSession } from '../components-session/components-session'
 import { getOpsClient, getEditState, subscribeEdit } from '@ship/studio/edit'
 import { resolveProjectRoot, projectPaths } from '../shell/project'

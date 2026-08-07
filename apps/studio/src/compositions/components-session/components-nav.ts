@@ -2,7 +2,7 @@
  * Components route / mode helpers — href builders + path parse.
  */
 import { appRouteBase, hrefForActivity } from '../shell/shell-page-vm'
-import type { ComponentMode } from '../components/types'
+import type { ComponentMode } from '../../components/types'
 
 export function componentsHomeHref(mode?: ComponentMode): string {
   const base = `${appRouteBase()}/components`

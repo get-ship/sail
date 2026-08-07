@@ -16,7 +16,7 @@ import {
   __clearComponentsActivityForTests,
   readComponentsActivity,
   writeComponentsActivity,
-} from '../src/components-session/components-activity'
+} from '../src/compositions/components-session/components-activity'
 import { buildAgentBrief, buildNewComponentBrief } from '../src/components/brief'
 import type { ComponentRecord, ComponentsCatalog } from '../src/components/types'
 import { COMPONENTS_CATALOG } from '../components.gen'
@@ -25,7 +25,7 @@ import {
   componentIdFromLocation,
   componentsHomeHref,
   modeFromLocation,
-} from '../src/components-session/components-nav'
+} from '../src/compositions/components-session/components-nav'
 
 const FIXTURE_CATALOG: ComponentsCatalog = {
   schemaVersion: '1.0.0',

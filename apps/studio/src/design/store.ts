@@ -57,7 +57,7 @@ import { DECISION_IDS } from './types'
 
 /** Lazy import to avoid circular design ↔ theme-session at module init. */
 function scheduleDraftPaint(): void {
-  void import('../theme-session/theme-draft-paint')
+  void import('../compositions/theme-session/theme-draft-paint')
     .then((m) => m.scheduleDraftPaint())
     .catch(() => {
       /* theme-session optional in pure design tests */

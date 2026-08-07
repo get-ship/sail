@@ -2,7 +2,7 @@
   <tasks-surface> — thread list + conversation + composer.
 -->
 <controller>
-import { createTasksSurface } from './tasks-surface-vm'
+import { createTasksSurface } from '../compositions/tasks-surface/tasks-surface-vm'
 export default controller(() => {
   const c = createTasksSurface()
   return {

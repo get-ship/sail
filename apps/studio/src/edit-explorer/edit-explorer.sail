@@ -3,7 +3,7 @@
   studio-sidebar · input · empty-state · sail-tree (createTable identity).
 -->
 <controller>
-import { createEditExplorer } from './edit-explorer-vm'
+import { createEditExplorer } from '../compositions/edit-explorer/edit-explorer-vm'
 export default controller(() => {
   const c = createEditExplorer()
   return {

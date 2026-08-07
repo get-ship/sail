@@ -265,7 +265,7 @@ describe('design surface source gates', () => {
       join(REPO, 'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail'),
       'utf8',
     )
-    const shellVm = readFileSync(join(REPO, 'apps/studio/src/shell/shell-page-vm.ts'), 'utf8')
+    const shellVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts'), 'utf8')
     expect(leaf).toMatch(/navigate\(`\$\{base\}\/themes`|\/themes/)
     expect(leaf).toMatch(/data-design-redirect|Opening Themes/)
     expect(leaf).not.toMatch(/<design-surface\b/)
@@ -283,11 +283,11 @@ describe('design surface source gates', () => {
       'utf8',
     )
     const session = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-session.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-session.ts'),
       'utf8',
     )
     const actions = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-session-actions.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-session-actions.ts'),
       'utf8',
     )
     const color = readFileSync(
@@ -315,7 +315,7 @@ describe('design surface source gates', () => {
     expect(color).not.toMatch(/blast radius|used-by-token/i)
     expect(shape).not.toMatch(/blast radius|used-by-token/i)
     const themesVm = readFileSync(
-      join(REPO, 'apps/studio/src/themes-surface/themes-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/themes-surface/themes-surface-vm.ts'),
       'utf8',
     )
     expect(themesVm).not.toMatch(/in Design|Open in Design|stay in Design|use Design/i)
@@ -323,7 +323,7 @@ describe('design surface source gates', () => {
     expect(session).not.toMatch(/In project · editable/)
     expect(session).not.toMatch(/Catalog · view only/)
     const nav = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-nav.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-nav.ts'),
       'utf8',
     )
     expect(nav).not.toMatch(/OVERFLOW_NAV/)
@@ -430,7 +430,7 @@ describe('design surface source gates', () => {
   })
 
   it('chrome boot loads themes and icon glyphs (no activity-signal rail)', () => {
-    const shellVm = readFileSync(join(REPO, 'apps/studio/src/shell/shell-page-vm.ts'), 'utf8')
+    const shellVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts'), 'utf8')
     expect(shellVm).toMatch(/loadThemes/)
     expect(shellVm).toMatch(/loadIconGlyphs/)
     expect(shellVm).not.toMatch(/setActivity/)

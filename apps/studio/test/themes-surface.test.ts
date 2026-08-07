@@ -17,8 +17,8 @@ import {
   setDesignProjectRoot,
   type DesignOpsClient,
 } from '../src/design'
-import { setThemeConfirm } from '../src/theme-session/theme-confirm'
-import { createThemesSurface } from '../src/themes-surface/themes-surface-vm'
+import { setThemeConfirm } from '../src/compositions/theme-session/theme-confirm'
+import { createThemesSurface } from '../src/compositions/themes-surface/themes-surface-vm'
 // mountAmbient requires a setup scope window (controller/setup).
 import {
   createScope,
@@ -28,7 +28,7 @@ import {
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const SURFACE = join(REPO, 'apps/studio/src/themes-surface/themes-surface.sail')
-const VM = join(REPO, 'apps/studio/src/themes-surface/themes-surface-vm.ts')
+const VM = join(REPO, 'apps/studio/src/compositions/themes-surface/themes-surface-vm.ts')
 
 let liveScope: EffectScope | null = null
 
@@ -236,7 +236,7 @@ describe('themes home — honesty UI contracts (source)', () => {
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {
     const vm = readFileSync(VM, 'utf8')
     const confirm = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-confirm.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-confirm.ts'),
       'utf8',
     )
     expect(vm).toMatch(/confirmNewTheme/)

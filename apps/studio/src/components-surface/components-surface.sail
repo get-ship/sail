@@ -9,8 +9,8 @@
 </scope>
 
 <controller>
-import { createComponentsSession } from '../components-session/components-session'
-import { createComponentsLibrary } from '../components-library/components-library'
+import { createComponentsSession } from '../compositions/components-session/components-session'
+import { createComponentsLibrary } from '../compositions/components-library/components-library'
 export default controller(() => {
   const session = createComponentsSession({ mode: 'library' })
   const library = createComponentsLibrary(session)

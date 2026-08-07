@@ -12,9 +12,9 @@ const INSPECT_SURFACE = join(
   REPO,
   'apps/studio/src/components-inspect-surface/components-inspect-surface.sail',
 )
-const SESSION = join(REPO, 'apps/studio/src/components-session/components-session.ts')
-const LIBRARY = join(REPO, 'apps/studio/src/components-library/components-library.ts')
-const INSPECT = join(REPO, 'apps/studio/src/components-inspect/components-inspect.ts')
+const SESSION = join(REPO, 'apps/studio/src/compositions/components-session/components-session.ts')
+const LIBRARY = join(REPO, 'apps/studio/src/compositions/components-library/components-library.ts')
+const INSPECT = join(REPO, 'apps/studio/src/compositions/components-inspect/components-inspect.ts')
 const CATALOG = join(REPO, 'apps/studio/src/components/catalog.ts')
 const BRIEF = join(REPO, 'apps/studio/src/components/brief.ts')
 const PAGE = join(REPO, 'apps/studio/routes/components/page.sail')
@@ -110,9 +110,9 @@ describe('components-surface', () => {
 
   it('line budgets roughly honored', () => {
     for (const [rel, max] of [
-      ['apps/studio/src/components-session/components-session.ts', 400],
-      ['apps/studio/src/components-library/components-library.ts', 400],
-      ['apps/studio/src/components-inspect/components-inspect.ts', 480],
+      ['apps/studio/src/compositions/components-session/components-session.ts', 400],
+      ['apps/studio/src/compositions/components-library/components-library.ts', 400],
+      ['apps/studio/src/compositions/components-inspect/components-inspect.ts', 480],
       ['apps/studio/src/components/catalog.ts', 250],
       ['apps/studio/src/components/brief.ts', 100],
     ] as const) {
@@ -122,8 +122,8 @@ describe('components-surface', () => {
   })
 
   it('shell rail + routes include components', () => {
-    const shellRail = readFileSync(join(REPO, 'apps/studio/src/shell/shell-rail.ts'), 'utf8')
-    const shellVm = readFileSync(join(REPO, 'apps/studio/src/shell/shell-page-vm.ts'), 'utf8')
+    const shellRail = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-rail.ts'), 'utf8')
+    const shellVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts'), 'utf8')
     const routesGen = readFileSync(join(REPO, 'apps/studio/routes.gen.ts'), 'utf8')
     const model = readFileSync(
       join(REPO, 'packages/sail/studio-shell/src/model.ts'),

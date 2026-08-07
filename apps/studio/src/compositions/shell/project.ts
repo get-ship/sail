@@ -11,7 +11,7 @@ export function projectPaths(proj: string): string[] {
       'apps/studio/test/fixtures/tier-s.sail',
       'apps/studio/test/fixtures/tier-i.sail',
       'apps/studio/test/fixtures/tier-c.sail',
-      'apps/studio/src/edit-explorer/edit-explorer-vm.ts',
+      'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts',
     )
   }
   return paths

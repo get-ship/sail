@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Components · Themes · Tasks · Config. Checks is a shell panel.",
   "exports": {
-    ".": "./src/shell/index.ts",
-    "./shell": "./src/shell/index.ts",
+    ".": "./src/compositions/shell/index.ts",
+    "./shell": "./src/compositions/shell/index.ts",
     "./edit": "./src/edit/index.ts",
     "./checks": "./src/checks/index.ts",
     "./design": "./src/design/index.ts",

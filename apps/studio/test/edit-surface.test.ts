@@ -50,7 +50,7 @@ import {
   regionMetaLabel,
   retryPreviewOnce,
   type PreviewFlight,
-} from '../src/edit-surface/preview-helpers'
+} from '../src/compositions/edit-surface/preview-helpers'
 import { paintRegionOverlay } from '../src/edit/region-overlay'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')

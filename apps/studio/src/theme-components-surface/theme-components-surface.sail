@@ -22,9 +22,9 @@
 </scope>
 
 <controller>
-import { createThemeSession } from '../theme-session/theme-session'
-import { watchPreviewHost } from '../theme-session/bind-preview-host'
-import { createComponentsEdit } from './theme-components-edit'
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
+import { createComponentsEdit } from '../compositions/theme-components-surface/theme-components-edit'
 export default controller(() => {
   const session = createThemeSession({
     facet: 'components',

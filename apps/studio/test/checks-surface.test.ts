@@ -815,7 +815,7 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       'utf8',
     )
     const vm = readFileSync(
-      join(REPO, 'apps/studio/src/checks-surface/checks-surface-vm.ts'),
+      join(REPO, 'apps/studio/src/compositions/checks-surface/checks-surface-vm.ts'),
       'utf8',
     )
     expect(surface).toMatch(/rule-group/)

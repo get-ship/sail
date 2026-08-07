@@ -9,21 +9,21 @@ import {
   subscribeEdit,
   type SailTreeNode,
 } from '@ship/studio/edit'
-import { COMPONENTS_CATALOG } from '../../components.gen'
+import { COMPONENTS_CATALOG } from '../../../components.gen'
 import {
   extractTagName,
   isProjectComponentPath,
   projectComponentId,
   recordsFromCatalog,
-} from '../components/catalog'
+} from '../../components/catalog'
 import type {
   IssueRowUi,
   LayoutBoxUi,
   StateRowUi,
   SurfaceOption,
-} from '../components/types'
+} from '../../components/types'
 import type { ComponentsSession } from '../components-session/components-session'
-import { stateCards } from '../edit/views'
+import { stateCards } from '../../edit/views'
 
 /** Pack + project ids for "Show in library" honesty. */
 function knownLibraryIds(): Set<string> {
@@ -314,7 +314,7 @@ export function createComponentsInspect(session: ComponentsSession) {
           const roots = (ret as { roots?: string[] }).roots
           const nodes = (ret as { nodes?: unknown[] }).nodes
           if (Array.isArray(nodes) && nodes.length && Array.isArray(roots)) {
-            const byId = new Map<string, import('../edit/types').TreeNode>()
+            const byId = new Map<string, import('../../edit/types').TreeNode>()
             for (const raw of nodes) {
               const o = raw as Record<string, unknown>
               const id = String(o.id ?? '')

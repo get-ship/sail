@@ -18,9 +18,9 @@
 </scope>
 
 <controller>
-import { createThemeSession } from '../theme-session/theme-session'
-import { watchPreviewHost } from '../theme-session/bind-preview-host'
-import { createAssetsEdit } from './theme-assets-edit'
+import { createThemeSession } from '../compositions/theme-session/theme-session'
+import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
+import { createAssetsEdit } from '../compositions/theme-assets-surface/theme-assets-edit'
 export default controller(() => {
   const session = createThemeSession({
     facet: 'assets',

@@ -14,11 +14,11 @@ const SURFACE = join(
 )
 const VM = join(
   REPO,
-  'apps/studio/src/theme-shape-surface/theme-shape-surface-vm.ts',
+  'apps/studio/src/compositions/theme-shape-surface/theme-shape-surface-vm.ts',
 )
-const EDIT = join(REPO, 'apps/studio/src/theme-shape-surface/theme-shape-edit.ts')
-const RECIPES = join(REPO, 'apps/studio/src/theme-shape-surface/theme-shape-recipes.ts')
-const SESSION = join(REPO, 'apps/studio/src/theme-session/theme-session.ts')
+const EDIT = join(REPO, 'apps/studio/src/compositions/theme-shape-surface/theme-shape-edit.ts')
+const RECIPES = join(REPO, 'apps/studio/src/compositions/theme-shape-surface/theme-shape-recipes.ts')
+const SESSION = join(REPO, 'apps/studio/src/compositions/theme-session/theme-session.ts')
 const PAGE = join(REPO, 'apps/studio/routes/themes/[id]/shape/page.sail')
 const ROUTES_GEN = join(REPO, 'apps/studio/routes.gen.ts')
 
@@ -97,7 +97,7 @@ describe('theme-shape-surface', () => {
     expect(edit).toMatch(/RADIUS_RAMP|0\.5/)
     // Pure helper unit: Soft master 10 → 5/10/15/20; Sharp master 2 → 1/2/3/4.
     const { mockRadiusFamily, RADIUS_RAMP } = await import(
-      '../src/theme-shape-surface/theme-shape-edit'
+      '../src/compositions/theme-shape-surface/theme-shape-edit'
     )
     expect(RADIUS_RAMP).toEqual({ sm: 0.5, md: 1, lg: 1.5, xl: 2 })
     expect(mockRadiusFamily(10)).toEqual({ sm: 5, md: 10, lg: 15, xl: 20 })
@@ -118,7 +118,7 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/glass-mini/)
     expect(sail).not.toMatch(/Live paint after Save until F4/)
     const { withColorAlpha, stripColorAlpha } = await import(
-      '../src/theme-shape-surface/theme-shape-edit'
+      '../src/compositions/theme-shape-surface/theme-shape-edit'
     )
     expect(withColorAlpha('oklch(1 0 0)', 0.72)).toBe('oklch(1 0 0 / 72%)')
     expect(withColorAlpha('oklch(0.99 0.01 240 / 100%)', 0.55)).toBe(
@@ -152,7 +152,7 @@ describe('theme-shape-surface', () => {
     const edit = readFileSync(EDIT, 'utf8')
     const session = readFileSync(SESSION, 'utf8')
     const actions = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-session-actions.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-session-actions.ts'),
       'utf8',
     )
     expect(session).toMatch(/mountAmbient\s*\(/)
@@ -176,10 +176,10 @@ describe('theme-shape-surface', () => {
   it('session path navigates shape among facets', () => {
     const session = readFileSync(SESSION, 'utf8')
     const actions = readFileSync(
-      join(REPO, 'apps/studio/src/theme-session/theme-session-actions.ts'),
+      join(REPO, 'apps/studio/src/compositions/theme-session/theme-session-actions.ts'),
       'utf8',
     )
-    const nav = readFileSync(join(REPO, 'apps/studio/src/theme-session/theme-nav.ts'), 'utf8')
+    const nav = readFileSync(join(REPO, 'apps/studio/src/compositions/theme-session/theme-nav.ts'), 'utf8')
     expect(nav).toMatch(/shape/)
     expect(nav).toMatch(/color/)
     expect(session).toMatch(/navigateFacet/)

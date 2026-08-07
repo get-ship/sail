@@ -4,7 +4,7 @@
   Engine: tree={tree} identity bind.
 -->
 <controller>
-import { createEditElementTree } from './edit-element-tree-vm'
+import { createEditElementTree } from '../compositions/edit-element-tree/edit-element-tree-vm'
 export default controller(() => {
   const vm = createEditElementTree()
   return {
