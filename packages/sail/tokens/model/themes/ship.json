@@ -1,5 +1,5 @@
 {
-  "$description": "SHIP theme \u2014 light/dark modes in one file (modes-in-file).",
+  "$description": "SHIP theme — light/dark modes in one file (modes-in-file).",
   "$extensions": {
     "ship": {
       "layer": "theme",
@@ -10,25 +10,14 @@
   "modes": {
     "light": {
       "color": {
-        "brandAccent": {
-          "default": {
-            "$value": "oklch(0.61 0.23 303)",
-            "$extensions": {
-              "ship": {
-                "cssName": "accent"
-              }
-            },
-            "$type": "color"
+        "backdrop": {
+          "$value": "oklch(0 0 0 / 40%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "backdrop"
+            }
           },
-          "foreground": {
-            "$value": "oklch(0.98 0.02 301)",
-            "$extensions": {
-              "ship": {
-                "cssName": "accent-foreground"
-              }
-            },
-            "$type": "color"
-          }
+          "$type": "color"
         },
         "background": {
           "$value": "oklch(0.975 0.002 106.423)",
@@ -68,11 +57,62 @@
             }
           }
         },
+        "brandAccent": {
+          "default": {
+            "$value": "oklch(0.61 0.23 303)",
+            "$extensions": {
+              "ship": {
+                "cssName": "accent"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.98 0.02 301)",
+            "$extensions": {
+              "ship": {
+                "cssName": "accent-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "destructive": {
+          "default": {
+            "$value": "oklch(0.58 0.22 27)",
+            "$extensions": {
+              "ship": {
+                "cssName": "destructive"
+              }
+            },
+            "$type": "color"
+          }
+        },
         "foreground": {
           "$value": "oklch(0.147 0.004 49.25)",
           "$extensions": {
             "ship": {
               "cssName": "foreground"
+            }
+          },
+          "$type": "color"
+        },
+        "info": {
+          "default": {
+            "$value": "oklch(0.58 0.15 245)",
+            "$extensions": {
+              "ship": {
+                "cssName": "info"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "input": {
+          "$value": "oklch(0.147 0.004 49.25 / 25%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "input"
             }
           },
           "$type": "color"
@@ -128,7 +168,157 @@
             "$type": "color"
           }
         },
+        "scrim": {
+          "$value": "oklch(0 0 0 / 20%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "scrim"
+            }
+          },
+          "$type": "color"
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.95 0.003 106.424)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.147 0.004 49.25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "sidebar": {
+          "default": {
+            "$value": "oklch(0.97 0.004 80)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar"
+              }
+            },
+            "$type": "color"
+          },
+          "accent": {
+            "$value": "oklch(0.95 0.003 106.424)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-accent"
+              }
+            },
+            "$type": "color"
+          },
+          "accent-foreground": {
+            "$value": "oklch(0.147 0.004 49.25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-accent-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "border": {
+            "$value": "oklch(0.147 0.004 49.25 / 12%)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-border"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.147 0.004 49.25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "primary": {
+            "$value": "oklch(0.67 0.16 var(--brand-hue, 58))",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-primary"
+              }
+            },
+            "$type": "color"
+          },
+          "primary-foreground": {
+            "$value": "oklch(0.99 0.02 95)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-primary-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "ring": {
+            "$value": "oklch(0.67 0.16 58 / 40%)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-ring"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "success": {
+          "default": {
+            "$value": "oklch(0.62 0.15 150)",
+            "$extensions": {
+              "ship": {
+                "cssName": "success"
+              }
+            },
+            "$type": "color"
+          }
+        },
         "surface": {
+          "0": {
+            "$value": "oklch(0.97 0.004 80)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-0"
+              }
+            }
+          },
+          "1": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-1"
+              }
+            }
+          },
+          "2": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-2"
+              }
+            }
+          },
+          "3": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-3"
+              }
+            }
+          },
           "overlay": {
             "$value": "none",
             "$extensions": {
@@ -155,59 +345,14 @@
               }
             },
             "$type": "number"
-          },
-          "3": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-3"
-              }
-            }
-          },
-          "2": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-2"
-              }
-            }
-          },
-          "0": {
-            "$value": "oklch(0.97 0.004 80)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-0"
-              }
-            }
-          },
-          "1": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-1"
-              }
-            }
           }
         },
-        "secondary": {
+        "warning": {
           "default": {
-            "$value": "oklch(0.95 0.003 106.424)",
+            "$value": "oklch(0.72 0.15 75)",
             "$extensions": {
               "ship": {
-                "cssName": "secondary"
-              }
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": "oklch(0.147 0.004 49.25)",
-            "$extensions": {
-              "ship": {
-                "cssName": "secondary-foreground"
+                "cssName": "warning"
               }
             },
             "$type": "color"
@@ -465,25 +610,14 @@
         }
       },
       "color": {
-        "brandAccent": {
-          "default": {
-            "$value": "oklch(0.3 0.05 300)",
-            "$extensions": {
-              "ship": {
-                "cssName": "accent"
-              }
-            },
-            "$type": "color"
+        "backdrop": {
+          "$value": "oklch(0 0 0 / 55%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "backdrop"
+            }
           },
-          "foreground": {
-            "$value": "oklch(0.9 0.02 300)",
-            "$extensions": {
-              "ship": {
-                "cssName": "accent-foreground"
-              }
-            },
-            "$type": "color"
-          }
+          "$type": "color"
         },
         "background": {
           "$value": "oklch(0.158 0.012 250)",
@@ -523,11 +657,62 @@
             "$type": "color"
           }
         },
+        "brandAccent": {
+          "default": {
+            "$value": "oklch(0.3 0.05 300)",
+            "$extensions": {
+              "ship": {
+                "cssName": "accent"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.9 0.02 300)",
+            "$extensions": {
+              "ship": {
+                "cssName": "accent-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "destructive": {
+          "default": {
+            "$value": "oklch(0.65 0.20 25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "destructive"
+              }
+            },
+            "$type": "color"
+          }
+        },
         "foreground": {
           "$value": "oklch(0.98 0.001 106)",
           "$extensions": {
             "ship": {
               "cssName": "foreground"
+            }
+          },
+          "$type": "color"
+        },
+        "info": {
+          "default": {
+            "$value": "oklch(0.70 0.14 245)",
+            "$extensions": {
+              "ship": {
+                "cssName": "info"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "input": {
+          "$value": "oklch(1 0 0 / 14%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "input"
             }
           },
           "$type": "color"
@@ -578,6 +763,120 @@
             "$extensions": {
               "ship": {
                 "cssName": "ring"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "scrim": {
+          "$value": "oklch(0 0 0 / 30%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "scrim"
+            }
+          },
+          "$type": "color"
+        },
+        "secondary": {
+          "default": {
+            "$value": "oklch(0.2 0.01 50)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.98 0.001 106)",
+            "$extensions": {
+              "ship": {
+                "cssName": "secondary-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "sidebar": {
+          "default": {
+            "$value": "oklch(0.145 0.014 250)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar"
+              }
+            },
+            "$type": "color"
+          },
+          "accent": {
+            "$value": "oklch(0.22 0.014 250)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-accent"
+              }
+            },
+            "$type": "color"
+          },
+          "accent-foreground": {
+            "$value": "oklch(0.98 0.001 106)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-accent-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "border": {
+            "$value": "oklch(1 0 0 / 12%)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-border"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.98 0.001 106)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "primary": {
+            "$value": "oklch(0.77 0.16 var(--brand-hue, 70))",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-primary"
+              }
+            },
+            "$type": "color"
+          },
+          "primary-foreground": {
+            "$value": "oklch(0.2 0.01 50)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-primary-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "ring": {
+            "$value": "oklch(0.77 0.16 70 / 30%)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-ring"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "success": {
+          "default": {
+            "$value": "oklch(0.72 0.15 150)",
+            "$extensions": {
+              "ship": {
+                "cssName": "success"
               }
             },
             "$type": "color"
@@ -648,21 +947,12 @@
             "$type": "number"
           }
         },
-        "secondary": {
+        "warning": {
           "default": {
-            "$value": "oklch(0.2 0.01 50)",
+            "$value": "oklch(0.78 0.15 75)",
             "$extensions": {
               "ship": {
-                "cssName": "secondary"
-              }
-            },
-            "$type": "color"
-          },
-          "foreground": {
-            "$value": "oklch(0.98 0.001 106)",
-            "$extensions": {
-              "ship": {
-                "cssName": "secondary-foreground"
+                "cssName": "warning"
               }
             },
             "$type": "color"

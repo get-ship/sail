@@ -86,7 +86,7 @@
     },
     {
       "tag": "breadcrumb",
-      "description": "trail host. ol/li/a anatomy + separators via compiler"
+      "description": "list trail host Style; li/a anatomy via compiler descendant map."
     },
     {
       "tag": "button",
