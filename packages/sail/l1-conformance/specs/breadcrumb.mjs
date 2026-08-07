@@ -35,6 +35,17 @@ export default {
             bad.push({ i, why: 'missing-separator', crumb: j })
         }
       })
+      // Token-backed trail paint: links + current must resolve (not transparent).
+      const link = el.querySelector('a:not([aria-current])')
+      if (link) {
+        const cs = getComputedStyle(link)
+        if (!cs.color || cs.color === 'rgba(0, 0, 0, 0)') bad.push({ i, why: 'no-token-link-fg' })
+      }
+      const cur = el.querySelector('[aria-current="page"]')
+      if (cur) {
+        const cs = getComputedStyle(cur)
+        if (!cs.color || cs.color === 'rgba(0, 0, 0, 0)') bad.push({ i, why: 'no-token-current-fg' })
+      }
     })
     return { count: document.querySelectorAll('.sail-breadcrumb').length, bad: bad.slice(0, 8) }
   },
