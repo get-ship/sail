@@ -1,18 +1,23 @@
 /**
- * STUDIO-BOOT-1 — boot smoke: every studio surface body mounts with zero
- * SailMountOutsideSetupError pageerrors.
+ * STUDIO-BROWSER-E2E / STUDIO-BOOT-1 — boot smoke: every studio surface body
+ * mounts with zero pageerrors of any kind (mount-scope + product runtime).
  *
  * Requires sail dev (default http://127.0.0.1:7891):
  *
  *   ./target/debug/sail dev --project apps/studio --addr 127.0.0.1:7891
  *   cd apps/studio && bunx vitest run test/boot-smoke.e2e.test.ts
  *
+ * Optional: STUDIO_EVIDENCE_DIR — write per-route screenshots (png) into that dir.
+ *
  * @vitest-environment node
  */
 import { describe, expect, it } from 'vitest'
 import http from 'node:http'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 const STUDIO = process.env.STUDIO_URL || 'http://127.0.0.1:7891'
+const EVIDENCE_DIR = process.env.STUDIO_EVIDENCE_DIR || ''
 
 /**
  * Product surfaces from STUDIO-BOOT-1, plus `/` which is the dual-scope canary:
@@ -60,11 +65,15 @@ async function studioUp(): Promise<boolean> {
 }
 
 describe('studio boot smoke (live sail dev)', () => {
-  it('studio routes mount surface bodies with zero SailMountOutsideSetupError', async () => {
+  it('studio routes mount surface bodies with zero pageerrors', async () => {
     if (!(await studioUp())) {
       throw new Error(
         `[FAIL] studio not reachable at ${STUDIO} — boot sail dev before boot-smoke`,
       )
+    }
+
+    if (EVIDENCE_DIR) {
+      await mkdir(EVIDENCE_DIR, { recursive: true })
     }
 
     const { chromium } = await import('playwright')
@@ -88,18 +97,24 @@ describe('studio boot smoke (live sail dev)', () => {
         // Root redirect needs a beat for ambient mount → navigate → leaf mount.
         await page.waitForTimeout(route.path === '/' ? 1500 : 800)
 
-        const mountErrors = pageerrors.filter(
-          (e) =>
-            e.includes('SailMountOutsideSetupError') ||
-            e.includes('mount() can only be called while a controller'),
-        )
-        expect(
-          mountErrors,
-          `${route.label}: SailMountOutsideSetupError pageerrors:\n${mountErrors.join('\n')}`,
-        ).toEqual([])
-
         if (route.expectSurface) {
           await page.waitForSelector(route.expectSurface, { timeout: 20_000 })
+        }
+
+        // Zero pageerrors of any kind (not only SailMountOutsideSetupError).
+        expect(
+          pageerrors,
+          `${route.label}: pageerrors:\n${pageerrors.join('\n---\n')}`,
+        ).toEqual([])
+
+        if (EVIDENCE_DIR) {
+          const shot = join(EVIDENCE_DIR, `${route.label}.png`)
+          await page.screenshot({ path: shot, fullPage: true })
+          await writeFile(
+            join(EVIDENCE_DIR, `${route.label}.pageerrors.json`),
+            JSON.stringify({ route: route.path, label: route.label, pageerrors: [] }, null, 2) +
+              '\n',
+          )
         }
       }
     } finally {
