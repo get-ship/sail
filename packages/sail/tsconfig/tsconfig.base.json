@@ -1,13 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "$comment": "Sail project defaults. Include `.sail/types.d.ts` from `sail-compiler types`. tsc owns controller/scope/logic + Style builder types; sail-compiler owns template/layout/vocabulary and Style DSL forms that are not valid TypeScript.",
+  "$comment": "Sail project defaults (TOOLING-1 WI2 / SPEC-TS-1). tsc owns controller/scope/logic + Style builder types; sail-compiler owns template/layout/vocabulary and Style DSL forms that are not valid TypeScript. Project configs MUST register the generated ambient pack (`.sail/types.d.ts` from `sail types`) via `include` so globals resolve — see `emit_project_tsconfig_json`.",
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "strict": true,
-    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true

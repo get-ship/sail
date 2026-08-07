@@ -270,24 +270,95 @@ pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     Ok(path)
 }
 
-/// Default sail project `compilerOptions` shared by typecheck + scaffold docs.
+/// TOOLING-1 WI2 flags that every sail project tsconfig must carry.
+///
+/// Kept as a public list so scaffold smoke tests and package drift checks
+/// share one SSOT with [`sail_tsconfig_compiler_options_json`].
+pub const SAIL_TSCONFIG_REQUIRED_FLAGS: &[&str] = &[
+    "\"strict\": true",
+    "\"noUncheckedIndexedAccess\": true",
+    "\"exactOptionalPropertyTypes\": true",
+    "\"noImplicitOverride\": true",
+    "\"verbatimModuleSyntax\": true",
+    "\"erasableSyntaxOnly\": true",
+    "\"isolatedModules\": true",
+    "\"moduleResolution\": \"Bundler\"",
+    "\"target\": \"ESNext\"",
+    "\"skipLibCheck\": true",
+];
+
+/// Default sail project `compilerOptions` shared by typecheck + scaffold.
+///
+/// Mirrors `packages/sail/tsconfig/tsconfig.base.json` (TOOLING-1 WI2).
+/// Ambient pack registration is **not** a `compilerOptions.types` package
+/// name: the generated file lives at [`PROJECT_TYPES_REL`] and is wired via
+/// `include` in [`emit_project_tsconfig_json`] so globals resolve under tsc.
 pub fn sail_tsconfig_compiler_options_json() -> &'static str {
     r#"{
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "strict": true,
-    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true
   }"#
 }
 
+/// Relative path of the scaffolded oxlint config inside a sail project.
+pub const PROJECT_OXLINT_REL: &str = ".oxlintrc.json";
+
+/// Default oxlint config for TS regions (TOOLING-1 WI2).
+///
+/// Recommended correctness + typescript plugin rule set. Sail-compiler owns
+/// sail-specific template/layout/vocabulary rules — not reimplemented here.
+/// Mirrors `packages/sail/tsconfig/oxlint.base.json`.
+pub fn emit_project_oxlintrc_json() -> String {
+    // No `$comment` — oxlint rejects unknown fields. Docs live in FEATURES.md
+    // and package.json description (TOOLING-1 WI2).
+    r#"{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "browser": true
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.deck/**",
+    "**/.sail/**",
+    "**/.sail-out/**"
+  ]
+}
+"#
+    .to_string()
+}
+
+/// Write `<project>/.oxlintrc.json` (scaffold / create path).
+pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
+    let path = project.join(PROJECT_OXLINT_REL);
+    fs::write(&path, emit_project_oxlintrc_json())
+        .with_context(|| format!("write {}", path.display()))?;
+    Ok(path)
+}
+
 /// Build a project-root `tsconfig.json` body that includes the ambient pack.
 ///
 /// `include_globs` are relative to the project (e.g. `src/**/*.ts`).
+/// The generated ambient pack ([`PROJECT_TYPES_REL`]) is always first in
+/// `include` so globals (`signal`, `controller`, `style`, …) register under
+/// tsc with zero hand ambient shims.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
     let mut includes = Vec::with_capacity(include_globs.len() + 1);
     includes.push(format!("\"{PROJECT_TYPES_REL}\""));
@@ -296,10 +367,12 @@ pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
     }
     format!(
         "{{\n  \
+         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2). Ambient pack registered via include of {pack}.\",\n  \
          \"compilerOptions\": {opts},\n  \
          \"include\": [{inc}],\n  \
          \"exclude\": [\"node_modules\", \"dist\", \".deck\", \".sail-out\"]\n\
          }}\n",
+        pack = PROJECT_TYPES_REL,
         opts = sail_tsconfig_compiler_options_json(),
         inc = includes.join(", "),
     )
@@ -1182,5 +1255,87 @@ mod tests {
         assert!(!is_ambient_const_name("2"));
         assert!(!is_ambient_const_name("1_5"));
         assert!(!is_ambient_const_name("default"));
+    }
+
+    #[test]
+    fn project_tsconfig_carries_tooling_wi2_flags_and_ambient_include() {
+        let opts = sail_tsconfig_compiler_options_json();
+        for flag in SAIL_TSCONFIG_REQUIRED_FLAGS {
+            assert!(
+                opts.contains(flag),
+                "sail_tsconfig_compiler_options_json missing {flag}:\n{opts}"
+            );
+        }
+        let body = emit_project_tsconfig_json(&["src/**/*.ts", "routes/**/*.ts"]);
+        for flag in SAIL_TSCONFIG_REQUIRED_FLAGS {
+            assert!(
+                body.contains(flag),
+                "emit_project_tsconfig_json missing {flag}:\n{body}"
+            );
+        }
+        assert!(
+            body.contains(PROJECT_TYPES_REL),
+            "project tsconfig must include ambient pack path:\n{body}"
+        );
+        assert!(
+            body.contains("\"src/**/*.ts\"") && body.contains("\"routes/**/*.ts\""),
+            "project tsconfig must include authored globs:\n{body}"
+        );
+    }
+
+    #[test]
+    fn project_oxlintrc_is_recommended_plus_typescript() {
+        let body = emit_project_oxlintrc_json();
+        assert!(
+            body.contains("\"typescript\""),
+            "oxlint must enable typescript plugin:\n{body}"
+        );
+        assert!(
+            body.contains("\"correctness\""),
+            "oxlint must enable recommended correctness category:\n{body}"
+        );
+        assert!(
+            body.contains("\"eslint\"") && body.contains("\"oxc\""),
+            "oxlint recommended plugin set incomplete:\n{body}"
+        );
+        // Sail-specific rules stay in sail-compiler — config must not pretend
+        // to own template vocabulary (no `sail-*` / `sail/` rule entries).
+        assert!(
+            !body.contains("\"sail-") && !body.contains("\"sail/"),
+            "oxlint must not embed sail-compiler rules:\n{body}"
+        );
+    }
+
+    #[test]
+    fn package_tsconfig_base_matches_emit_flags() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
+        let path = root.join("packages/sail/tsconfig/tsconfig.base.json");
+        let raw = fs::read_to_string(&path).expect("tsconfig.base.json readable");
+        for flag in SAIL_TSCONFIG_REQUIRED_FLAGS {
+            assert!(
+                raw.contains(flag),
+                "packages/sail/tsconfig/tsconfig.base.json missing {flag}:\n{raw}"
+            );
+        }
+    }
+
+    #[test]
+    fn package_oxlint_base_matches_emit() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
+        let path = root.join("packages/sail/tsconfig/oxlint.base.json");
+        let raw = fs::read_to_string(&path).expect("oxlint.base.json readable");
+        let emit = emit_project_oxlintrc_json();
+        // Structural parity: plugins + categories must agree (schema path may
+        // differ slightly between package and emit — compare rule surface).
+        for needle in [
+            "\"typescript\"",
+            "\"eslint\"",
+            "\"oxc\"",
+            "\"correctness\": \"error\"",
+            "\"suspicious\": \"warn\"",
+        ] {
+            assert!(raw.contains(needle), "package oxlint missing {needle}:\n{raw}");
+            assert!(emit.contains(needle), "emit oxlint missing {needle}:\n{emit}");
+        }
     }
 }

@@ -1,0 +1,17 @@
+{
+  "plugins": ["eslint", "typescript", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "browser": true
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.deck/**",
+    "**/.sail/**",
+    "**/.sail-out/**"
+  ]
+}

@@ -249,25 +249,27 @@ pub fn run_pack(name: String) -> Result<()> {
     );
     fs::write(base.join("package.json"), pkg_json)?;
 
-    // Align with packages/sail/tsconfig/tsconfig.base.json (inline so a
-    // freshly scaffolded pack typechecks without an extra workspace dep).
+    // Align with packages/sail/tsconfig/tsconfig.base.json (TOOLING-1 WI2)
+    // plus pack emit flags (declaration/outDir). Inline so a freshly
+    // scaffolded pack typechecks without an extra workspace dep.
     let tsconfig = "{\n  \
          \"compilerOptions\": {\n    \
-         \"target\": \"ES2022\",\n    \
+         \"target\": \"ESNext\",\n    \
          \"module\": \"ESNext\",\n    \
          \"moduleResolution\": \"Bundler\",\n    \
-         \"lib\": [\"ES2022\", \"DOM\", \"DOM.Iterable\"],\n    \
+         \"lib\": [\"ESNext\", \"DOM\", \"DOM.Iterable\"],\n    \
          \"strict\": true,\n    \
-         \"noImplicitAny\": true,\n    \
          \"noUncheckedIndexedAccess\": true,\n    \
          \"exactOptionalPropertyTypes\": true,\n    \
+         \"noImplicitOverride\": true,\n    \
+         \"verbatimModuleSyntax\": true,\n    \
+         \"erasableSyntaxOnly\": true,\n    \
+         \"isolatedModules\": true,\n    \
          \"declaration\": true,\n    \
          \"outDir\": \"dist\",\n    \
          \"rootDir\": \"src\",\n    \
          \"skipLibCheck\": true,\n    \
          \"esModuleInterop\": true,\n    \
-         \"isolatedModules\": true,\n    \
-         \"verbatimModuleSyntax\": true,\n    \
          \"noEmit\": false\n  \
          },\n  \
          \"include\": [\"src/**/*\"],\n  \
@@ -349,8 +351,9 @@ fn validate_app_name(name: &str) -> Result<()> {
 ///   .gitignore           # includes .deck/ (build output — never commit)
 /// ```
 ///
-/// Also seeds `.sail/types.d.ts` + a thin `tsconfig.json` so the TS-1 ambient
-/// path works out of the box. Does **not** publish to a registry (operator).
+/// Also seeds `.sail/types.d.ts`, strict `tsconfig.json` (TOOLING-1 WI2), and
+/// `.oxlintrc.json` so typecheck + oxlint work out of the box with zero hand
+/// edits. Does **not** publish to a registry (operator).
 pub fn run_create(name: PathBuf) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let app_dir = if name.as_os_str().is_empty() {
@@ -375,6 +378,8 @@ pub fn run_create(name: PathBuf) -> Result<()> {
 
     // Registry-style deps only (no file:, no workspace:*). Versions track the
     // monorepo package versions; operator npm publish is out of band (E8).
+    // typescript + oxlint as devDeps so a fresh app type-checks / lints with
+    // zero hand edits after install (TOOLING-1 WI2).
     let pkg_json = format!(
         "{{\n  \
          \"name\": \"{basen}\",\n  \
@@ -385,12 +390,18 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"scripts\": {{\n    \
          \"dev\": \"sail dev\",\n    \
          \"build\": \"sail build\",\n    \
-         \"check\": \"sail check .\"\n  \
+         \"check\": \"sail check .\",\n    \
+         \"typecheck\": \"tsc --noEmit -p tsconfig.json\",\n    \
+         \"lint\": \"oxlint .\"\n  \
          }},\n  \
          \"dependencies\": {{\n    \
          \"@ship/sail-runtime\": \"^0.3.0\",\n    \
          \"@ship/sail-dom\": \"^0.3.0\",\n    \
          \"@ship/tokens\": \"^0.3.0\"\n  \
+         }},\n  \
+         \"devDependencies\": {{\n    \
+         \"typescript\": \"~5.8.3\",\n    \
+         \"oxlint\": \"^1.77.0\"\n  \
          }}\n\
          }}\n"
     );
@@ -427,9 +438,9 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     sail_ops::ensure_project_store(&app_dir)
         .map_err(|e| anyhow!("ensure project store (.gitignore / .sail): {e}"))?;
 
-    // Ambient pack + tsconfig so `tsc` works without a monorepo ambient path.
-    // `.sail/types.d.ts` is gitignored via ensure_project_store; regenerate
-    // with `sail types` after clone if needed.
+    // Ambient pack + strict tsconfig + oxlint so `tsc` / `oxlint` work with
+    // zero hand edits (TOOLING-1 WI2). `.sail/types.d.ts` is gitignored via
+    // ensure_project_store; regenerate with `sail types` after clone if needed.
     let _ = sail_compiler::ambients::write_project_types(&app_dir)?;
     let tsconfig = sail_compiler::ambients::emit_project_tsconfig_json(&[
         "src/**/*.ts",
@@ -437,6 +448,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     ]);
     fs::write(app_dir.join("tsconfig.json"), tsconfig)
         .with_context(|| format!("write {}/tsconfig.json", app_dir.display()))?;
+    let _ = sail_compiler::ambients::write_project_oxlintrc(&app_dir)?;
 
     let rel = app_dir
         .strip_prefix(&cwd)
@@ -455,12 +467,13 @@ pub fn run_create(name: PathBuf) -> Result<()> {
             .display()
     );
     println!("[create]   .gitignore  (includes .deck/)");
-    println!("[create]   tsconfig.json  .sail/types.d.ts");
+    println!("[create]   tsconfig.json  .sail/types.d.ts  .oxlintrc.json");
     println!("[create] next steps:");
     println!("  1. cd {rel}");
     println!("  2. bun install   # after @ship packages are published");
-    println!("  3. sail dev");
-    println!("  4. sail check .");
+    println!("  3. bun run typecheck && bun run lint");
+    println!("  4. sail dev");
+    println!("  5. sail check .");
     Ok(())
 }
 

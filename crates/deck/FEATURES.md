@@ -149,7 +149,9 @@ The pure SAIL-facing read side, plus the framework CLI.
 | CLI: scaffold pack | `sail scaffold pack` | `crates/deck/deck-cli/src/scaffold.rs::run_pack` | Generates a new first-party `@ship/<name>` component pack. |
 | CLI: types (ambient pack) | `sail types` | `crates/deck/deck-cli/src/peer.rs::types` | Emits `<project>/.sail/types.d.ts` from compiler manifests (runtime ambients + Style builder + token scales) for tsc/tsgo. |
 | CLI: build --typecheck | `sail build --typecheck` | `crates/deck/deck-cli/src/typecheck.rs::run` | Regenerates ambients + runs `tsc --noEmit` with sail tsconfig defaults. **tsc** owns controller/logic/Style types; **sail-compiler** owns template/layout/vocabulary. |
-| Base tsconfig | `@ship/sail-tsconfig/base` | `packages/sail/tsconfig/tsconfig.base.json` | Shared strict/bundler/DOM defaults for sail projects. |
+| Base tsconfig | `@ship/sail-tsconfig/base` | `packages/sail/tsconfig/tsconfig.base.json` | TOOLING-1 WI2 strict defaults: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `isolatedModules`, `moduleResolution: Bundler`, `target: ESNext`, `skipLibCheck`. Project configs register the generated ambient pack via `include` of `.sail/types.d.ts`. |
+| Base oxlint | `@ship/sail-tsconfig/oxlint` | `packages/sail/tsconfig/oxlint.base.json` | TOOLING-1 WI2 TS-region defaults: recommended `correctness` (+ `suspicious` warn) with `eslint`/`typescript`/`oxc` plugins. Sail-compiler owns sail-specific rules only. Scaffolded as `.oxlintrc.json` by `sail create`. |
+| CLI: create (TS defaults) | `sail create` | `crates/deck/deck-cli/src/scaffold.rs::run_create` | Emits package.json (typecheck/lint scripts + typescript/oxlint devDeps), strict `tsconfig.json` (ambient include), `.sail/types.d.ts`, and `.oxlintrc.json`. |
 
 ## Security
 

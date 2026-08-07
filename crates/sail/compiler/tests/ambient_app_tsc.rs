@@ -112,6 +112,27 @@ fn ambient_app_fixture_tsc_no_emit_green() {
         "fixture tsconfig must include generated ambient pack:\n{tsconfig}"
     );
 
+    // TOOLING-1 WI2: base carries the strict flag set (fixture extends it).
+    let base = fs::read_to_string(repo.join("packages/sail/tsconfig/tsconfig.base.json")).unwrap();
+    for flag in ambients::SAIL_TSCONFIG_REQUIRED_FLAGS {
+        assert!(
+            base.contains(flag),
+            "tsconfig.base missing WI2 flag {flag}:\n{base}"
+        );
+    }
+    // Oxlint defaults present (recommended + typescript for TS regions).
+    let oxlint = project.join(".oxlintrc.json");
+    assert!(
+        oxlint.is_file(),
+        "fixture missing .oxlintrc.json at {}",
+        oxlint.display()
+    );
+    let oxlint_body = fs::read_to_string(&oxlint).unwrap();
+    assert!(
+        oxlint_body.contains("typescript") && oxlint_body.contains("correctness"),
+        "fixture oxlint must enable typescript + recommended correctness:\n{oxlint_body}"
+    );
+
     assert_no_hand_ambient_shims(&project);
 
     // Emit path consumers use: `sail types` / `write_project_types` → `.sail/types.d.ts`
