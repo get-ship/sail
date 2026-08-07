@@ -298,6 +298,49 @@ mod tests {
         .to_string()
     }
 
+    /// PACK-IMPORTS-1: the seven first-party L2 packs that FREEZE-HONESTY-1
+    /// L-2 wrongly refused must compile under the pack import envelope so CEM
+    /// generation (and `sail dev`) can proceed.
+    #[test]
+    fn first_party_packs_compile_under_pack_import_envelope() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .expect("repo root");
+        // The seven packs named in SPEC-PACK-IMPORTS-1 (relative imports +
+        // declared vendors). chat-elements is also a pack and should compile,
+        // but the acceptance gate is these seven.
+        let packs = [
+            "canvas",
+            "charts",
+            "code-editor",
+            "media",
+            "mermaid",
+            "primitives",
+            "viewer",
+        ];
+        let mut failures = Vec::new();
+        for name in packs {
+            let root = repo.join(format!("packages/components/sail/{name}"));
+            match write_pack_cem(&root) {
+                Ok(Some(path)) => {
+                    assert!(
+                        path.exists(),
+                        "{name}: CEM path missing after write: {}",
+                        path.display()
+                    );
+                }
+                Ok(None) => failures.push(format!("{name}: no customElements field")),
+                Err(e) => failures.push(format!("{name}: {e:#}")),
+            }
+        }
+        assert!(
+            failures.is_empty(),
+            "pack CEM generation failed under pack import envelope:\n{}",
+            failures.join("\n")
+        );
+    }
+
     /// Compile a component .sail in-process and verify the merged CEM is written.
     #[test]
     fn write_pack_cem_writes_standard_manifest() {

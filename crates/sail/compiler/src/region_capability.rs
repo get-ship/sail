@@ -110,7 +110,7 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         legal: "subset",
         status: "enforced",
         enforcement: "sail-controller-import-convention (Error) + ACTIONS-1 floor on src/actions/**",
-        notes: "Value imports: @ship/* packages, relative .sail types, src/actions|compositions|serverfns; type-only free",
+        notes: "L3 value imports: @ship/*, relative .sail, src/actions|compositions|serverfns. Pack envelope (package.json customElements): relative modules under pack root + declared dependencies/peerDependencies. Type-only free",
     },
     RegionCapability {
         region: "controller",
