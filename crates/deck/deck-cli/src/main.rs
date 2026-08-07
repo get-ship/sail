@@ -34,7 +34,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (create, dev, build, scaffold, compile, tokens, types, check, lsp, mcp, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (create, dev, build, scaffold, compile, tokens, types, check, fmt, lsp, mcp, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -177,6 +177,18 @@ enum Command {
         /// prefer-primitive): off | suggest | apply.
         #[arg(long, default_value = "off")]
         fix: String,
+    },
+
+    /// Pretty-print `.sail` sources (template CST + oxfmt for scope/controller).
+    ///
+    /// Format is scaffold-pinned (no user knobs). Idempotent: `fmt ∘ fmt = fmt`.
+    Fmt {
+        /// File or directory of `.sail` sources. Default: cwd.
+        #[arg(default_value = ".")]
+        input: PathBuf,
+        /// Check only — exit 1 if any file would change (CI).
+        #[arg(long)]
+        check: bool,
     },
 
     /// Language server (stdio) — same protocol as the `sail-lsp` package binary.
@@ -373,6 +385,7 @@ fn run() -> Result<()> {
             tsconfig_out,
         } => peer::types(project, out, tsconfig_out),
         Command::Check { input, fix } => peer::check(input, fix),
+        Command::Fmt { input, check } => peer::fmt(input, check),
         Command::Lsp => peer::lsp(),
         Command::Mcp => {
             peer::mcp();

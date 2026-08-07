@@ -34,6 +34,13 @@ pub fn preprocess_author(source: &str) -> Result<String, CompileError> {
     Ok(lower_prop_shorthand(&s))
 }
 
+/// Normalize only enough for the real HTML CST parse used by `fmt`.
+/// Quotes unquoted brace attrs and expands non-void self-closers — no
+/// Style/layout/prop desugar (those are compile semantics, not format).
+pub fn prepare_fmt(source: &str) -> String {
+    expand_self_close(&quote_brace_attrs(source))
+}
+
 /// The full pipeline with the stdlib-element pass switchable — element
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).

@@ -716,8 +716,8 @@ fn sail_help_lists_mvp_subcommands() {
     assert!(out.status.success());
     let help = String::from_utf8_lossy(&out.stdout);
     for cmd in [
-        "create", "dev", "build", "scaffold", "tokens", "compile", "check", "lsp", "mcp", "op",
-        "layout", "doctor", "version",
+        "create", "dev", "build", "scaffold", "tokens", "compile", "check", "fmt", "lsp", "mcp",
+        "op", "layout", "doctor", "version",
     ] {
         assert!(
             help.contains(cmd),

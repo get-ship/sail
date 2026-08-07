@@ -43,6 +43,7 @@ pub mod directive_manifest;
 pub mod edit;
 pub mod emit;
 pub mod escape;
+pub mod fmt;
 pub mod grammar_vocabulary;
 pub mod ir;
 pub mod keys;
@@ -71,6 +72,7 @@ pub use analysis::{
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
 pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
+pub use fmt::{FormatError, FormatOpts, FormatResult, format_source, format_source_with, is_formatted};
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
     L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,

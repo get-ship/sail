@@ -49,11 +49,12 @@ use lsp_server::{Connection, ExtractError, Message, Request, RequestId, Response
 use lsp_types::{
     CodeAction, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CodeActionResponse, CompletionItem, CompletionItemKind,
-    CompletionOptions, CompletionParams, Diagnostic, DiagnosticSeverity, GotoDefinitionParams,
-    GotoDefinitionResponse, Hover, HoverContents, HoverParams, HoverProviderCapability, Location,
-    MarkupContent, MarkupKind, NumberOrString, OneOf, OptionalVersionedTextDocumentIdentifier,
-    Position, PublishDiagnosticsParams, Range, ServerCapabilities, TextDocumentEdit,
-    TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Url, WorkspaceEdit,
+    CompletionOptions, CompletionParams, Diagnostic, DiagnosticSeverity,
+    DocumentFormattingParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
+    HoverParams, HoverProviderCapability, Location, MarkupContent, MarkupKind, NumberOrString,
+    OneOf, OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
+    ServerCapabilities, TextDocumentEdit, TextDocumentSyncCapability, TextDocumentSyncKind,
+    TextEdit, Url, WorkspaceEdit,
 };
 
 use tsgo::TsgoSession;
@@ -84,6 +85,8 @@ fn server_capabilities() -> ServerCapabilities {
             code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
             ..Default::default()
         })),
+        // Same `sail_compiler::format_source` path as `sail fmt` / codemods.
+        document_formatting_provider: Some(OneOf::Left(true)),
         ..Default::default()
     }
 }
@@ -193,6 +196,9 @@ fn handle_request(
             respond(req, |id, params| on_definition(docs, tsgo, id, params))
         }
         "textDocument/codeAction" => respond(req, |id, params| on_code_action(docs, id, params)),
+        "textDocument/formatting" => {
+            respond(req, |id, params| on_formatting(docs, id, params))
+        }
         _ => None,
     };
     if let Some(resp) = resp {
@@ -239,6 +245,30 @@ fn cast<P: serde::de::DeserializeOwned>(
         error: serde_json::Error::io(std::io::Error::other("bad params")),
     })?;
     Ok((id, params))
+}
+
+/// Full-document format via the same `sail_compiler::format_source` path as
+/// `sail fmt` (TOOLING-1 WI1). Options from the client are ignored — format
+/// is scaffold-pinned.
+fn on_formatting(
+    docs: &Docs,
+    _id: RequestId,
+    params: DocumentFormattingParams,
+) -> Option<Vec<TextEdit>> {
+    let uri = &params.text_document.uri;
+    let text = docs.get(uri)?;
+    let formatted = match sail_compiler::format_source(text) {
+        Ok(r) => r.source,
+        Err(_) => return None,
+    };
+    if formatted == *text {
+        return Some(vec![]);
+    }
+    let end = offset_to_position(text, text.len());
+    Some(vec![TextEdit {
+        range: Range::new(Position::new(0, 0), end),
+        new_text: formatted,
+    }])
 }
 
 fn on_hover(

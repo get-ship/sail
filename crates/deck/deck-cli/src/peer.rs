@@ -50,7 +50,7 @@ pub fn doctor(brand: &str) -> Result<()> {
     }
 
     // Peer libraries linked into this binary — not PATH probes.
-    println!("  sail compile/tokens/check: in-process (sail-compiler)");
+    println!("  sail compile/tokens/check/fmt: in-process (sail-compiler)");
     println!("  sail lsp: in-process (sail-lsp)");
     println!("  sail mcp: in-process (sail-mcp → sail-ops)");
     println!("  sail op: in-process (sail-ops Connect handlers)");
@@ -215,6 +215,88 @@ fn parse_op_target(target: &str) -> Result<(String, String)> {
         bail!("expected Service/Method, got `{target}`");
     }
     Ok((service.to_string(), method.to_string()))
+}
+
+/// `sail fmt` — pretty-print `.sail` files (CST template + oxfmt TS regions).
+///
+/// `--check` fails (exit via bail) when any file is not already canonical.
+pub fn fmt(input: PathBuf, check: bool) -> Result<()> {
+    let path = if input.is_absolute() {
+        input
+    } else {
+        std::env::current_dir()?.join(input)
+    };
+    let mut files = Vec::new();
+    if path.is_file() {
+        if path.extension().and_then(|e| e.to_str()) != Some("sail") {
+            bail!("not a .sail file: {}", path.display());
+        }
+        files.push(path);
+    } else if path.is_dir() {
+        collect_sail_files(&path, &mut files)?;
+        if files.is_empty() {
+            bail!("no .sail files under {}", path.display());
+        }
+        files.sort();
+    } else {
+        bail!("not a file or directory: {}", path.display());
+    }
+
+    let mut oxfmt_warned = false;
+    let mut changed = 0usize;
+    let mut failed = 0usize;
+    for f in &files {
+        match fmt_one(f, check, &mut oxfmt_warned) {
+            Ok(true) => changed += 1,
+            Ok(false) => {}
+            Err(e) => {
+                eprintln!("sail fmt: {}: {e:#}", f.display());
+                failed += 1;
+            }
+        }
+    }
+    if failed > 0 {
+        bail!("{failed}/{} file(s) failed to format", files.len());
+    }
+    if check {
+        if changed > 0 {
+            bail!("{changed}/{} file(s) need formatting", files.len());
+        }
+        println!("sail fmt --check: {} file(s) ok", files.len());
+    } else {
+        println!(
+            "sail fmt: {} file(s), {} rewritten",
+            files.len(),
+            changed
+        );
+    }
+    Ok(())
+}
+
+/// Format one file. Returns `Ok(true)` if content would change / did change.
+fn fmt_one(path: &Path, check: bool, oxfmt_warned: &mut bool) -> Result<bool> {
+    let original =
+        std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+    let result = sail_compiler::format_source(&original)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    if result.oxfmt_missing && !*oxfmt_warned {
+        eprintln!(
+            "sail fmt: warning: oxfmt not found (node_modules/.bin or PATH) — \
+             scope/controller regions indent-only; install oxfmt for TS format"
+        );
+        *oxfmt_warned = true;
+    }
+    if result.source == original {
+        return Ok(false);
+    }
+    if check {
+        println!("would reformat {}", path.display());
+        return Ok(true);
+    }
+    std::fs::write(path, &result.source)
+        .with_context(|| format!("write {}", path.display()))?;
+    println!("formatted {}", path.display());
+    Ok(true)
 }
 
 /// `sail check` — compile-time diagnostics for one `.sail` file or directory.
