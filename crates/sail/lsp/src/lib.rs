@@ -29,11 +29,14 @@ mod tsgo;
 mod virtual_ts;
 
 /// Public library API: hover / complete / diagnostics without stdio LSP.
+///
+/// SPEC-LSP-1 names (`hover_at_sail`, `completions_at_sail`, `diagnostics_for_sail`)
+/// are thin aliases of `hover_sail` / `complete_sail` / `diagnostics_sail`.
 pub use intelligence::{
     CompletionItemPayload, DiagPayload, HoverPayload, Intelligence, RangePayload, complete_sail,
-    complete_with_session, completion_payloads_from_tsgo, diagnostics_sail, diagnostics_sail_tier,
-    diagnostics_with_session, doc_key, hover_payload_from_tsgo, hover_sail, hover_with_session,
-    with_global_session,
+    complete_with_session, completion_payloads_from_tsgo, completions_at_sail, diagnostics_for_sail,
+    diagnostics_sail, diagnostics_sail_tier, diagnostics_with_session, doc_key,
+    hover_at_sail, hover_payload_from_tsgo, hover_sail, hover_with_session, with_global_session,
 };
 
 // Integration tests (`tests/tsgo_proxy.rs`) exercise the public surface of the

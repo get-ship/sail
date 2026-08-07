@@ -192,6 +192,17 @@ pub fn hover_sail(
     })
 }
 
+/// SPEC-LSP-1 name for [`hover_sail`].
+#[inline]
+pub fn hover_at_sail(
+    source: &str,
+    path: Option<&str>,
+    line_1based: u32,
+    col_1based: u32,
+) -> Option<HoverPayload> {
+    hover_sail(source, path, line_1based, col_1based)
+}
+
 /// Completions convenience: uses the process-local session.
 pub fn complete_sail(
     source: &str,
@@ -205,10 +216,27 @@ pub fn complete_sail(
     })
 }
 
+/// SPEC-LSP-1 name for [`complete_sail`].
+#[inline]
+pub fn completions_at_sail(
+    source: &str,
+    path: Option<&str>,
+    line_1based: u32,
+    col_1based: u32,
+) -> Vec<CompletionItemPayload> {
+    complete_sail(source, path, line_1based, col_1based)
+}
+
 /// Diagnostics convenience: uses the process-local session.
 /// Full (OnSave) stream — for MCP/agent-style explicit checks.
 pub fn diagnostics_sail(source: &str, path: Option<&str>) -> Vec<DiagPayload> {
     diagnostics_sail_tier(source, path, sail_compiler::DiagnosticTier::OnSave)
+}
+
+/// SPEC-LSP-1 name for [`diagnostics_sail`].
+#[inline]
+pub fn diagnostics_for_sail(source: &str, path: Option<&str>) -> Vec<DiagPayload> {
+    diagnostics_sail(source, path)
 }
 
 /// Diagnostics convenience with explicit tier (SPEC-TOOLING-1 §WI6).
@@ -588,6 +616,8 @@ export default controller((ctx) => ({ count: signal(0) }))
 
     #[test]
     fn hover_signal_typed_when_tsgo_present() {
+        // Soft-skip only when tsgo/node_modules is missing. When the session is
+        // live, require a typed hover (warm + brief settle; no silent skip).
         if crate::tsgo::discover_tsgo(Some(&repo_root())).is_none() {
             eprintln!("SKIP intelligence hover: no tsgo");
             return;
@@ -602,8 +632,23 @@ export default controller((ctx) => ({ count: signal(0) }))
         let (line0, col0) = offset_to_lsp_position(COUNTER, offset);
         let line = line0 + 1;
         let col = col0 + 1;
+        let path = Some("/tmp/intel-counter.sail");
+        // Open before sleeping — a pre-open sleep never settles project load.
+        intel.open_or_update(&doc_key(path, "hover.sail"), COUNTER);
         std::thread::sleep(std::time::Duration::from_millis(200));
-        let hover = intel.hover_sail(COUNTER, Some("/tmp/intel-counter.sail"), line, col);
+        let mut hover = intel.hover_sail(COUNTER, path, line, col);
+        // One retry after settle: first hover can race project graph warm-up.
+        if hover
+            .as_ref()
+            .map(|h| {
+                let t = h.contents.to_ascii_lowercase();
+                !(t.contains("signal") || t.contains("function"))
+            })
+            .unwrap_or(true)
+        {
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            hover = intel.hover_sail(COUNTER, path, line, col);
+        }
         assert!(hover.is_some(), "expected hover on signal");
         let text = hover.unwrap().contents.to_ascii_lowercase();
         assert!(
