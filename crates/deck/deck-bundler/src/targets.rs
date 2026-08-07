@@ -119,11 +119,20 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
     // navigate / mountRouter / mergeRoutes). Every per-app `routes.gen.ts`
     // imports `mountRouter` from it (ADR unified-deck-router), and the daemon
     // serves it via `include_str!` (assets.rs `DECK_ROUTE_JS`).
+    //
+    // BOTH bare `@ship/sail-runtime` AND `/internal` must stay external: the
+    // importmap maps them to the same `/_deck/runtime.js` singleton.
+    // `mountRouter` imports host `mount` from `/internal`; if only the bare
+    // specifier is external, Rolldown inlines `/internal` (effect-scope +
+    // mount) into deck-route.js. Then `withScope` sets CURRENT_SCOPE in the
+    // inlined copy while page controllers call `mountAmbient` on the real
+    // runtime — dual CURRENT_SCOPE → SailMountOutsideSetupError on every
+    // route that uses ambient mount (STUDIO-BOOT-1).
     FrameworkSingleton {
         name: "deck-route",
         spec: "@ship/deck-router",
         out_file: "deck-route.js",
-        externals: &["@ship/sail-runtime"],
+        externals: &["@ship/sail-runtime", "@ship/sail-runtime/internal"],
         co_assets: &[],
     },
     // `@ship/sail-studio-bridge` — DEV-only Studio bridge (hotkeys, FAB,
@@ -515,6 +524,24 @@ mod tests {
             "node-resolved framework target present"
         );
         assert!(names.contains(&"routes/git/route"), "discovered view");
+    }
+
+    /// STUDIO-BOOT-1: deck-route must externalize both the bare runtime and
+    /// `/internal` so host `mount` is not inlined with a second CURRENT_SCOPE.
+    #[test]
+    fn deck_route_externals_include_runtime_internal() {
+        let route = FRAMEWORK_SINGLETONS
+            .iter()
+            .find(|s| s.name == "deck-route")
+            .expect("deck-route framework singleton");
+        assert!(
+            route.externals.contains(&"@ship/sail-runtime"),
+            "bare @ship/sail-runtime must stay external"
+        );
+        assert!(
+            route.externals.contains(&"@ship/sail-runtime/internal"),
+            "@ship/sail-runtime/internal must stay external (host mount + effect-scope singleton)"
+        );
     }
 
     /// A framework singleton that doesn't resolve from this repo (not installed)

@@ -758,6 +758,45 @@ mod tests {
         );
     }
 
+    /// STUDIO-BOOT-1: deck-route must keep `@ship/sail-runtime/internal` external
+    /// so host `mount` is not inlined with a second CURRENT_SCOPE. The importmap
+    /// maps bare + `/internal` to one `/_deck/runtime.js`; inlining forks it.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn deck_route_keeps_runtime_internal_external() {
+        let repo = repo_root();
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+
+        let targets = layout.all_targets();
+        let Some(route) = targets.iter().find(|t| t.name == "deck-route") else {
+            eprintln!(
+                "SKIP deck_route_keeps_runtime_internal_external: no deck-route target \
+                 (package not resolvable from this root)"
+            );
+            return;
+        };
+        let m = bundle_target(&layout, route, staging.path(), true)
+            .await
+            .expect("deck-route should bundle");
+        let body = std::fs::read_to_string(&m.out_path).unwrap();
+        assert!(
+            body.contains("@ship/sail-runtime"),
+            "deck-route keeps bare @ship/sail-runtime external"
+        );
+        assert!(
+            body.contains("@ship/sail-runtime/internal"),
+            "deck-route keeps @ship/sail-runtime/internal external (host mount)"
+        );
+        // Host mount.ts lives on /internal; if it is inlined, this sentinel from
+        // packages/sail/runtime/src/mount.ts rides into deck-route.js.
+        assert!(
+            !body.contains("missing default.setup()"),
+            "host mount must not be inlined into deck-route (dual CURRENT_SCOPE)"
+        );
+    }
+
     #[tokio::test(flavor = "multi_thread")]
     async fn graph_capture_includes_transitive_dep_excludes_node_modules() {
         let tmp = tempfile::tempdir().unwrap();

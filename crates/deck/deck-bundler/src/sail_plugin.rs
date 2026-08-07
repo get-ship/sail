@@ -27,7 +27,19 @@ use crate::compile::{CompileMode, compile_sail};
 // importmap declares. Hardcoding the alias here would silently anchor
 // `@ship/sdk-client` to workspace source — the OPPOSITE of what the
 // importmap says — and break the host-declared singleton pattern.
+//
+// Bare AND subpath (`@ship/sail-runtime/internal`, `/actions`, …): the
+// importmap maps every subpath to the same `/_deck/runtime.js`. Exact-only
+// matching let `/internal` fall through to the `@ship/*` re-anchor and
+// inline a second effect-scope / CURRENT_SCOPE into deck-route (STUDIO-BOOT-1).
 const SINGLETONS: [&str; 2] = ["@ship/sail-runtime", "@ship/sail-dom"];
+
+/// True for a bare singleton or any of its subpaths (`@ship/sail-runtime/internal`).
+fn is_singleton_spec(spec: &str) -> bool {
+    SINGLETONS.iter().any(|&s| {
+        spec == s || (spec.starts_with(s) && spec.as_bytes().get(s.len()) == Some(&b'/'))
+    })
+}
 
 /// Virtual id for an unresolved `@sail-tag/<tag>` import — a shared empty module
 /// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
@@ -175,8 +187,9 @@ impl Plugin for SailPlugin {
         args: &HookResolveIdArgs<'_>,
     ) -> HookResolveIdReturn {
         let spec = args.specifier;
-        // Framework singletons stay external (one runtime instance).
-        if SINGLETONS.contains(&spec) {
+        // Framework singletons stay external (one runtime instance) — bare
+        // AND subpaths. See `is_singleton_spec` / STUDIO-BOOT-1.
+        if is_singleton_spec(spec) {
             return Ok(Some(HookResolveIdOutput {
                 id: spec.into(),
                 external: Some(ResolvedExternal::Bool(true)),
@@ -447,6 +460,17 @@ impl Plugin for SailPlugin {
 mod tests {
     use super::*;
     use crate::compile::CompileMode;
+
+    #[test]
+    fn singleton_spec_matches_bare_and_subpaths() {
+        assert!(is_singleton_spec("@ship/sail-runtime"));
+        assert!(is_singleton_spec("@ship/sail-runtime/internal"));
+        assert!(is_singleton_spec("@ship/sail-runtime/actions"));
+        assert!(is_singleton_spec("@ship/sail-dom"));
+        assert!(!is_singleton_spec("@ship/sail-runtimex"));
+        assert!(!is_singleton_spec("@ship/tokens"));
+        assert!(!is_singleton_spec("@ship/deck/router"));
+    }
 
     fn fake_root() -> PathBuf {
         PathBuf::from("/repo")
