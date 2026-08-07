@@ -140,14 +140,23 @@ export {
   clickOutside,
   contextMenu,
   dropzone,
+  focus,
   hotkeys,
+  inView,
   primeIconCache,
   rect,
   tipDescribe,
   virtualRow,
   zoomPan,
 } from './actions'
-export type { AnchorPlacement, ClipboardParam, HotkeyEntry, HotkeyHandler, HotkeysMap } from './actions'
+export type {
+  AnchorPlacement,
+  ClipboardParam,
+  HotkeyEntry,
+  HotkeyHandler,
+  HotkeysMap,
+  InViewHandler,
+} from './actions'
 
 // ── Errors ─────────────────────────────────────────────────────────────────
 export {

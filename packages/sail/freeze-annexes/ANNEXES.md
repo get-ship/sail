@@ -1,7 +1,7 @@
 # SAIL Syntax Freeze — Annexes A–E (generated)
 
 > **Do not hand-edit.** Regenerate: `node scripts/gen-freeze-annexes.mjs`
-> Tip: `be99336b6e092a3827b106a3ac9b9bcf1a6d502f` · Generated: 2026-08-07 · Content hash: `b5e076436e207aff`
+> Tip: `1b48804617692c5907f898aab6c1aec71d8e19c5` · Generated: 2026-08-07 · Content hash: `262036cae9e05aca`
 
 Normative freeze prose: mission scratch `SAIL-SYNTAX-FREEZE.md`. These files are the
 machine-readable inventory the freeze annexes point at.
@@ -12,8 +12,8 @@ machine-readable inventory the freeze annexes point at.
 | --- | --- | --- | --- |
 | A | L1 element inventory | 55 | a-l1-elements.json |
 | B | Token inventory | 435 | b-tokens.json |
-| C | Public action catalog | 11 | c-public-actions.json |
-| D | Runtime public exports | 125 | d-runtime-exports.json |
+| C | Public action catalog | 13 | c-public-actions.json |
+| D | Runtime public exports | 128 | d-runtime-exports.json |
 | E | Channel vocabulary | 164 | e-channel-vocabulary.json |
 
 
@@ -28,7 +28,7 @@ Source: compiler element manifest / stdlib (`language-surface.gen.ts` ELEMENTS).
 | `alert` | L1 inline status banner. Style value language only. |
 | `avatar` | L1 language element. Style value language only. |
 | `badge` | L1 language element. Style value language only: |
-| `breadcrumb` | list trail host Style; li/a anatomy via compiler descendant map. |
+| `breadcrumb` | trail host. ol/li/a anatomy + separators via compiler |
 | `button` | native <button>. L1 platform control. Style value language only. |
 | `card` | L1 language element (element mode). Generic surface: header/body/footer |
 | `chip` | filter/selection pill. |
@@ -122,7 +122,7 @@ Aliases: 0.
 
 Full name list: [`b-tokens.json`](./b-tokens.json) (`names` array).
 
-## C. Public action catalog (11)
+## C. Public action catalog (13)
 
 Source: `action_manifest::PUBLIC_ACTION_NAMES` / `PUBLIC_ACTIONS` surface.
 
@@ -134,24 +134,26 @@ Source: `action_manifest::PUBLIC_ACTION_NAMES` / `PUBLIC_ACTIONS` surface.
 | `clipboard` | ClipboardParam | Copy param text (or host text content) to the clipboard on click; optional onCopy success callback. |
 | `contextMenu` | void | Right-click menu: open on contextmenu, close on outside-click / ESC. |
 | `dropzone` | undefined | Drag-and-drop file receiver; reads files into a controller-side handler. |
+| `focus` | boolean \| null \| undefined \| void | Focus the host on mount, or whenever a truthy param updates (autofocus without the native race). |
 | `hotkeys` | HotkeysMap \| undefined | Declarative key→handler map on the document; ignores editable fields unless allowInInputs. |
+| `inView` | InViewHandler \| undefined | Fire a callback when the host enters the viewport (IntersectionObserver). |
 | `rect` | BoxRect \| null \| undefined | Track the element's bounding rect via ResizeObserver. |
 | `tipDescribe` | void | Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay. |
 | `virtualRow` | number \| null \| undefined | Register a virtualized row; tells the parent scroller its measured height. |
 | `zoomPan` | ZoomPanState \| null \| undefined | Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller. |
 
 
-Sanctioned pre-RC additions (not yet in catalog): `focus`, `inView`.
+Sanctioned pre-RC additions (not yet in catalog): .
 
 Manifest drift surface↔PUBLIC_ACTION_NAMES: surfaceOnly=[], manifestOnly=[].
 
-## D. Runtime public exports (125)
+## D. Runtime public exports (128)
 
 Source: `packages/sail/runtime/author-surface.json` (tier B).
 
 | Category | Count |
 | --- | --- |
-| actions | 20 |
+| actions | 23 |
 | components | 8 |
 | compositions | 5 |
 | controller | 8 |
@@ -208,6 +210,7 @@ Source: `packages/sail/runtime/author-surface.json` (tier B).
 | `EffectScope` | reactivity |
 | `filteredList` | compositions |
 | `findNearestBoundary` | errors |
+| `focus` | actions |
 | `form` | compositions |
 | `FormOptions` | compositions |
 | `Host` | host |
@@ -218,6 +221,8 @@ Source: `packages/sail/runtime/author-surface.json` (tier B).
 | `hydrateTheme` | theme |
 | `injectContext` | reactivity |
 | `interval` | reactivity |
+| `inView` | actions |
+| `InViewHandler` | actions |
 | `isSignal` | reactivity |
 | `ListSource` | compositions |
 | `LiveSignal` | data |

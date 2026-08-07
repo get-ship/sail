@@ -75,9 +75,9 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         region: "scope",
         capability: "static imports (types + channel values ONLY)",
         legal: "subset",
-        status: "partial",
-        enforcement: "parse::scope_block refuses all `import` today; freeze wants type + channel-value imports only",
-        notes: "Gap residual: allow type-only and Style-value imports; still ban runtime behavior imports",
+        status: "enforced",
+        enforcement: "parse::scope_block (type imports + Style-value from relative .sail; refuse package/side-effect/default/namespace)",
+        notes: "Type-only and Style-value imports only; runtime behavior imports belong in <controller>",
     },
     // ── controller ─────────────────────────────────────────────────────
     RegionCapability {
@@ -108,9 +108,9 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
         region: "controller",
         capability: "imports only from conventional dirs + runtime/stdlib",
         legal: "subset",
-        status: "partial",
-        enforcement: "ACTIONS-1 floor on src/actions/**; arbitrary controller import paths not yet a hard convention error",
-        notes: "Gap residual: compile error naming src/actions|compositions|serverfns convention",
+        status: "enforced",
+        enforcement: "sail-controller-import-convention (Error) + ACTIONS-1 floor on src/actions/**",
+        notes: "Value imports: @ship/* packages, relative .sail types, src/actions|compositions|serverfns; type-only free",
     },
     RegionCapability {
         region: "controller",

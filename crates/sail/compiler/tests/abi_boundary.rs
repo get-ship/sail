@@ -202,7 +202,7 @@ fn action_table_is_exported_by_the_runtime() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 11);
+    assert_eq!(PUBLIC_ACTION_COUNT, 13);
 
     let missing: Vec<&str> = ACTIONS
         .iter()
@@ -247,7 +247,7 @@ fn action_table_has_no_phantom_consumers() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 11);
+    assert_eq!(PUBLIC_ACTION_COUNT, 13);
 
     // Every action in the table must be re-exported from the full
     // actions barrel. Drift here is the class of bug this test exists
@@ -296,21 +296,22 @@ fn action_table_has_no_phantom_consumers() {
     );
 }
 
-/// The curated public `use:` surface is exactly 11 names (ACTIONS-1 diet;
-/// icon is widget-private with the L1 `<icon>` element), all present in
-/// ACTIONS, sorted, and the only action names on the runtime front door.
-/// The compiler still auto-imports *all* actions from
-/// `@ship/sail-runtime/actions` (stdlib needs internal stamps for
-/// tabs/menu/pagination/radioGroup/combobox/icon closed widget impl).
+/// The curated public `use:` surface is exactly 13 names (ACTIONS-1 diet
+/// + sanctioned pre-RC `focus`/`inView`; icon is widget-private with the
+/// L1 `<icon>` element), all present in ACTIONS, sorted, and the only
+/// action names on the runtime front door. The compiler still auto-imports
+/// *all* actions from `@ship/sail-runtime/actions` (stdlib needs internal
+/// stamps for tabs/menu/pagination/radioGroup/combobox/icon closed widget
+/// impl).
 #[test]
 fn public_action_surface_is_curated() {
     use sail_compiler::action_manifest::{
         ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES, is_public_action, public_actions,
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 11);
-    assert_eq!(PUBLIC_ACTION_NAMES.len(), 11);
-    assert_eq!(public_actions().count(), 11);
+    assert_eq!(PUBLIC_ACTION_COUNT, 13);
+    assert_eq!(PUBLIC_ACTION_NAMES.len(), 13);
+    assert_eq!(public_actions().count(), 13);
 
     let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
     sorted.sort();
@@ -378,10 +379,10 @@ fn builtin_actions_emit_bare_not_scope_qualified() {
         // Pairing checks require the sx bridge on the same node for some actions.
         let src = match *a {
             "virtualRow" => {
-                r#"<div use:virtualRow> style({ paint: translateY(bind(rowY) })) </div>"#.to_string()
+                r#"<div use:virtualRow> style({ paint: translateY(bind(rowY)) }) </div>"#.to_string()
             }
             "virtualSpacer" => {
-                r#"<div use:virtualSpacer> style({ box: h(bind(rowsH) })) </div>"#.to_string()
+                r#"<div use:virtualSpacer> style({ box: h(bind(rowsH)) }) </div>"#.to_string()
             }
             _ => format!(r#"<div use:{a}></div>"#),
         };

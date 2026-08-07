@@ -8348,7 +8348,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "breadcrumb",
-      "description": "list trail host Style; li/a anatomy via compiler descendant map."
+      "description": "trail host. ol/li/a anatomy + separators via compiler"
     },
     {
       "tag": "button",
@@ -8870,6 +8870,12 @@ export const ACTIONS: ActionDoc[] = [
     "public": false
   },
   {
+    "name": "focus",
+    "param": "boolean | null | undefined | void",
+    "summary": "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
+    "public": true
+  },
+  {
     "name": "gridTracks",
     "param": "string | null | undefined",
     "summary": "Measure a CSS grid's resolved track widths/positions for layout math.",
@@ -8892,6 +8898,12 @@ export const ACTIONS: ActionDoc[] = [
     "param": "void",
     "summary": "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
     "public": false
+  },
+  {
+    "name": "inView",
+    "param": "InViewHandler | undefined",
+    "summary": "Fire a callback when the host enters the viewport (IntersectionObserver).",
+    "public": true
   },
   {
     "name": "liveBox",
@@ -8997,8 +9009,8 @@ export const ACTIONS: ActionDoc[] = [
   },
   {
     "name": "syntaxHighlight",
-    "param": "void",
-    "summary": "Syntax-highlight + copy-button behavior for a <code-block>.",
+    "param": "string | null | undefined",
+    "summary": "Syntax-highlight source for a <code-block>; prefer use:syntaxHighlight={code()}.",
     "public": false
   },
   {
@@ -9102,9 +9114,21 @@ export const PUBLIC_ACTIONS: ActionDoc[] = [
     "public": true
   },
   {
+    "name": "focus",
+    "param": "boolean | null | undefined | void",
+    "summary": "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
+    "public": true
+  },
+  {
     "name": "hotkeys",
     "param": "HotkeysMap | undefined",
     "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
+    "public": true
+  },
+  {
+    "name": "inView",
+    "param": "InViewHandler | undefined",
+    "summary": "Fire a callback when the host enters the viewport (IntersectionObserver).",
     "public": true
   },
   {
@@ -9880,6 +9904,12 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
     "example": "<scope>\n  export type Item = { id: string, label: string }\n  props: { selected: Item | null = null }\n</scope>\n<p>ok</p>"
   },
   {
+    "form": "type import",
+    "syntax": "import type { Row } from './types'",
+    "summary": "type-only imports are legal in `<scope>` (static surface); value/behavior imports are refused",
+    "example": "<scope>\n  import type { Row } from './row-types'\n  props: { rows: Row[] = [] }\n</scope>\n<p>ok</p>"
+  },
+  {
     "form": "Style const",
     "syntax": "const filled = style({ paint: bg(primary), box: padX(2) })",
     "summary": "compile-time Style value (channel / match / when / compound / list / ref); attach with block style(name) on the host",
@@ -9907,9 +9937,9 @@ export interface ScopeRefusalDoc {
 
 export const SCOPE_REFUSALS: ScopeRefusalDoc[] = [
   {
-    "syntax": "import …",
-    "instead": "inline the type — <scope> is types and literals only",
-    "example": "<scope>\n  import type { X } from './x'\n  props: { open = false }\n</scope>\n<p>ok</p>"
+    "syntax": "runtime value import",
+    "instead": "import type { … } for types, or import { styleName } from './peer.sail' for Style values — behavior imports belong in <controller>",
+    "example": "<scope>\n  import { signal } from '@ship/sail-runtime'\n  props: { open = false }\n</scope>\n<p>ok</p>"
   },
   {
     "syntax": "let / var / non-Style const",
@@ -10111,9 +10141,9 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
     "region": "scope",
     "capability": "static imports (types + channel values ONLY)",
     "legal": "subset",
-    "status": "partial",
-    "enforcement": "parse::scope_block refuses all `import` today; freeze wants type + channel-value imports only",
-    "notes": "Gap residual: allow type-only and Style-value imports; still ban runtime behavior imports"
+    "status": "enforced",
+    "enforcement": "parse::scope_block (type imports + Style-value from relative .sail; refuse package/side-effect/default/namespace)",
+    "notes": "Type-only and Style-value imports only; runtime behavior imports belong in <controller>"
   },
   {
     "region": "controller",
@@ -10143,9 +10173,9 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
     "region": "controller",
     "capability": "imports only from conventional dirs + runtime/stdlib",
     "legal": "subset",
-    "status": "partial",
-    "enforcement": "ACTIONS-1 floor on src/actions/**; arbitrary controller import paths not yet a hard convention error",
-    "notes": "Gap residual: compile error naming src/actions|compositions|serverfns convention"
+    "status": "enforced",
+    "enforcement": "sail-controller-import-convention (Error) + ACTIONS-1 floor on src/actions/**",
+    "notes": "Value imports: @ship/* packages, relative .sail types, src/actions|compositions|serverfns; type-only free"
   },
   {
     "region": "controller",

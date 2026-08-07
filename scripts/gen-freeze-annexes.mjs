@@ -262,8 +262,8 @@ const actionsC = {
       (n) => !publicActionsSurface.some((a) => a.name === n),
     ),
   },
-  sanctionedPreRcAdditions: ['focus', 'inView'],
-  note: 'Widget-private actions remain auto-imported for stdlib stamps but are not public / taught.',
+  sanctionedPreRcAdditions: [],
+  note: 'Widget-private actions remain auto-imported for stdlib stamps but are not public / taught. focus + inView landed as public (FREEZE-HONESTY-1).',
 }
 
 // ── D. Runtime exports ──────────────────────────────────────────────────────

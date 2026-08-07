@@ -121,7 +121,9 @@
     "clickOutside": "actions",
     "contextMenu": "actions",
     "dropzone": "actions",
+    "focus": "actions",
     "hotkeys": "actions",
+    "inView": "actions",
     "primeIconCache": "actions",
     "rect": "actions",
     "tipDescribe": "actions",
@@ -132,6 +134,7 @@
     "HotkeyEntry": "actions",
     "HotkeyHandler": "actions",
     "HotkeysMap": "actions",
+    "InViewHandler": "actions",
 
     "attachBoundary": "errors",
     "detachBoundary": "errors",

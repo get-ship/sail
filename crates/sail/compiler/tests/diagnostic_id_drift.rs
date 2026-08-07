@@ -20,6 +20,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-attr-presence",
     "sail-controller-context",
     "sail-controller-empty",
+    "sail-controller-import-convention",
     "sail-controller-matchmedia-layout",
     "sail-controller-navigation",
     "sail-controller-no-ambient-authority",

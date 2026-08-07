@@ -181,6 +181,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "focus",
+        param: "boolean | null | undefined | void",
+        summary: "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "gridTracks",
         param: "string | null | undefined",
         summary: "Measure a CSS grid's resolved track widths/positions for layout math.",
@@ -202,6 +208,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "icon",
         param: "void",
         summary: "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "inView",
+        param: "InViewHandler | undefined",
+        summary: "Fire a callback when the host enters the viewport (IntersectionObserver).",
         auto_import: true,
     },
     ActionEntry {
@@ -381,7 +393,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// `pagination`, `combobox`, `icon`) are closed impl inside L1 widgets — not public.
 /// An action is node-lifetime imperative behavior the language has no syntax
 /// for — never content, state, or data (icon fails that test; the element owns it).
-pub const PUBLIC_ACTION_COUNT: usize = 11;
+pub const PUBLIC_ACTION_COUNT: usize = 13;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
@@ -389,7 +401,9 @@ pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "clipboard",
     "contextMenu",
     "dropzone",
+    "focus",
     "hotkeys",
+    "inView",
     "rect",
     "tipDescribe",
     "virtualRow",
@@ -430,10 +444,12 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "dismissible",
     "dropzone",
     "eventSpan",
+    "focus",
     "gridTracks",
     "hotkeys",
     "hoverSurface",
     "icon",
+    "inView",
     "liveBox",
     "liveRegion",
     "marquee",
@@ -493,8 +509,10 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "clipboard",
     "dropzone",
     "eventSpan",
+    "focus",
     "gridTracks",
     "hotkeys",
+    "inView",
     "liveBox",
     "maxWidth",
     "pin",
@@ -595,7 +613,7 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 11);
+        assert_eq!(PUBLIC_ACTION_COUNT, 13);
     }
 
     #[test]

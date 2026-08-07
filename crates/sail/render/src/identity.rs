@@ -595,7 +595,11 @@ mod tests {
     #[test]
     fn absolute_location_sums_parent_offsets() {
         // Real preprocess + taffy tree: nested pad offsets must accumulate.
-        let src = r#"<column style={style.pad(4)}><span>Hi</span></column>"#;
+        // Block Style product (CHANNELS-1) — not retired `style={…}` attr host.
+        let src = r#"<column>
+  style({ box: pad(4) })
+  <span>Hi</span>
+</column>"#;
         let pre = sail_compiler::parse::preprocess::preprocess(src).unwrap();
         let elements = sail_layout::html::parse_source(&pre);
         let layout = sail_layout::taffy_tree::build(elements.clone(), (320.0, 200.0)).unwrap();

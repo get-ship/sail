@@ -4,7 +4,7 @@
     "surface": "apps/sail-site/src/language-surface.gen.ts#PUBLIC_ACTIONS",
     "manifest": "crates/sail/compiler/src/action_manifest.rs#PUBLIC_ACTION_NAMES"
   },
-  "count": 11,
+  "count": 13,
   "names": [
     "anchor",
     "autosize",
@@ -12,7 +12,9 @@
     "clipboard",
     "contextMenu",
     "dropzone",
+    "focus",
     "hotkeys",
+    "inView",
     "rect",
     "tipDescribe",
     "virtualRow",
@@ -56,9 +58,21 @@
       "public": true
     },
     {
+      "name": "focus",
+      "param": "boolean | null | undefined | void",
+      "summary": "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
+      "public": true
+    },
+    {
       "name": "hotkeys",
       "param": "HotkeysMap | undefined",
       "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
+      "public": true
+    },
+    {
+      "name": "inView",
+      "param": "InViewHandler | undefined",
+      "summary": "Fire a callback when the host enters the viewport (IntersectionObserver).",
       "public": true
     },
     {
@@ -93,7 +107,9 @@
     "clipboard",
     "contextMenu",
     "dropzone",
+    "focus",
     "hotkeys",
+    "inView",
     "rect",
     "tipDescribe",
     "virtualRow",
@@ -103,9 +119,6 @@
     "surfaceOnly": [],
     "manifestOnly": []
   },
-  "sanctionedPreRcAdditions": [
-    "focus",
-    "inView"
-  ],
-  "note": "Widget-private actions remain auto-imported for stdlib stamps but are not public / taught."
+  "sanctionedPreRcAdditions": [],
+  "note": "Widget-private actions remain auto-imported for stdlib stamps but are not public / taught. focus + inView landed as public (FREEZE-HONESTY-1)."
 }

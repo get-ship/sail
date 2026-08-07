@@ -20,6 +20,7 @@ pub mod attr_bool_prop;
 pub mod attr_presence;
 pub mod controller_context;
 pub mod controller_empty;
+pub mod controller_import_convention;
 pub mod controller_matchmedia_layout;
 pub mod controller_navigation;
 pub mod controller_no_ambient_authority;
@@ -82,6 +83,10 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (
         controller_redundant_ambient_import::RULE_ID,
         controller_redundant_ambient_import::check,
+    ),
+    (
+        controller_import_convention::RULE_ID,
+        controller_import_convention::check,
     ),
     (controller_set_value::RULE_ID, controller_set_value::check),
     (controller_state_cast::RULE_ID, controller_state_cast::check),

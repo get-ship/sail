@@ -25,9 +25,8 @@ Profile</h2>
         style({ box: w(full) })
 
         <label slot="label">Display name</label>
-        <input type="text" placeholder="Your display name">
+        <input type="text" placeholder="Your display name" />
           style({ box: w(full) })
-        </input>
       </field>
     </column>
   </card>

@@ -801,15 +801,23 @@ fn expand_for(
     let body = &src[open_end..close];
     let end = close + "</for>".len();
 
-    let of_src = attrs
-        .get("of")
+    // BLOCKS-1 author form: `<for {items as item} key={…}>`. Legacy
+    // `of=` / `as=` attributes still accepted when present.
+    let primary = attrs
+        .get("__primary")
         .cloned()
-        .or_else(|| attrs.get("__primary").cloned())?;
-    let of_src = strip_attr_braces(&of_src);
-    let as_name = attrs
-        .get("as")
-        .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
-        .filter(|s| !s.is_empty())?;
+        .or_else(|| attrs.get("of").cloned())
+        .map(|s| strip_attr_braces(&s))?;
+    let (of_src, as_name) = match split_for_primary(&primary) {
+        Some((iterable, binding)) => (iterable.to_string(), binding.to_string()),
+        None => {
+            let as_name = attrs
+                .get("as")
+                .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
+                .filter(|s| !s.is_empty())?;
+            (primary, as_name)
+        }
+    };
 
     let Some(Value::Array(items)) = eval_expr(&of_src, scope) else {
         unresolved.push(format!("for of={{{of_src}}}"));
@@ -843,9 +851,65 @@ fn expand_for(
     Some((end, out))
 }
 
+/// Split BLOCKS-1 for primary `iterable as binding` (optional `, idx`).
+fn split_for_primary(src: &str) -> Option<(&str, &str)> {
+    let src = src.trim();
+    let bytes = src.as_bytes();
+    let mut depth = 0i32;
+    let mut str_quote: Option<u8> = None;
+    let mut i = 0usize;
+    while i + 4 <= bytes.len() {
+        if !src.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        let c = bytes[i];
+        if let Some(q) = str_quote {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        match c {
+            b'"' | b'\'' | b'`' => {
+                str_quote = Some(c);
+                i += 1;
+            }
+            b'(' | b'[' | b'{' => {
+                depth += 1;
+                i += 1;
+            }
+            b')' | b']' | b'}' => {
+                depth -= 1;
+                i += 1;
+            }
+            _ if depth == 0 && src.is_char_boundary(i + 4) && &src[i..i + 4] == " as " => {
+                let left = src[..i].trim();
+                let right = src[i + 4..].trim();
+                // Binding may be `item` or `item, i` — take the item name only.
+                let binding = right.split(',').next().unwrap_or(right).trim();
+                if !left.is_empty() && !binding.is_empty() {
+                    return Some((left, binding));
+                }
+                return None;
+            }
+            _ => i += 1,
+        }
+    }
+    None
+}
+
 fn split_if_branches(body: &str) -> (&str, &str) {
-    // Find a top-level {else => …} or bare {else => … at the end.
-    // Also handle <else-if> by treating first false path chain simply: only plain <else>.
+    // BLOCKS-1: `{else => …}` arm (and optional `{else-if {c} => …}`).
+    // Legacy sibling `<else>` / `<else-if>` still recognized.
+    if let Some((then, else_body)) = split_brace_else_arm(body) {
+        return (then, else_body);
+    }
     let bytes = body.as_bytes();
     let mut i = 0;
     let mut depth = 0i32; // nested <if> depth inside body
@@ -876,14 +940,10 @@ fn split_if_branches(body: &str) -> (&str, &str) {
             let after_else = &rest[5..];
             if after_else.starts_with('>') || after_else.starts_with(|c: char| c.is_whitespace()) {
                 if after_else.starts_with("-if") {
-                    // else-if: not fully evaluated in this slice — treat as else boundary
-                    // only when cond known; for simplicity take remainder as else and stop.
                     let then = &body[..i];
                     let else_part = &body[i..];
-                    // strip outer <else-if …>…</else-if> / <else>… if present
                     return (then, strip_else_wrapper(else_part));
                 }
-                // plain <else>
                 let then = &body[..i];
                 let else_part = &body[i..];
                 return (then, strip_else_wrapper(else_part));
@@ -892,6 +952,85 @@ fn split_if_branches(body: &str) -> (&str, &str) {
         i += 1;
     }
     (body, "")
+}
+
+/// Split on a top-level `{else => …}` arm. Returns (then_body, else_body).
+fn split_brace_else_arm(body: &str) -> Option<(&str, &str)> {
+    let bytes = body.as_bytes();
+    let mut i = 0usize;
+    let mut depth = 0i32; // nested <if> … </if>
+    let mut brace = 0i32;
+    let mut str_quote: Option<u8> = None;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if let Some(q) = str_quote {
+            if b == b'\\' {
+                i += 2;
+                continue;
+            }
+            if b == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        match b {
+            b'"' | b'\'' | b'`' => {
+                str_quote = Some(b);
+                i += 1;
+            }
+            b'{' => {
+                // Look for `{else =>` at depth 0 of both tag-nest and brace.
+                if depth == 0 && brace == 0 {
+                    let rest = &body[i..];
+                    if let Some(after) = rest.strip_prefix("{else") {
+                        let after = after.trim_start();
+                        if after.starts_with("=>") {
+                            let then = body[..i].trim_end();
+                            // Body of the arm: after `=>` through the matching `}`.
+                            let arrow_at = i + 1 + (rest[1..].find("=>")?);
+                            let body_start = arrow_at + 2;
+                            let arm_close = skip_balanced(bytes, i)?;
+                            let else_body = body[body_start..arm_close].trim();
+                            return Some((then, else_body));
+                        }
+                        // `{else-if {cond} => …}` — take as false-path remainder.
+                        if after.starts_with("-if") {
+                            let then = body[..i].trim_end();
+                            let arm_close = skip_balanced(bytes, i)?;
+                            // For ssr projection, treat else-if remainder as else shell
+                            // (full cond chain eval is out of this slice).
+                            let else_body = body[i..=arm_close].trim();
+                            return Some((then, else_body));
+                        }
+                    }
+                }
+                brace += 1;
+                i += 1;
+            }
+            b'}' => {
+                brace -= 1;
+                i += 1;
+            }
+            b'<' => {
+                let rest = &body[i..];
+                if rest.starts_with("<if")
+                    && rest
+                        .as_bytes()
+                        .get(3)
+                        .map(|c| c.is_ascii_whitespace() || *c == b'{' || *c == b'>')
+                        .unwrap_or(false)
+                {
+                    depth += 1;
+                } else if rest.starts_with("</if>") {
+                    depth -= 1;
+                }
+                i += 1;
+            }
+            _ => i += 1,
+        }
+    }
+    None
 }
 
 fn strip_else_wrapper(s: &str) -> &str {

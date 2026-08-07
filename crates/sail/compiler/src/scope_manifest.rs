@@ -100,6 +100,12 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
         example: "<scope>\n  export type Item = { id: string, label: string }\n  props: { selected: Item | null = null }\n</scope>\n<p>ok</p>",
     },
     ScopeEntry {
+        form: "type import",
+        syntax: "import type { Row } from './types'",
+        summary: "type-only imports are legal in `<scope>` (static surface); value/behavior imports are refused",
+        example: "<scope>\n  import type { Row } from './row-types'\n  props: { rows: Row[] = [] }\n</scope>\n<p>ok</p>",
+    },
+    ScopeEntry {
         form: "Style const",
         syntax: "const filled = style({ paint: bg(primary), box: padX(2) })",
         summary: "compile-time Style value (channel / match / when / compound / list / ref); attach with block style(name) on the host",
@@ -132,9 +138,9 @@ pub struct ScopeRefusal {
 /// refused with an error naming the alternative.
 pub const SCOPE_REFUSALS: &[ScopeRefusal] = &[
     ScopeRefusal {
-        syntax: "import …",
-        instead: "inline the type — <scope> is types and literals only",
-        example: "<scope>\n  import type { X } from './x'\n  props: { open = false }\n</scope>\n<p>ok</p>",
+        syntax: "runtime value import",
+        instead: "import type { … } for types, or import { styleName } from './peer.sail' for Style values — behavior imports belong in <controller>",
+        example: "<scope>\n  import { signal } from '@ship/sail-runtime'\n  props: { open = false }\n</scope>\n<p>ok</p>",
     },
     ScopeRefusal {
         syntax: "let / var / non-Style const",

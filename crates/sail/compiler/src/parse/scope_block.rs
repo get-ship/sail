@@ -1,12 +1,17 @@
 //! `<scope>` — the component's static surface. A fenced subset of TypeScript:
 //! `type` / `export type` aliases, field declarations (`name: Type = value`)
-//! with literal values, and **Style consts** (`const name = style.…`).
-//! Nothing in the block executes — no imports, no runtime `const` computation.
-//! If it computes, it belongs in `<controller>`.
+//! with literal values, **Style consts** (`const name = style.…`), and
+//! **static imports** of types + Style values only.
+//! Nothing in the block executes — no runtime `const` computation, no
+//! behavior imports. If it computes, it belongs in `<controller>`.
 //!
 //! Members (author grammar — also [`crate::scope_manifest::SCOPE_GRAMMAR`]):
 //!   - `type X = …` / `export type X = …` — aliases, threaded into the
 //!     compiled module so the controller can reuse them.
+//!   - `import type { … } from '…'` / `import { type X } from '…'` — type
+//!     imports only; threaded into the compiled module with aliases.
+//!   - `import { name } from './peer.sail'` — Style-value (channel) import;
+//!     names land in the Style env when the peer's Style consts resolve.
 //!   - `props: { … }` — the component's typed inputs (field declarations).
 //!     Residual CVA key→sx string maps type as the key union (no paint).
 //!     Product paint is host `match` / Style.
@@ -44,11 +49,22 @@ pub(crate) struct ScopeBlock {
 const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accent|muted";
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
-const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:`, Style \
-     `const name = style.…` / match / when / compound, optional residual `compound:` \
-     — types, literals, and Style only; logic goes in `<controller>`";
+const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, type/Style-value \
+     `import`s, `props:`, Style `const name = style.…` / match / when / compound, \
+     optional residual `compound:` — types, literals, and Style only; logic goes \
+     in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
+    parse_scope_block_at(body, span, None)
+}
+
+/// Like [`parse_scope_block`], with an optional directory for resolving
+/// relative Style-value imports (peer `.sail` Style consts).
+pub(crate) fn parse_scope_block_at(
+    body: &str,
+    span: Span,
+    base_dir: Option<&std::path::Path>,
+) -> Result<ScopeBlock, CompileError> {
     let bytes = body.as_bytes();
     let mut i = 0usize;
     let mut out = ScopeBlock {
@@ -74,6 +90,28 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 let end = consume_type_alias(body, if word == "export" { after } else { i })?;
                 out.types.push_str(body[start..end].trim());
                 out.types.push('\n');
+                i = end;
+            }
+            "import" => {
+                let (stmt, end, kind) = parse_scope_import(body, i, span)?;
+                match kind {
+                    ScopeImportKind::TypeOnly => {
+                        out.types.push_str(stmt.trim());
+                        out.types.push('\n');
+                    }
+                    ScopeImportKind::StyleValue { names, module } => {
+                        // Keep the import text for TS surface / d.ts.
+                        out.types.push_str(stmt.trim());
+                        out.types.push('\n');
+                        merge_style_value_imports(
+                            &mut out.style_env,
+                            &names,
+                            &module,
+                            base_dir,
+                            span,
+                        )?;
+                    }
+                }
                 i = end;
             }
             "props" => {
@@ -110,7 +148,6 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
             other => {
                 // Name the closest wrong turn we can recognize.
                 let hint = match other {
-                    "import" => " Type imports are not supported here yet — inline the type.",
                     "let" | "var" => {
                         " Use `const name = style.…` for Style values, or a prop literal \
                          default — computation belongs in `<controller>`."
@@ -125,6 +162,377 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
         }
     }
     Ok(out)
+}
+
+enum ScopeImportKind {
+    TypeOnly,
+    StyleValue { names: Vec<String>, module: String },
+}
+
+/// Parse one `import …` statement in `<scope>`.
+///
+/// Allowed:
+/// - `import type { X } from '…'` / `import type X from '…'`
+/// - `import { type X, type Y } from '…'` (all specs type-only)
+/// - `import { filled } from './peer.sail'` (Style-value / channel import)
+///
+/// Refused with teaching: default/namespace/side-effect imports, value
+/// imports from packages, mixed type+value without `type`, runtime behavior.
+fn parse_scope_import(
+    s: &str,
+    start: usize,
+    span: Span,
+) -> Result<(String, usize, ScopeImportKind), CompileError> {
+    let bytes = s.as_bytes();
+    let mut i = start;
+    // consume `import`
+    let (word, after) = read_word(s, i);
+    if word != "import" {
+        return Err(CompileError::new("expected `import`").with_span(span));
+    }
+    i = skip_trivia(s, after, None);
+    if i >= bytes.len() {
+        return Err(CompileError::new("incomplete `import` in `<scope>`").with_span(span));
+    }
+
+    // `import type …`
+    let (next, after_next) = read_word(s, i);
+    let whole_type = next == "type";
+    if whole_type {
+        i = skip_trivia(s, after_next, None);
+    }
+
+    // Side-effect: `import 'mod'`
+    if !whole_type && (bytes[i] == b'\'' || bytes[i] == b'"') {
+        return Err(CompileError::new(
+            "side-effect `import` is not a `<scope>` member — scope may import \
+             types (`import type { X } from '…'`) and Style values \
+             (`import { filled } from './peer.sail'`) only; runtime behavior \
+             belongs in `<controller>`.",
+        )
+        .with_span(span));
+    }
+
+    // Default import: `import Foo from` / `import type Foo from`
+    if bytes[i] != b'{' && bytes[i] != b'*' {
+        let (name, after_name) = read_word(s, i);
+        if name.is_empty() {
+            return Err(
+                CompileError::new("malformed `import` in `<scope>`").with_span(span)
+            );
+        }
+        i = skip_trivia(s, after_name, None);
+        // `import type Foo from '…'` is type-only default — allow.
+        if whole_type {
+            let end = consume_import_tail(s, i, span)?;
+            let stmt = s[start..end].trim().to_string();
+            return Ok((stmt, end, ScopeImportKind::TypeOnly));
+        }
+        return Err(CompileError::new(
+            "default `import` is not a `<scope>` member — use `import type { X } \
+             from '…'` for types, or `import { name } from './peer.sail'` for \
+             Style values. Runtime defaults belong in `<controller>`.",
+        )
+        .with_span(span));
+    }
+
+    // Namespace: `import * as ns from`
+    if bytes[i] == b'*' {
+        return Err(CompileError::new(
+            "namespace `import * as` is not a `<scope>` member — import named \
+             types or Style values only.",
+        )
+        .with_span(span));
+    }
+
+    // Named: `import { … } from '…'`
+    if bytes[i] != b'{' {
+        return Err(CompileError::new("malformed `import` in `<scope>`").with_span(span));
+    }
+    let brace_end = skip_balanced_brace(s, i)?;
+    let inner = s[i + 1..brace_end].trim();
+    let specs = parse_import_specifiers(inner, span)?;
+    i = skip_trivia(s, brace_end + 1, None);
+
+    let end = consume_import_tail(s, i, span)?;
+    let module = extract_import_module(s, start, end).unwrap_or_default();
+    let stmt = s[start..end].trim().to_string();
+
+    if whole_type || specs.iter().all(|sp| sp.is_type) {
+        return Ok((stmt, end, ScopeImportKind::TypeOnly));
+    }
+    if specs.iter().any(|sp| sp.is_type) {
+        return Err(CompileError::new(
+            "mixed type/value `import` in `<scope>` — use `import type { … }` \
+             for types, or a pure value import for Style consts; do not mix.",
+        )
+        .with_span(span));
+    }
+
+    // Value import → Style-value (channel) import only.
+    if module_looks_like_package(&module) {
+        return Err(CompileError::new(format!(
+            "value import from `{module}` is not a `<scope>` member — scope \
+             imports types and Style values only (relative `.sail` Style \
+             consts). Runtime packages belong in `<controller>`."
+        ))
+        .with_span(span));
+    }
+    let names: Vec<String> = specs.into_iter().map(|sp| sp.local).collect();
+    Ok((
+        stmt,
+        end,
+        ScopeImportKind::StyleValue { names, module },
+    ))
+}
+
+struct ImportSpec {
+    local: String,
+    is_type: bool,
+}
+
+fn parse_import_specifiers(inner: &str, span: Span) -> Result<Vec<ImportSpec>, CompileError> {
+    let mut out = Vec::new();
+    for part in split_top_level_commas(inner) {
+        let p = part.trim();
+        if p.is_empty() {
+            continue;
+        }
+        let mut rest = p;
+        let mut is_type = false;
+        if let Some(r) = rest.strip_prefix("type") {
+            if r.starts_with(|c: char| c.is_whitespace()) || r.is_empty() {
+                is_type = true;
+                rest = r.trim_start();
+            }
+        }
+        // `X as Y` → local Y; else local X
+        let local = if let Some((left, right)) = rest.split_once(" as ") {
+            let _ = left;
+            right.trim()
+        } else {
+            rest.trim()
+        };
+        if local.is_empty() || !is_import_ident(local) {
+            return Err(CompileError::new(format!(
+                "bad import specifier `{p}` in `<scope>`"
+            ))
+            .with_span(span));
+        }
+        out.push(ImportSpec {
+            local: local.to_string(),
+            is_type,
+        });
+    }
+    if out.is_empty() {
+        return Err(
+            CompileError::new("empty `import { }` in `<scope>`").with_span(span)
+        );
+    }
+    Ok(out)
+}
+
+fn is_import_ident(s: &str) -> bool {
+    let mut chars = s.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' || c == '$' => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+}
+
+fn consume_import_tail(s: &str, mut i: usize, span: Span) -> Result<usize, CompileError> {
+    let bytes = s.as_bytes();
+    i = skip_trivia(s, i, None);
+    let (from_word, after_from) = read_word(s, i);
+    if from_word != "from" {
+        return Err(CompileError::new(
+            "`import` in `<scope>` needs `from '…'`.",
+        )
+        .with_span(span));
+    }
+    i = skip_trivia(s, after_from, None);
+    if i >= bytes.len() || (bytes[i] != b'\'' && bytes[i] != b'"') {
+        return Err(CompileError::new(
+            "`import … from` needs a string module specifier.",
+        )
+        .with_span(span));
+    }
+    let q = bytes[i];
+    i += 1;
+    while i < bytes.len() && bytes[i] != q {
+        if bytes[i] == b'\\' {
+            i += 2;
+            continue;
+        }
+        i += 1;
+    }
+    if i >= bytes.len() {
+        return Err(CompileError::new("unclosed import module string").with_span(span));
+    }
+    i += 1; // closing quote
+    i = skip_trivia(s, i, None);
+    if i < bytes.len() && bytes[i] == b';' {
+        i += 1;
+    }
+    Ok(i)
+}
+
+fn extract_import_module(s: &str, start: usize, end: usize) -> Option<String> {
+    let slice = &s[start..end];
+    let from = slice.rfind(" from ")?;
+    let rest = slice[from + 6..].trim();
+    let q = rest.chars().next()?;
+    if q != '\'' && q != '"' {
+        return None;
+    }
+    let inner = rest.trim_start_matches(q);
+    let end_q = inner.find(q)?;
+    Some(inner[..end_q].to_string())
+}
+
+fn module_looks_like_package(module: &str) -> bool {
+    let m = module.trim();
+    if m.is_empty() {
+        return true;
+    }
+    // Relative / absolute / URL → not a package.
+    if m.starts_with('.') || m.starts_with('/') || m.starts_with("file:") {
+        return false;
+    }
+    true
+}
+
+fn skip_balanced_brace(s: &str, open: usize) -> Result<usize, CompileError> {
+    let bytes = s.as_bytes();
+    if bytes.get(open) != Some(&b'{') {
+        return Err(CompileError::new("expected `{`"));
+    }
+    let mut i = open;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Ok(i);
+                }
+            }
+            b'\'' | b'"' | b'`' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' {
+                        i += 2;
+                        continue;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    Err(CompileError::new("unclosed `{` in import"))
+}
+
+fn merge_style_value_imports(
+    env: &mut StyleEnv,
+    names: &[String],
+    module: &str,
+    base_dir: Option<&std::path::Path>,
+    span: Span,
+) -> Result<(), CompileError> {
+    // Resolve peer `.sail` Style consts into this env. Without a resolvable
+    // peer, register empty Style placeholders so host `style(name)` still
+    // type-checks as a known ref; paint lands when the peer is on disk.
+    let peer_env = resolve_peer_style_env(module, base_dir);
+    for name in names {
+        if env.contains_key(name) {
+            return Err(CompileError::new(format!(
+                "Style const `{name}` is declared twice in `<scope>` (import + local)."
+            ))
+            .with_span(span));
+        }
+        if let Some(ref peer) = peer_env {
+            if let Some(style) = peer.get(name) {
+                env.insert(name.clone(), style.clone());
+                continue;
+            }
+            return Err(CompileError::new(format!(
+                "Style-value import `{name}` not found in `{module}` — export a \
+                 `const {name} = style.….` from that `.sail` scope."
+            ))
+            .with_span(span));
+        }
+        // Peer not on disk (unit tests, missing path): keep the name as a
+        // known Style ref so the import is legal; paint is empty until resolved.
+        env.insert(name.clone(), Style::Empty);
+    }
+    Ok(())
+}
+
+fn resolve_peer_style_env(
+    module: &str,
+    base_dir: Option<&std::path::Path>,
+) -> Option<StyleEnv> {
+    let mut candidates = Vec::new();
+    let m = module.trim();
+    if m.is_empty() {
+        return None;
+    }
+    if let Some(base) = base_dir {
+        candidates.push(base.join(m));
+        if !m.ends_with(".sail") {
+            candidates.push(base.join(format!("{m}.sail")));
+        }
+    }
+    candidates.push(std::path::PathBuf::from(m));
+    if !m.ends_with(".sail") {
+        candidates.push(std::path::PathBuf::from(format!("{m}.sail")));
+    }
+    for path in candidates {
+        if let Ok(src) = std::fs::read_to_string(&path) {
+            // Pull Style consts only (imports in the peer are not re-resolved).
+            return Some(style_env_from_source_shallow(&src));
+        }
+    }
+    None
+}
+
+/// Style consts from every `<scope>` body without re-entering import resolution.
+fn style_env_from_source_shallow(source: &str) -> StyleEnv {
+    let mut env = HashMap::new();
+    harvest_style_consts_loose_all_scopes(source, &mut env);
+    env
+}
+
+fn harvest_style_consts_loose_all_scopes(source: &str, env: &mut StyleEnv) {
+    let mut rest = source;
+    while let Some(open_rel) = rest.find("<scope") {
+        let after_open_tag = &rest[open_rel..];
+        let Some(gt_rel) = after_open_tag.find('>') else {
+            break;
+        };
+        let tag_head = &after_open_tag[..gt_rel];
+        if tag_head
+            .as_bytes()
+            .get(6)
+            .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'-')
+        {
+            rest = &after_open_tag[1..];
+            continue;
+        }
+        let body_start = open_rel + gt_rel + 1;
+        let after_body = &rest[body_start..];
+        let Some(close_rel) = after_body.find("</scope>") else {
+            break;
+        };
+        let body = &after_body[..close_rel];
+        harvest_style_consts_loose(body, env);
+        rest = &after_body[close_rel + "</scope>".len()..];
+    }
 }
 
 /// Collect Style consts from every `<scope>…</scope>` body in an SFC source.
@@ -1191,10 +1599,52 @@ mod tests {
             "{}",
             e.message
         );
-        let e = err("import { x } from './y'");
-        assert!(e.message.contains("not supported here"), "{}", e.message);
+        let e = err("import { signal } from '@ship/sail-runtime'");
+        assert!(
+            e.message.contains("not a `<scope>` member") || e.message.contains("Style values"),
+            "{}",
+            e.message
+        );
         let e = err("props()");
         assert!(e.message.contains("props: { … }"), "{}", e.message);
+    }
+
+    #[test]
+    fn type_import_is_accepted() {
+        let b = block("import type { Row } from './types'\nprops: { open = false }");
+        assert!(
+            b.types.contains("import type { Row } from './types'"),
+            "types={}",
+            b.types
+        );
+        assert_eq!(prop(&b, "open").default.as_deref(), Some("false"));
+    }
+
+    #[test]
+    fn style_value_import_is_accepted() {
+        let b = block("import { filled } from './styles.sail'\nprops: { label = '' }");
+        assert!(b.style_env.contains_key("filled"), "must register Style name");
+        assert!(
+            b.types.contains("import { filled } from './styles.sail'"),
+            "types={}",
+            b.types
+        );
+    }
+
+    #[test]
+    fn package_value_import_is_refused() {
+        let e = err("import { signal } from '@ship/sail-runtime'");
+        assert!(
+            e.message.contains("Style values") || e.message.contains("not a `<scope>`"),
+            "{}",
+            e.message
+        );
+    }
+
+    #[test]
+    fn side_effect_import_is_refused() {
+        let e = err("import './polyfill'");
+        assert!(e.message.contains("side-effect"), "{}", e.message);
     }
 
     #[test]

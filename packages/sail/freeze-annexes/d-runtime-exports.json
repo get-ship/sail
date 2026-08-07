@@ -3,7 +3,7 @@
   "source": "packages/sail/runtime/author-surface.json",
   "specifier": "@ship/sail-runtime",
   "entry": ".",
-  "count": 125,
+  "count": 128,
   "categories": {
     "reactivity": "Signals, effects, context, ambient lifecycle",
     "controller": "Controller factory and scope types",
@@ -25,7 +25,7 @@
     "data": 15,
     "theme": 16,
     "motion": 18,
-    "actions": 20,
+    "actions": 23,
     "errors": 6,
     "components": 8,
     "host": 2
@@ -200,6 +200,10 @@
       "category": "errors"
     },
     {
+      "name": "focus",
+      "category": "actions"
+    },
+    {
       "name": "form",
       "category": "compositions"
     },
@@ -238,6 +242,14 @@
     {
       "name": "interval",
       "category": "reactivity"
+    },
+    {
+      "name": "inView",
+      "category": "actions"
+    },
+    {
+      "name": "InViewHandler",
+      "category": "actions"
     },
     {
       "name": "isSignal",
@@ -645,13 +657,16 @@
       "HotkeyEntry",
       "HotkeyHandler",
       "HotkeysMap",
+      "InViewHandler",
       "anchor",
       "autosize",
       "clickOutside",
       "clipboard",
       "contextMenu",
       "dropzone",
+      "focus",
       "hotkeys",
+      "inView",
       "primeIconCache",
       "rect",
       "tipDescribe",
