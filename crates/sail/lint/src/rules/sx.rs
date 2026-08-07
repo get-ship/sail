@@ -495,7 +495,14 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                         k += 1;
                     }
                     if k == name_lo {
+                        // Full UTF-8 char — bare `k += 1` panics mid-codepoint when
+                        // the next attr token is multi-byte (e.g. `{x === '●'}` on
+                        // `<if>` / free text in a tag stream). Mirrors the outer
+                        // loop's char-boundary advance.
                         k += 1;
+                        while k < bytes.len() && (bytes[k] & 0xC0) == 0x80 {
+                            k += 1;
+                        }
                         continue;
                     }
                     let name = &source[name_lo..k];
@@ -836,6 +843,20 @@ mod tests {
             .into_iter()
             .map(|f| f.message)
             .collect()
+    }
+
+    #[test]
+    fn multibyte_in_if_expr_does_not_panic_scan() {
+        // sail-tree unsaved marker: `<if {w.trailing === '●'}>` — attr scan must
+        // walk full UTF-8 chars so `source[k..]` never slices mid-codepoint.
+        let src = "\
+<if {w.trailing === '\u{25cf}'}>\n\
+  <span aria-label=\"Unsaved\" style({ paint: fg(warning) })>\u{25cf}</span>\n\
+</if>\n";
+        let _ = run(src); // must not panic
+        // Tag-position style on the span is valid product — no findings required,
+        // but the scan must complete.
+        assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
