@@ -14,12 +14,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference</p>
     <h1>Layout keywords</h1>
     <p token="doc-lead">
@@ -30,14 +26,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <grid cols="3" gap="2">
     <for {layoutRows() as k} key={k.tag}>
-      <card padding="sm">
-        style({ box: minW(0) })
-
+      <card padding="sm" style({ box: minW(0) })>
         <column gap="1">
           <code>&lt;{k.tag}&gt;</code>
-          <small>
-            style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-{k.props}</small>
+          <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{k.props}</small>
         </column>
       </card>
     </for>

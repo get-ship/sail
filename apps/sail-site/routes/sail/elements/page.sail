@@ -15,16 +15,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Guide</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Guide</p>
   <h1>Using components</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     The component library is part of the language: buttons, dialogs, tables,
     comboboxes and the rest are tags, written the way you write HTML. Nothing
     to install or import — put the tag on the page and it works, themed and
@@ -34,14 +28,10 @@ Guide</p>
   <h2>Write them like HTML</h2>
   <code-block code={code.useThem}></code-block>
   <p>Which is exactly this:</p>
-  <card>
-    style({ box: pad(4) })
-
+  <card style({ box: pad(4) })>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong>
-        style({ box: grow(1) })
-Ada Lovelace</strong>
+      <strong style({ box: grow(1) })>Ada Lovelace</strong>
       <badge tone="success">Active</badge>
     </row>
   </card>
@@ -141,9 +131,7 @@ Ada Lovelace</strong>
       </row>
     </column>
   </column>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
     A few tags only make sense inside a parent — <code>&lt;tab&gt;</code>
     inside <code>&lt;tabs&gt;</code>, <code>&lt;menu-item&gt;</code> inside
     <code>&lt;dropdown&gt;</code>, <code>&lt;page&gt;</code> inside
@@ -198,9 +186,7 @@ Ada Lovelace</strong>
   <code-block code={code.compose}></code-block>
   <accordion>
     <strong slot="trigger">Advanced options (click me)</strong>
-    <p>
-      style({ box: padT(2) })
-Hidden until asked for — and this one is running.</p>
+    <p style({ box: padT(2) })>Hidden until asked for — and this one is running.</p>
   </accordion>
   <p>
     Bigger components are small vocabularies of tags rather than
@@ -228,9 +214,7 @@ Hidden until asked for — and this one is running.</p>
     component does the rest. Try it:
   </p>
   <code-block code={code.behavior}></code-block>
-  <combobox placeholder="Pick a framework">
-    style({ box: maxW(panel-max-w-sm) })
-
+  <combobox placeholder="Pick a framework" style({ box: maxW(panel-max-w-sm) })>
     <option value="sail">Sail</option>
     <option value="svelte">Svelte</option>
     <option value="solid">Solid</option>
@@ -267,9 +251,7 @@ Hidden until asked for — and this one is running.</p>
       <icon name="trash-2"></icon> Delete
     </button>
   </row>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
     Accessibility is the <code>label</code> field — with it the icon is
     accessible name via semantic prop <code>label</code>; without it the
     icon is marked <code>hidden</code> — decoration, invisible to a
@@ -290,9 +272,7 @@ Hidden until asked for — and this one is running.</p>
     chips, table borders:
   </p>
   <code-block code={code.prose}></code-block>
-  <card>
-    style({ box: pad(4) })
-
+  <card style({ box: pad(4) })>
     <prose>
       <h3>Release notes</h3>
       <p>The build went <strong>green</strong> at noon — see
@@ -304,9 +284,7 @@ Hidden until asked for — and this one is running.</p>
       </ul>
     </prose>
   </card>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
     It takes no props. This site used to carry 515 lines of hand-written
     reading-column CSS; the framework stylesheet and
     <code>&lt;prose&gt;</code> replaced all of it.
@@ -320,9 +298,7 @@ Hidden until asked for — and this one is running.</p>
     declarations the compiler checks, so they cannot drift from the source.
   </p>
 
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
     For the curious: most of these tags don’t exist at runtime — the compiler
     lowers them to native markup with the behavior attached, which is why the
     library adds almost nothing to a page. A dialog ships as a real
@@ -330,9 +306,7 @@ Hidden until asked for — and this one is running.</p>
     <a href="/sail/reference">reference</a> covers the mechanics.
   </p>
 
-  <row justify="between" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/theming">← Theming</a>
     <a variant="solid" tone="primary" href="/sail/guide/building-a-component">Building a component →</a>
   </row>

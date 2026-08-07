@@ -3,16 +3,10 @@
   agent-first framework. Theme owned by the shell. No controller: static markup only.
 -->
 
-<column>
-  style({ box: pad(0).maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-AI</p>
+<column style({ box: pad(0).maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>AI</p>
   <h1>Sail is built for agents</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Most UI frameworks optimize for a human at a keyboard. Sail optimizes for a
     model: a narrow grammar, a strict lint that turns design-system violations
     into build errors, a tight compile-check loop, and a batteries-included
@@ -40,17 +34,13 @@ AI</p>
     <li><strong>Eval harness</strong> — a scored Sail-authoring benchmark, so changes to the language or lint are measured against whether agents actually get it right.</li>
   </ul>
 
-  <p>
-    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
     <strong>This is the headline, not an appendix.</strong> "Most ergonomic for
     agents" is the thesis of the whole framework; this section is where it gets
     concrete. Instructions, MCP setup, Skills, and the eval harness land here.
   </p>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/">← SHIP UI</a>
   </row>
 </column>

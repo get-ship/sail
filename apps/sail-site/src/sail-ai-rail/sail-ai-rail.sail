@@ -43,43 +43,21 @@ export default controller((ctx) => {
  const mobileBar = style({ box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar) }).when(tablet, { box: display(none) })
 </scope>
 
-<row nowrap align="stretch" gap="0">
-  style([ style(shell), style({ box: w(full).grow(1).minW(0) }) ])
-
- <nav label="AI docs">
-   style([ style(rail), style({ box: shrink(0) }) ])
-
- <p>
-   style(railLabel)
-AI</p>
- <a href="/ai" current={path() === '/ai' ? 'page' : null}>
-   style(railLink)
-Overview</a>
- <a href="/ai/authoring" current={path() === '/ai/authoring' ? 'page' : null}>
-   style(railLink)
-Authoring</a>
- <a href="/ai/tooling" current={path() === '/ai/tooling' ? 'page' : null}>
-   style(railLink)
-Tooling</a>
- <a href="/ai/eval" current={path() === '/ai/eval' ? 'page' : null}>
-   style(railLink)
-Eval</a>
+<row nowrap align="stretch" gap="0" style([ style(shell), style({ box: w(full).grow(1).minW(0) }) ])>
+ <nav label="AI docs" style([ style(rail), style({ box: shrink(0) }) ])>
+ <p style(railLabel)>AI</p>
+ <a href="/ai" current={path() === '/ai' ? 'page' : null} style(railLink)>Overview</a>
+ <a href="/ai/authoring" current={path() === '/ai/authoring' ? 'page' : null} style(railLink)>Authoring</a>
+ <a href="/ai/tooling" current={path() === '/ai/tooling' ? 'page' : null} style(railLink)>Tooling</a>
+ <a href="/ai/eval" current={path() === '/ai/eval' ? 'page' : null} style(railLink)>Eval</a>
  </nav>
 
- <column gap="0">
-   style({  box: grow(1).minW(0).minH(0)  })
-
- <div>
-   style(mobileBar)
-
+ <column gap="0" style({  box: grow(1).minW(0).minH(0)  })>
+ <div style(mobileBar)>
  <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
- <small>
-   style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-AI docs</small>
+ <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>AI docs</small>
  </div>
- <main>
-   style([ style(mainDocs), style({ box: grow(1).minW(0) }) ])
-
+ <main style([ style(mainDocs), style({ box: grow(1).minW(0) }) ])>
  <slot name="route"></slot>
  </main>
  </column>
@@ -94,30 +72,16 @@ AI docs</small>
  on-close={closeNav}
 >
  <header>
-  <row align="center" justify="between" gap="2">
-    style({ box: w(full) })
-
-   <strong>
-     style({ text: fontSize(sm) })
-AI docs</strong>
+  <row align="center" justify="between" gap="2" style({ box: w(full) })>
+   <strong style({ text: fontSize(sm) })>AI docs</strong>
    <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
   </row>
  </header>
  <section>
-  <p>
-    style(railLabel)
-AI</p>
-  <a href="/ai" on:click={closeNav} current={path() === '/ai' ? 'page' : null}>
-    style(railLink)
-Overview</a>
-  <a href="/ai/authoring" on:click={closeNav} current={path() === '/ai/authoring' ? 'page' : null}>
-    style(railLink)
-Authoring</a>
-  <a href="/ai/tooling" on:click={closeNav} current={path() === '/ai/tooling' ? 'page' : null}>
-    style(railLink)
-Tooling</a>
-  <a href="/ai/eval" on:click={closeNav} current={path() === '/ai/eval' ? 'page' : null}>
-    style(railLink)
-Eval</a>
+  <p style(railLabel)>AI</p>
+  <a href="/ai" on:click={closeNav} current={path() === '/ai' ? 'page' : null} style(railLink)>Overview</a>
+  <a href="/ai/authoring" on:click={closeNav} current={path() === '/ai/authoring' ? 'page' : null} style(railLink)>Authoring</a>
+  <a href="/ai/tooling" on:click={closeNav} current={path() === '/ai/tooling' ? 'page' : null} style(railLink)>Tooling</a>
+  <a href="/ai/eval" on:click={closeNav} current={path() === '/ai/eval' ? 'page' : null} style(railLink)>Eval</a>
  </section>
 </dialog>

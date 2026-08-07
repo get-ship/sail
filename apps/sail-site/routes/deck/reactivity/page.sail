@@ -14,16 +14,10 @@ import { code } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
 </controller>
 
-<article>
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Reactivity</p>
+<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Reactivity</p>
   <h1>deck in the reactive path</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Reactivity is Sail’s, not deck’s. Sail gives a route signals, derived values,
     and effects; deck’s job is to keep that graph fed from the things a
     framework owns and changes — the URL, live server data, and state that
@@ -86,9 +80,7 @@ Reactivity</p>
     never torn down.
   </p>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a href="/deck/layouts">← Layouts</a>
     <a href="/deck/data">The data seam →</a>
   </row>

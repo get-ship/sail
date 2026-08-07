@@ -21,8 +21,7 @@
   const sizeLg = style({ box: minH(control-h-lg).padX(4), text: fontSize(md) })
 </scope>
 
-<textarea>
-  style([
+<textarea style([
   base,
   match(size, {
     xs: sizeXs,
@@ -31,5 +30,4 @@
     lg: sizeLg,
   }),
   compound({ invalid: true }, style({ paint: border(destructive) })),
-])
-</textarea>
+])></textarea>

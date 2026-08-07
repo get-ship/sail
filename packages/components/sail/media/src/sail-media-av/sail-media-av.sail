@@ -216,14 +216,8 @@ export default controller((_ctx: Scope) => {
 
 </controller>
 <if {isVideo()}>
-  <video use:mediaWire>
-    style({ box: display(block).w(full), paint: radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs) })
-</video>
-{else => <audio use:mediaWire>
-    style({ box: display(block).w(full), paint: radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs) })
-</audio>
+  <video use:mediaWire style({ box: display(block).w(full), paint: radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs) })></video>
+{else => <audio use:mediaWire style({ box: display(block).w(full), paint: radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs) })></audio>
   <if {showWaveform()}>
-    <canvas aria-hidden="true" use:waveform>
-      style({ box: display(block).w(full).mt(2) })
-</canvas>
+    <canvas aria-hidden="true" use:waveform style({ box: display(block).w(full).mt(2) })></canvas>
   </if>}</if>

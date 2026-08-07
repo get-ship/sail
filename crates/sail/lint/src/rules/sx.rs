@@ -1,15 +1,14 @@
 //! `sail-sx` — the Style paint surface.
 //!
-//! Product form is a **block** Style statement on the element body:
+//! Product form is a **tag-position** `style(…)` call on the open tag:
 //! ```text
-//! <div>
-//!   style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })
+//! <div style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })>
 //!   children
 //! </div>
 //! ```
 //! Also: `style([ match(…), when(…) ])`, `style(constRef)`, or channel spines
-//! with `.when(key, { … })` tails. Attribute hosts `style={…}` / `sx={…}` are
-//! **not** the product attach form (compiler refuses Style product on attrs).
+//! with `.when(key, { … })` tails. Attribute hosts `style={…}` / `sx={…}` and
+//! body-nested Style statements are **not** the product attach form.
 //! Utility-string atoms (`style="p-4 bg-surface-2"`) are a **hard residual
 //! error** — not architecture.
 //!
@@ -193,12 +192,30 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     col,
                     rule: RULE_ID,
                     severity: Severity::Error,
-                    message: "style={…} as an attribute is not Style attachment — use a block \
-                              statement: style({ box: …, paint: … }).when(hover, { paint: … })  \
+                    message: "style={…} / sx= is not Style attachment — use a tag call: \
+                              style({ box: …, paint: … }).when(hover, { paint: … })  \
                               or  style([ base, match(…) ])"
                         .to_string(),
                     suggest: Some(
-                        "Attach Style as the first block statement after `>` on the element."
+                        "Attach Style as style({…}) on the open tag (no `=`)."
+                            .to_string(),
+                    ),
+                });
+                continue;
+            }
+            SxHit::BodyAttach(offset) => {
+                let (line, col) = offset_to_line_col(source, offset);
+                findings.push(Finding {
+                    file: path.to_path_buf(),
+                    line,
+                    col,
+                    rule: RULE_ID,
+                    severity: Severity::Error,
+                    message: "unknown statement — Style attaches as style({…}) on the open tag, \
+                              not as a body statement"
+                        .to_string(),
+                    suggest: Some(
+                        "Move Style onto the open tag: <div style({ box: …, paint: … })>…</div>"
                             .to_string(),
                     ),
                 });
@@ -372,25 +389,28 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
             .to_string(),
         suggest: Some(
             "Drive a primitive prop instead (e.g. `tone={ok() ? 'success' : 'destructive'}`), \
-             attach a block Style statement (`style({ box: …, paint: … })`), or branch with \
-             when / match / an `{#if}` between static Style values."
+             attach Style as a tag call (`style({ box: …, paint: … })` on the open tag), or \
+             branch with when / match / an `{#if}` between static Style values."
                 .to_string(),
         ),
     }
 }
 
 /// One Style host occurrence: a static Style value (value + offset) to validate,
-/// a runtime dynamic `style={jsExpr}` to reject, or a product Style attr host
-/// that must migrate to block attach.
+/// a runtime dynamic `style={jsExpr}` to reject, a product Style attr host that
+/// must migrate to tag call, or a body-nested Style statement (not product).
 enum SxHit<'a> {
     Static(&'a str, usize),
     Dynamic(usize),
     /// `style={StyleProduct}` / `sx={…}` — not product attach form.
     AttrHost(usize),
+    /// Body-nested Style after `>` — unknown statement; teach open-tag call.
+    BodyAttach(usize),
 }
 
-/// Find Style hosts: block statements after `>`, residual `style="…"`, dynamic
-/// `style={js}`, and retired product attr hosts. Skips HTML comments.
+/// Find Style hosts: tag-position `style(…)`, residual `style="…"`, dynamic
+/// `style={js}`, retired product attr hosts, and body-nested Style (error).
+/// Skips HTML comments.
 fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -405,7 +425,7 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                 None => break,
             }
         }
-        // Open tag → optional block Style statement after `>`.
+        // Open tag → attrs / tag-position style(…); body Style after `>` is refused.
         if bytes[i] == b'<'
             && i + 1 < bytes.len()
             && bytes[i + 1] != b'/'
@@ -436,6 +456,33 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                     }
                     if bytes[k] == b'/' && k + 1 < bytes.len() && bytes[k + 1] == b'>' {
                         break;
+                    }
+                    // Tag-position product: style(…)
+                    if source[k..].starts_with("style") {
+                        let after = k + 5;
+                        let boundary_ok = after >= bytes.len()
+                            || (!bytes[after].is_ascii_alphanumeric()
+                                && bytes[after] != b'_'
+                                && bytes[after] != b'$'
+                                && bytes[after] != b'-'
+                                && bytes[after] != b':');
+                        if boundary_ok {
+                            let mut m = after;
+                            while m < bytes.len() && bytes[m].is_ascii_whitespace() {
+                                m += 1;
+                            }
+                            if m < bytes.len() && bytes[m] == b'(' {
+                                if let Some((rel_lo, rel_hi, _expr)) =
+                                    try_block_style_statement(&source[k..])
+                                {
+                                    let abs_lo = k + rel_lo;
+                                    let abs_hi = k + rel_hi;
+                                    out.push(SxHit::Static(&source[abs_lo..abs_hi], abs_lo));
+                                    k = abs_hi;
+                                    continue;
+                                }
+                            }
+                        }
                     }
                     let name_lo = k;
                     while k < bytes.len()
@@ -521,14 +568,15 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                     } else {
                         k + 1
                     };
+                    // Body-nested Style is not product — hard error with tag-call teaching
+                    // (align with preprocess refuse_body_style_statements).
                     if !self_closing {
-                        if let Some((rel_lo, rel_hi, _expr)) =
+                        if let Some((rel_lo, _rel_hi, _expr)) =
                             try_block_style_statement(&source[body_start..])
                         {
                             let abs_lo = body_start + rel_lo;
-                            let abs_hi = body_start + rel_hi;
-                            out.push(SxHit::Static(&source[abs_lo..abs_hi], abs_lo));
-                            i = abs_hi;
+                            out.push(SxHit::BodyAttach(abs_lo));
+                            i = body_start;
                             continue;
                         }
                     }
@@ -792,45 +840,40 @@ mod tests {
 
     #[test]
     fn style_block_channel_product_passes() {
-        let src = r#"<div>
-  style({ paint: bg(primary), box: padX(2) })
-  x
+        let src = r#"<div style({ paint: bg(primary), box: padX(2) })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_block_channel_with_when_passes() {
-        let src = r#"<div>
-  style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) }).when(hover, { paint: bg(muted) })
-  x
+        let src = r#"<div style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) }).when(hover, { paint: bg(muted) })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_block_list_match_when_product_passes() {
-        let src = r#"<div>
-  style([ match(variant, { solid: style({ paint: bg(primary) }) }), when({ hover: style({ paint: opacity(90) }) }) ])
-  x
+        let src = r#"<div style([ match(variant, { solid: style({ paint: bg(primary) }) }), when({ hover: style({ paint: opacity(90) }) }) ])>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_block_const_ref_is_static_product() {
-        let src = r#"<div>
-  style(filled)
-  x
+        let src = r#"<div style(filled)>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]
     fn style_attr_host_is_not_product_happy_path() {
+        // `style={…}` is NOT the tag call form — must refuse with tag-call teaching.
         let ms = run(r#"<div style={style({ paint: bg(primary) })}>x</div>"#);
         assert!(
-            ms.iter().any(|m| m.contains("block") || m.contains("attribute")),
+            ms.iter().any(|m| m.contains("style={")
+                || m.contains("tag call")
+                || m.contains("not Style attachment")),
             "attr host must not green as product: {ms:?}"
         );
     }
@@ -855,9 +898,7 @@ mod tests {
     #[test]
     fn bad_token_fail_closed() {
         let ms = run(
-            r#"<div>
-  style({ paint: bg(notARealTokenZzz999) })
-  x
+            r#"<div style({ paint: bg(notARealTokenZzz999) })>  x
 </div>"#,
         );
         assert!(!ms.is_empty(), "{ms:?}");
@@ -871,9 +912,7 @@ mod tests {
     #[test]
     fn unknown_setter_fail_closed() {
         let ms = run(
-            r#"<div>
-  style({ paint: notASetter(primary) })
-  x
+            r#"<div style({ paint: notASetter(primary) })>  x
 </div>"#,
         );
         assert!(!ms.is_empty(), "{ms:?}");

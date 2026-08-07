@@ -203,58 +203,28 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} use:dropTarget>
-  style({ box: padY(6).padX(4), paint: group().borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none) }).when(focus, { paint: outline(ring) }).when(stateOver, { paint: borderWidth(1).border(ring).bg(muted) })
-  <span>
-    style({ box: display(contents), text: textAlign(center) })
-    <row align="center" justify="center" gap="0" aria-hidden="true">
-    style({ box: w(9).h(9).minW(9), paint: radius(lg).bg(muted).fg(muted-foreground) }).when(groupStateOver, { paint: bg(selected-bg).fg(ring) })
-    <span>
-      style({ box: display(contents), text: fontSize(lg).leading(none) })
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      style({ box: w(icon-size-md).h(icon-size-md) })
-<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} use:dropTarget style({ box: padY(6).padX(4), paint: group().borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none) }).when(focus, { paint: outline(ring) }).when(stateOver, { paint: borderWidth(1).border(ring).bg(muted) })>  <span style({ box: display(contents), text: textAlign(center) })>    <row align="center" justify="center" gap="0" aria-hidden="true" style({ box: w(9).h(9).minW(9), paint: radius(lg).bg(muted).fg(muted-foreground) }).when(groupStateOver, { paint: bg(selected-bg).fg(ring) })>    <span style({ box: display(contents), text: fontSize(lg).leading(none) })>      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style({ box: w(icon-size-md).h(icon-size-md) })><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
     </span>
 </row>
-  <span>Drag &amp; drop or <span>
-    style({ paint: fg(primary) })
-browse</span></span>
+  <span>Drag &amp; drop or <span style({ paint: fg(primary) })>browse</span></span>
   </span>
 </center>
-<input type="file" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" use:captureInput>
-  style({ box: display(none) })
-</input>
+<input type="file" accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" use:captureInput style({ box: display(none) })>
 <if {errorMsg()}>
-  <div role="alert">
-    style({ paint: fg(destructive) })
-    <span>
-      style({ box: display(contents), text: fontSize(sm) })
-      {errorMsg()}
+  <div role="alert" style({ paint: fg(destructive) })>    <span style({ box: display(contents), text: fontSize(sm) })>      {errorMsg()}
     </span>
 </div>
 </if>
 <if {displayFiles().length > 0}>
-  <column gap="1" aria-live="polite">
-    style({ box: mt(2) })
-
+  <column gap="1" aria-live="polite" style({ box: mt(2) })>
     <for {displayFiles() as f} key={f.key}>
       <row align="center" gap="3">
-        <span aria-hidden="true">
-          style({ paint: fg(muted-foreground) })
-
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            style({ box: w(icon-size-sm).h(icon-size-sm) })
-<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
+        <span aria-hidden="true" style({ paint: fg(muted-foreground) })>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style({ box: w(icon-size-sm).h(icon-size-sm) })><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
         </span>
-        <column gap="1">
-          style({ box: grow(1).minW(0) })
-
-          <span>
-            style({ paint: fg(foreground), text: fontSize(sm).truncate() })
-{f.name}</span>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(xs) })
-{f.sizeStr}</span>
+        <column gap="1" style({ box: grow(1).minW(0) })>
+          <span style({ paint: fg(foreground), text: fontSize(sm).truncate() })>{f.name}</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>{f.sizeStr}</span>
         </column>
         <button variant="ghost" size="sm" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
       </row>

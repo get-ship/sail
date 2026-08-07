@@ -26,8 +26,7 @@
   const segmented = style({ box: ms(0).me(1), paint: border(transparent).radius(sm) })
 </scope>
 
-<button type="button">
-  style([
+<button type="button" style([
   base,
   match(size, {
     md: sizeMd,
@@ -72,7 +71,6 @@
   compound({ orientation: vertical, variant: segmented }, when({
     last: style({ box: mb(0) }),
   })),
-])
-
+])>
   <slot></slot>
 </button>

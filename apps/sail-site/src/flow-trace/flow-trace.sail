@@ -60,64 +60,32 @@ export default controller(() => {
 </controller>
 
 <grid cols="2" gap="4">
-  <card>
-    style(board)
-
+  <card style(board)>
     <row align="center" justify="between" nowrap>
-      <strong>
-        style(boardTitle)
-Board</strong>
+      <strong style(boardTitle)>Board</strong>
       <span
-        state={step() === 'paint' ? 'live' : null}
-
-      >
-        style(departedBadge)
-{departed()} departed</span>
+        state={step() === 'paint' ? 'live' : null} style(departedBadge)>{departed()} departed</span>
     </row>
-    <column gap="1">
-      style(list)
-
+    <column gap="1" style(list)>
       <for {rows() as r} key={r.id}>
-        <row nowrap>
-          style({ animate: enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 }) })
-
-          <span>
-            style(city)
-{r.city}</span>
+        <row nowrap style({ animate: enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 }) })>
+          <span style(city)>{r.city}</span>
         </row>
       </for>
     </column>
   </card>
   <column gap="2">
-    <card state={step() === 'write' ? 'live' : null}>
-      style(stage)
-
-      <strong>
-        style(stageTitle)
-1 · the write</strong>
-      <p>
-        style(stageBody)
-the interval fires: flights.set(rows =&gt; ...)</p>
+    <card state={step() === 'write' ? 'live' : null} style(stage)>
+      <strong style(stageTitle)>1 · the write</strong>
+      <p style(stageBody)>the interval fires: flights.set(rows =&gt; ...)</p>
     </card>
-    <card state={step() === 'reconcile' ? 'live' : null}>
-      style(stage)
-
-      <strong>
-        style(stageTitle)
-2 · the reconcile</strong>
-      <p>
-        style(stageBody)
-watch the board: one row leaves, one enters</p>
+    <card state={step() === 'reconcile' ? 'live' : null} style(stage)>
+      <strong style(stageTitle)>2 · the reconcile</strong>
+      <p style(stageBody)>watch the board: one row leaves, one enters</p>
     </card>
-    <card state={step() === 'paint' ? 'live' : null}>
-      style(stage)
-
-      <strong>
-        style(stageTitle)
-3 · the repaint</strong>
-      <p>
-        style(stageBody)
-one text node: the counter, top right</p>
+    <card state={step() === 'paint' ? 'live' : null} style(stage)>
+      <strong style(stageTitle)>3 · the repaint</strong>
+      <p style(stageBody)>one text node: the counter, top right</p>
     </card>
   </column>
 </grid>

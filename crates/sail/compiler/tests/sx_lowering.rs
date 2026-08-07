@@ -13,7 +13,7 @@ fn pp(src: &str) -> String {
 
 #[test]
 fn style_pad_lowers_to_padding_var() {
-    let out = pp(r#"<div> style({ box: pad(4) }) x</div>"#);
+    let out = pp(r#"<div style({ box: pad(4) })> x</div>"#);
     assert!(
         out.contains("sx-"),
         "style({{ box: pad(4) }}) must emit an sx class:\n{out}"
@@ -26,7 +26,7 @@ fn style_pad_lowers_to_padding_var() {
 
 #[test]
 fn style_bg_surface_lowers() {
-    let out = pp(r#"<div> style({ paint: bg(surface-1) }) x</div>"#);
+    let out = pp(r#"<div style({ paint: bg(surface-1) })> x</div>"#);
     assert!(
         out.contains("var(--surface-1)") || out.contains("background"),
         "style({{ paint: bg(surface-1) }}) must bind surface token:\n{out}"
@@ -35,7 +35,7 @@ fn style_bg_surface_lowers() {
 
 #[test]
 fn style_fg_muted_lowers() {
-    let out = pp(r#"<div> style({ paint: fg(muted-foreground) }) x</div>"#);
+    let out = pp(r#"<div style({ paint: fg(muted-foreground) })> x</div>"#);
     assert!(
         out.contains("var(--muted-foreground)") || out.contains("color"),
         "style({{ paint: fg(muted-foreground) }}) must bind color token:\n{out}"
@@ -44,7 +44,7 @@ fn style_fg_muted_lowers() {
 
 #[test]
 fn style_radius_lowers() {
-    let out = pp(r#"<div> style({ paint: radius(md) }) x</div>"#);
+    let out = pp(r#"<div style({ paint: radius(md) })> x</div>"#);
     assert!(
         out.contains("var(--radius-md)") || out.contains("border-radius"),
         "style({{ paint: radius(md) }}) must bind radius token:\n{out}"
@@ -53,7 +53,7 @@ fn style_radius_lowers() {
 
 #[test]
 fn style_chain_multi_setters() {
-    let out = pp(r#"<div> style({ box: pad(4), paint: bg(surface-1).fg(muted-foreground) }) x</div>"#);
+    let out = pp(r#"<div style({ box: pad(4), paint: bg(surface-1).fg(muted-foreground) })> x</div>"#);
     assert!(out.contains("sx-"), "chain must emit classes:\n{out}");
     assert!(
         out.contains("var(--space-4)") || out.contains("padding"),
@@ -67,7 +67,7 @@ fn style_chain_multi_setters() {
 
 #[test]
 fn style_when_hover_emits_pseudo() {
-    let out = pp(r#"<div> when({ hover: style({ paint: bg(muted) }) }) x</div>"#);
+    let out = pp(r#"<div style(when({ hover: style({ paint: bg(muted) }) }))> x</div>"#);
     assert!(
         out.contains(":hover") || out.contains("hover"),
         "when hover must emit pseudo:\n{out}"
@@ -80,7 +80,7 @@ fn style_when_hover_emits_pseudo() {
 
 #[test]
 fn style_position_relative() {
-    let out = pp(r#"<div> style({ box: position(relative), paint: z(1) }) x</div>"#);
+    let out = pp(r#"<div style({ box: position(relative), paint: z(1) })> x</div>"#);
     assert!(
         out.contains("relative") || out.contains("position"),
         "position(relative):\n{out}"
@@ -89,7 +89,7 @@ fn style_position_relative() {
 
 #[test]
 fn style_bind_var_ref() {
-    let out = pp(r#"<div> style({ box: w(bind(glowRadius) })) x</div>"#);
+    let out = pp(r#"<div style({ box: w(bind(glowRadius) }))> x</div>"#);
     assert!(
         out.contains("var(--glow-radius)") || out.contains("--glow"),
         "bind must emit custom property read:\n{out}"
@@ -126,7 +126,7 @@ fn structured_string_product_is_a_compile_error() {
 
 #[test]
 fn style_transparent_bg() {
-    let out = pp(r#"<div> style({ paint: bg(transparent) }) x</div>"#);
+    let out = pp(r#"<div style({ paint: bg(transparent) })> x</div>"#);
     assert!(
         out.contains("transparent") || out.contains("background"),
         "bg(transparent):\n{out}"
@@ -135,7 +135,7 @@ fn style_transparent_bg() {
 
 #[test]
 fn style_display_none() {
-    let out = pp(r#"<div> style({ box: display(none) }) x</div>"#);
+    let out = pp(r#"<div style({ box: display(none) })> x</div>"#);
     assert!(
         out.contains("display:none") || out.contains("none") || out.contains("sx-"),
         "display(none):\n{out}"

@@ -35,8 +35,7 @@
   const hidden = style({ box: display(none) })
 </scope>
 
-<input>
-  style([
+<input style([
   match(type, {
     text: field,
     email: field,
@@ -80,5 +79,4 @@
     hidden: style({ box: minH(0) }),
   }),
   compound({ invalid: true }, style({ paint: border(destructive) })),
-])
-
+])>

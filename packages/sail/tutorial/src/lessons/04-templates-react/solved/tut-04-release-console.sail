@@ -66,15 +66,7 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     <match {phase()}>
-      {'idle' => <badge tone="muted">
-        style({ animate: enter({ opacity: 'fade' }) })
-idle</badge>}{'building' => <badge tone="warning">
-        style({ animate: enter({ translate-x: 'spring:snappy' }) })
-building</badge>}{'live' => <badge tone="success">
-        style({ animate: enter({ scale: 'spring:bouncy' }) })
-live</badge>}{else => <badge tone="destructive">
-        style({ animate: enter({ opacity: 'fade' }) })
-failed</badge>}</match>
+      {'idle' => <badge tone="muted" style({ animate: enter({ opacity: 'fade' }) })>idle</badge>}{'building' => <badge tone="warning" style({ animate: enter({ translate-x: 'spring:snappy' }) })>building</badge>}{'live' => <badge tone="success" style({ animate: enter({ scale: 'spring:bouncy' }) })>live</badge>}{else => <badge tone="destructive" style({ animate: enter({ opacity: 'fade' }) })>failed</badge>}</match>
   </row>
 
   <row gap="2">
@@ -92,16 +84,10 @@ failed</badge>}</match>
 
   <column gap="1">
     <for {filtered() as env} key={env.id}>
-      <row gap="3" align="center">
-        style(envRow)
-
+      <row gap="3" align="center" style(envRow)>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong>
-          style([ style(envName), style({ box: grow(1) }) ])
-{env.name}</strong>
-        <small>
-          style(envRegion)
-{env.region}</small>
+        <strong style([ style(envName), style({ box: grow(1) }) ])>{env.name}</strong>
+        <small style(envRegion)>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>
     </for>

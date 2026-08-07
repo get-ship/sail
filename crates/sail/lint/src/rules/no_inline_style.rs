@@ -1,4 +1,4 @@
-//! `sail-no-inline-style` — raw CSS `style="…"` banned; product host is `style={…}`.
+//! `sail-no-inline-style` — raw CSS `style="…"` banned; product host is tag `style(…)`.
 
 use std::path::Path;
 use crate::report::{Finding, Severity};
@@ -25,8 +25,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             findings.push(Finding {
                 file: path.to_path_buf(), line, col, rule: RULE_ID,
                 severity: Severity::Warn,
-                message: "inline style=\"…\" is raw CSS and bypasses the token surface — it is not allowed in any `.sail`. Use Style product host `style={style.…}` or a primitive prop; raw CSS values never compile.".into(),
-                suggest: Some("Use Style product `style={style.…}` or a primitive prop. There is no raw-CSS escape.".into()),
+                message: "inline style=\"…\" is raw CSS and bypasses the token surface — it is not allowed in any `.sail`. Use Style tag call `style({ box: …, paint: … })` or a primitive prop; raw CSS values never compile.".into(),
+                suggest: Some("Use Style tag call `style({ box: …, paint: … })` on the open tag, or a primitive prop. There is no raw-CSS escape.".into()),
             });
         }
         i += 1;

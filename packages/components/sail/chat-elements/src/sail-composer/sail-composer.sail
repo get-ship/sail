@@ -101,36 +101,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <column
   gap="2"
-  data-state={disabled() ? 'disabled' : ''}
-
->
-  style({ box: pad(2), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg) }).when(focusWithin, { paint: borderWidth(1).border(primary).outline(ring) }).when(stateDisabled, { paint: bg(muted).opacity(75) })
-  <span>
-    style({ box: display(contents), text: fontFamily(body) })
-    <div>
-    style({ box: display(contents) })
-
+  data-state={disabled() ? 'disabled' : ''} style({ box: pad(2), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg) }).when(focusWithin, { paint: borderWidth(1).border(primary).outline(ring) }).when(stateDisabled, { paint: bg(muted).opacity(75) })>  <span style({ box: display(contents), text: fontFamily(body) })>    <div style({ box: display(contents) })>
     <slot name="attachments"></slot>
   </div>
   <!-- nowrap: default row wraps and parks Send under the field in tight tiles. -->
   <row nowrap gap="2" align="center">
     <if {multiline()}>
-      <textarea rows="1" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys>
-        style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })
-</textarea>
+      <textarea rows="1" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })></textarea>
     </if>
     <if {!multiline()}>
-      <input type="text" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys>
-        style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })
-      </input>
+      <input type="text" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })>
     </if>
-    <row nowrap gap="1" align="center">
-      style({ box: shrink(0) })
-
+    <row nowrap gap="1" align="center" style({ box: shrink(0) })>
       <slot name="trailing"></slot>
-      <button use:sendClick type="button" variant="solid" tone="primary" size="sm" aria-label="Send" disabled={disabled() || text().trim().length === 0}>
-        style({ box: shrink(0) })
-Send</button>
+      <button use:sendClick type="button" variant="solid" tone="primary" size="sm" aria-label="Send" disabled={disabled() || text().trim().length === 0} style({ box: shrink(0) })>Send</button>
     </row>
   </row>
   </span>

@@ -131,83 +131,42 @@ export default controller(({ data, expanded, depth }: Scope) => {
 </controller>
 
 <column gap="0">
-  <span>
-    style({ box: display(contents), text: fontFamily(mono).fontSize(sm).leading(loose) })
-    <if {parseError() !== ''}>
-    <span role="alert">
-      style({ paint: fg(destructive) })
-Invalid JSON: {parseError()}</span>
+  <span style({ box: display(contents), text: fontFamily(mono).fontSize(sm).leading(loose) })>    <if {parseError() !== ''}>
+    <span role="alert" style({ paint: fg(destructive) })>Invalid JSON: {parseError()}</span>
   </if>
   <for {rows() as row} key={row.k}>
     <match {row.kind}>
       {'branch' => <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
->
-          style({ paint: group().radius(sm).cursor(pointer) }).when(hover, { paint: bg(hover-bg) })
+style({ paint: group().radius(sm).cursor(pointer) }).when(hover, { paint: bg(hover-bg) })>
 
           <for {row.pads as pad} key={pad.i}>
-            <span>
-              style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
-</span>
+            <span style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })></span>
           </for>
-          <span aria-hidden="true">
-            style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs) }).when(groupExpanded, { paint: rotate(90) })
-▶</span>
+          <span aria-hidden="true" style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs) }).when(groupExpanded, { paint: rotate(90) })>▶</span>
           <if {row.label !== ''}>
-            <span>
-              style({ text: fontWeight(medium) })
-"{row.label}"</span><span>
-              style({ paint: fg(muted-foreground) })
-:&nbsp;</span>
+            <span style({ text: fontWeight(medium) })>"{row.label}"</span><span style({ paint: fg(muted-foreground) })>:&nbsp;</span>
           </if>
-          <span>
-            style({ paint: fg(muted-foreground) })
-{row.openBracket}</span>
-          <span>
-            style({ box: padX(1).ml(1), paint: fg(muted-foreground).bg(muted).radius(full), text: fontSize(xs) })
-{row.meta}</span>
+          <span style({ paint: fg(muted-foreground) })>{row.openBracket}</span>
+          <span style({ box: padX(1).ml(1), paint: fg(muted-foreground).bg(muted).radius(full), text: fontSize(xs) })>{row.meta}</span>
           <if {!row.open}>
-            <span>
-              style({ paint: fg(muted-foreground) })
-…{row.closeBracket}</span>
+            <span style({ paint: fg(muted-foreground) })>…{row.closeBracket}</span>
           </if>
         </row>}{'close' => <row gap="0" align="center">
           <for {row.pads as pad} key={pad.i}>
-            <span>
-              style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
-</span>
+            <span style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })></span>
           </for>
-          <span>
-            style({ box: padX(1), paint: fg(muted-foreground) })
-{row.text}</span>
-        </row>}{else => <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center">
-          style({ paint: radius(sm) }).when(hover, { paint: bg(hover-bg) })
-
+          <span style({ box: padX(1), paint: fg(muted-foreground) })>{row.text}</span>
+        </row>}{else => <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" style({ paint: radius(sm) }).when(hover, { paint: bg(hover-bg) })>
           <for {row.pads as pad} key={pad.i}>
-            <span>
-              style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })
-</span>
+            <span style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })></span>
           </for>
           <if {row.label !== ''}>
-            <span>
-              style({ box: padX(1), text: fontWeight(medium) })
-"{row.label}"</span><span>
-              style({ paint: fg(muted-foreground) })
-:&nbsp;</span>
+            <span style({ box: padX(1), text: fontWeight(medium) })>"{row.label}"</span><span style({ paint: fg(muted-foreground) })>:&nbsp;</span>
           </if>
           <match {row.kind}>
-            {'str' => <span>
-              style({ paint: fg(success) })
-{row.text}</span>}{'num' => <span>
-              style({ paint: fg(info) })
-{row.text}</span>}{'bool' => <span>
-              style({ paint: fg(accent), text: fontWeight(medium) })
-{row.text}</span>}{'null' => <span>
-              style({ paint: fg(muted-foreground) })
-{row.text}</span>}{else => <span>
-              style({ paint: fg(muted-foreground) })
-{row.text}</span>}</match>
+            {'str' => <span style({ paint: fg(success) })>{row.text}</span>}{'num' => <span style({ paint: fg(info) })>{row.text}</span>}{'bool' => <span style({ paint: fg(accent), text: fontWeight(medium) })>{row.text}</span>}{'null' => <span style({ paint: fg(muted-foreground) })>{row.text}</span>}{else => <span style({ paint: fg(muted-foreground) })>{row.text}</span>}</match>
         </row>}</match>
   </for>
   </span>

@@ -21,17 +21,9 @@
   const cell = style({ box: minW(max), text: whitespace(nowrap) })
 </scope>
 
-<div>
-  style(host)
-
-  <row nowrap use:marquee>
-    style(track)
-
-    <span>
-      style([ style(cell), style({ box: shrink(0) }) ])
-<slot></slot></span>
-    <span hidden="true">
-      style([ style(cell), style({ box: shrink(0) }) ])
-<slot></slot></span>
+<div style(host)>
+  <row nowrap use:marquee style(track)>
+    <span style([ style(cell), style({ box: shrink(0) }) ])><slot></slot></span>
+    <span hidden="true" style([ style(cell), style({ box: shrink(0) }) ])><slot></slot></span>
   </row>
 </div>

@@ -9,25 +9,17 @@
   }
 </scope>
 
-<row studio-page-header align="center" gap="2" nowrap justify="between">
-  style({  box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
-
-  <row align="center" gap="2" nowrap>
-    style({ box: grow(1).minW(0) })
-
+<row studio-page-header align="center" gap="2" nowrap justify="between" style({  box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
+  <row align="center" gap="2" nowrap style({ box: grow(1).minW(0) })>
     <slot name="leading"></slot>
     <slot name="title">
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
-
+      <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
         {title()}
       </p>
     </slot>
     <slot></slot>
   </row>
-  <row align="center" gap="2" nowrap>
-    style({ box: shrink(0) })
-
+  <row align="center" gap="2" nowrap style({ box: shrink(0) })>
     <slot name="actions"></slot>
   </row>
 </row>

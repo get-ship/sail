@@ -112,21 +112,13 @@ export default controller(() => {
 })
 </controller>
 
-<column theme-facet-chrome-root gap="0">
-  style({  box: shrink(0).minW(0)  })
-
-  <row theme-facet-chrome align="center" justify="between" gap="3" nowrap>
-    style({  box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background)  })
-
-    <row align="center" gap="2" nowrap>
-      style({  box: grow(1).minW(0)  })
-
+<column theme-facet-chrome-root gap="0" style({  box: shrink(0).minW(0)  })>
+  <row theme-facet-chrome align="center" justify="between" gap="3" nowrap style({  box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background)  })>
+    <row align="center" gap="2" nowrap style({  box: grow(1).minW(0)  })>
       <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes
       </button>
-      <p hidden="true">
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-/</p>
+      <p hidden="true" style({ paint: fg(muted-foreground), text: fontSize(sm) })>/</p>
       <input
         type="text"
         theme-name
@@ -137,14 +129,8 @@ export default controller(() => {
         spellcheck="false"
         disabled={!canEdit()}
         on:input={onNameInput}
-        on:change={onNameChange}
-
->
-        style({ box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) })
-      </input>
-      <p hidden="true">
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-/</p>
+        on:change={onNameChange} style({ box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) })>
+      <p hidden="true" style({ paint: fg(muted-foreground), text: fontSize(sm) })>/</p>
       <button
         type="button"
         size="sm"
@@ -160,68 +146,44 @@ export default controller(() => {
       <dropdown id={pathMenuId()} placement="bottom-start" on-select={onPathSelect}>
         <for {pathNav() as item} key={item.key}>
           <menu-item value={item.value}>
-            <icon name={item.icon} size="sm">
-              style({ box: shrink(0) })
-</icon>
+            <icon name={item.icon} size="sm" style({ box: shrink(0) })></icon>
             {item.label}
           </menu-item>
         </for>
       </dropdown>
       <if {showStateChip()}>
-        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill>
-          style({ box: shrink(0) })
-
+        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill style({ box: shrink(0) })>
           {stateChipLabel()}
         </badge>
       </if>
     </row>
 
     <!-- Edit cluster (save / unsaved / undo) — separate from mode switch on the right. -->
-    <row align="center" gap="3" nowrap>
-      style({ box: shrink(0) })
-
-      <row edit-cluster align="center" gap="1" nowrap>
-        style({ box: shrink(0) })
-
-        <button type="button" size="sm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo}>
-          style({ box: shrink(0) })
-
+    <row align="center" gap="3" nowrap style({ box: shrink(0) })>
+      <row edit-cluster align="center" gap="1" nowrap style({ box: shrink(0) })>
+        <button type="button" size="sm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo} style({ box: shrink(0) })>
           <icon name="undo-2" size="sm"></icon>
         </button>
-        <button type="button" size="sm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo}>
-          style({ box: shrink(0) })
-
+        <button type="button" size="sm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo} style({ box: shrink(0) })>
           <icon name="redo-2" size="sm"></icon>
         </button>
         <!-- Dropdown always mounted (not inside isDirty) so use:anchor can bind to the trigger. -->
         <if {isDirty()}>
-          <button type="button" size="sm" variant="soft" tone="primary" unsaved-trigger popovertarget={diffMenuId()} label="Unsaved changes">
-            style({ box: shrink(0) })
-
+          <button type="button" size="sm" variant="soft" tone="primary" unsaved-trigger popovertarget={diffMenuId()} label="Unsaved changes" style({ box: shrink(0) })>
             Unsaved
             <icon name="chevron-down" size="sm"></icon>
           </button>
         </if>
         <dropdown id={diffMenuId()} placement="bottom-end">
-          <column gap="2">
-            style({ box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) })
-
-            <p>
-              style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
-Unsaved changes</p>
+          <column gap="2" style({ box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) })>
+            <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>Unsaved changes</p>
             <if {hasDiffRows()}>
-              <scroll-area>
-                style({ box: maxH(48) })
-
+              <scroll-area style({ box: maxH(48) })>
                 <column gap="2">
                   <for {diffRows() as row} key={row.key}>
                     <column gap="0" diff-row>
-                      <p>
-                        style({ paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() })
-{row.path}</p>
-                      <p>
-                        style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).truncate() })
-
+                      <p style({ paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() })>{row.path}</p>
+                      <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).truncate() })>
                         {row.from} → {row.to}
                       </p>
                     </column>
@@ -230,9 +192,7 @@ Unsaved changes</p>
               </scroll-area>
             </if>
             <if {!hasDiffRows()}>
-              <p>
-                style({ paint: fg(muted-foreground), text: fontSize(xs) })
-Edits pending — save to write theme JSON.</p>
+              <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>Edits pending — save to write theme JSON.</p>
             </if>
             <button type="button" size="sm" variant="solid" tone="primary" diff-save on:click={onSave}>
               Save
@@ -240,35 +200,23 @@ Edits pending — save to write theme JSON.</p>
           </column>
         </dropdown>
         <if {canEdit()}>
-          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave}>
-            style({ box: shrink(0) })
-
+          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave} style({ box: shrink(0) })>
             {saveButtonLabel()}
           </button>
         </if>
         <if {isCatalog()}>
-          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject}>
-            style({ box: shrink(0) })
-
+          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject} style({ box: shrink(0) })>
             Add to project
           </button>
         </if>
       </row>
 
-      <stack hidden="true">
-        style({ box: w(half).h(5).minW(half), paint: bg(border-subtle) })
-</stack>
+      <stack hidden="true" style({ box: w(half).h(5).minW(half), paint: bg(border-subtle) })></stack>
 
-      <row mode-cluster align="center" gap="2" nowrap>
-        style({ box: shrink(0) })
-
+      <row mode-cluster align="center" gap="2" nowrap style({ box: shrink(0) })>
         <if {canToggleMode()}>
-          <row dual-mode gap="2" align="center" nowrap label="Theme mode">
-            style({ box: shrink(0) })
-
-            <icon name="sun" size="sm" label="Light">
-              style({ box: shrink(0), paint: fg(muted-foreground) })
-</icon>
+          <row dual-mode gap="2" align="center" nowrap label="Theme mode" style({ box: shrink(0) })>
+            <icon name="sun" size="sm" label="Light" style({ box: shrink(0), paint: fg(muted-foreground) })></icon>
             <switch
               size="sm"
               tone="muted"
@@ -277,15 +225,11 @@ Edits pending — save to write theme JSON.</p>
               label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
               on:change={onModeSwitch}
             ></switch>
-            <icon name="moon" size="sm" label="Dark">
-              style({ box: shrink(0), paint: fg(muted-foreground) })
-</icon>
+            <icon name="moon" size="sm" label="Dark" style({ box: shrink(0), paint: fg(muted-foreground) })></icon>
           </row>
         </if>
         <if {showAddMode()}>
-          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode}>
-            style({ box: shrink(0) })
-
+          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode} style({ box: shrink(0) })>
             {addModeLabel()}
           </button>
         </if>

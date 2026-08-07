@@ -19,14 +19,12 @@
   const segmented = style({ box: pad(1), paint: bg(toggle-group).borderWidth(1).border(toggle-group-border).radius(md) })
 </scope>
 
-<row inline gap="0" use:toggleGroup>
-  style([
+<row inline gap="0" use:toggleGroup style([
   match(variant, {
     outline: style({ paint: bg(transparent) }),
     ghost: style({ paint: bg(transparent) }),
     segmented: segmented,
   }),
-])
-
+])>
   <slot></slot>
 </row>

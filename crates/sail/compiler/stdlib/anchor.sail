@@ -62,8 +62,7 @@
   const ghostMuted = style({ paint: fg(muted-foreground) }).when(hover, { paint: opacity(90) })
 </scope>
 
-<a>
-  style([
+<a style([
   base,
   match(variant, {
     default: vDefault,
@@ -102,7 +101,6 @@
   compound({ variant: ghost, tone: accent }, ghostAccent),
   compound({ variant: ghost, tone: muted }, ghostMuted),
   when({ disabled: style({ paint: opacity(50).cursor(not-allowed) }) }),
-])
-
+])>
   <slot></slot>
 </a>

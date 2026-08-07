@@ -18,16 +18,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Tutorial</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Tutorial</p>
   <h1>Learn Sail</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Nine hands-on lessons — one per decision surface the language kept, then
     the loop it exists for: agents author, humans review. Each lesson pairs a
     starter to edit with a solved screen running live.
@@ -38,19 +32,12 @@ Tutorial</p>
       <h2>{group.title}</h2>
       <column gap="2">
         <for {group.lessons as lesson} key={lesson.slug}>
-          <a href={lesson.href}
->
-            style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1) }).when(hover, { paint: bg(surface-2).borderWidth(1).border(border-strong) })
-
+          <a href={lesson.href} style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1) }).when(hover, { paint: bg(surface-2).borderWidth(1).border(border-strong) })>
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
-              <column gap="1">
-                style({ box: grow(1) })
-
+              <column gap="1" style({ box: grow(1) })>
                 <strong>{lesson.title}</strong>
-                <small>
-                  style({ paint: fg(muted-foreground) })
-{lesson.description}</small>
+                <small style({ paint: fg(muted-foreground) })>{lesson.description}</small>
               </column>
             </row>
           </a>
@@ -59,9 +46,7 @@ Tutorial</p>
     </column>
   </for>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/state">← State</a>
     <a variant="solid" tone="primary" href="/sail/tutorial/01-a-page-is-markup">Start lesson 1 →</a>
   </row>

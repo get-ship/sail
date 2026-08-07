@@ -228,6 +228,38 @@ impl<'a> Parser<'a> {
                 });
                 continue;
             }
+            // Tag-position Style call: `style(…)` (+ `.when` chains). Stored as
+            // name `style` with the full call text so author/fmt paths keep it.
+            if self.src[self.i..].starts_with("style") {
+                let after = self.i + 5;
+                let boundary = after >= self.bytes.len()
+                    || (!self.bytes[after].is_ascii_alphanumeric()
+                        && self.bytes[after] != b'_'
+                        && self.bytes[after] != b'$'
+                        && self.bytes[after] != b'-'
+                        && self.bytes[after] != b':');
+                if boundary {
+                    let mut k = after;
+                    while k < self.bytes.len() && self.bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
+                    if k < self.bytes.len() && self.bytes[k] == b'(' {
+                        let start = self.i;
+                        // consume balanced style expr from "style"
+                        if let Some(end) = consume_style_call(self.src, start) {
+                            let raw = self.src[start..end].to_string();
+                            self.i = end;
+                            out.push(Attr {
+                                name: "style".to_string(),
+                                value: raw,
+                                span: Span::new(start, end),
+                                value_span: Span::new(start, end),
+                            });
+                            continue;
+                        }
+                    }
+                }
+            }
             let name_start = self.i;
             while self.i < self.bytes.len() && is_attr_name_byte(self.bytes[self.i]) {
                 self.i += 1;
@@ -518,4 +550,95 @@ mod tests {
             "if must stay inside arm text, not sibling element: {kinds:?}"
         );
     }
+}
+
+/// Consume `style(…)` (+ `.method(` tails) starting at `start` in `src`.
+fn consume_style_call(src: &str, start: usize) -> Option<usize> {
+    let s = &src[start..];
+    if !s.starts_with("style") {
+        return None;
+    }
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brack = 0i32;
+    let mut brace = 0i32;
+    let mut saw = false;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+                if i < bytes.len() {
+                    i += 1;
+                }
+                continue;
+            }
+            b'(' => {
+                paren += 1;
+                saw = true;
+            }
+            b')' => {
+                paren -= 1;
+                if paren < 0 {
+                    return None;
+                }
+            }
+            b'[' => {
+                brack += 1;
+                saw = true;
+            }
+            b']' => {
+                brack -= 1;
+                if brack < 0 {
+                    return None;
+                }
+            }
+            b'{' => {
+                brace += 1;
+                saw = true;
+            }
+            b'}' => {
+                brace -= 1;
+                if brace < 0 {
+                    return None;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+        if saw && paren == 0 && brack == 0 && brace == 0 {
+            let mut j = i;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'.' {
+                let after = j + 1;
+                let mut k = after;
+                while k < bytes.len()
+                    && (bytes[k].is_ascii_alphanumeric() || bytes[k] == b'_' || bytes[k] == b'-')
+                {
+                    k += 1;
+                }
+                if k > after {
+                    let mut m = k;
+                    while m < bytes.len() && bytes[m].is_ascii_whitespace() {
+                        m += 1;
+                    }
+                    if m < bytes.len() && bytes[m] == b'(' {
+                        i = m;
+                        continue;
+                    }
+                }
+            }
+            return Some(start + i);
+        }
+    }
+    None
 }

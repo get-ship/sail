@@ -19,16 +19,10 @@ import { configExample, usageExample } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ configExample, usageExample }))
 </controller>
 
-<article>
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Reactivity</p>
+<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Reactivity</p>
   <h1>The data seam</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-deck mounts routes but owns no data. Your app exposes named clients through one seam; every route reads them straight off <code>ctx</code> — flattened, no nested bag.</p>
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>deck mounts routes but owns no data. Your app exposes named clients through one seam; every route reads them straight off <code>ctx</code> — flattened, no nested bag.</p>
 
   <h2>The clients seam</h2>
   <p>Declare a clients module in <code>sail.config.jsonc</code>. deck wires its exports into the router, and every route reads them by name.</p>
@@ -41,9 +35,7 @@ deck mounts routes but owns no data. Your app exposes named clients through one 
   <h2>Live server data</h2>
   <p>A <code>&lt;data source="…" live&gt;</code> binding subscribes a route to live server data. That transport is <strong>host-wired</strong>: a host (like shipd) mounts it and supplies a resolver. Standalone <code>sail dev</code> serves routing, assets, SSR and HMR but not live server data yet — that’s the server-functions work (#32). Use a client store for state until then.</p>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a href="/deck/reactivity">← Reactivity</a>
     <a href="/deck/rendering">Rendering modes →</a>
   </row>

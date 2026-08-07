@@ -317,22 +317,12 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
   })
 
 </controller>
-<div>
-  style({ box: position(relative).w(full).h(full) })
-  <span>
-    style({ box: display(contents), text: fontFamily(body) })
-    <slot></slot>
-  <div use:overlayAction data-state={captureState()}>
-    style({ box: position(absolute).top(0).right(0).bottom(0).left(0), paint: z(dropdown).pointerEvents(none) }).when(stateCapture, { paint: pointerEvents(auto) })
-
+<div style({ box: position(relative).w(full).h(full) })>  <span style({ box: display(contents), text: fontFamily(body) })>    <slot></slot>
+  <div use:overlayAction data-state={captureState()} style({ box: position(absolute).top(0).right(0).bottom(0).left(0), paint: z(dropdown).pointerEvents(none) }).when(stateCapture, { paint: pointerEvents(auto) })>
     <if {dragVisible()}>
       <div
         aria-hidden="true"
-        use:rect={dragRect()}
-
-      >
-        style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm) })
-</div>
+        use:rect={dragRect()} style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm) })></div>
     </if>
     <for {markers() as m} key={m.id}>
       <sail-annotation-marker
@@ -350,19 +340,12 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         use:rect={popoverPos()}
         on:pointerdown={(e) => e.stopPropagation()}
 
-      >
-        style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).minW(panel-min-w-md).pad(2), paint: z(sticky).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto) })
+       style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).minW(panel-min-w-md).pad(2), paint: z(sticky).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto) })>
 
-        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown}>
-          style({ box: w(full), paint: radius(sm) })
-</textarea>
+        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ box: w(full), paint: radius(sm) })></textarea>
         <row gap="2" justify="end">
-          <button type="button" on:click={cancelPending}>
-            style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })
-Cancel</button>
-          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote}>
-            style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })
-Send</button>
+          <button type="button" on:click={cancelPending} style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })>Cancel</button>
+          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} style({ box: padX(2_5), paint: radius(sm).cursor(pointer), text: fontSize(sm) })>Send</button>
         </row>
       </column>
     </if>

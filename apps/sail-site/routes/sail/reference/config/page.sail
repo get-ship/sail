@@ -14,12 +14,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference</p>
     <h1>sail.config.json — {keyCount()} keys</h1>
     <p token="doc-lead">
@@ -32,22 +28,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="2">
     <for {keys() as k} key={k.key}>
-      <card padding="sm">
-        style({ box: minW(0) })
-
+      <card padding="sm" style({ box: minW(0) })>
         <column gap="1">
           <row gap="3" align="center">
             <code>{k.key}</code>
-            <small>
-              style({ paint: fg(muted-foreground), text: fontFamily(mono) })
-{k.type}</small>
+            <small style({ paint: fg(muted-foreground), text: fontFamily(mono) })>{k.type}</small>
           </row>
-          <small>
-            style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })
-{k.doc}</small>
-          <small>
-            style({ paint: fg(muted-foreground) })
-default: {k.default}</small>
+          <small style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })>{k.doc}</small>
+          <small style({ paint: fg(muted-foreground) })>default: {k.default}</small>
         </column>
       </card>
     </for>

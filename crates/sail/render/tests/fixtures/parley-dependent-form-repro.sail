@@ -147,19 +147,11 @@ export default controller(() => {
 })
 </controller>
 
-<center>
-  style({ box: pad(6).minH(screen), paint: bg(background) })
-
-  <column gap="4">
-    style({ box: w(full).maxW(panel-max-w-md) })
-
+<center style({ box: pad(6).minH(screen), paint: bg(background) })>
+  <column gap="4" style({ box: w(full).maxW(panel-max-w-md) })>
     <column gap="1">
-      <h1>
-        style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })
-Shipping address</h1>
-      <p>
-        style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+      <h1 style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })>Shipping address</h1>
+      <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
         Enter where we should send your order. State options depend on country.
       </p>
     </column>
@@ -197,16 +189,10 @@ Shipping address</h1>
       </alert>
     </if>
 
-    <card>
-      style({ box: w(full) })
-
+    <card style({ box: w(full) })>
       <form on:submit={onSubmit}>
-        <column gap="4">
-          style({ box: w(full).pad(5) })
-
-          <field invalid={nameInvalid()}>
-            style({ box: w(full) })
-
+        <column gap="4" style({ box: w(full).pad(5) })>
+          <field invalid={nameInvalid()} style({ box: w(full) })>
             <label slot="label" required>Name</label>
             <input
               type="text"
@@ -214,16 +200,11 @@ Shipping address</h1>
               autocomplete="name"
               placeholder="Ada Lovelace"
               bind:value={name}
-              disabled={pending()}
-            >
-              style({ box: w(full) })
-            </input>
+              disabled={pending()} style({ box: w(full) })>
             <span slot="error">{errors().name}</span>
           </field>
 
-          <field invalid={emailInvalid()}>
-            style({ box: w(full) })
-
+          <field invalid={emailInvalid()} style({ box: w(full) })>
             <label slot="label" required>Email</label>
             <input
               type="email"
@@ -231,25 +212,17 @@ Shipping address</h1>
               autocomplete="email"
               placeholder="ada@example.com"
               bind:value={email}
-              disabled={pending()}
-            >
-              style({ box: w(full) })
-            </input>
+              disabled={pending()} style({ box: w(full) })>
             <span slot="error">{errors().email}</span>
             <span slot="hint">We use this only for delivery updates.</span>
           </field>
 
-          <field invalid={countryInvalid()}>
-            style({ box: w(full) })
-
+          <field invalid={countryInvalid()} style({ box: w(full) })>
             <label slot="label" required>Country</label>
             <select
               name="country"
               bind:value={country}
-              disabled={pending()}
-            >
-              style({ box: w(full) })
-
+              disabled={pending()} style({ box: w(full) })>
               <option value="">Select a country</option>
               <option value="US">United States</option>
               <option value="CA">Canada</option>
@@ -259,17 +232,12 @@ Shipping address</h1>
           </field>
 
           <if {needsRegion()}>
-            <field invalid={stateInvalid()}>
-              style({ box: w(full) })
-
+            <field invalid={stateInvalid()} style({ box: w(full) })>
               <label slot="label" required>{regionLabel()}</label>
               <select
                 name="state"
                 bind:value={state}
-                disabled={pending()}
-              >
-                style({ box: w(full) })
-
+                disabled={pending()} style({ box: w(full) })>
                 <option value="">Select {regionLabel()}</option>
                 <for {regions() as region} key={region.code}>
                   <option value={region.code}>{region.name}</option>
@@ -277,21 +245,15 @@ Shipping address</h1>
               </select>
               <span slot="error">{errors().state}</span>
             </field>
-          {else => <field>
-              style({ box: w(full) })
-
+          {else => <field style({ box: w(full) })>
               <label slot="label">State / Province</label>
-              <select name="state" disabled>
-                style({ box: w(full) })
-
+              <select name="state" disabled style({ box: w(full) })>
                 <option value="">Not required for Other</option>
               </select>
               <span slot="hint">Region is not required when country is Other.</span>
             </field>}</if>
 
-          <row gap="2" align="center" justify="end">
-            style({ box: w(full) })
-
+          <row gap="2" align="center" justify="end" style({ box: w(full) })>
             <button type="button" variant="outline" on:click={onReset} disabled={pending()}>
               Reset
             </button>
@@ -306,9 +268,7 @@ Shipping address</h1>
           </row>
 
           <if {attempted() && !valid() && !pending()}>
-            <p role="alert">
-              style({ paint: fg(destructive), text: fontSize(sm) })
-
+            <p role="alert" style({ paint: fg(destructive), text: fontSize(sm) })>
               Fix the highlighted fields before saving.
             </p>
           </if>

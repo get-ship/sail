@@ -16,25 +16,17 @@ import { loopDiagram } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
 </controller>
 
-<article>
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-AI</p>
+<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>AI</p>
   <h1>The agent authoring loop</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     An agent authoring a Sail route produces a <code>.sail</code> +
     <code>controller.ts</code> pair that compiles, stays in scope, and behaves
     to spec — all in one turn. Ship gives the agent six surfaces to make that
     one-turn target reachable.
   </p>
 
-  <pre>
-    style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })
-{loopDiagram}</pre>
+  <pre style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })>{loopDiagram}</pre>
 
   <p>
     The example to the right is a route with <strong>four deliberate
@@ -81,9 +73,7 @@ AI</p>
     shape, the right places to put <code>&lt;style&gt;</code>).
   </p>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a href="/ai">← Overview</a>
     <a href="/ai/tooling">Tooling →</a>
   </row>

@@ -16,10 +16,6 @@
   const input = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(field-foreground).bg(field).shadow(xs).radius(full).cursor(pointer), text: fontSize(base) }).when(checked, { paint: bg(primary).border(primary) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
 </scope>
 
-<label>
-  style(host)
-
-  <input type="radio">
-    style([ style(input), style({ box: shrink(0) }) ])
-  </input><span><slot></slot></span>
+<label style(host)>
+  <input type="radio" style([ style(input), style({ box: shrink(0) }) ])><span><slot></slot></span>
 </label>

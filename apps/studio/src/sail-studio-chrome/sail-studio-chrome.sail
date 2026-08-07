@@ -48,9 +48,7 @@ export default controller((ctx) => {
 })
 </controller>
 
-<row sail-studio-shell gap="0" nowrap align="stretch">
-  style({  box: w(full).minH(screen).h(screen).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })
-  <studio-activity-bar studio-rail on:click={onRailClick}>
+<row sail-studio-shell gap="0" nowrap align="stretch" style({  box: w(full).minH(screen).h(screen).minW(0).overflow(hidden), paint: bg(background).fg(foreground)  })>  <studio-activity-bar studio-rail on:click={onRailClick}>
     <for {rail() as item} key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
@@ -59,14 +57,8 @@ export default controller((ctx) => {
           active={item.active ? 'true' : 'false'}
           label={item.label}
           current={item.active ? 'page' : undefined}
-          title={item.label}
-
-        >
-          style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground) }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(selected-bg).fg(primary) })
-
-          <center>
-            style({ box: w(full).h(full) })
-
+          title={item.label} style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground) }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(selected-bg).fg(primary) })>
+          <center style({ box: w(full).h(full) })>
             <icon name={item.icon} size="sm"></icon>
           </center>
         </a>
@@ -80,14 +72,8 @@ export default controller((ctx) => {
           activity="exit"
           label="Back to app (Esc)"
           title="Back to app (Esc)"
-          on:click={onExitStudio}
-
-        >
-          style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer) }).when(hover, { paint: bg(hover-bg).fg(foreground) })
-
-          <center>
-            style({ box: w(full).h(full) })
-
+          on:click={onExitStudio} style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer) }).when(hover, { paint: bg(hover-bg).fg(foreground) })>
+          <center style({ box: w(full).h(full) })>
             <icon name="log-out" size="sm"></icon>
           </center>
         </button>
@@ -95,19 +81,13 @@ export default controller((ctx) => {
     </if>
   </studio-activity-bar>
 
-  <column gap="0">
-    style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })
-
+  <column gap="0" style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })>
     <if {hasBatch()}>
-      <row batch-tray align="center" gap="2" nowrap>
-        style({  box: shrink(0).padX(3).h(7).minH(7), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
-
+      <row batch-tray align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(7).minH(7), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
         <badge tone="primary" size="sm" variant="soft" batch-count>
           {batchCountLabel()}
         </badge>
-        <p>
-          style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })
-
+        <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>
           Collected
         </p>
         <for {batchChips() as chip} key={chip.key}>
@@ -115,9 +95,7 @@ export default controller((ctx) => {
             {chip.label}
           </badge>
         </for>
-        <row>
-          style({ box: grow(1) })
-</row>
+        <row style({ box: grow(1) })></row>
         <button
           type="button"
           size="sm"
@@ -139,12 +117,8 @@ export default controller((ctx) => {
       </row>
     </if>
 
-    <row gap="0" nowrap align="stretch">
-      style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })
-
-      <column studio-surface>
-        style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })
-
+    <row gap="0" nowrap align="stretch" style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })>
+      <column studio-surface style({  box: grow(1).minW(0).minH(0).basis(0).overflow(hidden).h(full)  })>
         <slot name="route"></slot>
       </column>
     </row>
@@ -186,21 +160,11 @@ export default controller((ctx) => {
       </footer>
     </dialog>
 
-    <row studio-status align="center" gap="3" nowrap>
-      style({  box: shrink(0).minW(0).h(6).minH(6).padX(3).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground)  })
-      <p>
-        style({  box: grow(1).minW(0), text: fontFamily(mono).fontSize(xs).truncate()  })
-{statusLine()}</p>
-      <p save-status>
-        style({ box: shrink(0), text: fontSize(xs) })
-{saveStatusLabel()}</p>
-      <p theme-status>
-        style({ box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) })
-{themeStatusLabel()}</p>
+    <row studio-status align="center" gap="3" nowrap style({  box: shrink(0).minW(0).h(6).minH(6).padX(3).overflow(hidden), paint: borderTWidth(1).borderT(border).bg(surface-0).fg(muted-foreground)  })>      <p style({  box: grow(1).minW(0), text: fontFamily(mono).fontSize(xs).truncate()  })>{statusLine()}</p>
+      <p save-status style({ box: shrink(0), text: fontSize(xs) })>{saveStatusLabel()}</p>
+      <p theme-status style({ box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) })>{themeStatusLabel()}</p>
       <!-- Findings status: colored error · warn counts (not a mute "Checks" label) -->
-      <button type="button" checks-badge findings-status open-checks-panel size="sm" variant={hasChecksFindings() ? 'soft' : 'ghost'} tone={findingsStatusTone()} title="Open findings (Ctrl/⌘+Shift+K)" label={findingsStatusAria()} pressed={checksPanelOpen() ? 'true' : 'false'} on:click={onToggleChecksPanel}>
-        style({  box: shrink(0).padX(2).h(5).minH(5)  })
-
+      <button type="button" checks-badge findings-status open-checks-panel size="sm" variant={hasChecksFindings() ? 'soft' : 'ghost'} tone={findingsStatusTone()} title="Open findings (Ctrl/⌘+Shift+K)" label={findingsStatusAria()} pressed={checksPanelOpen() ? 'true' : 'false'} on:click={onToggleChecksPanel} style({  box: shrink(0).padX(2).h(5).minH(5)  })>
         <row findings-status-inner align="center" gap="1" nowrap>
           <if {hasFindingsErrors()}>
             <badge
@@ -232,17 +196,13 @@ export default controller((ctx) => {
           </if>
         </row>
       </button>
-      <row health="ops" align="center" gap="1">
-        style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })
-
+      <row health="ops" align="center" gap="1" style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })>
         <icon name="activity" size="sm"></icon>
         <badge tone={opsHealthTone()} size="sm" variant="soft" health-tone="ops">
           {opsHealthLabel()}
         </badge>
       </row>
-      <row health="watch" align="center" gap="1">
-        style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })
-
+      <row health="watch" align="center" gap="1" style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })>
         <icon name="radio" size="sm"></icon>
         <badge tone={watchHealthTone()} size="sm" variant="soft" health-tone="watch">
           {watchHealthLabel()}

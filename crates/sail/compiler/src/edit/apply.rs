@@ -298,33 +298,24 @@ fn apply_one(source: &str, file: &str, op: &EditOp) -> Result<String, String> {
             let open = source
                 .get(node.open_span.start..node.open_span.end)
                 .ok_or_else(|| "open span out of range".to_string())?;
-            // Product Style is a block statement after `>`, not an HTML attr.
-            let self_closing = open.trim_end().ends_with("/>");
-            if self_closing
-                || !source.get(node.open_span.end..).is_some_and(|s| {
-                    let t = s.trim_start();
-                    !t.is_empty() && !t.starts_with("</")
-                })
-            {
-                return Err(
-                    "setSx requires an element body for block style({…}); got self-closing or empty host"
-                        .into(),
-                );
-            }
-            let after = &source[node.open_span.end..node.full_span.end];
-            if let Some((body_lo, body_hi, expr)) = try_block_style_in_body(after) {
+            // Product Style is a tag-position call on the open tag.
+            if let Some((rel_lo, rel_hi, expr)) = try_tag_style_in_open(open) {
                 let merged = merge_channel_setter(&expr, setter, args)?;
-                let abs_lo = node.open_span.end + body_lo;
-                let abs_hi = node.open_span.end + body_hi;
+                let abs_lo = node.open_span.start + rel_lo;
+                let abs_hi = node.open_span.start + rel_hi;
                 Ok(replace_range(source, abs_lo, abs_hi, &merged))
             } else {
-                let insert = format!("\n  {}\n", channel_style_stmt(setter, args));
-                Ok(replace_range(
-                    source,
-                    node.open_span.end,
-                    node.open_span.end,
-                    &insert,
-                ))
+                let insert = format!(" {}", channel_style_stmt(setter, args));
+                let open_inner = open.trim_end();
+                let cut = if open_inner.ends_with("/>") {
+                    open.len() - (open.len() - open_inner.len()) - 2
+                } else if open_inner.ends_with('>') {
+                    open.len() - (open.len() - open_inner.len()) - 1
+                } else {
+                    return Err("setSx: open tag has no closing `>`".into());
+                };
+                let abs = node.open_span.start + cut;
+                Ok(replace_range(source, abs, abs, &insert))
             }
         }
         EditOp::Move {
@@ -706,7 +697,53 @@ fn channel_value_span(inner: &str, after_key: usize) -> (usize, usize) {
     (start, i)
 }
 
-/// Locate block Style statement at the start of an element body.
+
+/// Locate tag-position `style(…)` call inside an open tag string.
+fn try_tag_style_in_open(open: &str) -> Option<(usize, usize, String)> {
+    let bytes = open.as_bytes();
+    let mut j = 0usize;
+    let mut quote: Option<u8> = None;
+    while j < bytes.len() {
+        match (quote, bytes[j]) {
+            (Some(q), b) if b == q => {
+                quote = None;
+                j += 1;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[j]);
+                j += 1;
+            }
+            (Some(_), _) => j += 1,
+            (None, _) => {
+                if open[j..].starts_with("style") {
+                    let after = j + 5;
+                    let ok_boundary = after >= bytes.len()
+                        || (!bytes[after].is_ascii_alphanumeric()
+                            && bytes[after] != b'_'
+                            && bytes[after] != b'$'
+                            && bytes[after] != b'-'
+                            && bytes[after] != b':');
+                    if ok_boundary {
+                        let mut k = after;
+                        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                            k += 1;
+                        }
+                        if k < bytes.len() && bytes[k] == b'(' {
+                            return try_block_style_in_body(&open[j..]).map(|(lo, hi, e)| {
+                                (j + lo, j + hi, e)
+                            });
+                        }
+                    }
+                }
+                j += 1;
+            }
+        }
+    }
+    None
+}
+
+/// Consume a Style product expression starting at `body` (used for tag-call
+/// tails after reserved `style`, and residual body scans).
 fn try_block_style_in_body(body: &str) -> Option<(usize, usize, String)> {
     let bytes = body.as_bytes();
     let mut start = 0;

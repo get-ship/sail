@@ -17,8 +17,7 @@
   const sizeLg = style({ box: size(icon-size-xl) })
   const sizeXl = style({ box: size(icon-size-2xl) })
 </scope>
-<span use:icon>
-  style([ style({ box: shrink(0) }), 
+<span use:icon style([ style({ box: shrink(0) }), 
   base,
   match(size, {
     md: sizeMd,
@@ -27,7 +26,6 @@
     lg: sizeLg,
     xl: sizeXl,
   }),
-])
-
+])>
   <slot></slot>
 </span>

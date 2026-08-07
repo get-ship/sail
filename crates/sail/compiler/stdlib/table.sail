@@ -16,8 +16,6 @@
   const base = style({ box: w(full), paint: fg(table-foreground), text: fontFamily(body).fontSize(sm).leading(normal).textAlign(start) })
 </scope>
 
-<table>
-  style(base)
-
+<table style(base)>
   <slot></slot>
 </table>

@@ -39,20 +39,12 @@
   const listbox = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(bind(anchorWidth)).maxH(panel-max-h-sm).overflowY(auto).pad(1), paint: overscroll(contain).fg(combobox-foreground).bg(combobox).borderWidth(1).border(field-border).radius(md).shadow(lg).z(popover) })
 </scope>
 
-<div use:combobox>
-  style(host)
-
-  <input type="text">
-    style(input)
-
+<div use:combobox style(host)>
+  <input type="text" style(input)>
   <div
     popover
     use:anchor
-    placement="bottom-start"
-
-  >
-    style(listbox)
-
+    placement="bottom-start" style(listbox)>
     <slot></slot>
   </div>
 </div>

@@ -58,9 +58,7 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Team</h3>
     <row gap="3" align="center">
-      <label>
-        style(muteLabel)
-
+      <label style(muteLabel)>
         <input type="checkbox" bind:checked={breakApi} /> break the API
       </label>
       <button size="sm" variant="outline" on:click={() => reload()}>Reload</button>
@@ -69,12 +67,8 @@ export default controller(() => {
 
   <match {team()}>
     {loading =>
-      <row gap="2" align="center">
-        style(loadingRow)
-        <spinner size="sm"></spinner>
-        <small>
-          style(muted)
-          loading the roster…
+      <row gap="2" align="center" style(loadingRow)>        <spinner size="sm"></spinner>
+        <small style(muted)>          loading the roster…
         </small>
       </row>
     }
@@ -84,11 +78,7 @@ export default controller(() => {
     {ok as value =>
       <column gap="1">
         <for {value as m} key={m.id}>
-          <row gap="3" align="center">
-            style(memberRow)
-            <strong>
-              style([ style(memberName), style({ box: grow(1) }) ])
-              {m.name}
+          <row gap="3" align="center" style(memberRow)>            <strong style([ style(memberName), style({ box: grow(1) }) ])>              {m.name}
             </strong>
             <if {m.role === 'admin'}>
               <badge tone="primary" variant="soft" size="sm">admin</badge>

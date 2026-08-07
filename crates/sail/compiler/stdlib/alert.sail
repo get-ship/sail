@@ -27,10 +27,7 @@
   align="start"
   gap="3"
   use:liveRegion
-  use:dismissControl
-
->
-  style([
+  use:dismissControl style([
     base,
     when({
       before: stripe,
@@ -49,10 +46,8 @@
         before: style({ paint: bg(CanvasText) }),
       }),
     }),
-  ])
-
-  <row inline nowrap align="center" justify="center">
-    style([ style({ box: shrink(1) }), 
+  ])>
+  <row inline nowrap align="center" justify="center" style([ style({ box: shrink(1) }), 
     ico,
     match(tone, {
       default: style({ paint: bg(alert).fg(alert-stripe) }),
@@ -65,52 +60,39 @@
     when({
       empty: style({ box: display(none) }),
     }),
-  ])
-
+  ])>
     <slot name="icon"></slot>
   </row>
-  <column gap="1">
-    style({ box: grow(1).minW(0) })
-
-    <div>
-      style([
+  <column gap="1" style({ box: grow(1).minW(0) })>
+    <div style([
       title,
       when({
         empty: style({ box: display(none) }),
       }),
-    ])
-
+    ])>
       <slot name="title"></slot>
     </div>
-    <div>
-      style(body)
-
+    <div style(body)>
       <slot></slot>
     </div>
-    <row align="center" gap="2">
-      style([
+    <row align="center" gap="2" style([
       actions,
       when({
         empty: style({ box: display(none) }),
       }),
-    ])
-
+    ])>
       <slot name="actions"></slot>
     </row>
   </column>
-  <button data-dismiss type="button" anatomy label="Dismiss">
-    style([ style({ box: shrink(1) }), 
+  <button data-dismiss type="button" anatomy label="Dismiss" style([ style({ box: shrink(1) }), 
       close,
       when({
         group-dismissible: style({ box: display(inline-block) }),
         hover: style({ paint: bg(alert).fg(alert-foreground) }),
         focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
       }),
-    ])
-
-    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round">
-      style(xmark)
-
+    ])>
+    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

@@ -49,34 +49,22 @@
 <column
   gap="1"
   align={from() === 'user' ? 'end' : 'stretch'}
-  data-state={from() + ' ' + contentType() + ' ' + status()}
-
->
-  style(host)
-
-  <row gap="2" align="baseline">
-    style(meta)
-
-    <span>
-      style(fromLabel)
-{from()}</span>
+  data-state={from() + ' ' + contentType() + ' ' + status()} style(host)>
+  <row gap="2" align="baseline" style(meta)>
+    <span style(fromLabel)>{from()}</span>
     <if {timestamp()}>
       <time datetime={timestamp()}>{timestamp()}</time>
     </if>
   </row>
 
-  <div>
-    style(bubble)
-
+  <div style(bubble)>
     <slot></slot>
   </div>
 
   <!-- display:contents so a message with no actions has no trailing box (the
        column's gap never opens under it) and slotted actions become items of
        the message column, following its alignment. -->
-  <div>
-    style(trailing)
-
+  <div style(trailing)>
     <slot name="trailing"></slot>
   </div>
 </column>

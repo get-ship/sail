@@ -50,7 +50,7 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
   const sizeSm = style({ box: padX(2), text: fontSize(xs) })
   const sizeMd = style({ box: padX(2_5), text: fontSize(sm) })
 </scope>
-<span> style([
+<span style([
   style({ paint: radius(full).borderWidth(1), text: fontWeight(medium) }),
   match(variant, {
     soft: soft,
@@ -61,7 +61,7 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
     sm: sizeSm,
     md: sizeMd,
   }),
-]) 
+])> 
   <slot></slot>
 </span>
 "#;

@@ -107,48 +107,20 @@ export default controller(({ from, to, value }: Scope) => {
   Flush surface for embed in tutorial/editor chrome — no outer radius/border
   double-boxing. Rows paint add/del distinctly; pre keeps spaces intact.
 -->
-<column role="list" gap="0">
-  style({ box: w(full).minW(0).overflowX(auto), paint: bg(surface-0) })
-  <span>
-    style({ box: display(contents), text: fontFamily(mono).fontSize(xs).leading(normal) })
-    <for {lines() as line} key={line.key}>
+<column role="list" gap="0" style({ box: w(full).minW(0).overflowX(auto), paint: bg(surface-0) })>  <span style({ box: display(contents), text: fontFamily(mono).fontSize(xs).leading(normal) })>    <for {lines() as line} key={line.key}>
     <match {line.kind}>
-      {'add' => <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0">
-          style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(success, 15) })
-
-          <small aria-hidden="true">
-            style({  box: shrink(0).w(4), paint: fg(success), text: fontWeight(semibold)  })
-{line.sign}</small>
-          <pre>
-            style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })
-{line.text}</pre>
-        </row>}{'del' => <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0">
-          style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(destructive, 15) })
-
-          <small aria-hidden="true">
-            style({  box: shrink(0).w(4), paint: fg(destructive), text: fontWeight(semibold)  })
-{line.sign}</small>
-          <pre>
-            style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })
-{line.text}</pre>
-        </row>}{'hunk' => <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0">
-          style({ box: padX(2).padY(px).w(full).minW(0), paint: bg(muted) })
-
-          <small aria-hidden="true">
-            style({  box: shrink(0).w(4), paint: fg(info)  })
-{line.sign}</small>
-          <pre>
-            style({  box: grow(1).minW(0), paint: fg(info), text: fontSize(xs)  })
-{line.text}</pre>
-        </row>}{else => <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0">
-          style({ box: padX(2).padY(px).w(full).minW(0) })
-
-          <small aria-hidden="true">
-            style({  box: shrink(0).w(4), paint: fg(muted-foreground)  })
-{line.sign}</small>
-          <pre>
-            style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })
-{line.text}</pre>
+      {'add' => <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(success, 15) })>
+          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(success), text: fontWeight(semibold)  })>{line.sign}</small>
+          <pre style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })>{line.text}</pre>
+        </row>}{'del' => <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(destructive, 15) })>
+          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(destructive), text: fontWeight(semibold)  })>{line.sign}</small>
+          <pre style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })>{line.text}</pre>
+        </row>}{'hunk' => <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0), paint: bg(muted) })>
+          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(info)  })>{line.sign}</small>
+          <pre style({  box: grow(1).minW(0), paint: fg(info), text: fontSize(xs)  })>{line.text}</pre>
+        </row>}{else => <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0) })>
+          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(muted-foreground)  })>{line.sign}</small>
+          <pre style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })>{line.text}</pre>
         </row>}</match>
   </for>
   </span>

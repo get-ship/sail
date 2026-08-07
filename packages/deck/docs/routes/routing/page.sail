@@ -18,8 +18,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ routeTree, coloca
   <pre data-code-block="true">{routeTree}</pre>
 
   <h2>Co-located files</h2>
-  <p>A route may sit beside a <code>controller.ts</code> for reactive state and a <code>style.css</code> for page styles. They belong to that route alone.</p>
-  <pre data-code-block="true">{colocated}</pre>
+  <p>A route may sit beside a <code>controller.ts</code> for reactive state and a <code style.css</code> for page styles. They belong to that route alone.</p>
+  <pre data-code-block="true">{colocated}></pre>
 
   <h2>Generated tables</h2>
   <p>Walking <code>routes/</code>, deck generates <code>routes.gen.ts</code> (the typed route table) and <code>entry.gen.ts</code> (the SPA bootstrap that calls <code>mountRouter</code>). You never edit them — they regenerate on every build and every dev run. The filesystem is the only config.</p>

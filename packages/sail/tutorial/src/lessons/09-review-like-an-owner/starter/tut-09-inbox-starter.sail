@@ -66,27 +66,17 @@ export default controller(() => {
         <row gap="3" align="center">
           messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' })
 
-          <if {!m.read}><span>
-            style(unreadDot)
-</span></if>
-          <column gap="0">
-            style({ box: grow(1) })
-
-            <strong>
-              style(from)
-{m.from}</strong>
-            <small>
-              style(muted)
-{m.subject}</small>
+          <if {!m.read}><span style(unreadDot)></span></if>
+          <column gap="0" style({ box: grow(1) })>
+            <strong style(from)>{m.from}</strong>
+            <small style(muted)>{m.subject}</small>
           </column>
           <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
         </row>
       </for>
       <if {visible().length === 0}>
-        <div>
-          style(emptyImprovised)
-Nothing matches this filter.</div>
+        <div style(emptyImprovised)>Nothing matches this filter.</div>
       </if>
     </column>
   </if>

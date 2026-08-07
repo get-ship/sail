@@ -14,16 +14,10 @@ import { quickstart, layers } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layers }))
 </controller>
 
-<article>
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-deck · 0.2.0</p>
+<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>deck · 0.2.0</p>
   <h1>The standalone web framework for Sail.</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     deck mounts Sail routes, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
     state-preserving HMR. It is to Sail what Next is to React.
@@ -37,24 +31,18 @@ deck · 0.2.0</p>
 
   <h2>The 30-second app</h2>
   <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
-  <pre>
-    style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })
-{quickstart}</pre>
+  <pre style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })>{quickstart}</pre>
   <p>That’s a running Sail single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
 
   <h2>Where it sits</h2>
-  <pre>
-    style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })
-{layers}</pre>
+  <pre style({ box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) })>{layers}</pre>
   <p>
     Sail is the component language — signals, templates, controllers. deck is the
     framework around it — routing, rendering, build, serving. Your app is what
     you write under <code>routes/</code>.
   </p>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="solid" tone="primary" href="/deck/getting-started">Getting started →</a>
   </row>
 </article>

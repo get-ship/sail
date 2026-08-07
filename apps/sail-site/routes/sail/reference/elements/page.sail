@@ -34,12 +34,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference</p>
     <h1>Elements — {stdlibCount()} stdlib</h1>
     <p token="doc-lead">
@@ -52,16 +48,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <grid cols="3" gap="2">
       <for {stdlibElements() as e} key={e.tag}>
-        <card padding="sm">
-          style({ box: minW(0) })
-
+        <card padding="sm" style({ box: minW(0) })>
           <column gap="1">
-            <a href={e.href}><code>{e.tag}</code> <small>
-              style({ paint: fg(muted-foreground) })
-{e.propCount}</small></a>
-            <small>
-              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-{e.description}</small>
+            <a href={e.href}><code>{e.tag}</code> <small style({ paint: fg(muted-foreground) })>{e.propCount}</small></a>
+            <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{e.description}</small>
           </column>
         </card>
       </for>

@@ -158,12 +158,8 @@ mod severity_tests {
         // Column with overflow hidden and a child that wants height while parent
         // collapses — classic silent-clip shape (simplified).
         let src = r#"
-            <column>
-  style({ box: overflow(hidden).h(0) })
-
-              <div>
-  style({ box: h(20) })
-tall</div>
+            <column style({ box: overflow(hidden).h(0) })>
+              <div style({ box: h(20) })>tall</div>
             </column>
         "#;
         let diags = collect(src);
@@ -185,11 +181,7 @@ tall</div>
     /// from Warning → Error so studio check fails closed.
     #[test]
     fn layout_error_profile_promotes_zero_main_axis() {
-        let src = r#"<column>
-  style({ box: h(0) })
-<div>
-  style({ box: h(20) })
-x</div></column>"#;
+        let src = r#"<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>"#;
         let dir = tempfile::tempdir().expect("tempdir");
         std::fs::write(
             dir.path().join("sail.config.json"),
@@ -409,7 +401,7 @@ fn tag_matches_fingerprint(
     let sx_value: &str = if let Some(v) = attrs.iter().find(|(n, _)| n == "style").map(|(_, v)| v.as_str())
     {
         v
-    } else if let Some(expr) = block_style_expr_after(source, tag_end) {
+    } else if let Some(expr) = tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end)) {
         sx_owned = expr;
         sx_owned.as_str()
     } else {
@@ -436,6 +428,75 @@ fn tag_matches_fingerprint(
 }
 
 /// First block Style statement immediately after an open tag (`>`).
+
+/// Tag-position `style(…)` call ending at open tag `>` (`gt_pos`).
+fn tag_style_expr_before(source: &str, gt_pos: usize) -> Option<String> {
+    if gt_pos == 0 || gt_pos > source.len() {
+        return None;
+    }
+    let bytes = source.as_bytes();
+    let mut open = gt_pos;
+    while open > 0 {
+        if bytes[open - 1] == b'<' {
+            open -= 1;
+            break;
+        }
+        open -= 1;
+    }
+    let mut tag_end = open + 1;
+    while tag_end < gt_pos
+        && (bytes[tag_end].is_ascii_alphanumeric()
+            || bytes[tag_end] == b'-'
+            || bytes[tag_end] == b'_'
+            || bytes[tag_end] == b':')
+    {
+        tag_end += 1;
+    }
+    let mut j = tag_end;
+    let mut quote: Option<u8> = None;
+    while j < gt_pos {
+        match (quote, bytes[j]) {
+            (Some(q), b) if b == q => {
+                quote = None;
+                j += 1;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[j]);
+                j += 1;
+            }
+            (Some(_), _) => j += 1,
+            (None, _) => {
+                if j + 5 <= gt_pos
+                    && &bytes[j..j + 5] == b"style"
+                    && (j == 0
+                        || (!bytes[j - 1].is_ascii_alphanumeric()
+                            && bytes[j - 1] != b'_'
+                            && bytes[j - 1] != b'$'))
+                    && (j + 5 >= gt_pos
+                        || (!bytes[j + 5].is_ascii_alphanumeric()
+                            && bytes[j + 5] != b'_'
+                            && bytes[j + 5] != b':'))
+                {
+                    let mut k = j + 5;
+                    while k < gt_pos && bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
+                    if k < gt_pos && bytes[k] == b'(' {
+                        let rest = &source[j..gt_pos];
+                        let end = rest.find('>').unwrap_or(rest.len());
+                        let expr = rest[..end].trim_end();
+                        if expr.starts_with("style(") {
+                            return Some(expr.to_string());
+                        }
+                    }
+                }
+                j += 1;
+            }
+        }
+    }
+    None
+}
+
 fn block_style_expr_after(source: &str, tag_end: usize) -> Option<String> {
     if tag_end >= source.len() {
         return None;
@@ -599,11 +660,7 @@ mod tests {
     /// diagnostic lands on the deepest collapsed box with non-zero children
     /// (the div — the column's only child totals 0 after flex shrink, so the
     /// parent case is suppressed by the layout crate's noise gate).
-    const ZERO_MAIN_SRC: &str = r#"<column>
-  style({ box: h(0) })
-<div>
-  style({ box: h(20) })
-x</div></column>"#;
+    const ZERO_MAIN_SRC: &str = r#"<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>"#;
 
     #[test]
     fn maps_zero_main_axis_back_to_collapsed_box() {
@@ -654,11 +711,7 @@ x</div></column>"#;
     #[test]
     fn duplicate_columns_map_by_index() {
         let src =
-            "<column>A</column>\n<column>
-  style({ box: h(0) })
-<div>
-  style({ box: h(20) })
-x</div></column>";
+            "<column>A</column>\n<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>";
         let diags = collect(src);
         let zero = diags
             .iter()

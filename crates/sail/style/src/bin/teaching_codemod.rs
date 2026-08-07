@@ -1,5 +1,5 @@
 //! Teaching scrub: flat `style.…` → channel spine, then lift `style=` / `sx=`
-//! product attribute hosts into block statements.
+//! product attribute hosts into tag-position `style(…)` calls.
 //!
 //! Usage:
 //!   cargo run -p sail-style --bin sail-style-teaching-codemod -- [--dry-run] <path>…

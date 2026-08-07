@@ -17,8 +17,7 @@
   const dashed = style({ box: pad(0), paint: bg(transparent).borderWidth(0) })
 </scope>
 
-<hr>
-  style([
+<hr style([
   base,
   match(orientation, {
     horizontal: orientH,
@@ -40,5 +39,4 @@
   compound({ variant: dashed, orientation: vertical, tone: muted }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(border-subtle) })),
   compound({ variant: dashed, orientation: vertical, tone: primary }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(primary) })),
   compound({ variant: dashed, orientation: vertical, tone: destructive }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(destructive) })),
-])
-
+])>

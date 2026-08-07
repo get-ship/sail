@@ -7,17 +7,11 @@
   ecosystem. Prior page mined as input only; absorbed the thesis (/thesis is
   gone). Voice: plain, confident, zero showmanship, no unverified numbers.
 -->
-<column gap="4">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Why Sail</p>
+<column gap="4" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Why Sail</p>
   <h1>Why build another framework?</h1>
 
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Because the author changed. Every mainstream web framework is an
     ergonomics project — built to fit a
     professional’s hands. Hooks, hot reload, clever DX: all of it optimizes
@@ -107,9 +101,7 @@ Why Sail</p>
     turns "an agent built this" from a warning into a guarantee.
   </p>
 
-  <row gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
     <a variant="default" href="/sail/overview">Introduction</a>
     <a variant="default" href="/sail/tutorial">Tutorial</a>

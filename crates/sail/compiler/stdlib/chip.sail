@@ -36,8 +36,7 @@
   use:dismissible
 
 >
-  <span>
-    style([
+  <span style([
     base,
     match(size, {
       md: sizeMd,
@@ -123,26 +122,19 @@
     compound({ variant: ghost }, when({
       hover: style({ paint: bg(hover-bg) }),
     })),
-  ])
-    <span>
-    style(leading)
-
+  ])>    <span style(leading)>
     <slot name="leading"></slot>
   </span>
   <slot></slot>
-  <button type="button" anatomy data-dismiss label="Remove" tabindex="-1">
-    style([ style({ box: shrink(0) }), 
+  <button type="button" anatomy data-dismiss label="Remove" tabindex="-1" style([ style({ box: shrink(0) }), 
       remove,
       when({
         group-removable: style({ box: display(inline-flex) }),
         hover: style({ paint: bg(muted).fg(foreground) }),
         focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
       }),
-    ])
-
-    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round">
-      style(xmark)
-
+    ])>
+    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

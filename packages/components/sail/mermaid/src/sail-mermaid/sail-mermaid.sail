@@ -170,33 +170,17 @@ export default controller((ctx) => {
   });
 
 </controller>
-<center use:paintDiagram hidden={hasError()}>
-  style({ box: w(full).minH(8) })
-</center>
+<center use:paintDiagram hidden={hasError()} style({ box: w(full).minH(8) })></center>
 
 <if {error()}>
-  <column gap="2">
-    style({ box: w(full).pad(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted) })
-    <span>
-      style({ box: display(contents), text: fontSize(sm) })
-      <row gap="2" align="center">
-      style({ paint: fg(destructive) })
-      <span>
-        style({ box: display(contents), text: fontWeight(semibold) })
-        <icon name="alert-triangle" label="" size="sm"></icon>
+  <column gap="2" style({ box: w(full).pad(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted) })>    <span style({ box: display(contents), text: fontSize(sm) })>      <row gap="2" align="center" style({ paint: fg(destructive) })>      <span style({ box: display(contents), text: fontWeight(semibold) })>        <icon name="alert-triangle" label="" size="sm"></icon>
       Diagram failed to render
       </span>
 </row>
-    <pre>
-      style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })
-{error()}</pre>
+    <pre style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })>{error()}</pre>
     <details>
-      <summary>
-        style({ paint: cursor(pointer).fg(muted-foreground), text: fontSize(xs) })
-mermaid source</summary>
-      <pre>
-        style({ box: mt(2).pad(2).padX(3).overflowX(auto), paint: bg(surface-2).borderWidth(1).border(border-subtle).radius(sm), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })
-{value()}</pre>
+      <summary style({ paint: cursor(pointer).fg(muted-foreground), text: fontSize(xs) })>mermaid source</summary>
+      <pre style({ box: mt(2).pad(2).padX(3).overflowX(auto), paint: bg(surface-2).borderWidth(1).border(border-subtle).radius(sm), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap) })>{value()}</pre>
     </details>
     </span>
 </column>

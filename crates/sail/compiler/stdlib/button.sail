@@ -40,8 +40,7 @@
   const vGhost = style({ paint: bg(transparent).fg(button-foreground) }).when(hover, { paint: bg(hover-bg) }).when(disabled, { paint: bg(transparent) })
 </scope>
 
-<button>
-  style([
+<button style([
   base,
   match(variant, {
     default: vDefault,
@@ -85,7 +84,6 @@
   compound({ variant: ghost, tone: destructive }, style({ paint: fg(destructive) })),
   compound({ variant: ghost, tone: accent }, style({ paint: fg(accent) })),
   compound({ variant: ghost, tone: muted }, style({ paint: fg(muted-foreground) })),
-])
-
+])>
   <slot></slot>
 </button>

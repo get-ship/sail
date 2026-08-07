@@ -23,18 +23,12 @@ export default controller(() => {
 })
 </controller>
 
-<card>
-  style(card)
-
+<card style(card)>
   <column gap="2" align="start">
-    <small>
-      style(labelText)
-{label()}</small>
+    <small style(labelText)>{label()}</small>
     <row gap="3" align="center" nowrap>
       <button on:click={() => add()}>+1</button>
-      <strong>
-        style(count)
-{clicks()}</strong>
+      <strong style(count)>{clicks()}</strong>
     </row>
   </column>
 </card>

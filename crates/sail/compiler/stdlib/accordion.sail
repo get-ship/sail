@@ -23,16 +23,10 @@
   const content = style({ box: padX(4).padY(3) })
 </scope>
 
-<details use:detailsToggle use:detailsDisabled>
-  style([
+<details use:detailsToggle use:detailsDisabled style([
   host,
   compound({ disabled: true }, style({ paint: opacity(50).cursor(not-allowed) })),
-])
-
-  <summary>
-    style(summary)
-<slot name="trigger"></slot></summary>
-  <div><div>
-    style(content)
-<slot></slot></div></div>
+])>
+  <summary style(summary)><slot name="trigger"></slot></summary>
+  <div><div style(content)><slot></slot></div></div>
 </details>

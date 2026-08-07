@@ -147,7 +147,7 @@ fn d3_analyze_agrees_with_compile_on_an_unconfigured_source() {
     // No `sail.config.json` in reach → no capability policy is declared, so the
     // capability-gated rules must stay quiet. Editor squiggles that name a
     // policy nobody opted into are squiggles that lie about what builds.
-    let src = r#"<div> style({ box: pad(4) }) hi</div>"#;
+    let src = r#"<div style({ box: pad(4) })> hi</div>"#;
     compile(src, opts()).expect("sx compiles with no policy declared");
     let a = sail_compiler::analyze(src, None, &[]);
     let noise: Vec<_> = a

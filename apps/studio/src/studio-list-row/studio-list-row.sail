@@ -12,17 +12,11 @@
   }
 </scope>
 
-<row studio-list-row selected={selected() ? 'true' : 'false'} gap="2" align="center" nowrap>
-  style({  box: minW(0).h(6).padX(3)  }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2) })
-
+<row studio-list-row selected={selected() ? 'true' : 'false'} gap="2" align="center" nowrap style({  box: minW(0).h(6).padX(3)  }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2) })>
   <slot name="leading"></slot>
-  <p>
-    style({ box: grow(1).minW(0), text: fontSize(sm).truncate() })
-{title()}</p>
+  <p style({ box: grow(1).minW(0), text: fontSize(sm).truncate() })>{title()}</p>
   <if {meta()}>
-    <p studio-list-meta>
-      style({ box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) })
-
+    <p studio-list-meta style({ box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs) })>
       {meta()}
     </p>
   </if>

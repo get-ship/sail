@@ -385,50 +385,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 </controller>
 <dialog use:dialogBridge size={size()} backdrop="blur">
-  <column gap="0">
-    style({ box: minH(0), paint: fg(foreground) })
-    <span>
-      style({ box: display(contents), text: fontFamily(body) })
-      <row align="center" gap="2">
-      style({  box: grow(0).pad(3).padX(4), paint: borderBWidth(1).borderB(border-subtle)  })
-
-      <icon name="search" size="sm">
-        style({ box: grow(0) })
-</icon>
-      <input type="text" flush autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput>
-        style({ box: grow(1).minW(0), text: fontFamily(body).fontSize(base).leading(normal) })
-      </input>
+  <column gap="0" style({ box: minH(0), paint: fg(foreground) })>    <span style({ box: display(contents), text: fontFamily(body) })>      <row align="center" gap="2" style({  box: grow(0).pad(3).padX(4), paint: borderBWidth(1).borderB(border-subtle)  })>
+      <icon name="search" size="sm" style({ box: grow(0) })></icon>
+      <input type="text" flush autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput style({ box: grow(1).minW(0), text: fontFamily(body).fontSize(base).leading(normal) })>
     </row>
-    <ul role="listbox" id={listId()} aria-label={label()} use:captureList>
-      style({  box: grow(1).maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)  })
-
+    <ul role="listbox" id={listId()} aria-label={label()} use:captureList style({  box: grow(1).maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)  })>
       <for {rows() as row} key={row.key}>
         <if {row.isHeading}>
-          <li role="presentation">
-            style({ box: padY(2).padB(1), paint: fg(muted-foreground).select(none), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
-{row.heading}</li>
-        {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
-            style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm) }).when(selected, { paint: bg(selected-bg) }).when(disabled, { paint: fg(muted-foreground).cursor(default).opacity(50) })
-
+          <li role="presentation" style({ box: padY(2).padB(1), paint: fg(muted-foreground).select(none), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })>{row.heading}</li>
+        {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'} style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm) }).when(selected, { paint: bg(selected-bg) }).when(disabled, { paint: fg(muted-foreground).cursor(default).opacity(50) })>
             <if {row.icon !== ''}>
-              <icon name={row.icon} size="sm">
-                style({ box: grow(0), paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })
-</icon>
+              <icon name={row.icon} size="sm" style({ box: grow(0), paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })></icon>
             </if>
-            <span>
-              style({ box: grow(1).minW(0), text: truncate() })
-{row.label}</span>
+            <span style({ box: grow(1).minW(0), text: truncate() })>{row.label}</span>
             <if {row.hint !== ''}>
-              <span>
-                style({  box: grow(0).ml(auto), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono)  })
-{row.hint}</span>
+              <span style({  box: grow(0).ml(auto), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono)  })>{row.hint}</span>
             </if>
           </li>}</if>
       </for>
       <if {rows().length === 0}>
-        <li role="status">
-          style({ box: pad(6).padX(4), paint: fg(muted-foreground), text: fontSize(sm).textAlign(center) })
-{emptyLabel()}</li>
+        <li role="status" style({ box: pad(6).padX(4), paint: fg(muted-foreground), text: fontSize(sm).textAlign(center) })>{emptyLabel()}</li>
       </if>
     </ul>
     </span>

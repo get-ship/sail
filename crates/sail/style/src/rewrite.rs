@@ -426,23 +426,20 @@ fn scan_string(src: &str, start: usize) -> usize {
     pos
 }
 
-// ── Teaching codemod: lift `style=` / `sx=` attribute hosts → block statements ──
+// ── Teaching codemod: lift `style=` / `sx=` attribute hosts → tag-position calls ──
 
-/// Flat → channel, then lift product Style attrs into block attach form.
+/// Flat → channel, then lift product Style attrs into tag-position `style(…)`.
 pub fn rewrite_teaching_source(src: &str) -> String {
     lift_style_attr_hosts(&rewrite_source(src))
 }
 
-/// Product Style on `style=` / `sx=` → remove the attribute and inject a block
-/// statement after the open tag’s `>`.
+/// Product Style on `style=` / `sx=` → remove the attribute and inject a
+/// tag-position `style(…)` call on the open tag (before `>` / `/>`).
 ///
 /// ```text
 /// <div style={style({ box: pad(4) })}>x</div>
 /// // →
-/// <div>
-///   style({ box: pad(4) })
-///   x
-/// </div>
+/// <div style({ box: pad(4) })>x</div>
 /// ```
 pub fn lift_style_attr_hosts(src: &str) -> String {
     let bytes = src.as_bytes();
@@ -577,7 +574,7 @@ pub fn lift_style_attr_hosts(src: &str) -> String {
                         if attr_lo > tag_end && bytes[attr_lo - 1] == b' ' {
                             attr_lo -= 1;
                         }
-                        let stmt = normalize_style_block_stmt(product_src);
+                        let stmt = normalize_style_tag_call(product_src);
                         product_attr = Some((attr_lo, val_hi, stmt));
                     }
                 }
@@ -600,15 +597,12 @@ pub fn lift_style_attr_hosts(src: &str) -> String {
             };
 
             if let Some((attr_lo, attr_hi, stmt)) = product_attr {
-                let indent = open_tag_indent(src, i);
                 edits.push(AttrLiftEdit {
                     attr_lo,
                     attr_hi,
                     gt_pos,
                     self_closing,
-                    tag: tag.to_string(),
                     stmt,
-                    indent,
                 });
             }
 
@@ -649,76 +643,45 @@ struct AttrLiftEdit {
     attr_hi: usize,
     gt_pos: usize,
     self_closing: bool,
-    tag: String,
     stmt: String,
-    indent: String,
 }
 
 fn apply_attr_lift(out: &mut String, e: &AttrLiftEdit) {
-    // gt_pos is still valid relative to pre-attr-removal source only if attr is
-    // before `>`. After removing the attr, gt shifts left when attr_lo < gt.
+    // gt_pos is relative to pre-attr-removal source. After removing the attr,
+    // gt shifts left when attr_lo < gt.
     let gt = e.gt_pos;
     let attr_lo = e.attr_lo;
     let attr_hi = e.attr_hi;
     debug_assert!(attr_hi <= gt, "attr must end before `>`");
-
-    let pad = format!("{}  ", e.indent); // 2-space child indent
-    let injection = if e.self_closing {
-        // Expand `/>` → `>\n  STMT\n</tag>` (drop the `/` by rewriting from gt-1).
-        format!(">\n{pad}{}\n{}</{}>", e.stmt, e.indent, e.tag)
-    } else {
-        format!(">\n{pad}{}", e.stmt)
-    };
 
     // 1) Remove attribute.
     out.replace_range(attr_lo..attr_hi, "");
     let shift = attr_hi - attr_lo;
     let gt2 = gt - shift;
 
-    // 2) Inject after `>` (or expand self-closing).
-    if e.self_closing {
-        // `/>` ends at gt2; `/` at gt2-1.
-        let slash = if gt2 > 0 && out.as_bytes()[gt2 - 1] == b'/' {
+    // 2) Inject tag-position style call before `>` or `/>`.
+    let insert_at = if e.self_closing {
+        // `/>` — insert before the `/`.
+        if gt2 > 0 && out.as_bytes()[gt2 - 1] == b'/' {
             gt2 - 1
         } else {
             gt2
-        };
-        // Replace from slash through `>` with injection (which starts with `>`).
-        out.replace_range(slash..gt2 + 1, &injection);
-    } else {
-        // Insert statement right after `>`.
-        let insert_at = gt2 + 1;
-        let after = &out[insert_at..];
-        let only_stmt = if after.starts_with('\n') || after.starts_with("\r\n") {
-            format!("\n{pad}{}", e.stmt)
-        } else if after.is_empty() || after.starts_with("</") {
-            // Empty body or immediate close — still put stmt on its own line.
-            format!("\n{pad}{}\n{}", e.stmt, e.indent)
-        } else {
-            // Inline children: break them onto the next indented line.
-            format!("\n{pad}{}\n{pad}", e.stmt)
-        };
-        out.insert_str(insert_at, &only_stmt);
-    }
-}
-
-fn open_tag_indent(src: &str, tag_lt: usize) -> String {
-    let bytes = src.as_bytes();
-    let mut line_start = tag_lt;
-    while line_start > 0 && bytes[line_start - 1] != b'\n' {
-        line_start -= 1;
-    }
-    let mut n = 0usize;
-    let mut i = line_start;
-    while i < tag_lt {
-        match bytes[i] {
-            b' ' => n += 1,
-            b'\t' => n += 2,
-            _ => break,
         }
-        i += 1;
+    } else {
+        gt2
+    };
+    let need_space_before =
+        insert_at > 0 && !out.as_bytes()[insert_at - 1].is_ascii_whitespace();
+    let mut injection = String::new();
+    if need_space_before {
+        injection.push(' ');
     }
-    " ".repeat(n)
+    injection.push_str(&e.stmt);
+    if e.self_closing {
+        // Prefer `style(…) />` over `style(…)/>`.
+        injection.push(' ');
+    }
+    out.insert_str(insert_at, &injection);
 }
 
 fn is_raw_skip_tag(tag: &str) -> bool {
@@ -818,8 +781,8 @@ fn is_ident_method_call(s: &str) -> bool {
     j < r.len() && r[j] == b'('
 }
 
-/// Normalize a product Style attr value into a block statement expression.
-fn normalize_style_block_stmt(value: &str) -> String {
+/// Normalize a product Style attr value into a tag-position `style(…)` call.
+fn normalize_style_tag_call(value: &str) -> String {
     let mut v = value.trim().to_string();
     // Strip one outer `{…}` if the whole value is wrapped.
     if v.starts_with('{') && v.ends_with('}') {
@@ -832,12 +795,15 @@ fn normalize_style_block_stmt(value: &str) -> String {
     v = rewrite_source(&v);
 
     let t = v.trim();
-    if t.starts_with("style(")
-        || t.starts_with("when(")
-        || t.starts_with("match(")
-        || t.starts_with("compound(")
-    {
+    if t.starts_with("style(") {
         return t.to_string();
+    }
+    // Bare when/match/compound were body-level products; tag attach needs `style`.
+    if t.starts_with("when(") {
+        return when_expr_to_tag_style(t);
+    }
+    if t.starts_with("match(") || t.starts_with("compound(") {
+        return format!("style([{t}])");
     }
     if t.starts_with('[') {
         return format!("style({t})");
@@ -848,8 +814,36 @@ fn normalize_style_block_stmt(value: &str) -> String {
     if is_bare_ident(t) {
         return format!("style({t})");
     }
-    // Const-ref motion chain etc. — keep as-is (already product).
+    // Const-ref motion chain etc.
+    if is_ident_method_call(t) {
+        return format!("style({t})");
+    }
     t.to_string()
+}
+
+/// `when({ hover: … })` / `when(hover, {…})` → `style({}).when(…)…`.
+fn when_expr_to_tag_style(expr: &str) -> String {
+    let t = expr.trim();
+    if !t.starts_with("when") {
+        return format!("style([{t}])");
+    }
+    let after = t["when".len()..].trim_start();
+    if !after.starts_with('(') {
+        return format!("style([{t}])");
+    }
+    let end = scan_balanced(after, 0);
+    let args = &after[..end];
+    let mut out = "style({})".to_string();
+    for tail in split_when_to_cond_args(args) {
+        out.push_str(".when");
+        out.push_str(&tail);
+    }
+    // Preserve any chain after the first when(…)
+    let rest = after[end..].trim_start();
+    if !rest.is_empty() {
+        out.push_str(rest);
+    }
+    out
 }
 
 #[cfg(test)]
@@ -1144,23 +1138,29 @@ mod tests {
     }
 
     #[test]
-    fn lift_attr_host_to_block() {
+    fn lift_attr_host_to_tag() {
         let src = r#"<div style={style.pad(4).bg(primary)}>x</div>"#;
         let out = rewrite_teaching_source(src);
-        assert!(
-            out.contains("style({ box: pad(4), paint: bg(primary) })"),
-            "{out}"
+        assert_eq!(
+            out,
+            r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#
         );
         assert!(!out.contains("style="), "{out}");
         assert!(!out.contains("style={"), "{out}");
+        // Must NOT reintroduce body-attach form.
+        assert!(
+            !out.contains(">\n") && !out.contains("> style("),
+            "must not inject body Style: {out}"
+        );
     }
 
     #[test]
     fn lift_list_form() {
         let src = r#"<button style={[ base, match(v, { a: a }) ]}>ok</button>"#;
         let out = rewrite_teaching_source(src);
-        assert!(out.contains("style(["), "{out}");
+        assert!(out.starts_with("<button style(["), "{out}");
         assert!(out.contains("match(v, { a: a })"), "{out}");
+        assert!(out.contains(">ok</button>"), "{out}");
         assert!(!out.contains("style="), "{out}");
     }
 
@@ -1168,11 +1168,13 @@ mod tests {
     fn lift_when_only() {
         let src = r#"<button style={when({ hover: style.bg(muted) })}>h</button>"#;
         let out = rewrite_teaching_source(src);
-        assert!(out.contains("when("), "{out}");
+        assert!(out.contains("style({}"), "{out}");
+        assert!(out.contains(".when(hover,"), "{out}");
         assert!(
-            out.contains("style({ paint: bg(muted) })") || out.contains("bg(muted)"),
+            out.contains("paint: bg(muted)") || out.contains("bg(muted)"),
             "{out}"
         );
+        assert!(out.contains("<button style("), "{out}");
         assert!(!out.contains("style="), "{out}");
     }
 
@@ -1180,7 +1182,7 @@ mod tests {
     fn lift_const_ref() {
         let src = r#"<span style={filled}>x</span>"#;
         let out = rewrite_teaching_source(src);
-        assert!(out.contains("style(filled)"), "{out}");
+        assert_eq!(out, r#"<span style(filled)>x</span>"#);
         assert!(!out.contains("style={filled}"), "{out}");
     }
 
@@ -1202,20 +1204,19 @@ mod tests {
     fn lift_sx_host_same_as_style() {
         let src = r#"<div sx={style.pad(4).bg(primary)}>x</div>"#;
         let out = rewrite_teaching_source(src);
-        assert!(
-            out.contains("style({ box: pad(4), paint: bg(primary) })"),
-            "{out}"
+        assert_eq!(
+            out,
+            r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#
         );
         assert!(!out.contains("sx="), "{out}");
     }
 
     #[test]
-    fn lift_self_closing_expands() {
+    fn lift_self_closing_stays_void() {
         let src = r#"<div style={style.pad(2)} />"#;
         let out = rewrite_teaching_source(src);
-        assert!(out.contains("style({ box: pad(2) })"), "{out}");
-        assert!(out.contains("</div>"), "{out}");
-        assert!(!out.contains("/>"), "{out}");
+        assert_eq!(out, r#"<div style({ box: pad(2) }) />"#);
+        assert!(!out.contains("</div>"), "{out}");
         assert!(!out.contains("style="), "{out}");
     }
 
@@ -1227,6 +1228,12 @@ mod tests {
         assert!(
             out.contains("style({ animate: press({ scale: 'press' }) })")
                 || out.contains("press({ scale: 'press' })"),
+            "{out}"
+        );
+        // Tag form — style call sits on the open tag with sibling attrs.
+        assert!(
+            out.contains("<button on:click={invite} style(")
+                || out.contains("<button style("),
             "{out}"
         );
         assert!(!out.contains("style="), "{out}");

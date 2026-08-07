@@ -23,16 +23,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Concepts</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
   <h1>Errors</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Things fail two ways. Data can fail to arrive — that is a state, and the
     <a href="/sail/language/data">Data</a> chapter renders it with
     <code>&lt;match error arm&gt;</code>. Or code can throw — an exception in
@@ -60,12 +54,8 @@ Concepts</p>
   <h2>&lt;error-boundary&gt;, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p>
-        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Live — throw, catch, retry</p>
-      <column gap="3">
-        style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
+      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — throw, catch, retry</p>
+      <column gap="3" style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
         <error-boundary on-error-reset={disarm}>
           <if {armed()}><p>{boom()}</p></if>
           <if {!armed()}>
@@ -78,9 +68,7 @@ Live — throw, catch, retry</p>
       </column>
     </column>
     <column>
-      <p>
-        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Source</p>
+      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </grid>
@@ -111,9 +99,7 @@ Source</p>
     renders that state where it happens:
   </p>
   <code-block code={code.async}></code-block>
-  <p>
-    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
     The two systems don’t overlap: a failed fetch shows the
     <code>&lt;match error arm&gt;</code> branch, never the boundary
     fallback; a synchronous throw trips the boundary, never the error state.
@@ -121,9 +107,7 @@ Source</p>
     by boundaries.
   </p>
 
-  <row justify="between" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/data">← Data</a>
     <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>
   </row>

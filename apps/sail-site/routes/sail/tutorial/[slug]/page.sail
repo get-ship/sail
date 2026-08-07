@@ -337,74 +337,42 @@ export default controller((ctx: ControllerScope<Scope>) => {
   tablet+: side-by-side workbench. Mobile (else / SSR default): stacked.
 -->
 <when {tablet}>
-<row nowrap align="stretch" gap="0">
-  style({  box: w(full).h(fill).minH(0).minW(0).overflow(hidden)  })
-
+<row nowrap align="stretch" gap="0" style({  box: w(full).h(fill).minH(0).minW(0).overflow(hidden)  })>
   <!-- Lesson pane -->
-  <column>
-    style({  box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border)  })
-
-    <column gap="3">
-      style({  box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4)  })
-
+  <column style({  box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border)  })>
+    <column gap="3" style({  box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4)  })>
       <row align="center" justify="between" gap="2">
-        <p>
-          style({ paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) })
-TUTORIAL</p>
-        <small>
-          style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })
-{lessonNumLabel()} / {totalLessons()}</small>
+        <p style({ paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) })>TUTORIAL</p>
+        <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })>{lessonNumLabel()} / {totalLessons()}</small>
       </row>
 
       <row gap="1" label="Lesson progress">
         <for {steps() as step} key={step.slug}>
           <match {step.state}>
-            {'done' => <a href={step.href} title={step.title}>
-                style({  box: grow(1).h(1), paint: radius(full).bg(primary)  })
-</a>}{'current' => <a href={step.href} title={step.title} current="step">
-                style({  box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50)  })
-</a>}{else => <a href={step.href} title={step.title}>
-                style({  box: grow(1).h(1), paint: radius(full).bg(surface-2)  })
-</a>}</match>
+            {'done' => <a href={step.href} title={step.title} style({  box: grow(1).h(1), paint: radius(full).bg(primary)  })></a>}{'current' => <a href={step.href} title={step.title} current="step" style({  box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50)  })></a>}{else => <a href={step.href} title={step.title} style({  box: grow(1).h(1), paint: radius(full).bg(surface-2)  })></a>}</match>
         </for>
       </row>
 
       <column gap="1">
-        <h1>
-          style({ text: fontSize(2xl).leading(tight) })
-{title()}</h1>
-        <p>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
-{description()}</p>
+        <h1 style({ text: fontSize(2xl).leading(tight) })>{title()}</h1>
+        <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>{description()}</p>
       </column>
 
-      <div use:prose={proseHtml()}>
-        style({ box: w(full).minW(0).overflowX(hidden) })
-</div>
+      <div use:prose={proseHtml()} style({ box: w(full).minW(0).overflowX(hidden) })></div>
     </column>
 
-    <row align="center" justify="between" gap="2">
-      style({  box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1)  })
-
-      <a href="/sail/tutorial">
-        style({ box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: fg(foreground).bg(surface-2) })
-← All lessons</a>
+    <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1)  })>
+      <a href="/sail/tutorial" style({ box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: fg(foreground).bg(surface-2) })>← All lessons</a>
       <if {hasNext()}>
         <a href={nextHref()} variant="solid" tone="primary">{nextTitle()}</a>
       </if>
     </row>
   </column>
 
-  <column gap="1">
-    style({  box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0)  })
-
+  <column gap="1" style({  box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0)  })>
     <!-- Editor card — file tabs + actions on one thin bar -->
-    <column gap="0">
-      style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
-
-      <row align="center" justify="between" gap="2">
-        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
-
+    <column gap="0" style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
+      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })>
         <tabs active="source" size="sm" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
@@ -422,13 +390,9 @@ TUTORIAL</p>
         collapsed the editor to ~0. Remount re-pushes via the existing editor
         effect when captureEditor fires again.
       -->
-      <column gap="0">
-        style({  box: grow(1).minH(0).overflow(hidden)  })
-
+      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
         <if {tab() === 'source'}>
-          <column gap="0">
-            style({  box: grow(1).minH(0).overflow(hidden)  })
-
+          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
             <sail-code-editor
               pane="source"
               language="sail"
@@ -441,24 +405,14 @@ TUTORIAL</p>
           </column>
         </if>
         <if {tab() === 'diff'}>
-          <column gap="0">
-            style({  box: grow(1).minH(0).overflow(hidden)  })
-
-            <row align="center" gap="2">
-              style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })
-
-              <small>
-                style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })
-your code → solution · {fileName()}</small>
+          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+            <row align="center" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })>
+              <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })>your code → solution · {fileName()}</small>
             </row>
             <!-- Absolute fill: CE display:contents + content-height flex min
                  let the LCS list blow past the viewport; lock a real scrollport. -->
-            <column gap="0">
-              style({  box: grow(1).minH(0).position(relative).overflow(hidden)  })
-
-              <div>
-                style({ box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) })
-
+            <column gap="0" style({  box: grow(1).minH(0).position(relative).overflow(hidden)  })>
+              <div style({ box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) })>
                 <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
               </div>
             </column>
@@ -468,60 +422,26 @@ your code → solution · {fileName()}</small>
     </column>
 
     <!-- Preview + console: fixed lower band; console is a real pane, not a 28px strip. -->
-    <column gap="0">
-      style({  box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
-
-      <row align="center" justify="between" gap="2">
-        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })
-
+    <column gap="0" style({  box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
+      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })>
         <row gap="2" align="center">
           <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
-          <small>
-            style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })
-PREVIEW</small>
+          <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })>PREVIEW</small>
         </row>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column gap="0">
-        style({  box: grow(1).minH(0).overflow(hidden)  })
-
+      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
         <iframe
           testid="tut-preview"
           base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
-          use:captureIframe
-
-        >
-          style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })
-</iframe>
+          use:captureIframe style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })></iframe>
       </column>
       <!-- h(16) ≈ 4rem ≈ 5 mono lines; was maxH(7)=28px under a gap-4 column. -->
-      <column live="polite" label="Preview console" gap="0">
-        style({  box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })
-        <span>
-          style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
-          <for {logs() as line} key={line.id}>
+      <column live="polite" label="Preview console" gap="0" style({  box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })>        <span style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })>          <for {logs() as line} key={line.id}>
           <match {line.kind}>
-            {'success' => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(success) })
-{line.msg}</small></row>}{'warn' => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(warning) })
-{line.msg}</small></row>}{'error' => <row gap="2">
-                style({ box: pad(1).padX(2), paint: bg(muted).radius(sm) })
-<small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(destructive) })
-{line.msg}</small></row>}{else => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(muted-foreground) })
-{line.msg}</small></row>}</match>
+            {'success' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(success) })>{line.msg}</small></row>}{'warn' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(warning) })>{line.msg}</small></row>}{'error' => <row gap="2" style({ box: pad(1).padX(2), paint: bg(muted).radius(sm) })><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(destructive) })>{line.msg}</small></row>}{else => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(muted-foreground) })>{line.msg}</small></row>}</match>
         </for>
         </span>
 </column>
@@ -529,39 +449,19 @@ PREVIEW</small>
   </column>
 </row>
 {else => <!-- Mobile: stacked — short lesson header + full-width playground -->
-<column gap="0">
-  style({  box: w(full).h(fill).minH(0).overflow(hidden)  })
-
-  <column gap="2">
-    style({  box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
-
+<column gap="0" style({  box: w(full).h(fill).minH(0).overflow(hidden)  })>
+  <column gap="2" style({  box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1)  })>
     <row align="center" justify="between" gap="2">
-      <p>
-        style({ paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) })
-TUTORIAL · {lessonNumLabel()}/{totalLessons()}</p>
-      <a href="/sail/tutorial">
-        style({ paint: fg(muted-foreground), text: fontSize(xs) })
-All lessons</a>
+      <p style({ paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) })>TUTORIAL · {lessonNumLabel()}/{totalLessons()}</p>
+      <a href="/sail/tutorial" style({ paint: fg(muted-foreground), text: fontSize(xs) })>All lessons</a>
     </row>
-    <h1>
-      style({ text: fontSize(xl).leading(tight) })
-{title()}</h1>
-    <p>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-{description()}</p>
-    <div use:prose={proseHtml()}>
-      style({ box: w(full).minW(0).overflowX(hidden) })
-</div>
+    <h1 style({ text: fontSize(xl).leading(tight) })>{title()}</h1>
+    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>{description()}</p>
+    <div use:prose={proseHtml()} style({ box: w(full).minW(0).overflowX(hidden) })></div>
   </column>
-  <column gap="1">
-    style({  box: grow(1).basis(0).minH(0).minW(0).pad(1), paint: bg(surface-0)  })
-
-    <column gap="0">
-      style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
-
-      <row align="center" justify="between" gap="2">
-        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })
-
+  <column gap="1" style({  box: grow(1).basis(0).minH(0).minW(0).pad(1), paint: bg(surface-0)  })>
+    <column gap="0" style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
+      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })>
         <tabs active="source" size="sm" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
@@ -573,13 +473,9 @@ All lessons</a>
           <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
         </row>
       </row>
-      <column gap="0">
-        style({  box: grow(1).minH(0).overflow(hidden)  })
-
+      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
         <if {tab() === 'source'}>
-          <column gap="0">
-            style({  box: grow(1).minH(0).overflow(hidden)  })
-
+          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
             <sail-code-editor
               pane="source"
               language="sail"
@@ -592,64 +488,30 @@ All lessons</a>
           </column>
         </if>
         <if {tab() === 'diff'}>
-          <column gap="0">
-            style({  box: grow(1).minH(0).overflow(hidden)  })
-
-            <scroll-area>
-              style({  box: grow(1).minH(0).w(full)  })
-
+          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+            <scroll-area style({  box: grow(1).minH(0).w(full)  })>
               <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
             </scroll-area>
           </column>
         </if>
       </column>
     </column>
-    <column gap="0">
-      style({  box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })
-
-      <row align="center" justify="between" gap="2">
-        style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })
-
+    <column gap="0" style({  box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
+      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })>
         <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column gap="0">
-        style({  box: grow(1).minH(0).overflow(hidden)  })
-
+      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
         <iframe
           testid="tut-preview"
           base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
-          use:captureIframe
-
-        >
-          style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })
-</iframe>
+          use:captureIframe style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })></iframe>
       </column>
-      <column live="polite" label="Preview console" gap="0">
-        style({  box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })
-        <span>
-          style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })
-          <for {logs() as line} key={line.id}>
+      <column live="polite" label="Preview console" gap="0" style({  box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })>        <span style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })>          <for {logs() as line} key={line.id}>
           <match {line.kind}>
-            {'success' => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(success) })
-{line.msg}</small></row>}{'warn' => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(warning) })
-{line.msg}</small></row>}{'error' => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(destructive) })
-{line.msg}</small></row>}{else => <row gap="2"><small>
-                style({ paint: fg(muted-foreground).opacity(50) })
-{line.ts}</small><small>
-                style({ paint: fg(muted-foreground) })
-{line.msg}</small></row>}</match>
+            {'success' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(success) })>{line.msg}</small></row>}{'warn' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(warning) })>{line.msg}</small></row>}{'error' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(destructive) })>{line.msg}</small></row>}{else => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(muted-foreground) })>{line.msg}</small></row>}</match>
         </for>
         </span>
 </column>

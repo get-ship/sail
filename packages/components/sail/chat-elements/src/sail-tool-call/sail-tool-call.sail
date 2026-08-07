@@ -56,52 +56,24 @@
   const resultBlock = style({ box: mt(2) })
 </scope>
 
-<div data-state={status()}>
-  style(host)
+<div data-state={status()} style(host)>
+  <span aria-hidden="true" style([rail, statusBg])></span>
 
-  <span aria-hidden="true">
-    style([rail, statusBg])
-</span>
-
-  <accordion open={open()}>
-    style({ paint: group() })
-
-    <row slot="trigger" gap="2" align="center">
-      style(trigger)
-
+  <accordion open={open()} style({ paint: group() })>
+    <row slot="trigger" gap="2" align="center" style(trigger)>
       <span
         dot
         aria-hidden="true"
-        pulse={status() === 'running'}
-
-      >
-        style([dot, statusBg])
-</span>
-      <span>
-        style(nameText)
-{name()}</span>
-      <span>
-        style([statusLabel, statusFg])
-{status()}</span>
+        pulse={status() === 'running'} style([dot, statusBg])></span>
+      <span style(nameText)>{name()}</span>
+      <span style([statusLabel, statusFg])>{status()}</span>
     </row>
-    <div>
-      style(body)
-
-      <span>
-        style(sectionLabel)
-Arguments</span>
-      <div>
-        style(pre)
-<slot></slot></div>
-      <div>
-        style(resultBlock)
-
-        <span>
-          style(sectionLabel)
-Result</span>
-        <div>
-          style(pre)
-<slot name="result"></slot></div>
+    <div style(body)>
+      <span style(sectionLabel)>Arguments</span>
+      <div style(pre)><slot></slot></div>
+      <div style(resultBlock)>
+        <span style(sectionLabel)>Result</span>
+        <div style(pre)><slot name="result"></slot></div>
       </div>
     </div>
   </accordion>

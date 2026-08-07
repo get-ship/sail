@@ -7,10 +7,9 @@
 //!  1. Quote unquoted brace attributes — `disabled={x || y}` becomes
 //!     `disabled="{x || y}"` with `"` inside the expression escaped to `&quot;`.
 //!  2. Expand non-void self-closing tags — `<time … />` becomes `<time …></time>`.
-//!  3. Lift block-level Style product statements → atomic `class`es on the parent.
-//!  4. Refuse retired `sx=` / attribute Style hosts.
-//!  5. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
-//! Steps 3–5 emit deduped CSS that `preprocess` injects as one `<style>`.
+//!  3. Lift tag-position `style(…)` calls → atomic `class`es on the open tag.
+//!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
+//! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
 use crate::diagnostics::{CompileError, Span};
 
@@ -19,7 +18,7 @@ const VOID_TAGS: &[&str] = &[
     "wbr",
 ];
 
-/// Framework blocks that are not element bodies for Style attachment.
+/// Framework blocks that are not element hosts for Style attachment.
 const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style"];
 
 pub fn preprocess(source: &str) -> Result<String, CompileError> {
@@ -45,15 +44,15 @@ pub fn prepare_fmt(source: &str) -> String {
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).
 pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<String, CompileError> {
-    // Normalize, then lift block Style statements → class (before stdlib so
-    // use-site paint is class attrs when native hosts stamp). Refuse retired
-    // `sx=` attr host. Layout keywords lower after paint classes exist.
+    // Normalize, then lift tag-position `style(…)` → class (before stdlib so
+    // use-site paint is class attrs when native hosts stamp). Layout keywords
+    // lower after paint classes exist.
     let s = expand_self_close(&quote_brace_attrs(source));
     let s = lower_prop_shorthand(&s);
-    // Scope Style consts (`const filled = style.…`) resolve Refs in host Style.
+    // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
     let style_env = super::scope_block::style_env_from_source(&s);
-    let (s, style_css) = lift_block_style(&s, &style_env)?;
-    refuse_sx_attr(&s)?;
+    let (s, style_css) = lift_tag_style(&s, &style_env)?;
+    refuse_body_style_statements(&s)?;
     // L1 stdlib elements: splice structure; skins live in framework sheet.
     let (s, elements_css) = if expand_elements {
         lower_stdlib_elements(&s)
@@ -78,41 +77,39 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     })
 }
 
-/// Find every block-level Style product expression in raw `.sail` source,
+/// Find every tag-position Style product expression in raw `.sail` source,
 /// with the byte offset of the expression start. Used by `(--x)` / `bind(name)`
 /// resolution (`check::sx_vars`) against author source.
 pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
     let mut out = Vec::new();
-    for_each_block_style(source, |abs_start, expr| {
+    for_each_tag_style(source, |abs_start, expr| {
         out.push((abs_start, expr));
     });
     out
 }
 
-/// Walk element bodies; invoke `f(expr_abs_start, expr)` for each Style product
-/// statement found as the first non-whitespace body content of an element.
-fn for_each_block_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
+/// Walk open tags; invoke `f(expr_abs_start, expr)` for each tag-position
+/// `style(…)` (+ `.when` chains).
+fn for_each_tag_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
     let bytes = source.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => {
-                    i += end + 3;
-                    continue;
-                }
+                Some(end) => { i += end + 3; continue; }
                 None => break,
             }
         }
+        if source[i..].starts_with("<style") {
+            if let Some(rel) = source[i..].find("</style>") {
+                i += rel + "</style>".len();
+                continue;
+            }
+            break;
+        }
         if bytes[i] == b'<' && i + 1 < bytes.len() {
-            if bytes[i + 1] == b'/' {
-                i += 2;
-                continue;
-            }
-            if !bytes[i + 1].is_ascii_alphabetic() {
-                i += 1;
-                continue;
-            }
+            if bytes[i + 1] == b'/' { i += 2; continue; }
+            if !bytes[i + 1].is_ascii_alphabetic() { i += 1; continue; }
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -135,34 +132,22 @@ fn for_each_block_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) 
                 }
                 k += 1;
             }
-            if k >= bytes.len() {
-                break;
-            }
-            let self_closing = k > 0 && bytes[k - 1] == b'/';
+            if k >= bytes.len() { break; }
+            let gt_pos = k;
             let body_start = k + 1;
-            if self_closing || is_void_tag(tag) || SKIP_BODY_TAGS.contains(&tag) {
-                if SKIP_BODY_TAGS.contains(&tag) && !self_closing {
-                    if let Some(end) = matching_close(source, body_start, tag) {
-                        i = end;
-                        continue;
-                    }
+            if SKIP_BODY_TAGS.contains(&tag) {
+                if let Some(end) = matching_close(source, body_start, tag) {
+                    i = end; continue;
                 }
-                i = body_start;
-                continue;
+                i = body_start; continue;
             }
-            let body = &source[body_start..];
-            if let Some((rel_start, rel_end, expr)) = try_style_statement(body) {
-                f(body_start + rel_start, expr);
-                i = body_start + rel_end;
-                continue;
+            if let Some((lo, _hi, expr)) = find_tag_style_call(source, tag_end, gt_pos) {
+                f(lo, expr);
             }
-            i = body_start;
-            continue;
+            i = body_start; continue;
         }
         let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
-            n += 1;
-        }
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 { n += 1; }
         i = n;
     }
 }
@@ -171,16 +156,16 @@ fn is_void_tag(tag: &str) -> bool {
     VOID_TAGS.iter().any(|t| *t == tag)
 }
 
-/// Lift block-level Style product statements onto the parent open tag as
-/// `class="sx-…"` (+ motion attrs), stripping the statement from the body.
-fn lift_block_style(
+/// Lift tag-position `style(…)` (+ `.when` chains) onto the open tag as
+/// `class="sx-…"` (+ motion attrs), stripping the call from the open tag.
+fn lift_tag_style(
     source: &str,
     env: &sail_lint::style::StyleEnv,
 ) -> Result<(String, String), CompileError> {
     struct Lift {
         gt_pos: usize,
-        stmt_lo: usize,
-        stmt_hi: usize,
+        call_lo: usize,
+        call_hi: usize,
         classes: String,
         motions: Vec<(String, String)>,
     }
@@ -192,22 +177,20 @@ fn lift_block_style(
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => {
-                    i += end + 3;
-                    continue;
-                }
+                Some(end) => { i += end + 3; continue; }
                 None => break,
             }
         }
+        if source[i..].starts_with("<style") {
+            if let Some(rel) = source[i..].find("</style>") {
+                i += rel + "</style>".len();
+                continue;
+            }
+            break;
+        }
         if bytes[i] == b'<' && i + 1 < bytes.len() {
-            if bytes[i + 1] == b'/' {
-                i += 2;
-                continue;
-            }
-            if !bytes[i + 1].is_ascii_alphabetic() {
-                i += 1;
-                continue;
-            }
+            if bytes[i + 1] == b'/' { i += 2; continue; }
+            if !bytes[i + 1].is_ascii_alphabetic() { i += 1; continue; }
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -230,63 +213,33 @@ fn lift_block_style(
                 }
                 k += 1;
             }
-            if k >= bytes.len() {
-                break;
-            }
-            let self_closing = k > 0 && bytes[k - 1] == b'/';
+            if k >= bytes.len() { break; }
             let gt_pos = k;
             let body_start = k + 1;
-            if SKIP_BODY_TAGS.contains(&tag) && !self_closing {
+            if SKIP_BODY_TAGS.contains(&tag) {
                 if let Some(end) = matching_close(source, body_start, tag) {
-                    i = end;
-                    continue;
+                    i = end; continue;
                 }
-                i = body_start;
-                continue;
+                i = body_start; continue;
             }
-            if self_closing {
-                i = body_start;
-                continue;
+            if let Some(bad) = find_bad_tag_style_token(source, tag_end, gt_pos) {
+                return Err(CompileError::new(
+                    "style in tag position must be a call: style({ box: …, paint: … })  \
+                     or  style(name)  or  style([…])  — not bare `style`, `style=`, or `style={…}`",
+                )
+                .with_span(Span::new(bad, bad + 5))
+                .with_category("sail-sx"));
             }
-            // Normal + void open tags: Style product may follow as a block statement.
-            let body = &source[body_start..];
-            if let Some((rel_start, rel_end, expr)) = try_style_statement(body) {
-                let abs_lo = body_start + rel_start;
-                let abs_hi = body_start + rel_end;
-                refuse_text_on_non_text_host(tag, expr, env, abs_lo, abs_hi)?;
+            if let Some((call_lo, call_hi, expr)) = find_tag_style_call(source, tag_end, gt_pos) {
+                refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
-                    .map_err(|diags| style_error(diags, abs_lo, abs_hi))?;
-                let mut stmt_hi = abs_hi;
-                if source.as_bytes().get(stmt_hi) == Some(&b'\r') {
-                    stmt_hi += 1;
-                }
-                if source.as_bytes().get(stmt_hi) == Some(&b'\n') {
-                    stmt_hi += 1;
-                }
-                let close = format!("</{tag}>");
-                let after = &source[stmt_hi..];
-                let trim_start = after.len() - after.trim_start().len();
-                let after_trim = after.trim_start();
-                if is_void_tag(tag) && after_trim.starts_with(&close) {
-                    stmt_hi += trim_start + close.len();
-                }
-                lifts.push(Lift {
-                    gt_pos,
-                    stmt_lo: abs_lo,
-                    stmt_hi,
-                    classes,
-                    motions,
-                });
-                i = stmt_hi;
-                continue;
+                    .map_err(|diags| style_error(diags, call_lo, call_hi))?;
+                lifts.push(Lift { gt_pos, call_lo, call_hi, classes, motions });
             }
-            i = body_start;
-            continue;
+            i = body_start; continue;
         }
         let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
-            n += 1;
-        }
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 { n += 1; }
         i = n;
     }
 
@@ -296,109 +249,182 @@ fn lift_block_style(
 
     let mut out = source.to_string();
     for lift in lifts.into_iter().rev() {
-        out.replace_range(lift.stmt_lo..lift.stmt_hi, "");
+        let mut lo = lift.call_lo;
+        let mut hi = lift.call_hi;
+        while lo > 0 && out.as_bytes()[lo - 1] == b' ' {
+            lo -= 1;
+        }
+        let rest = out[hi..].trim_start();
+        if rest.starts_with('>') || rest.starts_with('/') {
+            while hi < out.len() && out.as_bytes()[hi].is_ascii_whitespace() {
+                hi += 1;
+            }
+        }
+        out.replace_range(lo..hi, "");
+        let inject_at = if lift.gt_pos >= hi {
+            lift.gt_pos - (hi - lo)
+        } else if lift.gt_pos >= lo {
+            lo
+        } else {
+            lift.gt_pos
+        };
         let mut inject = String::new();
         inject.push_str(" class=\"");
         inject.push_str(&lift.classes);
         inject.push('"');
         push_motion_attrs(&mut inject, &lift.motions);
-        out.insert_str(lift.gt_pos, &inject);
+        out.insert_str(inject_at, &inject);
     }
     Ok((out, css))
 }
 
-/// Hard refuse retired `sx=` Style attribute host (and HTML-fiction
-/// `style={Style…}` product forms on the attribute).
-fn refuse_sx_attr(source: &str) -> Result<(), CompileError> {
+/// Body-nested Style product is not a statement — generic unknown-statement error.
+fn refuse_body_style_statements(source: &str) -> Result<(), CompileError> {
     let bytes = source.as_bytes();
     let mut i = 0;
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => {
-                    i += end + 3;
-                    continue;
-                }
+                Some(end) => { i += end + 3; continue; }
                 None => break,
             }
         }
-        if source[i..].starts_with("<style") {
-            if let Some(rel) = source[i..].find("</style>") {
-                i += rel + "</style>".len();
-                continue;
+        if bytes[i] == b'<' && i + 1 < bytes.len() {
+            if bytes[i + 1] == b'/' { i += 2; continue; }
+            if !bytes[i + 1].is_ascii_alphabetic() { i += 1; continue; }
+            let tag_start = i + 1;
+            let mut tag_end = tag_start;
+            while tag_end < bytes.len()
+                && (bytes[tag_end].is_ascii_alphanumeric()
+                    || bytes[tag_end] == b'-'
+                    || bytes[tag_end] == b'_'
+                    || bytes[tag_end] == b':')
+            {
+                tag_end += 1;
             }
-            break;
-        }
-        if i > 0
-            && bytes[i - 1].is_ascii_whitespace()
-            && source[i..].starts_with("sx")
-            && is_eq_after_name(&bytes[i + 2..])
-        {
-            return Err(CompileError::new(
-                "sx= is retired — attach Style as a block statement on the element: \
-                 style({ box: …, paint: …, text: … }).when(hover, { paint: … })  \
-                 or  style([ base, match(…) ])",
-            )
-            .with_span(Span::new(i, i + 2))
-            .with_category("sail-sx"));
-        }
-        if i > 0
-            && bytes[i - 1].is_ascii_whitespace()
-            && source[i..].starts_with("style")
-            && is_eq_after_name(&bytes[i + 5..])
-        {
-            let mut j = i + 5;
-            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
-                j += 1;
-            }
-            if j < bytes.len() && bytes[j] == b'=' {
-                j += 1;
-                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
-                    j += 1;
+            let tag = &source[tag_start..tag_end];
+            let mut k = tag_end;
+            let mut quote: Option<u8> = None;
+            while k < bytes.len() {
+                match (quote, bytes[k]) {
+                    (Some(q), b) if b == q => quote = None,
+                    (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                    (None, b'>') => break,
+                    _ => {}
                 }
-                let val_preview = if j < bytes.len() && bytes[j] == b'{' {
-                    balanced_brace(bytes, j)
-                        .map(|end| &source[j + 1..end])
-                        .unwrap_or("")
-                } else if j < bytes.len() && bytes[j] == b'"' {
-                    source[j + 1..]
-                        .find('"')
-                        .map(|rel| &source[j + 1..j + 1 + rel])
-                        .unwrap_or("")
-                } else {
-                    ""
-                };
-                let stripped = strip_outer_braces(val_preview.trim());
-                if looks_like_style_product(stripped) {
-                    return Err(CompileError::new(
-                        "style={…} as an attribute is not Style attachment — use a block \
-                         statement: style({ box: …, paint: … }).when(hover, { paint: … })  \
-                         or  style([ base, match(…) ])  (not an HTML style attribute)",
-                    )
-                    .with_span(Span::new(i, i + 5))
-                    .with_category("sail-sx"));
-                }
+                k += 1;
             }
+            if k >= bytes.len() { break; }
+            let self_closing = k > 0 && bytes[k - 1] == b'/';
+            let body_start = k + 1;
+            if self_closing || is_void_tag(tag) || SKIP_BODY_TAGS.contains(&tag) {
+                if SKIP_BODY_TAGS.contains(&tag) && !self_closing {
+                    if let Some(end) = matching_close(source, body_start, tag) {
+                        i = end; continue;
+                    }
+                }
+                i = body_start; continue;
+            }
+            let body = &source[body_start..];
+            if let Some((rel_start, rel_end, _expr)) = try_style_statement(body) {
+                let abs_lo = body_start + rel_start;
+                let abs_hi = body_start + rel_end;
+                return Err(CompileError::new(
+                    "unknown statement — Style attaches as style({…}) on the open tag, \
+                     not as a body statement",
+                )
+                .with_span(Span::new(abs_lo, abs_hi))
+                .with_category("sail-sx"));
+            }
+            i = body_start; continue;
         }
         let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
-            n += 1;
-        }
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 { n += 1; }
         i = n;
     }
     Ok(())
 }
 
-fn is_eq_after_name(bytes: &[u8]) -> bool {
-    let mut i = 0;
-    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
-        i += 1;
+/// Locate `style(…)` (+ chains) in an open-tag attribute region `[tag_end, gt_pos)`.
+fn find_tag_style_call(source: &str, tag_end: usize, gt_pos: usize) -> Option<(usize, usize, &str)> {
+    let bytes = source.as_bytes();
+    let mut j = tag_end;
+    let mut quote: Option<u8> = None;
+    while j < gt_pos {
+        match (quote, bytes[j]) {
+            (Some(q), b) if b == q => { quote = None; j += 1; }
+            (None, b'"') | (None, b'\'') => { quote = Some(bytes[j]); j += 1; }
+            (Some(_), _) => j += 1,
+            (None, _) => {
+                if is_style_word_at(bytes, j) {
+                    let after = j + 5;
+                    let mut k = after;
+                    while k < gt_pos && bytes[k].is_ascii_whitespace() { k += 1; }
+                    if k < gt_pos && bytes[k] == b'(' {
+                        let rest = &source[j..gt_pos];
+                        let end = consume_style_expr(rest)?;
+                        let expr = rest[..end].trim_end();
+                        if expr.is_empty() { return None; }
+                        return Some((j, j + end, expr));
+                    }
+                }
+                j += 1;
+            }
+        }
     }
-    i < bytes.len() && bytes[i] == b'='
+    None
+}
+
+/// `style` token in open-tag region that is NOT a valid `style(` call.
+fn find_bad_tag_style_token(source: &str, tag_end: usize, gt_pos: usize) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let mut j = tag_end;
+    let mut quote: Option<u8> = None;
+    while j < gt_pos {
+        match (quote, bytes[j]) {
+            (Some(q), b) if b == q => { quote = None; j += 1; }
+            (None, b'"') | (None, b'\'') => { quote = Some(bytes[j]); j += 1; }
+            (Some(_), _) => j += 1,
+            (None, _) => {
+                if is_style_word_at(bytes, j) {
+                    let after = j + 5;
+                    let mut k = after;
+                    while k < gt_pos && bytes[k].is_ascii_whitespace() { k += 1; }
+                    if k < gt_pos && bytes[k] == b'(' {
+                        if let Some(end) = consume_style_expr(&source[j..gt_pos]) {
+                            j += end; continue;
+                        }
+                    }
+                    return Some(j);
+                }
+                j += 1;
+            }
+        }
+    }
+    None
+}
+
+fn is_style_word_at(bytes: &[u8], j: usize) -> bool {
+    if j + 5 > bytes.len() || &bytes[j..j + 5] != b"style" {
+        return false;
+    }
+    if j > 0 {
+        let p = bytes[j - 1];
+        if p.is_ascii_alphanumeric() || p == b'_' || p == b'$' || p == b'-' || p == b':' {
+            return false;
+        }
+    }
+    if j + 5 < bytes.len() {
+        let n = bytes[j + 5];
+        // `style:color` is a colon-prefix directive, not the style keyword.
+        if n.is_ascii_alphanumeric() || n == b'_' || n == b'$' || n == b'-' || n == b':' {
+            return false;
+        }
+    }
+    true
 }
 
 /// First non-ws body content is a Style product statement?
-/// Returns `(rel_start, rel_end, expr)` where rel offsets are into `body`.
 fn try_style_statement(body: &str) -> Option<(usize, usize, &str)> {
     let bytes = body.as_bytes();
     let mut start = 0;
@@ -431,20 +457,15 @@ fn looks_like_style_product(s: &str) -> bool {
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
-        // Const-ref motion/paint: `cta.press({…})` — method must follow the
-        // first `.` immediately (not prose like `Saved. Sticky (hint).`).
         || is_style_const_method_call(t)
 }
 
-/// `name.method(…)` with method starting right after the first `.`.
 fn is_style_const_method_call(s: &str) -> bool {
     let Some((head, rest)) = s.split_once('.') else {
         return false;
     };
     if head.is_empty()
-        || !head
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
+        || !head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
     {
         return false;
     }
@@ -488,35 +509,20 @@ fn consume_style_expr(s: &str) -> Option<usize> {
                 }
                 continue;
             }
-            b'(' => {
-                paren += 1;
-                saw_group = true;
-            }
+            b'(' => { paren += 1; saw_group = true; }
             b')' => {
                 paren -= 1;
-                if paren < 0 {
-                    return None;
-                }
+                if paren < 0 { return None; }
             }
-            b'[' => {
-                brack += 1;
-                saw_group = true;
-            }
+            b'[' => { brack += 1; saw_group = true; }
             b']' => {
                 brack -= 1;
-                if brack < 0 {
-                    return None;
-                }
+                if brack < 0 { return None; }
             }
-            b'{' => {
-                brace += 1;
-                saw_group = true;
-            }
+            b'{' => { brace += 1; saw_group = true; }
             b'}' => {
                 brace -= 1;
-                if brace < 0 {
-                    return None;
-                }
+                if brace < 0 { return None; }
             }
             _ => {}
         }
@@ -540,8 +546,6 @@ fn consume_style_expr(s: &str) -> Option<usize> {
                         m += 1;
                     }
                     if m < bytes.len() && bytes[m] == b'(' {
-                        // Resume at the `(` so the next loop iteration opens
-                        // the group (avoids treating `.method` as complete).
                         i = m;
                         continue;
                     }
@@ -2928,7 +2932,7 @@ mod tests {
         // Regression: `<span class="badge" sx={…}>` must merge author class +
         // Style classes into one attribute (not two setAttribute("class") writes).
         let out =
-            preprocess(r#"<span class="badge"> style({ box: pad(4) }) x</span>"#).expect("preprocess");
+            preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#).expect("preprocess");
         assert!(
             out.contains(r#"class="badge "#) && out.contains("sx-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
@@ -2943,7 +2947,7 @@ mod tests {
     #[test]
     fn sx_before_class_also_merges() {
         let out =
-            preprocess(r#"<span class="badge"> style({ box: pad(4) }) x</span>"#).expect("preprocess");
+            preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#).expect("preprocess");
         assert!(
             out.contains("sx-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
@@ -2956,7 +2960,7 @@ mod tests {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static Style classes into an expression it can't evaluate.
         let out =
-            preprocess(r#"<span class={cls()}> style({ box: pad(4) }) x</span>"#).expect("preprocess");
+            preprocess(r#"<span class={cls()} style({ box: pad(4) })> x</span>"#).expect("preprocess");
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -2966,7 +2970,7 @@ mod tests {
 
     #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x"> style({ box: pad(4) }) y</span>"#)
+        let out = preprocess(r#"<span title="a > b" class="x" style({ box: pad(4) })> y</span>"#)
             .expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("sx-"),
@@ -3264,7 +3268,7 @@ mod tests {
     fn select_drops_default_wfull_when_author_sets_width_on_box_channel() {
         // Bare w/min-w attrs are retired — author width is box channel only.
         let via_w = preprocess(
-            r#"<select size="sm"> style({ box: w(28) }) <option>x</option></select>"#,
+            r#"<select size="sm" style({ box: w(28) })> <option>x</option></select>"#,
         )
         .expect("box w");
         assert!(via_w.contains("sx-w28") || via_w.contains("w28"), "author w: {via_w}");
@@ -3274,7 +3278,7 @@ mod tests {
         );
 
         let via_min = preprocess(
-            r#"<select size="sm"> style({ box: minW(ch-16).w(ch-20) }) <option>x</option></select>"#,
+            r#"<select size="sm" style({ box: minW(ch-16).w(ch-20) })> <option>x</option></select>"#,
         )
         .expect("box minW/w");
         assert!(
@@ -3282,7 +3286,7 @@ mod tests {
             "default w(full) dropped for minW/w: {via_min}"
         );
 
-        let via_sx = preprocess(r#"<select size="sm"> style({ box: w(24) }) <option>x</option></select>"#)
+        let via_sx = preprocess(r#"<select size="sm" style({ box: w(24) })> <option>x</option></select>"#)
             .expect("sx w");
         assert!(
             !via_sx.contains("sx-wfull"),
@@ -3379,7 +3383,7 @@ mod tests {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
         let src =
-            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\"> style({ box: pad(4) }) é…‹›</span>";
+            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" style({ box: pad(4) })> é…‹›</span>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("sx-"),
@@ -3442,7 +3446,7 @@ mod tests {
         // Regression: `lower_sx` byte-walked with `i += 1` and sliced
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
-        let src = "<p>Failed — retry…</p>\n<sail-card> style({ box: pad(4) }) café ☕</sail-card>";
+        let src = "<p>Failed — retry…</p>\n<sail-card style({ box: pad(4) })> café ☕</sail-card>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains("café ☕"),
@@ -3476,7 +3480,7 @@ mod tests {
     #[test]
     fn box_channel_grow_on_any_host_mints_style_class() {
         // Participation is box channel only (`style({ box: grow(1) })` → `sx-grow1`).
-        let out = preprocess(r#"<div> style({ box: grow(1) }) x</div>"#).expect("preprocess");
+        let out = preprocess(r#"<div style({ box: grow(1) })>x</div>"#).expect("preprocess");
         assert!(out.contains("sx-grow1"), "grow class: {out}");
         assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
         assert!(
@@ -3487,7 +3491,7 @@ mod tests {
 
     #[test]
     fn box_channel_grow_on_layout_keyword_merges_into_div() {
-        let out = preprocess(r#"<column gap="2"> style({ box: grow(1) }) x</column>"#)
+        let out = preprocess(r#"<column gap="2" style({ box: grow(1) })> x</column>"#)
             .expect("preprocess");
         assert!(out.contains("sail-col"), "layout base: {out}");
         assert!(out.contains("sx-grow1"), "grow class folded: {out}");
@@ -3498,7 +3502,7 @@ mod tests {
 
     #[test]
     fn box_channel_w_full_and_shrink_zero() {
-        let out = preprocess(r#"<main> style({ box: w(full).shrink(0) }) x</main>"#)
+        let out = preprocess(r#"<main style({ box: w(full).shrink(0) })> x</main>"#)
             .expect("preprocess");
         assert!(out.contains("sx-wfull"), "w full: {out}");
         assert!(out.contains("sx-shrink0"), "shrink 0: {out}");
@@ -3527,7 +3531,7 @@ mod tests {
     fn layout_element_sx_merges_into_one_class() {
         // Style lowers first (→ class), then layout folds it into the div's classes.
         let out =
-            preprocess(r#"<column gap="2"> style({ box: pad(4) }) x</column>"#).expect("preprocess");
+            preprocess(r#"<column gap="2" style({ box: pad(4) })> x</column>"#).expect("preprocess");
         assert!(
             out.contains("sail-col") && out.contains("sail-g-2") && out.contains("sx-"),
             "merged: {out}"
@@ -3861,7 +3865,7 @@ mod tests {
         // Utility-string condition prefixes are residual product (hard error /
         // empty lower). Style product uses when({…}) for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out = preprocess(r#"<div> when({ hover: style({ paint: shadow(none) }) }) x</div>"#)
+        let out = preprocess(r#"<div style(when({ hover: style({ paint: shadow(none) }) }))> x</div>"#)
             .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
@@ -3934,7 +3938,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn lower_sx_var_ref_binds_an_atomic_class() {
         // Product form: `style({ paint: translateY(bind(rowY)) })` — reactive paint via
         // CSS custom property. JS writes `--row-y`; Style declares the read.
-        let out = preprocess(r#"<grid> style({ paint: translateY(bind(rowY)) }) row</grid>"#)
+        let out = preprocess(r#"<grid style({ paint: translateY(bind(rowY)) })>row</grid>"#)
             .expect("preprocess");
         assert!(
             out.contains("var(--row-y)") || out.contains("translate"),
@@ -3945,27 +3949,14 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn lower_sx_var_ref_rejects_garbage_identifier() {
-        // An invalid identifier (here `(--row.y)` — the `.` is not
-        // a CSS ident character) in a utility-string sx form is now a
-        // hard Style/compile error, not silently inert paint.
-        let err = preprocess(r#"<div sx="top-(--row.y)">x</div>"#)
-            .expect_err("garbage var-ref in utility-string sx must fail loudly");
-        let msg = format!("{err:?}");
-        assert!(
-            msg.contains("Style error")
-                || msg.contains("utility-string")
-                || msg.contains("retired")
-                || msg.contains("sx="),
-            "error must name the Style diagnostic: {msg}"
-        );
+        // Utility-string sx no longer a special preprocess refuse; plain attr survives.
+        let out = preprocess(r#"<div sx="top-(--row.y)">x</div>"#).expect("no sx tombstone");
+        assert!(out.contains("sx="), "{out}");
     }
 
     #[test]
-    fn block_style_statement_lowers_to_class() {
-        let out = preprocess(r#"<div>
-  style({ box: padX(2), paint: bg(primary) })
-  x
-</div>"#).expect("preprocess");
+    fn tag_style_statement_lowers_to_class_legacy() {
+        let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#).expect("preprocess");
         assert!(out.contains("sx-") || out.contains("var(--primary)"), "{out}");
         assert!(!out.contains("style({ paint: bg(primary) })"), "{out}");
     }
@@ -3975,96 +3966,50 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 <scope>
   const base = style({ box: pad(2) })
 </scope>
-<div>
-  style(base)
-  x
-</div>"#).expect("preprocess");
+<div style(base)>x</div>"#).expect("preprocess");
         assert!(out.contains("sx-"), "{out}");
     }
     #[test]
     fn flat_style_method_chain_is_refused_on_product_path() {
-        let err = preprocess(r#"<div> style.pad(4).bg(primary) x</div>"#)
-            .expect_err("flat chain must fail product lower");
-        let msg = &err.message;
+        let err = preprocess(r#"<div style.pad(4)>x</div>"#).expect_err("flat chain");
         assert!(
-            msg.contains("retired") || msg.contains("channel spine"),
-            "got: {msg}"
+            err.message.contains("style(") || err.message.contains("call"),
+            "got: {}",
+            err.message
         );
-        // Diagnostic must teach channel block form, not revive flat style.pad chains.
-        assert!(
-            msg.contains("style({"),
-            "must point at block channel spine: {msg}"
-        );
-        assert!(!msg.contains("style.pad"), "must not teach style.pad: {msg}");
-        assert!(!msg.contains("style.bg"), "must not teach style.bg: {msg}");
     }
 
     #[test]
-    fn sx_attr_is_refused() {
-        let err = preprocess(r#"<div sx={style.pad(4)}>x</div>"#).expect_err("sx=");
-        let msg = format!("{err:?}");
-        assert!(
-            msg.contains("retired") || msg.contains("sx="),
-            "must name retired sx=: {msg}"
-        );
-        assert!(
-            msg.contains("style({"),
-            "must teach block channel form: {msg}"
-        );
-        // Must not teach dead flat product form as the migration target.
-        assert!(!msg.contains("style.pad"), "must not teach style.pad: {msg}");
-        assert!(!msg.contains("style.bg"), "must not teach style.bg: {msg}");
-        assert!(
-            !msg.contains("<el> style.…"),
-            "must not teach flat style.… chain: {msg}"
-        );
+    fn sx_attr_passes_preprocess_as_plain_attr() {
+        // sx= is no longer a special preprocess tombstone; unknown-attr is attrs/compile.
+        let out = preprocess(r#"<div sx="x">x</div>"#).expect("sx not special in preprocess");
+        assert!(out.contains("sx="), "{out}");
     }
 
     #[test]
     fn style_attr_product_is_refused() {
-        // Flat product on attribute host.
-        let err = preprocess(r#"<div style={style.pad(4)}>x</div>"#).expect_err("style=");
-        let m = format!("{err:?}");
-        assert!(
-            m.contains("block") || m.contains("style={"),
-            "must refuse attr Style product: {m}"
-        );
-        assert!(
-            m.contains("style({"),
-            "must teach block channel form: {m}"
-        );
-        assert!(!m.contains("style.pad"), "must not teach style.pad: {m}");
-        assert!(!m.contains("style.bg"), "must not teach style.bg: {m}");
-        assert!(
-            !m.contains("<el> style.…"),
-            "must not teach flat style.… chain: {m}"
-        );
-
-        // Channel spine on attribute host is still product-on-attr — refuse.
         let err = preprocess(r#"<div style={style({ paint: bg(primary) })}>x</div>"#)
-            .expect_err("style={channel} still attr product");
-        let m = format!("{err:?}");
+            .expect_err("style=");
         assert!(
-            m.contains("block") || m.contains("style={") || m.contains("attribute"),
-            "channel spine on attr must still refuse: {m}"
+            err.message.contains("style(") || err.message.contains("call"),
+            "must teach call form: {}",
+            err.message
         );
     }
 
     #[test]
-    fn raw_html_style_string_attr_is_not_style_product_refuse() {
-        // Foreign HTML `style="…"` CSS strings are not Style product attachment.
-        // refuse_sx_attr only refuses brace-product Style on the style= host.
-        let out = preprocess(r#"<div style="color: red">x</div>"#)
-            .expect("raw CSS style string must not hit Style product refuse");
+    fn raw_html_style_string_attr_is_loud_error() {
+        let err = preprocess(r#"<div style="color: red">x</div>"#).expect_err("style=");
         assert!(
-            out.contains(r#"style="color: red""#) || out.contains("color: red"),
-            "raw CSS attr should survive preprocess: {out}"
+            err.message.contains("style(") || err.message.contains("call"),
+            "got: {}",
+            err.message
         );
     }
 
     #[test]
     fn text_channel_refused_on_non_text_host() {
-        let err = preprocess(r#"<div> style({ text: fontSize(sm) }) x</div>"#)
+        let err = preprocess(r#"<div style({ text: fontSize(sm) })>x</div>"#)
             .expect_err("text channel on div");
         let msg = &err.message;
         assert!(
@@ -4079,13 +4024,11 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn text_channel_allowed_on_text_bearing_hosts() {
-        let out = preprocess(r#"<p> style({ text: fontSize(sm) }) x</p>"#)
+        let out = preprocess(r#"<p style({ text: fontSize(sm) })>x</p>"#)
             .expect("p is text-bearing");
         assert!(out.contains("sx-") || out.contains("font-size"), "{out}");
 
-        let out = preprocess(
-            r#"<button> style({ text: fontSize(sm), paint: bg(primary) }) go</button>"#,
-        )
+        let out = preprocess(r#"<button style({ text: fontSize(sm), paint: bg(primary) })>go</button>"#)
         .expect("button is text-bearing");
         assert!(out.contains("sx-"), "{out}");
     }
@@ -4093,10 +4036,70 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     #[test]
     fn non_text_host_box_paint_only_is_ok() {
         let out =
-            preprocess(r#"<div> style({ box: pad(4), paint: bg(primary) }) x</div>"#)
+            preprocess(r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#)
                 .expect("box+paint on div is legal");
         assert!(out.contains("sx-"), "{out}");
         assert!(!out.contains("style({"), "block Style must lift: {out}");
     }
+
+    #[test]
+    fn tag_style_object_lowers_to_class() {
+        let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#)
+            .expect("preprocess");
+        assert!(out.contains("sx-") || out.contains("var(--primary)"), "{out}");
+        assert!(!out.contains("style({"), "tag Style must lift off open tag: {out}");
+    }
+
+    #[test]
+    fn tag_style_void_host_no_lift_rule() {
+        let out = preprocess(r#"<input style({ box: w(full) })>"#).expect("void host");
+        assert!(out.contains("sx-"), "{out}");
+        assert!(!out.contains("style({"), "{out}");
+    }
+
+    #[test]
+    fn body_style_statement_is_unknown_statement() {
+        let err = preprocess("<div>
+  style({ box: pad(2) })
+  x
+</div>")
+            .expect_err("body style is unknown statement");
+        let msg = err.message.to_lowercase();
+        assert!(
+            msg.contains("unknown statement") || msg.contains("open tag"),
+            "got: {msg}"
+        );
+    }
+
+    #[test]
+    fn bare_style_in_tag_is_loud_error() {
+        let err = preprocess(r#"<div style>x</div>"#).expect_err("bare style");
+        assert!(
+            err.message.contains("style(") || err.message.contains("call"),
+            "must teach style(…): {}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn style_eq_in_tag_is_loud_error() {
+        let err = preprocess(r#"<div style={foo}>x</div>"#).expect_err("style=");
+        assert!(
+            err.message.contains("style(") || err.message.contains("call"),
+            "must teach call form: {}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn silent_drop_canary_tag_style_attaches() {
+        let out = preprocess(
+            r#"<button style({ box: pad(3).gap(2), paint: bg(primary).fg(primary-foreground) })>ok</button>"#,
+        )
+        .expect("tag style must compile");
+        assert!(out.contains("sx-") || out.contains("var(--primary)"), "must attach: {out}");
+        assert!(!out.contains("style({"), "must lower off the tag: {out}");
+    }
+
 
 }

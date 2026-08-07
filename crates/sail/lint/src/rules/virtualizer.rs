@@ -1,7 +1,7 @@
 //! `sail-virtualizer` — `use:virtualRow` / `use:virtualSpacer` must wire CSS.
 //!
-//! Runtime actions write geometry to custom properties; **block Style must
-//! read them** or every absolute row stacks at y=0 (the studio explorer
+//! Runtime actions write geometry to custom properties; **tag-position Style
+//! must read them** or every absolute row stacks at y=0 (the studio explorer
 //! disaster) and the spacer contributes no scroll height.
 //!
 //! | Action              | Required Style bridge                                   |
@@ -44,7 +44,9 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
         return None;
     }
 
-    let style_txt = block_style_after_open(source, t);
+    // Style attaches on the open tag: `style({…})` / chains. Attr scanner
+    // stores the full call as the `style` value.
+    let style_txt = tag_style_text(t);
     let (line, col) = layout::offset_to_line_col(source, t.start);
 
     if has_row && !has_row_translate(&style_txt) {
@@ -61,8 +63,8 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
                 t.tag
             ),
             suggest: Some(
-                "Add a block Style statement with translate for the row offset, e.g. \
-                 `<el use:virtualRow> style.position(absolute).left(0).w(full).translateY(bind(rowY))` \
+                "Add tag-position Style with translate for the row offset, e.g. \
+                 `<el use:virtualRow style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -83,8 +85,8 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
                 t.tag
             ),
             suggest: Some(
-                "Add a block Style statement with height from the spacer var, e.g. \
-                 `<el use:virtualSpacer> style.h(bind(rowsH)).position(relative).w(full)` \
+                "Add tag-position Style with height from the spacer var, e.g. \
+                 `<el use:virtualSpacer style({ box: h(bind(rowsH)).position(relative).w(full) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -94,93 +96,14 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
     None
 }
 
-/// First Style product statement in the element body after `t`'s open tag.
-fn block_style_after_open(source: &str, t: &OpenTag) -> String {
-    let bytes = source.as_bytes();
-    let mut k = t.start;
-    let mut quote: Option<u8> = None;
-    while k < bytes.len() {
-        match (quote, bytes[k]) {
-            (Some(q), b) if b == q => quote = None,
-            (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
-            (None, b'>') => break,
-            _ => {}
-        }
-        k += 1;
-    }
-    if k >= bytes.len() {
-        return String::new();
-    }
-    let body = &source[k + 1..];
-    let trimmed = body.trim_start();
-    let starts = trimmed.starts_with("style.")
-        || trimmed.starts_with("style(")
-        || trimmed.starts_with("match(")
-        || trimmed.starts_with("when(")
-        || trimmed.starts_with("compound(")
-        || trimmed.starts_with('[');
-    if !starts {
-        return String::new();
-    }
-    let mut end = 0usize;
-    let mut paren = 0i32;
-    let mut brack = 0i32;
-    let mut brace = 0i32;
-    let tb = trimmed.as_bytes();
-    let mut i = 0;
-    let mut saw = false;
-    while i < tb.len() {
-        match tb[i] {
-            b'(' => {
-                paren += 1;
-                saw = true;
-            }
-            b')' => paren -= 1,
-            b'[' => {
-                brack += 1;
-                saw = true;
-            }
-            b']' => brack -= 1,
-            b'{' => {
-                brace += 1;
-                saw = true;
-            }
-            b'}' => brace -= 1,
-            _ => {}
-        }
-        i += 1;
-        if saw && paren == 0 && brack == 0 && brace == 0 {
-            let mut j = i;
-            while j < tb.len() && tb[j].is_ascii_whitespace() {
-                j += 1;
-            }
-            if j < tb.len() && tb[j] == b'.' {
-                let after_dot = j + 1;
-                let mut k = after_dot;
-                while k < tb.len()
-                    && (tb[k].is_ascii_alphanumeric() || tb[k] == b'_' || tb[k] == b'-')
-                {
-                    k += 1;
-                }
-                if k > after_dot {
-                    let mut m = k;
-                    while m < tb.len() && tb[m].is_ascii_whitespace() {
-                        m += 1;
-                    }
-                    if m < tb.len() && tb[m] == b'(' {
-                        i = m;
-                        continue;
-                    }
-                }
-            }
-            end = i;
-            break;
-        }
-    }
-    if end == 0 {
-        end = trimmed.len().min(500);
-    }
-    trimmed[..end].to_string()
+/// Tag-position `style(…)` call text on the open tag (if any).
+fn tag_style_text(t: &OpenTag) -> String {
+    t.attrs
+        .iter()
+        .filter(|(n, _)| n.eq_ignore_ascii_case("style"))
+        .map(|(_, v)| v.as_str())
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// Accept Style API and token forms that read `--row-y`.
@@ -253,9 +176,7 @@ mod tests {
     #[test]
     fn virtual_row_without_translate_fails() {
         let src = r#"
-            <div use:virtualRow={w.start}>
-              style.position(absolute).left(0).w(full)
-              row
+            <div use:virtualRow={w.start} style({ box: position(absolute).left(0).w(full) })>              row
             </div>
         "#;
         let f = lint(src);
@@ -268,9 +189,7 @@ mod tests {
     #[test]
     fn virtual_row_with_translate_passes() {
         let src = r#"
-            <row use:virtualRow={w.start}>
-              style.position(absolute).left(0).w(full).translateY(bind(rowY))
-              row
+            <row use:virtualRow={w.start} style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)) })>              row
             </row>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
@@ -279,9 +198,7 @@ mod tests {
     #[test]
     fn virtual_spacer_without_height_fails() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()}>
-              style.position(relative).w(full)
-            </div>
+            <div use:virtualSpacer={totalSize()} style({ box: position(relative).w(full) })>            </div>
         "#;
         let f = lint(src);
         assert_eq!(f.len(), 1, "{f:?}");
@@ -291,9 +208,7 @@ mod tests {
     #[test]
     fn virtual_spacer_with_rows_h_passes() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()}>
-              style.h(bind(rowsH)).position(relative).w(full)
-            </div>
+            <div use:virtualSpacer={totalSize()} style({ box: h(bind(rowsH)).position(relative).w(full) })>            </div>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }
@@ -301,9 +216,7 @@ mod tests {
     #[test]
     fn token_form_translate_accepted() {
         let src = r#"
-            <grid use:virtualRow={w.start}>
-              style.translateY(bind(rowY)).position(absolute).left(0).w(full)
-            </grid>
+            <grid use:virtualRow={w.start} style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)) })>            </grid>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }

@@ -271,7 +271,7 @@ fn flex_child_gets_min_width_zero() {
 
 #[test]
 fn sx_width_full_matches_css() {
-    let src = r#"<div> style({ box: w(full) }) x</div>"#;
+    let src = r#"<div style({ box: w(full) })> x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
@@ -288,7 +288,7 @@ fn sx_width_full_matches_css() {
 /// Product box-channel `grow(1)` → `sx-grow1` (not residual `sx-grow` / bare attr).
 #[test]
 fn grow_box_channel_maps_to_taffy_flex_grow() {
-    let src = r#"<column><div> style({ box: grow(1) }) body</div></column>"#;
+    let src = r#"<column><div style({ box: grow(1) })> body</div></column>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("sx-grow1"),
@@ -305,7 +305,7 @@ fn grow_box_channel_maps_to_taffy_flex_grow() {
 /// Product `style({ box: minW(0) })` → `sx-minW0` (camelCase, not `sx-minw0`).
 #[test]
 fn min_w_box_channel_maps_to_taffy_min_width() {
-    let src = r#"<div> style({ box: minW(0) }) x</div>"#;
+    let src = r#"<div style({ box: minW(0) })> x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("sx-minW0"),
@@ -319,7 +319,7 @@ fn min_w_box_channel_maps_to_taffy_min_width() {
 /// Product `style({ box: pad(4) })` → `sx-pad4` (not residual `sx-p4`).
 #[test]
 fn style_pad_maps_to_taffy_padding() {
-    let src = r#"<div> style({ box: pad(4) }) x</div>"#;
+    let src = r#"<div style({ box: pad(4) })> x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
         preprocessed.contains("sx-pad4"),
@@ -333,7 +333,7 @@ fn style_pad_maps_to_taffy_padding() {
 
 #[test]
 fn sx_hidden_matches_css() {
-    let src = r#"<div> style({ box: display(none) }) x</div>"#;
+    let src = r#"<div style({ box: display(none) })> x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);

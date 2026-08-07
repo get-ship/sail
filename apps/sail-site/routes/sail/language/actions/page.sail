@@ -14,16 +14,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Concepts</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
   <h1>Actions</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     An action is a function that receives a DOM element, does something to
     it — attach a listener, start an observer, wire a third-party widget —
     and returns the cleanup that undoes it. <code>use:</code> attaches one
@@ -37,9 +31,7 @@ Concepts</p>
     grows to fit — the action measures the content and sets the height, and
     when the element leaves the page, the action’s cleanup runs with it:
   </p>
-  <textarea use:autosize placeholder="Type a few lines here…">
-    style({ box: maxW(panel-max-w-sm) })
-</textarea>
+  <textarea use:autosize placeholder="Type a few lines here…" style({ box: maxW(panel-max-w-sm) })></textarea>
 
   <h2>Why there is no ref</h2>
   <p>
@@ -91,15 +83,11 @@ Concepts</p>
     thing you are writing needs an element, it is an action.
   </p>
 
-  <p>
-    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
     For the full surface: <a href="/sail/reference/actions">reference → Actions</a>.
   </p>
 
-  <row justify="between" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/animation">← Animation</a>
     <a variant="solid" tone="primary" href="/sail/language/data">Data →</a>
   </row>

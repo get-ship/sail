@@ -70,50 +70,24 @@ export default controller((ctx) => {
   })
 
 </controller>
-<row gap="2" align="stretch">
-  style({ box: position(relative) })
-
-  <column align="center" gap="0">
-    style({ box: w(5) })
-
+<row gap="2" align="stretch" style({ box: position(relative) })>
+  <column align="center" gap="0" style({ box: w(5) })>
     <if {first()}>
-      <span>
-        style({ box: w(half).h(3), paint: visibility(hidden) })
-</span>
-    {else => <span>
-        style({ box: w(half).h(3), paint: bg(border-subtle) })
-</span>}</if>
-    <span>
-      style({ box: w(2_5).h(2_5), paint: radius(full).bg(foreground) })
-</span>
+      <span style({ box: w(half).h(3), paint: visibility(hidden) })></span>
+    {else => <span style({ box: w(half).h(3), paint: bg(border-subtle) })></span>}</if>
+    <span style({ box: w(2_5).h(2_5), paint: radius(full).bg(foreground) })></span>
     <if {last()}>
-      <span>
-        style({  box: grow(1).w(half), paint: visibility(hidden)  })
-</span>
-    {else => <span>
-        style({  box: grow(1).w(half), paint: bg(border-subtle)  })
-</span>}</if>
+      <span style({  box: grow(1).w(half), paint: visibility(hidden)  })></span>
+    {else => <span style({  box: grow(1).w(half), paint: bg(border-subtle)  })></span>}</if>
   </column>
-  <column gap="0">
-    style({  box: grow(1).minW(0).padY(2)  })
-
-    <row align="baseline" justify="between" gap="2">
-      style({ paint: fg(foreground) })
-      <span>
-        style({ box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) })
-        <slot name="title"></slot>
+  <column gap="0" style({  box: grow(1).minW(0).padY(2)  })>
+    <row align="baseline" justify="between" gap="2" style({ paint: fg(foreground) })>      <span style({ box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) })>        <slot name="title"></slot>
       <if {at()}>
-        <time>
-          style({ paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) })
-{at()}</time>
+        <time style({ paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) })>{at()}</time>
       </if>
       </span>
 </row>
-    <div>
-      style({ box: mt(1), paint: fg(muted-foreground) })
-      <span>
-        style({ box: display(contents), text: fontSize(sm).leading(normal) })
-        <slot></slot>
+    <div style({ box: mt(1), paint: fg(muted-foreground) })>      <span style({ box: display(contents), text: fontSize(sm).leading(normal) })>        <slot></slot>
       </span>
 </div>
   </column>

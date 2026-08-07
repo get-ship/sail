@@ -15,8 +15,7 @@
   const close = style({ box: ms(auto), paint: fg(toast-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer).opacity(70) })
 </scope>
 
-<row align="start" gap="3" use:autoDismiss use:dismissControl>
-  style([
+<row align="start" gap="3" use:autoDismiss use:dismissControl style([
   base,
   match(tone, {
     default: style({ paint: borderS(toast-stripe) }),
@@ -28,15 +27,12 @@
     accent: style({ paint: borderS(accent) }),
     muted: style({ paint: borderS(muted-foreground) }),
   }),
-])
-
+])>
   <slot></slot>
-  <button data-toast-close type="button" anatomy label="Dismiss">
-    style([ style({ box: shrink(0).grow(0) }), 
+  <button data-toast-close type="button" anatomy label="Dismiss" style([ style({ box: shrink(0).grow(0) }), 
     close,
     when({
       hover: style({ paint: fg(toast-foreground).bg(toast).opacity(100) }),
     }),
-  ])
-✕</button>
+  ])>✕</button>
 </row>

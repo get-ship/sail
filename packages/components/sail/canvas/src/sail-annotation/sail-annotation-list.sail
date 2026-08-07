@@ -70,30 +70,17 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
 
 </controller>
 <if {staged().length === 0}>
-  <p>
-    style({ box: padY(1).padX(2), paint: fg(muted-foreground), text: fontFamily(body).fontSize(sm) })
-No staged annotations.</p>
-{else => <column role="list" gap="1">
-    style({ paint: fg(foreground) })
-    <span>
-      style({ box: display(contents), text: fontFamily(body).fontSize(sm) })
-      <for {staged() as a} key={a.id}>
-      <row role="listitem" data-id={a.id} gap="2" align="center">
-        style({ box: padY(1).padX(2), paint: bg(background).borderWidth(1).border(border).radius(sm) })
-
-        <span>
-          style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })
-{a.kind}</span>
-        <span title={a.note ?? ''}>
-          style({ box: grow(1), text: truncate() })
-{a.note ?? '(no note)'}</span>
+  <p style({ box: padY(1).padX(2), paint: fg(muted-foreground), text: fontFamily(body).fontSize(sm) })>No staged annotations.</p>
+{else => <column role="list" gap="1" style({ paint: fg(foreground) })>    <span style({ box: display(contents), text: fontFamily(body).fontSize(sm) })>      <for {staged() as a} key={a.id}>
+      <row role="listitem" data-id={a.id} gap="2" align="center" style({ box: padY(1).padX(2), paint: bg(background).borderWidth(1).border(border).radius(sm) })>
+        <span style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })>{a.kind}</span>
+        <span title={a.note ?? ''} style({ box: grow(1), text: truncate() })>{a.note ?? '(no note)'}</span>
         <button
           type="button"
           aria-label="Remove annotation"
           on:click={() => emitRemove(a.id)}
 
-        >
-          style({ box: minH(0).padX(1_5).padY(half), paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer), text: fontSize(xs) }).when(hover, { paint: fg(destructive).borderWidth(1).border(destructive) })
+         style({ box: minH(0).padX(1_5).padY(half), paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer), text: fontSize(xs) }).when(hover, { paint: fg(destructive).borderWidth(1).border(destructive) })>
 Remove</button>
       </row>
     </for>

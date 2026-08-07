@@ -18,42 +18,22 @@
 
 <column gap="4">
   <row gap="1">
-    <a href="#usage" aria-current="page">
-      style(pill)
-Usage</a>
-    <a href="#billing">
-      style(pill)
-Billing</a>
-    <a href="#limits">
-      style(pill)
-Limits</a>
+    <a href="#usage" aria-current="page" style(pill)>Usage</a>
+    <a href="#billing" style(pill)>Billing</a>
+    <a href="#limits" style(pill)>Limits</a>
   </row>
 
-  <column gap="3">
-    style(card)
-
+  <column gap="3" style(card)>
     <row align="center" justify="between">
-      <strong>
-        style(label)
-Compute hours</strong>
-      <small>
-        style(muted)
-renews in 12 days</small>
+      <strong style(label)>Compute hours</strong>
+      <small style(muted)>renews in 12 days</small>
     </row>
     <row gap="2" align="end">
-      <strong>
-        style(value)
-412</strong>
-      <small>
-        style(of)
-of 500 hrs</small>
+      <strong style(value)>412</strong>
+      <small style(of)>of 500 hrs</small>
     </row>
-    <p>
-      style(body)
-Burst capacity unlocks automatically over 90% usage.</p>
-    <row gap="2" align="center">
-      style(alertRow)
-
+    <p style(body)>Burst capacity unlocks automatically over 90% usage.</p>
+    <row gap="2" align="center" style(alertRow)>
       <input placeholder="Set a usage alert (hours)" size="sm" />
       <button size="sm" variant="outline" tone="primary">Notify me</button>
     </row>

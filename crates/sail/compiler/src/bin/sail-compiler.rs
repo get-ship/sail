@@ -903,31 +903,44 @@ fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
     )
 }
 
-/// Fenced Style demos for `gen_skill`. Product attach is a **block statement**
-/// (`style({…})` after `>`), not an HTML attribute. Plain string for `push_str`.
+/// Fenced Style demos for `gen_skill`. Product attach is a **tag-position call**
+/// (`style({…})` on the open tag), not an HTML `style=` attribute. Plain string for `push_str`.
 ///
 /// `raw_containers`: when false, avoid bare `<div>`/`<span>` (no-raw policy).
 fn sx_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
-        "```\n\
-         <div>\n\
-           style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })\n\
-         </div>\n\
-         <span>\n\
-           style({ paint: fg(muted-foreground), text: fontSize(sm) })\n\
-         </span>\n\
-         ```\n\n"
+        "```
+\
+         <div style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })>
+\
+         </div>
+\
+         <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+\
+         </span>
+\
+         ```
+
+"
     } else {
-        "```\n\
-         <column gap=\"3\">\n\
-           style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })\n\
-           <p>\n\
-             style({ paint: fg(muted-foreground), text: fontSize(sm) })\n\
-             …\n\
-           </p>\n\
-         </column>\n\
-         ```\n\n\
-         No bare `<div>`/`<span>` here — use layout keywords + content tags.\n\n"
+        "```
+\
+         <column gap=\"3\" style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })>
+\
+           <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+\
+             …
+\
+           </p>
+\
+         </column>
+\
+         ```
+
+\
+         No bare `<div>`/`<span>` here — use layout keywords + content tags.
+
+"
     }
 }
 
@@ -1039,7 +1052,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(
         md,
         "- NO `<style>` blocks, NO product Style as an HTML attribute. NO raw values (px/hex) — spend a token.\n\
-         - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is a **block** Style attach:\n  \
+         - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is a **tag** Style call:\n  \
            `style({{ box: pad(4), paint: bg(surface-2) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
@@ -1071,7 +1084,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md.push_str(sx_skill_demo(effective.raw_containers));
         let _ = writeln!(
             md,
-            "Attach Style as a **block statement** after `>` — not `style=` / `sx=`.\n\
+            "Attach Style as a **tag call** `style({…})` on the open tag — not `style=` / `sx=`.\n\
              Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
              `bind(name)` for runtime CSS vars. Style is compile-time static — no\n\
              dynamic JS in the Style host. Full closed setter table: MCP `sail_surface`\n\

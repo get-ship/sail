@@ -63,14 +63,8 @@ export default controller(() => {
         <rect x="7" y="4" width="13" height="17" rx="3" fill="var(--primary)" opacity="0.75" />
         <rect x="10.5" y="1.5" width="13" height="17" rx="3" fill="var(--primary)" />
       </svg>
-      <strong>
-        style({ text: fontSize(lg).tracking(tight) })
-<b>
-        style({ paint: fg(primary) })
-deck</b> docs</strong>
-      <small>
-        style({ box: padX(2), paint: fg(muted-foreground).borderWidth(1).border(border).radius(full), text: fontFamily(mono).fontSize(xs) })
-0.2.0</small>
+      <strong style({ text: fontSize(lg).tracking(tight) })><b style({ paint: fg(primary) })>deck</b> docs</strong>
+      <small style({ box: padX(2), paint: fg(muted-foreground).borderWidth(1).border(border).radius(full), text: fontFamily(mono).fontSize(xs) })>0.2.0</small>
     </row>
   </a>
 
@@ -100,9 +94,7 @@ deck</b> docs</strong>
     <a href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
   </navbar>
 
-  <main>
-    style({  box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet)  })
-
+  <main style({  box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet)  })>
     <slot name="route"></slot>
   </main>
 </row>

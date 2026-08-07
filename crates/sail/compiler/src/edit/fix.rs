@@ -143,26 +143,25 @@ fn fix_participation_style(
         (_, v) if !v.is_empty() => v.to_string(),
         _ => return None,
     };
-    let new_open = strip_attr_from_open(open, &attr)?;
-    // Prefer injecting a block style after the open tag when host has a body.
-    let box_stmt = format!("style({{ box: {setter}({arg}) }})");
-    let insert_at = node.open_span.end;
-    let indent = "  ";
-    let replacement_open = new_open;
-    // Patch open tag (strip attr) + insert style statement after `>`.
-    let after = format!(
-        "{replacement_open}\n{indent}{box_stmt}\n"
-    );
+    let stripped = strip_attr_from_open(open, &attr)?;
+    // Product Style attaches as a tag-position call on the open tag (not body).
+    let box_call = format!("style({{ box: {setter}({arg}) }})");
+    let replacement_open = if let Some((lo, hi, expr)) = find_tag_style_call(&stripped) {
+        let merged = merge_box_setter_into_style(&expr, setter, &arg);
+        format!("{}{}{}", &stripped[..lo], merged, &stripped[hi..])
+    } else {
+        inject_tag_style_call(&stripped, &box_call)
+    };
     Some(FixPlan {
         rule: "sail-participation-style".into(),
         line: d.line,
         col: d.col,
-        message: format!("move `{attr}` attr to box channel `{box_stmt}`"),
+        message: format!("move `{attr}` attr to box channel `{box_call}`"),
         ops: vec![],
         text_patch: Some(TextPatch {
             start: node.open_span.start,
-            end: insert_at,
-            replacement: after,
+            end: node.open_span.end,
+            replacement: replacement_open,
         }),
         actor: None,
     })
@@ -321,9 +320,11 @@ fn fix_display_on_layout(
     let full = source
         .get(node.full_span.start..node.full_span.end)?
         .to_string();
-    // Pull display(…) expression from sx if present; otherwise wrap with display(none).
-    let (inner_without_display, display_expr) = split_display_from_element(&full, &node.tag)?;
-    let wrap = format!("<div style={{{display_expr}}}>{inner_without_display}</div>");
+    // Pull display(…) expression from style if present; otherwise wrap with display(none).
+    let (inner_without_display, display_call) = split_display_from_element(&full, &node.tag)?;
+    // Tag-position product form only — never emit style={…}.
+    // `display_call` is a full `style({ box: display(…) })` call.
+    let wrap = format!("<div {display_call}>{inner_without_display}</div>");
     Some(FixPlan {
         rule: "sail-display-on-layout".into(),
         line: d.line,
@@ -331,12 +332,12 @@ fn fix_display_on_layout(
         message: format!("nest <{}> inside a plain host for style.display", node.tag),
         ops: vec![EditOp::Replace {
             node_id: node.id.clone(),
-            fragment: wrap,
+            fragment: wrap.clone(),
         }],
         text_patch: Some(TextPatch {
             start: node.full_span.start,
             end: node.full_span.end,
-            replacement: format!("<div style={{{display_expr}}}>{inner_without_display}</div>"),
+            replacement: wrap,
         }),
         actor: None,
     })
@@ -582,71 +583,320 @@ fn extract_unknown_setter(message: &str) -> Option<String> {
 }
 
 fn replace_sx_setter(open: &str, setter: &str, target: &str) -> Option<String> {
-    // If sx already contains `style.setter(...)`, replace the existing call.
-    let sx_key = "style={";
-    let sx_at = open.find(sx_key)?;
-    let expr_start = sx_at + sx_key.len();
-    let mut depth = 1i32;
+    // Tag-position `style(…)` — replace an existing setter call, or inject one.
+    if let Some((lo, hi, expr)) = find_tag_style_call(open) {
+        let needle = format!(".{setter}(");
+        let new_expr = if let Some(rel) = expr.find(&needle) {
+            let arg_start = rel + needle.len();
+            let mut d = 1i32;
+            let mut k = arg_start;
+            while k < expr.len() {
+                match expr.as_bytes()[k] {
+                    b'(' => d += 1,
+                    b')' => {
+                        d -= 1;
+                        if d == 0 {
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+                k += 1;
+            }
+            if d != 0 {
+                return None;
+            }
+            format!("{}{target}{}", &expr[..arg_start], &expr[k..])
+        } else if let Some(ch) = channel_key_for_setter_name(setter) {
+            // Append into matching channel, or add a channel entry.
+            merge_setter_into_channel_style(&expr, ch, setter, target)
+        } else {
+            // Unknown channel — append flat chain residual is not product; inject channel.
+            format!("style({{ paint: {setter}({target}) }})")
+        };
+        return Some(format!("{}{}{}", &open[..lo], new_expr, &open[hi..]));
+    }
+    // No style call yet — inject tag-position style({ channel: setter(target) }).
+    let ch = channel_key_for_setter_name(setter).unwrap_or("paint");
+    let call = format!("style({{ {ch}: {setter}({target}) }})");
+    Some(inject_tag_style_call(open, &call))
+}
+
+fn channel_key_for_setter_name(setter: &str) -> Option<&'static str> {
+    match sail_lint::style::channel_for_setter(setter) {
+        Some(sail_lint::style::Channel::Box) => Some("box"),
+        Some(sail_lint::style::Channel::Text) => Some("text"),
+        Some(sail_lint::style::Channel::Animate) => Some("animate"),
+        Some(sail_lint::style::Channel::Paint) => Some("paint"),
+        None => None,
+    }
+}
+
+/// Locate tag-position `style(…)` (+ `.when`/chain tails) inside an open tag.
+fn find_tag_style_call(open: &str) -> Option<(usize, usize, String)> {
     let bytes = open.as_bytes();
-    let mut j = expr_start;
+    let mut j = 0usize;
+    let mut quote: Option<u8> = None;
     while j < bytes.len() {
-        match bytes[j] {
-            b'{' => depth += 1,
-            b'}' => {
-                depth -= 1;
-                if depth == 0 {
-                    break;
+        match (quote, bytes[j]) {
+            (Some(q), b) if b == q => {
+                quote = None;
+                j += 1;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[j]);
+                j += 1;
+            }
+            (Some(_), _) => j += 1,
+            (None, _) => {
+                if open[j..].starts_with("style") {
+                    let after = j + 5;
+                    let ok_boundary = after >= bytes.len()
+                        || (!bytes[after].is_ascii_alphanumeric()
+                            && bytes[after] != b'_'
+                            && bytes[after] != b'$'
+                            && bytes[after] != b'-'
+                            && bytes[after] != b':');
+                    if ok_boundary {
+                        let mut k = after;
+                        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                            k += 1;
+                        }
+                        if k < bytes.len() && bytes[k] == b'(' {
+                            let end = consume_style_call_len(open, j)?;
+                            let expr = open[j..end].to_string();
+                            return Some((j, end, expr));
+                        }
+                    }
+                }
+                j += 1;
+            }
+        }
+    }
+    None
+}
+
+/// Absolute end index of `style(…)` (+ `.method(` tails) starting at `start`.
+fn consume_style_call_len(src: &str, start: usize) -> Option<usize> {
+    let bytes = src.as_bytes();
+    if !src[start..].starts_with("style") {
+        return None;
+    }
+    let mut i = start + 5;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    if i >= bytes.len() || bytes[i] != b'(' {
+        return None;
+    }
+    let mut paren = 0i32;
+    let mut brace = 0i32;
+    let mut bracket = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' => paren += 1,
+            b')' => {
+                paren -= 1;
+                if paren == 0 && brace == 0 && bracket == 0 {
+                    i += 1;
+                    // chain tails: .when(…) / .method(…)
+                    loop {
+                        let mut k = i;
+                        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                            k += 1;
+                        }
+                        if k >= bytes.len() || bytes[k] != b'.' {
+                            return Some(i);
+                        }
+                        k += 1;
+                        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                            k += 1;
+                        }
+                        let name_start = k;
+                        while k < bytes.len()
+                            && (bytes[k].is_ascii_alphanumeric()
+                                || bytes[k] == b'_'
+                                || bytes[k] == b'-')
+                        {
+                            k += 1;
+                        }
+                        if k == name_start {
+                            return Some(i);
+                        }
+                        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                            k += 1;
+                        }
+                        if k >= bytes.len() || bytes[k] != b'(' {
+                            return Some(i);
+                        }
+                        // consume balanced call
+                        let mut p = 0i32;
+                        let mut b = 0i32;
+                        let mut br = 0i32;
+                        while k < bytes.len() {
+                            match bytes[k] {
+                                b'(' => p += 1,
+                                b')' => {
+                                    p -= 1;
+                                    if p == 0 && b == 0 && br == 0 {
+                                        k += 1;
+                                        break;
+                                    }
+                                }
+                                b'{' => b += 1,
+                                b'}' => b -= 1,
+                                b'[' => br += 1,
+                                b']' => br -= 1,
+                                _ => {}
+                            }
+                            k += 1;
+                        }
+                        i = k;
+                    }
+                }
+            }
+            b'{' => brace += 1,
+            b'}' => brace -= 1,
+            b'[' => bracket += 1,
+            b']' => bracket -= 1,
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
+fn inject_tag_style_call(open: &str, style_call: &str) -> String {
+    let trimmed = open.trim_end();
+    if trimmed.ends_with("/>") {
+        let head = &trimmed[..trimmed.len() - 2].trim_end();
+        let trail = &open[trimmed.len()..];
+        format!("{head} {style_call} />{trail}")
+    } else if trimmed.ends_with('>') {
+        let head = &trimmed[..trimmed.len() - 1].trim_end();
+        let trail = &open[trimmed.len()..];
+        format!("{head} {style_call}>{trail}")
+    } else {
+        format!("{open} {style_call}")
+    }
+}
+
+fn merge_box_setter_into_style(expr: &str, setter: &str, arg: &str) -> String {
+    merge_setter_into_channel_style(expr, "box", setter, arg)
+}
+
+fn merge_setter_into_channel_style(expr: &str, ch: &str, setter: &str, arg: &str) -> String {
+    let t = expr.trim();
+    let call = format!("{setter}({arg})");
+    if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
+        // Only simple style({…}) without chain tails handled here; chains keep full expr prefix.
+        let body = rest.trim();
+        if body.starts_with('{') && body.ends_with('}') {
+            let inner = body[1..body.len() - 1].trim();
+            let key = format!("{ch}:");
+            if let Some(idx) = find_channel_key_in(inner, ch) {
+                let after_key = idx + key.len();
+                let (val_start, val_end) = channel_value_span_in(inner, after_key);
+                let val = inner[val_start..val_end].trim();
+                let new_val = if val.is_empty() {
+                    call.clone()
+                } else if val.contains(&format!("{setter}(")) {
+                    // Replace existing setter arg if present.
+                    replace_method_arg(val, setter, arg).unwrap_or_else(|| format!("{val}.{call}"))
+                } else {
+                    format!("{val}.{call}")
+                };
+                let mut out = String::from("style({ ");
+                out.push_str(inner[..val_start].trim_end());
+                if !out.ends_with(' ') {
+                    out.push(' ');
+                }
+                out.push_str(&new_val);
+                let tail = inner[val_end..].trim_start();
+                if !tail.is_empty() {
+                    out.push(' ');
+                    out.push_str(tail);
+                }
+                out.push_str(" })");
+                return out;
+            }
+            let sep = if inner.is_empty() { "" } else { ", " };
+            return format!("style({{ {inner}{sep}{ch}: {call} }})");
+        }
+    }
+    // Non-object form (const ref / list) — leave existing and don't invent dual style.
+    // Caller prefers inject only when no style present; here append is wrong.
+    // Replace whole call with a channel spine that at least carries the fix.
+    format!("style({{ {ch}: {call} }})")
+}
+
+fn find_channel_key_in(inner: &str, ch: &str) -> Option<usize> {
+    let key = format!("{ch}:");
+    let bytes = inner.as_bytes();
+    let mut i = 0;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' | b'{' | b'[' => depth += 1,
+            b')' | b'}' | b']' => depth -= 1,
+            _ => {}
+        }
+        if depth == 0 && inner[i..].starts_with(&key) {
+            if i == 0 || bytes[i - 1].is_ascii_whitespace() || bytes[i - 1] == b',' {
+                return Some(i);
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
+fn channel_value_span_in(inner: &str, after_key: usize) -> (usize, usize) {
+    let bytes = inner.as_bytes();
+    let mut i = after_key;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    let start = i;
+    let mut paren = 0i32;
+    let mut brace = 0i32;
+    let mut bracket = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' => paren += 1,
+            b')' => paren -= 1,
+            b'{' => brace += 1,
+            b'}' => brace -= 1,
+            b'[' => bracket += 1,
+            b']' => bracket -= 1,
+            b',' if paren == 0 && brace == 0 && bracket == 0 => break,
+            _ => {}
+        }
+        i += 1;
+    }
+    (start, i)
+}
+
+fn replace_method_arg(chain: &str, setter: &str, arg: &str) -> Option<String> {
+    let needle = format!("{setter}(");
+    let rel = chain.find(&needle)?;
+    let arg_start = rel + needle.len();
+    let mut d = 1i32;
+    let mut k = arg_start;
+    while k < chain.len() {
+        match chain.as_bytes()[k] {
+            b'(' => d += 1,
+            b')' => {
+                d -= 1;
+                if d == 0 {
+                    return Some(format!("{}{arg}{}", &chain[..arg_start], &chain[k..]));
                 }
             }
             _ => {}
         }
-        j += 1;
+        k += 1;
     }
-    if depth != 0 {
-        return None;
-    }
-    let expr = &open[expr_start..j];
-    let needle = format!(".{setter}(");
-    if let Some(rel) = expr.find(&needle) {
-        let call_start = rel;
-        let arg_start = call_start + needle.len();
-        let mut d = 1i32;
-        let mut k = arg_start;
-        while k < expr.len() {
-            match expr.as_bytes()[k] {
-                b'(' => d += 1,
-                b')' => {
-                    d -= 1;
-                    if d == 0 {
-                        break;
-                    }
-                }
-                _ => {}
-            }
-            k += 1;
-        }
-        if d != 0 {
-            return None;
-        }
-        let new_expr = format!("{}{target}{}", &expr[..arg_start], &expr[k..]);
-        let mut out = String::new();
-        out.push_str(&open[..expr_start]);
-        out.push_str(&new_expr);
-        out.push_str(&open[j..]);
-        return Some(out);
-    }
-    // No existing setter — append it.
-    let call = format!("style.{setter}({target})");
-    let new_expr = if expr.trim().starts_with("style.") {
-        format!("{expr}.{setter}({target})")
-    } else {
-        call
-    };
-    let mut out = String::new();
-    out.push_str(&open[..expr_start]);
-    out.push_str(&new_expr);
-    out.push_str(&open[j..]);
-    Some(out)
+    None
 }
 
 /// Apply all text patches (highest offset first) + return new source.
@@ -701,216 +951,41 @@ fn find_host_for_offset<'a>(
         })
 }
 
-fn find_style_call_at(source: &str, offset: usize) -> Option<(&'static str, String)> {
-    // Search around offset for `.grow(` or `.shrink(`.
-    let window_start = offset.saturating_sub(8);
-    let window = &source[window_start..source.len().min(offset + 48)];
-    for (method, _) in [("grow", "grow"), ("shrink", "shrink")] {
-        let needle = format!(".{method}(");
-        if let Some(rel) = window.find(&needle) {
-            let abs = window_start + rel + needle.len();
-            let mut depth = 1i32;
-            let mut j = abs;
-            let bytes = source.as_bytes();
-            while j < bytes.len() {
-                match bytes[j] {
-                    b'(' => depth += 1,
-                    b')' => {
-                        depth -= 1;
-                        if depth == 0 {
-                            let arg = source[abs..j].trim().to_string();
-                            return Some((method, arg));
-                        }
-                    }
-                    _ => {}
-                }
-                j += 1;
-            }
-        }
-    }
-    None
-}
-
-fn strip_style_call_from_open(open: &str, method: &str, arg: &str) -> Option<String> {
-    // Remove `.method(arg)` or `style.method(arg)` from sx= chain.
-    let patterns = [
-        format!(".{method}({arg})"),
-        format!("style.{method}({arg})"),
-        format!(".{method}( {arg} )"),
-    ];
-    for p in &patterns {
-        if open.contains(p.as_str()) {
-            let mut s = open.replacen(p.as_str(), "", 1);
-            // Clean `style.` alone left empty chain edge cases.
-            s = s.replace("style={style}", "/*sx-cleared*/");
-            s = s.replace("style={style.}", "style={style");
-            // style.pad(2). → already fine; style. → style needs a method
-            if let Some(idx) = s.find("style={style}") {
-                // empty style product — drop sx attr entirely if empty chain.
-                let _ = idx;
-            }
-            // Collapse double dots
-            while s.contains("..") {
-                s = s.replace("..", ".");
-            }
-            s = s.replace("style={style.}", "style={style.");
-            // style={style} with nothing after
-            if s.contains("style={style}") || s.contains("style={}") {
-                s = remove_attr_from_open(&s, "style");
-            }
-            // style={style.pad(2).} trailing dot
-            s = s.replace(".)}", ")}");
-            s = s.replace(". }", " }");
-            return Some(s);
-        }
-    }
-    // Try regex-less: find `.method(` and matching paren.
-    let needle = format!(".{method}(");
-    if let Some(start) = open.find(&needle) {
-        let mut depth = 1i32;
-        let mut j = start + needle.len();
-        let bytes = open.as_bytes();
-        while j < bytes.len() {
-            match bytes[j] {
-                b'(' => depth += 1,
-                b')' => {
-                    depth -= 1;
-                    if depth == 0 {
-                        let mut s = String::new();
-                        s.push_str(&open[..start]);
-                        s.push_str(&open[j + 1..]);
-                        while s.contains("..") {
-                            s = s.replace("..", ".");
-                        }
-                        s = s.replace(".)}", ")}");
-                        if s.contains("style={style}") || s.contains("style={}") {
-                            s = remove_attr_from_open(&s, "style");
-                        }
-                        return Some(s);
-                    }
-                }
-                _ => {}
-            }
-            j += 1;
-        }
-    }
-    None
-}
-
-fn insert_attr(open: &str, name: &str, value: Option<&str>) -> String {
-    if open.contains(&format!("{name}=")) || open.split_whitespace().any(|t| t == name) {
-        return open.to_string();
-    }
-    let insert = match value {
-        None => format!(" {name}"),
-        Some(v) => format!(" {name}=\"{v}\""),
-    };
-    if let Some(gt) = open.rfind('>') {
-        let self_close = open[..gt].trim_end().ends_with('/');
-        if self_close {
-            let slash = open[..gt].rfind('/').unwrap_or(gt);
-            format!("{}{}{}>", &open[..slash], insert, &open[slash..])
-        } else {
-            format!("{}{}{}", &open[..gt], insert, &open[gt..])
-        }
-    } else {
-        format!("{open}{insert}")
-    }
-}
-
-fn remove_attr_from_open(open: &str, name: &str) -> String {
-    // Remove name="…" / name={…} / bare name
-    let mut s = open.to_string();
-    // name="..."
-    if let Some(start) = s.find(&format!("{name}=\"")) {
-        if let Some(rel) = s[start + name.len() + 2..].find('"') {
-            let end = start + name.len() + 2 + rel + 1;
-            s.replace_range(start..end, "");
-            return collapse_ws_open(&s);
-        }
-    }
-    // name={...}
-    if let Some(start) = s.find(&format!("{name}={{")) {
-        let mut depth = 0i32;
-        let bytes = s.as_bytes();
-        let mut j = start + name.len() + 1; // at '{'
-        while j < bytes.len() {
-            match bytes[j] {
-                b'{' => depth += 1,
-                b'}' => {
-                    depth -= 1;
-                    if depth == 0 {
-                        s.replace_range(start..j + 1, "");
-                        return collapse_ws_open(&s);
-                    }
-                }
-                _ => {}
-            }
-            j += 1;
-        }
-    }
-    s
-}
-
 fn collapse_ws_open(s: &str) -> String {
     let mut out = s.to_string();
     while out.contains("  ") {
         out = out.replace("  ", " ");
     }
     out = out.replace(" >", ">");
+    out = out.replace(" />", "/>");
     out
 }
 
 fn split_display_from_element(full: &str, tag: &str) -> Option<(String, String)> {
-    // Find style={…} on the open tag and peel display(…) out of the chain.
+    // Find tag-position style(…) on the open tag and peel display(…) out.
     let gt = full.find('>')?;
     let open = &full[..gt + 1];
     let rest = &full[gt + 1..];
-    let sx_key = "style={";
-    let sx_start = open.find(sx_key)?;
-    let expr_start = sx_start + sx_key.len();
-    let mut depth = 1i32;
-    let bytes = open.as_bytes();
-    let mut j = expr_start;
-    while j < bytes.len() {
-        match bytes[j] {
-            b'{' => depth += 1,
-            b'}' => {
-                depth -= 1;
-                if depth == 0 {
-                    break;
-                }
-            }
-            _ => {}
-        }
-        j += 1;
-    }
-    if depth != 0 {
-        return None;
-    }
-    let expr = &open[expr_start..j];
-    let (new_expr, display_expr) = peel_display(expr)?;
+    let (sx_start, sx_end, expr) = find_tag_style_call(open)?;
+    let (new_expr, display_expr) = peel_display(&expr)?;
     let mut new_open = String::new();
     new_open.push_str(&open[..sx_start]);
-    if new_expr.trim().is_empty() || new_expr.trim() == "style" {
-        // drop sx
-        new_open.push_str(&open[j + 1..]);
+    if new_expr.trim().is_empty() {
+        // drop style call entirely
+        new_open.push_str(&open[sx_end..]);
     } else {
-        new_open.push_str("style={");
         new_open.push_str(&new_expr);
-        new_open.push('}');
-        new_open.push_str(&open[j + 1..]);
+        new_open.push_str(&open[sx_end..]);
     }
     new_open = collapse_ws_open(&new_open);
     let inner = format!("{new_open}{rest}");
-    // Ensure close tag still matches
     let _ = tag;
     Some((inner, display_expr))
 }
 
 fn peel_display(expr: &str) -> Option<(String, String)> {
-    // style.display(none).pad(2) → (style.pad(2), style.display(none))
-    // style.pad(2).display(none) → same
+    // style({ box: display(none).pad(2) }) → peel display into outer wrap expr
+    // Also residual flat: style.display(none).pad(2)
     let disp = expr.find("display(")?;
     let arg_start = disp + "display(".len();
     let mut depth = 1i32;
@@ -932,16 +1007,17 @@ fn peel_display(expr: &str) -> Option<(String, String)> {
     if depth != 0 {
         return None;
     }
-    // include leading `style.` if this is the only call, or `.` before display
-    let call_start = if disp >= 6 && &expr[disp - 6..disp] == "style." {
-        disp - 6
-    } else if disp > 0 && expr.as_bytes()[disp - 1] == b'.' {
+    let call_end = j + 1; // after ')'
+    let display_arg = expr[arg_start..j].trim();
+    // Product wrap form always uses channel spine for the outer host.
+    let display_expr = format!("style({{ box: display({display_arg}) }})");
+
+    // Remove `display(…)` / `.display(…)` from the original chain.
+    let call_start = if disp > 0 && bytes[disp - 1] == b'.' {
         disp - 1
     } else {
         disp
     };
-    let call_end = j + 1; // after ')'
-    let call = format!("style.{}", &expr[disp..call_end]);
     let mut new_expr = String::new();
     new_expr.push_str(&expr[..call_start]);
     new_expr.push_str(&expr[call_end..]);
@@ -951,10 +1027,18 @@ fn peel_display(expr: &str) -> Option<(String, String)> {
     if new_expr.starts_with('.') {
         new_expr = format!("style{new_expr}");
     }
-    if new_expr.trim().is_empty() {
+    // Clean empty channel shells: style({ box:  }) / style({  })
+    let trimmed = new_expr.trim();
+    if trimmed.is_empty()
+        || trimmed == "style({})"
+        || trimmed == "style({ })"
+        || trimmed == "style({ box: })"
+        || trimmed == "style({ box:  })"
+    {
         new_expr.clear();
     }
-    Some((new_expr, call))
+    // Outer wrap host gets a full tag-position style call.
+    Some((new_expr, display_expr))
 }
 
 fn find_display_decl_span(source: &str, offset: usize) -> Option<(usize, usize)> {
@@ -1005,5 +1089,38 @@ mod tests {
         let next2 = strip_attr_from_open(&next, "min-w").unwrap();
         assert!(!next2.contains("min-w"), "{next2}");
         assert!(next2.contains("class"), "{next2}");
+    }
+
+    #[test]
+    fn participation_fix_injects_tag_style_not_body() {
+        let src = r#"<div grow>x</div>"#;
+        let plans = suggest_fixes_for_source(src, "t.sail", None);
+        let p = plans
+            .iter()
+            .find(|p| p.rule == "sail-participation-style")
+            .expect("participation fix");
+        let patch = p.text_patch.as_ref().expect("text patch");
+        let (out, skipped) =
+            apply_text_patches(src, &[(patch.start, patch.end, patch.replacement.clone())]);
+        assert_eq!(skipped, 0);
+        assert!(
+            out.contains("style({ box: grow(1) })"),
+            "expected tag style call: {out}"
+        );
+        assert!(
+            !out.contains(">\n  style(") && !out.contains(">\nstyle("),
+            "must not inject body Style: {out}"
+        );
+        assert!(!out.contains("style={"), "must not emit style={{: {out}");
+        // Fixed source must preprocess cleanly (tag form accepted).
+        crate::parse::preprocess::preprocess(&out).expect(&format!("preprocess failed: {out}"));
+    }
+
+    #[test]
+    fn replace_sx_setter_targets_tag_style() {
+        let open = r#"<div style({ box: pad(2) })>"#;
+        let next = replace_sx_setter(open, "pad", "4").unwrap();
+        assert_eq!(next, r#"<div style({ box: pad(4) })>"#);
+        assert!(!next.contains("style={"), "{next}");
     }
 }

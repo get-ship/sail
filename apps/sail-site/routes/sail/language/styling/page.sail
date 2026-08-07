@@ -19,16 +19,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-The language</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
   <h1>Styling</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Paint is the <strong>Style</strong> channel language:
     <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> as a block
     statement, plus <code>.when()</code>, <code>match</code>,
@@ -45,12 +39,8 @@ The language</p>
   </p>
 
   <h2>The chain</h2>
-  <card>
-    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })
-
-    <p>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-This card is styled by the code below it.</p>
+  <card style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })>
+    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>This card is styled by the code below it.</p>
   </card>
   <code-block code={code.sx}></code-block>
   <p>
@@ -69,18 +59,10 @@ This card is styled by the code below it.</p>
   <p>
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
-  <row gap="3">
-    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
-
-    <button>
-      when({ hover: style({ paint: bg(muted) }) })
-hover → bg(muted)</button>
-    <button>
-      when({ hover: style({ paint: fg(primary) }) })
-hover → fg(primary)</button>
-    <button>
-      when({ active: style({ paint: bg(primary).fg(primary-foreground) }) })
-active:…</button>
+  <row gap="3" style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })>
+    <button style(when({ hover: style({ paint: bg(muted) }) }))>hover → bg(muted)</button>
+    <button style(when({ hover: style({ paint: fg(primary) }) }))>hover → fg(primary)</button>
+    <button style(when({ active: style({ paint: bg(primary).fg(primary-foreground) }) }))>active:…</button>
   </row>
   <code-block code={code.states}></code-block>
   <p>
@@ -100,12 +82,8 @@ active:…</button>
     <code>when&#40;&#123; tablet: …, desktop: … &#125;&#41;</code>. Resize to see this panel
     pad more from 768px up:
   </p>
-  <column gap="2">
-    style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }).when(tablet, { box: pad(6) })
-
-    <p>
-      style({ text: fontSize(sm) })
-pad(3) on a phone; when tablet → pad(6).</p>
+  <column gap="2" style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }).when(tablet, { box: pad(6) })>
+    <p style({ text: fontSize(sm) })>pad(3) on a phone; when tablet → pad(6).</p>
   </column>
   <code-block code={code.conditions}></code-block>
   <p>
@@ -133,15 +111,9 @@ pad(3) on a phone; when tablet → pad(6).</p>
     <code>bind(name)</code> — the compiler registers the CSS custom property
     and reflects the signal onto the host. Drag:
   </p>
-  <column gap="3">
-    style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
-
-    <input type="range" min="0" max="200" step="1" bind:value={shift}>
-      style({ box: minW(0) })
-    </input>
-    <card>
-      style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(px)) })
-</card>
+  <column gap="3" style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })>
+    <input type="range" min="0" max="200" step="1" bind:value={shift} style({ box: minW(0) })>
+    <card style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(px)) })></card>
   </column>
   <code-block code={code.dynamic}></code-block>
   <p>
@@ -164,16 +136,12 @@ pad(3) on a phone; when tablet → pad(6).</p>
     hole.
   </p>
 
-  <p>
-    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
     For the full surface: <a href="/sail/reference/sx">reference → Style</a>
     · <a href="/sail/reference/regions">region matrix</a>.
   </p>
 
-  <row justify="between" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/templates">← Templates</a>
     <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
   </row>

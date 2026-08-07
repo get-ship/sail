@@ -52,12 +52,10 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <button variant="ghost" size="sm" on:click={() => restock()}>
-        style({ animate: hover({ rotate: 'spring:bouncy' }) })
+      <button variant="ghost" size="sm" on:click={() => restock()} style({ animate: hover({ rotate: 'spring:bouncy' }) })>
 Restock</button>
       <button variant="outline" tone="primary" size="sm"
-on:click={() => toggle()}>
-        style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })
+on:click={() => toggle()} style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })>
 
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
@@ -70,17 +68,13 @@ on:click={() => toggle()}>
   </row>
 
   <if {open()}>
-    <column gap="2">
-      style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
-
+    <column gap="2" style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })>
       <for {notes() as n} key={n.id}>
         <row gap="3" align="center">
           noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })
 
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p>
-            style([ style(noteText), style({ box: grow(1) }) ])
-{n.text}</p>
+          <p style([ style(noteText), style({ box: grow(1) }) ])>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>

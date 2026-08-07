@@ -22,8 +22,7 @@
   const thumbLg = style({ box: size(icon-size-sm) })
 </scope>
 
-<input type="checkbox">
-  style([ style({ box: shrink(0) }), 
+<input type="checkbox" style([ style({ box: shrink(0) }), 
   base,
   match(size, {
     md: sizeMd,
@@ -136,5 +135,4 @@
       focus: style({ paint: outline(CanvasText) }),
     }),
   }),
-])
-</input>
+])>

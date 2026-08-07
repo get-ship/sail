@@ -10,6 +10,4 @@
   into the emitted bundle as `... data-marker="demo-chip-marker" ...`.
 -->
 
-<span data-marker="demo-chip-marker">
-  style({ box: pad(1), paint: radius(md).bg(surface-2).fg(foreground), text: fontSize(xs).fontFamily(mono) })
-<slot></slot></span>
+<span data-marker="demo-chip-marker" style({ box: pad(1), paint: radius(md).bg(surface-2).fg(foreground), text: fontSize(xs).fontFamily(mono) })><slot></slot></span>

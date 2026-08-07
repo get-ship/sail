@@ -32,15 +32,9 @@ export default controller(() => {
 })
 </controller>
 
-<column gap="3">
-  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
-
-  <h1>
-    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
-query() demo</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-A real query()/mutation() round-trip against crm-demo.ts.</p>
+<column gap="3" style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })>
+  <h1 style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })>query() demo</h1>
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>A real query()/mutation() round-trip against crm-demo.ts.</p>
 
   <row gap="2">
     <button on:click={() => stage.set('open')} aria-pressed={stage() === 'open'}>open</button>
@@ -48,19 +42,13 @@ A real query()/mutation() round-trip against crm-demo.ts.</p>
   </row>
 
   <if {deals().kind === 'loading'}>
-  <p data-testid="deals-loading">
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Loading…</p>
+  <p data-testid="deals-loading" style({ paint: fg(muted-foreground), text: fontSize(sm) })>Loading…</p>
   </if>
   <if {deals().kind === 'error'}>
-  <p data-testid="deals-error">
-    style({ paint: fg(destructive), text: fontSize(sm) })
-Error</p>
+  <p data-testid="deals-error" style({ paint: fg(destructive), text: fontSize(sm) })>Error</p>
   </if>
   <if {deals().kind === 'ok'}>
-  <column gap="1" data-testid="deals-list">
-    style({ box: pad(0).m(0), paint: list(none) })
-
+  <column gap="1" data-testid="deals-list" style({ box: pad(0).m(0), paint: list(none) })>
     <for {deals().value.items as deal} key={deal.id}>
     <li>{deal.id} — {deal.stage} — {deal.amount}</li>
     </for>

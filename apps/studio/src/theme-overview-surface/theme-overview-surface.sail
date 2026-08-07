@@ -56,18 +56,12 @@ export default controller(() => {
 })
 </controller>
 
-<column surface="themes" theme-overview-surface overview-chrome gap="0">
-  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
-
+<column surface="themes" theme-overview-surface overview-chrome gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row overview-error align="center" gap="2">
-      style([ style(bandError), style({ box: shrink(0) }) ])
-
-      <p>
-        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
-{session.errorText()}</p>
+    <row overview-error align="center" gap="2" style([ style(bandError), style({ box: shrink(0) }) ])>
+      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" overview-retry on:click={session.onRetry}>
         Retry
       </button>
@@ -75,113 +69,57 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row overview-loading align="center" gap="2">
-      style([ style(bandStatus), style({ box: shrink(0) }) ])
-
+    <row overview-loading align="center" gap="2" style([ style(bandStatus), style({ box: shrink(0) }) ])>
       <spinner size="sm"></spinner>
-      <p>
-        style(fieldHint)
-Loading…</p>
+      <p style(fieldHint)>Loading…</p>
     </row>
   </if>
 
-  <row overview-workbench editorial-split gap="0" nowrap align="stretch">
-    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
-
-    <scroll-area identity-column>
-      style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })
-
-      <column gap="8">
-        style(identityCol)
-
+  <row overview-workbench editorial-split gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
+    <scroll-area identity-column style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })>
+      <column gap="8" style(identityCol)>
         <column color-hero gap="3">
-          <p>
-            style(sectionTitle)
-Color</p>
+          <p style(sectionTitle)>Color</p>
           <row hero-colors gap="3" align="stretch">
-            <column hero-card token="primary" gap="0">
-              style([ style(heroCard), style({ box: grow(1).minW(0) }) ])
-
-              <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'}>
-                style(heroSwatch)
-
-                <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on-change={overview.onHeroColor}>
-                  style({ box: w(full).h(20).minH(20) })
-</sail-color-picker>
+            <column hero-card token="primary" gap="0" style([ style(heroCard), style({ box: grow(1).minW(0) }) ])>
+              <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
+                <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
               </stack>
-              <row align="center" justify="between">
-                style(heroMeta)
-
-                <p>
-                  style(doorTitle)
-Primary</p>
-                <p>
-                  style(monoMeta)
-{primaryHex()}</p>
+              <row align="center" justify="between" style(heroMeta)>
+                <p style(doorTitle)>Primary</p>
+                <p style(monoMeta)>{primaryHex()}</p>
               </row>
             </column>
-            <column hero-card token="secondary" gap="0">
-              style([ style(heroCard), style({ box: grow(1).minW(0) }) ])
-
-              <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'}>
-                style(heroSwatch)
-
-                <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on-change={overview.onHeroColor}>
-                  style({ box: w(full).h(20).minH(20) })
-</sail-color-picker>
+            <column hero-card token="secondary" gap="0" style([ style(heroCard), style({ box: grow(1).minW(0) }) ])>
+              <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
+                <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
               </stack>
-              <row align="center" justify="between">
-                style(heroMeta)
-
-                <p>
-                  style(doorTitle)
-Secondary</p>
-                <p>
-                  style(monoMeta)
-{secondaryHex()}</p>
+              <row align="center" justify="between" style(heroMeta)>
+                <p style(doorTitle)>Secondary</p>
+                <p style(monoMeta)>{secondaryHex()}</p>
               </row>
             </column>
-            <column hero-card token="accent" gap="0">
-              style([ style(heroCard), style({ box: grow(1).minW(0) }) ])
-
-              <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'}>
-                style(heroSwatch)
-
-                <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on-change={overview.onHeroColor}>
-                  style({ box: w(full).h(20).minH(20) })
-</sail-color-picker>
+            <column hero-card token="accent" gap="0" style([ style(heroCard), style({ box: grow(1).minW(0) }) ])>
+              <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
+                <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
               </stack>
-              <row align="center" justify="between">
-                style(heroMeta)
-
-                <p>
-                  style(doorTitle)
-Accent</p>
-                <p>
-                  style(monoMeta)
-{accentHex()}</p>
+              <row align="center" justify="between" style(heroMeta)>
+                <p style(doorTitle)>Accent</p>
+                <p style(monoMeta)>{accentHex()}</p>
               </row>
             </column>
           </row>
           <if {session.catalogHint()}>
-            <p catalog-hint>
-              style(fieldHint)
-Add to project to edit.</p>
+            <p catalog-hint style(fieldHint)>Add to project to edit.</p>
           </if>
         </column>
 
         <grid cols="3" gap="3" editorial-band>
-          <column panel="type" gap="3">
-            style(panelCard)
-
-            <p>
-              style(sectionTitle)
-Type</p>
+          <column panel="type" gap="3" style(panelCard)>
+            <p style(sectionTitle)>Type</p>
             <column gap="3">
               <column gap="1">
-                <p>
-                  style(fieldHint)
-Display</p>
+                <p style(fieldHint)>Display</p>
                 <select type-token="display" size="sm" value={overview.typeDisplay()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.displayFontOpts() as o} key={o.key}>
                     <option value={o.value}>{o.label}</option>
@@ -189,9 +127,7 @@ Display</p>
                 </select>
               </column>
               <column gap="1">
-                <p>
-                  style(fieldHint)
-Body</p>
+                <p style(fieldHint)>Body</p>
                 <select type-token="body" size="sm" value={overview.typeBody()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.bodyFontOpts() as o} key={o.key}>
                     <option value={o.value}>{o.label}</option>
@@ -199,9 +135,7 @@ Body</p>
                 </select>
               </column>
               <column gap="1">
-                <p>
-                  style(fieldHint)
-Mono</p>
+                <p style(fieldHint)>Mono</p>
                 <select type-token="mono" size="sm" value={overview.typeMono()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.monoFontOpts() as o} key={o.key}>
                     <option value={o.value}>{o.label}</option>
@@ -211,29 +145,19 @@ Mono</p>
             </column>
           </column>
 
-          <column panel="icons" gap="3">
-            style(panelCard)
-
-            <p>
-              style(sectionTitle)
-Icons</p>
+          <column panel="icons" gap="3" style(panelCard)>
+            <p style(sectionTitle)>Icons</p>
             <column gap="1">
-              <p>
-                style(fieldHint)
-Pack</p>
+              <p style(fieldHint)>Pack</p>
               <select icon-pack size="sm" value={overview.iconPack()} disabled={!session.canEdit()} on:change={overview.onIconPack}>
                 <option value="lucide">Lucide</option>
                 <option value="phosphor">Phosphor</option>
               </select>
             </column>
             <if {overview.hasIconGlyphs()}>
-              <grid cols="4" gap="2" icon-sample>
-                style({ box: padT(1) })
-
+              <grid cols="4" gap="2" icon-sample style({ box: padT(1) })>
                 <for {overview.iconGlyphs() as g} key={g.key}>
-                  <center title={g.name}>
-                    style([ style(iconCell), style({ box: shrink(0) }) ])
-
+                  <center title={g.name} style([ style(iconCell), style({ box: shrink(0) }) ])>
                     <icon name={g.name} size="sm" label={g.name}></icon>
                   </center>
                 </for>
@@ -241,12 +165,8 @@ Pack</p>
             </if>
           </column>
 
-          <column panel="density" gap="3">
-            style(panelCard)
-
-            <p>
-              style(sectionTitle)
-Density</p>
+          <column panel="density" gap="3" style(panelCard)>
+            <p style(sectionTitle)>Density</p>
             <column density-seg gap="2" on:click={overview.onDensityClick}>
               <for {overview.densityOptions() as d} key={d.key}>
                 <button
@@ -256,11 +176,7 @@ Density</p>
                   variant={d.on ? 'solid' : 'soft'}
                   tone={d.on ? 'primary' : 'muted'}
                   pressed={d.on ? 'true' : 'false'}
-                  disabled={!session.canEdit()}
-
-                >
-                  style(fullBtn)
-
+                  disabled={!session.canEdit()} style(fullBtn)>
                   {d.label}
                 </button>
               </for>
@@ -269,27 +185,15 @@ Density</p>
         </grid>
 
         <column doors-row gap="3">
-          <p>
-            style(sectionTitle)
-More detail</p>
+          <p style(sectionTitle)>More detail</p>
           <grid cols="2" gap="3" facet-doors on:click={session.onFacet}>
             <for {overview.facetDoors() as door} key={door.key}>
-              <card facet={door.facet}>
-                style(doorCard)
-
+              <card facet={door.facet} style(doorCard)>
                 <row gap="2" align="center">
-                  <icon name={door.icon} size="sm">
-                    style([ style(mutedIcon), style({ box: shrink(0) }) ])
-</icon>
-                  <column gap="0">
-                    style({ box: grow(1).minW(0) })
-
-                    <p>
-                      style(doorTitle)
-{door.label}</p>
-                    <p>
-                      style(doorHint)
-{door.hint}</p>
+                  <icon name={door.icon} size="sm" style([ style(mutedIcon), style({ box: shrink(0) }) ])></icon>
+                  <column gap="0" style({ box: grow(1).minW(0) })>
+                    <p style(doorTitle)>{door.label}</p>
+                    <p style(doorHint)>{door.hint}</p>
                   </column>
                 </row>
               </card>
@@ -299,61 +203,31 @@ More detail</p>
       </column>
     </scroll-area>
 
-    <column specimen-dock gap="0">
-      style({  box: grow(1).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
-
-      <column gap="0">
-        style({  box: grow(1).minH(0).h(full).pad(4)  })
-
+    <column specimen-dock gap="0" style({  box: grow(1).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })>
+      <column gap="0" style({  box: grow(1).minH(0).h(full).pad(4)  })>
         <card
           overview-specimen
           preview-specimen
           mode={session.paintMode()}
           density={overview.specimenDensity()}
-          padding="none"
-
-        >
-          style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
-
-          <column gap="0">
-            style({  box: grow(1).minH(0).h(full)  })
-
-            <row specimen-chrome align="center" gap="2" nowrap>
-              style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
-
-              <row gap="2" align="center" nowrap hidden="true">
-                style({  box: shrink(0).minW(12)  })
-
-                <stack>
-                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
-</stack>
-                <stack>
-                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
-</stack>
-                <stack>
-                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
-</stack>
+          padding="none" style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })>
+          <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
+            <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
+              <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
+                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
+                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
+                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
               </row>
-              <p>
-                style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
-{session.nameEdit()}</p>
-              <p>
-                style([ style(monoMeta), style({ box: shrink(0) }) ])
-{session.paintMode()}</p>
+              <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{session.nameEdit()}</p>
+              <p style([ style(monoMeta), style({ box: shrink(0) }) ])>{session.paintMode()}</p>
             </row>
-            <scroll-area>
-              style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })
-
+            <scroll-area style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })>
               <!--
                 Plain host for density gap bind — layout column always ships sail-g-*
                 which beats sx.gap(bind). stack rejects style({ box: display(owns flex itself) }).
               -->
               <div
-                specimen-body
-
-              >
-                style({ box: display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap)) })
-
+                specimen-body style({ box: display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap)) })>
                 <row gap="2" align="center" nowrap specimen-buttons>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="primary">Primary</button>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="accent">Accent</button>
@@ -365,52 +239,32 @@ More detail</p>
                   <badge tone="warning" size={overview.badgeSize()} variant="solid" pill>Warning</badge>
                   <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill>Danger</badge>
                 </row>
-                <div type-samples>
-                  style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })
-
-                  <p>
-                    style({ text: fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight) })
-
+                <div type-samples style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })>
+                  <p style({ text: fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight) })>
                     {overview.typeDisplay()}
                   </p>
-                  <p>
-                    style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })
-
+                  <p style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })>
                     {overview.typeBody()} — product body copy.
                   </p>
-                  <p>
-                    style({ text: fontFamily(mono).fontSize(xs) })
-
+                  <p style({ text: fontFamily(mono).fontSize(xs) })>
                     {overview.typeMono()} — const ok = true
                   </p>
                 </div>
                 <if {overview.hasIconGlyphs()}>
                   <row specimen-icons gap="2" align="center" nowrap>
                     <for {overview.iconGlyphs() as g} key={g.key}>
-                      <icon name={g.name} size={overview.iconSize()} label={g.name}>
-                        style({ box: shrink(0) })
-</icon>
+                      <icon name={g.name} size={overview.iconSize()} label={g.name} style({ box: shrink(0) })></icon>
                     </for>
                   </row>
                 </if>
-                <div>
-                  style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })
-
-                  <p>
-                    style({ paint: fg(muted-foreground), text: fontSize(xs) })
-Email</p>
+                <div style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })>
+                  <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>Email</p>
                   <input type="email" size={overview.controlSize()} placeholder="you@company.com" label="Sample email" />
                 </div>
                 <card padding={overview.cardPadding()}>
-                  <div>
-                    style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })
-
-                    <p>
-                      style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })
-{session.nameEdit()}</p>
-                    <p>
-                      style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })
-
+                  <div style({ box: display(flex).flexDir(column).gap(bind(specimenStackGap)) })>
+                    <p style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })>{session.nameEdit()}</p>
+                    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })>
                       Nested card in this theme.
                     </p>
                     <row gap="2" nowrap>

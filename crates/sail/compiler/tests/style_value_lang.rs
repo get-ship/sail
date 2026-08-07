@@ -12,7 +12,7 @@ fn is_style_product(src: &str) -> bool {
 
 #[test]
 fn chain_emits_token_vars_on_product_path() {
-    let out = preprocess(r#"<div> style({ box: padX(2), paint: bg(primary) }) x</div>"#).expect("preprocess");
+    let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })> x</div>"#).expect("preprocess");
     assert!(
         out.contains("var(--primary)") || out.contains("sx-bgprimary"),
         "chain must emit token paint:\n{out}"
@@ -26,7 +26,7 @@ fn chain_emits_token_vars_on_product_path() {
 #[test]
 fn match_emits_attribute_selectors() {
     let out = preprocess(
-        r#"<div> match(variant, { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) }) x</div>"#,
+        r#"<div style(match(variant, { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) }))> x</div>"#,
     )
     .expect("preprocess");
     assert!(out.contains("[variant='solid']"), "{out}");
@@ -36,14 +36,14 @@ fn match_emits_attribute_selectors() {
 #[test]
 fn when_emits_hover_not_events() {
     let out =
-        preprocess(r#"<div> when({ hover: style({ paint: bg(muted) }) }) x</div>"#).expect("preprocess");
+        preprocess(r#"<div style(when({ hover: style({ paint: bg(muted) }) }))> x</div>"#).expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div> compound({ pill: true }, style({ paint: radius(full) })) x</div>"#)
+    let out = preprocess(r#"<div style(compound({ pill: true }, style({ paint: radius(full) })))> x</div>"#)
         .expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
@@ -227,7 +227,7 @@ fn scope_style_const_resolves_in_host_sx() {
 <scope>
   const filled = style({ box: padX(2), paint: bg(primary) })
 </scope>
-<div> style(filled) x</div>
+<div style(filled)> x</div>
 "#,
     )
     .expect("preprocess");
@@ -249,7 +249,7 @@ fn scope_style_const_in_match_arms() {
   const solid = style({ paint: bg(primary) })
   const soft = style({ paint: bg(muted) })
 </scope>
-<div> match(variant, { solid: solid, soft: soft }) x</div>
+<div style(match(variant, { solid: solid, soft: soft }))> x</div>
 "#,
     )
     .expect("preprocess");

@@ -74,15 +74,11 @@ fn compile_attr(
             return Err(unknown_directive_error(name, value_span, loc));
         }
     }
-    // `sx=` is retired. Style attaches as a block statement in the element body.
+    // Own-API ghost: no special tombstone — generic unknown attribute.
     if name == "sx" {
-        return Err(CompileError::new(
-            "sx= is retired — attach Style as a block statement: \
-             style({ box: …, paint: … }).when(hover, { paint: … })  \
-             or  style([ base, match(…) ])",
-        )
-        .with_span(value_span)
-        .with_category("sx"));
+        return Err(CompileError::new("unknown attribute `sx`")
+            .with_span(value_span)
+            .with_category(loc.to_string()));
     }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
@@ -1325,7 +1321,8 @@ mod tests {
     }
 
     #[test]
-    fn sx_attr_host_is_refused() {
+    fn sx_attr_host_is_unknown() {
+        // STYLE-TAG-1: `sx=` special tombstone deleted — generic unknown attr.
         let err = compile_attr(
             "sx",
             "{style.fontSize(2xl)}",
@@ -1333,34 +1330,37 @@ mod tests {
             "[h1 sx]",
             false,
         )
-        .expect_err("sx= host is retired");
+        .expect_err("sx= is unknown attribute");
         assert!(
-            err.message.contains("retired") || err.message.contains("block"),
-            "must teach block Style, got: {}",
+            err.message.contains("unknown attribute") && err.message.contains("sx"),
+            "must be generic unknown attr (no retired tombstone), got: {}",
+            err.message
+        );
+        assert!(
+            !err.message.contains("retired") && !err.message.contains("block Style"),
+            "tombstone teaching deleted, got: {}",
             err.message
         );
     }
 
     #[test]
-    fn parse_author_keeps_block_style_chain_with_scale_tokens() {
-        // Style is a block statement; preprocess lowers it to classes before
-        // author HTML parse — scale tokens must survive product Style parse.
+    fn parse_author_keeps_tag_style_chain_with_scale_tokens() {
+        // Tag-position `style({…}).when(…)` lowers to classes before author
+        // HTML parse — scale tokens must survive product Style parse.
         let src = r#"
-            <h1>
-              style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl) }).when(hover, { paint: fg(foreground) })
-              T
+            <h1 style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl) }).when(hover, { paint: fg(foreground) })>              T
             </h1>
         "#;
-        let pre = crate::parse::preprocess::preprocess(src).expect("preprocess block Style");
+        let pre = crate::parse::preprocess::preprocess(src).expect("preprocess tag Style");
         assert!(
             pre.contains("sx-") || pre.contains("fontSize") || pre.contains("2xl"),
-            "block Style with scale tokens must lower:\n{pre}"
+            "tag Style with scale tokens must lower:\n{pre}"
         );
         let _prog = crate::parse::parse_author(src)
-            .expect("parse_author must accept block Style product");
+            .expect("parse_author must accept tag-position Style product");
         assert!(
             pre.contains("hover") || pre.contains("sx-"),
-            "nested when must lower from block Style:\n{pre}"
+            "nested when must lower from tag Style:\n{pre}"
         );
     }
 

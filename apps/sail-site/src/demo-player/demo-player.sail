@@ -33,53 +33,25 @@ export default controller((ctx: Scope) => {
 })
 </controller>
 
-<card>
-  style(card)
-
+<card style(card)>
   <row gap="3" align="center" nowrap>
-    <column gap="1">
-      style({ box: grow(1).minW(0) })
-
-      <strong>
-        style(title)
-Signals in the Rain</strong>
-      <p>
-        style(artist)
-The Reactive Quartet</p>
+    <column gap="1" style({ box: grow(1).minW(0) })>
+      <strong style(title)>Signals in the Rain</strong>
+      <p style(artist)>The Reactive Quartet</p>
       <progress value={position()} max="100"></progress>
     </column>
     <if {playing()}>
-      <row gap="1" align="end">
-        style(eq)
-
-        <div>
-          style([bar, style({ box: h(4), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
-</div>
-        <div>
-          style([bar, style({ box: h(6), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
-</div>
-        <div>
-          style([bar, style({ box: h(3), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
-</div>
-        <div>
-          style([bar, style({ box: h(5), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])
-</div>
+      <row gap="1" align="end" style(eq)>
+        <div style([bar, style({ box: h(4), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
+        <div style([bar, style({ box: h(6), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
+        <div style([bar, style({ box: h(3), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
+        <div style([bar, style({ box: h(5), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
       </row>
-    {else => <row gap="1" align="center">
-        style(eq)
-
-        <div>
-          style(rest)
-</div>
-        <div>
-          style(rest)
-</div>
-        <div>
-          style(rest)
-</div>
-        <div>
-          style(rest)
-</div>
+    {else => <row gap="1" align="center" style(eq)>
+        <div style(rest)></div>
+        <div style(rest)></div>
+        <div style(rest)></div>
+        <div style(rest)></div>
       </row>}</if>
   </row>
 </card>

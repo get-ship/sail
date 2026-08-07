@@ -14,10 +14,6 @@ export default controller(() => {
 })
 </controller>
 
-<column studio-redirect design-redirect align="center" justify="center">
-  style({  box: grow(1).minH(0).h(full), paint: bg(background)  })
-
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Opening Themes…</p>
+<column studio-redirect design-redirect align="center" justify="center" style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Opening Themes…</p>
 </column>

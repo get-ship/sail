@@ -14,8 +14,6 @@
 
   const host = style({ box: minW(0) })
 </scope>
-<column gap="3" use:tabs>
-  style(host)
-
+<column gap="3" use:tabs style(host)>
   <slot></slot>
 </column>

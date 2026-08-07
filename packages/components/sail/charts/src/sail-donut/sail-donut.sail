@@ -77,19 +77,14 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
 </controller>
 <if {loading()}>
   <skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
-{else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <stack>
-    style({ box: w(fit) })
-
+{else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <stack style({ box: w(fit) })>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
       height={diameter()}
       role="img"
       aria-label={ariaLabel()}
-      aria-describedby="chart-data"
->
-      style({ box: display(block) })
-
+      aria-describedby="chart-data" style({ box: display(block) })>
       <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
       </circle>
       <for {segments() as seg} key={seg.id}>
@@ -98,16 +93,10 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
         </path>
       </for>
     </svg>
-    <center>
-      style({ paint: fg(foreground).pointerEvents(none) })
-      <span>
-        style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight) })
-        <slot></slot>
+    <center style({ paint: fg(foreground).pointerEvents(none) })>      <span style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight) })>        <slot></slot>
       </span>
 </center>
-    <column id="chart-data">
-      style({ paint: srOnly() })
-
+    <column id="chart-data" style({ paint: srOnly() })>
       <slot name="description">
         <table>
           <for {chart.ariaTable() as row} key={row[0].id}>

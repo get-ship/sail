@@ -16,16 +16,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-The language</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
   <h1>Layout</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     The web has accumulated half a dozen ways to lay things out — floats,
     positioning, flexbox, grid, and the properties that tune them. Sail
     ships <strong>one</strong> mechanism: five layout elements —
@@ -49,9 +43,7 @@ The language</p>
     (spacing-scale steps), <code>align</code> positions them on the cross
     axis, <code>justify</code> distributes them along the row:
   </p>
-  <row gap="3" align="center" justify="between">
-    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
-
+  <row gap="3" align="center" justify="between" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
     <strong>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
@@ -61,9 +53,7 @@ The language</p>
     rows <strong>wrap by default</strong>, like text does. Watch this one
     as the window narrows:
   </p>
-  <row gap="2">
-    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
-
+  <row gap="2" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
     <chip>signals</chip>
     <chip>derived</chip>
     <chip>effects</chip>
@@ -87,9 +77,7 @@ The language</p>
     and input below are <code>align="start"</code>, so they hug the left
     edge instead of stretching:
   </p>
-  <column gap="2" align="start">
-    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
-
+  <column gap="2" align="start" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
     <label>Email</label>
     <input type="email" placeholder="ada@example.com" />
     <button>Subscribe</button>
@@ -103,15 +91,9 @@ The language</p>
     needed:
   </p>
   <grid cols="3" gap="3">
-    <card>
-      style({ box: pad(4) })
-<strong>One</strong></card>
-    <card>
-      style({ box: pad(4) })
-<strong>Two</strong></card>
-    <card>
-      style({ box: pad(4) })
-<strong>Three</strong></card>
+    <card style({ box: pad(4) })><strong>One</strong></card>
+    <card style({ box: pad(4) })><strong>Two</strong></card>
+    <card style({ box: pad(4) })><strong>Three</strong></card>
   </grid>
   <code-block code={code.grid}></code-block>
   <p>
@@ -128,15 +110,9 @@ The language</p>
     sideways:
   </p>
   <grid cols="4" gap="3">
-    <card col-span="2">
-      style({ box: pad(3) })
-wide — spans 2</card>
-    <card>
-      style({ box: pad(3) })
-one</card>
-    <card>
-      style({ box: pad(3) })
-two</card>
+    <card col-span="2" style({ box: pad(3) })>wide — spans 2</card>
+    <card style({ box: pad(3) })>one</card>
+    <card style({ box: pad(3) })>two</card>
   </grid>
   <code-block code={code.spans}></code-block>
 
@@ -146,16 +122,10 @@ two</card>
     overlay cases: a badge on an avatar, a caption on an image, a dot on an
     icon.
   </p>
-  <row>
-    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
-
+  <row style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
     <stack align="start" justify="end">
-      <card>
-        style({ box: w(24).h(12), paint: bg(muted).radius(md) })
-</card>
-      <div>
-        style({ box: w(4).h(4), paint: radius(full).bg(primary) })
-</div>
+      <card style({ box: w(24).h(12), paint: bg(muted).radius(md) })></card>
+      <div style({ box: w(4).h(4), paint: radius(full).bg(primary) })></div>
     </stack>
   </row>
   <code-block code={code.stack}></code-block>
@@ -165,9 +135,7 @@ two</card>
     Centers its child, horizontally and vertically, in whatever space the
     element has:
   </p>
-  <center>
-    style({ box: minH(11).pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
-
+  <center style({ box: minH(11).pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
     <badge tone="primary">centered</badge>
   </center>
   <code-block code={code.center}></code-block>
@@ -178,15 +146,9 @@ two</card>
     space it was given on the <strong>box channel</strong> — legal on any
     element, not only layout keywords:
   </p>
-  <row gap="3" align="center">
-    style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })
-
-    <strong>
-      style({ box: grow(1).minW(0) })
-Ada Lovelace</strong>
-    <badge tone="success">
-      style({ box: shrink(0) })
-Active</badge>
+  <row gap="3" align="center" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+    <strong style({ box: grow(1).minW(0) })>Ada Lovelace</strong>
+    <badge tone="success" style({ box: shrink(0) })>Active</badge>
   </row>
   <code-block code={code.grow}></code-block>
   <p>
@@ -196,7 +158,7 @@ Active</badge>
     the same size tokens as other Style box setters. Bare attrs
     (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
     (<code>sail-participation-style</code>) — write
-    <code>style({ box: grow(1).minW(0) })</code> instead.
+    <code style({ box: grow(1).minW(0) })></code> instead.
   </p>
   <p>
     Layout-keyword <strong>axis</strong> sugar is separate and intentional:
@@ -208,7 +170,7 @@ Active</badge>
     badges — all as a block Style statement. Every child of a layout element
     is also born with <code>min-width: 0</code> — the browser default where an
     item refuses to shrink below its content is corrected at the language
-    level, so <code>style({ text: truncate() })</code> works the first time.
+    level, so <code style({ text: truncate() })></code> works the first time.
   </p>
 
   <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>
@@ -228,15 +190,11 @@ Active</badge>
     density and color tweaks — and is unchanged.
   </p>
 
-  <p>
-    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
     For the full surface: <a href="/sail/reference/layout">reference → Layout keywords</a>.
   </p>
 
-  <row justify="between" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/styling">← Styling</a>
     <a variant="solid" tone="primary" href="/sail/language/animation">Animation →</a>
   </row>

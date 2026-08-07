@@ -12,9 +12,7 @@
   })
 </scope>
 <nav label="Breadcrumb">
-  <ol>
-    style(list)
-
+  <ol style(list)>
     <slot></slot>
   </ol>
 </nav>

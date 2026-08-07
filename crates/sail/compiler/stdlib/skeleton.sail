@@ -18,8 +18,7 @@
   const shapeCircle = style({ box: minW(7).minH(7), paint: radius(full).aspect(square) })
 </scope>
 
-<span>
-  style([
+<span style([
   base,
   match(shape, {
     text: shapeText,
@@ -36,5 +35,4 @@
   compound({ shape: circle, size: sm }, style({ box: size(icon-size-2xl).minW(0).minH(0) })),
   compound({ shape: circle, size: md }, style({ box: size(7).minW(0).minH(0) })),
   compound({ shape: circle, size: lg }, style({ box: size(12).minW(0).minH(0) })),
-])
-</span>
+])></span>

@@ -47,12 +47,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference · tier B</p>
     <h1>Author runtime — {totalCount()} exports</h1>
     <p token="doc-lead">
@@ -66,23 +62,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h2>Controller — ambient vocabulary (tier A)</h2>
-    <p>
-      style({ box: maxW(breakpoint-tablet) })
-
+    <p style({ box: maxW(breakpoint-tablet) })>
       A <code>&lt;controller&gt;</code> block may reference these without
       importing them — the compiler injects the import for exactly the
       idents referenced. Same symbols are also available as tier B imports.
     </p>
     <grid cols="3" gap="2">
       <for {controllerRows() as c} key={c.name}>
-        <card padding="sm">
-          style({ box: minW(0) })
-
+        <card padding="sm" style({ box: minW(0) })>
           <column gap="1">
             <code>{c.name}</code>
-            <small>
-              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-{c.doc}</small>
+            <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{c.doc}</small>
           </column>
         </card>
       </for>
@@ -92,28 +82,16 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <for {groups() as group} key={group.id}>
     <column gap="3">
       <h2>{group.id} — {group.count}</h2>
-      <p>
-        style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })
-{group.summary}</p>
+      <p style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })>{group.summary}</p>
       <column gap="1">
         <for {group.exports as e} key={e.name}>
-          <row gap="3" align="start">
-            style({ box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) })
-
-            <code>
-              style({ box: minW(32) })
-{e.name}</code>
+          <row gap="3" align="start" style({ box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) })>
+            <code style({ box: minW(32) })>{e.name}</code>
             <badge size="sm">{e.kind}</badge>
-            <column gap="1">
-              style({ box: minW(0) })
-
-              <code>
-                style({ paint: fg(muted-foreground), text: fontFamily(mono) })
-{e.signature}</code>
+            <column gap="1" style({ box: minW(0) })>
+              <code style({ paint: fg(muted-foreground), text: fontFamily(mono) })>{e.signature}</code>
               <if {e.doc}>
-                <small>
-                  style({ paint: fg(muted-foreground) })
-{e.doc}</small>
+                <small style({ paint: fg(muted-foreground) })>{e.doc}</small>
               </if>
             </column>
           </row>

@@ -58,12 +58,8 @@ export default controller(() => {
 
   <match {inbox()}>
     {loading =>
-      <row gap="2" align="center">
-        style(loadingRow)
-        <spinner size="sm"></spinner>
-        <small>
-          style(muted)
-          loading messages…
+      <row gap="2" align="center" style(loadingRow)>        <spinner size="sm"></spinner>
+        <small style(muted)>          loading messages…
         </small>
       </row>
     }
@@ -77,19 +73,11 @@ export default controller(() => {
             messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })
 
             <if {!m.read}>
-              <span>
-                style(unreadDot)
-              </span>
+              <span style(unreadDot)>              </span>
             </if>
-            <column gap="0">
-              style({ box: grow(1) })
-              <strong>
-                style(from)
-                {m.from}
+            <column gap="0" style({ box: grow(1) })>              <strong style(from)>                {m.from}
               </strong>
-              <small>
-                style(muted)
-                {m.subject}
+              <small style(muted)>                {m.subject}
               </small>
             </column>
             <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>

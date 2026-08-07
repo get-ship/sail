@@ -29,10 +29,7 @@
   align="stretch"
   justify="center"
   gap="3"
-  use:variantLive
-
->
-  style([
+  use:variantLive style([
     base,
     match(size, {
       md: sizeMd,
@@ -48,10 +45,8 @@
     when({
       forced-colors: style({ paint: border(CanvasText) }),
     }),
-  ])
-
-  <row inline nowrap align="center" justify="center" hidden="true">
-    style([ style({ box: shrink(1) }), 
+  ])>
+  <row inline nowrap align="center" justify="center" hidden="true" style([ style({ box: shrink(1) }), 
       icon,
       match(tone, {
         default: style({ paint: bg(empty-state).fg(empty-state-foreground) }),
@@ -67,42 +62,33 @@
         empty: style({ box: display(none) }),
         forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),
       }),
-    ])
-
+    ])>
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1">
-    style([ style(copy), style({ box: grow(1).minW(0) }) ])
-
-    <div>
-      style([
+  <column align="stretch" gap="1" style([ style(copy), style({ box: grow(1).minW(0) }) ])>
+    <div style([
       title,
       when({
         empty: style({ box: display(none) }),
       }),
-    ])
-
+    ])>
       <slot name="title"></slot>
     </div>
-    <div>
-      style([
+    <div style([
       desc,
       when({
         empty: style({ box: display(none) }),
       }),
-    ])
-
+    ])>
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2">
-    style([
+  <row align="center" justify="center" gap="2" style([
     actions,
     when({
       empty: style({ box: display(none) }),
     }),
-  ])
-
+  ])>
     <slot name="action"></slot>
   </row>
 </column>

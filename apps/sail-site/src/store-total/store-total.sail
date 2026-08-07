@@ -13,11 +13,7 @@ export default controller(() => {
 })
 </controller>
 
-<p>
-  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+<p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
   …and this line is a third component reading the same store:
-  <strong>
-    style({ paint: fg(foreground) })
-{clicks()} clicks</strong> total.
+  <strong style({ paint: fg(foreground) })>{clicks()} clicks</strong> total.
 </p>

@@ -197,9 +197,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="4">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
+<column gap="4" style({ box: maxW(breakpoint-tablet).mx(auto) })>
   <if {showViewer()}>
     <breadcrumb>
       <a href="/components">components</a>
@@ -227,54 +225,36 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
               <column gap="3" align="center">
-                <button variant={variant()} tone="primary" size="lg" on:click={press}>
-                  style({ animate: press({ scale: 'press' }) })
-
+                <button variant={variant()} tone="primary" size="lg" on:click={press} style({ animate: press({ scale: 'press' }) })>
                   Save changes
                 </button>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-press fired ×{presses()}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>press fired ×{presses()}</p>
               </column>
             </if>
             <if {stage.input()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <input placeholder="Ada Lovelace" bind:value={name} />
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-hello, {name() || 'stranger'}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>hello, {name() || 'stranger'}</p>
               </column>
             </if>
             <if {stage.textarea()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-{bio().length} characters</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{bio().length} characters</p>
               </column>
             </if>
             <if {stage.select()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <select bind:value={team}>
                   <option>Engineering</option>
                   <option>Design</option>
                   <option>Research</option>
                 </select>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-team: {team()}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>team: {team()}</p>
               </column>
             </if>
             <if {stage.combobox()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <combobox placeholder="Pick a framework — type to filter" on-select={pickFw}>
                   <option value="sail">Sail</option>
                   <option value="react">React</option>
@@ -283,17 +263,13 @@ team: {team()}</p>
                   <option value="vue">Vue</option>
                   <option value="qwik">Qwik</option>
                 </combobox>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-picked: {fw() || 'nothing yet'}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>picked: {fw() || 'nothing yet'}</p>
               </column>
             </if>
             <if {stage.checkbox()}>
               <column gap="3" align="center">
                 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
               </column>
             </if>
             <if {stage.radioGroup()}>
@@ -305,20 +281,14 @@ picked: {fw() || 'nothing yet'}</p>
             <if {stage.switchToggle()}>
               <row gap="3" align="center">
                 <switch bind:checked={notify} size={variant()} tone="primary"></switch>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-{notify() ? 'on' : 'off'} · size {variant()}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{notify() ? 'on' : 'off'} · size {variant()}</p>
               </row>
             </if>
             <if {stage.slider()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
                 <progress value={load()} max="100"></progress>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-one signal, two components — {load()}%</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>one signal, two components — {load()}%</p>
               </column>
             </if>
             <if {stage.toggleGroup()}>
@@ -329,9 +299,7 @@ one signal, two components — {load()}%</p>
               </toggle-group>
             </if>
             <if {stage.field()}>
-              <column gap="4">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="4" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <field>
                   <label for="stage-name">Name</label>
                   <input id="stage-name" placeholder="Ada Lovelace" />
@@ -343,17 +311,13 @@ one signal, two components — {load()}%</p>
               </column>
             </if>
             <if {stage.label()}>
-              <column gap="1">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="1" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <label for="stage-email" required size={variant()}>Email</label>
                 <input id="stage-email" placeholder="ada@lovelace.dev" />
               </column>
             </if>
             <if {stage.fieldset()}>
-              <fieldset>
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <fieldset style({ box: w(full).maxW(panel-max-w-sm) })>
                 <legend>Account details</legend>
                 <column gap="2">
                   <input placeholder="Name" />
@@ -362,55 +326,39 @@ one signal, two components — {load()}%</p>
               </fieldset>
             </if>
             <if {stage.dropzone()}>
-              <card dropzone>
-                style({ box: pad(6).w(full).maxW(panel-max-w-sm) })
-Drop a file, or click to browse</card>
+              <card dropzone style({ box: pad(6).w(full).maxW(panel-max-w-sm) })>Drop a file, or click to browse</card>
             </if>
             <if {stage.themePicker()}>
               <column gap="4" align="center">
                 <column gap="1" align="center">
-                  <span>
-                    style({ paint: fg(muted-foreground), text: fontSize(xs) })
-Full catalog</span>
+                  <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Full catalog</span>
                   <theme-picker></theme-picker>
                 </column>
                 <column gap="1" align="center">
-                  <span>
-                    style({ paint: fg(muted-foreground), text: fontSize(xs) })
-Mode only</span>
+                  <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Mode only</span>
                   <theme-picker mode-only></theme-picker>
                 </column>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-themes this whole site, no reload</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>themes this whole site, no reload</p>
               </column>
             </if>
 
             <!-- ══ Feedback ════════════════════════════════════════════ -->
             <if {stage.alert()}>
-              <alert tone={variant()}>
-                style({ box: w(full) })
-
+              <alert tone={variant()} style({ box: w(full) })>
                 <strong>Heads up.</strong> The tone chips above restyle me — colour and icon both.
               </alert>
             </if>
             <if {stage.progressBar()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-one signal drives both — {load()}%</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>one signal drives both — {load()}%</p>
               </column>
             </if>
             <if {stage.meter()}>
               <!-- Fixed width: meter has no intrinsic width, and a percentage
                    can’t resolve inside the content-sized <center> stage. -->
-              <column gap="2">
-                style({ box: w(panel-max-w-sm) })
-
+              <column gap="2" style({ box: w(panel-max-w-sm) })>
                 <meter value="0.3"></meter>
                 <meter value="0.7"></meter>
                 <meter value="0.95"></meter>
@@ -424,46 +372,30 @@ one signal drives both — {load()}%</p>
               </row>
             </if>
             <if {stage.skeleton()}>
-              <row gap="3" align="center">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
-                <skeleton shape={variant()}>
-                  style({ box: w(7).h(7) })
-</skeleton>
-                <column gap="2">
-                  style({ box: grow(1) })
-
+              <row gap="3" align="center" style({ box: w(full).maxW(panel-max-w-sm) })>
+                <skeleton shape={variant()} style({ box: w(7).h(7) })></skeleton>
+                <column gap="2" style({ box: grow(1) })>
                   <skeleton shape={variant()} size="sm"></skeleton>
                   <skeleton shape={variant()} size="sm"></skeleton>
                 </column>
               </row>
             </if>
             <if {stage.emptyState()}>
-              <empty-state variant={variant()}>
-                style({ box: w(full) })
-
+              <empty-state variant={variant()} style({ box: w(full) })>
                 <strong slot="title">No results</strong>
                 Try a different search, or clear a filter.
               </empty-state>
             </if>
             <if {stage.errorState()}>
-              <error-state variant={variant()} code="ERR_TIMEOUT">
-                style({ box: w(full) })
-
+              <error-state variant={variant()} code="ERR_TIMEOUT" style({ box: w(full) })>
                 The request timed out. Retry, or check the connection.
               </error-state>
             </if>
             <if {stage.errorBoundary()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <error-boundary message="This panel could not load.">
-                  <card variant="outline">
-                    style({ box: pad(4) })
-
-                    <p>
-                      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+                  <card variant="outline" style({ box: pad(4) })>
+                    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
                       A healthy boundary is invisible — this card is the wrapped
                       subtree. A render throw inside would swap in the fallback.
                     </p>
@@ -472,9 +404,7 @@ one signal drives both — {load()}%</p>
               </column>
             </if>
             <if {stage.toast()}>
-              <toast tone={variant()} duration="0">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <toast tone={variant()} duration="0" style({ box: w(full).maxW(panel-max-w-sm) })>
                 <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
                 <button toast-close variant="ghost" size="sm">×</button>
               </toast>
@@ -501,27 +431,19 @@ one signal drives both — {load()}%</p>
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
                   </if>
                 </row>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-× or Backspace fires sail-remove</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>× or Backspace fires sail-remove</p>
               </column>
             </if>
             <if {stage.statusDot()}>
               <row gap="2" align="center">
                 <status-dot tone={variant()}></status-dot>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-the tone is the message</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>the tone is the message</p>
               </row>
             </if>
             <if {stage.card()}>
-              <card variant={variant()} interactive>
-                style({ box: pad(5) })
-
+              <card variant={variant()} interactive style({ box: pad(5) })>
                 <strong>A surface</strong>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-the hover lift is one attribute</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>the hover lift is one attribute</p>
               </card>
             </if>
             <if {stage.avatar()}>
@@ -545,16 +467,10 @@ the hover lift is one attribute</p>
               </row>
             </if>
             <if {stage.separator()}>
-              <column gap="2">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-above</p>
+              <column gap="2" style({ box: w(full).maxW(panel-max-w-sm) })>
+                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>above</p>
                 <separator variant={variant()}></separator>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-below — and vertical:</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>below — and vertical:</p>
                 <row gap="2" align="center">
                   <span>A</span>
                   <separator orientation="vertical" variant={variant()}></separator>
@@ -563,23 +479,17 @@ below — and vertical:</p>
               </column>
             </if>
             <if {stage.accordion()}>
-              <accordion>
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
+              <accordion style({ box: w(full).maxW(panel-max-w-sm) })>
                 <strong slot="trigger">Show the details</strong>
                 <p>Animated open and close — and it remembers its state.</p>
               </accordion>
             </if>
             <if {stage.kbd()}>
-              <p>
-                style({ paint: fg(muted-foreground), text: fontSize(sm) })
-                Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
+              <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>                Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
               </p>
             </if>
             <if {stage.prose()}>
-              <column gap="2">
-                style({ box: w(full).maxW(panel-max-w-md) })
-
+              <column gap="2" style({ box: w(full).maxW(panel-max-w-md) })>
                 <h3>Plain tags, already styled</h3>
                 <p>Body copy sets the baseline — <strong>strong</strong>, <em>emphasis</em>,
                    <code>inline_code()</code> and <mark>a highlight</mark> need no classes.</p>
@@ -598,31 +508,21 @@ below — and vertical:</p>
               <column gap="3" align="center">
                 <button variant="ghost" popovertarget="stage-hc">@ada</button>
                 <hover-card id="stage-hc">
-                  <card>
-                    style({ box: pad(4) })
-
+                  <card style({ box: pad(4) })>
                     <strong>Ada Lovelace</strong>
-                    <p>
-                      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-wrote the first program.</p>
+                    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>wrote the first program.</p>
                   </card>
                 </hover-card>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-focus-triggerable, not just mouse-only</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>focus-triggerable, not just mouse-only</p>
               </column>
             </if>
             <if {stage.popover()}>
               <column gap="3" align="center">
                 <button popovertarget="stage-pop">Open popover</button>
                 <popover id="stage-pop">
-                  <card>
-                    style({ box: pad(4) })
-Rides the platform top layer — Escape or click outside closes it.</card>
+                  <card style({ box: pad(4) })>Rides the platform top layer — Escape or click outside closes it.</card>
                 </popover>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-top layer · light dismiss · zero z-index</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>top layer · light dismiss · zero z-index</p>
               </column>
             </if>
             <if {stage.dropdown()}>
@@ -633,21 +533,13 @@ top layer · light dismiss · zero z-index</p>
                   <menu-item>Duplicate</menu-item>
                   <menu-item tone="destructive">Delete</menu-item>
                 </dropdown>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-arrows rove · type-ahead · Escape closes</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>arrows rove · type-ahead · Escape closes</p>
               </column>
             </if>
             <if {stage.contextMenu()}>
-              <column gap="3" align="center">
-                style({ box: w(full).maxW(panel-max-w-sm) })
-
-                <card id="stage-ctx" variant="outline">
-                  style({ box: pad(6).w(full) })
-
-                  <center><p>
-                    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-right-click target</p></center>
+              <column gap="3" align="center" style({ box: w(full).maxW(panel-max-w-sm) })>
+                <card id="stage-ctx" variant="outline" style({ box: pad(6).w(full) })>
+                  <center><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>right-click target</p></center>
                 </card>
                 <context-menu for="stage-ctx">
                   <menu-item value="cut">Cut</menu-item>
@@ -658,14 +550,10 @@ right-click target</p></center>
             </if>
             <if {stage.dialog()}>
               <column gap="3" align="center">
-                <button command="show-modal" commandfor="stage-dialog">
-                  style({ animate: press({ scale: 'press' }) })
-
+                <button command="show-modal" commandfor="stage-dialog" style({ animate: press({ scale: 'press' }) })>
                   Open the {variant()}
                 </button>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-Escape and the backdrop close it — that’s the platform</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>Escape and the backdrop close it — that’s the platform</p>
                 <dialog id="stage-dialog" side={sheetSide()} size="md">
                   <header>Delete project</header>
                   <section>
@@ -681,23 +569,15 @@ Escape and the backdrop close it — that’s the platform</p>
 
             <!-- ══ Navigation ══════════════════════════════════════════ -->
             <if {stage.tabs()}>
-              <tabs tone="primary">
-                style({ box: w(full) })
-
+              <tabs tone="primary" style({ box: w(full) })>
                 <tab-list variant={variant()}>
                   <tab>Overview</tab>
                   <tab>Activity</tab>
                   <tab>Settings</tab>
                 </tab-list>
-                <tab-panel><p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Arrows rove, Home and End jump — wired for you.</p></tab-panel>
-                <tab-panel><p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-The activity feed panel.</p></tab-panel>
-                <tab-panel><p>
-                  style({ paint: fg(muted-foreground), text: fontSize(sm) })
-The settings panel.</p></tab-panel>
+                <tab-panel><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Arrows rove, Home and End jump — wired for you.</p></tab-panel>
+                <tab-panel><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>The activity feed panel.</p></tab-panel>
+                <tab-panel><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>The settings panel.</p></tab-panel>
               </tabs>
             </if>
             <if {stage.breadcrumb()}>
@@ -715,15 +595,11 @@ The settings panel.</p></tab-panel>
                   <page value="3">3</page>
                   <page value="4">4</page>
                 </pagination>
-                <p>
-                  style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-on page {pageNo()}</p>
+                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>on page {pageNo()}</p>
               </column>
             </if>
             <if {stage.navbar()}>
-              <navbar bordered>
-                style({ box: w(full) })
-
+              <navbar bordered style({ box: w(full) })>
                 <strong slot="brand">SHIP</strong>
                 <a href="/components">Docs</a>
                 <a href="/components">Components</a>
@@ -733,9 +609,7 @@ on page {pageNo()}</p>
 
             <!-- ══ Data ════════════════════════════════════════════════ -->
             <if {stage.table()}>
-              <table>
-                style({ box: w(full) })
-
+              <table style({ box: w(full) })>
                 <thead>
                   <tr><th>Name</th><th>Team</th><th>Status</th></tr>
                 </thead>
@@ -753,37 +627,23 @@ on page {pageNo()}</p>
 
             <!-- ══ Layout ══════════════════════════════════════════════ -->
             <if {stage.layout()}>
-              <column gap="3">
-                style({ box: w(full).maxW(panel-max-w-md) })
-
+              <column gap="3" style({ box: w(full).maxW(panel-max-w-md) })>
                 <row gap="2" align="center" justify="between">
                   <strong>row — the x axis</strong>
                   <badge tone="primary">end</badge>
                 </row>
                 <grid cols="3" gap="2">
-                  <card>
-                    style({ box: pad(3) })
-<center>1</center></card>
-                  <card>
-                    style({ box: pad(3) })
-<center>2</center></card>
-                  <card>
-                    style({ box: pad(3) })
-<center>3</center></card>
+                  <card style({ box: pad(3) })><center>1</center></card>
+                  <card style({ box: pad(3) })><center>2</center></card>
+                  <card style({ box: pad(3) })><center>3</center></card>
                 </grid>
-                <center>
-                  style({ box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) })
-
-                  <p>
-                    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-center — both axes at once</p>
+                <center style({ box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) })>
+                  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>center — both axes at once</p>
                 </center>
               </column>
             </if>
             <if {stage.scrollArea()}>
-              <scroll-area>
-                style({ box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })
-
+              <scroll-area style({ box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
                 <p>Constrain it, and the overflow scrolls behind thin, themed scrollbars.</p>
                 <p>Line two.</p>
                 <p>Line three.</p>
@@ -797,12 +657,8 @@ center — both axes at once</p>
               </scroll-area>
             </if>
             <if {stage.ticker()}>
-              <ticker duration="normal">
-                style({ box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) })
-
-                <p>
-                  style({ box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })
-
+              <ticker duration="normal" style({ box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) })>
+                <p style({ box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>
                   tokens · signals · a11y · hot reload · forms ·&nbsp;
                 </p>
               </ticker>
@@ -845,12 +701,8 @@ center — both axes at once</p>
               </column>
             </if>
             <if {stage.sailMediaImage()}>
-              <column gap="3" align="center" tile-stage="sail-pack-media-image">
-                style({ box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) })
-
-                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false}>
-                  style({ box: w(full).h(full) })
-</sail-media-image>
+              <column gap="3" align="center" tile-stage="sail-pack-media-image" style({ box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) })>
+                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} style({ box: w(full).h(full) })></sail-media-image>
               </column>
             </if>
             <if {stage.sailMediaAv()}>
@@ -869,9 +721,7 @@ center — both axes at once</p>
               </column>
             </if>
             <if {stage.sailMessage()}>
-              <column gap="3" tile-stage="sail-pack-message">
-                style({ box: w(full).maxW(panel-max-w-md) })
-
+              <column gap="3" tile-stage="sail-pack-message" style({ box: w(full).maxW(panel-max-w-md) })>
                 <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
                 <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
               </column>
@@ -939,9 +789,7 @@ center — both axes at once</p>
 
       </column>
       <if {slotCopy}>
-        <p slot="stage">
-          style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-{slotCopy}</p>
+        <p slot="stage" style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{slotCopy}</p>
       </if>
     </sail-component-viewer>
 
@@ -953,9 +801,7 @@ center — both axes at once</p>
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
-    <empty-state>
-      style({ animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })
-
+    <empty-state style({ animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })>
       <strong slot="title">Nothing named “{tag()}” here</strong>
       Every element on the L1 surface has a detail page. Pack components
       (the 6 un-gated packs) render here too — this looks like a typo.

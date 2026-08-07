@@ -118,12 +118,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference</p>
     <h1>The language surface</h1>
     <p token="doc-lead">
@@ -142,22 +138,16 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <grid cols="3" gap="3">
     <for {sections() as s} key={s.href}>
       <a href={s.href}>
-        <card padding="md">
-          style({ box: minW(0).h(full) })
-
+        <card padding="md" style({ box: minW(0).h(full) })>
           <column gap="2">
             <row justify="between" align="center">
               <h3>{s.title}</h3>
               <row gap="2" align="center">
                 <badge size="sm">tier {s.tier}</badge>
-                <small>
-                  style({ paint: fg(muted-foreground) })
-{s.count}</small>
+                <small style({ paint: fg(muted-foreground) })>{s.count}</small>
               </row>
             </row>
-            <small>
-              style({ paint: fg(muted-foreground) })
-{s.description}</small>
+            <small style({ paint: fg(muted-foreground) })>{s.description}</small>
           </column>
         </card>
       </a>

@@ -200,37 +200,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button slot="action" type="button" data-action="clear-filters">Clear filters</button>
     </empty-state>
   </slot>
-</div>}{else => <div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  style({ box: w(full).h(full).minH(0).overflow(hidden), paint: fg(foreground) })
-  <span>
-    style({ box: display(contents), text: fontFamily(body).fontSize(density) })
-    <!-- Host fills parent (h/minH + overflow hidden); display(contents) text wrap
+</div>}{else => <div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null} style({ box: w(full).h(full).minH(0).overflow(hidden), paint: fg(foreground) })>  <span style({ box: display(contents), text: fontFamily(body).fontSize(density) })>    <!-- Host fills parent (h/minH + overflow hidden); display(contents) text wrap
        does not generate a box so scroll child resolves % height on the host.
        Flow list: overflow scrolls. No absolute virtualizer (collapse reflows). -->
-  <div>
-    style({ box: w(full).h(full).minH(0).overflowY(auto) })
-
+  <div style({ box: w(full).h(full).minH(0).overflowY(auto) })>
     <for {flowItems() as w} key={w.key}>
-      <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent}>
-        style({ box: w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)), paint: group().radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg) }).when(busy, { paint: fg(muted-foreground).cursor(default) }).when(focus, { paint: outline(ring) })
-        <span>
-          style({ box: display(contents) }).when(selected, { text: fontWeight(medium) }).when(busy, { text: italic(true) })
-
+      <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent} style({ box: w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)), paint: group().radius(sm).cursor(pointer).fg(foreground) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(selected-bg) }).when(busy, { paint: fg(muted-foreground).cursor(default) }).when(focus, { paint: outline(ring) })>        <span style({ box: display(contents) }).when(selected, { text: fontWeight(medium) }).when(busy, { text: italic(true) })>
         <!-- Chevron is paint only (aria-expanded / data-expanded). Expand is the row. -->
         <if {w.canExpand}>
-          <row data-tree-caret aria-hidden="true" align="center" justify="center">
-            style({ box: w(8).h(8).minW(8), paint: fg(muted-foreground) }).when(groupExpanded, { paint: rotate(90) })
-
+          <row data-tree-caret aria-hidden="true" align="center" justify="center" style({ box: w(8).h(8).minW(8), paint: fg(muted-foreground) }).when(groupExpanded, { paint: rotate(90) })>
             <icon name="chevron-right" size="sm"></icon>
           </row>
-        {else => <span aria-hidden="true">
-            style({ box: w(density-icon).minW(density-icon) })
-</span>}</if>
+        {else => <span aria-hidden="true" style({ box: w(density-icon).minW(density-icon) })></span>}</if>
 
         <if {selectable() === 'multi'}>
-          <span>
-            style(style)
-
+          <span style(style)>
             <input
               type="checkbox"
               size="sm"
@@ -241,28 +225,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </span>
         </if>
         <if {w.icon !== ''}>
-          <icon name={w.icon} size="sm">
-            style({ paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })
-</icon>
+          <icon name={w.icon} size="sm" style({ paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })></icon>
         {else => <slot name="node-icon"></slot>}</if>
-        <span>
-          style({ box: grow(1).minW(0), text: truncate() })
-{w.label}</span>
-        <span>
-          style({ box: ml(auto), text: fontSize(xs) })
-
+        <span style({ box: grow(1).minW(0), text: truncate() })>{w.label}</span>
+        <span style({ box: ml(auto), text: fontSize(xs) })>
           <if {w.trailing !== ''}>
             <if {w.trailing === '●'}>
-              <span aria-label="Unsaved">
-                style({ paint: fg(warning) })
-●</span>
-            {else => <span aria-label={`Meta ${w.trailing}`}>
-                style({ paint: fg(muted-foreground) })
-{w.trailing}</span>}</if>
+              <span aria-label="Unsaved" style({ paint: fg(warning) })>●</span>
+            {else => <span aria-label={`Meta ${w.trailing}`} style({ paint: fg(muted-foreground) })>{w.trailing}</span>}</if>
           </if>
-          <span>
-            style({ paint: fg(muted-foreground) })
-<slot name="node-trailing"></slot></span>
+          <span style({ paint: fg(muted-foreground) })><slot name="node-trailing"></slot></span>
         </span>
         </span>
       </row>

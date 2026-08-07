@@ -43,12 +43,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference · Style channels</p>
     <h1>Style — block channel attach</h1>
     <p token="doc-lead">
@@ -60,9 +56,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       below list those values. An off-list token is a compile error that names
       the same list.
     </p>
-    <p>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product
       (dead form — refuse). Responsive and state paint use
       <code>.when(tablet, &#123; … &#125;)</code> / <code>.when(hover, &#123; … &#125;)</code>
@@ -75,9 +69,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Setter value scales</h3>
-    <p>
-      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
-
+    <p style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })>
       Rows are named by historical atom heads (<code>bg</code>, <code>p</code>,
       <code>rounded</code>, …). In product form you call the Style setter:
       <code>style&#40;&#123; paint: bg(…) &#125;&#41;</code>, <code>style&#40;&#123; box: pad(…) &#125;&#41;</code>,
@@ -85,14 +77,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </p>
     <grid cols="2" gap="2">
       <for {sxRows() as a} key={a.prop}>
-        <card padding="sm">
-          style({ box: minW(0) })
-
+        <card padding="sm" style({ box: minW(0) })>
           <column gap="1">
             <code>{a.prop}</code>
-            <small>
-              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-{a.values}</small>
+            <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{a.values}</small>
           </column>
         </card>
       </for>
@@ -101,25 +89,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Not Style — use this ({refusalCount()})</h3>
-    <p>
-      style({ box: maxW(breakpoint-tablet) })
-
+    <p style({ box: maxW(breakpoint-tablet) })>
       The refused table is the other half of the vocabulary. Every entry below
       is something a Tailwind prior will reach for and Sail refuses by name;
       each names the element or attribute to use instead.
     </p>
     <grid cols="2" gap="2">
       <for {refusals() as r} key={r.atom}>
-        <card padding="sm">
-          style({ box: minW(0) })
-
+        <card padding="sm" style({ box: minW(0) })>
           <column gap="1">
-            <code>
-              style({ paint: fg(destructive) })
-{r.atom}</code>
-            <small>
-              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-→ {r.instead}</small>
+            <code style({ paint: fg(destructive) })>{r.atom}</code>
+            <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>→ {r.instead}</small>
           </column>
         </card>
       </for>
@@ -128,29 +108,19 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>when keys — interaction &amp; ARIA</h3>
-    <p>
-      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
-
+    <p style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })>
       Product form: <code>when&#40;&#123; hover: style&#40;&#123; paint: bg(muted) &#125;&#41;, current: style&#40;&#123; paint: fg(primary) &#125;&#41; &#125;&#41;</code>.
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
       <for {statePrefixes() as s} key={s.prefix}>
-        <row gap="3" align="center">
-          style({ box: padX(3).padY(1), paint: radius(md) })
-
-          <code>
-            style({ box: minW(9) })
-{s.prefix}</code>
-          <small>
-            style({ box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) })
-{s.selector}</small>
+        <row gap="3" align="center" style({ box: padX(3).padY(1), paint: radius(md) })>
+          <code style({ box: minW(9) })>{s.prefix}</code>
+          <small style({ box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) })>{s.selector}</small>
         </row>
       </for>
     </grid>
-    <p>
-      style({ box: maxW(breakpoint-tablet) })
-
+    <p style({ box: maxW(breakpoint-tablet) })>
       Ancestor propagation: mark the ancestor with <code>style&#40;&#123; paint: group() &#125;&#41;</code>,
       then <code>when&#40;&#123; groupHover: … &#125;&#41;</code> on the descendant.
     </p>
@@ -158,23 +128,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>when keys — media conditions</h3>
-    <p>
-      style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })
-
+    <p style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) })>
       Breakpoints are locked to design-token <code>breakpoint-*</code> lengths.
       Use <code>when&#40;&#123; tablet: style&#40;&#123; text: fontSize(lg) &#125;&#41;, desktop: style&#40;&#123; text: fontSize(xl) &#125;&#41; &#125;&#41;</code>.
     </p>
     <grid cols="3" gap="2">
       <for {conditionPrefixes() as c} key={c.prefix}>
-        <row gap="3" align="center">
-          style({ box: padX(3).padY(1), paint: radius(md) })
-
-          <code>
-            style({ box: minW(9) })
-{c.prefix}</code>
-          <small>
-            style({ box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) })
-{c.media}</small>
+        <row gap="3" align="center" style({ box: padX(3).padY(1), paint: radius(md) })>
+          <code style({ box: minW(9) })>{c.prefix}</code>
+          <small style({ box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) })>{c.media}</small>
         </row>
       </for>
     </grid>
@@ -182,9 +144,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Composition &amp; bind</h3>
-    <p>
-      style({ box: maxW(breakpoint-tablet) })
-
+    <p style({ box: maxW(breakpoint-tablet) })>
       <code>match&#40;prop, &#123; … &#125;&#41;</code> branches on a prop value;
       <code>compound&#40;&#123; … &#125;, style…&#41;</code> intersects prop arms;
       <code>bind(signalName)</code> reads a controller signal as a CSS custom
@@ -192,14 +152,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </p>
     <grid cols="2" gap="2">
       <for {extraForms() as f} key={f.form}>
-        <card padding="sm">
-          style({ box: minW(0) })
-
+        <card padding="sm" style({ box: minW(0) })>
           <column gap="1">
             <code>{f.form}</code>
-            <small>
-              style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })
-{f.doc}</small>
+            <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{f.doc}</small>
           </column>
         </card>
       </for>

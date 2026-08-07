@@ -17,10 +17,6 @@ export default controller(() => {
 })
 </controller>
 
-<column studio-redirect checks-redirect align="center" justify="center">
-  style({  box: grow(1).minH(0).h(full), paint: bg(background)  })
-
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Opening Checks panel…</p>
+<column studio-redirect checks-redirect align="center" justify="center" style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Opening Checks panel…</p>
 </column>

@@ -16,25 +16,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-The language</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
   <h1>Components</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     A component is one <code>.sail</code> file. This chapter builds this one —
     a departures board that runs itself: the boarding flight leaves, the next
     one starts boarding, a new city rolls onto the bottom.
   </p>
 
   <departures-board title="Departures — SFO">
-    <p slot="footer">
-      style({ box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) })
-
+    <p slot="footer" style({ box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) })>
       Gate changes are announced. Allegedly.
     </p>
   </departures-board>
@@ -155,15 +147,11 @@ The language</p>
     component</a>.
   </p>
 
-  <p>
-    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
     For the full surface: <a href="/sail/reference/scope">reference → Scope grammar</a>.
   </p>
 
-  <row justify="end" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="end" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
   </row>
 </column>

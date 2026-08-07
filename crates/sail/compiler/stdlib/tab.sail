@@ -20,8 +20,7 @@
   const enclosed = style({ paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) })
 </scope>
 
-<button type="button">
-  style([
+<button type="button" style([
   base,
   match(size, {
     md: sizeMd,
@@ -47,7 +46,6 @@
   compound({ variant: enclosed }, when({
     selected: style({ paint: fg(tab-selected-foreground).border(tab-border).bg(tab-selected-bg).translateY(px) }),
   })),
-])
-
+])>
   <slot></slot>
 </button>

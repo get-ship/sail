@@ -195,8 +195,8 @@ fn scan_attrs(
                     "bare `{attr}` is layout participation — use the box channel: {example}"
                 ),
                 suggest: Some(format!(
-                    "Move participation onto Style: attach `{example}` as a block statement \
-                     (merge into an existing `style({{ box: … }})` when present). Layout-keyword \
+                    "Move participation onto Style: attach `{example}` as a tag call on the open \
+                     tag (merge into an existing `style({{ box: … }})` when present). Layout-keyword \
                      axis attrs `gap` / `align` / `justify` stay on row|column|grid."
                 )),
             });
@@ -248,16 +248,12 @@ mod tests {
     #[test]
     fn allows_box_channel_grow_and_paint() {
         assert!(run(
-            r#"<div>
-  style({ box: grow(1).minW(0), paint: bg(card) })
-  x
+            r#"<div style({ box: grow(1).minW(0), paint: bg(card) })>  x
 </div>"#
         )
         .is_empty());
         assert!(run(
-            r#"<row gap="2" align="center">
-  style({ box: grow(1).w(full) })
-  x
+            r#"<row gap="2" align="center" style({ box: grow(1).w(full) })>  x
 </row>"#
         )
         .is_empty());

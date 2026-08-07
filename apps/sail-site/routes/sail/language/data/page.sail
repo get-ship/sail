@@ -29,16 +29,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5">
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Concepts</p>
+<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
   <h1>Data</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Data that arrives over the network is in one of three states at any
     moment: still loading, failed, or loaded. <code>query()</code> turns an
     async call into a signal that carries which state it is in, and the
@@ -49,20 +43,14 @@ Concepts</p>
   <h2>The three states, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p>
-        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Live — a 900 ms fake API</p>
-      <column gap="3">
-        style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
+      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — a 900 ms fake API</p>
+      <column gap="3" style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
         <row gap="2">
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
         <match {users()}>
-  {loading => <row gap="2" align="center"><spinner></spinner> <p>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-loading…</p></row>}
+  {loading => <row gap="2" align="center"><spinner></spinner> <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>loading…</p></row>}
   {error as err =>
           <alert tone="destructive">{err.message}</alert>}
   {ok as value => <row gap="2">
@@ -74,9 +62,7 @@ loading…</p></row>}
       </column>
     </column>
     <column>
-      <p>
-        style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-Source</p>
+      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </row>
@@ -103,9 +89,7 @@ Source</p>
   </p>
   <code-block code={code.states}></code-block>
 
-  <p>
-    style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
     The loaded value is only reachable on the <code>ok</code> arm
     (<code>as value</code>), so a template cannot render data it hasn’t
     confirmed has arrived — handling loading and error is built into the
@@ -117,15 +101,11 @@ Source</p>
     forms that validate, submit, and carry the same pending and failure
     states — is the <a href="/sail/guide/forms">Forms guide</a>.
   </p>
-  <p>
-    style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })
-
+  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
-  <row justify="between" gap="2">
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a variant="default" href="/sail/language/actions">← Actions</a>
     <a variant="solid" tone="primary" href="/sail/language/capabilities">Capabilities →</a>
   </row>

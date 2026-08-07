@@ -17,16 +17,10 @@ import { evalExample, hatchExample } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ evalExample, hatchExample }))
 </controller>
 
-<article>
-  style({ box: maxW(breakpoint-tablet).mx(auto) })
-
-  <p>
-    style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-AI</p>
+<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
+  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>AI</p>
   <h1>Scoring with sail-eval</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })
-
+  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     <code>@ship/sail-eval</code> runs an agent’s output against a behavioural
     spec and returns a structured quality score. The sub-scores tell you
     which gate (compile / scope / behaviour) the agent missed, so the next
@@ -88,9 +82,7 @@ AI</p>
     the full API surface.
   </p>
 
-  <row>
-    style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })
-
+  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
     <a href="/ai/tooling">← Tooling</a>
   </row>
 </article>

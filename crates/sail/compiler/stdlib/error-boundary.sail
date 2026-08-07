@@ -19,52 +19,36 @@
   const message = style({ paint: fg(error-boundary-message-foreground), text: leading(normal) })
   const retry = style({ box: self(start).padY(1).padX(3), paint: bg(error-boundary-retry-bg).borderWidth(1).border(border).radius(sm).fg(error-boundary-retry-foreground).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(xs).fontWeight(semibold) })
 </scope>
-<div use:catchRender>
-  style(root)
-
-  <div>
-    style([
+<div use:catchRender style(root)>
+  <div style([
     content,
     when({
       group-caught: style({ box: display(none) }),
     }),
-  ])
-<slot></slot></div>
-  <div>
-    style([
+  ])><slot></slot></div>
+  <div style([
     fallback,
     when({
       group-caught: style({ box: display(contents) }),
     }),
-  ])
-
+  ])>
     <!-- alert role stamped by use:catchRender (closed anatomy, not free author API) -->
-    <row align="start" gap="3" data-error-alert>
-      style(alert)
-
+    <row align="start" gap="3" data-error-alert style(alert)>
       <slot name="fallback">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden="true">
-          style([ style(icon), style({ box: shrink(0) }) ])
-
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden="true" style([ style(icon), style({ box: shrink(0) }) ])>
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
           <path d="M12 9v4"></path>
           <path d="M12 17h.01"></path>
         </svg>
-        <column gap="1">
-          style(body)
-
-          <div>
-            style(message)
-Something went wrong</div>
-          <button type="button" anatomy>
-            style([
+        <column gap="1" style(body)>
+          <div style(message)>Something went wrong</div>
+          <button type="button" anatomy style([
             retry,
             when({
               hover: style({ paint: bg(muted) }),
               focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
             }),
-          ])
-Retry</button>
+          ])>Retry</button>
         </column>
       </slot>
     </row>

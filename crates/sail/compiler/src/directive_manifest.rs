@@ -52,8 +52,8 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too",
     },
     DirectiveEntry {
-        syntax: "style.… / style([…]) / style({…}) block statement",
-        summary: "Style product paint on the element body — not an HTML attribute",
+        syntax: "style({…}) / style(name) / style([…]) tag call",
+        summary: "Style product paint on the open tag — style({…}).when(…) call form, not an HTML style= attribute",
     },
     DirectiveEntry {
         syntax: "(--name) inside Style values",
@@ -769,15 +769,15 @@ pub struct ForeignIdiomEntry {
 pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
     ForeignIdiomEntry {
         syntax: "class= / class:<name>",
-        instead: "styling is a block-level style(…) / style.… statement on the element",
+        instead: "styling is a tag-position style({…}) / style(name) / style([…]) call on the element",
     },
     ForeignIdiomEntry {
         syntax: "style= / style:<prop>",
-        instead: "runtime geometry is owned by named, typed actions; paint is a block-level style(…) statement, not an HTML style attribute",
+        instead: "runtime geometry is owned by named, typed actions; paint is a tag-position style({…}) call, not an HTML style attribute",
     },
     ForeignIdiomEntry {
         syntax: "part=\"…\"",
-        instead: "style with a block-level style(…) statement on the element itself — light DOM has no shadow parts",
+        instead: "style with a tag-position style({…}) call on the element itself — light DOM has no shadow parts",
     },
     ForeignIdiomEntry {
         syntax: "<div> / <span> for layout structure",
@@ -995,8 +995,8 @@ mod tests {
         );
         let style_row = DIRECTIVES
             .iter()
-            .find(|d| d.syntax.starts_with("style."))
-            .expect("style block DIRECTIVES row");
+            .find(|d| d.syntax.starts_with("style("))
+            .expect("style tag DIRECTIVES row");
         assert!(!style_row.syntax.contains("sx="), "{}", style_row.syntax);
     }
 }

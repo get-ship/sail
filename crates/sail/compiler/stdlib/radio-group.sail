@@ -27,6 +27,4 @@
   const host = style({ text: fontFamily(body) })
 </scope>
 
-<column gap="2" use:radioGroup>
-  style(host)
-<slot></slot></column>
+<column gap="2" use:radioGroup style(host)><slot></slot></column>

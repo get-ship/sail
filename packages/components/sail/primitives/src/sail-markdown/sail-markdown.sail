@@ -119,11 +119,7 @@ export default controller((ctx: Scope) => {
 
 </controller>
 <prose>
-  <div use:paintMarkdown>
-    style({ box: display(block) })
-    <span>
-      style({ box: display(contents), text: fontSize(base) })
-      
+  <div use:paintMarkdown style({ box: display(block) })>    <span style({ box: display(contents), text: fontSize(base) })>      
     </span>
 </div>
 </prose>

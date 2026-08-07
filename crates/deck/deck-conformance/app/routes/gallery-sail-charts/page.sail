@@ -1,30 +1,16 @@
-<column gap="8">
-  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
-
-  <header>
-    style({ box: padB(4), paint: borderBWidth(1).borderB(border) })
-
-    <h1>
-      style({ box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
-sail/charts</h1>
-    <p>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Pack <strong>sail/charts</strong> — SVG-rendered chart primitives. Each card shows one component with representative prop/variant combinations.</p>
+<column gap="8" style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })>
+  <header style({ box: padB(4), paint: borderBWidth(1).borderB(border) })>
+    <h1 style({ box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })>sail/charts</h1>
+    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Pack <strong>sail/charts</strong> — SVG-rendered chart primitives. Each card shows one component with representative prop/variant combinations.</p>
   </header>
 
   <!-- ── sail-area-chart ─────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-area-chart</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-area-chart</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-single series, no grid</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>single series, no grid</h3>
         <sail-area-chart
           series='[{"name":"Revenue","data":[12,28,18,42,35,60,55]}]'
           labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
@@ -32,31 +18,21 @@ single series, no grid</h3>
         </sail-area-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-two series + grid + points</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>two series + grid + points</h3>
         <sail-area-chart
           series='[{"name":"Downloads","data":[5,14,9,22,18,30,27],"tone":"primary"},{"name":"Uploads","data":[2,6,4,10,8,14,12],"tone":"success"}]'
           labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
           grid
           points
           label="downloads vs uploads area chart">
-          <span slot="legend-entry">
-            style({ paint: fg(primary) })
-Downloads</span>
+          <span slot="legend-entry" style({ paint: fg(primary) })>Downloads</span>
           <span>Uploads</span>
         </sail-area-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-area-chart loading label="loading area chart"></sail-area-chart>
       </column>
     </row>
@@ -64,17 +40,11 @@ loading state</h3>
 
   <!-- ── sail-line-chart ─────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-line-chart</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-line-chart</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-single series</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>single series</h3>
         <sail-line-chart
           series='[{"name":"Latency","data":[80,72,95,60,88,74,65]}]'
           labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
@@ -82,12 +52,8 @@ single series</h3>
         </sail-line-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-two series + grid + points</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>two series + grid + points</h3>
         <sail-line-chart
           series='[{"name":"p50","data":[40,38,45,36,42,39,37],"tone":"primary"},{"name":"p99","data":[120,115,140,105,130,118,110],"tone":"destructive"}]'
           labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
@@ -97,12 +63,8 @@ two series + grid + points</h3>
         </sail-line-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-line-chart loading label="loading line chart"></sail-line-chart>
       </column>
     </row>
@@ -110,17 +72,11 @@ loading state</h3>
 
   <!-- ── sail-bar-chart ──────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-bar-chart</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-bar-chart</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-vertical · tone=primary</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>vertical · tone=primary</h3>
         <sail-bar-chart
           data="12,28,18,42,35,60,55"
           labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
@@ -130,12 +86,8 @@ vertical · tone=primary</h3>
         </sail-bar-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-vertical · tone=success</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>vertical · tone=success</h3>
         <sail-bar-chart
           data="5,14,9,22,18,30,27"
           labels="Mon,Tue,Wed,Thu,Fri,Sat,Sun"
@@ -145,12 +97,8 @@ vertical · tone=success</h3>
         </sail-bar-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-horizontal · tone=warning</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>horizontal · tone=warning</h3>
         <sail-bar-chart
           data="30,55,40,70,25"
           labels="Alpha,Beta,Gamma,Delta,Epsilon"
@@ -160,12 +108,8 @@ horizontal · tone=warning</h3>
         </sail-bar-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-horizontal · tone=destructive</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>horizontal · tone=destructive</h3>
         <sail-bar-chart
           data="8,16,12,20,5"
           labels="Q1,Q2,Q3,Q4,Q5"
@@ -175,12 +119,8 @@ horizontal · tone=destructive</h3>
         </sail-bar-chart>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-bar-chart loading label="loading bar chart"></sail-bar-chart>
       </column>
     </row>
@@ -188,17 +128,11 @@ loading state</h3>
 
   <!-- ── sail-donut ──────────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-donut</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-donut</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-default size, center label</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>default size, center label</h3>
         <sail-donut
           data='[{"label":"TypeScript","value":58,"tone":"primary"},{"label":"Rust","value":30,"tone":"success"},{"label":"Other","value":12,"tone":"muted"}]'
           label="language breakdown donut">
@@ -206,46 +140,30 @@ default size, center label</h3>
         </sail-donut>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-larger size, thicker ring</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>larger size, thicker ring</h3>
         <sail-donut
           data='[{"label":"CPU","value":42,"tone":"destructive"},{"label":"Memory","value":35,"tone":"warning"},{"label":"Free","value":23,"tone":"muted"}]'
           size="160"
           thickness="24"
           label="resource usage donut">
-          <span>
-            style({ text: fontSize(sm) })
-Resources</span>
+          <span style({ text: fontSize(sm) })>Resources</span>
         </sail-donut>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-compact, thin ring</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>compact, thin ring</h3>
         <sail-donut
           data='[{"label":"Done","value":72,"tone":"success"},{"label":"Remaining","value":28,"tone":"muted"}]'
           size="80"
           thickness="8"
           label="progress donut">
-          <span>
-            style({ text: fontSize(xs) })
-72%</span>
+          <span style({ text: fontSize(xs) })>72%</span>
         </sail-donut>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-donut loading label="loading donut"></sail-donut>
       </column>
     </row>
@@ -253,17 +171,11 @@ loading state</h3>
 
   <!-- ── sail-gauge ──────────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-gauge</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-gauge</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=primary, 65%</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=primary, 65%</h3>
         <sail-gauge
           value="65"
           min="0"
@@ -274,12 +186,8 @@ tone=primary, 65%</h3>
         </sail-gauge>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=success, 85%</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=success, 85%</h3>
         <sail-gauge
           value="85"
           min="0"
@@ -290,12 +198,8 @@ tone=success, 85%</h3>
         </sail-gauge>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=warning, 45%</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=warning, 45%</h3>
         <sail-gauge
           value="45"
           min="0"
@@ -306,12 +210,8 @@ tone=warning, 45%</h3>
         </sail-gauge>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=destructive, 90%</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=destructive, 90%</h3>
         <sail-gauge
           value="90"
           min="0"
@@ -322,12 +222,8 @@ tone=destructive, 90%</h3>
         </sail-gauge>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-threshold-driven color, high=70</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>threshold-driven color, high=70</h3>
         <sail-gauge
           value="55"
           min="0"
@@ -341,12 +237,8 @@ threshold-driven color, high=70</h3>
         </sail-gauge>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-gauge loading label="loading gauge"></sail-gauge>
       </column>
     </row>
@@ -354,17 +246,11 @@ loading state</h3>
 
   <!-- ── sail-heatmap ────────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-heatmap</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-heatmap</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=primary, 4×7 grid</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=primary, 4×7 grid</h3>
         <sail-heatmap
           data="0,3,7,2,5,8,4,1,6,9,3,7,2,5,0,4,8,6,3,7,2,5,9,4,1,6,3,8"
           rows="Mon,Tue,Wed,Thu"
@@ -375,12 +261,8 @@ tone=primary, 4×7 grid</h3>
         </sail-heatmap>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=success, compact cells</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=success, compact cells</h3>
         <sail-heatmap
           data="0,2,5,8,3,6,9,1,4,7,2,5,8,3,6,9,1,4,7,2,5,8,3,6,9,1,4,7"
           rows="Mon,Tue,Wed,Thu"
@@ -392,12 +274,8 @@ tone=success, compact cells</h3>
         </sail-heatmap>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone=warning</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone=warning</h3>
         <sail-heatmap
           data="1,3,6,2,8,4,9,0,5,7,3,6,2,8,4,9,0,5,7,3,6,2,8,4,9,0,5,7"
           rows="Mon,Tue,Wed,Thu"
@@ -408,12 +286,8 @@ tone=warning</h3>
         </sail-heatmap>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-heatmap loading label="loading heatmap"></sail-heatmap>
       </column>
     </row>
@@ -421,69 +295,39 @@ loading state</h3>
 
   <!-- ── sail-sparkline ──────────────────────────────────────────────────── -->
   <section>
-    <h2>
-      style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })
-sail-sparkline</h2>
+    <h2 style({ box: mb(4), paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-sparkline</h2>
 
     <row align="start">
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-tone variants</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>tone variants</h3>
         <grid cols="2">
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-primary</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>primary</span>
           <sail-sparkline data="4,7,3,9,5,11,8" tone="primary" width="120" height="32"></sail-sparkline>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-success</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>success</span>
           <sail-sparkline data="2,5,8,6,9,7,10" tone="success" width="120" height="32"></sail-sparkline>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-warning</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>warning</span>
           <sail-sparkline data="9,6,8,4,7,5,6" tone="warning" width="120" height="32"></sail-sparkline>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-destructive</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>destructive</span>
           <sail-sparkline data="3,8,5,10,6,9,4" tone="destructive" width="120" height="32"></sail-sparkline>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-accent</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>accent</span>
           <sail-sparkline data="6,4,9,3,8,5,7" tone="accent" width="120" height="32"></sail-sparkline>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-muted</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>muted</span>
           <sail-sparkline data="5,7,4,8,6,9,3" tone="muted" width="120" height="32"></sail-sparkline>
         </grid>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-fill=true vs fill=false</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>fill=true vs fill=false</h3>
         <grid cols="2">
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-no fill</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>no fill</span>
           <sail-sparkline data="4,7,3,9,5,11,8" tone="primary" width="120" height="32"></sail-sparkline>
-          <span>
-            style({ paint: fg(muted-foreground), text: fontSize(sm) })
-fill</span>
+          <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>fill</span>
           <sail-sparkline data="4,7,3,9,5,11,8" tone="primary" fill width="120" height="32"></sail-sparkline>
         </grid>
       </column>
 
-      <column gap="3">
-        style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })
-
-        <h3>
-          style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })
-loading state</h3>
+      <column gap="3" style({ box: pad(4), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+        <h3 style({ paint: fg(muted-foreground), text: fontSize(sm).fontWeight(medium) })>loading state</h3>
         <sail-sparkline loading tone="primary" width="120" height="32"></sail-sparkline>
       </column>
     </row>

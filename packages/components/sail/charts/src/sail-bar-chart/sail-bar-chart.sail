@@ -109,18 +109,14 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
 
-    use:observeViewport>
-    style({ box: display(block).w(full).overflow(hidden) })
-
+    use:observeViewport style({ box: display(block).w(full).overflow(hidden) })>
     <for {bars() as b} key={b.id}>
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
         <title>{b.title}</title>
       </rect>
     </for>
   </svg>
-  <column id="chart-data">
-    style({ paint: srOnly() })
-
+  <column id="chart-data" style({ paint: srOnly() })>
     <slot name="description">
       <table>
         <for {chart.ariaTable() as row} key={row[0].id}>

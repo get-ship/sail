@@ -9,16 +9,8 @@ import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ count: signal(0) }))
 </controller>
 
-<column gap="3">
-  style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })
-
-  <h1>
-    style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })
-Counter</h1>
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
-Count: <strong>
-    style({ paint: fg(foreground), text: fontFamily(mono) })
-{count()}</strong></p>
+<column gap="3" style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })>
+  <h1 style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })>Counter</h1>
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Count: <strong style({ paint: fg(foreground), text: fontFamily(mono) })>{count()}</strong></p>
   <button on:click={() => count.set(count() + 1)}>increment</button>
 </column>

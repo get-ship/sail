@@ -19,9 +19,7 @@ export default controller(() => {
 </controller>
 
 <studio-sidebar edit-explorer title="Explorer">
-  <column slot="toolbar" gap="2">
-    style({  box: shrink(0).pad(2), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
-
+  <column slot="toolbar" gap="2" style({  box: shrink(0).pad(2), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
     <input
       type="search"
       edit-filter
@@ -29,15 +27,9 @@ export default controller(() => {
       value={filterText()}
       on:input={onFilterInput}
       label="Filter files"
-      size="sm"
-
->
-      style({ box: w(full) })
-    </input>
+      size="sm" style({ box: w(full) })>
     <row align="center" justify="between" nowrap gap="2">
-      <p file-count>
-        style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-
+      <p file-count style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>
         {fileCountLabel()}
       </p>
       <if {dirtyCountLabel()}>
@@ -48,13 +40,9 @@ export default controller(() => {
     </row>
   </column>
 
-  <column file-tree gap="0">
-    style({  box: grow(1).minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden), paint: bg(surface-0)  })
-
+  <column file-tree gap="0" style({  box: grow(1).minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden), paint: bg(surface-0)  })>
     <if {!hasTree()}>
-      <empty-state variant="placeholder" size="sm" files-empty>
-        style({  box: w(full).pad(3), paint: borderWidth(1).border(border-subtle).radius(md)  })
-
+      <empty-state variant="placeholder" size="sm" files-empty style({  box: w(full).pad(3), paint: borderWidth(1).border(border-subtle).radius(md)  })>
         <strong slot="title">No files</strong>
         Open a project to list sources.
       </empty-state>
@@ -67,11 +55,7 @@ export default controller(() => {
         selectable="single"
         size="sm"
         show-guides
-        on-select={onTreeSelect}
-
-      >
-        style({ box: w(full).h(full).minH(0) })
-</sail-tree>
+        on-select={onTreeSelect} style({ box: w(full).h(full).minH(0) })></sail-tree>
     </if>
   </column>
 </studio-sidebar>

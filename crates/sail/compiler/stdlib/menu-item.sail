@@ -20,17 +20,13 @@
 </scope>
 
 <button
-  type="button"
-
->
-  style([
+  type="button" style([
     base,
     when({
       hover: style({ paint: bg(menu-item-hover-bg) }),
       focus: style({ paint: bg(menu-item-hover-bg).outline(solid).outline(2).outline(ring) }),
       disabled: style({ paint: opacity(50).cursor(not-allowed) }),
     }),
-  ])
-
+  ])>
   <slot></slot>
 </button>

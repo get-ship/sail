@@ -33,78 +33,46 @@ export default controller(() => {
 })
 </controller>
 
-<column surface="themes" theme-assets-surface assets-chrome gap="0">
-  style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
-
+<column surface="themes" theme-assets-surface assets-chrome gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row assets-error align="center" gap="2">
-      style([ style(bandError), style({ box: shrink(0) }) ])
-
-      <p>
-        style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })
-{session.errorText()}</p>
+    <row assets-error align="center" gap="2" style([ style(bandError), style({ box: shrink(0) }) ])>
+      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row assets-loading align="center" gap="2">
-      style([ style(bandStatus), style({ box: shrink(0) }) ])
-
+    <row assets-loading align="center" gap="2" style([ style(bandStatus), style({ box: shrink(0) }) ])>
       <spinner size="sm"></spinner>
-      <p>
-        style(fieldHint)
-Loading…</p>
+      <p style(fieldHint)>Loading…</p>
     </row>
   </if>
 
-  <row assets-workbench gap="0" nowrap align="stretch">
-    style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })
-
-    <scroll-area assets-editor>
-      style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })
-
-      <column gap="8">
-        style(editorCol)
-
+  <row assets-workbench gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
+    <scroll-area assets-editor style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })>
+      <column gap="8" style(editorCol)>
         <column assets-header gap="2">
-          <p>
-            style(fieldHint)
-Assets facet</p>
-          <p>
-            style({ text: fontSize(xl).fontWeight(semibold).tracking(tight) })
-Type &amp; icons</p>
-          <p>
-            style(fieldHint)
-
+          <p style(fieldHint)>Assets facet</p>
+          <p style({ text: fontSize(xl).fontWeight(semibold).tracking(tight) })>Type &amp; icons</p>
+          <p style(fieldHint)>
             Deep type roles and icon pack judgment. Overview keeps shallow teasers only.
           </p>
-          <p>
-            style(pathMeta)
-{session.modesMeta()}</p>
+          <p style(pathMeta)>{session.modesMeta()}</p>
           <if {session.catalogHint()}>
-            <p catalog-hint>
-              style(fieldHint)
-Add to project to edit.</p>
+            <p catalog-hint style(fieldHint)>Add to project to edit.</p>
           </if>
         </column>
 
         <column section="type" gap="4">
           <row align="baseline" justify="between" gap="3" nowrap>
-            <p>
-              style(sectionTitle)
-Type</p>
-            <p>
-              style(pathMeta)
-display · body · mono</p>
+            <p style(sectionTitle)>Type</p>
+            <p style(pathMeta)>display · body · mono</p>
           </row>
           <column gap="3">
             <column gap="1">
-              <p>
-                style(fieldHint)
-Display</p>
+              <p style(fieldHint)>Display</p>
               <select type-token="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.displayFontOpts() as o} key={o.key}>
                   <option value={o.value}>{o.label}</option>
@@ -112,9 +80,7 @@ Display</p>
               </select>
             </column>
             <column gap="1">
-              <p>
-                style(fieldHint)
-Body</p>
+              <p style(fieldHint)>Body</p>
               <select type-token="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.bodyFontOpts() as o} key={o.key}>
                   <option value={o.value}>{o.label}</option>
@@ -122,9 +88,7 @@ Body</p>
               </select>
             </column>
             <column gap="1">
-              <p>
-                style(fieldHint)
-Mono</p>
+              <p style(fieldHint)>Mono</p>
               <select type-token="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.monoFontOpts() as o} key={o.key}>
                   <option value={o.value}>{o.label}</option>
@@ -135,35 +99,21 @@ Mono</p>
 
           <column font-discoverer gap="3">
             <row align="baseline" justify="between" gap="3" nowrap>
-              <p>
-                style(sectionTitle)
-Font discoverer</p>
-              <p>
-                style(pathMeta)
-{assets.fontCatalogMeta()}</p>
+              <p style(sectionTitle)>Font discoverer</p>
+              <p style(pathMeta)>{assets.fontCatalogMeta()}</p>
             </row>
-            <p>
-              style(fieldHint)
-
+            <p style(fieldHint)>
               Full Google Fonts catalog — search, preview, assign to a role, or install (vendor woff2 into the project).
             </p>
             <row gap="2" align="center" nowrap font-search>
-              <input type="search" size="sm" placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)" value={assets.fontSearchQ()} on:input={assets.onFontSearchInput} label="Search fonts">
-  style({ box: grow(1).minW(0) })
-</input>
-              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch}>
-                style({ box: shrink(0) })
-
+              <input type="search" size="sm" placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)" value={assets.fontSearchQ()} on:input={assets.onFontSearchInput} label="Search fonts" style({ box: grow(1).minW(0) })>
+              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch} style({ box: shrink(0) })>
                 Search
               </button>
             </row>
-            <row gap="1" align="center" nowrap font-cats>
-              style({ box: overflowX(auto).minW(0) })
-
+            <row gap="1" align="center" nowrap font-cats style({ box: overflowX(auto).minW(0) })>
               <for {assets.fontCategoryOpts() as c} key={c.key}>
-                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory}>
-                  style([ style(catChip), style({ box: shrink(0) }) ])
-
+                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory} style([ style(catChip), style({ box: shrink(0) }) ])>
                   {c.label}
                 </button>
               </for>
@@ -171,28 +121,18 @@ Font discoverer</p>
             <if {assets.fontSearching()}>
               <row align="center" gap="2" font-loading>
                 <spinner size="sm"></spinner>
-                <p>
-                  style(fieldHint)
-Searching catalog…</p>
+                <p style(fieldHint)>Searching catalog…</p>
               </row>
             </if>
             <if {assets.hasFontHits()}>
               <column gap="2" font-hits>
                 <for {assets.fontSearchHits() as f} key={f.key}>
-                  <column gap="2" font-hit font-family={f.family}>
-                    style(fontHit)
-
+                  <column gap="2" font-hit font-family={f.family} style(fontHit)>
                     <row align="baseline" justify="between" gap="2" nowrap>
-                      <p>
-                        style([ style(doorTitle), style({ box: grow(1).minW(0) }) ])
-{f.family}</p>
-                      <p>
-                        style([ style(pathMeta), style({ box: shrink(0) }) ])
-{f.category}</p>
+                      <p style([ style(doorTitle), style({ box: grow(1).minW(0) }) ])>{f.family}</p>
+                      <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{f.category}</p>
                     </row>
-                    <p font-sample face={f.family}>
-                      style(fontSample)
-{f.sample}</p>
+                    <p font-sample face={f.family} style(fontSample)>{f.sample}</p>
                     <row gap="1" align="center">
                       <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Display
@@ -203,9 +143,7 @@ Searching catalog…</p>
                       <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Mono
                       </button>
-                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-token="body" on:click={assets.onFontInstall} disabled={!session.canEdit()}>
-                        style({ box: shrink(0) })
-
+                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-token="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} style({ box: shrink(0) })>
                         Install
                       </button>
                     </row>
@@ -214,35 +152,25 @@ Searching catalog…</p>
               </column>
             </if>
             <if {!assets.hasFontHits() && !assets.fontSearching()}>
-              <p font-empty>
-                style(fieldHint)
-No families match — try another query or category.</p>
+              <p font-empty style(fieldHint)>No families match — try another query or category.</p>
             </if>
           </column>
         </column>
 
         <column section="icons" gap="4">
           <row align="baseline" justify="between" gap="3" nowrap>
-            <p>
-              style(sectionTitle)
-Icons</p>
-            <p>
-              style(pathMeta)
-browse · size scale</p>
+            <p style(sectionTitle)>Icons</p>
+            <p style(pathMeta)>browse · size scale</p>
           </row>
           <column gap="1">
-            <p>
-              style(fieldHint)
-Pack (session until pack token ships)</p>
+            <p style(fieldHint)>Pack (session until pack token ships)</p>
             <select icon-pack size="sm" value={assets.iconPack()} disabled={!session.canEdit()} on:change={assets.onIconPack}>
               <option value="lucide">Lucide</option>
               <option value="phosphor">Phosphor</option>
             </select>
           </column>
           <column gap="1">
-            <p>
-              style(fieldHint)
-Browse glyphs</p>
+            <p style(fieldHint)>Browse glyphs</p>
             <input
               type="search"
               size="sm"
@@ -255,9 +183,7 @@ Browse glyphs</p>
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs() as g} key={g.key}>
-                <center title={g.name}>
-                  style([ style(iconCell), style({ box: shrink(0) }) ])
-
+                <center title={g.name} style([ style(iconCell), style({ box: shrink(0) }) ])>
                   <icon name={g.name} size="md" label={g.name}></icon>
                 </center>
               </for>
@@ -265,24 +191,14 @@ Browse glyphs</p>
           </if>
           <column icon-scale gap="2">
             <row align="baseline" justify="between" gap="3" nowrap>
-              <p>
-                style(fieldHint)
-Size scale (sm → xl)</p>
-              <p>
-                style(pathMeta)
-{assets.iconScaleReadout()}</p>
+              <p style(fieldHint)>Size scale (sm → xl)</p>
+              <p style(pathMeta)>{assets.iconScaleReadout()}</p>
             </row>
-            <p>
-              style(fieldHint)
-Drag master to set the md step; other steps follow when scale-together is on.</p>
+            <p style(fieldHint)>Drag master to set the md step; other steps follow when scale-together is on.</p>
             <column gap="1">
               <row align="center" justify="between" gap="2" nowrap>
-                <p>
-                  style(fieldHint)
-Master</p>
-                <p>
-                  style(pathMeta)
-{assets.iconScaleMasterPx()}px</p>
+                <p style(fieldHint)>Master</p>
+                <p style(pathMeta)>{assets.iconScaleMasterPx()}px</p>
               </row>
               <input
                 type="range"
@@ -301,67 +217,33 @@ Master</p>
       </column>
     </scroll-area>
 
-    <column specimen-dock gap="0">
-      style({  box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })
-
-      <column gap="0">
-        style({  box: grow(1).minH(0).h(full).pad(4)  })
-
+    <column specimen-dock gap="0" style({  box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })>
+      <column gap="0" style({  box: grow(1).minH(0).h(full).pad(4)  })>
         <card
           assets-specimen
           preview-specimen
           mode={session.paintMode()}
-          padding="none"
-
-        >
-          style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })
-
-          <column gap="0">
-            style({  box: grow(1).minH(0).h(full)  })
-
-            <row specimen-chrome align="center" gap="2" nowrap>
-              style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })
-
-              <row gap="2" align="center" nowrap hidden="true">
-                style({  box: shrink(0).minW(12)  })
-
-                <stack>
-                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })
-</stack>
-                <stack>
-                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })
-</stack>
-                <stack>
-                  style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })
-</stack>
+          padding="none" style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })>
+          <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
+            <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
+              <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
+                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
+                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
+                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
               </row>
-              <p>
-                style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })
-{session.nameEdit()}</p>
-              <p>
-                style([ style(pathMeta), style({ box: shrink(0) }) ])
-{session.paintMode()}</p>
+              <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{session.nameEdit()}</p>
+              <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{session.paintMode()}</p>
             </row>
-          <scroll-area>
-            style({  box: grow(1).minH(0).h(full), paint: bg(background)  })
-
-            <column specimen-body gap="5">
-              style({ box: pad(5).minW(0) })
-
+          <scroll-area style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
+            <column specimen-body gap="5" style({ box: pad(5).minW(0) })>
               <column gap="2" type-stack>
-                <p>
-                  style({ text: fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight) })
-
+                <p style({ text: fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight) })>
                   {assets.typeDisplay()}
                 </p>
-                <p>
-                  style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })
-
+                <p style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })>
                   {assets.typeBody()} — body copy for product UI judgment.
                 </p>
-                <p>
-                  style({ text: fontFamily(mono).fontSize(xs) })
-
+                <p style({ text: fontFamily(mono).fontSize(xs) })>
                   {assets.typeMono()} — const pack = "lucide"
                 </p>
               </column>
@@ -381,9 +263,7 @@ Master</p>
               <if {assets.hasIconGlyphs()}>
                 <row specimen-icons gap="3" align="center" nowrap>
                   <for {assets.iconGlyphs() as g} key={g.key}>
-                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name}>
-                      style({ box: shrink(0) })
-</icon>
+                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} style({ box: shrink(0) })></icon>
                   </for>
                 </row>
               </if>
@@ -391,13 +271,9 @@ Master</p>
                 <column gap="2">
                   <row gap="2" align="center" nowrap>
                     <icon name="folder" size="sm"></icon>
-                    <p>
-                      style(doorTitle)
-Project list row</p>
+                    <p style(doorTitle)>Project list row</p>
                   </row>
-                  <p>
-                    style(fieldHint)
-Icons inherit currentColor under the theme table.</p>
+                  <p style(fieldHint)>Icons inherit currentColor under the theme table.</p>
                 </column>
               </card>
             </column>

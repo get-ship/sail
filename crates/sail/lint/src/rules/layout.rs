@@ -1164,6 +1164,31 @@ fn parse_open_tag(source: &str, start: usize, tag: &str) -> Option<OpenTag> {
             i += 2;
             break;
         }
+        // Tag-position Style call: `style(…)` (+ `.when` / chain tails).
+        // Reserved keyword after the tag name — not an HTML attr form.
+        if source[i..].starts_with("style") {
+            let after = i + 5;
+            let boundary = after >= bytes.len()
+                || (!bytes[after].is_ascii_alphanumeric()
+                    && bytes[after] != b'_'
+                    && bytes[after] != b'$'
+                    && bytes[after] != b'-'
+                    && bytes[after] != b':');
+            if boundary {
+                let mut k = after;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k < bytes.len() && bytes[k] == b'(' {
+                    if let Some(end) = consume_style_call(source, i) {
+                        let raw = source[i..end].to_string();
+                        i = end;
+                        attrs.push(("style".into(), raw));
+                        continue;
+                    }
+                }
+            }
+        }
         // attribute name
         let name_start = i;
         while i < bytes.len()
@@ -1239,6 +1264,97 @@ fn parse_open_tag(source: &str, start: usize, tag: &str) -> Option<OpenTag> {
         end: i,
         self_closing,
     })
+}
+
+/// Consume `style(…)` (+ `.method(` tails) starting at absolute `start` in `src`.
+fn consume_style_call(src: &str, start: usize) -> Option<usize> {
+    let s = &src[start..];
+    if !s.starts_with("style") {
+        return None;
+    }
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brack = 0i32;
+    let mut brace = 0i32;
+    let mut saw = false;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+                if i < bytes.len() {
+                    i += 1;
+                }
+                continue;
+            }
+            b'(' => {
+                paren += 1;
+                saw = true;
+            }
+            b')' => {
+                paren -= 1;
+                if paren < 0 {
+                    return None;
+                }
+            }
+            b'[' => {
+                brack += 1;
+                saw = true;
+            }
+            b']' => {
+                brack -= 1;
+                if brack < 0 {
+                    return None;
+                }
+            }
+            b'{' => {
+                brace += 1;
+                saw = true;
+            }
+            b'}' => {
+                brace -= 1;
+                if brace < 0 {
+                    return None;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+        if saw && paren == 0 && brack == 0 && brace == 0 {
+            let mut j = i;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'.' {
+                let after = j + 1;
+                let mut k = after;
+                while k < bytes.len()
+                    && (bytes[k].is_ascii_alphanumeric() || bytes[k] == b'_' || bytes[k] == b'-')
+                {
+                    k += 1;
+                }
+                if k > after {
+                    let mut m = k;
+                    while m < bytes.len() && bytes[m].is_ascii_whitespace() {
+                        m += 1;
+                    }
+                    if m < bytes.len() && bytes[m] == b'(' {
+                        i = m;
+                        continue;
+                    }
+                }
+            }
+            return Some(start + i);
+        }
+    }
+    None
 }
 
 pub(crate) fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
@@ -1331,6 +1447,24 @@ mod tests {
         // id / class / sx / on:click / data-* are fine on a layout element.
         assert!(
             run(r#"<column id="hero" style="p-4" on:click={go()} data-x="1">x</column>"#).is_empty()
+        );
+    }
+
+    #[test]
+    fn passes_through_tag_style_call() {
+        // Product Style attaches as `style({…})` on the open tag — not axis
+        // attrs. Scanner must consume the balanced call (and chains), else
+        // `{`/`box:`/`grow(1)` fragment as fake unknown attrs.
+        assert!(
+            run(r#"<column gap="2" style({ box: grow(1) })>x</column>"#).is_empty(),
+            "tag-position style() must be passthrough on layout keywords"
+        );
+        assert!(
+            run(
+                r#"<column gap="2" style({ box: pad(2) }).when(hover, { paint: bg(accent) })>x</column>"#
+            )
+            .is_empty(),
+            "style().when(…) chains must not split into unknown attrs"
         );
     }
 

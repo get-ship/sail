@@ -67,9 +67,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 base = layout_base_class(tag),
             ),
             suggest: Some(format!(
-                "Replace `<{tag} style={{style.display(none).…}}>` (or a Style \
+                "Replace `<{tag} style({{ box: display(none).… }})>` (or a Style \
                  const that sets display) with \
-                 `<div style={{style.display(none)}}><{tag} …>…</{tag}></div>` \
+                 `<div style({{ box: display(none) }})><{tag} …>…</{tag}></div>` \
                  (or hide the host with when/match)."
             )),
         });

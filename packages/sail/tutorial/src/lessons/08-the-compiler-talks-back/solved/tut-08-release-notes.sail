@@ -40,29 +40,19 @@ export default controller(() => {
   const noteText = style({ text: fontSize(sm) })
 </scope>
 
-<column gap="4">
-  style(page)
-
+<column gap="4" style(page)>
   <row align="center" justify="between">
     <h3>Release notes</h3>
-    <badge tone="primary" variant="soft">
-      style({ animate: enter({ opacity: 'fade' }) })
-v2.4.0</badge>
+    <badge tone="primary" variant="soft" style({ animate: enter({ opacity: 'fade' }) })>v2.4.0</badge>
   </row>
 
-  <p>
-    style(meta)
-published {published()}</p>
+  <p style(meta)>published {published()}</p>
 
   <column gap="1">
     <for {notes() as note} key={note.id}>
-      <row gap="3" align="center">
-        style(noteRow)
-
+      <row gap="3" align="center" style(noteRow)>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
-        <p>
-          style(noteText)
-{note.text}</p>
+        <p style(noteText)>{note.text}</p>
       </row>
     </for>
   </column>

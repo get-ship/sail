@@ -35,8 +35,7 @@
   })
 </scope>
 
-<row nowrap align="center" gap="4">
-  style([ style({ box: w(full) }), 
+<row nowrap align="center" gap="4" style([ style({ box: w(full) }), 
     base,
     match(placement, {
       top: placeTop,
@@ -56,26 +55,17 @@
     compound({ placement: rail, sticky: true, offset: '16' }, style({ box: top(16) })),
     compound({ placement: rail, sticky: true, offset: '20' }, style({ box: top(20) })),
     compound({ placement: rail, sticky: true, offset: '24' }, style({ box: top(24) })),
-  ])
-
-  <row inline nowrap align="center" gap="2">
-    style([ style(brand), style({ box: shrink(0) }) ])
-
+  ])>
+  <row inline nowrap align="center" gap="2" style([ style(brand), style({ box: shrink(0) }) ])>
     <slot name="brand"></slot>
   </row>
-  <div>
-    style(links)
-
+  <div style(links)>
     <slot></slot>
   </div>
-  <row nowrap align="center" justify="center">
-    style({ box: grow(1).minW(0) })
-
+  <row nowrap align="center" justify="center" style({ box: grow(1).minW(0) })>
     <slot name="center"></slot>
   </row>
-  <row inline nowrap align="center" gap="2">
-    style([ style(actions), style({ box: shrink(0) }) ])
-
+  <row inline nowrap align="center" gap="2" style([ style(actions), style({ box: shrink(0) }) ])>
     <slot name="actions"></slot>
   </row>
 </row>

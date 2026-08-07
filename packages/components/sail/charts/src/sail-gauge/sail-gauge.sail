@@ -99,18 +99,13 @@ export default controller(({
 </controller>
 <if {loading()}>
   <skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
-{else-if {chart.error()} => <error-state></error-state>}{else => <stack>
-    style({ box: w(fit) })
-
+{else-if {chart.error()} => <error-state></error-state>}{else => <stack style({ box: w(fit) })>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
       height={diameter()}
       role="img"
-      aria-label={ariaLabel()}
->
-      style({ box: display(block) })
-
+      aria-label={ariaLabel()} style({ box: display(block) })>
       <path d={arc().trackD} fill="none" stroke="var(--muted)" stroke-width={thickness()} stroke-linecap="round">
       </path>
       <if {arc().fillD}>
@@ -118,11 +113,7 @@ export default controller(({
         </path>
       </if>
     </svg>
-    <center>
-      style({ paint: fg(foreground) })
-      <span>
-        style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(xl) })
-        <slot></slot>
+    <center style({ paint: fg(foreground) })>      <span style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(xl) })>        <slot></slot>
       </span>
 </center>
   </stack>}</if>

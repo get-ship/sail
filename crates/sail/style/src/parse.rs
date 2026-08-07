@@ -857,6 +857,21 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
             p.expect(Tok::RParen, diags);
             list
         }
+        Some(Tok::Word("match")) => {
+            let m = parse_match(p, diags);
+            p.expect(Tok::RParen, diags);
+            m
+        }
+        Some(Tok::Word("when")) => {
+            let w = parse_when_call(p, diags);
+            p.expect(Tok::RParen, diags);
+            w
+        }
+        Some(Tok::Word("compound")) => {
+            let c = parse_compound(p, diags);
+            p.expect(Tok::RParen, diags);
+            c
+        }
         Some(Tok::Word(_)) => {
             let name = match p.bump() {
                 Some(Tok::Word(w)) => w.to_string(),
@@ -867,7 +882,7 @@ fn parse_style_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
         }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected `style({…})`, `style([…])`, or `style(name)`".into(),
+                message: "expected `style({…})`, `style([…])`, `style(name)`, or style(match|when|compound(…))".into(),
                 source: p.remainder(),
             });
             let mut depth = 1i32;

@@ -25,12 +25,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6">
-  style({ box: minW(0) })
-
-  <column gap="5">
-    style({ box: maxW(breakpoint-tablet) })
-
+<column gap="6" style({ box: minW(0) })>
+  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
     <p token="doc-eyebrow">Reference</p>
     <h1>Region capability matrix</h1>
     <p token="doc-lead">
@@ -39,9 +35,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       The table is the compiler SSOT (<code>region_capability</code>); every row
       cites a lint rule, a parse gate, or an honest residual gap.
     </p>
-    <p>
-      style({ paint: fg(muted-foreground), text: fontSize(sm) })
-
+    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
       Thin-controller policy: a setup body of
       <strong>{sizeThreshold()}+</strong> non-empty, non-comment lines emits
       <code>sail-controller-size</code> (policy warning, default on).
@@ -54,25 +48,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <h2>{g.region}</h2>
       <column gap="2">
         <for {g.rows as row} key={row.capability}>
-          <card padding="sm">
-            style({ box: minW(0) })
-
+          <card padding="sm" style({ box: minW(0) })>
             <column gap="1">
               <row gap="3" align="center">
                 <strong>{row.capability}</strong>
-                <code>
-                  style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-legal: {row.legal}</code>
-                <code>
-                  style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-{row.status}</code>
+                <code style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>legal: {row.legal}</code>
+                <code style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>{row.status}</code>
               </row>
-              <small>
-                style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })
-{row.notes}</small>
-              <small>
-                style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-{row.enforcement}</small>
+              <small style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })>{row.notes}</small>
+              <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>{row.enforcement}</small>
             </column>
           </card>
         </for>

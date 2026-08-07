@@ -35,7 +35,7 @@ fn compile_component(src: &str) -> Result<String, String> {
 
 #[test]
 fn setter_chain_lowers_through_style_ir() {
-    let src = r#"<div> style({ paint: bg(primary).fg(primary-foreground).radius(md) }) </div>"#;
+    let src = r#"<div style({ paint: bg(primary).fg(primary-foreground).radius(md) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("sx-bgprimary") || js.contains("bgprimary"),
@@ -45,7 +45,7 @@ fn setter_chain_lowers_through_style_ir() {
 
 #[test]
 fn match_guard_emits_attribute_selector() {
-    let src = r#"<div> match(variant, { filled: style({ paint: bg(primary) }), tonal: style({ paint: bg(secondary) }) }) </div>"#;
+    let src = r#"<div style(match(variant, { filled: style({ paint: bg(primary) }), tonal: style({ paint: bg(secondary) }) }))> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("[variant='filled']") || js.contains("variant"),
@@ -55,7 +55,7 @@ fn match_guard_emits_attribute_selector() {
 
 #[test]
 fn when_guard_emits_pseudo_selector() {
-    let src = r#"<div> when({ hover: style({ paint: bg(muted) }) }) </div>"#;
+    let src = r#"<div style(when({ hover: style({ paint: bg(muted) }) }))> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains(":hover") || js.contains("hover"),
@@ -65,7 +65,7 @@ fn when_guard_emits_pseudo_selector() {
 
 #[test]
 fn compound_guard_emits_combined_attribute_selector() {
-    let src = r#"<div> compound({ interactive: true, size: lg }, style({ paint: shadow(hover) })) </div>"#;
+    let src = r#"<div style(compound({ interactive: true, size: lg }, style({ paint: shadow(hover) })))> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("[interactive='true']") || js.contains("interactive"),
@@ -75,7 +75,7 @@ fn compound_guard_emits_combined_attribute_selector() {
 
 #[test]
 fn bind_reactive_paint_emits_var() {
-    let src = r#"<div> style({ paint: translateY(bind(rowY)) }) </div>"#;
+    let src = r#"<div style({ paint: translateY(bind(rowY)) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("bind") || js.contains("--row"),
@@ -158,7 +158,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
 #[test]
 fn style_list_lowers_through_ir() {
     let src =
-        r#"<div> style([style({ paint: bg(primary) }), match(variant, { filled: style({ paint: bg(primary) }) })]) </div>"#;
+        r#"<div style([style({ paint: bg(primary) }), match(variant, { filled: style({ paint: bg(primary) }) })])> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("sx-") || js.contains("class"),

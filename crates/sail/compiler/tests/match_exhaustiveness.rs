@@ -21,7 +21,7 @@ props: {
   variant: 'a' | 'b' | 'c' = 'a'
 }
 </scope>
-<div> match(variant, { a: style({ paint: bg(primary) }), b: style({ paint: bg(muted) }) }) x</div>
+<div style(match(variant, { a: style({ paint: bg(primary) }), b: style({ paint: bg(muted) }) }))> x</div>
 "#;
     let diags = warnings(src);
     assert_eq!(diags.len(), 1, "one warning for the missing arm: {diags:?}");
@@ -52,7 +52,7 @@ props: {
   variant: 'a' | 'b' | 'c' = 'a'
 }
 </scope>
-<div> match(variant, { a: style({ paint: bg(primary) }), b: style({ paint: bg(muted) }), c: style({ paint: bg(accent) }) }) x</div>
+<div style(match(variant, { a: style({ paint: bg(primary) }), b: style({ paint: bg(muted) }), c: style({ paint: bg(accent) }) }))> x</div>
 "#;
     assert!(warnings(src).is_empty(), "full coverage must not warn");
 }
@@ -66,8 +66,8 @@ props: {
   count = 3
 }
 </scope>
-<div> match(label, { x: style({ paint: bg(primary) }) }) x</div>
-<p> match(count, { 3: style({ paint: bg(muted) }) }) y</p>
+<div style(match(label, { x: style({ paint: bg(primary) }) }))> x</div>
+<p style(match(count, { 3: style({ paint: bg(muted) }) }))> y</p>
 "#;
     assert!(
         warnings(src).is_empty(),
@@ -84,7 +84,7 @@ props: {
 }
 const tones = match(variant, { a: style({ paint: bg(primary) }) })
 </scope>
-<div> style(tones) x</div>
+<div style(tones)> x</div>
 "#;
     let diags = warnings(src);
     assert_eq!(diags.len(), 1, "const-declared match warns once: {diags:?}");

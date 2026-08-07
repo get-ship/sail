@@ -32,37 +32,17 @@
 <span
   role="status"
   aria-live="polite"
-  aria-label={label()}
-
->
-  style(style)
-
+  aria-label={label()} style(style)>
   <row
     gap={size() === 'lg' ? '2' : '1'}
     align="center"
-    data-state={tone() + ' ' + size()}
-
-  >
-    style({ paint: group() })
-
+    data-state={tone() + ' ' + size()} style({ paint: group() })>
     <span
-aria-hidden="true"
-
->
-      style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { paint: scale(75) }).when(groupStateLg, { paint: scale(125) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })
-</span>
+aria-hidden="true" style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { paint: scale(75) }).when(groupStateLg, { paint: scale(125) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })></span>
     <span
-aria-hidden="true"
-
->
-      style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { paint: scale(75) }).when(groupStateLg, { paint: scale(125) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })
-</span>
+aria-hidden="true" style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { paint: scale(75) }).when(groupStateLg, { paint: scale(125) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })></span>
     <span
-aria-hidden="true"
-
->
-      style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { paint: scale(75) }).when(groupStateLg, { paint: scale(125) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })
-</span>
+aria-hidden="true" style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }) }).when(groupStateSm, { paint: scale(75) }).when(groupStateLg, { paint: scale(125) }).when(groupStatePrimary, { paint: bg(primary) }).when(groupStateInfo, { paint: bg(info) }).when(groupStateSuccess, { paint: bg(success) }).when(groupStateWarning, { paint: bg(warning) }).when(groupStateDestructive, { paint: bg(destructive) }).when(groupStateAccent, { paint: bg(accent) })></span>
   </row>
 </span>
 </span>

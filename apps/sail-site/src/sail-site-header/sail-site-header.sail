@@ -130,13 +130,9 @@ export default controller((ctx) => {
 </scope>
 
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
-<column gap="0">
-  style([ style(shell), style({ box: w(full) }) ])
-
+<column gap="0" style([ style(shell), style({ box: w(full) }) ])>
   <navbar sticky bordered use:chromeOffset>
-    <a slot="brand" href="/" label="SHIP UI home">
-      style({ box: shrink(0) })
-
+    <a slot="brand" href="/" label="SHIP UI home" style({ box: shrink(0) })>
       <row gap="2" align="center" nowrap>
         <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
           <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
@@ -145,43 +141,25 @@ export default controller((ctx) => {
           <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
           <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
         </svg>
-        <strong>
-          style(brandWord)
-<b>
-          style(brandMark)
-SHIP</b> UI</strong>
+        <strong style(brandWord)><b style(brandMark)>SHIP</b> UI</strong>
       </row>
     </a>
 
-    <row slot="center" gap="1" align="center" nowrap label="Products">
-      style([ style(productSwitch), style({ box: minW(0) }) ])
-
-      <a href="/sail/overview" current={product() === 'sail' ? 'page' : null}>
-        style([ style(productLink), style({ box: shrink(0) }) ])
-Sail</a>
-      <a href="/deck" current={product() === 'deck' ? 'page' : null}>
-        style([ style(productLink), style({ box: shrink(0) }) ])
-Deck</a>
-      <a href="/components" current={product() === 'components' ? 'page' : null}>
-        style([ style(productLink), style({ box: shrink(0) }) ])
-Components</a>
-      <a href="/ai" current={product() === 'ai' ? 'page' : null}>
-        style([ style(productLink), style({ box: shrink(0) }) ])
-AI</a>
+    <row slot="center" gap="1" align="center" nowrap label="Products" style([ style(productSwitch), style({ box: minW(0) }) ])>
+      <a href="/sail/overview" current={product() === 'sail' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>Sail</a>
+      <a href="/deck" current={product() === 'deck' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>Deck</a>
+      <a href="/components" current={product() === 'components' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>Components</a>
+      <a href="/ai" current={product() === 'ai' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>AI</a>
     </row>
 
     <theme-picker slot="actions"></theme-picker>
   </navbar>
 
   <if {landing()}>
-    <main>
-      style([ style(landingMain), style({ box: grow(1).minW(0).w(full) }) ])
-
+    <main style([ style(landingMain), style({ box: grow(1).minW(0).w(full) }) ])>
       <slot name="route"></slot>
     </main>
-  {else => <main>
-      style([ style(appMain), style({ box: grow(1).minW(0).w(full) }) ])
-
+  {else => <main style([ style(appMain), style({ box: grow(1).minW(0).w(full) }) ])>
       <slot name="route"></slot>
     </main>}</if>
 </column>

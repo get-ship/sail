@@ -39,7 +39,7 @@ fn a_prop_bound_var_ref_emits_property_and_host_reflection() {
         r#"<scope>
   props: { glowRadius: number = 0 }
 </scope>
-<div> style({ box: w(bind(glowRadius) })) </div>"#,
+<div style({ box: w(bind(glowRadius) }))> </div>"#,
         None,
     )
     .expect("compile");
@@ -63,7 +63,7 @@ fn an_action_owned_var_ref_is_unaffected_like_a_token() {
     // name, so it gets no component-local `@property`/host-reflection
     // wiring and is never refused as unmatched.
     let js = compile_component(
-        r#"<div use:virtualRow={0}> style({ paint: translateY(bind(rowY) })) </div>"#,
+        r#"<div use:virtualRow={0} style({ paint: translateY(bind(rowY) }))> </div>"#,
         None,
     )
     .expect("compile");
@@ -74,7 +74,7 @@ fn an_action_owned_var_ref_is_unaffected_like_a_token() {
 #[test]
 fn a_setup_returned_signal_var_ref_emits_property_and_host_reflection() {
     let js = compile_component(
-        r#"<div> style({ paint: bg(bind(hue) })) </div>"#,
+        r#"<div style({ paint: bg(bind(hue) }))> </div>"#,
         Some("controller((ctx) => { const hue = signal(220); return { hue }; })"),
     )
     .expect("compile");
@@ -86,7 +86,7 @@ fn a_setup_returned_signal_var_ref_emits_property_and_host_reflection() {
 
 #[test]
 fn a_global_token_var_ref_emits_no_component_local_wiring() {
-    let js = compile_component(r#"<div> style({ paint: bg(surface-2) }) </div>"#, None).expect("compile");
+    let js = compile_component(r#"<div style({ paint: bg(surface-2) })> </div>"#, None).expect("compile");
     assert!(!js.contains("registerCustomProperties("), "{js}");
     assert!(!js.contains("@property"), "{js}");
 }
@@ -97,7 +97,7 @@ fn an_unmatched_var_ref_refuses_with_did_you_mean() {
         r#"<scope>
   props: { glowRadius: number = 0 }
 </scope>
-<div> style({ box: top(bind(glowRadiuz) })) </div>"#,
+<div style({ box: top(bind(glowRadiuz) }))> </div>"#,
         None,
     )
     .unwrap_err();
@@ -108,7 +108,7 @@ fn an_unmatched_var_ref_refuses_with_did_you_mean() {
 #[test]
 fn a_signal_not_returned_from_setup_is_not_reachable() {
     let err = compile_component(
-        r#"<div> style({ paint: bg(bind(hue) })) </div>"#,
+        r#"<div style({ paint: bg(bind(hue) }))> </div>"#,
         Some("controller((ctx) => { const hue = signal(220); return {}; })"),
     )
     .unwrap_err();

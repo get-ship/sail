@@ -239,9 +239,7 @@ export default controller(() => {
 
   <section>
     <h2>Kanban — bindFor + DnD + transitions</h2>
-    <div data-row="true">
-      style({ box: mb(3) })
-
+    <div data-row="true" style({ box: mb(3) })>
       <div>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
       <button on:click={() => chaos()}>chaos × 20</button>
@@ -251,9 +249,7 @@ export default controller(() => {
       <for {columns() as col} key={col.id}>
         <section data-col={col.id}>
           <div>
-            <span data-tone="plain" use:swatch={col.tone}>
-              style({ paint: bg(bind(swatchColor)) })
-</span>
+            <span data-tone="plain" use:swatch={col.tone} style({ paint: bg(bind(swatchColor)) })></span>
             <span>{col.title}</span>
             <span>({col.cards.length})</span>
           </div>
@@ -267,8 +263,7 @@ draggable="true"
 on:dragstart={(e) => onDragStart(e, card.id)}
 on:dragend={onDragEnd}
 on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
-on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}>
-                style({ animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
+on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)} style({ animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }) })>
 
                 <div>
                   {card.title}
@@ -280,7 +275,7 @@ on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}>
               </li>
             </for>
             <if {col.cards.length === 0}>
-              <li data-card="true" style="border-style:dashed;cursor:default;text-align:center;color:var(--muted)">
+              <li data-card="true" style({ paint: border(dashed).cursor(default).fg(muted), text: textAlign(center) })>
                 drop a card
               </li>
             </if>

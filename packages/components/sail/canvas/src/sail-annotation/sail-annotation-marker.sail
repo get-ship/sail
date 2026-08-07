@@ -67,24 +67,14 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
 
 </controller>
 <if {isPoint()}>
-  <div use:pin={{x: x(), y: y()}}>
-    style({ box: position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY)) })
-
-    <center>
-      style({ box: h(0) })
-
+  <div use:pin={{x: x(), y: y()}} style({ box: position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY)) })>
+    <center style({ box: h(0) })>
       <row
         role="button"
         tabindex="0"
         gap="0"
         justify="center"
-        data-state={state()}
-
-      >
-        style({ box: w(5).h(5), paint: radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).shadow(sm).cursor(pointer).pointerEvents(auto) }).when(stateActive, { paint: outline(ring-color) })
-        <span>
-          style({ box: display(contents), text: fontSize(xs).fontWeight(medium).fontFamily(body) })
-          {badge()}
+        data-state={state()} style({ box: w(5).h(5), paint: radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).shadow(sm).cursor(pointer).pointerEvents(auto) }).when(stateActive, { paint: outline(ring-color) })>        <span style({ box: display(contents), text: fontSize(xs).fontWeight(medium).fontFamily(body) })>          {badge()}
         </span>
 </row>
     </center>
@@ -92,8 +82,4 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
 {else-if {hasBox()} => <div
     role="button"
     tabindex="0"
-    use:rect={box()}
-
-  >
-    style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto) })
-</div>}</if>
+    use:rect={box()} style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto) })></div>}</if>

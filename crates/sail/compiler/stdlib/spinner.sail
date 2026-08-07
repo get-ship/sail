@@ -18,8 +18,7 @@
   const ring = style({ box: display(block).size(full), paint: borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin) })
 </scope>
 
-<span>
-  style([
+<span style([
   base,
   match(size, {
     md: sizeMd,
@@ -37,9 +36,6 @@
     accent: style({ paint: fg(accent) }),
   }),
   compound({ centered: true }, style({ box: display(block).my(8).mx(auto) })),
-])
-
-  <span hidden="true">
-    style(ring)
-</span>
+])>
+  <span hidden="true" style(ring)></span>
 </span>
