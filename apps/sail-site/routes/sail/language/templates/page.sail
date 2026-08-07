@@ -114,7 +114,7 @@ The language</p>
     Whatever you write between a component’s tags is its
     <strong>children</strong>, and the component decides where children land
     by placing <code>&lt;slot&gt;</code>. Named slots give it more than one
-    landing place — this is the stdlib <code>&lt;field&gt;</code>'s
+    landing place — this is the stdlib <code>&lt;field&gt;</code>’s
     template:
   </p>
   <code-block code={code.slotDef}></code-block>
