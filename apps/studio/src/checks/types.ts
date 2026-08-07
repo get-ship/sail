@@ -1,3 +1,4 @@
+import type { StudioLocalOps, StudioOpsMethods } from '@ship/sail-studio-client'
 
 export type AutoFixMode = 'off' | 'suggest' | 'apply'
 
@@ -110,31 +111,11 @@ export type ChecksSurfaceState = {
   collapsedRules: string[]
 }
 
-export type ChecksOpsClient = {
-  sailAuthoringCheck: (args: {
-    path?: string
-    source?: string
-  }) => Promise<{ count: number; diagnostics: unknown[]; ok: boolean }>
-  sailAuthoringLayoutCheck?: (args: {
-    path?: string
-    source?: string
-  }) => Promise<{
-    diagnostics?: unknown[]
-    viewports?: unknown[]
-    count?: number
-    ok?: boolean
-    [key: string]: unknown
-  }>
-  sailInspectModel?: (args: {
-    path: string
-    viewport?: { width: number; height: number }
-  }) => Promise<{
-    diagnostics?: unknown[]
-    source?: string
-    file?: string
-    [key: string]: unknown
-  }>
-  readSource?: (path: string) => Promise<string>
-}
+/** Checks surface client — derived from generated ops (no hand-written shapes). */
+export type ChecksOpsClient = Pick<StudioOpsMethods, 'sailAuthoringCheck'> &
+  Partial<
+    Pick<StudioOpsMethods, 'sailAuthoringLayoutCheck' | 'sailInspectModel'>
+  > &
+  Pick<StudioLocalOps, 'readSource'>
 
 export const APPLY_FIX_READY = true

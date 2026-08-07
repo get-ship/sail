@@ -601,11 +601,28 @@
   },
   {
     "name": "sail_theme_font_search",
-    "description": "Search Google Fonts catalog (cached) by family query. Offline fallback list when network unavailable.",
+    "description": "Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.",
     "inputSchema": {
       "type": "object",
       "properties": {
+        "category": {
+          "description": "Optional category filter (e.g. `serif`, `sans-serif`, `display`, `mono`). `all` / empty is ignored. Backend normalizes case.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "description": "Max hits to return (clamped 1..=80 server-side; default 40).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
         "query": {
+          "description": "Family substring filter (case-insensitive). Empty → popularity order.",
           "default": "",
           "type": "string"
         }

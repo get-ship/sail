@@ -310,6 +310,136 @@ mod tests {
         assert_eq!(v["code"], "invalid_argument");
     }
 
+    /// HTTP parity helper: POST Connect path body must equal call_rpc for the same args.
+    async fn assert_http_matches_rpc(service: &str, method: &str, args: Value) {
+        let ctx = Ctx::from_env();
+        let via_rpc = call_rpc(service, method, &args, &ctx).unwrap_or_else(|e| {
+            // Some methods need real files; still require HTTP to match the same error shape.
+            json!({ "code": e.connect_code(), "message": e.to_string() })
+        });
+
+        let app = connect_router_with_ctx(Ctx::from_env());
+        let path = format!("/sail.ops.v1.{service}/{method}");
+        let res = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(&path)
+                    .header("content-type", "application/json")
+                    .body(Body::from(args.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let status = res.status();
+        let bytes = res.into_body().collect().await.unwrap().to_bytes();
+        let via_http: Value = serde_json::from_slice(&bytes).unwrap_or_else(|_| {
+            json!({ "parse_error": String::from_utf8_lossy(&bytes) })
+        });
+
+        if via_rpc.get("code").is_some() {
+            // Error path: both sides report the same Connect code (status may be 4xx).
+            assert_ne!(status, StatusCode::NOT_FOUND, "route missing for {path}");
+            assert_eq!(
+                via_http.get("code"),
+                via_rpc.get("code"),
+                "{service}/{method} HTTP error code drift: http={via_http} rpc={via_rpc}"
+            );
+        } else {
+            assert_eq!(status, StatusCode::OK, "{service}/{method} HTTP status");
+            assert_eq!(
+                via_http, via_rpc,
+                "{service}/{method} HTTP/RPC body drift"
+            );
+        }
+    }
+
+    /// SPEC-STUDIO-CONTRACT-1: Themes surface HTTP ≈ RPC.
+    #[tokio::test]
+    async fn themes_surface_via_http_matches_call_rpc() {
+        assert_http_matches_rpc(
+            "SailTheme",
+            "FontSearch",
+            json!({ "query": "inter", "category": "sans-serif", "limit": 5 }),
+        )
+        .await;
+        assert_http_matches_rpc(
+            "SailTheme",
+            "List",
+            json!({ "path": "packages/sail/tokens/model/themes" }),
+        )
+        .await;
+        assert_http_matches_rpc("SailTheme", "EffectiveIds", json!({})).await;
+    }
+
+    /// SPEC-STUDIO-CONTRACT-1: Tasks surface HTTP ≈ RPC.
+    #[tokio::test]
+    async fn tasks_surface_via_http_matches_call_rpc() {
+        assert_http_matches_rpc(
+            "SailTask",
+            "ThreadList",
+            json!({ "project": "apps/studio", "open": true }),
+        )
+        .await;
+        assert_http_matches_rpc(
+            "SailTask",
+            "List",
+            json!({ "project": "apps/studio", "open": true }),
+        )
+        .await;
+    }
+
+    /// SPEC-STUDIO-CONTRACT-1: Checks surface HTTP ≈ RPC.
+    #[tokio::test]
+    async fn checks_surface_via_http_matches_call_rpc() {
+        assert_http_matches_rpc(
+            "SailAuthoring",
+            "Check",
+            json!({
+                "source": "<page><text>hi</text></page>\n",
+                "fix": "off"
+            }),
+        )
+        .await;
+        assert_http_matches_rpc(
+            "SailAuthoring",
+            "LayoutCheck",
+            json!({ "source": "<page><text>hi</text></page>\n" }),
+        )
+        .await;
+    }
+
+    /// SPEC-STUDIO-CONTRACT-1: Edit surface HTTP ≈ RPC (incl. writeSource field).
+    #[tokio::test]
+    async fn edit_surface_via_http_matches_call_rpc() {
+        assert_http_matches_rpc(
+            "SailAuthoring",
+            "ListFiles",
+            json!({ "project": "apps/studio" }),
+        )
+        .await;
+        // dryRun writeSource: validate-only full-content path (no disk write).
+        assert_http_matches_rpc(
+            "SailAuthoring",
+            "Edit",
+            json!({
+                "path": "apps/studio/routes/page.sail",
+                "ops": [],
+                "source": "<page></page>\n",
+                "writeSource": true,
+                "dryRun": true,
+                "actor": "human:studio-contract-test"
+            }),
+        )
+        .await;
+        assert_http_matches_rpc(
+            "SailInspect",
+            "Model",
+            json!({ "path": "apps/studio/routes/page.sail" }),
+        )
+        .await;
+    }
+
     #[tokio::test]
     async fn watch_sse_delivers_file_event_within_500ms() {
         use crate::watch::{WatchKind, publish_file};

@@ -317,16 +317,19 @@ fn ts_ret_body_from_schema(schema: &Value, fallback: &str) -> String {
     "  [key: string]: JsonValue | undefined\n".into()
 }
 
-/// Nested named types referenced from args (e.g. TaskActor) — emit once.
+/// Nested named types referenced from args/rets (e.g. TaskActor, ThemeFontSearchHit).
 pub fn collect_named_defs(contracts: &[MethodContract]) -> Vec<(String, Value)> {
     let mut out = Vec::new();
     let mut seen = std::collections::BTreeSet::new();
     for c in contracts {
-        let input = (c.input_schema)();
-        if let Some(defs) = input.get("definitions").and_then(|d| d.as_object()) {
-            for (name, schema) in defs {
-                if seen.insert(name.clone()) {
-                    out.push((name.clone(), schema.clone()));
+        for schema in [(c.input_schema)(), (c.output_schema)()] {
+            for key in ["definitions", "$defs"] {
+                if let Some(defs) = schema.get(key).and_then(|d| d.as_object()) {
+                    for (name, def_schema) in defs {
+                        if seen.insert(name.clone()) {
+                            out.push((name.clone(), def_schema.clone()));
+                        }
+                    }
                 }
             }
         }

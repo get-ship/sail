@@ -1,3 +1,4 @@
+import type { StudioOpsMethods } from '@ship/sail-studio-client'
 
 export type ActorKind = 'human' | 'agent'
 
@@ -93,80 +94,23 @@ export type ActorFilter = 'all' | 'human' | 'agent'
 export type DriftFilter = 'all' | 'ok' | 'moved' | 'lost'
 export type OpenFilter = 'open' | 'all'
 
-export type TasksOpsClient = {
-  sailTaskThreadList?: (args: {
-    project?: string
-    status?: string
-    actor?: string
-    drift?: string
-    open?: boolean
-  }) => Promise<{ ok: boolean; tasks: unknown[] }>
-  sailTaskList?: (args: {
-    project?: string
-    status?: string
-    actor?: string
-    drift?: string
-    open?: boolean
-  }) => Promise<{ ok: boolean; tasks: unknown[] }>
-  sailTaskGet?: (args: {
-    project?: string
-    id: string
-  }) => Promise<{ ok: boolean; task: unknown }>
-  sailTaskThreadCreate?: (args: {
-    project?: string
-    title: string
-    body?: string
-    anchor: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; task?: unknown }>
-  sailTaskCreate?: (args: {
-    project?: string
-    title: string
-    body?: string
-    anchor?: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; task?: unknown }>
-  sailTaskThreadReply?: (args: {
-    project?: string
-    id: string
-    body: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; event?: unknown; task?: unknown }>
-  sailTaskComment?: (args: {
-    project?: string
-    id: string
-    body: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; event?: unknown; task?: unknown }>
-  sailTaskAddArtifact?: (args: {
-    project?: string
-    id: string
-    filename?: string
-    content_base64?: string
-    mime?: string
-    kind?: string
-    label?: string
-    region?: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; artifact_id?: string; path?: string; task?: unknown }>
-  sailTaskReanchor?: (args: {
-    project?: string
-    id: string
-    anchor: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; task?: unknown }>
-  sailTaskCommitIntent?: (args: {
-    project?: string
-    id: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; path?: string; bytes?: number; task?: unknown }>
-  sailTaskAgentNote?: (args: {
-    project?: string
-    id: string
-    body: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; event?: unknown; task?: unknown }>
-}
+/** Tasks/Work surface client — derived from generated ops (no hand-written shapes). */
+export type TasksOpsClient = Partial<
+  Pick<
+    StudioOpsMethods,
+    | 'sailTaskThreadList'
+    | 'sailTaskList'
+    | 'sailTaskGet'
+    | 'sailTaskThreadCreate'
+    | 'sailTaskCreate'
+    | 'sailTaskThreadReply'
+    | 'sailTaskComment'
+    | 'sailTaskAddArtifact'
+    | 'sailTaskReanchor'
+    | 'sailTaskCommitIntent'
+    | 'sailTaskAgentNote'
+  >
+>
 
 export type TasksSurfaceState = {
   projectRoot: string

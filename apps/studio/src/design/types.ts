@@ -1,3 +1,4 @@
+import type { StudioOpsMethods } from '@ship/sail-studio-client'
 
 export type DensityId = 'compact' | 'default' | 'spacious'
 
@@ -151,83 +152,23 @@ export type DesignSurfaceState = {
   canRedo: boolean
 }
 
-export type DesignOpsClient = {
-  sailThemeList: (args: { path: string }) => Promise<{
-    files?: string[]
-    ok?: boolean
-    path?: string
-  }>
-  sailThemeRead: (args: { path: string }) => Promise<{
-    content: string
-    ok?: boolean
-    path?: string
-  }>
-  sailThemeWrite: (args: {
-    path: string
-    content: string
-  }) => Promise<{ ok?: boolean; path?: string; bytes?: number }>
-  sailThemeDelete?: (args: {
-    path: string
-  }) => Promise<{ ok?: boolean; path?: string }>
-  sailThemeFork: (args: {
-    source_path: string
-    dest_path: string
-    new_id?: string
-    content?: string
-  }) => Promise<{ ok?: boolean; dest_path?: string; path?: string }>
-  /**
-   * SailTheme/Generate — regenerate registered app theme tables (mode=app).
-   */
-  sailThemeGenerate?: (args: {
-    mode?: string
-    project?: string
-    workspace?: string
-    model?: string
-    out?: string
-  }) => Promise<Record<string, unknown>>
-  sailThemeGraph?: (args: { themeId?: string }) => Promise<Record<string, unknown>>
-  sailThemeEffectiveIds?: (args: {
-    project?: string
-  }) => Promise<{ all?: string[]; project?: string[]; catalog?: string[] }>
-  sailInspectTokenUsage?: (args: { token: string }) => Promise<{
-    token?: string
-    components?: number
-    componentIds?: string[]
-    sites?: unknown[]
-  }>
-  sailRenderScreenshot?: (args: {
-    path?: string
-    source?: string
-    theme?: string
-    mode?: string
-    viewport?: { width: number; height: number } | string
-  }) => Promise<{
-    imagePng?: string
-    ms?: number
-    theme?: string
-  }>
-  /** SailTheme/FontAdd — vendor woff2 + tokens. */
-  sailThemeFontAdd?: (args: {
-    family: string
-    axes?: string
-  }) => Promise<Record<string, unknown>>
-  /** SailTheme/FontSearch — full Google Fonts catalog (bundled + filter). */
-  sailThemeFontSearch?: (args: {
-    query?: string
-    category?: string
-    limit?: number
-  }) => Promise<{
-    families?: string[]
-    hits?: Array<{
-      family?: string
-      category?: string
-      popularity?: number
-      mono?: boolean
-    }>
-    count?: number
-    catalogSize?: number
-    source?: string
-  }>
-}
+/** Themes/design surface client — derived from generated ops (no hand-written shapes). */
+export type DesignOpsClient = Pick<
+  StudioOpsMethods,
+  'sailThemeList' | 'sailThemeRead' | 'sailThemeWrite' | 'sailThemeFork'
+> &
+  Partial<
+    Pick<
+      StudioOpsMethods,
+      | 'sailThemeDelete'
+      | 'sailThemeGenerate'
+      | 'sailThemeGraph'
+      | 'sailThemeEffectiveIds'
+      | 'sailInspectTokenUsage'
+      | 'sailRenderScreenshot'
+      | 'sailThemeFontAdd'
+      | 'sailThemeFontSearch'
+    >
+  >
 
 export const CATALOG_THEMES_DIR = 'packages/sail/tokens/model/themes'

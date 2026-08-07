@@ -1192,12 +1192,29 @@
       "service": "SailTheme",
       "method": "FontSearch",
       "mcp_tool": "sail_theme_font_search",
-      "description": "Search Google Fonts catalog (cached) by family query. Offline fallback list when network unavailable.",
+      "description": "Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.",
       "path": "/sail.ops.v1.SailTheme/FontSearch",
       "inputSchema": {
         "type": "object",
         "properties": {
+          "category": {
+            "description": "Optional category filter (e.g. `serif`, `sans-serif`, `display`, `mono`). `all` / empty is ignored. Backend normalizes case.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "limit": {
+            "description": "Max hits to return (clamped 1..=80 server-side; default 40).",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0.0
+          },
           "query": {
+            "description": "Family substring filter (case-insensitive). Empty → popularity order.",
             "default": "",
             "type": "string"
           }
@@ -1211,6 +1228,22 @@
           "ok"
         ],
         "properties": {
+          "catalogSize": {
+            "description": "Full catalog size before limit/filter (discoverer honesty).",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint",
+            "minimum": 0.0
+          },
+          "category": {
+            "description": "Echo of applied category filter when present.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "count": {
             "type": [
               "integer",
@@ -1226,6 +1259,13 @@
               "type": "string"
             }
           },
+          "hits": {
+            "description": "Structured hits (family + category + popularity + mono). Preferred over families-only.",
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ThemeFontSearchHit"
+            }
+          },
           "ok": {
             "type": "boolean"
           },
@@ -1234,6 +1274,46 @@
               "string",
               "null"
             ]
+          },
+          "source": {
+            "description": "Provenance label e.g. `bundled-google-fonts`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "definitions": {
+          "ThemeFontSearchHit": {
+            "type": "object",
+            "required": [
+              "family"
+            ],
+            "properties": {
+              "category": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "family": {
+                "type": "string"
+              },
+              "mono": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "popularity": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            }
           }
         }
       }

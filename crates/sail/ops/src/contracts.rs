@@ -455,8 +455,27 @@ pub struct ThemeEffectiveIdsRet {
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ThemeFontSearchArgs {
+    /// Family substring filter (case-insensitive). Empty → popularity order.
     #[serde(default)]
     pub query: String,
+    /// Optional category filter (e.g. `serif`, `sans-serif`, `display`, `mono`).
+    /// `all` / empty is ignored. Backend normalizes case.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+    /// Max hits to return (clamped 1..=80 server-side; default 40).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeFontSearchHit {
+    pub family: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub popularity: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mono: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -464,10 +483,22 @@ pub struct ThemeFontSearchRet {
     pub ok: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub query: Option<String>,
+    /// Echo of applied category filter when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
     #[serde(default)]
     pub families: Vec<String>,
+    /// Structured hits (family + category + popularity + mono). Preferred over families-only.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub hits: Vec<ThemeFontSearchHit>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub count: Option<usize>,
+    /// Full catalog size before limit/filter (discoverer honesty).
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "catalogSize")]
+    pub catalog_size: Option<usize>,
+    /// Provenance label e.g. `bundled-google-fonts`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -1112,13 +1143,13 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "SailTheme",
         "FontSearch",
         "sail_theme_font_search",
-        "Search Google Fonts catalog (cached) by family query. Offline fallback list when network unavailable.",
+        "Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.",
         ThemeFontSearchArgs,
         ThemeFontSearchRet,
         "ThemeFontSearchArgs",
         "ThemeFontSearchRet",
-        "  query?: string\n",
-        "  ok: boolean\n  query?: string\n  families: string[]\n  count?: number\n"
+        "  query?: string\n  category?: string\n  limit?: number\n",
+        "  ok: boolean\n  query?: string\n  category?: string\n  families: string[]\n  hits?: ThemeFontSearchHit[]\n  count?: number\n  catalogSize?: number\n  source?: string\n"
     ),
     contract!(
         "SailTheme",

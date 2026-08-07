@@ -5,6 +5,8 @@
 import {
   sailAuthoringSurface,
   sailThemeList,
+  sailThemeFontSearch,
+  sailAuthoringEdit,
   sailTaskGet,
 } from '../src/index'
 
@@ -17,5 +19,18 @@ void sailThemeList({ path: 42 })
 // @ts-expect-error id is required on TaskGetArgs
 void sailTaskGet({ project: 'apps/x' })
 
-// Valid call — ensures the file typechecks when contracts are correct
+// @ts-expect-error limit must be number, not string
+void sailThemeFontSearch({ query: 'x', limit: 'many' })
+
+// @ts-expect-error writeSource must be boolean
+void sailAuthoringEdit({ ops: [], writeSource: 'yes' })
+
+// Valid calls — ensure the file typechecks when contracts are correct
 void sailAuthoringSurface({ topic: 'core' })
+void sailThemeFontSearch({ query: 'inter', category: 'sans-serif', limit: 10 })
+void sailAuthoringEdit({
+  path: 'x.sail',
+  ops: [],
+  source: '<page></page>',
+  writeSource: true,
+})

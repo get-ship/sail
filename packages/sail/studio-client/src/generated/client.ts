@@ -49,6 +49,13 @@ export interface InspectViewport {
   width: number
 }
 
+export interface ThemeFontSearchHit {
+  category?: string
+  family: string
+  mono?: boolean
+  popularity?: number
+}
+
 export interface TaskActor {
   kind?: string
   name?: string
@@ -300,14 +307,20 @@ export interface ThemeEffectiveIdsRet {
 }
 
 export interface ThemeFontSearchArgs {
+  category?: string
+  limit?: number
   query?: string
 }
 
 export interface ThemeFontSearchRet {
+  catalogSize?: number
+  category?: string
   count?: number
   families?: string[]
+  hits?: ThemeFontSearchHit[]
   ok: boolean
   query?: string
+  source?: string
 }
 
 export interface ThemeFontAddArgs {
@@ -754,7 +767,7 @@ export async function sailThemeEffectiveIds(
   return postJson<ThemeEffectiveIdsRet>('/sail.ops.v1.SailTheme/EffectiveIds', args ?? {}, opts)
 }
 
-// SailTheme/FontSearch — Search Google Fonts catalog (cached) by family query. Offline fallback list when network unavailable.
+// SailTheme/FontSearch — Search Google Fonts catalog (bundled) by family query + optional category/limit. Empty query returns popular families. Offline after catalog bake.
 export async function sailThemeFontSearch(
   args: ThemeFontSearchArgs,
   opts?: ClientOptions,

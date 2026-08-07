@@ -1,3 +1,4 @@
+import type { StudioLocalOps, StudioOpsMethods } from '@ship/sail-studio-client'
 
 export type DocViewId =
   | 'preview'
@@ -269,199 +270,47 @@ export type EditSurfaceState = {
   loading: boolean
 }
 
-export type OpsClient = {
-  sailInspectModel: (args: {
-    path: string
-    viewport?: { width: number; height: number }
-  }) => Promise<{
-    data: unknown
-    diagnostics: unknown[]
-    file: string
-    source?: string
-    layout: unknown
-    modelVersion: number
-    state: unknown
-    theme: unknown
-    tree: unknown
-  }>
-  sailInspectTree: (args: { path: string }) => Promise<{
-    file: string
-    modelVersion: number
-    nodes: unknown[]
-    roots: string[]
-  }>
-  sailInspectState: (args: { path: string }) => Promise<{
-    bindings: unknown[]
-    file: string
-    modelVersion: number
-  }>
-  sailRenderScreenshot: (args: {
-    path?: string
-    source?: string
-    theme?: string
-    mode?: string
-    viewport?: unknown
-  }) => Promise<{
-    dynamics: unknown[]
-    imagePng: string
-    ms: number
-    regions: unknown[]
-    theme: string
-    viewport: unknown
-  }>
-    sailAuthoringEdit?: (args: {
-    path: string
-    ops: unknown[]
-    source?: string
-    autofix?: string
-    actor?: string
-    dryRun?: boolean
-  }) => Promise<{
-    applied: boolean
-    modelRevision: string
-    diagnostics: unknown[]
-    autoFixed: unknown[]
-    source?: string
-    message?: string
-  }>
-  writeSource?: (path: string, content: string) => Promise<void>
-  sailAuthoringListFiles?: (args: {
-    project?: string
-  }) => Promise<{ ok: boolean; project: string; files: string[] }>
-  sailAuthoringCheck?: (args: {
-    path?: string
-    source?: string
-  }) => Promise<{ count: number; diagnostics: unknown[]; ok: boolean }>
-  sailAuthoringLayoutCheck?: (args: {
-    path?: string
-    source?: string
-  }) => Promise<{
-    diagnostics?: unknown[]
-    viewports?: unknown[]
-    count?: number
-    ok?: boolean
-    [key: string]: unknown
-  }>
-  sailTaskList?: (args: {
-    project?: string
-    status?: string
-    actor?: string
-    drift?: string
-    open?: boolean
-  }) => Promise<{ ok: boolean; tasks: unknown[] }>
-  sailTaskGet?: (args: {
-    project?: string
-    id: string
-  }) => Promise<{ ok: boolean; task: unknown }>
-  sailTaskCreate?: (args: {
-    project?: string
-    title: string
-    body?: string
-    anchor?: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; task?: unknown }>
-  sailTaskComment?: (args: {
-    project?: string
-    id: string
-    body: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; event?: unknown; task?: unknown }>
-  sailTaskAddArtifact?: (args: {
-    project?: string
-    id: string
-    filename?: string
-    content_base64?: string
-    mime?: string
-    kind?: string
-    label?: string
-    region?: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; artifact_id?: string; path?: string; task?: unknown }>
-  sailTaskAgentNote?: (args: {
-    project?: string
-    id: string
-    body: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; event?: unknown; task?: unknown }>
-  sailTaskThreadCreate?: (args: {
-    project?: string
-    title: string
-    body?: string
-    anchor: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; task?: unknown }>
-  sailTaskThreadReply?: (args: {
-    project?: string
-    id: string
-    body: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; event?: unknown; task?: unknown }>
-  sailTaskThreadList?: (args: {
-    project?: string
-    status?: string
-    actor?: string
-    drift?: string
-    open?: boolean
-  }) => Promise<{ ok: boolean; tasks: unknown[] }>
-  sailTaskReanchor?: (args: {
-    project?: string
-    id: string
-    anchor: Record<string, unknown>
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; task?: unknown }>
-  sailTaskCommitIntent?: (args: {
-    project?: string
-    id: string
-    actor?: { kind?: string; name?: string }
-  }) => Promise<{ ok?: boolean; path?: string; bytes?: number; task?: unknown }>
-  sailInspectTokenUsage?: (args: { token: string }) => Promise<{
-    token?: string
-    components?: number
-    componentIds?: string[]
-    sites?: unknown[]
-  }>
-  sailThemeList?: (args: { path: string }) => Promise<{
-    files?: string[]
-    ok?: boolean
-    path?: string
-  }>
-  sailThemeRead?: (args: { path: string }) => Promise<{
-    content: string
-    ok?: boolean
-    path?: string
-  }>
-  sailThemeWrite?: (args: {
-    path: string
-    content: string
-  }) => Promise<{ ok?: boolean; path?: string; bytes?: number }>
-  sailThemeFork?: (args: {
-    source_path: string
-    dest_path: string
-    new_id?: string
-    content?: string
-  }) => Promise<{ ok?: boolean; dest_path?: string; path?: string }>
-  sailThemeDelete?: (args: {
-    path: string
-  }) => Promise<{ ok?: boolean; path?: string }>
-  /** SailTheme/Generate — mode=app after project theme Save. */
-  sailThemeGenerate?: (args: {
-    mode?: string
-    project?: string
-    workspace?: string
-    model?: string
-    out?: string
-  }) => Promise<Record<string, unknown>>
-  sailThemeGraph?: (args: { themeId?: string }) => Promise<Record<string, unknown>>
-  sailThemeFontAdd?: (args: {
-    family: string
-    axes?: string
-  }) => Promise<Record<string, unknown>>
-  sailThemeFontSearch?: (args: {
-    query: string
-  }) => Promise<{ families?: string[] }>
-  sailThemeEffectiveIds?: (args: {
-    project?: string
-  }) => Promise<{ all?: string[]; project?: string[]; catalog?: string[] }>
-  /** Optional FS/ops read when Model.source is absent. */
-  readSource?: (path: string) => Promise<string>
-}
+/**
+ * Edit shell ops client — Pick of generated methods + local write/read helpers.
+ * Deleting a method from METHOD_CONTRACTS removes it from StudioOpsMethods and
+ * fails the studio typecheck + contract-drift tests.
+ */
+export type OpsClient = Pick<
+  StudioOpsMethods,
+  | 'sailInspectModel'
+  | 'sailInspectTree'
+  | 'sailInspectState'
+  | 'sailRenderScreenshot'
+> &
+  Partial<
+    Pick<
+      StudioOpsMethods,
+      | 'sailAuthoringEdit'
+      | 'sailAuthoringListFiles'
+      | 'sailAuthoringCheck'
+      | 'sailAuthoringLayoutCheck'
+      | 'sailTaskList'
+      | 'sailTaskGet'
+      | 'sailTaskCreate'
+      | 'sailTaskComment'
+      | 'sailTaskAddArtifact'
+      | 'sailTaskAgentNote'
+      | 'sailTaskThreadCreate'
+      | 'sailTaskThreadReply'
+      | 'sailTaskThreadList'
+      | 'sailTaskReanchor'
+      | 'sailTaskCommitIntent'
+      | 'sailInspectTokenUsage'
+      | 'sailThemeList'
+      | 'sailThemeRead'
+      | 'sailThemeWrite'
+      | 'sailThemeFork'
+      | 'sailThemeDelete'
+      | 'sailThemeGenerate'
+      | 'sailThemeGraph'
+      | 'sailThemeFontAdd'
+      | 'sailThemeFontSearch'
+      | 'sailThemeEffectiveIds'
+    >
+  > &
+  StudioLocalOps

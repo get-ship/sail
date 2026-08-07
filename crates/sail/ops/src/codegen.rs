@@ -47,14 +47,24 @@ pub fn generate_all(paths: &GenPaths) -> Result<Vec<PathBuf>, String> {
     write_if_changed(&paths.ts_out, &ts)?;
     written.push(paths.ts_out.clone());
 
-    // package index re-export (stable entry)
+    // package index re-export (stable entry). Keep ops-methods + generated client.
+    // Hand-authored surface of the package — do not shrink to generated-only.
     let index = paths
         .ts_out
         .parent()
         .and_then(|p| p.parent())
         .map(|p| p.join("index.ts"))
         .ok_or_else(|| "ts_out has no package parent".to_string())?;
-    let index_body = "/** Public entry — re-exports generated sail-ops client. */\nexport * from './generated/client'\n";
+    let index_body = concat!(
+        "/** Public entry — re-exports generated sail-ops client + derived method maps. */\n",
+        "export * from './generated/client'\n",
+        "export type {\n",
+        "  StudioLocalOps,\n",
+        "  StudioOpsClient,\n",
+        "  StudioOpsMethodName,\n",
+        "  StudioOpsMethods,\n",
+        "} from './ops-methods'\n",
+    );
     write_if_changed(&index, index_body)?;
     written.push(index);
 

@@ -36,7 +36,7 @@ pub use module::{
     ERR_API_UNSUPPORTED, ERR_CAPABILITY, ERR_UNSIGNED, LoadedModule, MODULE_API_VERSION,
     ModuleCallCtx, ModuleLoadError, ModuleManifest, ModuleMode, activity_surface_html,
     bootstrap_from_env, clear_modules, generate_module_ts_extension, install_modules,
-    load_module_dir, loaded_modules, modules_json, rebootstrap,
+    load_module_dir, loaded_modules, module_connect_paths, modules_json, rebootstrap,
 };
 pub use project_store::{
     CANONICAL_GITIGNORE, CRITICAL_GITIGNORE_LINES, EnsureGitignoreResult, ensure_project_store,
