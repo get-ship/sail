@@ -20,6 +20,8 @@
 //   theme.applyScope(host, { doc, mode }) — host-scoped DTCG draft paint
 //   theme.clearScope(host)   — teardown applyScope writes
 
+import { publicName } from '@ship/tokens'
+
 /** A patch maps token names (`--foo`) to CSS values. TokenName is validated at
  *  write time against the registered `@property` tokens (or a declared `:root`
  *  var); a non-token key is refused. */
@@ -272,7 +274,7 @@ export interface ThemeApplyScopeOptions {
   doc: ThemeDoc
   /**
    * Active paint mode (`light` | `dark` | declared mode id).
-   * Omit → `$extensions.ship.defaultMode` → `light` → first `modes` key.
+   * Omit → `$extensions.sail.defaultMode` → `light` → first `modes` key.
    */
   mode?: string | null
 }
@@ -323,7 +325,7 @@ function valueToString(v: unknown): string {
 
 /**
  * Port of `tokens_generate::flatten_tokens` — walk DTCG groups, collect leaves.
- * cssName from `$extensions.ship.cssName`, else path segments joined with `-`.
+ * Public short names via generator policy (`publicName(path)`), not model stamps.
  */
 function flattenTokens(
   doc: unknown,
@@ -338,12 +340,7 @@ function flattenTokens(
     if (isTokenLeaf(node)) {
       const pathParts = [...pathPrefix, key]
       const path = pathParts.join('.')
-      const ship = isPlainObject(node.$extensions)
-        ? (node.$extensions as Record<string, unknown>).ship
-        : undefined
-      const cssFromExt =
-        isPlainObject(ship) && typeof ship.cssName === 'string' ? ship.cssName : undefined
-      const cssName = cssFromExt && cssFromExt.length > 0 ? cssFromExt : pathParts.join('-')
+      const cssName = publicName(path)
       const ty =
         (typeof node.$type === 'string' ? node.$type : undefined) ?? inheritedType ?? 'string'
       const value = valueToString(node.$value)
@@ -395,8 +392,8 @@ function resolveValue(
 
 function themeIdOf(doc: ThemeDoc): string {
   const ext = doc.$extensions
-  if (isPlainObject(ext) && isPlainObject(ext.ship) && typeof ext.ship.themeId === 'string') {
-    return ext.ship.themeId
+  if (isPlainObject(ext) && isPlainObject(ext.sail) && typeof ext.sail.themeId === 'string') {
+    return ext.sail.themeId
   }
   return ''
 }
@@ -405,11 +402,11 @@ function defaultModeOf(doc: ThemeDoc): string | null {
   const ext = doc.$extensions
   if (
     isPlainObject(ext) &&
-    isPlainObject(ext.ship) &&
-    typeof ext.ship.defaultMode === 'string' &&
-    ext.ship.defaultMode.length > 0
+    isPlainObject(ext.sail) &&
+    typeof ext.sail.defaultMode === 'string' &&
+    ext.sail.defaultMode.length > 0
   ) {
-    return ext.ship.defaultMode
+    return ext.sail.defaultMode
   }
   return null
 }
