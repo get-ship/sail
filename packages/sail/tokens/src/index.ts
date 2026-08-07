@@ -1,7 +1,8 @@
 // @ship/tokens — barrel. The theme catalog + apply/persist helpers live in
 // `./themes`; closed-set unions live in `./generated/unions` (also
-// `@ship/tokens/unions`). CSS layers (`tokens.css`, `themes.css`) are served
-// by the daemon and asset scripts, so they are not re-exported here.
+// `@ship/tokens/unions`). THEMES-1 schema lock: `./theme-schema` +
+// `./generated/themes-meta`. CSS layers (`tokens.css`, `themes.css`) are
+// served by the daemon and asset scripts, so they are not re-exported here.
 export * from './themes'
 export {
   TONE_NAMES_SOURCE,

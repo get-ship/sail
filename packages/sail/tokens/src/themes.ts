@@ -15,9 +15,29 @@ import type { ThemeId } from './generated/unions'
 import {
   THEME_META,
   themeMeta as generatedThemeMeta,
+  modeCapability as generatedModeCapability,
   type ThemeMeta,
+  type ModeCapability,
 } from './generated/themes-meta'
-export type { ThemeId, ThemeMeta }
+export type { ThemeId, ThemeMeta, ModeCapability }
+export {
+  THEME_ROOT_KEYS,
+  THEME_SHIP_KEYS,
+  THEME_PAINT_MODES,
+  THEME_MODE_GROUP_KEYS,
+  THEME_OVERRIDE_ORDER,
+  modeCapability,
+} from './generated/themes-meta'
+export {
+  validateThemeDoc,
+  isValidThemeDoc,
+  modeCapabilityFromModes,
+  resolveOverrideLayer,
+  resolveTokenLayer,
+  pickerModesForTheme,
+  type ThemeOverrideLayer,
+  type ThemeSchemaError,
+} from './theme-schema'
 
 /**
  * Theme shipping tier.
@@ -42,6 +62,8 @@ export interface Theme {
   /** Mode names from DTCG `modes` (light/dark at minimum). */
   modes: readonly string[]
   defaultMode: string
+  /** Declared capability: light | dark | both (THEMES-1 mode model). */
+  capability: ModeCapability
 }
 
 /** Hand labels + swatches keyed by generated ThemeId. Meta (modes/dark) is generated. */
@@ -182,6 +204,8 @@ function buildThemes(): Theme[] {
     }
     const modes =
       meta.modes.length > 0 ? meta.modes : (['light', 'dark'] as const)
+    const capability: ModeCapability =
+      meta.capability ?? generatedModeCapability(meta.id)
     return {
       id: meta.id as ThemeId,
       label: pres.label,
@@ -190,6 +214,7 @@ function buildThemes(): Theme[] {
       swatches: pres.swatches,
       modes: [...modes],
       defaultMode: meta.defaultMode ?? 'light',
+      capability,
     }
   })
 }

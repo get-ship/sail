@@ -100,6 +100,51 @@ const THEME_ORDER: &[&str] = &[
     "synthwave",
 ];
 
+// ── THEMES-1 schema lock (authoring contract) ───────────────────────────────
+// Theme DATA MODEL is the forever contract — DTCG JSON is storage only.
+// A theme = { name (themeId), modes capability (light|dark|both), scale
+// overrides, component-token overrides }. Unknown keys refuse naming valid ones.
+
+/// Allowed top-level keys on a theme document.
+const THEME_ROOT_KEYS: &[&str] = &["$description", "$extensions", "modes"];
+
+/// Allowed keys under `$extensions.ship` on a theme document.
+const THEME_SHIP_KEYS: &[&str] = &[
+    "layer",
+    "themeId",
+    "defaultMode",
+    "supportedModes",
+    "density",
+    "ordered",
+];
+
+/// Allowed paint mode names (`data-mode` values).
+const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
+
+/// Allowed top-level groups inside a mode body (scale + component overrides).
+/// DTCG `$extensions` on the mode object is also allowed.
+const THEME_MODE_GROUP_KEYS: &[&str] = &[
+    "$extensions",
+    "color",
+    "component",
+    "control",
+    "interaction",
+    "motion",
+    "radius",
+    "scrollbar",
+    "shadow",
+    "typography",
+    "space",
+    "icon",
+    "density",
+    "panel",
+    "z",
+    "breakpoint",
+];
+
+/// Override resolution order (highest wins first). THEMES-1 WI3 / freeze §6.
+const THEME_OVERRIDE_ORDER: &[&str] = &["instance", "component", "global", "baked"];
+
 /// Preferred L1 tone axis order. Membership itself comes from DTCG
 /// `color.tone.<name>.{fg,bg,...}` ramps when present; this only sorts the set.
 const TONE_ORDER: &[&str] = &[
@@ -744,7 +789,7 @@ pub fn generate_with_options(
     })
 }
 
-/// Emit `generated/themes-meta.ts` — catalog meta for apply/pickers (Phase D).
+/// Emit `generated/themes-meta.ts` — catalog meta + THEMES-1 schema lock.
 fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     // Group modes by theme id.
     let mut by_id: BTreeMap<String, (bool, Option<String>, Vec<String>)> = BTreeMap::new();
@@ -780,9 +825,81 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     let mut out = String::new();
     out.push_str(
         "/**\n * GENERATED FILE — do not edit by hand.\n *\n \
-         * Theme catalog meta from packages/sail/tokens/model/themes/**.\n \
-         * Includes modes-in-file (Phase D). Regenerate: sail tokens\n */\n\n",
+         * Theme catalog meta + THEMES-1 schema lock from\n \
+         * packages/sail/tokens/model/themes/**.\n \
+         * Includes modes-in-file (Phase D) + mode capability (light|dark|both).\n \
+         * Regenerate: sail tokens\n */\n\n",
     );
+
+    // ── Schema lock (THEMES-1 WI1) ──────────────────────────────────────────
+    out.push_str("/** Allowed top-level keys on a theme document. */\n");
+    out.push_str(&format!(
+        "export const THEME_ROOT_KEYS = [{}] as const\n",
+        THEME_ROOT_KEYS
+            .iter()
+            .map(|k| format!("'{k}'"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    out.push_str("export type ThemeRootKey = (typeof THEME_ROOT_KEYS)[number]\n\n");
+
+    out.push_str("/** Allowed keys under `$extensions.ship` on a theme. */\n");
+    out.push_str(&format!(
+        "export const THEME_SHIP_KEYS = [{}] as const\n",
+        THEME_SHIP_KEYS
+            .iter()
+            .map(|k| format!("'{k}'"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    out.push_str("export type ThemeShipKey = (typeof THEME_SHIP_KEYS)[number]\n\n");
+
+    out.push_str("/** Allowed paint mode names (`data-mode` values). */\n");
+    out.push_str(&format!(
+        "export const THEME_PAINT_MODES = [{}] as const\n",
+        THEME_PAINT_MODES
+            .iter()
+            .map(|k| format!("'{k}'"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    out.push_str("export type ThemePaintMode = (typeof THEME_PAINT_MODES)[number]\n\n");
+
+    out.push_str(
+        "/** Allowed top-level groups inside a mode body (scale + component overrides). */\n",
+    );
+    out.push_str(&format!(
+        "export const THEME_MODE_GROUP_KEYS = [{}] as const\n",
+        THEME_MODE_GROUP_KEYS
+            .iter()
+            .map(|k| format!("'{k}'"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    out.push_str("export type ThemeModeGroupKey = (typeof THEME_MODE_GROUP_KEYS)[number]\n\n");
+
+    out.push_str(
+        "/**\n * Override resolution order (highest wins first).\n \
+         * Freeze §6 / inv-theme-override-order: instance (style/channels) >\n \
+         * component tokens > global theme > baked defaults.\n */\n",
+    );
+    out.push_str(&format!(
+        "export const THEME_OVERRIDE_ORDER = [{}] as const\n",
+        THEME_OVERRIDE_ORDER
+            .iter()
+            .map(|k| format!("'{k}'"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    out.push_str(
+        "export type ThemeOverrideLayer = (typeof THEME_OVERRIDE_ORDER)[number]\n\n",
+    );
+
+    out.push_str(
+        "/** Per-theme declared mode capability (VSCode model — not universal). */\n",
+    );
+    out.push_str("export type ModeCapability = 'light' | 'dark' | 'both'\n\n");
+
     out.push_str("export interface ThemeMeta {\n");
     out.push_str("  id: string\n");
     out.push_str("  /** Whether the default mode is a dark surface (data-mode dark). */\n");
@@ -790,6 +907,10 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     out.push_str("  /** Mode names when modes-in-file; empty = legacy single-block theme. */\n");
     out.push_str("  modes: readonly string[]\n");
     out.push_str("  defaultMode: string | null\n");
+    out.push_str(
+        "  /** Declared capability derived from modes: light | dark | both. */\n",
+    );
+    out.push_str("  capability: ModeCapability\n");
     out.push_str("}\n\n");
     out.push_str("export const THEME_META: readonly ThemeMeta[] = [\n");
     for (id, (dark, default_mode, modes)) in &by_id {
@@ -809,8 +930,9 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
             Some(m) => format!("'{m}'"),
             None => "null".into(),
         };
+        let cap = mode_capability(modes);
         out.push_str(&format!(
-            "  {{ id: '{id}', dark: {dark}, modes: {modes_lit}, defaultMode: {dm} }},\n"
+            "  {{ id: '{id}', dark: {dark}, modes: {modes_lit}, defaultMode: {dm}, capability: '{cap}' }},\n"
         ));
     }
     out.push_str("] as const\n\n");
@@ -818,8 +940,14 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
         "const BY_ID: Record<string, ThemeMeta> = Object.fromEntries(\n  THEME_META.map((t) => [t.id, t]),\n)\n\n",
     );
     out.push_str(
-        "export function themeMeta(id: string): ThemeMeta | undefined {\n  return BY_ID[id]\n}\n",
+        "export function themeMeta(id: string): ThemeMeta | undefined {\n  return BY_ID[id]\n}\n\n",
     );
+    out.push_str(
+        "/** Capability for a theme id (defaults to both when unknown). */\n",
+    );
+    out.push_str("export function modeCapability(id: string): ModeCapability {\n");
+    out.push_str("  return themeMeta(id)?.capability ?? 'both'\n");
+    out.push_str("}\n");
     out
 }
 
@@ -1284,6 +1412,9 @@ fn load_theme_layers_from_dir(
         let fallback = file.trim_end_matches(".json");
         let label = format!("{label_prefix}/{file}");
 
+        // THEMES-1 schema lock — unknown envelope keys refuse with valid list.
+        validate_theme_doc_schema(&doc, &label)?;
+
         // Modes-in-file only — one theme id, mode blocks under `modes`.
         // No twin-id / flat-theme dual path.
         // Single-mode themes are allowed (e.g. glass light-only, synthwave dark-only)
@@ -1582,6 +1713,207 @@ pub fn validate_theme_id(id: &str) -> Result<()> {
     if id.contains("..") || id.contains('/') || id.contains('\\') {
         bail!("theme id must not contain path separators — got {id:?}");
     }
+    Ok(())
+}
+
+/// Map declared paint modes → capability (`light` | `dark` | `both`).
+pub fn mode_capability(modes: &[String]) -> &'static str {
+    let has_light = modes.iter().any(|m| m == "light");
+    let has_dark = modes.iter().any(|m| m == "dark");
+    match (has_light, has_dark) {
+        (true, true) => "both",
+        (false, true) => "dark",
+        _ => "light",
+    }
+}
+
+fn closest_schema_key<'a>(unknown: &str, valid: &[&'a str]) -> Option<&'a str> {
+    let mut best: Option<(usize, &'a str)> = None;
+    for &k in valid {
+        let d = schema_levenshtein(unknown, k);
+        let max_d = (k.len().max(unknown.len()) / 3).max(2);
+        if d <= max_d && best.is_none_or(|(bd, _)| d < bd) {
+            best = Some((d, k));
+        }
+    }
+    best.map(|(_, s)| s)
+}
+
+fn schema_levenshtein(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    if a.is_empty() {
+        return b.len();
+    }
+    if b.is_empty() {
+        return a.len();
+    }
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut cur = vec![0; b.len() + 1];
+    for i in 1..=a.len() {
+        cur[0] = i;
+        for j in 1..=b.len() {
+            let cost = if a[i - 1] == b[j - 1] { 0 } else { 1 };
+            cur[j] = (prev[j] + 1)
+                .min(cur[j - 1] + 1)
+                .min(prev[j - 1] + cost);
+        }
+        std::mem::swap(&mut prev, &mut cur);
+    }
+    prev[b.len()]
+}
+
+fn unknown_key_error(label: &str, where_: &str, key: &str, valid: &[&str]) -> anyhow::Error {
+    let valid_list = valid.join(", ");
+    match closest_schema_key(key, valid) {
+        Some(s) => anyhow!(
+            "theme {label}: unknown {where_} key \"{key}\" \
+             (closest valid key: \"{s}\"; valid: {valid_list})"
+        ),
+        None => anyhow!(
+            "theme {label}: unknown {where_} key \"{key}\" (valid: {valid_list})"
+        ),
+    }
+}
+
+/// THEMES-1 schema lock: refuse out-of-schema theme documents.
+///
+/// Checks root keys, `$extensions.ship` keys, paint mode names, and mode-body
+/// scale/component group keys. Nested DTCG token leaves are not re-enumerated
+/// (registry paths own that surface); this locks the **authoring envelope**.
+pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
+    let Some(obj) = doc.as_object() else {
+        bail!("theme {label}: root must be a JSON object");
+    };
+
+    for key in obj.keys() {
+        if !THEME_ROOT_KEYS.contains(&key.as_str()) {
+            return Err(unknown_key_error(
+                label,
+                "root",
+                key,
+                THEME_ROOT_KEYS,
+            ));
+        }
+    }
+
+    if let Some(ext) = obj.get("$extensions") {
+        let Some(ext_obj) = ext.as_object() else {
+            bail!("theme {label}: $extensions must be an object");
+        };
+        for key in ext_obj.keys() {
+            if key != "ship" {
+                return Err(unknown_key_error(
+                    label,
+                    "$extensions",
+                    key,
+                    &["ship"],
+                ));
+            }
+        }
+        if let Some(ship) = ext_obj.get("ship") {
+            let Some(ship_obj) = ship.as_object() else {
+                bail!("theme {label}: $extensions.ship must be an object");
+            };
+            for key in ship_obj.keys() {
+                if !THEME_SHIP_KEYS.contains(&key.as_str()) {
+                    return Err(unknown_key_error(
+                        label,
+                        "$extensions.ship",
+                        key,
+                        THEME_SHIP_KEYS,
+                    ));
+                }
+            }
+            if let Some(dm) = ship_obj.get("defaultMode").and_then(|v| v.as_str()) {
+                if !THEME_PAINT_MODES.contains(&dm) {
+                    return Err(unknown_key_error(
+                        label,
+                        "defaultMode",
+                        dm,
+                        THEME_PAINT_MODES,
+                    ));
+                }
+            }
+            if let Some(arr) = ship_obj.get("supportedModes").and_then(|v| v.as_array()) {
+                for item in arr {
+                    let Some(m) = item.as_str() else {
+                        bail!("theme {label}: supportedModes entries must be strings");
+                    };
+                    if !THEME_PAINT_MODES.contains(&m) {
+                        return Err(unknown_key_error(
+                            label,
+                            "supportedModes",
+                            m,
+                            THEME_PAINT_MODES,
+                        ));
+                    }
+                }
+            }
+            if let Some(layer) = ship_obj.get("layer").and_then(|v| v.as_str()) {
+                if layer != "theme" {
+                    bail!(
+                        "theme {label}: $extensions.ship.layer must be \"theme\" (got {layer:?})"
+                    );
+                }
+            }
+            if let Some(id) = ship_obj.get("themeId").and_then(|v| v.as_str()) {
+                // Catalog allows digit-leading ids (e.g. "8bit"); fork/scaffold
+                // still use the stricter validate_theme_id for new ids.
+                if id.is_empty()
+                    || id.contains("..")
+                    || id.contains('/')
+                    || id.contains('\\')
+                    || !id
+                        .chars()
+                        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+                {
+                    bail!(
+                        "theme {label}: invalid $extensions.ship.themeId {id:?} \
+                         (expected /^[a-z0-9][a-z0-9-]*$/)"
+                    );
+                }
+            }
+            if let Some(d) = ship_obj.get("density").and_then(|v| v.as_str()) {
+                if d != "compact" && d != "default" && d != "spacious" {
+                    bail!(
+                        "theme {label}: $extensions.ship.density must be \
+                         compact|default|spacious (got {d:?})"
+                    );
+                }
+            }
+        }
+    }
+
+    if let Some(modes) = obj.get("modes") {
+        let Some(modes_obj) = modes.as_object() else {
+            bail!("theme {label}: modes must be an object");
+        };
+        for (mode_name, body) in modes_obj {
+            if !THEME_PAINT_MODES.contains(&mode_name.as_str()) {
+                return Err(unknown_key_error(
+                    label,
+                    "modes",
+                    mode_name,
+                    THEME_PAINT_MODES,
+                ));
+            }
+            let Some(body_obj) = body.as_object() else {
+                bail!("theme {label}: modes.{mode_name} must be an object");
+            };
+            for key in body_obj.keys() {
+                if !THEME_MODE_GROUP_KEYS.contains(&key.as_str()) {
+                    return Err(unknown_key_error(
+                        label,
+                        &format!("modes.{mode_name}"),
+                        key,
+                        THEME_MODE_GROUP_KEYS,
+                    ));
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -3854,6 +4186,9 @@ mod tests {
 
     #[test]
     fn reject_twin_theme_ids_and_require_modes() {
+        // Modes-in-file + twin-id rules sit after schema lock. Fixtures must use
+        // the modern envelope (root: $description | $extensions | modes) so we
+        // exercise twin/modes, not unknown-root-key.
         let dir = tempfile::tempdir().unwrap();
         let model = dir.path().join("model");
         let out = dir.path().join("src");
@@ -3861,19 +4196,51 @@ mod tests {
             &model.join("base.json"),
             r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
         );
-        // Flat twin-style file must fail.
+
+        // Missing `modes` (valid root keys only) → modes-in-file required.
         write_file(
-            &model.join("themes/ship-light.json"),
+            &model.join("themes/ship.json"),
             r#"{
-  "$extensions": { "ship": { "themeId": "ship-light", "layer": "theme" } },
-  "color": { "primary": { "$value": "oklch(0.5 0.1 50)", "$type": "color", "$extensions": { "ship": { "cssName": "primary" } } } }
+  "$extensions": { "ship": { "themeId": "ship", "layer": "theme" } }
 }
 "#,
         );
         let err = generate(&model, &out).unwrap_err().to_string();
         assert!(
-            err.contains("modes-in-file") || err.contains("twin"),
-            "expected modes/twin error, got: {err}"
+            err.contains("modes-in-file"),
+            "expected modes-in-file error, got: {err}"
+        );
+        let _ = fs::remove_file(model.join("themes/ship.json"));
+
+        // Twin theme id with modes envelope still refuses (one id + modes.*).
+        write_file(
+            &model.join("themes/ship-light.json"),
+            r#"{
+  "$extensions": {
+    "ship": {
+      "themeId": "ship-light",
+      "defaultMode": "light",
+      "layer": "theme"
+    }
+  },
+  "modes": {
+    "light": {
+      "color": {
+        "primary": {
+          "$value": "oklch(0.5 0.1 50)",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "primary" } }
+        }
+      }
+    }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("twin"),
+            "expected twin theme id error, got: {err}"
         );
     }
 
@@ -3926,6 +4293,111 @@ mod tests {
         assert!(
             meta.contains("id: 'glass'") && meta.contains("modes: ['light']"),
             "themes-meta must list only light for glass, got: {meta}"
+        );
+        assert!(
+            meta.contains("capability: 'light'"),
+            "single-mode glass must emit capability light, got: {meta}"
+        );
+        assert!(
+            meta.contains("THEME_ROOT_KEYS")
+                && meta.contains("THEME_OVERRIDE_ORDER")
+                && meta.contains("ModeCapability"),
+            "themes-meta must emit THEMES-1 schema lock constants, got: {meta}"
+        );
+    }
+
+    #[test]
+    fn reject_unknown_theme_root_key_names_valid() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+        );
+        write_file(
+            &model.join("themes/bad.json"),
+            r#"{
+  "$extensions": { "ship": { "themeId": "bad", "defaultMode": "light" } },
+  "modes": {
+    "light": {
+      "color": {
+        "primary": {
+          "$value": "oklch(0.5 0.1 50)",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "primary" } }
+        }
+      }
+    }
+  },
+  "palette": { "oops": true }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("unknown root key") && err.contains("palette"),
+            "expected unknown root key error, got: {err}"
+        );
+        assert!(
+            err.contains("valid:") || err.contains("closest valid key"),
+            "must name valid keys, got: {err}"
+        );
+    }
+
+    #[test]
+    fn reject_unknown_mode_group_key_names_valid() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{ "$extensions": { "ship": { "selector": ":root", "layer": "base" } } }"#,
+        );
+        write_file(
+            &model.join("themes/bad-group.json"),
+            r#"{
+  "$extensions": { "ship": { "themeId": "bad-group", "defaultMode": "light" } },
+  "modes": {
+    "light": {
+      "colour": {
+        "primary": {
+          "$value": "oklch(0.5 0.1 50)",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "primary" } }
+        }
+      }
+    }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("unknown modes.light key") && err.contains("colour"),
+            "expected unknown mode group error, got: {err}"
+        );
+        assert!(
+            err.contains("color") || err.contains("closest valid key"),
+            "must suggest color, got: {err}"
+        );
+    }
+
+    #[test]
+    fn validate_theme_doc_schema_ok_for_minimal() {
+        let doc: Value = serde_json::from_str(
+            r#"{
+  "$extensions": { "ship": { "themeId": "x", "defaultMode": "dark", "layer": "theme" } },
+  "modes": { "dark": { "color": {} } }
+}"#,
+        )
+        .unwrap();
+        validate_theme_doc_schema(&doc, "x.json").expect("minimal dark theme ok");
+        assert_eq!(mode_capability(&["dark".into()]), "dark");
+        assert_eq!(mode_capability(&["light".into()]), "light");
+        assert_eq!(
+            mode_capability(&["light".into(), "dark".into()]),
+            "both"
         );
     }
 

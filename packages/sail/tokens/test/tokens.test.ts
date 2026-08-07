@@ -28,17 +28,24 @@ import {
   DEFAULT_THEME,
   DEFAULT_MODE,
   THEME_MODE_STORAGE_KEY,
+  THEME_OVERRIDE_ORDER,
+  THEME_ROOT_KEYS,
   THEMES,
   applyMode,
   applyTheme,
   isCoreTheme,
   isDarkTheme,
   isValidTheme,
+  modeCapability,
   modesForTheme,
   paintMode,
   persistMode,
+  pickerModesForTheme,
   readModePreference,
+  resolveOverrideLayer,
+  resolveTokenLayer,
   subscribeSystemPreference,
+  validateThemeDoc,
 } from '../src/themes'
 import { THEME_META } from '../src/generated/themes-meta'
 
@@ -196,8 +203,14 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
       expect(modesForTheme(id)).toEqual(['light'])
       const meta = THEME_META.find((t) => t.id === id)
       expect(meta?.modes).toEqual(['light'])
+      expect(meta?.capability).toBe('light')
+      expect(modeCapability(id)).toBe('light')
       const theme = THEMES.find((t) => t.id === id)
       expect(theme?.modes).toEqual(['light'])
+      expect(theme?.capability).toBe('light')
+      const picker = pickerModesForTheme(id)
+      expect(picker.allowSystem).toBe(false)
+      expect(picker.paintModes).toEqual(['light'])
     }
   })
 
@@ -207,9 +220,95 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     const meta = THEME_META.find((t) => t.id === 'sail')
     expect(meta?.modes).toEqual(['light', 'dark'])
     expect(meta?.defaultMode).toBe('light')
+    expect(meta?.capability).toBe('both')
+    expect(modeCapability('sail')).toBe('both')
     const theme = THEMES.find((t) => t.id === 'sail')
     expect(theme?.label).toBe('Sail')
     expect(theme?.tier).toBe('core')
+    expect(theme?.capability).toBe('both')
+    expect(pickerModesForTheme('sail').allowSystem).toBe(true)
+  })
+
+  it('THEMES-1: every catalog theme has capability matching modes', () => {
+    for (const t of THEME_META) {
+      const hasL = t.modes.includes('light')
+      const hasD = t.modes.includes('dark')
+      const expected =
+        hasL && hasD ? 'both' : hasD ? 'dark' : 'light'
+      expect(t.capability, t.id).toBe(expected)
+      expect(modeCapability(t.id)).toBe(expected)
+      // Single-mode themes never pretend system / both.
+      if (expected !== 'both') {
+        expect(pickerModesForTheme(t.id).allowSystem).toBe(false)
+      }
+    }
+  })
+
+  it('THEMES-1: schema lock rejects unknown root keys naming valid ones', () => {
+    expect(THEME_ROOT_KEYS).toContain('$extensions')
+    expect(THEME_ROOT_KEYS).toContain('modes')
+    const bad = {
+      $extensions: { ship: { themeId: 'x', defaultMode: 'light', layer: 'theme' } },
+      modes: { light: { color: {} } },
+      palette: true,
+    }
+    const errs = validateThemeDoc(bad, 'x.json')
+    expect(errs.length).toBeGreaterThan(0)
+    expect(errs.some((e) => e.message.includes('palette'))).toBe(true)
+    expect(
+      errs.some(
+        (e) =>
+          e.message.includes('valid:') || e.message.includes('closest valid key'),
+      ),
+    ).toBe(true)
+  })
+
+  it('THEMES-1: schema lock accepts a minimal dual-mode theme', () => {
+    const ok = {
+      $description: 'test',
+      $extensions: {
+        ship: {
+          themeId: 'probe',
+          defaultMode: 'light',
+          layer: 'theme',
+          supportedModes: ['light', 'dark'],
+        },
+      },
+      modes: {
+        light: { color: {}, component: {} },
+        dark: { color: {}, component: {} },
+      },
+    }
+    expect(validateThemeDoc(ok)).toEqual([])
+  })
+
+  it('THEMES-1: override order is instance > component > global > baked', () => {
+    expect([...THEME_OVERRIDE_ORDER]).toEqual([
+      'instance',
+      'component',
+      'global',
+      'baked',
+    ])
+    expect(resolveOverrideLayer({ baked: true })).toBe('baked')
+    expect(resolveOverrideLayer({ global: true, baked: true })).toBe('global')
+    expect(
+      resolveOverrideLayer({ component: true, global: true, baked: true }),
+    ).toBe('component')
+    expect(
+      resolveOverrideLayer({
+        instance: true,
+        component: true,
+        global: true,
+        baked: true,
+      }),
+    ).toBe('instance')
+    expect(
+      resolveTokenLayer({
+        instance: false,
+        componentOverride: true,
+        globalOverride: true,
+      }).layer,
+    ).toBe('component')
   })
 
   it('every THEMES id is also a `:root[theme="id"]` selector in themes.css', () => {

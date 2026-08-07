@@ -1,0 +1,63 @@
+/**
+ * THEMES-1 studio editor contract — every control maps a schema field;
+ * five facets covered; no orphan write paths.
+ */
+import { describe, expect, it } from 'vitest'
+import {
+  THEME_EDITOR_CONTROLS,
+  THEME_EDITOR_CONTROL_IDS,
+  contractSchemaCoverage,
+  controlsForFacet,
+  isContractWritePath,
+} from '../src/design/theme-editor-contract'
+import type { ThemeFacet } from '../src/compositions/theme-session/theme-nav'
+
+const FACETS: ThemeFacet[] = ['overview', 'color', 'shape', 'assets', 'components']
+
+describe('THEMES-1 theme editor contract', () => {
+  it('covers all five studio theme facets', () => {
+    for (const f of FACETS) {
+      const controls = controlsForFacet(f)
+      expect(controls.length, f).toBeGreaterThan(0)
+    }
+  })
+
+  it('every control has a schema path and kind', () => {
+    for (const c of THEME_EDITOR_CONTROLS) {
+      expect(c.id).toBeTruthy()
+      expect(c.schemaPath).toBeTruthy()
+      expect(['identity', 'mode', 'scale', 'component', 'meta']).toContain(c.kind)
+      expect(FACETS).toContain(c.facet)
+    }
+    // unique ids
+    expect(new Set(THEME_EDITOR_CONTROL_IDS).size).toBe(THEME_EDITOR_CONTROL_IDS.length)
+  })
+
+  it('schema coverage includes identity, modes, scales, component overrides', () => {
+    const cov = contractSchemaCoverage()
+    expect(cov.identity).toContain('$extensions.ship.themeId')
+    expect(cov.mode).toContain('$extensions.ship.defaultMode')
+    expect(cov.mode).toContain('$extensions.ship.supportedModes')
+    expect(cov.scaleGroups).toContain('color')
+    expect(cov.scaleGroups).toContain('radius')
+    expect(cov.scaleGroups).toContain('typography')
+    expect(cov.component).toBe(true)
+  })
+
+  it('contract write path accepts mode-scoped scale + component leaves', () => {
+    expect(isContractWritePath('modes.light.color.primary.default')).toBe(true)
+    expect(isContractWritePath('modes.dark.component.button.bg')).toBe(true)
+    expect(isContractWritePath('modes.light.radius.md')).toBe(true)
+    expect(isContractWritePath('$extensions.ship.themeId')).toBe(true)
+    expect(isContractWritePath('$extensions.ship.density')).toBe(true)
+    expect(isContractWritePath('')).toBe(false)
+    expect(isContractWritePath('not-a-path')).toBe(false)
+  })
+
+  it('components facet exposes global fallback control (L1 pack hook)', () => {
+    const comps = controlsForFacet('components')
+    expect(comps.some((c) => c.id === 'components.token')).toBe(true)
+    expect(comps.some((c) => c.id === 'components.globalFallback')).toBe(true)
+    expect(comps.some((c) => c.kind === 'component')).toBe(true)
+  })
+})

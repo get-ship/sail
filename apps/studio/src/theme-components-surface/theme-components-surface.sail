@@ -577,6 +577,7 @@ export default controller(() => {
                       </stack>
                       <column gap="0" style({ box: grow(1).minW(0) })>
                         <p style(pathMeta)>{tok.hexLabel}</p>
+                        <p style(fieldHint) token-layer={tok.layer}>Layer · {tok.layer}</p>
                         <if {!tok.isOverridden}>
                           <p style(fieldHint)>Default · pick to override for this component only</p>
                         </if>
@@ -616,7 +617,10 @@ export default controller(() => {
                       <stack token-chip style({  box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0)  })>
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onGlobalColor}></sail-color-picker>
                       </stack>
-                      <p style(pathMeta)>{tok.hexLabel}</p>
+                      <column gap="0" style({ box: grow(1).minW(0) })>
+                        <p style(pathMeta)>{tok.hexLabel}</p>
+                        <p style(fieldHint) token-layer={tok.layer}>Layer · {tok.layer}</p>
+                      </column>
                     </row>
                   </if>
                   <if {!tok.isColor}>

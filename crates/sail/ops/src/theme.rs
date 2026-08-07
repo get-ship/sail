@@ -249,8 +249,10 @@ pub fn write(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         )));
     }
 
-    // Parse + ordered-scale gate (refuse non-monotonic before write).
+    // Parse + THEMES-1 schema lock + ordered-scale gate (refuse before write).
     if let Ok(doc) = serde_json::from_str::<Value>(content) {
+        sail_compiler::tokens_generate::validate_theme_doc_schema(&doc, rel)
+            .map_err(|e| OpError::InvalidArgument(e.to_string()))?;
         validate_ordered_scales(&doc)?;
     }
 
@@ -980,14 +982,19 @@ mod tests {
         std::fs::create_dir_all(ws.join("apps/demo/tokens/themes")).unwrap();
         let ctx = Ctx::new(ws, ws.join("apps/demo"), ws);
 
+        // THEMES-1: radius lives under modes.*; envelope must be schema-valid.
         let bad = r#"{
-          "$extensions": { "ship": { "themeId": "bad-radius" } },
-          "radius": {
-            "sm": { "$value": "8px", "$type": "dimension" },
-            "md": { "$value": "4px", "$type": "dimension" },
-            "lg": { "$value": "10px", "$type": "dimension" },
-            "xl": { "$value": "14px", "$type": "dimension" },
-            "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
+          "$extensions": { "ship": { "themeId": "bad-radius", "defaultMode": "light", "layer": "theme" } },
+          "modes": {
+            "light": {
+              "radius": {
+                "sm": { "$value": "8px", "$type": "dimension" },
+                "md": { "$value": "4px", "$type": "dimension" },
+                "lg": { "$value": "10px", "$type": "dimension" },
+                "xl": { "$value": "14px", "$type": "dimension" },
+                "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
+              }
+            }
           }
         }"#;
         let err = write(
@@ -1006,13 +1013,17 @@ mod tests {
         assert!(!ws.join("apps/demo/tokens/themes/bad-radius.json").exists());
 
         let good = r#"{
-          "$extensions": { "ship": { "themeId": "good-radius" } },
-          "radius": {
-            "sm": { "$value": "4px", "$type": "dimension" },
-            "md": { "$value": "6px", "$type": "dimension" },
-            "lg": { "$value": "10px", "$type": "dimension" },
-            "xl": { "$value": "16px", "$type": "dimension" },
-            "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
+          "$extensions": { "ship": { "themeId": "good-radius", "defaultMode": "light", "layer": "theme" } },
+          "modes": {
+            "light": {
+              "radius": {
+                "sm": { "$value": "4px", "$type": "dimension" },
+                "md": { "$value": "6px", "$type": "dimension" },
+                "lg": { "$value": "10px", "$type": "dimension" },
+                "xl": { "$value": "16px", "$type": "dimension" },
+                "$extensions": { "ordered": ["sm", "md", "lg", "xl"] }
+              }
+            }
           }
         }"#;
         let ok = write(
@@ -1104,10 +1115,11 @@ mod tests {
         );
         assert!(matches!(denied, Err(OpError::PermissionDenied(_))));
 
+        let body = r#"{"$extensions":{"ship":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#;
         let ok = write(
             &json!({
                 "path": "apps/demo/tokens/themes/custom.json",
-                "content": r#"{"ok":true}"#
+                "content": body
             }),
             &ctx,
         )
@@ -1115,7 +1127,22 @@ mod tests {
         assert_eq!(ok["ok"], true);
         assert_eq!(
             std::fs::read_to_string(ws.join("apps/demo/tokens/themes/custom.json")).unwrap(),
-            r#"{"ok":true}"#
+            body
+        );
+
+        // THEMES-1: out-of-schema root keys refused (naming valid ones).
+        let schema_err = write(
+            &json!({
+                "path": "apps/demo/tokens/themes/bad-schema.json",
+                "content": r#"{"ok":true}"#
+            }),
+            &ctx,
+        )
+        .unwrap_err();
+        let sm = schema_err.to_string();
+        assert!(
+            sm.contains("unknown root key") && sm.contains("ok"),
+            "expected schema lock error, got {sm}"
         );
     }
 
@@ -1167,7 +1194,7 @@ mod tests {
         let w = write(
             &json!({
                 "path": "themes/custom.json",
-                "content": r#"{"$extensions":{"ship":{"themeId":"custom"}}}"#
+                "content": r#"{"$extensions":{"ship":{"themeId":"custom","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
             }),
             &ctx,
         )
@@ -1190,7 +1217,7 @@ mod tests {
         let ok = write(
             &json!({
                 "path": "tokens/themes/legacy.json",
-                "content": r#"{"ok":true}"#
+                "content": r#"{"$extensions":{"ship":{"themeId":"legacy","defaultMode":"light","layer":"theme"}},"modes":{"light":{"color":{}}}}"#
             }),
             &ctx,
         )

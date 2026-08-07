@@ -10,6 +10,7 @@
     "./qa-themes": "./src/qa-themes.mjs",
     "./unions": "./src/generated/unions.ts",
     "./themes-meta": "./src/generated/themes-meta.ts",
+    "./theme-schema": "./src/theme-schema.ts",
     "./themes.css": "./src/themes.css",
     "./tokens.css": "./src/tokens.css",
     "./token-registry.json": "./src/token-registry.json",

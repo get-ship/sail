@@ -106,11 +106,23 @@ export function resolveColorRaw(
   return null
 }
 
+/**
+ * THEMES-1 override layer that won for this probe (studio shows resolved layer).
+ * Order: instance > component > global > baked (freeze §6).
+ */
+export type ResolvedLayer = 'instance' | 'component' | 'global' | 'baked'
+
 export type EffectiveColor = {
   /** Hex for swatch/picker — empty when unresolved (never invent mid-gray / fake white). */
   hex: string
   /** Theme has an explicit component.* leaf */
   isOverridden: boolean
+  /**
+   * Which override layer supplied the resolved value.
+   * Component override → `component`; global theme path → `global`;
+   * model/registry default → `baked`. Instance is caller-only (style/channels).
+   */
+  layer: ResolvedLayer
   /** Raw string for diagnostics (never shown as product when it is var(--*)) */
   raw: string
   /** Short UI label under/near swatch — never contains `var(--` */
@@ -154,6 +166,7 @@ export function effectiveComponentColor(
     return {
       hex,
       isOverridden: true,
+      layer: 'component',
       raw: override,
       hexLabel: formatOverrideLabel(hex, override),
       defaultPath: '',
@@ -166,6 +179,7 @@ export function effectiveComponentColor(
     return {
       hex: '',
       isOverridden: false,
+      layer: 'baked',
       raw: '',
       hexLabel: 'Default',
       defaultPath: '',
@@ -180,9 +194,14 @@ export function effectiveComponentColor(
   // Never surface CSS exhaust as product copy
   const safeRaw = /var\s*\(/i.test(alias) ? defaultPath || 'theme' : alias
 
+  // Alias into theme color.* with a present leaf → global layer; else baked.
+  const globalLeaf =
+    defaultPath && getPathValue(doc, defaultPath, mode) ? true : false
+
   return {
     hex,
     isOverridden: false,
+    layer: globalLeaf ? 'global' : 'baked',
     raw: safeRaw,
     hexLabel: formatDefaultLabel(hex, defaultPath),
     defaultPath,
@@ -201,6 +220,7 @@ export function effectiveGlobalColor(
     return {
       hex: '',
       isOverridden: false,
+      layer: 'baked',
       raw: '',
       hexLabel: 'Default',
       defaultPath: path,
@@ -212,6 +232,7 @@ export function effectiveGlobalColor(
   return {
     hex,
     isOverridden: true,
+    layer: 'global',
     raw,
     hexLabel: hex || formatOverrideLabel('', raw),
     defaultPath: '',

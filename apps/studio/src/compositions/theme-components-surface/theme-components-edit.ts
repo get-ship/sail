@@ -164,6 +164,8 @@ type ComponentKnobRow = {
   raw: string
   isColor: boolean
   isOverridden: boolean
+  /** THEMES-1: which override layer won (instance > component > global > baked). */
+  layer: string
   scope: string
 }
 
@@ -179,6 +181,7 @@ type GlobalKnobRow = {
   isColor: boolean
   isRadius: boolean
   isOverridden: boolean
+  layer: string
   scope: string
 }
 
@@ -244,6 +247,7 @@ export function createComponentsEdit(session: ThemeSession) {
             raw: eff.raw,
             isColor: true,
             isOverridden: eff.isOverridden,
+            layer: eff.layer,
             scope: 'component',
           }
         }
@@ -262,6 +266,7 @@ export function createComponentsEdit(session: ThemeSession) {
           raw: display,
           isColor: false,
           isOverridden,
+          layer: isOverridden ? 'component' : 'baked',
           scope: 'component',
         }
       })
@@ -287,6 +292,7 @@ export function createComponentsEdit(session: ThemeSession) {
             isColor: true,
             isRadius: false,
             isOverridden: eff.isOverridden,
+            layer: eff.layer,
             scope: 'global',
           }
         }
@@ -303,7 +309,8 @@ export function createComponentsEdit(session: ThemeSession) {
           raw: display,
           isColor: false,
           isRadius,
-          isOverridden: false,
+          isOverridden: raw != null,
+          layer: raw != null ? 'global' : 'baked',
           scope: 'global',
         }
       }),

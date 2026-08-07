@@ -2,6 +2,7 @@
 export * from './types'
 export * from './scale'
 export * from './theme-doc'
+export * from './theme-editor-contract'
 export * from './specimen'
 export * from './token-groups'
 export * from './color'
