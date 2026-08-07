@@ -8,7 +8,7 @@
   props: {
     type: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url' | 'date' | 'time' | 'datetime-local' | 'month' | 'week' | 'file' | 'color' | 'checkbox' | 'radio' | 'range' | 'submit' | 'hidden' = 'text'
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     invalid = false
     disabled = false
     placeholder = ''

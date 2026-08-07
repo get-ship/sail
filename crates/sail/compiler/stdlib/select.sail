@@ -8,7 +8,7 @@
 <scope>
   props: {
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     invalid = false
     disabled = false
     multiple = false
