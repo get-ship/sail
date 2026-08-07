@@ -1549,9 +1549,23 @@ mod tests {
                 e.name
             );
         }
-        // Framework escape hatches stay open.
-        assert!(compile_on("sail-rail:toggle", "{handler}", span, "t").is_ok());
-        assert!(compile_on("ship-thing:done", "{handler}", span, "t").is_ok());
+        // Custom-event bus is gone (CALLBACKS-1) — DOM events only; sail-*/ship-*
+        // names refuse with a callback-prop hint, not an escape hatch.
+        let retired = compile_on("sail-rail:toggle", "{handler}", span, "t").unwrap_err();
+        assert!(
+            retired.message.contains("custom events are retired")
+                || retired.message.contains("on-"),
+            "sail-* events must refuse with callback hint, got: {}",
+            retired.message
+        );
+        let retired_ship = compile_on("ship-thing:done", "{handler}", span, "t").unwrap_err();
+        assert!(
+            retired_ship.message.contains("custom events are retired")
+                || retired_ship.message.contains("on-")
+                || retired_ship.message.contains("unknown event"),
+            "ship-* events must refuse, got: {}",
+            retired_ship.message
+        );
 
         let err = compile_on("clik", "{handler}", span, "t").unwrap_err();
         assert!(
@@ -1560,14 +1574,16 @@ mod tests {
             err.message
         );
         assert!(
-            err.message.contains("did you mean click"),
+            err.message.contains("did you mean")
+                && (err.message.contains("click") || err.message.contains("on:click")),
             "must suggest click, got: {}",
             err.message
         );
 
         let err = compile_on("Click", "{handler}", span, "t").unwrap_err();
         assert!(
-            err.message.contains("did you mean click"),
+            err.message.contains("did you mean")
+                && (err.message.contains("click") || err.message.contains("on:click")),
             "capitalization typo must suggest click, got: {}",
             err.message
         );

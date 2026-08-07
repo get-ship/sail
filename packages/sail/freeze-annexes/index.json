@@ -1,7 +1,7 @@
 {
   "$comment": "SAIL syntax freeze annex index — regenerate via node scripts/gen-freeze-annexes.mjs",
-  "generatedAt": "2026-08-06",
-  "tipSha": "e9ac4f184338008296e58e35bd3e0b1de8507339",
+  "generatedAt": "2026-08-07",
+  "tipSha": "ee95d172a16fe49b00c877750922ba88e2734c12",
   "annexes": {
     "A": {
       "file": "a-l1-elements.json",
@@ -29,5 +29,5 @@
       "count": 164
     }
   },
-  "contentHash": "b5e076436e207aff"
+  "contentHash": "9945c72d5659c445"
 }

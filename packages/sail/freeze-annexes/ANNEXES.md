@@ -1,7 +1,7 @@
 # SAIL Syntax Freeze — Annexes A–E (generated)
 
 > **Do not hand-edit.** Regenerate: `node scripts/gen-freeze-annexes.mjs`
-> Tip: `e9ac4f184338008296e58e35bd3e0b1de8507339` · Generated: 2026-08-06 · Content hash: `b5e076436e207aff`
+> Tip: `ee95d172a16fe49b00c877750922ba88e2734c12` · Generated: 2026-08-07 · Content hash: `9945c72d5659c445`
 
 Normative freeze prose: mission scratch `SAIL-SYNTAX-FREEZE.md`. These files are the
 machine-readable inventory the freeze annexes point at.
@@ -28,7 +28,7 @@ Source: compiler element manifest / stdlib (`language-surface.gen.ts` ELEMENTS).
 | `alert` | L1 inline status banner. Style value language only. |
 | `avatar` | L1 language element. Style value language only. |
 | `badge` | L1 language element. Style value language only: |
-| `breadcrumb` | list trail host Style; li/a anatomy via compiler descendant map. |
+| `breadcrumb` | trail host. ol/li/a anatomy + separators via compiler |
 | `button` | native <button>. L1 platform control. Style value language only. |
 | `card` | L1 language element (element mode). Generic surface: header/body/footer |
 | `chip` | filter/selection pill. |
