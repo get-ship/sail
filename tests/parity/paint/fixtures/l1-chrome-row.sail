@@ -1,4 +1,4 @@
-<!-- PARITY-1 paint: load-bearing L1 chrome row (skins/tokens/radius/borders). Static only. -->
+<!-- Load-bearing L1 chrome row (skins/tokens/radius/borders). Static only. -->
 <column gap="4" style({ box: w(full).pad(4), paint: bg(background).fg(foreground) })>
   <row gap="3" align="center">
     <button variant="solid" tone="primary">Primary</button>

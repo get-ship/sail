@@ -1,4 +1,4 @@
-<!-- PARITY-1: sidebar-left row (grow/shrink/nowrap). -->
+<!-- Sidebar-left row (grow/shrink/nowrap). -->
 <column style({ box: w(full).minH(screen) })>
   <row nowrap align="stretch" style({ box: grow(1).w(full) })>
     <column style({ box: shrink(0).w(48).pad(3) })>

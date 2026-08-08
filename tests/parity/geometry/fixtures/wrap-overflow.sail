@@ -1,4 +1,4 @@
-<!-- PARITY-1: wrap row + clipped overflow host. -->
+<!-- Default wrap row + clipped overflow host. -->
 <column gap="4" style({ box: w(full).pad(4) })>
   <row gap="2" style({ box: w(full) })>
     <span>One</span>

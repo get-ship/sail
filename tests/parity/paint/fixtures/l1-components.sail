@@ -1,4 +1,4 @@
-<!-- Ten load-bearing L1 surfaces for paint goldens (RENDER-1). -->
+<!-- Ten load-bearing L1 surfaces for paint goldens. Static only. -->
 <column gap="4" style({ box: w(full).pad(4), paint: bg(background).fg(foreground) })>
   <row gap="3" align="center">
     <button variant="solid" tone="primary">Primary</button>
