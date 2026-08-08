@@ -31,16 +31,16 @@
   const panel = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(0).w(panel-max-w-sm).maxW(panel-w-toast).minW(0).maxH(panel-vh-md).overflowX(hidden).overflowY(auto), paint: overscroll(contain).fg(theme-picker.foreground).bg(theme-picker).borderWidth(border-width).border(border).radius(lg).shadow(lg).z(popover) })
 
   const header = style({ box: w(full).minW(0).padX(3).padT(3).padB(0) })
-  const headerEyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform).leading(none) })
+  const headerEyebrow = style({ paint: fg(theme-picker.option-fg), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform).leading(none) })
   const headerTitle = style({ paint: fg(theme-picker.foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(base).leading(tight).truncate() })
-  const headerMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).leading(none) })
+  const headerMeta = style({ paint: fg(theme-picker.option-fg), text: fontSize(xs).leading(none) })
 
   // Filter tabs — ALWAYS readable on popover chrome.
   // Selected: strong fill using hover-bg + primary underline (never primary fill — breaks on brut).
   const modeSeg = style({ box: w(full).minW(0).gap(0).padX(1), paint: borderBWidth(1).borderB(border) })
   const modeSegBtn = style({ box: minW(0).padY(2).padX(2), paint: fg(theme-picker.option-fg).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) })
 
-  const catalogHead = style({ box: w(full).minW(0).padX(3).padT(2).padB(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform) })
+  const catalogHead = style({ box: w(full).minW(0).padX(3).padT(2).padB(1), paint: fg(theme-picker.option-fg), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform) })
 
   const panelList = style({ box: w(full).minW(0).pad(1_5) })
   const option = style({ box: w(full).minW(0).pad(0).overflow(hidden), paint: bg(transparent).borderWidth(border-width).border(transparent).radius(md).cursor(pointer), text: textAlign(start) })

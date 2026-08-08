@@ -2,9 +2,12 @@
   <sail-timeline-item> — one timeline entry: gutter connector + tone dot,
   head row (title slot + timestamp), body content. `interactive` makes the
   row a button (role/tabindex/sail-select from the controller; the pressed
-  surface from the compound variant). The connector is two real segments
+  surface from the Style compound). The connector is two real segments
   around the dot — the first item hides the top run, the last hides the
   bottom run (visibility, so the gutter geometry never shifts).
+
+  Tone: real Tone members only — omit for rest (never tone="default").
+  Rest dot = foreground; brand = bound bg(tone). muted → muted-foreground.
 
   Residual (LANG-GAPS.md): forced-colors focus outline (system colors are
   not sx values); first/last detection is mount-time (static lists).
@@ -12,13 +15,25 @@
 
 <scope>
   props: {
-    tone = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     at = ''
     interactive = false
   }
-  compound: [
-    { when: { interactive: true }, sx: 'cursor-pointer rounded-sm hover:bg-muted focus:ring-ring' },
-  ]
+
+  const host = style({ box: position(relative) })
+  const gutter = style({ box: w(5) })
+  const connectorHide = style({ box: w(half).h(3), paint: visibility(hidden) })
+  const connector = style({ box: w(half).h(3), paint: bg(border-subtle) })
+  const connectorGrowHide = style({ box: grow(1).w(half), paint: visibility(hidden) })
+  const connectorGrow = style({ box: grow(1).w(half), paint: bg(border-subtle) })
+  // Rest = foreground; bound tone expands [tone='…'] gates over rest.
+  const dot = style({ box: w(2_5).h(2_5), paint: radius(full).bg(foreground) })
+  const bodyCol = style({ box: grow(1).minW(0).padY(2) })
+  const head = style({ paint: fg(foreground) })
+  const titleSlot = style({ box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) })
+  const atTime = style({ paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) })
+  const body = style({ box: mt(1), paint: fg(muted-foreground) })
+  const bodySlot = style({ box: display(contents), text: fontSize(sm).leading(normal) })
 </scope>
 
 <controller>
@@ -70,25 +85,29 @@ export default controller((ctx) => {
   })
 
 </controller>
-<row gap="2" align="stretch" style({ box: position(relative) })>
-  <column align="center" gap="0" style({ box: w(5) })>
+<row gap="2" align="stretch" style(host, { compound: [ { interactive: true, paint: cursor(pointer).radius(sm), when: { hover: { paint: bg(muted) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } } } ] })>
+  <column align="center" gap="0" style(gutter)>
     <if {first()}>
-      <span style({ box: w(half).h(3), paint: visibility(hidden) })></span>
-    {else => <span style({ box: w(half).h(3), paint: bg(border-subtle) })></span>}</if>
-    <span style({ box: w(2_5).h(2_5), paint: radius(full).bg(foreground) })></span>
+      <span style(connectorHide)></span>
+    {else => <span style(connector)></span>}</if>
+    <span style(dot, { paint: bg(tone), compound: [ { tone: muted, paint: bg(muted-foreground) } ] })></span>
     <if {last()}>
-      <span style({  box: grow(1).w(half), paint: visibility(hidden)  })></span>
-    {else => <span style({  box: grow(1).w(half), paint: bg(border-subtle)  })></span>}</if>
+      <span style(connectorGrowHide)></span>
+    {else => <span style(connectorGrow)></span>}</if>
   </column>
-  <column gap="0" style({  box: grow(1).minW(0).padY(2)  })>
-    <row align="baseline" justify="between" gap="2" style({ paint: fg(foreground) })>      <span style({ box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) })>        <slot name="title"></slot>
+  <column gap="0" style(bodyCol)>
+    <row align="baseline" justify="between" gap="2" style(head)>
+      <span style(titleSlot)>
+        <slot name="title"></slot>
+      </span>
       <if {at()}>
-        <time style({ paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) })>{at()}</time>
+        <time style(atTime)>{at()}</time>
       </if>
+    </row>
+    <div style(body)>
+      <span style(bodySlot)>
+        <slot></slot>
       </span>
-</row>
-    <div style({ box: mt(1), paint: fg(muted-foreground) })>      <span style({ box: display(contents), text: fontSize(sm).leading(normal) })>        <slot></slot>
-      </span>
-</div>
+    </div>
   </column>
 </row>
