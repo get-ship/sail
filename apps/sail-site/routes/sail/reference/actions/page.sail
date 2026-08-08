@@ -5,7 +5,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { PUBLIC_ACTIONS } from '../../../../src/language-surface.gen'
+import { PUBLIC_ACTIONS } from '../../../../src/compositions/language-surface'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   actions: () => PUBLIC_ACTIONS,

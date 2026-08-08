@@ -8,7 +8,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-language-styling-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   // Range writes shift; effect mirrors into px for style({ box: translateX(bind(px)) }).
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Named looks are data: typed props plus Style pieces composed with
     <code>match:</code> and <code>compound:</code> keys — not CVA string maps or
-    free <code>match()</code> calls. Each arm is an ordinary Style value, same
+    free <code>match&#40;&#41;</code> calls. Each arm is an ordinary Style value, same
     pipeline as a host <code>style&#40;&#123; … &#125;&#41;</code>. Variance
     authoring for libraries may still need a directory permit; plain pages
     usually paint with consts + <code>match:</code> only.
@@ -111,7 +111,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>Styles can be dynamic too</h2>
   <p>
     Computed paint flows through signals. Style product reads them with
-    <code>bind(name)</code> — the compiler registers the CSS custom property
+    <code>bind&#40;name&#41;</code> — the compiler registers the CSS custom property
     and reflects the signal onto the host. Drag:
   </p>
   <column gap="3" style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })>

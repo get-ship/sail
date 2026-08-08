@@ -22,7 +22,7 @@ import type { Action, ControllerScope } from '@ship/sail-runtime'
 import { bindHtml } from '@ship/sail-runtime/internal'
 import { ensureWasm, makeCompile } from '@ship/sail-viewer/wasm-bootstrap'
 import type { Scope } from './page.sail'
-import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../../src/tutorial-data'
+import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../../src/compositions/tutorial-data'
 import {
   createDebouncer,
   listenPreview,
@@ -32,7 +32,7 @@ import {
   runInPreview,
   type CodeEditorHost,
   type CompileFn,
-} from '../../../../src/tutorial-boot'
+} from '../../../../src/compositions/tutorial-boot'
 
 const BY_SLUG: Record<string, TutorialLesson> = {}
 for (const l of TUTORIAL_LESSONS) BY_SLUG[l.slug] = l

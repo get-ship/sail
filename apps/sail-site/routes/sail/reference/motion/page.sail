@@ -6,7 +6,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { MOTION, MOTION_VALUE_FORMS } from '../../../../src/language-surface.gen'
+import { MOTION, MOTION_VALUE_FORMS } from '../../../../src/compositions/language-surface'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   motionTriggers: () => MOTION.triggers.join(' · '),

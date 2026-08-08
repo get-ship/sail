@@ -11,7 +11,7 @@
 // loop-diagram ASCII never leaks into the inferred scope.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { loopDiagram } from './snippets'
+import { loopDiagram } from '../../../src/compositions/ai-authoring-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
 </controller>

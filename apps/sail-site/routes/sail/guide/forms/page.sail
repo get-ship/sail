@@ -8,7 +8,7 @@
 import { form, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { profileApi, type Profile } from '../../../../src/compositions/profile-api'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-guide-forms-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   const sabotage = signal(false)

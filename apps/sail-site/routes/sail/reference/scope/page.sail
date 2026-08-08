@@ -7,7 +7,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { SCOPE_GRAMMAR, SCOPE_REFUSALS } from '../../../../src/language-surface.gen'
+import { SCOPE_GRAMMAR, SCOPE_REFUSALS } from '../../../../src/compositions/language-surface'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   grammar: () => SCOPE_GRAMMAR,

@@ -9,7 +9,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-language-sail-file-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   return { code }
@@ -102,7 +102,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.controller}></code-block>
   <p>
     Two things to notice. Props arrive on <code>ctx</code> —
-    <code>ctx.seed()</code> is the prop the scope declared, readable like any
+    <code>ctx.seed&#40;&#41;</code> is the prop the scope declared, readable like any
     signal. And <code>signal&lt;Flight[]&gt;</code> is the payoff of putting
     the type in scope: contract and state speak the same <code>Flight</code>,
     with no import in sight.

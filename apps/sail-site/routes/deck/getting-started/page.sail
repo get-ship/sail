@@ -5,7 +5,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { pageExample, controllerExample, devCmd } from './snippets'
+import { pageExample, controllerExample, devCmd } from '../../../src/compositions/deck-getting-started-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, controllerExample, devCmd }))
 </controller>

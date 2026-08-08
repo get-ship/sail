@@ -7,8 +7,8 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { PROP_REGISTRY } from '../../../../src/prop-registry.gen'
-import { ELEMENTS } from '../../../../src/language-surface.gen'
+import { PROP_REGISTRY } from '../../../../src/compositions/prop-registry'
+import { ELEMENTS } from '../../../../src/compositions/language-surface'
 
 interface ElementRow {
   tag: string

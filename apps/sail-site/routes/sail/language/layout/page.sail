@@ -9,7 +9,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-language-layout-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   return { code }
@@ -186,7 +186,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     The server cannot know the viewport, so <strong>SSR always emits the
     <code>&lt;else&gt;</code> / default branch</strong> (mobile-first). After
     hydrate, the client matchMedia-swaps to the matching branch. No UA sniffing.
-    Style <code>.style({ when: { 123: tablet } })</code> stays paint-level —
+    Style <code>.style&#40;&#123; when: &#123; 123: tablet &#125; &#125;&#41;</code> stays paint-level —
     density and color tweaks — and is unchanged.
   </p>
 

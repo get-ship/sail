@@ -178,9 +178,12 @@ export function listenPreview(
     }
     if (e.data?.kind === 'tutorial:ready') hooks.onReady()
   }
-  // sail-allow sail-no-ambient-events
+  // sail-allow sail-no-ambient-events — preview iframe postMessage channel
   window.addEventListener('message', onMessage)
-  return () => window.removeEventListener('message', onMessage)
+  return () => {
+    // sail-allow sail-no-ambient-events — dispose pairs with add above
+    window.removeEventListener('message', onMessage)
+  }
 }
 
 /** The reader's theme lives on <html theme + data-mode> — an external DOM

@@ -11,7 +11,7 @@
 // `.lsp.json` payload) never leak into the inferred scope.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { lintCmd, lintOutput, compileCmd, lspJson } from './snippets'
+import { lintCmd, lintOutput, compileCmd, lspJson } from '../../../src/compositions/ai-tooling-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ lintCmd, lintOutput, compileCmd, lspJson }))
 </controller>

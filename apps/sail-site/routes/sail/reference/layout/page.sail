@@ -5,7 +5,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { LAYOUT_KEYWORDS } from '../../../../src/language-surface.gen'
+import { LAYOUT_KEYWORDS } from '../../../../src/compositions/language-surface'
 
 const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
 

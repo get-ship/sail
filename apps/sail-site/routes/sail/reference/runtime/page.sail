@@ -11,8 +11,8 @@ import {
   AUTHOR_RUNTIME_COUNT,
   RUNTIME_CATEGORIES,
   RUNTIME_EXPORTS,
-} from '../../../../src/runtime-surface.gen'
-import { CONTROLLER_AMBIENT } from '../../../../src/language-surface.gen'
+} from '../../../../src/compositions/runtime-surface'
+import { CONTROLLER_AMBIENT } from '../../../../src/compositions/language-surface'
 
 interface CategoryGroup {
   id: string

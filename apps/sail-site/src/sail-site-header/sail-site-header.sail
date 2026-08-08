@@ -34,10 +34,9 @@
 // imports can't be tree-shaken — whereas an export-less clients module gets
 // dropped. sail-base.css gives every page the design-system typography
 // (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
-import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
-import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
-import '@ship/tokens/sail-base.css' // sail-base (document floor): bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a Sail document, no class hooks needed
+import { siteTokenCss } from '../compositions/site-token-css' // themes.css + products.css + sail-base.css
 import { applyTheme, readStoredTheme, isValidTheme, DEFAULT_THEME } from '@ship/tokens/themes'
+void siteTokenCss // keep value binding live so CSS side-effects are not dropped
 
 // Ship UI is ONE site with a top product switcher (Sail · Deck · Components · AI).
 // The active product is derived from the path; each drives its own segment

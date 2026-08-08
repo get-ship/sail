@@ -9,7 +9,7 @@
 // data-theme; this controller only supplies the page's code snippets.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { quickstart, layers } from './snippets'
+import { quickstart, layers } from '../../src/compositions/deck-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layers }))
 </controller>

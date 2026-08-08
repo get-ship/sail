@@ -8,7 +8,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../src/compositions/sail-elements-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   return { code }
