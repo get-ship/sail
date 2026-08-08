@@ -29,7 +29,7 @@ use anyhow::{Context, Result};
 use sail_lint::component_surfaces;
 use sail_lint::scales;
 use sail_lint::style::setters::{SetterSpec, setters};
-use sail_lint::token_groups::{self, TONE_FAMILY, TONE_GROUP_NAMES, TONE_GROUPS};
+use sail_lint::token_groups::{self, tone_group_names, tone_groups};
 
 /// Relative path of the ambient pack inside a sail project.
 pub const PROJECT_TYPES_REL: &str = ".sail/types.d.ts";
@@ -442,15 +442,15 @@ fn emit_token_unions(out: &mut String) -> BTreeSet<String> {
 
 /// Emit Tone allowlist + static/bound group member path unions for Style paint.
 ///
-/// Same graph as validate/emit ([`TONE_GROUPS`] / [`TONE_FAMILY`]) so authors
-/// complete `fg(tone.foreground)` / `bg(primary)` / `'primary.foreground'`.
+/// Same graph as validate/emit ([`tone_groups`]) so authors complete
+/// `fg(tone.foreground)` / `bg(primary)` / `'primary.foreground'`.
 fn emit_tone_group_types(out: &mut String) {
     out.push_str("// ── Tone + token-group member paths (token_groups SSOT) ──\n");
     out.push_str(
         "/** Semantic paint Tone allowlist (Style bound `tone` / host prop). No `'default'`.\n\
          \x20*  Rest paint = omit the tone attribute (component pack tokens). */\n         type Tone =\n",
     );
-    for name in TONE_GROUP_NAMES {
+    for name in tone_group_names() {
         out.push_str(&format!("  | '{name}'\n"));
     }
     out.push('\n');
@@ -461,7 +461,7 @@ fn emit_tone_group_types(out: &mut String) {
          \x20*  Resolves to public leaf tokens at compile (same as validate). */\n         type SailStaticGroupMemberPath =\n",
     );
     let mut any_static = false;
-    for g in TONE_GROUPS {
+    for g in tone_groups() {
         for m in g.members {
             if m.name == "default" {
                 continue;
@@ -475,10 +475,10 @@ fn emit_tone_group_types(out: &mut String) {
     }
     out.push('\n');
 
-    // Bound prop paths for the tone family (root + members present on every group).
+    // Bound prop paths — bridge-var realization (host reflects var references).
     out.push_str(
-        "/** Bound `tone` prop paths — product: `bg(tone)`, `fg(tone.foreground)`.\n\
-         \x20*  Expands attr-gated over the Tone table at emit. */\n         type SailBoundTonePath =\n         \x20 | 'tone'\n",
+        "/** Bound Tone-typed prop paths — product: `bg(tone)`, `fg(tone.foreground)`.\n\
+         \x20*  Emits bridge vars; host sets `--tone: var(--primary)` from the prop. */\n         type SailBoundTonePath =\n         \x20 | 'tone'\n",
     );
     // Members that exist on *every* group (bound_member_valid) — default is bare `tone`.
     let common_members = common_bound_member_names();
@@ -498,7 +498,7 @@ fn emit_tone_group_types(out: &mut String) {
     // Document TONE table shape for hover/docs (mirrors packages/sail/tokens unions).
     out.push_str("/** Tone group → members → public token name (informational; paint uses paths above). */\n");
     out.push_str("type SailToneTable = {\n");
-    for g in TONE_GROUPS {
+    for g in tone_groups() {
         out.push_str(&format!("  {}: {{\n", g.name));
         for m in g.members {
             out.push_str(&format!(
@@ -509,13 +509,12 @@ fn emit_tone_group_types(out: &mut String) {
         out.push_str("  }\n");
     }
     out.push_str("}\n\n");
-
-    let _ = TONE_FAMILY; // keep family import load-bearing for docs/parity
 }
 
 /// Member names present on every group in the bound Tone family (excl. gaps like hover).
 fn common_bound_member_names() -> Vec<&'static str> {
-    let Some(first) = TONE_GROUPS.first() else {
+    let groups = tone_groups();
+    let Some(first) = groups.first() else {
         return Vec::new();
     };
     first
@@ -523,7 +522,9 @@ fn common_bound_member_names() -> Vec<&'static str> {
         .iter()
         .map(|m| m.name)
         .filter(|name| {
-            TONE_GROUPS.iter().all(|g| g.members.iter().any(|m| m.name == *name))
+            groups
+                .iter()
+                .all(|g| g.members.iter().any(|m| m.name == *name))
         })
         .collect()
 }
@@ -1415,7 +1416,7 @@ mod tests {
             !tone_block.contains("'default'"),
             "Tone must not include 'default':\n{tone_block}"
         );
-        for name in TONE_GROUP_NAMES {
+        for name in tone_group_names() {
             assert!(
                 tone_block.contains(&format!("'{name}'")),
                 "Tone missing {name}:\n{tone_block}"

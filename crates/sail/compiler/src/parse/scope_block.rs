@@ -551,6 +551,50 @@ fn harvest_style_consts_loose_all_scopes(source: &str, env: &mut StyleEnv) {
     }
 }
 
+/// Prop names whose type is a Tone union (type-keyed group bind).
+///
+/// Scans every `<scope>` props block; used so Style parse recognizes
+/// `bg(shade)` when `shade: Tone` (not only the product ambient `tone`).
+pub(crate) fn tone_typed_prop_names(source: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = source;
+    while let Some(open_rel) = rest.find("<scope") {
+        let after_open_tag = &rest[open_rel..];
+        let Some(gt_rel) = after_open_tag.find('>') else {
+            break;
+        };
+        let tag_head = &after_open_tag[..gt_rel];
+        if tag_head
+            .as_bytes()
+            .get(6)
+            .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'-')
+        {
+            rest = &after_open_tag[1..];
+            continue;
+        }
+        let body_start = open_rel + gt_rel + 1;
+        let after_body = &rest[body_start..];
+        let Some(close_rel) = after_body.find("</scope>") else {
+            break;
+        };
+        let body = &after_body[..close_rel];
+        if let Ok(block) = parse_scope_block(body, Span::new(0, body.len())) {
+            for p in &block.props {
+                if let crate::ir::PropKind::Union(members) = &p.kind {
+                    if sail_lint::token_groups::is_tone_union(members) {
+                        let name = crate::emit::util::camel_of(&p.name);
+                        if !out.contains(&name) {
+                            out.push(name);
+                        }
+                    }
+                }
+            }
+        }
+        rest = &after_body[close_rel + "</scope>".len()..];
+    }
+    out
+}
+
 /// Collect Style consts from every `<scope>…</scope>` body in an SFC source.
 /// Used by preprocess before `sx=` lowering so `Ref` names resolve.
 pub(crate) fn style_env_from_source(source: &str) -> StyleEnv {

@@ -1,7 +1,7 @@
 <!--
   <separator> — native <hr>. Style value language only.
   Rest paint = separator.line when tone is omitted.
-  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone.
   Host subset: muted | primary | destructive (not full Tone).
   Orientation × dashed compounds remain (not pure group-member paint).
 -->

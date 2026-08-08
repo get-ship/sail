@@ -1,7 +1,7 @@
 <!--
   <button> — native <button>. L1 platform control. Style value language only.
   Rest paint = component.button tokens when tone is omitted.
-  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone.
 -->
 
 <scope>

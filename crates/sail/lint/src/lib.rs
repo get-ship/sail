@@ -32,7 +32,8 @@ pub mod style {
         lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes, setters,
         style_complete_at, style_complete_context_at, style_complete_for_context,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
-        surface_pack_for_host, text_channel_host_error, token_groups, when_keys, with_host_surface,
+        surface_pack_for_host, text_channel_host_error, token_groups, when_keys,
+        with_bound_group_props, with_host_surface,
     };
 }
 

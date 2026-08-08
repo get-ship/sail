@@ -1,7 +1,7 @@
 <!--
   <alert> — L1 inline status banner. Style value language only.
   Stripe / icon rest = alert tokens when tone is omitted.
-  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone group paths.
   Host subset: muted | info | success | warning | destructive (no primary/accent product use).
 -->
 

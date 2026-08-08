@@ -31,7 +31,7 @@ pub use complete::{
 };
 
 pub use component_surfaces::{color_paint_vocabulary, is_component_public_name, surface_pack_for_host};
-pub use host_ctx::with_host_surface;
+pub use host_ctx::{with_bound_group_props, with_host_surface};
 pub use channel::{
     Channel, TEXT_BEARING_ELEMENTS, channel_for_setter, is_animate_trigger, is_geometry_setter,
     is_interaction_when_key, is_text_bearing, style_contains_geometry, style_uses_text_channel,

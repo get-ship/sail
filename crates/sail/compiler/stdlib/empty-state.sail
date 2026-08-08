@@ -2,7 +2,7 @@
   <empty-state> — L1 centered empty placeholder.
   Style value language only. size/variant ordinary props.
   Icon rest = empty-state tokens when tone is omitted.
-  Semantic paint = bound tone (icon fg). Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone (icon fg).
 -->
 
 <scope>

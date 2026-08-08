@@ -1,7 +1,7 @@
 <!--
   <toast> — auto-dismiss + close. Style value language only.
   Start stripe rest = toast.stripe when tone is omitted.
-  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone group paths.
 -->
 
 <scope>

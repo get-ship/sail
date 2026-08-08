@@ -6,11 +6,18 @@
 //!
 //! Style author forms:
 //! - Static: `bg(primary)`, `fg(primary.foreground)` — resolve to public names.
-//! - Bound prop: `bg(tone)`, `fg(tone.foreground)` — expand over the prop's
-//!   group family with attribute-gated classes (`[tone='primary']…`).
+//! - Bound prop: `bg(tone)`, `fg(tone.foreground)`, `bg(shade)` with `shade: Tone`
+//!   — emit bridge vars (`var(--tone)`, `var(--tone-foreground)`); the host
+//!   reflects var *references* (`--tone: var(--primary)`) from the prop value.
 //!
-//! IR is a general member path; **Tone** is the first consumer (bound prop
-//! `tone` → [`TONE_GROUPS`]). Do not call group members "channels".
+//! **SSOT:** group tables are **derived** from the token registry (same DTCG
+//! paths that generate TS `Tone` / `TONE`), never dual hand tables.
+//!
+//! Binding is **type-keyed** (any Tone-typed prop), not name-keyed on `"tone"`.
+
+use std::sync::OnceLock;
+
+use crate::tokens;
 
 /// One member of a token group: author segment → public CSS token id.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,23 +37,8 @@ pub struct TokenGroup {
     pub members: &'static [GroupMember],
 }
 
-/// Closed family of groups (e.g. Tone allowlist).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TokenGroupFamily {
-    /// Prop name that expands over this family when used as a paint root.
-    pub prop: &'static str,
-    pub groups: &'static [TokenGroup],
-}
-
-const fn m(name: &'static str, public_name: &'static str) -> GroupMember {
-    GroupMember { name, public_name }
-}
-
-/// Tone allowlist v1 — curated semantic paint groups (not entire `color.*`).
-///
-/// `'default'` is **not** a Tone member. Rest paint = component tokens when
-/// the `tone` attribute is unset.
-pub const TONE_GROUP_NAMES: &[&str] = &[
+/// Preferred Tone allowlist order (membership from registry; this only sorts).
+const TONE_ORDER: &[&str] = &[
     "primary",
     "info",
     "success",
@@ -56,69 +48,172 @@ pub const TONE_GROUP_NAMES: &[&str] = &[
     "muted",
 ];
 
-/// Group → members → public name. Mirrors DTCG `color.<stem>.*` with
-/// `brandAccent` published as `accent` (generator `public_name` policy).
-pub const TONE_GROUPS: &[TokenGroup] = &[
-    TokenGroup {
-        name: "primary",
-        members: &[
-            m("default", "primary"),
-            m("foreground", "primary-foreground"),
-            m("hover", "primary-hover"),
-        ],
-    },
-    TokenGroup {
-        name: "info",
-        members: &[m("default", "info"), m("foreground", "info-foreground")],
-    },
-    TokenGroup {
-        name: "success",
-        members: &[
-            m("default", "success"),
-            m("foreground", "success-foreground"),
-        ],
-    },
-    TokenGroup {
-        name: "warning",
-        members: &[
-            m("default", "warning"),
-            m("foreground", "warning-foreground"),
-        ],
-    },
-    TokenGroup {
-        name: "destructive",
-        members: &[
-            m("default", "destructive"),
-            m("foreground", "destructive-foreground"),
-        ],
-    },
-    TokenGroup {
-        name: "accent",
-        members: &[m("default", "accent"), m("foreground", "accent-foreground")],
-    },
-    TokenGroup {
-        name: "muted",
-        members: &[m("default", "muted"), m("foreground", "muted-foreground")],
-    },
-];
-
-/// Bound prop `tone` expands over [`TONE_GROUPS`].
-pub const TONE_FAMILY: TokenGroupFamily = TokenGroupFamily {
-    prop: "tone",
-    groups: TONE_GROUPS,
-};
-
-/// Bound paint roots that expand over a group family (attr-gated emit).
-pub fn bound_group_family(root: &str) -> Option<&'static TokenGroupFamily> {
-    match root {
-        "tone" => Some(&TONE_FAMILY),
-        _ => None,
+/// DTCG path stem for a public Tone name (`accent` ← `brandAccent`).
+fn dtcg_stem(public_group: &str) -> &str {
+    match public_group {
+        "accent" => "brandAccent",
+        other => other,
     }
+}
+
+fn leak_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
+}
+
+fn leak_members(members: Vec<GroupMember>) -> &'static [GroupMember] {
+    Box::leak(members.into_boxed_slice())
+}
+
+fn leak_groups(groups: Vec<TokenGroup>) -> &'static [TokenGroup] {
+    Box::leak(groups.into_boxed_slice())
+}
+
+fn leak_names(names: Vec<&'static str>) -> &'static [&'static str] {
+    Box::leak(names.into_boxed_slice())
+}
+
+/// Build Tone groups from the token registry path map.
+fn derive_tone_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
+    let mut groups: Vec<TokenGroup> = Vec::with_capacity(TONE_ORDER.len());
+    let mut names: Vec<&'static str> = Vec::with_capacity(TONE_ORDER.len());
+
+    for &name in TONE_ORDER {
+        let stem = dtcg_stem(name);
+        let mut members: Vec<GroupMember> = Vec::new();
+
+        // default
+        let default_public = tokens::path_to_css_name(&format!("color.{stem}.default"))
+            .or_else(|| tokens::path_to_css_name(&format!("color.{stem}")))
+            .unwrap_or(name);
+        members.push(GroupMember {
+            name: "default",
+            public_name: if default_public == name {
+                name
+            } else {
+                leak_str(default_public.to_string())
+            },
+        });
+
+        // foreground
+        let fg_public = tokens::path_to_css_name(&format!("color.{stem}.foreground"))
+            .map(|s| {
+                if s == name {
+                    // shouldn't happen
+                    leak_str(format!("{name}-foreground"))
+                } else {
+                    // Prefer leaked stable string; common names match pattern.
+                    leak_str(s.to_string())
+                }
+            })
+            .unwrap_or_else(|| leak_str(format!("{name}-foreground")));
+        members.push(GroupMember {
+            name: "foreground",
+            public_name: fg_public,
+        });
+
+        // hover only when present in registry
+        if let Some(h) = tokens::path_to_css_name(&format!("color.{stem}.hover")) {
+            members.push(GroupMember {
+                name: "hover",
+                public_name: leak_str(h.to_string()),
+            });
+        } else if name == "primary" && tokens::registry().contains("primary-hover") {
+            members.push(GroupMember {
+                name: "hover",
+                public_name: "primary-hover",
+            });
+        }
+
+        names.push(name);
+        groups.push(TokenGroup {
+            name,
+            members: leak_members(members),
+        });
+    }
+
+    (leak_names(names), leak_groups(groups))
+}
+
+fn tone_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
+    static CACHE: OnceLock<(&'static [&'static str], &'static [TokenGroup])> = OnceLock::new();
+    *CACHE.get_or_init(derive_tone_tables)
+}
+
+/// Tone allowlist — curated semantic paint groups (not entire `color.*`).
+///
+/// `'default'` is **not** a Tone member. Rest paint = component tokens when
+/// the group-typed prop attribute is unset.
+pub fn tone_group_names() -> &'static [&'static str] {
+    tone_tables().0
+}
+
+/// Group → members → public name. Derived from the token registry.
+pub fn tone_groups() -> &'static [TokenGroup] {
+    tone_tables().1
+}
+
+/// Bridge CSS custom-property name for a bound group member path.
+/// - `tone` / default → `tone`
+/// - `tone.foreground` → `tone-foreground`
+/// - `shade.hover` → `shade-hover`
+pub fn bridge_var_name(prop: &str, path: &[String]) -> String {
+    let prop_kebab = camel_to_kebab(prop);
+    match path {
+        [] => prop_kebab,
+        [one] if one == "default" => prop_kebab,
+        [one] => format!("{prop_kebab}-{one}"),
+        segs => format!("{prop_kebab}-{}", segs.join("-")),
+    }
+}
+
+/// CSS `var(--…)` read for a bound group member path.
+pub fn bridge_var_ref(prop: &str, path: &[String]) -> String {
+    format!("var(--{})", bridge_var_name(prop, path))
+}
+
+/// Public token id for one (group value, member path).
+pub fn public_name_for_group_value(group_value: &str, path: &[String]) -> Option<&'static str> {
+    let group = tone_groups().iter().find(|g| g.name == group_value)?;
+    resolve_group_member(group, path).ok()
+}
+
+/// Host reflection value: `var(--primary)` / `var(--primary-foreground)`.
+pub fn reflect_var_reference(group_value: &str, path: &[String]) -> Option<String> {
+    public_name_for_group_value(group_value, path).map(|p| format!("var(--{p})"))
+}
+
+/// All (member name or "" for default, public_name) pairs for a group value.
+pub fn group_value_member_publics(
+    group_value: &str,
+) -> Option<Vec<(&'static str, &'static str)>> {
+    let group = tone_groups().iter().find(|g| g.name == group_value)?;
+    Some(
+        group
+            .members
+            .iter()
+            .map(|m| {
+                let path = if m.name == "default" { "" } else { m.name };
+                (path, m.public_name)
+            })
+            .collect(),
+    )
+}
+
+/// Whether `members` is a Tone-shaped union (every member is a Tone group name,
+/// non-empty, no `'default'`). Used for type-keyed binding.
+pub fn is_tone_union(members: &[String]) -> bool {
+    if members.is_empty() {
+        return false;
+    }
+    let names = tone_group_names();
+    members
+        .iter()
+        .all(|m| m != "default" && names.iter().any(|n| *n == m.as_str()))
 }
 
 /// Static group stem lookup (e.g. `primary` in `primary.foreground`).
 pub fn static_token_group(name: &str) -> Option<&'static TokenGroup> {
-    TONE_GROUPS.iter().find(|g| g.name == name)
+    tone_groups().iter().find(|g| g.name == name)
 }
 
 /// Resolve a member path on a group. Empty `path` → `default` member.
@@ -160,22 +255,46 @@ pub fn resolve_static_member_path(root: &str, path: &[String]) -> Result<String,
     resolve_group_member(group, path).map(|s| s.to_string())
 }
 
-/// Whether every group in a bound family has the given member path.
-pub fn bound_member_valid(family: &TokenGroupFamily, path: &[String]) -> Result<(), String> {
-    for g in family.groups {
+/// Whether every Tone group has the given member path (bound member validity).
+pub fn bound_member_valid(path: &[String]) -> Result<(), String> {
+    for g in tone_groups() {
         resolve_group_member(g, path)?;
     }
     Ok(())
 }
 
-/// Public token id for one (group, member path) on a bound family.
-pub fn bound_public_name(
-    family: &TokenGroupFamily,
-    group_name: &str,
-    path: &[String],
-) -> Option<&'static str> {
-    let group = family.groups.iter().find(|g| g.name == group_name)?;
-    resolve_group_member(group, path).ok()
+/// True if `root` (+ optional member path) looks like a bound group-typed paint
+/// root — not a static group stem, not a surface.
+///
+/// Type-keyed: only roots installed via
+/// [`crate::host_ctx::with_bound_group_props`] (plus product ambient `tone`)
+/// are recognized. Scale tokens (`sm`, `2`, `solid`) stay ordinary Tokens.
+pub fn looks_like_bound_group_root(root: &str, path: &[String]) -> bool {
+    let _ = path;
+    if static_token_group(root).is_some() {
+        return false;
+    }
+    if crate::component_surfaces::current_surface_pack() == Some(root) {
+        return false;
+    }
+    // Type-keyed (or product ambient `tone`). Member validity is checked at
+    // parse (diagnostic) and binding (refusal for non-universal members).
+    crate::host_ctx::is_bound_group_prop(root)
+}
+
+fn camel_to_kebab(name: &str) -> String {
+    let mut out = String::with_capacity(name.len() + 4);
+    for (i, c) in name.chars().enumerate() {
+        if c.is_ascii_uppercase() {
+            if i != 0 {
+                out.push('-');
+            }
+            out.extend(c.to_lowercase());
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -184,9 +303,11 @@ mod tests {
 
     #[test]
     fn tone_allowlist_has_no_default_group() {
-        assert!(!TONE_GROUP_NAMES.contains(&"default"));
-        assert_eq!(TONE_GROUPS.len(), TONE_GROUP_NAMES.len());
-        for (g, n) in TONE_GROUPS.iter().zip(TONE_GROUP_NAMES.iter()) {
+        let names = tone_group_names();
+        let groups = tone_groups();
+        assert!(!names.contains(&"default"));
+        assert_eq!(groups.len(), names.len());
+        for (g, n) in groups.iter().zip(names.iter()) {
             assert_eq!(&g.name, n);
             assert!(g.members.iter().any(|m| m.name == "default"));
             assert!(g.members.iter().any(|m| m.name == "foreground"));
@@ -216,15 +337,38 @@ mod tests {
     }
 
     #[test]
-    fn bound_tone_default_and_foreground() {
-        let f = bound_group_family("tone").unwrap();
-        assert!(bound_member_valid(f, &[]).is_ok());
-        assert!(bound_member_valid(f, &["foreground".into()]).is_ok());
-        // hover is not on every tone group
-        assert!(bound_member_valid(f, &["hover".into()]).is_err());
+    fn bound_member_default_and_foreground() {
+        assert!(bound_member_valid(&[]).is_ok());
+        assert!(bound_member_valid(&["foreground".into()]).is_ok());
+        assert!(bound_member_valid(&["hover".into()]).is_err());
         assert_eq!(
-            bound_public_name(f, "destructive", &["foreground".into()]),
+            public_name_for_group_value("destructive", &["foreground".into()]),
             Some("destructive-foreground")
         );
+    }
+
+    #[test]
+    fn bridge_var_names() {
+        assert_eq!(bridge_var_name("tone", &[]), "tone");
+        assert_eq!(
+            bridge_var_name("tone", &["foreground".into()]),
+            "tone-foreground"
+        );
+        assert_eq!(bridge_var_name("shade", &["hover".into()]), "shade-hover");
+    }
+
+    #[test]
+    fn tone_union_detection() {
+        assert!(is_tone_union(&[
+            "primary".into(),
+            "info".into(),
+            "success".into(),
+            "warning".into(),
+            "destructive".into(),
+            "accent".into(),
+            "muted".into(),
+        ]));
+        assert!(!is_tone_union(&["default".into(), "primary".into()]));
+        assert!(!is_tone_union(&["sm".into(), "md".into()]));
     }
 }

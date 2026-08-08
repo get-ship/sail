@@ -254,7 +254,7 @@ pub fn color_paint_vocabulary(host: Option<&str>) -> HashSet<String> {
         .map(|s| (*s).to_string())
         .collect();
     // Static tone group paths (non-default members).
-    for g in crate::token_groups::TONE_GROUPS {
+    for g in crate::token_groups::tone_groups() {
         for m in g.members {
             if m.name != "default" {
                 set.insert(format!("{}.{}", g.name, m.name));

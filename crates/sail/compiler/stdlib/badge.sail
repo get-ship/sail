@@ -1,7 +1,7 @@
 <!--
   <badge> — L1 language element. Style value language only.
   Rest paint = component.badge tokens when tone is omitted.
-  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone.
 -->
 
 <scope>
