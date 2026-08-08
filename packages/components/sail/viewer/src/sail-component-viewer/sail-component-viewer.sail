@@ -1,19 +1,6 @@
 <!--
-  <sail-component-viewer> — the shared component-viewing surface: a live stage
-  holding the REAL component (slot="stage"), variant chips that drive a real
-  attribute on it, and its generated prop table. Every surface that shows a
-  component composes this one — docs, studio, devtools, eval.
-
-    <sail-component-viewer name="badge" variant-attr="variant"
-                          variants={['solid','soft','outline']}
-                          props={PROP_REGISTRY.badge}
-                          usage={snippet}>
-      <badge slot="stage" variant="solid" tone="primary">Live</badge>
-    </sail-component-viewer>
-
-  The specimen is slotted, so the viewer never mounts a fake: the host renders
-  the component it actually ships. Picking a variant writes the named attribute
-  onto every slotted element and emits sail-variant-change.
+  <sail-component-viewer> — live stage (slot=stage), variant chips, prop table.
+  Specimen is slotted; picking a variant writes the named attribute on stage kids.
 -->
 
 <scope>
@@ -28,13 +15,16 @@
     'variant-attr' = ''
     /** Variant values. */
     variants: string[]
-    /** Prop rows — the generated registry's shape. (`props` is the runtime's
-        own context key, so the rows land on `rows`.) */
+    /** Prop rows — registry shape (`props` is a runtime context key → `rows`). */
     rows: PropRow[]
     /** A complete, compiling usage program. */
     usage = ''
-    /** Hide the a11y assurance chip (fx actions and the like). */
+    /** Hide the a11y assurance chip. */
     'no-a11y-chip' = false
+  }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
   }
 </scope>
 
@@ -60,16 +50,11 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
       variantList().map((v) => ({ v, variant: v === current() ? 'solid' : 'ghost' })),
     )
     mount((host) => {
-      // Picking a variant writes the real attribute onto the slotted specimen —
-      // the viewer drives the component, it does not simulate it.
       const apply = (): void => {
         const attr = variantAttr()
         const val = current()
-        // Skip fake/label-only attrs (e.g. dialog "open as") — invalid names
-        // crash setAttribute and take the whole tab with them.
+        // Skip label-only attrs (invalid names crash setAttribute).
         if (!attr || !val || !/^[A-Za-z_:][\w:.-]*$/.test(attr)) return
-        // No-op when already applied — setAttribute storms re-enter effects /
-        // MutationObservers and freeze the tab.
         for (const el of host.querySelectorAll('[slot="stage"]')) {
           if (el.getAttribute(attr) !== val) el.setAttribute(attr, val)
         }
@@ -83,8 +68,6 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
         ;(host as any).onVariantChange?.({ variant: v })
       }
       host.addEventListener('click', onClick)
-      // The specimen tracks the selection: identity props (variants) may land
-      // after mount, and a pick must reach the slotted element either way.
       const stop = effect(apply)
       return () => {
         stop()
@@ -126,14 +109,14 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
       </row>
     </row>
 
-    <center data-stage style({  box: grow(1).pad(6).minH(9)  })>
+    <center data-stage style({ box: grow(1).pad(6).minH(9) })>
       <slot name="stage"></slot>
     </center>
   </column>
 
   <if {hasUsage()}>
     <column gap="2">
-      <p style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })>Usage — a complete program</p>
+      <p style(sectionLabel)>Usage — a complete program</p>
       <code-block code={usage()}></code-block>
     </column>
   </if>
@@ -141,7 +124,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
   <if {hasProps()}>
     <card style({ box: pad(4) })>
       <column gap="3">
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })>Props</p>
+        <p style(sectionLabel)>Props</p>
         <for {propRows() as r} key={r.name}>
           <column gap="1">
             <row gap="3" align="baseline">
