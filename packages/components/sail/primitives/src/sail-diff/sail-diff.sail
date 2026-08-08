@@ -1,23 +1,8 @@
 <!--
-  <sail-diff> — unified diff renderer. Accepts from/to (LCS diff computed) or a
-  raw unified-diff string via value.
-
-  Prop parity
-  ----------------------------------------------------------------
-  from  (string, reflect)   original text
-  to    (string, reflect)   revised text
-  value (string, reflect)   raw unified-diff (wins over from/to)
-  ----------------------------------------------------------------
-  (no events, no slots)
-  ARIA: host role=region + aria-label="diff" (controller sets if absent);
-        each line role=listitem + aria-label="added|removed|hunk|context: …"
-
-  The controller computes `lines()` as data; the template renders them with
-  {#for}/{#match}, one static sx read per line kind.
-
-  LANG-GAP: white-space control is not sx vocabulary — code lines must not
-  collapse space runs, so the text rides a <pre> (pre, not the pre-wrap +
-  break-word this component actually wants).
+  <sail-diff> — unified diff renderer.
+  from/to run LCS; value is a raw unified-diff string and wins when set.
+  Host role=region + aria-label="diff"; each line is a listitem with kind label.
+  Lines use <pre> so space runs stay intact (no white-space Style setter for pre).
 -->
 
 <scope>
@@ -26,73 +11,67 @@
     to = ''
     value = ''
   }
+
+  style root = {
+    box: w(full).minW(0).overflowX(auto),
+    paint: bg(surface-0),
+  }
+  style mono = {
+    box: display(contents),
+    text: fontFamily(mono).fontSize(xs).leading(normal),
+  }
+  style lineAdd = {
+    box: padX(2).padY(px).w(full).minW(0),
+    paint: colorMix(success, 15),
+  }
+  style lineDel = {
+    box: padX(2).padY(px).w(full).minW(0),
+    paint: colorMix(destructive, 15),
+  }
+  style lineHunk = {
+    box: padX(2).padY(px).w(full).minW(0),
+    paint: bg(muted),
+  }
+  style lineCtx = {
+    box: padX(2).padY(px).w(full).minW(0),
+  }
+  style signAdd = {
+    box: shrink(0).w(4),
+    paint: fg(success),
+    text: fontWeight(semibold),
+  }
+  style signDel = {
+    box: shrink(0).w(4),
+    paint: fg(destructive),
+    text: fontWeight(semibold),
+  }
+  style signHunk = {
+    box: shrink(0).w(4),
+    paint: fg(info),
+  }
+  style signCtx = {
+    box: shrink(0).w(4),
+    paint: fg(muted-foreground),
+  }
+  style textBody = {
+    box: grow(1).minW(0),
+    paint: fg(foreground),
+    text: fontSize(xs),
+  }
+  style textHunk = {
+    box: grow(1).minW(0),
+    paint: fg(info),
+    text: fontSize(xs),
+  }
 </scope>
 
 <controller>
 
 import type { Scope } from './sail-diff.sail'
-
-type Kind = 'add' | 'del' | 'ctx' | 'hunk'
-interface Line {
-  id: number
-  key: string
-  kind: Kind
-  text: string
-  sign: string
-  label: string
-}
-
-function diffKinds(a: string, b: string): Array<{ kind: Kind; text: string }> {
-  const A = a.split('\n')
-  const B = b.split('\n')
-  const n = A.length
-  const m = B.length
-  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0))
-  for (let i = n - 1; i >= 0; i--) {
-    for (let j = m - 1; j >= 0; j--) {
-      dp[i]![j] = A[i] === B[j] ? dp[i + 1]![j + 1]! + 1 : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!)
-    }
-  }
-  const out: Array<{ kind: Kind; text: string }> = []
-  let i = 0
-  let j = 0
-  while (i < n && j < m) {
-    if (A[i] === B[j]) { out.push({ kind: 'ctx', text: A[i]! }); i++; j++ }
-    else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) { out.push({ kind: 'del', text: A[i]! }); i++ }
-    else { out.push({ kind: 'add', text: B[j]! }); j++ }
-  }
-  while (i < n) out.push({ kind: 'del', text: A[i++]! })
-  while (j < m) out.push({ kind: 'add', text: B[j++]! })
-  return out
-}
-
-function parseUnified(value: string): Array<{ kind: Kind; text: string }> {
-  return value.split('\n').map((line) => {
-    if (line.startsWith('@@')) return { kind: 'hunk' as Kind, text: line }
-    if (line.startsWith('+')) return { kind: 'add' as Kind, text: line.slice(1) }
-    if (line.startsWith('-')) return { kind: 'del' as Kind, text: line.slice(1) }
-    return { kind: 'ctx' as Kind, text: line.startsWith(' ') ? line.slice(1) : line }
-  })
-}
-
-const SIGNS: Record<Kind, string> = { add: '+', del: '-', hunk: '@', ctx: ' ' }
-const LABELS: Record<Kind, string> = { add: 'added', del: 'removed', hunk: 'hunk', ctx: 'context' }
+import { buildDiffLines } from './diff-lines'
 
 export default controller(({ from, to, value }: Scope) => {
-    const lines = derived((): Line[] => {
-      const v = value()
-      const f = from()
-      const t = to()
-      const raw = v ? parseUnified(v) : f || t ? diffKinds(f, t) : []
-      return raw.map((l, i) => ({
-        id: i,
-        key: `${i}:${l.kind}`,
-        kind: l.kind,
-        text: l.text,
-        sign: SIGNS[l.kind],
-        label: `${LABELS[l.kind]}: ${l.text}`,
-      }))
-    })
+    const lines = derived(() => buildDiffLines(from(), to(), value()))
 
     mount((host) => {
       if (!host.hasAttribute('role')) host.setAttribute('role', 'region')
@@ -103,25 +82,61 @@ export default controller(({ from, to, value }: Scope) => {
   })
 </controller>
 
-<!--
-  Flush surface for embed in tutorial/editor chrome — no outer radius/border
-  double-boxing. Rows paint add/del distinctly; pre keeps spaces intact.
--->
-<column role="list" gap="0" style({ box: w(full).minW(0).overflowX(auto), paint: bg(surface-0) })>  <span style({ box: display(contents), text: fontFamily(mono).fontSize(xs).leading(normal) })>    <for {lines() as line} key={line.key}>
-    <match {line.kind}>
-      {'add' => <row role="listitem" data-line-kind="add" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(success, 15) })>
-          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(success), text: fontWeight(semibold)  })>{line.sign}</small>
-          <pre style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })>{line.text}</pre>
-        </row>}{'del' => <row role="listitem" data-line-kind="del" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0), paint: colorMix(destructive, 15) })>
-          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(destructive), text: fontWeight(semibold)  })>{line.sign}</small>
-          <pre style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })>{line.text}</pre>
-        </row>}{'hunk' => <row role="listitem" data-line-kind="hunk" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0), paint: bg(muted) })>
-          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(info)  })>{line.sign}</small>
-          <pre style({  box: grow(1).minW(0), paint: fg(info), text: fontSize(xs)  })>{line.text}</pre>
-        </row>}{else => <row role="listitem" data-line-kind="ctx" aria-label={line.label} nowrap gap="0" style({ box: padX(2).padY(px).w(full).minW(0) })>
-          <small aria-hidden="true" style({  box: shrink(0).w(4), paint: fg(muted-foreground)  })>{line.sign}</small>
-          <pre style({  box: grow(1).minW(0), paint: fg(foreground), text: fontSize(xs)  })>{line.text}</pre>
-        </row>}</match>
-  </for>
+<!-- data-line-kind is pack-internal part identity for tests / consumers. -->
+<column role="list" gap="0" style(root)>
+  <span style(mono)>
+    <for {lines() as line} key={line.key}>
+      <match {line.kind}>
+        {'add' =>
+          <row
+            role="listitem"
+            data-line-kind="add"
+            aria-label={line.label}
+            nowrap
+            gap="0"
+            style(lineAdd)
+          >
+            <small aria-hidden="true" style(signAdd)>{line.sign}</small>
+            <pre style(textBody)>{line.text}</pre>
+          </row>
+        }{'del' =>
+          <row
+            role="listitem"
+            data-line-kind="del"
+            aria-label={line.label}
+            nowrap
+            gap="0"
+            style(lineDel)
+          >
+            <small aria-hidden="true" style(signDel)>{line.sign}</small>
+            <pre style(textBody)>{line.text}</pre>
+          </row>
+        }{'hunk' =>
+          <row
+            role="listitem"
+            data-line-kind="hunk"
+            aria-label={line.label}
+            nowrap
+            gap="0"
+            style(lineHunk)
+          >
+            <small aria-hidden="true" style(signHunk)>{line.sign}</small>
+            <pre style(textHunk)>{line.text}</pre>
+          </row>
+        }{else =>
+          <row
+            role="listitem"
+            data-line-kind="ctx"
+            aria-label={line.label}
+            nowrap
+            gap="0"
+            style(lineCtx)
+          >
+            <small aria-hidden="true" style(signCtx)>{line.sign}</small>
+            <pre style(textBody)>{line.text}</pre>
+          </row>
+        }
+      </match>
+    </for>
   </span>
 </column>

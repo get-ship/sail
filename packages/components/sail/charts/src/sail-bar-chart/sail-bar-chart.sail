@@ -1,31 +1,8 @@
 <!--
   <sail-bar-chart> — vertical or horizontal categorical bar chart, SVG-rendered.
-
-  MIGRATED onto the createChartData engine + createChartViewport adapter: the
-  comma-string `data` decodes through `normalizeSeries`, bars are a pure
-  `derived` (present at first paint), the ad-hoc `isEmpty` signal is replaced by
-  the engine discriminator composing `sail-empty-state`, loading composes
-  `sail-skeleton`, and the `max=0`→auto domain convention is preserved by the
-  engine extent. The viewBox tracks the measured box.
-
-  Props
-  ─────────────────────────────────────────────────────────────────────────────
-  data         string  reflect    comma-separated numbers (normalizeSeries).
-  labels       string             used as <title> per bar.
-  tone         union   reflect    series color (toneColor role-token map).
-  orientation  union   reflect    vertical | horizontal.
-  width        number  300        initial estimate — measured box drives render.
-  height       number  200        same.
-  max          number  0          0 = auto (engine extent yMax-null semantics).
-  label        string  "bar chart"  aria-label kind (prefixes the data summary).
-  loading      bool    reflect    loading branch (engine isLoading) → sail-skeleton.
-  error        —       error identity-only → sail-error-state.
-  ─────────────────────────────────────────────────────────────────────────────
-  Slots: description (described-data override)
-
-  The SVG is the component's box: full-bleed width, `height` px tall. Bars rest
-  at 85% fill so a dense chart reads as one mass rather than a row of shouting
-  blocks.
+  Geometry is pure derived over createChartData + createChartViewport.
+  `max=0` means auto domain (engine yMax-null). Loading / empty / error compose
+  skeleton / empty-state / error-state.
 -->
 
 <scope>
@@ -52,8 +29,7 @@ import { barGeometry } from '../engine/geometry-cartesian'
 import { parseLabels } from '../chart-util'
 import type { Scope } from './sail-bar-chart.sail'
 
-// `error` arrives via `error={…}` identity (no decodable <prop> for
-// `unknown`); read off the host in `mount` and patch the engine.
+// `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
 interface BarHost extends Element {
   error?: unknown
 }
@@ -65,14 +41,12 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     })
     const chart = createChartData({
       series: derived(() => normalizeSeries(data())),
-      // Bars grow from a zero baseline; `max>0` caps the y-domain, `0` = auto
-      // (engine yMax-null) — reactive so changing `max` re-resolves the domain.
+      // Bars grow from zero; max>0 caps y-domain, 0 = auto.
       yMin: 0,
       yMax: derived(() => (max() > 0 ? max() : null)),
       isLoading: loading,
     })
 
-    // GEOMETRY IS A PURE DERIVED — present at first paint, no effect-into-signal.
     const bars = derived(() =>
       barGeometry(chart.normalized(), { w: viewport.width(), h: viewport.height() }, {
         horizontal: orientation() === 'horizontal',
@@ -82,10 +56,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     )
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
-    // The <svg> lives behind {#if}, so it mounts and unmounts as the chart
-    // moves between loading/error/empty and data. The action runs on each
-    // mount and disposes on each unmount — `observe()` builds a fresh
-    // observer per call, so the pair is re-entrant.
+    // SVG mounts/unmounts with the data branch; observe re-attaches each time.
     const observeViewport: Action<void> = (node) => {
       viewport.observe(node)
       return { destroy: () => viewport.dispose() }
@@ -101,17 +72,39 @@ export default controller(({ data, labels, tone, orientation, max, width, height
 
 </controller>
 <if {loading()}>
-  <skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
-{else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <svg
+  <skeleton
+    shape="block"
+    size="lg"
+    role="status"
+    aria-label="Loading"
+    aria-live="polite"
+    aria-busy="true"
+  ></skeleton>
+{else-if {chart.error()} =>
+  <error-state></error-state>
+}{else-if {chart.isEmpty()} =>
+  <empty-state></empty-state>
+}{else =>
+  <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
     height={height()}
     role="img"
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
-
-    use:observeViewport style({ box: display(block).w(full).overflow(hidden) })>
+    use:observeViewport
+    style({ box: display(block).w(full).overflow(hidden) })
+  >
     <for {bars() as b} key={b.id}>
-      <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
+      <rect
+        x={b.x}
+        y={b.y}
+        width={b.w}
+        height={b.h}
+        rx={b.rx}
+        ry={b.ry}
+        fill={b.color}
+        fill-opacity="0.85"
+      >
         <title>{b.title}</title>
       </rect>
     </for>
@@ -128,4 +121,5 @@ export default controller(({ data, labels, tone, orientation, max, width, height
         </for>
       </table>
     </slot>
-  </column>}</if>
+  </column>
+}</if>

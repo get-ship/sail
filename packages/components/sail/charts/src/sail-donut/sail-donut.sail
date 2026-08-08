@@ -1,30 +1,9 @@
 <!--
-  <sail-donut> — distribution donut, segments drawn as stroked arcs.
-
-  MIGRATED onto the createChartData engine + createChartViewport adapter: the
-  `[{label,value,tone?}]` JSON decodes through `normalizeSeries` (one series of
-  points), segments are a pure `derived` over `arcGeometry` (present at first
-  paint), and empty / loading / error branch on the engine discriminators
-  composing the full-size primitives. A null-valued slice is skipped per the
-  gap contract.
-
-  Props
-  ─────────────────────────────────────────────────────────────────────────────
-  data       string  reflect   JSON [{label,value,tone?}] SSR fallback; series
-                               identity supersedes (normalizeSeries handles both).
-  diameter   number  120       outer diameter in px (square viewBox). NOT `size`:
-                               that name is the framework's xs|sm|md|lg channel,
-                               which would retype this number to a union.
-  thickness  number  16        ring stroke width.
-  label      string  "donut chart"  aria-label kind (prefixes the data summary).
-  loading    bool    reflect   loading branch (engine isLoading) → sail-skeleton.
-  error      —       error identity-only → sail-error-state.
-  ─────────────────────────────────────────────────────────────────────────────
-  Slots: (default) center content · description (described-data override)
-
-  The ring and the center content are one <stack>: both children occupy the same
-  grid cell, so the slotted center label lands over the hole with no positioning
-  math. The stack shrink-wraps to the `diameter` box.
+  <sail-donut> — distribution donut; segments drawn as stroked arcs.
+  Geometry is pure derived over arcGeometry + createChartData.
+  Loading / empty / error compose skeleton / empty-state / error-state.
+  Default slot = center content (stack overlay); description overrides aria table.
+  `diameter` is not named `size` (that is the framework xs|sm|md|lg channel).
 -->
 
 <scope>
@@ -44,23 +23,19 @@ import { normalizeSeries } from '../engine/normalize'
 import { arcGeometry } from '../engine/geometry-radial'
 import type { Scope } from './sail-donut.sail'
 
-// `error` arrives via `error={…}` identity (no decodable <prop> for
-// `unknown`); read off the host in `mount` and patch the engine.
+// `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
 interface DonutHost extends Element {
   error?: unknown
 }
 
 export default controller(({ data, diameter, thickness, label, loading }: Scope) => {
     const chart = createChartData({
-      // normalizeSeries accepts string | ChartSeries[] — ONE scope key handles
-      // both the SSR JSON string AND a live series identity, no cast.
+      // normalizeSeries accepts string | ChartSeries[] (SSR JSON + live identity).
       series: derived(() => normalizeSeries(data())),
       isLoading: loading,
     })
 
-    // GEOMETRY IS A PURE DERIVED — donut arcs are proportion-of-total, so the
-    // helper reads raw series values (not the 0..1 extent normalization). A
-    // null/non-positive slice is skipped per the gap contract.
+    // Proportion-of-total arcs; null/non-positive slices skipped (gap contract).
     const segments = derived(() =>
       arcGeometry(chart.series(), { size: diameter(), thickness: thickness() }),
     )
@@ -76,26 +51,57 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
 
 </controller>
 <if {loading()}>
-  <skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></skeleton>
-{else-if {chart.error()} => <error-state></error-state>}{else-if {chart.isEmpty()} => <empty-state></empty-state>}{else => <stack style({ box: w(fit) })>
+  <skeleton
+    shape="circle"
+    size="lg"
+    role="status"
+    aria-label="Loading"
+    aria-live="polite"
+    aria-busy="true"
+  ></skeleton>
+{else-if {chart.error()} =>
+  <error-state></error-state>
+}{else-if {chart.isEmpty()} =>
+  <empty-state></empty-state>
+}{else =>
+  <stack style({ box: w(fit) })>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
       height={diameter()}
       role="img"
       aria-label={ariaLabel()}
-      aria-describedby="chart-data" style({ box: display(block) })>
-      <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
-      </circle>
+      aria-describedby="chart-data"
+      style({ box: display(block) })
+    >
+      <circle
+        cx={diameter() / 2}
+        cy={diameter() / 2}
+        r={(diameter() - thickness()) / 2}
+        fill="none"
+        stroke="var(--muted)"
+        stroke-width={thickness()}
+      ></circle>
       <for {segments() as seg} key={seg.id}>
-        <path d={seg.d} fill="none" stroke={seg.color} stroke-width={thickness()} stroke-linecap="butt">
+        <path
+          d={seg.d}
+          fill="none"
+          stroke={seg.color}
+          stroke-width={thickness()}
+          stroke-linecap="butt"
+        >
           <title>{seg.title}</title>
         </path>
       </for>
     </svg>
-    <center style({ paint: fg(foreground).pointerEvents(none) })>      <span style({ box: display(contents), text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight) })>        <slot></slot>
+    <center style({ paint: fg(foreground).pointerEvents(none) })>
+      <span style({
+        box: display(contents),
+        text: fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight),
+      })>
+        <slot></slot>
       </span>
-</center>
+    </center>
     <column id="chart-data" style({ paint: srOnly() })>
       <slot name="description">
         <table>
@@ -109,4 +115,5 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
         </table>
       </slot>
     </column>
-  </stack>}</if>
+  </stack>
+}</if>
