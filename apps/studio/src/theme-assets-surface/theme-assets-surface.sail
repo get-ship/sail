@@ -15,7 +15,26 @@
   style fontHit = { box: pad(2_5).minW(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
   style fontSample = { box: minW(0), paint: fg(foreground), text: fontSize(lg).leading(snug) }
   style catChip = { when: { selected: { paint: bg(selected-bg).fg(foreground).border(border) } } }
+  type TypeRoleSelectProps = {
+    token: string
+    label: string
+    value: string
+    disabled: boolean
+    options: any
+    onChange: any
+  }
 </scope>
+
+<partial type-role-select props: TypeRoleSelectProps>
+  <column gap="1">
+    <p style(fieldHint)>{label}</p>
+    <select type-token={token} size="sm" value={value} disabled={disabled} on:change={onChange}>
+      <for {options as o} key={o.key}>
+        <option value={o.value}>{o.label}</option>
+      </for>
+    </select>
+  </column>
+</partial>
 
 <controller>
 import { createThemeSession } from '../compositions/theme-session/theme-session'
@@ -71,30 +90,30 @@ export default controller(() => {
             <p style(pathMeta)>display · body · mono</p>
           </row>
           <column gap="3">
-            <column gap="1">
-              <p style(fieldHint)>Display</p>
-              <select type-token="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
-                <for {assets.displayFontOpts() as o} key={o.key}>
-                  <option value={o.value}>{o.label}</option>
-                </for>
-              </select>
-            </column>
-            <column gap="1">
-              <p style(fieldHint)>Body</p>
-              <select type-token="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
-                <for {assets.bodyFontOpts() as o} key={o.key}>
-                  <option value={o.value}>{o.label}</option>
-                </for>
-              </select>
-            </column>
-            <column gap="1">
-              <p style(fieldHint)>Mono</p>
-              <select type-token="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
-                <for {assets.monoFontOpts() as o} key={o.key}>
-                  <option value={o.value}>{o.label}</option>
-                </for>
-              </select>
-            </column>
+            <type-role-select
+              token="display"
+              label="Display"
+              value={assets.typeDisplay()}
+              disabled={!session.canEdit()}
+              options={assets.displayFontOpts()}
+              on-change={assets.onTypeSelect}
+            />
+            <type-role-select
+              token="body"
+              label="Body"
+              value={assets.typeBody()}
+              disabled={!session.canEdit()}
+              options={assets.bodyFontOpts()}
+              on-change={assets.onTypeSelect}
+            />
+            <type-role-select
+              token="mono"
+              label="Mono"
+              value={assets.typeMono()}
+              disabled={!session.canEdit()}
+              options={assets.monoFontOpts()}
+              on-change={assets.onTypeSelect}
+            />
           </column>
 
           <column font-discoverer gap="3">
