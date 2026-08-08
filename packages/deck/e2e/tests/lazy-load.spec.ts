@@ -18,7 +18,7 @@ test('routes are code-split: the counter chunk loads on-demand at nav, not upfro
   })
 
   await page.goto('/')
-  await expect(page.locator('main.home h1')).toHaveText('deck e2e')
+  await expect(page.getByRole('heading', { name: 'deck e2e' })).toBeVisible()
   // The home route pulled its OWN chunk (proof routes are split, not inlined in
   // the entry — an all-in-one entry would load zero page-*.js).
   const afterHome = new Set(pageChunks)
@@ -29,7 +29,7 @@ test('routes are code-split: the counter chunk loads on-demand at nav, not upfro
   // Navigate — the counter's chunk must be fetched NOW (lazy), i.e. a page chunk
   // that was NOT already loaded for the home route.
   await page.getByRole('link', { name: 'counter' }).click()
-  await expect(page.locator('.counter h1')).toHaveText('Counter')
+  await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()
   const fresh = [...pageChunks].filter((u) => !afterHome.has(u))
   expect(
     fresh.length,

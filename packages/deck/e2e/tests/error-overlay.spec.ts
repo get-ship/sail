@@ -39,7 +39,7 @@ test.describe('deck dev — runtime error overlay', () => {
 
   test('a healthy page shows no overlay', async ({ page }) => {
     await page.goto('/counter', { waitUntil: 'load' })
-    await expect(page.locator('[data-counter] h1')).toHaveText('Counter')
+    await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()
     await expect(page.locator('#__sail_error_overlay')).toHaveCount(0)
   })
 

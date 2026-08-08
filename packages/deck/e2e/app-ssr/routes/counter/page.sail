@@ -1,13 +1,10 @@
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
-
-// The signal's initial value lives in JS, so SSR can't fold it: the server
-// renders the static structure + a hydration anchor for the count slot; the
-// client fills `0` on hydrate. Clicking proves reactivity survived hydration.
+// Signal initial value lives in JS so SSR cannot fold it: server paints structure
+// + hydration anchor; client fills 0 on hydrate. Clicks prove reactivity survived.
 export default controller(() => ({ count: signal(0) }))
 </controller>
 
-<div data-counter="true">
+<div>
   <h1>Counter</h1>
   <p>Count: <strong>{count()}</strong></p>
   <button on:click={() => count.set(count() + 1)}>increment</button>

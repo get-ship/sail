@@ -22,7 +22,7 @@ test.describe('deck HMR — edit→reload loop', () => {
     const original = readFileSync(PAGE, 'utf8')
     try {
       await page.goto('/hmr-edit')
-      await expect(page.locator('.hmr-heading')).toHaveText('HMR original')
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('HMR original')
 
       // A sentinel on window: survives a SOFT reload, wiped by a full reload.
       await page.evaluate(() => {
@@ -30,7 +30,7 @@ test.describe('deck HMR — edit→reload loop', () => {
       })
 
       // Drive controller state to a non-default value.
-      const count = page.locator('.hmr-edit strong')
+      const count = page.locator('strong')
       const inc = page.getByRole('button', { name: 'increment' })
       await inc.click()
       await inc.click()
@@ -40,7 +40,9 @@ test.describe('deck HMR — edit→reload loop', () => {
       writeFileSync(PAGE, original.replace('HMR original', 'HMR edited'))
 
       // The code update arrives via HMR (debounce + rebuild + SSE + re-import).
-      await expect(page.locator('.hmr-heading')).toHaveText('HMR edited', { timeout: 30_000 })
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('HMR edited', {
+        timeout: 30_000,
+      })
       // Controller state preserved across the soft reload...
       await expect(count).toHaveText('2')
       // ...it was a SOFT reload (a full document reload would have wiped this)...

@@ -1,14 +1,18 @@
-<!--
-  A live [param] route — routes/examples/greet/[name]/page.sail matches
-  /examples/greet/:name. `route` is ambient in every route; route.params.name()
-  reads the segment as a signal, so the heading tracks the URL.
--->
-<article data-doc="true">
-  <p role="doc-eyebrow">Live example</p>
+<!-- Live [param] route — route.params.name() tracks the URL segment as a signal. -->
+
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>Live example</p>
   <h1>Hello, {route.params.name()}.</h1>
-  <p role="doc-lead">
+  <p style(lead)>
     This page is <code>routes/examples/greet/[name]/page.sail</code>. The
-    <code style(name)></code> directory is a route parameter, and
+    <code>{'[name]'}</code> directory is a route parameter, and
     <code>route.params.name()</code> reads it as a signal.
   </p>
   <p>
@@ -16,8 +20,8 @@
     <a href="/examples/greet/ada">/examples/greet/ada</a> or
     <a href="/examples/greet/deck">/examples/greet/deck</a>.
   </p>
-  <div role="navigation">
+  <row justify="between" style(footNav)>
     <a href="/dynamic-routes">← Dynamic routes</a>
     <span></span>
-  </div>
+  </row>
 </article>
