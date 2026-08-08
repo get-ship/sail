@@ -1,15 +1,10 @@
-<!--
-  Overview (`/`) — the docs landing. What deck is, the 30-second app, where it
-  sits relative to SAIL. Code snippets come from the controller as strings
-  (literal `{` in a template would parse as interpolation).
--->
+<!-- Overview (`/`) — what deck is, 30-second app, SAIL layering. -->
 
 <controller>
-// Overview controller — supplies the page's code snippets as strings (literal
-// braces in a .sail template parse as interpolation, so code lives here).
 import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
+// Snippets as strings — literal `{` in a template would parse as interpolation.
 const quickstart = `my-app/
 └─ routes/
    └─ page.sail        <h1>Hello, deck.</h1>
@@ -23,36 +18,44 @@ React  :  Next   :  your app`
 export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layers }))
 </controller>
 
-<article data-doc="true">
-  <p role="doc-eyebrow">deck · 0.2.0</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style callout = { box: padY(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).bg(surface-1), text: fontSize(sm) }
+  style calloutStrong = { paint: fg(foreground) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>deck · 0.2.0</p>
   <h1>The standalone web framework for SAIL.</h1>
-  <p role="doc-lead">
+  <p style(lead)>
     deck mounts SAIL routes, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
     state-preserving HMR. It is to SAIL what Next is to React.
   </p>
 
-  <div role="note">
-    <strong>This site is a deck app.</strong> Every page you read is a file-routed
-    deck route, server-rendered and hydrated. The docs are deck's own canonical
+  <div style(callout)>
+    <strong style(calloutStrong)>This site is a deck app.</strong> Every page you read is a file-routed
+    deck route, server-rendered and hydrated. The docs are deck’s own canonical
     example — and its release test.
   </div>
 
   <h2>The 30-second app</h2>
   <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
-  <pre data-code-block="true">{quickstart}</pre>
-  <p>That's a running SAIL single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
+  <code-block code={quickstart} lang="text"></code-block>
+  <p>That’s a running SAIL single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
 
   <h2>Where it sits</h2>
-  <pre data-code-block="true">{layers}</pre>
+  <code-block code={layers} lang="text"></code-block>
   <p>
     SAIL is the component language — signals, templates, controllers. deck is the
     framework around it — routing, rendering, build, serving. Your app is what
     you write under <code>routes/</code>.
   </p>
 
-  <div role="navigation">
-    <span></span>
+  <row justify="end" style(footNav)>
     <a variant="solid" href="/getting-started">Getting started →</a>
-  </div>
+  </row>
 </article>
