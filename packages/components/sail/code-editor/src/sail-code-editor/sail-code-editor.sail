@@ -200,7 +200,7 @@ export default controller((ctx: Scope) => {
         // (full-line underlines stack into the "overlapping warnings" mess).
         let end = from
         const text = doc.sliceString(from, startLine.to)
-        const m = text.style({ match: { : { A-Za-z0-9_: { } } } })
+        const m = text.match(/[A-Za-z0-9_]+/)
         end = m ? from + m[0].length : Math.min(startLine.to, from + 1)
         to = end
       }

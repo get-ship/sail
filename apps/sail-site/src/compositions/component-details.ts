@@ -6,7 +6,7 @@
 // <scope> props declaration. The usage strings live in
 // ./snippets.ts so the site-wide snippet guard compiles every one
 // of them.
-import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
+import { PROP_REGISTRY } from '../prop-registry.gen'
 import { usage } from './component-detail-snippets'
 
 export interface PropRow {
