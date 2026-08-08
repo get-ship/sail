@@ -2,13 +2,14 @@
 //!
 //! Product form is a **tag-position** `style(…)` call on the open tag:
 //! ```text
-//! <div style({ box: pad(4), paint: bg(surface-2).radius(lg) }).when(hover, { paint: bg(muted) })>
+//! <div style({ box: pad(4), paint: bg(surface-2).radius(lg), when: { hover: { paint: bg(muted) } } })>
 //!   children
 //! </div>
 //! ```
-//! Also: `style({ match: {…}, when: {…} })`, `style(constRef)`, or channel spines
-//! with `.when(key, { … })` tails. Attribute hosts `style={…}` / `sx={…}` and
+//! Also: `style({ match: {…}, when: {…} })`, `style(constRef)`, or multi-partial
+//! composition `style(a, b, …)`. Attribute hosts `style={…}` / `sx={…}` and
 //! body-nested Style statements are **not** the product attach form.
+//! Residual `.when(…)` method chains are a hard error (object key `when:`).
 //! Utility-string atoms (`style="p-4 bg-surface-2"`) are a **hard residual
 //! error** — not architecture.
 //!
@@ -867,7 +868,8 @@ mod tests {
 
     #[test]
     fn style_block_channel_with_when_passes() {
-        let src = r#"<div style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) }).when(hover, { paint: bg(muted) })>  x
+        // Product when: is an object key inside style({…}) — not a `.when(…)` chain.
+        let src = r#"<div style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }), when: { hover: { paint: bg(muted) } } })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }

@@ -1461,10 +1461,10 @@ mod tests {
         );
         assert!(
             run(
-                r#"<column gap="2" style({ box: pad(2) }).when(hover, { paint: bg(accent) })>x</column>"#
+                r#"<column gap="2" style({ box: pad(2), when: { hover: { paint: bg(accent) } } })>x</column>"#
             )
             .is_empty(),
-            "style().when(…) chains must not split into unknown attrs"
+            "style({{…, when: {{…}}}}) must not split into unknown attrs"
         );
     }
 

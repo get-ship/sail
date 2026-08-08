@@ -1345,10 +1345,10 @@ mod tests {
 
     #[test]
     fn parse_author_keeps_tag_style_chain_with_scale_tokens() {
-        // Tag-position `style({…}).when(…)` lowers to classes before author
+        // Tag-position object Style with when: lowers to classes before author
         // HTML parse — scale tokens must survive product Style parse.
         let src = r#"
-            <h1 style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl) }).when(hover, { paint: fg(foreground) })>              T
+            <h1 style({ box: padX(2_5), paint: fg(sidebar-foreground), text: fontSize(2xl), when: { hover: { paint: fg(foreground) } } })>              T
             </h1>
         "#;
         let pre = crate::parse::preprocess::preprocess(src).expect("preprocess tag Style");
@@ -1359,8 +1359,8 @@ mod tests {
         let _prog = crate::parse::parse_author(src)
             .expect("parse_author must accept tag-position Style product");
         assert!(
-            pre.contains("hover") || pre.contains("sx-"),
-            "nested when must lower from tag Style:\n{pre}"
+            pre.contains(":hover") || pre.contains("hover"),
+            "object when: hover must lower from tag Style:\n{pre}"
         );
     }
 

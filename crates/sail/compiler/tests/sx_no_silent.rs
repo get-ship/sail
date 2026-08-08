@@ -16,7 +16,9 @@ const TYPO_SRC: &str = r#"<scope>
 </scope>
 <div style({ paint: bg(surfce-2) })> {title()}</div>"#;
 
-const UTILITY_STRING_SRC: &str = r#"<div sx="p-4 bg-surface-2">x</div>"#;
+// Residual utility-string product is `style="…"` (HTML style host) — refuse
+// with Style teaching. Bare `sx=` is scrubbed to generic unknown-attribute.
+const UTILITY_STRING_SRC: &str = r#"<div style="p-4 bg-surface-2">x</div>"#;
 
 fn opts(component_name: &str) -> CompileOpts {
     CompileOpts {
@@ -67,10 +69,15 @@ fn typo_style_token_is_still_rejected_under_a_softened_policy() {
 #[test]
 fn utility_string_sx_is_residual_error() {
     let err = compile(UTILITY_STRING_SRC, opts("sx-util-string"))
-        .expect_err("utility-string sx must refuse");
+        .expect_err("utility-string style= must refuse");
     let msg = err.message.to_lowercase();
     assert!(
-        msg.contains("utility-string") || msg.contains("style product") || msg.contains("residual"),
+        msg.contains("utility-string")
+            || msg.contains("style product")
+            || msg.contains("residual")
+            || msg.contains("style(")
+            || msg.contains("tag position")
+            || msg.contains("style="),
         "diagnostic must point at Style product: {err:?}"
     );
 }
