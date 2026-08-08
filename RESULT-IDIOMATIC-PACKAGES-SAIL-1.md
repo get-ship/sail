@@ -112,9 +112,9 @@ Before shots omitted: several sources **did not compile** pre-fix (06/09 body St
 
 Local on `job/idiomatic-packages-sail-1` — **DO NOT push.**
 
-**Tip SHA:** `5000dc83` — local only, **not pushed** (pin follow-up)
+**Tip SHA:** `53e72cfa` — local only, **not pushed**
 
-**Full tip SHA:** `5000dc83bbd04c277cf500c81ab8b708afb1f8c6`
+**Full tip SHA:** `53e72cfaee017b597ac9c74aaebae5a2ccab07cb`
 
 **Feature commit (fine-comb):** `5000dc83`
 
