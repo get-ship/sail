@@ -1,19 +1,9 @@
 <!--
-  Reactivity (`/reactivity`) — the diamond-dependency glitch test, live.
-  Change `a`; watch b, c, and d update; watch d recompute exactly once.
+  Live diamond-dependency playground: change a; b and c update; d recomputes once.
 -->
 
 <controller>
-// Reactivity playground — the diamond-dependency glitch test.
-//
-//   a ─┬─▶ b = a × 2 ─┐
-//      └─▶ c = a + 10 ─┴─▶ d = b + c
-//
-// When `a` changes, both b and c change, and both feed d. A naive reactive
-// system recomputes d TWICE (once per changed input) — a "glitch", where d
-// briefly holds an inconsistent value. SAIL's colored push-pull scheduler
-// recomputes d exactly ONCE per `a` change. We prove it live: an effect counts
-// d's recomputes; it should climb by exactly 1 each time you nudge `a`.
+// Diamond graph: a → b, a → c, (b,c) → d. Effect counts d recomputes (should +1 per a change).
 import { controller, signal, derived, effect, untrack, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
@@ -26,8 +16,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const dRecomputes = signal(0)
     const aChanges = signal(0)
 
-    // Count d's actual recomputes. Track `d`; write the counter untracked so the
-    // effect never depends on its own output (no loop).
+    // Track d; write the counter untracked so the effect does not re-run on its own output.
     effect(() => {
       d()
       dRecomputes.set(untrack(() => dRecomputes()) + 1)
@@ -47,74 +36,167 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aChanges,
       inc: (): void => nudge(1),
       dec: (): void => nudge(-1),
-      // Reset `a` but KEEP the counters, so the "1 recompute per change" ratio
-      // stays visible as evidence.
+      // Reset a to 1 without clearing recompute counters (ratio stays as evidence).
       resetValue: (): void => nudge(1 - a()),
     }
   })
 </controller>
 
-<section data-rx="true">
-  <header data-rx-head="true">
-    <p role="doc-eyebrow">reactivity · the signal graph</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto).padY(5) }
+  style head = { box: mb(5) }
+  style eyebrow = {
+    box: mb(2),
+    paint: fg(accent),
+    text: fontFamily(mono).fontSize(xs).tracking(wide).textCase(uppercase),
+  }
+  style lead = { box: maxW(panel-max-w-md), paint: fg(muted-foreground), text: leading(relaxed) }
+  style graph = { box: w(full).mb(5) }
+  style node = {
+    box: w(full).maxW(panel-max-w-md).padX(5).padY(4).mx(auto),
+    paint: bg(surface-1).borderWidth(1).border(border).radius(lg),
+    text: textAlign(center),
+  }
+  style nodeHead = { box: mb(1) }
+  style nodeName = { paint: fg(foreground), text: fontFamily(mono).fontWeight(bold).fontSize(sm) }
+  style nodeKind = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style val = {
+    box: my(2),
+    paint: fg(foreground),
+    text: fontFamily(mono).fontWeight(bold).fontSize(2xl).leading(none),
+  }
+  style valJoin = {
+    box: my(2),
+    paint: fg(accent),
+    text: fontFamily(mono).fontWeight(bold).fontSize(3xl).leading(none),
+  }
+  style controls = { box: mt(3) }
+  style edge = {
+    box: my(2),
+    paint: fg(muted-foreground),
+    text: fontFamily(mono).fontSize(xs).tracking(wide).textAlign(center),
+  }
+  style pair = {
+    box: w(full).maxW(panel-max-w-md).mx(auto),
+    paint: borderWidth(1).border(border).radius(lg).overflow(hidden),
+  }
+  style pairNode = {
+    box: padX(5).padY(4).grow(1),
+    paint: borderRWidth(1).borderR(border),
+    text: textAlign(center),
+  }
+  style pairNodeLast = { box: padX(5).padY(4).grow(1), text: textAlign(center) }
+  style proof = {
+    box: pad(5).mb(5),
+    paint: borderWidth(1).border(border).radius(lg).bg(surface-2),
+  }
+  style proofStats = { box: mb(3) }
+  style stat = { box: minW(24) }
+  style statK = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+  style statV = { text: fontFamily(mono).fontSize(xl).fontWeight(bold) }
+  style statAccent = { paint: fg(accent), text: fontFamily(mono).fontSize(xl).fontWeight(bold) }
+  style proofNote = {
+    box: maxW(panel-max-w-md),
+    paint: fg(muted-foreground),
+    text: fontSize(sm).leading(relaxed),
+  }
+  style footNav = {
+    box: padT(4),
+    paint: borderTWidth(1).borderT(border),
+  }
+  style toneDot = {
+    box: w(2).h(2).shrink(0),
+    paint: radius(full).bg(accent),
+  }
+  style toneDotMuted = {
+    box: w(2).h(2).shrink(0),
+    paint: radius(full).bg(muted-foreground),
+  }
+</scope>
+
+<section style(page)>
+  <header style(head)>
+    <p role="doc-eyebrow" style(eyebrow)>reactivity · the signal graph</p>
     <h1>The diamond, with no glitch.</h1>
-    <p role="doc-lede">
+    <p role="doc-lede" style(lead)>
       Change <code>a</code>. It feeds both <code>b</code> and <code>c</code>, and
       both feed <code>d</code>. SAIL recomputes <code>d</code> exactly once per
       change — never the double-fire a naive reactive system does.
     </p>
   </header>
 
-  <div data-graph="true">
-    <article data-node="signal" data-tier="source">
-      <div data-node-head="true">
-        <span data-tone="signal"></span><span data-name="true">a</span>
-        <span data-kind="true">signal · source</span>
-      </div>
-      <div data-val="true">{a()}</div>
-      <div data-controls="true">
+  <column gap="2" align="center" style(graph)>
+    <article style(node)>
+      <row gap="2" align="center" justify="center" style(nodeHead)>
+        <span style(toneDot) aria-hidden="true"></span>
+        <span style(nodeName)>a</span>
+        <span style(nodeKind)>signal · source</span>
+      </row>
+      <div style(val)>{a()}</div>
+      <row gap="2" align="center" justify="center" style(controls)>
         <button variant="default" type="button" on:click={() => dec()}>− 1</button>
         <button variant="solid" type="button" on:click={() => inc()}>+ 1</button>
         <button variant="ghost" type="button" on:click={() => resetValue()}>set 1</button>
-      </div>
+      </row>
     </article>
 
-    <p data-edge="true">feeds ↓</p>
+    <p style(edge)>feeds ↓</p>
 
-    <div data-pair="true">
-      <article data-node="derived">
-        <div data-node-head="true"><span data-tone="derived"></span><span data-name="true">b</span><span data-kind="true">a × 2</span></div>
-        <div data-val="true">{b()}</div>
+    <row style(pair)>
+      <article style(pairNode)>
+        <row gap="2" align="center" justify="center" style(nodeHead)>
+          <span style(toneDotMuted) aria-hidden="true"></span>
+          <span style(nodeName)>b</span>
+          <span style(nodeKind)>a × 2</span>
+        </row>
+        <div style(val)>{b()}</div>
       </article>
-      <article data-node="derived">
-        <div data-node-head="true"><span data-tone="derived"></span><span data-name="true">c</span><span data-kind="true">a + 10</span></div>
-        <div data-val="true">{c()}</div>
+      <article style(pairNodeLast)>
+        <row gap="2" align="center" justify="center" style(nodeHead)>
+          <span style(toneDotMuted) aria-hidden="true"></span>
+          <span style(nodeName)>c</span>
+          <span style(nodeKind)>a + 10</span>
+        </row>
+        <div style(val)>{c()}</div>
       </article>
-    </div>
+    </row>
 
-    <p data-edge="true">join ↓</p>
+    <p style(edge)>join ↓</p>
 
-    <article data-node="derived-join">
-      <div data-node-head="true"><span data-tone="derived"></span><span data-name="true">d</span><span data-kind="true">b + c</span></div>
-      <div>{d()}</div>
+    <article style(node)>
+      <row gap="2" align="center" justify="center" style(nodeHead)>
+        <span style(toneDot) aria-hidden="true"></span>
+        <span style(nodeName)>d</span>
+        <span style(nodeKind)>b + c</span>
+      </row>
+      <div style(valJoin)>{d()}</div>
     </article>
-  </div>
+  </column>
 
-  <aside>
-    <div>
-      <div><span>you changed a</span><span>{aChanges()}×</span></div>
-      <div><span>d recomputed</span><span>{dRecomputes()}×</span></div>
-    </div>
-    <p>
+  <aside style(proof)>
+    <row gap="6" style(proofStats)>
+      <column gap="1" style(stat)>
+        <span style(statK)>you changed a</span>
+        <span style(statV)>{aChanges()}×</span>
+      </column>
+      <column gap="1" style(stat)>
+        <span style(statK)>d recomputed</span>
+        <span style(statAccent)>{dRecomputes()}×</span>
+      </column>
+    </row>
+    <p style(proofNote)>
       One recompute per change (plus one at first paint). A glitchy system would
       <em>double</em> that — <code>d</code> would briefly equal
-      <code>b_new + c_old</code>. SAIL's colored push-pull scheduler never lets
+      <code>b_new + c_old</code>. The SAIL colored push-pull scheduler never lets
       that intermediate value exist.
     </p>
   </aside>
 
-  <div role="navigation">
+  <row justify="between" gap="3" style(footNav)>
     <a href="/layouts">← Layouts</a>
     <a href="/data">The data seam →</a>
-  </div>
+  </row>
 </section>

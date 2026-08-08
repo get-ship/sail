@@ -11,7 +11,6 @@ function notify(message: string, tone: string, description?: string) {
 }
 
 export default controller(() => ({
-    // Overlays
     dialogDemo: useDialog(),
     leaveDialogOpen: signal(false),
     drawerOpen: signal(false),
@@ -19,25 +18,57 @@ export default controller(() => ({
     dropdownOpen: signal(false),
     hoverCardOpen: signal(false),
     contextMenuOpen: signal(false),
-    // Error boundary
     triggerError: signal(false),
-    // Toast dispatch helpers — plain functions, not signals
+    // Toast helpers are plain functions (not signals).
     showSuccessToast: () => notify('File saved', 'success'),
     showErrorToast: () => notify('Upload failed', 'destructive', 'Network error — try again'),
     showInfoToast: () => notify('Background job started', 'info'),
   }))
 </controller>
 
+
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style title = { box: mb(2), text: fontSize(2xl).fontWeight(bold) }
+  style lede = { paint: fg(muted-foreground) }
+  style sectionH = { box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  style hint = { paint: fg(muted-foreground), text: fontSize(xs).leading(normal) }
+  style miniCard = { box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style panelSm = { box: maxW(panel-max-w-sm) }
+  style w48 = { box: w(48) }
+  style smText = { box: display(contents), text: fontSize(sm) }
+  style hintRelaxed = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
+  style hintXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style dangerBox = { box: pad(4), paint: radius(md).borderWidth(1).border(destructive).bg(hover-bg) }
+  style mutedBox = { box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) }
+  style hide = { box: display(none) }
+  style padY2 = { box: padY(2) }
+  style pad2 = { box: pad(2) }
+  style textSm = { text: fontSize(sm) }
+  style textSmSemibold = { text: fontWeight(semibold).fontSize(sm) }
+  style hintItalic = { paint: fg(muted-foreground), text: fontSize(xs).italic(true) }
+  style panelMd = { box: maxW(panel-max-w-md) }
+  style centerSm = { box: display(contents), text: textAlign(center).fontSize(sm) }
+  style ctxHost = { box: padY(4).padX(6), paint: borderWidth(1).border(border).radius(md).fg(muted-foreground).select(none).cursor(context-menu) }
+  style successBox = { box: pad(4), paint: bg(surface-2).radius(md).fg(success-foreground) }
+  style miniCardMd = { box: pad(4).minW(48).maxW(panel-max-w-sm), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style miniCard64 = { box: pad(4).minW(48).maxW(64), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style miniCardMinMd = { box: pad(4).minW(panel-min-w-md), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style scrollDemo = { box: h(32).w(panel-max-w-sm), paint: borderWidth(1).border(border).radius(md) }
+  style h56 = { box: h(56) }
+  style pad3max56 = { box: pad(3).maxW(56) }
+</scope>
+
 <!-- FILE_CAP_OVERRIDE: gallery instantiates all 50+ sail/primitives — one card each; cannot be split without losing the gallery contract -->
-<column gap="8" style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })>
+<column gap="8" style(page)>
   <header>
-    <h1 style({ box: mb(2), text: fontSize(2xl).fontWeight(bold) })>sail/primitives gallery</h1>
-    <p style({ paint: fg(muted-foreground) })>Real component instantiations — one card per primitive, representative prop combos.</p>
+    <h1 style(title)>sail/primitives gallery</h1>
+    <p style(lede)>Real component instantiations — one card per primitive, representative prop combos.</p>
   </header>
 
   <!-- Accordion -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-accordion</h2>
+    <h2 style(sectionH)>sail-accordion</h2>
     <row gap="3" align="start">
       <sail-accordion type="single" value="a1">
         <sail-accordion-item value="a1">
@@ -58,7 +89,7 @@ export default controller(() => ({
 
   <!-- Alert -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>alert</h2>
+    <h2 style(sectionH)>alert</h2>
     <column gap="3">
       <alert tone="info">
         <span slot="title">Info</span>
@@ -85,7 +116,7 @@ export default controller(() => ({
 
   <!-- Avatar -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>avatar</h2>
+    <h2 style(sectionH)>avatar</h2>
     <row gap="3" align="start">
       <avatar name="Alice Hart" size="xs"></avatar>
       <avatar name="Bob Ray" size="sm" tone="primary"></avatar>
@@ -97,11 +128,9 @@ export default controller(() => ({
     </row>
   </section>
 
-  <!-- Badge dissolved to L1 (bare <span> + sx) — see dissolve-gate.md -->
-
   <!-- Button -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-button</h2>
+    <h2 style(sectionH)>sail-button</h2>
     <row gap="3" align="start">
       <sail-button variant="default">Default</sail-button>
       <sail-button variant="solid" tone="primary">Solid primary</sail-button>
@@ -121,22 +150,22 @@ export default controller(() => ({
 
   <!-- Card -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-card</h2>
+    <h2 style(sectionH)>sail-card</h2>
     <row gap="3" align="start">
-      <card style({ box: w(48) })>
+      <card style(w48)>
         <span slot="header">Default card</span>
         Content in the default slot.
         <span slot="footer">Footer</span>
       </card>
-      <card tone="primary" variant="outline" style({ box: w(48) })>
+      <card tone="primary" variant="outline" style(w48)>
         <span slot="header">Outline primary</span>
         Outline variant with primary tone.
       </card>
-      <card tone="success" accent-bar="static" status-rail style({ box: w(48) })>
+      <card tone="success" accent-bar="static" status-rail style(w48)>
         <span slot="header">Status rail</span>
         Accent bar + status rail active.
       </card>
-      <card tone="info" fill padding="lg" style({ box: w(48) })>
+      <card tone="info" fill padding="lg" style(w48)>
         Fill + large padding.
       </card>
     </row>
@@ -144,7 +173,7 @@ export default controller(() => ({
 
   <!-- Checkbox -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-checkbox</h2>
+    <h2 style(sectionH)>sail-checkbox</h2>
     <row gap="3" align="start">
       <sail-checkbox label="Default"></sail-checkbox>
       <sail-checkbox label="Checked" checked></sail-checkbox>
@@ -157,7 +186,7 @@ export default controller(() => ({
 
   <!-- Chip -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>chip</h2>
+    <h2 style(sectionH)>chip</h2>
     <row gap="3" align="start">
       <chip>Default</chip>
       <chip tone="primary" variant="solid">Solid</chip>
@@ -170,37 +199,35 @@ export default controller(() => ({
 
   <!-- Cluster + Stack layout primitives -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>row / column</h2>
+    <h2 style(sectionH)>row / column</h2>
     <column gap="3">
       <row gap="3" align="center">
-        <span tone="primary" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>A</span>
-        <span tone="success" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>B</span>
-        <span tone="accent" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>C</span>
+        <badge tone="primary" size="sm">A</badge>
+        <badge tone="success" size="sm">B</badge>
+        <badge tone="accent" size="sm">C</badge>
       </row>
       <column gap="2">
-        <span tone="info" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>Stack item 1</span>
-        <span tone="warning" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>Stack item 2</span>
-        <span tone="destructive" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>Stack item 3</span>
+        <badge tone="info" size="sm">Stack item 1</badge>
+        <badge tone="warning" size="sm">Stack item 2</badge>
+        <badge tone="destructive" size="sm">Stack item 3</badge>
       </column>
     </column>
   </section>
 
-  <!-- Code dissolved to L1 (bare code/pre + sx) — see dissolve-gate.md -->
-
   <!-- Collapsible -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-accordion</h2>
+    <h2 style(sectionH)>sail-accordion</h2>
     <row gap="3" align="start">
       <accordion>
         <sail-button slot="trigger" variant="outline" size="sm">Toggle details</sail-button>
-        <column style({ box: padY(2) })>Revealed content when expanded.</column>
+        <column style(padY2)>Revealed content when expanded.</column>
       </accordion>
     </row>
   </section>
 
   <!-- Empty state + Error state -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-empty-state / sail-error-state</h2>
+    <h2 style(sectionH)>sail-empty-state / sail-error-state</h2>
     <row gap="3" align="start">
       <empty-state variant="default" size="sm">
         <icon slot="icon" name="inbox"></icon>
@@ -221,8 +248,8 @@ export default controller(() => ({
 
   <!-- Field + Label -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>field / sail-label / sail-input / sail-textarea</h2>
-    <column gap="3" style({ box: maxW(panel-max-w-sm) })>
+    <h2 style(sectionH)>field / sail-label / sail-input / sail-textarea</h2>
+    <column gap="3" style(panelSm)>
       <field>
         <sail-label slot="label" required>Name</sail-label>
         <input type="text" placeholder="Enter your name" name="demo-name">
@@ -242,7 +269,7 @@ export default controller(() => ({
 
   <!-- Icon -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-icon</h2>
+    <h2 style(sectionH)>sail-icon</h2>
     <row gap="3" align="start">
       <icon name="star" size="xs"></icon>
       <icon name="star" size="sm"></icon>
@@ -260,7 +287,7 @@ export default controller(() => ({
 
   <!-- Navigation menu -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-navigation-menu</h2>
+    <h2 style(sectionH)>sail-navigation-menu</h2>
     <row gap="3" align="start">
       <nav-top value="home">
         <sail-navigation-item value="home" active>Home</sail-navigation-item>
@@ -273,7 +300,7 @@ export default controller(() => ({
 
   <!-- Pagination -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-pagination</h2>
+    <h2 style(sectionH)>sail-pagination</h2>
     <column gap="3">
       <pagination page="1" total="150" page-size="10"></pagination>
       <pagination page="3" total="150" page-size="25" page-size-options="10,25,50"></pagination>
@@ -282,7 +309,7 @@ export default controller(() => ({
 
   <!-- Radio group -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>radio-group / radio</h2>
+    <h2 style(sectionH)>radio-group / radio</h2>
     <row gap="3" align="start">
       <radio-group name="demo-radio" value="b" label="Size">
         <radio value="a">Small</radio>
@@ -299,7 +326,7 @@ export default controller(() => ({
 
   <!-- Select + Combobox -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-select</h2>
+    <h2 style(sectionH)>sail-select</h2>
     <row gap="3" align="start">
       <select name="demo-select" size="sm">
         <option value="">Pick one…</option>
@@ -321,7 +348,7 @@ export default controller(() => ({
 
   <!-- Separator -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-separator</h2>
+    <h2 style(sectionH)>sail-separator</h2>
     <column gap="3">
       <sail-separator orientation="horizontal"></sail-separator>
       <sail-separator orientation="horizontal" variant="dashed" tone="muted"></sail-separator>
@@ -331,8 +358,8 @@ export default controller(() => ({
 
   <!-- Skeleton -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-skeleton</h2>
-    <column gap="3" style({ box: maxW(panel-max-w-sm) })>
+    <h2 style(sectionH)>sail-skeleton</h2>
+    <column gap="3" style(panelSm)>
       <sail-skeleton shape="text" size="md"></sail-skeleton>
       <sail-skeleton shape="line" size="sm"></sail-skeleton>
       <sail-skeleton shape="block" size="lg"></sail-skeleton>
@@ -342,8 +369,8 @@ export default controller(() => ({
 
   <!-- Slider -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-slider</h2>
-    <column gap="3" style({ box: maxW(panel-max-w-sm) })>
+    <h2 style(sectionH)>sail-slider</h2>
+    <column gap="3" style(panelSm)>
       <slider name="demo-slider" value="40" min="0" max="100" aria-label="Volume"></slider>
       <slider name="demo-slider2" value="60" tone="primary" size="lg" aria-label="Primary large"></slider>
       <slider name="demo-slider3" value="20" disabled aria-label="Disabled"></slider>
@@ -352,7 +379,7 @@ export default controller(() => ({
 
   <!-- Spinner -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-spinner</h2>
+    <h2 style(sectionH)>sail-spinner</h2>
     <row gap="3" align="start">
       <sail-spinner size="xs"></sail-spinner>
       <sail-spinner size="sm" tone="primary"></sail-spinner>
@@ -363,7 +390,7 @@ export default controller(() => ({
 
   <!-- Status dot -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-status-dot</h2>
+    <h2 style(sectionH)>sail-status-dot</h2>
     <row gap="3" align="start">
       <sail-status-dot tone="success" label="Online"></sail-status-dot>
       <sail-status-dot tone="warning" pulse label="Pending"></sail-status-dot>
@@ -375,7 +402,7 @@ export default controller(() => ({
 
   <!-- Switch -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-switch</h2>
+    <h2 style(sectionH)>sail-switch</h2>
     <row gap="3" align="start">
       <label><switch name="demo-sw1"></switch> Default</label>
       <label><switch name="demo-sw2" checked></switch> Checked</label>
@@ -387,7 +414,7 @@ export default controller(() => ({
 
   <!-- Tabs -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-tabs</h2>
+    <h2 style(sectionH)>sail-tabs</h2>
     <column gap="3">
       <tabs active="tab1" variant="line">
         <sail-tab name="tab1" label="Overview"></sail-tab>
@@ -408,7 +435,7 @@ export default controller(() => ({
 
   <!-- Timeline -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-timeline</h2>
+    <h2 style(sectionH)>sail-timeline</h2>
     <row gap="3" align="start">
       <sail-timeline>
         <sail-timeline-item tone="success" at="2026-06-01">
@@ -429,8 +456,8 @@ export default controller(() => ({
 
   <!-- Toast -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-toast (static preview)</h2>
-    <column gap="3" style({ box: maxW(panel-max-w-sm) })>
+    <h2 style(sectionH)>sail-toast (static preview)</h2>
+    <column gap="3" style(panelSm)>
       <toast tone="info">
         <span slot="title">Info toast</span>
         Something happened you should know about.
@@ -448,7 +475,7 @@ export default controller(() => ({
 
   <!-- Toggle group -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-toggle-group</h2>
+    <h2 style(sectionH)>sail-toggle-group</h2>
     <column gap="3">
       <toggle-group type="single" value="b" variant="outline" name="demo-tg1">
         <sail-toggle value="a">Left</sail-toggle>
@@ -465,7 +492,7 @@ export default controller(() => ({
 
   <!-- Tooltip -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>tooltip</h2>
+    <h2 style(sectionH)>tooltip</h2>
     <row gap="3" align="start">
       <tooltip placement="top" content="Tooltip on top">
         <sail-button variant="outline">Hover me (top)</sail-button>
@@ -481,7 +508,7 @@ export default controller(() => ({
 
   <!-- Tree view -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-tree-view</h2>
+    <h2 style(sectionH)>sail-tree-view</h2>
     <row gap="3" align="start">
       <sail-tree>
         <sail-tree-item label="src" expanded>
@@ -500,10 +527,10 @@ export default controller(() => ({
 
   <!-- Scroll area -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-scroll-area</h2>
+    <h2 style(sectionH)>sail-scroll-area</h2>
     <row gap="3" align="start">
-      <scroll-area orientation="vertical" style({ box: h(32).w(panel-max-w-sm), paint: borderWidth(1).border(border).radius(md) })>
-        <column gap="1" style({ box: pad(2) })>
+      <scroll-area orientation="vertical" style(scrollDemo)>
+        <column gap="1" style(pad2)>
           <p>Line 1</p><p>Line 2</p><p>Line 3</p><p>Line 4</p>
           <p>Line 5</p><p>Line 6</p><p>Line 7</p><p>Line 8</p>
         </column>
@@ -513,7 +540,7 @@ export default controller(() => ({
 
   <!-- JSON view -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-json-view</h2>
+    <h2 style(sectionH)>sail-json-view</h2>
     <row gap="3" align="start">
       <sail-json-view data={'{"name":"Sail","version":1,"stable":true}'} depth="2" expanded></sail-json-view>
     </row>
@@ -521,15 +548,15 @@ export default controller(() => ({
 
   <!-- Markdown -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-markdown</h2>
-    <row gap="3" align="start" style({ box: maxW(panel-max-w-md) })>
+    <h2 style(sectionH)>sail-markdown</h2>
+    <row gap="3" align="start" style(panelMd)>
       <sail-markdown value="## Hello from **Markdown**&#10;&#10;- Item one&#10;- Item two&#10;- `code` inline"></sail-markdown>
     </row>
   </section>
 
   <!-- Diff -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-diff</h2>
+    <h2 style(sectionH)>sail-diff</h2>
     <row gap="3" align="start">
       <sail-diff from="const x = 1;" to="const x = 2;"></sail-diff>
     </row>
@@ -537,20 +564,20 @@ export default controller(() => ({
 
   <!-- Table (slot mode) -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-table (slot mode)</h2>
+    <h2 style(sectionH)>sail-table (slot mode)</h2>
     <row gap="3" align="start">
       <table variant="slot" label="Demo table" hoverable>
         <tr slot="head"><th>Name</th><th>Role</th><th>Status</th></tr>
-        <tr><td>Alice</td><td>Engineer</td><td><span tone="success" style({ box: display(inline-block).minH(control-h-2xs).padX(1_5), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>Active</span></td></tr>
-        <tr><td>Bob</td><td>Designer</td><td><span tone="warning" style({ box: display(inline-block).minH(control-h-2xs).padX(1_5), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>Away</span></td></tr>
-        <tr><td>Carol</td><td>PM</td><td><span tone="muted" style({ box: display(inline-block).minH(control-h-2xs).padX(1_5), paint: radius(sm).bg(tone-bg).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(semibold) })>Offline</span></td></tr>
+        <tr><td>Alice</td><td>Engineer</td><td><badge tone="success" size="sm">Active</badge></td></tr>
+        <tr><td>Bob</td><td>Designer</td><td><badge tone="warning" size="sm">Away</badge></td></tr>
+        <tr><td>Carol</td><td>PM</td><td><badge tone="muted" size="sm">Offline</badge></td></tr>
       </table>
     </row>
   </section>
 
   <!-- Color picker -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-color-picker</h2>
+    <h2 style(sectionH)>sail-color-picker</h2>
     <row gap="3" align="start">
       <sail-color-picker name="demo-color1" value="#3b82f6"></sail-color-picker>
       <sail-color-picker name="demo-color2" value="#22c55e" size="sm"></sail-color-picker>
@@ -560,7 +587,7 @@ export default controller(() => ({
 
   <!-- Date picker -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-date-picker</h2>
+    <h2 style(sectionH)>sail-date-picker</h2>
     <row gap="3" align="start">
       <sail-date-picker name="demo-date1" placeholder="YYYY-MM-DD"></sail-date-picker>
       <sail-date-picker name="demo-date2" value="2026-06-05" tone="primary" size="sm"></sail-date-picker>
@@ -569,8 +596,8 @@ export default controller(() => ({
 
   <!-- File upload -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-file-upload</h2>
-    <column gap="3" style({ box: maxW(panel-max-w-sm) })>
+    <h2 style(sectionH)>sail-file-upload</h2>
+    <column gap="3" style(panelSm)>
       <sail-file-upload accept="image/*,application/pdf" tone="primary"></sail-file-upload>
       <sail-file-upload multiple accept=".json,.csv" tone="muted"></sail-file-upload>
     </column>
@@ -578,7 +605,7 @@ export default controller(() => ({
 
   <!-- Autocomplete -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-autocomplete</h2>
+    <h2 style(sectionH)>sail-autocomplete</h2>
     <row gap="3" align="start">
       <combobox name="demo-ac" placeholder="Search fruits…" suggestions='["Apple","Apricot","Banana","Blueberry","Cherry","Date"]' size="md"></combobox>
     </row>
@@ -588,10 +615,10 @@ export default controller(() => ({
 
   <!-- sail-dialog -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-dialog</h2>
+    <h2 style(sectionH)>sail-dialog</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Modal dialog — size=md, backdrop=default</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Modal dialog — size=md, backdrop=default</p>
         <sail-button variant="outline" size="sm" on:click={dialogDemo.open}>Open dialog</sail-button>
         <dialog use:dialogDemo>
           <header>Confirm action</header>
@@ -607,10 +634,10 @@ export default controller(() => ({
 
   <!-- dialog leave / multi-action confirm — pattern of <dialog>, not a second L1 tag -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>dialog — leave pattern</h2>
+    <h2 style(sectionH)>dialog — leave pattern</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Alert-style modal = plain dialog + author footer (studio leave). Always-mounted; open bind; no confirm-label sugar / no second tag.</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Alert-style modal = plain dialog + author footer (studio leave). Always-mounted; open bind; no confirm-label sugar / no second tag.</p>
         <button type="button" variant="outline" tone="destructive" size="sm" on:click={() => leaveDialogOpen.set(true)}>Leave with unsaved changes</button>
         <dialog
           open={leaveDialogOpen()}
@@ -639,12 +666,12 @@ export default controller(() => ({
 
   <!-- sail-drawer -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-drawer</h2>
+    <h2 style(sectionH)>sail-drawer</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Side-sheet panel — side=right, size=md</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Side-sheet panel — side=end, size=md</p>
         <sail-button variant="outline" size="sm" on:click={() => drawerOpen.set(true)}>Open drawer</sail-button>
-        <dialog side="end" open={drawerOpen()} side="right" size="md">
+        <dialog side="end" open={drawerOpen()} size="md">
           <span slot="title">Settings</span>
           <span slot="description">Adjust your workspace preferences.</span>
           <column gap="3">
@@ -668,15 +695,15 @@ export default controller(() => ({
 
   <!-- sail-popover -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-popover</h2>
+    <h2 style(sectionH)>sail-popover</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Anchor-positioned popover — placement=bottom</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Anchor-positioned popover — placement=bottom</p>
         <popover placement="bottom">
           <sail-button slot="trigger" variant="outline" size="sm">Open popover</sail-button>
-          <column gap="1" style({ box: pad(3).maxW(56) })>
-            <strong style({ text: fontSize(sm) })>Popover content</strong>
-            <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>
+          <column gap="1" style(pad3max56)>
+            <strong style(textSm)>Popover content</strong>
+            <p style(hintXs)>
               Click outside or press Escape to dismiss. Uses native popover API for top-layer rendering.
             </p>
           </column>
@@ -687,10 +714,10 @@ export default controller(() => ({
 
   <!-- sail-dropdown-menu -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-dropdown-menu</h2>
+    <h2 style(sectionH)>sail-dropdown-menu</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Trigger-anchored menu with ARIA role=menu + keyboard navigation</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Trigger-anchored menu with ARIA role=menu + keyboard navigation</p>
         <dropdown>
           <sail-button slot="trigger" variant="outline" size="sm">
             Actions
@@ -707,10 +734,10 @@ export default controller(() => ({
 
   <!-- sail-hover-card -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-hover-card</h2>
+    <h2 style(sectionH)>sail-hover-card</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Hover-triggered rich content overlay — placement=bottom, delay=300ms</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Hover-triggered rich content overlay — placement=bottom, delay=300ms</p>
         <hover-card placement="bottom" show-delay="300" hide-delay="150">
           <sail-button slot="trigger" variant="ghost" size="sm">
             <avatar name="Alice Hart" size="sm" tone="primary"></avatar>
@@ -720,11 +747,11 @@ export default controller(() => ({
             <row gap="2">
               <avatar name="Alice Hart" size="md" tone="primary"></avatar>
               <column gap="0">
-                <span style({ text: fontWeight(semibold).fontSize(sm) })>Alice Hart</span>
-                <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Senior Engineer</span>
+                <span style(textSmSemibold)>Alice Hart</span>
+                <span style(hintXs)>Senior Engineer</span>
               </column>
             </row>
-            <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>
+            <p style(hintXs)>
               Joined 2023 · 142 contributions · Rust, TypeScript
             </p>
           </column>
@@ -735,12 +762,12 @@ export default controller(() => ({
 
   <!-- sail-context-menu -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-context-menu</h2>
+    <h2 style(sectionH)>sail-context-menu</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Right-click triggered overlay menu — positioned at cursor via show(x,y)</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Right-click triggered overlay menu — positioned at cursor via show(x,y)</p>
         <context-menu>
-          <column slot="trigger" style({ box: padY(4).padX(6), paint: borderWidth(1).border(border).radius(md).fg(muted-foreground).select(none).cursor(context-menu) })>            <span style({ box: display(contents), text: textAlign(center).fontSize(sm) })>              Right-click this area
+          <column slot="trigger" style(ctxHost)>            <span style(centerSm)>              Right-click this area
             </span>
 </column>
           <sail-menu-item value="open">Open</sail-menu-item>
@@ -758,10 +785,10 @@ export default controller(() => ({
 
   <!-- sail-combobox -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-combobox</h2>
+    <h2 style(sectionH)>sail-combobox</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48).maxW(panel-max-w-sm), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Single-select with type-to-filter — options via JSON</p>
+      <column gap="3" style(miniCardMd)>
+        <p style(hint)>Single-select with type-to-filter — options via JSON</p>
         <combobox
           name="demo-combo"
           placeholder="Search framework…"
@@ -769,8 +796,8 @@ export default controller(() => ({
           size="md"
         ></combobox>
       </column>
-      <column gap="3" style({ box: pad(4).minW(48).maxW(64), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Pre-selected value · size=sm</p>
+      <column gap="3" style(miniCard64)>
+        <p style(hint)>Pre-selected value · size=sm</p>
         <combobox
           name="demo-combo2"
           value="sail"
@@ -784,10 +811,10 @@ export default controller(() => ({
 
   <!-- sail-calendar -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-calendar</h2>
+    <h2 style(sectionH)>sail-calendar</h2>
     <column gap="3">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Month view with 3 events — focus-date=2026-06-05</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Month view with 3 events — focus-date=2026-06-05</p>
         <sail-calendar
           view="month"
           focus-date="2026-06-05"
@@ -799,10 +826,10 @@ export default controller(() => ({
 
   <!-- sail-tree -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-tree</h2>
+    <h2 style(sectionH)>sail-tree</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(panel-min-w-md), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Hierarchical tree — selectable=single, show-guides</p>
+      <column gap="3" style(miniCardMinMd)>
+        <p style(hint)>Hierarchical tree — selectable=single, show-guides</p>
         <sail-tree
           label="File system"
           selectable="single"
@@ -816,10 +843,10 @@ export default controller(() => ({
   <!-- sail-tree-view / sail-tree-item — already covered above but was a thin static stub; a full grid follows -->
   <!-- sail-tree-grid -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-tree-grid</h2>
+    <h2 style(sectionH)>sail-tree-grid</h2>
     <column gap="3">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Hierarchical tree-grid (role=treegrid) — columns with Name, Size, Kind</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Hierarchical tree-grid (role=treegrid) — columns with Name, Size, Kind</p>
         <sail-tree-grid
           label="Artifact tree"
           selectable="single"
@@ -832,16 +859,16 @@ export default controller(() => ({
 
   <!-- sail-sheet -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-sheet</h2>
+    <h2 style(sectionH)>sail-sheet</h2>
     <column gap="3">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>Spreadsheet primitive — 2-D cell space with A1 addressing and formula bar</p>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>Spreadsheet primitive — 2-D cell space with A1 addressing and formula bar</p>
         <dialog side="end"
           label="Budget sheet"
           show-headers
           show-gridlines
           show-formula-bar
-          workbook={'{"sheets":[{"id":"sheet1","name":"Q2 Budget","cells":{"A1":{"v":"Category"},"B1":{"v":"Budget"},"C1":{"v":"Spent"},"A2":{"v":"Engineering"},"B2":{"v":50000},"C2":{"v":42300},"A3":{"v":"Design"},"B3":{"v":20000},"C3":{"v":18750},"A4":{"v":"Marketing"},"B4":{"v":15000},"C4":{"v":9200}}}]}'} style({ box: h(56) })></dialog>
+          workbook={'{"sheets":[{"id":"sheet1","name":"Q2 Budget","cells":{"A1":{"v":"Category"},"B1":{"v":"Budget"},"C1":{"v":"Spent"},"A2":{"v":"Engineering"},"B2":{"v":50000},"C2":{"v":42300},"A3":{"v":"Design"},"B3":{"v":20000},"C3":{"v":18750},"A4":{"v":"Marketing"},"B4":{"v":15000},"C4":{"v":9200}}}]}'} style(h56)></dialog>
       </column>
     </column>
   </section>
@@ -850,28 +877,24 @@ export default controller(() => ({
 
   <!-- sail-portal -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-portal</h2>
+    <h2 style(sectionH)>sail-portal</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>
           Teleports slotted children into a different DOM location (stacking-context escape).
-          The portal below appends a labelled marker to <code>body</code> — inspect the
-          DOM to confirm it lives outside this view's mount point.
+          Runtime demo requires a live host portal target; shell only here.
         </p>
-                  <column data-portal-demo aria-hidden="true" style({ box: display(none) })>
-            [sail-portal demo — this node lives in &lt;body&gt;, not in the gallery mount]
-          </column>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).italic(true) })>Portal active — check DevTools &gt; Elements for the marker in &lt;body&gt;.</p>
+        <p style(hintItalic)>Portal active in a full app shell — static gallery shows the contract only.</p>
       </column>
     </row>
   </section>
 
   <!-- sail-toast-container -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-toast-container / sail-toast-host</h2>
+    <h2 style(sectionH)>sail-toast-container / sail-toast-host</h2>
     <row gap="3" align="start">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>
           <code>sail-toast-container</code> is the fixed-position stacking host.
           <code>sail-toast-host</code> wraps it and listens for <code>ship:notify</code> events.
           Click the button to dispatch a notify event — the host shows the toast.
@@ -894,10 +917,10 @@ export default controller(() => ({
 
   <!-- sail-tab-panel -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-tab-panel (inside sail-tabs)</h2>
+    <h2 style(sectionH)>sail-tab-panel (inside sail-tabs)</h2>
     <column gap="3">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>
           <code>sail-tab-panel</code> is the companion panel element driven by the parent
           <code>sail-tabs</code> controller. Each panel shows when its <code>name</code>
           matches the active tab.
@@ -907,18 +930,18 @@ export default controller(() => ({
           <sail-tab name="tp2" label="Details"></sail-tab>
           <sail-tab name="tp3" label="History"></sail-tab>
           <tab-panel name="tp1">
-            <column style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) })>              <span style({ box: display(contents), text: fontSize(sm) })>                Overview panel — rendered when the Overview tab is active.
+            <column style(mutedBox)>              <span style(smText)>                Overview panel — rendered when the Overview tab is active.
               Uses <code>animation: sail-tab-panel-fade</code> on transition.
               </span>
 </column>
           </tab-panel>
           <tab-panel name="tp2">
-            <column style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) })>              <span style({ box: display(contents), text: fontSize(sm) })>                Details panel — secondary content rendered on demand.
+            <column style(mutedBox)>              <span style(smText)>                Details panel — secondary content rendered on demand.
               </span>
 </column>
           </tab-panel>
           <tab-panel name="tp3">
-            <column style({ box: pad(4), paint: fg(muted-foreground).bg(surface-2).radius(md) })>              <span style({ box: display(contents), text: fontSize(sm) })>                History panel — lazy content until the user navigates here.
+            <column style(mutedBox)>              <span style(smText)>                History panel — lazy content until the user navigates here.
               </span>
 </column>
           </tab-panel>
@@ -929,10 +952,10 @@ export default controller(() => ({
 
   <!-- sail-error-boundary -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>sail-error-boundary</h2>
+    <h2 style(sectionH)>sail-error-boundary</h2>
     <column gap="3">
-      <column gap="3" style({ box: pad(4).minW(48), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(normal) })>
+      <column gap="3" style(miniCard)>
+        <p style(hint)>
           Render-fault isolation. Toggle the switch to simulate a subtree error;
           the boundary catches it and shows the fallback. Click Retry to recover.
         </p>
@@ -941,8 +964,8 @@ export default controller(() => ({
         </row>
         <error-boundary fallback-text="The widget threw an error — click Retry to recover.">
           <if {triggerError()}>
-            <column style({ box: display(none) })>This subtree is broken (error boundary will catch)</column>
-          {else => <column style({ box: pad(4), paint: bg(surface-2).radius(md).fg(success-foreground) })>              <span style({ box: display(contents), text: fontSize(sm) })>                Subtree is healthy. Toggle the switch above to simulate a fault.
+            <column style(hide)>This subtree is broken (error boundary will catch)</column>
+          {else => <column style(successBox)>              <span style(smText)>                Subtree is healthy. Toggle the switch above to simulate a fault.
               </span>
 </column>}</if>
         </error-boundary>
@@ -954,39 +977,39 @@ export default controller(() => ({
 
   <!-- sail-board / sail-draw / sail-media-av / sail-media-image / sail-media-csv -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>Blocked by #263 — production-compile gap</h2>
+    <h2 style(sectionH)>Blocked by #263 — production-compile gap</h2>
     <column gap="3">
 
-      <column gap="2" style({ box: pad(4), paint: radius(md).borderWidth(1).border(destructive).bg(hover-bg) })>
+      <column gap="2" style(dangerBox)>
         <row gap="3">
           <code>sail-board</code>
-          <span tone="destructive" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(medium).whitespace(nowrap) })>blocked by #263 — production-compile gap</span>
+          <badge tone="destructive" size="sm">blocked by #263 — production-compile gap</badge>
         </row>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })>
+        <p style(hintRelaxed)>
           <code>sail-board</code> uses <code>Set.prototype.has()</code> inside template
           expressions, which the real (native) Sail compiler rejects. Passes jsdom tests;
           fails <code>cargo run -p sail-compiler -- build</code>. Tracked in #263.
         </p>
       </column>
 
-      <column gap="2" style({ box: pad(4), paint: radius(md).borderWidth(1).border(destructive).bg(hover-bg) })>
+      <column gap="2" style(dangerBox)>
         <row gap="3">
           <code>sail-draw</code>
-          <span tone="destructive" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(medium).whitespace(nowrap) })>blocked by #263 — production-compile gap</span>
+          <badge tone="destructive" size="sm">blocked by #263 — production-compile gap</badge>
         </row>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })>
+        <p style(hintRelaxed)>
           <code>sail-draw</code> uses <code>Set.prototype.has()</code> inside template
           expressions, which the real (native) Sail compiler rejects. Passes jsdom tests;
           fails <code>cargo run -p sail-compiler -- build</code>. Tracked in #263.
         </p>
       </column>
 
-      <column gap="2" style({ box: pad(4), paint: radius(md).borderWidth(1).border(destructive).bg(hover-bg) })>
+      <column gap="2" style(dangerBox)>
         <row gap="3">
           <code>sail-media-av</code> / <code>sail-media-image</code> / <code>sail-media-csv</code>
-          <span tone="destructive" style({ box: display(inline-block).minH(control-h-2xs).padX(2), paint: radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg), text: fontSize(xs).fontWeight(medium).whitespace(nowrap) })>blocked by #263 — production-compile gap</span>
+          <badge tone="destructive" size="sm">blocked by #263 — production-compile gap</badge>
         </row>
-        <p style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })>
+        <p style(hintRelaxed)>
           All three <code>sail-media-*</code> components capture non-root elements via
           local <code>use:</code> actions inside conditional branches.
           The gallery-sail-media view covers the scalar-attr surface of these components

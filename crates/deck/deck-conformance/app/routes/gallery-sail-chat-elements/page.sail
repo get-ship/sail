@@ -60,39 +60,53 @@ export default controller(() => ({
   }))
 </controller>
 
-<column gap="8" style({ box: maxW(breakpoint-tablet).mx(auto).pad(6), paint: fg(foreground) })>  <span style({ box: display(contents), text: fontFamily(body) })>    <header>
-    <h1 style({ box: mb(2), text: fontSize(3xl).fontWeight(bold) })>sail/chat-elements</h1>
-    <p style({ paint: fg(muted-foreground), text: fontSize(md) })>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto).pad(6) }
+  style title = { box: mb(2), text: fontSize(3xl).fontWeight(bold) }
+  style lede = { paint: fg(muted-foreground), text: fontSize(md) }
+  style sectionH = { box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
+  style sectionBody = { box: mb(4), paint: fg(muted-foreground), text: fontSize(base) }
+  style card = { box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) }
+  style cardLabel = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) }
+  style listTall = { box: h(64), paint: borderWidth(1).border(border).radius(md) }
+  style listShort = { box: h(48), paint: borderWidth(1).border(border).radius(md) }
+  style mutedBase = { paint: fg(muted-foreground), text: fontSize(base) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style chip = { box: padX(2).padY(1), text: fontSize(xs) }
+</scope>
+
+<column gap="8" style(page)>
+  <header>
+    <h1 style(title)>sail/chat-elements</h1>
+    <p style(lede)>
       Unbound multi-modal chat primitives — message · message-list · composer ·
       thinking-dots · tool-call · citation. Pure framework tier; no SDK reads.
     </p>
   </header>
-
-  <!-- ── sail-citation ──────────────────────────────────────────── -->
   <section>
-    <h2 style({ box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-citation</h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(base) })>
+    <h2 style(sectionH)>sail-citation</h2>
+    <p style(sectionBody)>
       Numbered source pill. Clicking emits <code>sail-citation-open</code>.
     </p>
 
     <column gap="3">
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>index 1 — short label</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>index 1 — short label</h3>
         <sail-citation source="Ship docs" index={1}></sail-citation>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>index 2 — URL source</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>index 2 — URL source</h3>
         <sail-citation source="https://ship.example.com/reference" index={2}></sail-citation>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>index 3 — long label (truncates)</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>index 3 — long label (truncates)</h3>
         <sail-citation source="A very long citation label that will be clipped by the max-width" index={3}></sail-citation>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>inline inside prose</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>inline inside prose</h3>
         <p>
           The agent used three sources
           <sail-citation source="Ship docs" index={1}></sail-citation>
@@ -102,141 +116,135 @@ export default controller(() => ({
       </column>
     </column>
   </section>
-
-  <!-- ── sail-composer ──────────────────────────────────────────── -->
   <section>
-    <h2 style({ box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-composer</h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(base) })>
+    <h2 style(sectionH)>sail-composer</h2>
+    <p style(sectionBody)>
       Message input + send control. Single-line by default; <code>multiline</code>
       grows to a textarea. Emits <code>sail-composer-submit</code> on send.
     </p>
 
     <column gap="3">
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>default — single-line, placeholder</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>default — single-line, placeholder</h3>
         <sail-composer placeholder="Message the agent…"></sail-composer>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>multiline — Shift+Enter for newlines</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>multiline — Shift+Enter for newlines</h3>
         <sail-composer placeholder="Write a long message…" multiline></sail-composer>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>disabled</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>disabled</h3>
         <sail-composer placeholder="Sending…" disabled></sail-composer>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>with trailing slot — extra action beside Send</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>with trailing slot — extra action beside Send</h3>
         <sail-composer placeholder="Ask anything…">
-          <button slot="trailing" type="button" style({ box: padX(2).padY(1), text: fontSize(xs) })>Mic</button>
+          <button slot="trailing" type="button" style(chip)>Mic</button>
         </sail-composer>
       </column>
     </column>
   </section>
-
-  <!-- ── sail-message ────────────────────────────────────────────── -->
   <section>
-    <h2 style({ box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-message</h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(base) })>
+    <h2 style(sectionH)>sail-message</h2>
+    <p style(sectionBody)>
       Single chat bubble. Role drives alignment + tone; content-type drives inner
       shape; status tints the border. Trailing slot for per-message actions.
     </p>
 
     <column gap="3">
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>from: assistant — text (default)</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>from: assistant — text (default)</h3>
         <sail-message from="assistant" timestamp="2026-06-05T14:00:00Z">
           Here is the information you requested about Sail components.
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>from: user</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>from: user</h3>
         <sail-message from="user" timestamp="2026-06-05T14:01:00Z">
           Can you show me the chat-elements pack?
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>from: system</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>from: system</h3>
         <sail-message from="system">
           You are a helpful assistant with access to Ship tools.
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>from: tool</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>from: tool</h3>
         <sail-message from="tool" content-type="text">
           Tool output: 42 results found.
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>content-type: code</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>content-type: code</h3>
         <sail-message from="assistant" content-type="code">
           const x = signal(0);
 const doubled = derived(() => x() * 2);
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>content-type: terminal-snapshot</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>content-type: terminal-snapshot</h3>
         <sail-message from="assistant" content-type="terminal-snapshot">
           $ cargo run -p sail-compiler -- build page.sail
 compiled 1 file(s)
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>status: sending</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>status: sending</h3>
         <sail-message from="user" status="sending">
           Sending this message now…
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>status: error</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>status: error</h3>
         <sail-message from="user" status="error">
           This message failed to send.
         </sail-message>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>with trailing slot — copy action</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>with trailing slot — copy action</h3>
         <sail-message from="assistant" timestamp="2026-06-05T14:02:00Z">
           The answer is forty-two.
-          <span slot="trailing" style({ paint: fg(muted-foreground), text: fontSize(xs) })>Copy</span>
+          <span slot="trailing" style(mutedXs)>Copy</span>
         </sail-message>
       </column>
     </column>
   </section>
-
-  <!-- ── sail-message-list ───────────────────────────────────────── -->
   <section>
-    <h2 style({ box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-message-list</h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(base) })>
+    <h2 style(sectionH)>sail-message-list</h2>
+    <p style(sectionBody)>
       Keyed, windowed, auto-scrolling column. Items via <code>items</code>;
       <code>sticky-bottom</code> pins to newest. Empty state via the
       <code>empty</code> slot.
     </p>
 
     <column gap="3">
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>empty state — no items</h3>
-        <column style({ box: h(48), paint: borderWidth(1).border(border).radius(md) })>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>empty state — no items</h3>
+        <column style(listShort)>
           <sail-message-list items={emptyItems()}>
-            <span slot="empty" style({ paint: fg(muted-foreground), text: fontSize(base) })>
+            <span slot="empty" style(mutedBase)>
               No messages yet. Start the conversation.
             </span>
           </sail-message-list>
         </column>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>sticky-bottom=true — pre-loaded thread</h3>
-        <column style({ box: h(64), paint: borderWidth(1).border(border).radius(md) })>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>sticky-bottom=true — pre-loaded thread</h3>
+        <column style(listTall)>
           <sail-message-list items={threadItems()}>
             <span slot="empty">No messages.</span>
           </sail-message-list>
@@ -244,18 +252,16 @@ compiled 1 file(s)
       </column>
     </column>
   </section>
-
-  <!-- ── sail-thinking-dots ──────────────────────────────────────── -->
   <section>
-    <h2 style({ box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-thinking-dots</h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(base) })>
+    <h2 style(sectionH)>sail-thinking-dots</h2>
+    <p style(sectionBody)>
       Three bouncing dots signalling an assistant composing a reply. Pure
       presentational; no controller. Screen-reader-friendly live region.
     </p>
 
     <column gap="3">
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>size: sm | md (default) | lg</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>size: sm | md (default) | lg</h3>
         <row gap="4">
           <sail-thinking-dots size="sm"></sail-thinking-dots>
           <sail-thinking-dots size="md"></sail-thinking-dots>
@@ -263,8 +269,8 @@ compiled 1 file(s)
         </row>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>tone: default | primary | info | success | warning | destructive | accent | muted</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>tone: default | primary | info | success | warning | destructive | accent | muted</h3>
         <row gap="4">
           <sail-thinking-dots></sail-thinking-dots>
           <sail-thinking-dots tone="primary"></sail-thinking-dots>
@@ -277,60 +283,57 @@ compiled 1 file(s)
         </row>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>custom label — overrides announced text</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>custom label — overrides announced text</h3>
         <sail-thinking-dots label="Model is composing" size="md" tone="primary"></sail-thinking-dots>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>inline inside a message bubble</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>inline inside a message bubble</h3>
         <sail-message from="assistant">
           <sail-thinking-dots size="sm" tone="muted"></sail-thinking-dots>
         </sail-message>
       </column>
     </column>
   </section>
-
-  <!-- ── sail-tool-call ──────────────────────────────────────────── -->
   <section>
-    <h2 style({ box: mb(1), paint: fg(primary), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>sail-tool-call</h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(base) })>
+    <h2 style(sectionH)>sail-tool-call</h2>
+    <p style(sectionBody)>
       Collapsible record of one tool invocation. Header shows name + status dot;
       body shows args (default slot) and result (<code>result</code> slot).
     </p>
 
     <column gap="3">
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>status: running — body collapsed</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>status: running — body collapsed</h3>
         <sail-tool-call name="list_files" status="running">
-          { "path": "/workspace/src" }
+          path: /workspace/src
         </sail-tool-call>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>status: ok — body collapsed</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>status: ok — body collapsed</h3>
         <sail-tool-call name="read_file" status="ok">
-          { "path": "/workspace/src/lib.rs" }
-          <span slot="result">pub fn hello() -&gt; &amp;'static str { "world" }</span>
+          path: /workspace/src/lib.rs
+          <span slot="result">pub fn hello() -> String</span>
         </sail-tool-call>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>status: error — body collapsed</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>status: error — body collapsed</h3>
         <sail-tool-call name="run_tests" status="error">
-          { "suite": "unit" }
+          suite: unit
           <span slot="result">Error: test runner not found</span>
         </sail-tool-call>
       </column>
 
-      <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
-        <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>open=true — body expanded on load</h3>
+      <column gap="3" style(card)>
+        <h3 style(cardLabel)>open=true — body expanded on load</h3>
         <sail-tool-call name="search_code" status="ok" open>
-          { "query": "sail-message", "scope": "packages/" }
+          query: sail-message, scope: packages/
           <span slot="result">Found 7 matches in 3 files.</span>
         </sail-tool-call>
       </column>
     </column>
   </section>
-  </span>
-</column>
+  </column>

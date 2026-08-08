@@ -1,21 +1,29 @@
-<column gap="8" style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })>
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style title = { box: mb(2), text: fontSize(2xl).fontWeight(bold) }
+  style lede = { paint: fg(muted-foreground) }
+  style sectionH = { box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  style badge = { box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) }
+  style body = { box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style card = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
+</scope>
+
+<column gap="8" style(page)>
   <header>
-    <h1 style({ box: mb(2), text: fontSize(2xl).fontWeight(bold) })>ship/markdown — Domain Stubs</h1>
-    <p style({ paint: fg(muted-foreground) })>
+    <h1 style(title)>ship/markdown — Domain Stubs</h1>
+    <p style(lede)>
       Pack <strong>ship/markdown</strong>. Each card below renders the real
       custom element tag with static mock attribute values so the shell
       registers and paints. A visible badge on each card marks it as a domain
       stub — no <code>ship.*</code> calls, no live data.
     </p>
   </header>
-
-  <!-- ship-markdown-editor: default / md size -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>value: string</code> (form-associated),
       <code>placeholder: string</code>,
       <code>size: sm|md|lg</code>,
@@ -33,7 +41,7 @@
       composer are built-in.
     </p>
 
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-default"
         label="Default (md)"
@@ -43,18 +51,16 @@
       </ship-markdown-editor>
     </column>
   </section>
-
-  <!-- ship-markdown-editor: sm size -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code> — size sm
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Small variant. Reduced font-size, toolbar height, and padding via
       <code>size="sm"</code>. Placeholder text demonstrates the empty state.
     </p>
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-sm"
         label="Small editor"
@@ -64,18 +70,16 @@
       </ship-markdown-editor>
     </column>
   </section>
-
-  <!-- ship-markdown-editor: lg size -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code> — size lg
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Large variant. Larger font-size and row height. Suitable for document
       authoring surfaces.
     </p>
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-lg"
         label="Large editor"
@@ -85,19 +89,17 @@
       </ship-markdown-editor>
     </column>
   </section>
-
-  <!-- ship-markdown-editor: disabled -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code> — disabled
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       <code>disabled</code> is a boolean, form-disabled prop. The shell
       applies 60% opacity and blocks pointer events. Toolbar buttons are
       also disabled.
     </p>
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-disabled"
         label="Disabled editor"
@@ -108,18 +110,16 @@
       </ship-markdown-editor>
     </column>
   </section>
-
-  <!-- ship-markdown-editor: invalid -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code> — invalid
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       <code>invalid</code> applies the destructive ring to the editor shell.
       Used in form-validation contexts when the field value fails a constraint.
     </p>
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-invalid"
         label="Field with validation error"
@@ -130,20 +130,18 @@
       </ship-markdown-editor>
     </column>
   </section>
-
-  <!-- ship-markdown-editor: no selection toolbar, no comment -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code> — toolbar-only mode
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       <code>show-selection-toolbar="false"</code> hides the floating bubble
       toolbar. <code>allow-comment="false"</code> removes the comment button
       from the bubble. Both are false here — a simple editing surface without
       collaborative features.
     </p>
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-simple"
         label="Toolbar-only editor"
@@ -155,19 +153,17 @@
       </ship-markdown-editor>
     </column>
   </section>
-
-  <!-- ship-markdown-editor: allow-generate -->
   <section>
-    <h2 style({ box: mb(3).padB(2), paint: fg(muted-foreground).borderBWidth(1).borderB(border), text: fontSize(sm).fontWeight(semibold).textCase(uppercase).tracking(wide) })>
+    <h2 style(sectionH)>
       <code>ship-markdown-editor</code> — allow-generate
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).whitespace(nowrap).textCase(normal).tracking(normal) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ box: mb(4), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       <code>allow-generate="true"</code> adds a sparkles button to the
       selection bubble toolbar. Clicking it fires the <code>generate</code>
       event — the host is responsible for wiring to an AI back-end.
     </p>
-    <column style({ box: pad(5), paint: bg(card).borderWidth(1).border(border).radius(lg) })>
+    <column style(card)>
       <ship-markdown-editor
         name="demo-md-generate"
         label="AI-enabled editor"
