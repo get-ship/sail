@@ -60,7 +60,7 @@ pub fn emit_module(
     lowered: &Lowered,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
-    sx_var_bindings: &[crate::check::sx_vars::SxVarBinding],
+    sx_var_bindings: &[crate::check::binding::StyleBinding],
 ) -> String {
     let mut lowered = lowered.clone();
     if !sx_var_bindings.is_empty() {

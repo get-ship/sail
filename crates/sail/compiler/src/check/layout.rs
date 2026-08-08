@@ -249,7 +249,7 @@ fn element_fingerprint(class: &str, tag: &str) -> Option<Fingerprint> {
     for token in class.split_whitespace() {
         if let Some(t) = layout_base_to_tag(token) {
             base_tag = Some(t.to_string());
-        } else if let Some(atom) = token.strip_prefix("sx-") {
+        } else if let Some(atom) = token.strip_prefix("s-") {
             sx_atoms.push(atom.to_string());
         }
     }
@@ -329,8 +329,8 @@ fn element_matches_fingerprint(
         let lowered: std::collections::HashSet<String> = elem
             .class
             .split_whitespace()
-            .filter(|c| c.starts_with("sx-"))
-            .map(|c| c.strip_prefix("sx-").unwrap_or(c).to_string())
+            .filter(|c| c.starts_with("s-"))
+            .map(|c| c.strip_prefix("s-").unwrap_or(c).to_string())
             .collect();
         fingerprint.sx_atoms.iter().all(|a| lowered.contains(a))
     } else {

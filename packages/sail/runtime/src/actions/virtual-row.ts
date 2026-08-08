@@ -10,7 +10,7 @@ import type { Action } from '../action'
  *     <grid use:virtualRow={w.start} style="translate-y-(--row-y) absolute">…</grid>
  *
  * The atom `translate-y-(--row-y)` lowers to
- *     `.sx-translate-y-rv-rowy { translate: 0 var(--row-y) }`
+ *     `.s-translate-y-rv-rowy { translate: 0 var(--row-y) }`
  *
  * The action lives in the framework layer (`packages/sail/runtime/src/actions`)
  * because the only place a `.style` write is legitimate is the seam itself —

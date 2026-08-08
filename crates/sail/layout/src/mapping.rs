@@ -27,8 +27,8 @@ pub enum Selector {
         prefix: &'static str,
         value: &'static str,
     },
-    /// A sanitized sx atomic class, e.g. product `sx-pad4` / `sx-grow1`
-    /// (residual utility names like `sx-p4` / `sx-grow` still match for
+    /// A sanitized sx atomic class, e.g. product `s-pad4` / `s-grow1`
+    /// (residual utility names like `s-p4` / `s-grow` still match for
     /// fixtures and any leftover emit).
     Sx(&'static str),
     /// The element whose *parent* carries the given base class. Used for child
@@ -475,12 +475,12 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
         selector: Selector::Sx("hidden"),
         declarations: &[Declaration::Display(Display::None)],
     },
-    // Style product: `style.display(none)` mints `sx-displaynone` (not bare `hidden`).
+    // Style product: `style.display(none)` mints `s-displaynone` (not bare `hidden`).
     LayoutRule {
         selector: Selector::Sx("displaynone"),
         declarations: &[Declaration::Display(Display::None)],
     },
-    // Product `style.display(inline-flex|flex|block|…)` → `sx-display*`.
+    // Product `style.display(inline-flex|flex|block|…)` → `s-display*`.
     // Longest / more-specific tokens first (inlineflex before inline, etc.).
     LayoutRule {
         selector: Selector::Sx("displayinlineflex"),
@@ -522,8 +522,8 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
         selector: Selector::Sx("sticky"),
         declarations: &[Declaration::Position(Position::Relative)],
     },
-    // Product Style / participation attrs: `style.grow(1)` / `grow` → `sx-grow1`.
-    // Residual bare `sx-grow` kept for fixtures + any leftover emit.
+    // Product Style / participation attrs: `style.grow(1)` / `grow` → `s-grow1`.
+    // Residual bare `s-grow` kept for fixtures + any leftover emit.
     LayoutRule {
         selector: Selector::Sx("grow1"),
         declarations: &[Declaration::FlexGrow(1.0)],
@@ -709,12 +709,12 @@ const DISPLAY_CENTER_INLINE: &[Declaration] = &[
 // Scale-driven sx prefixes resolved at runtime through `sail_lint::scales`.
 // ---------------------------------------------------------------------------
 
-/// A scale prefix that maps a sanitized sx class like `sx-p4` to a layout
+/// A scale prefix that maps a sanitized sx class like `s-p4` to a layout
 /// property. The value tail is fed to the scale resolver.
 #[derive(Debug, Clone, Copy)]
 pub enum SxScaleRule {
     Padding(SideSet),
-    /// `style.size(N)` → `sx-sizeN` sets both width and height.
+    /// `style.size(N)` → `s-sizeN` sets both width and height.
     Size,
     Width,
     Height,
@@ -735,46 +735,46 @@ pub enum SideSet {
     L,
 }
 
-/// Every `sx-*` prefix whose value lives on a closed scale. Order matters: the
+/// Every `s-*` prefix whose value lives on a closed scale. Order matters: the
 /// longest prefix must be checked first.
 ///
 /// **Product Style** mints classes from setter names + alphanumeric args:
-/// `style.pad(4)` → `sx-pad4`, `style.padX(2)` → `sx-padX2`,
-/// `style.minW(0)` → `sx-minW0` (camelCase preserved). Residual utility-string
-/// prefixes (`sx-p4`, `sx-minw0`, …) stay so fixtures / any leftover emit still
+/// `style.pad(4)` → `s-pad4`, `style.padX(2)` → `s-padX2`,
+/// `style.minW(0)` → `s-minW0` (camelCase preserved). Residual utility-string
+/// prefixes (`s-p4`, `s-minw0`, …) stay so fixtures / any leftover emit still
 /// resolve.
 pub static SX_SCALE_RULES: &[(&'static str, SxScaleRule)] = &[
     // Product pad* (longest first: padX before pad).
-    ("sx-padX", SxScaleRule::Padding(SideSet::X)),
-    ("sx-padY", SxScaleRule::Padding(SideSet::Y)),
-    ("sx-padT", SxScaleRule::Padding(SideSet::T)),
-    ("sx-padR", SxScaleRule::Padding(SideSet::R)),
-    ("sx-padB", SxScaleRule::Padding(SideSet::B)),
-    ("sx-padL", SxScaleRule::Padding(SideSet::L)),
-    ("sx-padS", SxScaleRule::Padding(SideSet::L)), // inline-start ≈ left for taffy
-    ("sx-padE", SxScaleRule::Padding(SideSet::R)), // inline-end ≈ right for taffy
-    ("sx-pad", SxScaleRule::Padding(SideSet::All)),
+    ("s-padX", SxScaleRule::Padding(SideSet::X)),
+    ("s-padY", SxScaleRule::Padding(SideSet::Y)),
+    ("s-padT", SxScaleRule::Padding(SideSet::T)),
+    ("s-padR", SxScaleRule::Padding(SideSet::R)),
+    ("s-padB", SxScaleRule::Padding(SideSet::B)),
+    ("s-padL", SxScaleRule::Padding(SideSet::L)),
+    ("s-padS", SxScaleRule::Padding(SideSet::L)), // inline-start ≈ left for taffy
+    ("s-padE", SxScaleRule::Padding(SideSet::R)), // inline-end ≈ right for taffy
+    ("s-pad", SxScaleRule::Padding(SideSet::All)),
     // Product size atoms (camelCase minW / maxH).
-    ("sx-minW", SxScaleRule::MinWidth),
-    ("sx-minH", SxScaleRule::MinHeight),
-    ("sx-maxW", SxScaleRule::MaxWidth),
-    ("sx-maxH", SxScaleRule::MaxHeight),
+    ("s-minW", SxScaleRule::MinWidth),
+    ("s-minH", SxScaleRule::MinHeight),
+    ("s-maxW", SxScaleRule::MaxWidth),
+    ("s-maxH", SxScaleRule::MaxHeight),
     // Residual utility-string prefixes (p/px/…, minw lowercase).
-    ("sx-px", SxScaleRule::Padding(SideSet::X)),
-    ("sx-py", SxScaleRule::Padding(SideSet::Y)),
-    ("sx-pt", SxScaleRule::Padding(SideSet::T)),
-    ("sx-pr", SxScaleRule::Padding(SideSet::R)),
-    ("sx-pb", SxScaleRule::Padding(SideSet::B)),
-    ("sx-pl", SxScaleRule::Padding(SideSet::L)),
-    ("sx-p", SxScaleRule::Padding(SideSet::All)),
-    ("sx-minw", SxScaleRule::MinWidth),
-    ("sx-minh", SxScaleRule::MinHeight),
-    ("sx-maxw", SxScaleRule::MaxWidth),
-    ("sx-maxh", SxScaleRule::MaxHeight),
+    ("s-px", SxScaleRule::Padding(SideSet::X)),
+    ("s-py", SxScaleRule::Padding(SideSet::Y)),
+    ("s-pt", SxScaleRule::Padding(SideSet::T)),
+    ("s-pr", SxScaleRule::Padding(SideSet::R)),
+    ("s-pb", SxScaleRule::Padding(SideSet::B)),
+    ("s-pl", SxScaleRule::Padding(SideSet::L)),
+    ("s-p", SxScaleRule::Padding(SideSet::All)),
+    ("s-minw", SxScaleRule::MinWidth),
+    ("s-minh", SxScaleRule::MinHeight),
+    ("s-maxw", SxScaleRule::MaxWidth),
+    ("s-maxh", SxScaleRule::MaxHeight),
     // Product `style.size(N)` → width+height (before bare w/h).
-    ("sx-size", SxScaleRule::Size),
-    ("sx-w", SxScaleRule::Width),
-    ("sx-h", SxScaleRule::Height),
+    ("s-size", SxScaleRule::Size),
+    ("s-w", SxScaleRule::Width),
+    ("s-h", SxScaleRule::Height),
 ];
 
 // ---------------------------------------------------------------------------

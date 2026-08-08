@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 use serde::Serialize;
 
 use crate::prefixes as sx_rules;
-use crate::sx_vocab::{self, Resolved};
+use crate::style_vocab::{self, Resolved};
 use crate::tokens;
 
 // ─── IR ──────────────────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ impl SxError {
 
 /// Author-facing property names that map onto an existing vocab head.
 /// Value disambiguation (shared heads like `text` / `font` / `border`) still
-/// runs through `sx_vocab::resolve` after the atom is built.
+/// runs through `style_vocab::resolve` after the atom is built.
 const PROP_ALIASES: &[(&str, &str)] = &[
     ("color", "text"),       // text color (color-scale values)
     ("font-size", "text"),   // type scale
@@ -165,7 +165,7 @@ pub fn is_property(name: &str) -> bool {
     if PROP_ALIASES.iter().any(|(a, _)| *a == n) {
         return true;
     }
-    let names = sx_vocab::names();
+    let names = style_vocab::names();
     names.iter().any(|k| k == n)
 }
 
@@ -173,13 +173,13 @@ pub fn is_property(name: &str) -> bool {
 /// surfaces the same "use layout element" diagnostic as legacy `gap-2`.
 fn is_refused_head(name: &str) -> bool {
     let n = name.strip_prefix('-').unwrap_or(name);
-    sx_vocab::refusals().iter().any(|(k, _)| k == n)
+    style_vocab::refusals().iter().any(|(k, _)| k == n)
 }
 
 /// Documented closed property table (canonical props + aliases).
 pub fn property_table() -> Vec<PropertyMeta> {
     let mut out: BTreeMap<String, PropertyMeta> = BTreeMap::new();
-    for (name, values) in sx_vocab::vocabulary() {
+    for (name, values) in style_vocab::vocabulary() {
         out.insert(
             name.clone(),
             PropertyMeta {
@@ -414,7 +414,7 @@ pub fn parse_lenient(input: &str) -> (SxProgram, Vec<SxError>) {
             }
             StructuredTry::NotStructured => {
                 // Legacy atom form (incl. prefix:atom).
-                match parse_legacy_atom(t) {
+                match parse_utility_atom(t) {
                     Ok(decl) => prog.decls.push(decl),
                     Err(e) => errors.push(e),
                 }
@@ -543,7 +543,7 @@ fn try_structured(tokens: &[&str], i: usize) -> StructuredTry {
     }
 }
 
-fn parse_legacy_atom(pair: &str) -> Result<SxDecl, SxError> {
+fn parse_utility_atom(pair: &str) -> Result<SxDecl, SxError> {
     // Split closed prefix chain, remainder is atom (may contain `:` only if
     // value was something weird — legacy atoms use `-`).
     let parts: Vec<&str> = pair.split(':').collect();
@@ -619,8 +619,8 @@ fn parse_legacy_atom(pair: &str) -> Result<SxDecl, SxError> {
 
 /// Best-effort split of a legacy body into prop + value for IR display.
 fn split_legacy_name_value(body: &str) -> (String, Option<SxValue>) {
-    // Longest vocab name match (same as sx_vocab::resolve).
-    let names = sx_vocab::names();
+    // Longest vocab name match (same as style_vocab::resolve).
+    let names = style_vocab::names();
     let mut best: Option<(&str, &str)> = None;
     for name in names.iter() {
         if let Some(rest) = body.strip_prefix(name.as_str()) {
@@ -687,7 +687,7 @@ pub fn decl_atom(decl: &SxDecl) -> String {
                 a.push_str(prop);
                 a.push('-');
                 a.push_str(&cand);
-                if matches!(sx_vocab::resolve(&a), Resolved::Ok(_)) {
+                if matches!(style_vocab::resolve(&a), Resolved::Ok(_)) {
                     return a;
                 }
             }
@@ -712,7 +712,7 @@ pub fn lower_decl(decl: &SxDecl) -> Option<Vec<(String, String)>> {
         return lower_raw(decl, css_val);
     }
     let atom = decl_atom(decl);
-    match sx_vocab::resolve(&atom) {
+    match style_vocab::resolve(&atom) {
         Resolved::Ok(decls) => Some(decls),
         _ => None,
     }
@@ -733,7 +733,7 @@ fn lower_raw(decl: &SxDecl, css_val: &str) -> Option<Vec<(String, String)>> {
 
 fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
     // From vocab table: pick first utility with this name that has css list.
-    for (name, _) in sx_vocab::vocabulary() {
+    for (name, _) in style_vocab::vocabulary() {
         if name != prop {
             continue;
         }
@@ -770,10 +770,10 @@ fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
     for p in probes {
         let atom = format!("{prop}-{p}");
         // Skip bare exact atoms that are not `{prop}-{value}` utilities (e.g. bg-none bare).
-        if matches!(sx_vocab::resolve(p), Resolved::Ok(_)) && p == "none" && prop == "bg" {
+        if matches!(style_vocab::resolve(p), Resolved::Ok(_)) && p == "none" && prop == "bg" {
             continue;
         }
-        if let Resolved::Ok(decls) = sx_vocab::resolve(&atom) {
+        if let Resolved::Ok(decls) = style_vocab::resolve(&atom) {
             // Prefer color/background-color over background-image for `bg` raw paint.
             if prop == "bg"
                 && decls.iter().any(|(k, _)| k == "background-image")
@@ -787,7 +787,7 @@ fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
         }
     }
     // Bare?
-    if let Resolved::Ok(decls) = sx_vocab::resolve(prop) {
+    if let Resolved::Ok(decls) = style_vocab::resolve(prop) {
         return Some(decls.into_iter().map(|(k, _)| k).collect());
     }
     // Hardcoded fallbacks for aliases / common props.
@@ -852,7 +852,7 @@ pub fn validate_decl(decl: &SxDecl) -> Result<(), SxError> {
     }
 
     let atom = decl_atom(decl);
-    match sx_vocab::resolve(&atom) {
+    match style_vocab::resolve(&atom) {
         Resolved::Ok(_) => Ok(()),
         Resolved::Refused { instead } => Err(SxError::Refused {
             atom,
@@ -933,7 +933,7 @@ pub fn class_name(decl: &SxDecl) -> String {
     let atom = decl_atom(decl);
     let sanitized: String = atom.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
     if decl.prefixes.is_empty() {
-        format!("sx-{sanitized}")
+        format!("s-{sanitized}")
     } else {
         let sp: String = decl
             .prefixes
@@ -941,7 +941,7 @@ pub fn class_name(decl: &SxDecl) -> String {
             .flat_map(|s| s.chars())
             .filter(|c| c.is_ascii_alphanumeric())
             .collect();
-        format!("sx-{sp}-{sanitized}")
+        format!("s-{sp}-{sanitized}")
     }
 }
 
@@ -1136,7 +1136,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_legacy_atoms() {
+    fn parse_utility_atoms() {
         let p = parse("bg-primary px-2 hover:bg-muted").unwrap();
         assert_eq!(p.decls.len(), 3);
         assert_eq!(p.decls[0].prop, "bg");
@@ -1258,9 +1258,9 @@ mod tests {
     #[test]
     fn class_name_stable() {
         let p = parse("px: 2").unwrap();
-        assert_eq!(class_name(&p.decls[0]), "sx-px2");
+        assert_eq!(class_name(&p.decls[0]), "s-px2");
         let p = parse("hover:bg: primary").unwrap();
-        assert_eq!(class_name(&p.decls[0]), "sx-hover-bgprimary");
+        assert_eq!(class_name(&p.decls[0]), "s-hover-bgprimary");
     }
 
     #[test]
@@ -1276,7 +1276,7 @@ mod tests {
             &mut seen,
         )
             .expect("valid Style spine lowers");
-        assert!(classes.contains("sx-"), "{classes}");
+        assert!(classes.contains("s-"), "{classes}");
         assert!(
             css.contains("var(--primary)") || css.contains("background"),
             "{css}"
@@ -1313,7 +1313,7 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         let classes =
             lower_sx_string("filled", &env, &mut css, &mut seen).expect("Style const ref lowers");
-        assert!(classes.contains("sx-"), "{classes}");
+        assert!(classes.contains("s-"), "{classes}");
         assert!(
             css.contains("var(--primary)") || css.contains("background"),
             "{css}"

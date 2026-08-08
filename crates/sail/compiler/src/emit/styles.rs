@@ -34,7 +34,7 @@ use super::writer::js_string;
 /// implement `querySelector`, so a hand-rolled `firstChild` walk is the only
 /// isomorphic option (and the dedupe only matters on re-mount, hit O(1)).
 ///
-/// CSS is always wrapped in `@layer sail` so page atomics (`.sx-bgtransparent`,
+/// CSS is always wrapped in `@layer sail` so page atomics (`.s-bgtransparent`,
 /// etc.) compete with element-skins by specificity — not as unlayered rules
 /// that beat every layered compound fill. Skins ship in the same layer.
 ///
@@ -47,7 +47,7 @@ pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
         return String::new();
     }
     // Same layer as element-skins.css — unlayered page atomics otherwise crush
-    // compound variant fills (e.g. solid primary bg loses to .sx-bgtransparent).
+    // compound variant fills (e.g. solid primary bg loses to .s-bgtransparent).
     let css = if css.starts_with("@layer ") {
         css.to_string()
     } else {
@@ -95,7 +95,7 @@ pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
 }
 
 /// `@property` registration for every prop/signal `(--x)` binding this
-/// component's `sx` reads matched (see `check::sx_vars`). Emitted as its
+/// component's `sx` reads matched (see `check::binding`). Emitted as its
 /// OWN install call, never appended to `program.styles` — that string gets
 /// wrapped in a `@scope (...) to (...) { ... }` donut at runtime
 /// (`injectScopedStyles`), and `@property` is a top-level-only at-rule: a
@@ -108,23 +108,34 @@ pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
 /// `initial-value`, which the spec permits (`"*"` matches any token
 /// sequence, so there's no type to default).
 pub(crate) fn register_properties_install_js(
-    bindings: &[crate::check::sx_vars::SxVarBinding],
+    bindings: &[crate::check::binding::StyleBinding],
 ) -> String {
     if bindings.is_empty() {
         return String::new();
     }
+    use crate::check::binding::StyleBindingUnit;
     let mut css = String::new();
     for b in bindings {
-        if b.numeric {
-            css.push_str(&format!(
-                "@property --{name} {{ syntax: '<number>'; inherits: true; initial-value: 0; }}",
-                name = b.css_name,
-            ));
-        } else {
-            css.push_str(&format!(
-                "@property --{name} {{ syntax: '*'; inherits: true; }}",
-                name = b.css_name,
-            ));
+        match b.unit {
+            StyleBindingUnit::Number => {
+                css.push_str(&format!(
+                    "@property --{name} {{ syntax: '<number>'; inherits: true; initial-value: 0; }}",
+                    name = b.css_name,
+                ));
+            }
+            StyleBindingUnit::LengthPx => {
+                // Number → length: typed length realization (never bare number in a length slot).
+                css.push_str(&format!(
+                    "@property --{name} {{ syntax: '<length>'; inherits: true; initial-value: 0px; }}",
+                    name = b.css_name,
+                ));
+            }
+            StyleBindingUnit::Untyped => {
+                css.push_str(&format!(
+                    "@property --{name} {{ syntax: '*'; inherits: true; }}",
+                    name = b.css_name,
+                ));
+            }
         }
     }
     let key = fnv1a32_hex(css.as_bytes());
@@ -529,12 +540,12 @@ mod tests {
 
     #[test]
     fn styles_install_wraps_in_sail_layer() {
-        let js = styles_install_js(".sx-bgtransparent{background-color:transparent}", false);
+        let js = styles_install_js(".s-bgtransparent{background-color:transparent}", false);
         assert!(
             js.contains("@layer sail {"),
             "page atomics must ship in @layer sail so they don't crush element-skins compounds:\n{js}"
         );
-        assert!(js.contains(".sx-bgtransparent{background-color:transparent}"));
+        assert!(js.contains(".s-bgtransparent{background-color:transparent}"));
         // Already layered → leave alone (no double wrap).
         let once = styles_install_js("@layer sail {\n.x{color:red}\n}", false);
         assert_eq!(once.matches("@layer sail").count(), 1, "{once}");

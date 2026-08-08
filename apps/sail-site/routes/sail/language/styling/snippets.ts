@@ -7,7 +7,7 @@ export const code = {
     On the system, or it does not compile.</p>
 </card>`,
 
-  sxError: `error: [sail-sx] unknown Style token on setter \`radius\`: huge
+  sxError: `error: [sail-style] unknown Style token on setter \`radius\`: huge
   \`radius\` accepts scale tokens (none, sm, md, lg, xl, full, …); did you mean \`full\`?`,
 
   current: `<row gap="1" align="center" style({ box: pad(1), paint: bg(surface-2).borderWidth(1).border(border).radius(full) })>

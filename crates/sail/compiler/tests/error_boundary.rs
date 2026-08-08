@@ -36,8 +36,8 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
     .expect("element compiles");
 
     assert!(
-        el.structure_html.contains("sx-contents")
-            || el.structure_html.contains("sx-displaycontents")
+        el.structure_html.contains("s-contents")
+            || el.structure_html.contains("s-displaycontents")
             || el.skin_css.contains("display:contents")
             || el.skin_css.contains("display: contents"),
         "the root must not box: struct={} skin={}",
@@ -48,8 +48,8 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
     // It carries display:contents + group-caught hide so a healthy boundary
     // does not box.
     assert!(
-        el.structure_html.contains("sx-displaycontents")
-            || el.structure_html.contains("sx-contents")
+        el.structure_html.contains("s-displaycontents")
+            || el.structure_html.contains("s-contents")
             || el.skin_css.contains("display:contents")
             || el.skin_css.contains("display: contents"),
         "nor may the content wrapper box: {}",
@@ -79,8 +79,8 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     assert!(
         el.structure_html.contains("sail-grp")
             && (el.skin_css.contains("[data-caught]")
-                || el.structure_html.contains("sx-groupcaught-hidden")
-                || el.structure_html.contains("sx-groupcaught-contents")),
+                || el.structure_html.contains("s-groupcaught-hidden")
+                || el.structure_html.contains("s-groupcaught-contents")),
         "group-caught must lower into structure/skin:\nstruct={}\nskin={}",
         el.structure_html,
         el.skin_css

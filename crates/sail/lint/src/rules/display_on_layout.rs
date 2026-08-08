@@ -1,7 +1,7 @@
 //! `sail-display-on-layout` — do not put `style.display(…)` on layout keywords.
 //!
 //! Layout bases (`.sail-col` / `.sail-row` / `.sail-grid` / …) own
-//! `display:flex|grid`. A sibling atomic class like `sx-displaynone` loses the
+//! `display:flex|grid`. A sibling atomic class like `s-displaynone` loses the
 //! cascade fight in product CSS (same specificity, base often later or equal),
 //! so `display(none)` on `<column>` / `<row>` / … is a silent production
 //! footgun. Authors must use a plain host element for show/hide and nest the
@@ -14,7 +14,7 @@
 //!
 //! **Known gaps (not yet flagged):** multi-hop refs (`const a = hide`), list
 //! spreads, `match`/`compound` wrappers that only nest a display-bearing const,
-//! and post-lower class inspection (`sx-displaynone` on a layout base). Prefer
+//! and post-lower class inspection (`s-displaynone` on a layout base). Prefer
 //! plain host + nest until those land.
 
 use std::collections::HashSet;
@@ -62,7 +62,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             message: format!(
                 "`style.display(…)` on <{tag}> is rejected — layout bases \
                  (.{base}) own `display:flex|grid` and beat \
-                 `.sx-displaynone` / other display atoms. Use a plain host \
+                 `.s-displaynone` / other display atoms. Use a plain host \
                  element for show/hide and nest <{tag}> inside.",
                 base = layout_base_class(tag),
             ),

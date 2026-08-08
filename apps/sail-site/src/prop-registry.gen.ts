@@ -505,8 +505,8 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "offset",
-      "type": "string",
-      "default": ""
+      "type": "number",
+      "default": "0"
     }
   ],
   "page": [

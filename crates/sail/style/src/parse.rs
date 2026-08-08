@@ -9,23 +9,12 @@ use super::setters::{closest_unique_setter, find_setter, validate_op, when_targe
 /// Parse a Style expression (product / channel-only). Flat `style.method(…)`
 /// chains are refused — use `style({ box, paint, text, animate })`.
 ///
-/// Codemod emit-identity and rewrite duals use [`parse_flat`].
+/// Codemod emit-identity and rewrite duals use [`flat_chain`].
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse_with(input, /* allow_flat */ false, /* allow_legacy */ false)
+    parse_with(input)
 }
 
-/// Migration dual: accept flat `style.method(…)` chains for codemod
-/// emit-identity and rewrite verification only. Not a product authoring path.
-pub fn parse_flat(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse_with(input, /* allow_flat */ true, /* allow_legacy */ true)
-}
-
-/// Codemod-only dual: accept retired free match/when/compound/list/`.when`.
-pub fn parse_legacy(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse_with(input, /* allow_flat */ false, /* allow_legacy */ true)
-}
-
-fn parse_with(input: &str, allow_flat: bool, allow_legacy: bool) -> (Style, Vec<StyleDiagnostic>) {
+fn parse_with(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     let mut diags = Vec::new();
     // Authors reasonably write `//` / `/* */` comments inside long sx lists.
     // Strip them before tokenizing: the grammar has no division and no string
@@ -50,7 +39,7 @@ fn parse_with(input: &str, allow_flat: bool, allow_legacy: bool) -> (Style, Vec<
     // Offsets are into `trimmed`; `input_base` maps them back if needed. Motion
     // config capture uses the trimmed slice so quotes/units survive.
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new_full(trimmed, &tokens, allow_flat, allow_legacy);
+    let mut p = Parser::new_full(trimmed, &tokens, false, false);
     let _ = trim_start; // kept for future span mapping into original input
     let style = parse_style_expr(&mut p, &mut diags);
     if !p.at_end() {
@@ -308,7 +297,7 @@ fn is_const_ref_motion_chain(input: &str) -> bool {
     is_motion_chain_method(method)
 }
 
-/// Public for the sx-attribute classifier (`rules::sx`): a const-ref motion
+/// Public for the s-attribute classifier (`rules::sx`): a const-ref motion
 /// chain (`row.enter({…}).exit({…})`) is a compile-time Style product, not a
 /// runtime dynamic binding.
 pub fn is_const_ref_motion_chain_pub(input: &str) -> bool {
@@ -527,7 +516,7 @@ struct Parser<'a> {
     tokens: &'a [SpannedTok<'a>],
     pos: usize,
     /// When false, `style.method(…)` flat chains are refused (product parse).
-    allow_flat: bool,
+    allow_flat: bool, // migration dual deleted
     /// When true, free match/when/compound/list/`.when` duals parse (codemod only).
     allow_legacy: bool,
 }
@@ -536,7 +525,7 @@ impl<'a> Parser<'a> {
     fn new_full(
         input: &'a str,
         tokens: &'a [SpannedTok<'a>],
-        allow_flat: bool,
+        allow_flat: bool, // migration dual deleted
         allow_legacy: bool,
     ) -> Self {
         Self {
@@ -769,7 +758,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     if p.peek() == Some(&Tok::LParen) {
         return parse_style_call(p, diags);
     }
-    // Flat `style.method(…)` — product parse refuses; migration dual via parse_flat.
+    // Flat `style.method(…)` — product parse refuses; migration dual via flat_chain.
     if !p.allow_flat {
         let source = p.remainder();
         let preview: String = source.chars().take(80).collect();
@@ -787,15 +776,15 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let saved = p.allow_flat;
         p.allow_flat = true;
         let mut sink = Vec::new();
-        let _ = parse_flat_style_chain_body(p, &mut sink);
+        let _ = flat_chain_style_chain_body(p, &mut sink);
         p.allow_flat = saved;
         return Style::Empty;
     }
-    parse_flat_style_chain_body(p, diags)
+    flat_chain_style_chain_body(p, diags)
 }
 
 /// Body of a flat `style.method(…).…` chain (caller already ate `style`).
-fn parse_flat_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     let mut ops = Vec::new();
     let mut iters = 0usize;
     loop {
@@ -2282,15 +2271,15 @@ fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
 /// 3. **Compose** — `name, { … }` / `name, style({ … })` (same merge as multi-arg `style`)
 /// 4. **Bare ref** — another Style const name
 pub fn parse_style_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse_const_rhs(input, /* allow_flat */ false, /* allow_legacy */ false)
+    parse_const_rhs(input, false, false)
 }
 
 /// Like [`parse_with`], but the body is one or more style *args* (compose / bare
 /// object) rather than a single top-level `style(…)` / ref expression only.
 fn parse_const_rhs(
     input: &str,
-    allow_flat: bool,
-    allow_legacy: bool,
+    _allow_flat: bool,
+    _allow_legacy: bool,
 ) -> (Style, Vec<StyleDiagnostic>) {
     let mut diags = Vec::new();
     let stripped = strip_comments(input);
@@ -2307,7 +2296,7 @@ fn parse_const_rhs(
         return (Style::Empty, diags);
     }
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new_full(trimmed, &tokens, allow_flat, allow_legacy);
+    let mut p = Parser::new_full(trimmed, &tokens, false, false);
     // Declaration RHS = style-arg composition (same merge law as `style(a, b, …)`).
     let mut parts = Vec::new();
     let mut iters = 0usize;

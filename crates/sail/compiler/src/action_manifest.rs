@@ -43,6 +43,9 @@
 //!     action can opt out without restructuring. The curated *public*
 //!     surface taught in skill/docs is [`PUBLIC_ACTION_NAMES`] — a
 //!     strict subset; runtime top-level re-exports only those.
+//!   * `writes` — camelCase bind vocabulary this action sets at runtime
+//!     (`anchorLeft`, …). Closed `bind(name)` resolution checks these when
+//!     the file uses `use:<action>`.
 
 use serde_json::{Value, json};
 
@@ -68,6 +71,10 @@ pub struct ActionEntry {
     /// independent of the public `use:` skill surface — see
     /// [`PUBLIC_ACTION_NAMES`].
     pub auto_import: bool,
+    /// Bind vocabulary names this action writes at runtime (camelCase), e.g.
+    /// `anchorLeft`. Empty when the action writes no style-bind channels.
+    /// `bind(name)` resolves against these when the file uses `use:<action>`.
+    pub writes: &'static [&'static str],
 }
 
 /// The action registry. Sorted by `name` for deterministic builds and
@@ -83,306 +90,357 @@ pub const ACTIONS: &[ActionEntry] = &[
         param: "AnchorPlacement | undefined",
         summary: "Position a popper-like surface against an anchor element.",
         auto_import: true,
+        writes: &["anchorLeft", "anchorTop", "anchorWidth"],
     },
     ActionEntry {
         name: "autoDismiss",
         param: "void",
         summary: "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; invokes `onDismiss` then removes the host.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "autosize",
         param: "void",
         summary: "Autosize a textarea (height) or single-line input (width) to its content.",
         auto_import: true,
+        writes: &["autosizeH"],
     },
     ActionEntry {
         name: "catchRender",
         param: "void",
         summary: "Catch render errors thrown by descendants; show a fallback UI.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "cellPad",
         param: "number | null | undefined",
         summary: "Track the current cell's left/right padding for a virtualized grid.",
         auto_import: true,
+        writes: &["cellPs"],
     },
     ActionEntry {
         name: "chromeOffset",
         param: "void",
         summary: "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale).",
         auto_import: true,
+        writes: &["chromeOffset"],
     },
     ActionEntry {
         name: "clickOutside",
         param: "(() => void) | undefined",
         summary: "Fire a callback when a click lands outside the element.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "clipboard",
         param: "ClipboardParam",
         summary: "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "combobox",
         param: "void",
         summary: "Internal: L1 <combobox> closed behavior (not public use: — attach the widget).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "contextMenu",
         param: "void",
         summary: "Right-click menu: open on contextmenu, close on outside-click / ESC.",
         auto_import: true,
+        writes: &["anchorLeft", "anchorTop"],
     },
     ActionEntry {
         name: "describedControl",
         param: "void",
         summary: "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "detailsDisabled",
         param: "void",
         summary: "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "detailsToggle",
         param: "void",
         summary: "On native <details> `toggle`, invoke `onToggle` with `{ open }`.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "dismissControl",
         param: "void",
         summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) invokes `onDismiss` then removes the host; non-toast hosts gate on [dismissible].",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "dismissible",
         param: "void",
         summary: "Invoke `onRemove` on a `[removable]` host for Backspace/Delete or remove-button click — the attr-gated dismiss mix-in.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "dropzone",
         param: "undefined",
         summary: "Drag-and-drop file receiver; reads files into a controller-side handler.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "eventSpan",
         param: "RectSpan | null | undefined",
         summary: "Track the bounding rect of a pointer event target across the screen.",
         auto_import: true,
+        writes: &["evtTop", "evtH", "evtLeft", "evtW"],
     },
     ActionEntry {
         name: "focus",
         param: "boolean | null | undefined | void",
         summary: "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "gridTracks",
         param: "string | null | undefined",
         summary: "Measure a CSS grid's resolved track widths/positions for layout math.",
         auto_import: true,
+        writes: &["sailGridTemplate"],
     },
     ActionEntry {
         name: "hotkeys",
         param: "HotkeysMap | undefined",
         summary: "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "hoverSurface",
         param: "void",
         summary: "Hover-triggered card; open on pointer-in, close on pointer-out with delay.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "icon",
         param: "void",
         summary: "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "inView",
         param: "InViewHandler | undefined",
         summary: "Fire a callback when the host enters the viewport (IntersectionObserver).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "liveBox",
         param: "string | null | undefined",
         summary: "Apply freeform CSS declarations for live specimen geometry (border-radius, box-shadow, …).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "liveRegion",
         param: "void",
         summary: "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "marquee",
         param: "void",
         summary: "Infinite seamless track scroll for L1 <ticker> (duration/reverse on host).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "maxWidth",
         param: "number | string | null | undefined",
         summary: "Cap the element's content width to a max (px or CSS length).",
         auto_import: true,
+        writes: &["maxW"],
     },
     ActionEntry {
         name: "mediaFallback",
         param: "void",
         summary: "Image-with-fallback behavior for an <avatar> element.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "menu",
         param: "void",
         summary: "Internal: L1 <dropdown>/<context-menu> closed behavior (not public use: — attach the widget).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "pagination",
         param: "void",
         summary: "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "pin",
         param: "PinPoint | null | undefined",
         summary: "Pin one corner of an element to a fixed viewport coordinate.",
         auto_import: true,
+        writes: &["pinX", "pinY"],
     },
     ActionEntry {
         name: "portEdge",
         param: "PortSide",
         summary: "Anchor a fixed-size port to the midpoint of one of its parent's four edges.",
         auto_import: true,
+        writes: &["portTop", "portLeft", "portRight", "portBottom"],
     },
     ActionEntry {
         name: "pressable",
         param: "void",
         summary: "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "pressed",
         param: "void",
         summary: "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "radioGroup",
         param: "void",
         summary: "Internal: L1 <radio-group> closed behavior (not public use: — attach the widget).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "rangeFill",
         param: "void",
         summary: "Paint the filled portion of a <input type=range> on a custom track.",
         auto_import: true,
+        writes: &["rngPct"],
     },
     ActionEntry {
         name: "recoverySurface",
         param: "void",
         summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "rect",
         param: "BoxRect | null | undefined",
         summary: "Track the element's bounding rect via ResizeObserver.",
         auto_import: true,
+        writes: &["boxTop", "boxLeft", "boxW", "boxH"],
     },
     ActionEntry {
         name: "spotlight",
         param: "void",
         summary: "Soft spotlight following the pointer; visual highlight for surfaces under it.",
         auto_import: true,
+        writes: &["spotX", "spotY", "spotStrength"],
     },
     ActionEntry {
         name: "swatch",
         param: "string | null | undefined",
         summary: "Render a color swatch keyed by a token name from the active theme.",
         auto_import: true,
+        writes: &["swatchColor"],
     },
     ActionEntry {
         name: "syntaxHighlight",
         param: "string | null | undefined",
         summary: "Syntax-highlight source for a <code-block>; prefer use:syntaxHighlight={code()}.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "tabs",
         param: "void",
         summary: "Internal: L1 <tabs> closed behavior (not public use: — attach the widget).",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "targetCursor",
         param: "void",
         summary: "Switch the cursor to a custom 'target' style while over the element.",
         auto_import: true,
+        writes: &["tcX", "tcY"],
     },
     ActionEntry {
         name: "themeSelect",
         param: "void",
         summary: "Theme switcher: click to write the picked theme to the host context.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "tipDescribe",
         param: "void",
         summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
         auto_import: true,
+        writes: &["ttTop", "ttBottom", "ttLeft", "ttRight", "ttTx", "ttArrowTop", "ttArrowBottom", "ttArrowLeft", "ttArrowRight", "ttArrowMl", "ttArrowMt"],
     },
     ActionEntry {
         name: "toggleGroup",
         param: "void",
         summary: "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "variantLive",
         param: "void",
         summary: "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation.",
         auto_import: true,
+        writes: &[],
     },
     ActionEntry {
         name: "virtualRow",
         param: "number | null | undefined",
         summary: "Register a virtualized row; tells the parent scroller its measured height.",
         auto_import: true,
+        writes: &["rowY"],
     },
     ActionEntry {
         name: "virtualSpacer",
         param: "number | null | undefined",
         summary: "Spacer row in a virtualized list; the engine reads its measured height.",
         auto_import: true,
+        writes: &["rowsH"],
     },
     ActionEntry {
         name: "worldTransform",
         param: "string | null | undefined",
         summary: "Track the cumulative CSS transform up the parent chain (for canvas positioning).",
         auto_import: true,
+        writes: &["worldTx"],
     },
     ActionEntry {
         name: "zoomPan",
         param: "ZoomPanState | null | undefined",
         summary: "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
         auto_import: true,
+        writes: &["zoomTx"],
     },
 ];
 
@@ -530,6 +588,27 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
 // (see drift-guard note above — the tests in `mod tests` enforce
 // the same invariants at `cargo test` time)
 
+
+/// Bind names (`anchorLeft`, …) written by any of the given `use:` actions.
+pub fn writes_for_actions<'a>(
+    action_names: impl IntoIterator<Item = &'a str>,
+) -> std::collections::BTreeSet<&'static str> {
+    let mut out = std::collections::BTreeSet::new();
+    for name in action_names {
+        if let Some(a) = ACTIONS.iter().find(|a| a.name == name) {
+            for w in a.writes {
+                out.insert(*w);
+            }
+        }
+    }
+    out
+}
+
+/// Lookup an action by bare `use:` name.
+pub fn action_by_name(name: &str) -> Option<&'static ActionEntry> {
+    ACTIONS.iter().find(|a| a.name == name)
+}
+
 /// Serialize the action registry as JSON, in the same shape the L1
 /// element manifest uses (`emit::element::ElementOutput::manifest`).
 /// The docs site and the agent skill consume this; the L1 element
@@ -558,6 +637,7 @@ pub fn to_json() -> Value {
                 "autoImport": a.auto_import,
                 "public": is_public_action(a.name),
                 "summary": a.summary,
+                "writes": a.writes,
             })
         })
         .collect();

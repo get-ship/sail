@@ -1,7 +1,7 @@
 //! Native-kind stdlib element stamping — a stdlib element whose template
 //! root tag EQUALS the element name (label → `<label>`) is never spliced
 //! (the tag already IS the element), but its host paint — the `.sail-<name>`
-//! root class plus the atomic `sx-*` classes its host Style lowered to,
+//! root class plus the atomic `s-*` classes its host Style lowered to,
 //! the same string `serialize_static` bakes into a spliced root — must be
 //! STAMPED onto the use-site tag. Before this pass the skin's atomic rules
 //! sat in `element-skins.css` with no class ever carrying them: inert CSS.
@@ -41,7 +41,7 @@ fn native_label_stamps_host_classes_at_use_site() {
     // The element's atomic host sx classes ride along (label.sail authors
     // cursor(pointer) + fg(label-foreground) on the host).
     assert!(
-        out.contains("sx-cursorpointer") && out.contains("sx-fglabelforeground"),
+        out.contains("s-cursorpointer") && out.contains("s-fglabelforeground"),
         "atomic host sx classes stamped:\n{out}"
     );
     // No splice: the element's internals (the .req marker span from
@@ -83,14 +83,14 @@ fn native_label_stamping_is_idempotent() {
     // An already-stamped tag (author wrote the classes, or a re-scan) must
     // not accumulate duplicates.
     let out =
-        pp(r#"<label class="sail-label sx-cursorpointer" data-sail-host="label">Email</label>"#);
+        pp(r#"<label class="sail-label s-cursorpointer" data-sail-host="label">Email</label>"#);
     assert_eq!(
         out.matches("sail-label").count(),
         1,
         "root class not duplicated:\n{out}"
     );
     assert_eq!(
-        out.matches("sx-cursorpointer").count(),
+        out.matches("s-cursorpointer").count(),
         1,
         "atomic class not duplicated:\n{out}"
     );

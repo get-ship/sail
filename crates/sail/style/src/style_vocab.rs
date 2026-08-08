@@ -78,7 +78,7 @@ pub struct Utility {
 }
 
 impl Utility {
-    /// True iff `value` is a `(--name)` form — the sx-side seam to runtime
+    /// True iff `value` is a `(--name)` form — the s-side seam to runtime
     /// geometry (a number that crossed JS, written to a custom property by
     /// an action). The shape mirrors Tailwind v4's `(--foo)` reader so an
     /// agent's prior transfers; the property's identity is verified so a

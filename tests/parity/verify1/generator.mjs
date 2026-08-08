@@ -304,7 +304,7 @@ export function generateErrorCases(rand, countPerClass = 80) {
     out.push({
       id: `e-sc-pos-${String(i++).padStart(4, '0')}`,
       source,
-      html: `<div class="sail-col sail-ai-stretch sx-wfull sx-h0 sx-overflowhidden"><div class="sx-h${childH} sx-shrink0"><span>silent clip content ${n}</span></div></div>`,
+      html: `<div class="sail-col sail-ai-stretch s-wfull s-h0 s-overflowhidden"><div class="s-h${childH} s-shrink0"><span>silent clip content ${n}</span></div></div>`,
       family: 'error',
       class_id: 'silent-clip',
       expected: true,
@@ -320,7 +320,7 @@ export function generateErrorCases(rand, countPerClass = 80) {
     out.push({
       id: `e-sc-pos2-${String(i++).padStart(4, '0')}`,
       source,
-      html: `<div class="sail-col sail-ai-stretch sx-wfull sx-h8 sx-overflowhidden"><div class="sx-h24 sx-shrink0"><span>${escapeXml(TEXTS.latin_long)}</span></div></div>`,
+      html: `<div class="sail-col sail-ai-stretch s-wfull s-h8 s-overflowhidden"><div class="s-h24 s-shrink0"><span>${escapeXml(TEXTS.latin_long)}</span></div></div>`,
       family: 'error',
       class_id: 'silent-clip',
       expected: true,

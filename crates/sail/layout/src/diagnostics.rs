@@ -295,7 +295,7 @@ mod tests {
             Element {
                 tag: "div".to_string(),
                 // fixed height so the child measures non-zero and case 3 applies
-                class: "sx-h-20".to_string(),
+                class: "s-h-20".to_string(),
                 children: vec![],
                 parent: Some(1),
                 text: "x".to_string(),
@@ -315,7 +315,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col sx-grow".to_string(),
+                class: "sail-col s-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()
@@ -353,7 +353,7 @@ mod tests {
             },
             Element {
                 tag: "div".to_string(),
-                class: "sx-h-20".to_string(),
+                class: "s-h-20".to_string(),
                 children: vec![],
                 parent: Some(1),
                 text: "branch".to_string(),
@@ -379,7 +379,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col sx-grow".to_string(),
+                class: "sail-col s-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()

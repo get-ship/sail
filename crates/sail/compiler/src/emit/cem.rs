@@ -75,7 +75,7 @@ pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
 }
 
 /// Walk the template collecting the anatomy: author-authored class names
-/// (compile-generated `sx-*`/`sail-*` atomics excluded — they are emission
+/// (compile-generated `s-*`/`sail-*` atomics excluded — they are emission
 /// detail, not contract) and slot names (`(default)` for the unnamed slot).
 /// Sorted + deduped for deterministic manifests.
 pub(crate) fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) {
@@ -104,7 +104,7 @@ pub(crate) fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) 
                             && name == "class"
                         {
                             for c in value.split_whitespace() {
-                                if !c.starts_with("sx-") && !c.starts_with("sail-") {
+                                if !c.starts_with("s-") && !c.starts_with("sail-") {
                                     classes.insert(c.to_string());
                                 }
                             }

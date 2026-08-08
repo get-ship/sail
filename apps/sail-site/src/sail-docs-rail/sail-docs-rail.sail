@@ -11,7 +11,7 @@
  Responsive — CSS media queries, NOT matchMedia unmount:
  - tablet+ (768px): fixed-width side rail
  - below tablet: rail display:none (on a plain div — .sail-col beats
- sx-displaynone); Menu opens a fixed drawer
+ s-displaynone); Menu opens a fixed drawer
 
  Rail is a <div display:flex; flex-dir:column>, never <column>, so
  display(none) is not overridden by .sail-col { display:flex }.
@@ -63,7 +63,7 @@ export default controller((ctx) => {
  style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
  // Plain div rail: fixed width, never grows into the content pane.
  // Mobile base = display(none); tablet+ restores flex column.
- // NOT <column> — .sail-col { display:flex } beats .sx-displaynone.
+ // NOT <column> — .sail-col { display:flex } beats .s-displaynone.
  // 14rem rail (space-56 ≡ --panel-rail-w).
  style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }

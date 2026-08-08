@@ -5,7 +5,7 @@
 //!
 //! **Spacing is resolved structurally** via `sail_lint::style::parse` on each
 //! child's block `style({…})` statement (and parent `gap` attrs) — not by
-//! substring fingerprinting lowered `sx-mr*` class tokens.
+//! substring fingerprinting lowered `s-mr*` class tokens.
 //!
 //! Rhythm: ≥3 siblings, modal spacing ≥60% → repair outliers to the modal
 //! space-scale token. No mode → WARN only (deliberate asymmetry).
@@ -842,7 +842,7 @@ fn element_fingerprint(class: &str, tag: &str) -> Option<Fingerprint> {
     for token in class.split_whitespace() {
         if let Some(t) = layout_base_to_tag(token) {
             base_tag = Some(t.to_string());
-        } else if let Some(atom) = token.strip_prefix("sx-") {
+        } else if let Some(atom) = token.strip_prefix("s-") {
             sx_atoms.push(atom.to_string());
         }
     }
@@ -920,8 +920,8 @@ fn element_matches_fingerprint(
         let lowered: std::collections::HashSet<String> = elem
             .class
             .split_whitespace()
-            .filter(|c| c.starts_with("sx-"))
-            .map(|c| c.strip_prefix("sx-").unwrap_or(c).to_string())
+            .filter(|c| c.starts_with("s-"))
+            .map(|c| c.strip_prefix("s-").unwrap_or(c).to_string())
             .collect();
         fingerprint.sx_atoms.iter().all(|a| lowered.contains(a))
     } else {
@@ -992,7 +992,7 @@ fn tag_matches_fingerprint(
         return false;
     };
     // Collapse Style source to alphanumeric tokens so `mr(4)` / `mr4` match
-    // mint atom `mr4` from fingerprint (class `sx-mr4`).
+    // mint atom `mr4` from fingerprint (class `s-mr4`).
     let collapsed: String = sx_value
         .chars()
         .filter(|c| c.is_ascii_alphanumeric())

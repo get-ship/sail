@@ -22,7 +22,7 @@
   // native OS chrome instead of design-system controls.
   //
   // No base bg(transparent): that class is a cascade landmine (F7). Unlayered
-  // product `.sx-bgtransparent` beats layered solid skins and empties primary
+  // product `.s-bgtransparent` beats layered solid skins and empties primary
   // fills. Variants own background; ghost is the only transparent fill.
   style base = { box: display(inline-flex).position(relative), paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().controlFrame().select(none).cursor(pointer), text: fontWeight(medium).leading(none).whitespace(nowrap), when: { hover: { paint: controlLift() }, active: { paint: press() }, disabled: { paint: cursor(not-allowed).opacity(50) } } }
 

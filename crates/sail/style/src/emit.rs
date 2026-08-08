@@ -211,10 +211,10 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
 
 fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     if op.setter == "avatarMedia" {
-        return "sx-avatarmedia".into();
+        return "s-avatarmedia".into();
     }
     if op.setter == "glyphFill" {
-        return "sx-glyphfill".into();
+        return "s-glyphfill".into();
     }
     // All args feed the class name — composites like border(1, border) vs
     // border(1, primary) must not share an atomic class.
@@ -248,9 +248,9 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
         .filter(|c| c.is_ascii_alphanumeric())
         .collect();
     if path.is_empty() {
-        format!("sx-{setter}{arg}")
+        format!("s-{setter}{arg}")
     } else {
-        format!("sx-{path}-{setter}{arg}")
+        format!("s-{path}-{setter}{arg}")
     }
 }
 
@@ -385,7 +385,7 @@ pub fn lower_style_source_with_motion(
     seen: &mut HashSet<String>,
 ) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
     // Product authoring: channel spine only. Flat `style.pad().bg()` is retired
-    // (corpus codemod + block attachment). Migration dual is `parse_flat` only.
+    // (corpus codemod + block attachment). Migration dual is `flat_chain` only.
     // Early refuse matches product `parse` (no IR for flat chains).
     let t = src.trim_start();
     if t.starts_with("style.") {

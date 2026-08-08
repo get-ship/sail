@@ -18,7 +18,7 @@ pub mod source;
 // CHANNELS-1: Style pipeline lives in `sail-style`. Re-export under the
 // historical `sail_lint::{style,sx_ir,sx_vocab,scales,tokens}` paths so
 // compiler/layout/ops/lsp keep compiling without a fan-out import thrash.
-pub use sail_style::{component_surfaces, host_ctx, scales, sx_ir, sx_vocab, token_groups, tokens};
+pub use sail_style::{component_surfaces, host_ctx, scales, style_ir, style_vocab, token_groups, tokens};
 
 /// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
 pub mod style {
@@ -29,7 +29,7 @@ pub mod style {
         collect_style_const_names, color_paint_vocabulary, condition_media, conditions, emit,
         emit_style, ir, is_geometry_setter, is_interaction_when_key, is_text_bearing,
         looks_like_utility_string_product, lower_style, lower_style_source,
-        lower_style_source_with_motion, parse, parse_flat, parse_style_const_rhs, prefixes, setters,
+        lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes, setters,
         style_complete_at, style_complete_context_at, style_complete_for_context,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
         surface_pack_for_host, text_channel_host_error, token_groups, when_keys, with_host_surface,

@@ -23,7 +23,7 @@ fn chip_compiles_with_style_and_capability_mixins() {
             && out.skin_css.contains("variant='soft'")
             && (out.skin_css.contains("var(--chip)")
                 || out.skin_css.contains("var(--primary)")
-                || out.structure_html.contains("sx-bgchip")),
+                || out.structure_html.contains("s-bgchip")),
         "variant paint via Style tokens: {}",
         out.skin_css
     );
@@ -50,8 +50,8 @@ fn chip_compiles_with_style_and_capability_mixins() {
         );
     }
     assert!(
-        out.structure_html.contains("sx-")
-            && (out.structure_html.contains("sx-minhcontrolhxs")
+        out.structure_html.contains("s-")
+            && (out.structure_html.contains("s-minhcontrolhxs")
                 || out.skin_css.contains("control-h-xs")
                 || out.structure_html.contains("controlhxs")),
         "attr-absent PE size=md + solid base: {}",
@@ -83,8 +83,8 @@ fn badge_and_card_compile_style() {
     let bsize = battrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(bsize["default"], "md", "PE badge size=md: {bsize}");
     assert!(
-        badge.structure_html.contains("sx-")
-            && (badge.structure_html.contains("sx-minhcontrolh2xs")
+        badge.structure_html.contains("s-")
+            && (badge.structure_html.contains("s-minhcontrolh2xs")
                 || badge.skin_css.contains("control-h-2xs")),
         "attr-absent PE badge size=md + soft base: {}",
         badge.structure_html
@@ -100,8 +100,8 @@ fn badge_and_card_compile_style() {
     let pad = cattrs.iter().find(|a| a["name"] == "padding").unwrap();
     assert_eq!(pad["default"], "md", "PE card padding=md: {pad}");
     assert!(
-        card.structure_html.contains("sx-")
-            && (card.structure_html.contains("sx-py4") || card.skin_css.contains("padding")),
+        card.structure_html.contains("s-")
+            && (card.structure_html.contains("s-py4") || card.skin_css.contains("padding")),
         "attr-absent PE card padding=md + surface base: {}",
         card.structure_html
     );

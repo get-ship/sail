@@ -5,7 +5,7 @@
 // Paint classes mirror lowered Style: popover / popover-foreground / popover-border.
 
 const POP =
-  'sail-popover sx-minWpanelmenuminw sx-pad3 sx-fgpopoverforeground sx-bgpopover sx-borderWidth1 sx-borderpopoverborder sx-radiusmd sx-shadowmd sx-zpopover'
+  'sail-popover s-minWpanelmenuminw s-pad3 s-fgpopoverforeground s-bgpopover s-borderWidth1 s-borderpopoverborder s-radiusmd s-shadowmd s-zpopover'
 
 const surface = () =>
   `<div class="${POP}" style="position:static">Popover surface — anchored overlay content.</div>`

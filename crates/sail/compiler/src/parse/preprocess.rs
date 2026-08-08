@@ -84,7 +84,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
 
 /// Find every tag-position Style product expression in raw `.sail` source,
 /// with the byte offset of the expression start. Used by `(--x)` / `bind(name)`
-/// resolution (`check::sx_vars`) against author source.
+/// resolution (`check::binding`) against author source.
 pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
     let mut out = Vec::new();
     for_each_tag_style(source, |abs_start, expr| {
@@ -162,7 +162,7 @@ fn is_void_tag(tag: &str) -> bool {
 }
 
 /// Lift tag-position `style(…)` (+ `.when` chains) onto the open tag as
-/// `class="sx-…"` (+ motion attrs), stripping the call from the open tag.
+/// `class="s-…"` (+ motion attrs), stripping the call from the open tag.
 fn lift_tag_style(
     source: &str,
     env: &sail_lint::style::StyleEnv,
@@ -233,7 +233,7 @@ fn lift_tag_style(
                      or  style(name) / style(partial, …)  — not bare `style`, `style=`, or `style={…}`",
                 )
                 .with_span(Span::new(bad, bad + 5))
-                .with_category("sail-sx"));
+                .with_category("sail-style"));
             }
             if let Some((call_lo, call_hi, expr)) = find_tag_style_call(source, tag_end, gt_pos) {
                 refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
@@ -339,7 +339,7 @@ fn refuse_body_style_statements(source: &str) -> Result<(), CompileError> {
                      not as a body statement",
                 )
                 .with_span(Span::new(abs_lo, abs_hi))
-                .with_category("sail-sx"));
+                .with_category("sail-style"));
             }
             i = body_start; continue;
         }
@@ -578,7 +578,7 @@ fn style_error(
         .join("; ");
     CompileError::new(format!("Style error: {message}"))
         .with_span(Span::new(start, end))
-        .with_category("sail-sx")
+        .with_category("sail-style")
 }
 fn lower_sx_value(
     val: &str,
@@ -590,7 +590,7 @@ fn lower_sx_value(
     let val = strip_outer_braces(val.trim());
     // Sole product path: Style value language (chain + match/when/compound/bind).
     // Motion chain methods (`.enter` / `.exit` / …) return alongside classes.
-    sail_lint::sx_ir::lower_sx_string_with_motion(val, env, css, seen)
+    sail_lint::style_ir::lower_sx_string_with_motion(val, env, css, seen)
 }
 
 /// Text channel may only attach to text-bearing hosts (SPEC + Phase 3).
@@ -617,7 +617,7 @@ fn refuse_text_on_non_text_host(
     Err(
         CompileError::new(sail_lint::style::text_channel_host_error(tag))
             .with_span(Span::new(abs_lo, abs_hi))
-            .with_category("sail-sx"),
+            .with_category("sail-style"),
     )
 }
 
@@ -685,7 +685,7 @@ fn split_sx_prefixes(pair: &str) -> (Vec<String>, String) {
     }
     let mut i = 0usize;
     while i < parts.len() - 1 {
-        if sail_lint::rules::sx::is_prefix(parts[i]) {
+        if sail_lint::rules::style_rule::is_prefix(parts[i]) {
             i += 1;
         } else {
             break;
@@ -991,9 +991,9 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
                 let v = value.trim_matches(['"', '\'']);
                 for c in v.split_whitespace() {
                     let cl = c.to_ascii_lowercase();
-                    if cl.starts_with("sx-w")
-                        || cl.starts_with("sx-minw")
-                        || cl.starts_with("sx-maxw")
+                    if cl.starts_with("s-w")
+                        || cl.starts_with("s-minw")
+                        || cl.starts_with("s-maxw")
                     {
                         return true;
                     }
@@ -1012,12 +1012,12 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
 /// Keeps base/state classes; drops inactive variant/size/tone/type match arms.
 /// (Style match/compound — not CVA string maps.)
 ///
-/// Class names compound: `sx-typecheckboxchecked-bgprimary`,
-/// `sx-typecheckboxsizemd-w…`. The axis value is a *prefix* of the head segment,
+/// Class names compound: `s-typecheckboxchecked-bgprimary`,
+/// `s-typecheckboxsizemd-w…`. The axis value is a *prefix* of the head segment,
 /// not the whole head (`checkbox` not `checkboxchecked`).
 fn freeform_class_active(class: &str, active: &std::collections::HashMap<String, String>) -> bool {
     // Layout / identity tokens always stay.
-    if !class.starts_with("sx-") {
+    if !class.starts_with("s-") {
         return true;
     }
     let rest = &class[3..];
@@ -1048,7 +1048,7 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
     if STATE.iter().any(|p| rest.starts_with(p)) {
         return true;
     }
-    // Attr-gated match arms: sx-variant{value}-*, sx-size{value}-*, sx-type{value}-*, …
+    // Attr-gated match arms: s-variant{value}-*, s-size{value}-*, s-type{value}-*, …
     // Nested match emits typecheckboxsizemd / typecheckboxchecked as one head —
     // active value must be a case-insensitive *prefix* of that head.
     const AXES: &[&str] = &[
@@ -1081,7 +1081,7 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
             return freeform_axis_value_matches(head, want);
         }
     }
-    // Tone / compound: sx-tone{t}-* or sx-tone{t}variant{v}-*
+    // Tone / compound: s-tone{t}-* or s-tone{t}variant{v}-*
     if let Some(after) = rest.strip_prefix("tone") {
         let head = after.split('-').next().unwrap_or("");
         if head.is_empty() {
@@ -1109,7 +1109,7 @@ fn freeform_class_active(class: &str, active: &std::collections::HashMap<String,
 /// Stamp a native-kind element's host classes (`sail-<name>` + the atomic
 /// sx classes its host Style lowered to — `ElementOutput::host_classes`,
 /// the same string `serialize_static` bakes into a spliced root) onto a
-/// use-site open tag: `<label size="sm">` → `<label class="sail-label sx-…"
+/// use-site open tag: `<label size="sm">` → `<label class="sail-label s-…"
 /// data-sail-host="label" size="sm">`. Rules:
 ///   - an author `class` merges — host classes first, author classes after,
 ///     deduped by token, so re-scanning an already-stamped tag is a NO-OP
@@ -1179,13 +1179,13 @@ fn stamp_native_host(
 
     // Select base ships `w(full)` for form columns; when the author already
     // sets width (participation or Style), drop the default so fixed toolbar
-    // widths are not dual-classed with `sx-wfull`.
+    // widths are not dual-classed with `s-wfull`.
     let drop_select_wfull = tag_name == "select" && author_sets_select_width(&attrs);
 
     let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut merged: Vec<&str> = Vec::new();
     for c in host_classes.split_whitespace() {
-        if drop_select_wfull && c == "sx-wfull" {
+        if drop_select_wfull && c == "s-wfull" {
             continue;
         }
         if !bare_link && !freeform_class_active(c, &active) {
@@ -1311,6 +1311,52 @@ fn splice_element(
         .chars()
         .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
         .collect();
+    // Progressive enhancement: static attr values for bound props become
+    // host custom properties so non-JS renderers see the real inset (not
+    // only the @property initial-value floor).
+    let mut bind_style = String::new();
+    if !el.bound_props.is_empty() {
+        for (prop, unit) in &el.bound_props {
+            let raw = snippet_attrs
+                .iter()
+                .find(|(n, _)| n == prop || camel_eq(n, prop))
+                .map(|(_, v)| v.trim_matches(['"', '\'']).to_string())
+                .or_else(|| {
+                    el.default_attrs
+                        .iter()
+                        .find(|(n, _)| n == prop || camel_eq(n, prop))
+                        .map(|(_, v)| v.clone())
+                });
+            let Some(val) = raw.filter(|v| !v.is_empty() && !v.starts_with('{')) else {
+                continue;
+            };
+            let css = kebab_of(prop);
+            let realized = match unit {
+                crate::check::binding::StyleBindingUnit::LengthPx
+                    if val.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-') =>
+                {
+                    format!("{val}px")
+                }
+                _ => val,
+            };
+            if !bind_style.is_empty() {
+                bind_style.push(' ');
+            }
+            bind_style.push_str(&format!("--{css}: {realized};"));
+        }
+    }
+    if !bind_style.is_empty() {
+        if let Some(slot) = snippet_attrs.iter_mut().find(|(n, _)| n == "style") {
+            let prev = slot.1.trim_matches(['"', '\'']);
+            if prev.starts_with('{') {
+                // Dynamic style expression — leave alone (runtime reflection owns it).
+            } else {
+                slot.1 = format!("\"{prev} {bind_style}\"");
+            }
+        } else {
+            snippet_attrs.push(("style".into(), format!("\"{bind_style}\"")));
+        }
+    }
     let mut outb = format!("<{tag_name}");
     for (n, v) in &snippet_attrs {
         outb.push(' ');
@@ -1329,6 +1375,25 @@ fn splice_element(
     let body = fill_slots(rest, &default_children, &named_children);
     outb.push_str(&body);
     outb
+}
+
+fn camel_eq(a: &str, b: &str) -> bool {
+    crate::emit::util::camel_of(a) == crate::emit::util::camel_of(b)
+}
+
+fn kebab_of(name: &str) -> String {
+    let mut out = String::with_capacity(name.len() + 4);
+    for (i, c) in name.chars().enumerate() {
+        if c.is_ascii_uppercase() {
+            if i != 0 {
+                out.push('-');
+            }
+            out.push(c.to_ascii_lowercase());
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 /// Partition use-site children into the default bucket (un-slotted nodes, in
@@ -1882,7 +1947,7 @@ fn merge_tag_classes(tag: &str) -> String {
 
 /// Dedup atomic CSS rules file-wide, first occurrence keeping its slot.
 /// Each lowering pass (style / layout / stdlib skins) dedups only within
-/// itself, so the same atomic (`sx-wfull`) was emitted once per pass — and
+/// itself, so the same atomic (`s-wfull`) was emitted once per pass — and
 /// the LAST copy won the shared-layer cascade. Atomic rules are identical
 /// declarations, so first-occurrence dedup is semantics-preserving and
 /// makes rule ORDER the single, reviewable mechanism.
@@ -2911,7 +2976,7 @@ mod tests {
         let out =
             preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#).expect("preprocess");
         assert!(
-            out.contains(r#"class="badge "#) && out.contains("sx-"),
+            out.contains(r#"class="badge "#) && out.contains("s-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
         );
         assert_eq!(
@@ -2926,7 +2991,7 @@ mod tests {
         let out =
             preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#).expect("preprocess");
         assert!(
-            out.contains("sx-") && out.contains("badge"),
+            out.contains("s-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
         );
         assert_eq!(out.matches("class=").count(), 1);
@@ -2950,7 +3015,7 @@ mod tests {
         let out = preprocess(r#"<span title="a > b" class="x" style({ box: pad(4) })> y</span>"#)
             .expect("preprocess");
         assert!(
-            out.contains(r#"class="x "#) && out.contains("sx-"),
+            out.contains(r#"class="x "#) && out.contains("s-"),
             "got:\n{out}"
         );
     }
@@ -2974,9 +3039,9 @@ mod tests {
             !out.contains("aria-label=\"Loading\""),
             "use-site wins: {out}"
         );
-        // Ring child is structure + Style atoms (sx-animatespin etc.), not a part class.
+        // Ring child is structure + Style atoms (s-animatespin etc.), not a part class.
         assert!(
-            out.contains("aria-hidden=\"true\"") && out.contains("sx-animatespin"),
+            out.contains("aria-hidden=\"true\"") && out.contains("s-animatespin"),
             "structure spliced with Style ring paint: {out}"
         );
         // The SKIN — including its @keyframes — ships in element-skins.css, not in the
@@ -3059,7 +3124,7 @@ mod tests {
             "un-slotted body projected: {out}"
         );
         // The slotted <button> is a native stdlib tag — stamping adds its
-        // sail-button + sx-* classes (and stamped defaults like `size`) ahead
+        // sail-button + s-* classes (and stamped defaults like `size`) ahead
         // of / around the use-site slot= attribute.
         assert!(
             out.contains("sail-button")
@@ -3105,7 +3170,7 @@ mod tests {
             "default slot copy: {out}"
         );
         // Same native stamping as alert: the slotted <button> carries its
-        // sail-button + sx-* classes around the use-site slot= attribute.
+        // sail-button + s-* classes around the use-site slot= attribute.
         assert!(
             out.contains("sail-button")
                 && out.contains(r#"slot="action""#)
@@ -3229,16 +3294,16 @@ mod tests {
         )
         .expect("preprocess");
         assert!(out.contains("sail-select"), "host stamp: {out}");
-        assert!(out.contains("sx-padE8"), "chevron room on base: {out}");
+        assert!(out.contains("s-padE8"), "chevron room on base: {out}");
         assert!(
-            out.contains("sx-sizesm-padS25") || out.contains("padS25"),
+            out.contains("s-sizesm-padS25") || out.contains("padS25"),
             "size ladder uses padS not padX: {out}"
         );
         assert!(
-            !out.contains("sx-sizesm-padX") && !out.contains("sx-padX3"),
+            !out.contains("s-sizesm-padX") && !out.contains("s-padX3"),
             "size/base must not set padX (clobbers end pad): {out}"
         );
-        assert!(out.contains("sx-wfull"), "bare select keeps w(full): {out}");
+        assert!(out.contains("s-wfull"), "bare select keeps w(full): {out}");
     }
 
     #[test]
@@ -3248,9 +3313,9 @@ mod tests {
             r#"<select size="sm" style({ box: w(28) })> <option>x</option></select>"#,
         )
         .expect("box w");
-        assert!(via_w.contains("sx-w28") || via_w.contains("w28"), "author w: {via_w}");
+        assert!(via_w.contains("s-w28") || via_w.contains("w28"), "author w: {via_w}");
         assert!(
-            !via_w.contains("sx-wfull"),
+            !via_w.contains("s-wfull"),
             "default w(full) dropped for box w: {via_w}"
         );
 
@@ -3259,17 +3324,17 @@ mod tests {
         )
         .expect("box minW/w");
         assert!(
-            !via_min.contains("sx-wfull"),
+            !via_min.contains("s-wfull"),
             "default w(full) dropped for minW/w: {via_min}"
         );
 
         let via_sx = preprocess(r#"<select size="sm" style({ box: w(24) })> <option>x</option></select>"#)
             .expect("sx w");
         assert!(
-            !via_sx.contains("sx-wfull"),
+            !via_sx.contains("s-wfull"),
             "default w(full) dropped for Style w: {via_sx}"
         );
-        assert!(via_sx.contains("sx-w24") || via_sx.contains("w24"), "author sx w: {via_sx}");
+        assert!(via_sx.contains("s-w24") || via_sx.contains("w24"), "author sx w: {via_sx}");
     }
 
     #[test]
@@ -3382,7 +3447,7 @@ mod tests {
             "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" style({ box: pad(4) })> é…‹›</span>";
         let out = preprocess(src).expect("preprocess");
         assert!(
-            out.contains(r#"class="x "#) && out.contains("sx-"),
+            out.contains(r#"class="x "#) && out.contains("s-"),
             "got:\n{out}"
         );
         assert!(out.contains("é…‹›"), "text content preserved:\n{out}");
@@ -3449,7 +3514,7 @@ mod tests {
             "multibyte content preserved: {out}"
         );
         assert!(
-            out.contains("sx-") && out.contains("class="),
+            out.contains("s-") && out.contains("class="),
             "Style still lowered: {out}"
         );
     }
@@ -3475,10 +3540,10 @@ mod tests {
 
     #[test]
     fn box_channel_grow_on_any_host_mints_style_class() {
-        // Participation is box channel only (`style({ box: grow(1) })` → `sx-grow1`).
+        // Participation is box channel only (`style({ box: grow(1) })` → `s-grow1`).
         let out = preprocess(r#"<div style({ box: grow(1) })>x</div>"#).expect("preprocess");
-        assert!(out.contains("sx-grow1"), "grow class: {out}");
-        assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
+        assert!(out.contains("s-grow1"), "grow class: {out}");
+        assert!(out.contains(".s-grow1{flex-grow:1}"), "grow css: {out}");
         assert!(
             !out.contains(" grow") && !out.contains("grow="),
             "no bare attr: {out}"
@@ -3490,8 +3555,8 @@ mod tests {
         let out = preprocess(r#"<column gap="2" style({ box: grow(1) })> x</column>"#)
             .expect("preprocess");
         assert!(out.contains("sail-col"), "layout base: {out}");
-        assert!(out.contains("sx-grow1"), "grow class folded: {out}");
-        assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
+        assert!(out.contains("s-grow1"), "grow class folded: {out}");
+        assert!(out.contains(".s-grow1{flex-grow:1}"), "grow css: {out}");
         assert!(!out.contains("grow="), "grow not raw attr: {out}");
         assert_eq!(out.matches("class=").count(), 1, "one class attr: {out}");
     }
@@ -3500,11 +3565,11 @@ mod tests {
     fn box_channel_w_full_and_shrink_zero() {
         let out = preprocess(r#"<main style({ box: w(full).shrink(0) })> x</main>"#)
             .expect("preprocess");
-        assert!(out.contains("sx-wfull"), "w full: {out}");
-        assert!(out.contains("sx-shrink0"), "shrink 0: {out}");
-        assert!(out.contains(".sx-wfull{width:100%}"), "w css: {out}");
+        assert!(out.contains("s-wfull"), "w full: {out}");
+        assert!(out.contains("s-shrink0"), "shrink 0: {out}");
+        assert!(out.contains(".s-wfull{width:100%}"), "w css: {out}");
         assert!(
-            out.contains(".sx-shrink0{flex-shrink:0}"),
+            out.contains(".s-shrink0{flex-shrink:0}"),
             "shrink css: {out}"
         );
     }
@@ -3514,7 +3579,7 @@ mod tests {
         // Residual attr lower deleted — bare grow/w stay unconsumed (lint refuses).
         let out = preprocess(r#"<div grow w="full">x</div>"#).expect("preprocess");
         assert!(
-            !out.contains("sx-grow1") && !out.contains("sx-wfull"),
+            !out.contains("s-grow1") && !out.contains("s-wfull"),
             "must not mint from bare attrs: {out}"
         );
         assert!(
@@ -3529,7 +3594,7 @@ mod tests {
         let out =
             preprocess(r#"<column gap="2" style({ box: pad(4) })> x</column>"#).expect("preprocess");
         assert!(
-            out.contains("sail-col") && out.contains("sail-g-2") && out.contains("sx-"),
+            out.contains("sail-col") && out.contains("sail-g-2") && out.contains("s-"),
             "merged: {out}"
         );
         assert_eq!(
@@ -3867,7 +3932,7 @@ mod tests {
         .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
-            out.contains("box-shadow") || out.contains("shadow") || out.contains("sx-"),
+            out.contains("box-shadow") || out.contains("shadow") || out.contains("s-"),
             "{out}"
         );
     }
@@ -3942,7 +4007,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             out.contains("var(--row-y)") || out.contains("translate"),
             "bind translateY emits var/read:\n{out}"
         );
-        assert!(out.contains("sx-"), "emits Style class:\n{out}");
+        assert!(out.contains("s-"), "emits Style class:\n{out}");
     }
 
     #[test]
@@ -3955,7 +4020,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     #[test]
     fn tag_style_statement_lowers_to_class_legacy() {
         let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#).expect("preprocess");
-        assert!(out.contains("sx-") || out.contains("var(--primary)"), "{out}");
+        assert!(out.contains("s-") || out.contains("var(--primary)"), "{out}");
         assert!(!out.contains("style({ paint: bg(primary) })"), "{out}");
     }
     #[test]
@@ -3965,7 +4030,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
   const base = style({ box: pad(2) })
 </scope>
 <div style(base)>x</div>"#).expect("preprocess");
-        assert!(out.contains("sx-"), "{out}");
+        assert!(out.contains("s-"), "{out}");
     }
     #[test]
     fn flat_style_method_chain_is_refused_on_product_path() {
@@ -4024,11 +4089,11 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn text_channel_allowed_on_text_bearing_hosts() {
         let out = preprocess(r#"<p style({ text: fontSize(sm) })>x</p>"#)
             .expect("p is text-bearing");
-        assert!(out.contains("sx-") || out.contains("font-size"), "{out}");
+        assert!(out.contains("s-") || out.contains("font-size"), "{out}");
 
         let out = preprocess(r#"<button style({ text: fontSize(sm), paint: bg(primary) })>go</button>"#)
         .expect("button is text-bearing");
-        assert!(out.contains("sx-"), "{out}");
+        assert!(out.contains("s-"), "{out}");
     }
 
     #[test]
@@ -4036,7 +4101,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
         let out =
             preprocess(r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#)
                 .expect("box+paint on div is legal");
-        assert!(out.contains("sx-"), "{out}");
+        assert!(out.contains("s-"), "{out}");
         assert!(!out.contains("style({"), "block Style must lift: {out}");
     }
 
@@ -4044,14 +4109,14 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn tag_style_object_lowers_to_class() {
         let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#)
             .expect("preprocess");
-        assert!(out.contains("sx-") || out.contains("var(--primary)"), "{out}");
+        assert!(out.contains("s-") || out.contains("var(--primary)"), "{out}");
         assert!(!out.contains("style({"), "tag Style must lift off open tag: {out}");
     }
 
     #[test]
     fn tag_style_void_host_no_lift_rule() {
         let out = preprocess(r#"<input style({ box: w(full) })>"#).expect("void host");
-        assert!(out.contains("sx-"), "{out}");
+        assert!(out.contains("s-"), "{out}");
         assert!(!out.contains("style({"), "{out}");
     }
 
@@ -4095,7 +4160,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             r#"<button style({ box: pad(3).gap(2), paint: bg(primary).fg(primary-foreground) })>ok</button>"#,
         )
         .expect("tag style must compile");
-        assert!(out.contains("sx-") || out.contains("var(--primary)"), "must attach: {out}");
+        assert!(out.contains("s-") || out.contains("var(--primary)"), "must attach: {out}");
         assert!(!out.contains("style({"), "must lower off the tag: {out}");
     }
 

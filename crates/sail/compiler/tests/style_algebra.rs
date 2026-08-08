@@ -38,7 +38,7 @@ fn setter_chain_lowers_through_style_ir() {
     let src = r#"<div style({ paint: bg(primary).fg(primary-foreground).radius(md) })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
-        js.contains("sx-bgprimary") || js.contains("bgprimary"),
+        js.contains("s-bgprimary") || js.contains("bgprimary"),
         "setter chain should emit classes: {js}"
     );
 }
@@ -161,7 +161,7 @@ fn style_list_lowers_through_ir() {
         r#"<div style({ paint: bg(primary), match: { variant: { filled: { paint: bg(primary) } } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
-        js.contains("sx-") || js.contains("class"),
+        js.contains("s-") || js.contains("class"),
         "style list should emit classes: {js}"
     );
 }

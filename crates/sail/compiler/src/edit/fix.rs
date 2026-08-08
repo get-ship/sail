@@ -106,7 +106,7 @@ pub fn suggest_fixes(
                     plans.push(p);
                 }
             }
-            "sail-sx" => {
+            "sail-style" => {
                 if let Some(p) = fix_unknown_sx_setter(source, &index, d) {
                     plans.push(p);
                 }
@@ -529,7 +529,7 @@ fn fix_unknown_sx_setter(
         return None;
     }
     Some(FixPlan {
-        rule: "sail-sx".into(),
+        rule: "sail-style".into(),
         line: d.line,
         col: d.col,
         message: format!("rewrite unknown setter {bad} → {target}"),

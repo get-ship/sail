@@ -122,7 +122,7 @@ const CTRL_COMMA: &str = "<controller>\n\
 #[test]
 fn d2_every_declarator_in_a_multi_declarator_const_registers() {
     // `(--b)` is the sx reflection of the SECOND declarator. Before the fix it
-    // failed `sail-sx-var` with a did-you-mean pointing at its sibling `a`.
+    // failed `sail-style-bind` with a did-you-mean pointing at its sibling `a`.
     let src = format!(
         "{CTRL_COMMA}<div>\n  style({{ paint: opacity(bind(a)) }})\n  <span>\n    style({{ paint: opacity(bind(b)) }})\n  </span>\n</div>"
     );

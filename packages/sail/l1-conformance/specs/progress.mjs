@@ -4,7 +4,7 @@
 // reads -1. Markup mirrors freeform host stamp.
 
 const PR =
-  'sail-progress sx-appearancenone sx-displayinlineblock sx-alignmiddle sx-wfull sx-h2 sx-borderWidth0 sx-radiusfull sx-overflowhidden sx-bgmuted sx-fgprimary sx-sizesm-h15 sx-sizemd-h2 sx-sizelg-h3'
+  'sail-progress s-appearancenone s-displayinlineblock s-alignmiddle s-wfull s-h2 s-borderWidth0 s-radiusfull s-overflowhidden s-bgmuted s-fgprimary s-sizesm-h15 s-sizemd-h2 s-sizelg-h3'
 
 const pr = (a) => {
   const m = a.match(/class="([^"]*)"/)

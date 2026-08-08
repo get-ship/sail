@@ -1032,7 +1032,7 @@ fn sx_attr_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
     None
 }
 
-/// sx completion items, sourced from `sail_lint::sx_vocab` — the same
+/// sx completion items, sourced from `sail_lint::style_vocab` — the same
 /// tables the lint validates and the docs teach. So what an agent is
 /// offered is what the lint will accept, by construction.
 ///
@@ -1046,7 +1046,7 @@ fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
 
     // Bare atoms: the atom itself is the value. Surfaced as `hidden`,
     // `truncate`, `italic`, etc. so the user can see the keyword shape.
-    for name in sail_lint::sx_vocab::names() {
+    for name in sail_lint::style_vocab::names() {
         if name.starts_with(&lower) && !name.contains('-') {
             out.push(CompletionItem {
                 label: name.clone(),
@@ -1060,7 +1060,7 @@ fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
     // (name, values) — one completion per legal (name-value) pair. The
     // label is the full atom (`p-4`, `bg-surface-1`); the detail is the
     // CSS shape it lowers to.
-    for (name, values) in sail_lint::sx_vocab::vocabulary() {
+    for (name, values) in sail_lint::style_vocab::vocabulary() {
         let hyphen = format!("{name}-");
         if !lower.is_empty() && !name.starts_with(&lower) && !hyphen.starts_with(&lower) {
             continue;
@@ -1078,7 +1078,7 @@ fn sx_completion_items(prefix: String) -> Vec<CompletionItem> {
 
     // Refusals — atoms the lint rejects, with the thing to use instead.
     // Surfaced so the agent sees WHY a Tailwind-prior favourite fails.
-    for (atom, instead) in sail_lint::sx_vocab::refusals() {
+    for (atom, instead) in sail_lint::style_vocab::refusals() {
         if !lower.is_empty() && !atom.starts_with(&lower) {
             continue;
         }

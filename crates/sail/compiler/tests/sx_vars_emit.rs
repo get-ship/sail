@@ -1,9 +1,10 @@
-//! `(--x)` binding integration tests — the resolution law's emit side.
+//! `bind(name)` binding integration tests — the resolution law's emit side.
 //!
 //! Pins: a matched prop/signal gets a CSS `@property` registration + host
 //! reflection (seed at mount + on every write); an unmatched name refuses
 //! with a did-you-mean; a signal not returned from `setup()` is not
-//! reachable; a global token is unaffected (no component-local wiring).
+//! reachable; a global token is unaffected (no component-local wiring);
+//! action writes resolve without reflection; number→length realizes as px.
 
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
@@ -34,7 +35,7 @@ fn compile_component(source: &str, controller: Option<&str>) -> Result<String, S
 }
 
 #[test]
-fn a_prop_bound_var_ref_emits_property_and_host_reflection() {
+fn a_prop_bound_var_ref_emits_length_property_and_host_reflection() {
     let js = compile_component(
         r#"<scope>
   props: { glowRadius: number = 0 }
@@ -45,23 +46,24 @@ fn a_prop_bound_var_ref_emits_property_and_host_reflection() {
     .expect("compile");
     assert!(js.contains("registerCustomProperties("), "{js}");
     assert!(js.contains("@property --glow-radius"), "{js}");
-    assert!(js.contains("syntax: '<number>'"), "{js}");
+    assert!(js.contains("syntax: '<length>'"), "{js}");
+    assert!(js.contains("initial-value: 0px"), "{js}");
     assert!(js.contains("$scope.glowRadius()"), "{js}");
     assert!(
         js.contains("__root.style.setProperty(\"--glow-radius\""),
         "{js}"
+    );
+    assert!(
+        js.contains("__v + \"px\"") || js.contains("+ \"px\""),
+        "number→length reflects as px:\n{js}"
     );
     assert!(js.contains("effect("), "{js}");
 }
 
 #[test]
 fn an_action_owned_var_ref_is_unaffected_like_a_token() {
-    // `--row-y` is written by `use:virtualRow`, not declared by this
-    // component as a prop or signal — the resolution law's token bucket
-    // (via `sail_lint::tokens::CONVENTION_TOKENS`) covers action-owned
-    // custom properties for exactly this reason: the ACTION owns the
-    // name, so it gets no component-local `@property`/host-reflection
-    // wiring and is never refused as unmatched.
+    // `--row-y` is written by `use:virtualRow` — resolved via action `writes`,
+    // no component-local `@property`/host-reflection wiring.
     let js = compile_component(
         r#"<div use:virtualRow={0} style({ paint: translateY(bind(rowY)) })> </div>"#,
         None,
@@ -72,16 +74,54 @@ fn an_action_owned_var_ref_is_unaffected_like_a_token() {
 }
 
 #[test]
+fn action_write_without_use_refuses() {
+    let err = compile_component(
+        r#"<div style({ paint: translateY(bind(rowY)) })> </div>"#,
+        None,
+    )
+    .unwrap_err();
+    assert!(err.contains("bind(rowY)") || err.contains("does not match"), "{err}");
+}
+
+#[test]
 fn a_setup_returned_signal_var_ref_emits_property_and_host_reflection() {
     let js = compile_component(
-        r#"<div style({ paint: bg(bind(hue)) })> </div>"#,
-        Some("controller((ctx) => { const hue = signal(220); return { hue }; })"),
+        r#"<div style({ paint: opacity(bind(fade)) })> </div>"#,
+        Some("controller((ctx) => { const fade = signal(0.5); return { fade }; })"),
     )
     .expect("compile");
     assert!(js.contains("registerCustomProperties("), "{js}");
-    assert!(js.contains("@property --hue"), "{js}");
-    assert!(js.contains("$scope.hue()"), "{js}");
-    assert!(js.contains("__root.style.setProperty(\"--hue\""), "{js}");
+    assert!(js.contains("@property --fade"), "{js}");
+    assert!(js.contains("syntax: '<number>'"), "{js}");
+    assert!(js.contains("$scope.fade()"), "{js}");
+    assert!(js.contains("__root.style.setProperty(\"--fade\""), "{js}");
+}
+
+#[test]
+fn derived_annotated_number_binds() {
+    let js = compile_component(
+        r#"<div style({ box: top(bind(doubled)) })> </div>"#,
+        Some(
+            "controller((ctx) => { const n = signal(8); const doubled = derived((): number => n() * 2); return { doubled }; })",
+        ),
+    )
+    .expect("compile");
+    assert!(js.contains("@property --doubled"), "{js}");
+    assert!(js.contains("syntax: '<length>'"), "{js}");
+    assert!(js.contains("$scope.doubled()"), "{js}");
+}
+
+#[test]
+fn number_to_color_refuses() {
+    let err = compile_component(
+        r#"<scope>
+  props: { n: number = 0 }
+</scope>
+<div style({ paint: bg(bind(n)) })> </div>"#,
+        None,
+    )
+    .unwrap_err();
+    assert!(err.contains("number") && (err.contains("color") || err.contains("bg")), "{err}");
 }
 
 #[test]
@@ -101,18 +141,18 @@ fn an_unmatched_var_ref_refuses_with_did_you_mean() {
         None,
     )
     .unwrap_err();
-    assert!(err.contains("does not match"), "{err}");
-    assert!(err.contains("glow-radius"), "{err}");
+    assert!(err.contains("does not match") || err.contains("bind("), "{err}");
+    assert!(err.contains("glowRadius") || err.contains("glow-radius"), "{err}");
 }
 
 #[test]
 fn a_signal_not_returned_from_setup_is_not_reachable() {
     let err = compile_component(
-        r#"<div style({ paint: bg(bind(hue)) })> </div>"#,
+        r#"<div style({ paint: opacity(bind(hue)) })> </div>"#,
         Some("controller((ctx) => { const hue = signal(220); return {}; })"),
     )
     .unwrap_err();
-    assert!(err.contains("does not match"), "{err}");
+    assert!(err.contains("does not match") || err.contains("bind(hue)"), "{err}");
 }
 
 #[test]

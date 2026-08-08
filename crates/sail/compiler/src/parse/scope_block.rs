@@ -720,13 +720,11 @@ fn parse_named_style_binding(
 fn looks_like_style_const_rhs(rhs: &str) -> bool {
     let t = rhs.trim();
     if t.starts_with('{')
-        || t.starts_with("style.")
         || t.starts_with("style(")
-        || t.starts_with("match(")
-        || t.starts_with("when(")
-        || t.starts_with("compound(")
-        || t.starts_with('[')
+        || t.starts_with("style.")
     {
+        // Live Style RHS: object form, style({…}) / style(ref, {…}), compose head.
+        // Free match(/when(/compound(/list forms are deleted (STYLE-BINDING-1).
         return true;
     }
     // Bare Style ref or compose head: `host` / `host, { … }` / `host, style({…})`.

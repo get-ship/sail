@@ -1198,7 +1198,7 @@ pub async fn bundle_app_with_base(
         // The runtime mount injects the page's author-sx `<style>` adjacent
         // to the app root (top of <body>); framework sheets must precede
         // THAT point in document order so author sx wins the shared-layer
-        // cascade (`sx-w28` on a use site beats the skin's `sx-wfull`).
+        // cascade (`s-w28` on a use site beats the skin's `s-wfull`).
         // Links at body end landed after the mount style — the skin sheet
         // silently beat author overrides (studio tasks-filter selects).
         final_html = final_html.replace("</head>", &format!("{link_tags}\n</head>"));

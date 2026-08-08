@@ -142,7 +142,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     assert!(config_path.ends_with("sail.config.json"));
 
     // The build-time reproduction of the original bug report: a package with
-    // only `stylesheets` declared, and an sx-using component. The compile
+    // only `stylesheets` declared, and an s-using component. The compile
     // must refuse and the refusal must point at the missing grant, not
     // silently drop the sx. Gate surface is `style=` (see sail-no-sx).
     let (_tmp2, sail_sx) = write_pack(

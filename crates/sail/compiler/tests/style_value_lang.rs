@@ -14,7 +14,7 @@ fn is_style_product(src: &str) -> bool {
 fn chain_emits_token_vars_on_product_path() {
     let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })> x</div>"#).expect("preprocess");
     assert!(
-        out.contains("var(--primary)") || out.contains("sx-bgprimary"),
+        out.contains("var(--primary)") || out.contains("s-bgprimary"),
         "chain must emit token paint:\n{out}"
     );
     assert!(
@@ -169,7 +169,7 @@ fn badge_compiles_and_emits_token_css() {
     assert!(!out.structure_html.is_empty(), "structure present");
     let paint = format!("{}{}", out.structure_html, out.skin_css);
     assert!(
-        paint.contains("var(--") || paint.contains("sx-"),
+        paint.contains("var(--") || paint.contains("s-"),
         "token/class paint present:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -201,7 +201,7 @@ fn card_compiles_and_emits_token_css() {
     let out = compile_element(src, "card").expect("card compiles on Style path");
     let paint = format!("{}{}", out.structure_html, out.skin_css);
     assert!(
-        paint.contains("var(--") || paint.contains("sx-"),
+        paint.contains("var(--") || paint.contains("s-"),
         "token/class paint present:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -233,11 +233,11 @@ fn scope_style_const_resolves_in_host_sx() {
     )
     .expect("preprocess");
     assert!(
-        out.contains("var(--primary)") || out.contains("sx-bgprimary"),
+        out.contains("var(--primary)") || out.contains("s-bgprimary"),
         "scope Style const must resolve via StyleEnv:\n{out}"
     );
     assert!(
-        out.contains("var(--space-2)") || out.contains("padding") || out.contains("sx-padx"),
+        out.contains("var(--space-2)") || out.contains("padding") || out.contains("s-padx"),
         "const chain setters must emit:\n{out}"
     );
 }
@@ -254,11 +254,11 @@ fn scope_style_decl_resolves_in_host_sx() {
     )
     .expect("preprocess");
     assert!(
-        out.contains("var(--primary)") || out.contains("sx-bgprimary"),
+        out.contains("var(--primary)") || out.contains("s-bgprimary"),
         "style name = must resolve via StyleEnv:\n{out}"
     );
     assert!(
-        out.contains("var(--space-2)") || out.contains("padding") || out.contains("sx-padx"),
+        out.contains("var(--space-2)") || out.contains("padding") || out.contains("s-padx"),
         "style decl setters must emit:\n{out}"
     );
 }
@@ -277,13 +277,13 @@ fn scope_style_decl_compose_merges() {
     .expect("preprocess");
     // pad(2) should win/merge from compose partial; primary paint from base.
     assert!(
-        out.contains("var(--primary)") || out.contains("sx-bgprimary"),
+        out.contains("var(--primary)") || out.contains("s-bgprimary"),
         "compose base paint must resolve:\n{out}"
     );
     assert!(
         out.contains("var(--space-2)")
             || out.contains("padding")
-            || out.contains("sx-pad")
+            || out.contains("s-pad")
             || out.contains("space-2"),
         "compose partial box must emit:\n{out}"
     );
@@ -304,7 +304,7 @@ fn scope_style_const_in_match_arms() {
     assert!(out.contains("[variant='solid']"), "{out}");
     assert!(out.contains("[variant='soft']"), "{out}");
     assert!(
-        out.contains("var(--primary)") || out.contains("sx-"),
+        out.contains("var(--primary)") || out.contains("s-"),
         "match arm refs must resolve:\n{out}"
     );
 }
@@ -344,7 +344,7 @@ fn batch_a_chrome_compile_on_style_path() {
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
         let paint = format!("{}{}", out.structure_html, out.skin_css);
         assert!(
-            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            paint.contains("var(--") || paint.contains("s-") || paint.contains("sail-grp"),
             "{tag} must emit token/class paint:\nstruct={}\nskin={}",
             out.structure_html,
             out.skin_css
@@ -372,7 +372,7 @@ fn batch_b_controls_compile_on_style_path() {
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
         let paint = format!("{}{}", out.structure_html, out.skin_css);
         assert!(
-            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            paint.contains("var(--") || paint.contains("s-") || paint.contains("sail-grp"),
             "{tag} must emit token/class paint:\nstruct={}\nskin={}",
             out.structure_html,
             out.skin_css
@@ -408,7 +408,7 @@ fn batch_c_surfaces_compile_on_style_path() {
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
         let paint = format!("{}{}", out.structure_html, out.skin_css);
         assert!(
-            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            paint.contains("var(--") || paint.contains("s-") || paint.contains("sail-grp"),
             "{tag} must emit token/class paint:\nstruct={}\nskin={}",
             out.structure_html,
             out.skin_css
@@ -449,7 +449,7 @@ fn batch_d_chrome_menus_compile_on_style_path() {
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
         let paint = format!("{}{}", out.structure_html, out.skin_css);
         assert!(
-            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            paint.contains("var(--") || paint.contains("s-") || paint.contains("sail-grp"),
             "{tag} must emit token/class paint:\nstruct={}\nskin={}",
             out.structure_html,
             out.skin_css
@@ -487,7 +487,7 @@ fn batch_e_residuals_compile_on_style_path() {
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
         let paint = format!("{}{}", out.structure_html, out.skin_css);
         assert!(
-            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            paint.contains("var(--") || paint.contains("s-") || paint.contains("sail-grp"),
             "{tag} must emit token/class paint:\nstruct={}\nskin={}",
             out.structure_html,
             out.skin_css

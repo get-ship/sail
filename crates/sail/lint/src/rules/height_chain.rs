@@ -210,7 +210,7 @@ fn has_zero_min_h(sx: &str) -> bool {
         || style_call(sx, "minHeight", "0")
         || token_atom(sx, "min-h-0")
         || token_atom(sx, "minh0")
-        || sx.contains("sx-minh0")
+        || sx.contains("s-minh0")
         || contains_ci(sx, "minH(bind")
         || contains_ci(sx, "minh(bind")
 }
@@ -221,7 +221,7 @@ fn has_zero_min_w(sx: &str) -> bool {
         || style_call(sx, "minWidth", "0")
         || token_atom(sx, "min-w-0")
         || token_atom(sx, "minw0")
-        || sx.contains("sx-minw0")
+        || sx.contains("s-minw0")
         || contains_ci(sx, "minW(bind")
         || contains_ci(sx, "minw(bind")
 }

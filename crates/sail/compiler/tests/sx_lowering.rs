@@ -15,7 +15,7 @@ fn pp(src: &str) -> String {
 fn style_pad_lowers_to_padding_var() {
     let out = pp(r#"<div style({ box: pad(4) })> x</div>"#);
     assert!(
-        out.contains("sx-"),
+        out.contains("s-"),
         "style({{ box: pad(4) }}) must emit an sx class:\n{out}"
     );
     assert!(
@@ -54,7 +54,7 @@ fn style_radius_lowers() {
 #[test]
 fn style_chain_multi_setters() {
     let out = pp(r#"<div style({ box: pad(4), paint: bg(surface-1).fg(muted-foreground) })> x</div>"#);
-    assert!(out.contains("sx-"), "chain must emit classes:\n{out}");
+    assert!(out.contains("s-"), "chain must emit classes:\n{out}");
     assert!(
         out.contains("var(--space-4)") || out.contains("padding"),
         "pad in chain:\n{out}"
@@ -142,7 +142,7 @@ fn style_transparent_bg() {
 fn style_display_none() {
     let out = pp(r#"<div style({ box: display(none) })> x</div>"#);
     assert!(
-        out.contains("display:none") || out.contains("none") || out.contains("sx-"),
+        out.contains("display:none") || out.contains("none") || out.contains("s-"),
         "display(none):\n{out}"
     );
 }

@@ -4,7 +4,7 @@
 //! Text: font-size/weight/family, letter-spacing, line-height, text-transform.
 //!
 //! Author page CSS (preprocess `<style>`) and L1 element skins share one
-//! stylesheet. Attribute-qualified rules (`[tone='primary'].sx-…`) match the
+//! stylesheet. Attribute-qualified rules (`[tone='primary'].s-…`) match the
 //! lowered host attrs so compound host class lists do not all paint at once.
 
 use std::collections::HashMap;
@@ -141,7 +141,7 @@ impl StyleSheet {
     /// (then declaration order within a rule). `Paint::from_decls` last-write-wins
     /// per property — not CSS specificity. Host emit must stamp CVA compounds
     /// (e.g. `[tone][variant]` fills) **after** base classes like
-    /// `sx-bgtransparent`, or primary fills are crushed by earlier matches.
+    /// `s-bgtransparent`, or primary fills are crushed by earlier matches.
     pub fn decls_for_element(&self, elem: &Element) -> Vec<(String, String)> {
         let classes: Vec<&str> = elem.class.split_whitespace().collect();
         let is_empty = elem.children.is_empty() && elem.text.trim().is_empty();
@@ -836,9 +836,9 @@ mod tests {
     #[test]
     fn parses_atomic_rules() {
         let sheet = StyleSheet::parse(
-            ".sx-bgprimary{background-color:var(--primary)}.sx-radiussm{border-radius:var(--radius-sm)}",
+            ".s-bgprimary{background-color:var(--primary)}.s-radiussm{border-radius:var(--radius-sm)}",
         );
-        let d = sheet.decls_for_classes("sx-bgprimary sx-radiussm");
+        let d = sheet.decls_for_classes("s-bgprimary s-radiussm");
         assert_eq!(d.len(), 2);
         assert_eq!(d[0].0, "background-color");
     }
@@ -846,8 +846,8 @@ mod tests {
     #[test]
     fn resolves_primary_to_color() {
         let palette = ThemePalette::resolve(ThemeSelect::default(), None).unwrap();
-        let sheet = StyleSheet::parse(".sx-bgprimary{background-color:var(--primary)}");
-        let paint = Paint::from_decls(&sheet.decls_for_classes("sx-bgprimary"), &palette);
+        let sheet = StyleSheet::parse(".s-bgprimary{background-color:var(--primary)}");
+        let paint = Paint::from_decls(&sheet.decls_for_classes("s-bgprimary"), &palette);
         assert!(paint.background_color.is_some(), "primary must paint");
     }
 
@@ -858,11 +858,11 @@ mod tests {
     fn cva_attr_selectors_filter_and_class_order_wins() {
         let sheet = StyleSheet::parse(
             r#"
-            .sx-bgtransparent{background-color:transparent}
-            [variant='default'].sx-variantdefault-bgbackground{background-color:var(--background)}
-            [variant='solid'].sx-variantsolid-bgforeground{background-color:var(--foreground)}
-            [tone='primary'][variant='solid'].sx-toneprimaryvariantsolid-bgprimary{background-color:var(--primary)}
-            [tone='info'][variant='solid'].sx-toneinfovariantsolid-bginfo{background-color:var(--info)}
+            .s-bgtransparent{background-color:transparent}
+            [variant='default'].s-variantdefault-bgbackground{background-color:var(--background)}
+            [variant='solid'].s-variantsolid-bgforeground{background-color:var(--foreground)}
+            [tone='primary'][variant='solid'].s-toneprimaryvariantsolid-bgprimary{background-color:var(--primary)}
+            [tone='info'][variant='solid'].s-toneinfovariantsolid-bginfo{background-color:var(--info)}
             "#,
         );
 
@@ -873,11 +873,11 @@ mod tests {
         let host = Element {
             tag: "button".into(),
             class: [
-                "sx-bgtransparent",
-                "sx-variantdefault-bgbackground",
-                "sx-variantsolid-bgforeground",
-                "sx-toneinfovariantsolid-bginfo",
-                "sx-toneprimaryvariantsolid-bgprimary",
+                "s-bgtransparent",
+                "s-variantdefault-bgbackground",
+                "s-variantsolid-bgforeground",
+                "s-toneinfovariantsolid-bginfo",
+                "s-toneprimaryvariantsolid-bgprimary",
             ]
             .join(" "),
             attrs,
@@ -917,7 +917,7 @@ mod tests {
         attrs.insert("variant".into(), "default".into());
         let def = Element {
             tag: "button".into(),
-            class: "sx-bgtransparent sx-variantdefault-bgbackground sx-toneprimaryvariantsolid-bgprimary"
+            class: "s-bgtransparent s-variantdefault-bgbackground s-toneprimaryvariantsolid-bgprimary"
                 .into(),
             attrs,
             ..Default::default()

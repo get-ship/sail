@@ -259,7 +259,7 @@ fn text_channel_ladder_golden_and_behavior() {
         result.html
     );
 
-    // Layout heights must cascade with sx-fontSize (xs < 4xl).
+    // Layout heights must cascade with s-fontSize (xs < 4xl).
     let spans: Vec<_> = result
         .regions
         .iter()

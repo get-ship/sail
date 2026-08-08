@@ -9,13 +9,13 @@ const x =
 
 // Base rest paint: solid default + soft rest both stamp chip / chip-foreground / chip-border.
 const CHIP =
-  'sail-chip sx-displayinlineflex sx-minHcontrolh2xs sx-padX2 sx-padYpx sx-appearancenone sx-cursorpointer sx-selectnone sx-tapHighlightnone sx-radiusfull sx-borderWidth1 sx-bordersolid sx-bgchip sx-fgchipforeground sx-borderchipborder sx-transitioncolors sx-durationfast sx-easeout sx-fontFamilybody sx-fontWeightmedium sx-leadingnone sx-whitespacenowrap sx-fontSizexs'
+  'sail-chip s-displayinlineflex s-minHcontrolh2xs s-padX2 s-padYpx s-appearancenone s-cursorpointer s-selectnone s-tapHighlightnone s-radiusfull s-borderWidth1 s-bordersolid s-bgchip s-fgchipforeground s-borderchipborder s-transitioncolors s-durationfast s-easeout s-fontFamilybody s-fontWeightmedium s-leadingnone s-whitespacenowrap s-fontSizexs'
 const CHIP_SOFT =
-  `${CHIP} sx-variantsoft-bgchip sx-variantsoft-fgchipforeground sx-variantsoft-borderchipborder`
+  `${CHIP} s-variantsoft-bgchip s-variantsoft-fgchipforeground s-variantsoft-borderchipborder`
 const CHIP_OUTLINE =
-  `${CHIP} sx-variantoutline-bgtransparent sx-variantoutline-fgchipforeground sx-variantoutline-borderchipborder`
+  `${CHIP} s-variantoutline-bgtransparent s-variantoutline-fgchipforeground s-variantoutline-borderchipborder`
 const CHIP_GHOST =
-  `${CHIP} sx-variantghost-bgtransparent sx-variantghost-fgchipforeground sx-variantghost-bordertransparent`
+  `${CHIP} s-variantghost-bgtransparent s-variantghost-fgchipforeground s-variantghost-bordertransparent`
 
 const paintCls = (variant) => {
   if (variant === 'soft') return CHIP_SOFT

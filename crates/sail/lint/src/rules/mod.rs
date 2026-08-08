@@ -69,7 +69,8 @@ pub mod prop_value;
 pub mod route_inline_style;
 pub mod space_literal;
 pub mod surface_not_card;
-pub mod sx;
+pub mod style_rule;
+pub mod style_value_enumeration;
 pub mod virtualizer;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 
@@ -139,7 +140,11 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (route_inline_style::RULE_ID, route_inline_style::check),
     (surface_not_card::RULE_ID, surface_not_card::check),
     (for_key::RULE_ID, for_key::check),
-    (sx::RULE_ID, sx::check),
+    (style_rule::RULE_ID, style_rule::check),
+    (
+        style_value_enumeration::RULE_ID,
+        style_value_enumeration::check,
+    ),
     (layout::RULE_ID, layout::check),
     (height_chain::RULE_ID, height_chain::check),
     (virtualizer::RULE_ID, virtualizer::check),

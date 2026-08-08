@@ -1,4 +1,4 @@
-//! `sail-sx` — the Style paint surface.
+//! `sail-style` — the Style paint surface.
 //!
 //! Product form is a **tag-position** `style(…)` call on the open tag:
 //! ```text
@@ -17,7 +17,7 @@
 //! number, never a colour, never a unit. There is no bracket escape (cf.
 //! Tailwind's `p-[13px]`).
 //!
-//! The vocabulary is a TABLE (`sx-vocabulary.json`, read by `crate::sx_vocab`),
+//! The vocabulary is a TABLE (`sx-vocabulary.json`, read by `crate::style_vocab`),
 //! not code. Style setters re-home the same closed heads (`bg`, `pad`, …) inside
 //! channels. A scale-valued setter spends a token and nothing else; a
 //! keyword-valued one takes its CSS keywords. The value discipline is the point.
@@ -37,7 +37,7 @@ use std::path::Path;
 
 use crate::report::{Finding, Severity};
 
-pub const RULE_ID: &str = "sail-sx";
+pub const RULE_ID: &str = "sail-style";
 
 // Residual string lowerers still call these names. SSOT is Style product:
 // `sail_style::conditions` (`when({ tablet: … })`) and `sail_style::prefixes`.
@@ -52,7 +52,7 @@ pub use sail_style::prefixes::{
 /// page and the LSP all render this), so what an agent is told is what the lint
 /// enforces, by construction.
 pub fn vocabulary() -> Vec<(String, Vec<String>)> {
-    crate::sx_vocab::vocabulary()
+    crate::style_vocab::vocabulary()
 }
 
 /// Split an sx pair into its prefixes and its atom. `hover:bg-surface-2` is one
@@ -241,7 +241,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         }
 
         #[allow(unreachable_code)]
-        let (prog, parse_errs) = crate::sx_ir::parse_lenient(val);
+        let (prog, parse_errs) = crate::style_ir::parse_lenient(val);
         for e in &parse_errs {
             findings.push(mk(path, line, col, e.message()));
         }
@@ -249,10 +249,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let mut layout = LayoutIntent::default();
         let mut kept: Vec<String> = Vec::new();
         for decl in &prog.decls {
-            let atom = crate::sx_ir::decl_atom(decl);
+            let atom = crate::style_ir::decl_atom(decl);
             if matches!(
-                crate::sx_vocab::resolve(&atom),
-                crate::sx_vocab::Resolved::Refused { .. }
+                crate::style_vocab::resolve(&atom),
+                crate::style_vocab::Resolved::Refused { .. }
             ) {
                 if layout.absorb(&atom) {
                     continue;
@@ -271,22 +271,22 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         }
 
         for decl in &prog.decls {
-            let atom = crate::sx_ir::decl_atom(decl);
+            let atom = crate::style_ir::decl_atom(decl);
             // Layout atoms already reported as one redirect.
             if matches!(
-                crate::sx_vocab::resolve(&atom),
-                crate::sx_vocab::Resolved::Refused { .. }
+                crate::style_vocab::resolve(&atom),
+                crate::style_vocab::Resolved::Refused { .. }
             ) && LayoutIntent::default().absorb(&atom)
             {
                 continue;
             }
-            if let Err(e) = crate::sx_ir::validate_decl(decl) {
+            if let Err(e) = crate::style_ir::validate_decl(decl) {
                 // Enrich BadValue with options when possible.
                 let msg = match &e {
-                    crate::sx_ir::SxError::BadValue { prop, value, .. } => {
-                        let atom = crate::sx_ir::decl_atom(decl);
-                        match crate::sx_vocab::resolve(&atom) {
-                            crate::sx_vocab::Resolved::BadValue { name, options } => {
+                    crate::style_ir::SxError::BadValue { prop, value, .. } => {
+                        let atom = crate::style_ir::decl_atom(decl);
+                        match crate::style_vocab::resolve(&atom) {
+                            crate::style_vocab::Resolved::BadValue { name, options } => {
                                 let raw = value
                                     .chars()
                                     .next()
@@ -307,10 +307,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             }
                             _ => {
                                 let _ = prop;
-                                if crate::sx_ir::looks_like_raw_color(value)
-                                    || crate::sx_ir::looks_like_raw_length(value)
+                                if crate::style_ir::looks_like_raw_color(value)
+                                    || crate::style_ir::looks_like_raw_length(value)
                                 {
-                                    crate::sx_ir::SxError::RawWithoutEscape {
+                                    crate::style_ir::SxError::RawWithoutEscape {
                                         value: value.clone(),
                                         source: decl.source.clone(),
                                     }
@@ -321,7 +321,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             }
                         }
                     }
-                    crate::sx_ir::SxError::UnknownPrefix { prefix, .. } => {
+                    crate::style_ir::SxError::UnknownPrefix { prefix, .. } => {
                         let states: Vec<String> = STATE_PREFIXES
                             .iter()
                             .map(|(n, _)| format!("{n}:"))
@@ -338,9 +338,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                             conditions.join("/")
                         )
                     }
-                    crate::sx_ir::SxError::UnknownAtom { atom, .. } => {
+                    crate::style_ir::SxError::UnknownAtom { atom, .. } => {
                         let mut m = format!("sx `{atom}` — not in the vocabulary");
-                        let names = crate::sx_vocab::names();
+                        let names = crate::style_vocab::names();
                         let opts: Vec<&str> = names.iter().map(String::as_str).collect();
                         let head = atom.split('-').next().unwrap_or(atom);
                         if let Some(s) = nearest(head, &opts) {
