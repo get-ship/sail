@@ -1969,6 +1969,17 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
                     source: op.source.clone(),
                 });
             }
+            // SPEC-D1: component surface public names are emit labels only —
+            // not Style author Tokens. Host units use dotted MemberPath.
+            if spec.scale == Some("color")
+                && crate::component_surfaces::is_component_public_name(bare)
+            {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: tok.clone(),
+                    source: op.source.clone(),
+                });
+            }
             if spec.keywords.iter().any(|k| *k == bare) {
                 return Ok(());
             }

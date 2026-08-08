@@ -15,9 +15,9 @@
   const base = style({ box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px), paint: borderWidth(1).radius(sm), text: fontFamily(body).fontWeight(semibold).leading(none).whitespace(nowrap).fontSize(xs) })
 
   // Rest variants ride component.badge tokens (pack defaults).
-  const soft = style({ paint: bg(badge).fg(badge-foreground).border(badge-border) })
-  const solid = style({ paint: bg(badge).fg(badge-foreground).border(badge-border).shadow(xs) })
-  const outline = style({ paint: bg(transparent).fg(badge-foreground).border(badge-border) })
+  const soft = style({ paint: bg(badge).fg(badge.foreground).border(badge.border) })
+  const solid = style({ paint: bg(badge).fg(badge.foreground).border(badge.border).shadow(xs) })
+  const outline = style({ paint: bg(transparent).fg(badge.foreground).border(badge.border) })
 
   const sizeMd = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
   const sizeSm = style({ box: minH(4).padX(1_5), text: fontSize(xs) })

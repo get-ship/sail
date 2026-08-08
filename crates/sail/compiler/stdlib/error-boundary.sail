@@ -13,11 +13,11 @@
   const root = style({ box: display(contents), paint: group() })
   const content = style({ box: display(contents) })
   const fallback = style({ box: display(none) })
-  const alert = style({ box: padY(4).padX(5), paint: bg(error-boundary).borderWidth(1).border(error-boundary-border).radius(md).shadow(xs).fg(error-boundary-foreground), text: fontFamily(body).fontSize(sm) })
-  const icon = style({ box: size(icon-size-lg).mt(1), paint: fg(error-boundary-icon) })
+  const alert = style({ box: padY(4).padX(5), paint: bg(error-boundary).borderWidth(1).border(error-boundary.border).radius(md).shadow(xs).fg(error-boundary.foreground), text: fontFamily(body).fontSize(sm) })
+  const icon = style({ box: size(icon-size-lg).mt(1), paint: fg(error-boundary.icon-fg) })
   const body = style({ box: minW(0) })
-  const message = style({ paint: fg(error-boundary-message-foreground), text: leading(normal) })
-  const retry = style({ box: self(start).padY(1).padX(3), paint: bg(error-boundary-retry-bg).borderWidth(1).border(border).radius(sm).fg(error-boundary-retry-foreground).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(xs).fontWeight(semibold) })
+  const message = style({ paint: fg(error-boundary.message-fg), text: leading(normal) })
+  const retry = style({ box: self(start).padY(1).padX(3), paint: bg(error-boundary.retry-bg).borderWidth(1).border(border).radius(sm).fg(error-boundary.retry-fg).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(xs).fontWeight(semibold) })
 </scope>
 <div use:catchRender style(root)>
   <div style(content, { when: { group-caught: { box: display(none) } } })><slot></slot></div>

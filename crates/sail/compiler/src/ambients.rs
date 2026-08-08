@@ -26,6 +26,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
+use sail_lint::component_surfaces;
 use sail_lint::scales;
 use sail_lint::style::setters::{SetterSpec, setters};
 use sail_lint::token_groups::{self, TONE_FAMILY, TONE_GROUP_NAMES, TONE_GROUPS};
@@ -395,7 +396,11 @@ fn emit_token_unions(out: &mut String) -> BTreeSet<String> {
 
     for scale in scales {
         let name = scale_type_name(scale);
-        let vals = scales::values(scale);
+        let mut vals = scales::values(scale);
+        // SPEC-D1: component surface public names are not app Style paint vocabulary.
+        if scale == "color" {
+            vals.retain(|v| !component_surfaces::is_component_public_name(v));
+        }
         out.push_str(&format!("type {name} =\n"));
         if vals.is_empty() {
             out.push_str("  | never\n");

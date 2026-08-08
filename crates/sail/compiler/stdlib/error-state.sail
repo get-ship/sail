@@ -10,11 +10,11 @@
     code = ''
   }
 
-  const base = style({ box: padY(8).padX(4), paint: fg(error-state-foreground).borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs).group(), text: fontFamily(body).textAlign(center) })
+  const base = style({ box: padY(8).padX(4), paint: fg(error-state.foreground).borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs).group(), text: fontFamily(body).textAlign(center) })
   const sizeMd = style({ box: padY(8).padX(4) })
   const sizeSm = style({ box: padY(7) })
   const sizeLg = style({ box: padY(8).padX(6) })
-  const variantDefault = style({ paint: borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) })
+  const variantDefault = style({ paint: borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) })
   const variantInline = style({ box: padY(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none), text: textAlign(start) })
   const icon = style({ box: self(center).size(control-h-xl), paint: radius(lg).bg(muted).fg(destructive).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset) })
   const glyph = style({ box: size(control-h-2xs) })

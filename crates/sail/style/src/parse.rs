@@ -1840,14 +1840,16 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Pain
 
 /// Resolve paint arg identity:
 /// - bound family root (`tone`, `tone.foreground`) → MemberPath
+/// - L1 host surface (`chip`, `chip.foreground`) → MemberPath (host context only)
 /// - static group path (`primary.foreground`) → Token(public name)
-/// - bare non-group word → Token (legacy)
+/// - bare non-group word → Token (legacy / global)
 fn normalize_paint_arg(
     root: String,
     path: Vec<String>,
     source: String,
     diags: &mut Vec<StyleDiagnostic>,
 ) -> PaintArg {
+    use super::component_surfaces::{current_surface_pack, resolve_surface_author};
     use super::token_groups::{
         bound_group_family, bound_member_valid, resolve_static_member_path, static_token_group,
     };
@@ -1869,9 +1871,39 @@ fn normalize_paint_arg(
         return PaintArg::MemberPath { root, path };
     }
 
+    // L1 host surface graph — identity stays MemberPath; emit maps to public name.
+    if current_surface_pack() == Some(root.as_str()) {
+        if let Err(msg) = resolve_surface_author(&root, &path) {
+            diags.push(StyleDiagnostic::BadToken {
+                setter: String::new(),
+                value: if path.is_empty() {
+                    root.clone()
+                } else {
+                    format!("{root}.{}", path.join("."))
+                },
+                source: source.clone(),
+            });
+            let _ = msg;
+        }
+        return PaintArg::MemberPath { root, path };
+    }
+
+    // Bare tokens: color scale excludes component surface public names
+    // (SPEC-D1). Non-color scales may still use short names that collide with
+    // emit labels (e.g. `z(popover)` → z-popover). No early reject here.
     if path.is_empty() {
-        // Bare `primary` stays Token for back-compat (also a group stem).
         return PaintArg::Token(root);
+    }
+
+    // Dotted path that looks like a foreign/out-of-scope surface.
+    if super::component_surfaces::surface_slots(&root).is_some() {
+        let value = format!("{root}.{}", path.join("."));
+        diags.push(StyleDiagnostic::BadToken {
+            setter: String::new(),
+            value: value.clone(),
+            source: source.clone(),
+        });
+        return PaintArg::Token(value);
     }
 
     if static_token_group(&root).is_some() {

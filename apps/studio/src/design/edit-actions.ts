@@ -331,7 +331,22 @@ export async function setTokenValueOn(
   path: string,
   value: string,
 ): Promise<void> {
-  const knob = getKnob(path)
+  // SPEC-D1: theme/studio write to a path not on the token schema → hard error
+  // (never silent no-op). Component surface leaves must exist in the registry.
+  const barePath = path
+    .replace(/^modes\.(light|dark)\./, '')
+    .replace(/\.\$value$/, '')
+  if (barePath.startsWith('component.') && !getKnob(barePath) && !getKnob(path)) {
+    const msg = `Unknown component surface path "${barePath}" — not in the host surface schema`
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: msg,
+      statusNote: msg,
+    })
+    ctx.emit()
+    return
+  }
+  const knob = getKnob(path) ?? getKnob(barePath)
   const cssName = knob?.cssName ?? path
   const type = knob?.type ?? 'string'
   let writeValue = value

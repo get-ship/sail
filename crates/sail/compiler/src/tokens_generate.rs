@@ -1169,19 +1169,85 @@ fn build_name_index(tokens: &[Token]) -> NameIndex {
 }
 
 /// Resolve DTCG `$value` → CSS. Aliases `{path}` / `{cssName}` → `var(--cssName)`.
+///
+/// SPEC-D1 failure modes: dangling alias and alias cycles are hard errors
+/// (never silent kebab fallback).
 fn resolve_value(value: &str, name_index: &NameIndex) -> Result<String> {
     let alias = parse_alias(value);
     if let Some(ref_name) = alias {
-        let css_name = if let Some(c) = name_index.path_to_css.get(&ref_name) {
-            c.clone()
-        } else if name_index.css_to_path.contains_key(&ref_name) {
-            ref_name
-        } else {
-            ref_name.replace('.', "-")
-        };
+        let css_name = resolve_alias_target(&ref_name, name_index).with_context(|| {
+            format!("dangling alias `{{{ref_name}}}` — target identity does not exist in the model")
+        })?;
         return Ok(format!("var(--{css_name})"));
     }
     Ok(value.to_string())
+}
+
+/// Map `{path}` / `{cssName}` to a known public cssName, or None if dangling.
+fn resolve_alias_target(ref_name: &str, name_index: &NameIndex) -> Option<String> {
+    if let Some(c) = name_index.path_to_css.get(ref_name) {
+        return Some(c.clone());
+    }
+    if name_index.css_to_path.contains_key(ref_name) {
+        return Some(ref_name.to_string());
+    }
+    None
+}
+
+/// Detect alias cycles across token `$value` edges. Hard error (SPEC-D1).
+fn check_alias_cycles(tokens: &[Token]) -> Result<()> {
+    let path_set: HashSet<&str> = tokens.iter().map(|t| t.path.as_str()).collect();
+    let css_to_path: HashMap<&str, &str> = tokens
+        .iter()
+        .map(|t| (t.css_name.as_str(), t.path.as_str()))
+        .collect();
+    let mut edges: HashMap<String, String> = HashMap::new();
+    for t in tokens {
+        let Some(alias) = parse_alias(&t.value) else {
+            continue;
+        };
+        let target = if path_set.contains(alias.as_str()) {
+            alias
+        } else if let Some(p) = css_to_path.get(alias.as_str()) {
+            (*p).to_string()
+        } else {
+            continue; // dangling handled in resolve_value
+        };
+        edges.insert(t.path.clone(), target);
+    }
+    let mut visiting: HashSet<String> = HashSet::new();
+    let mut visited: HashSet<String> = HashSet::new();
+    let mut stack: Vec<String> = Vec::new();
+    for node in edges.keys().cloned().collect::<Vec<_>>() {
+        check_cycle_dfs(&node, &edges, &mut visiting, &mut visited, &mut stack)?;
+    }
+    Ok(())
+}
+
+fn check_cycle_dfs(
+    node: &str,
+    edges: &HashMap<String, String>,
+    visiting: &mut HashSet<String>,
+    visited: &mut HashSet<String>,
+    stack: &mut Vec<String>,
+) -> Result<()> {
+    if visited.contains(node) {
+        return Ok(());
+    }
+    if !visiting.insert(node.to_string()) {
+        let cycle_start = stack.iter().position(|n| n == node).unwrap_or(0);
+        let mut cycle: Vec<&str> = stack[cycle_start..].iter().map(|s| s.as_str()).collect();
+        cycle.push(node);
+        anyhow::bail!("alias cycle detected: {}", cycle.join(" → "));
+    }
+    stack.push(node.to_string());
+    if let Some(next) = edges.get(node) {
+        check_cycle_dfs(next, edges, visiting, visited, stack)?;
+    }
+    stack.pop();
+    visiting.remove(node);
+    visited.insert(node.to_string());
+    Ok(())
 }
 
 fn parse_alias(value: &str) -> Option<String> {
@@ -1283,6 +1349,7 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
     // the base layer (paths like component.card.bg → public cssNames).
     merge_component_sources(model_dir, &mut base_doc)?;
     let base_tokens_raw = flatten_tokens(&base_doc, &[], None);
+    check_alias_cycles(&base_tokens_raw)?;
     let name_index = build_name_index(&base_tokens_raw);
 
     let mut layers = Vec::new();
@@ -4804,4 +4871,52 @@ mod tests {
         let report = generate(&model, &out).unwrap();
         assert_eq!(report.theme_count, 1);
     }
+    #[test]
+    fn dangling_alias_is_hard_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "primary": {
+      "$value": "{color.does.not.exist}",
+      "$type": "color"
+    }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("dangling alias") || err.contains("does.not.exist"),
+            "expected dangling alias diagnostic, got: {err}"
+        );
+    }
+
+    #[test]
+    fn alias_cycle_is_hard_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "a": { "$value": "{color.b}", "$type": "color" },
+    "b": { "$value": "{color.a}", "$type": "color" }
+  }
+}
+"#,
+        );
+        let err = generate(&model, &out).unwrap_err().to_string();
+        assert!(
+            err.contains("alias cycle"),
+            "expected alias cycle diagnostic, got: {err}"
+        );
+    }
+
 }

@@ -213,6 +213,9 @@ pub fn color_values() -> &'static [&'static str] {
                     .bytes()
                     .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
             {
+                // Full registry colors including component emit labels (lower needs
+                // them). Author Style cannot *name* surfaces as free Tokens —
+                // validate rejects component public names (SPEC-D1).
                 colors.insert(Box::leak(name.clone().into_boxed_str()));
             }
         }
@@ -226,6 +229,33 @@ pub fn color_values() -> &'static [&'static str] {
         }
         let mut out: Vec<&'static str> = colors.into_iter().collect();
         out.sort_unstable();
+        out
+    })
+}
+
+/// Component color leaves: `(storage path, public cssName)`.
+/// Used to build L1 surface graphs and exclude surface ids from app paint.
+pub fn component_color_paths() -> &'static [(String, String)] {
+    static C: OnceLock<Vec<(String, String)>> = OnceLock::new();
+    C.get_or_init(|| {
+        let file = registry_file();
+        let color_set: HashSet<&str> = file.colors.iter().map(|s| s.as_str()).collect();
+        let mut out: Vec<(String, String)> = Vec::new();
+        for (path, css) in &file.paths {
+            if path.starts_with("component.") && color_set.contains(css.as_str()) {
+                out.push((path.clone(), css.clone()));
+            }
+        }
+        // Also pull from tokens meta when paths map is incomplete.
+        for (css_name, meta) in &file.tokens {
+            if meta.path.starts_with("component.")
+                && color_set.contains(css_name.as_str())
+                && !out.iter().any(|(p, _)| p == &meta.path)
+            {
+                out.push((meta.path.clone(), css_name.clone()));
+            }
+        }
+        out.sort_by(|a, b| a.0.cmp(&b.0));
         out
     })
 }

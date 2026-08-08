@@ -16,7 +16,7 @@
     shape: 'round' | 'square' = 'round'
   }
 
-  const base = style({ box: position(relative).overflow(hidden).size(7), paint: fg(avatar-foreground).select(none).align(middle).radius(full).shadow(inset-ring).bgImage(primary-accent).avatarMedia(true), text: fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fontSize(base) })
+  const base = style({ box: position(relative).overflow(hidden).size(7), paint: fg(avatar.foreground).select(none).align(middle).radius(full).shadow(inset-ring).bgImage(primary-accent).avatarMedia(true), text: fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fontSize(base) })
   const sizeMd = style({ box: size(7), text: fontSize(base) })
   const sizeXs = style({ box: size(5), text: fontSize(xs) })
   const sizeSm = style({ box: size(control-h-sm), text: fontSize(xs) })
@@ -24,4 +24,4 @@
   const sizeXl = style({ box: size(control-h-xl), text: fontSize(2xl) })
 </scope>
 
-<row inline nowrap align="center" justify="center" use:mediaFallback style(base, { box: shrink(0), paint: bgImage(none).bg(tone).fg(tone.foreground), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl }, shape: { round: { paint: radius(full) }, square: { paint: radius(sm) } } }, compound: [ { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar-foreground) } ] })></row>
+<row inline nowrap align="center" justify="center" use:mediaFallback style(base, { box: shrink(0), paint: bgImage(none).bg(tone).fg(tone.foreground), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl }, shape: { round: { paint: radius(full) }, square: { paint: radius(sm) } } }, compound: [ { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar.foreground) } ] })></row>

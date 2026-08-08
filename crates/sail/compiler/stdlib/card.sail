@@ -4,7 +4,7 @@
 
   Paint (Style product only):
     host sx={[…]} — base surface from component.card tokens (cssNames card,
-                    card-foreground) + corner-image/backdrop treatment,
+                    card.foreground) + corner-image/backdrop treatment,
                     style({ match: { variant: { padding: { } } } }), style({ compound: [ { interactive: fill, status-rail: accent-bar } ] }), bound tone border
     structure     — named header/footer slots with chrome Style; unfilled
                     regions collapse via style({ when: { empty: { box: display(none) } } }).
@@ -25,7 +25,7 @@
     fill = false
   }
 
-  const base = style({ box: position(relative).overflow(clip).padY(4).padX(5), paint: isolate().radius(lg).border(1, border).fg(card-foreground).shadow(card-rest).transition(colors).duration(fast).ease(out).bg(card).backdrop(card-backdrop-filter).borderImage(corner-image) })
+  const base = style({ box: position(relative).overflow(clip).padY(4).padX(5), paint: isolate().radius(lg).border(1, border).fg(card.foreground).shadow(card-rest).transition(colors).duration(fast).ease(out).bg(card).backdrop(card-backdrop-filter).borderImage(corner-image) })
   const outline = style({ paint: bg(transparent) })
   const padMd = style({ box: padY(4).padX(5) })
   const padNone = style({ box: pad(0) })

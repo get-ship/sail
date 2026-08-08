@@ -11,7 +11,7 @@
   }
 
   // Track/fill ride component.progress tokens (global fallbacks in the pack).
-  const base = style({ box: display(inline-block).w(full).h(2).overflow(hidden), paint: appearance(none).align(middle).borderWidth(0).radius(full).bg(progress).fg(progress-fill) })
+  const base = style({ box: display(inline-block).w(full).h(2).overflow(hidden), paint: appearance(none).align(middle).borderWidth(0).radius(full).bg(progress).fg(progress.fill) })
   const sizeSm = style({ box: h(1_5) })
   const sizeMd = style({ box: h(2) })
   const sizeLg = style({ box: h(3) })

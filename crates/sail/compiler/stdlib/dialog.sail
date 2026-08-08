@@ -21,9 +21,9 @@
   // content without those gets a :has() floor in the map so demos never
   // collapse into a zero-pad pill. h(fit) keeps inset:0 from stretching the
   // shell to the full viewport (section flex would otherwise eat empty space).
-  // Shell paint from component.dialog tokens (was surface-1 + card-foreground —
+  // Shell paint from component.dialog tokens (was surface-1 + card.foreground —
   // cross-component leak; dialog owns its surface now with global fallbacks).
-  const base = style({ box: position(fixed).inset(0).m(auto).pad(0).w(full).maxW(panel-max-w-md).minW(panel-max-w-sm).overflow(hidden), paint: borderWidth(1).border(dialog-border).radius(xl).bg(dialog).fg(dialog-foreground).shadow(xl), text: fontFamily(body) })
+  const base = style({ box: position(fixed).inset(0).m(auto).pad(0).w(full).maxW(panel-max-w-md).minW(panel-max-w-sm).overflow(hidden), paint: borderWidth(1).border(dialog.border).radius(xl).bg(dialog).fg(dialog.foreground).shadow(xl), text: fontFamily(body) })
   const open = style({ box: display(flex).flexDir(column).h(fit).maxH(panel-vh-md) })
   const sizeSm = style({ box: maxW(panel-max-w-sm).minW(0) })
   const sizeMd = style({ box: maxW(panel-max-w-md) })

@@ -1,7 +1,7 @@
 <!--
   <field> — stack+gap layout; hint/error gates via structure Style.
   Paint: hint/error from component.field tokens; control surface (bg/fg/border)
-  is shared with input/select/textarea via field / field-foreground / field-border.
+  is shared with input/select/textarea via field / field.foreground / field.border.
 -->
 
 <scope>
@@ -10,8 +10,8 @@
   }
 
   const host = style({ paint: group(), text: fontFamily(body) })
-  const hint = style({ box: mt(1), paint: fg(field-hint), text: fontSize(xs).leading(snug) })
-  const error = style({ box: mt(1), paint: fg(field-error), text: fontSize(xs).leading(snug).fontWeight(medium) })
+  const hint = style({ box: mt(1), paint: fg(field.hint), text: fontSize(xs).leading(snug) })
+  const error = style({ box: mt(1), paint: fg(field.error), text: fontSize(xs).leading(snug).fontWeight(medium) })
   const icon = style({ box: size(icon-size-sm) })
 </scope>
 

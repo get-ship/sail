@@ -19,7 +19,7 @@
     offset = ''
   }
 
-  const base = style({ box: minH(14).padY(2).padX(4), paint: bg(navbar).fg(navbar-foreground), text: underline(none) })
+  const base = style({ box: minH(14).padY(2).padX(4), paint: bg(navbar).fg(navbar.foreground), text: underline(none) })
   const placeTop = style({ box: minH(14).padY(2).padX(4) })
   const placeBottom = style({ box: minH(14).padY(2).padX(4) })
   const placeRail = style({ box: minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column) })
@@ -31,7 +31,7 @@
   const actions = style({ match: { placement: { rail: { box: ms(auto).mt(auto) }, top: { box: ms(auto) }, bottom: { box: ms(auto) } } } })
 </scope>
 
-<row nowrap align="center" gap="4" style(base, { box: w(full), match: { placement: { top: placeTop, bottom: placeBottom, rail: placeRail } }, compound: [ { sticky: true, box: position(sticky).top(0), paint: z(sticky) }, { bordered: true, paint: borderBWidth(1).border(navbar-border) }, { placement: bottom, sticky: true, box: top(auto).bottom(0) }, { bordered: true, placement: bottom, paint: borderBWidth(0).borderTWidth(1).border(navbar-border) }, { bordered: true, placement: rail, paint: borderBWidth(0).borderEWidth(1).border(navbar-border) }, { placement: rail, sticky: true, box: position(sticky).top(0).bottom(0).self(start).overflowY(auto), paint: z(dropdown) }, { offset: 8, placement: rail, sticky: true, box: top(8) }, { offset: 10, placement: rail, sticky: true, box: top(10) }, { offset: 12, placement: rail, sticky: true, box: top(12) }, { offset: 14, placement: rail, sticky: true, box: top(14) }, { offset: 16, placement: rail, sticky: true, box: top(16) }, { offset: 20, placement: rail, sticky: true, box: top(20) }, { offset: 24, placement: rail, sticky: true, box: top(24) } ] })>
+<row nowrap align="center" gap="4" style(base, { box: w(full), match: { placement: { top: placeTop, bottom: placeBottom, rail: placeRail } }, compound: [ { sticky: true, box: position(sticky).top(0), paint: z(sticky) }, { bordered: true, paint: borderBWidth(1).border(navbar.border) }, { placement: bottom, sticky: true, box: top(auto).bottom(0) }, { bordered: true, placement: bottom, paint: borderBWidth(0).borderTWidth(1).border(navbar.border) }, { bordered: true, placement: rail, paint: borderBWidth(0).borderEWidth(1).border(navbar.border) }, { placement: rail, sticky: true, box: position(sticky).top(0).bottom(0).self(start).overflowY(auto), paint: z(dropdown) }, { offset: 8, placement: rail, sticky: true, box: top(8) }, { offset: 10, placement: rail, sticky: true, box: top(10) }, { offset: 12, placement: rail, sticky: true, box: top(12) }, { offset: 14, placement: rail, sticky: true, box: top(14) }, { offset: 16, placement: rail, sticky: true, box: top(16) }, { offset: 20, placement: rail, sticky: true, box: top(20) }, { offset: 24, placement: rail, sticky: true, box: top(24) } ] })>
   <row inline nowrap align="center" gap="2" style(brand, { box: shrink(0) })>
     <slot name="brand"></slot>
   </row>

@@ -176,13 +176,21 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
         }
         return;
     }
-    let Ok(decls) = lower_op_css(op) else {
+    // L1 host surface MemberPath → emit public name (identity stays in IR until here).
+    let op_owned;
+    let op_ref = if op_has_surface_member(op) {
+        op_owned = resolve_surface_args(op);
+        &op_owned
+    } else {
+        op
+    };
+    let Ok(decls) = lower_op_css(op_ref) else {
         return;
     };
     if decls.is_empty() {
         return;
     }
-    let class = class_name(op, ctx);
+    let class = class_name(op_ref, ctx);
     let mut child = "";
     if op.setter == "avatarMedia" {
         child = " img";
@@ -266,6 +274,39 @@ fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
     )
 }
 
+
+
+fn op_has_surface_member(op: &PaintOp) -> bool {
+    op.args.iter().any(|a| {
+        matches!(a, PaintArg::MemberPath { root, .. } if bound_group_family(root).is_none()
+            && super::component_surfaces::current_surface_pack() == Some(root.as_str()))
+    })
+}
+
+fn resolve_surface_args(op: &PaintOp) -> PaintOp {
+    use super::component_surfaces::resolve_surface_author;
+    let args = op
+        .args
+        .iter()
+        .map(|a| match a {
+            PaintArg::MemberPath { root, path }
+                if bound_group_family(root).is_none()
+                    && super::component_surfaces::current_surface_pack() == Some(root.as_str()) =>
+            {
+                match resolve_surface_author(root, path) {
+                    Ok(public) => PaintArg::Token(public.to_string()),
+                    Err(_) => a.clone(),
+                }
+            }
+            other => other.clone(),
+        })
+        .collect();
+    PaintOp {
+        setter: op.setter.clone(),
+        args,
+        source: op.source.clone(),
+    }
+}
 
 /// Prop name of the first bound group MemberPath in `op`, if any.
 fn first_bound_family_prop(op: &PaintOp) -> Option<&'static str> {

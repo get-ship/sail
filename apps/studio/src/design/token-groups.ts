@@ -128,11 +128,14 @@ export function humanLabel(path: string): string {
       tail === 'sm' ? 'Small' : tail === 'md' ? 'Medium' : tail === 'lg' ? 'Large' : 'Extra large'
     return prev ? `${titleCase(prev)} · ${size}` : size
   }
+  // SPEC-D1: primary UI uses short graph label (chip / chip.foreground), not
+  // raw component.chip.fg as the hero string.
   if (parts[0] === 'component' && parts.length >= 2) {
-    return parts
-      .slice(1)
-      .map(titleCase)
-      .join(' · ')
+    const pack = parts[1]!
+    const leaf = parts.length >= 3 ? parts.slice(2).join('.') : ''
+    if (!leaf || leaf === 'bg' || leaf === 'track') return pack
+    if (leaf === 'fg') return `${pack}.foreground`
+    return `${pack}.${leaf}`
   }
   return titleCase(tail)
 }

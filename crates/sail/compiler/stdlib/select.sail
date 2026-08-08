@@ -15,7 +15,7 @@
   }
 
   // Shares component.field surface with input/textarea (global fallbacks in the pack).
-  const base = style({ box: display(block).minH(control-h-md).padY(1_5).padS(3).padE(8).w(full), paint: fg(field-foreground).bg(field).borderWidth(1).border(field-border).radius(md).shadow(xs).cursor(pointer), text: fontSize(base), when: { hover: { paint: border(field-border-hover) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
+  const base = style({ box: display(block).minH(control-h-md).padY(1_5).padS(3).padE(8).w(full), paint: fg(field.foreground).bg(field).borderWidth(1).border(field.border).radius(md).shadow(xs).cursor(pointer), text: fontSize(base), when: { hover: { paint: border(border-strong) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
   const sizeXs = style({ box: minH(control-h-2xs).padS(2), text: fontSize(xs) })
   const sizeSm = style({ box: minH(control-h-sm).padS(2_5), text: fontSize(sm) })
   const sizeMd = style({ box: minH(control-h-md).padS(3), text: fontSize(base) })

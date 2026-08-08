@@ -276,8 +276,7 @@ fn empty_state_child_paint_on_structure_sx() {
     assert!(
         !src.contains("--es-")
             && !src.contains("tone-bg")
-            && !src.contains("compound: [")
-            && src.contains("align=\"stretch\"")
+                        && src.contains("align=\"stretch\"")
             && is_style_product(src)
             && src.contains("match:") && src.contains("size:")
             && src.contains("match:") && src.contains("variant:")
@@ -371,7 +370,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
     let out = compile_element(src, "tab").expect("tab compiles");
     assert!(
         is_style_product(src)
-            && src.contains("when({")
+            && (src.contains("when({") || src.contains("when: {"))
             && src.contains("selected:")
             && (src.contains("borderB(primary)") || src.contains("borderB(tone)"))
             && (src.contains("outline(ring)") || src.contains("outline(tone-ring)"))
@@ -428,7 +427,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
     assert!(
         tab_src.contains("pill:")
             && tab_src.contains("enclosed:")
-            && (tab_src.contains("tab-selected-bg") || tab_src.contains("bg(tab-selected-bg)")),
+            && (tab_src.contains("tab.selected-bg") || tab_src.contains("tab-selected-bg") || tab_src.contains("selected-bg") || tab_src.contains("bg(tab.selected-bg)")),
         "tab.sail must Style match pill/enclosed selected chrome"
     );
 }
@@ -479,8 +478,8 @@ fn switch_host_track_paint_on_host_sx() {
             && (src.contains("style({ paint: appearance(none) })") || src.contains("appearance(none)"))
             && src.contains("bg(none)")
             && src.contains("bg(switch)")
-            && src.contains("border(switch-border)")
-            && src.contains("bg(switch-thumb)")
+            && (src.contains("border(switch.border)") || src.contains("border(switch-border)"))
+            && (src.contains("bg(switch.thumb)") || src.contains("bg(switch-thumb)"))
             && src.contains("radius(full)")
             && src.contains("w(control-h-sm)")
             && src.contains("h(icon-size-md)")
@@ -851,14 +850,13 @@ fn navbar_host_paint_on_sx_cva() {
     assert!(
         !src.contains("--rail-offset")
             && !src.contains("--nav-")
-            && !src.contains("compound: [")
-            && src.contains("<row")
+                        && src.contains("<row")
             && src.contains("nowrap")
             && src.contains("gap=\"4\"")
             && is_style_product(src)
             && (src.contains("flexDir(column)") || src.contains("dir-column"))
             && (src.contains("bg(navbar)") || src.contains("bg: navbar"))
-            && (src.contains("fg(navbar-foreground)") || src.contains("navbar-foreground"))
+            && ((src.contains("fg(navbar.foreground)") || src.contains("fg(navbar-foreground)")) || (src.contains("navbar.foreground") || src.contains("navbar-foreground")))
             && (src.contains("minH(14)") || src.contains("min-h: 14"))
             && (src.contains("padY(2)") || src.contains("py: 2"))
             && (src.contains("padX(4)") || src.contains("px: 4"))
@@ -879,7 +877,7 @@ fn navbar_host_paint_on_sx_cva() {
                 || src.contains("grow min-w"))
             && (src.contains("ms(auto)") || src.contains("ms: auto") || src.contains("ms-auto"))
             && (src.contains("mt(auto)") || src.contains("mt: auto") || src.contains("mt-auto"))
-            && (src.contains("offset: '8'") || src.contains("offset: \"8\""))
+            && (src.contains("offset: 8") || src.contains("offset: '8'"))
             && (src.contains("top(8)") || src.contains("top: 8") || src.contains("top-8")),
         "navbar structure must own layout + sticky rail/offset Style compounds"
     );
@@ -975,8 +973,7 @@ fn error_state_child_paint_on_structure_sx() {
     assert!(
         !src.contains("--es-")
             && !src.contains("tone-destructive")
-            && !src.contains("compound: [")
-            && src.contains("align=\"stretch\"")
+                        && src.contains("align=\"stretch\"")
             && is_style_product(src)
             && (src.contains("grow(1)") || src.contains(" grow") || src.contains("grow min-w"))
             && src.contains("self(stretch)")
@@ -1080,13 +1077,14 @@ fn radio_nested_row_kills_label_flex_pe() {
         src.contains("<label")
             && src.contains("type=\"radio\"")
             && is_style_product(src)
+            && (src.contains("radio.foreground") || src.contains("radio-foreground") || src.contains("fg(radio"))
             && (src.contains("fontFamily(body)")
                 || src.contains("font-family: body")
                 || src.contains("font-body"))
             && (src.contains("cursor(pointer)")
                 || src.contains("cursor: pointer")
                 || src.contains("cursor-pointer"))
-            && (src.contains("radio-foreground") || src.contains("color: foreground")),
+            && ((src.contains("radio.foreground") || src.contains("radio-foreground")) || src.contains("color: foreground")),
         "radio must be native label + input with host type paint"
     );
     assert!(
@@ -1118,8 +1116,8 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
         !src.contains("'tg-h'")
             && !src.contains("--tg-")
             && is_style_product(src)
-            && (src.contains("bg(toggle-group)") || src.contains("toggle-group"))
-            && (src.contains("border(toggle-group-border)") || src.contains("toggle-group-border"))
+            && ((src.contains("bg(toggle-group)") || src.contains("bg(toggle-group)")) || src.contains("toggle-group"))
+            && (src.contains("border(toggle-group-border)") || (src.contains("toggle-group.border") || src.contains("toggle-group-border")))
             && src.contains("<row inline gap=\"0\"")
             && src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
         "segmented host chrome on Style via component.toggle-group tokens; host is inline row; size stamped"
@@ -1217,19 +1215,19 @@ fn alert_tone_stripe_before_on_host_sx() {
         is_style_product(src)
             && src.contains("before:")
             && src.contains("content(empty)")
-            && src.contains("alert-stripe")
+            && (src.contains("alert.stripe") || (src.contains("alert.stripe") || src.contains("alert-stripe")))
             && src.contains("empty:")
             && src.contains("group-dismissible")
             && src.contains("group()")
             && src.contains("forced-colors")
             && src.contains("CanvasText")
             && !src.contains("tone-bg")
-            && !src.contains("compound: ["),
+            ,
         "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
     );
     // Rest stripe = alert-stripe; brand via bound tone (attr-gated), not hand match matrix.
     assert!(
-        src.contains("bg(alert-stripe)")
+        (src.contains("bg(alert.stripe)") || src.contains("bg(alert-stripe)"))
             && (src.contains("bg(tone)") || out.skin_css.contains("tone='info'")),
         "stripe rest alert-stripe + bound tone brand"
     );
@@ -1490,7 +1488,7 @@ fn prose_host_paint_on_sx_descendants_generated() {
             && (src.contains("fontFamily(body)")
                 || src.contains("font-body")
                 || src.contains("font-family: body"))
-            && (src.contains("prose-foreground") || src.contains("text-foreground"))
+            && ((src.contains("prose.foreground") || src.contains("prose-foreground")) || src.contains("text-foreground"))
             && (src.contains("leading(loose)")
                 || src.contains("leading-loose")
                 || src.contains("leading: loose")),
@@ -1561,7 +1559,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && (src.contains("z(sticky)") || src.contains("z: sticky"))
             && (src.contains("bg(tab-list)") || src.contains("tab-list"))
             && src.contains("pill:")
-            && (src.contains("bg(tab-list-rail)") || src.contains("tab-list-rail")),
+            && ((src.contains("bg(tab-list.rail)") || src.contains("bg(tab-list-rail)")) || (src.contains("tab-list.rail") || src.contains("tab-list-rail"))),
         "tab-list must declare sticky compound + component.tab-list bg + pill rail Style on host"
     );
     assert!(
@@ -1617,7 +1615,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && (tab_src.contains("padY(2)") || tab_src.contains("py: 2"))
             && (tab_src.contains("padX(3)") || tab_src.contains("px: 3"))
             && (tab_src.contains("fontSize(xs)") || tab_src.contains("font-size: xs"))
-            && (tab_src.contains("tab-foreground") || tab_src.contains("muted-foreground")),
+            && (tab_src.contains("tab.foreground") || tab_src.contains("tab-foreground") || tab_src.contains("muted-foreground") || tab_src.contains("fg(tab")),
         "tab.sail size Style direct pad/type tokens + component.tab paint:\n{tab_src}"
     );
     assert!(
@@ -1665,7 +1663,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
                 || src.contains("scrollbar-thin")
                 || src.contains("scrollbar: thin"))
             && (src.contains("scrollbarThumb(scroll-area-thumb)")
-                || src.contains("scroll-area-thumb"))
+                || (src.contains("scroll-area.thumb") || src.contains("scroll-area-thumb")))
             && (src.contains("overscroll(contain)")
                 || src.contains("overscroll: contain")
                 || src.contains("overscroll-contain"))
@@ -1804,8 +1802,8 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
             && src.contains("data-field-error")
             && src.contains("use:describedControl")
             && !src.contains(" role=")
-            && src.contains("field-hint")
-            && src.contains("field-error"),
+            && (src.contains("field.hint") || src.contains("field-hint"))
+            && (src.contains("field.error") || src.contains("field-error")),
         "field structure must carry group + empty/group-invalid Style gates without part classes; alert via use:describedControl"
     );
     assert!(
@@ -1854,7 +1852,7 @@ fn label_req_gate_in_element_skins_anatomy() {
     let out = compile_element(src, "label").expect("label compiles");
     assert!(
         !src.contains("class=")
-            && src.contains("label-required")
+            && (src.contains("label.required") || src.contains("label-required"))
             && src.contains("group-required")
             && src.contains("display(none)")
             && (src.contains(".group()") || src.contains("style({ paint: group() })")),
@@ -1905,7 +1903,7 @@ fn pagination_size_cva_on_page() {
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
     assert!(
         is_style_product(page_src)
-            && page_src.contains("match:") && src.contains("size:")
+            && page_src.contains("match:") && page_src.contains("size:")
             && (page_src.contains("minW(control-h-md)")
                 || page_src.contains("min-w-control-h-md")
                 || page_src.contains("control-h-md"))

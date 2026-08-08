@@ -89,6 +89,19 @@ describe('font discoverer behavior', () => {
 })
 
 describe('component token write behavior', () => {
+  it('schema-missing component path write is a hard error', async () => {
+    const { setTokenValue } = await import('../src/design')
+    __setWorkingDocForTests({
+      $extensions: { ship: { themeId: 'comp-toy' } },
+      modes: { light: { component: {} } },
+    })
+    await setTokenValue('component.button.not-a-real-slot', '#22c55e')
+    const err = getDesignState().lastWriteError
+    expect(err).toBeTruthy()
+    expect(String(err)).toMatch(/Unknown component surface path|not in the host surface schema/i)
+    expect(getDesignState().dirty).toBe(false)
+  })
+
   it('setTokenValue can write a component-scoped color hex to oklch', async () => {
     const { setTokenValue, getPathValue } = await import('../src/design')
     __setWorkingDocForTests({

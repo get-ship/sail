@@ -7,6 +7,8 @@
 //! used by Style lower and layout class resolution.
 
 pub mod channel;
+pub mod component_surfaces;
+pub mod host_ctx;
 pub mod clash;
 pub mod conditions;
 pub mod emit;
@@ -22,6 +24,8 @@ pub mod sx_vocab;
 pub mod token_groups;
 pub mod tokens;
 
+pub use component_surfaces::{color_paint_vocabulary, is_component_public_name, surface_pack_for_host};
+pub use host_ctx::with_host_surface;
 pub use channel::{
     Channel, TEXT_BEARING_ELEMENTS, channel_for_setter, is_animate_trigger, is_geometry_setter,
     is_interaction_when_key, is_text_bearing, style_contains_geometry, style_uses_text_channel,
@@ -705,13 +709,13 @@ mod tests {
         // Representative host-component paint from the packages Style conversion wave.
         let packages_exprs = [
             "style({ box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) })",
-            "style({ box: padY(2).padX(3), paint: radius(lg).bg(card).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal) }).when(groupStateUser, { paint: bg(hover-bg).borderWidth(1).border(primary) }).when(groupStateSystem, { paint: bg(muted).fg(muted-foreground) }).when(groupStateError, { paint: borderWidth(1).border(destructive) }).when(groupStateSending, { paint: opacity(75) })",
+            "style({ box: padY(2).padX(3), paint: radius(lg).bg(surface-1).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal) }).when(groupStateUser, { paint: bg(hover-bg).borderWidth(1).border(primary) }).when(groupStateSystem, { paint: bg(muted).fg(muted-foreground) }).when(groupStateError, { paint: borderWidth(1).border(destructive) }).when(groupStateSending, { paint: opacity(75) })",
             "style({ box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border) }).when(stateOut, { paint: fg(muted-foreground).bg(muted) }).when(stateWeekend, { paint: bg(muted) }).when(stateRange, { paint: bg(selected-bg) })",
             "style({ box: position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).padY(half).padX(1).overflow(hidden), paint: cursor(pointer).fg(primary).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density) }).when(selected, { paint: outline(ring) })",
             "style({ box: padY(6).padX(4), paint: group().borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none), text: textAlign(center) }).when(focus, { paint: outline(ring) }).when(stateOver, { paint: borderWidth(1).border(ring).bg(muted) })",
             "style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)), paint: bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto) })",
-            "style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(sm) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) })",
-            "style({ box: padY(4).padX(5), paint: borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).shadow(xs), text: fontFamily(body).fontSize(sm) })",
+            "style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), text: fontFamily(body).fontSize(sm) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) })",
+            "style({ box: padY(4).padX(5), paint: borderWidth(1).border(destructive).radius(md).bg(muted).fg(foreground).shadow(xs), text: fontFamily(body).fontSize(sm) })",
             "style({ box: h(control-h-sm), paint: radius(sm).cursor(pointer).fg(foreground), text: textAlign(center) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(primary).fg(primary-foreground) }).when(disabled, { paint: fg(muted-foreground).opacity(50).cursor(not-allowed) }).when(stateEmpty, { paint: visibility(hidden) }).when(stateToday, { paint: outline(border-strong) }).when(focus, { paint: outline(ring) })",
             "style({ paint: cursor(cell) })",
             "style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)) }).when(selected, { paint: outline(primary) })",

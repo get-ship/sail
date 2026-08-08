@@ -396,8 +396,11 @@ pub fn compile_element(
     }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
-    let program = parse::parse_element_source(&stripped)?;
-    emit::element::emit_element(&program, &stripped, name)
+    // SPEC-D1: host known by construction → surface vocabulary for this host.
+    sail_lint::style::with_host_surface(Some(name), || {
+        let program = parse::parse_element_source(&stripped)?;
+        emit::element::emit_element(&program, &stripped, name)
+    })
 }
 
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {

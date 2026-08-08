@@ -23,22 +23,22 @@
 
   const host = style({ paint: group() })
 
-  const trigger = style({ box: size(control-h-sm).pad(0), paint: fg(theme-picker-trigger-foreground).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) })
-  const modeTrigger = style({ box: size(control-h-sm).minW(control-h-sm).pad(0), paint: fg(theme-picker-trigger-foreground).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) })
+  const trigger = style({ box: size(control-h-sm).pad(0), paint: fg(theme-picker.trigger-fg).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) })
+  const modeTrigger = style({ box: size(control-h-sm).minW(control-h-sm).pad(0), paint: fg(theme-picker.trigger-fg).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) })
   const triggerIcon = style({ box: size(icon-size-md).display(block) })
-  const glyph = style({ paint: fg(theme-picker-trigger-foreground), text: fontSize(sm).leading(none) })
+  const glyph = style({ paint: fg(theme-picker.trigger-fg), text: fontSize(sm).leading(none) })
 
-  const panel = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(0).w(panel-max-w-sm).maxW(panel-w-toast).minW(0).maxH(panel-vh-md).overflowX(hidden).overflowY(auto), paint: overscroll(contain).fg(theme-picker-foreground).bg(theme-picker).borderWidth(border-width).border(border).radius(lg).shadow(lg).z(popover) })
+  const panel = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(0).w(panel-max-w-sm).maxW(panel-w-toast).minW(0).maxH(panel-vh-md).overflowX(hidden).overflowY(auto), paint: overscroll(contain).fg(theme-picker.foreground).bg(theme-picker).borderWidth(border-width).border(border).radius(lg).shadow(lg).z(popover) })
 
   const header = style({ box: w(full).minW(0).padX(3).padT(3).padB(0) })
   const headerEyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform).leading(none) })
-  const headerTitle = style({ paint: fg(theme-picker-foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(base).leading(tight).truncate() })
+  const headerTitle = style({ paint: fg(theme-picker.foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(base).leading(tight).truncate() })
   const headerMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).leading(none) })
 
   // Filter tabs — ALWAYS readable on popover chrome.
   // Selected: strong fill using hover-bg + primary underline (never primary fill — breaks on brut).
   const modeSeg = style({ box: w(full).minW(0).gap(0).padX(1), paint: borderBWidth(1).borderB(border) })
-  const modeSegBtn = style({ box: minW(0).padY(2).padX(2), paint: fg(theme-picker-option-foreground).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) })
+  const modeSegBtn = style({ box: minW(0).padY(2).padX(2), paint: fg(theme-picker.option-fg).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) })
 
   const catalogHead = style({ box: w(full).minW(0).padX(3).padT(2).padB(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform) })
 
@@ -68,7 +68,7 @@
     type="button"
     popovertarget="sail-theme-panel"
     data-picker-trigger="full"
-    label="Choose theme" style(trigger, { when: { hover: { paint: bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, group-inline: { box: display(none) } } })>
+    label="Choose theme" style(trigger, { when: { hover: { paint: bg(hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, group-inline: { box: display(none) } } })>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" style(triggerIcon, { box: shrink(0) })>
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
@@ -83,7 +83,7 @@
     data-picker-trigger="mode"
     data-mode-only-trigger="1"
     label="Color mode"
-    hidden style(modeTrigger, { when: { hover: { paint: bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) } } })>
+    hidden style(modeTrigger, { when: { hover: { paint: bg(hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) } } })>
     <span data-mode-icon="light" hidden="true" style(glyph, { box: shrink(0) })>☀</span>
     <span data-mode-icon="dark" hidden hidden="true" style(glyph, { box: shrink(0) })>☾</span>
     <span data-mode-icon="system" hidden hidden="true" style(glyph, { box: shrink(0) })>◐</span>
@@ -109,13 +109,13 @@
       <!-- Filter tabs: selected = bold + fill + primary underline (readable on every host theme) -->
       <!-- tablist/tab/option roles stamped by use:themeSelect -->
       <row gap="0" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap style(modeSeg, { box: minW(0) })>
-        <button type="button" data-mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
+        <button type="button" data-mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker.foreground).bg(hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker.foreground).bg(hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
           Light
         </button>
-        <button type="button" data-mode="dark" selected="false" title="Show dark themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
+        <button type="button" data-mode="dark" selected="false" title="Show dark themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker.foreground).bg(hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker.foreground).bg(hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
           Dark
         </button>
-        <button type="button" data-mode="system" selected="false" title="Show dual-mode themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
+        <button type="button" data-mode="system" selected="false" title="Show dual-mode themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker.foreground).bg(hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker.foreground).bg(hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
           System
         </button>
       </row>

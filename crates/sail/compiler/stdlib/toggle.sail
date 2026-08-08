@@ -2,7 +2,7 @@
   <toggle> — pressed-button cell for <toggle-group> only (standalone died).
   First/last join + variant/orientation/size Style.
   Paint: rest bg/fg/border from component.toggle tokens
-         (cssNames toggle, toggle-foreground, toggle-border).
+         (cssNames toggle, toggle.foreground, toggle.border).
   Binary form control → use <switch>. Action button → use <button>.
 -->
 
@@ -17,7 +17,7 @@
 
   // border(solid) is required — bare <button> UA is border-style:outset; without
   // it the outline join paints as separate browser chrome (not a segment).
-  const base = style({ box: position(relative).display(inline-flex).h(control-h-md).padX(3).ms(-px), paint: appearance(none).fg(toggle-foreground).bg(toggle).cursor(pointer).select(none).borderWidth(1).border(solid).border(toggle-border).radius(none).tapHighlight(none).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(sm) })
+  const base = style({ box: position(relative).display(inline-flex).h(control-h-md).padX(3).ms(-px), paint: appearance(none).fg(toggle.foreground).bg(toggle).cursor(pointer).select(none).borderWidth(1).border(solid).border(toggle.border).radius(none).tapHighlight(none).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(sm) })
   const sizeMd = style({ box: h(control-h-md).padX(3), text: fontSize(sm) })
   const sizeSm = style({ box: h(control-h-sm).padX(2_5), text: fontSize(xs) })
   const sizeLg = style({ box: h(control-h-lg).padX(4), text: fontSize(base) })

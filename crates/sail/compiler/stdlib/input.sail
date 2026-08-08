@@ -15,7 +15,7 @@
   }
 
   // Text-like fields share component.field surface tokens with select/textarea.
-  const field = style({ box: display(block).minH(control-h-md).padY(1_5).padX(3).w(full), paint: fg(field-foreground).bg(field).borderWidth(1).border(field-border).radius(md).shadow(xs), text: fontSize(base), when: { hover: { paint: border(field-border-hover) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
+  const field = style({ box: display(block).minH(control-h-md).padY(1_5).padX(3).w(full), paint: fg(field.foreground).bg(field).borderWidth(1).border(field.border).radius(md).shadow(xs), text: fontSize(base), when: { hover: { paint: border(border-strong) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
   const sizeXs = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
   const sizeSm = style({ box: minH(control-h-sm).padX(2_5), text: fontSize(sm) })
   const sizeMd = style({ box: minH(control-h-md).padX(3), text: fontSize(base) })
@@ -24,13 +24,13 @@
   // Border uses foreground (not border-strong) so checks stay visible on muted/soft surfaces.
   // Explicit border(solid): appearance:none leaves border-style:none in some UAs,
   // so borderWidth alone paints nothing (catalog "barely visible" checkboxes).
-  const check = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(field-foreground).bg(field).shadow(xs).radius(sm).cursor(pointer), text: fontSize(base), when: { checked: { paint: bg(primary).border(primary) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
-  const radio = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(field-foreground).bg(field).shadow(xs).radius(full).cursor(pointer), text: fontSize(base), when: { checked: { paint: bg(primary).border(primary) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
+  const check = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(field.foreground).bg(field).shadow(xs).radius(sm).cursor(pointer), text: fontSize(base), when: { checked: { paint: bg(primary).border(primary) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
+  const radio = style({ box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm), paint: appearance(none).align(middle).borderWidth(2).border(solid).border(field.foreground).bg(field).shadow(xs).radius(full).cursor(pointer), text: fontSize(base), when: { checked: { paint: bg(primary).border(primary) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
   const checkSm = style({ box: w(icon-size-xs).h(icon-size-xs) })
   const checkMd = style({ box: w(icon-size-sm).h(icon-size-sm) })
   const checkLg = style({ box: w(icon-size-md).h(icon-size-md) })
   const range = style({ box: w(full).h(5), paint: appearance(none).bg(transparent).cursor(pointer), when: { disabled: { paint: cursor(not-allowed).opacity(50) } } })
-  const color = style({ box: w(9).h(control-h-md).pad(1), paint: appearance(none).borderWidth(1).border(field-border).radius(md).bg(field).shadow(xs).cursor(pointer) })
+  const color = style({ box: w(9).h(control-h-md).pad(1), paint: appearance(none).borderWidth(1).border(field.border).radius(md).bg(field).shadow(xs).cursor(pointer) })
   const file = style({ box: display(flex).minH(control-h-md).padY(1).padX(3), paint: cursor(pointer) })
   const hidden = style({ box: display(none) })
 </scope>
