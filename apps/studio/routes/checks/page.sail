@@ -1,7 +1,11 @@
 <!--
-  /checks deep-link → open Checks panel + land on Edit (not a rail home).
-  STUDIO-V1-LAUNCH: Checks is a shell panel, not a fifth activity page.
+  /checks deep-link → open Checks panel and land on Edit.
 -->
+<scope>
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
+
 <controller>
 import { navigate } from '@ship/deck/router'
 import { setChecksPanelOpen } from '@ship/sail-studio-shell'
@@ -17,6 +21,6 @@ export default controller(() => {
 })
 </controller>
 
-<column studio-redirect checks-redirect align="center" justify="center" style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Opening Checks panel…</p>
+<column studio-redirect checks-redirect align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Opening Checks panel…</p>
 </column>
