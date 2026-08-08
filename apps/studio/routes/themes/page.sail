@@ -1,2 +1,8 @@
-<!-- /themes — project theme catalog (master–detail) -->
-<themes-surface style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden)  })></themes-surface>
+<!--
+  /themes — project theme catalog (master–detail).
+  h(full)+minH(0) under the route-slot flex host (bare grow collapses).
+-->
+<scope>
+  style surfaceFill = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden) }
+</scope>
+<themes-surface style(surfaceFill)></themes-surface>
