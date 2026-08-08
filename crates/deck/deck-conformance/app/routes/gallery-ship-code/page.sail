@@ -1,21 +1,32 @@
-<column gap="8" style({ box: pad(6).maxW(breakpoint-tablet).mx(auto) })>
-  <header style({ box: padB(4), paint: borderBWidth(1).borderB(border) })>
-    <h1 style({ box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) })>ship/code — Domain Stubs</h1>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style pageHead = { box: padB(4), paint: borderBWidth(1).borderB(border) }
+  style title = { box: mb(2), paint: fg(foreground), text: fontSize(2xl).fontWeight(bold) }
+  style lede = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style card = { box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style cardTitle = { paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
+  style badge = { box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) }
+  style body = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style stage = { box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) }
+  style caption = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) }
+</scope>
+
+<column gap="8" style(page)>
+  <header style(pageHead)>
+    <h1 style(title)>ship/code — Domain Stubs</h1>
+    <p style(body)>
       Pack <strong>ship/code</strong>. Each card renders the real custom-element
       tag with static mock attribute values so the shell registers and paints.
       A visible badge on each card marks it as a domain stub — no
       <code>ship.*</code> calls, no live data.
     </p>
   </header>
-
-  <!-- ── ship-code-editor ──────────────────────────────────────────────── -->
-  <column gap="4" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-    <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>
+  <column gap="4" style(card)>
+    <h2 style(cardTitle)>
       <code>ship-code-editor</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>value: string</code> (form-value), <code>language: string</code>,
       <code>placeholder: string</code>, <code>readonly: bool</code>,
       <code>line-numbers: bool</code>, <code>size: sm|md|lg</code>,
@@ -25,8 +36,8 @@
     </p>
 
     <column gap="4">
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>size=sm · language=typescript · line-numbers</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>size=sm · language=typescript · line-numbers</span>
         <ship-code-editor
           value="const greet = (name: string) =&gt; name.toUpperCase();"
           language="typescript"
@@ -35,8 +46,8 @@
         </ship-code-editor>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>size=md · language=rust · tone=default (default)</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>size=md · language=rust · tone=default (default)</span>
         <ship-code-editor
           value="fn main() { println!(&quot;Hello, world!&quot;); }"
           language="rust"
@@ -44,8 +55,8 @@
         </ship-code-editor>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>size=lg · language=json · tone=info</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>size=lg · language=json · tone=info</span>
         <ship-code-editor
           value="name: ship, version: 1.0.0"
           language="json"
@@ -54,8 +65,8 @@
         </ship-code-editor>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>readonly · tone=success · theme=dark</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>readonly · tone=success · theme=dark</span>
         <ship-code-editor
           value="SELECT id, name FROM agents WHERE active = true;"
           language="sql"
@@ -65,8 +76,8 @@
         </ship-code-editor>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>tone=warning · placeholder shown</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>tone=warning · placeholder shown</span>
         <ship-code-editor
           language="typescript"
           placeholder="Paste code here…"
@@ -74,8 +85,8 @@
         </ship-code-editor>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>tone=destructive · size=sm</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>tone=destructive · size=sm</span>
         <ship-code-editor
           value="import bad from &quot;danger&quot;;"
           language="typescript"
@@ -85,14 +96,12 @@
       </column>
     </column>
   </column>
-
-  <!-- ── ship-git-diff ─────────────────────────────────────────────────── -->
-  <column gap="4" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-    <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>
+  <column gap="4" style(card)>
+    <h2 style(cardTitle)>
       <code>ship-git-diff</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>files: number</code>, <code>additions: number</code>,
       <code>deletions: number</code>, <code>empty: bool</code>.
       Slot: default (accepts <code>ship-git-diff-file</code> children). Renders
@@ -100,8 +109,8 @@
     </p>
 
     <column gap="4">
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>2 files · +18 / -7 · expanded</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>2 files · +18 / -7 · expanded</span>
         <ship-git-diff files="2" additions="18" deletions="7">
           <ship-git-diff-file path="src/main.rs" additions="12" deletions="4">
             <ship-git-diff-hunk header="@@ -1,6 +1,8 @@ fn main()"></ship-git-diff-hunk>
@@ -121,8 +130,8 @@
         </ship-git-diff>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>1 file · collapsed · line with comment</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>1 file · collapsed · line with comment</span>
         <ship-git-diff files="1" additions="3" deletions="1">
           <ship-git-diff-file path="controller.ts" additions="3" deletions="1" collapsed>
             <ship-git-diff-hunk header="@@ -10,5 +10,7 @@ export default controller"></ship-git-diff-hunk>
@@ -133,20 +142,18 @@
         </ship-git-diff>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>empty state</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>empty state</span>
         <ship-git-diff empty files="0" additions="0" deletions="0"></ship-git-diff>
       </column>
     </column>
   </column>
-
-  <!-- ── ship-git-diff-file (standalone) ──────────────────────────────── -->
-  <column gap="4" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-    <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>
+  <column gap="4" style(card)>
+    <h2 style(cardTitle)>
       <code>ship-git-diff-file</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>path: string</code>, <code>additions: number</code>,
       <code>deletions: number</code>, <code>collapsed: bool</code>.
       Slot: default (accepts hunks + lines). Collapsible per-file header
@@ -154,8 +161,8 @@
     </p>
 
     <column gap="4">
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>expanded · additions + deletions</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>expanded · additions + deletions</span>
         <ship-git-diff-file path="packages/runtime/src/index.ts" additions="8" deletions="2">
           <ship-git-diff-hunk header="@@ -42,6 +42,12 @@ export"></ship-git-diff-hunk>
           <ship-git-diff-line type="context" old="42" new="42">export signal from reactive;</ship-git-diff-line>
@@ -164,22 +171,20 @@
         </ship-git-diff-file>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>collapsed · additions only</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>collapsed · additions only</span>
         <ship-git-diff-file path="README.md" additions="40" deletions="0" collapsed>
           <ship-git-diff-line type="add" old="" new="1">Ship Framework</ship-git-diff-line>
         </ship-git-diff-file>
       </column>
     </column>
   </column>
-
-  <!-- ── ship-git-diff-hunk (standalone) ──────────────────────────────── -->
-  <column gap="4" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-    <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>
+  <column gap="4" style(card)>
+    <h2 style(cardTitle)>
       <code>ship-git-diff-hunk</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>header: string</code>. No slots. Purely presentational —
       renders a mono hunk-header line (e.g. <code>@@ -10,7 +10,8 @@</code>).
       The daemon emits the header text; the template renders it inside a
@@ -187,30 +192,28 @@
     </p>
 
     <column gap="4">
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>typical hunk header</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>typical hunk header</span>
         <ship-git-diff-hunk header="@@ -10,7 +10,8 @@ fn main()"></ship-git-diff-hunk>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>file-start hunk</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>file-start hunk</span>
         <ship-git-diff-hunk header="@@ -0,0 +1,24 @@"></ship-git-diff-hunk>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>large range hunk</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>large range hunk</span>
         <ship-git-diff-hunk header="@@ -128,42 +128,58 @@ impl Router"></ship-git-diff-hunk>
       </column>
     </column>
   </column>
-
-  <!-- ── ship-git-diff-line (standalone) ──────────────────────────────── -->
-  <column gap="4" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-    <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>
+  <column gap="4" style(card)>
+    <h2 style(cardTitle)>
       <code>ship-git-diff-line</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>type: add|del|context</code>, <code>old: string</code>,
       <code>new: string</code>, <code>comment-count: number</code>.
       Slot: default (line content text). Single diff line with old/new gutters,
@@ -218,35 +221,33 @@
     </p>
 
     <column gap="4">
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>type=context</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>type=context</span>
         <ship-git-diff-line type="context" old="10" new="10">  let x = signal(0);</ship-git-diff-line>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>type=add</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>type=add</span>
         <ship-git-diff-line type="add" old="" new="11">  let x = signal(42);</ship-git-diff-line>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>type=del</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>type=del</span>
         <ship-git-diff-line type="del" old="11" new="">  let x = 0;</ship-git-diff-line>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>type=add · comment-count=3</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>type=add · comment-count=3</span>
         <ship-git-diff-line type="add" old="" new="12" comment-count="3">  return count;</ship-git-diff-line>
       </column>
     </column>
   </column>
-
-  <!-- ── ship-terminal ─────────────────────────────────────────────────── -->
-  <column gap="4" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-    <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold).fontFamily(mono) })>
+  <column gap="4" style(card)>
+    <h2 style(cardTitle)>
       <code>ship-terminal</code>
-      <span style({ box: padX(2).padY(half).ms(3), paint: fg(warning-foreground).bg(warning).borderWidth(1).border(warning).radius(sm), text: fontSize(xs).fontWeight(medium).fontFamily(body).tracking(wide).whitespace(nowrap) })>domain-stub — awaits backend spec</span>
+      <span style(badge)>domain-stub — awaits backend spec</span>
     </h2>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>
+    <p style(body)>
       Props: <code>rows: number</code>, <code>cols: number</code>,
       <code>font-size: number</code>, <code>readonly: bool</code>,
       <code>theme: light|dark|auto</code>, <code>fit: bool</code>.
@@ -256,18 +257,18 @@
     </p>
 
     <column gap="4">
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>rows=8 · cols=80 · theme=auto (default)</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>rows=8 · cols=80 · theme=auto (default)</span>
         <ship-terminal rows="8" cols="80"></ship-terminal>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>rows=12 · readonly · theme=dark</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>rows=12 · readonly · theme=dark</span>
         <ship-terminal rows="12" cols="80" readonly theme="dark"></ship-terminal>
       </column>
 
-      <column gap="2" style({ box: pad(3), paint: borderWidth(1).border(divider).radius(md).bg(surface-2) })>
-        <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(lowercase).tracking(wide).fontFamily(mono) })>rows=6 · font-size=11 · theme=light · fit</span>
+      <column gap="2" style(stage)>
+        <span style(caption)>rows=6 · font-size=11 · theme=light · fit</span>
         <ship-terminal rows="6" cols="80" font-size="11" theme="light" fit></ship-terminal>
       </column>
     </column>
