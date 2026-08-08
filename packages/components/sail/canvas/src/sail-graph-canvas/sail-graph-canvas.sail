@@ -1,43 +1,7 @@
 <!--
-  <sail-graph-canvas> — SAIL port of <ship-graph-canvas>.
-  Generic positioned-graph primitive. Renders an SVG edge layer with bezier
-  paths plus absolutely-positioned node cards.
-
-  Prop / event parity vs <ship-graph-canvas>
-  ─────────────────────────────────────────────────────────────────────────────
-  Lit                           SAIL                          Notes
-  ─────────────────────────────────────────────────────────────────────────────
-  nodes (array|string, [])      nodes (string, '')            ✓ JSON-encoded
-  edges (array|string, [])      edges (string, '')            ✓ JSON-encoded
-  width (number, 1000, reflect) width (number, 1000, reflect) ✓
-  height (number, 600, reflect) height (number, 600, reflect) ✓
-  layout ('positioned'|'radial' layout (union, 'positioned',  ✓
-    , 'positioned', reflect)      reflect)
-  selectedId (string, '',       selected-id (string, '',      ✓
-    reflect, attribute:           reflect)
-    'selected-id')
-  ─────────────────────────────────────────────────────────────────────────────
-  ship-node-select {id, kind}   sail-node-select {id, kind}    renamed
-  ship-node-hover  {id, kind}   sail-node-hover  {id, kind}    renamed
-  ─────────────────────────────────────────────────────────────────────────────
-  Slots: node (hidden; per-kind <template slot="node" data-kind="...">)
-  ─────────────────────────────────────────────────────────────────────────────
-  Anatomy: the surface holds one <svg> edge layer and one 0×0 anchor per node;
-  each anchor centers a role=button card carrying data-id (identity), data-state
-  (kind) and aria-current (selection).
-  ─────────────────────────────────────────────────────────────────────────────
-
-  GEOMETRY
-  The `width`/`height` props are the graph's coordinate space. The edge <svg>
-  carries them as its viewBox and sits IN FLOW, so its intrinsic ratio gives
-  the surface its height and node percentages resolve against the same box.
-  Node cards are HTML (they must not scale with the surface), positioned by
-  percentage through the style: channel — runtime geometry, not a skin.
-  Each card hangs in a 0×0 anchor + <center>, which lands the card's midpoint
-  on its (x, y) — the point the layout actually computed.
-
-  Edge stroke colors stay consumer-overridable knobs (`--edge-agent` … on the
-  host); the paths read them with a token fallback.
+  <sail-graph-canvas> — positioned graph: SVG bezier edges + HTML node cards.
+  width/height are the coordinate space (SVG viewBox). Events: sail-node-select/hover.
+  Optional per-kind body via <template slot="node" data-kind="…">.
 -->
 
 <scope>

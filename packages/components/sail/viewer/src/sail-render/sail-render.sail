@@ -1,21 +1,7 @@
 <!--
-  <sail-render> — THE engine primitive: a live, reactive mount stage for a SAIL
-  component (build-spec §1 / §Render-engine seam).
-
-  Thin shell. ALL render-engine work (compile + view-mode `__mount` + net-new
-  component-mode createElement / prop-apply / slot-inject / versioned-tag swap
-  + dispose) lives in the paired controller + `engine/*.ts`. The template only:
-    - declares the scalar control props (mode / component-name / viewport-width)
-    - hosts the stage container via `use:captureStage` (action) —
-      NEVER a post-mount querySelector
-    - wraps the fault-prone subtree in <error-boundary> so an agent's `.sail`
-      that throws in setup/mount/render is CAUGHT, not a white screen
-    - folds the compile-error display (the culled sail-compile-error) and the
-      runtime-error panel, plus a <sail-spinner> while compiling
-
-  Data (the bound `compile()`, raw `source`, `propValues`, `setup`, `slots`)
-  arrives via `*` identity/snapshot — the host owns discovery. NO
-  object/json attribute props (Cardinal: `<prop type=json>` does not exist).
+  <sail-render> — live mount stage for a SAIL component (source or tag mode).
+  Engine work in engine/*.ts; template hosts stage via use:captureStage + error-boundary.
+  Compile/source/props arrive via host identity — not JSON attrs.
 -->
 
 <scope>
@@ -27,14 +13,7 @@
 </scope>
 
 <controller>
-// <sail-render> controller — the render-engine lifecycle (build-spec §1).
-//
-// Controller-purity: this file does NO view-markup DOM construction. It owns
-// LIFECYCLE only — wiring host `*` into signals, running the reactive
-// compile+mount effect, disposing prior mounts, and emitting events. All
-// `createElement` / `createContextualFragment` / `__mount` lives in
-// `engine/*.ts` (the legitimate render-engine seam, outside
-// `sail-controller-purity` scope). No `innerHTML`/`outerHTML`/`insertAdjacentHTML`.
+// Lifecycle only — compile+mount+dispose; DOM construction stays in engine/*.ts.
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-render.sail'
@@ -45,8 +24,7 @@ import type { CompileFn, WasmCompileResult } from '../wasm-bootstrap'
 
 type ErrPhase = 'compile' | 'mount' | 'runtime'
 
-// Pull a structured diagnostic out of an injected-compile `{kind:'err'}`
-// result, or out of a thrown `sail-compiler: <msg> (l:c)` Error.
+
 function diagFromResult(r: Extract<WasmCompileResult, { kind: 'err' }>): CompileDiagnostic {
   return { message: r.message, line: r.line, col: r.col, category: r.category }
 }
@@ -62,8 +40,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       stageEl.set(node as HTMLElement)
       return { destroy: () => stageEl.set(null) }
     }
-    // Stage framing: the reflected viewport-width prop picks a breakpoint
-    // token; full means unconstrained.
+
     const viewportWidth = (ctx as unknown as { viewportWidth?: () => string }).viewportWidth
     const stageMaxWidth = (): string | null => {
       const w = viewportWidth ? viewportWidth() : 'full'
@@ -72,15 +49,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const compiling = signal(false)
     const compileError = signal<ReturnType<typeof formatCompileError> | null>(null)
     const runtimeError = signal<string | null>(null)
-    // Derived display strings for the folded compile-error branch.
+
     const compileErrorSummary = signal('')
     const compileErrorBody = signal('')
     mount((host) => {
-      // Attach the engine shadow root + relocate the compiled template into it
-      // (build-spec §Isolation — the engine stage is a shadow on the host).
+
       attachEngineShadow(host)
 
-      // --- host * → signals (the property-apply path; identity preserved) ---
+
       const compile = signal<CompileFn | null>(null)
       const source = signal<string | null>(null)
       const propValues = signal<Record<string, unknown> | null>(null)
@@ -88,10 +64,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const setupUrl = signal<string | null>(null)
       const slots = signal<string | null>(null)
 
-      // Store the property value into the signal WITHOUT the updater-function
-      // interpretation: `signal.set(fn)` would CALL `fn(prev)` (the updater form),
-      // which is wrong for the function-valued props (`compile`, `setup`). The
-      // updater closure `() => value` stores the literal value — function or not.
+      // signal.set(fn) treats fn as updater — wrap so function-valued props store as values.
       type AnySig = { (): unknown; set: (u: (p: unknown) => unknown) => void }
       const defineHostProp = (name: string, sig: { (): unknown; set: (v: never) => void }): void => {
         const s = sig as unknown as AnySig
@@ -110,7 +83,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       defineHostProp('setupUrl', setupUrl)
       defineHostProp('slots', slots)
 
-      // --- live mount handles + dedup guards ---
+
       let viewMount: ViewMount | null = null
       let tagMount: TagMount | null = null
       let lastViewKey = '' // source identity that produced the last-good view mount
@@ -157,7 +130,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         if (compileError() !== null) compileError.set(null)
       }
 
-      // --- the reactive compile+mount effect (source/tag/prop change) ---
+
       const stop = effect(() => {
         const stage = stageEl()
         const fn = compile()
@@ -166,8 +139,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         const tag = (ctx.componentName() as string) || ''
         const pv = propValues()
         const slotHtml = slots()
-        // Track the view-mode setup/marker so a late-supplied setup re-mounts —
-        // the harness may set `source` before `setup`/`setupUrl` land.
+
         setupFn()
         setupUrl()
         if (!stage || !fn || src == null) return
@@ -182,9 +154,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       function mountSource(stage: HTMLElement, fn: CompileFn, src: string): void {
         compiling.set(true)
         try {
-          // Compile FIRST (may throw → last-good specimen survives below). Only
-          // once we have a clean compile do we tear down the prior mount and
-          // mount the new one — disposing first would race the snapshot diff.
+          // Compile before dispose so last-good survives a bad source.
           const su = setupUrl()
           const sf = setupFn()
           const result = mountBySource(stage, fn, {
@@ -205,8 +175,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           })
           host.emit!('sail-render:mounted', { tag: null })
         } catch (e) {
-          // A bad source-change KEEPS the last-good specimen (do not dispose) and
-          // surfaces the diagnostic. A first-mount failure simply shows the panel.
+
           const d = diagFromError(e)
           const phase: ErrPhase = /sail-compiler:/.test(d.message) ? 'compile' : 'mount'
           if (phase === 'compile') {
@@ -229,21 +198,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
         slotHtml: string | null,
       ): void {
         if (!tag) return
-        // Prop-only change (same source, node already mounted): patch in place —
-        // NO recompile, NO recreate (build-spec §Reactivity, prop channel).
+
         if (tagMount && src === lastTagSource) {
           tagMount.setProps(pv)
           if (slotHtml != null) tagMount.setSlots(slotHtml)
           return
         }
-        // A source CHANGE (tag already mounted, src differs) must mint a FRESH
-        // definition: the customElements registry is process-global + append-only
-        // (no undefine), so re-using the base tag would silently keep the OLD
-        // definition (stale render). A content-hashed versioned tag gives a fresh
-        // definition for distinct source while the define-once guard collapses
-        // identical source — bounding registry growth by distinct-source count.
-        // First mount (no prior tagMount) uses the base tag so a host querying by
-        // `component-name` finds the registered element.
+        // Source change → content-hashed versioned tag (registry is append-only).
         const versioned = tagMount != null
         compiling.set(true)
         try {
@@ -254,8 +215,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           clearCompileError()
           lastErrorKey = ''
           host.emit!('sail-render:compiled', { js: '', css: null, dts: null, ssrHtml: null })
-          // Report the tag actually mounted: the base tag on first mount, the
-          // content-hashed versioned tag on a source-change swap.
+
           host.emit!('sail-render:mounted', { tag: next.tag })
         } catch (e) {
           showCompileError(diagFromError(e), src)
@@ -264,9 +224,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         }
       }
 
-      // --- runtime throw: the inner sail-error-boundary fires a composed
-      //     `sail-error-boundary:caught` that crosses the shadow; re-surface it as
-      //     a runtime sail-render:error and render the runtime panel. ---
+      // error-boundary → sail-render:error + runtime panel.
       const onCaught = (e: Event): void => {
         const detail = (e as CustomEvent).detail as { error?: unknown } | undefined
         const err = detail?.error

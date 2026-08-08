@@ -1,23 +1,7 @@
 <!--
-  <sail-calendar> — month / week / day calendar surface (Slice 2, the VIEW).
-  Pure-framework component over the COMMITTED headless engine
-  (`./engine/createCalendar`), which owns all reactive state + view-model
-  (monthCells / dayColumns / timeSlots / agenda / selection / navigation). The
-  engine arrives via `calendar` IDENTITY; `events`/`focus-date` (type=string)
-  are the SSR/declarative fallback (JSON.parse in the controller — `type="json"`
-  does NOT compile). All emits go through host.emit! (see controller).
-
-  A11y: month grid is a FIXED 6×7 role=grid/row/gridcell tree (never virtualized
-  → NO windowed-count ARIA); event chips are role=button DESCENDANTS inside a
-  gridcell; today → aria-current="date". Density: NO density/dense prop — rows
-  read the --density-* channel off <html data-density>.
-
-  Range selection (range-mode date|datetime): pointer drag across month-grid day
-  cells, or Shift+Arrow from the focus anchor, sets the engine `range` signal and
-  emits sail-range-change. Drag-to-create (empty time slot → sail-event-create-intent)
-  and drag-to-move (timed chip → sail-event-move) ride a background slot grid that
-  carries data-iso + data-minutes so the pointer→time map is element-addressed.
-  The virtualized agenda remains an explicit GAP.
+  <sail-calendar> — month / week / day view over `./engine/createCalendar`.
+  Engine via `calendar` identity; `events`/`focus-date` JSON strings are SSR fallback.
+  Interactions (range drag, create/move) in sail-calendar.interactions.
 -->
 
 <scope>
@@ -35,21 +19,7 @@
   }
 </scope>
 <controller>
-// <sail-calendar> controller — Slice 2 (the VIEW). Glue-only / tier-2.
-//
-// The headless engine (`./engine/createCalendar`) owns ALL reactive state +
-// view-model derivation (month/week/day, agenda, selection, navigation). This
-// controller is the thin seam: it routes the live `Calendar` in via the
-// `calendar` IDENTITY path (a JS reference, never a stringified attribute),
-// falls back to building an engine from the `events` `type="string"` SSR prop
-// (sail-combobox JSON.parse pattern), re-exposes the engine's `Derived` surfaces
-// as scope signals the template reads, and emits `sail-*` events via the runtime
-// `host.emit!` helper (NOT open-coded `dispatchEvent`).
-//
-// Cardinals honored: mutations only in on:* / mount; no fetch / ship.* / query()
-// (engine purity asserted by engine/purity.test.ts). Range selection +
-// drag-to-create/move ride the engine's range/intent mutators; the DOM bridge
-// (pointer drag + Shift+Arrow → engine + sail-* emits) lives in `./sail-calendar.interactions`.
+// Thin seam: identity → engine surfaces; DOM bridge in sail-calendar.interactions.
 
 import type { ControllerScope } from '@ship/sail-runtime'
 import { createCalendar } from './engine'
@@ -60,8 +30,6 @@ import type { Scope } from './sail-calendar.sail'
 const EMPTY: CalendarEvent[] = []
 const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-/** SSR/declarative fallback decoder: parse the `events` JSON-string prop.
- *  Bad JSON degrades to an empty list (never throws into the render). */
 function parseJsonEvents(raw: string): CalendarEvent[] {
   const s = raw.trim()
   if (!s) return EMPTY
@@ -73,7 +41,6 @@ function parseJsonEvents(raw: string): CalendarEvent[] {
   }
 }
 
-/** Weekday header labels rotated to honor `weekStartsOn`. */
 function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
   const out: { key: string; label: string }[] = []
   for (let i = 0; i < 7; i++) {
@@ -85,29 +52,19 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
 
 export default controller((ctx: ControllerScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
-    // The time-grid tracks — a constant per skin, exposed as a derived so
-    // sx/use:gridTracks={...} can stay expression-bound. The language's
-    // layout element only accepts `--var` for `tracks`, so this lives as
-    // a custom property read at runtime, not a static literal.
+    // tracks attr only accepts --var; action stamps --cal-time-tracks.
     const timeGridTracks = derived<string>(() => 'auto 1fr')
-    // `use:eventSpan={eventRect(pe)}` — convert a PositionedEvent's per-cent
-    // geometry into a Rect the action writes as four custom properties.
-    // topPct/heightPct/laneIndex/laneCount are runtime decimals from the
-    // layouter (not design); we stringify each as `N%` so the action reads
-    // it straight through.
+    // PositionedEvent percents → use:eventSpan custom properties.
     const eventRect = (pe: { topPct: number; heightPct: number; laneIndex: number; laneCount: number }) => ({
       top: `${pe.topPct}%`,
       height: `${pe.heightPct}%`,
       left: `${(pe.laneIndex / pe.laneCount) * 100}%`,
       width: `${(1 / pe.laneCount) * 100}%`,
     })
-    // The live engine. `calendar` identity (set in mount) supersedes; until
-    // then we seed from the SSR `events` string + the focus-date attr so a
-    // declarative (no-parent-controller) mount still renders.
+    // calendar identity (mount) supersedes; seed from SSR events until then.
     const engine = signal<Calendar | null>(null)
 
-    // exactOptionalPropertyTypes: omit initialDate when empty rather than
-    // passing `undefined` to the optional field.
+    // omit initialDate when empty (exactOptionalPropertyTypes).
     const initialDate = focusDate()
     const fallback = createCalendar({
       events: derived(() => parseJsonEvents(events())),
@@ -122,17 +79,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     /** The active engine — the calendar identity if present, else fallback. */
     const cal = derived<Calendar>(() => engine() ?? fallback)
 
-    // Re-expose the engine view-model as scope deriveds the template reads.
+
     const view = derived<ViewMode>(() => cal().view())
     const title = derived(() => cal().title())
     const monthCells = derived(() => cal().monthCells())
-    // Each cell carries a content-sensitive key so a keyed {#for} re-renders the
-    // cell (and its inner event {#for}) when the engine swaps in / events change —
-    // a stable `iso`-only key would let the runtime reuse the row DOM and skip
-    // the inner loop (the nested-for-over-a-plain-array reuse trap).
-    // A cell is in-range when the range (day part) covers its day. The cell key
-    // is content-sensitive but EXCLUDES the range, so `in-range` re-binds on the
-    // REUSED cell as the range changes (a re-key would detach drag nodes mid-drag).
+    // Content-sensitive cell keys (not iso-only) so nested event for re-renders;
+    // range excluded so drag nodes stay attached while in-range rebinds.
     const inRangeIso = (iso: string, r: DateRange | null): boolean =>
       r != null && iso >= r.start.slice(0, 10) && iso <= r.end.slice(0, 10)
     type CellRow = { key: string; iso: string; cell: MonthCell; inRange: boolean; state: string }
@@ -147,8 +99,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         const slice = cells.slice(row * 7, row * 7 + 7)
         const cellRows = slice.map((c) => {
           const inRange = inRangeIso(c.iso, range)
-          // data-state is the component-state channel the skin keys on
-          // (state-out:/state-today:/state-weekend:/state-range:).
+
           const state = [
             c.inMonth ? '' : 'out',
             c.today ? 'today' : '',
@@ -164,8 +115,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       return rows
     })
     const weekdays = derived(() => weekdayLabels(weekStartsOn() || 0))
-    // Day columns with a content-sensitive key (same reuse-trap guard as the
-    // month grid): the laid-out timed events change when the engine swaps.
+
     const dayColumns = derived(() => {
       const sel = cal().selectedEventIds()
       return cal()
@@ -179,18 +129,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const agenda = derived(() => cal().agenda())
     const isEmpty = derived(() => cal().isEmpty())
     const selectedIds = derived(() => cal().selectedEventIds())
-    // view-mode branch flags the template reads (CSS also branches via the
-    // reflected `view` host attribute synced in mount).
+
     const isMonth = derived(() => view() === 'month')
     const isWeek = derived(() => view() === 'week')
     const isDay = derived(() => view() === 'day')
-    // The keyboard focus anchor — drives the month grid's roving tabindex
-    // (focused cell tabindex=0, all others -1) so the grid is reachable + operable.
+    // Month grid roving tabindex anchor.
     const focusedIso = derived(() => cal().focusDate())
 
     mount((host) => {
-      // calendar identity — a live `Calendar` reference (the engine path),
-      // routed into the scope signal so every derived re-resolves onto it.
+
       Object.defineProperty(host, 'calendar', {
         configurable: true,
         get: () => engine(),
@@ -199,8 +146,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         },
       })
 
-      // Keep the reflected `view` attribute synced to the engine view so the
-      // host CSS layout branches follow programmatic setView() too.
+
       const stopView = effect(() => {
         const v = view()
         if (host.getAttribute('view') !== v) host.setAttribute('view', v)
@@ -208,10 +154,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
       const active = (): Calendar => cal()
 
-      // Deduped emit (sail-combobox lastEmitted pattern) over host.emit!. When
-      // calendar swaps the engine identity we re-seed from the NEW engine
-      // (no emit) instead of diffing its view/date against the prior engine's —
-      // otherwise the stale closure fires a spurious sail-view/date-change.
+      // Deduped emit; engine identity swap reseeds without emitting.
       let lastEngine: Calendar | null = null
       let lastView: ViewMode | null = null
       let lastDate: string | null = null
@@ -262,18 +205,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
         if (dayCell) cal.goToDate(dayCell.dataset.iso!)
       }
 
-      // Month-grid keyboard operability — the grid advertises role=grid/gridcell
-      // with a roving tabindex, so the focused day cell must respond to arrow /
-      // Home / End / PageUp-Down / Enter-Space. All moves route through the engine
-      // (which owns the date math); DOM focus follows the new focus anchor.
+      // Month-grid keyboard: arrows/Home/End/Page*/Enter → engine; DOM focus follows.
       const onShadowKey = (e: KeyboardEvent) => {
         const cell = (e.target as HTMLElement | null)?.closest?.(
           '[role=gridcell][data-iso]',
         ) as HTMLElement | null
         if (!cell) return
-        // Shift+Arrow is range extension — owned by the interactions wiring (which
-        // moves focus AND extends the range as one move). Skip it here so focus is
-        // not moved twice.
+        // Shift+Arrow = range extension (interactions module owns both).
         if (e.shiftKey) return
         const cal = active()
         switch (e.key) {

@@ -1,27 +1,7 @@
 <!--
-  <sail-board> — SVG-native node/edge/port diagram on the canvas substrate.
-
-  Builds createCanvas() + a board model in the controller. Nodes/edges/ports/
-  selection are DOM/SVG (selectable, accessible, token-themeable) — NO canvas
-  engine. The board composes <sail-canvas> as its substrate via canvas
-  identity and renders its domain layer into the world slot. Edges live in an
-  SVG overlay; nodes are absolutely-positioned <div>s carrying a default slot
-  for consumer-owned visuals (the board owns geometry, not content).
-
-  Props
-  ─────────────────────────────────────────────────────────────────────
-  value     (string, '')              SSR/declarative board-JSON FALLBACK
-                                        (parsed via JSON.parse). * wins.
-  readonly  (bool, false reflect)      Pan/zoom only; no node edits.
-  theme     ('light'|'dark' reflect)   Forwarded to the substrate.
-  grid      ('none'|'dots'|'lines')    Forwarded background grid hint.
-  layout    ('none'|'layered'|'force') Auto-layout algorithm (Slice 7).
-  label     (string, '')               → aria-label on the application region.
-  ─────────────────────────────────────────────────────────────────────
-  Events (host.emit!):
-    sail-board-change { value, version } — debounced board mutation.
-    sail-node-select  { ids }            — selection changed.
-    sail-edge-create  { source, target } — drag-from-port created an edge.
+  <sail-board> — SVG node/edge/port diagram on <sail-canvas> substrate.
+  Board model owns geometry; node faces are slotted. Events: sail-board-change,
+  sail-node-select, sail-edge-create.
 -->
 
 <scope>
@@ -42,8 +22,7 @@ import { createBoardModel, type Node, type Edge, type PortRef } from './engine/b
 import { applyBoardKey } from './engine/board-keys'
 import type { LayoutKind } from './engine/layout-adapter'
 
-// SSR fallback = the verified sail-combobox shape: plain JSON.parse, try/caught.
-// The live path is * identity onto the board model.
+// SSR JSON fallback; live path is identity onto the board model.
 function parseBoard(raw: string): { nodes?: Node[]; edges?: Edge[] } | null {
   if (!raw) return null
   try {
@@ -53,9 +32,6 @@ function parseBoard(raw: string): { nodes?: Node[]; edges?: Edge[] } | null {
   }
 }
 
-// <sail-board> controller — SVG-native nodes/edges/ports on the canvas
-// substrate. Geometry lives in the board model (world coords); the view maps
-// to screen through the substrate transform. Node visuals are a per-node slot.
 export default controller(({ value, layout }: Scope) => {
   const seed = parseBoard(value())
   const board = createBoardModel({
@@ -63,16 +39,12 @@ export default controller(({ value, layout }: Scope) => {
     edges: seed?.edges ?? [],
   })
   const canvas = createCanvas({
-    getViewportElement: () => null, // <sail-canvas> owns the viewport thunk
+    getViewportElement: () => null,
   })
-  // Drag bookkeeping — which node is under an active face-drag.
   const draggingNode = signal<string | null>(null)
   const lastPointer = signal<{ x: number; y: number } | null>(null)
-  // Outbound debounced change source: a monotonic version bumped on mutation.
   const version = signal(0)
   const changeSrc = debounce(version, 200)
-  // Derived memos are plain statements in the setup body now — no `derived:`
-  // section to fold them into.
   const nodes = derived(() => board.nodes())
   const routes = derived(() => board.routes())
   const selectedSet = derived(() => new Set(board.selectedNodes()))
