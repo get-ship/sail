@@ -11,4 +11,8 @@
   style horizontal = { box: padT(4).minW(0) }
   style vertical = { box: padT(0).padS(4).minW(0) }
 </scope>
-<div style(base, { match: { orientation: { horizontal: horizontal, vertical: vertical } } })><slot></slot></div>
+<div
+  style(base, {
+    match: { orientation: { horizontal: horizontal, vertical: vertical } },
+  })
+><slot></slot></div>
