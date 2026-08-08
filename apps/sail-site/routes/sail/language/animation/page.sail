@@ -198,7 +198,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
     <row align="center" style({ box: minH(9) })>
       <!--
-        Plain div, not <card>: card host always paints bg(card) ≈ surface-1,
+        Plain div, not <card>: card host always paints bg(surface-1) ≈ surface-1,
         so bg(primary) never wins and the tile disappears on most themes.
         Matches the stagger tiles above.
       -->

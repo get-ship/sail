@@ -32,7 +32,7 @@
     open = false
   }
 
-  style host = { box: position(relative).overflow(hidden), paint: group().borderWidth(1).border(border).radius(md).bg(card) }
+  style host = { box: position(relative).overflow(hidden), paint: group().borderWidth(1).border(border).radius(md).bg(surface-1) }
   style statusBg = { when: { groupStateRunning: { paint: bg(info) }, groupStateOk: { paint: bg(success) }, groupStateError: { paint: bg(destructive) } } }
   style statusFg = { when: { groupStateRunning: { paint: fg(info) }, groupStateOk: { paint: fg(success) }, groupStateError: { paint: fg(destructive) } } }
   // Status rail only — collapsible owns the caret (one disclosure chrome).

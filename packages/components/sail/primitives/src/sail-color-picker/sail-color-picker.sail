@@ -443,7 +443,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:anchor
         placement="bottom-start"
         role="dialog"
-        aria-label="Choose color" style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md) })>        <span style({ box: display(contents), text: fontSize(size-fs) })>          <column gap="3">
+        aria-label="Choose color" style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md) })>        <span style({ box: display(contents), text: fontSize(size-fs) })>          <column gap="3">
           <div
             use:swatch={value() || '#000000'}
 
@@ -505,7 +505,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:anchor
         placement="bottom-start"
         role="dialog"
-        aria-label="Choose color" style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md) })>        <span style({ box: display(contents), text: fontSize(size-fs) })>          <column gap="3">
+        aria-label="Choose color" style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md) })>        <span style({ box: display(contents), text: fontSize(size-fs) })>          <column gap="3">
           <div
             use:swatch={value() || '#000000'}
 

@@ -18,7 +18,7 @@
   </card>
 
   <navbar placement="top" bordered>
-    <span slot="brand" style({ paint: fg(navbar-foreground), text: fontWeight(semibold) })>Nav</span>
+    <span slot="brand" style({ paint: fg(foreground), text: fontWeight(semibold) })>Nav</span>
   </navbar>
 
   <row nowrap align="stretch" style({ box: grow(1).w(full) })>

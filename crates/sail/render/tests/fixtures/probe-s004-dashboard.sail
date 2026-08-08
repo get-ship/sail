@@ -1,6 +1,6 @@
 <column style({ box: minH(screen), paint: bg(background) })>
   <navbar placement="top" sticky bordered>
-    <span slot="brand" style({ paint: fg(navbar-foreground), text: fontSize(lg).fontWeight(semibold) })>
+    <span slot="brand" style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })>
       Dashboard
     </span>
   </navbar>
