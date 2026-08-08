@@ -1217,7 +1217,9 @@ mod tests {
     fn hover_signal_typed_when_tsgo_present() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
-        // Soft-skip when tsgo is missing (CI without bun install).
+        // Soft-skip only when tsgo/node_modules is missing. When discovered and
+        // the session is live, warm + retry then require typed hover (no silent
+        // empty-skip). Matches intelligence::hover_signal_typed_when_tsgo_present.
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../..")
             .canonicalize()
@@ -1248,29 +1250,43 @@ export default controller((ctx) => ({ count: signal(0) }))
                 col += 1;
             }
         }
-        // Warm session once (tsgo settle).
-        let _ = call_rpc(
-            "SailAuthoring",
-            "Hover",
-            &json!({ "source": src, "path": "fixture-counter.sail", "line": line, "column": col }),
-            &ctx,
-        );
-        std::thread::sleep(std::time::Duration::from_millis(250));
-        let v = call_rpc(
-            "SailAuthoring",
-            "Hover",
-            &json!({ "source": src, "path": "fixture-counter.sail", "line": line, "column": col }),
-            &ctx,
-        )
-        .expect("Hover rpc");
-        let contents = v["contents"].as_str().unwrap_or("");
-        if contents.is_empty() {
-            eprintln!("SKIP hover_signal: empty contents (tsgo not ready / degrade)");
+        let args = json!({
+            "source": src,
+            "path": "fixture-counter.sail",
+            "line": line,
+            "column": col
+        });
+        // Warm session once — open before sleeping so settle can progress.
+        let _ = call_rpc("SailAuthoring", "Hover", &args, &ctx);
+        let live = sail_lsp::with_global_session(Some(&root), |intel| intel.is_tsgo_live());
+        if !live {
+            eprintln!("SKIP hover_signal: session not live");
             return;
         }
-        let lower = contents.to_ascii_lowercase();
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        let hover_text = |v: &serde_json::Value| -> String {
+            v["contents"].as_str().unwrap_or("").to_string()
+        };
+        let is_typed = |t: &str| {
+            let lower = t.to_ascii_lowercase();
+            lower.contains("signal") || lower.contains("function")
+        };
+        let mut contents = hover_text(
+            &call_rpc("SailAuthoring", "Hover", &args, &ctx).expect("Hover rpc"),
+        );
+        // One retry after settle: first hover can race project graph warm-up.
+        if !is_typed(&contents) {
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            contents = hover_text(
+                &call_rpc("SailAuthoring", "Hover", &args, &ctx).expect("Hover rpc retry"),
+            );
+        }
         assert!(
-            lower.contains("signal") || lower.contains("function"),
+            !contents.is_empty(),
+            "expected non-empty typed hover when tsgo live; got empty contents"
+        );
+        assert!(
+            is_typed(&contents),
             "expected typed hover for signal; got {contents}"
         );
     }
