@@ -1,8 +1,6 @@
 <!--
-  /sail/language/styling — Style product chapter: object Style, match:/when:/
-  compound keys, scope Style consts. Every live demo paints with Style; code samples
-  match. Responsive paint uses style({ when: { tablet: … } }) locked to breakpoint
-  tokens — never tablet: utility prefixes.
+  /sail/language/styling — Style product: object Style, name =, when/match/
+  compound, bind. Live demos paint with Style; samples match.
 -->
 
 <controller>
@@ -11,22 +9,37 @@ import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-language-styling-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-  // Range writes shift; effect mirrors into px for style({ box: translateX(bind(px)) }).
+  // Range bind:value is string; number derived feeds translateX(bind) as px.
   const shift = signal('0')
-  const px = signal('0px')
-  effect(() => px.set(`${shift()}px`))
-  return { code, shift, px }
+  const shiftPx = derived((): number => Number(shift()) || 0)
+  return { code, shift, shiftPx }
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style demoCard = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) }
+  style demoMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style demoPanel = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
+  style responsivePanel = { box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), when: { tablet: { box: pad(6) } } }
+  style bodySm = { text: fontSize(sm) }
+  style rangeTrack = { box: minW(0) }
+  style shiftTile = { box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(shiftPx)) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>The language</p>
   <h1>Styling</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Paint is the <strong>Style</strong> channel language:
     <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> on the host,
     with optional <code>when</code>, <code>match</code>, and <code>compound</code>
-    keys for conditionality, plus scope Style consts. Values are design tokens —
+    keys for conditionality, plus named Style
+    (<code>style name = &#123; … &#125;</code>). Values are design tokens —
     never raw hex. The compiler and the
     <a href="/sail/reference/sx">Style reference</a> share one table.
   </p>
@@ -39,8 +52,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <h2>The chain</h2>
-  <card style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>This card is styled by the code below it.</p>
+  <card style(demoCard)>
+    <p style(demoMuted)>This card is styled by the code below it.</p>
   </card>
   <code-block code={code.sx}></code-block>
   <p>
@@ -49,7 +62,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.sxError}></code-block>
   <p>
-    Prefer a scope const when the same paint repeats:
+    Prefer a named Style when the same paint repeats:
     <code>style card = &#123; box: pad(5), paint: bg(surface-1) &#125;</code> then
     attach <code>style&#40;card&#41;</code> or compose Style pieces
     <code>style&#40;base, emphasis&#41;</code> on the host. (That is paint
@@ -62,7 +75,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
-  <row gap="3" style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })>
+  <row gap="3" style(demoPanel)>
     <button style({ when: { hover: { paint: bg(muted) } } })>hover → bg(muted)</button>
     <button style({ when: { hover: { paint: fg(primary) } } })>hover → fg(primary)</button>
     <button style({ when: { active: { paint: bg(primary).fg(primary-foreground) } } })>active:…</button>
@@ -85,8 +98,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>style&#40;&#123; when: &#123; tablet: …, desktop: … &#125; &#125;&#41;</code>. Resize to see this panel
     pad more from 768px up:
   </p>
-  <column gap="2" style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), when: { tablet: { box: pad(6) } } })>
-    <p style({ text: fontSize(sm) })>pad(3) on a phone; when tablet → pad(6).</p>
+  <column gap="2" style(responsivePanel)>
+    <p style(bodySm)>pad(3) on a phone; when tablet → pad(6).</p>
   </column>
   <code-block code={code.conditions}></code-block>
   <p>
@@ -102,7 +115,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     free <code>match&#40;&#41;</code> calls. Each arm is an ordinary Style value, same
     pipeline as a host <code>style&#40;&#123; … &#125;&#41;</code>. Variance
     authoring for libraries may still need a directory permit; plain pages
-    usually paint with consts + <code>match:</code> only.
+    usually paint with named Style + <code>match:</code> only.
   </p>
   <code-block code={code.variants}></code-block>
   <p>Callers pick a look the way they set any field:</p>
@@ -112,11 +125,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Computed paint flows through signals. Style product reads them with
     <code>bind&#40;name&#41;</code> — the compiler registers the CSS custom property
-    and reflects the signal onto the host. Drag:
+    and reflects the signal onto the host. A number bound into a length
+    setter is px. Drag:
   </p>
-  <column gap="3" style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })>
-    <input type="range" min="0" max="200" step="1" bind:value={shift} style({ box: minW(0) })>
-    <card style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(px)) })></card>
+  <column gap="3" style(demoPanel)>
+    <input type="range" min="0" max="200" step="1" bind:value={shift} style(rangeTrack)>
+    <card style(shiftTile)></card>
   </column>
   <code-block code={code.dynamic}></code-block>
   <p>
@@ -139,12 +153,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     hole.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the full surface: <a href="/sail/reference/sx">reference → Style</a>
     · <a href="/sail/reference/regions">region matrix</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/templates">← Templates</a>
     <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
   </row>

@@ -1,9 +1,6 @@
 <!--
-  /sail/language/sail-file — chapter 1: Components. Builds ONE bespoke
-  component (<departures-board>, src/departures-board/) and walks its file
-  slice by slice: template → scope → controller → flow → nesting. The live
-  board leads; every snippet is a slice of the real file. No backlinks to
-  other chapters' demos, no negative-space claims about other frameworks.
+  /sail/language/sail-file — components chapter via departures-board.sail:
+  template → scope → controller → flow → nesting.
 -->
 
 <controller>
@@ -16,17 +13,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footerNote = { box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>The language</p>
   <h1>Components</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     A component is one <code>.sail</code> file. This chapter builds this one —
     a departures board that runs itself: the boarding flight leaves, the next
     one starts boarding, a new city rolls onto the bottom.
   </p>
 
   <departures-board title="Departures — SFO">
-    <p slot="footer" style({ box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) })>
+    <p slot="footer" style(footerNote)>
       Gate changes are announced. Allegedly.
     </p>
   </departures-board>
@@ -147,11 +153,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component</a>.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the full surface: <a href="/sail/reference/scope">reference → Scope grammar</a>.
   </p>
 
-  <row justify="end" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="end" gap="2" style(footNav)>
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
   </row>
 </column>

@@ -1,46 +1,22 @@
 <!--
-  <sail-site-header> — the site-wide chrome: brand, product switcher, theme
-  picker, and theme/product application. Written in the language, no CSS.
+  <sail-site-header> — site chrome: brand, product switcher, theme picker.
+  Mounted by routes/_layout.sail at prefix `/`. Segment sidebars live in
+  routes/<segment>/_layout.sail + rail — not here.
 
-  This is the ONLY layout that wraps every route (`routes/_layout.sail`
-  mounts it at prefix `/`). Per-segment sidebars (Sail/Deck/Components/AI)
-  live in their own `routes/<segment>/_layout.sail` + rail component, nested
-  inside this one — this file owns none of that, only the always-on top bar.
-
-  Shell geometry (one chrome tree — theme-picker must NEVER remount on SPA):
-  - Outer column is always viewport-locked (`h(screen)`) so fill/grow children
-    (docs rails, tutorial workbench) resolve a real height budget.
-  - Landing (`/`) uses a single scrollport on <main> (overflowY auto) with
-    non-shrinking children so marketing is one continuous scroll, not sections.
-  - Document routes use overflow(hidden) on <main> so nested rails own
-    independent rail + content scrollports.
-  - Tutorial lessons (`/sail/tutorial/*`) and showcase keep the same fill shell;
-    sail-docs-rail drops the rail (workbench mode).
+  Shell: outer column is viewport-locked (h(screen)) so fill/grow children
+  resolve height. Landing (`/`) scrolls on <main>; document routes hide
+  overflow on <main> so nested rails own scrollports. One chrome tree so
+  theme-picker never remounts on SPA navigation.
 -->
 
 <controller>
-// Controller for <sail-site-header> — brand + product switcher + theme
-// picker.
-//
-// THEME and PRODUCT are separate channels with separate owners. The theme —
-// one of @ship/tokens' nine — owns every surface and ink on the page;
-// `applyTheme` is its only writer (theme + data-mode),
-// and the picker persists the choice. The product — derived from the path —
-// owns only the accent hue, on its own attribute (data-product), so crossing
-// into Deck turns the brand violet without repainting the reader's theme.
-//
-// The Sail theme + the framework contracts are imported HERE (not the clients
-// seam): this header is in every route's module graph, so these side-effect
-// imports can't be tree-shaken — whereas an export-less clients module gets
-// dropped. sail-base.css gives every page the design-system typography
-// (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
-import { siteTokenCss } from '../compositions/site-token-css' // themes.css + products.css + sail-base.css
+// Theme (applyTheme) and product accent (data-product from path) are
+// separate channels. Side-effect CSS imports live here so the module graph
+// keeps them (export-less clients modules get tree-shaken).
+import { siteTokenCss } from '../compositions/site-token-css'
 import { applyTheme, readStoredTheme, isValidTheme, DEFAULT_THEME } from '@ship/tokens/themes'
-void siteTokenCss // keep value binding live so CSS side-effects are not dropped
+void siteTokenCss
 
-// Ship UI is ONE site with a top product switcher (Sail · Deck · Components · AI).
-// The active product is derived from the path; each drives its own segment
-// layout/sidebar/accent (see routes/{sail,deck,components,ai}/_layout.sail).
 function productFor(p: string): string {
   if (p === '/') return 'ship'
   if (p === '/deck' || p.startsWith('/deck/')) return 'deck'
@@ -48,8 +24,7 @@ function productFor(p: string): string {
   if (p === '/components' || p.startsWith('/components/')) return 'components'
   return 'sail'
 }
-// The umbrella landing is ship (teal); Sail red; Deck violet; Components
-// green; AI blue. `product-accents.css` keys on this attribute.
+
 function productAttr(product: string): string {
   switch (product) {
     case 'ship':
@@ -73,21 +48,14 @@ function livePath(ctx: { route?: { pathname?: () => string } }): string {
 
 export default controller((ctx) => {
     const root = document.documentElement
-    // Live pathname from the router when chrome is reused across leaf
-    // navigations; fall back to location for first paint / non-router mounts.
     const path = derived(() => livePath(ctx as { route?: { pathname?: () => string } }))
     const product = derived(() => productFor(path()))
     effect(() => {
       root.setAttribute('data-product', productAttr(product()))
     })
 
-    // Theme application. applyTheme is the ONLY writer of theme/mode and
-    // does NOT persist (the picker owns storage via persistTheme) — so
-    // re-running per navigation is free and never overrides an explicit pick.
-    // Storage reads go through readStoredTheme() (tokens package seam).
-    //
-    // The marketing home leads with kinetic ship/dark when the stored theme
-    // is the package default (unset or default pick).
+    // applyTheme writes theme/mode only; picker owns persistence. Marketing
+    // home leads with ship/dark when stored theme is still the package default.
     effect(() => {
       const stored = readStoredTheme()
       if (path() === '/' && stored === DEFAULT_THEME) {
@@ -98,8 +66,6 @@ export default controller((ctx) => {
       else applyTheme(DEFAULT_THEME)
     })
 
-    // The umbrella landing (design 1c) is the marketing home — a full-bleed
-    // kinetic page that must NOT sit inside the docs reading gutter.
     const landing = derived(() => path() === '/')
 
     return { path, product, landing }
@@ -109,26 +75,20 @@ export default controller((ctx) => {
 <scope>
   style brand = { text: fontSize(lg).tracking(tight).whitespace(nowrap) }
   style brandMark = { paint: fg(primary) }
-  // One fixed-height track. Never wrap — overflow scrolls if needed (last resort).
+  // Fixed-height track; overflow-x scrolls if product links overflow.
   style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
-  // Compact on phone so Sail·Deck·Components·AI + brand + theme stay one row.
   style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
-  // Phone: mark only. Tablet+: SHIP UI wordmark.
+  // Phone: logo only. Tablet+: SHIP UI wordmark.
   style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }
-  // Viewport-locked shell so fill/grow children resolve. One tree — never remount
-  // the theme-picker when switching landing/docs/tutorial (SPA chrome reuse).
   // Do NOT overflow:hidden the outer column — taffy silent-clip + popover hosts.
   style shell = { box: minH(screen).h(screen) }
-  // Landing: THE continuous scrollport. Clip ticker X; Y scrolls here only.
-  // Children must shrink=0 so sections do not compress into mini-scrollpanes.
+  // Landing: continuous scrollport. Children shrink=0 so sections do not compress.
   style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
-  // App (docs / workbench / catalog): flex column so nested shells resolve h(full).
-  // Without display:flex, children size to content → overflow:hidden clips → no scroll
-  // (components catalog was unscrollable for exactly this reason).
+  // Docs/workbench: flex column so nested shells resolve h(full). Without
+  // display:flex, overflow:hidden on main clips and catalog cannot scroll.
   style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
 </scope>
 
-<!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
 <column gap="0" style(shell, { box: w(full) })>
   <navbar sticky bordered use:chromeOffset>
     <a slot="brand" href="/" label="SHIP UI home" style({ box: shrink(0) })>

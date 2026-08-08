@@ -1,11 +1,5 @@
 <!--
-  /overview — the Introduction (pairing draft v3).
-  v3 rulings applied: query added to the opener’s API list; hover feedback is
-  Style .style({ when: { hover: { } } }) paint (not animate motion — that path ran a full
-  WAAPI pass on enter AND leave (jitter on mouse sweep)); prose and demos sit
-  side by side; the bundle widget is GONE (bundle story ≠ compiler tunability
-  — separate artifact, built when we’re ready to compare honestly); tuning
-  section is prose about the real policy settings.
+  /sail/overview — Introduction. Signals, Style, query, components, theme.
 -->
 
 <controller>
@@ -19,11 +13,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="6" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <column gap="3" style({ box: maxW(breakpoint-tablet) })>
-    <p style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Introduction</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style colGrow = { box: grow(1).basis(breakpoint-mobile).minW(0) }
+  style demoPane = { box: grow(1).basis(64).minW(0).pad(4), paint: bg(muted).borderWidth(1).border(border).radius(lg) }
+  style pathLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style ctaRow = { box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="6" style(page)>
+  <column gap="3" style(intro)>
+    <p style(eyebrow)>Introduction</p>
     <h1>Sail</h1>
-    <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+    <p style(lead)>
       Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
       agents: the language provides the APIs an interface needs — signals for
@@ -45,10 +51,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       component — and the same lines running:
     </p>
     <row gap="6" align="start">
-      <column gap="2" style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
+      <column gap="2" style(colGrow)>
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="2" justify="center" style({  box: grow(1).basis(64).minW(0).pad(4), paint: bg(muted).borderWidth(1).border(border).radius(lg)  })>
+      <column gap="2" justify="center" style(demoPane)>
         <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
           <switch bind:checked={playing}></switch>
@@ -70,10 +76,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <theme-picker inline></theme-picker>
   </column>
 
-  <column gap="3" style({ box: maxW(breakpoint-tablet) })>
+  <column gap="3" style(intro)>
     <h2>The compiler pushes back</h2>
     <row gap="6" align="start">
-      <column gap="3" style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
+      <column gap="3" style(colGrow)>
         <p>
           The compiler checks more than syntax: a colour that isn’t a token, a
           stylesheet beside a component, an animation outside the motion
@@ -91,8 +97,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           isn’t granted doesn’t compile.
         </p>
       </column>
-      <column gap="2" style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
-        <p style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>apps/sail-site/routes/sail.config.json</p>
+      <column gap="2" style(colGrow)>
+        <p style(pathLabel)>apps/sail-site/routes/sail.config.json</p>
         <sail-json-view data={code.configJson} expanded depth={2}></sail-json-view>
       </column>
     </row>
@@ -124,12 +130,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       as their own runtime on top of the framework’s.
     </p>
 
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+    <p style(mutedSm)>
       Sail is in alpha. It builds real websites today — this site is one —
       and the language is still settling.
     </p>
 
-    <row gap="2" style({ box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) })>
+    <row gap="2" style(ctaRow)>
       <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
       <a variant="default" href="/sail/tutorial">Tutorial</a>
       <a variant="default" href="/showcase">Showcase</a>

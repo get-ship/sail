@@ -1,7 +1,6 @@
 <!--
-  /sail/reference — language surface index, split by API tier.
-  Tier A pages render compiler tables (language-surface.gen.ts / prop-registry).
-  Tier B is author-surface.json → runtime-surface.gen.ts (not the full package graph).
+  /sail/reference — language surface index by API tier.
+  Tier A: compiler tables. Tier B: author-surface.json → runtime-surface.gen.
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -56,7 +55,7 @@ const SECTIONS: SectionCard[] = [
     href: '/sail/reference/sx',
     title: 'Style',
     count: `${SX_ATOMS.length} scale entries`,
-    description: 'Tier A — channel attach style({ box, paint, text, animate }) + .style({}); setter scales, refusals, match/compound/bind.',
+    description: 'Tier A — style({ box, paint, text, animate }), style name =, when/match/compound/bind; setter scales and refusals.',
     tier: 'A',
   },
   {
@@ -118,8 +117,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style({ box: minW(0) })>
-  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style cardShell = { box: minW(0).h(full) }
+  style muted = { paint: fg(muted-foreground) }
+</scope>
+
+<column gap="6" style(root)>
+  <column gap="5" style(intro)>
     <p token="doc-eyebrow">Reference</p>
     <h1>The language surface</h1>
     <p token="doc-lead">
@@ -138,16 +144,16 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <grid cols="3" gap="3">
     <for {sections() as s} key={s.href}>
       <a href={s.href}>
-        <card padding="md" style({ box: minW(0).h(full) })>
+        <card padding="md" style(cardShell)>
           <column gap="2">
             <row justify="between" align="center">
               <h3>{s.title}</h3>
               <row gap="2" align="center">
                 <badge size="sm">tier {s.tier}</badge>
-                <small style({ paint: fg(muted-foreground) })>{s.count}</small>
+                <small style(muted)>{s.count}</small>
               </row>
             </row>
-            <small style({ paint: fg(muted-foreground) })>{s.description}</small>
+            <small style(muted)>{s.description}</small>
           </column>
         </card>
       </a>
