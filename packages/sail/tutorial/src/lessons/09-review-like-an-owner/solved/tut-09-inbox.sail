@@ -19,16 +19,15 @@
 </scope>
 <controller>
 import { query } from '@ship/sail-runtime'
-import { inboxClient } from './tut-09-inbox-client'
+import { inboxClient } from '../../../compositions/tut-09-inbox-client'
 
 export default controller(() => {
     const inbox = query(() => inboxClient.messages.list())
     const filter = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])
 
-    // The visible list composes the live value with local state: archive
-    // hides rows client-side (so their exit animation can play) and the
-    // filter narrows to unread.
+    // Visible list composes the live value with local state: archive hides
+    // rows client-side so exit animation can play; filter narrows to unread.
     const visible = derived(() => {
       const state = inbox()
       if (state.kind !== 'ok') return []
@@ -58,9 +57,9 @@ export default controller(() => {
 
   <match {inbox()}>
     {loading =>
-      <row gap="2" align="center" style(loadingRow)>        <spinner size="sm"></spinner>
-        <small style(muted)>          loading messages…
-        </small>
+      <row gap="2" align="center" style(loadingRow)>
+        <spinner size="sm"></spinner>
+        <small style(muted)>loading messages…</small>
       </row>
     }
     {error as err =>
@@ -69,16 +68,19 @@ export default controller(() => {
     {ok =>
       <column gap="1">
         <for {visible() as m} key={m.id}>
-          <row gap="3" align="center">
-            messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })
-
+          <row
+            gap="3"
+            align="center"
+            style(messageRow, {
+              animate: enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' }),
+            })
+          >
             <if {!m.read}>
-              <span style(unreadDot)>              </span>
+              <span style(unreadDot)></span>
             </if>
-            <column gap="0" style({ box: grow(1) })>              <strong style(from)>                {m.from}
-              </strong>
-              <small style(muted)>                {m.subject}
-              </small>
+            <column gap="0" style({ box: grow(1) })>
+              <strong style(from)>{m.from}</strong>
+              <small style(muted)>{m.subject}</small>
             </column>
             <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
             <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>

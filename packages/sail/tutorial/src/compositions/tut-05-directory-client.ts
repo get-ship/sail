@@ -1,13 +1,6 @@
-// The "server" for lesson 05, moved OUT of the controller into an imported
-// client module. query() derives its cache key from a static member-path
-// call on an imported binding (`directory.team.list`), so the data source
-// has to live behind such a binding — a local function in the controller
-// gives the compiler no path to key on.
-//
-// `list` takes the tracked signals as call args: `attempt` re-keys each
-// reload (a fresh cache entry → a real refetch), `broken` reproduces the
-// "break the API" toggle. It returns a Promise, so query() routes it down
-// the PULL path.
+// Lesson 05 mock data client. query() keys on the static member path
+// `directory.team.list` — a local controller function has no key path.
+// `list` args (`attempt`, `broken`) are tracked deps for refetch / fail.
 
 export interface Member {
   id: number

@@ -8,10 +8,13 @@ next: "07-themes-are-one-attribute"
 chapter: "system"
 ---
 
-There is exactly one animation surface in the language:
+There is exactly one animation surface in the language — Style's
+`animate` channel:
 
 ```
-fx:TRIGGER={{ property: 'preset' }}
+style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
+style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })
+style(name, { animate: loop({ scale: 'pulse' }) })
 ```
 
 The **trigger** says when: `hover`, `press`, `focus`, `focus-visible`
@@ -48,10 +51,10 @@ for scale and opacity). A quoted string carries its own unit — `'-12%'`,
 inline cubic-bezier. You can also start from a preset and override one
 field: `scale: { preset: 'pulse', to: 1.9 }`.
 
-This is where `fx:` differs from `sx` on purpose. sx is closed
-because colour and spacing are theming integrity — an off-system colour
-is a bug. A 3600ms decorative loop is not a theming decision, so it does
-not need a token to exist before you can write it.
+This is where `animate` differs from paint/box channels on purpose. Paint
+and spacing are closed for theming integrity — an off-system colour is a
+bug. A 3600ms decorative loop is not a theming decision, so it does not
+need a token to exist before you can write it.
 
 ## Signals: config that follows state
 
@@ -65,8 +68,9 @@ When the signal changes, the animation is re-created with the new
 values, and it is cleaned up when the element goes away. Note what this
 is: reactive **config** — the signal says what the animation *is*. A
 signal that drives a value every *frame* is the other lane: derive it in
-the `<controller>` and reflect it through sx with `(--name)`. Reach for
-that one to scrub; each change on `fx:` costs an animation teardown.
+the `<controller>` and reflect it through Style `bind` (or a length
+channel). Reach for that one to scrub; each change on `animate` config
+costs an animation teardown.
 
 ## exit is why the framework is involved
 
@@ -92,8 +96,8 @@ transitions collapse toward instant — the contract lives in the system,
 not in each call site. This holds for inline durations too: reduced
 motion is enforced once, in the runtime, so a hand-written `duration:
 3600` is stopped by exactly the same authority as a preset. (For
-hand-authored cases, sx has `motion-reduce:` and `motion-safe:`
-prefixes.)
+hand-authored cases, Style `when` can still gate motion-safe/reduce
+overrides when you need an explicit branch.)
 
 ## Try it
 

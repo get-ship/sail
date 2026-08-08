@@ -1,5 +1,5 @@
 <!--
-  Lesson 06 solved — one directive, one system.
+  Lesson 06 solved — motion lives on Style's animate channel.
 
   The trigger says WHEN (hover/press/loop/enter/exit), the body says WHAT
   (property: preset). Note the variety: rotate on the restock hint, scale
@@ -23,8 +23,8 @@ const SEED: Note[] = [
   { id: 4, kind: 'incident', tone: 'destructive', text: 'billing webhook failing since 09:12' },
 ]
 
-// This lesson's state is deliberately boring — every interesting line in
-// it lives in the TEMPLATE, because motion is a directive, not code.
+// State stays boring on purpose — motion is a Style directive on the
+// template, not logic in the controller.
 export default controller(() => {
     const open = signal(true)
     const notes = signal<Note[]>(SEED)
@@ -52,36 +52,47 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <button variant="ghost" size="sm" on:click={() => restock()} style({ animate: hover({ rotate: 'spring:bouncy' }) })>
-Restock</button>
-      <button variant="outline" tone="primary" size="sm"
-on:click={() => toggle()} style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })>
-
+      <button
+        variant="ghost"
+        size="sm"
+        on:click={() => restock()}
+        style({ animate: hover({ rotate: 'spring:bouncy' }) })
+      >Restock</button>
+      <button
+        variant="outline"
+        tone="primary"
+        size="sm"
+        on:click={() => toggle()}
+        style({ animate: hover({ scale: 'spring:gentle' }).press({ scale: 'press' }) })
+      >
         {open() ? 'Close tray' : 'Open tray'}
         <if {unread() > 0}>
-          <span>
-            unreadDot.loop({ scale: 'pulse' })
-</span>
+          <span style(unreadDot, { animate: loop({ scale: 'pulse' }) })></span>
         </if>
       </button>
     </row>
   </row>
 
   <if {open()}>
-    <column gap="2" style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })>
+    <column
+      gap="2"
+      style({ animate: enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
+    >
       <for {notes() as n} key={n.id}>
-        <row gap="3" align="center">
-          noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })
-
+        <row
+          gap="3"
+          align="center"
+          style(noteRow, {
+            animate: enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' }),
+          })
+        >
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
           <p style(noteText, { box: grow(1) })>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>
       <if {notes().length === 0}>
-        <p>
-          empty.enter({ opacity: 'fade' })
-All clear.</p>
+        <p style(empty, { animate: enter({ opacity: 'fade' }) })>All clear.</p>
       </if>
     </column>
   </if>

@@ -60,9 +60,11 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     <match {phase()}>
-      {'idle' => <badge tone="muted">idle</badge>
-      <!-- TODO 4:}{'building' => and}{'live' => branches, each
-           with a style.enter so the swapped-in badge announces itself. -->}{else => <badge tone="destructive">failed</badge>}</match>
+      {'idle' => <badge tone="muted">idle</badge>}
+      <!-- TODO 4: add {'building' => …} and {'live' => …} branches, each with
+           style({ animate: enter(...) }) so the swapped-in badge announces itself. -->
+      {else => <badge tone="destructive">failed</badge>}
+    </match>
   </row>
 
   <row gap="2">
@@ -79,8 +81,8 @@ export default controller(() => {
          on:keydown|key:Escape={clear} />
 
   <column gap="1">
-    <!-- TODO 5: this {#for} has no key. Add key={env.id} and compare what
-         promote() does to the DOM with and without it. -->
+    <!-- TODO 5: try removing key={env.id}, promote(), and watch focus/DOM
+         identity thrash — then put the key back. -->
     <for {filtered() as env} key={env.id}>
       <row gap="3" align="center" style(envRow)>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>

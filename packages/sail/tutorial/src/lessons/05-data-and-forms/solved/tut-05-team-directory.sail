@@ -9,7 +9,7 @@
 
 <controller>
 import { query } from '@ship/sail-runtime'
-import { directory } from './tut-05-directory-client'
+import { directory } from '../../../compositions/tut-05-directory-client'
 
 export default controller(() => {
     const attempt = signal(1)
@@ -17,13 +17,12 @@ export default controller(() => {
     const name = signal('')
     const role = signal<'member' | 'admin'>('member')
 
-    // query() reads from an imported client (directory.team.list) and
-    // hands back a state signal:
+    // query() reads an imported client (directory.team.list) and returns a
+    // state signal:
     //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
-    // The signals read INSIDE the call ARGS — attempt() and breakApi() —
-    // are the tracked deps: change either and query() re-keys to a fresh
-    // cache entry (a real refetch), back through 'loading'. That is the
-    // whole refetch story — no refetch() method, just a signal you bump.
+    // Signals read INSIDE the call ARGS — attempt() and breakApi() — are the
+    // tracked deps: change either and query() re-keys to a fresh cache entry
+    // (a real refetch), back through 'loading'.
     const team = query(() => directory.team.list({ attempt: attempt(), broken: breakApi() }))
 
     const canAdd = derived(() => name().trim().length > 0)
@@ -40,7 +39,7 @@ export default controller(() => {
         directory.team.add({ name: name().trim(), role: role() })
         name.set('')
         role.set('member')
-        attempt.set((n) => n + 1) // refetch: bumping attempt re-keys the query, same path
+        attempt.set((n) => n + 1)
       },
     }
   })
@@ -67,9 +66,9 @@ export default controller(() => {
 
   <match {team()}>
     {loading =>
-      <row gap="2" align="center" style(loadingRow)>        <spinner size="sm"></spinner>
-        <small style(muted)>          loading the roster…
-        </small>
+      <row gap="2" align="center" style(loadingRow)>
+        <spinner size="sm"></spinner>
+        <small style(muted)>loading the roster…</small>
       </row>
     }
     {error as err =>
@@ -78,8 +77,8 @@ export default controller(() => {
     {ok as value =>
       <column gap="1">
         <for {value as m} key={m.id}>
-          <row gap="3" align="center" style(memberRow)>            <strong style(memberName, { box: grow(1) })>              {m.name}
-            </strong>
+          <row gap="3" align="center" style(memberRow)>
+            <strong style(memberName, { box: grow(1) })>{m.name}</strong>
             <if {m.role === 'admin'}>
               <badge tone="primary" variant="soft" size="sm">admin</badge>
             </if>

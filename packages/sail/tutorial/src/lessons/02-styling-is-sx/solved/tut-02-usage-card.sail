@@ -1,9 +1,11 @@
 <!--
-  Lesson 02 solved — the whole surface is Style on sx.
+  Lesson 02 solved — the whole surface is the Style product.
 
-  Spacing, color, radius, border, shadow, and type are tokens via style.*
-  chains; interaction states are when({ hover, focusWithin, current, … }).
-  Nothing here is a raw value — a px or a hex would not compile.
+  Spacing, color, radius, border, shadow, and type are tokens via Style
+  object channels; interaction states are when({ hover, focusWithin,
+  current, … }). Nothing here is a raw value — a px or a hex would not
+  compile. Named scope Style (style name = { … }) is reused on tags as
+  style(name).
 -->
 <scope>
   style pill = { box: padX(3).padY(1), paint: radius(full).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) }, current: { paint: bg(primary).fg(primary-foreground) } } }
