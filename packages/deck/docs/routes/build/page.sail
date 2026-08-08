@@ -1,33 +1,40 @@
+<!-- Build & deploy — sail build static dir, base assets, no dev cruft. -->
+
 <controller>
-// Build & deploy controller. Snippets live in ./snippets (a plain data module)
-// so example code containing `{ ... }` is never scope-scanned by the compiler.
 import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { buildCmd, buildOut, baseCmd } from './snippets'
+import { buildCmd, buildOut, baseCmd } from '../../src/compositions/deck-build-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ buildCmd, buildOut, baseCmd }))
 </controller>
 
-<article data-doc="true">
-  <p role="doc-eyebrow">Rendering &amp; build</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>Rendering &amp; build</p>
   <h1>Build &amp; deploy</h1>
-  <p role="doc-lead">One command emits a self-contained static directory a dumb host can serve as-is.</p>
+  <p style(lead)>One command emits a self-contained static directory a dumb host can serve as-is.</p>
 
   <h2>Build a static dir</h2>
   <p><code>sail build --project . --bundle-framework</code> materializes everything the app needs into one directory.</p>
-  <pre data-code-block="true">{buildCmd}</pre>
-  <pre data-code-block="true">{buildOut}</pre>
+  <code-block code={buildCmd} lang="bash"></code-block>
+  <code-block code={buildOut} lang="text"></code-block>
   <p>You get <code>index.html</code> (the importmap), <code>_deck/</code> (the framework singletons, materialized), and one code-split, lazily-loaded <code>assets/page-&lt;hash&gt;.js</code> chunk per route.</p>
 
   <h2>Deploy anywhere</h2>
   <p>Pass <code>--base assets</code> so asset URLs become <code>/assets/&lt;file&gt;</code>, matching the on-disk layout. A dumb static host — Netlify, S3, nginx — then serves the directory directly.</p>
-  <pre data-code-block="true">{baseCmd}</pre>
+  <code-block code={baseCmd} lang="bash"></code-block>
 
   <h2>No dev cruft</h2>
   <p>A shipped build carries nothing from dev: no live-reload client, no dev-only metas. Just the markup, the framework singletons, and the route chunks.</p>
 
-  <div role="navigation">
+  <row justify="between" style(footNav)>
     <a href="/hmr">← HMR</a>
     <span></span>
-  </div>
+  </row>
 </article>

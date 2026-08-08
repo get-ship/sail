@@ -1,7 +1,6 @@
-<main data-home="true">
+<main>
   <h1>deck e2e</h1>
-  <!-- A constant the SSR pass folds: proves server-side render reached the
-       page, independent of any client JS. -->
+  <!-- Constant the SSR pass folds: proves server render reached the page. -->
   <p>two plus two is {2 + 2}</p>
   <nav>
     <a href="/counter">counter</a>

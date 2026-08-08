@@ -26,20 +26,21 @@ test.describe('deck dev — routes/ SSR (render: ssr)', () => {
     expect(html).toContain('content="ssr"')
     // The route is rendered server-side: its markup is in the raw bytes, inside
     // #root — not the empty `<div id="root"></div>` of a CSR shell.
-    expect(html).toMatch(/id="root">\s*<div class="counter"/)
+    expect(html).toMatch(/id="root">\s*<div/)
     expect(html).toContain('Counter')
   })
 
   test('the index route SSRs too (not just named routes)', async ({ request }) => {
     const html = await (await request.get(`${SSR}/`)).text()
-    expect(html).toMatch(/id="root">\s*<main class="home"/)
+    expect(html).toMatch(/id="root">\s*<main/)
+    expect(html).toContain('deck e2e ssr')
   })
 
   test('SSR DOM hydrates and stays reactive — no mismatch', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.goto(`${SSR}/counter`)
-    const count = page.locator('.counter strong')
+    const count = page.locator('strong')
     // SSR rendered the controller, so the count is 0 in first paint; the client
     // hydrates that DOM rather than rebuilding it.
     await expect(count).toHaveText('0')

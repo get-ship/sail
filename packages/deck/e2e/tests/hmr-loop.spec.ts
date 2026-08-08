@@ -16,7 +16,7 @@ test.describe('deck HMR — state-preserving re-mount', () => {
     page,
   }) => {
     await page.goto('/counter')
-    const count = page.locator('.counter strong')
+    const count = page.locator('strong')
     const inc = page.getByRole('button', { name: 'increment' })
     await expect(count).toHaveText('0')
 

@@ -43,10 +43,10 @@ test.describe('deck build — shipped static SPA', () => {
 
   test('the built entry mounts and renders the home route', async ({ page }) => {
     await page.goto(`${BASE}/`)
-    await expect(page.locator('main.home h1')).toHaveText('deck e2e')
+    await expect(page.getByRole('heading', { name: 'deck e2e' })).toBeVisible()
     // Proof the self-contained framework singletons loaded + the bundled packs
     // resolved: the route actually rendered.
-    await expect(page.locator('.ssr-probe')).toHaveText('two plus two is 4')
+    await expect(page.getByText('two plus two is 4')).toBeVisible()
   })
 
   test('client-side <a> navigation works from the built bundle (no full reload)', async ({
@@ -58,7 +58,7 @@ test.describe('deck build — shipped static SPA', () => {
     })
     await page.getByRole('link', { name: 'counter' }).click()
     await expect(page).toHaveURL(/\/counter$/)
-    await expect(page.locator('.counter h1')).toHaveText('Counter')
+    await expect(page.getByRole('heading', { name: 'Counter' })).toBeVisible()
     const sentinel = await page.evaluate(
       () => (window as unknown as { __deckE2E?: string }).__deckE2E,
     )
@@ -67,7 +67,7 @@ test.describe('deck build — shipped static SPA', () => {
 
   test('signal reactivity works in the built bundle', async ({ page }) => {
     await page.goto(`${BASE}/counter`)
-    const count = page.locator('.counter strong')
+    const count = page.locator('strong')
     await expect(count).toHaveText('0')
     await page.getByRole('button', { name: 'increment' }).click()
     await expect(count).toHaveText('1')
