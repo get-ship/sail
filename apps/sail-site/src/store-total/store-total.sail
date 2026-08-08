@@ -1,8 +1,11 @@
 <!--
-  <store-total> — the third reader in the State chapter's shared-state demo.
-  A DIFFERENT component from <store-counter>, resolving the same store: the
-  point is that sharing needs no wiring between them.
+  Third reader of the shared tally store (State chapter demo).
 -->
+<scope>
+  style line = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style total = { paint: fg(foreground) }
+</scope>
+
 <controller>
 import { useStore } from '@ship/sail-runtime'
 import { tally } from '../compositions/counter-store'
@@ -13,7 +16,7 @@ export default controller(() => {
 })
 </controller>
 
-<p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+<p style(line)>
   …and this line is a third component reading the same store:
-  <strong style({ paint: fg(foreground) })>{clicks()} clicks</strong> total.
+  <strong style(total)>{clicks()} clicks</strong> total.
 </p>
