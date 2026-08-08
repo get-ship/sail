@@ -1,51 +1,7 @@
 <!--
-  <error-boundary> — render-fault isolation.
-
-  Wraps a subtree. If any rendering, controller `mount()`, or reactive
-  effect inside throws, the subtree is unmounted and the boundary
-  displays its fallback. React-style propagation: the innermost
-  boundary catches a thrown error and outer boundaries see nothing.
-
-  Fallback resolution (first match wins):
-    1. `<template slot="fallback">…</template>` child — projected via
-       the named slot. Authors can read the message via the host's
-       `data-error-message` attribute or by listening for
-       `sail-error-boundary:caught`.
-    2. `fallback-text` attribute — rendered inside a default container
-       with a "Retry" button.
-    3. Built-in "Something went wrong" + retry button.
-
-  Programmatic recovery: `host.reset()` re-renders the protected
-  subtree. The default fallback's retry button calls the same path.
-
-  Event: `sail-error-boundary:caught` fires on the host when an error
-  is caught; detail carries `{ error, source }` where `source` is
-  `'effect' | 'mount' | 'render' | 'unknown'`.
-
-  NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
-  ─────────────────────────────────────────────────────────────────────────────
-  - No tone/theme block: this component has no tone prop, and never had one
-    in feat/next — the destructive fallback tokens (hover-bg/
-    -border, destructive) are read directly, unconditionally.
-  - Controller is BYTE-IDENTICAL to feat/next.
-  - sail-stack → column, a bare flex row → the row layout keyword (gap/
-    align are its props now, not sx — sx deliberately doesn't own layout).
-  - sx is closed-vocabulary; the style block keeps only what it structurally
-    cannot express: font-family (no sx prop for it), `flex: 0 0 auto` on the
-    icon (no `flex` shorthand prop in sx), `appearance: none`, `font:
-    inherit`, and the multi-property background-color transition on the
-    retry button.
-  - Fixed two bugs found in the worktree's prior (pre-gate) spike pass while
-    re-deriving values from feat/next: the retry button's padding was
-    `p:1 pr:3`, which only widens the RIGHT side (left stayed at space-1/4px
-    instead of feat/next's symmetric space-3/12px horizontal) — corrected to
-    `py:1 px:3`. Its border was `border:subtle` (var(--border-subtle), a
-    lighter color-mix), which doesn't match feat/next's plain `var(--border)`
-    — corrected to `border:border`.
-  - Icon (18×18), message line-height (1.5), and retry font-weight (600) all
-    land EXACTLY on existing tokens (icon-size-lg, leading-normal, font-
-    weight-semibold) — no quantization needed anywhere in this component.
-  - No new LANG-GAP.
+  <error-boundary> — render-fault isolation. Innermost boundary catches;
+  fallback: slot=fallback, else fallback-text, else built-in + Retry.
+  host.reset() re-renders the protected subtree.
 -->
 
 <scope>
@@ -66,11 +22,7 @@ interface HostWithReset extends HTMLElement {
 export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
     const caughtError = signal<Error | null>(null)
     const hasFallbackSlot = signal<boolean>(false)
-    // The host element is not present in the scope factory (the post-
-    // convergence "SAIL names no host" compile stops passing it as the 2nd
-    // arg), so read it through this signal — set in `mount` once the
-    // runtime hands over the real element. The template wires
-    // `on:click={reset}`, so reset must always read the latest host.
+    // Host not in scope factory — publish via signal set in mount.
     const hostEl = signal<HTMLElement | null>(null)
     const reset = (): void => {
       caughtError.set(null)
@@ -78,15 +30,8 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
       if (h) h.removeAttribute('data-error-message')
     }
     mount((host) => {
-      // The runtime hands the real host element here. The scope's `reset`
-      // closure reads through `hostEl` (the dead-`host` workaround) — publish
-      // the element now that it exists, before the first user click.
       hostEl.set(host as HTMLElement)
-      // Authors commonly wrap their custom fallback in <template slot="fallback">
-      // so the markup isn't visible while the boundary is healthy. Templates
-      // don't render their contents, so we clone the inert template into a
-      // live wrapper element bearing the same slot name — the assignment
-      // becomes visible the moment the boundary swaps to its fallback branch.
+      // Clone inert <template slot="fallback"> into a live slotted wrapper.
       const templates = host.querySelectorAll(':scope > template[slot="fallback"]')
       for (const tpl of Array.from(templates)) {
         const wrap = document.createElement('div')
@@ -98,8 +43,6 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
 
       attachBoundary(host, {
         catch(err, source) {
-          // Re-entrancy guard: once the fallback is rendered, a second
-          // inner throw shouldn't overwrite the original error.
           if (caughtError() !== null) return
           const error = err instanceof Error ? err : new Error(String(err))
           host.setAttribute('data-error-message', error.message)
@@ -128,16 +71,37 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
   <slot></slot>
 {else => <if {hasFallbackSlot()}>
     <slot name="fallback"></slot>
-  {else => <row role="alert" gap="3" align="start" style({ box: padY(4).padX(5), paint: borderWidth(1).border(destructive).radius(md).bg(muted).fg(foreground).shadow(xs) })>      <span style({ box: display(contents), text: fontFamily(body).fontSize(sm) })>        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style({ box: w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).mt(1), paint: fg(destructive) })>
+  {else => <row
+    role="alert"
+    gap="3"
+    align="start"
+    style({
+      box: padY(4).padX(5),
+      paint: borderWidth(1).border(destructive).radius(md).bg(muted).fg(foreground).shadow(xs),
+    })
+  >
+    <span style({ box: display(contents), text: fontFamily(body).fontSize(sm) })>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        style({ box: w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).mt(1), paint: fg(destructive) })
+      >
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>
         <path d="M12 17h.01"></path>
       </svg>
       <column gap="1">
-        <div style({ paint: fg(muted-foreground) })>          <span style({ box: display(contents), text: leading(normal) })>            {fallbackText() || 'Something went wrong'}
+        <div style({ paint: fg(muted-foreground) })>
+          <span style({ box: display(contents), text: leading(normal) })>
+            {fallbackText() || 'Something went wrong'}
           </span>
-</div>
+        </div>
         <button type="button" variant="outline" size="xs" on:click={reset}>Retry</button>
       </column>
-      </span>
-</row>}</if>}</if>
+    </span>
+  </row>}</if>}</if>

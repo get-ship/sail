@@ -1,41 +1,12 @@
 <!--
-  <sail-heatmap> — 2D grid of SVG rect cells, intensity-colored.
-
-  MIGRATED onto the createChartData engine + cellGeometry helper: 1D-comma /
-  2D-JSON `data` decodes through `normalizeSeries` (reshaped into rows by the
-  rows/cols labels), cells are a pure `derived` over `cellGeometry` (present at
-  first paint), and empty / loading branch on the engine discriminators
-  composing the full-size primitives (heatmap is full-size despite being compact).
-
-  TOKEN CLEANUP: the controller-built `color-mix(in oklch,…)` string is GONE —
-  each cell fills with the tone role token `var(--<tone>)` and drives intensity
-  via `fill-opacity` bound from the normalized value (0..1). This is the only
-  token-clean continuous-intensity path; a null/zero cell renders empty
-  (fill-opacity 0).
-
-  Props
-  ─────────────────────────────────────────────────────────────────────────────
-  data       string  reflect   1D comma nums OR JSON [[row],[row]].
-  values     string  reflect   Alias of `data` (docs/catalog demos use this).
-  rows       string             Comma labels **or** a count integer ("3" → 3 rows).
-  cols       string             Comma labels **or** a count integer ("5" → 5 cols).
-  tone       union   reflect    cell base hue (toneColor role-token map).
-  cell-size  number  20         px per cell.
-  gap        number  3          px between cells.
-  label      string  "heatmap"  aria-label kind (prefixes the data summary).
-  loading    bool    reflect    loading branch (engine isLoading) → sail-skeleton.
-  error      —       error identity-only → sail-error-state.
-  ─────────────────────────────────────────────────────────────────────────────
-  Slots: description (described-data override)
-
-  The SVG is the component's box: it is sized by the grid (`cell-size` × `gap`),
-  so it shrink-wraps its cells and sits inline with the copy around it.
+  <sail-heatmap> — 2D SVG rect grid, intensity via fill-opacity on tone token.
+  createChartData + cellGeometry; `values` aliases `data` for catalog demos.
 -->
 
 <scope>
   props: {
     data = ''
-    /** Alias of `data` — accepted so catalog demos (`values="…"`) actually paint. */
+    /** Alias of `data` — catalog demos use `values="…"`. */
     values = ''
     rows = ''
     cols = ''
@@ -50,64 +21,16 @@
 <controller>
 
 import { createChartData } from '../engine/create-chart-data'
-import { normalizeSeries } from '../engine/normalize'
 import { cellGeometry } from '../engine/geometry-grid'
-import { parseLabels } from '../chart-util'
-import type { ChartSeries, ChartValue, ChartPoint } from '../engine/types'
+import { parseAxis, toGrid } from './heatmap-grid'
+import type { ChartSeries } from '../engine/types'
 import type { Scope } from './sail-heatmap.sail'
 
-// `error` arrives via `error={…}` identity (no decodable <prop> for
-// `unknown`); read off the host in `mount` and patch the engine.
 interface HeatmapHost extends Element {
   error?: unknown
 }
 
-/** Read the y of a flat value or an explicit point. */
-function yOf(entry: ChartValue | ChartPoint): ChartValue {
-  return typeof entry === 'object' && entry !== null ? entry.y : entry
-}
-
-/**
- * `rows` / `cols` accept either:
- *   - comma labels: `"Mon,Tue,Wed"`
- *   - a count integer: `"3"` → `["0","1","2"]`
- * so catalog demos (`rows="4" cols="6"`) shape a grid without inventing labels.
- */
-function parseAxis(raw: string, prefix: string): string[] {
-  const s = String(raw ?? '').trim()
-  if (!s) return []
-  if (/^\d+$/.test(s)) {
-    const n = Math.max(0, Math.min(64, Number(s)))
-    return Array.from({ length: n }, (_, i) => `${prefix}${i}`)
-  }
-  return parseLabels(s)
-}
-
-/**
- * Resolve the canonical row-series for the grid. `normalizeSeries` already
- * yields one series per row for 2D JSON; a 1D comma string yields ONE flat
- * series, which is reshaped here into `ceil(n / cols)` rows by the cols label
- * count (preserving null gaps positionally).
- */
-function toGrid(raw: string, rowLabels: string[], colLabels: string[]): ChartSeries[] {
-  const series = normalizeSeries(raw)
-  if (series.length === 0) return []
-  // 2D JSON (or already multi-row) — one series per row, kept as-is.
-  if (series.length > 1) return series
-
-  // 1D flat series → reshape into rows by the col count.
-  const flat = (series[0]!.data as Array<ChartValue | ChartPoint>).map(yOf)
-  const nc = colLabels.length || 1
-  const nr = rowLabels.length || (flat.length > 0 ? Math.ceil(flat.length / nc) : 0)
-  const out: ChartSeries[] = []
-  for (let r = 0; r < nr; r++) {
-    out.push({ name: rowLabels[r] ?? `row-${r}`, data: flat.slice(r * nc, (r + 1) * nc) })
-  }
-  return out
-}
-
 export default controller(({ data, values, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
-    // `values` is a documented alias of `data` (catalog tiles used it first).
     const rawData = derived(() => {
       const d = String(data() ?? '').trim()
       if (d) return d
@@ -118,8 +41,6 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     )
     const chart = createChartData({ series: grid, isLoading: loading })
 
-    // Grid dimensions are cell-size driven (not the responsive viewport): the
-    // box fed to cellGeometry is sized so each cell renders at exactly cell-size.
     const dims = derived(() => {
       const norm = chart.normalized()
       const nRows = norm.length
@@ -136,8 +57,6 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     const svgW = derived(() => dims().w)
     const svgH = derived(() => dims().h)
 
-    // GEOMETRY IS A PURE DERIVED — intensity from the normalized value over the
-    // tone role token (no color-mix). A null/zero cell renders empty (opacity 0).
     const cells = derived(() => {
       const d = dims()
       return cellGeometry(chart.normalized(), { w: d.w, h: d.h }, { tone: tone(), gap: gap() })
@@ -161,7 +80,10 @@ export default controller(({ data, values, rows, cols, tone, cellSize, gap, labe
     height={svgH()}
     role="img"
     aria-label={ariaLabel()}
-    aria-describedby="chart-data" style({ box: display(inline-block).overflow(visible) })>    <for {cells() as cell} key={cell.id}>
+    aria-describedby="chart-data"
+    style({ box: display(inline-block).overflow(visible) })
+  >
+    <for {cells() as cell} key={cell.id}>
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     </for>
