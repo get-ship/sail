@@ -67,7 +67,7 @@ pub mod wasm;
 
 pub use analysis::{
     Analysis, Hover, QueryKeyInfo, SsrTier, Symbol, analyze, analyze_with_tier, classify_ssr_tier,
-    completions_at, extract_query_keys, hover_at,
+    completions_at, completions_at_offset, extract_query_keys, hover_at,
 };
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;

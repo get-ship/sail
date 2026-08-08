@@ -303,6 +303,9 @@ pub fn hover_with_session(
 }
 
 /// Core completion path shared by stdio LSP (structure branch) and the library.
+///
+/// Style regions (SPEC-STYLE-COMPLETE-1): Style complete from validate SSOT
+/// **before** tsgo / bare scope. Does not require tsgo live for Style tokens.
 pub fn complete_with_session(
     tsgo: &mut TsgoSession,
     source: &str,
@@ -312,6 +315,29 @@ pub fn complete_with_session(
     col_1based: u32,
 ) -> Vec<CompletionItemPayload> {
     let offset = line_col_to_byte_offset(source, line_1based as usize, col_1based as usize);
+    // Infer L1 host from path stem when it matches a known surface pack
+    // (stdlib `chip.sail` → host `chip`); app paths yield None.
+    let host = infer_style_host(path);
+    let style_items =
+        sail_lint::style::style_complete_at(source, path, offset, host.as_deref());
+    if !style_items.is_empty() {
+        return style_items
+            .into_iter()
+            .map(|it| CompletionItemPayload {
+                label: it.label,
+                kind: Some(it.kind.as_str().to_string()),
+                detail: it.detail.or_else(|| Some(format!("{} (style)", it.kind.as_str()))),
+                insert_text: it.insert_text,
+                documentation: None,
+            })
+            .collect();
+    }
+    let style_ctx = sail_lint::style::style_complete_context_at(source, offset, host.as_deref());
+    if !matches!(style_ctx, sail_lint::style::StyleCompleteContext::Unknown) {
+        // Classified Style position with empty set — do not fall through to
+        // weak tsgo / scope noise.
+        return Vec::new();
+    }
     if tsgo.is_live() {
         if let Some(raw) = tsgo.completion_mapped(uri_key, source, offset) {
             let items = completion_payloads_from_tsgo_inner(raw);
@@ -330,6 +356,16 @@ pub fn complete_with_session(
             documentation: None,
         })
         .collect()
+}
+
+/// Host tag for Style complete: surface pack when path stem is a known L1 pack.
+fn infer_style_host(path: Option<&Path>) -> Option<String> {
+    let stem = path?.file_stem()?.to_str()?;
+    if sail_lint::style::surface_pack_for_host(stem).is_some() {
+        Some(stem.to_string())
+    } else {
+        None
+    }
 }
 
 /// Structure + mapped tsgo diagnostics at `tier` (SPEC-TOOLING-1 §WI6).
@@ -612,6 +648,64 @@ export default controller((ctx) => ({ count: signal(0) }))
             "expected structure diag: {diags:?}"
         );
         assert!(diags.iter().all(|d| d.source.as_deref() == Some("sail")));
+    }
+
+    #[test]
+    fn complete_sail_style_bg_tokens_without_tsgo() {
+        // SPEC-STYLE-COMPLETE-1: Style complete inside style({ paint: bg(¦) })
+        // does not require tsgo.
+        let mut intel =
+            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let src = r#"<div style({ paint: bg() })>x</div>"#;
+        let offset = src.find("bg(").expect("bg(") + 3;
+        let (line0, col0) = offset_to_lsp_position(src, offset);
+        let items = intel.complete_sail(src, Some("app.sail"), line0 + 1, col0 + 1);
+        assert!(
+            items.iter().any(|i| i.label == "primary"),
+            "expected primary: {:?}",
+            items.iter().map(|i| &i.label).collect::<Vec<_>>()
+        );
+        assert!(
+            items.iter().any(|i| i.label == "surface-1"),
+            "expected surface-1: {:?}",
+            items.iter().map(|i| &i.label).collect::<Vec<_>>()
+        );
+        assert!(
+            items
+                .iter()
+                .any(|i| i.kind.as_deref() == Some("token") || i.kind.as_deref() == Some("keyword")),
+            "expected style kinds: {:?}",
+            items
+        );
+        assert!(
+            !items.iter().any(|i| i.label == "chip-foreground"),
+            "app path must exclude chip-foreground"
+        );
+    }
+
+    #[test]
+    fn complete_sail_style_prefers_style_over_scope() {
+        let mut intel =
+            Intelligence::start(Some(Path::new("/nonexistent-sail-tsgo-root-for-intel")));
+        let src = r#"<controller>
+import { controller, signal } from '@ship/sail-runtime'
+export default controller(() => ({ primary: signal(0) }))
+</controller>
+<div style({ paint: bg() })>{primary()}</div>"#;
+        let offset = src.find("bg(").expect("bg(") + 3;
+        let (line0, col0) = offset_to_lsp_position(src, offset);
+        let items = intel.complete_sail(src, None, line0 + 1, col0 + 1);
+        assert!(
+            items.iter().any(|i| i.label == "primary" && i.kind.as_deref() == Some("token")),
+            "Style token primary must win: {:?}",
+            items
+        );
+        // Scope signal must not be the only hit — Style labels present.
+        assert!(
+            items.iter().any(|i| i.label == "surface-1"),
+            "style tokens present: {:?}",
+            items.iter().map(|i| &i.label).collect::<Vec<_>>()
+        );
     }
 
     #[test]

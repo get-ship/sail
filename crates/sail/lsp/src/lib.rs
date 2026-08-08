@@ -368,28 +368,10 @@ fn on_completion(
     if let Some(prefix) = tag_open_prefix(&text, pos.line as usize, col) {
         return Some(l1_completion_items(&prefix));
     }
-    // Proxy to tsgo inside TS regions (UTF-16-correct offset), then structure fallback.
-    if tsgo.is_live() {
-        let sail_offset = line_byte_offset(&text, pos.line as usize, col);
-        if let Some(raw) =
-            tsgo.completion_mapped(tdp.text_document.uri.as_str(), &text, sail_offset)
-        {
-            let payloads = intelligence::completion_payloads_from_tsgo(raw);
-            if !payloads.is_empty() {
-                return Some(
-                    payloads
-                        .into_iter()
-                        .map(completion_item_from_payload)
-                        .collect(),
-                );
-            }
-        }
-    }
+    // Style / structure / tsgo via complete_with_session (SPEC-STYLE-COMPLETE-1:
+    // Style regions prefer validate SSOT over weak/empty tsgo).
     let (line, col_1) = from_lsp_pos(pos);
     let payloads = intelligence::complete_with_session(
-        // Pass a non-live path for structure-only: session still consulted but
-        // tsgo already tried above; complete_with_session will re-try tsgo which
-        // is fine (cached virtuals) and fall through to structure symbols.
         tsgo,
         &text,
         path.as_deref(),
@@ -397,12 +379,18 @@ fn on_completion(
         line as u32,
         col_1 as u32,
     );
-    Some(
-        payloads
-            .into_iter()
-            .map(completion_item_from_payload)
-            .collect(),
-    )
+    if !payloads.is_empty() {
+        return Some(
+            payloads
+                .into_iter()
+                .map(completion_item_from_payload)
+                .collect(),
+        );
+    }
+    // Soft-degrade: if session returned empty (no Style, no tsgo, no scope),
+    // try a direct tsgo pass once more is unnecessary — complete_with_session
+    // already did. Return empty list.
+    Some(Vec::new())
 }
 
 fn completion_item_from_payload(p: intelligence::CompletionItemPayload) -> CompletionItem {
