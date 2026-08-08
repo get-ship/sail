@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal, mountAmbient as mount, type ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, mount, type ControllerScope } from '@ship/sail-runtime'
 
 type Scope = {}
 

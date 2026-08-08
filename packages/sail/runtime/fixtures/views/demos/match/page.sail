@@ -6,23 +6,77 @@ type Tone = 'info' | 'success' | 'warning' | 'destructive'
 export default controller(() => ({ tone: signal<Tone>('info') }))
 </controller>
 
-<div data-demo="true">
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style alert = {
+    box: pad(4),
+    paint: borderWidth(1).border(border).radius(md).bg(surface-1),
+  }
+</scope>
+
+<column gap="4" style(page)>
   <p><a href="/demos">← demos</a></p>
-  <h1>match</h1>
-  <p>
-    Block <code>match expr / case "x" / default</code>. Like a switch
-    statement, but only the active branch is mounted.
-  </p>
+  <column gap="1">
+    <h1>match</h1>
+    <p style(muted)>
+      Block <code>match expr / case "x" / default</code>. Like a switch
+      statement, but only the active branch is mounted.
+    </p>
+  </column>
 
-  <div role="tablist">
-    <button role="tab" data-test="tone-info"        aria-selected={tone() === 'info'}        on:click={() => tone.set('info')}>info</button>
-    <button role="tab" data-test="tone-success"     aria-selected={tone() === 'success'}     on:click={() => tone.set('success')}>success</button>
-    <button role="tab" data-test="tone-warning"     aria-selected={tone() === 'warning'}     on:click={() => tone.set('warning')}>warning</button>
-    <button role="tab" data-test="tone-destructive" aria-selected={tone() === 'destructive'} on:click={() => tone.set('destructive')}>destructive</button>
-  </div>
+  <row gap="2" role="tablist">
+    <button
+      role="tab"
+      data-test="tone-info"
+      variant={tone() === 'info' ? 'solid' : 'outline'}
+      tone="info"
+      aria-selected={tone() === 'info'}
+      on:click={() => tone.set('info')}
+    >info</button>
+    <button
+      role="tab"
+      data-test="tone-success"
+      variant={tone() === 'success' ? 'solid' : 'outline'}
+      tone="success"
+      aria-selected={tone() === 'success'}
+      on:click={() => tone.set('success')}
+    >success</button>
+    <button
+      role="tab"
+      data-test="tone-warning"
+      variant={tone() === 'warning' ? 'solid' : 'outline'}
+      tone="warning"
+      aria-selected={tone() === 'warning'}
+      on:click={() => tone.set('warning')}
+    >warning</button>
+    <button
+      role="tab"
+      data-test="tone-destructive"
+      variant={tone() === 'destructive' ? 'solid' : 'outline'}
+      tone="destructive"
+      aria-selected={tone() === 'destructive'}
+      on:click={() => tone.set('destructive')}
+    >destructive</button>
+  </row>
 
-  <section data-test="alert" data-tone={tone()}>
+  <section data-test="alert" style(alert)>
     <match {tone()}>
-      {'info' => <strong>Heads up.</strong> Just a friendly note.}{'success' => <strong>All good.</strong> The thing finished without errors.}{'warning' => <strong>Careful.</strong> This action may have side-effects.}{'destructive' => <strong>Stop.</strong> This will permanently delete data.}{else => <em>Pick a tone.</em>}</match>
+      {'info' =>
+        <span><strong>Heads up.</strong> Just a friendly note.</span>
+      }
+      {'success' =>
+        <span><strong>All good.</strong> The thing finished without errors.</span>
+      }
+      {'warning' =>
+        <span><strong>Careful.</strong> This action may have side-effects.</span>
+      }
+      {'destructive' =>
+        <span><strong>Stop.</strong> This will permanently delete data.</span>
+      }
+      {else =>
+        <em>Pick a tone.</em>
+      }
+    </match>
   </section>
-</div>
+</column>

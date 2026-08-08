@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
+import { controller, signal, batch } from '@ship/sail-runtime'
 
 interface TodoItem {
   id: number
@@ -8,30 +8,32 @@ interface TodoItem {
 }
 
 export default controller(() => {
-    let nextId = 3
-    const items = signal<TodoItem[]>([
-      { id: 1, text: 'buy milk', done: false },
-      { id: 2, text: 'write tests', done: false },
-    ])
-    const draft = signal('')
+  let nextId = 3
+  const items = signal<TodoItem[]>([
+    { id: 1, text: 'buy milk', done: false },
+    { id: 2, text: 'write tests', done: false },
+  ])
+  const draft = signal('')
 
-    const addItem = () => {
-      const text = draft().trim()
-      if (!text) return
+  const addItem = () => {
+    const text = draft().trim()
+    if (!text) return
+    batch(() => {
       items.set([...items(), { id: nextId++, text, done: false }])
       draft.set('')
-    }
+    })
+  }
 
-    const toggleItem = (id: number) => {
-      items.set(items().map((it) => (it.id === id ? { ...it, done: !it.done } : it)))
-    }
+  const toggleItem = (id: number) => {
+    items.set(items().map((it) => (it.id === id ? { ...it, done: !it.done } : it)))
+  }
 
-    const removeItem = (id: number) => {
-      items.set(items().filter((it) => it.id !== id))
-    }
+  const removeItem = (id: number) => {
+    items.set(items().filter((it) => it.id !== id))
+  }
 
-    return { items, draft, addItem, toggleItem, removeItem }
-  })
+  return { items, draft, addItem, toggleItem, removeItem }
+})
 </controller>
 
 <div>
