@@ -340,7 +340,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         use:rect={popoverPos()}
         on:pointerdown={(e) => e.stopPropagation()}
 
-       style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).minW(panel-min-w-md).pad(2), paint: z(sticky).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto) })>
+       style({ box: position(absolute).left(bind(boxLeft)).top(bind(boxTop)).minW(panel-min-w-md).pad(2), paint: z(sticky).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto) })>
 
         <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} style({ box: w(full), paint: radius(sm) })></textarea>
         <row gap="2" justify="end">

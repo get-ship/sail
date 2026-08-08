@@ -2,12 +2,17 @@
  * STUDIO-BROWSER-E2E / STUDIO-BOOT-1 — boot smoke: every studio surface body
  * mounts with zero pageerrors of any kind (mount-scope + product runtime).
  *
- * Requires sail dev (default http://127.0.0.1:7891):
+ * Preferred in-agent recipe (starts sail if needed, shuts it down after):
+ *
+ *   cd apps/studio && bun run test:boot-smoke
+ *
+ * Manual two-terminal form:
  *
  *   ./target/debug/sail dev --project apps/studio --addr 127.0.0.1:7891
  *   cd apps/studio && bunx vitest run test/boot-smoke.e2e.test.ts
  *
  * Optional: STUDIO_EVIDENCE_DIR — write per-route screenshots (png) into that dir.
+ * Optional: STUDIO_URL — default http://127.0.0.1:7891
  *
  * @vitest-environment node
  */

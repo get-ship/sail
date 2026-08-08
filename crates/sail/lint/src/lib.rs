@@ -207,13 +207,19 @@ pub fn lint_action_source(path: &std::path::Path, source: &str) -> Vec<Finding> 
 /// happen elsewhere. No filesystem access.
 pub fn lint_controller_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    let profile = std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    // Instant::now panics on wasm32 (no platform clock) — profiling is native-only.
+    let profile = cfg!(not(target_arch = "wasm32"))
+        && std::env::var_os("SAIL_LINT_PROFILE").is_some();
     for (id, check) in rules::CONTROLLER_RULES {
-        let t = std::time::Instant::now();
+        #[cfg(not(target_arch = "wasm32"))]
+        let t = profile.then(std::time::Instant::now);
         findings.extend(check(path, source));
-        if profile {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(t) = t {
             eprintln!("sail-lint: {id} {:?}", t.elapsed());
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = (id, profile);
     }
     findings.sort_by(|a, b| a.line.cmp(&b.line).then_with(|| a.col.cmp(&b.col)));
     findings
@@ -255,13 +261,19 @@ pub fn lint_app_source_source(path: &std::path::Path, source: &str) -> Vec<Findi
 /// sorted by `(line, col)`. No filesystem access.
 pub fn lint_sail_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    let profile = std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    // Instant::now panics on wasm32 (no platform clock) — profiling is native-only.
+    let profile = cfg!(not(target_arch = "wasm32"))
+        && std::env::var_os("SAIL_LINT_PROFILE").is_some();
     for (id, check) in rules::SUI_TEMPLATE_RULES {
-        let t = std::time::Instant::now();
+        #[cfg(not(target_arch = "wasm32"))]
+        let t = profile.then(std::time::Instant::now);
         findings.extend(check(path, source));
-        if profile {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(t) = t {
             eprintln!("sail-lint: {id} {:?}", t.elapsed());
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = (id, profile);
     }
     findings.sort_by(|a, b| a.line.cmp(&b.line).then_with(|| a.col.cmp(&b.col)));
     findings
