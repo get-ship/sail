@@ -20,8 +20,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "disabled",
@@ -58,8 +57,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "alert": [
     {
       "name": "tone",
-      "type": "default · muted · info · success · warning · destructive",
-      "default": "default"
+      "type": "muted · info · success · warning · destructive"
     },
     {
       "name": "dismissible",
@@ -94,8 +92,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · accent · info · success · warning · destructive · muted",
-      "default": "default"
+      "type": "primary · accent · info · success · warning · destructive · muted"
     },
     {
       "name": "size",
@@ -111,8 +108,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "badge": [
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "variant",
@@ -138,8 +134,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "size",
@@ -155,8 +150,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "card": [
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "variant",
@@ -192,8 +186,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "chip": [
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "variant",
@@ -319,8 +312,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     }
   ],
   "error-boundary": [
@@ -416,8 +408,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "invalid",
@@ -600,8 +591,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "size",
@@ -643,8 +633,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "invalid",
@@ -670,8 +659,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · muted · primary · destructive",
-      "default": "default"
+      "type": "muted · primary · destructive"
     },
     {
       "name": "variant",
@@ -719,8 +707,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "size",
@@ -741,8 +728,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent"
     },
     {
       "name": "centered",
@@ -763,8 +749,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "size",
@@ -858,8 +843,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "orientation",
@@ -879,8 +863,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "invalid",
@@ -939,8 +922,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "toast": [
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
-      "default": "default"
+      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "duration",

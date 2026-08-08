@@ -453,8 +453,13 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     let mut ts_tags: std::collections::BTreeMap<String, Vec<serde_json::Value>> =
         std::collections::BTreeMap::new();
     for (tag, source) in sail_compiler::stdlib::sources() {
-        let program = sail_compiler::parse::parse(source)
-            .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
+        // SPEC-D1: dotted surface members (`fg(spinner.foreground)`) are legal
+        // only under that L1 host unit. Prop-registry re-parses stdlib sources
+        // outside `compile_element`, so install the same host surface context.
+        let program = sail_lint::style::with_host_surface(Some(tag), || {
+            sail_compiler::parse::parse(source)
+        })
+        .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
         let mut props = std::collections::BTreeMap::new();
         let mut ts_props: Vec<serde_json::Value> = Vec::new();
         for p in &program.props {

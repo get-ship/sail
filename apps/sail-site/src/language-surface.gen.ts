@@ -5718,7 +5718,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "badge",
-      "description": "L1 language element. Style value language only:"
+      "description": "L1 language element. Style value language only."
     },
     {
       "tag": "breadcrumb",
@@ -5862,7 +5862,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "spinner",
-      "description": "L1 language element. Style value language only:"
+      "description": "L1 language element. Style value language only."
     },
     {
       "tag": "switch",
@@ -6632,8 +6632,8 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too"
   },
   {
-    "syntax": "style({…}) / style(partial, …) / style(name) tag call",
-    "summary": "Style product paint on the element body — not an HTML attribute"
+    "syntax": "style({…}) / style(name, {…}) / style(partial, …) tag call",
+    "summary": "Style product paint on the open tag — style({…}).when(…) call form, not an HTML style= attribute"
   },
   {
     "syntax": "(--name) inside Style values",
@@ -7155,15 +7155,15 @@ export interface ForeignIdiomDoc {
 export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   {
     "syntax": "class= / class:<name>",
-    "instead": "styling is a block-level style(…) / style.… statement on the element"
+    "instead": "styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element"
   },
   {
     "syntax": "style= / style:<prop>",
-    "instead": "runtime geometry is owned by named, typed actions; paint is a block-level style(…) statement, not an HTML style attribute"
+    "instead": "runtime geometry is owned by named, typed actions; paint is a tag-position style({…}) call, not an HTML style attribute"
   },
   {
     "syntax": "part=\"…\"",
-    "instead": "style with a block-level style(…) statement on the element itself — light DOM has no shadow parts"
+    "instead": "style with a tag-position style({…}) call on the element itself — light DOM has no shadow parts"
   },
   {
     "syntax": "<div> / <span> for layout structure",
@@ -7238,13 +7238,13 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   {
     "form": "union prop",
     "syntax": "variant: 'solid' | 'soft' = 'solid'",
-    "summary": "a union of string literals, reflected as an attribute; the default is required and must be a member — there is no first-member magic",
+    "summary": "a union of string literals, reflected as an attribute; default is optional (omit = rest) and when present must be a member — no first-member magic",
     "example": "<scope>\n  props: { variant: 'solid' | 'soft' = 'solid' }\n</scope>\n<p>{variant}</p>"
   },
   {
     "form": "shared tone/size prop",
     "syntax": "tone = 'primary'  ·  size = 'md'",
-    "summary": "Bare tone/size defaults type as the shared stdlib unions (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
+    "summary": "Bare tone/size defaults type as the shared stdlib unions (tone: primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
     "example": "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>"
   },
   {
@@ -7286,8 +7286,8 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   {
     "form": "Style const",
     "syntax": "const filled = style({ paint: bg(primary), box: padX(2) })",
-    "summary": "compile-time Style value (channels + when/match/compound keys / ref); attach with block style(name) on the host",
-    "example": "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span>\n  style(filled)\n  {label}\n</span>"
+    "summary": "compile-time Style value (channels + when/match/compound keys / ref); attach with tag-position style(name) on the host",
+    "example": "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
   },
   {
     "form": "Identity type annotation",
@@ -7549,7 +7549,7 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
     "legal": "subset",
     "status": "enforced",
     "enforcement": "sail-controller-import-convention (Error) + ACTIONS-1 floor on src/actions/**",
-    "notes": "Value imports: @ship/* packages, relative .sail types, src/actions|compositions|serverfns; type-only free"
+    "notes": "L3 value imports: @ship/*, relative .sail, src/actions|compositions|serverfns. Pack envelope (package.json customElements): relative modules under pack root + declared dependencies/peerDependencies. Type-only free"
   },
   {
     "region": "controller",
