@@ -659,7 +659,7 @@ describe('selection sync explorer ↔ source span', () => {
   }, 120_000)
 })
 
-describe('STUDIO-1 review gates', () => {
+describe('edit surface review gates', () => {
   it('setView persists per document and restores on re-open', async () => {
     setOpsClient(cli)
     unbind = bindEditSelection()

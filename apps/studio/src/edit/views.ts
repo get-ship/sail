@@ -319,7 +319,7 @@ export function parseThreads(raw: unknown[], scopePath: string | null): ThreadRo
 }
 
 /**
- * Structured tree edits are not wired to SailAuthoring yet.
+ * Structured tree edits are not available through SailAuthoring.
  * Return empty so the surface can hide the rail (no decorative dead buttons).
  */
 export function structuredEditOps(): StructuredEditOp[] {

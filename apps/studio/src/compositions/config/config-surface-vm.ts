@@ -1,6 +1,6 @@
 /**
  * Config surface domain — settings from shell + project only (no invented knobs).
- * Writes not wired; danger actions disabled.
+ * Config fields are read-only; danger actions stay disabled.
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import { getShellState, subscribeShell } from '@ship/sail-studio-shell'
@@ -56,7 +56,7 @@ const TITLES: Record<ConfigCatId, string> = {
 const LEADS: Record<ConfigCatId, string> = {
   project: 'Open root and theme/mode from the running shell.',
   runtime: 'Dev server and loaded module activities.',
-  plugins: 'Module activities on the rail. Ship Cloud install is not wired.',
+  plugins: 'Module activities on the rail. Ship Cloud install is unavailable here.',
   danger: 'Destructive actions are not available yet.',
 }
 

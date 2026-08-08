@@ -1,6 +1,6 @@
 /**
  * Theme shape facet — radius / elevation / border / glass + specimen-first layout.
- * Wave 2: mock re-port + review fixes (mock ramp, glass card α, honesty).
+ * Shape surface: mock ramp, glass card α, honesty markers.
  */
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'

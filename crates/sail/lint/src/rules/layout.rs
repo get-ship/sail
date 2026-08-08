@@ -934,7 +934,7 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             | "translate"
             | "dir"
             | "lang"
-            // Framework theme IR (Job 5d / D10): host paint authority attr.
+            // Framework theme IR: host paint authority attr.
             // Matches tokens_generate `[theme=id]` + theme.applyScope writes.
             | "theme"
             // Design-token identity (ARIA-1: former design `role=` misuse).

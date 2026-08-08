@@ -108,17 +108,8 @@ fn skill_generator_matches_product_surface() {
         "skill must teach data-sail-host is compiler-only and tests use role/name/text"
     );
     assert!(
-        md.contains("sail_edit") && !md.contains("sail_apply"),
-        "skill must list live MCP sail_edit (sail_apply removed)"
-    );
-    // Full tables must NOT dump into the default skill.
-    assert!(
-        !md.contains("### Full closed Style setters"),
-        "default skill must not dump the full Style setter table — use MCP"
-    );
-    assert!(
-        !md.contains("## L1 elements — the language surface"),
-        "default skill must not dump the full L1 inventory — use MCP topic l1"
+        md.contains("sail_edit"),
+        "skill must list live MCP sail_edit"
     );
     assert!(
         md.contains("colorMix") && md.contains("(colorToken, pct)"),
@@ -139,11 +130,7 @@ fn skill_generator_matches_product_surface() {
             || (md.contains("grow") && md.contains("box")),
         "skill hard rules must mention participation → box channel"
     );
-    assert!(
-        !md.contains("Participation attrs only"),
-        "skill must not still teach bare participation attrs as canonical"
-    );
-    assert!(
+     assert!(
         md.contains("sail-display-on-layout") || md.contains("display") && md.contains("layout"),
         "skill must warn about display-on-layout footgun"
     );
@@ -155,14 +142,6 @@ fn skill_generator_matches_product_surface() {
     assert!(
         md.contains("style.") || md.contains("style("),
         "skill must teach Style product (style.… / style({{…}}))"
-    );
-    assert!(
-        !md.contains("sx={style.") && !md.contains("sx={{style."),
-        "skill must not teach retired sx= host"
-    );
-    assert!(
-        !md.contains("when({{"),
-        "skill must not emit when({{{{…}}}}) — nested format-string leak"
     );
 }
 

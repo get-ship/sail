@@ -1,5 +1,5 @@
 /**
- * Job 4b — Themes home open path (Playwright).
+ * Themes home open path (Playwright).
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893) from product tree.
  *
@@ -80,7 +80,7 @@ describe('theme home e2e (live studio)', () => {
         { timeout: 20_000 },
       )
 
-      // Honesty smoke on live DOM + Job 5d theme= paint authority
+      // Honesty smoke on live DOM + theme={id} paint authority
       const honesty = await page.evaluate(() => {
         const text = document.body?.innerText || ''
         const swatch = document.querySelector(

@@ -19,7 +19,7 @@ export function projectPaths(proj: string): string[] {
 
 /**
  * Ops target (workspace-relative).
- * `?project=apps/…` → host sail-project meta → apps/studio dogfood.
+ * `?project=apps/…` → host sail-project meta → apps/studio default.
  * Meta is host-stamped; apps read via studio-shell, not document.querySelector.
  */
 export function resolveProjectRoot(): string {

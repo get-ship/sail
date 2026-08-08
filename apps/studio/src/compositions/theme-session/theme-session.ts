@@ -535,11 +535,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
     leaveReason,
     pathNav: () => PATH_NAV.map((p) => ({ ...p })),
     facetDoors: () => FACET_DOORS.map((p) => ({ ...p })),
-    /**
-     * Overflow menu removed from chrome (delete/remix on Themes home).
-     * Keep a no-op iterator so stale HMR bundles that still call
-     * `s().overflowNav()` do not crash the route boundary.
-     */
+    /** Empty overflow items (delete/remix live on Themes home). */
     overflowNav: () => [] as { key: string; value: string; icon: string; label: string }[],
     pathMenuId: `theme-${facet}-path-menu`,
     chromeMarker: facet,

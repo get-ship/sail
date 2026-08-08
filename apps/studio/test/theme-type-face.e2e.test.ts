@@ -1,5 +1,5 @@
 /**
- * Job 1 / Job B proof — type role edit changes preview face (host CSS var / computed font).
+ * Type role edit changes preview face (host CSS var / computed font).
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893) from product tree.
  * Screenshot: mission scratch pw-type-face-product-tree.png
@@ -118,7 +118,7 @@ describe('type face e2e (live studio product tree)', () => {
   it('set Display type role → preview host --display-font / computed face updates', async () => {
     if (!(await studioUp())) {
       throw new Error(
-        `[FAIL] studio not reachable at ${STUDIO} — boot sail dev before Job 1 proof`,
+        `[FAIL] studio not reachable at ${STUDIO} — boot sail dev before this proof`,
       )
     }
 

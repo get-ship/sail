@@ -1,5 +1,5 @@
 /**
- * Theme leave bridge — shell rail ↔ dirty leave guard (Job A).
+ * Theme leave bridge — shell rail ↔ dirty leave guard.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import {

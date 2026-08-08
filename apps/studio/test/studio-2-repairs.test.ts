@@ -1,5 +1,5 @@
 /**
- * STUDIO-2 regressions — R1–R6 gates + bar token checks.
+ * Studio shell/theme repair regressions + bar token checks.
  * Split from shell.test.ts to hold the hard ≤400 LOC file cap.
  */
 import { describe, expect, it } from 'vitest'
@@ -22,7 +22,7 @@ const SURFACE_VMS = [
   'apps/studio/src/compositions/theme-session/theme-session.ts',
 ] as const
 
-describe('STUDIO-2 repairs + bar gates', () => {
+describe('studio repairs + bar gates', () => {
   it('R1: ambient mountAmbient (not route mount) in every surface VM', () => {
     // Bare `mount` from @ship/sail-runtime is the host route mount and reads
     // payload.params; ambient lifecycle must use mountAmbient.

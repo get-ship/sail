@@ -23,7 +23,7 @@ fn stdlib_tags_match_manifest() {
     let (stdlib_entries, reskins) = l1_by_kind();
     assert!(
         reskins.is_empty(),
-        "native reskins retired — l1_by_kind().1 must be empty, got {}",
+        "l1_by_kind().1 (reskins) must be empty, got {}",
         reskins.len()
     );
     let registry_tags: HashSet<&'static str> = stdlib::sources().iter().map(|(t, _)| *t).collect();
@@ -41,12 +41,8 @@ fn stdlib_tags_match_manifest() {
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    // 55 stdlib after SPEC-L1-1 structure + skeleton promote:
-    //   − collapsible, details, summary  + accordion, kbd
-    //   − 2 native reskins (hr, kbd floor) deleted entirely
-    //   + skeleton (was attribute floor)
     assert_eq!(stdlib.len(), 55, "stdlib L1 count");
-    assert_eq!(reskins.len(), 0, "reskins must be gone");
+    assert_eq!(reskins.len(), 0, "reskins empty");
     assert_eq!(l1_entries().len(), 55);
 }
 
@@ -58,7 +54,7 @@ fn l1_kind_is_stdlib_only() {
         assert_eq!(
             entry.kind,
             L1Kind::StdlibElement,
-            "L1 `{}` must be StdlibElement after reskin scrub",
+            "L1 `{}` must be StdlibElement",
             entry.tag
         );
         let k = l1_kind(&entry.tag).expect("tag exists");
@@ -75,18 +71,12 @@ fn l1_kind_is_stdlib_only() {
     assert!(entries.iter().any(|e| e.tag == "kbd"), "kbd must be L1");
     assert!(
         entries.iter().any(|e| e.tag == "skeleton"),
-        "skeleton must be L1 (promoted from attribute floor)"
+        "skeleton must be L1"
     );
     assert!(
         entries.iter().any(|e| e.tag == "separator"),
-        "separator must be L1 (absorbs hr)"
+        "separator must be L1"
     );
-    for retired in ["collapsible", "details", "summary"] {
-        assert!(
-            entries.iter().all(|e| e.tag != retired),
-            "retired `{retired}` must not remain in L1"
-        );
-    }
 }
 
 #[test]

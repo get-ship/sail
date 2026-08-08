@@ -1,5 +1,5 @@
 /**
- * Job 0 / Job A proof — dirty leave dialog is modal isolation, not density bleed.
+ * Dirty leave dialog is modal isolation, not density bleed.
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893) from product tree.
  * Screenshot: mission scratch pw-leave-dialog-product-tree.png

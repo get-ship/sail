@@ -749,7 +749,7 @@ export function projectThemesDir(projectRoot: string): string {
     // Workspace-relative external or monorepo project root.
     return `${norm}/themes`
   }
-  // Fallback: studio dogfood
+  // Fallback: studio theme id
   return 'apps/studio/themes'
 }
 

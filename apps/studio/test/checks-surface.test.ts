@@ -666,7 +666,7 @@ describe('Review fixes dialog flow', () => {
   })
 })
 
-describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
+describe('rule groups + autofix + re-check + empty', () => {
   it('groupByRule sorts by count desc with severity badge counts', async () => {
     setChecksOpsClient({
       sailAuthoringCheck: async () => ({

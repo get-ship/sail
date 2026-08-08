@@ -61,7 +61,7 @@ fn grammar_block_vocabulary_matches_compiler_manifest() {
 }
 
 #[test]
-fn grammar_does_not_recognize_retired_while_or_case_elements() {
+fn grammar_block_rules_are_if_for_match_when_only() {
     assert!(
         !GRAMMAR_SRC.contains("while_loading_block")
             && !GRAMMAR_SRC.contains("while_error_block")
@@ -69,12 +69,12 @@ fn grammar_does_not_recognize_retired_while_or_case_elements() {
             && !GRAMMAR_SRC.contains("default_clause")
             && !GRAMMAR_SRC.contains("else_if_clause")
             && !GRAMMAR_SRC.contains("else_clause"),
-        "grammar.js still declares retired while-*/case/default/else element rules",
+        "grammar.js block element rules must be if/for/match/when only",
     );
 }
 
 #[test]
-fn grammar_does_not_recognize_retired_style_directive() {
+fn grammar_has_no_style_attr_directive() {
     assert!(
         !GRAMMAR_SRC.contains("style_attr") && !GRAMMAR_SRC.contains("'style:'"),
         "grammar.js still declares a `style:` attribute rule, but the \
@@ -83,7 +83,7 @@ fn grammar_does_not_recognize_retired_style_directive() {
 }
 
 #[test]
-fn grammar_does_not_recognize_retired_class_directive() {
+fn grammar_has_no_class_attr_directive() {
     assert!(
         !GRAMMAR_SRC.contains("class_attr") && !GRAMMAR_SRC.contains("'class:'"),
         "grammar.js still declares a `class:` attribute rule, but the \

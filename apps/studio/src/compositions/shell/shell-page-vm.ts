@@ -267,7 +267,7 @@ export function createShellPage(opts?: ShellPageOpts) {
       if (d.type === 'annotate' && d.rect) void handleBridgeRegion('annotate', d.rect)
       if (d.type === 'screenshot' && d.rect) void handleBridgeRegion('screenshot', d.rect)
     }
-    // Declarative shell hotkeys (SPEC-CTX-1 / G4) — no ambient keydown.
+    // Declarative shell hotkeys — no ambient keydown.
     const digitMap: Record<string, () => void> = {}
     for (const d of Object.keys(ACTIVITY_BY_DIGIT)) {
       digitMap[`mod+${d}`] = () => go(hrefForActivity(ACTIVITY_BY_DIGIT[d]!))

@@ -1,5 +1,5 @@
 /**
- * Themes home — behavioral honesty contracts (H-L1–H-L7).
+ * Themes home — behavioral honesty contracts.
  * Ops + createThemesSurface handlers; not template-string-only.
  */
 import { afterEach, describe, expect, it } from 'vitest'

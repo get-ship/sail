@@ -1,5 +1,5 @@
 /**
- * Job C proof — Components facet DTCG UI (live studio Playwright).
+ * Components facet DTCG UI (live studio Playwright).
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893).
  * Screenshot: mission scratch pw-components-dtcg-product-tree.png
@@ -62,7 +62,7 @@ describe('components DTCG e2e (live studio)', () => {
   it('Alert defaults resolve via DTCG; no var(--)/L1; pick writes override; Clear restores', async () => {
     if (!(await studioUp())) {
       throw new Error(
-        `[FAIL] studio not reachable at ${STUDIO} — boot sail dev before Job C proof`,
+        `[FAIL] studio not reachable at ${STUDIO} — boot sail dev before this proof`,
       )
     }
 
