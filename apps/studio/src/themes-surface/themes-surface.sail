@@ -1,9 +1,7 @@
 <!--
-  <themes-surface> — project theme catalog master–detail (Variant B).
-  List (In project / Catalog) + preview with color story + L1 chrome under scoped theme.
-  Membership = project file on disk. Catalog: Add to project (confirm). No fake enable/default.
-  Ban-clean: layout keywords + L1. Color identity via theme= + registered tables (no CSSOM).
-  Idiomatic fine-comb: named Style in scope, same-file partials for list row + swatches.
+  <themes-surface> — project theme catalog master–detail.
+  List (In project / Catalog) + preview (color story, type, live chrome) under scoped theme.
+  Membership = project file on disk. Catalog: Add to project (confirm).
 -->
 <scope>
   style pageHeader = { box: shrink(0).padX(6).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
@@ -171,8 +169,7 @@ import type { Action } from '@ship/sail-runtime'
 import { createThemesSurface } from '../compositions/themes-surface/themes-surface-vm'
 export default controller(() => {
   const vm = createThemesSurface()
-  // themes.css cascade bit is data-mode — never author data-* in app .sail
-  // (sail-no-data-attr). Stamp via use: from the mode signal/value.
+  // Stamp data-mode via action (no data-* in markup).
   const paintMode: Action<string | null | undefined> = (node, initial) => {
     const el = node as HTMLElement
     const apply = (m: string | null | undefined): void => {

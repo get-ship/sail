@@ -13,9 +13,8 @@
   }
 
   style base = { box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(alert.border).radius(md).bg(alert).fg(alert.foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) }
-  // Start stripe geometry; brand paint layered at use site via style(stripe, { paint: bg(tone) }).
+  // ::before stripe geometry (rest fill alert.stripe; host attaches tone via when.before).
   style stripe = { box: position(absolute).left(0).top(0).bottom(0).w(1), paint: content(empty).bg(alert.stripe) }
-  // Icon rest samples alert surface; brand tones recolor the glyph via bound tone.
   style ico = { box: size(control-h-xs), paint: radius(md).bg(alert).fg(alert.stripe) }
   style title = { text: fontWeight(semibold) }
   style body = { paint: fg(alert.stripe) }
