@@ -1,6 +1,5 @@
 <!--
-  /sail/reference/layout — the layout keyword vocabulary, rendered from
-  src/language-surface.gen.ts (emitted by `sail-compiler prop-registry`).
+  /sail/reference/layout — layout keyword vocabulary from language-surface.
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -14,11 +13,20 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style({ box: minW(0) })>
-  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
-    <p token="doc-eyebrow">Reference</p>
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style cardMin = { box: minW(0) }
+  style propsLine = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+</scope>
+
+<column gap="6" style(root)>
+  <column gap="5" style(intro)>
+    <p style(eyebrow)>Reference</p>
     <h1>Layout keywords</h1>
-    <p token="doc-lead">
+    <p style(lead)>
       Structure is elements, not CSS. Each keyword takes a closed set of
       axis props; anything else is a compile error.
     </p>
@@ -26,10 +34,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <grid cols="3" gap="2">
     <for {layoutRows() as k} key={k.tag}>
-      <card padding="sm" style({ box: minW(0) })>
+      <card padding="sm" style(cardMin)>
         <column gap="1">
           <code>&lt;{k.tag}&gt;</code>
-          <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{k.props}</small>
+          <small style(propsLine)>{k.props}</small>
         </column>
       </card>
     </for>
