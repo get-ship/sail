@@ -15,6 +15,26 @@
   style fontHit = { box: pad(2_5).minW(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
   style fontSample = { box: minW(0), paint: fg(foreground), text: fontSize(lg).leading(snug) }
   style catChip = { when: { selected: { paint: bg(selected-bg).fg(foreground).border(border) } } }
+  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style editorScroll = { box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background) }
+  style pageTitle = { text: fontSize(xl).fontWeight(semibold).tracking(tight) }
+  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() }
+  style growMin = { box: grow(1).minW(0) }
+  style shrink0 = { box: shrink(0) }
+  style catsScroll = { box: overflowX(auto).minW(0) }
+  style specimenDock = { box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) }
+  style specimenPad = { box: grow(1).minH(0).h(full).pad(4) }
+  style specimenFrame = { box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) }
+  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style trafficDots = { box: shrink(0).minW(12) }
+  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
+  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
+  style scrollGrow = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style stageBody = { box: pad(5).minW(0) }
+  style typeDisplay = { text: fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight) }
+  style typeBody = { text: fontFamily(body).fontSize(sm).leading(relaxed) }
+  style typeMono = { text: fontFamily(mono).fontSize(xs) }
   type TypeRoleSelectProps = {
     token: string
     label: string
@@ -22,6 +42,14 @@
     disabled: boolean
     options: any
     onChange: any
+  }
+  type FontHitProps = {
+    family: string
+    category: string
+    sample: string
+    canEdit: boolean
+    onUseRole: any
+    onInstall: any
   }
 </scope>
 
@@ -33,6 +61,30 @@
         <option value={o.value}>{o.label}</option>
       </for>
     </select>
+  </column>
+</partial>
+
+<partial font-hit-row props: FontHitProps>
+  <column gap="2" font-hit font-family={family} style(fontHit)>
+    <row align="baseline" justify="between" gap="2" nowrap>
+      <p style(doorTitle, { box: grow(1).minW(0) })>{family}</p>
+      <p style(pathMeta, { box: shrink(0) })>{category}</p>
+    </row>
+    <p font-sample face={family} style(fontSample)>{sample}</p>
+    <row gap="1" align="center">
+      <button type="button" size="xs" variant="outline" tone="muted" font-family={family} font-token="display" on:click={onUseRole} disabled={!canEdit}>
+        Display
+      </button>
+      <button type="button" size="xs" variant="outline" tone="muted" font-family={family} font-token="body" on:click={onUseRole} disabled={!canEdit}>
+        Body
+      </button>
+      <button type="button" size="xs" variant="outline" tone="muted" font-family={family} font-token="mono" on:click={onUseRole} disabled={!canEdit}>
+        Mono
+      </button>
+      <button type="button" size="xs" variant="soft" tone="primary" font-family={family} font-token="body" on:click={onInstall} disabled={!canEdit} style(shrink0)>
+        Install
+      </button>
+    </row>
   </column>
 </partial>
 
@@ -52,12 +104,12 @@ export default controller(() => {
 })
 </controller>
 
-<column surface="themes" theme-assets-surface assets-chrome gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
+<column surface="themes" theme-assets-surface assets-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
     <row assets-error align="center" gap="2" style(bandError, { box: shrink(0) })>
-      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
+      <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
@@ -69,12 +121,12 @@ export default controller(() => {
     </row>
   </if>
 
-  <row assets-workbench gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
-    <scroll-area assets-editor style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })>
+  <row assets-workbench gap="0" nowrap align="stretch" style(workbench)>
+    <scroll-area assets-editor style(editorScroll)>
       <column gap="8" style(editorCol)>
         <column assets-header gap="2">
           <p style(fieldHint)>Assets facet</p>
-          <p style({ text: fontSize(xl).fontWeight(semibold).tracking(tight) })>Type &amp; icons</p>
+          <p style(pageTitle)>Type &amp; icons</p>
           <p style(fieldHint)>
             Deep type roles and icon pack judgment. Overview keeps shallow teasers only.
           </p>
@@ -125,12 +177,12 @@ export default controller(() => {
               Full Google Fonts catalog — search, preview, assign to a role, or install (vendor woff2 into the project).
             </p>
             <row gap="2" align="center" nowrap font-search>
-              <input type="search" size="sm" placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)" value={assets.fontSearchQ()} on:input={assets.onFontSearchInput} label="Search fonts" style({ box: grow(1).minW(0) })>
-              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch} style({ box: shrink(0) })>
+              <input type="search" size="sm" placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)" value={assets.fontSearchQ()} on:input={assets.onFontSearchInput} label="Search fonts" style(growMin)>
+              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch} style(shrink0)>
                 Search
               </button>
             </row>
-            <row gap="1" align="center" nowrap font-cats style({ box: overflowX(auto).minW(0) })>
+            <row gap="1" align="center" nowrap font-cats style(catsScroll)>
               <for {assets.fontCategoryOpts() as c} key={c.key}>
                 <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory} style(catChip, { box: shrink(0) })>
                   {c.label}
@@ -146,27 +198,14 @@ export default controller(() => {
             <if {assets.hasFontHits()}>
               <column gap="2" font-hits>
                 <for {assets.fontSearchHits() as f} key={f.key}>
-                  <column gap="2" font-hit font-family={f.family} style(fontHit)>
-                    <row align="baseline" justify="between" gap="2" nowrap>
-                      <p style(doorTitle, { box: grow(1).minW(0) })>{f.family}</p>
-                      <p style(pathMeta, { box: shrink(0) })>{f.category}</p>
-                    </row>
-                    <p font-sample face={f.family} style(fontSample)>{f.sample}</p>
-                    <row gap="1" align="center">
-                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
-                        Display
-                      </button>
-                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="body" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
-                        Body
-                      </button>
-                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
-                        Mono
-                      </button>
-                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-token="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} style({ box: shrink(0) })>
-                        Install
-                      </button>
-                    </row>
-                  </column>
+                  <font-hit-row
+                    family={f.family}
+                    category={f.category}
+                    sample={f.sample}
+                    canEdit={session.canEdit()}
+                    onUseRole={assets.onFontUseRole}
+                    onInstall={assets.onFontInstall}
+                  ></font-hit-row>
                 </for>
               </column>
             </if>
@@ -236,33 +275,33 @@ export default controller(() => {
       </column>
     </scroll-area>
 
-    <column specimen-dock gap="0" style({  box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })>
-      <column gap="0" style({  box: grow(1).minH(0).h(full).pad(4)  })>
+    <column specimen-dock gap="0" style(specimenDock)>
+      <column gap="0" style(specimenPad)>
         <card
           assets-specimen
           preview-specimen
           mode={session.paintMode()}
-          padding="none" style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })>
+          padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-              <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
+            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+              <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
+                <stack style(trafficDot, { paint: bg(destructive) })></stack>
+                <stack style(trafficDot, { paint: bg(warning) })></stack>
+                <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
-              <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{session.nameEdit()}</p>
+              <p style(chromeTitle)>{session.nameEdit()}</p>
               <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
-          <scroll-area style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
-            <column specimen-body gap="5" style({ box: pad(5).minW(0) })>
+          <scroll-area style(scrollGrow)>
+            <column specimen-body gap="5" style(stageBody)>
               <column gap="2" type-stack>
-                <p style({ text: fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight) })>
+                <p style(typeDisplay)>
                   {assets.typeDisplay()}
                 </p>
-                <p style({ text: fontFamily(body).fontSize(sm).leading(relaxed) })>
+                <p style(typeBody)>
                   {assets.typeBody()} — body copy for product UI judgment.
                 </p>
-                <p style({ text: fontFamily(mono).fontSize(xs) })>
+                <p style(typeMono)>
                   {assets.typeMono()} — const pack = "lucide"
                 </p>
               </column>

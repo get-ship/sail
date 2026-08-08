@@ -1,24 +1,32 @@
 <!--
   <theme-facet-chrome> — shared Themes facet chrome band.
-  Receives session via identity bind: session={session}
-  Path crumb, sun/moon mode switch, Save/Add.
-  No overflow menu — delete / remix live on Themes home.
-  Dirty leave: Save / Discard / Cancel dialog.
+  Identity bind: session={session}. Path crumb, mode switch, Save/Add, leave dialog.
 -->
+<scope>
+  style chromeRoot = { box: shrink(0).minW(0) }
+  style chromeBar = { box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background) }
+  style growMin = { box: grow(1).minW(0) }
+  style shrink0 = { box: shrink(0) }
+  style slashMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style nameInput = { box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) }
+  style diffMenu = { box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) }
+  style diffTitle = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) }
+  style diffPath = { paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() }
+  style diffDelta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).truncate() }
+  style diffEmpty = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style modeIcon = { box: shrink(0), paint: fg(muted-foreground) }
+  style divider = { box: w(half).h(5).minW(half), paint: bg(border-subtle) }
+</scope>
+
 <controller>
 import { mountAmbient } from '@ship/sail-runtime'
 import type { ThemeSession } from '../compositions/theme-session/theme-session'
 
 export default controller(() => {
   const sessionSig = signal<ThemeSession | null>(null)
-  /**
-   * Real signal for bindOpen → showModal() (top layer + backdrop).
-   * Static `open` is non-modal and nests in the chrome column — density UI
-   * bled through and Discard was clipped. Mirror session leaveOpen here.
-   */
+  // Real signal for bindOpen → showModal (top layer). Mirror session.leaveOpen.
   const leaveOpen = signal(false)
 
-  // Ambient lifecycle mount (do not import { mount } — that is the host view-mounter).
   mount((host) => {
     const pre = (host as unknown as { session?: ThemeSession | null }).session
     if (pre != null) sessionSig.set(pre)
@@ -112,13 +120,13 @@ export default controller(() => {
 })
 </controller>
 
-<column theme-facet-chrome-root gap="0" style({  box: shrink(0).minW(0)  })>
-  <row theme-facet-chrome align="center" justify="between" gap="3" nowrap style({  box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background)  })>
-    <row align="center" gap="2" nowrap style({  box: grow(1).minW(0)  })>
+<column theme-facet-chrome-root gap="0" style(chromeRoot)>
+  <row theme-facet-chrome align="center" justify="between" gap="3" nowrap style(chromeBar)>
+    <row align="center" gap="2" nowrap style(growMin)>
       <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes
       </button>
-      <p hidden="true" style({ paint: fg(muted-foreground), text: fontSize(sm) })>/</p>
+      <p hidden="true" style(slashMuted)>/</p>
       <input
         type="text"
         theme-name
@@ -129,8 +137,8 @@ export default controller(() => {
         spellcheck="false"
         disabled={!canEdit()}
         on:input={onNameInput}
-        on:change={onNameChange} style({ box: maxW(48), paint: borderWidth(0), text: fontWeight(semibold) })>
-      <p hidden="true" style({ paint: fg(muted-foreground), text: fontSize(sm) })>/</p>
+        on:change={onNameChange} style(nameInput)>
+      <p hidden="true" style(slashMuted)>/</p>
       <button
         type="button"
         size="sm"
@@ -152,38 +160,37 @@ export default controller(() => {
         </for>
       </dropdown>
       <if {showStateChip()}>
-        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill style({ box: shrink(0) })>
+        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill style(shrink0)>
           {stateChipLabel()}
         </badge>
       </if>
     </row>
 
-    <!-- Edit cluster (save / unsaved / undo) — separate from mode switch on the right. -->
-    <row align="center" gap="3" nowrap style({ box: shrink(0) })>
-      <row edit-cluster align="center" gap="1" nowrap style({ box: shrink(0) })>
-        <button type="button" size="sm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo} style({ box: shrink(0) })>
+    <row align="center" gap="3" nowrap style(shrink0)>
+      <row edit-cluster align="center" gap="1" nowrap style(shrink0)>
+        <button type="button" size="sm" variant="ghost" tone="muted" facet-undo label="Undo" disabled={!canUndo()} on:click={onUndo} style(shrink0)>
           <icon name="undo-2" size="sm"></icon>
         </button>
-        <button type="button" size="sm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo} style({ box: shrink(0) })>
+        <button type="button" size="sm" variant="ghost" tone="muted" facet-redo label="Redo" disabled={!canRedo()} on:click={onRedo} style(shrink0)>
           <icon name="redo-2" size="sm"></icon>
         </button>
-        <!-- Dropdown always mounted (not inside isDirty) so use:anchor can bind to the trigger. -->
+        <!-- Diff dropdown always mounted so the trigger can open it when dirty. -->
         <if {isDirty()}>
-          <button type="button" size="sm" variant="soft" tone="primary" unsaved-trigger popovertarget={diffMenuId()} label="Unsaved changes" style({ box: shrink(0) })>
+          <button type="button" size="sm" variant="soft" tone="primary" unsaved-trigger popovertarget={diffMenuId()} label="Unsaved changes" style(shrink0)>
             Unsaved
             <icon name="chevron-down" size="sm"></icon>
           </button>
         </if>
         <dropdown id={diffMenuId()} placement="bottom-end">
-          <column gap="2" style({ box: pad(3).minW(panel-min-w-md).maxW(panel-max-w-md) })>
-            <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>Unsaved changes</p>
+          <column gap="2" style(diffMenu)>
+            <p style(diffTitle)>Unsaved changes</p>
             <if {hasDiffRows()}>
               <scroll-area style({ box: maxH(48) })>
                 <column gap="2">
                   <for {diffRows() as row} key={row.key}>
                     <column gap="0" diff-row>
-                      <p style({ paint: fg(foreground), text: fontSize(xs).fontFamily(mono).truncate() })>{row.path}</p>
-                      <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).truncate() })>
+                      <p style(diffPath)>{row.path}</p>
+                      <p style(diffDelta)>
                         {row.from} → {row.to}
                       </p>
                     </column>
@@ -192,7 +199,7 @@ export default controller(() => {
               </scroll-area>
             </if>
             <if {!hasDiffRows()}>
-              <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>Edits pending — save to write theme JSON.</p>
+              <p style(diffEmpty)>Edits pending — save to write theme JSON.</p>
             </if>
             <button type="button" size="sm" variant="solid" tone="primary" diff-save on:click={onSave}>
               Save
@@ -200,23 +207,23 @@ export default controller(() => {
           </column>
         </dropdown>
         <if {canEdit()}>
-          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave} style({ box: shrink(0) })>
+          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave} style(shrink0)>
             {saveButtonLabel()}
           </button>
         </if>
         <if {isCatalog()}>
-          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject} style({ box: shrink(0) })>
+          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject} style(shrink0)>
             Add to project
           </button>
         </if>
       </row>
 
-      <stack hidden="true" style({ box: w(half).h(5).minW(half), paint: bg(border-subtle) })></stack>
+      <stack hidden="true" style(divider)></stack>
 
-      <row mode-cluster align="center" gap="2" nowrap style({ box: shrink(0) })>
+      <row mode-cluster align="center" gap="2" nowrap style(shrink0)>
         <if {canToggleMode()}>
-          <row dual-mode gap="2" align="center" nowrap label="Theme mode" style({ box: shrink(0) })>
-            <icon name="sun" size="sm" label="Light" style({ box: shrink(0), paint: fg(muted-foreground) })></icon>
+          <row dual-mode gap="2" align="center" nowrap label="Theme mode" style(shrink0)>
+            <icon name="sun" size="sm" label="Light" style(modeIcon)></icon>
             <switch
               size="sm"
               tone="muted"
@@ -225,11 +232,11 @@ export default controller(() => {
               label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
               on:change={onModeSwitch}
             ></switch>
-            <icon name="moon" size="sm" label="Dark" style({ box: shrink(0), paint: fg(muted-foreground) })></icon>
+            <icon name="moon" size="sm" label="Dark" style(modeIcon)></icon>
           </row>
         </if>
         <if {showAddMode()}>
-          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode} style({ box: shrink(0) })>
+          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode} style(shrink0)>
             {addModeLabel()}
           </button>
         </if>
@@ -237,14 +244,7 @@ export default controller(() => {
     </row>
   </row>
 
-  <!--
-    Dirty leave — keep <dialog> mounted (not inside <if>). bindIf renders the
-    branch into a DocumentFragment and only then inserts; bindOpen's showModal
-    requires a connected element, so if+open=true never entered the top layer
-    (density bled through a closed/zero-size dialog). Always-mounted +
-    open={leaveOpen()} → bindOpen showModal when dirty leave fires.
-    ESC / backdrop → sail-close → cancel leave (pending navigation dropped).
-  -->
+  <!-- Leave dialog always mounted — bindOpen needs a connected host for showModal. -->
   <dialog
     theme-leave-dialog
     open={leaveOpen()}

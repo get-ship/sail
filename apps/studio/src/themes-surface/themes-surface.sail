@@ -169,7 +169,7 @@ import type { Action } from '@ship/sail-runtime'
 import { createThemesSurface } from '../compositions/themes-surface/themes-surface-vm'
 export default controller(() => {
   const vm = createThemesSurface()
-  // Stamp data-mode via action (no data-* in markup).
+  // Mode stamp for themed preview subtrees (action writes host attribute).
   const paintMode: Action<string | null | undefined> = (node, initial) => {
     const el = node as HTMLElement
     const apply = (m: string | null | undefined): void => {
