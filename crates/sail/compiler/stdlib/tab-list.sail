@@ -12,11 +12,28 @@
   }
 
   style base = { paint: borderBWidth(1).border(tab-list.border).bg(tab-list) }
-  style line = { paint: borderBWidth(1).border(tab-list.border) }
+  // line + enclosed share the bottom-edge strip chrome.
+  style variantStrip = { paint: borderBWidth(1).border(tab-list.border) }
   style pill = { box: pad(1), paint: borderWidth(0).radius(md).bg(tab-list.rail).borderBWidth(0) }
-  style enclosed = { paint: borderBWidth(1).border(tab-list.border) }
 </scope>
 
-<row align="stretch" gap="1" style(base, { match: { variant: { line: line, pill: pill, enclosed: enclosed } }, compound: [ { sticky: true, box: position(sticky).top(0), paint: z(sticky) }, { orientation: vertical, paint: borderBWidth(0).borderEWidth(1).border(tab-list.border) }, { orientation: vertical, variant: pill, paint: borderEWidth(0) } ] })>
+<row
+  align="stretch"
+  gap="1"
+  style(base, {
+    match: {
+      variant: {
+        line: variantStrip,
+        pill: pill,
+        enclosed: variantStrip,
+      },
+    },
+    compound: [
+      { sticky: true, box: position(sticky).top(0), paint: z(sticky) },
+      { orientation: vertical, paint: borderBWidth(0).borderEWidth(1).border(tab-list.border) },
+      { orientation: vertical, variant: pill, paint: borderEWidth(0) },
+    ],
+  })
+>
   <slot></slot>
 </row>

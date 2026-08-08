@@ -8,9 +8,8 @@
     size: 'sm' | 'md' | 'lg' = 'md'
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     orientation: 'horizontal' | 'vertical' = 'horizontal'
-  
     onTabChange: (detail: { name: string }) => void
-}
+  }
 
   style host = { box: minW(0) }
 </scope>
