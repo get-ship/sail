@@ -63,11 +63,18 @@ function once<T>(op: string, args: Record<string, unknown> = {}): LiveSource<T> 
   }
 }
 
+/** Intentional error payload shape for the boom ok-arm (rarely hit). */
+export interface BoomOk {
+  data: string
+}
+
 /** The `ship` client: app-domain demo ops. */
 export interface ShipClient {
   demo: {
     todos(): LiveSource<TodoList>
     config(): LiveSource<DemoConfig>
+    /** Always fails — error-boundary / match {error} showcase. */
+    boom(): LiveSource<BoomOk>
   }
 }
 
@@ -84,6 +91,7 @@ export function makeShip(): ShipClient {
     demo: {
       todos: () => once<TodoList>('demo.todos'),
       config: () => once<DemoConfig>('demo.config'),
+      boom: () => once<BoomOk>('demo.boom'),
     },
   }
 }

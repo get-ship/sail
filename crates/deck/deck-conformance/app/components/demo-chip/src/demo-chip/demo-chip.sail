@@ -1,13 +1,11 @@
-<!--
-  <demo-chip> — trivial custom element for the deck-conformance shared-chunk dedup
-  showcase (GAP 4). Both routes/widgets and routes/gallery use this tag; the
-  multi-entry build must hoist it into ONE shared chunk.
+<!-- Shared CE for multi-entry chunk dedup; data-marker is the shared_chunk test literal. -->
 
-  `data-marker="demo-chip-marker"` is the stable literal the deck-conformance
-  `shared_chunk` test searches `.deck/` JS files for to prove the dedup
-  invariant. `data-*` is a recognized HTML pass-through (see `layout::is_passthrough_attr`)
-  so the framework keeps it on the element; the marker survives lowering
-  into the emitted bundle as `... data-marker="demo-chip-marker" ...`.
--->
+<scope>
+  style chip = {
+    box: pad(1),
+    paint: radius(md).bg(surface-2).fg(foreground),
+    text: fontSize(xs).fontFamily(mono),
+  }
+</scope>
 
-<span data-marker="demo-chip-marker" style({ box: pad(1), paint: radius(md).bg(surface-2).fg(foreground), text: fontSize(xs).fontFamily(mono) })><slot></slot></span>
+<span data-marker="demo-chip-marker" style(chip)><slot></slot></span>
