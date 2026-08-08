@@ -213,6 +213,21 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "menu-item",
         &["menu-item-foreground", "menu-item-hover-bg"],
     ),
+    // L1-POLISH residual — error-state anatomy chrome + theme-picker meta ink.
+    (
+        "error-state",
+        &["error-state", "error-state-foreground", "error-state-border"],
+    ),
+    (
+        "theme-picker",
+        &[
+            "theme-picker",
+            "theme-picker-foreground",
+            "theme-picker-trigger-foreground",
+            "theme-picker-option-foreground",
+            "theme-picker-option-hover-bg",
+        ],
+    ),
 ];
 
 /// Default-rest free globals that a slice element must NOT use for its owned
@@ -304,6 +319,12 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ("/* menu-item */", &["foreground", "muted", "hover-bg"]),
     // L1-POLISH-D — field hint/error channels (not free muted-foreground / destructive).
     ("/* field */", &["muted-foreground", "destructive"]),
+    // L1-POLISH residual — desc/code/details rest from pack (not free muted-foreground).
+    // Icon + inline still brand muted/destructive; title keeps free foreground.
+    ("/* error-state */", &["muted-foreground", "border-subtle"]),
+    // L1-POLISH residual — chrome meta ink from option-fg (not free muted-foreground).
+    // Swatch live previews still free background/foreground intentionally.
+    ("/* theme-picker */", &["muted-foreground"]),
 ];
 
 fn component_packs() -> BTreeMap<String, BTreeSet<String>> {
