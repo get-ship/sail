@@ -7,6 +7,7 @@
 //! used by Style lower and layout class resolution.
 
 pub mod channel;
+pub mod complete;
 pub mod component_surfaces;
 pub mod host_ctx;
 pub mod clash;
@@ -23,6 +24,12 @@ pub mod sx_ir;
 pub mod sx_vocab;
 pub mod token_groups;
 pub mod tokens;
+
+pub use complete::{
+    OBJECT_KEYS, StyleCompleteContext, StyleCompleteItem, StyleCompleteKind,
+    collect_style_const_names, style_complete_at, style_complete_context_at,
+    style_complete_for_context, when_keys,
+};
 
 pub use component_surfaces::{color_paint_vocabulary, is_component_public_name, surface_pack_for_host};
 pub use host_ctx::with_host_surface;

@@ -681,6 +681,43 @@ pub fn completions_at(source: &str, source_path: Option<&Path>) -> Vec<Symbol> {
     symbols_from_table(&table, controller.as_ref())
 }
 
+/// Position-aware completions (SPEC-STYLE-COMPLETE-1).
+///
+/// When `byte_offset` sits inside a Style region, returns Style items mapped to
+/// [`Symbol`] (prefer Style over bare scope). Otherwise returns scope symbols
+/// from [`completions_at`].
+///
+/// `host` is the L1 host tag for component units (`Some("chip")`); `None` for
+/// app Style (D1 surface law).
+pub fn completions_at_offset(
+    source: &str,
+    source_path: Option<&Path>,
+    byte_offset: usize,
+    host: Option<&str>,
+) -> Vec<Symbol> {
+    let style_items =
+        sail_lint::style::style_complete_at(source, source_path, byte_offset, host);
+    if !style_items.is_empty() {
+        return style_items
+            .into_iter()
+            .map(|it| Symbol {
+                name: it.label,
+                kind: it.kind.as_str().to_string(),
+                source: "style".into(),
+                line: 0,
+                col: 0,
+            })
+            .collect();
+    }
+    // Style context with empty set (e.g. StyleRef with no consts) still wins
+    // over scope when the caret is classified as Style.
+    let ctx = sail_lint::style::style_complete_context_at(source, byte_offset, host);
+    if !matches!(ctx, sail_lint::style::StyleCompleteContext::Unknown) {
+        return Vec::new();
+    }
+    completions_at(source, source_path)
+}
+
 // ── internals ─────────────────────────────────────────────────────────────
 
 fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>) -> Vec<Symbol> {
@@ -933,6 +970,50 @@ mod tests {
     #[test]
     fn root_ident_none_off_identifier() {
         assert_eq!(root_ident_at(b"  + ", 1), None);
+    }
+
+    #[test]
+    fn completions_at_offset_style_bg_tokens() {
+        // SPEC-STYLE-COMPLETE-1: caret inside `bg(¦)` returns Style tokens.
+        let src = r#"<div style({ paint: bg() })>x</div>"#;
+        let off = src.find("bg(").expect("bg(") + 3; // inside parens
+        let items = completions_at_offset(src, None, off, None);
+        assert!(
+            items.iter().any(|s| s.name == "primary"),
+            "expected primary token: {:?}",
+            items.iter().map(|s| &s.name).collect::<Vec<_>>()
+        );
+        assert!(
+            items.iter().any(|s| s.name == "surface-1"),
+            "expected surface-1: {:?}",
+            items.iter().map(|s| &s.name).collect::<Vec<_>>()
+        );
+        assert!(
+            items.iter().all(|s| s.source == "style"),
+            "Style complete must prefer style source: {:?}",
+            items
+        );
+        assert!(
+            !items.iter().any(|s| s.name == "chip-foreground"),
+            "app host must exclude chip-foreground"
+        );
+    }
+
+    #[test]
+    fn completions_at_offset_outside_style_is_scope() {
+        let src = r#"<controller>
+import { controller, signal } from '@ship/sail-runtime'
+export default controller(() => ({ count: signal(0) }))
+</controller>
+<div>{count()}</div>"#;
+        let off = src.find("count()").expect("count");
+        let items = completions_at_offset(src, None, off, None);
+        // Not Style context — may return scope symbols (count) when parse ok.
+        assert!(
+            !items.iter().any(|s| s.source == "style" && s.kind == "token"),
+            "non-style caret must not invent style tokens: {:?}",
+            items
+        );
     }
 
     #[test]
