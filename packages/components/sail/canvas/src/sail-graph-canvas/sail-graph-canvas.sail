@@ -299,7 +299,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 })
 
 </controller>
-<div style({ box: position(relative).w(full).overflow(hidden), paint: bg(card).borderWidth(1).border(border).radius(md) })>
+<div style({ box: position(relative).w(full).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
     preserveAspectRatio="none"
@@ -334,7 +334,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
 
-         style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), when: { hover: { paint: shadow(sm) }, focus: { paint: outline(ring) }, current: { paint: borderWidth(1).border(ring).shadow(sm) }, stateAgent: { paint: borderLWidth(1).borderL(primary) }, stateSkill: { paint: borderLWidth(1).borderL(success) }, stateMcp: { paint: borderLWidth(1).borderL(info) }, stateRule: { paint: borderLWidth(1).borderL(warning) }, statePerm: { paint: borderLWidth(1).borderL(destructive) }, stateHarness: { paint: borderLWidth(1).borderL(accent) } } })>
+         style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), when: { hover: { paint: shadow(sm) }, focus: { paint: outline(ring) }, current: { paint: borderWidth(1).border(ring).shadow(sm) }, stateAgent: { paint: borderLWidth(1).borderL(primary) }, stateSkill: { paint: borderLWidth(1).borderL(success) }, stateMcp: { paint: borderLWidth(1).borderL(info) }, stateRule: { paint: borderLWidth(1).borderL(warning) }, statePerm: { paint: borderLWidth(1).borderL(destructive) }, stateHarness: { paint: borderLWidth(1).borderL(accent) } } })>
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>

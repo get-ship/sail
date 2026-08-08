@@ -23,7 +23,7 @@
     <row style({ box: gap(2) })>
       <div style({ box: pad(2), paint: bg(surface-2).radius(sm) })>B1</div>
       <div style({ box: pad(2), paint: bg(surface-3).radius(sm) })>B2</div>
-      <div style({ box: pad(2), paint: bg(card).radius(sm) })>B3</div>
+      <div style({ box: pad(2), paint: bg(surface-1).radius(sm) })>B3</div>
     </row>
   </column>
   <p style({ paint: fg(foreground) })>Footer line with no dynamics.</p>

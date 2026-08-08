@@ -65,7 +65,7 @@ export default controller((ctx) => {
  // Mobile base = display(none); tablet+ restores flex column.
  // NOT <column> — .sail-col { display:flex } beats .sx-displaynone.
  // 14rem rail (space-56 ≡ --panel-rail-w).
- style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(navbar).fg(navbar-foreground), when: { tablet: { box: display(flex) } } }
+ style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
  // Current must paint over the base muted ink — use a filled pill so the
  // active page is obvious even when cascade order is unkind.
@@ -76,7 +76,7 @@ export default controller((ctx) => {
  // (tutorial) — grow alone collapses when the slot host is a block wrapper.
  style mainWorkbench = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).h(fill).overflow(hidden) }
  // Mobile-only chrome — plain div so display:none wins at tablet+.
- style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar), when: { tablet: { box: display(none) } } }
+ style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
  style contentCol = { box: minH(0).minW(0) }
 </scope>
 

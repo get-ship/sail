@@ -128,7 +128,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
   <slot></slot>
 {else => <if {hasFallbackSlot()}>
     <slot name="fallback"></slot>
-  {else => <row role="alert" gap="3" align="start" style({ box: padY(4).padX(5), paint: borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).shadow(xs) })>      <span style({ box: display(contents), text: fontFamily(body).fontSize(sm) })>        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style({ box: w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).mt(1), paint: fg(destructive) })>
+  {else => <row role="alert" gap="3" align="start" style({ box: padY(4).padX(5), paint: borderWidth(1).border(destructive).radius(md).bg(muted).fg(foreground).shadow(xs) })>      <span style({ box: display(contents), text: fontFamily(body).fontSize(sm) })>        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style({ box: w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).mt(1), paint: fg(destructive) })>
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>
         <path d="M12 17h.01"></path>

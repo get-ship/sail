@@ -368,7 +368,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   </svg>
 </row>
 <if {open() && !disabled()}>
-  <div role="dialog" aria-label="Choose date" style({ box: position(absolute).left(0).w(panel-max-w-sm).pad(2).mt(1), paint: z(popover).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md) })>    <span style({ box: display(contents), text: fontFamily(body) })>      <row align="center" justify="between" style({ box: mb(1) })>
+  <div role="dialog" aria-label="Choose date" style({ box: position(absolute).left(0).w(panel-max-w-sm).pad(2).mt(1), paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md) })>    <span style({ box: display(contents), text: fontFamily(body) })>      <row align="center" justify="between" style({ box: mb(1) })>
       <button type="button" data-act="prev" aria-label="Previous month" style({ box: w(icon-size-2xl).h(icon-size-2xl), paint: radius(sm).fg(muted-foreground).cursor(pointer), when: { hover: { paint: bg(muted).fg(foreground) } } })>‹</button>
       <span style({ box: grow(1), text: fontWeight(semibold).textAlign(center) })>{monthLabel()}</span>
       <button type="button" data-act="next" aria-label="Next month" style({ box: w(icon-size-2xl).h(icon-size-2xl), paint: radius(sm).fg(muted-foreground).cursor(pointer), when: { hover: { paint: bg(muted).fg(foreground) } } })>›</button>
