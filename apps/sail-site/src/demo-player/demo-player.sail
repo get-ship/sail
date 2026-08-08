@@ -42,10 +42,10 @@ export default controller((ctx: Scope) => {
     </column>
     <if {playing()}>
       <row gap="1" align="end" style(eq)>
-        <div style([bar, style({ box: h(4), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
-        <div style([bar, style({ box: h(6), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
-        <div style([bar, style({ box: h(3), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
-        <div style([bar, style({ box: h(5), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })])></div>
+        <div style(bar, { box: h(4), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(bar, { box: h(6), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(bar, { box: h(3), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
+        <div style(bar, { box: h(5), paint: opacity(75), animate: loop({ scale-y: 'spring:gentle', stagger: '0.1s' }) })></div>
       </row>
     {else => <row gap="1" align="center" style(eq)>
         <div style(rest)></div>

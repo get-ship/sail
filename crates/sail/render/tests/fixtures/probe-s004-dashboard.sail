@@ -8,15 +8,15 @@
   <row nowrap align="stretch" style({ box: grow(1) })>
     <column gap="1" style({ box: shrink(0).w(56).padY(5).padX(4), paint: bg(sidebar).fg(sidebar-foreground).borderE(sidebar-border) })>
       <a
-        href="#home" style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md) }).when(hover, { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) })>
+        href="#home" style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md), when: { hover: { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) } } })>
         Home
       </a>
       <a
-        href="#reports" style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md) }).when(hover, { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) })>
+        href="#reports" style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md), when: { hover: { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) } } })>
         Reports
       </a>
       <a
-        href="#team" style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md) }).when(hover, { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) })>
+        href="#team" style({ box: padY(2).padX(3), paint: fg(sidebar-foreground).radius(md), when: { hover: { paint: bg(sidebar-accent).fg(sidebar-accent-foreground) } } })>
         Team
       </a>
     </column>

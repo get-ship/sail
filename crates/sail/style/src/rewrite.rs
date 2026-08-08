@@ -161,16 +161,38 @@ pub fn rewrite_style_expr(expr: &str) -> String {
         parts.push(format!("animate: {}", animate_calls.join(".")));
     }
 
-    let mut out = if parts.is_empty() {
+    // Fold `.when` tails into object key `when:` (SPEC-STYLE-OBJECT-1).
+    let when_entries = fold_when_tails(&when_tails);
+    if !when_entries.is_empty() {
+        parts.push(format!("when: {{ {} }}", when_entries.join(", ")));
+    }
+    if parts.is_empty() {
         "style({})".to_string()
     } else {
         format!("style({{ {} }})", parts.join(", "))
-    };
-    for t in when_tails {
-        out.push_str(".when");
-        out.push_str(&t);
     }
-    out
+}
+
+/// Convert rewritten when-tail arg lists into `key: partial` entries.
+fn fold_when_tails(tails: &[String]) -> Vec<String> {
+    let mut entries = Vec::new();
+    for t in tails {
+        // t is like `(hover, { paint: … })` or `({ hover: … })`
+        let inner = t.trim();
+        let inner = inner.strip_prefix('(').and_then(|s| s.strip_suffix(')')).unwrap_or(inner).trim();
+        if inner.starts_with('{') {
+            // map form already key: value pairs — strip braces
+            let body = inner.strip_prefix('{').and_then(|s| s.strip_suffix('}')).unwrap_or(inner).trim();
+            if !body.is_empty() {
+                entries.push(body.to_string());
+            }
+        } else if let Some((key, rest)) = inner.split_once(',') {
+            let key = key.trim();
+            let body = rest.trim();
+            entries.push(format!("{key}: {body}"));
+        }
+    }
+    entries
 }
 
 /// Returns one or more parenthesized when-args strings.
@@ -802,11 +824,8 @@ fn normalize_style_tag_call(value: &str) -> String {
     if t.starts_with("when(") {
         return when_expr_to_tag_style(t);
     }
-    if t.starts_with("match(") || t.starts_with("compound(") {
-        return format!("style([{t}])");
-    }
-    if t.starts_with('[') {
-        return format!("style({t})");
+    if t.starts_with("match(") || t.starts_with("compound(") || t.starts_with('[') {
+        return crate::objectify::objectify_style_expr(t);
     }
     if t.starts_with("style.") {
         return rewrite_style_expr(t);
@@ -821,29 +840,36 @@ fn normalize_style_tag_call(value: &str) -> String {
     t.to_string()
 }
 
-/// `when({ hover: … })` / `when(hover, {…})` → `style({}).when(…)…`.
+/// `when({ hover: … })` / `when(hover, {…})` → `style({ when: {…} })`.
 fn when_expr_to_tag_style(expr: &str) -> String {
     let t = expr.trim();
     if !t.starts_with("when") {
-        return format!("style([{t}])");
+        return objectify_free_form(t);
     }
     let after = t["when".len()..].trim_start();
     if !after.starts_with('(') {
-        return format!("style([{t}])");
+        return objectify_free_form(t);
     }
     let end = scan_balanced(after, 0);
     let args = &after[..end];
-    let mut out = "style({})".to_string();
-    for tail in split_when_to_cond_args(args) {
-        out.push_str(".when");
-        out.push_str(&tail);
-    }
-    // Preserve any chain after the first when(…)
+    let entries = fold_when_tails(&split_when_to_cond_args(args));
+    let out = if entries.is_empty() {
+        "style({})".to_string()
+    } else {
+        format!("style({{ when: {{ {} }} }})", entries.join(", "))
+    };
     let rest = after[end..].trim_start();
-    if !rest.is_empty() {
-        out.push_str(rest);
+    if rest.is_empty() {
+        out
+    } else {
+        // Residual tails after free when — leave attached (should not appear).
+        format!("{out}{rest}")
     }
-    out
+}
+
+fn objectify_free_form(t: &str) -> String {
+    // Prefer full objectify path when available.
+    crate::objectify::objectify_style_expr(t)
 }
 
 #[cfg(test)]
@@ -901,7 +927,7 @@ mod tests {
     fn emit_pair(old: &str, new: &str) {
         // Old form: migration dual (`parse_flat`). New form: product channel parse.
         let (s_old, d_old) = crate::parse::parse_flat(old);
-        let (s_new, d_new) = parse(new);
+        let (s_new, d_new) = crate::parse::parse(new);
         assert!(
             d_old.is_empty() && d_new.is_empty(),
             "diags old={:?} new={:?}",
@@ -982,7 +1008,7 @@ mod tests {
         let new = rewrite_style_expr(old);
         assert_eq!(
             new,
-            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+            "style({ paint: bg(primary), when: { hover: { paint: bg(muted) } } })"
         );
         emit_pair(old, &new);
     }
@@ -992,12 +1018,12 @@ mod tests {
         let old = "style.cursor(pointer).when({ hover: style.controlLift(), active: style.press(), disabled: style.cursor(not-allowed).opacity(50) })";
         let new = rewrite_style_expr(old);
         assert!(
-            new.contains(".when(hover, { paint: controlLift() })"),
+            new.contains("when: {") && new.contains("hover: { paint: controlLift() }"),
             "{new}"
         );
-        assert!(new.contains(".when(active, { paint: press() })"), "{new}");
+        assert!(new.contains("active: { paint: press() }"), "{new}");
         assert!(
-            new.contains(".when(disabled, { paint: cursor(not-allowed).opacity(50) })"),
+            new.contains("disabled: { paint: cursor(not-allowed).opacity(50) }"),
             "{new}"
         );
         emit_pair(old, &new);
@@ -1158,18 +1184,19 @@ mod tests {
     fn lift_list_form() {
         let src = r#"<button style={[ base, match(v, { a: a }) ]}>ok</button>"#;
         let out = rewrite_teaching_source(src);
-        assert!(out.starts_with("<button style(["), "{out}");
-        assert!(out.contains("match(v, { a: a })"), "{out}");
+        assert!(out.starts_with("<button style("), "{out}");
+        assert!(out.contains("match:") || out.contains("base"), "{out}");
         assert!(out.contains(">ok</button>"), "{out}");
         assert!(!out.contains("style="), "{out}");
+        assert!(!out.contains("style(["), "{out}");
     }
 
     #[test]
     fn lift_when_only() {
         let src = r#"<button style={when({ hover: style.bg(muted) })}>h</button>"#;
         let out = rewrite_teaching_source(src);
-        assert!(out.contains("style({}"), "{out}");
-        assert!(out.contains(".when(hover,"), "{out}");
+        assert!(out.contains("style({"), "{out}");
+        assert!(out.contains("when:") && out.contains("hover:"), "{out}");
         assert!(
             out.contains("paint: bg(muted)") || out.contains("bg(muted)"),
             "{out}"

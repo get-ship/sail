@@ -33,16 +33,8 @@
   }
 
   const host = style({ box: position(relative).overflow(hidden), paint: group().borderWidth(1).border(border).radius(md).bg(card) })
-  const statusBg = when({
-    groupStateRunning: style({ paint: bg(info) }),
-    groupStateOk: style({ paint: bg(success) }),
-    groupStateError: style({ paint: bg(destructive) }),
-  })
-  const statusFg = when({
-    groupStateRunning: style({ paint: fg(info) }),
-    groupStateOk: style({ paint: fg(success) }),
-    groupStateError: style({ paint: fg(destructive) }),
-  })
+  const statusBg = style({ when: { groupStateRunning: { paint: bg(info) }, groupStateOk: { paint: bg(success) }, groupStateError: { paint: bg(destructive) } } })
+  const statusFg = style({ when: { groupStateRunning: { paint: fg(info) }, groupStateOk: { paint: fg(success) }, groupStateError: { paint: fg(destructive) } } })
   // Status rail only — collapsible owns the caret (one disclosure chrome).
   const rail = style({ box: position(absolute).left(0).top(0).bottom(0).w(1) })
   const dot = style({ paint: shadow(none) })
@@ -57,16 +49,16 @@
 </scope>
 
 <div data-state={status()} style(host)>
-  <span aria-hidden="true" style([rail, statusBg])></span>
+  <span aria-hidden="true" style(rail, statusBg)></span>
 
   <accordion open={open()} style({ paint: group() })>
     <row slot="trigger" gap="2" align="center" style(trigger)>
       <span
         dot
         aria-hidden="true"
-        pulse={status() === 'running'} style([dot, statusBg])></span>
+        pulse={status() === 'running'} style(dot, statusBg)></span>
       <span style(nameText)>{name()}</span>
-      <span style([statusLabel, statusFg])>{status()}</span>
+      <span style(statusLabel, statusFg)>{status()}</span>
     </row>
     <div style(body)>
       <span style(sectionLabel)>Arguments</span>

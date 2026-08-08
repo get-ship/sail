@@ -193,8 +193,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     rule: RULE_ID,
                     severity: Severity::Error,
                     message: "style={…} / sx= is not Style attachment — use a tag call: \
-                              style({ box: …, paint: … }).when(hover, { paint: … })  \
-                              or  style([ base, match(…) ])"
+                              style({ box: …, paint: …, when: { hover: { paint: … } }, match: { … } })"
                         .to_string(),
                     suggest: Some(
                         "Attach Style as style({…}) on the open tag (no `=`)."
@@ -875,7 +874,7 @@ mod tests {
 
     #[test]
     fn style_block_list_match_when_product_passes() {
-        let src = r#"<div style([ match(variant, { solid: style({ paint: bg(primary) }) }), when({ hover: style({ paint: opacity(90) }) }) ])>  x
+        let src = r#"<div style({ match: { variant: { solid: { paint: bg(primary) } } }, when: { hover: { paint: opacity(90) } } })>  x
 </div>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }

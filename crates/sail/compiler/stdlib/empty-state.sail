@@ -31,60 +31,19 @@
   align="stretch"
   justify="center"
   gap="3"
-  use:variantLive style([
-    base,
-    match(size, {
-      md: sizeMd,
-      sm: sizeSm,
-      lg: sizeLg,
-    }),
-    match(variant, {
-      default: variantDefault,
-      inline: variantInline,
-      placeholder: variantPlaceholder,
-      connecting: variantConnecting,
-    }),
-    when({
-      forced-colors: style({ paint: border(CanvasText) }),
-    }),
-  ])>
-  <row inline nowrap align="center" justify="center" hidden="true" style([ style({ box: shrink(1) }), 
-      icon,
-      // Bound tone recolors icon glyph; omit tone → empty-state rest.
-      style({ paint: bg(empty-state).fg(tone) }),
-      // Muted keeps empty-state-foreground (not pure muted-foreground).
-      compound({ tone: muted }, style({ paint: bg(empty-state).fg(empty-state-foreground) })),
-      when({
-        empty: style({ box: display(none) }),
-        forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),
-      }),
-    ])>
+  use:variantLive style(base, { when: { forced-colors: { paint: border(CanvasText) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline, placeholder: variantPlaceholder, connecting: variantConnecting } } })>
+  <row inline nowrap align="center" justify="center" hidden="true" style(icon, { box: shrink(1), paint: bg(empty-state).fg(tone), when: { empty: { box: display(none) }, forced-colors: { paint: bg(Canvas).fg(CanvasText) } }, compound: [ { tone: muted, paint: bg(empty-state).fg(empty-state-foreground) } ] })>
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" style([ style(copy), style({ box: grow(1).minW(0) }) ])>
-    <div style([
-      title,
-      when({
-        empty: style({ box: display(none) }),
-      }),
-    ])>
+  <column align="stretch" gap="1" style(copy, { box: grow(1).minW(0) })>
+    <div style(title, { when: { empty: { box: display(none) } } })>
       <slot name="title"></slot>
     </div>
-    <div style([
-      desc,
-      when({
-        empty: style({ box: display(none) }),
-      }),
-    ])>
+    <div style(desc, { when: { empty: { box: display(none) } } })>
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" style([
-    actions,
-    when({
-      empty: style({ box: display(none) }),
-    }),
-  ])>
+  <row align="center" justify="center" gap="2" style(actions, { when: { empty: { box: display(none) } } })>
     <slot name="action"></slot>
   </row>
 </column>

@@ -150,7 +150,7 @@ export default controller(() => {
               <for {inspect.layoutRows() as box} key={box.key}>
                 <row gap="2" align="center" nowrap style({ box: padY(1) })>
                   <p style({ box: shrink(0), text: fontSize(sm).fontFamily(mono) })>{box.tag}</p>
-                  <p style([ style(pathMeta), style({ box: grow(1).minW(0) }) ])>{box.dims}</p>
+                  <p style(pathMeta, { box: grow(1).minW(0) })>{box.dims}</p>
                   <if {box.flags}>
                     <badge tone="warning" size="sm" variant="soft" pill style({ box: shrink(0) })>{box.flags}</badge>
                   </if>

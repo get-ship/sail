@@ -21,11 +21,4 @@
   const sizeLg = style({ box: h(3) })
 </scope>
 
-<meter style([
-  base,
-  match(size, {
-    sm: sizeSm,
-    md: sizeMd,
-    lg: sizeLg,
-  }),
-])></meter>
+<meter style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })></meter>

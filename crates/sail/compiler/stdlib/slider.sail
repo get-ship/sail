@@ -15,17 +15,10 @@
     name = ''
   }
 
-  const base = style({ box: w(full).h(5), paint: appearance(none).bg(transparent).cursor(pointer) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const base = style({ box: w(full).h(5), paint: appearance(none).bg(transparent).cursor(pointer), when: { disabled: { paint: cursor(not-allowed).opacity(50) } } })
   const sizeSm = style({ box: h(4) })
   const sizeMd = style({ box: h(5) })
   const sizeLg = style({ box: h(6) })
 </scope>
 
-<input type="range" use:rangeFill style([
-  base,
-  match(size, {
-    sm: sizeSm,
-    md: sizeMd,
-    lg: sizeLg,
-  }),
-])>
+<input type="range" use:rangeFill style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })>

@@ -14,7 +14,7 @@
   const fullBtn = style({ box: w(full) })
   const fontHit = style({ box: pad(2_5).minW(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
   const fontSample = style({ box: minW(0), paint: fg(foreground), text: fontSize(lg).leading(snug) })
-  const catChip = style({}).when(selected, { paint: bg(selected-bg).fg(foreground).border(border) })
+  const catChip = style({ when: { selected: { paint: bg(selected-bg).fg(foreground).border(border) } } })
 </scope>
 
 <controller>
@@ -37,14 +37,14 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row assets-error align="center" gap="2" style([ style(bandError), style({ box: shrink(0) }) ])>
+    <row assets-error align="center" gap="2" style(bandError, { box: shrink(0) })>
       <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row assets-loading align="center" gap="2" style([ style(bandStatus), style({ box: shrink(0) }) ])>
+    <row assets-loading align="center" gap="2" style(bandStatus, { box: shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -113,7 +113,7 @@ export default controller(() => {
             </row>
             <row gap="1" align="center" nowrap font-cats style({ box: overflowX(auto).minW(0) })>
               <for {assets.fontCategoryOpts() as c} key={c.key}>
-                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory} style([ style(catChip), style({ box: shrink(0) }) ])>
+                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory} style(catChip, { box: shrink(0) })>
                   {c.label}
                 </button>
               </for>
@@ -129,8 +129,8 @@ export default controller(() => {
                 <for {assets.fontSearchHits() as f} key={f.key}>
                   <column gap="2" font-hit font-family={f.family} style(fontHit)>
                     <row align="baseline" justify="between" gap="2" nowrap>
-                      <p style([ style(doorTitle), style({ box: grow(1).minW(0) }) ])>{f.family}</p>
-                      <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{f.category}</p>
+                      <p style(doorTitle, { box: grow(1).minW(0) })>{f.family}</p>
+                      <p style(pathMeta, { box: shrink(0) })>{f.category}</p>
                     </row>
                     <p font-sample face={f.family} style(fontSample)>{f.sample}</p>
                     <row gap="1" align="center">
@@ -183,7 +183,7 @@ export default controller(() => {
           <if {assets.hasIconGlyphs()}>
             <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs() as g} key={g.key}>
-                <center title={g.name} style([ style(iconCell), style({ box: shrink(0) }) ])>
+                <center title={g.name} style(iconCell, { box: shrink(0) })>
                   <icon name={g.name} size="md" label={g.name}></icon>
                 </center>
               </for>
@@ -232,7 +232,7 @@ export default controller(() => {
                 <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
               </row>
               <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{session.nameEdit()}</p>
-              <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{session.paintMode()}</p>
+              <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
           <scroll-area style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
             <column specimen-body gap="5" style({ box: pad(5).minW(0) })>

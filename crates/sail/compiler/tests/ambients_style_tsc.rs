@@ -80,11 +80,11 @@ fn style_misuse_is_tsc_error_and_good_chain_is_green() {
         work.join("good.ts"),
         r#"
 const a = style({ box: padX(2), paint: bg(primary).radius(sm).fg('muted-foreground') })
-const b = style({}).when(hover, { paint: bg(muted) })
-const c = match('solid', { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) })
-const d = compound({ pill: true }, style({ paint: radius(full) }))
+const b = style({ when: { hover: { paint: bg(muted) } } })
+const c = style({ match: { variant: { solid: { paint: bg(primary) }, soft: { paint: bg(muted) } } } })
+const d = style({ compound: [ { pill: true, paint: radius(full) } ] })
 const e = style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })
-const f = style({ box: pad(4).gap(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })
+const f = style({ box: pad(4).gap(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })
 // T0: bound tone + static group.member + string-form paths typecheck as paint args
 const tonePaint = style({ paint: bg(tone).fg(tone.foreground).border(tone) })
 const staticMember = style({ paint: fg(primary.foreground) })

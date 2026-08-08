@@ -261,7 +261,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           data-el-id={el.id}
           aria-selected={selectedSet().has(el.id) ? 'true' : 'false'}
           on:pointerdown={elementDown}
-          pointer-events="fill" style({ paint: stroke(none), text: fontFamily(body).fontSize(base) }).when(selected, { paint: fill(primary) })>{el.text}</text>
+          pointer-events="fill" style({ paint: stroke(none), text: fontFamily(body).fontSize(base), when: { selected: { paint: fill(primary) } } })>{el.text}</text>
       {else => <path
           d={el.path}
           data-el-id={el.id}
@@ -271,7 +271,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           on:pointerdown={elementDown}
           vector-effect="non-scaling-stroke"
           pointer-events={el.kind === 'pen' ? 'fill' : 'stroke'}
-          stroke-width="2" style({ paint: fill(none).cursor(pointer) }).when(selected, { paint: stroke(primary) }).when(statePen, { paint: fill(currentColor).stroke(none) })></path>}</if>
+          stroke-width="2" style({ paint: fill(none).cursor(pointer), when: { selected: { paint: stroke(primary) }, statePen: { paint: fill(currentColor).stroke(none) } } })></path>}</if>
     </for>
     <if {draftPath()}>
       <path

@@ -139,12 +139,12 @@ export default controller(({ data, expanded, depth }: Scope) => {
       {'branch' => <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
-style({ paint: group().radius(sm).cursor(pointer) }).when(hover, { paint: bg(hover-bg) })>
+style({ paint: group().radius(sm).cursor(pointer), when: { hover: { paint: bg(hover-bg) } } })>
 
           <for {row.pads as pad} key={pad.i}>
             <span style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })></span>
           </for>
-          <span aria-hidden="true" style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs) }).when(groupExpanded, { paint: rotate(90) })>▶</span>
+          <span aria-hidden="true" style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs), when: { groupExpanded: { paint: rotate(90) } } })>▶</span>
           <if {row.label !== ''}>
             <span style({ text: fontWeight(medium) })>"{row.label}"</span><span style({ paint: fg(muted-foreground) })>:&nbsp;</span>
           </if>
@@ -158,7 +158,7 @@ style({ paint: group().radius(sm).cursor(pointer) }).when(hover, { paint: bg(hov
             <span style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })></span>
           </for>
           <span style({ box: padX(1), paint: fg(muted-foreground) })>{row.text}</span>
-        </row>}{else => <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" style({ paint: radius(sm) }).when(hover, { paint: bg(hover-bg) })>
+        </row>}{else => <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" style({ paint: radius(sm), when: { hover: { paint: bg(hover-bg) } } })>
           <for {row.pads as pad} key={pad.i}>
             <span style({ box: w(3), paint: borderLWidth(1).borderL(border-subtle) })></span>
           </for>

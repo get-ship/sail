@@ -35,7 +35,7 @@
 
   const host = style({ box: display(block).position(relative).w(full), text: fontFamily(body) })
   // Same field chrome as bare <input type=text> so combobox survives theme swaps.
-  const input = style({ box: display(block).w(full).minH(control-h-md).padY(1_5).padX(3), paint: fg(field-foreground).bg(field).borderWidth(1).border(field-border).radius(md).shadow(xs), text: fontSize(base) }).when(hover, { paint: border(field-border-hover) }).when(focus, { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }).when(disabled, { paint: cursor(not-allowed).opacity(50) })
+  const input = style({ box: display(block).w(full).minH(control-h-md).padY(1_5).padX(3), paint: fg(field-foreground).bg(field).borderWidth(1).border(field-border).radius(md).shadow(xs), text: fontSize(base), when: { hover: { paint: border(field-border-hover) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }, disabled: { paint: cursor(not-allowed).opacity(50) } } })
   const listbox = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(bind(anchorWidth)).maxH(panel-max-h-sm).overflowY(auto).pad(1), paint: overscroll(contain).fg(combobox-foreground).bg(combobox).borderWidth(1).border(field-border).radius(md).shadow(lg).z(popover) })
 </scope>
 

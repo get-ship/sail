@@ -32,7 +32,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <h2>{group.title}</h2>
       <column gap="2">
         <for {group.lessons as lesson} key={lesson.slug}>
-          <a href={lesson.href} style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1) }).when(hover, { paint: bg(surface-2).borderWidth(1).border(border-strong) })>
+          <a href={lesson.href} style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1), when: { hover: { paint: bg(surface-2).borderWidth(1).border(border-strong) } } })>
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
               <column gap="1" style({ box: grow(1) })>

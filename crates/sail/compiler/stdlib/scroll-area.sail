@@ -16,14 +16,4 @@
   const horizontal = style({ box: overflowX(auto).overflowY(hidden) })
   const both = style({ box: overflow(auto) })
 </scope>
-<div style([
-  base,
-  match(orientation, {
-    vertical: vertical,
-    horizontal: horizontal,
-    both: both,
-  }),
-  when({
-    hover: style({ paint: scrollbarThumb(scroll-area-thumb-hover) }),
-  }),
-])><slot></slot></div>
+<div style(base, { when: { hover: { paint: scrollbarThumb(scroll-area-thumb-hover) } }, match: { orientation: { vertical: vertical, horizontal: horizontal, both: both } } })><slot></slot></div>

@@ -57,7 +57,7 @@ export default controller((ctx) => {
           active={item.active ? 'true' : 'false'}
           label={item.label}
           current={item.active ? 'page' : undefined}
-          title={item.label} style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground) }).when(hover, { paint: bg(hover-bg).fg(foreground) }).when(current, { paint: bg(selected-bg).fg(primary) })>
+          title={item.label} style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground), when: { hover: { paint: bg(hover-bg).fg(foreground) }, current: { paint: bg(selected-bg).fg(primary) } } })>
           <center style({ box: w(full).h(full) })>
             <icon name={item.icon} size="sm"></icon>
           </center>
@@ -72,7 +72,7 @@ export default controller((ctx) => {
           activity="exit"
           label="Back to app (Esc)"
           title="Back to app (Esc)"
-          on:click={onExitStudio} style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer) }).when(hover, { paint: bg(hover-bg).fg(foreground) })>
+          on:click={onExitStudio} style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer), when: { hover: { paint: bg(hover-bg).fg(foreground) } } })>
           <center style({ box: w(full).h(full) })>
             <icon name="log-out" size="sm"></icon>
           </center>
@@ -196,13 +196,13 @@ export default controller((ctx) => {
           </if>
         </row>
       </button>
-      <row health="ops" align="center" gap="1" style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })>
+      <row health="ops" align="center" gap="1" style({ box: shrink(0).padX(1), when: { hover: { paint: bg(hover-bg) } } })>
         <icon name="activity" size="sm"></icon>
         <badge tone={opsHealthTone()} size="sm" variant="soft" health-tone="ops">
           {opsHealthLabel()}
         </badge>
       </row>
-      <row health="watch" align="center" gap="1" style({  box: shrink(0).padX(1)  }).when(hover, { paint: bg(hover-bg) })>
+      <row health="watch" align="center" gap="1" style({ box: shrink(0).padX(1), when: { hover: { paint: bg(hover-bg) } } })>
         <icon name="radio" size="sm"></icon>
         <badge tone={watchHealthTone()} size="sm" variant="soft" health-tone="watch">
           {watchHealthLabel()}

@@ -1,6 +1,6 @@
 <!--
   /sail/reference/sx — Style / channels surface (URL slug is historical).
-  Product form: style({ box, paint, text, animate }) + .when(). Setter scale
+  Product form: style({ box, paint, text, animate }) + .style({}). Setter scale
   tables, when keys, refusals, match/compound/bind. No sx= product teaching.
 -->
 <controller>
@@ -51,7 +51,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Product paint is a <strong>block statement</strong> on the host with a
       channel spine:
       <code>style&#40;&#123; box: padX(2), paint: bg(primary), text: fontSize(sm), animate: enter(&#123;…&#125;) &#125;&#41;</code>,
-      <code>style&#40;[base, match(…), when(…)]&#41;</code>, or <code>style&#40;constRef&#41;</code>.
+      <code>style&#40;[base, style({ match: { : {  } } }), style({})]&#41;</code>, or <code>style&#40;constRef&#41;</code>.
       Every setter argument is a design token from a closed scale — the rows
       below list those values. An off-list token is a compile error that names
       the same list.
@@ -59,7 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product
       (dead form — refuse). Responsive and state paint use
-      <code>.when(tablet, &#123; … &#125;)</code> / <code>.when(hover, &#123; … &#125;)</code>
+      <code>.style({ when: { tablet: 123 } })</code> / <code>.style({ when: { hover: 123 } })</code>
       or map <code>when&#40;&#123; tablet: style… &#125;&#41;</code>, not
       <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
       {sxCount()} scale entries feed the setters. Region legality lives on the

@@ -29,32 +29,6 @@
   const outlineTone = style({ paint: bg(transparent).fg(tone).border(tone) })
 </scope>
 
-<span style([
-  base,
-  match(variant, {
-    soft: soft,
-    solid: solid,
-    outline: outline,
-  }),
-  match(size, {
-    md: sizeMd,
-    sm: sizeSm,
-    lg: sizeLg,
-  }),
-  match(variant, {
-    solid: solidTone,
-    soft: softTone,
-    outline: outlineTone,
-  }),
-  // Muted specials — not pure group-member paint for soft/outline.
-  compound({ variant: solid, tone: muted }, style({ paint: bg(muted).fg(muted-foreground).border(border) })),
-  compound({ variant: soft, tone: muted }, style({ paint: bg(muted).fg(muted-foreground).border(border) })),
-  compound({ variant: outline, tone: muted }, style({ paint: fg(muted-foreground).border(border) })),
-  compound({ pill: true }, style({ paint: radius(full) })),
-  when({
-    hover: style({ paint: opacity(90) }),
-    focus: style({ paint: outline(2) }),
-  }),
-])>
+<span style(base, { when: { hover: { paint: opacity(90) }, focus: { paint: outline(2) } }, match: { variant: { soft: style(soft, softTone), solid: style(solid, solidTone), outline: style(outline, outlineTone) }, size: { md: sizeMd, sm: sizeSm, lg: sizeLg } }, compound: [ { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) }, { tone: muted, variant: soft, paint: bg(muted).fg(muted-foreground).border(border) }, { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) }, { pill: true, paint: radius(full) } ] })>
   <slot></slot>
 </span>

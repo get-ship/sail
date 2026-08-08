@@ -20,28 +20,4 @@
   const dashed = style({ box: pad(0), paint: bg(transparent).borderWidth(0) })
 </scope>
 
-<hr style([
-  base,
-  match(orientation, {
-    horizontal: orientH,
-    vertical: orientV,
-  }),
-  match(variant, {
-    solid: solid,
-    dashed: dashed,
-  }),
-  // Solid brand via bound tone (omit tone → separator-line rest).
-  match(variant, {
-    solid: style({ paint: bg(tone) }),
-  }),
-  // Dashed rest geometry + separator-line color (orientation specials).
-  compound({ variant: dashed, orientation: horizontal }, style({ box: h(0), paint: borderTWidth(1).border(dashed).borderT(separator-line) })),
-  compound({ variant: dashed, orientation: vertical }, style({ box: w(0), paint: borderLWidth(1).border(dashed).borderL(separator-line) })),
-  // Dashed brand via bound tone.
-  compound({ variant: dashed, orientation: horizontal }, style({ paint: borderT(tone) })),
-  compound({ variant: dashed, orientation: vertical }, style({ paint: borderL(tone) })),
-  // Muted specials use border-subtle (not pure muted group fill).
-  compound({ variant: solid, tone: muted }, style({ paint: bg(border-subtle) })),
-  compound({ variant: dashed, orientation: horizontal, tone: muted }, style({ paint: borderT(border-subtle) })),
-  compound({ variant: dashed, orientation: vertical, tone: muted }, style({ paint: borderL(border-subtle) })),
-])>
+<hr style(base, { match: { orientation: { horizontal: orientH, vertical: orientV }, variant: { solid: style(solid, { paint: bg(tone) }), dashed: dashed } }, compound: [ { orientation: horizontal, variant: dashed, box: h(0), paint: borderTWidth(1).border(dashed).borderT(separator-line) }, { orientation: vertical, variant: dashed, box: w(0), paint: borderLWidth(1).border(dashed).borderL(separator-line) }, { orientation: horizontal, variant: dashed, paint: borderT(tone) }, { orientation: vertical, variant: dashed, paint: borderL(tone) }, { tone: muted, variant: solid, paint: bg(border-subtle) }, { orientation: horizontal, tone: muted, variant: dashed, paint: borderT(border-subtle) }, { orientation: vertical, tone: muted, variant: dashed, paint: borderL(border-subtle) } ] })>

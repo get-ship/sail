@@ -1,7 +1,7 @@
 <!--
   /sail/language/styling — Style product chapter: style.* chains, match, when,
   compound, scope Style consts. Every live demo paints with Style; code samples
-  match. Responsive paint uses when({ tablet|desktop|… }) locked to breakpoint
+  match. Responsive paint uses style({ when: { tablet: desktop } }) locked to breakpoint
   tokens — never tablet: utility prefixes.
 -->
 
@@ -25,7 +25,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Paint is the <strong>Style</strong> channel language:
     <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> as a block
-    statement, plus <code>.when()</code>, <code>match</code>,
+    statement, plus <code>.style({})</code>, <code>match</code>,
     <code>compound</code>, and scope Style consts. Values are design tokens —
     never raw hex. The compiler and the
     <a href="/sail/reference/sx">Style reference</a> share one table.
@@ -60,9 +60,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Browser and ARIA state are a map, not string prefixes. Hover these:
   </p>
   <row gap="3" style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })>
-    <button style(when({ hover: style({ paint: bg(muted) }) }))>hover → bg(muted)</button>
-    <button style(when({ hover: style({ paint: fg(primary) }) }))>hover → fg(primary)</button>
-    <button style(when({ active: style({ paint: bg(primary).fg(primary-foreground) }) }))>active:…</button>
+    <button style({ when: { hover: { paint: bg(muted) } } })>hover → bg(muted)</button>
+    <button style({ when: { hover: { paint: fg(primary) } } })>hover → fg(primary)</button>
+    <button style({ when: { active: { paint: bg(primary).fg(primary-foreground) } } })>active:…</button>
   </row>
   <code-block code={code.states}></code-block>
   <p>
@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>when&#40;&#123; tablet: …, desktop: … &#125;&#41;</code>. Resize to see this panel
     pad more from 768px up:
   </p>
-  <column gap="2" style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }).when(tablet, { box: pad(6) })>
+  <column gap="2" style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), when: { tablet: { box: pad(6) } } })>
     <p style({ text: fontSize(sm) })>pad(3) on a phone; when tablet → pad(6).</p>
   </column>
   <code-block code={code.conditions}></code-block>

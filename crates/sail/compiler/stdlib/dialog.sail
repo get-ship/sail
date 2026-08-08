@@ -36,22 +36,6 @@
   const sideBottom = style({ box: inset(0).w(full).maxW(none).m(0), paint: radius(none) })
 </scope>
 
-<dialog style([
-  base,
-  when({ open: open }),
-  match(size, {
-    sm: sizeSm,
-    md: sizeMd,
-    lg: sizeLg,
-    full: sizeFull,
-  }),
-  match(side, {
-    center: style({ box: m(auto) }),
-    start: sideStart,
-    end: sideEnd,
-    top: sideTop,
-    bottom: sideBottom,
-  }),
-])>
+<dialog style(base, { when: { open: open }, match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg, full: sizeFull }, side: { center: { box: m(auto) }, start: sideStart, end: sideEnd, top: sideTop, bottom: sideBottom } } })>
   <slot></slot>
 </dialog>

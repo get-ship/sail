@@ -261,7 +261,7 @@ export default controller(() => {
                 <if {library.hasProps()}>
                   <column props-table gap="1">
                     <row gap="3" nowrap style({ box: padY(1), paint: borderBWidth(1).borderB(border-subtle) })>
-                      <p style([ style(eyebrow), style({ box: grow(1) }) ])>Name</p>
+                      <p style(eyebrow, { box: grow(1) })>Name</p>
                       <p style(eyebrow)>Type</p>
                       <p style(eyebrow)>Default</p>
                     </row>
@@ -271,8 +271,8 @@ export default controller(() => {
                           <p style({ text: fontSize(sm).fontFamily(mono) })>{prop.name}</p>
                           <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>{prop.requiredLabel}</p>
                         </column>
-                        <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{prop.type}</p>
-                        <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{prop.defaultValue}</p>
+                        <p style(pathMeta, { box: shrink(0) })>{prop.type}</p>
+                        <p style(pathMeta, { box: shrink(0) })>{prop.defaultValue}</p>
                       </row>
                     </for>
                   </column>

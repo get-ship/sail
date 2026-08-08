@@ -329,7 +329,7 @@ pub fn channel_for_setter(name: &str) -> Option<Channel> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::parse;
+    use crate::parse::parse_legacy as parse;
 
     #[test]
     fn text_bearing_list_covers_spec_and_prose() {

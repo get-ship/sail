@@ -31,77 +31,31 @@
   align="stretch"
   justify="center"
   gap="3"
-  use:recoverySurface style([
-    base,
-    match(size, {
-      md: sizeMd,
-      sm: sizeSm,
-      lg: sizeLg,
-    }),
-    match(variant, {
-      default: variantDefault,
-      inline: variantInline,
-    }),
-    when({
-      forced-colors: style({ paint: border(CanvasText) }),
-    }),
-  ])>
-  <row inline nowrap align="center" justify="center" hidden="true" style([ style({ box: shrink(1) }), 
-      icon,
-      when({
-        forced-colors: style({ paint: bg(Canvas).fg(CanvasText) }),
-      }),
-    ])>
+  use:recoverySurface style(base, { when: { forced-colors: { paint: border(CanvasText) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline } } })>
+  <row inline nowrap align="center" justify="center" hidden="true" style(icon, { box: shrink(1), when: { forced-colors: { paint: bg(Canvas).fg(CanvasText) } } })>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style(glyph)>
       <circle cx="12" cy="12" r="9"></circle>
       <path d="M12 8v5"></path>
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" style([ style(copy), style({ box: grow(1).minW(0) }) ])>
+  <column align="stretch" gap="1" style(copy, { box: grow(1).minW(0) })>
     <div style(title)>
       <slot name="title">Something went wrong</slot>
     </div>
-    <div style([
-      desc,
-      when({
-        empty: style({ box: display(none) }),
-      }),
-    ])>
+    <div style(desc, { when: { empty: { box: display(none) } } })>
       <slot></slot>
     </div>
-    <div style([
-      codeBox,
-      when({
-        empty: style({ box: display(none) }),
-      }),
-    ])></div>
+    <div style(codeBox, { when: { empty: { box: display(none) } } })></div>
     <button
       type="button"
       anatomy
-      expanded="false" style([
-        detailsToggle,
-        when({
-          group-state-has-details: style({ box: display(inline-block) }),
-          hover: style({ paint: fg(foreground).bg(muted) }),
-          focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
-        }),
-      ])>Show details</button>
-    <div style([
-      details,
-      when({
-        group-state-open: style({ box: display(block) }),
-      }),
-    ])>
+      expanded="false" style(detailsToggle, { when: { group-state-has-details: { box: display(inline-block) }, hover: { paint: fg(foreground).bg(muted) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } } })>Show details</button>
+    <div style(details, { when: { group-state-open: { box: display(block) } } })>
       <slot name="details"></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" style([
-    actions,
-    when({
-      empty: style({ box: display(none) }),
-    }),
-  ])>
+  <row align="center" justify="center" gap="2" style(actions, { when: { empty: { box: display(none) } } })>
     <slot name="action"></slot>
   </row>
 </column>

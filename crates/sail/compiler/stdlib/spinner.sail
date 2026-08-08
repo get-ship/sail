@@ -20,17 +20,6 @@
   const ring = style({ box: display(block).size(full), paint: borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin) })
 </scope>
 
-<span style([
-  base,
-  match(size, {
-    md: sizeMd,
-    xs: sizeXs,
-    sm: sizeSm,
-    lg: sizeLg,
-  }),
-  // Bound tone recolors the spinner glyph; omit tone → spinner-foreground rest.
-  style({ paint: fg(tone) }),
-  compound({ centered: true }, style({ box: display(block).my(8).mx(auto) })),
-])>
+<span style(base, { paint: fg(tone), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg } }, compound: [ { centered: true, box: display(block).my(8).mx(auto) } ] })>
   <span hidden="true" style(ring)></span>
 </span>

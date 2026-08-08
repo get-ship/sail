@@ -17,19 +17,7 @@
   const req = style({ box: display(none).ms(1), paint: fg(label-required), text: fontWeight(bold) })
 </scope>
 
-<label style([
-  base,
-  match(size, {
-    md: sizeMd,
-    sm: sizeSm,
-    lg: sizeLg,
-  }),
-])>
+<label style(base, { match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } } })>
   <slot></slot>
-  <span hidden="true" style([
-    req,
-    when({
-      group-required: style({ box: display(inline) }),
-    }),
-  ])>*</span>
+  <span hidden="true" style(req, { when: { group-required: { box: display(inline) } } })>*</span>
 </label>

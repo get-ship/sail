@@ -45,7 +45,7 @@ fn setter_chain_lowers_through_style_ir() {
 
 #[test]
 fn match_guard_emits_attribute_selector() {
-    let src = r#"<div style(match(variant, { filled: style({ paint: bg(primary) }), tonal: style({ paint: bg(secondary) }) }))> </div>"#;
+    let src = r#"<div style({ match: { variant: { filled: { paint: bg(primary) }, tonal: { paint: bg(secondary) } } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("[variant='filled']") || js.contains("variant"),
@@ -55,7 +55,7 @@ fn match_guard_emits_attribute_selector() {
 
 #[test]
 fn when_guard_emits_pseudo_selector() {
-    let src = r#"<div style(when({ hover: style({ paint: bg(muted) }) }))> </div>"#;
+    let src = r#"<div style({ when: { hover: { paint: bg(muted) } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains(":hover") || js.contains("hover"),
@@ -65,7 +65,7 @@ fn when_guard_emits_pseudo_selector() {
 
 #[test]
 fn compound_guard_emits_combined_attribute_selector() {
-    let src = r#"<div style(compound({ interactive: true, size: lg }, style({ paint: shadow(hover) })))> </div>"#;
+    let src = r#"<div style({ compound: [ { interactive: true, size: lg, paint: shadow(hover) } ] })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("[interactive='true']") || js.contains("interactive"),
@@ -91,7 +91,7 @@ fn raw_color_without_escape_produces_diagnostic() {
 
 #[test]
 fn invalid_new_syntax_produces_parse_error() {
-    let (_, diags) = parse("match(variant, { filled: style({ paint: bg(#ff00ff) }) })");
+    let (_, diags) = parse("style({ match: { variant: { filled: { paint: bg(ff00ff) } } } })");
     assert!(
         !diags.is_empty(),
         "invalid token inside new syntax should produce diagnostics"
@@ -112,7 +112,7 @@ fn clash_detection_flags_duplicate_setter() {
 fn list_shadows_duplicate_setter_without_clash() {
     // Chain = unordered conjunction (clash); List = ordered composition
     // (later shadows earlier, no diagnostic).
-    let (style, _) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
+    let (style, _) = parse("style({ paint: bg(primary) }, { paint: bg(muted) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         !diags.iter().any(|d| d.message().contains("clash")),
@@ -122,7 +122,7 @@ fn list_shadows_duplicate_setter_without_clash() {
 
 #[test]
 fn chain_inside_list_item_still_clashes() {
-    let (style, _) = parse("[ style({ paint: bg(primary).bg(muted) }) ]");
+    let (style, _) = parse("style({ paint: bg(primary).bg(muted) })");
     let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
     assert!(
         diags.iter().any(|d| d.message().contains("clash")),
@@ -158,7 +158,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
 #[test]
 fn style_list_lowers_through_ir() {
     let src =
-        r#"<div style([style({ paint: bg(primary) }), match(variant, { filled: style({ paint: bg(primary) }) })])> </div>"#;
+        r#"<div style({ paint: bg(primary), match: { variant: { filled: { paint: bg(primary) } } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("sx-") || js.contains("class"),

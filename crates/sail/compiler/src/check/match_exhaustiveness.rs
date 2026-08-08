@@ -1,10 +1,10 @@
 //! Match exhaustiveness for two surfaces:
 //!
-//! 1. **Style** `match(prop, {…})` on a closed-union scope prop — WARNING
+//! 1. **Style** `match(prop, {â¦})` on a closed-union scope prop â WARNING
 //!    when members lack an arm (partial paint is legitimate).
 //! 2. **Template** `<match {disc}>` with kind arms on LiveState /
-//!    MutationState closed unions — COMPILE ERROR naming the missing arm.
-//!    `{else => …}` covers any remainder.
+//!    MutationState closed unions â COMPILE ERROR naming the missing arm.
+//!    `{else => â¦}` covers any remainder.
 //!
 //! Style remains warning-only. Template kind-unions gate the build.
 
@@ -21,7 +21,7 @@ pub const RULE: &str = "sail-style-match-exhaustive";
 /// Template match exhaustiveness rule id (errors).
 pub const TEMPLATE_RULE: &str = "sail-match-exhaustive";
 
-const MATCH_OPEN: &str = "match(";
+const MATCH_OPEN: &str = "style({ match: { : {  } } })";
 
 /// LiveState closed kinds.
 const LIVE_STATE_KINDS: &[&str] = &["loading", "error", "ok"];
@@ -32,11 +32,11 @@ const MUTATION_STATE_KINDS: &[&str] = &["idle", "loading", "ok", "error"];
 pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
 
-    // ── Template `<match>` kind-union exhaustiveness (errors) ──────────
+    // ââ Template `<match>` kind-union exhaustiveness (errors) ââââââââââ
     walk_template_match(&program.template, source, &mut out);
 
-    // ── Style match (warnings) ─────────────────────────────────────────
-    // Closed-union props: name → members.
+    // ââ Style match (warnings) âââââââââââââââââââââââââââââââââââââââââ
+    // Closed-union props: name â members.
     let unions: Vec<(&str, &[String])> = program
         .props
         .iter()
@@ -49,7 +49,7 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
         return out;
     }
 
-    // `<scope>` Style consts — `const tones = match(variant, {…})`.
+    // `<scope>` Style consts â `const tones = match(variant, {â¦})`.
     let env = crate::parse::scope_block::style_env_from_source(source);
     let mut seen_consts: HashSet<&str> = HashSet::new();
     for (body_start, body) in scope_bodies(source) {
@@ -72,7 +72,7 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
         }
     }
 
-    // Host `style={…}` / `style="…"` values.
+    // Host `style={â¦}` / `style="…"` values.
     for (vstart, val) in crate::parse::preprocess::find_sx_attr_values(source) {
         let (style, _diags) = sail_lint::style::parse(val);
         check_style(&style, &unions, source, vstart, val, &mut out);
@@ -120,7 +120,7 @@ fn walk_template_match(instrs: &[Instr], source: &str, out: &mut Vec<Diagnostic>
 }
 
 fn check_template_match(m: &MatchInstr, source: &str, out: &mut Vec<Diagnostic>) {
-    // `{else => …}` covers every remainder.
+    // `{else => â¦}` covers every remainder.
     if m.default.is_some() {
         return;
     }
@@ -131,10 +131,10 @@ fn check_template_match(m: &MatchInstr, source: &str, out: &mut Vec<Diagnostic>)
         }
     }
     if kind_arms.is_empty() {
-        return; // pure expression-equality match — no closed-kind law
+        return; // pure expression-equality match â no closed-kind law
     }
 
-    // idle present → MutationState; else any LiveState kind → LiveState.
+    // idle present â MutationState; else any LiveState kind â LiveState.
     // Custom kind words alone do not invent a closed union.
     let expected: &[&str] = if kind_arms.contains("idle") {
         MUTATION_STATE_KINDS
@@ -179,8 +179,8 @@ fn check_template_match(m: &MatchInstr, source: &str, out: &mut Vec<Diagnostic>)
 
 /// Walk `style` pre-order; every `Match` whose scrutinee resolves to a
 /// closed-union prop and misses members becomes one warning. `region` is the
-/// source text the style was parsed from, starting at `region_start` — the
-/// k-th `match(` in walk order is the k-th in textual order, which pins the
+/// source text the style was parsed from, starting at `region_start` â the
+/// k-th `match:` in walk order is the k-th in textual order, which pins the
 /// diagnostic span without re-parsing for offsets.
 fn check_style(
     style: &Style,
@@ -235,7 +235,7 @@ fn check_style(
             severity: DiagSeverity::Warning,
             message: format!(
                 "Style match on `{scrutinee}` is not exhaustive — missing arm(s) for {quoted}; \
-                 an unmatched variant renders with no paint from this match."
+                 unmatched variants render with rest paint only."
             ),
             rule: Some(RULE.to_string()),
         });
@@ -243,7 +243,7 @@ fn check_style(
 }
 
 /// Pre-order harvest of every `Match` node (scrutinee + arm keys). `Ref` is
-/// NOT resolved — a referenced scope const is checked at its declaration, so
+/// NOT resolved â a referenced scope const is checked at its declaration, so
 /// resolving here would double-report.
 fn collect_matches<'a>(style: &'a Style, out: &mut Vec<(&'a str, &'a [(String, Style)])>) {
     match style {
@@ -268,7 +268,7 @@ fn collect_matches<'a>(style: &'a Style, out: &mut Vec<(&'a str, &'a [(String, S
     }
 }
 
-/// Every `<scope>…</scope>` body as `(body_start_offset, body_text)` — the
+/// Every `<scope>â¦</scope>` body as `(body_start_offset, body_text)` â the
 /// same tag walk `scope_block::style_env_from_source` uses.
 fn scope_bodies(source: &str) -> Vec<(usize, &str)> {
     let mut out = Vec::new();

@@ -48,7 +48,7 @@ export default controller(() => {
             <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
           </row>
           <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{nameEdit()}</p>
-          <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{paintMode()}</p>
+          <p style(pathMeta, { box: shrink(0) })>{paintMode()}</p>
         </row>
         <scroll-area style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })>
           <column specimen-body gap="4" style({ box: pad(5).minW(0) })>

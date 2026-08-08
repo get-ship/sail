@@ -23,7 +23,7 @@
 
 <div style(host)>
   <row nowrap use:marquee style(track)>
-    <span style([ style(cell), style({ box: shrink(0) }) ])><slot></slot></span>
-    <span hidden="true" style([ style(cell), style({ box: shrink(0) }) ])><slot></slot></span>
+    <span style(cell, { box: shrink(0) })><slot></slot></span>
+    <span hidden="true" style(cell, { box: shrink(0) })><slot></slot></span>
   </row>
 </div>

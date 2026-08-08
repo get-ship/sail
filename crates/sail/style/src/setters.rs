@@ -3713,7 +3713,7 @@ mod tests {
     #[test]
     fn outline_style_width_color_triple_write_does_not_clash() {
         let (style, diags) =
-            parse("when({ focus: style({ paint: outline(solid).outline(2).outline(ring) }) })");
+            parse("style({ when: { focus: { paint: outline(solid).outline(2).outline(ring) } } })");
         assert!(
             diags.is_empty(),
             "{:?}",

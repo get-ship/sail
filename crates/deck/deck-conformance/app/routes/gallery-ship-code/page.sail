@@ -113,7 +113,7 @@
           </ship-git-diff-file>
           <ship-git-diff-file path="Cargo.toml" additions="6" deletions="3">
             <ship-git-diff-hunk header="@@ -8,4 +8,7 @@ [dependencies]"></ship-git-diff-hunk>
-            <ship-git-diff-line type="context" old="8" new="8" style([dependencies])></ship-git-diff-line>
+            <ship-git-diff-line type="context" old="8" new="8" style(dependencies)></ship-git-diff-line>
             <ship-git-diff-line type="del" old="9" new="">serde = "1.0"</ship-git-diff-line>
             <ship-git-diff-line type="add" old="" new="9">serde = "2.0"</ship-git-diff-line>
             <ship-git-diff-line type="add" old="" new="10">tokio = "1"</ship-git-diff-line>

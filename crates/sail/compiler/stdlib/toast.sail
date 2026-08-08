@@ -16,18 +16,7 @@
   const close = style({ box: ms(auto), paint: fg(toast-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer).opacity(70) })
 </scope>
 
-<row align="start" gap="3" use:autoDismiss use:dismissControl style([
-  base,
-  // Bound tone recolors the start stripe; omit tone → toast-stripe rest.
-  style({ paint: borderS(tone) }),
-  // Muted uses muted-foreground (stronger than muted fill) — not pure default member.
-  compound({ tone: muted }, style({ paint: borderS(muted-foreground) })),
-])>
+<row align="start" gap="3" use:autoDismiss use:dismissControl style(base, { paint: borderS(tone), compound: [ { tone: muted, paint: borderS(muted-foreground) } ] })>
   <slot></slot>
-  <button data-toast-close type="button" anatomy label="Dismiss" style([ style({ box: shrink(0).grow(0) }), 
-    close,
-    when({
-      hover: style({ paint: fg(toast-foreground).bg(toast).opacity(100) }),
-    }),
-  ])>✕</button>
+  <button data-toast-close type="button" anatomy label="Dismiss" style(close, { box: shrink(0).grow(0), when: { hover: { paint: fg(toast-foreground).bg(toast).opacity(100) } } })>✕</button>
 </row>

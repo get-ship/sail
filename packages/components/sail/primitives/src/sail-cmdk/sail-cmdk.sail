@@ -393,9 +393,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <for {rows() as row} key={row.key}>
         <if {row.isHeading}>
           <li role="presentation" style({ box: padY(2).padB(1), paint: fg(muted-foreground).select(none), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })>{row.heading}</li>
-        {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'} style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm) }).when(selected, { paint: bg(selected-bg) }).when(disabled, { paint: fg(muted-foreground).cursor(default).opacity(50) })>
+        {else => <li role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'} style({ box: pad(2), paint: group().radius(sm).fg(foreground).cursor(pointer).select(none), text: fontSize(sm), when: { selected: { paint: bg(selected-bg) }, disabled: { paint: fg(muted-foreground).cursor(default).opacity(50) } } })>
             <if {row.icon !== ''}>
-              <icon name={row.icon} size="sm" style({ box: grow(0), paint: fg(muted-foreground) }).when(groupSelected, { paint: fg(foreground) })></icon>
+              <icon name={row.icon} size="sm" style({ box: grow(0), paint: fg(muted-foreground), when: { groupSelected: { paint: fg(foreground) } } })></icon>
             </if>
             <span style({ box: grow(1).minW(0), text: truncate() })>{row.label}</span>
             <if {row.hint !== ''}>

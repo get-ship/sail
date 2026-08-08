@@ -52,7 +52,7 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too",
     },
     DirectiveEntry {
-        syntax: "style({…}) / style(name) / style([…]) tag call",
+        syntax: "style({…}) / style(name, {…}) / style(partial, …) tag call",
         summary: "Style product paint on the open tag — style({…}).when(…) call form, not an HTML style= attribute",
     },
     DirectiveEntry {
@@ -769,7 +769,7 @@ pub struct ForeignIdiomEntry {
 pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
     ForeignIdiomEntry {
         syntax: "class= / class:<name>",
-        instead: "styling is a tag-position style({…}) / style(name) / style([…]) call on the element",
+        instead: "styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element",
     },
     ForeignIdiomEntry {
         syntax: "style= / style:<prop>",

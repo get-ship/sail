@@ -114,7 +114,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     The two grants are independent; neither implies the other. If your
     component talks to a server, you want <code>network</code>, with the
-    narrowest list that works — usually <code style(["self"])></code>. If it must
+    narrowest list that works — usually <code style("self")></code>. If it must
     evaluate code it chooses at runtime — a lazily loaded module, a plugin
     system — <code>unconfined</code> is the only option, and the honest way
     to use it is to keep that code in its own package so the grant covers as

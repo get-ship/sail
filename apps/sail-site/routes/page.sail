@@ -57,7 +57,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const page = style({ box: w(full).maxW(full).minW(0).overflowX(hidden), paint: bg(surface-0) })
   // Marketing sections: overflowX clips tickers/bleed; shrink=0 in markup so
   // they never flex-compress into mini-scrollpanes under residual height locks.
-  const hero = style({ box: position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden) }).when(tablet, { box: padX(8).padT(20).padB(16) })
+  const hero = style({ box: position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(20).padB(16) } } })
   const glow = style({ box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).z(base) })
   const heroInner = style({ box: position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
   const eyebrow = style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
@@ -74,13 +74,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const tickerBandTop = style({ box: position(absolute).left(-10).right(-10).top(12), paint: rotate(-2).z(popover) })
   const tickerPrimary = style({ box: padY(3).overflow(hidden), paint: bg(primary) })
   const tickerBold = style({ paint: fg(primary-foreground), text: fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).whitespace(nowrap) })
-  const bento = style({ box: padX(4).padT(6).padB(10).minW(0).overflowX(hidden) }).when(tablet, { box: padX(8).padT(8).padB(12) })
+  const bento = style({ box: padX(4).padT(6).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(8).padB(12) } } })
   const grid = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
-  const cardLink = style({ box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none) }).when(hover, { paint: fg(foreground) })
+  const cardLink = style({ box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none), when: { hover: { paint: fg(foreground) } } })
   // Equal-height bento cells — quiet surface, real pad. minH only from tablet up
   // so phone cards don’t become full-viewport towers.
-  const cardFill = style({ box: h(full).overflow(hidden) }).when(tablet, { box: minH(52) })
-  const cardCol = style({ box: h(full).pad(4) }).when(tablet, { box: pad(5) })
+  const cardFill = style({ box: h(full).overflow(hidden), when: { tablet: { box: minH(52) } } })
+  const cardCol = style({ box: h(full).pad(4), when: { tablet: { box: pad(5) } } })
   const cardEyebrow = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
   const cardTitle = style({ box: mt(1), paint: fg(foreground), text: fontSize(md).fontWeight(semibold).leading(snug) })
   const cardBody = style({ box: mt(2), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
@@ -91,9 +91,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const statusLine = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
   const term = style({ box: padX(3).padY(2_5), paint: bg(surface-0).borderWidth(1).border(border).radius(md).fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
   const termAccent = style({ paint: fg(primary) })
-  const foot = style({ box: padX(4).padT(8) }).when(tablet, { box: padX(8).padT(12) })
+  const foot = style({ box: padX(4).padT(8), when: { tablet: { box: padX(8).padT(12) } } })
   const footRow = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).padB(6).gap(3), paint: borderBWidth(1).borderB(border).fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
-  const footLink = style({ paint: fg(muted-foreground), text: underline(none) }).when(hover, { paint: fg(primary) })
+  const footLink = style({ paint: fg(muted-foreground), text: underline(none), when: { hover: { paint: fg(primary) } } })
   const diamond = style({ box: display(inline-block).w(2).h(2), paint: rotate(45).bg(primary).radius(sm) })
   const wordmarkWrap = style({ box: w(full).maxW(full).minW(0).overflow(hidden) })
   const wordmark = style({ box: mb(-8).minW(0).maxW(full), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })
@@ -101,7 +101,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <column gap="0" style(page)>
 
-  <section style([ style(hero), style({ box: shrink(0) }) ])>
+  <section style(hero, { box: shrink(0) })>
     <div style(glow)></div>
 
     <column gap="8" align="center" style(heroInner)>
@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
   </section>
 
-  <section style([ style(tickerSection), style({ box: shrink(0) }) ])>
+  <section style(tickerSection, { box: shrink(0) })>
     <div style(tickerBand)>
       <ticker duration="slow" reverse style(tickerDark)>
         <p style(tickerMono)>forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;live data&nbsp;&nbsp;·&nbsp;&nbsp;springs + tweens&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;hot reload&nbsp;&nbsp;·&nbsp;&nbsp;design tokens&nbsp;&nbsp;·&nbsp;&nbsp;</p>
@@ -142,7 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </div>
   </section>
 
-  <section style([ style(bento), style({ box: shrink(0) }) ])>
+  <section style(bento, { box: shrink(0) })>
     <!--
       <grid cols> is not breakpoint-aware. Duplicate the six cards only to
       swap track count — language gap, not content gap. Structural when
@@ -174,12 +174,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <strong style(cardTitle)>Nine themes. One token graph.</strong>
               <p style(cardBody)>Swap theme and every surface, ink, and control re-resolves.</p>
               <row gap="2" style(cardFoot)>
-                <div style([swatch, style({ paint: bg(primary) })])></div>
-                <div style([swatch, style({ paint: bg(accent) })])></div>
-                <div style([swatch, style({ paint: bg(success) })])></div>
-                <div style([swatch, style({ paint: bg(warning) })])></div>
-                <div style([swatch, style({ paint: bg(info) })])></div>
-                <div style([swatch, style({ paint: bg(muted) })])></div>
+                <div style(swatch, { paint: bg(primary) })></div>
+                <div style(swatch, { paint: bg(accent) })></div>
+                <div style(swatch, { paint: bg(success) })></div>
+                <div style(swatch, { paint: bg(warning) })></div>
+                <div style(swatch, { paint: bg(info) })></div>
+                <div style(swatch, { paint: bg(muted) })></div>
               </row>
             </column>
           </card>
@@ -232,7 +232,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p style(cardEyebrow)>AI</p>
               <strong style(cardTitle)>Agents stay inside the language</strong>
               <p style(cardBody)>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
-              <div style([term, cardFoot])>
+              <div style(term, cardFoot)>
                 <p><span style(termAccent)>$</span> sail check app/</p>
                 <p>ok · 0 refusals · 214 modules</p>
               </div>
@@ -265,12 +265,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <strong style(cardTitle)>Nine themes. One token graph.</strong>
               <p style(cardBody)>Swap theme and every surface, ink, and control re-resolves.</p>
               <row gap="2" style(cardFoot)>
-                <div style([swatch, style({ paint: bg(primary) })])></div>
-                <div style([swatch, style({ paint: bg(accent) })])></div>
-                <div style([swatch, style({ paint: bg(success) })])></div>
-                <div style([swatch, style({ paint: bg(warning) })])></div>
-                <div style([swatch, style({ paint: bg(info) })])></div>
-                <div style([swatch, style({ paint: bg(muted) })])></div>
+                <div style(swatch, { paint: bg(primary) })></div>
+                <div style(swatch, { paint: bg(accent) })></div>
+                <div style(swatch, { paint: bg(success) })></div>
+                <div style(swatch, { paint: bg(warning) })></div>
+                <div style(swatch, { paint: bg(info) })></div>
+                <div style(swatch, { paint: bg(muted) })></div>
               </row>
             </column>
           </card>
@@ -323,7 +323,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p style(cardEyebrow)>AI</p>
               <strong style(cardTitle)>Agents stay inside the language</strong>
               <p style(cardBody)>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
-              <div style([term, cardFoot])>
+              <div style(term, cardFoot)>
                 <p><span style(termAccent)>$</span> sail check app/</p>
                 <p>ok · 0 refusals · 214 modules</p>
               </div>
@@ -333,7 +333,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </grid>}</when>
   </section>
 
-  <section style([ style(foot), style({ box: shrink(0) }) ])>
+  <section style(foot, { box: shrink(0) })>
     <row justify="between" align="center" style(footRow)>
       <row gap="6" align="center">
         <a href="/sail/overview" style(footLink)>Docs</a>
@@ -346,7 +346,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </section>
 
-  <div style([ style(wordmarkWrap), style({ box: shrink(0) }) ])>
+  <div style(wordmarkWrap, { box: shrink(0) })>
     <p style(wordmark)>SHIP</p>
   </div>
 </column>

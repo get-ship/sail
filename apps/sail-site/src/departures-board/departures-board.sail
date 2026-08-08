@@ -81,7 +81,7 @@ export default controller((ctx) => {
   <column gap="1" style(list)>
     <for {flights() as f} key={f.id}>
       <row align="center" gap="3" nowrap style({ animate: enter({ opacity: 'fade' }) })>
-        <span style([ style(city), style({ box: grow(1).minW(0) }) ])>{f.city}</span>
+        <span style(city, { box: grow(1).minW(0) })>{f.city}</span>
         <span style(gate)>{f.gate}</span>
         <match {f.status}>
           {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>

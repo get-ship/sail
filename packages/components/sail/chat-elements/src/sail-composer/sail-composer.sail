@@ -101,7 +101,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <column
   gap="2"
-  data-state={disabled() ? 'disabled' : ''} style({ box: pad(2), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg) }).when(focusWithin, { paint: borderWidth(1).border(primary).outline(ring) }).when(stateDisabled, { paint: bg(muted).opacity(75) })>  <span style({ box: display(contents), text: fontFamily(body) })>    <div style({ box: display(contents) })>
+  data-state={disabled() ? 'disabled' : ''} style({ box: pad(2), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg), when: { focusWithin: { paint: borderWidth(1).border(primary).outline(ring) }, stateDisabled: { paint: bg(muted).opacity(75) } } })>  <span style({ box: display(contents), text: fontFamily(body) })>    <div style({ box: display(contents) })>
     <slot name="attachments"></slot>
   </div>
   <!-- nowrap: default row wraps and parks Send under the field in tight tiles. -->

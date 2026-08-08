@@ -24,21 +24,4 @@
   const sizeXl = style({ box: size(control-h-xl), text: fontSize(2xl) })
 </scope>
 
-<row inline nowrap align="center" justify="center" use:mediaFallback style([ style({ box: shrink(0) }), 
-  base,
-  match(size, {
-    md: sizeMd,
-    xs: sizeXs,
-    sm: sizeSm,
-    lg: sizeLg,
-    xl: sizeXl,
-  }),
-  match(shape, {
-    round: style({ paint: radius(full) }),
-    square: style({ paint: radius(sm) }),
-  }),
-  // Bound tone solid fill replaces rest gradient when tone is set.
-  style({ paint: bgImage(none).bg(tone).fg(tone.foreground) }),
-  // Muted uses avatar component tokens (not pure muted group fill).
-  compound({ tone: muted }, style({ paint: bgImage(none).bg(avatar).fg(avatar-foreground) })),
-])></row>
+<row inline nowrap align="center" justify="center" use:mediaFallback style(base, { box: shrink(0), paint: bgImage(none).bg(tone).fg(tone.foreground), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl }, shape: { round: { paint: radius(full) }, square: { paint: radius(sm) } } }, compound: [ { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar-foreground) } ] })></row>

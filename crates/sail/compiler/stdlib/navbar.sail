@@ -5,7 +5,7 @@
     layout keywords  — host row (nowrap, align center, gap 4); brand/actions
                        inline rows; links as contents so slot kids share the
                        host flex axis (row top / column rail); center row grows
-    host sx={[…]}    — component.navbar tokens + match(placement) + compound
+    host sx={[…]}    — component.navbar tokens + style({ match: { placement: {  } } }) + compound
                        sticky/bordered/rail geometry (no CVA string maps)
     child sx         — center grow-1; actions ms-auto mt-auto
   Slotted link/label chrome is author sx on the projected nodes (current:/hover:).
@@ -28,35 +28,11 @@
   // Top/bottom: ms(auto) only. mt(auto) on a tall cross-axis drops actions to a
   // second visual row (looks like the nav "wrapped"). Rail needs mt(auto) so
   // actions pin to the foot of the column.
-  const actions = match(placement, {
-    rail: style({ box: ms(auto).mt(auto) }),
-    top: style({ box: ms(auto) }),
-    bottom: style({ box: ms(auto) }),
-  })
+  const actions = style({ match: { placement: { rail: { box: ms(auto).mt(auto) }, top: { box: ms(auto) }, bottom: { box: ms(auto) } } } })
 </scope>
 
-<row nowrap align="center" gap="4" style([ style({ box: w(full) }), 
-    base,
-    match(placement, {
-      top: placeTop,
-      bottom: placeBottom,
-      rail: placeRail,
-    }),
-    compound({ sticky: true }, style({ box: position(sticky).top(0), paint: z(sticky) })),
-    compound({ bordered: true }, style({ paint: borderBWidth(1).border(navbar-border) })),
-    compound({ placement: bottom, sticky: true }, style({ box: top(auto).bottom(0) })),
-    compound({ placement: bottom, bordered: true }, style({ paint: borderBWidth(0).borderTWidth(1).border(navbar-border) })),
-    compound({ placement: rail, bordered: true }, style({ paint: borderBWidth(0).borderEWidth(1).border(navbar-border) })),
-    compound({ placement: rail, sticky: true }, style({ box: position(sticky).top(0).bottom(0).self(start).overflowY(auto), paint: z(dropdown) })),
-    compound({ placement: rail, sticky: true, offset: '8' }, style({ box: top(8) })),
-    compound({ placement: rail, sticky: true, offset: '10' }, style({ box: top(10) })),
-    compound({ placement: rail, sticky: true, offset: '12' }, style({ box: top(12) })),
-    compound({ placement: rail, sticky: true, offset: '14' }, style({ box: top(14) })),
-    compound({ placement: rail, sticky: true, offset: '16' }, style({ box: top(16) })),
-    compound({ placement: rail, sticky: true, offset: '20' }, style({ box: top(20) })),
-    compound({ placement: rail, sticky: true, offset: '24' }, style({ box: top(24) })),
-  ])>
-  <row inline nowrap align="center" gap="2" style([ style(brand), style({ box: shrink(0) }) ])>
+<row nowrap align="center" gap="4" style(base, { box: w(full), match: { placement: { top: placeTop, bottom: placeBottom, rail: placeRail } }, compound: [ { sticky: true, box: position(sticky).top(0), paint: z(sticky) }, { bordered: true, paint: borderBWidth(1).border(navbar-border) }, { placement: bottom, sticky: true, box: top(auto).bottom(0) }, { bordered: true, placement: bottom, paint: borderBWidth(0).borderTWidth(1).border(navbar-border) }, { bordered: true, placement: rail, paint: borderBWidth(0).borderEWidth(1).border(navbar-border) }, { placement: rail, sticky: true, box: position(sticky).top(0).bottom(0).self(start).overflowY(auto), paint: z(dropdown) }, { offset: 8, placement: rail, sticky: true, box: top(8) }, { offset: 10, placement: rail, sticky: true, box: top(10) }, { offset: 12, placement: rail, sticky: true, box: top(12) }, { offset: 14, placement: rail, sticky: true, box: top(14) }, { offset: 16, placement: rail, sticky: true, box: top(16) }, { offset: 20, placement: rail, sticky: true, box: top(20) }, { offset: 24, placement: rail, sticky: true, box: top(24) } ] })>
+  <row inline nowrap align="center" gap="2" style(brand, { box: shrink(0) })>
     <slot name="brand"></slot>
   </row>
   <div style(links)>
@@ -65,7 +41,7 @@
   <row nowrap align="center" justify="center" style({ box: grow(1).minW(0) })>
     <slot name="center"></slot>
   </row>
-  <row inline nowrap align="center" gap="2" style([ style(actions), style({ box: shrink(0) }) ])>
+  <row inline nowrap align="center" gap="2" style(actions, { box: shrink(0) })>
     <slot name="actions"></slot>
   </row>
 </row>

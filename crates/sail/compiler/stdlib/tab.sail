@@ -20,32 +20,6 @@
   const enclosed = style({ paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) })
 </scope>
 
-<button type="button" style([
-  base,
-  match(size, {
-    md: sizeMd,
-    sm: sizeSm,
-    lg: sizeLg,
-  }),
-  match(variant, {
-    line: style({ paint: borderB(transparent) }),
-    pill: pill,
-    enclosed: enclosed,
-  }),
-  compound({ variant: pill }, style({ paint: borderBWidth(0).radius(sm) })),
-  compound({ variant: enclosed }, style({ paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) })),
-  when({
-    hover: style({ paint: fg(tab-selected-foreground) }),
-    selected: style({ paint: fg(tab-selected-foreground).borderB(primary), text: fontWeight(semibold) }),
-    focus: style({ paint: outline(solid).outline(ring-width).outline(ring).outlineOffset(ring-inset) }),
-    disabled: style({ paint: opacity(50).cursor(not-allowed) }),
-  }),
-  compound({ variant: pill }, when({
-    selected: style({ paint: fg(tab-selected-foreground).bg(tab-selected-bg).shadow(xs).borderB(transparent) }),
-  })),
-  compound({ variant: enclosed }, when({
-    selected: style({ paint: fg(tab-selected-foreground).border(tab-border).bg(tab-selected-bg).translateY(px) }),
-  })),
-])>
+<button type="button" style(base, { when: { hover: { paint: fg(tab-selected-foreground) }, selected: { paint: fg(tab-selected-foreground).borderB(primary), text: fontWeight(semibold) }, focus: { paint: outline(solid).outline(ring-width).outline(ring).outlineOffset(ring-inset) }, disabled: { paint: opacity(50).cursor(not-allowed) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { line: { paint: borderB(transparent) }, pill: pill, enclosed: enclosed } }, compound: [ { variant: pill, paint: borderBWidth(0).radius(sm) }, { variant: enclosed, paint: borderWidth(1).border(transparent).borderBWidth(0).radiusT(md) }, { variant: pill, when: { selected: { paint: fg(tab-selected-foreground).bg(tab-selected-bg).shadow(xs).borderB(transparent) } } }, { variant: enclosed, when: { selected: { paint: fg(tab-selected-foreground).border(tab-border).bg(tab-selected-bg).translateY(px) } } } ] })>
   <slot></slot>
 </button>

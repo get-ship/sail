@@ -18,21 +18,4 @@
   const shapeCircle = style({ box: minW(7).minH(7), paint: radius(full).aspect(square) })
 </scope>
 
-<span style([
-  base,
-  match(shape, {
-    text: shapeText,
-    line: shapeLine,
-    block: shapeBlock,
-    circle: shapeCircle,
-  }),
-  compound({ shape: text, size: sm }, style({ box: h(2) })),
-  compound({ shape: text, size: md }, style({ box: h(3) })),
-  compound({ shape: text, size: lg }, style({ box: h(4) })),
-  compound({ shape: line, size: sm }, style({ box: h(2) })),
-  compound({ shape: line, size: md }, style({ box: h(3) })),
-  compound({ shape: line, size: lg }, style({ box: h(4) })),
-  compound({ shape: circle, size: sm }, style({ box: size(icon-size-2xl).minW(0).minH(0) })),
-  compound({ shape: circle, size: md }, style({ box: size(7).minW(0).minH(0) })),
-  compound({ shape: circle, size: lg }, style({ box: size(12).minW(0).minH(0) })),
-])></span>
+<span style(base, { match: { shape: { text: shapeText, line: shapeLine, block: shapeBlock, circle: shapeCircle } }, compound: [ { shape: text, size: sm, box: h(2) }, { shape: text, size: md, box: h(3) }, { shape: text, size: lg, box: h(4) }, { shape: line, size: sm, box: h(2) }, { shape: line, size: md, box: h(3) }, { shape: line, size: lg, box: h(4) }, { shape: circle, size: sm, box: size(icon-size-2xl).minW(0).minH(0) }, { shape: circle, size: md, box: size(7).minW(0).minH(0) }, { shape: circle, size: lg, box: size(12).minW(0).minH(0) } ] })></span>

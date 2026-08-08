@@ -639,17 +639,24 @@ fn emit_style_types(out: &mut String) {
     out.push_str("  | (string & {})\n\n");
 
     out.push_str(
-        "/** Channel partial — product spine keys. */\n\
-         type SailStyleChannels = {\n\
+        "/** Style object partial — channels + condition keys (SPEC-STYLE-OBJECT-1). */\n\
+         type SailStyleObj = {\n\
          \x20 box?: SailStyleValue\n\
          \x20 paint?: SailStyleValue\n\
          \x20 text?: SailStyleValue\n\
          \x20 animate?: SailStyleValue\n\
+         \x20 when?: SailWhenMap\n\
+         \x20 match?: SailMatchBlock\n\
+         \x20 compound?: SailCompoundRow[]\n\
          }\n\
          \n\
-         type SailWhenMap = { [K in SailWhenKey]?: SailStyleValue | SailStyleChannels }\n\
+         type SailStyleChannels = SailStyleObj\n\
+         type SailWhenMap = { [K in SailWhenKey]?: SailStyleObj | SailStyleValue }\n\
+         type SailMatchArms = { [arm: string]: SailStyleObj | SailStyleValue }\n\
+         type SailMatchBlock = { [prop: string]: SailMatchArms }\n\
+         type SailCompoundRow = SailStyleObj & Record<string, unknown>\n\
          \n\
-         /** Opaque compile-time Style value (chain / match / when / list / ref). */\n\
+         /** Opaque compile-time Style value (object / ref). */\n\
          type SailStyleValue = SailStyleChain\n\
          \n",
     );
@@ -678,28 +685,14 @@ fn emit_style_types(out: &mut String) {
             "  {m}(config: SailStyleMotionConfig): SailStyleChain\n"
         ));
     }
-    // Map form + cond form (product: `.when(hover, { paint: … })`).
-    out.push_str("  when(map: SailWhenMap): SailStyleChain\n");
-    out.push_str(
-        "  when(key: SailWhenKey, partial: SailStyleChannels | SailStyleValue): SailStyleChain\n",
-    );
     out.push_str("}\n\n");
 
-    // Callable channel head + residual flat chain methods (unit/codemod dual).
+    // Callable style head — variadic partials (SPEC-STYLE-OBJECT-1).
     out.push_str(
-        "/** Compile-time Style head — product: `style({ box, paint, text, animate })`.\n\
-         \x20*  Residual flat `style.method` remains typed for codemod/unit dual path. */\n\
-         interface SailStyleBuilder extends SailStyleChain {\n\
-         \x20 (channels?: SailStyleChannels): SailStyleChain\n\
-         \x20 (items: SailStyleValue[]): SailStyleChain\n\
-         \x20 (ref: SailStyleValue): SailStyleChain\n\
+        "/** Compile-time Style head — product: `style(partial, partial, …)`. */\n\
+         interface SailStyleBuilder {\n\
+         \x20 (...partials: Array<SailStyleObj | SailStyleValue>): SailStyleChain\n\
          }\n\
-         \n",
-    );
-
-    // Free forms
-    out.push_str(
-        "type SailMatchArms = { [arm: string]: SailStyleValue }\n\
          \n",
     );
 }
@@ -998,17 +991,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     }
     out.push('\n');
 
-    // Style head + free forms (channel product).
+    // Style head (SPEC-STYLE-OBJECT-1 — free match/when/compound deleted).
     out.push_str(
         "  /** Compile-time Style builder — erased to classes by sail-compiler. */\n\
          \x20 const style: SailStyleBuilder\n\
-         \x20 function match(scrutinee: unknown, arms: SailMatchArms): SailStyleValue\n\
-         \x20 function when(map: SailWhenMap): SailStyleValue\n\
-         \x20 function when(key: SailWhenKey, partial: SailStyleChannels | SailStyleValue): SailStyleValue\n\
-         \x20 function compound(\n\
-         \x20\x20  keys: Record<string, unknown>,\n\
-         \x20\x20  body: SailStyleValue,\n\
-         \x20\x20): SailStyleValue\n\
          \x20 function bind(name: string): SailBind\n\
          \n",
     );
@@ -1367,21 +1353,21 @@ mod tests {
         let dts = emit_types_dts();
         assert!(dts.contains("const style: SailStyleBuilder"));
         assert!(
-            dts.contains("interface SailStyleBuilder extends SailStyleChain"),
+            dts.contains("interface SailStyleBuilder"),
             "style head must be callable channel form"
         );
         assert!(
-            dts.contains("box?: SailStyleValue") && dts.contains("paint?: SailStyleValue"),
-            "SailStyleChannels missing"
+            dts.contains("type SailStyleObj") && dts.contains("paint?: SailStyleValue"),
+            "SailStyleObj missing"
         );
         // Free channel-body setters
         assert!(dts.contains("function pad(") || dts.contains("function padX("), "{dts}");
         assert!(dts.contains("function bg(") || dts.contains("const bg:"), "free bg");
         assert!(dts.contains("function enter("), "free enter motion");
         assert!(dts.contains("const hover:"), "when-key / motion hybrid hover");
-        assert!(dts.contains("function match("));
-        assert!(dts.contains("function when("));
-        assert!(dts.contains("function compound("));
+        assert!(!dts.contains("function match("), "free match() deleted");
+        assert!(!dts.contains("function compound("), "free compound() deleted");
+        assert!(dts.contains("match?: SailMatchBlock") || dts.contains("type SailMatchBlock"), "match: key type");
         assert!(dts.contains("function bind("));
         assert!(dts.contains("function query<"));
         assert!(dts.contains("function mutation<"));

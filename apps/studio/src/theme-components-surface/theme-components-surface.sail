@@ -15,7 +15,7 @@
   const fullBtn = style({ box: w(full) })
   const chipCol = style({ box: minW(0) })
   // Selected rail row: soft fill + subtle border (no nested cards).
-  const listRow = style({ box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(selected, { paint: bg(surface-2).border(border-subtle) })
+  const listRow = style({ box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, selected: { paint: bg(surface-2).border(border-subtle) } } })
   const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
   const tokenStrip = style({ box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) })
   const tokenRow = style({ box: padY(1_5), paint: borderBWidth(1).borderB(border-subtle) })
@@ -41,14 +41,14 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row components-error align="center" gap="2" style([ style(bandError), style({ box: shrink(0) }) ])>
+    <row components-error align="center" gap="2" style(bandError, { box: shrink(0) })>
       <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row components-loading align="center" gap="2" style([ style(bandStatus), style({ box: shrink(0) }) ])>
+    <row components-loading align="center" gap="2" style(bandStatus, { box: shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -127,12 +127,12 @@ export default controller(() => {
               <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>
                 {session.nameEdit()} · {components.selectedLabel()}
               </p>
-              <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{session.paintMode()}</p>
+              <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
 
             <if {components.hasVariants()}>
               <row specimen-variants align="center" gap="2" nowrap on:click={components.onVariantPick} style({  box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-                <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{components.viewerVariantAttr()}:</p>
+                <p style(pathMeta, { box: shrink(0) })>{components.viewerVariantAttr()}:</p>
                 <for {components.variantChips() as c} key={c.key}>
                   <button
                     type="button"

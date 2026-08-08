@@ -362,7 +362,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
 
     <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1)  })>
-      <a href="/sail/tutorial" style({ box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }).when(hover, { paint: fg(foreground).bg(surface-2) })>← All lessons</a>
+      <a href="/sail/tutorial" style({ box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) } } })>← All lessons</a>
       <if {hasNext()}>
         <a href={nextHref()} variant="solid" tone="primary">{nextTitle()}</a>
       </if>

@@ -12,12 +12,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ routeExample, rea
   <p role="doc-lead">A directory segment in brackets is a parameter. <code>routes/posts/[id]/page.sail</code> matches <code>/posts/anything</code>, and the route reads the value as a signal.</p>
 
   <h2>The [param] segment</h2>
-  <p>deck emits a typed pattern — <code>/posts/:id</code> — for any <code style([param])></code> directory. Read the value with <code>route.params.&lt;name&gt;()</code>. It's a signal, so the route re-renders when the parameter changes during client-side navigation.</p>
+  <p>deck emits a typed pattern — <code>/posts/:id</code> — for any <code style(param)></code> directory. Read the value with <code>route.params.&lt;name&gt;()</code>. It's a signal, so the route re-renders when the parameter changes during client-side navigation.</p>
   <pre data-code-block="true">{routeExample}</pre>
   <pre data-code-block="true">{readExample}</pre>
 
   <h2>Try it</h2>
-  <p>This site has a live <code style([name])></code> route at <code>routes/examples/greet/[name]/</code>:</p>
+  <p>This site has a live <code style(name)></code> route at <code>routes/examples/greet/[name]/</code>:</p>
   <p><a variant="solid" href="/examples/greet/ada">Open /examples/greet/ada →</a></p>
 
   <div role="navigation">

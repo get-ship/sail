@@ -74,7 +74,7 @@ on:click={() => toggle()} style({ animate: hover({ scale: 'spring:gentle' }).pre
           noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })
 
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
-          <p style([ style(noteText), style({ box: grow(1) }) ])>{n.text}</p>
+          <p style(noteText, { box: grow(1) })>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>

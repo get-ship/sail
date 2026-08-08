@@ -63,7 +63,7 @@ export default controller(() => {
     <column gap="1">
       <for {team().value as m} key={m.id}>
         <row gap="3" align="center" style(memberRow)>
-          <strong style([ style(memberName), style({ box: grow(1) }) ])>{m.name}</strong>
+          <strong style(memberName, { box: grow(1) })>{m.name}</strong>
           <if {m.role === 'admin'}><badge tone="primary" variant="soft" size="sm">admin</badge></if>
         </row>
       </for>

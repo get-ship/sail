@@ -17,11 +17,4 @@
   const sizeLg = style({ box: h(3) })
 </scope>
 
-<progress style([
-  base,
-  match(size, {
-    sm: sizeSm,
-    md: sizeMd,
-    lg: sizeLg,
-  }),
-])></progress>
+<progress style(base, { match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg } } })></progress>

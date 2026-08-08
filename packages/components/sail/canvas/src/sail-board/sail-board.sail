@@ -230,7 +230,7 @@ export default controller(({ value, layout }: Scope) => {
   readonly={readonly()} style({ box: display(block).position(relative).w(full).h(full) })>
   <svg aria-hidden="true" style({ box: position(absolute).top(0).left(0).overflow(visible), paint: pointerEvents(none) })>
     <for {routes() as r} key={r.id}>
-      <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} stroke-width="2" style({ paint: fill(none).stroke(border) }).when(stateIncident, { paint: stroke(primary) })></path>
+      <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} stroke-width="2" style({ paint: fill(none).stroke(border), when: { stateIncident: { paint: stroke(primary) } } })></path>
     </for>
     <if {pendingPath()}>
       <path d={pendingPath()} stroke-width="2" stroke-dasharray="6 4" style({ paint: fill(none).stroke(primary) })></path>
@@ -245,7 +245,7 @@ export default controller(({ value, layout }: Scope) => {
       aria-selected={selectedSet().has(n.id) ? 'true' : 'false'}
       data-node-id={n.id}
       use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}}
-      on:pointerdown={nodePointerDown} style({ box: pad(2), paint: boxSizing(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).cursor(grab).select(none).outline(none) }).when(focus, { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }).when(selected, { paint: border(primary).outline(primary) })>
+      on:pointerdown={nodePointerDown} style({ box: pad(2), paint: boxSizing(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).cursor(grab).select(none).outline(none), when: { focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }, selected: { paint: border(primary).outline(primary) } } })>
       <slot name={n.id}></slot>
       <for {n.ports as p} key={p.id}>
         <span

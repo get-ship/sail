@@ -1,6 +1,6 @@
-//! Compile-time Style value language: chain + match / when / compound / bind.
+//! Compile-time Style value language: style object (channels + when/match/compound).
 //!
-//! Sole paint architecture: chain + match / when / compound / bind.
+//! Sole paint architecture: style({ box, paint, text, animate, when, match, compound }).
 //!
 //! This crate owns Style parse / IR / emit / clash / setters, plus the leaf
 //! sx machinery (`sx_ir`, `sx_vocab`), token scales, and design-token registry
@@ -10,6 +10,7 @@ pub mod channel;
 pub mod clash;
 pub mod conditions;
 pub mod emit;
+pub mod objectify;
 pub mod ir;
 pub mod parse;
 pub mod prefixes;
@@ -33,8 +34,9 @@ pub use emit::{
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
     collect_motion_attaches, looks_like_utility_string_product, parse, parse_flat,
-    parse_style_const_rhs,
+    parse_legacy, parse_style_const_rhs,
 };
+pub use objectify::{objectify_source, objectify_style_expr};
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
 };
@@ -44,9 +46,10 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    /// Product parse (channel-only). Flat fixture strings are retired.
+    /// Test helper: legacy dual for emit/IR fixtures still written in old form.
+    /// Product surface is `super::parse` (object form only).
     fn parse(src: &str) -> (Style, Vec<StyleDiagnostic>) {
-        super::parse(src)
+        super::parse_legacy(src)
     }
 
     #[test]
@@ -134,7 +137,7 @@ mod tests {
         }
 
         let (style, diags) = parse(
-            "style({ text: fontSize(sm) }).when(tablet, { text: fontSize(lg) }).when(desktop, { text: fontSize(xl) })",
+            "style({ text: fontSize(sm), when: { tablet: { text: fontSize(lg) }, desktop: { text: fontSize(xl) } } })",
         );
         assert!(
             diags.is_empty(),
@@ -248,7 +251,7 @@ mod tests {
 
     #[test]
     fn chain_when_method() {
-        let (style, diags) = parse("style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })");
+        let (style, diags) = parse("style({ paint: bg(primary), when: { hover: { paint: bg(muted) } } })");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -1119,7 +1122,7 @@ mod tests {
     #[test]
     fn product_path_when_hover_paint() {
         let (classes, css) = product_lower(
-            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })",
+            "style({ paint: bg(primary), when: { hover: { paint: bg(muted) } } })",
         )
         .expect("hover paint through product path");
         assert!(classes.contains("sx-"), "{classes}");
@@ -1129,7 +1132,7 @@ mod tests {
     #[test]
     fn product_path_geometry_under_interaction_fails_closed() {
         let msgs = product_err_msgs(
-            "style({ box: pad(2) }).when(hover, { box: pad(4) })",
+            "style({ box: pad(2), when: { hover: { box: pad(4) } } })",
         );
         let joined = msgs.join("; ");
         assert!(
@@ -1143,7 +1146,7 @@ mod tests {
     fn product_path_geometry_matrix_sample() {
         // group-hover + pad refuses.
         let msgs = product_err_msgs(
-            "style({ box: pad(2) }).when(group-hover, { box: pad(4) })",
+            "style({ box: pad(2), when: { group-hover: { box: pad(4) } } })",
         );
         let joined = msgs.join("; ");
         assert!(
@@ -1153,7 +1156,7 @@ mod tests {
 
         // focusWithin + pad refuses.
         let msgs = product_err_msgs(
-            "style({ box: pad(2) }).when(focusWithin, { box: pad(4) })",
+            "style({ box: pad(2), when: { focusWithin: { box: pad(4) } } })",
         );
         let joined = msgs.join("; ");
         assert!(
@@ -1163,7 +1166,7 @@ mod tests {
 
         // tablet + pad allows (media may gate layout).
         let (classes, _css) = product_lower(
-            "style({ box: pad(2) }).when(tablet, { box: pad(4) })",
+            "style({ box: pad(2), when: { tablet: { box: pad(4) } } })",
         )
         .expect("tablet may gate pad geometry on product path");
         assert!(classes.contains("sx-"), "{classes}");
@@ -1178,7 +1181,70 @@ mod tests {
             "color→fg must hard-fail product path: {joined}"
         );
     }
+
+    #[test]
+    fn style_object_match_compound_when() {
+        let (style, diags) = super::parse(
+            "style({ paint: bg(primary), when: { hover: { paint: bg(muted) } }, match: { variant: { solid: { paint: bg(secondary) } } }, compound: [ { pill: true, paint: radius(full) } ] })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &std::collections::HashMap::new());
+        assert!(css.contains(":hover"), "{css}");
+        assert!(css.contains("[variant='solid']"), "{css}");
+        assert!(css.contains("[pill]"), "{css}");
+    }
+
+    #[test]
+    fn style_object_tone_axis_refused() {
+        let (_, diags) = super::parse(
+            "style({ match: { tone: { primary: { paint: bg(primary) } } } })",
+        );
+        assert!(
+            diags.iter().any(|d| {
+                let m = d.message();
+                m.contains("token-typed") || m.contains("cannot be a match axis")
+            }),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn style_object_wildcard_compound() {
+        let (style, diags) = super::parse(
+            "style({ compound: [ { tone: *, paint: opacity(90) } ] })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &std::collections::HashMap::new());
+        assert!(css.contains("[tone]"), "presence gate missing: {css}");
+    }
+
+    #[test]
+    fn style_variadic_composition() {
+        let (style, diags) = super::parse("style({ paint: bg(primary) }, { box: pad(2) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (classes, _) = lower_style(&style, &std::collections::HashMap::new());
+        assert!(classes.contains("sx-"), "{classes}");
+    }
+
+    #[test]
+    fn free_match_call_refused() {
+        let (_, diags) = super::parse("match(variant, { solid: style({ paint: bg(primary) }) })");
+        assert!(
+            !diags.is_empty(),
+            "free match() must fail product parse"
+        );
+    }
 }
-
-
-

@@ -39,16 +39,16 @@ export default controller(() => {
   <column gap="3" style({ box: pad(5), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
     <h2 style({ paint: fg(foreground), text: fontSize(lg).fontWeight(semibold) })>Theme</h2>
     <row gap="2">
-      <button aria-pressed={activeTheme() === 'ship'} on:click={() => activeTheme.set('ship')} style({ box: padX(3).padY(1), paint: radius(md) }).when(pressed, { paint: bg(foreground).fg(background) })>
+      <button aria-pressed={activeTheme() === 'ship'} on:click={() => activeTheme.set('ship')} style({ box: padX(3).padY(1), paint: radius(md), when: { pressed: { paint: bg(foreground).fg(background) } } })>
 SHIP</button>
 
-      <button aria-pressed={activeTheme() === 'paper'} on:click={() => activeTheme.set('paper')} style({ box: padX(3).padY(1), paint: radius(md) }).when(pressed, { paint: bg(foreground).fg(background) })>
+      <button aria-pressed={activeTheme() === 'paper'} on:click={() => activeTheme.set('paper')} style({ box: padX(3).padY(1), paint: radius(md), when: { pressed: { paint: bg(foreground).fg(background) } } })>
 Paper</button>
-      <button aria-pressed={activeTheme() === 'halo'} on:click={() => activeTheme.set('halo')} style({ box: padX(3).padY(1), paint: radius(md) }).when(pressed, { paint: bg(foreground).fg(background) })>
+      <button aria-pressed={activeTheme() === 'halo'} on:click={() => activeTheme.set('halo')} style({ box: padX(3).padY(1), paint: radius(md), when: { pressed: { paint: bg(foreground).fg(background) } } })>
 Halo</button>
-      <button aria-pressed={activeTheme() === 'console'} on:click={() => activeTheme.set('console')} style({ box: padX(3).padY(1), paint: radius(md) }).when(pressed, { paint: bg(foreground).fg(background) })>
+      <button aria-pressed={activeTheme() === 'console'} on:click={() => activeTheme.set('console')} style({ box: padX(3).padY(1), paint: radius(md), when: { pressed: { paint: bg(foreground).fg(background) } } })>
 Console</button>
-      <button aria-pressed={activeTheme() === 'contrast'} on:click={() => activeTheme.set('contrast')} style({ box: padX(3).padY(1), paint: radius(md) }).when(pressed, { paint: bg(foreground).fg(background) })>
+      <button aria-pressed={activeTheme() === 'contrast'} on:click={() => activeTheme.set('contrast')} style({ box: padX(3).padY(1), paint: radius(md), when: { pressed: { paint: bg(foreground).fg(background) } } })>
 Contrast</button>
     </row>
     <p style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })>Active: {activeTheme()}</p>

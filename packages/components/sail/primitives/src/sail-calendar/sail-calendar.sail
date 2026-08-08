@@ -394,8 +394,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
             data-state={cr.state}
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
-            gap="1" style({ box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border) }).when(stateOut, { paint: fg(muted-foreground).bg(muted) }).when(stateWeekend, { paint: bg(muted) }).when(stateRange, { paint: bg(selected-bg) })>
-            <row align="center" justify="center" gap="0" style({ box: minW(control-h-2xs).h(control-h-2xs), paint: radius(full) }).when(groupStateToday, { paint: fg(primary).outline(primary) })>              <span style({ box: display(contents), text: fontSize(density) }).when(groupStateToday, { text: fontWeight(semibold) })>                {cr.cell.day}
+            gap="1" style({ box: padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell), paint: group().borderRWidth(1).borderR(border).borderBWidth(1).borderB(border), when: { stateOut: { paint: fg(muted-foreground).bg(muted) }, stateWeekend: { paint: bg(muted) }, stateRange: { paint: bg(selected-bg) } } })>
+            <row align="center" justify="center" gap="0" style({ box: minW(control-h-2xs).h(control-h-2xs), paint: radius(full), when: { groupStateToday: { paint: fg(primary).outline(primary) } } })>              <span style({ box: display(contents), text: fontSize(density), when: { groupStateToday: { text: fontWeight(semibold) } } })>                {cr.cell.day}
               </span>
 </row>
             <for {cr.cell.events as ev} key={ev.id}>
@@ -404,8 +404,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-event-id={ev.id}
                 data-state={ev.allDay ? 'allday' : ''}
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
-                title={ev.title} style({ box: position(relative).padY(half).padX(1_5).padL(3), paint: cursor(pointer).fg(foreground).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density).truncate() }).when(stateAllday, { paint: bg(hover-bg) }).when(selected, { paint: outline(ring) })>
-                <span aria-hidden="true" style({ box: position(absolute).left(half).top(1).bottom(1).w(half), paint: radius(sm).bg(primary) }).when(groupStateAllday, { paint: bg(accent) })></span>
+                title={ev.title} style({ box: position(relative).padY(half).padX(1_5).padL(3), paint: cursor(pointer).fg(foreground).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density).truncate(), when: { stateAllday: { paint: bg(hover-bg) }, selected: { paint: outline(ring) } } })>
+                <span aria-hidden="true" style({ box: position(absolute).left(half).top(1).bottom(1).w(half), paint: radius(sm).bg(primary), when: { groupStateAllday: { paint: bg(accent) } } })></span>
                 {ev.title}
               </button>
             </for>
@@ -430,10 +430,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
     <row gap="0" style({ box: grow(1) })>
       <for {dayColumns() as dc} key={dc.key}>
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({  box: grow(1).position(relative).minH(panel-min-h-daycol), paint: borderRWidth(1).borderR(border)  }).when(stateToday, { paint: bg(selected-bg) })>
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} style({ box: grow(1).position(relative).minH(panel-min-h-daycol), paint: borderRWidth(1).borderR(border), when: { stateToday: { paint: bg(selected-bg) } } })>
           <column gap="0" style({ box: position(absolute).top(0).right(0).bottom(0).left(0) })>
             <for {timeSlots() as slot} key={slot.key}>
-              <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({  box: grow(1).minH(control-h-md), paint: cursor(cell).borderBWidth(1).borderB(border)  }).when(hover, { paint: bg(hover-bg) })></div>
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes} style({ box: grow(1).minH(control-h-md), paint: cursor(cell).borderBWidth(1).borderB(border), when: { hover: { paint: bg(hover-bg) } } })></div>
             </for>
           </column>
           <column gap="1" style({ box: position(relative).pad(half), paint: z(elevated) })>
@@ -443,7 +443,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-event-id={ev.id}
                 data-state="allday"
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
-                title={ev.title} style({ box: position(relative).padY(half).padX(1_5), paint: cursor(pointer).fg(foreground).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density).truncate() }).when(selected, { paint: outline(ring) })>{ev.title}</button>
+                title={ev.title} style({ box: position(relative).padY(half).padX(1_5), paint: cursor(pointer).fg(foreground).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density).truncate(), when: { selected: { paint: outline(ring) } } })>{ev.title}</button>
             </for>
           </column>
           <for {dc.col.laidOut as pe} key={pe.event.id}>
@@ -452,7 +452,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               data-event-id={pe.event.id}
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
               use:eventSpan={eventRect(pe)}
-              title={pe.event.title} style({ box: position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).padY(half).padX(1).overflow(hidden), paint: cursor(pointer).fg(primary).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density) }).when(selected, { paint: outline(ring) })>{pe.event.title}</button>
+              title={pe.event.title} style({ box: position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).padY(half).padX(1).overflow(hidden), paint: cursor(pointer).fg(primary).bg(hover-bg).radius(sm), text: textAlign(start).fontSize(density), when: { selected: { paint: outline(ring) } } })>{pe.event.title}</button>
           </for>
         </div>
       </for>

@@ -26,51 +26,6 @@
   const segmented = style({ box: ms(0).me(1), paint: border(transparent).radius(sm) })
 </scope>
 
-<button type="button" style([
-  base,
-  match(size, {
-    md: sizeMd,
-    sm: sizeSm,
-    lg: sizeLg,
-  }),
-  match(variant, {
-    outline: outline,
-    ghost: ghost,
-    segmented: segmented,
-  }),
-  compound({ orientation: vertical, variant: outline }, style({ box: mt(-px).ms(0).me(0), paint: radius(none) })),
-  compound({ variant: ghost }, style({ box: ms(0).mt(0).me(1), paint: border(transparent).radius(md) })),
-  compound({ variant: segmented }, style({ box: ms(0).mt(0).me(1), paint: border(transparent).radius(sm) })),
-  compound({ orientation: vertical, variant: ghost }, style({ box: ms(0).mt(0).me(0).mb(1), paint: border(transparent).radius(md) })),
-  compound({ orientation: vertical, variant: segmented }, style({ box: ms(0).mt(0).me(0).mb(1), paint: border(transparent).radius(sm) })),
-  // hover-bg (not muted) — muted collapses into the surface on many dark
-  // themes and makes unpressed hover text unreadable.
-  when({
-    hover: style({ paint: bg(hover-bg).fg(foreground) }),
-    pressed: style({ paint: bg(foreground).fg(background).border(foreground).z(1) }),
-    disabled: style({ paint: opacity(50).cursor(not-allowed) }),
-    focus: style({ paint: outline(solid).outline(2).outline(ring).z(2) }),
-  }),
-  compound({ orientation: horizontal, variant: outline }, when({
-    first: style({ box: ms(0), paint: radiusL(md) }),
-    last: style({ paint: radiusR(md) }),
-  })),
-  compound({ orientation: vertical, variant: outline }, when({
-    first: style({ box: mt(0), paint: radiusT(md) }),
-    last: style({ paint: radiusB(md) }),
-  })),
-  compound({ variant: ghost }, when({
-    last: style({ box: me(0) }),
-  })),
-  compound({ variant: segmented }, when({
-    last: style({ box: me(0) }),
-  })),
-  compound({ orientation: vertical, variant: ghost }, when({
-    last: style({ box: mb(0) }),
-  })),
-  compound({ orientation: vertical, variant: segmented }, when({
-    last: style({ box: mb(0) }),
-  })),
-])>
+<button type="button" style(base, { when: { hover: { paint: bg(hover-bg).fg(foreground) }, pressed: { paint: bg(foreground).fg(background).border(foreground).z(1) }, disabled: { paint: opacity(50).cursor(not-allowed) }, focus: { paint: outline(solid).outline(2).outline(ring).z(2) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { outline: outline, ghost: ghost, segmented: segmented } }, compound: [ { orientation: vertical, variant: outline, box: mt(-px).ms(0).me(0), paint: radius(none) }, { variant: ghost, box: ms(0).mt(0).me(1), paint: border(transparent).radius(md) }, { variant: segmented, box: ms(0).mt(0).me(1), paint: border(transparent).radius(sm) }, { orientation: vertical, variant: ghost, box: ms(0).mt(0).me(0).mb(1), paint: border(transparent).radius(md) }, { orientation: vertical, variant: segmented, box: ms(0).mt(0).me(0).mb(1), paint: border(transparent).radius(sm) }, { orientation: horizontal, variant: outline, when: { first: { box: ms(0), paint: radiusL(md) }, last: { paint: radiusR(md) } } }, { orientation: vertical, variant: outline, when: { first: { box: mt(0), paint: radiusT(md) }, last: { paint: radiusB(md) } } }, { variant: ghost, when: { last: { box: me(0) } } }, { variant: segmented, when: { last: { box: me(0) } } }, { orientation: vertical, variant: ghost, when: { last: { box: mb(0) } } }, { orientation: vertical, variant: segmented, when: { last: { box: mb(0) } } } ] })>
   <slot></slot>
 </button>

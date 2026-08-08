@@ -45,23 +45,12 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
     size: 'sm' | 'md' = 'md'
   }
   const soft = style({ paint: bg(muted).fg(muted-foreground).borderWidth(1).border(border) })
-  const solid = style({ paint: bg(primary).fg(primary-foreground).borderWidth(1).border(primary) }).when({ hover: style({ paint: opacity(90 })) })
+  const solid = style({ paint: bg(primary).fg(primary-foreground).borderWidth(1).border(primary), when: { hover: { paint: opacity(90) } } })
   const outline = style({ paint: bg(transparent).fg(foreground).borderWidth(1).border(border) })
   const sizeSm = style({ box: padX(2), text: fontSize(xs) })
   const sizeMd = style({ box: padX(2_5), text: fontSize(sm) })
 </scope>
-<span style([
-  style({ paint: radius(full).borderWidth(1), text: fontWeight(medium) }),
-  match(variant, {
-    soft: soft,
-    solid: solid,
-    outline: outline,
-  }),
-  match(size, {
-    sm: sizeSm,
-    md: sizeMd,
-  }),
-])> 
+<span style({ paint: radius(full).borderWidth(1), text: fontWeight(medium), match: { variant: { soft: soft, solid: solid, outline: outline }, size: { sm: sizeSm, md: sizeMd } } })> 
   <slot></slot>
 </span>
 "#;
@@ -290,9 +279,9 @@ fn empty_state_child_paint_on_structure_sx() {
             && !src.contains("compound: [")
             && src.contains("align=\"stretch\"")
             && is_style_product(src)
-            && src.contains("match(size")
-            && src.contains("match(variant")
-            && (src.contains("fg(tone)") || src.contains("match(tone") || src.contains("bg(tone)"))
+            && src.contains("match:") && src.contains("size:")
+            && src.contains("match:") && src.contains("variant:")
+            && (src.contains("fg(tone)") || (src.contains("bg(tone)") || src.contains("fg(tone)")) || src.contains("bg(tone)"))
             && (src.contains("grow(1)") || src.contains(" grow") || src.contains("grow min-w"))
             && src.contains("self(stretch)")
             && src.contains("self(center)")
@@ -507,7 +496,7 @@ fn switch_host_track_paint_on_host_sx() {
             && src.contains("saturate(60)")
             && (src.contains("bg(info)") || src.contains("bg(primary)"))
             && (src.contains("outline(info)") || src.contains("outline(primary)"))
-            && src.contains("match(size")
+            && src.contains("match:") && src.contains("size:")
             && src.contains("size(2_5)")
             && src.contains("w(7)")
             && src.contains("size(icon-size-sm)"),
@@ -1680,7 +1669,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
             && (src.contains("overscroll(contain)")
                 || src.contains("overscroll: contain")
                 || src.contains("overscroll-contain"))
-            && (src.contains("match(orientation") || src.contains("orientation:")),
+            && (src.contains("match:") && src.contains("orientation:") || src.contains("orientation:")),
         "scroll-area host Style must carry standard scrollbar pack via component.scroll-area tokens"
     );
     // Overflow / orientation always land.
@@ -1916,7 +1905,7 @@ fn pagination_size_cva_on_page() {
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
     assert!(
         is_style_product(page_src)
-            && page_src.contains("match(size")
+            && page_src.contains("match:") && src.contains("size:")
             && (page_src.contains("minW(control-h-md)")
                 || page_src.contains("min-w-control-h-md")
                 || page_src.contains("control-h-md"))

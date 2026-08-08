@@ -36,12 +36,5 @@
 <span use:tipDescribe style(host)>
   <slot></slot>
   <!-- tooltip role stamped by use:tipDescribe (closed part anatomy) -->
-  <span data-tooltip-bubble style([
-      bubble,
-      when({
-        group-hover: style({ paint: opacity(100) }),
-        group-focus-within: style({ paint: opacity(100) }),
-        after: arrow,
-      }),
-    ])></span>
+  <span data-tooltip-bubble style(bubble, { when: { group-hover: { paint: opacity(100) }, group-focus-within: { paint: opacity(100) }, after: arrow } })></span>
 </span>

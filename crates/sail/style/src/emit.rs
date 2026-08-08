@@ -249,7 +249,8 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
 fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
     let mut attrs = String::new();
     for (k, v) in &ctx.attrs {
-        if v == "true" {
+        // `true` (bool prop) and `*` (any-set wildcard) → presence gate [k].
+        if v == "true" || v == "*" {
             attrs.push_str(&format!("[{k}]"));
         } else if v == "false" {
             attrs.push_str(&format!(":not([{k}])"));
@@ -349,7 +350,7 @@ pub fn lower_style_source_with_motion(
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: pad(4).gap(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+                      style({ box: pad(4).gap(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })"
                 .into(),
             source: t.to_string(),
         }]);

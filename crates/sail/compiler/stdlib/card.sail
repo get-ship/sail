@@ -5,10 +5,9 @@
   Paint (Style product only):
     host sx={[…]} — base surface from component.card tokens (cssNames card,
                     card-foreground) + corner-image/backdrop treatment,
-                    match(variant/padding), compound(interactive/fill/
-                    status-rail/accent-bar), bound tone border
+                    style({ match: { variant: { padding: { } } } }), style({ compound: [ { interactive: fill, status-rail: accent-bar } ] }), bound tone border
     structure     — named header/footer slots with chrome Style; unfilled
-                    regions collapse via when({ empty: style({ box: display(none) }) }).
+                    regions collapse via style({ when: { empty: { box: display(none) } } }).
   Zero CVA-in-props paint maps. Zero scope compound: arrays.
 
   Rest border = border token when tone is omitted.
@@ -36,42 +35,12 @@
   const footerChrome = style({ box: mt(3).mx(-5).mb(-4).padX(5).padY(4), paint: borderT(1, border-subtle) })
 </scope>
 
-<div style([
-  base,
-  match(variant, {
-    default: style({ paint: bg(card) }),
-    outline: outline,
-  }),
-  match(padding, {
-    md: padMd,
-    none: padNone,
-    sm: padSm,
-    lg: padLg,
-  }),
-  compound({ interactive: true }, style({ paint: cursor(pointer).tapHighlight(none) }).when(hover, { paint: border(border-strong).shadow(hover).translateY(-px) }).when(active, { paint: shadow(card-rest).translateY(0).duration(instant) }).when(motion-reduce, { paint: translateY(0) }).when(focus, { paint: outline(2) }).when(forced-colors, when({ focus: style({ paint: outline(CanvasText) }) }))),
-  compound({ fill: true }, style({ paint: bg(muted).border(border) })),
-  // Bound tone border (omit tone → base border token).
-  style({ paint: border(tone) }),
-  // Muted special uses border (not pure muted group fill).
-  compound({ tone: muted }, style({ paint: border(border) })),
-  compound({ status-rail: true }, style({ box: padS(4), paint: borderS(3, border-strong) })),
-  compound({ status-rail: true, padding: sm }, style({ box: padS(2) })),
-  compound({ status-rail: true, padding: md }, style({ box: padS(4) })),
-  compound({ status-rail: true, padding: lg }, style({ box: padS(5) })),
-  compound({ status-rail: true, padding: none }, style({ box: padS(0) })),
-  compound({ accent-bar: static }, when({
-    before: style({ box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).opacity(100).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }),
-  })),
-  compound({ accent-bar: hover }, when({
-    before: style({ box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).opacity(0).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }),
-    hover: when({ before: style({ paint: opacity(100) }) }),
-  })),
-])>
-  <div style([ headerChrome, when({ empty: style({ box: display(none) }) }) ])>
+<div style(base, { paint: border(tone), match: { variant: { default: { paint: bg(card) }, outline: outline }, padding: { md: padMd, none: padNone, sm: padSm, lg: padLg } }, compound: [ { interactive: true, paint: cursor(pointer).tapHighlight(none), when: { hover: { paint: border(border-strong).shadow(hover).translateY(-px) }, active: { paint: shadow(card-rest).translateY(0).duration(instant) }, motion-reduce: { paint: translateY(0) }, focus: { paint: outline(2) }, forced-colors: { when: { focus: { paint: outline(CanvasText) } } } } }, { fill: true, paint: bg(muted).border(border) }, { tone: muted, paint: border(border) }, { status-rail: true, box: padS(4), paint: borderS(3, border-strong) }, { padding: sm, status-rail: true, box: padS(2) }, { padding: md, status-rail: true, box: padS(4) }, { padding: lg, status-rail: true, box: padS(5) }, { padding: none, status-rail: true, box: padS(0) }, { accent-bar: static, when: { before: { box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).opacity(100).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) } } }, { accent-bar: hover, when: { before: { box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).opacity(0).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }, hover: { when: { before: { paint: opacity(100) } } } } } ] })>
+  <div style(headerChrome, { when: { empty: { box: display(none) } } })>
     <slot name="header"></slot>
   </div>
   <slot></slot>
-  <div style([ footerChrome, when({ empty: style({ box: display(none) }) }) ])>
+  <div style(footerChrome, { when: { empty: { box: display(none) } } })>
     <slot name="footer"></slot>
   </div>
 </div>

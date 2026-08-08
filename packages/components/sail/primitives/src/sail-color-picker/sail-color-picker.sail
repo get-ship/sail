@@ -434,7 +434,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-expanded={open() ? 'true' : 'false'}
       aria-label="Choose color"
       use:captureInput
-      use:swatch={value() || '#000000'} style({ box: w(full).h(full).minW(0).minH(0).pad(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).shadow(none) }).when(focusWithin, { paint: outline(ring) })></button>
+      use:swatch={value() || '#000000'} style({ box: w(full).h(full).minW(0).minH(0).pad(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).shadow(none), when: { focusWithin: { paint: outline(ring) } } })></button>
     <if {open() && !disabled()}>
       <div
         id={panelId()}
@@ -455,7 +455,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
                 data-hex={sw.hex}
                 aria-label={sw.label}
-                use:swatch={sw.hex} style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)) }).when(selected, { paint: outline(primary) })></button>
+                use:swatch={sw.hex} style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: { paint: outline(primary) } } })></button>
             </for>
           </grid>
           <column gap="2">
@@ -491,7 +491,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <row
       data-color-trigger
       align="center"
-      gap="2" style({ box: w(full).minH(size-h).padY(1).padX(1_5), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer) }).when(focusWithin, { paint: outline(ring) })>
+      gap="2" style({ box: w(full).minH(size-h).padY(1).padX(1_5), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer), when: { focusWithin: { paint: outline(ring) } } })>
       <button type="button" data-color-trigger-btn disabled={disabled() ? true : null} aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} aria-label="Choose color" use:captureInput use:swatch={value() || '#000000'} style({  box: shrink(0).size(10).minW(10).pad(0), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer)  })></button>
       <if {showHexUi()}>
         <input type="text" flush name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-label="Hex color" bind:value={value} style({ box: grow(1).minW(0), paint: cursor(pointer), text: fontFamily(mono).textCase(lowercase) })>
@@ -517,7 +517,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
                 data-hex={sw.hex}
                 aria-label={sw.label}
-                use:swatch={sw.hex} style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)) }).when(selected, { paint: outline(primary) })></button>
+                use:swatch={sw.hex} style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: { paint: outline(primary) } } })></button>
             </for>
           </grid>
           <column gap="2">

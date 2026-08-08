@@ -8,7 +8,7 @@
   <h1>Hello, {route.params.name()}.</h1>
   <p role="doc-lead">
     This page is <code>routes/examples/greet/[name]/page.sail</code>. The
-    <code style([name])></code> directory is a route parameter, and
+    <code style(name)></code> directory is a route parameter, and
     <code>route.params.name()</code> reads it as a signal.
   </p>
   <p>

@@ -84,7 +84,7 @@ export default controller(() => {
     <for {filtered() as env} key={env.id}>
       <row gap="3" align="center" style(envRow)>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong style([ style(envName), style({ box: grow(1) }) ])>{env.name}</strong>
+        <strong style(envName, { box: grow(1) })>{env.name}</strong>
         <small style(envRegion)>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>

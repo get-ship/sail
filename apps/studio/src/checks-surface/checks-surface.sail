@@ -191,7 +191,7 @@ export default controller(() => {
               gap="2"
               nowrap
               rule-header={g.rule}
-              group-row-id={g.groupRowId} style({ box: h(6).padX(3) }).when(hover, { paint: bg(hover-bg) })>
+              group-row-id={g.groupRowId} style({ box: h(6).padX(3), when: { hover: { paint: bg(hover-bg) } } })>
               <button
                 type="button"
                 size="sm"
@@ -248,7 +248,7 @@ export default controller(() => {
                   slot="trigger"
                   gap="2"
                   align="center"
-                  nowrap style({ box: h(6).padX(3).w(full) }).when(hover, { paint: bg(hover-bg) })>
+                  nowrap style({ box: h(6).padX(3).w(full), when: { hover: { paint: bg(hover-bg) } } })>
                   <badge
                     severity-pill
                     tone={f.severityTone}

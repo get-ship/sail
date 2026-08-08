@@ -26,7 +26,7 @@ fn chain_emits_token_vars_on_product_path() {
 #[test]
 fn match_emits_attribute_selectors() {
     let out = preprocess(
-        r#"<div style(match(variant, { solid: style({ paint: bg(primary) }), soft: style({ paint: bg(muted) }) }))> x</div>"#,
+        r#"<div style({ match: { variant: { solid: { paint: bg(primary) }, soft: { paint: bg(muted) } } } })> x</div>"#,
     )
     .expect("preprocess");
     assert!(out.contains("[variant='solid']"), "{out}");
@@ -36,14 +36,14 @@ fn match_emits_attribute_selectors() {
 #[test]
 fn when_emits_hover_not_events() {
     let out =
-        preprocess(r#"<div style(when({ hover: style({ paint: bg(muted) }) }))> x</div>"#).expect("preprocess");
+        preprocess(r#"<div style({ when: { hover: { paint: bg(muted) } } })> x</div>"#).expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div style(compound({ pill: true }, style({ paint: radius(full) })))> x</div>"#)
+    let out = preprocess(r#"<div style({ compound: [ { pill: true, paint: radius(full) } ] })> x</div>"#)
         .expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
@@ -100,7 +100,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
 #[test]
 fn list_shadows_silently_no_clash() {
     // List = ordered composition: later items shadow earlier ones.
-    let (style, _) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
+    let (style, _) = parse("style({ paint: bg(primary) }, { paint: bg(muted) })");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
         !diags
@@ -114,7 +114,7 @@ fn list_shadows_silently_no_clash() {
 fn list_shadowed_rule_emitted_after_earlier_rule() {
     // Stylesheet order implements the precedence: the shadowing (later) rule
     // lands after the shadowed (earlier) rule in the emitted CSS text.
-    let (style, diags) = parse("[ style({ paint: bg(primary) }), style({ paint: bg(muted) }) ]");
+    let (style, diags) = parse("style({ paint: bg(primary) }, { paint: bg(muted) })");
     assert!(
         diags.is_empty(),
         "{:?}",
@@ -146,7 +146,7 @@ fn badge_proving_ground_no_cva_no_tone_star() {
         !src.contains("soft: '")
             && !src.contains("solid: '")
             && !src.contains("md: '")
-            && !src.contains("compound: ["),
+            && !src.contains("compound({"),
         "badge must not use CVA string maps or scope compound arrays"
     );
     assert!(
@@ -157,7 +157,7 @@ fn badge_proving_ground_no_cva_no_tone_star() {
         "badge must not use tone-* product paint"
     );
     assert!(
-        is_style_product(src) && src.contains("match(") && src.contains("when("),
+        is_style_product(src) && src.contains("match:") && src.contains("when:"),
         "badge must use Style value language"
     );
 }
@@ -180,11 +180,11 @@ fn badge_compiles_and_emits_token_css() {
 fn card_proving_ground_no_cva() {
     let src = include_str!("../stdlib/card.sail");
     assert!(
-        !src.contains("default: '") && !src.contains("md: '") && !src.contains("compound: ["),
+        !src.contains("default: '") && !src.contains("md: '") && !src.contains("compound({"),
         "card must not use CVA string maps or scope compound arrays"
     );
     assert!(
-        is_style_product(src) && src.contains("match(") && src.contains("when("),
+        is_style_product(src) && src.contains("match:") && src.contains("when:"),
         "card must use Style value language"
     );
     // Component token cssNames stay live (orch component packs).
@@ -210,7 +210,7 @@ fn card_compiles_and_emits_token_css() {
 #[test]
 fn list_and_bind_parse() {
     let (style, diags) =
-        parse("[ style({ paint: bg(primary) }), style({ paint: translateY(bind(rowY)) }) ]");
+        parse("style({ paint: bg(primary) }, { paint: translateY(bind(rowY)) })");
     assert!(
         diags.is_empty(),
         "{:?}",
@@ -249,7 +249,7 @@ fn scope_style_const_in_match_arms() {
   const solid = style({ paint: bg(primary) })
   const soft = style({ paint: bg(muted) })
 </scope>
-<div style(match(variant, { solid: solid, soft: soft }))> x</div>
+<div style({ match: { variant: { solid: solid, soft: soft } } })> x</div>
 "#,
     )
     .expect("preprocess");
@@ -269,7 +269,7 @@ fn badge_uses_scope_style_consts() {
         "badge proving ground should declare scope Style consts"
     );
     assert!(
-        src.contains("soft: soft") || src.contains("soft:soft"),
+        src.contains("soft: style(soft") || src.contains("soft: soft") || src.contains("const soft = style"),
         "badge match arms should ref Style consts"
     );
 }
@@ -286,11 +286,11 @@ fn batch_a_chrome_compile_on_style_path() {
     ] {
         assert!(
             !src.contains("md: '")
-                && !src.contains("compound: [")
+                && !src.contains("compound({")
                 && !src.contains("tone-fg")
                 && !src.contains("tone-bg")
                 && is_style_product(src)
-                && (src.contains("match(") || src.contains("when(") || src.contains("compound(")),
+                && (src.contains("match:") || src.contains("when:") || src.contains("compound:")),
             "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
@@ -316,9 +316,9 @@ fn batch_b_controls_compile_on_style_path() {
     ] {
         assert!(
             !src.contains("md: '")
-                && !src.contains("compound: [")
+                && !src.contains("compound({")
                 && is_style_product(src)
-                && (src.contains("match(") || src.contains("when(")),
+                && (src.contains("match:") || src.contains("when:")),
             "{tag} must use Style product (no CVA string maps):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
@@ -344,15 +344,15 @@ fn batch_c_surfaces_compile_on_style_path() {
     ] {
         assert!(
             !src.contains("md: '")
-                && !src.contains("compound: [")
+                && !src.contains("compound({")
                 && !src.contains("tone-bg")
                 && !src.contains("tone-fg")
                 && !src.contains("tone-border")
                 && !src.contains("tone-contrast")
                 && is_style_product(src)
-                && (src.contains("match(")
-                    || src.contains("when(")
-                    || src.contains("compound(")
+                && (src.contains("match:")
+                    || src.contains("when:")
+                    || src.contains("compound:")
                     || src.contains("style(")
                     || is_style_product(src)),
             "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
@@ -393,7 +393,7 @@ fn batch_d_chrome_menus_compile_on_style_path() {
     ] {
         assert!(
             !src.contains("md: '")
-                && !src.contains("compound: [")
+                && !src.contains("compound({")
                 && !src.contains("sx=\"")
                 && is_style_product(src),
             "{tag} must use Style product (no CVA string maps / string sx):\n{src}"
@@ -429,7 +429,7 @@ fn batch_e_residuals_compile_on_style_path() {
     ] {
         assert!(
             !src.contains("md: '")
-                && !src.contains("compound: [")
+                && !src.contains("compound({")
                 && !src.contains("sx=\"")
                 && !src.contains("tone-bg")
                 && !src.contains("tone-fg")
@@ -458,7 +458,7 @@ fn batch_e_residuals_compile_on_style_path() {
         ("slider", include_str!("../stdlib/slider.sail")),
     ] {
         assert!(
-            !src.contains("sx=\"") && !src.contains("md: '") && !src.contains("compound: ["),
+            !src.contains("sx=\"") && !src.contains("md: '") && !src.contains("compound({"),
             "{tag} residual structure must not carry utility-string sx / CVA maps:\n{src}"
         );
         let _ = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));

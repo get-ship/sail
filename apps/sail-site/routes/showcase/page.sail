@@ -146,7 +146,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <for {filteredPlaylists() as p} key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
                current={activePlaylist() === p.id ? 'true' : null}
- align="center" justify="between" style({ box: pad(2), paint: radius(md).cursor(pointer) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })>
+ align="center" justify="between" style({ box: pad(2), paint: radius(md).cursor(pointer), when: { hover: { paint: bg(muted) }, current: { paint: bg(muted) } } })>
 
             <span>{p.name}</span>
             <badge tone="muted">{p.tracks.length}</badge>
@@ -156,7 +156,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <separator></separator>
       <row on:click={() => activePlaylist.set('__liked')}
            current={activePlaylist() === '__liked' ? 'true' : null}
- align="center" justify="between" style({ box: pad(2), paint: radius(md).cursor(pointer) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })>
+ align="center" justify="between" style({ box: pad(2), paint: radius(md).cursor(pointer), when: { hover: { paint: bg(muted) }, current: { paint: bg(muted) } } })>
 
         <span>♥ Liked</span>
         <badge tone="primary">{liked().length}</badge>
@@ -178,7 +178,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <row on:click={() => playTrack(t.id)}
                  current={currentId() === t.id ? 'true' : null}
 
-                 align="center" gap="3" style({ box: pad(2).padX(3), paint: radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }) }).when(hover, { paint: bg(muted) }).when(current, { paint: bg(muted) })>
+                 align="center" gap="3" style({ box: pad(2).padX(3), paint: radius(md).cursor(pointer), animate: enter({ opacity: 'fade', stagger: '0.03s' }), when: { hover: { paint: bg(muted) }, current: { paint: bg(muted) } } })>
 
               <div style({  box: shrink(0).position(relative).w(10).h(10).overflow(hidden), paint: radius(sm).bg(muted)  })>
                 <img src={t.cover} alt="" style({ box: display(block).w(full).h(full), paint: objectFit(cover) })>
@@ -193,10 +193,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 </if>
               </div>
               <column gap="0" style({ box: grow(1).minW(0) })>
-                <strong style(when({ groupCurrent: style({ paint: fg(primary) }) }))>{t.title}</strong>
+                <strong style({ when: { groupCurrent: { paint: fg(primary) } } })>{t.title}</strong>
                 <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>{t.artist}</p>
               </column>
-              <p style({ box: display(none), paint: fg(muted-foreground), text: fontSize(sm) }).when(desktop, { box: display(block) })>{t.album}</p>
+              <p style({ box: display(none), paint: fg(muted-foreground), text: fontSize(sm), when: { desktop: { box: display(block) } } })>{t.album}</p>
               <button on:click={(e) => { e.stopPropagation(); toggleLike(t.id) }}
                     variant="ghost" size="sm" tone={liked().includes(t.id) ? 'primary' : 'default'}>
                 ♥

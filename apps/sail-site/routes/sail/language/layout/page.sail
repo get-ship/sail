@@ -186,7 +186,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     The server cannot know the viewport, so <strong>SSR always emits the
     <code>&lt;else&gt;</code> / default branch</strong> (mobile-first). After
     hydrate, the client matchMedia-swaps to the matching branch. No UA sniffing.
-    Style <code>.when(&#123; tablet: style.… &#125;)</code> stays paint-level —
+    Style <code>.style({ when: { 123: tablet } })</code> stays paint-level —
     density and color tweaks — and is unchanged.
   </p>
 

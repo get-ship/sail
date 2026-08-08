@@ -125,7 +125,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <scope>
   // Gutter: catalog was flush to the viewport edge (rail + grid). Real pad.
-  const page = style({ box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full) }).when(tablet, { box: padX(6).padY(5) })
+  const page = style({ box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } })
   // Visible so tooltips/hover-cards can escape the tile; media stages clip themselves.
   const tile = style({ box: overflow(visible) })
   const tileCol = style({ box: h(full).overflow(visible) })
@@ -140,10 +140,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const eyebrow = style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
   const sectionTitle = style({ box: mt(2), text: fontSize(sm).fontWeight(semibold) })
   // Packs are a wrapping chip strip above the grid (not a side rail).
-  // Side-by-side via flexDir(row)+when(tablet) loses the cascade war:
+  // Side-by-side via flexDir(row)+style({ when: { tablet: { } } }) loses the cascade war:
   // base w(full)/flexDir(column) can beat the tablet override, grid → 0 width.
   const packStack = style({ box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) })
-  const packBtn = style({ box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap) }).when(hover, { paint: bg(hover-bg) }).when(pressed, { paint: bg(muted).border(primary).shadow(sm) })
+  const packBtn = style({ box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } })
   const packLabel = style({ text: fontSize(sm) })
   const packCount = style({ paint: fg(primary), text: fontSize(xs).fontFamily(mono) })
   const railNote = style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })
@@ -159,7 +159,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const catRow = style({ box: overflowX(auto).maxW(full) })
 </scope>
 
-<column gap="5" style([ style(page), style({ box: w(full).minW(0) }) ])>
+<column gap="5" style(page, { box: w(full).minW(0) })>
   <column gap="1">
     <p style(eyebrow)>Components</p>
     <h1 style({ text: fontSize(2xl).fontWeight(semibold).tracking(tight) })>Catalog</h1>
@@ -173,7 +173,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <p style(eyebrow)>Packs</p>
     <div label="Component packs" style(packStack)>
       <for {packs() as p} key={p.id}>
-        <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style([ style(packBtn), style({ box: shrink(0) }) ])>
+        <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style(packBtn, { box: shrink(0) })>
 
           <row gap="2" align="center" style(tileMeta)>
             <strong style(packLabel)>{p.label}</strong>
@@ -208,7 +208,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <for {visibleList() as e} key={e.key}>
           <card padding="none" tile={e.tag} live={e.live ? 'true' : null} style(tile)>
             <column gap="0" style(tileCol)>
-              <row align="center" justify="center" style([ style(preview), style({ box: grow(1).w(full) }) ])>
+              <row align="center" justify="center" style(preview, { box: grow(1).w(full) })>
                 <if {!e.live}>
                   <p style(dormant)>Select pack in the rail to mount</p>
                 {else-if {e.tag === 'button'} => <row gap="2" align="center">

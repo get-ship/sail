@@ -29,61 +29,22 @@
   align="start"
   gap="3"
   use:liveRegion
-  use:dismissControl style([
-    base,
-    when({
-      before: stripe,
-      forced-colors: style({ paint: border(CanvasText) }),
-    }),
-    // Bound tone expands stripe over Tone groups; omit tone → alert-stripe rest.
-    when({ before: style({ paint: bg(tone) }) }),
-    // Muted keeps alert-stripe (not pure muted group fill).
-    compound({ tone: muted }, when({ before: style({ paint: bg(alert-stripe) }) })),
-    when({
-      forced-colors: when({
-        before: style({ paint: bg(CanvasText) }),
-      }),
-    }),
-  ])>
-  <row inline nowrap align="center" justify="center" style([ style({ box: shrink(1) }), 
-    ico,
-    style({ paint: fg(tone) }),
-    compound({ tone: muted }, style({ paint: bg(alert).fg(alert-stripe) })),
-    when({
-      empty: style({ box: display(none) }),
-    }),
-  ])>
+  use:dismissControl style(base, { when: { before: stripe, forced-colors: { paint: border(CanvasText) }, before: { paint: bg(tone) }, forced-colors: { when: { before: { paint: bg(CanvasText) } } } }, compound: [ { tone: muted, when: { before: { paint: bg(alert-stripe) } } } ] })>
+  <row inline nowrap align="center" justify="center" style(ico, { box: shrink(1), paint: fg(tone), when: { empty: { box: display(none) } }, compound: [ { tone: muted, paint: bg(alert).fg(alert-stripe) } ] })>
     <slot name="icon"></slot>
   </row>
   <column gap="1" style({ box: grow(1).minW(0) })>
-    <div style([
-      title,
-      when({
-        empty: style({ box: display(none) }),
-      }),
-    ])>
+    <div style(title, { when: { empty: { box: display(none) } } })>
       <slot name="title"></slot>
     </div>
     <div style(body)>
       <slot></slot>
     </div>
-    <row align="center" gap="2" style([
-      actions,
-      when({
-        empty: style({ box: display(none) }),
-      }),
-    ])>
+    <row align="center" gap="2" style(actions, { when: { empty: { box: display(none) } } })>
       <slot name="actions"></slot>
     </row>
   </column>
-  <button data-dismiss type="button" anatomy label="Dismiss" style([ style({ box: shrink(1) }), 
-      close,
-      when({
-        group-dismissible: style({ box: display(inline-block) }),
-        hover: style({ paint: bg(alert).fg(alert-foreground) }),
-        focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(2) }),
-      }),
-    ])>
+  <button data-dismiss type="button" anatomy label="Dismiss" style(close, { box: shrink(1), when: { group-dismissible: { box: display(inline-block) }, hover: { paint: bg(alert).fg(alert-foreground) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } } })>
     <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>

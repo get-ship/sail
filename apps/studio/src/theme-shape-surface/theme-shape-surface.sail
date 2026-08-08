@@ -126,7 +126,7 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row shape-error align="center" gap="2" style([ style(bandError), style({ box: shrink(0) }) ])>
+    <row shape-error align="center" gap="2" style(bandError, { box: shrink(0) })>
       <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" shape-retry on:click={session.onRetry}>
         Retry
@@ -135,7 +135,7 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row shape-loading align="center" gap="2" style([ style(bandStatus), style({ box: shrink(0) }) ])>
+    <row shape-loading align="center" gap="2" style(bandStatus, { box: shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -486,10 +486,10 @@ export default controller(() => {
               <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>
                 {session.nameEdit()} · Shape
               </p>
-              <p style([ style(pathMeta), style({ box: shrink(0) }) ])>{session.paintMode()}</p>
+              <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
 
-            <scroll-area style([ style(stageSolid), style({ box: grow(1) }) ])>
+            <scroll-area style(stageSolid, { box: grow(1) })>
               <column
                 specimen-body
                 gap="5"
@@ -522,15 +522,15 @@ export default controller(() => {
                       <button type="button" size="sm" variant="outline" tone="primary">Outline</button>
                     </row>
                     <row gap="2" align="stretch">
-                      <column gap="0" style([ style(statCell), style({ box: grow(1).minW(0) }) ])>
+                      <column gap="0" style(statCell, { box: grow(1).minW(0) })>
                         <p style(pathMeta)>radius.md</p>
                         <p style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })>{shape.statRadius()}</p>
                       </column>
-                      <column gap="0" style([ style(statCell), style({ box: grow(1).minW(0) }) ])>
+                      <column gap="0" style(statCell, { box: grow(1).minW(0) })>
                         <p style(pathMeta)>shadow</p>
                         <p style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })>{shape.statShadow()}</p>
                       </column>
-                      <column gap="0" style([ style(statCell), style({ box: grow(1).minW(0) }) ])>
+                      <column gap="0" style(statCell, { box: grow(1).minW(0) })>
                         <p style(pathMeta)>border</p>
                         <p style({ text: fontSize(sm).fontFamily(mono).fontWeight(semibold) })>{shape.statBorder()}</p>
                       </column>

@@ -140,7 +140,7 @@ export default controller(() => {
                 current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
-                nowrap style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })>
+                nowrap style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, current: { paint: bg(selected-bg).border(selected-border) } } })>
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
                 <row theme-swatches theme={row.previewId} use:paintMode={row.paintMode} gap="0" nowrap hidden="true" style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })>
                   <center style({  box: grow(1).minW(0).h(full), paint: bg(background)  })></center>
@@ -190,7 +190,7 @@ export default controller(() => {
                 current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
-                nowrap style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent) }).when(hover, { paint: bg(hover-bg) }).when(current, { paint: bg(selected-bg).border(selected-border) })>
+                nowrap style({ box: pad(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, current: { paint: bg(selected-bg).border(selected-border) } } })>
                 <row theme-swatches theme={row.previewId} use:paintMode={row.paintMode} gap="0" nowrap hidden="true" style({  box: shrink(0).w(14).h(7).minW(14).overflow(hidden), paint: radius(sm).borderWidth(1).border(border-subtle)  })>
                   <center style({  box: grow(1).minW(0).h(full), paint: bg(background)  })></center>
                   <center style({  box: grow(1).minW(0).h(full), paint: bg(surface-2)  })></center>

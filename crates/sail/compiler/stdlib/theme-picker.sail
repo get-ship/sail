@@ -68,15 +68,8 @@
     type="button"
     popovertarget="sail-theme-panel"
     data-picker-trigger="full"
-    label="Choose theme" style([
-      trigger,
-      when({
-        hover: style({ paint: bg(theme-picker-option-hover-bg) }),
-        focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }),
-        group-inline: style({ box: display(none) }),
-      }),
-    ])>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" style([ style(triggerIcon), style({ box: shrink(0) }) ])>
+    label="Choose theme" style(trigger, { when: { hover: { paint: bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, group-inline: { box: display(none) } } })>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" style(triggerIcon, { box: shrink(0) })>
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
       <circle cx="8.5" cy="7.5" r="1.5"></circle>
@@ -90,16 +83,10 @@
     data-picker-trigger="mode"
     data-mode-only-trigger="1"
     label="Color mode"
-    hidden style([
-      modeTrigger,
-      when({
-        hover: style({ paint: bg(theme-picker-option-hover-bg) }),
-        focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }),
-      }),
-    ])>
-    <span data-mode-icon="light" hidden="true" style([ style(glyph), style({ box: shrink(0) }) ])>☀</span>
-    <span data-mode-icon="dark" hidden hidden="true" style([ style(glyph), style({ box: shrink(0) }) ])>☾</span>
-    <span data-mode-icon="system" hidden hidden="true" style([ style(glyph), style({ box: shrink(0) }) ])>◐</span>
+    hidden style(modeTrigger, { when: { hover: { paint: bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) } } })>
+    <span data-mode-icon="light" hidden="true" style(glyph, { box: shrink(0) })>☀</span>
+    <span data-mode-icon="dark" hidden hidden="true" style(glyph, { box: shrink(0) })>☾</span>
+    <span data-mode-icon="system" hidden hidden="true" style(glyph, { box: shrink(0) })>◐</span>
   </button>
 
   <!-- listbox role stamped by use:themeSelect (closed multi-part anatomy) -->
@@ -109,50 +96,26 @@
     use:anchor
     placement="bottom-end"
     label="Theme"
-    data-theme-listbox style([
-      panel,
-      compound({ inline: true }, style({ box: position(static).w(full).maxW(none).pad(0).overflowX(hidden), paint: shadow(none).bg(transparent).borderWidth(0) })),
-    ])>
+    data-theme-listbox style(panel, { compound: [ { inline: true, box: position(static).w(full).maxW(none).pad(0).overflowX(hidden), paint: shadow(none).bg(transparent).borderWidth(0) } ] })>
     <column gap="2" data-picker-header style(header)>
       <column gap="1" style({ box: minW(0) })>
         <span style(headerEyebrow)>Active</span>
         <row align="center" gap="2" nowrap style({ box: minW(0) })>
-          <span data-selected-label style([ style(headerTitle), style({ box: grow(1).minW(0) }) ])>—</span>
-          <span data-selected-tier style([ style(headerMeta), style({ box: shrink(0) }) ])></span>
+          <span data-selected-label style(headerTitle, { box: grow(1).minW(0) })>—</span>
+          <span data-selected-tier style(headerMeta, { box: shrink(0) })></span>
         </row>
       </column>
 
       <!-- Filter tabs: selected = bold + fill + primary underline (readable on every host theme) -->
       <!-- tablist/tab/option roles stamped by use:themeSelect -->
-      <row gap="0" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap style([ style(modeSeg), style({ box: minW(0) }) ])>
-        <button type="button" data-mode="light" selected="true" data-active="true" title="Show light themes" style([ style({ box: grow(1).minW(0) }), 
-          modeSegBtn,
-          when({
-            hover: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }),
-            focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }),
-            selected: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) }),
-          }),
-        ])>
+      <row gap="0" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap style(modeSeg, { box: minW(0) })>
+        <button type="button" data-mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
           Light
         </button>
-        <button type="button" data-mode="dark" selected="false" title="Show dark themes" style([ style({ box: grow(1).minW(0) }), 
-          modeSegBtn,
-          when({
-            hover: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }),
-            focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }),
-            selected: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) }),
-          }),
-        ])>
+        <button type="button" data-mode="dark" selected="false" title="Show dark themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
           Dark
         </button>
-        <button type="button" data-mode="system" selected="false" title="Show dual-mode themes" style([ style({ box: grow(1).minW(0) }), 
-          modeSegBtn,
-          when({
-            hover: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }),
-            focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }),
-            selected: style({ paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) }),
-          }),
-        ])>
+        <button type="button" data-mode="system" selected="false" title="Show dual-mode themes" style(modeSegBtn, { box: grow(1).minW(0), when: { hover: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: fg(theme-picker-foreground).bg(theme-picker-option-hover-bg).borderB(primary), text: fontWeight(semibold) } } })>
           System
         </button>
       </row>
@@ -160,37 +123,27 @@
 
     <span data-catalog-label style(catalogHead)>Light themes</span>
 
-    <column gap="2" data-theme-grid style([ style(panelList), style({ box: minW(0) }) ])>
-      <button type="button" value="sail" style([
-        option,
-        when({
-          hover: style({ paint: border(border) }),
-          focus: style({ paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }),
-          selected: style({ paint: border(primary) }),
-          forced-colors: when({
-            selected: style({ paint: border(CanvasText) }),
-          }),
-        }),
-      ])>
-        <column gap="0" style([ style(optionCol), style({ box: minW(0) }) ])>
+    <column gap="2" data-theme-grid style(panelList, { box: minW(0) })>
+      <button type="button" value="sail" style(option, { when: { hover: { paint: border(border) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(ring-offset) }, selected: { paint: border(primary) }, forced-colors: { when: { selected: { paint: border(CanvasText) } } } } })>
+        <column gap="0" style(optionCol, { box: minW(0) })>
           <!-- Full-bleed live specimen: heading face + chromatic strips + controls -->
           <column theme="sail" data-mode="light" hidden="true" style(swatch)>
             <span style(overlay)></span>
-            <column gap="2" justify="between" style([ style(specimen), style({ box: minW(0) }) ])>
+            <column gap="2" justify="between" style(specimen, { box: minW(0) })>
               <row align="center" gap="2" nowrap style({ box: minW(0).w(full) })>
-                <span data-swatch-title style([ style(title), style({ box: grow(1).minW(0) }) ])>Sail</span>
-                <span data-selected-check hidden hidden="true" style([ style(checkMark), style({ box: shrink(0) }) ])>✓</span>
+                <span data-swatch-title style(title, { box: grow(1).minW(0) })>Sail</span>
+                <span data-selected-check hidden hidden="true" style(checkMark, { box: shrink(0) })>✓</span>
               </row>
               <!-- primary · secondary · accent — equal strips, no surface-matching noise -->
               <row align="center" gap="1" nowrap hidden="true" style({ box: minW(0).w(full) })>
-                <span style([ style(stripPrimary), style({ box: grow(1).minW(0) }) ])></span>
-                <span style([ style(stripSecondary), style({ box: grow(1).minW(0) }) ])></span>
-                <span style([ style(stripAccent), style({ box: grow(1).minW(0) }) ])></span>
+                <span style(stripPrimary, { box: grow(1).minW(0) })></span>
+                <span style(stripSecondary, { box: grow(1).minW(0) })></span>
+                <span style(stripAccent, { box: grow(1).minW(0) })></span>
               </row>
               <!-- Body-face controls: outline + solid (fills the bottom without fake pangrams) -->
               <row align="center" gap="1" nowrap style({ box: minW(0) })>
-                <row inline nowrap style([ style(btnGhost), style({ box: shrink(0) }) ])>Cancel</row>
-                <row inline nowrap style([ style(btnSolid), style({ box: shrink(0) }) ])>Continue</row>
+                <row inline nowrap style(btnGhost, { box: shrink(0) })>Cancel</row>
+                <row inline nowrap style(btnSolid, { box: shrink(0) })>Continue</row>
               </row>
             </column>
           </column>

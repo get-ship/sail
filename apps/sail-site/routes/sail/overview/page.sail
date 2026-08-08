@@ -1,7 +1,7 @@
 <!--
   /overview — the Introduction (pairing draft v3).
   v3 rulings applied: query added to the opener’s API list; hover feedback is
-  Style .when(hover, …) paint (not animate motion — that path ran a full
+  Style .style({ when: { hover: { } } }) paint (not animate motion — that path ran a full
   WAAPI pass on enter AND leave (jitter on mouse sweep)); prose and demos sit
   side by side; the bundle widget is GONE (bundle story ≠ compiler tunability
   — separate artifact, built when we’re ready to compare honestly); tuning

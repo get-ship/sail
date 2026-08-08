@@ -334,7 +334,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
 
-         style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer) }).when(hover, { paint: shadow(sm) }).when(focus, { paint: outline(ring) }).when(current, { paint: borderWidth(1).border(ring).shadow(sm) }).when(stateAgent, { paint: borderLWidth(1).borderL(primary) }).when(stateSkill, { paint: borderLWidth(1).borderL(success) }).when(stateMcp, { paint: borderLWidth(1).borderL(info) }).when(stateRule, { paint: borderLWidth(1).borderL(warning) }).when(statePerm, { paint: borderLWidth(1).borderL(destructive) }).when(stateHarness, { paint: borderLWidth(1).borderL(accent) })>
+         style({ box: w(bind(boxW)).padY(2).padX(3), paint: bg(card).fg(foreground).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer), when: { hover: { paint: shadow(sm) }, focus: { paint: outline(ring) }, current: { paint: borderWidth(1).border(ring).shadow(sm) }, stateAgent: { paint: borderLWidth(1).borderL(primary) }, stateSkill: { paint: borderLWidth(1).borderL(success) }, stateMcp: { paint: borderLWidth(1).borderL(info) }, stateRule: { paint: borderLWidth(1).borderL(warning) }, statePerm: { paint: borderLWidth(1).borderL(destructive) }, stateHarness: { paint: borderLWidth(1).borderL(accent) } } })>
 
           <if {n.body !== ''}>
             <div use:nodeBody={n.body}></div>

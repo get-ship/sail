@@ -80,7 +80,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
           aria-label="Remove annotation"
           on:click={() => emitRemove(a.id)}
 
-         style({ box: minH(0).padX(1_5).padY(half), paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer), text: fontSize(xs) }).when(hover, { paint: fg(destructive).borderWidth(1).border(destructive) })>
+         style({ box: minH(0).padX(1_5).padY(half), paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer), text: fontSize(xs), when: { hover: { paint: fg(destructive).borderWidth(1).border(destructive) } } })>
 Remove</button>
       </row>
     </for>

@@ -16,19 +16,6 @@
   const sizeSm = style({ box: minW(control-h-sm).h(control-h-sm), text: fontSize(xs) })
   const sizeLg = style({ box: minW(control-h-lg).h(control-h-lg), text: fontSize(base) })
 </scope>
-<button type="button" style([
-  base,
-  match(size, {
-    md: sizeMd,
-    sm: sizeSm,
-    lg: sizeLg,
-  }),
-  when({
-    hover: style({ paint: bg(page-hover-bg) }),
-    current: style({ paint: bg(page-current-bg).fg(page-current-foreground).border(page-current-bg) }),
-    disabled: style({ paint: opacity(50).cursor(not-allowed) }),
-    focus: style({ paint: outline(solid).outline(2).outline(ring) }),
-  }),
-])>
+<button type="button" style(base, { when: { hover: { paint: bg(page-hover-bg) }, current: { paint: bg(page-current-bg).fg(page-current-foreground).border(page-current-bg) }, disabled: { paint: opacity(50).cursor(not-allowed) }, focus: { paint: outline(solid).outline(2).outline(ring) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } } })>
   <slot></slot>
 </button>

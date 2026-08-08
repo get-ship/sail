@@ -113,9 +113,9 @@ export default controller((ctx) => {
   // One fixed-height track. Never wrap — overflow scrolls if needed (last resort).
   const productSwitch = style({ box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) })
   // Compact on phone so Sail·Deck·Components·AI + brand + theme stay one row.
-  const productLink = style({ box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap) }).when(hover, { paint: fg(foreground).bg(hover-bg) }).when(current, { paint: bg(primary).fg(primary-foreground) }).when(tablet, { box: padX(2_5), text: fontSize(sm) })
+  const productLink = style({ box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } })
   // Phone: mark only. Tablet+: SHIP UI wordmark.
-  const brandWord = style({ box: display(none), text: whitespace(nowrap) }).when(tablet, { box: display(inline) })
+  const brandWord = style({ box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } })
   // Viewport-locked shell so fill/grow children resolve. One tree — never remount
   // the theme-picker when switching landing/docs/tutorial (SPA chrome reuse).
   // Do NOT overflow:hidden the outer column — taffy silent-clip + popover hosts.
@@ -130,7 +130,7 @@ export default controller((ctx) => {
 </scope>
 
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
-<column gap="0" style([ style(shell), style({ box: w(full) }) ])>
+<column gap="0" style(shell, { box: w(full) })>
   <navbar sticky bordered use:chromeOffset>
     <a slot="brand" href="/" label="SHIP UI home" style({ box: shrink(0) })>
       <row gap="2" align="center" nowrap>
@@ -145,21 +145,21 @@ export default controller((ctx) => {
       </row>
     </a>
 
-    <row slot="center" gap="1" align="center" nowrap label="Products" style([ style(productSwitch), style({ box: minW(0) }) ])>
-      <a href="/sail/overview" current={product() === 'sail' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>Sail</a>
-      <a href="/deck" current={product() === 'deck' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>Deck</a>
-      <a href="/components" current={product() === 'components' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>Components</a>
-      <a href="/ai" current={product() === 'ai' ? 'page' : null} style([ style(productLink), style({ box: shrink(0) }) ])>AI</a>
+    <row slot="center" gap="1" align="center" nowrap label="Products" style(productSwitch, { box: minW(0) })>
+      <a href="/sail/overview" current={product() === 'sail' ? 'page' : null} style(productLink, { box: shrink(0) })>Sail</a>
+      <a href="/deck" current={product() === 'deck' ? 'page' : null} style(productLink, { box: shrink(0) })>Deck</a>
+      <a href="/components" current={product() === 'components' ? 'page' : null} style(productLink, { box: shrink(0) })>Components</a>
+      <a href="/ai" current={product() === 'ai' ? 'page' : null} style(productLink, { box: shrink(0) })>AI</a>
     </row>
 
     <theme-picker slot="actions"></theme-picker>
   </navbar>
 
   <if {landing()}>
-    <main style([ style(landingMain), style({ box: grow(1).minW(0).w(full) }) ])>
+    <main style(landingMain, { box: grow(1).minW(0).w(full) })>
       <slot name="route"></slot>
     </main>
-  {else => <main style([ style(appMain), style({ box: grow(1).minW(0).w(full) }) ])>
+  {else => <main style(appMain, { box: grow(1).minW(0).w(full) })>
       <slot name="route"></slot>
     </main>}</if>
 </column>

@@ -8,12 +8,12 @@
   const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
   const mutedIcon = style({ paint: fg(muted-foreground) })
   const panelCard = style({ box: pad(4).minW(0).h(full), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
-  const doorCard = style({ box: pad(3), paint: cursor(pointer) }).when(hover, { paint: bg(hover-bg) })
+  const doorCard = style({ box: pad(3), paint: cursor(pointer), when: { hover: { paint: bg(hover-bg) } } })
   const doorTitle = style({ text: fontWeight(semibold) })
   const doorHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
   const heroCard = style({ box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
-  const heroSwatch = style({ box: position(relative).h(28).minH(28).w(full).overflow(hidden), paint: bg(bind(swatchColor)) }).when(stateEdit, { paint: cursor(pointer) }).when(stateLocked, { paint: cursor(default) })
-  const heroColorInput = style({ box: position(absolute).top(0).left(0).w(full).h(full).pad(0), paint: borderWidth(0).cursor(pointer).opacity(0) }).when(disabled, { paint: cursor(not-allowed) })
+  const heroSwatch = style({ box: position(relative).h(28).minH(28).w(full).overflow(hidden), paint: bg(bind(swatchColor)), when: { stateEdit: { paint: cursor(pointer) }, stateLocked: { paint: cursor(default) } } })
+  const heroColorInput = style({ box: position(absolute).top(0).left(0).w(full).h(full).pad(0), paint: borderWidth(0).cursor(pointer).opacity(0), when: { disabled: { paint: cursor(not-allowed) } } })
   const heroMeta = style({ box: padX(3).padY(2) })
   const identityCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
   const iconCell = style({ box: w(9).h(9).minW(9).minH(9), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
@@ -60,7 +60,7 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row overview-error align="center" gap="2" style([ style(bandError), style({ box: shrink(0) }) ])>
+    <row overview-error align="center" gap="2" style(bandError, { box: shrink(0) })>
       <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" overview-retry on:click={session.onRetry}>
         Retry
@@ -69,7 +69,7 @@ export default controller(() => {
   </if>
 
   <if {session.loading()}>
-    <row overview-loading align="center" gap="2" style([ style(bandStatus), style({ box: shrink(0) }) ])>
+    <row overview-loading align="center" gap="2" style(bandStatus, { box: shrink(0) })>
       <spinner size="sm"></spinner>
       <p style(fieldHint)>Loading…</p>
     </row>
@@ -81,7 +81,7 @@ export default controller(() => {
         <column color-hero gap="3">
           <p style(sectionTitle)>Color</p>
           <row hero-colors gap="3" align="stretch">
-            <column hero-card token="primary" gap="0" style([ style(heroCard), style({ box: grow(1).minW(0) }) ])>
+            <column hero-card token="primary" gap="0" style(heroCard, { box: grow(1).minW(0) })>
               <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
                 <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
               </stack>
@@ -90,7 +90,7 @@ export default controller(() => {
                 <p style(monoMeta)>{primaryHex()}</p>
               </row>
             </column>
-            <column hero-card token="secondary" gap="0" style([ style(heroCard), style({ box: grow(1).minW(0) }) ])>
+            <column hero-card token="secondary" gap="0" style(heroCard, { box: grow(1).minW(0) })>
               <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
                 <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
               </stack>
@@ -99,7 +99,7 @@ export default controller(() => {
                 <p style(monoMeta)>{secondaryHex()}</p>
               </row>
             </column>
-            <column hero-card token="accent" gap="0" style([ style(heroCard), style({ box: grow(1).minW(0) }) ])>
+            <column hero-card token="accent" gap="0" style(heroCard, { box: grow(1).minW(0) })>
               <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
                 <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
               </stack>
@@ -157,7 +157,7 @@ export default controller(() => {
             <if {overview.hasIconGlyphs()}>
               <grid cols="4" gap="2" icon-sample style({ box: padT(1) })>
                 <for {overview.iconGlyphs() as g} key={g.key}>
-                  <center title={g.name} style([ style(iconCell), style({ box: shrink(0) }) ])>
+                  <center title={g.name} style(iconCell, { box: shrink(0) })>
                     <icon name={g.name} size="sm" label={g.name}></icon>
                   </center>
                 </for>
@@ -190,7 +190,7 @@ export default controller(() => {
             <for {overview.facetDoors() as door} key={door.key}>
               <card facet={door.facet} style(doorCard)>
                 <row gap="2" align="center">
-                  <icon name={door.icon} size="sm" style([ style(mutedIcon), style({ box: shrink(0) }) ])></icon>
+                  <icon name={door.icon} size="sm" style(mutedIcon, { box: shrink(0) })></icon>
                   <column gap="0" style({ box: grow(1).minW(0) })>
                     <p style(doorTitle)>{door.label}</p>
                     <p style(doorHint)>{door.hint}</p>
@@ -219,7 +219,7 @@ export default controller(() => {
                 <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
               </row>
               <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{session.nameEdit()}</p>
-              <p style([ style(monoMeta), style({ box: shrink(0) }) ])>{session.paintMode()}</p>
+              <p style(monoMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
             <scroll-area style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })>
               <!--
