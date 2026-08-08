@@ -187,9 +187,10 @@ fn card_proving_ground_no_cva() {
         is_style_product(src) && src.contains("match:") && src.contains("when:"),
         "card must use Style value language"
     );
-    // Component token cssNames stay live (orch component packs).
+    // Component token cssNames stay live (orch component packs; D1 dotted form).
     assert!(
-        src.contains("card") && src.contains("card-foreground"),
+        src.contains("card")
+            && (src.contains("card.foreground") || src.contains("card-foreground")),
         "card must paint via component.card tokens"
     );
 }
@@ -242,6 +243,53 @@ fn scope_style_const_resolves_in_host_sx() {
 }
 
 #[test]
+fn scope_style_decl_resolves_in_host_sx() {
+    let out = preprocess(
+        r#"
+<scope>
+  style host = { box: padX(2), paint: bg(primary) }
+</scope>
+<div style(host)> x</div>
+"#,
+    )
+    .expect("preprocess");
+    assert!(
+        out.contains("var(--primary)") || out.contains("sx-bgprimary"),
+        "style name = must resolve via StyleEnv:\n{out}"
+    );
+    assert!(
+        out.contains("var(--space-2)") || out.contains("padding") || out.contains("sx-padx"),
+        "style decl setters must emit:\n{out}"
+    );
+}
+
+#[test]
+fn scope_style_decl_compose_merges() {
+    let out = preprocess(
+        r#"
+<scope>
+  style a = { box: pad(1), paint: bg(primary) }
+  style b = a, { box: pad(2) }
+</scope>
+<div style(b)> x</div>
+"#,
+    )
+    .expect("preprocess");
+    // pad(2) should win/merge from compose partial; primary paint from base.
+    assert!(
+        out.contains("var(--primary)") || out.contains("sx-bgprimary"),
+        "compose base paint must resolve:\n{out}"
+    );
+    assert!(
+        out.contains("var(--space-2)")
+            || out.contains("padding")
+            || out.contains("sx-pad")
+            || out.contains("space-2"),
+        "compose partial box must emit:\n{out}"
+    );
+}
+
+#[test]
 fn scope_style_const_in_match_arms() {
     let out = preprocess(
         r#"
@@ -262,15 +310,15 @@ fn scope_style_const_in_match_arms() {
 }
 
 #[test]
-fn badge_uses_scope_style_consts() {
+fn badge_uses_scope_style_decls() {
     let src = include_str!("../stdlib/badge.sail");
     assert!(
-        src.contains("const base = style") && src.contains("const soft = style"),
-        "badge proving ground should declare scope Style consts"
+        src.contains("style base =") && src.contains("style soft ="),
+        "badge proving ground should declare scope Style with style name ="
     );
     assert!(
-        src.contains("soft: style(soft") || src.contains("soft: soft") || src.contains("const soft = style"),
-        "badge match arms should ref Style consts"
+        src.contains("soft: style(soft") || src.contains("soft: soft") || src.contains("style soft ="),
+        "badge match arms should ref Style decls"
     );
 }
 

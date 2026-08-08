@@ -1,7 +1,8 @@
 //! `<scope>` — the component's static surface. A fenced subset of TypeScript:
 //! `type` / `export type` aliases, field declarations (`name: Type = value`)
-//! with literal values, **Style consts** (`const name = style.…`), and
-//! **static imports** of types + Style values only.
+//! with literal values, **Style declarations** (`style name = {…}` preferred;
+//! legacy `const name = style(…)` dual path), and **static imports** of types
+//! + Style values only.
 //! Nothing in the block executes — no runtime `const` computation, no
 //! behavior imports. If it computes, it belongs in `<controller>`.
 //!
@@ -15,8 +16,9 @@
 //!   - `props: { … }` — the component's typed inputs (field declarations).
 //!     Residual CVA key→sx string maps type as the key union (no paint).
 //!     Product paint is host `match` / Style.
-//!   - `const name = <Style>` — compile-time Style value (chain / match / when /
-//!     compound / list / ref). Resolved when host `sx=` refs the name.
+//!   - `style name = <Style>` — first-class compile-time Style declaration
+//!     (object / call / compose / ref). Preferred product form.
+//!   - `const name = <Style>` — legacy dual-path Style const (same env).
 //!   - Residual `compound: [ { when, sx } ]` is skipped (no paint).
 //!
 //! Bare `tone` / `size` defaults type as the shared stdlib unions and reflect
@@ -42,7 +44,8 @@ pub(crate) struct ScopeBlock {
     /// Raw `type` / `export type` alias text, appended to the controller
     /// module (aliases hoist, so appending preserves controller spans).
     pub types: String,
-    /// Scope Style consts (`const name = style.…` → env for `sx` Ref).
+    /// Scope Style values (`style name = …` / legacy `const name = style.…`
+    /// → env for product `style(name)` Ref).
     pub style_env: StyleEnv,
 }
 
@@ -50,9 +53,9 @@ const TONE_VOCAB: &str = "primary|info|success|warning|destructive|accent|muted"
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, type/Style-value \
-     `import`s, `props:`, Style `const name = style.…` / match / when / compound, \
-     optional residual `compound:` — types, literals, and Style only; logic goes \
-     in `<controller>`";
+     `import`s, `props:`, Style `style name = {…}` (preferred) or legacy \
+     `const name = style(…)`, optional residual `compound:` — types, literals, \
+     and Style only; logic goes in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
     parse_scope_block_at(body, span, None)
@@ -131,7 +134,20 @@ pub(crate) fn parse_scope_block_at(
                 let (name, style, end) = parse_style_const(body, after, span)?;
                 if out.style_env.contains_key(&name) {
                     return Err(CompileError::new(format!(
-                        "Style const `{name}` is declared twice in `<scope>`."
+                        "Style `{name}` is declared twice in `<scope>`."
+                    ))
+                    .with_span(span));
+                }
+                out.style_env.insert(name, style);
+                i = end;
+            }
+            "style" => {
+                // First-class Style decl: `style name = <rhs>` (not tag-position
+                // `style(…)` — that lives on hosts, not as a scope statement).
+                let (name, style, end) = parse_style_decl(body, after, span)?;
+                if out.style_env.contains_key(&name) {
+                    return Err(CompileError::new(format!(
+                        "Style `{name}` is declared twice in `<scope>`."
                     ))
                     .with_span(span));
                 }
@@ -149,7 +165,7 @@ pub(crate) fn parse_scope_block_at(
                 // Name the closest wrong turn we can recognize.
                 let hint = match other {
                     "let" | "var" => {
-                        " Use `const name = style.…` for Style values, or a prop literal \
+                        " Use `style name = {…}` for Style values, or a prop literal \
                          default — computation belongs in `<controller>`."
                     }
                     _ => "",
@@ -574,33 +590,93 @@ pub(crate) fn style_env_from_source(source: &str) -> StyleEnv {
     env
 }
 
-/// `const name = <Style expr>` — Style product only (no runtime computation).
+/// `const name = <Style expr>` — legacy dual path (no runtime computation).
 fn parse_style_const(
     s: &str,
     after_const: usize,
     span: Span,
 ) -> Result<(String, Style, usize), CompileError> {
+    parse_named_style_binding(
+        s,
+        after_const,
+        span,
+        StyleBindingKw::Const,
+    )
+}
+
+/// `style name = <Style rhs>` — first-class Style declaration.
+fn parse_style_decl(
+    s: &str,
+    after_style: usize,
+    span: Span,
+) -> Result<(String, Style, usize), CompileError> {
+    parse_named_style_binding(s, after_style, span, StyleBindingKw::Style)
+}
+
+enum StyleBindingKw {
+    Const,
+    Style,
+}
+
+fn parse_named_style_binding(
+    s: &str,
+    after_kw: usize,
+    span: Span,
+    kw: StyleBindingKw,
+) -> Result<(String, Style, usize), CompileError> {
     let bytes = s.as_bytes();
-    let i = skip_trivia(s, after_const, None);
+    let i = skip_trivia(s, after_kw, None);
     let (name, after_name) = read_word(s, i);
+    let form_hint = match kw {
+        StyleBindingKw::Const => "const filled = style({ paint: bg(primary) })",
+        StyleBindingKw::Style => "style filled = { paint: bg(primary) }",
+    };
     if name.is_empty() {
-        return Err(CompileError::new(
-            "`const` in `<scope>` needs a name — write `const filled = style({ paint: bg(primary) })`."
-                .to_string(),
-        )
-        .with_span(span));
+        let msg = match kw {
+            StyleBindingKw::Const => format!(
+                "`const` in `<scope>` needs a name — write `{form_hint}` \
+                 (or preferred `style name = {{…}}`)."
+            ),
+            StyleBindingKw::Style => {
+                // `style(` at statement position is not a declaration.
+                if i < bytes.len() && bytes[i] == b'(' {
+                    "`style(…)` is tag-position product syntax, not a `<scope>` \
+                     declaration — write `style name = { … }` (or compose \
+                     `style quiet = host, { … }`)."
+                        .to_string()
+                } else {
+                    format!(
+                        "`style` in `<scope>` needs a name — write `{form_hint}`."
+                    )
+                }
+            }
+        };
+        return Err(CompileError::new(msg).with_span(span));
     }
     let mut j = skip_trivia(s, after_name, None);
     if j >= bytes.len() || bytes[j] != b'=' {
         return Err(CompileError::new(format!(
-            "`const {name}` in `<scope>` needs `=` — write `const {name} = style({{ … }})`."
+            "`{} {name}` in `<scope>` needs `=` — write `{} {name} = {{ … }}` \
+             (or `style(…)` call form).",
+            match kw {
+                StyleBindingKw::Const => "const",
+                StyleBindingKw::Style => "style",
+            },
+            match kw {
+                StyleBindingKw::Const => "const",
+                StyleBindingKw::Style => "style",
+            },
         ))
         .with_span(span));
     }
     if j + 1 < bytes.len() && bytes[j + 1] == b'>' {
         return Err(CompileError::new(format!(
-            "`const {name}` in `<scope>` is a Style value, not an arrow function — \
-             write `const {name} = style({{ … }})`."
+            "`{} {name}` in `<scope>` is a Style value, not an arrow function — \
+             write `style {name} = {{ … }}`.",
+            match kw {
+                StyleBindingKw::Const => "const",
+                StyleBindingKw::Style => "style",
+            },
         ))
         .with_span(span));
     }
@@ -610,21 +686,29 @@ fn parse_style_const(
     let rhs = s[start..end].trim();
     if rhs.is_empty() {
         return Err(CompileError::new(format!(
-            "`const {name}` in `<scope>` has no Style RHS — write `const {name} = style.…`."
+            "`{} {name}` in `<scope>` has no Style RHS — write `style {name} = {{ … }}`.",
+            match kw {
+                StyleBindingKw::Const => "const",
+                StyleBindingKw::Style => "style",
+            },
         ))
         .with_span(span));
     }
     if !looks_like_style_const_rhs(rhs) {
         return Err(CompileError::new(format!(
-            "`const {name}` in `<scope>` must be a Style expression \
-             (`style.…`, `match`, `when`, `compound`, `[…]`, or another Style const name) — \
-             computation belongs in `<controller>`."
+            "`{} {name}` in `<scope>` must be a Style expression \
+             (`{{…}}`, `style(…)`, compose `base, {{…}}`, or another Style name) — \
+             computation belongs in `<controller>`.",
+            match kw {
+                StyleBindingKw::Const => "const",
+                StyleBindingKw::Style => "style",
+            },
         ))
         .with_span(span));
     }
     let (style, diags) = sail_lint::style::parse_style_const_rhs(rhs);
     if let Some(msg) = style_const_diag_message(&diags) {
-        return Err(CompileError::new(format!("Style const `{name}`: {msg}")).with_span(span));
+        return Err(CompileError::new(format!("Style `{name}`: {msg}")).with_span(span));
     }
     let mut after = skip_trivia(s, end, None);
     if after < bytes.len() && bytes[after] == b';' {
@@ -635,7 +719,8 @@ fn parse_style_const(
 
 fn looks_like_style_const_rhs(rhs: &str) -> bool {
     let t = rhs.trim();
-    if t.starts_with("style.")
+    if t.starts_with('{')
+        || t.starts_with("style.")
         || t.starts_with("style(")
         || t.starts_with("match(")
         || t.starts_with("when(")
@@ -644,11 +729,15 @@ fn looks_like_style_const_rhs(rhs: &str) -> bool {
     {
         return true;
     }
-    // Bare Style const ref: identifier starting with a letter (not `50`, not keywords).
-    let mut chars = t.chars();
+    // Bare Style ref or compose head: `host` / `host, { … }` / `host, style({…})`.
+    let head = t.split(',').next().unwrap_or("").trim();
+    if head.is_empty() {
+        return false;
+    }
+    let mut chars = head.chars();
     match chars.next() {
         Some(c) if c.is_ascii_alphabetic() || c == '_' => {
-            t.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+            head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
         }
         _ => false,
     }
@@ -686,7 +775,7 @@ fn scan_style_expr_end(s: &str, start: usize) -> usize {
     bytes.len()
 }
 
-/// Best-effort const harvest when full scope parse fails (props errors, etc.).
+/// Best-effort Style harvest when full scope parse fails (props errors, etc.).
 fn harvest_style_consts_loose(body: &str, env: &mut StyleEnv) {
     let bytes = body.as_bytes();
     let mut i = 0usize;
@@ -705,6 +794,29 @@ fn harvest_style_consts_loose(body: &str, env: &mut StyleEnv) {
             }
             if let Ok((name, style, end)) =
                 parse_style_const(body, after_kw, Span::new(0, body.len()))
+            {
+                env.entry(name).or_insert(style);
+                i = end;
+                continue;
+            }
+        }
+        if body[i..].starts_with("style") {
+            let after_kw = i + 5;
+            // Word boundary: `style` not `stylesheet` / `styleFoo`.
+            if after_kw < bytes.len()
+                && (bytes[after_kw].is_ascii_alphanumeric() || bytes[after_kw] == b'_')
+            {
+                i += 1;
+                continue;
+            }
+            // Skip tag-position-looking `style(` at statement start.
+            let after_triv = skip_trivia(body, after_kw, None);
+            if after_triv < bytes.len() && bytes[after_triv] == b'(' {
+                i = after_kw;
+                continue;
+            }
+            if let Ok((name, style, end)) =
+                parse_style_decl(body, after_kw, Span::new(0, body.len()))
             {
                 env.entry(name).or_insert(style);
                 i = end;
@@ -1661,12 +1773,65 @@ mod tests {
     }
 
     #[test]
+    fn style_decl_is_a_scope_member() {
+        let b = block(
+            "style filled = { paint: bg(primary).fg(primary-foreground) }\nprops: {\n  label = ''\n}",
+        );
+        assert!(
+            b.style_env.contains_key("filled"),
+            "style name = must land in style_env"
+        );
+        assert_eq!(prop(&b, "label").default.as_deref(), Some(""));
+    }
+
+    #[test]
+    fn style_decl_call_form_is_accepted() {
+        let b = block("style host = style({ paint: bg(primary) })\nprops: { label = '' }");
+        assert!(b.style_env.contains_key("host"));
+    }
+
+    #[test]
+    fn style_decl_compose_merges() {
+        let b = block(
+            "style a = { box: pad(1) }\nstyle b = a, { box: pad(2) }\nprops: { label = '' }",
+        );
+        assert!(b.style_env.contains_key("a"));
+        assert!(b.style_env.contains_key("b"));
+        // Compose is ordered List (same as style(a, {…})).
+        match b.style_env.get("b") {
+            Some(sail_lint::style::Style::List(parts)) => {
+                assert_eq!(parts.len(), 2, "compose should be List of base + partial");
+            }
+            other => panic!("expected List compose, got {other:?}"),
+        }
+    }
+
+    #[test]
     fn style_const_match_rhs_is_accepted() {
         let b = block(
             "const soft = style({ paint: bg(muted) })\nconst paint = style({ match: { variant: { soft: soft, solid: style({ paint: bg(primary) }) } } })",
         );
         assert!(b.style_env.contains_key("soft"));
         assert!(b.style_env.contains_key("paint"));
+    }
+
+    #[test]
+    fn style_decl_and_legacy_const_dual_path() {
+        let b = block(
+            "style host = { paint: bg(primary) }\nconst legacy = style({ paint: bg(muted) })\nprops: { label = '' }",
+        );
+        assert!(b.style_env.contains_key("host"));
+        assert!(b.style_env.contains_key("legacy"));
+    }
+
+    #[test]
+    fn style_call_as_scope_statement_is_refused() {
+        let e = err("style({ paint: bg(primary) })\nprops: { label = '' }");
+        assert!(
+            e.message.contains("tag-position") || e.message.contains("declaration"),
+            "{}",
+            e.message
+        );
     }
 
     #[test]

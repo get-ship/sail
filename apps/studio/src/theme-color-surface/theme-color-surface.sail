@@ -3,24 +3,24 @@
   Controller composition: session + color domain.
 -->
 <scope>
-  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
-  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const doorTitle = style({ text: fontWeight(semibold) })
-  const editorCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
-  const brandCard = style({ box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
+  style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
+  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style monoMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style doorTitle = { text: fontWeight(semibold) }
+  style editorCol = { box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) }
+  style brandCard = { box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) }
   // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
-  const brandSwatch = style({ box: position(relative).h(28).minH(28).w(full).overflow(hidden), when: { stateEdit: { paint: cursor(pointer) }, stateLocked: { paint: cursor(default) } } })
+  style brandSwatch = { box: position(relative).h(28).minH(28).w(full).overflow(hidden), when: { stateEdit: { paint: cursor(pointer) }, stateLocked: { paint: cursor(default) } } }
   // Token-row chip: explicit size + relative so absolute-fill swatch has a real hit target.
-  const tokenChip = style({ box: position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle) })
-  const heroMeta = style({ box: padX(3).padY(2) })
-  const tokenRow = style({ box: padY(2).minW(0) })
-  const seedDot = style({ box: w(4).h(4).minW(4).minH(4), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) })
-  const surfaceChip = style({ box: padX(2).padY(1), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
-  const surfaceDot = style({ box: w(3).h(3).minW(3).minH(3), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) })
-  const bandStatus = style({ box: padX(4).padY(2) })
-  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
+  style tokenChip = { box: position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle) }
+  style heroMeta = { box: padX(3).padY(2) }
+  style tokenRow = { box: padY(2).minW(0) }
+  style seedDot = { box: w(4).h(4).minW(4).minH(4), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) }
+  style surfaceChip = { box: padX(2).padY(1), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
+  style surfaceDot = { box: w(3).h(3).minW(3).minH(3), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) }
+  style bandStatus = { box: padX(4).padY(2) }
+  style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
 </scope>
 
 <controller>

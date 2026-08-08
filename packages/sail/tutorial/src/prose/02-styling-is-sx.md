@@ -31,18 +31,19 @@ animate: … })` with optional keys for conditionality — `when:`, `match:`,
 distinct: `borderWidth(1)` sets the width; `border(border)` sets the color
 to the `border` token.
 
-Prefer a scope const when the same paint repeats:
+Prefer a scope Style declaration when the same paint repeats:
 
 ```
 <scope>
-  const card = style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
+  style card = { box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
 </scope>
 <column style(card)>
   …
 </column>
 ```
 
-Or compose partials as args: `style(base, emphasis)`. Computed class
+Or compose partials as args: `style(base, emphasis)` — and in scope,
+`style quiet = host, { paint: bg(transparent) }`. Computed class
 strings are not the product — utility-string atoms like
 `style="p-4 bg-muted"` do not compile. Moving a *value* at runtime is a
 different tool: `bind(name)`, which the Styling chapter covers.

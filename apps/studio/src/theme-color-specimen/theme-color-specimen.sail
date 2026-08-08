@@ -28,8 +28,8 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
 </scope>
 
 <column specimen-dock gap="0" style({  box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })>

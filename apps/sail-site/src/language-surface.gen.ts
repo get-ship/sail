@@ -7284,9 +7284,15 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
     "example": "<scope>\n  import type { Row } from './row-types'\n  props: { rows: Row[] = [] }\n</scope>\n<p>ok</p>"
   },
   {
-    "form": "Style const",
+    "form": "Style declaration",
+    "syntax": "style filled = { paint: bg(primary), box: padX(2) }",
+    "summary": "first-class compile-time Style (object / compose / call form); attach with tag-position style(name) on the host",
+    "example": "<scope>\n  style filled = { paint: bg(primary), box: padX(2) }\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
+  },
+  {
+    "form": "Style const (legacy dual path)",
     "syntax": "const filled = style({ paint: bg(primary), box: padX(2) })",
-    "summary": "compile-time Style value (channels + when/match/compound keys / ref); attach with tag-position style(name) on the host",
+    "summary": "legacy Style binding — still accepted this cycle; prefer `style name = {…}`",
     "example": "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>"
   },
   {
@@ -7317,7 +7323,7 @@ export const SCOPE_REFUSALS: ScopeRefusalDoc[] = [
   },
   {
     "syntax": "let / var / non-Style const",
-    "instead": "Style const (`const name = style.…`) or a literal prop default; computation belongs in <controller>",
+    "instead": "Style declaration (`style name = {…}`) or a literal prop default; computation belongs in <controller>",
     "example": "<scope>\n  let n = 1\n  props: { open = false }\n</scope>\n<p>ok</p>"
   }
 ]
@@ -7497,11 +7503,11 @@ export const REGION_CAPABILITY_MATRIX: RegionCapabilityDoc[] = [
   },
   {
     "region": "scope",
-    "capability": "Style consts (const name = style.…)",
+    "capability": "Style declarations (style name = {…}; legacy const name = style.…)",
     "legal": "yes",
     "status": "enforced",
     "enforcement": "parse::scope_block (StyleEnv) + sail-style lower",
-    "notes": "Channel values as compile-time Style only"
+    "notes": "Channel values as compile-time Style only; prefer style name ="
   },
   {
     "region": "scope",

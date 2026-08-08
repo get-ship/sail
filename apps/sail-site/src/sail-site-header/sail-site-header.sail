@@ -108,25 +108,25 @@ export default controller((ctx) => {
 </controller>
 
 <scope>
-  const brand = style({ text: fontSize(lg).tracking(tight).whitespace(nowrap) })
-  const brandMark = style({ paint: fg(primary) })
+  style brand = { text: fontSize(lg).tracking(tight).whitespace(nowrap) }
+  style brandMark = { paint: fg(primary) }
   // One fixed-height track. Never wrap — overflow scrolls if needed (last resort).
-  const productSwitch = style({ box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) })
+  style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
   // Compact on phone so Sail·Deck·Components·AI + brand + theme stay one row.
-  const productLink = style({ box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } })
+  style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
   // Phone: mark only. Tablet+: SHIP UI wordmark.
-  const brandWord = style({ box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } })
+  style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }
   // Viewport-locked shell so fill/grow children resolve. One tree — never remount
   // the theme-picker when switching landing/docs/tutorial (SPA chrome reuse).
   // Do NOT overflow:hidden the outer column — taffy silent-clip + popover hosts.
-  const shell = style({ box: minH(screen).h(screen) })
+  style shell = { box: minH(screen).h(screen) }
   // Landing: THE continuous scrollport. Clip ticker X; Y scrolls here only.
   // Children must shrink=0 so sections do not compress into mini-scrollpanes.
-  const landingMain = style({ box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) })
+  style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
   // App (docs / workbench / catalog): flex column so nested shells resolve h(full).
   // Without display:flex, children size to content → overflow:hidden clips → no scroll
   // (components catalog was unscrollable for exactly this reason).
-  const appMain = style({ box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) })
+  style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
 </scope>
 
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->

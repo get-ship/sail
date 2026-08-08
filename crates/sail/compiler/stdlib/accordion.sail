@@ -17,10 +17,10 @@
 }
 
   // Shell + trigger from component.accordion tokens (global fallbacks in the pack).
-  const host = style({ box: display(block), paint: borderWidth(1).border(accordion.border).radius(lg).bg(accordion), text: fontFamily(body) })
+  style host = { box: display(block), paint: borderWidth(1).border(accordion.border).radius(lg).bg(accordion), text: fontFamily(body) }
   // list(none) + after chevron: kill UA marker; single themed caret.
-  const summary = style({ box: display(flex).padY(3).padX(4), paint: fg(accordion.foreground).cursor(pointer).list(none).select(none).radius(lg).transition(colors).duration(fast).ease(out), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: bg(hover-bg) }, after: { box: ms(auto).size(4), paint: content(empty).bg(accordion.chevron) } } })
-  const content = style({ box: padX(4).padY(3) })
+  style summary = { box: display(flex).padY(3).padX(4), paint: fg(accordion.foreground).cursor(pointer).list(none).select(none).radius(lg).transition(colors).duration(fast).ease(out), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: bg(hover-bg) }, after: { box: ms(auto).size(4), paint: content(empty).bg(accordion.chevron) } } }
+  style content = { box: padX(4).padY(3) }
 </scope>
 
 <details use:detailsToggle use:detailsDisabled style(host, { compound: [ { disabled: true, paint: opacity(50).cursor(not-allowed) } ] })>

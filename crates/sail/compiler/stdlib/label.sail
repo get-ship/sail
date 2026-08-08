@@ -10,11 +10,11 @@
     required = false
   }
 
-  const base = style({ paint: fg(label.foreground).cursor(pointer).group(), text: fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fontSize(base) })
-  const sizeMd = style({ text: fontSize(base) })
-  const sizeSm = style({ text: fontSize(sm) })
-  const sizeLg = style({ text: fontSize(sm) })
-  const req = style({ box: display(none).ms(1), paint: fg(label.required), text: fontWeight(bold) })
+  style base = { paint: fg(label.foreground).cursor(pointer).group(), text: fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fontSize(base) }
+  style sizeMd = { text: fontSize(base) }
+  style sizeSm = { text: fontSize(sm) }
+  style sizeLg = { text: fontSize(sm) }
+  style req = { box: display(none).ms(1), paint: fg(label.required), text: fontWeight(bold) }
 </scope>
 
 <label style(base, { match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg } } })>

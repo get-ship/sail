@@ -28,10 +28,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const muted = style({ paint: fg(muted-foreground) })
-  const preview = style({ box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(background).fg(foreground) })
-  const title = style({ text: fontSize(sm) })
-  const body = style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  style muted = { paint: fg(muted-foreground) }
+  style preview = { box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(background).fg(foreground) }
+  style title = { text: fontSize(sm) }
+  style body = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
 <column gap="4">

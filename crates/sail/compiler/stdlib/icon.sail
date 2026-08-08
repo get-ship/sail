@@ -10,12 +10,12 @@
     spin = false
   }
 
-  const base = style({ box: display(inline-block).size(icon-size-md), paint: align(middle).fg(currentColor).glyphFill(true) })
-  const sizeMd = style({ box: size(icon-size-md) })
-  const sizeXs = style({ box: size(icon-size-2xs) })
-  const sizeSm = style({ box: size(icon-size-sm) })
-  const sizeLg = style({ box: size(icon-size-xl) })
-  const sizeXl = style({ box: size(icon-size-2xl) })
+  style base = { box: display(inline-block).size(icon-size-md), paint: align(middle).fg(currentColor).glyphFill(true) }
+  style sizeMd = { box: size(icon-size-md) }
+  style sizeXs = { box: size(icon-size-2xs) }
+  style sizeSm = { box: size(icon-size-sm) }
+  style sizeLg = { box: size(icon-size-xl) }
+  style sizeXl = { box: size(icon-size-2xl) }
 </scope>
 <span use:icon style(base, { box: shrink(0), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl } } })>
   <slot></slot>

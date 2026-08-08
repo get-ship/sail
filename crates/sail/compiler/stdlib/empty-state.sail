@@ -12,19 +12,19 @@
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
   }
 
-  const base = style({ box: padY(16).padX(4), paint: fg(empty-state.foreground).borderWidth(1).border(empty-state.border).radius(lg).bg(empty-state).shadow(xs), text: fontFamily(body).textAlign(center) })
-  const sizeMd = style({ box: padY(16).padX(4) })
-  const sizeSm = style({ box: padY(7).padX(4) })
-  const sizeLg = style({ box: padY(24).padX(6) })
-  const variantDefault = style({ paint: borderWidth(1).border(empty-state.border).radius(lg).bg(empty-state).shadow(xs), text: textAlign(center) })
-  const variantInline = style({ box: padY(3).padX(4), paint: borderWidth(1).border(dashed).border(empty-state.border).radius(md).bg(empty-state).shadow(none), text: textAlign(start) })
-  const variantPlaceholder = style({ box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) })
-  const variantConnecting = style({ box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) })
-  const icon = style({ box: self(center).size(12), paint: radius(lg).bg(empty-state).fg(empty-state.foreground) })
-  const copy = style({ box: self(stretch) })
-  const title = style({ paint: fg(empty-state.title), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) })
-  const desc = style({ box: maxW(panel-ch-w-md), paint: fg(empty-state.foreground), text: leading(loose).fontSize(sm) })
-  const actions = style({ box: self(center) })
+  style base = { box: padY(16).padX(4), paint: fg(empty-state.foreground).borderWidth(1).border(empty-state.border).radius(lg).bg(empty-state).shadow(xs), text: fontFamily(body).textAlign(center) }
+  style sizeMd = { box: padY(16).padX(4) }
+  style sizeSm = { box: padY(7).padX(4) }
+  style sizeLg = { box: padY(24).padX(6) }
+  style variantDefault = { paint: borderWidth(1).border(empty-state.border).radius(lg).bg(empty-state).shadow(xs), text: textAlign(center) }
+  style variantInline = { box: padY(3).padX(4), paint: borderWidth(1).border(dashed).border(empty-state.border).radius(md).bg(empty-state).shadow(none), text: textAlign(start) }
+  style variantPlaceholder = { box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) }
+  style variantConnecting = { box: padY(6), paint: borderWidth(0).bg(transparent).radius(none).shadow(none), text: textAlign(center) }
+  style icon = { box: self(center).size(12), paint: radius(lg).bg(empty-state).fg(empty-state.foreground) }
+  style copy = { box: self(stretch) }
+  style title = { paint: fg(empty-state.title), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) }
+  style desc = { box: maxW(panel-ch-w-md), paint: fg(empty-state.foreground), text: leading(loose).fontSize(sm) }
+  style actions = { box: self(center) }
 </scope>
 
 <column

@@ -5,6 +5,6 @@
   Paint: fg from component.prose token (cssName prose.foreground).
 -->
 <scope>
-  const host = style({ box: display(block), paint: fg(prose.foreground), text: fontFamily(body).leading(loose) })
+  style host = { box: display(block), paint: fg(prose.foreground), text: fontFamily(body).leading(loose) }
 </scope>
 <div style(host)><slot></slot></div>

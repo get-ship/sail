@@ -13,15 +13,15 @@
     onDismiss: () => void
 }
 
-  const base = style({ box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(alert.border).radius(md).bg(alert).fg(alert.foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) })
-  const stripe = style({ box: position(absolute).left(0).top(0).bottom(0).w(1), paint: content(empty).bg(alert.stripe) })
+  style base = { box: position(relative).overflow(hidden).pad(3), paint: group().borderWidth(1).border(alert.border).radius(md).bg(alert).fg(alert.foreground).shadow(xs), text: fontFamily(body).fontSize(base).leading(normal) }
+  style stripe = { box: position(absolute).left(0).top(0).bottom(0).w(1), paint: content(empty).bg(alert.stripe) }
   // Icon rest samples alert surface; brand tones recolor the glyph via bound tone.
-  const ico = style({ box: size(control-h-xs), paint: radius(md).bg(alert).fg(alert.stripe) })
-  const title = style({ text: fontWeight(semibold) })
-  const body = style({ paint: fg(alert.stripe) })
-  const actions = style({ box: mt(2) })
-  const close = style({ box: display(none).size(control-h-xs).self(start).pad(0), paint: borderWidth(0).radius(sm).bg(transparent).fg(alert.stripe).cursor(pointer).transition(colors).duration(fast).ease(out) })
-  const xmark = style({ box: display(block).size(icon-size-sm), paint: stroke(currentColor).fill(none) })
+  style ico = { box: size(control-h-xs), paint: radius(md).bg(alert).fg(alert.stripe) }
+  style title = { text: fontWeight(semibold) }
+  style body = { paint: fg(alert.stripe) }
+  style actions = { box: mt(2) }
+  style close = { box: display(none).size(control-h-xs).self(start).pad(0), paint: borderWidth(0).radius(sm).bg(transparent).fg(alert.stripe).cursor(pointer).transition(colors).duration(fast).ease(out) }
+  style xmark = { box: display(block).size(icon-size-sm), paint: stroke(currentColor).fill(none) }
 </scope>
 
 <row

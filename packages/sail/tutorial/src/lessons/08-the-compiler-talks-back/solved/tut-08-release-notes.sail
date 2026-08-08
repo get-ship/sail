@@ -34,10 +34,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const page = style({ box: pad(4) })
-  const meta = style({ paint: fg(muted-foreground), text: fontSize(sm) })
-  const noteRow = style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
-  const noteText = style({ text: fontSize(sm) })
+  style page = { box: pad(4) }
+  style meta = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style noteRow = { box: padX(3).padY(2), paint: bg(surface-1).radius(md) }
+  style noteText = { text: fontSize(sm) }
 </scope>
 
 <column gap="4" style(page)>

@@ -4,21 +4,21 @@
   Defaults resolve via DTCG color paths; overrides write component.* leaves.
 -->
 <scope>
-  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
-  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const doorTitle = style({ text: fontWeight(semibold) })
-  const bandStatus = style({ box: padX(4).padY(2) })
-  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
-  const railCol = style({ box: padX(3).padT(4).padB(6).minW(0) })
-  const inspectorCol = style({ box: padX(4).padT(4).padB(8).minW(0) })
-  const fullBtn = style({ box: w(full) })
-  const chipCol = style({ box: minW(0) })
+  style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
+  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style doorTitle = { text: fontWeight(semibold) }
+  style bandStatus = { box: padX(4).padY(2) }
+  style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
+  style railCol = { box: padX(3).padT(4).padB(6).minW(0) }
+  style inspectorCol = { box: padX(4).padT(4).padB(8).minW(0) }
+  style fullBtn = { box: w(full) }
+  style chipCol = { box: minW(0) }
   // Selected rail row: soft fill + subtle border (no nested cards).
-  const listRow = style({ box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, selected: { paint: bg(surface-2).border(border-subtle) } } })
-  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
-  const tokenStrip = style({ box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) })
-  const tokenRow = style({ box: padY(1_5), paint: borderBWidth(1).borderB(border-subtle) })
+  style listRow = { box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, selected: { paint: bg(surface-2).border(border-subtle) } } }
+  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) }
+  style tokenStrip = { box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) }
+  style tokenRow = { box: padY(1_5), paint: borderBWidth(1).borderB(border-subtle) }
 </scope>
 
 <controller>

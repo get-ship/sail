@@ -20,20 +20,20 @@
     interactive = false
   }
 
-  const host = style({ box: position(relative) })
-  const gutter = style({ box: w(5) })
-  const connectorHide = style({ box: w(half).h(3), paint: visibility(hidden) })
-  const connector = style({ box: w(half).h(3), paint: bg(border-subtle) })
-  const connectorGrowHide = style({ box: grow(1).w(half), paint: visibility(hidden) })
-  const connectorGrow = style({ box: grow(1).w(half), paint: bg(border-subtle) })
+  style host = { box: position(relative) }
+  style gutter = { box: w(5) }
+  style connectorHide = { box: w(half).h(3), paint: visibility(hidden) }
+  style connector = { box: w(half).h(3), paint: bg(border-subtle) }
+  style connectorGrowHide = { box: grow(1).w(half), paint: visibility(hidden) }
+  style connectorGrow = { box: grow(1).w(half), paint: bg(border-subtle) }
   // Rest = foreground; bound tone expands [tone='…'] gates over rest.
-  const dot = style({ box: w(2_5).h(2_5), paint: radius(full).bg(foreground) })
-  const bodyCol = style({ box: grow(1).minW(0).padY(2) })
-  const head = style({ paint: fg(foreground) })
-  const titleSlot = style({ box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) })
-  const atTime = style({ paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) })
-  const body = style({ box: mt(1), paint: fg(muted-foreground) })
-  const bodySlot = style({ box: display(contents), text: fontSize(sm).leading(normal) })
+  style dot = { box: w(2_5).h(2_5), paint: radius(full).bg(foreground) }
+  style bodyCol = { box: grow(1).minW(0).padY(2) }
+  style head = { paint: fg(foreground) }
+  style titleSlot = { box: display(contents), text: fontSize(sm).fontWeight(medium).fontFamily(body) }
+  style atTime = { paint: fg(muted-foreground), text: fontSize(xs).tracking(wide).fontFamily(mono) }
+  style body = { box: mt(1), paint: fg(muted-foreground) }
+  style bodySlot = { box: display(contents), text: fontSize(sm).leading(normal) }
 </scope>
 
 <controller>

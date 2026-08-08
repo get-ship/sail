@@ -10,12 +10,12 @@
     playing = true
   }
 
-  const card = style({ box: pad(3).w(full) })
-    const title = style({ text: fontSize(sm).truncate() })
-  const artist = style({ paint: fg(muted-foreground), text: fontSize(xs).truncate() })
-  const eq = style({ box: minH(6) })
-  const bar = style({ box: w(1), paint: radius(sm).bg(primary).origin(bottom) })
-  const rest = style({ box: w(1).h(2), paint: radius(full).bg(muted-foreground).opacity(50) })
+  style card = { box: pad(3).w(full) }
+    style title = { text: fontSize(sm).truncate() }
+  style artist = { paint: fg(muted-foreground), text: fontSize(xs).truncate() }
+  style eq = { box: minH(6) }
+  style bar = { box: w(1), paint: radius(sm).bg(primary).origin(bottom) }
+  style rest = { box: w(1).h(2), paint: radius(full).bg(muted-foreground).opacity(50) }
 </scope>
 
 <controller>

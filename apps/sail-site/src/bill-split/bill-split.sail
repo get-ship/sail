@@ -10,11 +10,11 @@
     total = 96
   }
 
-  const card = style({ box: pad(4).w(full).maxW(panel-max-w-sm) })
-  const title = style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })
-  const totalText = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
-  const peopleCount = style({ box: w(8), text: fontFamily(mono).fontSize(sm).nums(tabular).textAlign(center) })
-  const shareText = style({ text: fontFamily(mono).fontSize(2xl).nums(tabular) })
+  style card = { box: pad(4).w(full).maxW(panel-max-w-sm) }
+  style title = { text: textCase(uppercase).tracking(wide).fontSize(sm) }
+  style totalText = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) }
+  style peopleCount = { box: w(8), text: fontFamily(mono).fontSize(sm).nums(tabular).textAlign(center) }
+  style shareText = { text: fontFamily(mono).fontSize(2xl).nums(tabular) }
 </scope>
 
 <controller>

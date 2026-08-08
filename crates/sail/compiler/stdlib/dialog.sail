@@ -23,17 +23,17 @@
   // shell to the full viewport (section flex would otherwise eat empty space).
   // Shell paint from component.dialog tokens (was surface-1 + card.foreground —
   // cross-component leak; dialog owns its surface now with global fallbacks).
-  const base = style({ box: position(fixed).inset(0).m(auto).pad(0).w(full).maxW(panel-max-w-md).minW(panel-max-w-sm).overflow(hidden), paint: borderWidth(1).border(dialog.border).radius(xl).bg(dialog).fg(dialog.foreground).shadow(xl), text: fontFamily(body) })
-  const open = style({ box: display(flex).flexDir(column).h(fit).maxH(panel-vh-md) })
-  const sizeSm = style({ box: maxW(panel-max-w-sm).minW(0) })
-  const sizeMd = style({ box: maxW(panel-max-w-md) })
-  const sizeLg = style({ box: maxW(panel-max-w-lg) })
-  const sizeFull = style({ box: maxW(full).maxH(full).minW(0).h(full) })
+  style base = { box: position(fixed).inset(0).m(auto).pad(0).w(full).maxW(panel-max-w-md).minW(panel-max-w-sm).overflow(hidden), paint: borderWidth(1).border(dialog.border).radius(xl).bg(dialog).fg(dialog.foreground).shadow(xl), text: fontFamily(body) }
+  style open = { box: display(flex).flexDir(column).h(fit).maxH(panel-vh-md) }
+  style sizeSm = { box: maxW(panel-max-w-sm).minW(0) }
+  style sizeMd = { box: maxW(panel-max-w-md) }
+  style sizeLg = { box: maxW(panel-max-w-lg) }
+  style sizeFull = { box: maxW(full).maxH(full).minW(0).h(full) }
   // Side sheets: radius/inset floor; edge margin + 100vh width live in DIALOG_MAP.
-  const sideStart = style({ box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) })
-  const sideEnd = style({ box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) })
-  const sideTop = style({ box: inset(0).w(full).maxW(none).m(0), paint: radius(none) })
-  const sideBottom = style({ box: inset(0).w(full).maxW(none).m(0), paint: radius(none) })
+  style sideStart = { box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) }
+  style sideEnd = { box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) }
+  style sideTop = { box: inset(0).w(full).maxW(none).m(0), paint: radius(none) }
+  style sideBottom = { box: inset(0).w(full).maxW(none).m(0), paint: radius(none) }
 </scope>
 
 <dialog style(base, { when: { open: open }, match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg, full: sizeFull }, side: { center: { box: m(auto) }, start: sideStart, end: sideEnd, top: sideTop, bottom: sideBottom } } })>

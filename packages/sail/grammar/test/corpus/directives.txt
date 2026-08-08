@@ -41,6 +41,27 @@ scope directive with declared props
     close_tag: (tag_name)))
 
 ==================
+scope with first-class style name = declaration (opaque body text)
+==================
+
+<scope>
+  style host = base
+  props: {
+    data = ''
+  }
+</scope>
+
+---
+
+(source_file
+  (element
+    tag: (tag_name)
+    (text)
+    (interpolation
+      (identifier))
+    close_tag: (tag_name)))
+
+==================
 style: attribute is refused syntax — must NOT parse as a directive
 ==================
 

@@ -41,10 +41,10 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const unreadDot = style({ box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(destructive) })
-  const noteRow = style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) })
-  const noteText = style({ text: fontSize(sm) })
-  const empty = style({ box: pad(3), paint: fg(muted-foreground), text: fontSize(sm) })
+  style unreadDot = { box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(destructive) }
+  style noteRow = { box: pad(3), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) }
+  style noteText = { text: fontSize(sm) }
+  style empty = { box: pad(3), paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
 <column gap="4">

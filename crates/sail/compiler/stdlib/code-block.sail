@@ -15,8 +15,8 @@
     lang = 'sail'
   }
 
-  const host = style({ box: display(block) })
-  const pre = style({ box: m(0).padY(4).padX(5).overflowX(auto), paint: bg(code-block).fg(code-block.foreground).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(code).tab(2).whitespace(pre) })
+  style host = { box: display(block) }
+  style pre = { box: m(0).padY(4).padX(5).overflowX(auto), paint: bg(code-block).fg(code-block.foreground).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(code).tab(2).whitespace(pre) }
 </scope>
 <div use:syntaxHighlight style(host)>
   <pre style(pre)></pre>

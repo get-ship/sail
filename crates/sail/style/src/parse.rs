@@ -210,14 +210,26 @@ fn forbid_geometry_inside_interaction_when(style: &Style) -> Result<(), StyleDia
 
 /// True if input is the killed utility-string product (atoms / prop: value soup without style./match/when).
 pub fn looks_like_utility_string_product(input: &str) -> bool {
+    let raw = input.trim();
+    // Bare Style object form (scope `style name = {…}` / style() args).
+    // Must not trip on `paint:` / `box:` colons — those are channel keys, not
+    // utility-string soup (`hover:bg-muted`).
+    if raw.starts_with('{') {
+        return false;
+    }
+    // Compose form: `host, { … }` / `host, style({…})` (declaration RHS).
+    if looks_like_style_compose_rhs(raw) {
+        return false;
+    }
     // Preprocess may pass `{expr}` (outer brace wrapper from quote_brace_attrs).
-    let t = strip_one_outer_brace_layer(input.trim());
+    let t = strip_one_outer_brace_layer(raw);
     if t.starts_with("style.")
         || t.starts_with("style(")
         || t.starts_with("match(")
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
+        || t.starts_with('{')
     {
         return false;
     }
@@ -235,6 +247,29 @@ pub fn looks_like_utility_string_product(input: &str) -> bool {
     t.contains(':')
         || t.split_whitespace()
             .any(|w| w.contains('-') && !w.starts_with("style"))
+}
+
+/// `name, {…}` / `name, style(…)` / multi-arg compose heads for declaration RHS.
+fn looks_like_style_compose_rhs(input: &str) -> bool {
+    let t = input.trim();
+    let Some((head, rest)) = t.split_once(',') else {
+        return false;
+    };
+    let head = head.trim();
+    if head.is_empty()
+        || !head
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return false;
+    }
+    let rest = rest.trim_start();
+    rest.starts_with('{')
+        || rest.starts_with("style(")
+        || rest.starts_with("style.")
+        || rest
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b',' || b.is_ascii_whitespace())
 }
 
 fn strip_one_outer_brace_layer(t: &str) -> &str {
@@ -2239,9 +2274,79 @@ fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
     }
 }
 
-/// Parse `const name = <style-expr>` (scope Style const line, without the `const` keyword optional).
+/// Parse a scope Style declaration RHS (`const name = <rhs>` or `style name = <rhs>`).
+///
+/// Accepts (SPEC-STYLE-DECL-1):
+/// 1. **Object form** — bare `{ box: …, paint: …, when: … }` (no outer `style(`)
+/// 2. **Call form** — `style({ … })` / `style(base, { … })`
+/// 3. **Compose** — `name, { … }` / `name, style({ … })` (same merge as multi-arg `style`)
+/// 4. **Bare ref** — another Style const name
 pub fn parse_style_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
-    parse(input)
+    parse_const_rhs(input, /* allow_flat */ false, /* allow_legacy */ false)
+}
+
+/// Like [`parse_with`], but the body is one or more style *args* (compose / bare
+/// object) rather than a single top-level `style(…)` / ref expression only.
+fn parse_const_rhs(
+    input: &str,
+    allow_flat: bool,
+    allow_legacy: bool,
+) -> (Style, Vec<StyleDiagnostic>) {
+    let mut diags = Vec::new();
+    let stripped = strip_comments(input);
+    let trimmed = stripped.trim();
+    if trimmed.is_empty() {
+        return (Style::Empty, diags);
+    }
+    if looks_like_utility_string_product(trimmed) {
+        diags.push(StyleDiagnostic::ResidualProduct {
+            message: "utility-string sx is not the Style product — use style({ box, paint, text, animate, when, match, compound })"
+                .into(),
+            source: trimmed.chars().take(80).collect(),
+        });
+        return (Style::Empty, diags);
+    }
+    let tokens = tokenize(trimmed);
+    let mut p = Parser::new_full(trimmed, &tokens, allow_flat, allow_legacy);
+    // Declaration RHS = style-arg composition (same merge law as `style(a, b, …)`).
+    let mut parts = Vec::new();
+    let mut iters = 0usize;
+    loop {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "style declaration RHS too many compose parts".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        parts.push(parse_style_arg(&mut p, &mut diags));
+        if !p.eat(&Tok::Comma) {
+            break;
+        }
+        if p.at_end() {
+            break; // trailing comma
+        }
+    }
+    let style = match parts.len() {
+        0 => Style::Empty,
+        1 => parts.swap_remove(0),
+        _ => Style::List(parts),
+    };
+    if !p.at_end() {
+        diags.push(StyleDiagnostic::ParseError {
+            message: format!("unexpected token `{}`", p.peek_str()),
+            source: p.remainder(),
+        });
+    }
+    validate_style(&style, &mut diags);
+    if let Err(d) = forbid_motion_inside_when(&style) {
+        diags.push(d);
+    }
+    if let Err(d) = forbid_geometry_inside_interaction_when(&style) {
+        diags.push(d);
+    }
+    (style, diags)
 }
 
 #[cfg(test)]
@@ -2256,5 +2361,38 @@ mod utility_detect_tests {
     #[test]
     fn atoms_are_utility() {
         assert!(looks_like_utility_string_product("p-4 bg-muted"));
+    }
+}
+
+#[cfg(test)]
+mod const_rhs_tests {
+    use super::{parse_style_const_rhs, Style};
+
+    #[test]
+    fn bare_object_form() {
+        let (style, diags) = parse_style_const_rhs("{ paint: bg(primary) }");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        assert!(!matches!(style, Style::Empty));
+    }
+
+    #[test]
+    fn call_form() {
+        let (style, diags) = parse_style_const_rhs("style({ box: pad(2) })");
+        assert!(diags.is_empty(), "{diags:?}");
+        assert!(!matches!(style, Style::Empty));
+    }
+
+    #[test]
+    fn compose_form() {
+        let (style, diags) = parse_style_const_rhs("host, { box: pad(2) }");
+        assert!(diags.is_empty(), "{diags:?}");
+        match style {
+            Style::List(parts) => assert_eq!(parts.len(), 2),
+            other => panic!("expected List, got {other:?}"),
+        }
     }
 }

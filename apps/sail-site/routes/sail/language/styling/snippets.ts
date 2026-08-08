@@ -35,10 +35,10 @@ export const code = {
     emphasis: 'solid' | 'soft' | 'outline' = 'solid'
   }
 
-  const base = style({ box: padX(3).padY(1), paint: radius(md) })
-  const solid = style({ paint: bg(primary).fg(primary-foreground) })
-  const soft = style({ paint: bg(muted).fg(foreground) })
-  const outline = style({ paint: borderWidth(1).border(border) })
+  style base = { box: padX(3).padY(1), paint: radius(md) }
+  style solid = { paint: bg(primary).fg(primary-foreground) }
+  style soft = { paint: bg(muted).fg(foreground) }
+  style outline = { paint: borderWidth(1).border(border) }
 </scope>
 
 <button style(base, {

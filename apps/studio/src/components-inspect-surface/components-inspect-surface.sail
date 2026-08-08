@@ -3,9 +3,9 @@
   Composition: { session, inspect }. Library is the sibling route surface.
 -->
 <scope>
-  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
-  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const muted = style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
 <controller>

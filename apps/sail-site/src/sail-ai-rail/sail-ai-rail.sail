@@ -35,12 +35,12 @@ export default controller((ctx) => {
 
 <scope>
  // Fill site-header <main>; rail + content independent scrollports.
- const shell = style({ box: minH(0).h(full).minW(0).overflow(hidden) })
- const rail = style({ box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(navbar).fg(navbar-foreground), when: { tablet: { box: display(flex) } } })
- const railLabel = style({ box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
- const railLink = style({ box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } })
- const mainDocs = style({ box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } })
- const mobileBar = style({ box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar), when: { tablet: { box: display(none) } } })
+ style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
+ style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(navbar).fg(navbar-foreground), when: { tablet: { box: display(flex) } } }
+ style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+ style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
+ style mainDocs = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
+ style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar), when: { tablet: { box: display(none) } } }
 </scope>
 
 <row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
