@@ -1,7 +1,5 @@
 <!--
-  /sail/language/actions — Concepts chapter. What an action is, how to attach
-  one, feel one work, how to write one, and the fact that the standard
-  library is built on the same mechanism. Voice: explain, don’t perform.
+  Actions: use: attach, author actions, L1 private vs public attach-anywhere.
 -->
 
 <controller>
@@ -14,10 +12,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style demoField = { box: maxW(panel-max-w-sm) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Concepts</p>
   <h1>Actions</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     An action is a function that receives a DOM element, does something to
     it — attach a listener, start an observer, wire a third-party widget —
     and returns the cleanup that undoes it. <code>use:</code> attaches one
@@ -31,7 +38,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     grows to fit — the action measures the content and sets the height, and
     when the element leaves the page, the action’s cleanup runs with it:
   </p>
-  <textarea use:autosize placeholder="Type a few lines here…" style({ box: maxW(panel-max-w-sm) })></textarea>
+  <textarea use:autosize placeholder="Type a few lines here…" style(demoField)></textarea>
 
   <h2>Why there is no ref</h2>
   <p>
@@ -83,11 +90,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     thing you are writing needs an element, it is an action.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the full surface: <a href="/sail/reference/actions">reference → Actions</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/animation">← Animation</a>
     <a variant="solid" tone="primary" href="/sail/language/data">Data →</a>
   </row>

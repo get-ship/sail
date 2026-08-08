@@ -1,15 +1,8 @@
 <!--
-  /ai/eval — scoring with sail-eval, adapted from
-  packages/sail/tutorial/src/prose/11-sail-eval/index.md. The source covers a
-  sub-scores table and a sniffEscapeHatches() helper; both land here. The
-  sub-score table is rendered as sub-headings under "Sub-scores" so the page
-  stays prose-only and requires no co-located stylesheet.
+  AI eval — sail-eval scoring and sniffEscapeHatches.
 -->
 
 <controller>
-// /ai/eval — scoring with sail-eval, adapted from the 11-sail-eval tutorial
-// lesson. Snippets live in ./snippets so literal braces in the example block
-// and the sniffEscapeHatches output never leak into the inferred scope.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { evalExample, hatchExample } from '../../../src/compositions/ai-eval-snippets'
@@ -17,10 +10,17 @@ import { evalExample, hatchExample } from '../../../src/compositions/ai-eval-sni
 export default controller((_ctx: ControllerScope<Scope>) => ({ evalExample, hatchExample }))
 </controller>
 
-<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>AI</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>AI</p>
   <h1>Scoring with sail-eval</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     <code>@ship/sail-eval</code> runs an agent’s output against a behavioural
     spec and returns a structured quality score. The sub-scores tell you
     which gate (compile / scope / behaviour) the agent missed, so the next
@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ evalExample, hatc
     the full API surface.
   </p>
 
-  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row style(footNav)>
     <a href="/ai/tooling">← Tooling</a>
   </row>
 </article>

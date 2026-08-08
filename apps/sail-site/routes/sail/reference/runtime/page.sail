@@ -1,8 +1,5 @@
 <!--
-  /sail/reference/runtime — tier B author runtime only.
-  packages/sail/runtime/author-surface.json → scripts/gen-runtime-surface.mjs
-  → src/runtime-surface.gen.ts. Progressive by category (reactivity, controller, …).
-  Ambient controller idents (tier A) from language-surface.gen.ts.
+  Author runtime (tier B) — exports from author-surface.json via runtime-surface composition.
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -47,11 +44,27 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style({ box: minW(0) })>
-  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
-    <p token="doc-eyebrow">Reference · tier B</p>
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style sectionLead = { box: maxW(breakpoint-tablet) }
+  style sectionSummary = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground) }
+  style cardMin = { box: minW(0) }
+  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style exportRow = { box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) }
+  style exportName = { box: minW(32) }
+  style exportSig = { paint: fg(muted-foreground), text: fontFamily(mono) }
+  style exportDoc = { paint: fg(muted-foreground) }
+  style exportBody = { box: minW(0) }
+</scope>
+
+<column gap="6" style(root)>
+  <column gap="5" style(intro)>
+    <p style(eyebrow)>Reference · tier B</p>
     <h1>Author runtime — {totalCount()} exports</h1>
-    <p token="doc-lead">
+    <p style(lead)>
       Intentional imports from <code>@ship/sail-runtime</code> (root barrel),
       filtered by <code>author-surface.json</code>. Host subpaths
       (<code>./framework</code>, <code>./server</code>, <code>./dev</code>, …)
@@ -62,17 +75,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h2>Controller — ambient vocabulary (tier A)</h2>
-    <p style({ box: maxW(breakpoint-tablet) })>
+    <p style(sectionLead)>
       A <code>&lt;controller&gt;</code> block may reference these without
       importing them — the compiler injects the import for exactly the
       idents referenced. Same symbols are also available as tier B imports.
     </p>
     <grid cols="3" gap="2">
       <for {controllerRows() as c} key={c.name}>
-        <card padding="sm" style({ box: minW(0) })>
+        <card padding="sm" style(cardMin)>
           <column gap="1">
             <code>{c.name}</code>
-            <small style({ box: maxW(panel-max-w-sm), paint: fg(muted-foreground) })>{c.doc}</small>
+            <small style(cardDoc)>{c.doc}</small>
           </column>
         </card>
       </for>
@@ -82,16 +95,16 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <for {groups() as group} key={group.id}>
     <column gap="3">
       <h2>{group.id} — {group.count}</h2>
-      <p style({ box: maxW(breakpoint-tablet), paint: fg(muted-foreground) })>{group.summary}</p>
+      <p style(sectionSummary)>{group.summary}</p>
       <column gap="1">
         <for {group.exports as e} key={e.name}>
-          <row gap="3" align="start" style({ box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) })>
-            <code style({ box: minW(32) })>{e.name}</code>
+          <row gap="3" align="start" style(exportRow)>
+            <code style(exportName)>{e.name}</code>
             <badge size="sm">{e.kind}</badge>
-            <column gap="1" style({ box: minW(0) })>
-              <code style({ paint: fg(muted-foreground), text: fontFamily(mono) })>{e.signature}</code>
+            <column gap="1" style(exportBody)>
+              <code style(exportSig)>{e.signature}</code>
               <if {e.doc}>
-                <small style({ paint: fg(muted-foreground) })>{e.doc}</small>
+                <small style(exportDoc)>{e.doc}</small>
               </if>
             </column>
           </row>

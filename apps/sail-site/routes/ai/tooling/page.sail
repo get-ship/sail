@@ -1,14 +1,8 @@
 <!--
-  /ai/tooling — the LSP and the CLI, adapted from
-  packages/sail/tutorial/src/prose/10-lsp-cli/index.md. The source frames the
-  tooling as "one Rust grammar, two binary delivery channels — the sail-lint
-  fast check and the sail-compiler full compile"; that’s the spine here.
+  AI tooling — sail-lint, sail-compiler, sail-lsp (one Rust grammar, several surfaces).
 -->
 
 <controller>
-// /ai/tooling — the LSP / CLI surface, adapted from the 10-lsp-cli tutorial
-// lesson. Snippets live in ./snippets so literal braces (e.g. the
-// `.lsp.json` payload) never leak into the inferred scope.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { lintCmd, lintOutput, compileCmd, lspJson } from '../../../src/compositions/ai-tooling-snippets'
@@ -16,10 +10,17 @@ import { lintCmd, lintOutput, compileCmd, lspJson } from '../../../src/compositi
 export default controller((_ctx: ControllerScope<Scope>) => ({ lintCmd, lintOutput, compileCmd, lspJson }))
 </controller>
 
-<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>AI</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>AI</p>
   <h1>The LSP — diagnostics on tap</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Sail’s language intelligence is the Rust compiler —
     <code>sail_compiler::analyze</code> (diagnostics + scope symbols + dependencies)
     and <code>check_all</code> (every diagnostic, not just the first). It’s the
@@ -82,7 +83,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ lintCmd, lintOutp
     sync.
   </p>
 
-  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row style(footNav)>
     <a href="/ai/authoring">← Authoring</a>
     <a href="/ai/eval">Eval →</a>
   </row>

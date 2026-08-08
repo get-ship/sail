@@ -1,8 +1,5 @@
 <!--
-  /errors — what happens when component code throws. One boundary element,
-  one dev overlay, one default route boundary; async errors are the Data
-  chapter’s match error arm and stay out of this system. Every claim here is
-  checked against the runtime sources and their tests.
+  Errors: throws vs async states. Async failures stay on Data’s match error arm.
 -->
 
 <controller>
@@ -17,16 +14,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     armed,
     arm: () => armed.set(true),
     disarm: () => armed.set(false),
-    // called from the template — throws while the branch renders
+    // Throws while the protected branch renders (demo for the boundary).
     boom: (): string => { throw new Error('the demo component threw') },
   }
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style livePanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Concepts</p>
   <h1>Errors</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Things fail two ways. Data can fail to arrive — that is a state, and the
     <a href="/sail/language/data">Data</a> chapter renders it with
     <code>&lt;match error arm&gt;</code>. Or code can throw — an exception in
@@ -54,8 +61,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>&lt;error-boundary&gt;, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — throw, catch, retry</p>
-      <column gap="3" style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+      <p style(monoLabel)>Live — throw, catch, retry</p>
+      <column gap="3" style(livePanel)>
         <error-boundary on-error-reset={disarm}>
           <if {armed()}><p>{boom()}</p></if>
           <if {!armed()}>
@@ -68,7 +75,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
     </column>
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
+      <p style(monoLabel)>Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </grid>
@@ -99,7 +106,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     renders that state where it happens:
   </p>
   <code-block code={code.async}></code-block>
-  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
+  <p style(callout)>
     The two systems don’t overlap: a failed fetch shows the
     <code>&lt;match error arm&gt;</code> branch, never the boundary
     fallback; a synchronous throw trips the boundary, never the error state.
@@ -107,7 +114,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     by boundaries.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/data">← Data</a>
     <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>
   </row>

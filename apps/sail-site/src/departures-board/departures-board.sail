@@ -1,8 +1,6 @@
 <!--
-  <departures-board> — the component the "Components" chapter builds, slice by
-  slice. A live airport board: every few seconds the boarding flight departs,
-  the next flight starts boarding, and a new city rolls onto the bottom of the
-  board. Keyed rows keep DOM identity as the list shifts.
+  <departures-board> — live airport board demo for the Components chapter.
+  Keyed rows keep DOM identity as the list shifts.
 -->
 <scope>
   type Flight = {
@@ -25,6 +23,8 @@
 </scope>
 
 <controller>
+import { interval } from '@ship/sail-runtime'
+
 const POOL: Array<[string, string]> = [
   ['Reykjavík', 'A2'],
   ['Osaka', 'B7'],
@@ -35,8 +35,6 @@ const POOL: Array<[string, string]> = [
   ['Porto', 'A9'],
   ['Ulaanbaatar', 'B1'],
 ]
-
-import { interval } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
   let seq = 0
@@ -84,7 +82,10 @@ export default controller((ctx) => {
         <span style(city, { box: grow(1).minW(0) })>{f.city}</span>
         <span style(gate)>{f.gate}</span>
         <match {f.status}>
-          {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
+          {'boarding' => <badge tone="success">Boarding</badge>}
+          {'delayed' => <badge tone="destructive">Delayed</badge>}
+          {else => <badge tone="muted">On time</badge>}
+        </match>
       </row>
     </for>
   </column>

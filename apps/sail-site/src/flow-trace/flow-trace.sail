@@ -1,10 +1,5 @@
 <!--
-  <flow-trace> — the Components chapter's animated tick, slowed to reading
-  speed. One six-second cycle: each stage HOLDS for 1.5s while its effect
-  plays out on the mini board beside it — the write (nothing moves yet; the
-  write is in code), the reconcile (a row visibly leaves, one enters), the
-  repaint (the counter flips and flashes). Inactive stages sit dimmed; the
-  active one inverts to primary. The argument is the absent fourth card.
+  <flow-trace> — slow write → reconcile → repaint cycle for the Components chapter.
 -->
 <scope>
   type Row = {
@@ -23,9 +18,9 @@
 </scope>
 
 <controller>
-const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík']
-
 import { debounce, interval } from '@ship/sail-runtime'
+
+const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík']
 
 export default controller(() => {
   let seq = 0
@@ -38,7 +33,7 @@ export default controller(() => {
   const departed = signal(0)
   const step = signal('idle')
 
-  // Lifecycle-bound: debounce one-shots + interval, auto-cleared on dispose.
+  // Lifecycle-bound one-shots + interval; auto-cleared on dispose.
   const phaseReconcile = debounce(() => {
     rows.set((r) => [...r.slice(1), mk()])
     step.set('reconcile')
@@ -63,8 +58,7 @@ export default controller(() => {
   <card style(board)>
     <row align="center" justify="between" nowrap>
       <strong style(boardTitle)>Board</strong>
-      <span
-        state={step() === 'paint' ? 'live' : null} style(departedBadge)>{departed()} departed</span>
+      <span state={step() === 'paint' ? 'live' : null} style(departedBadge)>{departed()} departed</span>
     </row>
     <column gap="1" style(list)>
       <for {rows() as r} key={r.id}>
