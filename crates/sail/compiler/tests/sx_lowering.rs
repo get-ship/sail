@@ -1,7 +1,7 @@
 //! Style product lowering — focused tests for the AOT path the compiler runs
-//! on every element block Style statement (`style.…` / `style({…})`) before emit.
+//! on every element tag Style statement (`style({…})`) before emit.
 //!
-//! Utility-string `sx="…"` is residual product and must not emit classes.
+//! Utility-string `style="…"` is residual product and must not emit classes.
 //! The shared Style setters re-home vocab heads from
 //! `crates/sail/style/sx-vocabulary.json` (style + emit SSOT).
 
@@ -67,7 +67,8 @@ fn style_chain_multi_setters() {
 
 #[test]
 fn style_when_hover_emits_pseudo() {
-    let out = pp(r#"<div style(when({ hover: style({ paint: bg(muted) }) }))> x</div>"#);
+    // Free `when({…})` / `.when(…)` chains are residual; product is object-key when:.
+    let out = pp(r#"<div style({ when: { hover: { paint: bg(muted) } } })> x</div>"#);
     assert!(
         out.contains(":hover") || out.contains("hover"),
         "when hover must emit pseudo:\n{out}"
@@ -89,7 +90,7 @@ fn style_position_relative() {
 
 #[test]
 fn style_bind_var_ref() {
-    let out = pp(r#"<div style({ box: w(bind(glowRadius) }))> x</div>"#);
+    let out = pp(r#"<div style({ box: w(bind(glowRadius)) })> x</div>"#);
     assert!(
         out.contains("var(--glow-radius)") || out.contains("--glow"),
         "bind must emit custom property read:\n{out}"
@@ -98,28 +99,32 @@ fn style_bind_var_ref() {
 
 #[test]
 fn utility_string_product_is_a_compile_error() {
-    let err = preprocess_src(r#"<div sx="p-4 bg-surface-1">x</div>"#)
-        .expect_err("utility-string sx must fail loudly");
+    // Utility-string atoms attach as residual `style="…"` (not product Style).
+    // The `sx=` host is scrubbed to generic unknown-attribute (no Style tombstone).
+    let err = preprocess_src(r#"<div style="p-4 bg-surface-1">x</div>"#)
+        .expect_err("utility-string style= must fail loudly");
     let msg = format!("{err:?}");
     assert!(
         msg.contains("Style error")
             || msg.contains("utility-string")
-            || msg.contains("retired")
-            || msg.contains("sx="),
+            || msg.contains("style(")
+            || msg.contains("style=")
+            || msg.contains("tag position"),
         "error must name the Style diagnostic: {msg}"
     );
 }
 
 #[test]
 fn structured_string_product_is_a_compile_error() {
-    let err = preprocess_src(r#"<div sx="bg: primary px: 2">x</div>"#)
-        .expect_err("structured utility-string sx must fail loudly");
+    let err = preprocess_src(r#"<div style="bg: primary px: 2">x</div>"#)
+        .expect_err("structured utility-string style= must fail loudly");
     let msg = format!("{err:?}");
     assert!(
         msg.contains("Style error")
             || msg.contains("utility-string")
-            || msg.contains("retired")
-            || msg.contains("sx="),
+            || msg.contains("style(")
+            || msg.contains("style=")
+            || msg.contains("tag position"),
         "error must name the Style diagnostic: {msg}"
     );
 }
