@@ -40,9 +40,9 @@ test('catalog renders, pack previews mount on demand, and perf stays bounded', a
   await page.goto('/components', { waitUntil: 'domcontentloaded' })
 
   // Catalog renders with the default L1 pack.
-  // Featured live demos also set data-tile (+ data-live); catalog cards do not.
-  await expect(page.locator('[data-tile="button"]:not([data-live])')).toBeVisible({ timeout: 30_000 })
-  await expect(page.locator('[data-tile="input"]:not([data-live])')).toBeVisible()
+  // Cards stamp `tile={e.tag}` (+ optional `live`) on the host — not data-*.
+  await expect(page.locator('[tile="button"]:not([live])')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('[tile="input"]:not([live])')).toBeVisible()
   await expect(page.getByText(/in catalog/i)).toBeVisible()
 
   // Pack previews are not mounted by default (only the featured L1 demos + placeholders).
