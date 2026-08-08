@@ -9,9 +9,7 @@
 -->
 
 <controller>
-// /motion — the page deals its own cards. `replay` clears the hand and
-// re-deals after the exits finish, so the stagger arrival can be watched
-// again without a reload. No interval: one deal on arrival, replay on demand.
+// Replay clears the hand and re-deals after exits finish.
 
 import { debounce, timeline, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -26,22 +24,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     redeal()
   }
 
-  // The choreography lane, live. The slider owns the clock; `timeline()` turns
-  // motion.dev's own 7-stop tile keyframes into one signal per channel. Swap
-  // `p` for `clock(3600, { loop: true })` and the demo runs itself — nothing
-  // else on this page would change.
+  // Slider owns progress 0…1; timeline() yields one signal per channel.
   const scrubText = signal('0')
   const p = (): number => Number(scrubText()) / 100
   const { tileX, tileRotate, tileScale } = timeline(
     p,
     {
-      // Translate settles at .34 and HOLDS through .44 — a hold is the same
-      // VALUE repeated at a later offset, never arithmetic.
+      // Hold = same value at a later offset (not arithmetic).
       tileX: [[0, '0px'], [0.12, '0px'], [0.34, '120px'], [0.44, '120px'],
              [0.54, '120px'], [0.64, '120px'], [1, '0px']],
       tileRotate: [[0, '0deg'], [0.12, '0deg'], [0.34, '15deg'], [0.44, '15deg'],
                   [0.54, '15deg'], [0.64, '15deg'], [1, '0deg']],
-      // …while the scale pops on its own, .54 → .64.
       tileScale: [[0.44, 1], [0.54, 1.75], [0.64, 1]],
     },
     { easing: [0.6, 0, 0.2, 1] },
@@ -60,10 +53,39 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
+
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style pressBtn = { animate: press({ scale: 'press' }) }
+  style tileRow = { box: minH(9) }
+  style tile = { box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style tileDim = { box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style demoPanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style demoPanelTall = { box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style enterCard = { box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
+  style loopTileFast = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
+  style loopTileSlow = { box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
+  style revealCard = { box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
+  style revealSpring = { box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
+  style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style ambientDotDim = { box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style spinTile = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) }
+  style grow1 = { box: grow(1) }
+  style scrub = { box: grow(1).minW(0) }
+  style scrubVal = { box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) }
+  style timelineTile = { box: shrink(0).w(9).h(9), paint: bg(primary).radius(md) }
+  style focusBtn = { animate: focus-visible({ scale: 'spring:snappy' }) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>The language</p>
   <h1>Animation</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Animation is declared on the element via the Style <strong>animate
     channel</strong>. <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> /
     <code>exit</code> / <code>loop</code> / <code>reveal</code> name a
@@ -76,19 +98,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row gap="3" align="center">
-    <button on:click={replay} style({ animate: press({ scale: 'press' }) })>Replay</button>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+    <button on:click={replay} style(pressBtn)>Replay</button>
+    <p style(mutedSm)>
       Five tiles, one <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> each;
       <code>stagger</code> is the delay between siblings.
     </p>
   </row>
   <if {dealt()}>
-    <row gap="3" align="center" style({ box: minH(9) })>
-      <div style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })></div>
-      <div style({ box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })></div>
-      <div style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })></div>
-      <div style({ box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })></div>
-      <div style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })></div>
+    <row gap="3" align="center" style(tileRow)>
+      <div style(tile)></div>
+      <div style(tileDim)></div>
+      <div style(tile)></div>
+      <div style(tileDim)></div>
+      <div style(tile)></div>
     </row>
   </if>
   <code-block code={code.stagger}></code-block>
@@ -101,17 +123,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     to play, so the runtime keeps the element mounted until the exit
     finishes.
   </p>
-  <column gap="3" style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+  <column gap="3" style(demoPanel)>
     <row>
-      <button on:click={() => open.set(!open())} style({ animate: press({ scale: 'press' }) })>
+      <button on:click={() => open.set(!open())} style(pressBtn)>
 
         {open() ? 'Remove' : 'Add'} the panel
       </button>
     </row>
     <if {open()}>
-      <card style({ box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })>
+      <card style(enterCard)>
         <strong>I animate in, and I animate out.</strong>
-        <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Watch me leave before I go.</p>
+        <p style(mutedSm)>Watch me leave before I go.</p>
       </card>
     </if>
   </column>
@@ -125,9 +147,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>from</code>/<code>to</code> per property. The two tiles below run
     the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
   </p>
-  <row gap="5" align="center" style({ box: minH(9) })>
-    <div testid="inline-demo" style({ box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) })></div>
-    <div style({ box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) })></div>
+  <row gap="5" align="center" style(tileRow)>
+    <div testid="inline-demo" style(loopTileFast)></div>
+    <div style(loopTileSlow)></div>
   </row>
   <code-block code={code.express}></code-block>
   <p>
@@ -145,10 +167,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     viewport. Same configs as everything else:
   </p>
   <column gap="4">
-    <card style({ box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) })>
+    <card style(revealCard)>
       <h3>This one fades up as it enters the viewport.</h3>
     </card>
-    <card style({ box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) })>
+    <card style(revealSpring)>
       <h3>And this one springs in.</h3>
     </card>
   </column>
@@ -161,13 +183,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     offsets siblings so a row reads as a wave. A user whose system asks for
     reduced motion gets none of this, automatically.
   </p>
-  <row gap="3" align="center" id="loop-row" style({ box: minH(9) })>
-    <div testid="ambient-dot" style({ box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })></div>
-    <div style({ box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })></div>
-    <div style({ box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })></div>
-    <div style({ box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })></div>
-    <row style({ box: grow(1) })></row>
-    <div testid="spin-demo" style({ box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) })></div>
+  <row gap="3" align="center" id="loop-row" style(tileRow)>
+    <div testid="ambient-dot" style(ambientDot)></div>
+    <div style(ambientDotDim)></div>
+    <div style(ambientDot)></div>
+    <div style(ambientDotDim)></div>
+    <row style(grow1)></row>
+    <div testid="spin-demo" style(spinTile)></div>
   </row>
   <code-block code={code.loop}></code-block>
 
@@ -179,8 +201,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/language/styling">styling chapter</a>.
   </p>
   <row gap="3" align="center">
-    <button style({ animate: press({ scale: 'press' }) })>press me</button>
-    <button style({ animate: focus-visible({ scale: 'spring:snappy' }) })>tab to me</button>
+    <button style(pressBtn)>press me</button>
+    <button style(focusBtn)>tab to me</button>
   </row>
   <code-block code={code.gestures}></code-block>
 
@@ -191,18 +213,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     tile moves through a seven-stop sequence, holds where the keyframes
     hold, and pops in place between 54 and 64.
   </p>
-  <column gap="4" style({ box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+  <column gap="4" style(demoPanelTall)>
     <row align="center" gap="3">
-      <input type="range" min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub" style({ box: grow(1).minW(0) })>
-      <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) })>{scrubText()}</span>
+      <input type="range" min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub" style(scrub)>
+      <span style(scrubVal)>{scrubText()}</span>
     </row>
-    <row align="center" style({ box: minH(9) })>
-      <!--
-        Plain div, not <card>: card host always paints bg(surface-1) ≈ surface-1,
-        so bg(primary) never wins and the tile disappears on most themes.
-        Matches the stagger tiles above.
-      -->
-      <div testid="timeline-tile" style({  box: shrink(0).w(9).h(9), paint: bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))  })></div>
+    <row align="center" style(tileRow)>
+      <!-- Plain div (not card): card host paints surface, so primary fill would not win. -->
+      <div testid="timeline-tile" style(timelineTile, { paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })></div>
     </row>
   </column>
   <p>
@@ -238,33 +256,33 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
+      <p style(mutedSm)>enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>
-      <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>opacity · scale · scale-x · scale-y · translate-x · translate-y · rotate</p>
+      <p style(mutedSm)>opacity · scale · scale-x · scale-y · translate-x · translate-y · rotate</p>
     </column>
     <column gap="1">
       <label>Springs</label>
-      <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
+      <p style(mutedSm)>spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
     </column>
     <column gap="1">
       <label>Tweens</label>
-      <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>fade · fade-out · press · release · pulse · spin</p>
+      <p style(mutedSm)>fade · fade-out · press · release · pulse · spin</p>
     </column>
   </grid>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     Config fields: <code>duration</code> · <code>delay</code> ·
     <code>easing</code> · <code>from</code>/<code>to</code> ·
     <code>stagger</code>. Every name above is compiler-checked; every value
     is yours.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the full surface: <a href="/sail/reference/motion">reference → Motion</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/layout">← Layout</a>
     <a variant="solid" tone="primary" href="/sail/language/actions">Actions →</a>
   </row>

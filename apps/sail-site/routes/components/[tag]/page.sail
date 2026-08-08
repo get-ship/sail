@@ -1,74 +1,41 @@
 <!--
-  /components/[tag] — the detail route. The live component holds center stage
-  (press it, type in it, pick from it); the variant chips drive a REAL
-  attribute on it; usage is a complete compiling program; props are the
-  curated truth from the stdlib declarations.
-
-  route.params.tag() picks the entry; src/compositions/component-details covers the FULL L1
-  surface (all 48 elements), so the empty state below is for typos, not
-  for real components. Each stage mounts through one zero-arg gate
-  (`stage.<key>()`) — the only call shape a renderable expression
-  allows.
+  /components/[tag] — detail route. Live stage + variant chips + usage + props.
+  L1 from component-details; pack tags from component-pack-meta. Template reads
+  only zero-arg calls (`entry()`, `stage.button()`).
 -->
 
 <controller>
-// /components/[tag] — the detail route. route.params.tag() picks the entry
-// out of the DETAILS registry (the full L1 surface); one variant signal
-// drives the live stage (each entry maps its chips onto whichever
-// attribute its variants mean — button:variant, slider:tone, switch:size,
-// tooltip:placement).
-//
-// Every read the template does is a zero-arg call (`entry()`, `stage.button()`),
-// because that is the only call shape a renderable expression allows — the
-// stage map mirrors the browser page's `show` map.
-
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { DETAILS, type DetailEntry } from '../../../src/compositions/component-details'
+import {
+  DEMO_PHOTO,
+  PACK_PROPS,
+  PACK_TAGS,
+  packBlurbFor,
+  packLabelFor,
+  packSlotCopy,
+} from '../../../src/compositions/component-pack-meta'
+
 export default controller((ctx: ControllerScope<Scope>) => {
     const tag = derived(() => ctx.route.params.tag?.() ?? '')
     const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
     const known = derived(() => entry() !== null)
-    // Pack-component tags don't have DETAILS entries (that registry is the
-    // L1 surface only) — mark them known too so this route mounts them
-    // instead of reporting a typo. Includes the 7 canvas-pack tags, which
-    // page.sail skips in its own grid but which still render fully here via
-    // direct navigation. sail-message-list and sail-media-csv are NOT here:
-    // both transitively import `@ship/sail-runtime/virtual` — message-list
-    // directly, media-csv via `createTable` from the `@ship/sail-primitives`
-    // barrel, whose index.ts side-effect-imports sail-tree/sail-tree-grid — a
-    // framework-singleton subpath with no deck-bundler importmap entry
-    // (apps/sail-site/src/register-all.ts). Pre-existing bundler gap, not a
-    // floor issue. Both still count in the registry catalog, but no
-    // template may reference either tag anywhere until that importmap gap
-    // is closed (separate job), or the app build fails outright.
-    const PACK_TAGS = new Set([
-      'sail-sparkline', 'sail-area-chart', 'sail-bar-chart', 'sail-donut', 'sail-gauge',
-      'sail-heatmap', 'sail-line-chart', 'sail-media-image', 'sail-media-av',
-      'sail-code-editor', 'sail-mermaid', 'sail-message',
-      'sail-citation', 'sail-composer', 'sail-thinking-dots',
-      'sail-tool-call', 'sail-canvas', 'sail-board', 'sail-draw', 'sail-graph-canvas',
-      'sail-annotation-layer', 'sail-annotation-list', 'sail-annotation-marker',
-    ])
+    // Pack tags lack DETAILS rows; still mount via knownPack (catalog skips
+    // message-list/media-csv — importmap gap, not this route).
     const knownPack = derived(() => PACK_TAGS.has(tag()))
     const showViewer = derived(() => known() || knownPack())
 
     const variant = signal('')
-    // A navigation between two detail pages reuses this scope — re-seed the
-    // variant whenever the tag changes.
+    // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
       variant.set(entry()?.variants[0] ?? '')
     })
     const pick = (v: string): void => variant.set(v)
-    // The shared viewer owns the chips; the page keeps its own variant signal
-    // because every specimen stage reads it.
     const onVariantChange = (detail: { variant: string }): void =>
       variant.set(detail?.variant ?? '')
 
-    // Pack media: `src` is a JS identity property (not a reflect attr).
-    // Real Unsplash photo — deck CSP must allow https: for img-src.
-    const DEMO_PHOTO =
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&h=640&fit=crop&auto=format&q=80'
+    // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
       requestAnimationFrame(() => {
@@ -85,85 +52,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const blurb = () => entry()?.blurb ?? ''
     const props = () => entry()?.props ?? []
     const usageCode = () => entry()?.usage ?? ''
-    // Slot tagline — the page subtitle under the specimen. For pack
-    // components the L1 "nothing here is a screenshot" copy undersells the
-    // point (the pack IS the live component) and some packs have their own
-    // interaction model (world layer, code editor, mermaid SVG).
-    const slotCopy = (() => {
-      if (!knownPack()) return ''
-      const t = tag()
-      if (t === 'sail-canvas' || t === 'sail-board' || t === 'sail-draw' || t === 'sail-graph-canvas' || t.startsWith('sail-annotation-')) {
-        return 'The world layer — pans, zooms, and drops annotations on click.'
-      }
-      if (t === 'sail-code-editor') return ''
-      if (t === 'sail-mermaid') return ''
-      return ''
-    })()
+    const slotCopy = () => (knownPack() ? packSlotCopy(tag()) : '')
     const heading = () => entry()?.heading ?? tag()
-
-    // Pack blurb — packs without a DETAILS entry get a hand-written
-    // one-liner keyed off the tag.
-    const packBlurb = () => {
-      const t = tag()
-      if (t === 'sail-area-chart') return 'Multi-series area chart with stacked fills. Series JSON + label list.'
-      if (t === 'sail-bar-chart') return 'Vertical bars, one per label. CSV data string + label list.'
-      if (t === 'sail-donut') return 'Stroked-arc segments, sized by value. JSON label/value/tone.'
-      if (t === 'sail-gauge') return 'Single-arc gauge, value 0..max. Auto-centers the indicator.'
-      if (t === 'sail-heatmap') return 'Grid of cells, colored by value. rows × cols × values.'
-      if (t === 'sail-line-chart') return 'Multi-series line chart with markers and grid. Series JSON + label list.'
-      if (t === 'sail-sparkline') return 'Compact single-line trend. CSV data, width × height.'
-      if (t === 'sail-media-image') return 'Image primitive with src/alt + framework theming.'
-      if (t === 'sail-media-av') return 'Audio/video primitive with platform controls + framework skin.'
-      if (t === 'sail-code-editor') return 'CodeMirror 6 wrapped as a primitive; controlled value + language prop.'
-      if (t === 'sail-mermaid') return 'Mermaid-rendered SVG; pass the source as the value prop.'
-      if (t === 'sail-message') return 'A single chat message; from, status, content, timestamp props.'
-      if (t === 'sail-citation') return 'Citation pill with source/label; click to follow href.'
-      if (t === 'sail-composer') return 'Chat-composer input with submit + cancel events.'
-      if (t === 'sail-thinking-dots') return 'Three bouncing dots with polite live status.'
-      if (t === 'sail-tool-call') return 'Tool-call disclosure with name + status (running|ok|error).'
-      if (t === 'sail-canvas') return 'The pannable/zoomable world layer canvas-pack components mount on.'
-      if (t === 'sail-board') return 'A bounded canvas surface hosting a world layer.'
-      if (t === 'sail-draw') return 'Freehand drawing surface over the world layer.'
-      if (t === 'sail-graph-canvas') return 'Node/edge graph canvas; JSON nodes + edges.'
-      if (t === 'sail-annotation-layer') return 'Click-to-annotate overlay for the world layer.'
-      if (t === 'sail-annotation-list') return 'List view of the annotations dropped on a layer.'
-      if (t === 'sail-annotation-marker') return 'A single point annotation marker at x/y.'
-      return 'Pack component.'
-    }
-    // Pack props table — hand-curated per the pack's authored prop surface.
-    const PACK_PROPS: Record<string, { name: string; type: string; desc: string }[]> = {
-      'sail-sparkline':   [{ name: 'data',   type: 'string',  desc: 'CSV numbers, e.g. "2,5,3,8,4,6,7".' }, { name: 'width',  type: 'number',  desc: 'SVG width in px.' }, { name: 'height', type: 'number',  desc: 'SVG height in px.' }],
-      'sail-area-chart':  [{ name: 'series', type: 'string (JSON)', desc: '[{name, data, tone?}] — multi-series.' }, { name: 'labels', type: 'string (CSV)', desc: 'X-axis labels.' }],
-      'sail-bar-chart':   [{ name: 'data',   type: 'string (CSV)', desc: 'Bar values, e.g. "2,5,3,8,4".' }, { name: 'labels', type: 'string (CSV)', desc: 'Bar labels.' }],
-      'sail-donut':       [{ name: 'data',   type: 'string (JSON)', desc: '[{label,value,tone?}] segments.' }, { name: 'diameter', type: 'number', desc: 'Outer diameter in px.' }],
-      'sail-gauge':       [{ name: 'value',  type: 'number', desc: 'Indicator position (0..max).' }, { name: 'diameter', type: 'number', desc: 'Outer diameter in px.' }],
-      'sail-heatmap':     [{ name: 'rows',  type: 'count or labels', desc: 'Row count ("4") or comma labels.' }, { name: 'cols', type: 'count or labels', desc: 'Column count or comma labels.' }, { name: 'values', type: 'string (CSV)', desc: 'Row-major cell values (alias of data).' }, { name: 'data', type: 'string', desc: 'Same as values; 1D CSV or 2D JSON.' }],
-      'sail-line-chart':  [{ name: 'series', type: 'string (JSON)', desc: '[{name, data, tone?}].' }, { name: 'labels', type: 'string (CSV)', desc: 'X-axis labels.' }],
-      'sail-media-image': [{ name: 'src',   type: 'string', desc: 'Image URL.' }, { name: 'alt',  type: 'string', desc: 'Alt text.' }],
-      'sail-media-av':    [{ name: 'src',   type: 'string', desc: 'Audio/video URL.' }, { name: 'mime', type: 'string', desc: 'Override mime type.' }],
-      'sail-code-editor': [{ name: 'value', type: 'string', desc: 'Editor text.' }, { name: 'language', type: 'string', desc: 'CodeMirror language.' }, { name: 'line-numbers', type: 'bool', desc: 'Show gutter.' }],
-      'sail-mermaid':     [{ name: 'value', type: 'string', desc: 'Mermaid source text.' }],
-      'sail-message':     [{ name: 'from',  type: 'string', desc: 'Message author (user|assistant|system|tool).' }, { name: 'state', type: 'string', desc: 'Message state (user|assistant|...).' }, { name: 'content', type: 'string', desc: 'Body text.' }],
-      'sail-citation':    [{ name: 'source', type: 'string', desc: 'Citation source label.' }, { name: 'href',  type: 'string', desc: 'Click target.' }],
-      'sail-composer':    [{ name: 'placeholder', type: 'string', desc: 'Empty-state copy.' }],
-      'sail-thinking-dots': [{ name: 'label', type: 'string', desc: 'Live-region label.' }],
-      'sail-tool-call':   [{ name: 'name',   type: 'string', desc: 'Tool name.' }, { name: 'status', type: 'string', desc: 'running|ok|error.' }],
-      'sail-canvas':      [{ name: 'width',  type: 'number', desc: 'Viewport width in px.' }, { name: 'height', type: 'number', desc: 'Viewport height in px.' }],
-      'sail-graph-canvas': [{ name: 'nodes', type: 'string (JSON)', desc: '[{id, kind, title, x, y}].' }, { name: 'edges', type: 'string (JSON)', desc: '[{from, to}].' }],
-      'sail-annotation-marker': [{ name: 'x', type: 'number', desc: 'X position.' }, { name: 'y', type: 'number', desc: 'Y position.' }],
-    }
+    const packBlurb = () => packBlurbFor(tag())
     const packProps = () => PACK_PROPS[tag()] ?? []
+    const packLabel = () => packLabelFor(tag())
 
-    // One zero-arg gate per stage — `stage.<key>()`, derived from the entry.
-    // Pack components (the 6 un-gated packs, 25 components) are added here
-    // as a side channel — they don't have DETAILS entries, so their
-    // `entry()` is null; we gate on tag() (kebab-case) directly.
     const stage = Object.fromEntries([
       ...Object.values(DETAILS).map((e) => [e.key, () => entry()?.key === e.key]),
       ...[...PACK_TAGS].map((k) => [k.replace(/-([a-z])/g, (_, c) => c.toUpperCase()), () => tag() === k]),
     ]) as Record<string, () => boolean>
 
-    // Stage state — real signals the stages mutate.
     const presses = signal(0)
     const press = (): void => presses.set((n) => n + 1)
     const notify = signal(true)
@@ -189,7 +88,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     return {
       tag, entry, known, knownPack, showViewer, heading,
       variant, pick, onVariantChange, variants, hasVariants, variantAttr,
-      blurb, props, packBlurb, packProps, usageCode, stage, slotCopy,
+      blurb, props, packBlurb, packProps, packLabel, usageCode, stage, slotCopy,
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       sheetSide, people,
@@ -197,7 +96,32 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="4" style({ box: maxW(breakpoint-tablet).mx(auto) })>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style stageCol = { box: w(full).maxW(panel-max-w-sm) }
+  style stageColMd = { box: w(full).maxW(panel-max-w-md) }
+  style meterCol = { box: w(panel-max-w-sm) }
+  style grow1 = { box: grow(1) }
+  style cardPad = { box: pad(4) }
+  style cardPad5 = { box: pad(5) }
+  style mediaStage = { box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) }
+  style fullMedia = { box: w(full).h(full) }
+  style fullW = { box: w(full) }
+  style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
+  style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
+  style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style pressBtn = { animate: press({ scale: 'press' }) }
+  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
+  style skeletonBox = { box: w(7).h(7) }
+  style ctxCard = { box: pad(6).w(full) }
+  style toastStage = { box: w(full).maxW(panel-max-w-sm) }
+</scope>
+
+<column gap="4" style(page)>
   <if {showViewer()}>
     <breadcrumb>
       <a href="/components">components</a>
@@ -207,14 +131,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <sail-component-viewer
       name={heading()}
       blurb={knownPack() ? packBlurb() : blurb()}
-      pack={knownPack() ? (
-        tag().startsWith('sail-area-chart') || tag().startsWith('sail-bar-chart') || tag().startsWith('sail-line-chart') || tag() === 'sail-donut' || tag() === 'sail-gauge' || tag() === 'sail-heatmap' || tag() === 'sail-sparkline' ? 'Pack: charts' :
-        tag().startsWith('sail-media-') ? 'Pack: media' :
-        tag() === 'sail-canvas' || tag() === 'sail-board' || tag() === 'sail-draw' || tag() === 'sail-graph-canvas' || tag().startsWith('sail-annotation-') ? 'Pack: canvas' :
-        tag().startsWith('sail-message') || tag() === 'sail-citation' || tag() === 'sail-composer' || tag() === 'sail-thinking-dots' || tag() === 'sail-tool-call' ? 'Pack: chat' :
-        tag() === 'sail-mermaid' ? 'Pack: mermaid' :
-        tag() === 'sail-code-editor' ? 'Pack: code-editor' : 'Pack'
-      ) : 'Component primitives'}
+      pack={knownPack() ? packLabel() : 'Component primitives'}
       variant-attr={variantAttr()}
       usage={usageCode()}
       variants={variants()}
@@ -225,36 +142,36 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
               <column gap="3" align="center">
-                <button variant={variant()} tone="primary" size="lg" on:click={press} style({ animate: press({ scale: 'press' }) })>
+                <button variant={variant()} tone="primary" size="lg" on:click={press} style(pressBtn)>
                   Save changes
                 </button>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>press fired ×{presses()}</p>
+                <p style(monoXs)>press fired ×{presses()}</p>
               </column>
             </if>
             <if {stage.input()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <input placeholder="Ada Lovelace" bind:value={name} />
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>hello, {name() || 'stranger'}</p>
+                <p style(monoXs)>hello, {name() || 'stranger'}</p>
               </column>
             </if>
             <if {stage.textarea()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{bio().length} characters</p>
+                <p style(monoXs)>{bio().length} characters</p>
               </column>
             </if>
             <if {stage.select()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <select bind:value={team}>
                   <option>Engineering</option>
                   <option>Design</option>
                   <option>Research</option>
                 </select>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>team: {team()}</p>
+                <p style(monoXs)>team: {team()}</p>
               </column>
             </if>
             <if {stage.combobox()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <combobox placeholder="Pick a framework — type to filter" on-select={pickFw}>
                   <option value="sail">Sail</option>
                   <option value="react">React</option>
@@ -263,13 +180,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <option value="vue">Vue</option>
                   <option value="qwik">Qwik</option>
                 </combobox>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>picked: {fw() || 'nothing yet'}</p>
+                <p style(monoXs)>picked: {fw() || 'nothing yet'}</p>
               </column>
             </if>
             <if {stage.checkbox()}>
               <column gap="3" align="center">
                 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
+                <p style(monoXs)>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
               </column>
             </if>
             <if {stage.radioGroup()}>
@@ -281,14 +198,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <if {stage.switchToggle()}>
               <row gap="3" align="center">
                 <switch bind:checked={notify} size={variant()} tone="primary"></switch>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{notify() ? 'on' : 'off'} · size {variant()}</p>
+                <p style(monoXs)>{notify() ? 'on' : 'off'} · size {variant()}</p>
               </row>
             </if>
             <if {stage.slider()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
                 <progress value={load()} max="100"></progress>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>one signal, two components — {load()}%</p>
+                <p style(monoXs)>one signal, two components — {load()}%</p>
               </column>
             </if>
             <if {stage.toggleGroup()}>
@@ -299,7 +216,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </toggle-group>
             </if>
             <if {stage.field()}>
-              <column gap="4" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="4" style(stageCol)>
                 <field>
                   <label for="stage-name">Name</label>
                   <input id="stage-name" placeholder="Ada Lovelace" />
@@ -311,13 +228,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.label()}>
-              <column gap="1" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="1" style(stageCol)>
                 <label for="stage-email" required size={variant()}>Email</label>
                 <input id="stage-email" placeholder="ada@lovelace.dev" />
               </column>
             </if>
             <if {stage.fieldset()}>
-              <fieldset style({ box: w(full).maxW(panel-max-w-sm) })>
+              <fieldset style(stageCol)>
                 <legend>Account details</legend>
                 <column gap="2">
                   <input placeholder="Name" />
@@ -331,34 +248,34 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <if {stage.themePicker()}>
               <column gap="4" align="center">
                 <column gap="1" align="center">
-                  <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Full catalog</span>
+                  <span style(mutedXs)>Full catalog</span>
                   <theme-picker></theme-picker>
                 </column>
                 <column gap="1" align="center">
-                  <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Mode only</span>
+                  <span style(mutedXs)>Mode only</span>
                   <theme-picker mode-only></theme-picker>
                 </column>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>themes this whole site, no reload</p>
+                <p style(monoXs)>themes this whole site, no reload</p>
               </column>
             </if>
 
             <!-- ══ Feedback ════════════════════════════════════════════ -->
             <if {stage.alert()}>
-              <alert tone={variant()} style({ box: w(full) })>
+              <alert tone={variant()} style(fullW)>
                 <strong>Heads up.</strong> The tone chips above restyle me — colour and icon both.
               </alert>
             </if>
             <if {stage.progressBar()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>one signal drives both — {load()}%</p>
+                <p style(monoXs)>one signal drives both — {load()}%</p>
               </column>
             </if>
             <if {stage.meter()}>
               <!-- Fixed width: meter has no intrinsic width, and a percentage
                    can’t resolve inside the content-sized <center> stage. -->
-              <column gap="2" style({ box: w(panel-max-w-sm) })>
+              <column gap="2" style(meterCol)>
                 <meter value="0.3"></meter>
                 <meter value="0.7"></meter>
                 <meter value="0.95"></meter>
@@ -372,30 +289,30 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </row>
             </if>
             <if {stage.skeleton()}>
-              <row gap="3" align="center" style({ box: w(full).maxW(panel-max-w-sm) })>
-                <skeleton shape={variant()} style({ box: w(7).h(7) })></skeleton>
-                <column gap="2" style({ box: grow(1) })>
+              <row gap="3" align="center" style(stageCol)>
+                <skeleton shape={variant()} style(skeletonBox)></skeleton>
+                <column gap="2" style(grow1)>
                   <skeleton shape={variant()} size="sm"></skeleton>
                   <skeleton shape={variant()} size="sm"></skeleton>
                 </column>
               </row>
             </if>
             <if {stage.emptyState()}>
-              <empty-state variant={variant()} style({ box: w(full) })>
+              <empty-state variant={variant()} style(fullW)>
                 <strong slot="title">No results</strong>
                 Try a different search, or clear a filter.
               </empty-state>
             </if>
             <if {stage.errorState()}>
-              <error-state variant={variant()} code="ERR_TIMEOUT" style({ box: w(full) })>
+              <error-state variant={variant()} code="ERR_TIMEOUT" style(fullW)>
                 The request timed out. Retry, or check the connection.
               </error-state>
             </if>
             <if {stage.errorBoundary()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <column gap="3" style(stageCol)>
                 <error-boundary message="This panel could not load.">
-                  <card variant="outline" style({ box: pad(4) })>
-                    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+                  <card variant="outline" style(cardPad)>
+                    <p style(mutedSm)>
                       A healthy boundary is invisible — this card is the wrapped
                       subtree. A render throw inside would swap in the fallback.
                     </p>
@@ -404,7 +321,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.toast()}>
-              <toast tone={variant()} duration="0" style({ box: w(full).maxW(panel-max-w-sm) })>
+              <toast tone={variant()} duration="0" style(stageCol)>
                 <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
                 <button toast-close variant="ghost" size="sm">×</button>
               </toast>
@@ -431,19 +348,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
                   </if>
                 </row>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>× or Backspace fires sail-remove</p>
+                <p style(monoXs)>× or Backspace fires sail-remove</p>
               </column>
             </if>
             <if {stage.statusDot()}>
               <row gap="2" align="center">
                 <status-dot tone={variant()}></status-dot>
-                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>the tone is the message</p>
+                <p style(mutedSm)>the tone is the message</p>
               </row>
             </if>
             <if {stage.card()}>
-              <card variant={variant()} interactive style({ box: pad(5) })>
+              <card variant={variant()} interactive style(cardPad5)>
                 <strong>A surface</strong>
-                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>the hover lift is one attribute</p>
+                <p style(mutedSm)>the hover lift is one attribute</p>
               </card>
             </if>
             <if {stage.avatar()}>
@@ -467,10 +384,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </row>
             </if>
             <if {stage.separator()}>
-              <column gap="2" style({ box: w(full).maxW(panel-max-w-sm) })>
-                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>above</p>
+              <column gap="2" style(stageCol)>
+                <p style(mutedSm)>above</p>
                 <separator variant={variant()}></separator>
-                <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>below — and vertical:</p>
+                <p style(mutedSm)>below — and vertical:</p>
                 <row gap="2" align="center">
                   <span>A</span>
                   <separator orientation="vertical" variant={variant()}></separator>
@@ -479,17 +396,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.accordion()}>
-              <accordion style({ box: w(full).maxW(panel-max-w-sm) })>
+              <accordion style(stageCol)>
                 <strong slot="trigger">Show the details</strong>
                 <p>Animated open and close — and it remembers its state.</p>
               </accordion>
             </if>
             <if {stage.kbd()}>
-              <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>                Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
+              <p style(mutedSm)>                Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
               </p>
             </if>
             <if {stage.prose()}>
-              <column gap="2" style({ box: w(full).maxW(panel-max-w-md) })>
+              <column gap="2" style(stageColMd)>
                 <h3>Plain tags, already styled</h3>
                 <p>Body copy sets the baseline — <strong>strong</strong>, <em>emphasis</em>,
                    <code>inline_code()</code> and <mark>a highlight</mark> need no classes.</p>
@@ -508,21 +425,21 @@ export default controller((ctx: ControllerScope<Scope>) => {
               <column gap="3" align="center">
                 <button variant="ghost" popovertarget="stage-hc">@ada</button>
                 <hover-card id="stage-hc">
-                  <card style({ box: pad(4) })>
+                  <card style(cardPad)>
                     <strong>Ada Lovelace</strong>
-                    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>wrote the first program.</p>
+                    <p style(mutedSm)>wrote the first program.</p>
                   </card>
                 </hover-card>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>focus-triggerable, not just mouse-only</p>
+                <p style(monoXs)>focus-triggerable, not just mouse-only</p>
               </column>
             </if>
             <if {stage.popover()}>
               <column gap="3" align="center">
                 <button popovertarget="stage-pop">Open popover</button>
                 <popover id="stage-pop">
-                  <card style({ box: pad(4) })>Rides the platform top layer — Escape or click outside closes it.</card>
+                  <card style(cardPad)>Rides the platform top layer — Escape or click outside closes it.</card>
                 </popover>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>top layer · light dismiss · zero z-index</p>
+                <p style(monoXs)>top layer · light dismiss · zero z-index</p>
               </column>
             </if>
             <if {stage.dropdown()}>
@@ -533,13 +450,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <menu-item>Duplicate</menu-item>
                   <menu-item tone="destructive">Delete</menu-item>
                 </dropdown>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>arrows rove · type-ahead · Escape closes</p>
+                <p style(monoXs)>arrows rove · type-ahead · Escape closes</p>
               </column>
             </if>
             <if {stage.contextMenu()}>
-              <column gap="3" align="center" style({ box: w(full).maxW(panel-max-w-sm) })>
-                <card id="stage-ctx" variant="outline" style({ box: pad(6).w(full) })>
-                  <center><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>right-click target</p></center>
+              <column gap="3" align="center" style(stageCol)>
+                <card id="stage-ctx" variant="outline" style(ctxCard)>
+                  <center><p style(mutedSm)>right-click target</p></center>
                 </card>
                 <context-menu for="stage-ctx">
                   <menu-item value="cut">Cut</menu-item>
@@ -550,10 +467,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.dialog()}>
               <column gap="3" align="center">
-                <button command="show-modal" commandfor="stage-dialog" style({ animate: press({ scale: 'press' }) })>
+                <button command="show-modal" commandfor="stage-dialog" style(pressBtn)>
                   Open the {variant()}
                 </button>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>Escape and the backdrop close it — that’s the platform</p>
+                <p style(monoXs)>Escape and the backdrop close it — that’s the platform</p>
                 <dialog id="stage-dialog" side={sheetSide()} size="md">
                   <header>Delete project</header>
                   <section>
@@ -569,15 +486,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Navigation ══════════════════════════════════════════ -->
             <if {stage.tabs()}>
-              <tabs tone="primary" style({ box: w(full) })>
+              <tabs tone="primary" style(fullW)>
                 <tab-list variant={variant()}>
                   <tab>Overview</tab>
                   <tab>Activity</tab>
                   <tab>Settings</tab>
                 </tab-list>
-                <tab-panel><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Arrows rove, Home and End jump — wired for you.</p></tab-panel>
-                <tab-panel><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>The activity feed panel.</p></tab-panel>
-                <tab-panel><p style({ paint: fg(muted-foreground), text: fontSize(sm) })>The settings panel.</p></tab-panel>
+                <tab-panel><p style(mutedSm)>Arrows rove, Home and End jump — wired for you.</p></tab-panel>
+                <tab-panel><p style(mutedSm)>The activity feed panel.</p></tab-panel>
+                <tab-panel><p style(mutedSm)>The settings panel.</p></tab-panel>
               </tabs>
             </if>
             <if {stage.breadcrumb()}>
@@ -595,11 +512,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <page value="3">3</page>
                   <page value="4">4</page>
                 </pagination>
-                <p style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>on page {pageNo()}</p>
+                <p style(monoXs)>on page {pageNo()}</p>
               </column>
             </if>
             <if {stage.navbar()}>
-              <navbar bordered style({ box: w(full) })>
+              <navbar bordered style(fullW)>
                 <strong slot="brand">SHIP</strong>
                 <a href="/components">Docs</a>
                 <a href="/components">Components</a>
@@ -609,7 +526,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Data ════════════════════════════════════════════════ -->
             <if {stage.table()}>
-              <table style({ box: w(full) })>
+              <table style(fullW)>
                 <thead>
                   <tr><th>Name</th><th>Team</th><th>Status</th></tr>
                 </thead>
@@ -627,7 +544,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Layout ══════════════════════════════════════════════ -->
             <if {stage.layout()}>
-              <column gap="3" style({ box: w(full).maxW(panel-max-w-md) })>
+              <column gap="3" style(stageColMd)>
                 <row gap="2" align="center" justify="between">
                   <strong>row — the x axis</strong>
                   <badge tone="primary">end</badge>
@@ -637,13 +554,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <card style({ box: pad(3) })><center>2</center></card>
                   <card style({ box: pad(3) })><center>3</center></card>
                 </grid>
-                <center style({ box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) })>
-                  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>center — both axes at once</p>
+                <center style(centerBox)>
+                  <p style(mutedSm)>center — both axes at once</p>
                 </center>
               </column>
             </if>
             <if {stage.scrollArea()}>
-              <scroll-area style({ box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+              <scroll-area style(scrollDemo)>
                 <p>Constrain it, and the overflow scrolls behind thin, themed scrollbars.</p>
                 <p>Line two.</p>
                 <p>Line three.</p>
@@ -657,8 +574,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </scroll-area>
             </if>
             <if {stage.ticker()}>
-              <ticker duration="normal" style({ box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) })>
-                <p style({ box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>
+              <ticker duration="normal" style(ticker)>
+                <p style(tickerText)>
                   tokens · signals · a11y · hot reload · forms ·&nbsp;
                 </p>
               </ticker>
@@ -701,8 +618,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.sailMediaImage()}>
-              <column gap="3" align="center" tile-stage="sail-pack-media-image" style({ box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) })>
-                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} style({ box: w(full).h(full) })></sail-media-image>
+              <column gap="3" align="center" tile-stage="sail-pack-media-image" style(mediaStage)>
+                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} style(fullMedia)></sail-media-image>
               </column>
             </if>
             <if {stage.sailMediaAv()}>
@@ -721,7 +638,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.sailMessage()}>
-              <column gap="3" tile-stage="sail-pack-message" style({ box: w(full).maxW(panel-max-w-md) })>
+              <column gap="3" tile-stage="sail-pack-message" style(stageColMd)>
                 <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
                 <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
               </column>
@@ -788,8 +705,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
 
       </column>
-      <if {slotCopy}>
-        <p slot="stage" style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>{slotCopy}</p>
+      <if {slotCopy()}>
+        <p slot="stage" style(monoXs)>{slotCopy()}</p>
       </if>
     </sail-component-viewer>
 
@@ -801,7 +718,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
-    <empty-state style({ animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })>
+    <empty-state style(emptyEnter)>
       <strong slot="title">Nothing named “{tag()}” here</strong>
       Every element on the L1 surface has a detail page. Pack components
       (the 6 un-gated packs) render here too — this looks like a typo.

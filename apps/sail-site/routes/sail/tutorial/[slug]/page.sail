@@ -1,21 +1,9 @@
 <!--
-  /tutorial/[slug] — the interactive lesson. Two-pane split: the lesson (prose,
-  progress stepper, bottom nav) on the LEFT; the playground (editor card with
-  template/controller/diff tabs, live preview iframe, output console) on the
-  RIGHT.
-
-  Playground state — active tab, status badge, console lines, editor values —
-  is signals in the <controller>; the template is a pure read. tutorial-boot
-  owns the FFI seams only (wasm compile, iframe postMessage, theme observer);
-  the editor's imperative API is reached through use: capture actions that set
-  signal refs. The Sail docs segment layout renders /sail/tutorial/* lessons
-  full-bleed (sail-docs-rail `workbench`).
-
-  LANG-GAP (renders without these until the vocabulary grows):
-  - column clamp: the lesson pane wants exactly minmax(0, 30rem); it uses
-    grow:1 + max-w:panel-max-w-md;
-  - transform/gradient/text-transform atoms: stepper hover scaleY, the radial
-    preview tint, and uppercase-via-CSS (labels are written uppercase in text).
+  /tutorial/[slug] — two-pane lesson: prose + stepper left; editor, preview,
+  console right. Playground state is signals; tutorial-boot owns wasm/iframe
+  seams; use: capture actions hold editor/iframe refs. Workbench chrome via
+  sail-docs-rail. Language gaps: no column clamp atom (uses max-w panel token);
+  no transform/gradient stepper polish.
 -->
 <controller>
 import type { Action, ControllerScope } from '@ship/sail-runtime'
@@ -69,8 +57,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const lesson = derived(() => BY_SLUG[ctx.route.params.slug() ?? ''])
     const nextSlug = derived(() => lesson()?.next ?? '')
 
-    // ── FFI refs: the editors, the preview iframe (via use: capture actions) ──
-    const editorEl = signal<CodeEditorHost | null>(null)
+        const editorEl = signal<CodeEditorHost | null>(null)
     const iframeEl = signal<HTMLIFrameElement | null>(null)
     const captureEditor: Action<void> = (node) => {
       editorEl.set(node as CodeEditorHost)
@@ -81,8 +68,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       return { destroy: () => iframeEl.set(null) }
     }
 
-    // ── Playground state — signals the template reads ────────────────────
-    const tab = signal<string>('source')
+        const tab = signal<string>('source')
     const statusTone = signal<string>('muted')
     const statusText = signal<string>('loading…')
     const logs = signal<LogLine[]>([])
@@ -98,8 +84,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       .then(() => compile.set(() => makeCompile() as unknown as CompileFn))
       .catch((err) => console.error('[sail-site] wasm compile seam failed:', err))
 
-    // ── Console log (elapsed-stamped, capped) ─────────────────────────────
-    const bootedAt = Date.now()
+        const bootedAt = Date.now()
     const pad2 = (n: number): string => (n < 10 ? '0' + n : String(n))
     let logSeq = 0
     const log = (msg: string, kind: LogLine['kind'] = 'info'): void => {
@@ -116,8 +101,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       statusText.set(text)
     }
 
-    // ── Run pipeline ──────────────────────────────────────────────────────
-    let tagSeq = 0
+        let tagSeq = 0
     let iframeReady = false
     let lastSourceSlug = ''
     let lastPushedKey = ''
@@ -164,8 +148,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       runNow()
     }
 
-    // ── Template handlers ────────────────────────────────────────────────
-    const onSourceChange = (detail: { value: string }): void => {
+        const onSourceChange = (detail: { value: string }): void => {
       const v = detail?.value
       if (typeof v !== 'string') return
       srcValue.set(v)
@@ -201,8 +184,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       runNow()
     }
 
-    // ── Lesson lifecycle ─────────────────────────────────────────────────
-    // Source seed is independent of wasm / preview iframe. The e2e contract is
+        // Source seed is independent of wasm / preview iframe. The e2e contract is
     // that sail-code-editor[pane]=source].value holds the lesson `.sail` as
     // soon as the editor upgrades — gating that on compile/iframe left the
     // editor empty whenever the host ref raced the one-shot write, or when
@@ -282,8 +264,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       disposeTheme()
     })
 
-    // ── Presentation reads ───────────────────────────────────────────────
-    // The lesson's real filename — the tab is the file, so it says so.
+        // The lesson's real filename — the tab is the file, so it says so.
     const fileName = derived(() => (lesson()?.starterStem ?? 'lesson') + '.sail')
 
     const steps = derived((): StepSegment[] => {
@@ -328,51 +309,106 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 
 <!--
-  Full-bleed workbench under site chrome. REBUILD-MARKER-3 h(fill) (not h(full)) — the shell
-  is display:contents all the way up, so % height collapses; fill uses the
-  chrome-offset calc. No tab-panel: its default padT and orientation stamp
-  ate the editor. Tabs drive a signal; panes are plain grow columns.
+  h(fill) not h(full): shell is display:contents up the tree, so % height collapses.
+  Tabs drive a signal; panes are plain grow columns (tab-panel pad ate the editor).
+  tablet+: side-by-side; mobile/SSR else: stacked.
 -->
-<!--
-  tablet+: side-by-side workbench. Mobile (else / SSR default): stacked.
--->
+
+<scope>
+  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
+  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
+  style lessonPane = { box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border) }
+  style lessonScroll = { box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4) }
+  style tutLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
+  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style stepDone = { box: grow(1).h(1), paint: radius(full).bg(primary) }
+  style stepCurrent = { box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50) }
+  style stepTodo = { box: grow(1).h(1), paint: radius(full).bg(surface-2) }
+  style title = { text: fontSize(2xl).leading(tight) }
+  style titleSm = { text: fontSize(xl).leading(tight) }
+  style desc = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style descSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style proseHost = { box: w(full).minW(0).overflowX(hidden) }
+  style lessonFoot = { box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1) }
+  style allLessons = { box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) } } }
+  style allLessonsSm = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) }
+  style card = { box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style cardBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
+  style paneCol = { box: grow(1).minH(0).overflow(hidden) }
+  style diffBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
+  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style diffShell = { box: grow(1).minH(0).position(relative).overflow(hidden) }
+  style diffAbs = { box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) }
+  style previewBand = { box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
+  style iframeStyle = { box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) }
+  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
+  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
+  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
+  style ts = { paint: fg(muted-foreground).opacity(50) }
+  style logOk = { paint: fg(success) }
+  style logWarn = { paint: fg(warning) }
+  style logErr = { paint: fg(destructive) }
+  style logInfo = { paint: fg(muted-foreground) }
+  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
+  style mobileHead = { box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1) }
+  style growMin = { box: grow(1).minH(0).overflow(hidden) }
+
+  type LogLineProps = {
+    ts: string
+    kind: string
+    msg: string
+  }
+</scope>
+
+<partial log-line props: LogLineProps>
+  <match {kind}>
+    {'success' => <row gap="2"><small style(ts)>{ts}</small><small style(logOk)>{msg}</small></row>}
+    {'warn' => <row gap="2"><small style(ts)>{ts}</small><small style(logWarn)>{msg}</small></row>}
+    {'error' => <row gap="2" style(logErrRow)><small style(ts)>{ts}</small><small style(logErr)>{msg}</small></row>}
+    {else => <row gap="2"><small style(ts)>{ts}</small><small style(logInfo)>{msg}</small></row>}
+  </match>
+</partial>
+
 <when {tablet}>
-<row nowrap align="stretch" gap="0" style({  box: w(full).h(fill).minH(0).minW(0).overflow(hidden)  })>
+<row nowrap align="stretch" gap="0" style(workbench)>
   <!-- Lesson pane -->
-  <column style({  box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border)  })>
-    <column gap="3" style({  box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4)  })>
+  <column style(lessonPane)>
+    <column gap="3" style(lessonScroll)>
       <row align="center" justify="between" gap="2">
-        <p style({ paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) })>TUTORIAL</p>
-        <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })>{lessonNumLabel()} / {totalLessons()}</small>
+        <p style(tutLabel)>TUTORIAL</p>
+        <small style(countLabel)>{lessonNumLabel()} / {totalLessons()}</small>
       </row>
 
       <row gap="1" label="Lesson progress">
         <for {steps() as step} key={step.slug}>
           <match {step.state}>
-            {'done' => <a href={step.href} title={step.title} style({  box: grow(1).h(1), paint: radius(full).bg(primary)  })></a>}{'current' => <a href={step.href} title={step.title} current="step" style({  box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50)  })></a>}{else => <a href={step.href} title={step.title} style({  box: grow(1).h(1), paint: radius(full).bg(surface-2)  })></a>}</match>
+            {'done' => <a href={step.href} title={step.title} style(stepDone)></a>}{'current' => <a href={step.href} title={step.title} current="step" style(stepCurrent)></a>}{else => <a href={step.href} title={step.title} style(stepTodo)></a>}</match>
         </for>
       </row>
 
       <column gap="1">
-        <h1 style({ text: fontSize(2xl).leading(tight) })>{title()}</h1>
-        <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>{description()}</p>
+        <h1 style(title)>{title()}</h1>
+        <p style(desc)>{description()}</p>
       </column>
 
-      <div use:prose={proseHtml()} style({ box: w(full).minW(0).overflowX(hidden) })></div>
+      <div use:prose={proseHtml()} style(proseHost)></div>
     </column>
 
-    <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1)  })>
-      <a href="/sail/tutorial" style({ box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) } } })>← All lessons</a>
+    <row align="center" justify="between" gap="2" style(lessonFoot)>
+      <a href="/sail/tutorial" style(allLessons)>← All lessons</a>
       <if {hasNext()}>
         <a href={nextHref()} variant="solid" tone="primary">{nextTitle()}</a>
       </if>
     </row>
   </column>
 
-  <column gap="1" style({  box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0)  })>
+  <column gap="1" style(playground)>
     <!-- Editor card — file tabs + actions on one thin bar -->
-    <column gap="0" style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
-      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })>
+    <column gap="0" style(card)>
+      <row align="center" justify="between" gap="2" style(cardBar)>
         <tabs active="source" size="sm" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
@@ -390,9 +426,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
         collapsed the editor to ~0. Remount re-pushes via the existing editor
         effect when captureEditor fires again.
       -->
-      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+      <column gap="0" style(paneCol)>
         <if {tab() === 'source'}>
-          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+          <column gap="0" style(paneCol)>
             <sail-code-editor
               pane="source"
               language="sail"
@@ -405,14 +441,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
           </column>
         </if>
         <if {tab() === 'diff'}>
-          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
-            <row align="center" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })>
-              <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })>your code → solution · {fileName()}</small>
+          <column gap="0" style(paneCol)>
+            <row align="center" gap="2" style(diffBar)>
+              <small style(countLabel)>your code → solution · {fileName()}</small>
             </row>
             <!-- Absolute fill: CE display:contents + content-height flex min
                  let the LCS list blow past the viewport; lock a real scrollport. -->
-            <column gap="0" style({  box: grow(1).minH(0).position(relative).overflow(hidden)  })>
-              <div style({ box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) })>
+            <column gap="0" style(diffShell)>
+              <div style(diffAbs)>
                 <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
               </div>
             </column>
@@ -422,46 +458,47 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
 
     <!-- Preview + console: fixed lower band; console is a real pane, not a 28px strip. -->
-    <column gap="0" style({  box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
-      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })>
+    <column gap="0" style(previewBand)>
+      <row align="center" justify="between" gap="2" style(diffBar)>
         <row gap="2" align="center">
           <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
-          <small style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) })>PREVIEW</small>
+          <small style(countLabel)>PREVIEW</small>
         </row>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+      <column gap="0" style(paneCol)>
         <iframe
           testid="tut-preview"
           base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
-          use:captureIframe style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })></iframe>
+          use:captureIframe style(iframeStyle)></iframe>
       </column>
       <!-- h(16) ≈ 4rem ≈ 5 mono lines; was maxH(7)=28px under a gap-4 column. -->
-      <column live="polite" label="Preview console" gap="0" style({  box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })>        <span style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })>          <for {logs() as line} key={line.id}>
-          <match {line.kind}>
-            {'success' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(success) })>{line.msg}</small></row>}{'warn' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(warning) })>{line.msg}</small></row>}{'error' => <row gap="2" style({ box: pad(1).padX(2), paint: bg(muted).radius(sm) })><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(destructive) })>{line.msg}</small></row>}{else => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(muted-foreground) })>{line.msg}</small></row>}</match>
-        </for>
+      <column live="polite" label="Preview console" gap="0" style(console)>
+        <span style(monoContents)>
+          <for {logs() as line} key={line.id}>
+            <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+          </for>
         </span>
-</column>
+      </column>
     </column>
   </column>
 </row>
 {else => <!-- Mobile: stacked — short lesson header + full-width playground -->
-<column gap="0" style({  box: w(full).h(fill).minH(0).overflow(hidden)  })>
-  <column gap="2" style({  box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1)  })>
+<column gap="0" style(workbenchMobile)>
+  <column gap="2" style(mobileHead)>
     <row align="center" justify="between" gap="2">
-      <p style({ paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) })>TUTORIAL · {lessonNumLabel()}/{totalLessons()}</p>
-      <a href="/sail/tutorial" style({ paint: fg(muted-foreground), text: fontSize(xs) })>All lessons</a>
+      <p style(tutLabel)>TUTORIAL · {lessonNumLabel()}/{totalLessons()}</p>
+      <a href="/sail/tutorial" style(allLessonsSm)>All lessons</a>
     </row>
-    <h1 style({ text: fontSize(xl).leading(tight) })>{title()}</h1>
-    <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>{description()}</p>
-    <div use:prose={proseHtml()} style({ box: w(full).minW(0).overflowX(hidden) })></div>
+    <h1 style(titleSm)>{title()}</h1>
+    <p style(descSm)>{description()}</p>
+    <div use:prose={proseHtml()} style(proseHost)></div>
   </column>
-  <column gap="1" style({  box: grow(1).basis(0).minH(0).minW(0).pad(1), paint: bg(surface-0)  })>
-    <column gap="0" style({  box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
-      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1)  })>
+  <column gap="1" style(playground)>
+    <column gap="0" style(card)>
+      <row align="center" justify="between" gap="2" style(cardBar)>
         <tabs active="source" size="sm" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
@@ -473,9 +510,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
           <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
         </row>
       </row>
-      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+      <column gap="0" style(paneCol)>
         <if {tab() === 'source'}>
-          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+          <column gap="0" style(paneCol)>
             <sail-code-editor
               pane="source"
               language="sail"
@@ -488,33 +525,34 @@ export default controller((ctx: ControllerScope<Scope>) => {
           </column>
         </if>
         <if {tab() === 'diff'}>
-          <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
-            <scroll-area style({  box: grow(1).minH(0).w(full)  })>
+          <column gap="0" style(paneCol)>
+            <scroll-area style(paneCol)>
               <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
             </scroll-area>
           </column>
         </if>
       </column>
     </column>
-    <column gap="0" style({  box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1)  })>
-      <row align="center" justify="between" gap="2" style({  box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border)  })>
+    <column gap="0" style(previewBandMobile)>
+      <row align="center" justify="between" gap="2" style(diffBar)>
         <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column gap="0" style({  box: grow(1).minH(0).overflow(hidden)  })>
+      <column gap="0" style(paneCol)>
         <iframe
           testid="tut-preview"
           base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
-          use:captureIframe style({ box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) })></iframe>
+          use:captureIframe style(iframeStyle)></iframe>
       </column>
-      <column live="polite" label="Preview console" gap="0" style({  box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0)  })>        <span style({ box: display(contents), text: fontFamily(mono).fontSize(xs) })>          <for {logs() as line} key={line.id}>
-          <match {line.kind}>
-            {'success' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(success) })>{line.msg}</small></row>}{'warn' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(warning) })>{line.msg}</small></row>}{'error' => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(destructive) })>{line.msg}</small></row>}{else => <row gap="2"><small style({ paint: fg(muted-foreground).opacity(50) })>{line.ts}</small><small style({ paint: fg(muted-foreground) })>{line.msg}</small></row>}</match>
-        </for>
+      <column live="polite" label="Preview console" gap="0" style(consoleMobile)>
+        <span style(monoContents)>
+          <for {logs() as line} key={line.id}>
+            <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+          </for>
         </span>
-</column>
+      </column>
     </column>
   </column>
 </column>}</when>

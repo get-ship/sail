@@ -15,10 +15,30 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Guide</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style cardPad = { box: pad(4) }
+  style grow1 = { box: grow(1) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style accordionBody = { box: padT(2) }
+  style combobox = { box: maxW(panel-max-w-sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+
+  type CatLabelProps = {
+    label: string
+  }
+</scope>
+
+<partial cat-label props: CatLabelProps>
+  <badge variant="outline" tone="muted">{label}</badge>
+</partial>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Guide</p>
   <h1>Using components</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     The component library is part of the language: buttons, dialogs, tables,
     comboboxes and the rest are tags, written the way you write HTML. Nothing
     to install or import — put the tag on the page and it works, themed and
@@ -28,10 +48,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>Write them like HTML</h2>
   <code-block code={code.useThem}></code-block>
   <p>Which is exactly this:</p>
-  <card style({ box: pad(4) })>
+  <card style(cardPad)>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong style({ box: grow(1) })>Ada Lovelace</strong>
+      <strong style(grow1)>Ada Lovelace</strong>
       <badge tone="success">Active</badge>
     </row>
   </card>
@@ -46,7 +66,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <column gap="4">
     <column gap="2">
-      <badge variant="outline" tone="muted">Inputs</badge>
+      <cat-label label="Inputs"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">button</badge>
         <badge size="sm" variant="soft" tone="muted">input</badge>
@@ -66,7 +86,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </column>
     <column gap="2">
-      <badge variant="outline" tone="muted">Display</badge>
+      <cat-label label="Display"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">badge</badge>
         <badge size="sm" variant="soft" tone="muted">chip</badge>
@@ -81,7 +101,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </column>
     <column gap="2">
-      <badge variant="outline" tone="muted">Feedback</badge>
+      <cat-label label="Feedback"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">alert</badge>
         <badge size="sm" variant="soft" tone="muted">progress</badge>
@@ -95,7 +115,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </column>
     <column gap="2">
-      <badge variant="outline" tone="muted">Overlay</badge>
+      <cat-label label="Overlay"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">tooltip</badge>
         <badge size="sm" variant="soft" tone="muted">hover-card</badge>
@@ -106,7 +126,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </column>
     <column gap="2">
-      <badge variant="outline" tone="muted">Navigation</badge>
+      <cat-label label="Navigation"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">tabs</badge>
         <badge size="sm" variant="soft" tone="muted">breadcrumb</badge>
@@ -115,13 +135,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </column>
     <column gap="2">
-      <badge variant="outline" tone="muted">Data</badge>
+      <cat-label label="Data"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">table</badge>
       </row>
     </column>
     <column gap="2">
-      <badge variant="outline" tone="muted">Layout</badge>
+      <cat-label label="Layout"></cat-label>
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">row</badge>
         <badge size="sm" variant="soft" tone="muted">column</badge>
@@ -131,7 +151,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </column>
   </column>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     A few tags only make sense inside a parent — <code>&lt;tab&gt;</code>
     inside <code>&lt;tabs&gt;</code>, <code>&lt;menu-item&gt;</code> inside
     <code>&lt;dropdown&gt;</code>, <code>&lt;page&gt;</code> inside
@@ -186,7 +206,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.compose}></code-block>
   <accordion>
     <strong slot="trigger">Advanced options (click me)</strong>
-    <p style({ box: padT(2) })>Hidden until asked for — and this one is running.</p>
+    <p style(accordionBody)>Hidden until asked for — and this one is running.</p>
   </accordion>
   <p>
     Bigger components are small vocabularies of tags rather than
@@ -214,7 +234,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component does the rest. Try it:
   </p>
   <code-block code={code.behavior}></code-block>
-  <combobox placeholder="Pick a framework" style({ box: maxW(panel-max-w-sm) })>
+  <combobox placeholder="Pick a framework" style(combobox)>
     <option value="sail">Sail</option>
     <option value="svelte">Svelte</option>
     <option value="solid">Solid</option>
@@ -251,7 +271,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <icon name="trash-2"></icon> Delete
     </button>
   </row>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     Accessibility is the <code>label</code> field — with it the icon is
     accessible name via semantic prop <code>label</code>; without it the
     icon is marked <code>hidden</code> — decoration, invisible to a
@@ -272,7 +292,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     chips, table borders:
   </p>
   <code-block code={code.prose}></code-block>
-  <card style({ box: pad(4) })>
+  <card style(cardPad)>
     <prose>
       <h3>Release notes</h3>
       <p>The build went <strong>green</strong> at noon — see
@@ -284,7 +304,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </ul>
     </prose>
   </card>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     It takes no props. This site used to carry 515 lines of hand-written
     reading-column CSS; the framework stylesheet and
     <code>&lt;prose&gt;</code> replaced all of it.
@@ -298,7 +318,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     declarations the compiler checks, so they cannot drift from the source.
   </p>
 
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     For the curious: most of these tags don’t exist at runtime — the compiler
     lowers them to native markup with the behavior attached, which is why the
     library adds almost nothing to a page. A dialog ships as a real
@@ -306,7 +326,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/reference">reference</a> covers the mechanics.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/theming">← Theming</a>
     <a variant="solid" tone="primary" href="/sail/guide/building-a-component">Building a component →</a>
   </row>

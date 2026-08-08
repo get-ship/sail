@@ -1,30 +1,11 @@
 <!--
-  Ship UI landing — design 1c KINETIC treatment carrying the REAL landing copy.
-  A full-bleed dark marketing home (NOT a docs page):
-
-    · a GIANT rotating headline — one teal word cycles ("Batteries · Components ·
-      Styling · State · Motion · Themes") in front of the fixed "included. All of
-      them." The cycle is the previous landing’s proven WORDS + {#for}+style.enter
-      fade word-cycler, blown up to display size.
-    · the signature TWO CROSSING DIAGONAL TICKER BANDS — a bright teal band tilted
-      one way OVER a dark mono band tilted the other, overlapping so they visually
-      cross, both running continuously (the stdlib <ticker> owns the loop).
-    · a bento of SIX cards, each a real <a href> to an existing section, carrying
-      that section’s real headline and an on-brand micro-animation (spring bars,
-      pulsing swatches, a live signal counter, deploy dots, live components, an
-      agent terminal).
-    · a closing giant SHIP wordmark in a teal→void gradient, cropped at the bottom.
-
-  Everything is tokens + L1 primitives + motion — no <style>, no style=, no raw
-  px/hex. The shell renders `/` full-bleed (fullscreen, no rail, no gutter) and
-  defaults it to ship (dark mode).
+  Ship UI landing — full-bleed dark marketing home (not a docs page).
+  Giant rotating headline, crossing diagonal tickers, six-card bento to real
+  sections, closing SHIP wordmark. Tokens + L1 + motion only.
 -->
 
 <controller>
-// The page is CSS + motion; the two pieces of real state are the hero word
-// cycler (i → which WORD is showing) and the reactivity card's live counter
-// (ticks → a signal you can literally watch increment). Both are the previous
-// landing's mechanisms, reused verbatim.
+// Hero word cycler (i → WORDS) and reactivity card counter (ticks).
 import { interval, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
@@ -34,12 +15,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const i = signal(0)
     interval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
 
-    // "State you can watch think." — a real signal ticking once a second.
     const ticks = signal(0)
     interval(() => ticks.set((n) => n + 1), 1000)
-
-    // Responsive bento: structural <when {tablet}> in the template (not
-    // matchMedia + mount — that threw SailMountOutsideSetupError on /).
 
     return {
       word: () => [WORDS[i()]],
@@ -49,19 +26,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <scope>
-  // minW(0) + overflowX clip on the page root — diagonal tickers use
-  // left/right negative inset; without a hard clip the document grows sideways.
-  // Do NOT pair overflowX(hidden) with a height-capped flex parent and leave Y
-  // visible: CSS coerces Y→auto and sections become independent scrollports.
-  // Document shell is content-sized; overflowX alone is fine (no Y scrollport).
+  // minW(0) + overflowX clip — diagonal tickers use negative inset; clip stops sideways growth.
+  // Do NOT pair overflowX(hidden) with height-capped flex parent and leave Y visible:
+  // CSS coerces Y→auto and sections become independent scrollports.
   style page = { box: w(full).maxW(full).minW(0).overflowX(hidden), paint: bg(surface-0) }
-  // Marketing sections: overflowX clips tickers/bleed; shrink=0 in markup so
-  // they never flex-compress into mini-scrollpanes under residual height locks.
   style hero = { box: position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(20).padB(16) } } }
   style glow = { box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).z(base) }
   style heroInner = { box: position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0) }
   style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  // minW(0) keeps the display word from forcing the page wider than the viewport.
   style display = { box: minW(0).maxW(full).overflow(hidden), paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) }
   style line = { box: display(block).minW(0).overflow(hidden) }
   style lead = { box: maxW(breakpoint-mobile).minW(0), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) }
@@ -77,8 +49,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style bento = { box: padX(4).padT(6).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(8).padB(12) } } }
   style grid = { box: w(full).maxW(breakpoint-desktop).mx(auto).minW(0) }
   style cardLink = { box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none), when: { hover: { paint: fg(foreground) } } }
-  // Equal-height bento cells — quiet surface, real pad. minH only from tablet up
-  // so phone cards don’t become full-viewport towers.
   style cardFill = { box: h(full).overflow(hidden), when: { tablet: { box: minH(52) } } }
   style cardCol = { box: h(full).pad(4), when: { tablet: { box: pad(5) } } }
   style cardEyebrow = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
@@ -97,8 +67,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style diamond = { box: display(inline-block).w(2).h(2), paint: rotate(45).bg(primary).radius(sm) }
   style wordmarkWrap = { box: w(full).maxW(full).minW(0).overflow(hidden) }
   style wordmark = { box: mb(-8).minW(0).maxW(full), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) }
+  style wordPrimary = { paint: fg(primary) }
+  style bar40 = { box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40) }
+  style bar60 = { box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60) }
+  style bar70 = { box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70) }
+  style barFull = { box: w(1_5).h(14), paint: radius(sm).bg(primary) }
+  style bar60b = { box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) }
+  style bar40b = { box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) }
+  type MotionBarsProps = {}
 </scope>
 
+<!-- Motion foot reused in tablet + mobile bento grids. -->
+<partial motion-bars props: MotionBarsProps>
+  <row gap="1" align="end" id="landing-motion-bars" style(cardFoot)>
+    <div testid="landing-motion-bar" style(bar40)></div>
+    <div style(bar60)></div>
+    <div style(bar70)></div>
+    <div style(barFull)></div>
+    <div style(bar60b)></div>
+    <div style(bar40b)></div>
+  </row>
+</partial>
+
+<!--
+  Six cards are listed twice only to swap grid track count — <grid cols> is not
+  breakpoint-aware (language gap). Structural <when {tablet}> owns the breakpoint.
+-->
 <column gap="0" style(page)>
 
   <section style(hero, { box: shrink(0) })>
@@ -110,7 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <h1 style(display)>
         <span style(line)>
           <for {word() as w} key={w}>
-            <b style({ paint: fg(primary) })>{w}</b>
+            <b style(wordPrimary)>{w}</b>
           </for>
         </span>
         <span style(line)>included.</span>
@@ -143,11 +137,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </section>
 
   <section style(bento, { box: shrink(0) })>
-    <!--
-      <grid cols> is not breakpoint-aware. Duplicate the six cards only to
-      swap track count — language gap, not content gap. Structural when
-      (WHEN-1) owns the breakpoint; no matchMedia controller state.
-    -->
     <when {tablet}>
       <grid cols="3" gap="4" style(grid)>
         <a href="/sail/language/animation" style(cardLink)>
@@ -156,14 +145,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p style(cardEyebrow)>Animation</p>
               <strong style(cardTitle)>Motion as a language surface</strong>
               <p style(cardBody)>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <row gap="1" align="end" id="landing-motion-bars" style(cardFoot)>
-                <div testid="landing-motion-bar" style({ box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40) })></div>
-                <div style({ box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60) })></div>
-                <div style({ box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70) })></div>
-                <div style({ box: w(1_5).h(14), paint: radius(sm).bg(primary) })></div>
-                <div style({ box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) })></div>
-                <div style({ box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) })></div>
-              </row>
+              <motion-bars></motion-bars>
             </column>
           </card>
         </a>
@@ -247,14 +229,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p style(cardEyebrow)>Animation</p>
               <strong style(cardTitle)>Motion as a language surface</strong>
               <p style(cardBody)>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <row gap="1" align="end" id="landing-motion-bars" style(cardFoot)>
-                <div testid="landing-motion-bar" style({ box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40) })></div>
-                <div style({ box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60) })></div>
-                <div style({ box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70) })></div>
-                <div style({ box: w(1_5).h(14), paint: radius(sm).bg(primary) })></div>
-                <div style({ box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) })></div>
-                <div style({ box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) })></div>
-              </row>
+              <motion-bars></motion-bars>
             </column>
           </card>
         </a>
