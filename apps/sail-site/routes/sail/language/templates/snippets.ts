@@ -15,6 +15,22 @@ export const code = {
   <tr><td>{row.name}</td></tr>
 </for>`,
 
+  partial: `<scope>
+  type ListTileProps = { title: string; icon?: string }
+  style card = { box: pad(2) }
+</scope>
+
+<partial list-tile props: ListTileProps>
+  <row style(card) gap="2" align="center">
+    <p>{title}</p>
+    <slot></slot>
+  </row>
+</partial>
+
+<list-tile title={run.name}>
+  <badge tone="muted">live</badge>
+</list-tile>`,
+
   events: `<button on:click={() => count.set((n) => n + 1)}>
   clicked {count()} times
 </button>`,

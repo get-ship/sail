@@ -50,9 +50,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.sxError}></code-block>
   <p>
     Prefer a scope const when the same paint repeats:
-    <code>const card = style&#40;&#123; box: pad(5), paint: bg(surface-1) &#125;&#41;…</code> then
-    attach <code>style&#40;card&#41;</code> or compose partials
-    <code>style&#40;base, emphasis&#41;</code> on the host.
+    <code>style card = &#123; box: pad(5), paint: bg(surface-1) &#125;</code> then
+    attach <code>style&#40;card&#41;</code> or compose Style pieces
+    <code>style&#40;base, emphasis&#41;</code> on the host. (That is paint
+    composition — not an in-file <code>&lt;partial&gt;</code>, which reuses
+    template structure; see
+    <a href="/sail/language/templates">templates</a>.)
   </p>
 
   <h2>States with when</h2>
@@ -94,9 +97,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Variants with match and compound</h2>
   <p>
-    Named looks are data: typed props plus Style partials composed with
+    Named looks are data: typed props plus Style pieces composed with
     <code>match:</code> and <code>compound:</code> keys — not CVA string maps or
-    free <code>match()</code> calls. Each arm is an ordinary partial, same
+    free <code>match()</code> calls. Each arm is an ordinary Style value, same
     pipeline as a host <code>style&#40;&#123; … &#125;&#41;</code>. Variance
     authoring for libraries may still need a directory permit; plain pages
     usually paint with consts + <code>match:</code> only.

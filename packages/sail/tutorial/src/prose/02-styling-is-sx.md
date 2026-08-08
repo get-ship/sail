@@ -42,9 +42,10 @@ Prefer a scope Style declaration when the same paint repeats:
 </column>
 ```
 
-Or compose partials as args: `style(base, emphasis)` — and in scope,
-`style quiet = host, { paint: bg(transparent) }`. Computed class
-strings are not the product — utility-string atoms like
+Or compose Style pieces as args: `style(base, emphasis)` — and in scope,
+`style quiet = host, { paint: bg(transparent) }`. That is paint
+composition on a host, not an in-file `<partial>` (template reuse). Computed
+class strings are not the product — utility-string atoms like
 `style="p-4 bg-muted"` do not compile. Moving a *value* at runtime is a
 different tool: `bind(name)`, which the Styling chapter covers.
 

@@ -32,7 +32,7 @@
 </scope>
 
 <partial color-token-row props: ColorTokenRowProps>
-  <row token-row token={token} align="center" gap="3" nowrap style(tokenRow)>
+  <row token-row token={token} sem={token} align="center" gap="3" nowrap style(tokenRow)>
     <stack token-chip style(tokenChip, { box: shrink(0) })>
       <sail-color-picker
         token={token}
@@ -344,78 +344,38 @@ export default controller(() => {
             <p style(pathMeta)>color.success · warning · danger · info</p>
           </row>
           <column token-list gap="1">
-            <row token-row token="success" sem="success" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="success"
-                value={successHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Success"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Success</p>
-                <p style(pathMeta)>color.success</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{successHex()}</p>
-            </row>
-            <row token-row token="warning" sem="warning" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="warning"
-                value={warningHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Warning"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Warning</p>
-                <p style(pathMeta)>color.warning</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{warningHex()}</p>
-            </row>
-            <row token-row token="danger" sem="danger" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="danger"
-                value={dangerHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Danger"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Danger</p>
-                <p style(pathMeta)>color.danger</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{dangerHex()}</p>
-            </row>
-            <row token-row token="info" sem="info" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="info"
-                value={infoHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Info"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Info</p>
-                <p style(pathMeta)>color.info</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{infoHex()}</p>
-            </row>
+            <color-token-row
+              token="success"
+              value={successHex()}
+              label="Success"
+              path="color.success"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="warning"
+              value={warningHex()}
+              label="Warning"
+              path="color.warning"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="danger"
+              value={dangerHex()}
+              label="Danger"
+              path="color.danger"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="info"
+              value={infoHex()}
+              label="Info"
+              path="color.info"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
           </column>
         </column>
 

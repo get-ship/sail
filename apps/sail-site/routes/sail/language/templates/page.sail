@@ -61,6 +61,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.forBlock}></code-block>
 
+  <h2>In-file partials</h2>
+  <p>
+    When the same markup repeats in <em>one</em> file, declare an in-file
+    <code>&lt;partial&gt;</code> — a same-file functional component. Params
+    are a plain type in <code>&lt;scope&gt;</code>; the body reads them as bare
+    names (<code>&#123;title&#125;</code>), and you invoke it as
+    <code>&lt;kebab-name …&gt;</code> in this file only.
+  </p>
+  <code-block code={code.partial}></code-block>
+  <p>
+    Partials expand at preprocess: the runtime never sees them, and the
+    lowered tree is the same as hand-written markup. Rules that keep them
+    small and honest: top-level declaration only; no recursion; no
+    tag-position <code>style&#40;…&#41;</code> on the invocation (paint inside
+    the body, or pass a Style value as a param). Cross-file reuse is still a
+    component file — <code>src/&lt;tag&gt;/&lt;tag&gt;.sail</code>.
+  </p>
+  <p>
+    This is not Style composition. Named Style pieces composed with
+    <code>style&#40;base, emphasis&#41;</code> or <code>match:</code> arms are
+    paint data on a host node; <code>&lt;partial&gt;</code> is template
+    structure. The
+    <a href="/sail/language/styling">styling chapter</a> covers Style
+    composition.
+  </p>
+
   <h2>Events and callbacks</h2>
   <p>
     Props flow down. Callbacks report up. <code>bind:</code> syncs a value.
