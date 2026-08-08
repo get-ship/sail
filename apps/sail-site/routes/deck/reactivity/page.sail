@@ -1,10 +1,6 @@
 <!--
-  /deck/reactivity — deck’s role in the reactive update path. Reactivity
-  itself (signal / derived / effect, the glitch-free update pass) is Sail’s;
-  that model lives at /reactivity and is not re-taught here. This page is
-  about the sources deck owns and feeds into the graph: the URL, live server
-  data, durable app state, and dev edits. Code blocks are highlighted via
-  <code-block> (strings from ./snippets).
+  Deck’s role in the reactive path: URL, live data, durable state, HMR.
+  Sail’s signal model is taught at /sail/language/state — not re-taught here.
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -14,10 +10,17 @@ import { code } from '../../../src/compositions/deck-reactivity-snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
 </controller>
 
-<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Reactivity</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>Reactivity</p>
   <h1>deck in the reactive path</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Reactivity is Sail’s, not deck’s. Sail gives a route signals, derived values,
     and effects; deck’s job is to keep that graph fed from the things a
     framework owns and changes — the URL, live server data, and state that
@@ -80,7 +83,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
     never torn down.
   </p>
 
-  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row style(footNav)>
     <a href="/deck/layouts">← Layouts</a>
     <a href="/deck/data">The data seam →</a>
   </row>

@@ -1,17 +1,18 @@
 <!--
-  /why — the argument, written fresh 2026-07-18 (owner + Claude pairing).
-  Shape: (1) the author changed — agents AND newcomers; the decision gauntlet;
-  (2) the one-shot cliff — the bet; (3) the missing layer is a compiler;
-  (4) built from the platform — ARIA/best practices by construction;
-  (5) where it came from — Ship, integration, a toolchain without the node
-  ecosystem. Prior page mined as input only; absorbed the thesis (/thesis is
-  gone). Voice: plain, confident, zero showmanship, no unverified numbers.
+  Why Sail — argument for one constrained system for agents and newcomers.
 -->
-<column gap="4" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Why Sail</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="4" style(page)>
+  <p style(eyebrow)>Why Sail</p>
   <h1>Why build another framework?</h1>
 
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Because the author changed. Every mainstream web framework is an
     ergonomics project — built to fit a
     professional’s hands. Hooks, hot reload, clever DX: all of it optimizes
@@ -101,7 +102,7 @@
     turns "an agent built this" from a warning into a guarantee.
   </p>
 
-  <row gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row gap="2" style(footNav)>
     <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
     <a variant="default" href="/sail/overview">Introduction</a>
     <a variant="default" href="/sail/tutorial">Tutorial</a>

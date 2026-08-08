@@ -1,9 +1,5 @@
 <controller>
-// /data — a real async source with a visible delay, so the reader watches
-// loading → ok and loading → error actually happen. `query()` derives its
-// cache key from the client member path; the `attempt()`/`sabotage()`
-// signals read in the call ARGS are tracked deps — bumping either mints a
-// fresh key, so the state walks through loading again (that is the refetch).
+// Live query demo: attempt/sabotage in the call args mint a new cache key (refetch).
 
 import { query, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -11,28 +7,40 @@ import { usersDemo } from '../../../../src/compositions/users-demo'
 import { code } from '../../../../src/compositions/sail-language-data-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-    const attempt = signal(1)
-    const sabotage = signal(false)
-    const users = query(() => usersDemo.users.list({ attempt: attempt(), fail: sabotage() }))
-    return {
-      code,
-      users,
-      reload: () => {
-        sabotage.set(false)
-        attempt.set((a) => a + 1)
-      },
-      breakIt: () => {
-        sabotage.set(true)
-        attempt.set((a) => a + 1)
-      },
-    }
+  const attempt = signal(1)
+  const sabotage = signal(false)
+  const users = query(() => usersDemo.users.list({ attempt: attempt(), fail: sabotage() }))
+  return {
+    code,
+    users,
+    reload: () => {
+      sabotage.set(false)
+      attempt.set((a) => a + 1)
+    },
+    breakIt: () => {
+      sabotage.set(true)
+      attempt.set((a) => a + 1)
+    },
+  }
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style livePanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style loadingText = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Concepts</p>
   <h1>Data</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Data that arrives over the network is in one of three states at any
     moment: still loading, failed, or loaded. <code>query()</code> turns an
     async call into a signal that carries which state it is in, and the
@@ -43,29 +51,34 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>The three states, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — a 900 ms fake API</p>
-      <column gap="3" style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+      <p style(monoLabel)>Live — a 900 ms fake API</p>
+      <column gap="3" style(livePanel)>
         <row gap="2">
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
         <match {users()}>
-  {loading => <row gap="2" align="center"><spinner></spinner> <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>loading…</p></row>}
-  {error as err =>
-          <alert tone="destructive">{err.message}</alert>}
-  {ok as value => <row gap="2">
-            <for {value as name} key={name}>
-              <badge>{name}</badge>
-            </for>
-          </row>}
-</match>
+          {loading =>
+            <row gap="2" align="center">
+              <spinner></spinner>
+              <p style(loadingText)>loading…</p>
+            </row>}
+          {error as err =>
+            <alert tone="destructive">{err.message}</alert>}
+          {ok as value =>
+            <row gap="2">
+              <for {value as name} key={name}>
+                <badge>{name}</badge>
+              </for>
+            </row>}
+        </match>
       </column>
     </column>
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
+      <p style(monoLabel)>Source</p>
       <code-block code={code.demo}></code-block>
     </column>
-  </row>
+  </grid>
 
   <h2>Wrap an async source</h2>
   <p>
@@ -89,7 +102,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.states}></code-block>
 
-  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
+  <p style(callout)>
     The loaded value is only reachable on the <code>ok</code> arm
     (<code>as value</code>), so a template cannot render data it hasn’t
     confirmed has arrived — handling loading and error is built into the
@@ -101,11 +114,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     forms that validate, submit, and carry the same pending and failure
     states — is the <a href="/sail/guide/forms">Forms guide</a>.
   </p>
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/actions">← Actions</a>
     <a variant="solid" tone="primary" href="/sail/language/capabilities">Capabilities →</a>
   </row>

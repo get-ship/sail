@@ -1,7 +1,5 @@
 <controller>
-// /capabilities — the mechanism by which a HOST adds named, typed members to a
-// view's scope. The live demo is honest: this page is a deck route, deck grants
-// `route`, so `ctx.route.pathname()` is a real capability read, not a mock.
+// Live demo: deck grants `route`, so `ctx.route.pathname()` is a real capability.
 
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -13,10 +11,22 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style livePanel = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style liveMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style liveValue = { paint: fg(accent), text: fontFamily(mono).fontSize(lg) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Concepts</p>
   <h1>Capabilities</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     A <strong>capability</strong> is a named, typed value that whatever runs your
     app puts on your scope. Props come from the parent that renders you;
     capabilities come from the <strong>host</strong> that mounts you. You read
@@ -33,14 +43,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </p>
   <grid cols="2" gap="4">
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — read from the real host</p>
-      <column gap="2" style({ box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
-        <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>ctx.route.pathname() says:</p>
-        <p style({ paint: fg(accent), text: fontFamily(mono).fontSize(lg) })>{here()}</p>
+      <p style(monoLabel)>Live — read from the real host</p>
+      <column gap="2" style(livePanel)>
+        <p style(liveMuted)>ctx.route.pathname() says:</p>
+        <p style(liveValue)>{here()}</p>
       </column>
     </column>
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
+      <p style(monoLabel)>Source</p>
       <code-block code={code.read}></code-block>
     </column>
   </grid>
@@ -119,13 +129,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
     five clients and using one costs you one import.
   </p>
 
-  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
+  <p style(callout)>
     Today, a name your own controller or template declares takes precedence over
     a host capability of the same name — the author’s value shadows the granted
     one, silently.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/data">← Data</a>
     <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>
   </row>
