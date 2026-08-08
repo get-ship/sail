@@ -12,17 +12,13 @@
     side: 'center' | 'start' | 'end' | 'top' | 'bottom' = 'center'
     /** ESC + backdrop can close. Destructive confirms set false so the user must pick an action. */
     dismissible = true
-  
     onClose: () => void
     onDismiss: () => void
-}
+  }
 
-  // pad 0 — air lives on >header / >section / >footer (DIALOG_MAP). Flat
-  // content without those gets a :has() floor in the map so demos never
-  // collapse into a zero-pad pill. h(fit) keeps inset:0 from stretching the
-  // shell to the full viewport (section flex would otherwise eat empty space).
-  // Shell paint from component.dialog tokens (was surface-1 + card.foreground —
-  // cross-component leak; dialog owns its surface now with global fallbacks).
+  // pad 0 — air lives on >header / >section / >footer (DIALOG_MAP). Flat content
+  // without those gets a :has() floor in the map. h(fit) keeps inset:0 from
+  // stretching the shell to the full viewport.
   style base = { box: position(fixed).inset(0).m(auto).pad(0).w(full).maxW(panel-max-w-md).minW(panel-max-w-sm).overflow(hidden), paint: borderWidth(1).border(dialog.border).radius(xl).bg(dialog).fg(dialog.foreground).shadow(xl), text: fontFamily(body) }
   style open = { box: display(flex).flexDir(column).h(fit).maxH(panel-vh-md) }
   style sizeSm = { box: maxW(panel-max-w-sm).minW(0) }
@@ -30,12 +26,22 @@
   style sizeLg = { box: maxW(panel-max-w-lg) }
   style sizeFull = { box: maxW(full).maxH(full).minW(0).h(full) }
   // Side sheets: radius/inset floor; edge margin + 100vh width live in DIALOG_MAP.
-  style sideStart = { box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) }
-  style sideEnd = { box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) }
-  style sideTop = { box: inset(0).w(full).maxW(none).m(0), paint: radius(none) }
-  style sideBottom = { box: inset(0).w(full).maxW(none).m(0), paint: radius(none) }
+  style sideEdge = { box: inset(0).maxW(panel-max-w-sm).m(0), paint: radius(none) }
+  style sideBand = { box: inset(0).w(full).maxW(none).m(0), paint: radius(none) }
 </scope>
 
-<dialog style(base, { when: { open: open }, match: { size: { sm: sizeSm, md: sizeMd, lg: sizeLg, full: sizeFull }, side: { center: { box: m(auto) }, start: sideStart, end: sideEnd, top: sideTop, bottom: sideBottom } } })>
+<dialog style(base, {
+  when: { open: open },
+  match: {
+    size: { sm: sizeSm, md: sizeMd, lg: sizeLg, full: sizeFull },
+    side: {
+      center: { box: m(auto) },
+      start: sideEdge,
+      end: sideEdge,
+      top: sideBand,
+      bottom: sideBand,
+    },
+  },
+})>
   <slot></slot>
 </dialog>

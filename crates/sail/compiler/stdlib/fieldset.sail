@@ -8,7 +8,6 @@
     disabled = false
   }
 
-  // Group chrome rides component.fieldset tokens (global fallbacks in the pack).
   style base = { box: m(0).pad(4), paint: borderWidth(1).border(fieldset.border).radius(md).bg(transparent), when: { disabled: { paint: opacity(50).cursor(not-allowed) } } }
 </scope>
 

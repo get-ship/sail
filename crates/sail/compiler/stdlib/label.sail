@@ -1,7 +1,7 @@
 <!--
   <label> — size match; weight token; .req gate via group-required when.
-  Paint (Style product only): host + .req via style chains / match / when.
-  Tokens: component.label (cssNames label.foreground, label.required) + label-weight.
+  Host + .req via style chains / match / when.
+  Tokens: component.label (label.foreground, label.required) + label-weight.
 -->
 
 <scope>

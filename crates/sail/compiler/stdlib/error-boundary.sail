@@ -1,14 +1,13 @@
 <!--
-  <error-boundary> — group-caught swap on Style when. Fallback chrome from
-  component.error-boundary tokens.
+  <error-boundary> — group-caught swap on Style when.
+  Fallback chrome from component.error-boundary tokens.
 -->
 <scope>
   props: {
     message = ''
-  
     onErrorReset: () => void
     onErrorCaught: (detail: { error: Error; source: string }) => void
-}
+  }
 
   style root = { box: display(contents), paint: group() }
   style content = { box: display(contents) }
@@ -22,7 +21,7 @@
 <div use:catchRender style(root)>
   <div style(content, { when: { group-caught: { box: display(none) } } })><slot></slot></div>
   <div style(fallback, { when: { group-caught: { box: display(contents) } } })>
-    <!-- alert role stamped by use:catchRender (closed anatomy, not free author API) -->
+    <!-- alert role stamped by use:catchRender (closed anatomy) -->
     <row align="start" gap="3" data-error-alert style(alert)>
       <slot name="fallback">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden="true" style(icon, { box: shrink(0) })>
