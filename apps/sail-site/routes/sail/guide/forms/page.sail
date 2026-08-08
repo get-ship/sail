@@ -38,10 +38,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Guide</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style demoPanel = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style help = { box: mt(2), paint: fg(muted-foreground), text: fontSize(sm) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Guide</p>
   <h1>Forms</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Forms are how an app writes. <code>query()</code> turns reading async data
     into a signal with explicit loading and error states; a form is the same
     idea pointed the other way — user input, validated, sent somewhere, with
@@ -52,8 +64,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>A real form, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — saves to a 900 ms fake API</p>
-      <column gap="3" style({ box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+      <p style(monoLabel)>Live — saves to a 900 ms fake API</p>
+      <column gap="3" style(demoPanel)>
         <form on:submit={onSubmit} testid="forms-demo">
           <column gap="3">
             <field invalid={tried() && !!profile.errors().name}>
@@ -79,7 +91,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             </row>
 
             <if {profile.pending()}>
-              <row gap="2" align="center"><spinner></spinner> <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>saving…</p></row>
+              <row gap="2" align="center"><spinner></spinner> <p style(mutedSm)>saving…</p></row>
             </if>
             <if {profile.lastError()}>
               <alert tone="destructive" testid="forms-error">{profile.lastError().message}</alert>
@@ -90,14 +102,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </column>
         </form>
       </column>
-      <p style({ box: mt(2), paint: fg(muted-foreground), text: fontSize(sm) })>
+      <p style(help)>
         Try it: save while empty to see the errors, fill it in and save to
         watch the pending state, and use "Fail the next save" to see the
         failure path.
       </p>
     </column>
     <column>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
+      <p style(monoLabel)>Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </grid>
@@ -195,14 +207,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.mutation}></code-block>
 
-  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
+  <p style(callout)>
     A Sail page renders its markup before JavaScript arrives, so a form is
     visible and focusable immediately — but submitting needs the runtime
     attached. The server-rendered <code>action</code> a deck app injects
     marks the seam; it is not a working no-JS submit target.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/guide/building-a-component">← Building a component</a>
     <a variant="solid" tone="primary" href="/sail/guide/making-a-theme">Making a theme →</a>
   </row>

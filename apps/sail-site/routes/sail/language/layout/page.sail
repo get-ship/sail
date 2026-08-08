@@ -16,10 +16,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style demo = { box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) }
+  style demoCenter = { box: minH(11).pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) }
+  style cardPad = { box: pad(4) }
+  style cardPadSm = { box: pad(3) }
+  style stackCard = { box: w(24).h(12), paint: bg(muted).radius(md) }
+  style stackDot = { box: w(4).h(4), paint: radius(full).bg(primary) }
+  style growMin = { box: grow(1).minW(0) }
+  style shrink0 = { box: shrink(0) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>The language</p>
   <h1>Layout</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     The web has accumulated half a dozen ways to lay things out — floats,
     positioning, flexbox, grid, and the properties that tune them. Sail
     ships <strong>one</strong> mechanism: five layout elements —
@@ -43,7 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     (spacing-scale steps), <code>align</code> positions them on the cross
     axis, <code>justify</code> distributes them along the row:
   </p>
-  <row gap="3" align="center" justify="between" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+  <row gap="3" align="center" justify="between" style(demo)>
     <strong>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
@@ -53,7 +69,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     rows <strong>wrap by default</strong>, like text does. Watch this one
     as the window narrows:
   </p>
-  <row gap="2" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+  <row gap="2" style(demo)>
     <chip>signals</chip>
     <chip>derived</chip>
     <chip>effects</chip>
@@ -77,7 +93,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     and input below are <code>align="start"</code>, so they hug the left
     edge instead of stretching:
   </p>
-  <column gap="2" align="start" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+  <column gap="2" align="start" style(demo)>
     <label>Email</label>
     <input type="email" placeholder="ada@example.com" />
     <button>Subscribe</button>
@@ -91,9 +107,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     needed:
   </p>
   <grid cols="3" gap="3">
-    <card style({ box: pad(4) })><strong>One</strong></card>
-    <card style({ box: pad(4) })><strong>Two</strong></card>
-    <card style({ box: pad(4) })><strong>Three</strong></card>
+    <card style(cardPad)><strong>One</strong></card>
+    <card style(cardPad)><strong>Two</strong></card>
+    <card style(cardPad)><strong>Three</strong></card>
   </grid>
   <code-block code={code.grid}></code-block>
   <p>
@@ -110,9 +126,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     sideways:
   </p>
   <grid cols="4" gap="3">
-    <card col-span="2" style({ box: pad(3) })>wide — spans 2</card>
-    <card style({ box: pad(3) })>one</card>
-    <card style({ box: pad(3) })>two</card>
+    <card col-span="2" style(cardPadSm)>wide — spans 2</card>
+    <card style(cardPadSm)>one</card>
+    <card style(cardPadSm)>two</card>
   </grid>
   <code-block code={code.spans}></code-block>
 
@@ -122,10 +138,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     overlay cases: a badge on an avatar, a caption on an image, a dot on an
     icon.
   </p>
-  <row style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+  <row style(demo)>
     <stack align="start" justify="end">
-      <card style({ box: w(24).h(12), paint: bg(muted).radius(md) })></card>
-      <div style({ box: w(4).h(4), paint: radius(full).bg(primary) })></div>
+      <card style(stackCard)></card>
+      <div style(stackDot)></div>
     </stack>
   </row>
   <code-block code={code.stack}></code-block>
@@ -135,7 +151,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Centers its child, horizontally and vertically, in whatever space the
     element has:
   </p>
-  <center style({ box: minH(11).pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
+  <center style(demoCenter)>
     <badge tone="primary">centered</badge>
   </center>
   <code-block code={code.center}></code-block>
@@ -146,9 +162,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     space it was given on the <strong>box channel</strong> — legal on any
     element, not only layout keywords:
   </p>
-  <row gap="3" align="center" style({ box: pad(4), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
-    <strong style({ box: grow(1).minW(0) })>Ada Lovelace</strong>
-    <badge tone="success" style({ box: shrink(0) })>Active</badge>
+  <row gap="3" align="center" style(demo)>
+    <strong style(growMin)>Ada Lovelace</strong>
+    <badge tone="success" style(shrink0)>Active</badge>
   </row>
   <code-block code={code.grow}></code-block>
   <p>
@@ -158,7 +174,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     the same size tokens as other Style box setters. Bare attrs
     (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
     (<code>sail-participation-style</code>) — write
-    <code style({ box: grow(1).minW(0) })></code> instead.
+    <code style(growMin)></code> instead.
   </p>
   <p>
     Layout-keyword <strong>axis</strong> sugar is separate and intentional:
@@ -190,11 +206,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     density and color tweaks — and is unchanged.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the full surface: <a href="/sail/reference/layout">reference → Layout keywords</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/styling">← Styling</a>
     <a variant="solid" tone="primary" href="/sail/language/animation">Animation →</a>
   </row>

@@ -24,10 +24,26 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The language</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style monoLabelSm = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style liveCol = { box: grow(1).basis(breakpoint-mobile).minW(0) }
+  style livePanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style livePanelSm = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style value = { text: fontSize(lg) }
+  style monoLine = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>The language</p>
   <h1>State</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     State is three primitives. A <strong>signal</strong> holds a value. A
     <strong>derived</strong> computes a value from other state. An
     <strong>effect</strong> runs code when the state it reads changes.
@@ -38,30 +54,30 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>The graph, live</h2>
   <row gap="4" align="start">
-    <column style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live</p>
-      <column gap="4" style({ box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+    <column style(liveCol)>
+      <p style(monoLabel)>Live</p>
+      <column gap="4" style(livePanel)>
         <row gap="5" align="center">
           <button on:click={() => count.set(count() + 1)}>+1</button>
           <column gap="1" align="center">
-            <small style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })>signal</small>
-            <strong style({ text: fontSize(lg) })>{count()}</strong>
+            <small style(monoLabelSm)>signal</small>
+            <strong style(value)>{count()}</strong>
           </column>
           <column gap="1" align="center">
-            <small style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })>derived ×2</small>
-            <strong style({ text: fontSize(lg) })>{doubled()}</strong>
+            <small style(monoLabelSm)>derived ×2</small>
+            <strong style(value)>{doubled()}</strong>
           </column>
         </row>
         <column gap="1">
-          <small style({ paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) })>effect output</small>
+          <small style(monoLabelSm)>effect output</small>
           <for {log() as line} key={line}>
-            <p style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })>{line}</p>
+            <p style(monoLine)>{line}</p>
           </for>
         </column>
       </column>
     </column>
-    <column style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Source</p>
+    <column style(liveCol)>
+      <p style(monoLabel)>Source</p>
       <code-block code={code.graph}></code-block>
     </column>
   </row>
@@ -98,7 +114,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     effect started is never left running after it’s gone.
   </p>
   <code-block code={code.effect}></code-block>
-  <p style({ box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) })>
+  <p style(callout)>
     An effect subscribes to what it <em>actually read on this run</em> — so
     a read the code never reached is a read the effect never subscribed to.
     If an early <code>return</code> or an <code>if</code> skips past a
@@ -169,9 +185,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component can reach by name.
   </p>
   <row gap="4" align="start">
-    <column style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live — click either card</p>
-      <column gap="3" style({ box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) })>
+    <column style(liveCol)>
+      <p style(monoLabel)>Live — click either card</p>
+      <column gap="3" style(livePanelSm)>
         <grid cols="2" gap="3">
           <store-counter label="one component"></store-counter>
           <store-counter label="a different instance"></store-counter>
@@ -179,8 +195,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <store-total></store-total>
       </column>
     </column>
-    <column style({  box: grow(1).basis(breakpoint-mobile).minW(0)  })>
-      <p style({ box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>The store</p>
+    <column style(liveCol)>
+      <p style(monoLabel)>The store</p>
       <code-block code={code.storeDef}></code-block>
     </column>
   </row>
@@ -217,11 +233,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     which is handed the element explicitly.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/sail-file">← Components</a>
     <a variant="solid" tone="primary" href="/sail/language/templates">Templates →</a>
   </row>

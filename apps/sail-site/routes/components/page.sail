@@ -88,22 +88,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const plan = signal('pro')
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
-    // Multi-line sample for the code-editor tile (can't put `function` in a
-    // template expr — renderable expressions ban that keyword).
+    // Code-editor tile sample — template exprs ban the `function` keyword.
     const editorSample = () =>
       "const greet = (name) => {\n  return `hello, ${name}`\n}\n\ngreet('sail')\n"
     const toolArgs = () => '{ "env": "prod", "limit": 5 }'
     const toolResult = () => '[{ "id": "d-1842", "status": "healthy" }]'
-    // Real photo (Unsplash). `src` is a JS identity property, not a reflect attr
-    // (source-in-never-fetch). Requires deck CSP img-src to allow https:.
+    // sail-media-image src is JS identity (not reflect); needs CSP img-src https:.
     const DEMO_PHOTO =
       'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&h=400&fit=crop&auto=format&q=80'
     effect(() => {
       void packSel()
       void visibleList()
       requestAnimationFrame(() => {
-        // Free attr on <card tile={…}>; also tolerate data-tile if stamped.
-        // (Prior typo `[tile]="…"]` was an invalid selector and broke all tiles.)
         document
           .querySelectorAll(
             'sail-media-image, [tile="sail-media-image"] sail-media-image, [data-tile="sail-media-image"] sail-media-image',
@@ -124,14 +120,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <scope>
-  // Gutter: catalog was flush to the viewport edge (rail + grid). Real pad.
   style page = { box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } }
-  // Visible so tooltips/hover-cards can escape the tile; media stages clip themselves.
+  // Tooltips/hover-cards escape the tile; media stages clip themselves.
   style tile = { box: overflow(visible) }
   style tileCol = { box: h(full).overflow(visible) }
-  // Flex via <row> (not <center>/grid place-items:center): auto grid tracks
-  // collapse to max-content, so width:100% bars (progress/meter) measure 0.
-  // Flex parent has a definite tile width, so w="full" children get a real track.
+  // <row> preview: grid max-content tracks zero out w-full progress/meter.
   style preview = { box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
   style tileMeta = { box: padX(3).padY(2) }
   style tileName = { text: fontSize(sm).fontWeight(semibold).fontFamily(mono) }
@@ -139,9 +132,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style mutedSm = { box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
   style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
   style sectionTitle = { box: mt(2), text: fontSize(sm).fontWeight(semibold) }
-  // Packs are a wrapping chip strip above the grid (not a side rail).
-  // Side-by-side via flexDir(row)+style({ when: { tablet: { } } }) loses the cascade war:
-  // base w(full)/flexDir(column) can beat the tablet override, grid → 0 width.
+  // Pack chip strip (row flex + overflowX); avoid column base that zeros the grid.
   style packStack = { box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) }
   style packBtn = { box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } }
   style packLabel = { text: fontSize(sm) }
@@ -152,8 +143,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style count = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
   style dormant = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) }
   style fieldLabel = { text: fontSize(sm).fontWeight(medium) }
-  // Definite box: CE host is display:contents, so the stage needs a real
-  // height or the <img> collapses when the source fails / is aspect-less.
+  // Definite box: CE host is display:contents — without height the img collapses.
   style mediaFrame = { box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) }
   style mediaStage = { box: w(full).h(full).minH(40) }
   style catRow = { box: overflowX(auto).maxW(full) }

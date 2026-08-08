@@ -23,10 +23,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Guide</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style list = { box: padL(6), paint: list(decimal) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Guide</p>
   <h1>Making a theme</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Nine themes ship with the framework. Making a tenth is a copy-and-edit
     job: take the block of token values closest to what you want, rename it,
     change the numbers, and register it so the framework will apply it. This
@@ -45,7 +54,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Concretely, a theme is two things in
     <code>packages/sail/tokens</code>, and nothing else:
   </p>
-  <ol style({ box: padL(6), paint: list(decimal) })>
+  <ol style(list)>
     <li>
       a block in <code>src/themes.css</code> that assigns the tokens, keyed
       on <code>&#91;theme='…'&#93;</code>;
@@ -127,7 +136,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>data-mode</code> attribute goes on the document, which a number of
     component skins key on. Set it to match the theme you actually built.
   </p>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     The two files are kept in step by the token package’s own tests: for
     every id in <code>THEMES</code>, one asserts a matching
     <code>:root[theme]</code> block exists in
@@ -196,7 +205,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>--sidebar-primary</code> follow it; surfaces and ink stay put.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/guide/forms">← Forms</a>
     <a variant="solid" tone="primary" href="/sail/guide/embedding-third-party-code">Embedding third-party code →</a>
   </row>
