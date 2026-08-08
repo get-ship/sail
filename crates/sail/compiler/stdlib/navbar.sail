@@ -5,10 +5,10 @@
     layout keywords  — host row (nowrap, align center, gap 4); brand/actions
                        inline rows; links as contents so slot kids share the
                        host flex axis (row top / column rail); center row grows
-    host sx={[…]}    — component.navbar tokens + style({ match: { placement: {  } } }) + compound
-                       sticky/bordered/rail geometry (no CVA string maps)
-    child sx         — center grow-1; actions ms-auto mt-auto
-  Slotted link/label chrome is author sx on the projected nodes (current:/hover:).
+    host style       — component.navbar tokens + match placement + compound
+                       sticky/bordered/rail geometry; offset via top(bind(offset))
+    child style      — center grow-1; actions ms-auto mt-auto
+  Slotted link/label chrome is author style on the projected nodes (current:/hover:).
 -->
 
 <scope>
@@ -16,7 +16,7 @@
     placement: 'top' | 'bottom' | 'rail' = 'top'
     sticky = false
     bordered = false
-    offset = ''
+    offset: number = 0
   }
 
   style base = { box: minH(14).padY(2).padX(4), paint: bg(navbar).fg(navbar.foreground), text: underline(none) }
@@ -31,7 +31,7 @@
   style actions = { match: { placement: { rail: { box: ms(auto).mt(auto) }, top: { box: ms(auto) }, bottom: { box: ms(auto) } } } }
 </scope>
 
-<row nowrap align="center" gap="4" style(base, { box: w(full), match: { placement: { top: placeTop, bottom: placeBottom, rail: placeRail } }, compound: [ { sticky: true, box: position(sticky).top(0), paint: z(sticky) }, { bordered: true, paint: borderBWidth(1).border(navbar.border) }, { placement: bottom, sticky: true, box: top(auto).bottom(0) }, { bordered: true, placement: bottom, paint: borderBWidth(0).borderTWidth(1).border(navbar.border) }, { bordered: true, placement: rail, paint: borderBWidth(0).borderEWidth(1).border(navbar.border) }, { placement: rail, sticky: true, box: position(sticky).top(0).bottom(0).self(start).overflowY(auto), paint: z(dropdown) }, { offset: 8, placement: rail, sticky: true, box: top(8) }, { offset: 10, placement: rail, sticky: true, box: top(10) }, { offset: 12, placement: rail, sticky: true, box: top(12) }, { offset: 14, placement: rail, sticky: true, box: top(14) }, { offset: 16, placement: rail, sticky: true, box: top(16) }, { offset: 20, placement: rail, sticky: true, box: top(20) }, { offset: 24, placement: rail, sticky: true, box: top(24) } ] })>
+<row nowrap align="center" gap="4" style(base, { box: w(full), match: { placement: { top: placeTop, bottom: placeBottom, rail: placeRail } }, compound: [ { sticky: true, box: position(sticky).top(bind(offset)), paint: z(sticky) }, { bordered: true, paint: borderBWidth(1).border(navbar.border) }, { placement: bottom, sticky: true, box: top(auto).bottom(0) }, { bordered: true, placement: bottom, paint: borderBWidth(0).borderTWidth(1).border(navbar.border) }, { bordered: true, placement: rail, paint: borderBWidth(0).borderEWidth(1).border(navbar.border) }, { placement: rail, sticky: true, box: position(sticky).top(bind(offset)).bottom(0).self(start).overflowY(auto), paint: z(dropdown) } ] })>
   <row inline nowrap align="center" gap="2" style(brand, { box: shrink(0) })>
     <slot name="brand"></slot>
   </row>

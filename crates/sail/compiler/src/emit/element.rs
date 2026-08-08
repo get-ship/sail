@@ -167,6 +167,10 @@ pub struct ElementOutput {
     /// (`tone="default"`, `size="md"`, …) so Style CVA selectors match.
     /// Bool false is omitted; bool true is presence (`name` with empty value).
     pub default_attrs: Vec<(String, String)>,
+    /// Prop names bound via `bind(name)` with their unit realization — used by
+    /// use-site splice to inline static first-paint custom properties
+    /// (`offset="16"` → `style="--offset: 16px"`).
+    pub bound_props: Vec<(String, crate::check::binding::StyleBindingUnit)>,
     /// Skin CSS — keyed on `.sail-<name>` for spliced elements, on the bare
     /// tag selector for native-kind (from the source's `:host` idioms).
     pub skin_css: String,
@@ -178,6 +182,15 @@ pub fn emit_element(
     program: &Program,
     source: &str,
     name: &str,
+) -> Result<ElementOutput, CompileError> {
+    emit_element_with_bindings(program, source, name, &[])
+}
+
+pub fn emit_element_with_bindings(
+    program: &Program,
+    source: &str,
+    name: &str,
+    style_bindings: &[crate::check::binding::StyleBinding],
 ) -> Result<ElementOutput, CompileError> {
     // L1 element names are lowercase words, optionally hyphen-joined
     // (`badge`, `empty-state`, `date-picker`). The naming seam is the STDLIB
@@ -310,6 +323,11 @@ pub fn emit_element(
 
     let host_classes = root_class_attr(&structure);
     let default_attrs = default_prop_attrs(name, &program.props);
+    let bound_props: Vec<(String, crate::check::binding::StyleBindingUnit)> = style_bindings
+        .iter()
+        .filter(|b| b.source == crate::check::binding::StyleBindingSource::Prop)
+        .map(|b| (b.scope_name.clone(), b.unit))
+        .collect();
 
     Ok(ElementOutput {
         root_class,
@@ -317,6 +335,7 @@ pub fn emit_element(
         structure_html: structure,
         host_classes,
         default_attrs,
+        bound_props,
         skin_css,
         manifest,
     })

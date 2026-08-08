@@ -37,7 +37,7 @@ mod scope_bound_expr_tests;
 pub mod scope_member;
 pub mod semantic_a11y;
 pub mod signal_called;
-pub mod sx_vars;
+pub mod binding;
 pub mod symbol_table;
 pub mod tscheck;
 
@@ -111,8 +111,8 @@ pub fn run(
         css_token::check(source, source_path, overrides)
     )?;
     pass!(
-        "sx-vars",
-        sx_vars::resolve(source, program, controller).map(|_| ())
+        "style-bind",
+        binding::resolve(source, program, controller).map(|_| ())
     )?;
     // `controller` is resolved by the caller: the inline `<controller>` block
     // (SFC) wins, else the paired `.controller.ts`.
@@ -274,7 +274,7 @@ pub fn collect(
         &mut diags,
     );
     push(
-        sx_vars::resolve(source, program, controller).map(|_| ()),
+        binding::resolve(source, program, controller).map(|_| ()),
         source,
         &mut diags,
     );

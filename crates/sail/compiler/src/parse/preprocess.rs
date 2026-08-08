@@ -84,7 +84,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
 
 /// Find every tag-position Style product expression in raw `.sail` source,
 /// with the byte offset of the expression start. Used by `(--x)` / `bind(name)`
-/// resolution (`check::sx_vars`) against author source.
+/// resolution (`check::binding`) against author source.
 pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
     let mut out = Vec::new();
     for_each_tag_style(source, |abs_start, expr| {
@@ -1311,6 +1311,52 @@ fn splice_element(
         .chars()
         .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
         .collect();
+    // Progressive enhancement: static attr values for bound props become
+    // host custom properties so non-JS renderers see the real inset (not
+    // only the @property initial-value floor).
+    let mut bind_style = String::new();
+    if !el.bound_props.is_empty() {
+        for (prop, unit) in &el.bound_props {
+            let raw = snippet_attrs
+                .iter()
+                .find(|(n, _)| n == prop || camel_eq(n, prop))
+                .map(|(_, v)| v.trim_matches(['"', '\'']).to_string())
+                .or_else(|| {
+                    el.default_attrs
+                        .iter()
+                        .find(|(n, _)| n == prop || camel_eq(n, prop))
+                        .map(|(_, v)| v.clone())
+                });
+            let Some(val) = raw.filter(|v| !v.is_empty() && !v.starts_with('{')) else {
+                continue;
+            };
+            let css = kebab_of(prop);
+            let realized = match unit {
+                crate::check::binding::StyleBindingUnit::LengthPx
+                    if val.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-') =>
+                {
+                    format!("{val}px")
+                }
+                _ => val,
+            };
+            if !bind_style.is_empty() {
+                bind_style.push(' ');
+            }
+            bind_style.push_str(&format!("--{css}: {realized};"));
+        }
+    }
+    if !bind_style.is_empty() {
+        if let Some(slot) = snippet_attrs.iter_mut().find(|(n, _)| n == "style") {
+            let prev = slot.1.trim_matches(['"', '\'']);
+            if prev.starts_with('{') {
+                // Dynamic style expression — leave alone (runtime reflection owns it).
+            } else {
+                slot.1 = format!("\"{prev} {bind_style}\"");
+            }
+        } else {
+            snippet_attrs.push(("style".into(), format!("\"{bind_style}\"")));
+        }
+    }
     let mut outb = format!("<{tag_name}");
     for (n, v) in &snippet_attrs {
         outb.push(' ');
@@ -1329,6 +1375,25 @@ fn splice_element(
     let body = fill_slots(rest, &default_children, &named_children);
     outb.push_str(&body);
     outb
+}
+
+fn camel_eq(a: &str, b: &str) -> bool {
+    crate::emit::util::camel_of(a) == crate::emit::util::camel_of(b)
+}
+
+fn kebab_of(name: &str) -> String {
+    let mut out = String::with_capacity(name.len() + 4);
+    for (i, c) in name.chars().enumerate() {
+        if c.is_ascii_uppercase() {
+            if i != 0 {
+                out.push('-');
+            }
+            out.push(c.to_ascii_lowercase());
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 /// Partition use-site children into the default bucket (un-slotted nodes, in

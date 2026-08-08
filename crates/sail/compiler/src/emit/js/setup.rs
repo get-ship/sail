@@ -13,7 +13,7 @@ pub(super) fn emit_setup_body(
     program: &Program,
     bindings: &BindingRegistry,
     opts: &CompileOpts,
-    sx_var_bindings: &[crate::check::sx_vars::SxVarBinding],
+    sx_var_bindings: &[crate::check::binding::StyleBinding],
 ) -> Writer {
     // A source is a COMPONENT (custom element) iff it carries a tag
     // (`component_meta`); otherwise it's a tagless mount-form (a route/page).
@@ -96,8 +96,17 @@ pub(super) fn emit_setup_body(
         for b in sx_var_bindings {
             let css_prop = js_string(&format!("--{}", b.css_name));
             let scope_ident = js_ident(&b.scope_name);
+            // LengthPx: number sources mean px — never write a unitless number into a length slot.
+            let value_expr = match b.unit {
+                crate::check::binding::StyleBindingUnit::LengthPx => {
+                    format!(
+                        "(typeof __v === \"number\" ? __v + \"px\" : String(__v))"
+                    )
+                }
+                _ => "String(__v)".to_string(),
+            };
             mount_w.line(&format!(
-                "{{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, String(__v)); }}"
+                "{{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, {value_expr}); }}"
             ));
         }
         mount_w.leave();

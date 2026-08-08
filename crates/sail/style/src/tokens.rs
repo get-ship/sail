@@ -99,44 +99,11 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     "font-sans",
     "toast-duration",
     "z-overlay",
-    // Runtime-geometry channels — a `use:<action>` action (see
-    // `packages/sail/runtime/src/actions/`) writes these; sx reads them via
-    // the matching `(--name)` atom. Not tokens (a measurement, not a design
-    // decision) and not component props/signals either — the ACTION owns
-    // the name, same as a token owns its name, which is why this allowlist
-    // (rather than `check::sx_vars`'s prop/signal resolution) is where they
-    // belong.
-    "box-top",
-    "box-left",
-    "box-w",
-    "box-h", // use:rect
-    "evt-top",
-    "evt-h",
-    "evt-left",
-    "evt-w",   // use:eventSpan
-    "row-y",   // use:virtualRow
-    "rows-h",  // use:virtualSpacer
-    "cell-ps", // use:cellPad
-    "pin-x",
-    "pin-y", // use:pin
-    "port-top",
-    "port-left",
-    "port-right",
-    "port-bottom",  // use:portEdge
-    "world-tx",     // use:worldTransform
-    "zoom-tx",      // use:zoomPan
-    "max-w",        // use:maxWidth
-    "swatch-color", // use:swatch
-    "tc-x",
-    "tc-y", // use:targetCursor
-    "spot-x",
-    "spot-y",
-    "spot-strength",      // use:spotlight
-    "sail-grid-template", // use:gridTracks
-    "rng-pct",            // use:rangeFill
-    "anchor-left",
-    "anchor-top", // use:anchor / use:contextMenu
-    "autosize-h", // use:autosize
+    // Runtime-geometry channels that actions write used to live here so
+    // bind/var resolution treated them like tokens. STYLE-BINDING-1 moves
+    // them to action_manifest `writes` — `bind(name)` resolves against the
+    // action contract, not this allowlist. Keep only non-action convention
+    // channels that still need var(--x) legitimacy in author CSS.
 ];
 
 fn registry_file() -> &'static RegistryFile {

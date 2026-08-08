@@ -397,9 +397,11 @@ pub fn compile_element(
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
     // SPEC-D1: host known by construction → surface vocabulary for this host.
+    // One regime: closed `bind(name)` resolution runs on stdlib/skins too.
     sail_lint::style::with_host_surface(Some(name), || {
         let program = parse::parse_element_source(&stripped)?;
-        emit::element::emit_element(&program, &stripped, name)
+        let bindings = check::binding::resolve(&stripped, &program, None)?;
+        emit::element::emit_element_with_bindings(&program, &stripped, name, &bindings)
     })
 }
 
@@ -479,7 +481,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // (fail-fast); re-resolving here is cheap (pure text scan) and gets us
     // the matched prop/signal bindings the emitter wires `@property` +
     // host reflection for.
-    let sx_var_bindings = check::sx_vars::resolve(effective_source, &program, controller.as_ref())
+    let sx_var_bindings = check::binding::resolve(effective_source, &program, controller.as_ref())
         .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);
     // `is_route` is the master route/component switch in lowering (which runtime

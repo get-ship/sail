@@ -877,9 +877,11 @@ fn navbar_host_paint_on_sx_cva() {
                 || src.contains("grow min-w"))
             && (src.contains("ms(auto)") || src.contains("ms: auto") || src.contains("ms-auto"))
             && (src.contains("mt(auto)") || src.contains("mt: auto") || src.contains("mt-auto"))
-            && (src.contains("offset: 8") || src.contains("offset: '8'"))
-            && (src.contains("top(8)") || src.contains("top: 8") || src.contains("top-8")),
-        "navbar structure must own layout + sticky rail/offset Style compounds"
+            && src.contains("offset: number")
+            && src.contains("top(bind(offset))")
+            && !src.contains("offset: 8")
+            && !src.contains("top(8)"),
+        "navbar structure must own layout + sticky + top(bind(offset))"
     );
     assert!(
         out.structure_html.contains("sail-row")
@@ -939,12 +941,12 @@ fn navbar_host_paint_on_sx_cva() {
             && out.skin_css.contains("overflow-y:auto")
             && !out.skin_css.contains("--rail-offset")
             && !out.skin_css.contains("--nav-")
-            && (out.skin_css.contains("offset='8'") || out.skin_css.contains("offset=\"8\""))
-            && (out.skin_css.contains("top:var(--space-8)")
-                || out.skin_css.contains("top: var(--space-8)")
-                || out.skin_css.contains("top:2rem")
-                || out.skin_css.contains("top: 2rem")),
-        "placement/sticky/bordered/rail + offset top-N compounds (no rail-offset channel):\n{}",
+            && !out.skin_css.contains("offset='8'")
+            && !out.skin_css.contains("offset=\"8\"")
+            && (out.skin_css.contains("var(--offset)")
+                || out.structure_html.contains("topbindoffset")
+                || out.structure_html.contains("bindoffset")),
+        "placement/sticky/bordered/rail + top(bind(offset)) (no offset enumeration):\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(
