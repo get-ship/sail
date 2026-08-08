@@ -1,3 +1,4 @@
+<!-- Fixture: SSR tier S — pure literal signal. -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 export default controller((_ctx: ControllerScope<any>) => {

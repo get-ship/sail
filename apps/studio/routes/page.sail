@@ -1,6 +1,9 @@
-<!--
-  Root `/` → redirect to `/edit`. Deep links land on leaf surfaces.
--->
+<!-- Root `/` → `/edit`. Deep links land on leaf surfaces. -->
+<scope>
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
+
 <controller>
 import { navigate } from '@ship/deck/router'
 import { appRouteBase } from '../src/compositions/shell/shell-rail'
@@ -14,6 +17,6 @@ export default controller(() => {
 })
 </controller>
 
-<column studio-redirect align="center" justify="center" style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Opening Edit…</p>
+<column studio-redirect align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Opening Edit…</p>
 </column>

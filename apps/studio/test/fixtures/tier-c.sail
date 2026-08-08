@@ -1,3 +1,4 @@
+<!-- Fixture: SSR tier C (client) — interval-driven signal. -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 export default controller((_ctx: ControllerScope<any>) => {

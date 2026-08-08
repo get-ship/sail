@@ -1,7 +1,7 @@
+<!-- Fixture: SSR tier I — non-literal signal init (interactive / hydrate). -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 export default controller((_ctx: ControllerScope<any>) => {
-  // Non-literal signal init → SSR tier I (interactive / hydrate)
   const seed = signal(Math.random())
   const label = signal('n=' + String(seed()))
   return { seed, label }
