@@ -35,10 +35,9 @@ export default controller(() => {
     return {
       phase,
       filtered,
-      // A tiny async state machine: the handler WRITES phase, the
-      // {#match} in the template reads it. The build "runs" for a
-      // moment, then lands on live (mostly) or failed (sometimes) —
-      // so every branch of the match is reachable.
+      // Tiny async state machine: the handler WRITES phase, the {#match}
+      // in the template reads it. The build "runs" briefly, then lands on
+      // live (mostly) or failed (sometimes) so every match arm is reachable.
       deploy: (): void => {
         if (phase() === 'building') return
         phase.set('building')
@@ -48,7 +47,7 @@ export default controller(() => {
       search: (e: Event): void => query.set((e.target as HTMLInputElement).value),
       clear: (): void => query.set(''),
       // Move the env to the front. The keyed {#for} sees the same ids in a
-      // new order, so the reconciler MOVES the existing rows — DOM identity
+      // new order, so the reconciler MOVES existing rows — DOM identity
       // (focus, animation state) survives the reorder.
       promote: (id: string): void =>
         envs.set([...envs().filter((e) => e.id === id), ...envs().filter((e) => e.id !== id)]),
@@ -66,7 +65,11 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     <match {phase()}>
-      {'idle' => <badge tone="muted" style({ animate: enter({ opacity: 'fade' }) })>idle</badge>}{'building' => <badge tone="warning" style({ animate: enter({ translate-x: 'spring:snappy' }) })>building</badge>}{'live' => <badge tone="success" style({ animate: enter({ scale: 'spring:bouncy' }) })>live</badge>}{else => <badge tone="destructive" style({ animate: enter({ opacity: 'fade' }) })>failed</badge>}</match>
+      {'idle' => <badge tone="muted" style({ animate: enter({ opacity: 'fade' }) })>idle</badge>}
+      {'building' => <badge tone="warning" style({ animate: enter({ translate-x: 'spring:snappy' }) })>building</badge>}
+      {'live' => <badge tone="success" style({ animate: enter({ scale: 'spring:bouncy' }) })>live</badge>}
+      {else => <badge tone="destructive" style({ animate: enter({ opacity: 'fade' }) })>failed</badge>}
+    </match>
   </row>
 
   <row gap="2">

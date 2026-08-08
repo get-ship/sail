@@ -37,11 +37,12 @@ is intent:
   recycle each other's DOM on any reorder or archive. *Check: could two
   live items ever share this key? Then it is not a key.*
 - **Does removal have an exit?** Rows arrive with a staggered
-  `style.enter` — and vanish with a snap, because `style.exit` is
-  missing. Arrival was designed; departure was forgotten. *Check: every
-  list that animates in should say what leaving looks like.*
+  `style({ animate: enter(…) })` — and vanish with a snap, because
+  `exit` is missing on the animate chain. Arrival was designed;
+  departure was forgotten. *Check: every list that animates in should
+  say what leaving looks like.*
 - **Is that div a component the system already has?** The empty case
-  is a hand-rolled `<div> style({…}) Nothing matches… </div>`. It works;
+  is a hand-rolled `<div style(emptyImprovised)>…</div>`. It works;
   it also skips the semantics, sizing, and tone contract of
   `<empty-state>` — the component that exists precisely so empty never
   gets improvised. *Check: before approving a styled div, ask what

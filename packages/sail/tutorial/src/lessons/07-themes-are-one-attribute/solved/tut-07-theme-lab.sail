@@ -3,8 +3,8 @@
 
   pick() calls applyTheme + persistTheme; everything on the page repaints
   because every surface reads tokens. The two panels below opt OUT: each
-  pins its own token table with theme, which is how a picker
-  can show you a theme without applying it.
+  pins its own token table with theme, which is how a picker can show you
+  a theme without applying it.
 -->
 
 <controller>
@@ -23,10 +23,9 @@ export default controller(() => {
     return {
       themes: (): Theme[] => THEMES,
       active,
-      // applyTheme is the ONLY writer of the theme state: it sets
-      // data-theme + data-mode on <html>.
-      // Every component repaints because components read tokens, never
-      // colors. persistTheme makes the choice survive a reload.
+      // applyTheme is the only writer of the page theme (data-theme +
+      // data-mode on <html>). Components repaint because they read tokens,
+      // not colors. persistTheme keeps the choice across reloads.
       pick: (id: ThemeId): void => {
         applyTheme(id)
         persistTheme(id)
@@ -41,7 +40,27 @@ export default controller(() => {
   style preview = { box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(background).fg(foreground) }
   style title = { text: fontSize(sm) }
   style body = { paint: fg(muted-foreground), text: fontSize(sm) }
+  type PinnedPreviewProps = { pin: string }
 </scope>
+
+<partial pinned-preview props: PinnedPreviewProps>
+  <column theme={pin} gap="2" style(preview)>
+    <small style(muted)>pinned: {pin}</small>
+    <card padding="md">
+      <column gap="2">
+        <row gap="2" align="center">
+          <badge tone="success" variant="soft" size="sm">on track</badge>
+          <strong style(title)>Q3 launch</strong>
+        </row>
+        <p style(body)>Same markup as the panel beside me — only the tokens differ.</p>
+        <row gap="2">
+          <button size="sm" variant="solid" tone="primary">Primary</button>
+          <button size="sm" variant="outline" tone="primary">Outline</button>
+        </row>
+      </column>
+    </card>
+  </column>
+</partial>
 
 <column gap="4">
   <row align="center" justify="between">
@@ -58,39 +77,8 @@ export default controller(() => {
   </row>
 
   <grid cols="2" gap="4">
-    <column theme="paper" gap="2" style(preview)>
-      <small style(muted)>pinned: paper</small>
-      <card padding="md">
-        <column gap="2">
-          <row gap="2" align="center">
-            <badge tone="success" variant="soft" size="sm">on track</badge>
-            <strong style(title)>Q3 launch</strong>
-          </row>
-          <p style(body)>Same markup as the panel beside me — only the tokens differ.</p>
-          <row gap="2">
-            <button size="sm" variant="solid" tone="primary">Primary</button>
-            <button size="sm" variant="outline" tone="primary">Outline</button>
-          </row>
-        </column>
-      </card>
-    </column>
-
-    <column theme="console" gap="2" style(preview)>
-      <small style(muted)>pinned: console</small>
-      <card padding="md">
-        <column gap="2">
-          <row gap="2" align="center">
-            <badge tone="success" variant="soft" size="sm">on track</badge>
-            <strong style(title)>Q3 launch</strong>
-          </row>
-          <p style(body)>Same markup as the panel beside me — only the tokens differ.</p>
-          <row gap="2">
-            <button size="sm" variant="solid" tone="primary">Primary</button>
-            <button size="sm" variant="outline" tone="primary">Outline</button>
-          </row>
-        </column>
-      </card>
-    </column>
+    <pinned-preview pin="paper" />
+    <pinned-preview pin="console" />
   </grid>
 
   <row gap="2" align="center">

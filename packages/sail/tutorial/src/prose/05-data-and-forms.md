@@ -12,7 +12,7 @@ chapter: "state"
 walks a tagged union:
 
 ```
-import { directory } from './tut-05-directory-client'
+import { directory } from '../../../compositions/tut-05-directory-client'
 
 // signals read inside the call ARGS are tracked deps
 const team = query(() => directory.team.list({ attempt: attempt(), broken: breakApi() }))

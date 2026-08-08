@@ -1,29 +1,17 @@
 <!--
   <sail-app> — single-component sanity-check demo.
 
-  Goal: exercise the common authoring primitives in one screen so a
-  smoke-pass against a fresh sail-runtime build either looks/feels
-  right or doesn't. Not a benchmark, not a product — just a place
-  to click around.
+  Exercises common authoring primitives in one screen so a smoke-pass
+  against a fresh sail-runtime build either looks/feels right or doesn't.
+  Not a benchmark, not a product — a place to click around:
 
-  What's here:
-    - signal/derived: counter at the top, ticks-per-second derived
-    - effect: 250ms tick keeps a sparkline-ish log moving
-    - bindFor + keyed reorder: kanban-ish board with HTML5 DnD
-    - data-*: per-card priority + selected highlight
-    - on: handlers, including async one (chrome.modal not used —
-      standalone build has no daemon)
-    - style.enter/exit on card add/remove (fade + scale)
-    - update() callback exercise: the chaos button mutates the row
-      list, which forces bindFor through the diff path the per-field
-      gating + monotone fast-path optimize.
+    - signal / derived (counter + ticks-per-second)
+    - effect-driven tick log (interval)
+    - keyed <for> reorder + HTML5 DnD kanban
+    - Style animate enter/exit on card add/remove
+    - use:swatch + bind for dynamic column tone
 -->
 
-<scope>
-  props: {
-    shadow = false
-  }
-</scope>
 <controller>
 import { controller, signal, derived, effect } from '@ship/sail-runtime'
 
@@ -95,15 +83,10 @@ const fmt = (d: Date): string =>
   `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}.${String(d.getMilliseconds()).padStart(3, '0')}`
 
 export default controller(() => {
-    // Counter + derived.
     const count = signal(0)
     const doubled = derived(() => count() * 2)
 
-    // Ticks driven by a 250ms interval; recentTicks is a sliding window
-    // of the last 10. effect demonstrates a side-effect (DOM-free) that
-    // updates a signal — common pattern for streaming sources.
     const ticks = signal(0)
-    const lastTickWall = signal<number>(Date.now())
     const recentTicks = signal<Tick[]>([])
     const tickRate = signal('0')
 
@@ -112,22 +95,17 @@ export default controller(() => {
       const n = ticks() + 1
       const now = Date.now()
       ticks.set(n)
-      lastTickWall.set(now)
       const ws = recentTicks().slice(-9)
       ws.push({ id: n, label: fmt(new Date(now)) })
       recentTicks.set(ws)
-      // Rolling 1-second tick rate.
       tickHistory.push(now)
       while (tickHistory.length > 0 && now - tickHistory[0]! > 1000) tickHistory.shift()
       tickRate.set(tickHistory.length.toString())
     }, 250)
 
-    // Kanban state.
     const cols = signal<Column[]>(initialColumns())
     const draggingId = signal<number | null>(null)
 
-    // Demo effect — log to console when count crosses 10. Just to
-    // show effect() is alive; harmless otherwise.
     effect(() => {
       if (count() >= 10 && count() < 11) {
         console.log('[sail-app] count reached', count())
@@ -135,15 +113,12 @@ export default controller(() => {
     })
 
     return {
-      // counter
       count, doubled,
       bump: (n: number): void => count.set(count() + n),
       reset: (): void => count.set(0),
 
-      // ticks
       ticks, recentTicks, tickRate,
 
-      // kanban
       cols, draggingId,
       totalCards: derived(() => cols().reduce((n, c) => n + c.cards.length, 0)),
       columns: derived(() => cols()),
@@ -202,86 +177,117 @@ export default controller(() => {
   })
 </controller>
 
-<div>
-  <header>
-    <div>
-      <h1>SAIL sanity-check</h1>
-      <p>standalone — no daemon, no shell, no view-host</p>
-    </div>
-    <div data-row="true">
-      <div data-counter="true">ticks <strong>{ticks()}</strong></div>
-      <div data-counter="true">{tickRate()}/s</div>
-    </div>
-  </header>
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style header = { box: padB(4).mb(6), paint: borderBWidth(1).borderB(border) }
+  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style section = { box: my(6) }
+  style sectionTitle = { box: mb(2), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) }
+  style stat = { box: padX(3).padY(2), paint: bg(surface-1).borderWidth(1).border(border).radius(md), text: fontFamily(mono).fontSize(sm) }
+  style tickLog = { box: pad(3).maxH(panel-max-h-sm).overflowY(auto), paint: bg(surface-1).borderWidth(1).border(border).radius(md), text: fontFamily(mono).fontSize(xs) }
+  style tickFresh = { paint: fg(success) }
+  style tickWarn = { paint: fg(warning) }
+  style tickMuted = { paint: fg(muted-foreground) }
+  style col = { box: pad(3).minH(panel-min-h-daycol), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
+  style colHead = { box: mb(2), text: fontSize(sm).fontWeight(semibold) }
+  style swatch = { box: w(2).h(2), paint: radius(full) }
+  style card = {
+    box: pad(3),
+    paint: bg(background).borderWidth(1).border(border).radius(md).cursor(grab),
+    animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }),
+  }
+  style cardTitle = { box: mb(1), text: fontSize(sm).fontWeight(semibold) }
+  style cardMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style pillHigh = { box: padX(1).ml(1), paint: radius(full).bg(destructive).fg(primary-foreground), text: fontSize(xs).fontFamily(mono) }
+  style pillLow = { box: padX(1).ml(1), paint: radius(full).bg(muted).fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style dropZone = { box: pad(3), paint: borderWidth(1).border(border).cursor(default).fg(muted-foreground), text: textAlign(center).fontSize(sm) }
+</scope>
 
-  <section>
-    <h2>Counter + derived</h2>
-    <div data-row="true">
-      <div data-counter="true">count <strong>{count()}</strong></div>
-      <div data-counter="true">×2 <strong>{doubled()}</strong></div>
+<column style(page)>
+  <row align="end" justify="between" style(header)>
+    <column gap="1">
+      <h1>SAIL sanity-check</h1>
+      <p style(muted)>standalone — no daemon, no shell, no view-host</p>
+    </column>
+    <row gap="2" align="center">
+      <div style(stat)>ticks <strong>{ticks()}</strong></div>
+      <div style(stat)>{tickRate()}/s</div>
+    </row>
+  </row>
+
+  <column style(section) gap="2">
+    <h2 style(sectionTitle)>Counter + derived</h2>
+    <row gap="2" align="center">
+      <div style(stat)>count <strong>{count()}</strong></div>
+      <div style(stat)>×2 <strong>{doubled()}</strong></div>
       <button on:click={() => bump(1)}>+1</button>
       <button on:click={() => bump(-1)}>−1</button>
       <button on:click={() => bump(10)}>+10</button>
       <button on:click={() => reset()}>reset</button>
-    </div>
-  </section>
+    </row>
+  </column>
 
-  <section>
-    <h2>Live tick log (effect re-fires each tick)</h2>
-    <div>
+  <column style(section) gap="2">
+    <h2 style(sectionTitle)>Live tick log</h2>
+    <column style(tickLog) gap="0">
       <for {recentTicks() as row} key={row.id}>
-        <div data-ticks-row="true" aria-current={row.id === ticks() ? 'fresh' : (row.id % 7 === 0 ? 'warn' : 'false')}>
-          tick {row.id} @ {row.label}
-        </div>
+        <if {row.id === ticks()}>
+          <div style(tickFresh)>tick {row.id} @ {row.label}</div>
+        {else-if {row.id % 7 === 0} =>
+          <div style(tickWarn)>tick {row.id} @ {row.label}</div>
+        }
+        {else =>
+          <div style(tickMuted)>tick {row.id} @ {row.label}</div>
+        }</if>
       </for>
-    </div>
-  </section>
+    </column>
+  </column>
 
-  <section>
-    <h2>Kanban — bindFor + DnD + transitions</h2>
-    <div data-row="true" style({ box: mb(3) })>
-      <div>{totalCards()} cards</div>
+  <column style(section) gap="3">
+    <h2 style(sectionTitle)>Kanban — keyed for + DnD + transitions</h2>
+    <row gap="2" align="center" style({ box: mb(1) })>
+      <div style(muted)>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
       <button on:click={() => chaos()}>chaos × 20</button>
       <button on:click={() => resetBoard()}>reset board</button>
-    </div>
-    <div>
+    </row>
+    <grid cols="3" gap="3">
       <for {columns() as col} key={col.id}>
-        <section data-col={col.id}>
-          <div>
-            <span data-tone="plain" use:swatch={col.tone} style({ paint: bg(bind(swatchColor)) })></span>
+        <column style(col) gap="2">
+          <row align="center" gap="2" style(colHead)>
+            <span use:swatch={col.tone} style(swatch, { paint: bg(bind(swatchColor)) })></span>
             <span>{col.title}</span>
-            <span>({col.cards.length})</span>
-          </div>
-          <ol data-col-cards={col.id}
-              on:dragover|preventDefault={(e) => onDragOver(e)}
-              on:drop|preventDefault={(e) => onDrop(e, col.id, null)}>
+            <span style(muted)>({col.cards.length})</span>
+          </row>
+          <column
+            gap="2"
+            on:dragover|preventDefault={(e) => onDragOver(e)}
+            on:drop|preventDefault={(e) => onDrop(e, col.id, null)}
+          >
             <for {col.cards as card} key={card.id}>
-              <li data-card="true"
-data-card={card.id}
-draggable="true"
-on:dragstart={(e) => onDragStart(e, card.id)}
-on:dragend={onDragEnd}
-on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
-on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)} style({ animate: enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' }) })>
-
-                <div>
+              <div
+                draggable="true"
+                on:dragstart={(e) => onDragStart(e, card.id)}
+                on:dragend={onDragEnd}
+                on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
+                on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}
+                style(card)
+              >
+                <div style(cardTitle)>
                   {card.title}
                   <if {card.priority === 'high'}>
-                    <span>high</span>
-                  {else-if {card.priority === 'low'} => <span>low</span>}</if>
+                    <span style(pillHigh)>high</span>
+                  {else-if {card.priority === 'low'} => <span style(pillLow)>low</span>}</if>
                 </div>
-                <div>owner: {card.owner} · #{card.id}</div>
-              </li>
+                <div style(cardMeta)>owner: {card.owner} · #{card.id}</div>
+              </div>
             </for>
             <if {col.cards.length === 0}>
-              <li data-card="true" style({ paint: border(dashed).cursor(default).fg(muted), text: textAlign(center) })>
-                drop a card
-              </li>
+              <div style(dropZone)>drop a card</div>
             </if>
-          </ol>
-        </section>
+          </column>
+        </column>
       </for>
-    </div>
-  </section>
-</div>
+    </grid>
+  </column>
+</column>

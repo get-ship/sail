@@ -1,11 +1,5 @@
-// The "server" for lesson 09, moved OUT of the controller into an imported
-// client module. query() derives its cache key from a static member-path
-// call on an imported binding (`inboxClient.messages.list`) — a bare local
-// function reference gives the compiler nothing to key on.
-//
-// Note the repeated topics — a non-unique field is exactly the kind of
-// thing an unreviewed key= reaches for. `list` returns a Promise, so
-// query() routes it down the PULL path.
+// Lesson 09 mock data client. query() keys on `inboxClient.messages.list`.
+// Topics intentionally repeat so key={m.topic} is a planted review flaw.
 
 export interface Message {
   id: number

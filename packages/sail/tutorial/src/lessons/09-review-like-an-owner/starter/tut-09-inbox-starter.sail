@@ -19,7 +19,7 @@
 </scope>
 <controller>
 import { query } from '@ship/sail-runtime'
-import { inboxClient } from './tut-09-inbox-client'
+import { inboxClient } from '../../../compositions/tut-09-inbox-client'
 
 // This controller is sound. Every flaw in this lesson lives in the
 // TEMPLATE, and every one of them compiles — that is the point: the
@@ -56,28 +56,34 @@ export default controller(() => {
     </row>
   </row>
 
-  {error as err =>
-    <alert tone="destructive">{err.message}</alert>
-  }
-
-  <if {inbox().kind === 'ok'}>
-    <column gap="1">
-      <for {visible() as m} key={m.topic}>
-        <row gap="3" align="center">
-          messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' })
-
-          <if {!m.read}><span style(unreadDot)></span></if>
-          <column gap="0" style({ box: grow(1) })>
-            <strong style(from)>{m.from}</strong>
-            <small style(muted)>{m.subject}</small>
-          </column>
-          <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
-          <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
-        </row>
-      </for>
-      <if {visible().length === 0}>
-        <div style(emptyImprovised)>Nothing matches this filter.</div>
-      </if>
-    </column>
-  </if>
+  <match {inbox()}>
+    {loading => }
+    {error as err =>
+      <alert tone="destructive">{err.message}</alert>
+    }
+    {ok =>
+      <column gap="1">
+        <for {visible() as m} key={m.topic}>
+          <row
+            gap="3"
+            align="center"
+            style(messageRow, {
+              animate: enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }),
+            })
+          >
+            <if {!m.read}><span style(unreadDot)></span></if>
+            <column gap="0" style({ box: grow(1) })>
+              <strong style(from)>{m.from}</strong>
+              <small style(muted)>{m.subject}</small>
+            </column>
+            <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
+            <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
+          </row>
+        </for>
+        <if {visible().length === 0}>
+          <div style(emptyImprovised)>Nothing matches this filter.</div>
+        </if>
+      </column>
+    }
+  </match>
 </column>
