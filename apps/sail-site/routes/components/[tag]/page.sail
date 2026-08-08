@@ -4,7 +4,7 @@
   attribute on it; usage is a complete compiling program; props are the
   curated truth from the stdlib declarations.
 
-  route.params.tag() picks the entry; ./registry.ts covers the FULL L1
+  route.params.tag() picks the entry; src/compositions/component-details covers the FULL L1
   surface (all 48 elements), so the empty state below is for typos, not
   for real components. Each stage mounts through one zero-arg gate
   (`stage.<key>()`) — the only call shape a renderable expression
@@ -24,7 +24,7 @@
 
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { DETAILS, type DetailEntry } from './registry'
+import { DETAILS, type DetailEntry } from '../../../src/compositions/component-details'
 export default controller((ctx: ControllerScope<Scope>) => {
     const tag = derived(() => ctx.route.params.tag?.() ?? '')
     const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
