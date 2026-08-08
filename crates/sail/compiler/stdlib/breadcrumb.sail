@@ -1,8 +1,6 @@
 <!--
-  <breadcrumb> — trail host. ol/li/a anatomy + separators via compiler
-  descendant map (stdlib BREADCRUMB_MAP); host list Style so the trail is
-  flex + component-token fg even before skins attach.
-  Paint: breadcrumb.foreground (aliases muted-foreground in pack default).
+  <breadcrumb> — trail host. ol/li/a anatomy + separators via compiler descendant map.
+  Host list Style: flex + component-token fg before skins attach.
 -->
 <scope>
   style list = {

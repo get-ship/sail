@@ -1,13 +1,8 @@
 <!--
   <code-block> — syntax-highlighted source.
   pre Style (leading-code + tab-2); .tok-* via compiler descendant map → skins.
-
-  Paint: bg/fg from component.code-block tokens (cssNames code-block,
-  code-block.foreground).
-
-  Element mode forbids use:action={param} (static splice). The action node is
-  this structure root; props land on the stamped CE host — syntaxHighlight
-  resolves host `.code` / `code` attr (and observes attribute changes).
+  Paint from component.code-block tokens. use:syntaxHighlight on host; code/lang
+  attrs land on the CE host for the action to read.
 -->
 <scope>
   props: {

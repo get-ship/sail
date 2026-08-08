@@ -2,7 +2,7 @@
   <avatar> — L1 language element. Style value language only.
   avatarMedia child pack sizes injected img.
   Rest paint = primary-accent gradient when tone is omitted.
-  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
@@ -24,4 +24,30 @@
   style sizeXl = { box: size(control-h-xl), text: fontSize(2xl) }
 </scope>
 
-<row inline nowrap align="center" justify="center" use:mediaFallback style(base, { box: shrink(0), paint: bgImage(none).bg(tone).fg(tone.foreground), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg, xl: sizeXl }, shape: { round: { paint: radius(full) }, square: { paint: radius(sm) } } }, compound: [ { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar.foreground) } ] })></row>
+<row
+  inline
+  nowrap
+  align="center"
+  justify="center"
+  use:mediaFallback
+  style(base, {
+    box: shrink(0),
+    paint: bgImage(none).bg(tone).fg(tone.foreground),
+    match: {
+      size: {
+        md: sizeMd,
+        xs: sizeXs,
+        sm: sizeSm,
+        lg: sizeLg,
+        xl: sizeXl,
+      },
+      shape: {
+        round: { paint: radius(full) },
+        square: { paint: radius(sm) },
+      },
+    },
+    compound: [
+      { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar.foreground) },
+    ],
+  })
+></row>

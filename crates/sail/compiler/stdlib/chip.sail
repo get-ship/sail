@@ -1,9 +1,7 @@
 <!--
   <chip> — filter/selection pill.
-
   Rest paint = component.chip tokens when tone is omitted.
-  Semantic paint = bound tone group paths (bg(tone), fg(tone.foreground), …).
-  Authors never write tone="default" — omit the attribute for rest.
+  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
 -->
 
 <scope>
@@ -14,12 +12,10 @@
     selected = false
     removable = false
     disabled = false
-  
     onRemove: () => void
-}
+  }
 
-  // Default solid rides component.chip tokens (muted secondary — not primary).
-  // Brand tones only when tone= is set. gap-1 keeps the dismiss mark tight.
+  // Default solid rides component.chip tokens. Brand tones only when tone= is set.
   style base = { box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).borderWidth(1).border(solid).bg(chip).fg(chip.foreground).border(chip.border).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(xs) }
   style sizeMd = { box: minH(control-h-2xs).padX(2_5), text: fontSize(sm) }
   style sizeSm = { box: minH(control-h-2xs).padX(2), text: fontSize(xs) }
@@ -37,16 +33,78 @@
   use:pressable
   use:pressed
   use:dismissible
-
 >
-  <span style(base, { when: { pressed: { paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs), text: fontWeight(semibold) }, disabled: { paint: cursor(not-allowed).bg(chip).border(border-subtle).fg(chip.foreground).saturate(65).shadow(none) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { solid: { paint: bg(tone).fg(tone.foreground).border(tone), when: { hover: { paint: opacity(90) } } }, soft: { paint: fg(tone), when: { hover: { paint: opacity(90) } } }, outline: { paint: bg(transparent).fg(tone).border(tone), when: { hover: { paint: bg(hover-bg) } } }, ghost: { paint: bg(transparent).border(transparent).fg(tone), when: { hover: { paint: bg(hover-bg) } } } } }, compound: [ { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) }, { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) }, { tone: muted, variant: ghost, paint: fg(muted-foreground) }, { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) }, { selected: true, tone: muted, paint: bg(primary).fg(primary-foreground).border(primary) }, { selected: true, when: { hover: { paint: opacity(90) } } } ] })>    <span style(leading)>
-    <slot name="leading"></slot>
-  </span>
-  <slot></slot>
-  <button type="button" anatomy data-dismiss label="Remove" tabindex="-1" style(remove, { box: shrink(0), when: { group-removable: { box: display(inline-flex) }, hover: { paint: bg(chip).fg(chip.foreground) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } } })>
-    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
-      <path d="M2 2 L8 8 M8 2 L2 8"></path>
-    </svg>
-  </button>
+  <span
+    style(base, {
+      when: {
+        pressed: {
+          paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs),
+          text: fontWeight(semibold),
+        },
+        disabled: {
+          paint: cursor(not-allowed).bg(chip).border(border-subtle).fg(chip.foreground).saturate(65).shadow(none),
+        },
+        focus: {
+          paint: outline(solid).outline(2).outline(ring).outlineOffset(2),
+        },
+      },
+      match: {
+        size: {
+          md: sizeMd,
+          sm: sizeSm,
+          lg: sizeLg,
+        },
+        variant: {
+          solid: {
+            paint: bg(tone).fg(tone.foreground).border(tone),
+            when: { hover: { paint: opacity(90) } },
+          },
+          soft: {
+            paint: fg(tone),
+            when: { hover: { paint: opacity(90) } },
+          },
+          outline: {
+            paint: bg(transparent).fg(tone).border(tone),
+            when: { hover: { paint: bg(hover-bg) } },
+          },
+          ghost: {
+            paint: bg(transparent).border(transparent).fg(tone),
+            when: { hover: { paint: bg(hover-bg) } },
+          },
+        },
+      },
+      compound: [
+        { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) },
+        { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) },
+        { tone: muted, variant: ghost, paint: fg(muted-foreground) },
+        { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
+        { selected: true, tone: muted, paint: bg(primary).fg(primary-foreground).border(primary) },
+        { selected: true, when: { hover: { paint: opacity(90) } } },
+      ],
+    })
+  >
+    <span style(leading)>
+      <slot name="leading"></slot>
+    </span>
+    <slot></slot>
+    <button
+      type="button"
+      anatomy
+      data-dismiss
+      label="Remove"
+      tabindex="-1"
+      style(remove, {
+        box: shrink(0),
+        when: {
+          group-removable: { box: display(inline-flex) },
+          hover: { paint: bg(chip).fg(chip.foreground) },
+          focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
+        },
+      })
+    >
+      <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
+        <path d="M2 2 L8 8 M8 2 L2 8"></path>
+      </svg>
+    </button>
   </span>
 </row>
