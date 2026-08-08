@@ -9,9 +9,7 @@ const host = (name: string) => `[data-sail-host="${name}"]`
  * value matches the element's `value` with `aria-current="page"`, and on click
  * of a page sets `value` + invokes `onPageChange`. Prev/next are just pages
  * whose value is the target page. Structure (which pages/ellipsis to show) is
- * authored; this owns the state contract.
- *
- * Size is an ordinary prop on each `<page>` (CVA on the child).
+ * authored; this owns the state contract. Size Style match is on each `<page>`.
  */
 export const pagination: Action<void> = (node) => {
   const root = node as HTMLElement

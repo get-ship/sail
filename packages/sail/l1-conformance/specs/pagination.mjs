@@ -21,7 +21,7 @@ export default {
   tag: 'pagination',
   width: 640,
   rows() {
-    return [pager('3'), pager('1', 'size="sm"'), pager('5', 'size="lg"')]
+    return [pager('3'), pager('1'), pager('5')]
   },
   probe() {
     const bad = []

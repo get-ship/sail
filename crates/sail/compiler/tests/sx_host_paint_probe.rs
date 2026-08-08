@@ -1108,8 +1108,8 @@ fn radio_nested_row_kills_label_flex_pe() {
 
 #[test]
 fn toggle_group_segmented_and_join_on_skins_not_pe() {
-    // Segmented host CVA; size stamped for cells; join/ghost/segmented on
-    // toggle first:/last: + size CVA (no --tg-*). Zero hand PE.
+    // Segmented host Style match; size is authored on each <toggle> (not host).
+    // Join/ghost/segmented on toggle first:/last: + size match (no --tg-*).
     let src = include_str!("../stdlib/toggle-group.sail");
     let out = compile_element(src, "toggle-group").expect("toggle-group compiles");
     assert!(
@@ -1119,8 +1119,8 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && ((src.contains("bg(toggle-group)") || src.contains("bg(toggle-group)")) || src.contains("toggle-group"))
             && (src.contains("border(toggle-group-border)") || (src.contains("toggle-group.border") || src.contains("toggle-group-border")))
             && src.contains("<row inline gap=\"0\"")
-            && src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
-        "segmented host chrome on Style via component.toggle-group tokens; host is inline row; size stamped"
+            && !src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
+        "segmented host chrome on Style via component.toggle-group tokens; host is inline row; size not on host"
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
@@ -1596,17 +1596,18 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
         "pill variant CVA must lower on tab-list with --tab-list-rail:\n{}",
         out.skin_css
     );
-    // sticky + variant no longer tabs props; tabs stamps size onto tab cells.
+    // sticky/variant/size not on <tabs> — size Style match lives on <tab>.
     let tabs_src = include_str!("../stdlib/tabs.sail");
-    let tabs_out = compile_element(tabs_src, "tabs").expect("tabs compiles");
+    let _tabs_out = compile_element(tabs_src, "tabs").expect("tabs compiles");
     assert!(
         !tabs_src.contains("'tab-py'")
             && !tabs_src.contains("--tab-")
             && !tabs_src.contains("sticky = false")
             && !tabs_src.contains("sticky=false")
             && !tabs_src.contains("variant:")
-            && tabs_src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
-        "sticky/variant not on <tabs>; size stamped (no --tab-*):\n{tabs_src}"
+            && !tabs_src.contains("size: 'sm' | 'md' | 'lg' = 'md'")
+            && !tabs_src.contains("tone:"),
+        "sticky/variant/size/tone not on <tabs> (no --tab-*):\n{tabs_src}"
     );
     // Size CVA lives on <tab> (text-sm py-2 px-3 …), not --tab-* custom props.
     let tab_src = include_str!("../stdlib/tab.sail");
@@ -1899,12 +1900,16 @@ fn label_req_gate_in_element_skins_anatomy() {
 
 #[test]
 fn pagination_size_cva_on_page() {
-    // use:pagination stamps size onto child pages; page size Style match owns geometry.
+    // Size Style match lives on each <page>; <pagination> is layout-only (no size prop).
     // No --pg-* PE in contracts.
     let page_src = include_str!("../stdlib/page.sail");
     let pag_src = include_str!("../stdlib/pagination.sail");
     let page = compile_element(page_src, "page").expect("page compiles");
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
+    assert!(
+        !pag_src.contains("size: 'sm'") && !pag_src.contains("size: 'md'"),
+        "pagination host must not declare unused size prop:\n{pag_src}"
+    );
     assert!(
         is_style_product(page_src)
             && page_src.contains("match:") && page_src.contains("size:")

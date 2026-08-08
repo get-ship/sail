@@ -1,5 +1,5 @@
 <!--
-  <page> — size match owns cell geometry (stamped from pagination).
+  <page> — size match owns cell geometry (author size on each page).
   Paint from component.page tokens (page.foreground, hover-bg, current-*).
 -->
 

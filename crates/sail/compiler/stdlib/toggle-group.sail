@@ -10,7 +10,6 @@
     type: 'single' | 'multiple' = 'single'
     value = ''
     variant: 'outline' | 'ghost' | 'segmented' = 'outline'
-    size: 'sm' | 'md' | 'lg' = 'md'
     orientation: 'horizontal' | 'vertical' = 'horizontal'
   
     onToggleChange: (detail: { value: string }) => void

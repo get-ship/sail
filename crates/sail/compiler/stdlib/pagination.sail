@@ -1,12 +1,11 @@
 <!--
-  <pagination> — nav state via use:pagination (ARIA current). Size is an ordinary
-  prop stamped onto each <page> (child Style match). Host is layout-only.
+  <pagination> — nav state via use:pagination (ARIA current). Host is layout-only.
+  Size Style match lives on each <page> (author there).
 -->
 
 <scope>
   props: {
     value = ''
-    size: 'sm' | 'md' | 'lg' = 'md'
 
     onPageChange: (detail: { page: string }) => void
   }

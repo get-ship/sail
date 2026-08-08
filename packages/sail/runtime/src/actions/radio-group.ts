@@ -14,8 +14,6 @@ let _seq = 0
  *  - on a radio `change`, reflect the new value to the group's `value` attribute
  *    + a hidden <input> (form) and dispatch sail-change {value};
  *  - aria-label / aria-required from the group.
- * Tone/size are ordinary props: put them on the group (CSS custom properties
- * inherit) and/or on each radio.
  * Re-syncs when the group's attributes or its children change. Written once —
  * no per-instance controller.
  */

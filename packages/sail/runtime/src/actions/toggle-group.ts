@@ -10,8 +10,8 @@ const host = (name: string) => `[data-sail-host="${name}"]`
  * = `single` (one value, deselectable) or `multiple` (space-separated set).
  * Each toggle host gets `aria-pressed`. Emits `sail-toggle-change`.
  *
- * Orientation is structural (join/axis CVA); stamped onto cells. Size/variant
- * paint is authored on each toggle.
+ * Orientation is structural (join/axis); stamped onto cells. Size/variant
+ * Style is authored on each toggle.
  */
 export const toggleGroup: Action<void> = (node) => {
   const root = node as HTMLElement

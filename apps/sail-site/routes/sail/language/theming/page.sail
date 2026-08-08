@@ -98,8 +98,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       Status UI spends these directly via Style
       (<code>style&#40;&#123; paint: bg(destructive) &#125;&#41;</code>,
       <code>style&#40;&#123; paint: colorMix(primary, 15) &#125;&#41;</code>).
-      The L1 <code>tone</code> prop selects which hue a component paints —
-      it is not a CSS channel and there is no <code>tone-*-bg/fg</code> ramp.
+      A color-group typed prop (often named <code>tone</code>, type <code>Tone</code>)
+      binds in Style paint (<code>bg(tone)</code>, <code>fg(tone.foreground)</code>) —
+      type-keyed, not a special channel; rest paint is omit the attribute.
     </li>
     <li>
       <strong>Brand / role paint</strong> — <code>--foreground</code>,

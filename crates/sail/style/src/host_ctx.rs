@@ -4,8 +4,9 @@
 //! known by construction. Surface author spelling (`chip`, `chip.foreground`)
 //! is legal only in that unit. App / L2 Style has no surface identities.
 //!
-//! Bound group props (Tone-typed) are type-keyed: the compiler installs the
-//! prop names that are Tone unions so `bg(shade)` parses as a bridge path.
+//! Bound color-group props are type-keyed: the compiler installs the prop
+//! names whose type is the color-group union (`Tone`) so `bg(shade)` parses
+//! as a bridge path. Prop name is irrelevant.
 
 use std::cell::RefCell;
 
@@ -29,11 +30,12 @@ pub fn current_host_surface() -> Option<String> {
     HOST.with(|cell| cell.borrow().clone())
 }
 
-/// Run `f` with Tone-typed prop names recognized as bound group paint roots.
+/// Run `f` with color-group typed prop names recognized as bound paint roots.
 ///
-/// Nested calls replace (not merge) the set. The product ambient `tone` is
-/// always recognized in [`crate::token_groups::looks_like_bound_group_root`]
-/// even when this set is empty (parse/complete without a component).
+/// Nested calls replace (not merge) the set. The product ambient name `tone`
+/// (common color-group prop) is always recognized in
+/// [`crate::token_groups::looks_like_bound_group_root`] even when this set is
+/// empty (parse/complete without a component).
 pub fn with_bound_group_props<T>(props: &[String], f: impl FnOnce() -> T) -> T {
     BOUND_GROUP_PROPS.with(|cell| {
         let prev = cell.replace(props.to_vec());
@@ -43,12 +45,13 @@ pub fn with_bound_group_props<T>(props: &[String], f: impl FnOnce() -> T) -> T {
     })
 }
 
-/// Prop names currently recognized as Tone-typed bound group roots.
+/// Prop names currently recognized as color-group typed bound paint roots.
 pub fn bound_group_prop_names() -> Vec<String> {
     BOUND_GROUP_PROPS.with(|cell| cell.borrow().clone())
 }
 
-/// True if `name` is a bound group prop in the current context (or ambient `tone`).
+/// True if `name` is a bound color-group prop in the current context
+/// (or product ambient `tone`).
 pub fn is_bound_group_prop(name: &str) -> bool {
     if name == "tone" {
         return true;

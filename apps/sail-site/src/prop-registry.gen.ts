@@ -407,10 +407,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "md"
     },
     {
-      "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
-    },
-    {
       "name": "invalid",
       "type": "bool",
       "default": "false"
@@ -533,11 +529,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": ""
     },
     {
-      "name": "size",
-      "type": "sm · md · lg",
-      "default": "md"
-    },
-    {
       "name": "onPageChange",
       "type": "(detail: { page: string }) => void"
     }
@@ -590,15 +581,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     },
     {
-      "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
-    },
-    {
-      "name": "size",
-      "type": "sm · md · lg",
-      "default": "md"
-    },
-    {
       "name": "name",
       "type": "string",
       "default": ""
@@ -630,10 +612,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "xs · sm · md · lg",
       "default": "md"
-    },
-    {
-      "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "invalid",
@@ -704,10 +682,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
-    },
-    {
-      "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "size",
@@ -837,15 +811,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": ""
     },
     {
-      "name": "size",
-      "type": "sm · md · lg",
-      "default": "md"
-    },
-    {
-      "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
-    },
-    {
       "name": "orientation",
       "type": "horizontal · vertical",
       "default": "horizontal"
@@ -860,10 +825,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "size",
       "type": "xs · sm · md · lg",
       "default": "md"
-    },
-    {
-      "name": "tone",
-      "type": "primary · info · success · warning · destructive · accent · muted"
     },
     {
       "name": "invalid",
@@ -982,11 +943,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "variant",
       "type": "outline · ghost · segmented",
       "default": "outline"
-    },
-    {
-      "name": "size",
-      "type": "sm · md · lg",
-      "default": "md"
     },
     {
       "name": "orientation",

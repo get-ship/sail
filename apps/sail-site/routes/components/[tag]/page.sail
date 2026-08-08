@@ -203,7 +203,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.slider()}>
               <column gap="3" style(stageCol)>
-                <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
+                <slider bind:value={load} min="0" max="100"></slider>
                 <progress value={load()} max="100"></progress>
                 <p style(monoXs)>one signal, two components — {load()}%</p>
               </column>
@@ -267,7 +267,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.progressBar()}>
               <column gap="3" style(stageCol)>
-                <slider bind:value={load} min="0" max="100" tone="primary"></slider>
+                <slider bind:value={load} min="0" max="100"></slider>
                 <progress value={load()} max="100"></progress>
                 <p style(monoXs)>one signal drives both — {load()}%</p>
               </column>
@@ -486,7 +486,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Navigation ══════════════════════════════════════════ -->
             <if {stage.tabs()}>
-              <tabs tone="primary" style(fullW)>
+              <tabs style(fullW)>
                 <tab-list variant={variant()}>
                   <tab>Overview</tab>
                   <tab>Activity</tab>
@@ -506,7 +506,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
             <if {stage.pagination()}>
               <column gap="3" align="center">
-                <pagination value={pageNo()} size={variant()} on-page-change={goPage}>
+                <pagination value={pageNo()} on-page-change={goPage}>
                   <page value="1">1</page>
                   <page value="2">2</page>
                   <page value="3">3</page>

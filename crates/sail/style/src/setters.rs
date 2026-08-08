@@ -2378,7 +2378,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             return Ok(bind_css_props(spec, &css));
         }
         // Bound group paths (`tone`, `tone.foreground`) → bridge vars.
-        // Host reflects `--tone: var(--primary)` from the Tone-typed prop.
+        // Host reflects `--tone: var(--primary)` from the color-group typed prop.
         PaintArg::MemberPath { root, path } => {
             let css = crate::token_groups::bridge_var_name(root, path);
             return Ok(bind_css_props(spec, &css));

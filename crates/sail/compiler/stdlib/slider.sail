@@ -10,7 +10,6 @@
     max = 100
     step = 1
     disabled = false
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     size: 'sm' | 'md' | 'lg' = 'md'
     name = ''
   }

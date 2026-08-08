@@ -1,7 +1,7 @@
 # SAIL Syntax Freeze — Annexes A–E (generated)
 
 > **Do not hand-edit.** Regenerate: `node scripts/gen-freeze-annexes.mjs`
-> Tip: `cabd15da531db7775b593831dbde419ee306d8c1` · Generated: 2026-08-08 · Content hash: `6fdfca5406f610ae`
+> Tip: `97490c0e190cadd0c0beef6ceec85292184f1a35` · Generated: 2026-08-08 · Content hash: `552fc2d772c62ad9`
 
 Normative freeze prose: mission scratch `SAIL-SYNTAX-FREEZE.md`. These files are the
 machine-readable inventory the freeze annexes point at.
@@ -24,21 +24,21 @@ Source: compiler element manifest / stdlib (`language-surface.gen.ts` ELEMENTS).
 | Tag | Description |
 | --- | --- |
 | `a` | native <a>. Bare (no variant) = text link (sail-base color). With |
-| `accordion` | ONE disclosure element (replaces collapsible + details). |
+| `accordion` | single disclosure. use:detailsToggle + use:detailsDisabled. |
 | `alert` | L1 inline status banner. Style value language only. |
 | `avatar` | L1 language element. Style value language only. |
 | `badge` | L1 language element. Style value language only. |
-| `breadcrumb` | trail host. ol/li/a anatomy + separators via compiler |
+| `breadcrumb` | trail host. ol/li/a anatomy + separators via compiler descendant map. |
 | `button` | native <button>. L1 platform control. Style value language only. |
-| `card` | L1 language element (element mode). Generic surface: header/body/footer |
+| `card` | L1 surface with header/body/footer slots, tone border, status rail, |
 | `chip` | filter/selection pill. |
 | `code-block` | syntax-highlighted source. |
-| `combobox` | L1 filtering picker (element mode). A text input |
+| `combobox` | L1 filtering picker. Text input filters a listbox |
 | `context-menu` | L1 right-click menu. Native [popover] + use:contextMenu |
 | `dialog` | native modal / sheet. Style product only. |
 | `dropdown` | L1 anchored menu (element mode). |
 | `empty-state` | L1 centered empty placeholder. |
-| `error-boundary` | group-caught swap on Style when. Fallback chrome from |
+| `error-boundary` | group-caught swap on Style when. |
 | `error-state` | L1 recovery surface. Style value language only. |
 | `field` | stack+gap layout; hint/error gates via structure Style. |
 | `fieldset` | form group. Style product only. |
@@ -51,13 +51,13 @@ Source: compiler element manifest / stdlib (`language-surface.gen.ts` ELEMENTS).
 | `menu-item` | item inside dropdown/context-menu. Style product host paint. |
 | `meter` | gauge (value-in-range). Style product only. |
 | `navbar` | application nav bar. Placements top/rail/bottom; sticky; bordered. |
-| `page` | size match owns cell geometry (stamped from pagination). |
-| `pagination` | nav state via use:pagination (ARIA current). Size is an ordinary |
+| `page` | size match owns cell geometry (author size on each page). |
+| `pagination` | nav state via use:pagination (ARIA current). Host is layout-only. |
 | `popover` | L1 anchored overlay. Style value language only. |
 | `progress` | determinate / indeterminate bar. Style product only. |
 | `prose` | typography scope for rendered content (markdown blobs etc.). |
 | `radio` | label + native radio. Root stays <label> for native semantics. |
-| `radio-group` | L1 language element (element mode). A vertical group of |
+| `radio-group` | vertical group of <radio> options. use:radioGroup wires shared |
 | `scroll-area` | overflow axes + standard scrollbar pack on host Style. |
 | `select` | native picker. Field surface + size ladder (Style). |
 | `separator` | native <hr>. Style value language only. |

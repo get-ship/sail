@@ -409,7 +409,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     <!-- Editor card — file tabs + actions on one thin bar -->
     <column gap="0" style(card)>
       <row align="center" justify="between" gap="2" style(cardBar)>
-        <tabs active="source" size="sm" on-tab-change={onTabChange}>
+        <tabs active="source" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
             <tab name="diff">diff</tab>
@@ -499,7 +499,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <column gap="1" style(playground)>
     <column gap="0" style(card)>
       <row align="center" justify="between" gap="2" style(cardBar)>
-        <tabs active="source" size="sm" on-tab-change={onTabChange}>
+        <tabs active="source" on-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
             <tab name="diff">diff</tab>

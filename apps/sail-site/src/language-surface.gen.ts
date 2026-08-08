@@ -5706,7 +5706,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "accordion",
-      "description": "ONE disclosure element (replaces collapsible + details)."
+      "description": "single disclosure. use:detailsToggle + use:detailsDisabled."
     },
     {
       "tag": "alert",
@@ -5722,7 +5722,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "breadcrumb",
-      "description": "trail host. ol/li/a anatomy + separators via compiler"
+      "description": "trail host. ol/li/a anatomy + separators via compiler descendant map."
     },
     {
       "tag": "button",
@@ -5730,7 +5730,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "card",
-      "description": "L1 language element (element mode). Generic surface: header/body/footer"
+      "description": "L1 surface with header/body/footer slots, tone border, status rail,"
     },
     {
       "tag": "chip",
@@ -5742,7 +5742,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "combobox",
-      "description": "L1 filtering picker (element mode). A text input"
+      "description": "L1 filtering picker. Text input filters a listbox"
     },
     {
       "tag": "context-menu",
@@ -5762,7 +5762,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "error-boundary",
-      "description": "group-caught swap on Style when. Fallback chrome from"
+      "description": "group-caught swap on Style when."
     },
     {
       "tag": "error-state",
@@ -5814,11 +5814,11 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "page",
-      "description": "size match owns cell geometry (stamped from pagination)."
+      "description": "size match owns cell geometry (author size on each page)."
     },
     {
       "tag": "pagination",
-      "description": "nav state via use:pagination (ARIA current). Size is an ordinary"
+      "description": "nav state via use:pagination (ARIA current). Host is layout-only."
     },
     {
       "tag": "popover",
@@ -5838,7 +5838,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "radio-group",
-      "description": "L1 language element (element mode). A vertical group of"
+      "description": "vertical group of <radio> options. use:radioGroup wires shared"
     },
     {
       "tag": "scroll-area",

@@ -551,11 +551,11 @@ fn harvest_style_consts_loose_all_scopes(source: &str, env: &mut StyleEnv) {
     }
 }
 
-/// Prop names whose type is a Tone union (type-keyed group bind).
+/// Prop names whose type is a color-group union (type-keyed paint bind).
 ///
 /// Scans every `<scope>` props block; used so Style parse recognizes
 /// `bg(shade)` when `shade: Tone` (not only the product ambient `tone`).
-pub(crate) fn tone_typed_prop_names(source: &str) -> Vec<String> {
+pub(crate) fn color_group_typed_prop_names(source: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut rest = source;
     while let Some(open_rel) = rest.find("<scope") {
@@ -581,7 +581,7 @@ pub(crate) fn tone_typed_prop_names(source: &str) -> Vec<String> {
         if let Ok(block) = parse_scope_block(body, Span::new(0, body.len())) {
             for p in &block.props {
                 if let crate::ir::PropKind::Union(members) = &p.kind {
-                    if sail_lint::token_groups::is_tone_union(members) {
+                    if sail_lint::token_groups::is_color_group_union(members) {
                         let name = crate::emit::util::camel_of(&p.name);
                         if !out.contains(&name) {
                             out.push(name);

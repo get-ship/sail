@@ -84,7 +84,7 @@ export default controller(() => ({ notify: signal(true) }))
 export default controller(() => ({ load: signal(62) }))
 </controller>
 
-<slider bind:value={load} min="0" max="100" tone="primary"></slider>
+<slider bind:value={load} min="0" max="100"></slider>
 <progress value={load()} max="100"></progress>
 <p>Two components, one signal — drag it: {load()}%</p>`,
 
@@ -373,7 +373,7 @@ export default controller(() => {
   </footer>
 </dialog>`,
 
-  tabs: `<tabs tone="primary">
+  tabs: `<tabs>
   <tab-list variant="pill">
     <tab>Overview</tab>
     <tab>Activity</tab>
