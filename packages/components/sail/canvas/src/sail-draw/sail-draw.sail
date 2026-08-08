@@ -1,35 +1,6 @@
 <!--
-  <sail-draw> — an Excalidraw-class whiteboard, OWNED on the canvas substrate.
-
-  Builds createCanvas() + an owned scene model in the controller. Strokes /
-  shapes / arrows / text live as DOM/SVG paths (selectable, accessible,
-  token-themeable) — NO canvas engine. Pen outlines come from vendored
-  perfect-freehand; the optional hand-drawn aesthetic from vendored roughjs
-  (the rough-adapter is the sole importer). The whiteboard composes
-  <sail-canvas> as its substrate via canvas identity and renders its scene
-  into the world layer; selection/transform are an SVG overlay.
-
-  This REPLACES the deleted React + Excalidraw bridge. v1 ships owned
-  SVG-native strokes + shapes + selection + move + undo/redo. Resize/rotate
-  transform handles are not implemented — the scene is intentionally
-  SVG-native (no canvas scene-graph engine), so when they land they will be
-  SVG-overlay handles driven by the scene model, not a vendored canvas lib.
-
-  Props
-  ─────────────────────────────────────────────────────────────────────
-  value     (string, '')                       SSR scene-JSON FALLBACK
-                                                  (JSON.parse). * wins.
-  readonly  (bool, false reflect)               Pan/zoom only; no edits.
-  theme     ('light'|'dark' reflect)            Forwarded to the substrate.
-  grid      ('none'|'dots'|'lines')             Forwarded background grid hint.
-  tool      ('select'|'pan'|'pen'|'rect'|       Active tool (reflect).
-             'ellipse'|'arrow'|'line'|'text')
-  sketchy   (bool, false reflect)               Hand-drawn aesthetic (roughjs).
-  label     (string, '')                        → aria-label on the region.
-  ─────────────────────────────────────────────────────────────────────
-  Events (host.emit!):
-    sail-draw-change { value, version } — debounced 200ms scene mutation.
-    sail-draw-select { ids }            — selection changed.
+  <sail-draw> — SVG whiteboard on <sail-canvas> (pen/shapes/select/undo).
+  Scene model in engine/; optional roughjs sketchy. Events: sail-draw-change, sail-draw-select.
 -->
 
 <scope>
@@ -50,8 +21,6 @@ import { createCanvas } from '../engine/create-canvas'
 import { createDrawScene, type DrawElement, type DrawTool } from './engine/scene'
 import type { ShapeKind } from './engine/shape'
 
-// SSR fallback = the verified sail-combobox shape: plain JSON.parse, try/caught.
-// The live path is * identity onto the scene model.
 function parseScene(raw: string): { elements?: DrawElement[] } | null {
   if (!raw) return null
   try {
@@ -73,10 +42,6 @@ const TOOL_KEYS: Record<string, DrawTool> = {
   t: 'text',
 }
 
-// <sail-draw> controller — an owned SVG-native whiteboard on the canvas
-// substrate. The scene model holds elements (world coords); the view maps to
-// screen through the substrate transform. Pen drafting + shape drag + select
-// + undo/redo run through returned handlers / mount (Cardinal 3).
 export default controller(({ value, sketchy, readonly }: Scope) => {
   const seed = parseScene(value())
   const scene = createDrawScene({

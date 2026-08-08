@@ -1,9 +1,6 @@
 <!--
-  <sail-color-picker> — visual color pick: live swatch + popover.
-  Internal control value is `#rrggbb` (slider math is HSL for simple tracks);
-  theme studio converts oklch ↔ hex at the boundary so tokens stay oklch.
-  `showHex=false` hides hex text. Popover: native popover + use:anchor.
-  ALWAYS show the color being edited (large preview + trigger swatch).
+  <sail-color-picker> — live swatch + popover (`#rrggbb` control; HSL sliders).
+  variant=swatch fills a relative parent (studio chips). Popover: native + use:anchor.
 -->
 
 <scope>
@@ -12,12 +9,18 @@
     value = '#000000'
     disabled = false
     showHex = true
-    /** swatch = color fill only (no hex field / "Pick color" chrome) — for design studio cards. */
+    /** swatch = fill-only trigger (no hex field chrome) for studio cards. */
     variant: 'default' | 'swatch' = 'default'
     tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 </scope>
+
+<!--
+  Panel body is duplicated for swatch vs default triggers (partial purity cannot
+  see controller signals without a ~15-arg bag — reported as language gap).
+-->
+
 <controller>
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
@@ -49,28 +52,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const satId = signal(`sail-color-picker-s-${id}`)
     const lightId = signal(`sail-color-picker-l-${id}`)
     const panelId = signal(`sail-color-picker-panel-${id}`)
-    // Theme-derived at mount() from the host's computed tone tokens — never a
-    // hardcoded palette. Seeded empty; populated once the host is connected.
+    // Populated in mount from host tone tokens (connected cascade).
     const swatches = signal<Swatch[]>([])
 
     mount((host) => {
       let suppress = false
-      // `value` is a declared <prop> — writes below go through its own
-      // compiler-installed accessor (the same signal `_ctx.value()` reads),
-      // never a disconnected local copy, so external `el.value = ...` and
-      // this component's own commits stay in sync.
+      // Prop accessor keeps external `el.value = …` and local commits in sync.
       const hostEl = host as HTMLElement & { value: string }
 
-      // Derive the swatch palette from the host's resolved design-system tone
-      // tokens (+ a neutral ramp) now that the element is connected and the
-      // cascade is in effect.
       swatches.set(deriveSwatches(host))
 
-      // True while a range slider is being dragged — parent must not thrash us.
+      // True while a range slider is dragged — parent must not thrash us.
       let gesture = false
-      /** Hex at open — dismiss without a real edit must not emit (no false dirty). */
+      /** Hex at open — bare dismiss must not emit (no false dirty). */
       let openHex = ''
-      /** User changed color this open session (slider / swatch / hex text). */
+      /** User changed color this open session. */
       let userEdited = false
 
       const emit = (hex: string) => {
@@ -102,11 +98,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         suppress = false
       }
 
-      /** Emit only when hex actually differs from open snapshot / current prop. */
+      /** Emit only when hex differs from open snapshot / current prop. */
       const emitIfChanged = (hex: string) => {
         const norm = normHex(hex) || hex.toLowerCase()
         if (!isHex(norm)) return false
-        // Read previous BEFORE applyLocalHex — hostEl.value updates the prop signal.
         const prev = String(_ctx.value() ?? '').toLowerCase()
         if (norm === openHex || norm === prev) {
           applyLocalHex(norm)
@@ -120,31 +115,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       const commitHex = (raw: string) => {
         const norm = normHex(raw)
         if (!norm) return false
-        // Capture prop before local write; applyLocalHex mutates host value.
         const prev = String(_ctx.value() ?? '').toLowerCase()
         userEdited = true
         syncFromHex(norm)
         applyLocalHex(norm)
-        // Intentional swatch/text: emit when different from prior prop.
         if (norm !== prev) emit(norm)
         return true
       }
 
-      // External value → internal HSL.
-      // While the popover is open (or a drag gesture is active), HSL is SSOT —
-      // ignore parent oklch↔hex rewrites so sliders do not jump mid-drag.
+      // Closed: parent value drives HSL. Open/gesture: HSL is SSOT (no mid-drag jumps).
       const stopValueSync = effect(() => {
         const v = _ctx.value()
         if (suppress || gesture || open()) return
         if (isHex(v as string)) syncFromHex(v as string)
       })
 
-      // Initial seed.
       if (isHex(_ctx.value() as string)) syncFromHex(_ctx.value() as string)
 
-      // Slider edits → local HSL/preview only. Never emit from this effect:
-      // HSL↔hex roundtrip on mount/open would mark every token dirty and thrash parents.
-      // Commit paths: pointerup / range change (commitFromSliders), swatch, hex text.
+      // Sliders preview locally; emit only on commitFromSliders / swatch / hex text.
       const sliderEffect = effect(() => {
         const h = Number(hueText())
         const s = Number(satText())
@@ -186,14 +174,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         try {
           panel.showPopover?.()
         } catch {
-          /* ignore API errors */
+          /* ignore */
         }
-        // popover API can leave panel closed if showPopover races mount —
-        // force top-layer visibility as last resort for studio pickers.
+        // showPopover can race if-render mount — one retry after style read.
         const st = getComputedStyle(panel)
         if (st.display === 'none' || !(panel as HTMLElement & { matches: (s: string) => boolean }).matches?.(':popover-open')) {
           try {
-            // Re-try showPopover once more after style read
             panel.showPopover?.()
           } catch {
             /* ignore */
@@ -202,7 +188,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         return true
       }
 
-      /** Panel is gated by open() — if-render is async; retry until mounted. */
+      /** open() gates the panel; if-render is async — rAF retry until mounted. */
       const ensurePanelShown = (attempts = 16) => {
         if (showPanelPopover()) return
         if (attempts <= 0) return
@@ -233,7 +219,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         }
       }
 
-      /** Commit only if the user edited this session; never lossy-rewrite on bare dismiss. */
+      /** Commit only if the user edited this session. */
       const dismissPanel = () => {
         if (!open()) return
         if (userEdited) commitFromSliders()
@@ -264,7 +250,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         }
       }
 
-      // Attach listeners when trigger exists (capture may lag mount by a frame).
+      // captureInput may lag mount — rAF until trigger is present.
       let attached: HTMLElement | null = null
       let hexAttached: HTMLInputElement | null = null
       const attachTrigger = () => {
@@ -289,7 +275,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         }
         return true
       }
-      // Immediate + rAF retries (swatch if-branch capture)
       if (!attachTrigger()) {
         let tries = 20
         const tick = () => {
@@ -302,10 +287,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       const onShadowClick = (e: Event) => {
         const t = e.target as HTMLElement | null
         if (!t) return
-        // Delegate trigger open — survives if/branch re-renders (no capture race).
         const trigger = t.closest?.('[data-color-trigger-btn], [data-color-trigger]') as HTMLElement | null
         if (trigger && !t.closest?.('[data-color-panel]')) {
-          // Don't steal clicks from hex text input (default variant).
           if (!(t instanceof HTMLInputElement)) {
             onTriggerClick(e)
             return
@@ -347,7 +330,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           commitFromSliders()
         }
       }
-      // Keyboard slider steps: change fires after value settles.
       const onRangeChange = (e: Event) => {
         const t = e.target as HTMLElement | null
         if (!t?.matches?.('input[type="range"]')) return
@@ -362,7 +344,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       rootEl.addEventListener('pointerup', onRangePointerUp)
       rootEl.addEventListener('change', onRangeChange)
       document.addEventListener('pointerdown', onDocPointer)
-      // pointerup outside host still ends a drag that started on a range.
       document.addEventListener('pointerup', onRangePointerUp)
 
       host.expose!({
@@ -416,12 +397,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 </controller>
 <!--
-  Host is display:contents — host `sx` size is ignored. Swatch mode must absolute-fill
-  a position:relative parent (brand/hero stack or token chip wrapper); % width collapses
-  to 0 in auto grid tracks (2px border-only hit target → "picker does not launch").
+  Host is display:contents — size on host is ignored. Swatch must absolute-fill a
+  position:relative parent; % width collapses in auto grid tracks.
 -->
 <if {isSwatchOnly()}>
-  <column gap="0" data-color-picker-root data-variant="swatch" style({ box: position(absolute).top(0).left(0).right(0).bottom(0).minW(0).minH(0) })>
+  <column
+    gap="0"
+    data-color-picker-root
+    data-variant="swatch"
+    style({ box: position(absolute).top(0).left(0).right(0).bottom(0).minW(0).minH(0) })
+  >
     <button
       type="button"
       data-color-trigger
@@ -434,7 +419,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-expanded={open() ? 'true' : 'false'}
       aria-label="Choose color"
       use:captureInput
-      use:swatch={value() || '#000000'} style({ box: w(full).h(full).minW(0).minH(0).pad(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).shadow(none), when: { focusWithin: { paint: outline(ring) } } })></button>
+      use:swatch={value() || '#000000'}
+      style({
+        box: w(full).h(full).minW(0).minH(0).pad(0),
+        paint: radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).shadow(none),
+        when: { focusWithin: { paint: outline(ring) } },
+      })
+    ></button>
     <if {open() && !disabled()}>
       <div
         id={panelId()}
@@ -443,58 +434,119 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:anchor
         placement="bottom-start"
         role="dialog"
-        aria-label="Choose color" style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md) })>        <span style({ box: display(contents), text: fontSize(size-fs) })>          <column gap="3">
-          <div
-            use:swatch={value() || '#000000'}
-
-            aria-hidden="true" style({ box: w(full).h(16), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm) })></div>
-          <grid cols="6" gap="2">
-            <for {swatches() as sw} key={sw.hex}>
-              <button
-                type="button"
-                aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
-                data-hex={sw.hex}
-                aria-label={sw.label}
-                use:swatch={sw.hex} style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: { paint: outline(primary) } } })></button>
-            </for>
-          </grid>
-          <column gap="2">
+        aria-label="Choose color"
+        style({
+          box: w(panel-max-w-md).pad(3),
+          paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md),
+        })
+      >
+        <span style({ box: display(contents), text: fontSize(size-fs) })>
+          <column gap="3">
+            <div
+              use:swatch={value() || '#000000'}
+              aria-hidden="true"
+              style({
+                box: w(full).h(16),
+                paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm),
+              })
+            ></div>
+            <grid cols="6" gap="2">
+              <for {swatches() as sw} key={sw.hex}>
+                <button
+                  type="button"
+                  aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
+                  data-hex={sw.hex}
+                  aria-label={sw.label}
+                  use:swatch={sw.hex}
+                  style({
+                    box: pad(0).aspect(square),
+                    paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)),
+                    when: { selected: { paint: outline(primary) } },
+                  })
+                ></button>
+              </for>
+            </grid>
+            <column gap="2">
+              <row align="center" gap="2">
+                <label for={hueId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>H</label>
+                <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) })>
+                <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{hue()}°</span>
+              </row>
+              <row align="center" gap="2">
+                <label for={satId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>S</label>
+                <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) })>
+                <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{sat()}%</span>
+              </row>
+              <row align="center" gap="2">
+                <label for={lightId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>L</label>
+                <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) })>
+                <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{light()}%</span>
+              </row>
+            </column>
             <row align="center" gap="2">
-              <label for={hueId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>H</label>
-              <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) })>
-              <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{hue()}°</span>
-            </row>
-            <row align="center" gap="2">
-              <label for={satId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>S</label>
-              <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) })>
-              <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{sat()}%</span>
-            </row>
-            <row align="center" gap="2">
-              <label for={lightId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>L</label>
-              <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) })>
-              <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{light()}%</span>
+              <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Hex</span>
+              <input
+                type="text"
+                bind:value={hexDraft}
+                spellcheck="false"
+                autocomplete="off"
+                aria-label="Hex color"
+                style({ box: grow(1).minW(0), text: fontFamily(mono).textCase(lowercase).fontSize(xs) })
+              >
             </row>
           </column>
-          <!-- Always expose hex — studio shows hex on tokens; picker must accept paste. -->
-          <row align="center" gap="2">
-            <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Hex</span>
-            <input type="text" bind:value={hexDraft} spellcheck="false" autocomplete="off" aria-label="Hex color" style({ box: grow(1).minW(0), text: fontFamily(mono).textCase(lowercase).fontSize(xs) })>
-          </row>
-        </column>
         </span>
-</div>
+      </div>
     </if>
   </column>
 </if>
 <if {!isSwatchOnly()}>
-  <column gap="0" data-color-picker-root data-variant="default" style({ box: position(relative).w(full).minH(0) })>
+  <column
+    gap="0"
+    data-color-picker-root
+    data-variant="default"
+    style({ box: position(relative).w(full).minH(0) })
+  >
     <row
       data-color-trigger
       align="center"
-      gap="2" style({ box: w(full).minH(size-h).padY(1).padX(1_5), paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer), when: { focusWithin: { paint: outline(ring) } } })>
-      <button type="button" data-color-trigger-btn disabled={disabled() ? true : null} aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} aria-label="Choose color" use:captureInput use:swatch={value() || '#000000'} style({  box: shrink(0).size(10).minW(10).pad(0), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer)  })></button>
+      gap="2"
+      style({
+        box: w(full).minH(size-h).padY(1).padX(1_5),
+        paint: bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer),
+        when: { focusWithin: { paint: outline(ring) } },
+      })
+    >
+      <button
+        type="button"
+        data-color-trigger-btn
+        disabled={disabled() ? true : null}
+        aria-haspopup="dialog"
+        aria-expanded={open() ? 'true' : 'false'}
+        aria-label="Choose color"
+        use:captureInput
+        use:swatch={value() || '#000000'}
+        style({
+          box: shrink(0).size(10).minW(10).pad(0),
+          paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer),
+        })
+      ></button>
       <if {showHexUi()}>
-        <input type="text" flush name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-label="Hex color" bind:value={value} style({ box: grow(1).minW(0), paint: cursor(pointer), text: fontFamily(mono).textCase(lowercase) })>
+        <input
+          type="text"
+          flush
+          name={name()}
+          placeholder="#000000"
+          disabled={disabled()}
+          autocomplete="off"
+          aria-label="Hex color"
+          bind:value={value}
+          style({
+            box: grow(1).minW(0),
+            paint: cursor(pointer),
+            text: fontFamily(mono).textCase(lowercase),
+          })
+        >
       </if>
     </row>
     <if {open() && !disabled()}>
@@ -505,47 +557,71 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         use:anchor
         placement="bottom-start"
         role="dialog"
-        aria-label="Choose color" style({ box: w(panel-max-w-md).pad(3), paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md) })>        <span style({ box: display(contents), text: fontSize(size-fs) })>          <column gap="3">
-          <div
-            use:swatch={value() || '#000000'}
-
-            aria-hidden="true" style({ box: w(full).h(16), paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm) })></div>
-          <grid cols="6" gap="2">
-            <for {swatches() as sw} key={sw.hex}>
-              <button
-                type="button"
-                aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
-                data-hex={sw.hex}
-                aria-label={sw.label}
-                use:swatch={sw.hex} style({ box: pad(0).aspect(square), paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)), when: { selected: { paint: outline(primary) } } })></button>
-            </for>
-          </grid>
-          <column gap="2">
-            <row align="center" gap="2">
-              <label for={hueId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>H</label>
-              <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) })>
-              <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{hue()}°</span>
-            </row>
-            <row align="center" gap="2">
-              <label for={satId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>S</label>
-              <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) })>
-              <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{sat()}%</span>
-            </row>
-            <row align="center" gap="2">
-              <label for={lightId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>L</label>
-              <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) })>
-              <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{light()}%</span>
-            </row>
+        aria-label="Choose color"
+        style({
+          box: w(panel-max-w-md).pad(3),
+          paint: z(popover).bg(surface-1).fg(foreground).borderWidth(1).border(border).radius(md).shadow(md),
+        })
+      >
+        <span style({ box: display(contents), text: fontSize(size-fs) })>
+          <column gap="3">
+            <div
+              use:swatch={value() || '#000000'}
+              aria-hidden="true"
+              style({
+                box: w(full).h(16),
+                paint: radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm),
+              })
+            ></div>
+            <grid cols="6" gap="2">
+              <for {swatches() as sw} key={sw.hex}>
+                <button
+                  type="button"
+                  aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
+                  data-hex={sw.hex}
+                  aria-label={sw.label}
+                  use:swatch={sw.hex}
+                  style({
+                    box: pad(0).aspect(square),
+                    paint: borderWidth(1).border(border-subtle).radius(sm).cursor(pointer).bg(bind(swatchColor)),
+                    when: { selected: { paint: outline(primary) } },
+                  })
+                ></button>
+              </for>
+            </grid>
+            <column gap="2">
+              <row align="center" gap="2">
+                <label for={hueId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>H</label>
+                <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) })>
+                <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{hue()}°</span>
+              </row>
+              <row align="center" gap="2">
+                <label for={satId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>S</label>
+                <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) })>
+                <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{sat()}%</span>
+              </row>
+              <row align="center" gap="2">
+                <label for={lightId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>L</label>
+                <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) })>
+                <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{light()}%</span>
+              </row>
+            </column>
+            <if {showHexUi()}>
+              <row align="center" gap="2">
+                <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Hex</span>
+                <input
+                  type="text"
+                  bind:value={hexDraft}
+                  spellcheck="false"
+                  autocomplete="off"
+                  aria-label="Hex color"
+                  style({ box: grow(1).minW(0), text: fontFamily(mono).textCase(lowercase).fontSize(xs) })
+                >
+              </row>
+            </if>
           </column>
-          <if {showHexUi()}>
-            <row align="center" gap="2">
-              <span style({ paint: fg(muted-foreground), text: fontSize(xs) })>Hex</span>
-              <input type="text" bind:value={hexDraft} spellcheck="false" autocomplete="off" aria-label="Hex color" style({ box: grow(1).minW(0), text: fontFamily(mono).textCase(lowercase).fontSize(xs) })>
-            </row>
-          </if>
-        </column>
         </span>
-</div>
+      </div>
     </if>
   </column>
 </if>

@@ -1,52 +1,7 @@
 <!--
-  <sail-tree-grid> — engine-backed hierarchical TREE-GRID (role=treegrid).
-
-  The SAME flattened depth-first `tree.rows()` from the REUSED Table engine
-  (createTable with getSubRows+expanded — NO createTree()), rendered through
-  the Table view's COLUMN/CELL machinery (row.getVisibleCells()), with the
-  disclosure caret + indent in the FIRST visible column. navMode:'cell' (vs
-  'row' for sail-tree); role=treegrid (vs role=tree). The live Table<T>
-  (carrying the column defs) arrives via tree IDENTITY binding; a
-  nodes+columns JSON pair is the SSR fallback.
-
-  Density is the platform axis (<html data-density>). NO density/dense prop.
-
-  Events (host.emit): sail-toggle {id, expanded}, sail-expand-change {expanded},
-  sail-select {id}, sail-node-select {selected, selectedIds}, sail-node-click
-  {id, depth, index}.
-
-  Anatomy (anatomy = the dom structure the controller renders into shadow;
-  every named part has a `part=` attribute the test selectors pin to, and
-  every styling class below is a LINT-DISALLOWED public hook — tests anchor
-  on `part=` / `data-*` / `role=`, not on class names):
-
-    <sail-tree-grid>            shadow root
-      ├─ .grid    part=grid    <column>, role=treegrid (the tablegrid)
-      │   ├─ .head part=thead  sticky header row, role=row
-      │   │   └─ .col-head    part=columnheader, role=columnheader (×N)
-      │   │       ├─ .col-label            (text)
-      │   │       ├─ .sort-glyph  sail-icon chevron-up|down (when sorted)
-      │   │       ├─ <button>   data-action=column-menu, ghost xs (when canHide)
-      │   │       └─ .resize-handle part=resize-handle (when canResize)
-      │   └─ .viewport part=viewport
-      │       └─ .spacer part=spacer (the virtualizer total-size ruler)
-      │           └─ .row     part=row, role=row (per visible row)
-      │               └─ .cell part=cell, role=gridcell (per visible column)
-      │                   ├─ .caret  part=caret, sail-icon chevron-right
-      │                   └─ .cell-label (text)
-      ├─ .tree-error part=error (sail-error-state inside, when error attr)
-      └─ .tree-empty part=empty (sail-empty-state inside, when no rows)
-
-  Columns arrive on the live `Table<T>` via the `tree` identity host
-  property; `nodes`/`columns` JSON pair is the SSR fallback.
-
-  Tests pin to `part=` / `data-*` / `role=` — never to a class name.
-
-  Runtime geometry: the row's vertical offset, per-row indent, the
-  virtualizer total-size ruler, and the grid-template tracks all read
-  custom properties written by named actions (`use:virtualRow`,
-  `use:virtualSpacer`, `use:indent`, `use:gridTracks`). No `style:`
-  attributes — runtime geometry is the seam the actions own.
+  <sail-tree-grid> — role=treegrid over createTable (getSubRows+expanded).
+  Live Table via `tree` identity; nodes/columns JSON is SSR fallback.
+  Geometry via use:virtualRow / virtualSpacer / indent / gridTracks actions.
 -->
 
 <scope>
@@ -63,23 +18,7 @@
 </scope>
 
 <controller>
-// <sail-tree-grid> controller — the SAME engine-backed flattened tree, rendered
-// through Table's column/cell machinery (role=treegrid, navMode:'cell').
-//
-// REUSES createTable (getSubRows+expanded) + createVirtualizer; NO createTree().
-// Differs from `sail-tree` only in navMode/role/render: it reads the same
-// flattened `tree.rows()` but maps each row's `getVisibleCells()` into cells
-// (the disclosure caret + indent land in the FIRST visible column). Columns
-// arrive on the live `Table<T>` via the `tree` identity host property; a
-// `nodes`/`columns` JSON pair is the SSR fallback.
-//
-// Runtime geometry (track string, row offset, indent, spacer height) leaves
-// the controller as typed numbers, then crosses JS into `--sail-*` custom
-// properties via the runtime actions. The CSS / sx half never sees an
-// untyped value — every property's NAME is in the template, only the
-// NUMBER walks.
-//
-// Authority: build-spec §"The view", §"sail-tree-grid", Slice 5; behavioral #8.
+// createTable navMode:cell + virtualizer; column wire in sail-tree-grid.columns.
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import { createVirtualizer, type Virtual } from '@ship/sail-runtime/virtual'

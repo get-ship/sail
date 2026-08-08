@@ -1,39 +1,7 @@
 <!--
-  <sail-code-editor> — SAIL primitive, framework-pure. CodeMirror 6 wrapped as a
-  lazy-loaded web-component. Drop-in for any code-editing surface in sail-site
-  (or any SAIL app) without depending on the ship platform.
-
-  Prop / event parity
-  ───────────────────────────────────────────────────────────────────────────
-  value (string, '', form-value)   controlled text contents
-  language (string, '')            dynamic-imported extension on assignment
-  placeholder (string)             empty-state copy
-  readonly (bool, false, reflect)  drop all editor interactions
-  line-numbers (bool, true, reflect)
-  size (sm|md|lg, md, reflect)     controls font-size + line-height
-  tone (info|success|warning|destructive — omit for rest, reflect)
-  theme (light|dark|auto, auto, reflect)
-  wasm-url (string)        compiler WASM URL for browser structure diagnose
-  ops-url (string)         SailAuthoring HTTP base (Studio). Empty = off.
-                           Use "/" for same-origin (createOpsClient default).
-  ops-path (string)        Open file path forwarded to Hover/Complete/Check.
-  ───────────────────────────────────────────────────────────────────────────
-  sail-change              debounced 150ms `value` updates
-  sail-save                Mod-s saves (host-bound events)
-  sail-cancel              Escape cancels pending save
-  input                   native bubbling change event
-  ───────────────────────────────────────────────────────────────────────────
-  host.setDiagnostics()   imperative API for compiler-error squiggles
-  host.focus()            imperative focus
-  ───────────────────────────────────────────────────────────────────────────
--->
-
-<!--
-  Styling: structure + mono type ride sx on the template root; size and chrome
-  are variant() maps on the host (chrome: card = standalone box, flush =
-  embedded in a host-drawn pane). CodeMirror's own internals (.cm-*) are
-  themed in sail-code-editor.theme.ts — the FFI library's styling system.
-  [hidden] comes from the framework contracts sheet.
+  <sail-code-editor> — CodeMirror 6 as a pack CE (lazy mount via use:editorMount).
+  Events: sail-change (debounced), sail-save (Mod-s), sail-cancel (Esc).
+  Host API: setDiagnostics / setCompletions / focus. CM chrome in theme.ts.
 -->
 <scope>
   props: {
@@ -45,9 +13,9 @@
     tone: 'info' | 'success' | 'warning' | 'destructive'
     theme: 'auto' | 'light' | 'dark' = 'auto'
     'wasm-url' = '/sail_compiler_bg.wasm'
-    /** SailAuthoring ops base URL. Empty disables; "/" = same-origin. */
+    /** SailAuthoring ops base. Empty = off; "/" = same-origin. */
     'ops-url' = ''
-    /** Active file path for Hover/Complete/diagnostics RPCs. */
+    /** Open file path for Hover/Complete/diagnostics. */
     'ops-path' = ''
     size: {
       md: 'text-sm leading-loose',
@@ -62,7 +30,7 @@
 </scope>
 
 <controller>
-// use: action + mount() pattern: element → EditorView → event bridge → cleanup.
+// use:editorMount — element → EditorView → event bridge → cleanup.
 
 import type { Action, Signal } from '@ship/sail-runtime'
 import { EditorState, Compartment } from '@codemirror/state'

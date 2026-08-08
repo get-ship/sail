@@ -1,30 +1,7 @@
 <!--
-  <sail-media-image> — the raster + SVG image renderer arm of the sail-media
-  family (Backbone #2 — ViewerRenderer).
-
-  Read-only, source-in-never-fetch. A resolved source arrives via `src`
-  identity (a raster object-url/bytes, or SVG text the consumer already fetched)
-  — NEVER an attribute, NEVER a fetch. A raster source paints into the native
-  <img> (whose `load`/`error` drive the lifecycle events) inside a zoom/pan
-  stage. An SVG TEXT source inlines through `bindHtml` into a sandboxed
-  `role="img"` container (no raster <img>, no innerHTML in the controller). A
-  `gallery` source array renders a `role="listbox"` thumbnail strip with
-  arrow-key navigation.
-
-  Density is the platform axis (`<html data-density>`): this renderer is NOT
-  row-shaped and exposes NEITHER `density` NOR `dense`.
-
-  Props (build-spec §Props):
-    alt       string                    reflect — the real accessible name (<img alt> / SVG aria-label)
-    fit       contain|cover|actual      reflect — object-fit
-    zoomable  bool, true                reflect — wheel/keyboard zoom + pan
-    gallery   bool, false               reflect — multi-image strip (sources via src array)
-
-  Events (ViewerRenderer contract, via emit):
-    sail-viewer-load              — first successful raster load / SVG inline
-    sail-viewer-error {message}   — raster decode failure
-    sail-viewer-zoom {scale}      — wheel/keyboard zoom
-    sail-viewer-index-change {index} — gallery arrow-navigation
+  <sail-media-image> — raster + SVG viewer (source-in, never fetch).
+  `src` is a host identity property (ViewerSource | ViewerSource[] | string), not a
+  reflectable attr. Zoom/pan via engine/zoom-pan; gallery strip when src is an array.
 -->
 
 <scope>
@@ -36,25 +13,8 @@
   }
 </scope>
 <controller>
-// sail-media-image — the raster + SVG image renderer controller (tier-2, glue-
-// only). A resolved source arrives via `src` identity (single ViewerSource
-// OR an array for `gallery`). The controller:
-//   - routes raster sources into the use:rasterImg <img> (resolving bytes→object-url
-//     when the consumer did not pre-resolve a url) and wires load/error → the
-//     ViewerRenderer lifecycle events;
-//   - inlines an SVG TEXT source through `bindHtml` (no innerHTML) into the
-//     sandboxed role=img container, emitting `sail-viewer-load` once;
-//   - delegates zoom/pan to `engine/zoom-pan.ts` (the pre-committed split),
-//     emitting `sail-viewer-zoom {scale}`;
-//   - drives the `gallery` strip's active index + arrow navigation, emitting
-//     `sail-viewer-index-change {index}`.
-//
-// Source-in, never fetch: no `fetch`/`EventSource`/`ship.*`. Heavy interaction
-// math lives in the engine; lifecycle emits go through the sanctioned
-// `emitViewer*` helpers (the free `emit`).
-//
-// Authority: build-spec Slice 6, §"Backbone #2 — ViewerRenderer contract",
-// §"Props" (sail-media-image), §Accessibility, behavioral spec #4.
+// Glue: route src identity → raster <img> / SVG bindHtml / gallery strip.
+// Zoom math in engine/zoom-pan; lifecycle via emitViewer*.
 
 import { emit } from '@ship/sail-runtime/internal'
 import { bindHtml } from '@ship/sail-runtime/internal'
@@ -72,14 +32,12 @@ interface GalleryItem {
   selected: boolean
 }
 
-/** First source of a (possibly array) src assignment. */
 function firstSource(src: ImageSrc): ViewerSource | string | null {
   if (src == null) return null
   if (Array.isArray(src)) return src[0] ?? null
   return src
 }
 
-/** The SVG markup of a source, if it is an SVG text source. */
 function svgTextOf(src: ViewerSource | string | null): string | null {
   if (src == null || typeof src === 'string') return null
   const ct = src.contentType ?? ''
@@ -88,9 +46,7 @@ function svgTextOf(src: ViewerSource | string | null): string | null {
   return looksSvg && text ? text : null
 }
 
-/** A raster object-url for a source: a pre-resolved `url`, else an object URL
- *  minted from resolved `bytes`. Returns `{ url, created }` so the caller can
- *  revoke only what it created. */
+/** Raster url from pre-resolved `url` or object-URL from `bytes` (track `created` to revoke). */
 function rasterUrlOf(src: ViewerSource | string | null): { url: string; created: boolean } {
   if (src == null) return { url: '', created: false }
   if (typeof src === 'string') return { url: src, created: false }
@@ -103,15 +59,12 @@ function rasterUrlOf(src: ViewerSource | string | null): { url: string; created:
 }
 
 export default controller((_ctx: Scope) => {
-    // src identity — assigned to the host `src` property in mount.
+    // Host `src` identity is defined in mount (not a reflectable prop).
     const srcSig = signal<ImageSrc>(null)
     const activeIndex = signal(0)
 
-    // SVG text source → role=img inline path; else the raster <img> path.
     const isSvg = derived<boolean>(() => svgTextOf(firstSource(srcSig())) != null)
 
-    // Gallery is on when the `gallery` bool prop is set AND the source is an
-    // array. Read off the live signal so re-assigning the source recomputes.
     const sources = derived<ViewerSource[]>(() => {
       const s = srcSig()
       return Array.isArray(s) ? s : []
@@ -129,7 +82,6 @@ export default controller((_ctx: Scope) => {
 
     const zoomPanSig = signal<ZoomPanState>({ x: 0, y: 0, scale: 1 })
 
-    // Set by mount before any action body can run.
     let hostEl: HTMLElement | null = null
 
     let created: string[] = []
@@ -138,10 +90,6 @@ export default controller((_ctx: Scope) => {
     }
     const zoomable = (): boolean => hostEl?.getAttribute('zoomable') !== 'false'
 
-    // --- Raster <img> wiring: src + load/error → lifecycle events ------------
-    // Each of the four actions below replaces a ref PLUS a hand-rolled
-    // "did the element change? tear down the old one" effect. The action's own
-    // lifecycle IS that bookkeeping, so the identity locals are gone.
     let lastImgUrl = ''
     const rasterImg: Action<void> = (node) => {
       const img = node as HTMLImageElement
@@ -170,21 +118,14 @@ export default controller((_ctx: Scope) => {
       }
     }
 
-    // --- SVG inline path: bindHtml into the sandboxed role=img container ------
-    // `bindHtml` owns its own reactive re-read of the markup, so it is wired
-    // once per mounted container — which is exactly once per action run.
     const svgMarkup = (): string => svgTextOf(firstSource(srcSig())) ?? ''
     const svgInline: Action<void> = (node) => {
       const stop = bindHtml(node as HTMLElement, svgMarkup)
       return { destroy: stop }
     }
 
-    // --- zoom/pan: attach to the stage, apply transform, emit sail-viewer-zoom
-    const applyTransform = (_st: ZoomPanState): void => {
-      // Runtime geometry goes through an action: the <img> carries
-      // use:zoomPan and that action stamps --zoom-tx, which sx reads as
-      // transform-(--zoom-tx). The controller never touches el.style.
-    }
+    // Transform stamped by use:zoomPan action (--zoom-tx); controller never touches el.style.
+    const applyTransform = (_st: ZoomPanState): void => {}
     const onZoom = (scale: number): void => {
       if (hostEl) emit(hostEl, 'sail-viewer-zoom', { scale })
     }
@@ -198,7 +139,6 @@ export default controller((_ctx: Scope) => {
       return { destroy: () => detach?.() }
     }
 
-    // --- gallery: active-index arrow navigation -------------------------------
     const onStripKey = (e: KeyboardEvent): void => {
       const count = sources().length
       if (count === 0) return
@@ -220,12 +160,9 @@ export default controller((_ctx: Scope) => {
 
     mount((host) => {
       hostEl = host
-      // `zoomable` defaults to true; reflect the default so `.sail-media-image[zoomable]`
-      // CSS + the affordance check see it when the consumer left it unset.
       if (!host.hasAttribute('zoomable')) host.setAttribute('zoomable', '')
 
-      // src identity setter — a live JS reference (or array), never a
-      // stringified attribute. Routes into the scope signal so render re-resolves.
+      // Identity prop — live reference, not a stringified attribute.
       Object.defineProperty(host, 'src', {
         configurable: true,
         get: () => srcSig(),
@@ -235,9 +172,6 @@ export default controller((_ctx: Scope) => {
         },
       })
 
-      // A separate effect emits `sail-viewer-load` once per distinct source
-      // inlined (re-assigning a new source re-fires), mirroring the raster
-      // <img> load lifecycle. It needs no element, so it stays in mount.
       let lastInlined: unknown = null
       const stopSvgEmit = effect(() => {
         if (!isSvg()) return
@@ -259,16 +193,41 @@ export default controller((_ctx: Scope) => {
 
 </controller>
 <if {isSvg()}>
-  <center role="img" aria-label={alt()} use:svgInline style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })></center>
-{else => <center tabindex="0" use:zoomStage style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })>
-    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} style({ box: display(block).w(full).h(full).maxH(full), paint: objectFit(cover).transform(bind(zoomTx)) })>
+  <center
+    role="img"
+    aria-label={alt()}
+    use:svgInline
+    style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })
+  ></center>
+{else =>
+  <center
+    tabindex="0"
+    use:zoomStage
+    style({ box: position(relative).w(full).h(full).minH(28).overflow(hidden), paint: bg(surface-1).radius(md) })
+  >
+    <img
+      alt={alt()}
+      use:rasterImg
+      use:zoomPan={zoomPanSig()}
+      style({ box: display(block).w(full).h(full).maxH(full), paint: objectFit(cover).transform(bind(zoomTx)) })
+    >
   </center>
   <if {isGallery()}>
     <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip style({ box: pad(2).overflowX(auto) })>
       <for {galleryItems() as item} key={item.id}>
-        <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'} style({ box: grow(0).pad(0).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer), when: { selected: { paint: borderWidth(1).border(primary).shadow(accent) } } })>
+        <row
+          role="option"
+          gap="0"
+          aria-selected={item.selected ? 'true' : 'false'}
+          style({
+            box: grow(0).pad(0).overflow(hidden),
+            paint: bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer),
+            when: { selected: { paint: borderWidth(1).border(primary).shadow(accent) } },
+          })
+        >
           <img src={item.url} alt="" />
         </row>
       </for>
     </row>
-  </if>}</if>
+  </if>
+}</if>

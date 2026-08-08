@@ -1,35 +1,6 @@
 <!--
-  <sail-annotation-layer> — SAIL port of <ship-annotation-layer>.
-  Framework-agnostic capture overlay. Wraps slotted content, captures pointer
-  gestures (point click or region drag), opens an inline note popover, and
-  either POSTs each annotation immediately or stages them for batch send().
-
-  Prop surface
-  ──────────────────────────────────────────────────────────────────────────────
-  view-id   (string, '')              target.view_id on emitted events
-  mode      (off|point|region, 'off', reflect)  gesture capture mode
-  endpoint  (string, '/api/feedback') override default POST target
-  staging   (bool, false, reflect)    batch until send() is called
-  ──────────────────────────────────────────────────────────────────────────────
-  Events (bubbles, composed):
-    sail-annotation-staged  → detail: AnnotationEvent
-    sail-annotation-sent    → detail: { id, status }
-    sail-annotation-error   → detail: { code, message?, id? }
-  ──────────────────────────────────────────────────────────────────────────────
-  JS methods (exposed on host by controller):
-    send()   — POST all staged items serially
-    clear()  — drop all staged items without sending
-  JS property:
-    staged: AnnotationEvent[]  — current staged array (readonly getter)
-  ──────────────────────────────────────────────────────────────────────────────
-  Slots: (default) — wraps the annotatable content
-  Anatomy: the slotted content sits under a capture overlay (data-state=capture
-  while armed); staged annotations render as <sail-annotation-marker> children.
-  ──────────────────────────────────────────────────────────────────────────────
-  Parity vs <ship-annotation-layer>:
-    view-id, mode, endpoint, staging attrs  → identical
-    ship-annotation-staged/sent/error       → sail-annotation-staged/sent/error
-    send(), clear()                         → identical
+  <sail-annotation-layer> — capture overlay (point/region) + note popover.
+  POST immediately or stage for host send()/clear(). Events: sail-annotation-staged/sent/error.
 -->
 
 <scope>
@@ -75,9 +46,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
     const drag = signal<Drag | null>(null)
     const noteText = signal('')
 
-    // The host element is not present in the scope factory (the post-
-    // convergence "SAIL names no host" compile stops passing it as the 2nd
-    // arg), so read it through this signal — set in `mount` once the
+    // Host is not a setup arg — capture in mount via this signal once the
     // runtime hands over the real element. The `sendOne` / `confirmNote`
     // closures below emit `sail-annotation-{staged,sent,error}` on the host,
     // so they must read the host from this signal, not the dead scope arg.

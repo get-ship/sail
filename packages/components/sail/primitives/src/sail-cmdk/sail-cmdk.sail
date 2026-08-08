@@ -1,53 +1,7 @@
 <!--
-  <sail-cmdk> — generic command palette (dialog + filterable list + keyboard nav).
-
-  Composes a native <dialog> for the modal shell (top-layer, focus trap, scroll
-  lock, ::backdrop, ESC) via the useDialog handle — it does NOT reinvent any of
-  that. On top of the dialog body it lays a search input pinned to the top and a
-  scrollable,
-  type-to-filter, keyboard-navigable listbox of items, optionally grouped.
-
-  RUNTIME-FREE / SDK-FREE. Items + handlers arrive as data/events:
-    • `items` IDENTITY binding — a live `CmdkItem[]` from a parent
-      controller (the primary runtime path; never serialized).
-    • `items='[…JSON…]'` attribute — the SSR/declarative fallback (the
-      compiler's <prop> vocab is string|bool|number, so structured data
-      arrives as a JSON string parsed in the controller). Same name as the
-      property, mirroring the sail-tree `tree`/`nodes` duality minus a second
-      tag.
-  The consuming app supplies the data and reacts to events — nothing here
-  imports a client or a router.
-
-  CmdkItem shape (all but id/label optional):
-    { id, label, value?, icon?, hint?, group?, keywords?, disabled? }
-  `value` defaults to `id`; `icon` is a <icon> name; `keywords` widens
-  the substring match beyond the visible label; `group` inserts a heading
-  when it changes between consecutive items.
-
-  Behaviour
-  ─────────────────────────────────────────────────────────────────────────
-  - Opening focuses the search input and highlights the first enabled item.
-  - Typing filters case-insensitively over label + keywords; highlight
-    resets to the first match.
-  - ↑/↓ move the highlight (wrapping) over ENABLED items; Home/End jump to
-    the first/last; Enter selects the highlight; Escape closes (the dialog's
-    native cancel handles it). Clicking a row selects it.
-  - Selecting emits `sail-cmdk-select {id, value}`, closes, and clears the
-    query. Disabled rows render dimmed and are skipped by nav + click.
-  ─────────────────────────────────────────────────────────────────────────
-  Events (bubbling, composed):
-    sail-cmdk-select {id, value}   a row was chosen
-    sail-cmdk-input  {query}       the search query changed (async-search seam)
-    sail-cmdk-open   {}            the palette opened
-    sail-cmdk-close  {}            the palette closed
-  Methods (host.expose): open(), close(), toggle()
-  Parts: dialog, panel, search, input, list, group, item, item-icon,
-         item-label, item-hint, empty
-  ─────────────────────────────────────────────────────────────────────────
-  ARIA: the input is role=combobox (aria-expanded, aria-controls,
-        aria-activedescendant → the highlighted row's id); the list is
-        role=listbox; rows are role=option with aria-selected on the
-        highlight and aria-disabled on disabled rows.
+  <sail-cmdk> — command palette: native <dialog> + filterable listbox.
+  Items via `items` identity (CmdkItem[]) or JSON attr SSR fallback.
+  Events: sail-cmdk-select / -input / -open / -close. Host: open/close/toggle.
 -->
 
 <scope>
@@ -60,17 +14,7 @@
   }
 </scope>
 <controller>
-// <sail-cmdk> controller — generic command palette.
-//
-// Composes a native <dialog> via useDialog (modal shell + focus trap + scroll lock + ESC) and
-// owns the search/filter/keyboard-nav layer on top of it. RUNTIME-FREE: data
-// arrives via the `items` IDENTITY property (a live CmdkItem[]) or the `items`
-// JSON attribute (SSR fallback), and selections leave as `sail-cmdk-*` events.
-// No client, no router — the consuming app wires those.
-//
-// Templates declare, controllers do: the filtered/grouped render rows are
-// derived here; mutations (highlight, select, open/close sync) + emission live
-// in mount's listeners.
+// Dialog shell via action; filter + keyboard nav + emits here.
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-cmdk.sail'
@@ -78,7 +22,6 @@ import { type CmdkItem, str, parseJsonItems } from './decode'
 
 export type { CmdkItem } from './decode'
 
-/** A normalized, filter-position-tagged item (concrete fields, no optionals). */
 interface VisibleItem {
   id: string
   optId: string
@@ -90,8 +33,7 @@ interface VisibleItem {
   disabled: boolean
 }
 
-/** A flat render row — uniform shape (heading rows zero the item fields) so the
- *  template never relies on discriminated-union narrowing. */
+/** Flat row — heading rows zero item fields (no union narrowing in template). */
 interface RenderRow {
   key: string
   isHeading: boolean
@@ -114,8 +56,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const highlight = signal(0)
     const listId = signal(`sail-cmdk-list-${seq}`)
 
-    // Cross-element refs: `scrollActiveIntoView` reads `listEl` from keydown
-    // handlers bound to the INPUT.
+    // listEl read from input keydown handlers (scrollActiveIntoView).
     const inputEl = signal<HTMLInputElement | null>(null)
     const listEl = signal<HTMLUListElement | null>(null)
     const captureInput: Action<void> = (node) => {
@@ -127,13 +68,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       return { destroy: () => listEl.set(null) }
     }
 
-    // Set by mount before any handler below can fire.
     let hostEl: (HTMLElement & { open: boolean }) | null = null
 
-    // `open` prop ⇄ the native modal. The platform owns top layer, focus trap,
-    // ESC and focus-return; the dialog owns this behavior, so it rides an
-    // action: the open/close bridge and the native-close mirror both live with
-    // the element and tear down with it.
+    // open prop ⇄ dialog showModal/close.
     const dialogBridge: Action<void> = (node) => {
       const el = node as HTMLDialogElement
       const stop = effect(() => {
@@ -153,8 +90,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
     }
 
-    // Filter case-insensitively over label + keywords, preserving order, and
-    // tag each survivor with a stable per-instance option id.
+
     const visible = derived<VisibleItem[]>(() => {
       const q = query().trim().toLowerCase()
       const out: VisibleItem[] = []
@@ -175,11 +111,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       return out
     })
 
-    // The keyboard-navigable subset (enabled rows only); highlight indexes here.
+
     const navigable = derived<VisibleItem[]>(() => visible().filter((v) => !v.disabled))
 
-    // Highlight clamped to the live navigable range (or 0 when empty), so a
-    // shrinking filtered set can never strand the selection past the end.
+
     const safeHighlight = derived<number>(() => {
       const n = navigable().length
       if (n === 0) return 0
@@ -190,7 +125,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const highlightId = derived<string>(() => navigable()[safeHighlight()]?.id ?? '')
     const activeId = derived<string>(() => navigable()[safeHighlight()]?.optId ?? '')
 
-    // Flatten to render rows, injecting a heading row whenever `group` changes.
+
     const rows = derived<RenderRow[]>(() => {
       const out: RenderRow[] = []
       let lastGroup: string | null = null
@@ -227,17 +162,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     })
 
     mount((host) => {
-      // `open` is a declared <prop> — writes below go through its own
-      // compiler-installed accessor (the same signal `_ctx.open()` reads),
-      // never a disconnected local copy, so `el.open = true` set externally
-      // and `sail-cmdk`'s own show()/close()/toggle() stay in sync.
       hostEl = host as HTMLElement & { open: boolean }
-      // Non-null alias for the mount body; the action guards its own read.
       const h = hostEl
-      // ── `items` IDENTITY property + JSON-attribute SSR fallback ──────────────
-      // A live CmdkItem[] assigned to the host `items` property (never a string).
-      // Defined on the instance so it shadows nothing — `items` is intentionally
-      // NOT a declared <prop>, so there is no compiler accessor to clash with.
+      // items identity (live CmdkItem[]) — not a declared prop.
       Object.defineProperty(host, 'items', {
         configurable: true,
         get: () => itemsSig(),
@@ -256,9 +183,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         const list = listEl() as HTMLUListElement | null
         const id = activeId() as string
         if (!list || !id) return
-        // Match by id without a CSS selector — option ids derive from caller
-        // data and `CSS.escape` is absent under jsdom, so a plain scan is the
-        // robust path. scrollIntoView is optional (jsdom stubs it).
+        // Scan by id (CSS.escape missing under jsdom).
         let target: HTMLElement | null = null
         for (const li of Array.from(list.querySelectorAll('li.item'))) {
           if ((li as HTMLElement).id === id) {
@@ -269,8 +194,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         target?.scrollIntoView?.({ block: 'nearest' })
       }
 
-      // Reset query + highlight on each open; emit open/close. The dialog drives
-      // its own native open via open={open()}; here we react to the state.
+
       let wasOpen = false
       const stopOpenSync = effect(() => {
         const isOpen = _ctx.open() === true
