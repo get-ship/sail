@@ -1,31 +1,8 @@
 <!--
-  <sail-composer> — the message input + send control. Single-line by
-  default; `multiline` switches to a growing textarea. Enter submits;
-  Shift+Enter inserts a newline (multiline only). Composes a bare
-  <button> for the send action.
-
-  Attachments (files, canvases, code snippets) are owned by the
-  consumer: render their chips into the `attachments` slot and set the
-  `attachments` JS-property on the host. The composer echoes that array
-  back in the submit event — it never fabricates attachment data.
-
-  Focus lives on the frame (`focus-within:`), not on the field. The frame
-  carries `disabled` as a `data-state` token so the dimmed surface is one
-  `state-disabled:` rule on the element that draws it.
-
-  Props
-  ─────────────────────────────────────────────────────────────────────
-  placeholder  (string)  Input placeholder.
-  disabled     (bool)    Disables the input + send button.
-  multiline    (bool)    Use a textarea + Shift+Enter for newlines.
-  ─────────────────────────────────────────────────────────────────────
-  Slots
-    attachments  attachment chips (file / canvas / code)
-    trailing     extra actions beside Send
-  ─────────────────────────────────────────────────────────────────────
-  Events
-    sail-composer-submit  { detail: { text: string, attachments: unknown[] } }
-  ─────────────────────────────────────────────────────────────────────
+  <sail-composer> — message input + send. multiline → growing textarea;
+  Enter submits, Shift+Enter newline (multiline only). Attachments are
+  consumer-owned (slot + host JS property); echoed on submit, never fabricated.
+  Events: sail-composer-submit { text, attachments }.
 -->
 
 <scope>
@@ -34,6 +11,28 @@
     disabled = false
     multiline = false
   }
+
+  style frame = {
+    box: pad(2),
+    paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg),
+    when: {
+      focusWithin: { paint: borderWidth(1).border(primary).outline(ring) },
+      stateDisabled: { paint: bg(muted).opacity(75) },
+    },
+  }
+  style body = { box: display(contents), text: fontFamily(body) }
+  style field = {
+    box: grow(1).minW(0).minH(0).padY(1_5).padX(2),
+    paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
+    text: fontFamily(body).fontSize(base).leading(normal),
+  }
+  style fieldMulti = {
+    box: grow(1).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto),
+    paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
+    text: fontFamily(body).fontSize(base).leading(normal),
+  }
+  style actions = { box: shrink(0) }
+  style send = { box: shrink(0) }
 </scope>
 
 <controller>
@@ -43,18 +42,12 @@ import type { Scope } from './sail-composer.sail'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const text = signal('')
-    // Consumer-owned attachment payloads. The composer never fabricates
-    // these — it echoes whatever the host assigned in the submit event.
+    // Consumer-owned payloads; composer only echoes them on submit.
     const attachments = signal<unknown[]>([])
-    // The submit event is dispatched from the host, so the handlers need it.
-    // `mount` runs after the template is built, but an action only REGISTERS
-    // listeners at attach time — by the time any of them fires, mount has run
-    // and this is set.
     let hostEl: Element | null = null
 
     mount((host) => {
       hostEl = host
-      // Expose `attachments` as a JS-property: `el.attachments = [...]`.
       const init = (host as unknown as { attachments?: unknown[] }).attachments
       if (init != null) attachments.set(init)
       Object.defineProperty(host, 'attachments', {
@@ -74,17 +67,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     const onKeydown = (e: KeyboardEvent) => {
       if (e.key !== 'Enter') return
-      // Shift+Enter inserts a newline in multiline mode; plain Enter
-      // always submits. Single-line mode submits on Enter regardless.
       if (_ctx.multiline() && e.shiftKey) return
       e.preventDefault()
       submit()
     }
 
-    // `multiline` toggles the {#if}, swapping <textarea> for <input>. The
-    // action re-runs on whichever element mounts and tears down with the one
-    // that leaves — the rebind that used to need a ref + tracking effect is
-    // just the action's lifecycle.
+    // multiline swaps textarea/input; action rebinds on whichever mounts.
     const fieldKeys: Action<void> = (node) => {
       node.addEventListener('keydown', onKeydown as EventListener)
       return { destroy: () => node.removeEventListener('keydown', onKeydown as EventListener) }
@@ -101,21 +89,48 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <column
   gap="2"
-  data-state={disabled() ? 'disabled' : ''} style({ box: pad(2), paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg), when: { focusWithin: { paint: borderWidth(1).border(primary).outline(ring) }, stateDisabled: { paint: bg(muted).opacity(75) } } })>  <span style({ box: display(contents), text: fontFamily(body) })>    <div style({ box: display(contents) })>
-    <slot name="attachments"></slot>
-  </div>
-  <!-- nowrap: default row wraps and parks Send under the field in tight tiles. -->
-  <row nowrap gap="2" align="center">
-    <if {multiline()}>
-      <textarea rows="1" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })></textarea>
-    </if>
-    <if {!multiline()}>
-      <input type="text" placeholder={placeholder()} disabled={disabled()} bind:value={text} use:fieldKeys style({  box: grow(1).minW(0).minH(0).padY(1_5).padX(2), paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none), text: fontFamily(body).fontSize(base).leading(normal)  })>
-    </if>
-    <row nowrap gap="1" align="center" style({ box: shrink(0) })>
-      <slot name="trailing"></slot>
-      <button use:sendClick type="button" variant="solid" tone="primary" size="sm" aria-label="Send" disabled={disabled() || text().trim().length === 0} style({ box: shrink(0) })>Send</button>
+  data-state={disabled() ? 'disabled' : ''}
+  style(frame)
+>
+  <span style(body)>
+    <div style({ box: display(contents) })>
+      <slot name="attachments"></slot>
+    </div>
+    <!-- nowrap keeps Send beside the field in tight tiles. -->
+    <row nowrap gap="2" align="center">
+      <if {multiline()}>
+        <textarea
+          rows="1"
+          placeholder={placeholder()}
+          disabled={disabled()}
+          bind:value={text}
+          use:fieldKeys
+          style(fieldMulti)
+        ></textarea>
+      </if>
+      <if {!multiline()}>
+        <input
+          type="text"
+          placeholder={placeholder()}
+          disabled={disabled()}
+          bind:value={text}
+          use:fieldKeys
+          style(field)
+        >
+      </if>
+      <row nowrap gap="1" align="center" style(actions)>
+        <slot name="trailing"></slot>
+        <button
+          use:sendClick
+          type="button"
+          variant="solid"
+          tone="primary"
+          size="sm"
+          aria-label="Send"
+          disabled={disabled() || text().trim().length === 0}
+          style(send)
+        >Send</button>
+      </row>
     </row>
-  </row>
   </span>
 </column>

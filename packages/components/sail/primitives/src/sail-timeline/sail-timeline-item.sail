@@ -1,16 +1,9 @@
 <!--
-  <sail-timeline-item> — one timeline entry: gutter connector + tone dot,
-  head row (title slot + timestamp), body content. `interactive` makes the
-  row a button (role/tabindex/sail-select from the controller; the pressed
-  surface from the Style compound). The connector is two real segments
-  around the dot — the first item hides the top run, the last hides the
-  bottom run (visibility, so the gutter geometry never shifts).
-
+  <sail-timeline-item> — gutter connector + tone dot, title/at head, body slot.
+  `interactive` makes the row a button (role/tabindex + onSelect).
+  First/last items hide the top/bottom connector run (visibility, not layout shift).
   Tone: real Tone members only — omit for rest (never tone="default").
-  Rest dot = foreground; brand = bound bg(tone). muted → muted-foreground.
-
-  Residual (LANG-GAPS.md): forced-colors focus outline (system colors are
-  not sx values); first/last detection is mount-time (static lists).
+  Rest dot = foreground; brand = bound bg(tone); muted → muted-foreground.
 -->
 
 <scope>
@@ -26,7 +19,6 @@
   style connector = { box: w(half).h(3), paint: bg(border-subtle) }
   style connectorGrowHide = { box: grow(1).w(half), paint: visibility(hidden) }
   style connectorGrow = { box: grow(1).w(half), paint: bg(border-subtle) }
-  // Rest = foreground; bound tone expands [tone='…'] gates over rest.
   style dot = { box: w(2_5).h(2_5), paint: radius(full).bg(foreground) }
   style bodyCol = { box: grow(1).minW(0).padY(2) }
   style head = { paint: fg(foreground) }
@@ -44,6 +36,7 @@ export default controller((ctx) => {
 
     mount((host) => {
       if (!host.hasAttribute('role')) host.setAttribute('role', 'listitem')
+      // Static lists: first/last of type at mount.
       first.set(host.matches(':first-of-type'))
       last.set(host.matches(':last-of-type'))
 
@@ -85,15 +78,35 @@ export default controller((ctx) => {
   })
 
 </controller>
-<row gap="2" align="stretch" style(host, { compound: [ { interactive: true, paint: cursor(pointer).radius(sm), when: { hover: { paint: bg(muted) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } } } ] })>
+<row
+  gap="2"
+  align="stretch"
+  style(host, {
+    compound: [{
+      interactive: true,
+      paint: cursor(pointer).radius(sm),
+      when: {
+        hover: { paint: bg(muted) },
+        focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
+      },
+    }],
+  })
+>
   <column align="center" gap="0" style(gutter)>
     <if {first()}>
       <span style(connectorHide)></span>
-    {else => <span style(connector)></span>}</if>
-    <span style(dot, { paint: bg(tone), compound: [ { tone: muted, paint: bg(muted-foreground) } ] })></span>
+    {else =>
+      <span style(connector)></span>
+    }</if>
+    <span style(dot, {
+      paint: bg(tone),
+      compound: [{ tone: muted, paint: bg(muted-foreground) }],
+    })></span>
     <if {last()}>
       <span style(connectorGrowHide)></span>
-    {else => <span style(connectorGrow)></span>}</if>
+    {else =>
+      <span style(connectorGrow)></span>
+    }</if>
   </column>
   <column gap="0" style(bodyCol)>
     <row align="baseline" justify="between" gap="2" style(head)>

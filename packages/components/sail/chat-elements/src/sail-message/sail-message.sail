@@ -1,34 +1,7 @@
 <!--
-  <sail-message> — a single chat bubble. Renders one turn from any
-  participant in any modality. Pure declarative primitive: the consumer
-  supplies the content via the default slot and any per-message actions
-  via the `trailing` slot. No controller — from / content-type / status
-  drive presentation entirely.
-
-  from / content-type / status ride the root's `data-state` token list, so
-  the bubble reads all three through `group-state-<value>:` sx. The three
-  vocabularies are disjoint, so one token list carries them without
-  collision.
-
-  Message kind (`from`) is NOT an ARIA role — never stamps role=user|assistant
-  on the host. Values stay user|assistant|system|tool for CSS + meta label.
-
-  Props
-  ─────────────────────────────────────────────────────────────────────
-  from          (union)  user | assistant | system | tool. Drives
-                        bubble alignment + tone (message kind, not ARIA).
-  content-type  (union)  text | code | drawing | terminal-snapshot |
-                        tool-call | citation | image. Drives the inner
-                        shape (monospace surface for code/terminal,
-                        framed media for drawing/image, etc.).
-  timestamp     (string) ISO timestamp; surfaced via the `time`
-                        element's datetime + shown in the meta row.
-  status        (union)  sending | sent | error. Tints the bubble edge.
-  ─────────────────────────────────────────────────────────────────────
-  Slots
-    (default)   message content
-    trailing    per-message actions (copy, retry, …)
-  ─────────────────────────────────────────────────────────────────────
+  <sail-message> — one chat bubble. Content via default slot; actions via trailing.
+  from / content-type / status ride data-state (disjoint vocabularies) for
+  group-state paint. from is message kind, not an ARIA role.
 -->
 
 <scope>
@@ -39,17 +12,45 @@
     status: 'sent' | 'sending' | 'error' = 'sent'
   }
 
-  style host = { box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) }
-  style meta = { box: padX(half), paint: fg(muted-foreground), text: fontSize(xs) }
+  style host = {
+    box: maxW(full),
+    paint: group().fg(foreground),
+    text: fontFamily(body),
+  }
+  style meta = {
+    box: padX(half),
+    paint: fg(muted-foreground),
+    text: fontSize(xs),
+  }
   style fromLabel = { text: fontWeight(medium) }
-  style bubble = { box: padY(2).padX(3), paint: radius(lg).bg(surface-1).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal), when: { groupStateUser: { paint: bg(hover-bg).borderWidth(1).border(primary) }, groupStateSystem: { paint: bg(muted).fg(muted-foreground) }, groupStateTool: { paint: bg(hover-bg).borderWidth(1).border(accent) }, groupStateError: { paint: borderWidth(1).border(destructive) }, groupStateSending: { paint: opacity(75) }, groupStateCode: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }, groupStateToolCall: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }, groupStateTerminalSnapshot: { paint: bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle), text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) } } }
+  style bubble = {
+    box: padY(2).padX(3),
+    paint: radius(lg).bg(surface-1).borderWidth(1).border(border).fg(foreground),
+    text: fontSize(base).leading(normal),
+    when: {
+      groupStateUser: { paint: bg(hover-bg).borderWidth(1).border(primary) },
+      groupStateSystem: { paint: bg(muted).fg(muted-foreground) },
+      groupStateTool: { paint: bg(hover-bg).borderWidth(1).border(accent) },
+      groupStateError: { paint: borderWidth(1).border(destructive) },
+      groupStateSending: { paint: opacity(75) },
+      groupStateCode: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) },
+      groupStateToolCall: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) },
+      groupStateTerminalSnapshot: {
+        paint: bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle),
+        text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
+      },
+    },
+  }
+  // contents: no trailing box when empty so column gap never opens under it.
   style trailing = { box: display(contents) }
 </scope>
 
 <column
   gap="1"
   align={from() === 'user' ? 'end' : 'stretch'}
-  data-state={from() + ' ' + contentType() + ' ' + status()} style(host)>
+  data-state={from() + ' ' + contentType() + ' ' + status()}
+  style(host)
+>
   <row gap="2" align="baseline" style(meta)>
     <span style(fromLabel)>{from()}</span>
     <if {timestamp()}>
@@ -61,9 +62,6 @@
     <slot></slot>
   </div>
 
-  <!-- display:contents so a message with no actions has no trailing box (the
-       column's gap never opens under it) and slotted actions become items of
-       the message column, following its alignment. -->
   <div style(trailing)>
     <slot name="trailing"></slot>
   </div>
