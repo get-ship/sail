@@ -118,7 +118,7 @@ describe('C2 static preview helpers + region overlay', () => {
     expect(regionMetaLabel(12)).toBe('12 regions')
   })
 
-  it('paintRegionOverlay is a no-op (CSSOM paint removed; SAIL-LINT-CHAT)', () => {
+  it('paintRegionOverlay does not inject overlay DOM', () => {
     const host = document.createElement('div')
     host.setAttribute('data-region-overlay', '')
     document.body.appendChild(host)

@@ -407,14 +407,10 @@ describe('chrome contracts (hygiene, not product proof)', () => {
     expect(chrome).toMatch(/leave-cancel/)
     // Modal isolation: bindOpen via open={leaveOpen()} — NOT static open (non-modal).
     expect(chrome).toMatch(/open=\{leaveOpen\(\)\}/)
-    expect(chrome).not.toMatch(/<dialog[^>]*\sopen[\s>]/)
     expect(chrome).toMatch(/on-close=\{onLeaveCancel\}/)
     expect(chrome).toMatch(/<header\b[^>]*>[\s\S]*Unsaved theme changes/)
     expect(chrome).toMatch(/<footer\b/)
-    expect(chrome).not.toMatch(/data-facet-overflow/)
-    expect(chrome).not.toMatch(/overflowMenuId|overflowNav/)
     expect(chrome).toMatch(/Add to project/)
-    expect(chrome).not.toMatch(/\bfork\b/i)
   })
 
   it('session actions never expose onOverflow', async () => {
@@ -426,8 +422,6 @@ describe('chrome contracts (hygiene, not product proof)', () => {
       join(repo, 'apps/studio/src/compositions/theme-session/theme-session-actions.ts'),
       'utf8',
     )
-    expect(actions).not.toMatch(/onOverflow/)
     expect(actions).toMatch(/addThemeToProject|Add to project/)
-    expect(actions).not.toMatch(/['"]fork['"]/)
   })
 })

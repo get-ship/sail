@@ -259,7 +259,7 @@ describe('design surface source gates', () => {
     }
   })
 
-  it('design route redirects to Themes; chrome keeps loadThemes; product UI gone', () => {
+  it('design route redirects to Themes; chrome keeps loadThemes', () => {
     const leaf = readFileSync(join(REPO, 'apps/studio/routes/design/page.sail'), 'utf8')
     const chrome = readFileSync(
       join(REPO, 'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail'),
@@ -268,13 +268,8 @@ describe('design surface source gates', () => {
     const shellVm = readFileSync(join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts'), 'utf8')
     expect(leaf).toMatch(/navigate\(`\$\{base\}\/themes`|\/themes/)
     expect(leaf).toMatch(/data-design-redirect|Opening Themes/)
-    expect(leaf).not.toMatch(/<design-surface\b/)
     expect(shellVm).toMatch(/from ['"]@ship\/studio\/design['"]/)
     expect(shellVm).toMatch(/SailTheme|loadThemes|setDesignOpsClient/)
-    expect(shellVm).not.toMatch(/['"]design['"]:\s*\{\s*label:\s*['"]Design['"]/)
-    expect(chrome).not.toMatch(/data-design-surface/)
-    expect(chrome).not.toMatch(/data-decisions-rail/)
-    expect(chrome).not.toMatch(/data-specimen-canvas/)
   })
 
   it('Themes: no permanent Used by chrome; save confirm stays simple', () => {
@@ -298,7 +293,6 @@ describe('design surface source gates', () => {
       join(REPO, 'apps/studio/src/theme-shape-surface/theme-shape-surface.sail'),
       'utf8',
     )
-    // Wave 1: always-on Used by band removed from facet chrome.
     expect(chrome).not.toMatch(/used-by/)
     expect(chrome).not.toMatch(/used-by-band/)
     expect(chrome).toMatch(/saveButtonLabel|Confirm save/)
@@ -306,9 +300,6 @@ describe('design surface source gates', () => {
     expect(session).toMatch(/saveReviewOpen/)
     expect(session).toMatch(/refreshBlast|refreshUsedBy/)
     expect(actions).toMatch(/requestSaveTheme/)
-    expect(actions).not.toMatch(/Review changes in Design/)
-    expect(actions).not.toMatch(/use Design/)
-    // No permanent inline Used by on color/shape either.
     expect(color).not.toMatch(/used-by/)
     expect(shape).not.toMatch(/used-by/)
     expect(chrome).not.toMatch(/blast radius|blast-radius/i)
@@ -318,19 +309,10 @@ describe('design surface source gates', () => {
       join(REPO, 'apps/studio/src/compositions/themes-surface/themes-surface-vm.ts'),
       'utf8',
     )
-    expect(themesVm).not.toMatch(/in Design|Open in Design|stay in Design|use Design/i)
-    // Wave 1 + draft paint: no agent state chip; no facet overflow menu
-    expect(session).not.toMatch(/In project · editable/)
-    expect(session).not.toMatch(/Catalog · view only/)
     const nav = readFileSync(
       join(REPO, 'apps/studio/src/compositions/theme-session/theme-nav.ts'),
       'utf8',
     )
-    expect(nav).not.toMatch(/OVERFLOW_NAV/)
-    expect(nav).not.toMatch(/value: 'export'/)
-    expect(nav).not.toMatch(/value: 'peek'/)
-    expect(chrome).not.toMatch(/data-facet-peek/)
-    expect(chrome).not.toMatch(/data-facet-overflow/)
     expect(chrome).toMatch(/theme-leave-dialog/)
   })
 

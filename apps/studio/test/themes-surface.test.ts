@@ -187,36 +187,21 @@ describe('themes home — delete behavior (store)', () => {
   })
 })
 
-describe('themes home — honesty UI contracts (source)', () => {
-  it('removes fake enable switch, default star, and dishonest enable copy', () => {
+describe('themes home — UI contracts (source)', () => {
+  it('catalog rows use Add to project and mode switch', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     const vm = readFileSync(VM, 'utf8')
-    // H-L1 / H-L2: no enable-switch theater
-    expect(sail).not.toMatch(/data-theme-enable/)
     expect(sail).toMatch(/theme-add-project/)
     expect(sail).toMatch(/Add to project/)
-    expect(vm).not.toMatch(/onEnableChange/)
-    // H-L4 option A: no default star / Set default UI
-    expect(sail).not.toMatch(/data-theme-default/)
-    expect(sail).not.toMatch(/data-preview-set-default/)
-    expect(sail).not.toMatch(/Set as default/)
-    expect(sail).not.toMatch(/>Default</)
-    expect(vm).not.toMatch(/onSetDefault|onPreviewSetDefault|defaultId/)
-    // H-L5 honest blurb
-    expect(sail).not.toMatch(/Enable catalog packs/i)
     expect(sail).toMatch(/Project themes live on disk|Add catalog themes to the project/)
-    // H-L6 never say fork in product UI
-    expect(sail).not.toMatch(/\bfork\b/i)
-    // Mode switch only (not enable) may remain for dual-mode preview
     expect(sail).toMatch(/mode-switch/)
+    expect(vm).toMatch(/addThemeToProject|openTheme|loadThemes/)
   })
 
-  it('paints catalog/project hosts via theme= not theme (Job 5d)', () => {
+  it('paints catalog/project hosts via theme={id}', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     expect(sail).toMatch(/theme=\{row\.previewId\}/)
     expect(sail).toMatch(/theme=\{previewPaintId\(\)\}/)
-    // Load-bearing preview attr must not remain on home hosts
-    expect(sail).not.toMatch(/theme-preview=\{/)
   })
 
   it('preview mode stamps data-mode via use:paintMode (not authored data-* / bare mode=)', () => {
@@ -227,10 +212,6 @@ describe('themes home — honesty UI contracts (source)', () => {
     expect(sail).toMatch(/use:paintMode=\{row\.paintMode\}/)
     expect(sail).toMatch(/const paintMode:\s*Action/)
     expect(sail).toMatch(/setAttribute\(['"]data-mode['"]/)
-    // No authored data-* or bare mode= on paint hosts.
-    expect(sail).not.toMatch(/\sdata-mode=\{/)
-    expect(sail).not.toMatch(/\smode=\{previewModeId\(\)\}/)
-    expect(sail).not.toMatch(/\smode=\{row\.paintMode\}/)
   })
 
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {

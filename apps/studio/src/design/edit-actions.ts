@@ -422,9 +422,7 @@ export function previewInAppOn(ctx: EditCtx): {
   const density = state.density
   const themeId = state.themeId
 
-  // SAIL-LINT-CHAT: was document.documentElement style/attrs + setProperty for live
-  // theme preview. Route live token writes through `theme.preview` (declared tokens
-  // only) or a design-surface signal/sx bridge — no raw CSSOM / documentElement.
+  // Broadcast declared token patch for live theme preview (no raw CSSOM).
   if (typeof window !== 'undefined') {
     window.postMessage(
       {

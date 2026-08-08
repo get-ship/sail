@@ -196,12 +196,9 @@ function editCtx(): EditCtx {
   }
 }
 
-// SAIL-LINT-CHAT: reflectCss used to write previewRoot.style. Live draft paint
-// is DTCG → emit → scheduleDraftPaint → theme.applyScope only (Job 5d).
-// Call sites in edit-actions remain for API stability; they must not be the
-// sole paint path — recomputeDerived + emit always follow writers.
+// API stability shim; live draft paint is scheduleDraftPaint / applyScope.
 function reflectCss(_cssName: string, _value: string | null): void {
-  /* intentional no-op — paint via scheduleDraftPaint / applyScope */
+  /* no-op — paint via scheduleDraftPaint / applyScope */
 }
 
 const ui = makeStoreUi({
@@ -384,13 +381,7 @@ export function setIconScaleTogether(on: boolean): void {
   emit()
 }
 
-/**
- * Specimen panel root registration (no CSSOM paint).
- *
- * // SAIL-LINT-CHAT: was el.style.setProperty for radius/icon-size vars. Bind
- * // those through sx / declared custom-property reflection once specimen host
- * // is wired via template, not store-side style writes.
- */
+/** Register the specimen panel root element (no CSSOM paint). */
 export function setSpecimenPreviewRoot(el: HTMLElement | null): void {
   previewRoot = el
 }

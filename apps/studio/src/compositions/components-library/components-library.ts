@@ -166,8 +166,8 @@ export function createComponentsLibrary(session: ComponentsSession) {
     previewTitle.set(rec.displayName || rec.id)
     previewHint.set(
       rec.origin === 'pack'
-        ? 'Pack preview stage is static for now — open in docs or Edit when path is available.'
-        : 'Preview uses the app theme. Live mount is not wired for every project component yet.',
+        ? 'Pack components show catalog detail here. Open in docs or Edit when a path is available.'
+        : 'Preview uses the app theme. Some project components mount live; others show catalog detail only.',
     )
   }
 

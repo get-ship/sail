@@ -114,7 +114,7 @@ function faceToken(name: string): string {
   return name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-describe('Job 1 type face e2e (live studio product tree)', () => {
+describe('type face e2e (live studio product tree)', () => {
   it('set Display type role → preview host --display-font / computed face updates', async () => {
     if (!(await studioUp())) {
       throw new Error(

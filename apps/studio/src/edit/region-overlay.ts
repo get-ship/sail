@@ -4,10 +4,6 @@
  * Raw CSSOM paint (`cssText` / `createElement`) is banned under
  * `sail-no-imperative-style` + `sail-no-ambient-dom`. Until regions bind
  * through a Sail template (for-each boxes + sx), paint is a no-op.
- *
- * // SAIL-LINT-CHAT: region overlay needs Sail-template boxes (for + sx
- * // selected/hover variants) or a runtime `use:` action for geometry — not
- * // app-module createElement/cssText.
  */
 
 export type RegionBoxUi = {
@@ -23,7 +19,7 @@ export type RegionBoxUi = {
   key: string
 }
 
-/** No-op: raw overlay paint removed (lint floor). Callers still compute boxes for labels. */
+/** No-op: overlay geometry is computed by callers; paint waits on template boxes. */
 export function paintRegionOverlay(_boxes: RegionBoxUi[]): void {
-  /* intentional no-op — see SAIL-LINT-CHAT above */
+  /* no-op until template-bound boxes */
 }

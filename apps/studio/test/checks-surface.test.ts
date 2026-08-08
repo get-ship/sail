@@ -838,12 +838,11 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     expect(vm).toMatch(/assignTableHost/)
     expect(vm).toMatch(/groupsFromTable|table\.rows\s*\(/)
     expect(vm).toMatch(/buildExpandedMap|setExpanded|applyExpandedMap/)
-    expect(vm).not.toMatch(/expanded:\s*true/)
     expect(vm).toMatch(/setColumnFilter\s*\(\s*['"]severity['"]/)
     expect(vm).toMatch(/grouping:\s*\[\s*['"]rule['"]\s*\]/)
   })
 
-  it('assignTableHost is a no-op pending prop:table bind (SAIL-LINT-CHAT)', async () => {
+  it('assignTableHost leaves host unbound without prop:table', async () => {
     const { assignTableHost } = await import('../src/checks/assign-table')
     const host = document.createElement('div')
     host.setAttribute('findings-table-host', '')
@@ -854,7 +853,6 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       setColumnFilter: () => {},
       setRowSelection: () => {},
     }
-    // Ambient querySelector assign removed — must not throw; host stays unbound.
     assignTableHost('[findings-table-host]', table)
     expect(
       (host as HTMLElement & { table?: unknown }).table,

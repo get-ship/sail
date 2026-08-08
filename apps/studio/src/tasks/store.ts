@@ -93,7 +93,7 @@ function humanActor() {
 
 export async function loadThreads(): Promise<void> {
   if (!client) {
-    // Ops not wired yet — honest empty, not a red error (chrome boots client next).
+    // No ops client yet — empty threads until chrome boots the client.
     state = { ...state, error: null, loading: false, threads: [] }
     emit()
     return

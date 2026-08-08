@@ -421,7 +421,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
 
   const onAddMode = () => {
     setNote(
-      'Would create a mode table in DTCG (mode authoring not wired yet).',
+      'Mode tables are fixed by the theme file — authoring extra modes is not available.',
       'warning',
     )
   }

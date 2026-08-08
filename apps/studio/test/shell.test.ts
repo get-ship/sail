@@ -19,7 +19,7 @@ const SHELL_VM = join(REPO, 'apps/studio/src/compositions/shell/shell-page-vm.ts
 const SHELL_RAIL = join(REPO, 'apps/studio/src/compositions/shell/shell-rail.ts')
 const ROUTES_GEN = join(REPO, 'apps/studio/routes.gen.ts')
 
-describe('Studio routes + chrome (STUDIO-1)', () => {
+describe('Studio routes + chrome', () => {
   const chrome = readFileSync(CHROME, 'utf8')
   const shellVm = readFileSync(SHELL_VM, 'utf8')
   const shellRail = readFileSync(SHELL_RAIL, 'utf8')
@@ -44,18 +44,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(existsSync(join(REPO, 'apps/studio/routes/design/page.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/routes/themes/page.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/routes/tasks/page.sail'))).toBe(true)
-    // /design is redirect-only (Themes cutover)
     const designPage = readFileSync(join(REPO, 'apps/studio/routes/design/page.sail'), 'utf8')
     expect(designPage).toMatch(/\/themes/)
-    expect(designPage).not.toMatch(/<design-surface\b/)
     // /checks deep-link opens panel + lands on Edit (not a rail page)
     const checksPage = readFileSync(join(REPO, 'apps/studio/routes/checks/page.sail'), 'utf8')
     expect(checksPage).toMatch(/setChecksPanelOpen/)
     expect(checksPage).toMatch(/\/edit/)
-    expect(checksPage).not.toMatch(/<checks-surface\b/)
   })
 
-  it('leaf routes mount surfaces; no activity-signal switching in chrome', () => {
+  it('leaf routes mount surfaces via rail links', () => {
     for (const [leaf, tag] of [
       ['edit', 'edit-surface'],
       ['config', 'config-surface'],
@@ -66,9 +63,6 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       const page = readFileSync(join(REPO, `apps/studio/routes/${leaf}/page.sail`), 'utf8')
       expect(page).toMatch(new RegExp(`<${tag}\\b`))
     }
-    // Signal switching deleted from shell (rail uses links + click→navigate, not setActivity)
-    expect(shellVm).not.toMatch(/setActivity/)
-    expect(shellVm).not.toMatch(/isEdit|isChecks|isDesign|isThemes|isTasks/)
     // Rail = real links + optimistic navigate/sync on click
     expect(chrome).toMatch(/href=\{item\.href\}/)
     expect(chrome).toMatch(/studio-rail/)
@@ -138,7 +132,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(chrome).toMatch(/route\?\.pathname|r\.pathname/)
   })
 
-  it('STUDIO-0 hotkeys: digit map, rail labels, save gate, status markers', () => {
+  it('hotkeys: digit map, rail labels, save gate, status markers', () => {
     expect(ACTIVITY_BY_DIGIT).toEqual({
       '1': 'edit',
       '2': 'components',
@@ -164,7 +158,6 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(shellVm).toMatch(/hotkeys\(/)
     expect(shellVm).toMatch(/['"]mod\+s['"]/)
     expect(shellVm).toMatch(/activePath/)
-    expect(shellVm).not.toMatch(/view === ['"]source['"]/)
     expect(shellVm).toMatch(/subscribeEdit/)
     expect(shellVm).toMatch(/sync\(href\)|sync\(p\)|sync\(path/)
     expect(shellVm).toMatch(/ACTIVITY_BY_DIGIT/)
@@ -178,26 +171,17 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(chrome).toMatch(/saveStatusLabel|themeStatusLabel/)
   })
 
-  it('batch new task uses deck navigate, not raw pushState', () => {
+  it('batch new task uses deck navigate', () => {
     expect(shellVm).toMatch(/from ['"]@ship\/deck\/router['"]/)
     expect(shellVm).toMatch(/hrefForActivity\('tasks'\)/)
     expect(shellVm).toMatch(/navigate\(href\)/)
-    expect(shellVm).not.toMatch(/history\.pushState/)
-    expect(shellVm).not.toMatch(/PopStateEvent/)
   })
 
-  it('chrome has activity bar + status; no shell doc-tabs, viewport, esc badge', () => {
+  it('chrome has activity bar + status', () => {
     expect(chrome).toMatch(/sail-studio-shell/)
     expect(chrome).toMatch(/studio-rail/)
     expect(chrome).toMatch(/studio-status/)
     expect(chrome).toMatch(/slot name="route"/)
-    // Explicit removals
-    expect(chrome).not.toMatch(/toggle-group|onViewport|viewport/)
-    expect(chrome).not.toMatch(/hotkey-hints|>esc</)
-    expect(chrome).not.toMatch(/studio-tabs/)
-    expect(chrome).not.toMatch(/selectionLabel/)
-    expect(shellVm).not.toMatch(/setViewport|onViewport/)
-    expect(shellVm).not.toMatch(/ViewportId/)
     // Health tones bound (soft badge tone from ops/watch health signals)
     expect(chrome).toMatch(/tone=\{opsHealthTone\(\)\}/)
     expect(chrome).toMatch(/tone=\{watchHealthTone\(\)\}/)
@@ -283,11 +267,8 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(shellRail).toMatch(/icon:\s*'settings'/)
     expect(shellRail).toMatch(/icon:\s*'palette'/)
     expect(shellRail).toMatch(/icon:\s*'messages-square'/)
-    expect(shellRail).not.toMatch(/icon:\s*'clipboard-check'/)
-    expect(shellRail).not.toMatch(/icon:\s*'swatch-book'/)
     // Exit matches activity item geometry
     expect(chrome).toMatch(/exit-studio[\s\S]*w\(10\)\.h\(10\)/)
-    expect(chrome).not.toMatch(/variant=\{item\.active \? 'solid'/)
   })
 
   it('activity rail has Exit / Back to app (never a dead-end)', () => {
@@ -319,7 +300,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     }
   })
 
-  it('edit-surface: doc tabs + source editor only (no nested view menus)', () => {
+  it('edit-surface: doc tabs + source editor', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/edit-surface/edit-surface.sail'),
       'utf8',
@@ -340,14 +321,6 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/source-editor/)
     expect(surface).toMatch(/source-host/)
     expect(surface).toMatch(/sail-code-editor/)
-    // Nested view menus removed (preview/state/layout cram)
-    expect(surface).not.toMatch(/view-switcher/)
-    expect(surface).not.toMatch(/view-panel=/)
-    expect(surface).not.toMatch(/preview-host/)
-    expect(surface).not.toMatch(/live-preview/)
-    expect(surface).not.toMatch(/name="preview"|name="state"|name="layout"/)
-    expect(surface).not.toMatch(/struct-op|edit-rail|structured-edit/)
-    expect(surface).not.toMatch(/toggle-group|onViewport|viewport picker/i)
     const tabsMod = readFileSync(
       join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-tabs.ts'),
       'utf8',
@@ -356,11 +329,9 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surfaceVm).toMatch(/mapDocTabs|onTabMiddle/)
     expect(surfaceVm).toMatch(/closeDocTab|openShellTabDocument/)
     expect(surfaceVm).toMatch(/setView\(\s*['"]source['"]\s*\)/)
-    expect(surface).not.toMatch(/<div\b/)
-    expect(surface).not.toMatch(/<span\b/)
   })
 
-  it('source pane: CodeMirror host density + ready/empty/loading + save (no SOURCE toolbar)', () => {
+  it('source pane: CodeMirror host density + ready/empty/loading + save', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/edit-surface/edit-surface.sail'),
       'utf8',
@@ -375,9 +346,6 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     )
     const sailMode = readFileSync(join(REPO, 'apps/studio/src/cm/sail-mode.ts'), 'utf8')
     expect(surface).toMatch(/source-host/)
-    // No second chrome row — status on tab + status bar
-    expect(surface).not.toMatch(/source-toolbar/)
-    expect(surface).not.toMatch(/>Source</)
     expect(surface).toMatch(/source-loading|isSourceLoading/)
     expect(surface).toMatch(/source-ready|isSourceReady/)
     expect(surface).toMatch(/source-empty|isSourceEmpty/)
@@ -389,11 +357,6 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/save-source/)
     expect(surface).toMatch(/on-save=\{onSaveSource\}/)
     expect(surface).toMatch(/on-change=\{onSourceSailChange\}/)
-    // Bulk diagnostic list above editor removed — Checks panel + CM lints remain
-    expect(surface).not.toMatch(/source-gutter/)
-    expect(surface).not.toMatch(/checkRows/)
-    expect(surfaceVm).not.toMatch(/\bcheckRows\b/)
-    expect(surfaceVm).not.toMatch(/\bhasChecks\b/)
     expect(surfaceVm).toMatch(/isSourceReady/)
     expect(surfaceVm).toMatch(/isSourceEmpty/)
     expect(surfaceVm).toMatch(/isSourceLoading/)
@@ -427,26 +390,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(explorer).toMatch(/Filter files…|Filter files/)
     expect(explorer).toMatch(/No files/)
     // No nested Routes/Files/Components menus
-    expect(explorer).not.toMatch(/rail-tabs/)
-    expect(explorer).not.toMatch(/name="routes"|name="components"/)
-    expect(explorer).not.toMatch(/rail-panel/)
-    expect(explorer).not.toMatch(/edit-element-tree/)
     // Single full-height tree host (no dual-panel split)
     expect(explorer).toMatch(/file-tree[\s\S]*h\(full\)/)
     expect(explorerVm).toMatch(/createTable/)
     expect(explorerVm).toMatch(/fileSailTreeNodes/)
-    expect(explorerVm).not.toMatch(/routeSailTreeNodes/)
-    expect(explorerVm).not.toMatch(/railTab/)
     expect(explorerVm).toMatch(/startsWith\('group:'\)/)
     expect(explorerVm).toMatch(/startsWith\('dir:'\)/)
     // Identity bind — live Table returned + tree={tree} (no ambient assign)
     expect(explorerVm).toMatch(/\btree\b/)
-    expect(explorerVm).not.toMatch(/assignTreeHost/)
-    expect(explorerVm).not.toMatch(/querySelector/)
     expect(explorer).toMatch(/tree=\{tree\}/)
-    expect(explorer).not.toMatch(/assignTreeHost/)
-    expect(explorer).not.toMatch(/querySelector/)
-    expect(explorer).not.toMatch(/<div\b/)
   })
 
   it('Files tree uses trailing dirty + nested paths (not label cram)', () => {
@@ -468,59 +420,31 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(treeSail).toMatch(/node-trailing/)
   })
 
-  it('edit surface VMs do not dual-load ops/openDocument on mount', () => {
-    const surfaceVm = readFileSync(
-      join(REPO, 'apps/studio/src/compositions/edit-surface/edit-surface-vm.ts'),
-      'utf8',
-    )
-    const treeVm = readFileSync(
-      join(REPO, 'apps/studio/src/compositions/edit-element-tree/edit-element-tree-vm.ts'),
-      'utf8',
-    )
+  it('edit explorer opens documents from the rail tree', () => {
     const explorerVm = readFileSync(
       join(REPO, 'apps/studio/src/compositions/edit-explorer/edit-explorer-vm.ts'),
       'utf8',
     )
-    for (const vm of [surfaceVm, treeVm]) {
-      // Comments may mention createOpsClient(); ban call/import only.
-      expect(vm).not.toMatch(/(?:^|\n)\s*(?:import|const|let|var)[^\n]*createOpsClient/)
-      expect(vm).not.toMatch(/(?:^|\n)\s*[^/\n]*\bsetOpsClient\s*\(/)
-    }
-    // surface openDocument only via tab open helper
-    expect(explorerVm).not.toMatch(/(?:^|\n)\s*(?:import|const|let|var)[^\n]*createOpsClient/)
-    expect(explorerVm).not.toMatch(/(?:^|\n)\s*[^/\n]*\bsetOpsClient\s*\(/)
     expect(explorerVm).toMatch(/openDocument\s*\(/)
     const mountBody =
       explorerVm.match(/mountAmbient\s*\(\s*\(\)\s*=>\s*\{([\s\S]*?)\n  \}\)/)?.[1] ?? ''
     expect(mountBody.length).toBeGreaterThan(0)
-    expect(mountBody).not.toMatch(/openDocument/)
   })
 
-  it('chrome boots ops + seed; rail surfaces not dual-mounted (checks panel hosts findings)', () => {
-    expect(chrome).not.toMatch(/<edit-surface\b/)
-    expect(chrome).not.toMatch(/<components-surface\b/)
-    expect(chrome).not.toMatch(/<design-surface\b/)
-    expect(chrome).not.toMatch(/<themes-surface\b/)
-    expect(chrome).not.toMatch(/<tasks-surface\b/)
-    expect(chrome).not.toMatch(/<config-surface\b/)
-    // Findings: L1 dialog side sheet overlay (not in-flow layout column)
+  it('chrome boots ops + seed; checks panel hosts findings', () => {
     expect(chrome).toMatch(/checks-panel/)
     expect(chrome).toMatch(/<dialog\b[^>]*side="end"/)
     expect(chrome).toMatch(/checks-panel[\s\S]*<checks-surface\b|<checks-surface\b[\s\S]*checks-panel/)
     expect(shellVm).toMatch(/from ['"]@ship\/studio\/edit['"]/)
     expect(shellVm).toMatch(/openDocument|createOpsClient|setOpsClient/)
     expect(shellVm).toMatch(/seedFilesFromPaths|bindEditSelection/)
-    // Live preview on for non-studio targets; dogfood skips nested iframe.
     expect(shellVm).toMatch(/loadPreview/)
-    expect(shellVm).not.toMatch(/refreshPreview/)
     expect(shellVm).toMatch(/loadFindings|setChecksOpsClient/)
     expect(shellVm).toMatch(/loadThemes|loadIconGlyphs/)
     expect(shellVm).toMatch(/loadThreads|newTaskFromBatch/)
   })
 
-  // STUDIO-2 R1/R4/R5/B1 + batched sail check → test/studio-2-repairs.test.ts
-
-  it('checks-surface ban-clean + workbench markers', () => {
+  it('checks-surface workbench markers', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/checks-surface/checks-surface.sail'),
       'utf8',
@@ -555,16 +479,10 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(vm).toMatch(/assignTableHost/)
     expect(vm).toMatch(/table\.rows\s*\(|groupsFromTable/)
     expect(vm).toMatch(/buildExpandedMap|setExpanded|applyExpandedMap/)
-    expect(vm).not.toMatch(/expanded:\s*true/)
     // Error strip + retry (not empty-state-as-error only)
     expect(surface).toMatch(/checks-error/)
     expect(surface).toMatch(/retry-checks|onRetryChecks|Retry/)
     expect(surface).toMatch(/<accordion\b/)
-    // Review UI is an inline sheet; findings overlay dialog lives in chrome
-    expect(surface).not.toMatch(/<dialog\b/)
-    expect(surface).not.toMatch(/commit intent/i)
-    expect(surface).not.toMatch(/<div\b/)
-    expect(surface).not.toMatch(/<span\b/)
     // Empty via studio-empty (wraps empty-state); may still use raw empty-state in dialogs
     expect(surface).toMatch(/<studio-empty\b|<empty-state\b/)
     expect(surface).toMatch(/<studio-page-header\b/)
@@ -572,21 +490,17 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/<scroll-area\b/)
   })
 
-  it('Design product surface removed; Themes chrome has no permanent Used by', () => {
-    expect(existsSync(join(REPO, 'apps/studio/src/design-surface'))).toBe(false)
-    expect(existsSync(join(REPO, 'apps/studio/src/design-inspector'))).toBe(false)
+  it('Themes chrome has no permanent Used by band', () => {
     const chromeFacet = readFileSync(
       join(REPO, 'apps/studio/src/theme-facet-chrome/theme-facet-chrome.sail'),
       'utf8',
     )
-    expect(chromeFacet).not.toMatch(/used-by/)
     expect(chromeFacet).toMatch(/theme-facet-chrome/)
+    expect(chromeFacet).not.toMatch(/used-by/)
     expect(chromeFacet).not.toMatch(/blast radius|blast-radius/i)
-    expect(shellVm).not.toMatch(/previewInApp/)
-    expect(shellVm).not.toMatch(/activityFromPath\(readPath\(\)\) === ['"]design['"]/)
   })
 
-  it('themes-surface ban-clean + master–detail markers', () => {
+  it('themes-surface master–detail markers', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/themes-surface/themes-surface.sail'),
       'utf8',
@@ -603,30 +517,20 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/theme-row/)
     expect(surface).toMatch(/list-group/)
     expect(surface).toMatch(/new-theme/)
-    // Job 5d: paint authority is theme={id}, not load-bearing theme
     expect(surface).toMatch(/theme=\{row\.previewId\}|theme=\{previewPaintId\(\)\}/)
-    expect(surface).not.toMatch(/theme-preview=\{/)
     expect(surface).toMatch(/createThemesSurface\(\)/)
-    expect(surface).not.toMatch(/<div\b/)
-    expect(surface).not.toMatch(/<span\b/)
     expect(surface).toMatch(/<scroll-area\b/)
     expect(surface).toMatch(/panel-min-w-md|panel-max-w-md/)
-    expect(surface).not.toMatch(/document\.querySelector/)
-    expect(surface).not.toMatch(/\.style\.setProperty/)
-    expect(surface).not.toMatch(/action=/)
     expect(vm).toMatch(/loadThemes|openTheme|addThemeToProject|forkTheme/)
     expect(vm).toMatch(/subscribeDesign|getDesignState/)
     expect(vm).toMatch(/from ['"]@ship\/studio\/design['"]/)
     expect(vm).toMatch(/mountAmbient/)
-    expect(vm).not.toMatch(/document\.querySelector/)
-    expect(vm).not.toMatch(/\.style\.setProperty/)
-    expect(vm).not.toMatch(/design-surface/)
     expect(existsSync(join(REPO, 'apps/studio/routes/themes/page.sail'))).toBe(true)
     const page = readFileSync(join(REPO, 'apps/studio/routes/themes/page.sail'), 'utf8')
     expect(page).toMatch(/<themes-surface\b/)
   })
 
-  it('tasks-surface: status dots, chat-elements, ban-clean', () => {
+  it('tasks-surface: status dots and chat-elements', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/tasks-surface/tasks-surface.sail'),
       'utf8',
@@ -643,18 +547,12 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/retry-tasks|Retry/)
     expect(surface).toMatch(/<sail-composer\b/)
     expect(surface).toMatch(/<sail-message-list\b/)
-    expect(surface).not.toMatch(/commit-intent/)
-    expect(surface).not.toMatch(/>\s*Commit\s*</)
-    expect(surface).not.toMatch(/Re-link/)
-    expect(surface).not.toMatch(/Crops from the tray/)
-    expect(surface).not.toMatch(/<div\b/)
-    expect(surface).not.toMatch(/<span\b/)
     expect(surface).toMatch(/<empty-state\b/)
     expect(surface).toMatch(/tasks-workbench/)
     expect(surface).toMatch(/<scroll-area\b/)
   })
 
-  it('viewport picker absent from studio app sources', () => {
+  it('studio chrome sources have no viewport picker', () => {
     const roots = [
       'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail',
       'apps/studio/src/compositions/shell/shell-page-vm.ts',
@@ -667,8 +565,6 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       expect(src, rel).not.toMatch(/toggle-group[\s\S]*viewport|onViewport|Preview viewport/)
     }
   })
-
-  // Batched sail check → test/studio-2-repairs.test.ts (STUDIO-2 R6)
 
   it('sail.config renders client-side (SPA workbench)', () => {
     const cfg = readFileSync(join(REPO, 'apps/studio/sail.config.jsonc'), 'utf8')

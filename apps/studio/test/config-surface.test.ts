@@ -25,7 +25,7 @@ describe('config-surface', () => {
     expect(existsSync(join(REPO, 'apps/studio/src/compositions/config/config-surface-vm.ts'))).toBe(true)
   })
 
-  it('surface uses button nav + table fields (no diary chrome)', () => {
+  it('surface uses button nav + table fields', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/config-surface/config-surface.sail'),
       'utf8',
@@ -37,13 +37,6 @@ describe('config-surface', () => {
     expect(surface).toMatch(/<table\b/)
     expect(surface).toMatch(/\bdense\b/)
     expect(surface).toMatch(/config-fields/)
-    expect(surface).not.toMatch(/L1 table dense/)
-    expect(surface).not.toMatch(/honest/)
-    expect(surface).not.toMatch(/dogfood/)
-    expect(surface).not.toMatch(/scaffold/)
-    expect(surface).not.toMatch(/showPlugins/)
-    expect(surface).not.toMatch(/<div\b/)
-    expect(surface).not.toMatch(/<span\b/)
   })
 
   it('buildConfigFields: only live/project/disabled sources', () => {

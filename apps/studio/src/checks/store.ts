@@ -171,7 +171,7 @@ export async function loadFindings(
   lastLoadPath = path
   lastLoadSource = opts?.source
   if (!client) {
-    // Ops not wired yet — honest empty, not a red error (chrome boots client next).
+    // No ops client yet — empty findings until chrome boots the client.
     patch({ error: null, loading: false })
     return []
   }

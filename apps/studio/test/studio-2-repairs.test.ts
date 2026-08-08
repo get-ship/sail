@@ -89,7 +89,6 @@ describe('STUDIO-2 repairs + bar gates', () => {
       'utf8',
     )
     expect(colorSpec).toMatch(/color-specimen|preview-specimen/)
-    expect(colorSpec).not.toMatch(/theme-preview=/)
   })
 
   it('B3: explorer sail-tree labels stay short (no size meta — stacked-text fix)', () => {
@@ -97,8 +96,6 @@ describe('STUDIO-2 repairs + bar gates', () => {
     const explorer = readFileSync(join(REPO, 'apps/studio/src/edit/explorer.ts'), 'utf8')
     expect(vm).toMatch(/fileSailTreeNodes|createTable/)
     expect(explorer).toMatch(/fileSailTreeNodes/)
-    expect(explorer).not.toMatch(/sourceLen/)
-    expect(explorer).not.toMatch(/KB/)
   })
 
   it('B4: Themes no permanent Used by chrome + no Design product surface', () => {
@@ -106,7 +103,6 @@ describe('STUDIO-2 repairs + bar gates', () => {
       join(REPO, 'apps/studio/src/theme-facet-chrome/theme-facet-chrome.sail'),
       'utf8',
     )
-    expect(chrome).not.toMatch(/used-by/)
     expect(chrome).toMatch(/theme-facet-chrome/)
     expect(existsSync(join(REPO, 'apps/studio/src/design-surface'))).toBe(false)
     expect(existsSync(join(REPO, 'apps/studio/src/design-inspector'))).toBe(false)

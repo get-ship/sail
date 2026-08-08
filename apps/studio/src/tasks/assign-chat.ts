@@ -4,10 +4,6 @@
  * Ambient `document.querySelector` host mutation is banned
  * (`sail-no-ambient-dom`). Until templates bind prop:items / prop:attachments,
  * these are no-ops.
- *
- * // SAIL-LINT-CHAT: migrate sail-message-list / sail-composer hosts to
- * // prop:items={…} / prop:attachments={…} identity binding in tasks-surface;
- * // delete this assign helper once bound.
  */
 
 export type ChatMessageItem = {
@@ -20,9 +16,9 @@ export type ChatMessageItem = {
 }
 
 export function assignMessageListHost(_sel: string, _items: ChatMessageItem[]): void {
-  /* intentional no-op — see SAIL-LINT-CHAT above */
+  /* no-op until prop:items bind */
 }
 
 export function assignComposerAttachments(_sel: string, _attachments: unknown[]): void {
-  /* intentional no-op — see SAIL-LINT-CHAT above */
+  /* no-op until prop:attachments bind */
 }

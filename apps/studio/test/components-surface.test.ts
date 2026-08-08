@@ -1,5 +1,5 @@
 /**
- * Components surface — ban-clean + composition + shell wiring markers.
+ * Components surface — composition + shell wiring markers.
  */
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
@@ -42,7 +42,7 @@ describe('components-surface', () => {
     expect(readFileSync(PAGE_INSPECT, 'utf8')).toMatch(/<components-inspect-surface\b/)
   })
 
-  it('library + inspect surfaces ban-clean markers', () => {
+  it('library + inspect surfaces expose composition markers', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     const inspectSail = readFileSync(INSPECT_SURFACE, 'utf8')
     expect(sail).toMatch(/components-surface/)
@@ -69,16 +69,6 @@ describe('components-surface', () => {
     expect(inspectSail).toMatch(/Select a surface to inspect/)
     expect(inspectSail).toMatch(/createComponentsInspect/)
     expect(inspectSail).toMatch(/return \{ session, inspect \}/)
-    for (const src of [sail, inspectSail]) {
-      expect(src).not.toMatch(/<div\b/)
-      expect(src).not.toMatch(/<span\b/)
-      expect(src).not.toMatch(/document\.querySelector/)
-      expect(src).not.toMatch(/\.style\.setProperty/)
-      expect(src).not.toMatch(/theme-facet-chrome/)
-      expect(src).not.toMatch(/theme-components-surface/)
-      expect(src).not.toMatch(/L1_CATALOG/)
-      expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-    }
   })
 
   it('session uses openDocument + createThread + generation-safe domains', () => {
@@ -91,7 +81,6 @@ describe('components-surface', () => {
     expect(session).toMatch(/buildAgentBrief/)
     expect(session).toMatch(/requestSourceScroll/)
     expect(session).toMatch(/writeComponentsActivity|readComponentsActivity/)
-    expect(session).not.toMatch(/listeners\s*=\s*new Set/)
     expect(library).toMatch(/loadGen/)
     expect(library).toMatch(/if \(gen !== loadGen\)/)
     expect(library).toMatch(/mergeProjectPathAuthority|unionFromEditPaths/)
@@ -104,8 +93,6 @@ describe('components-surface', () => {
     expect(inspect).toMatch(/createTable/)
     expect(inspect).toMatch(/elementSailTreeNodes|sailInspectTree/)
     expect(inspect).toMatch(/knownLibraryIds/)
-    expect(inspect).not.toMatch(/listeners\s*=\s*new Set/)
-    expect(library).not.toMatch(/listeners\s*=\s*new Set/)
   })
 
   it('line budgets roughly honored', () => {

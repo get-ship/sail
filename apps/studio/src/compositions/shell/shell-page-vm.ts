@@ -189,9 +189,7 @@ export function createShellPage(opts?: ShellPageOpts) {
   sync()
 
   mountAmbient(() => {
-    // Theme/mode attrs: setThemeMode below + host chrome — no documentElement writes
-    // (sail-no-ambient-dom). SAIL-LINT-CHAT if shell still needs data-theme on :root
-    // without theme-select / tokens path.
+    // Theme/mode via setThemeMode + host chrome (no documentElement writes).
     const ops = createOpsClient()
     setOpsClient(ops)
     setChecksOpsClient(ops)

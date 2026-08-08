@@ -58,7 +58,7 @@ function extractVisibleText(page: import('playwright').Page): Promise<string> {
   })
 }
 
-describe('Job C components DTCG e2e (live studio)', () => {
+describe('components DTCG e2e (live studio)', () => {
   it('Alert defaults resolve via DTCG; no var(--)/L1; pick writes override; Clear restores', async () => {
     if (!(await studioUp())) {
       throw new Error(

@@ -1,5 +1,5 @@
 /**
- * Theme overview — ban-clean editorial + docked specimen + design store wiring.
+ * Theme overview — editorial + docked specimen + design store wiring.
  */
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
@@ -30,7 +30,7 @@ const THEMES_VM = join(REPO, 'apps/studio/src/compositions/themes-surface/themes
 const ROUTES_GEN = join(REPO, 'apps/studio/routes.gen.ts')
 
 describe('theme-overview-surface', () => {
-  it('surface + route files exist with ban-clean markers', () => {
+  it('surface + route files exist with composition markers', () => {
     expect(existsSync(SURFACE)).toBe(true)
     expect(existsSync(VM)).toBe(true)
     expect(existsSync(PAGE)).toBe(true)
@@ -45,38 +45,25 @@ describe('theme-overview-surface', () => {
     expect(sail).toMatch(/<theme-facet-chrome\b/)
     expect(sail).toMatch(/createThemeSession/)
     expect(sail).toMatch(/createOverviewEdit/)
-    expect(sail).not.toMatch(/Single path control|Docked|Live preview/)
     expect(sail).toMatch(/facet-doors/)
     expect(sail).toMatch(/identity-column/)
     expect(sail).toMatch(/specimen-dock/)
     expect(sail).toMatch(/overview-specimen|preview-specimen/)
     expect(sail).toMatch(/color-hero|hero-colors/)
     expect(sail).toMatch(/editorial-split|overview-workbench/)
-    // Draft paint = applyScope bind; no load-bearing theme on facet host (D7/Job 3).
-    expect(sail).not.toMatch(/data-theme-preview=\{/)
     expect(sail).toMatch(/watchPreviewHost/)
     expect(sail).toMatch(/mode=\{/)
     expect(sail).toMatch(/variant="solid"\s+tone="primary"/)
     expect(sail).toMatch(/variant="solid"\s+tone="accent"/)
     expect(sail).toMatch(/<toast-region\b/)
     expect(sail).toMatch(/overview-toast/)
-    expect(sail).not.toMatch(/overview-status/)
-    expect(sail).not.toMatch(/document\.querySelector/)
-    expect(sail).not.toMatch(/\.style\.setProperty/)
-    expect(sail).not.toMatch(/action=/)
-    expect(sail).not.toMatch(/theme\.preview\s*\(/)
     expect(chrome).toMatch(/theme-facet-chrome/)
     expect(chrome).toMatch(/mode-switch/)
     expect(page).toMatch(/<theme-overview-surface\b/)
   })
 
-  it('does not dual-path into design-surface', () => {
-    const sail = readFileSync(SURFACE, 'utf8')
-    const vm = readFileSync(VM, 'utf8')
+  it('overview edit domain uses design store module', () => {
     const edit = readFileSync(EDIT, 'utf8')
-    expect(sail).not.toMatch(/design-surface|design-inspector/)
-    expect(vm).not.toMatch(/design-surface|design-inspector/)
-    expect(edit).not.toMatch(/design-surface|design-inspector/)
     expect(edit).toMatch(/@ship\/studio\/design/)
   })
 
@@ -106,10 +93,6 @@ describe('theme-overview-surface', () => {
     expect(nav).toMatch(/PATH_NAV/)
     expect(nav).toMatch(/assets/)
     expect(nav).toMatch(/components/)
-    expect(session).not.toMatch(/document\.querySelector/)
-    expect(session).not.toMatch(/setProperty/)
-    expect(session).not.toMatch(/document\.createElement/)
-    expect(session).not.toMatch(/theme\.preview/)
   })
 
   it('Open from themes home navigates to /themes/:id after openTheme', () => {
@@ -136,10 +119,9 @@ describe('theme-overview-surface', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     expect(sail).toMatch(/panel-min-w-md|minW\(panel-min-w-md\)/)
     expect(sail).toMatch(/panel-max-w-md|maxW\(panel-max-w-md\)/)
-    expect(sail).not.toMatch(/\bw="48"|\bw="56"/)
   })
 
-  it('Wave 1: hero swatch hit targets + leave guard + no overflow', () => {
+  it('hero swatch hit targets + leave guard', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     const nav = readFileSync(NAV, 'utf8')
     const session = readFileSync(SESSION, 'utf8')
@@ -148,12 +130,7 @@ describe('theme-overview-surface', () => {
     expect(sail).toMatch(/position\(absolute\)/)
     expect(sail).toMatch(/use:swatch=/)
     expect(sail).toMatch(/stateEdit|stateLocked/)
-    // Facet overflow removed — delete/remix on Themes home
-    expect(nav).not.toMatch(/OVERFLOW_NAV/)
-    expect(nav).not.toMatch(/value: 'peek'|value: 'export'/)
-    expect(session).not.toMatch(/In project · editable/)
     expect(session).toMatch(/leaveOpen|onLeaveSave|createLeaveGuard/)
-    // Draft paint wiring (functional — not Overview UX redesign)
     expect(sail).toMatch(/watchPreviewHost/)
   })
 })

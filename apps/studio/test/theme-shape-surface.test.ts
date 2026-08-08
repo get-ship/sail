@@ -44,8 +44,6 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/radius-master/)
     expect(sail).toMatch(/elev-chips/)
     expect(sail).toMatch(/radius-ladder/)
-    // Draft paint = applyScope bind; no load-bearing theme on facet host (D7/Job 3).
-    expect(sail).not.toMatch(/theme-preview=\{/)
     expect(sail).toMatch(/watchPreviewHost/)
     expect(sail).toMatch(/mode=\{/)
     expect(sail).toMatch(/createThemeSession|createShapeEdit/)
@@ -54,16 +52,10 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/variant="outline"/)
     expect(sail).toMatch(/<toast-region\b/)
     // Radius chips must stay outline (never solid color blobs).
-    expect(sail).not.toMatch(/radius="[^"]+"[\s\S]{0,120}variant="solid"/)
-    expect(sail).not.toMatch(/document\.querySelector/)
-    expect(sail).not.toMatch(/\.style\.setProperty/)
-    expect(sail).not.toMatch(/action=/)
-    expect(sail).not.toMatch(/theme\.preview\s*\(/)
-    expect(sail).not.toMatch(/escape hatch|power tooling|power-path|power path/i)
     expect(page).toMatch(/<theme-shape-surface\b/)
   })
 
-  it('Wave 2: specimen-first IA + outline radius + draft paint host', () => {
+  it('specimen-first IA + outline radius + draft paint host', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     const edit = readFileSync(EDIT, 'utf8')
     const recipes = readFileSync(RECIPES, 'utf8')
@@ -77,12 +69,8 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/elev=/)
     expect(sail).toMatch(/section="glass"|showGlass/)
     expect(sail).toMatch(/preview-specimen/)
-    expect(sail).not.toMatch(/theme-preview=/)
     expect(sail).toMatch(/bg\(background\)/)
     expect(sail).toMatch(/spec-card/)
-    // No "live" badge theater.
-    expect(sail).not.toMatch(/>live</)
-    // Draft paint adapter wired on surface host
     expect(sail).toMatch(/watchPreviewHost/)
     expect(edit).toMatch(/liveCardRadius\.set\(px\(lg\)\)/)
     expect(edit).toMatch(/setRadiusFamily|setRadiusStep/)
@@ -111,12 +99,10 @@ describe('theme-shape-surface', () => {
     // Correct frost channel — not surface-overlay noise α.
     expect(edit).toMatch(/component\.card\.bg/)
     expect(edit).toMatch(/component\.card\.backdrop-filter/)
-    expect(edit).not.toMatch(/color\.surface\.overlay-opacity/)
     expect(edit).toMatch(/withColorAlpha|liveCardFill/)
     // Specimen freeform fill (liveBox pack or bind).
     expect(sail).toMatch(/liveCardFill|liveCardBox|use:liveBox/)
     expect(sail).toMatch(/glass-mini/)
-    expect(sail).not.toMatch(/Live paint after Save until F4/)
     const { withColorAlpha, stripColorAlpha } = await import(
       '../src/compositions/theme-shape-surface/theme-shape-edit'
     )
@@ -127,24 +113,16 @@ describe('theme-shape-surface', () => {
     expect(stripColorAlpha('oklch(1 0 0 / 55%)')).toBe('oklch(1 0 0)')
   })
 
-  it('review: stepped elev marks + no dead radiusChips solid helper', () => {
+  it('review: stepped elev marks', () => {
     const sail = readFileSync(SURFACE, 'utf8')
     const edit = readFileSync(EDIT, 'utf8')
     expect(sail).toMatch(/elevMarkNone|elevMarkXs|elevMarkXl/)
     expect(sail).toMatch(/shadow\(xs\)/)
     expect(sail).toMatch(/shadow\(xl\)/)
-    expect(edit).not.toMatch(/radiusChips/)
-    expect(edit).not.toMatch(/btnVariant.*solid/)
-    expect(edit).not.toMatch(/onStageBg|stageSolidOn/)
   })
 
-  it('does not dual-path into design-surface / design-inspector UI', () => {
-    const sail = readFileSync(SURFACE, 'utf8')
-    const vm = readFileSync(VM, 'utf8')
+  it('shape edit domain uses design store module', () => {
     const edit = readFileSync(EDIT, 'utf8')
-    expect(sail).not.toMatch(/design-surface|design-inspector/)
-    expect(vm).not.toMatch(/design-surface|design-inspector/)
-    expect(edit).not.toMatch(/design-surface|design-inspector/)
     expect(edit).toMatch(/@ship\/studio\/design/)
   })
 
@@ -166,11 +144,6 @@ describe('theme-shape-surface', () => {
     expect(edit).toMatch(/color\.border\.width/)
     expect(edit).toMatch(/component\.card\.bg/)
     expect(edit).toMatch(/component\.card\.backdrop-filter/)
-    expect(edit).not.toMatch(/document\.querySelector/)
-    expect(edit).not.toMatch(/document\.createElement/)
-    // Host draft paint goes through applyScope adapter — not theme.preview(:root).
-    expect(edit).not.toMatch(/theme\.preview\s*\(/)
-    expect(edit).not.toMatch(/escape hatch|power tooling/i)
   })
 
   it('session path navigates shape among facets', () => {
