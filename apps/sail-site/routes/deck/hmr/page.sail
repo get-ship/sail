@@ -1,9 +1,8 @@
 <!--
-  /deck/hmr — adapted from packages/deck/docs/routes/hmr/page.sail.
+  /deck/hmr — route soft-reload with state preserved; component hot-swap; SSE.
 -->
 
 <controller>
-// /deck/hmr — adapted from packages/deck/docs/routes/hmr.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { devCmd } from '../../../src/compositions/deck-hmr-snippets'
@@ -11,10 +10,17 @@ import { devCmd } from '../../../src/compositions/deck-hmr-snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
 </controller>
 
-<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Rendering &amp; build</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>Rendering &amp; build</p>
   <h1>HMR</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
+  <p style(lead)>In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
 
   <h2>Routes reload with state intact</h2>
   <p>Save a route’s <code>.sail</code> and deck swaps the freshly-bundled module into the already-running router — via a <code>globalThis.__deckHmr</code> handle — then re-mounts. Signal state survives the swap, so counters, inputs, and scroll stay put.</p>
@@ -26,7 +32,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
   <h2>Pushed over SSE</h2>
   <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>
 
-  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row style(footNav)>
     <a href="/deck/rendering">← Rendering modes</a>
     <a href="/deck/build">Build &amp; deploy →</a>
   </row>

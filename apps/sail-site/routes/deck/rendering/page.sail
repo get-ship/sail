@@ -1,9 +1,8 @@
 <!--
-  /deck/rendering — adapted from packages/deck/docs/routes/rendering/page.sail.
+  /deck/rendering — CSR default, SSR opt-in, sail build static out.
 -->
 
 <controller>
-// /deck/rendering — adapted from packages/deck/docs/routes/rendering.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { ssrConfig, buildCmd } from '../../../src/compositions/deck-rendering-snippets'
@@ -11,10 +10,17 @@ import { ssrConfig, buildCmd } from '../../../src/compositions/deck-rendering-sn
 export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildCmd }))
 </controller>
 
-<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Rendering &amp; build</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>Rendering &amp; build</p>
   <h1>Rendering modes</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>deck paints a route one of two ways. The default renders on the client; opt into server rendering for first paint and SEO.</p>
+  <p style(lead)>deck paints a route one of two ways. The default renders on the client; opt into server rendering for first paint and SEO.</p>
 
   <h2>CSR (default)</h2>
   <p>deck serves an empty <code>&lt;div id="root"&gt;</code> and an importmap shell. The client entry mounts the <code>routes/</code> SPA and paints. The initial document is near-empty; everything is drawn in the browser.</p>
@@ -28,7 +34,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildC
   <p>Whichever mode you pick, <code>sail build</code> produces a self-contained static directory.</p>
   <code-block code={buildCmd} lang="bash"></code-block>
 
-  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row style(footNav)>
     <a href="/deck/data">← The data seam</a>
     <a href="/deck/hmr">HMR →</a>
   </row>

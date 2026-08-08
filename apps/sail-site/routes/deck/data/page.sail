@@ -1,17 +1,9 @@
 <!--
-  /deck/data — adapted from packages/deck/docs/routes/data/page.sail. The
-  source site exercises a live `store` client (with a `visits` counter
-  persisted to localStorage); that client lives in packages/deck/docs’s
-  own clients.ts. The sail-site doesn’t expose a `store` client (its
-  clients seam is intentionally empty), so the live demo is omitted
-  here — the prose + config + usage snippets still document the seam.
+  /deck/data — clients seam, durable store vs route state, live server data.
+  Live store demo omitted: sail-site clients seam is empty by design.
 -->
 
 <controller>
-// /deck/data — adapted from packages/deck/docs/routes/data. The live `visits`
-// demo is omitted here because the sail-site doesn't expose a `store` client
-// (its clients seam is intentionally empty). The config + usage snippets
-// still document the seam.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { configExample, usageExample } from '../../../src/compositions/deck-data-snippets'
@@ -19,10 +11,17 @@ import { configExample, usageExample } from '../../../src/compositions/deck-data
 export default controller((_ctx: ControllerScope<Scope>) => ({ configExample, usageExample }))
 </controller>
 
-<article style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Reactivity</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<article style(page)>
+  <p style(eyebrow)>Reactivity</p>
   <h1>The data seam</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>deck mounts routes but owns no data. Your app exposes named clients through one seam; every route reads them straight off <code>ctx</code> — flattened, no nested bag.</p>
+  <p style(lead)>deck mounts routes but owns no data. Your app exposes named clients through one seam; every route reads them straight off <code>ctx</code> — flattened, no nested bag.</p>
 
   <h2>The clients seam</h2>
   <p>Declare a clients module in <code>sail.config.jsonc</code>. deck wires its exports into the router, and every route reads them by name.</p>
@@ -35,7 +34,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ configExample, us
   <h2>Live server data</h2>
   <p>A <code>&lt;data source="…" live&gt;</code> binding subscribes a route to live server data. That transport is <strong>host-wired</strong>: a host (like shipd) mounts it and supplies a resolver. Standalone <code>sail dev</code> serves routing, assets, SSR and HMR but not live server data yet — that’s the server-functions work (#32). Use a client store for state until then.</p>
 
-  <row style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row style(footNav)>
     <a href="/deck/reactivity">← Reactivity</a>
     <a href="/deck/rendering">Rendering modes →</a>
   </row>

@@ -1,7 +1,5 @@
 <!--
-  <store-counter> — one cell of the State chapter's shared-state demo. Every
-  instance resolves the SAME store; no props carry the count, no events
-  bubble it. Click any instance, all of them move.
+  Shared-state demo cell: every instance uses the same store (no count props).
 -->
 <scope>
   props: {
