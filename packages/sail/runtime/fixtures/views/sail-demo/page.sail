@@ -1,67 +1,95 @@
-<div data-demo="true">
-  <h1>Sail Demo</h1>
-  <p>Visual sanity-check for the Sail component bundle.</p>
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style section = { box: my(4).pad(4), paint: borderWidth(1).border(border).radius(lg) }
+  style sectionTitle = { box: mb(2), paint: fg(muted-foreground), text: fontSize(sm).fontWeight(semibold) }
+  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
 
-  <section>
-    <h2>button — solid</h2>
-    <button solid>Default</button>
-    <button solid primary>Primary</button>
-    <button solid success>Success</button>
-    <button solid warning>Warning</button>
-    <button solid destructive>Destructive</button>
-    <button solid info>Info</button>
-  </section>
+<column gap="4" style(page)>
+  <column gap="1">
+    <h1>Sail Demo</h1>
+    <p style(muted)>Visual sanity-check for the Sail component bundle.</p>
+  </column>
 
-  <section>
-    <h2>button — soft</h2>
-    <button soft>Default</button>
-    <button soft primary>Primary</button>
-    <button soft success>Success</button>
-    <button soft destructive>Destructive</button>
-  </section>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>button — solid</h2>
+    <row gap="2" align="center">
+      <button variant="solid">Default</button>
+      <button variant="solid" tone="primary">Primary</button>
+      <button variant="solid" tone="success">Success</button>
+      <button variant="solid" tone="warning">Warning</button>
+      <button variant="solid" tone="destructive">Destructive</button>
+      <button variant="solid" tone="info">Info</button>
+    </row>
+  </column>
 
-  <section>
-    <h2>button — outline</h2>
-    <button outline primary>Primary</button>
-    <button outline success>Success</button>
-    <button outline destructive>Destructive</button>
-  </section>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>button — soft</h2>
+    <row gap="2" align="center">
+      <button variant="soft">Default</button>
+      <button variant="soft" tone="primary">Primary</button>
+      <button variant="soft" tone="success">Success</button>
+      <button variant="soft" tone="destructive">Destructive</button>
+    </row>
+  </column>
 
-  <section>
-    <h2>button — ghost</h2>
-    <button ghost primary>Primary</button>
-    <button ghost destructive>Destructive</button>
-  </section>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>button — outline</h2>
+    <row gap="2" align="center">
+      <button variant="outline" tone="primary">Primary</button>
+      <button variant="outline" tone="success">Success</button>
+      <button variant="outline" tone="destructive">Destructive</button>
+    </row>
+  </column>
 
-  <section>
-    <h2>button — sizes</h2>
-    <button solid primary sm>Small</button>
-    <button solid primary md>Medium</button>
-    <button solid primary lg>Large</button>
-  </section>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>button — ghost</h2>
+    <row gap="2" align="center">
+      <button variant="ghost" tone="primary">Primary</button>
+      <button variant="ghost" tone="destructive">Destructive</button>
+    </row>
+  </column>
 
-  <section>
-    <h2>button — states</h2>
-    <button solid primary disabled>Disabled</button>
-    <button solid primary disabled aria-busy="true"><spinner size="sm"></spinner> Loading</button>
-  </section>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>button — sizes</h2>
+    <row gap="2" align="center">
+      <button variant="solid" tone="primary" size="sm">Small</button>
+      <button variant="solid" tone="primary" size="md">Medium</button>
+      <button variant="solid" tone="primary" size="lg">Large</button>
+    </row>
+  </column>
 
-  <section>
-    <h2>sail-badge (dissolved to bare span + sx)</h2>
-    <span style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(muted).borderWidth(1).border(border).fg(muted-foreground), text: fontSize(xs).fontWeight(semibold) })>default</span>
-    <span style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(primary).borderWidth(1).border(primary).fg(primary-foreground), text: fontSize(xs).fontWeight(semibold) })>primary</span>
-    <span style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(success).borderWidth(1).border(success).fg(success-foreground), text: fontSize(xs).fontWeight(semibold) })>success</span>
-    <span style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(warning).borderWidth(1).border(warning).fg(warning-foreground), text: fontSize(xs).fontWeight(semibold) })>warning solid</span>
-    <span style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(transparent).borderWidth(1).border(info).fg(info), text: fontSize(xs).fontWeight(semibold) })>info outline</span>
-    <span style({ box: minH(control-h-2xs).padX(2), paint: radius(sm).bg(destructive).borderWidth(1).border(destructive).fg(destructive-foreground), text: fontSize(xs).fontWeight(semibold) })>destructive</span>
-  </section>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>button — states</h2>
+    <row gap="2" align="center">
+      <button variant="solid" tone="primary" disabled>Disabled</button>
+      <button variant="solid" tone="primary" disabled aria-busy="true">
+        <spinner size="sm"></spinner>
+        Loading
+      </button>
+    </row>
+  </column>
 
-  <section>
-    <h2>sail-card</h2>
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>badge</h2>
+    <row gap="2" align="center">
+      <badge variant="soft">default</badge>
+      <badge tone="primary" variant="solid">primary</badge>
+      <badge tone="success" variant="solid">success</badge>
+      <badge tone="warning" variant="solid">warning solid</badge>
+      <badge tone="info" variant="outline">info outline</badge>
+      <badge tone="destructive" variant="solid">destructive</badge>
+    </row>
+  </column>
+
+  <column gap="2" style(section)>
+    <h2 style(sectionTitle)>card</h2>
     <card>
       <h3 slot="header">Card title</h3>
       <p>Card body content lives in the default slot.</p>
-      <div slot="footer"><button solid primary>Action</button></div>
+      <row slot="footer" gap="2">
+        <button variant="solid" tone="primary">Action</button>
+      </row>
     </card>
-  </section>
-</div>
+  </column>
+</column>

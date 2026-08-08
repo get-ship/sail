@@ -8,9 +8,20 @@
 <scope>
   style title = { text: tracking(tight) }
   style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style email = { paint: fg(muted-foreground) }
+  style hint = { paint: fg(muted-foreground) }
   style rowLabel = { text: fontSize(sm) }
+  type NotifyRowProps = { label: string; detail: string; enabled: boolean }
 </scope>
+
+<partial notify-row props: NotifyRowProps>
+  <row align="center" justify="between" gap="3">
+    <column gap="1">
+      <strong style(rowLabel)>{label}</strong>
+      <small style(hint)>{detail}</small>
+    </column>
+    <switch checked={enabled} tone="primary"></switch>
+  </row>
+</partial>
 
 <column gap="5">
   <row align="center" justify="between" gap="4">
@@ -32,7 +43,7 @@
           <avatar initials="AV" tone="primary" size="lg"></avatar>
           <column gap="1">
             <strong>Avery Vale</strong>
-            <small style(email)>avery@example.dev</small>
+            <small style(hint)>avery@example.dev</small>
           </column>
         </row>
         <separator></separator>
@@ -46,27 +57,21 @@
     <card padding="lg">
       <column gap="4">
         <h3>Notifications</h3>
-        <row align="center" justify="between" gap="3">
-          <column gap="1">
-            <strong style(rowLabel)>Weekly digest</strong>
-            <small style(email)>One summary email, Monday morning.</small>
-          </column>
-          <switch checked tone="primary"></switch>
-        </row>
-        <row align="center" justify="between" gap="3">
-          <column gap="1">
-            <strong style(rowLabel)>Mentions</strong>
-            <small style(email)>When someone @-mentions you.</small>
-          </column>
-          <switch checked tone="primary"></switch>
-        </row>
-        <row align="center" justify="between" gap="3">
-          <column gap="1">
-            <strong style(rowLabel)>Marketing</strong>
-            <small style(email)>Product news and tips.</small>
-          </column>
-          <switch tone="primary"></switch>
-        </row>
+        <notify-row
+          label="Weekly digest"
+          detail="One summary email, Monday morning."
+          enabled={true}
+        />
+        <notify-row
+          label="Mentions"
+          detail="When someone @-mentions you."
+          enabled={true}
+        />
+        <notify-row
+          label="Marketing"
+          detail="Product news and tips."
+          enabled={false}
+        />
       </column>
     </card>
   </grid>
