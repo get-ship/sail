@@ -1,7 +1,6 @@
 <!--
   Themes → Components facet — component token overrides (not the Components entity page).
-  Storybook-ish: catalog rail | large stage | override inspector.
-  Defaults resolve via DTCG color paths; overrides write component.* leaves.
+  Catalog rail | live stage | override inspector. Overrides write component.* leaves.
 -->
 <scope>
   style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
@@ -14,12 +13,61 @@
   style inspectorCol = { box: padX(4).padT(4).padB(8).minW(0) }
   style fullBtn = { box: w(full) }
   style chipCol = { box: minW(0) }
-  // Selected rail row: soft fill + subtle border (no nested cards).
+  // Selected rail row: soft fill + subtle border.
   style listRow = { box: padX(2_5).padY(2), paint: radius(md).cursor(pointer).borderWidth(1).border(transparent), when: { hover: { paint: bg(hover-bg) }, selected: { paint: bg(surface-2).border(border-subtle) } } }
   style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) }
   style tokenStrip = { box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) }
   style tokenRow = { box: padY(1_5), paint: borderBWidth(1).borderB(border-subtle) }
+  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style panelRail = { box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background) }
+  style panelInspector = { box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderLWidth(1).borderL(border-subtle).bg(background) }
+  style specimenDock = { box: grow(1).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background) }
+  style specimenPad = { box: grow(1).minH(0).h(full).pad(4) }
+  style specimenFrame = { box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) }
+  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style specimenVariants = { box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style trafficDots = { box: shrink(0).minW(12) }
+  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
+  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
+  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() }
+  style growMin = { box: grow(1).minW(0) }
+  style shrink0 = { box: shrink(0) }
+  style stageHost = { box: w(full) }
+  style sampleMax = { box: w(full).maxW(panel-max-w-sm) }
+  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full), paint: bg(background) }
+  style stageBody = { box: pad(5).minW(0).minH(full) }
+  style stageTitle = { text: fontSize(md).fontWeight(semibold).fontFamily(heading) }
+  style stageBlurb = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) }
+  style inspectorTitle = { text: fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading) }
+  style tokenChip = { box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
+  type ComponentRailRowProps = {
+    id: string
+    label: string
+    hint: string
+    selected: boolean
+    hasOverride: boolean
+  }
 </scope>
+
+<partial component-rail-row props: ComponentRailRowProps>
+  <row
+    l1={id}
+    selected={selected ? 'true' : 'false'}
+    align="center"
+    gap="2"
+    nowrap
+    style(listRow)
+  >
+    <column gap="0" style(growMin)>
+      <p style(doorTitle)>{label}</p>
+      <p style(fieldHint)>{hint}</p>
+    </column>
+    <if {hasOverride}>
+      <badge tone="primary" size="sm" variant="solid" pill style(shrink0)>override</badge>
+    </if>
+  </row>
+</partial>
 
 <controller>
 import { createThemeSession } from '../compositions/theme-session/theme-session'
@@ -37,12 +85,12 @@ export default controller(() => {
 })
 </controller>
 
-<column surface="themes" theme-components-surface components-chrome gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
+<column surface="themes" theme-components-surface components-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
     <row components-error align="center" gap="2" style(bandError, { box: shrink(0) })>
-      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
+      <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
@@ -54,10 +102,8 @@ export default controller(() => {
     </row>
   </if>
 
-  <!-- Storybook-ish: rail | LARGE stage | inspector -->
-  <row components-workbench gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
-    <!-- LEFT: component catalog rail -->
-    <scroll-area components-rail style({  box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background)  })>
+  <row components-workbench gap="0" nowrap align="stretch" style(workbench)>
+    <scroll-area components-rail style(panelRail)>
       <column gap="3" style(railCol)>
         <column gap="2">
           <p style(eyebrow)>Components</p>
@@ -84,61 +130,46 @@ export default controller(() => {
         </column>
         <column l1-list gap="1" on:click={components.onSelect}>
           <for {components.componentRows() as row} key={row.key}>
-            <row
-              l1={row.id}
-              selected={row.selected ? 'true' : 'false'}
-              selected={row.selected ? 'true' : 'false'}
-              align="center"
-              gap="2"
-              nowrap style(listRow)>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>{row.label}</p>
-                <p style(fieldHint)>{row.hint}</p>
-              </column>
-              <if {row.hasOverride}>
-                <badge tone="primary" size="sm" variant="solid" pill style({ box: shrink(0) })>override</badge>
-              </if>
-            </row>
+            <component-rail-row
+              id={row.id}
+              label={row.label}
+              hint={row.hint}
+              selected={row.selected}
+              hasOverride={row.hasOverride}
+            ></component-rail-row>
           </for>
         </column>
       </column>
     </scroll-area>
 
-    <!-- CENTER: large live specimen stage -->
-    <column specimen-dock components-stage gap="0" style({  box: grow(1).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background)  })>
-      <column gap="0" style({  box: grow(1).minH(0).h(full).pad(4)  })>
-        <!--
-          One themed host only. Stage content sits ON background —
-          no nested white plate under the live specimen (light-mode clash).
-          Frame chrome shows theme name + mode — no external Preview/light label.
-        -->
+    <column specimen-dock components-stage gap="0" style(specimenDock)>
+      <column gap="0" style(specimenPad)>
         <card
           components-specimen
           preview-specimen
           mode={session.paintMode()}
-          padding="none" style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })>
+          padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-              <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
+            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+              <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
+                <stack style(trafficDot, { paint: bg(destructive) })></stack>
+                <stack style(trafficDot, { paint: bg(warning) })></stack>
+                <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
-              <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>
+              <p style(chromeTitle)>
                 {session.nameEdit()} · {components.selectedLabel()}
               </p>
               <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
 
             <if {components.hasVariants()}>
-              <row specimen-variants align="center" gap="2" nowrap on:click={components.onVariantPick} style({  box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
+              <row specimen-variants align="center" gap="2" nowrap on:click={components.onVariantPick} style(specimenVariants)>
                 <p style(pathMeta, { box: shrink(0) })>{components.viewerVariantAttr()}:</p>
                 <for {components.variantChips() as c} key={c.key}>
                   <button
                     type="button"
                     size="sm"
                     tone="primary"
-                    variant={c.btnVariant}
                     variant={c.v}
                   >
                     {c.v}
@@ -147,27 +178,27 @@ export default controller(() => {
               </row>
             </if>
 
-            <scroll-area style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })>
+            <scroll-area style(scrollGrow)>
               <column
                 specimen-body
                 l1-live-stage={components.selectedId()}
                 gap="5"
-                align="stretch" style({ box: pad(5).minW(0).minH(full) })>
+                align="stretch" style(stageBody)>
                 <column gap="1">
-                  <p style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })>
+                  <p style(stageTitle)>
                     {components.selectedLabel()}
                   </p>
-                  <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) })>
+                  <p style(stageBlurb)>
                     {components.viewerBlurb()}
                   </p>
                   <p style(pathMeta)>{components.registryNote()}</p>
                 </column>
 
-                <column gap="4" align="start" l1-stage-host style({ box: w(full) })>
+                <column gap="4" align="start" l1-stage-host style(stageHost)>
 
                   <!-- ── Inputs ─────────────────────────────────────── -->
                   <if {components.stage.button()}>
-                    <column gap="3" style({ box: w(full) })>
+                    <column gap="3" style(stageHost)>
                       <row gap="2" align="center" nowrap>
                         <button type="button" size="sm" variant={components.variant() || 'solid'} tone="primary">Primary</button>
                         <button type="button" size="sm" variant={components.variant() || 'solid'} tone="accent">Accent</button>
@@ -177,22 +208,22 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.input()}>
-                    <column gap="2" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <column gap="2" style(sampleMax)>
                       <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
                     </column>
                   </if>
                   <if {components.stage.textarea()}>
-                    <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" style({  box: w(full).maxW(panel-max-w-sm)  })></textarea>
+                    <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" style(sampleMax)></textarea>
                   </if>
                   <if {components.stage.select()}>
-                    <select size="sm" label="Sample select" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <select size="sm" label="Sample select" style(sampleMax)>
                       <option>Option A</option>
                       <option>Option B</option>
                       <option>Option C</option>
                     </select>
                   </if>
                   <if {components.stage.combobox()}>
-                    <combobox placeholder="Type to filter…" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <combobox placeholder="Type to filter…" style(sampleMax)>
                       <option value="sail">Sail</option>
                       <option value="react">React</option>
                       <option value="svelte">Svelte</option>
@@ -202,7 +233,7 @@ export default controller(() => {
                     <radio value="a">Option A</radio>
                   </if>
                   <if {components.stage.radioGroup()}>
-                    <radio-group label="Plan" name="theme-l1-plan" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <radio-group label="Plan" name="theme-l1-plan" style(sampleMax)>
                       <radio value="monthly">Monthly</radio>
                       <radio value="yearly">Yearly</radio>
                     </radio-group>
@@ -214,7 +245,7 @@ export default controller(() => {
                     </row>
                   </if>
                   <if {components.stage.slider()}>
-                    <column gap="2" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <column gap="2" style(sampleMax)>
                       <slider value={components.load()} min="0" max="100" tone={components.variant() || 'primary'} label="Sample slider"></slider>
                       <p style(fieldHint)>{components.load()}%</p>
                     </column>
@@ -228,20 +259,20 @@ export default controller(() => {
                     </toggle-group>
                   </if>
                   <if {components.stage.field()}>
-                    <field style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <field style(sampleMax)>
                       <label slot="label" for="theme-l1-field">Name</label>
                       <input id="theme-l1-field" size="sm" placeholder="Ada Lovelace" />
                       <p slot="hint">Hint under the control</p>
                     </field>
                   </if>
                   <if {components.stage.label()}>
-                    <column gap="1" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <column gap="1" style(sampleMax)>
                       <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
                       <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
                     </column>
                   </if>
                   <if {components.stage.fieldset()}>
-                    <fieldset style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <fieldset style(sampleMax)>
                       <legend>Account</legend>
                       <column gap="2">
                         <input size="sm" placeholder="Name" />
@@ -250,7 +281,7 @@ export default controller(() => {
                     </fieldset>
                   </if>
                   <if {components.stage.legend()}>
-                    <fieldset style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <fieldset style(sampleMax)>
                       <legend>Legend specimen</legend>
                       <p style(fieldHint)>Legend lives on a fieldset.</p>
                     </fieldset>
@@ -261,15 +292,15 @@ export default controller(() => {
 
                   <!-- ── Feedback ───────────────────────────────────── -->
                   <if {components.stage.alert()}>
-                    <alert tone={components.variant() || 'info'} style({ box: w(full) })>
+                    <alert tone={components.variant() || 'info'} style(stageHost)>
                       <strong>Heads up.</strong> Live alert under theme paint.
                     </alert>
                   </if>
                   <if {components.stage.progressBar()}>
-                    <progress value={components.load()} max="100" style({  box: w(full).maxW(panel-max-w-sm)  })></progress>
+                    <progress value={components.load()} max="100" style(sampleMax)></progress>
                   </if>
                   <if {components.stage.meter()}>
-                    <column gap="2" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <column gap="2" style(sampleMax)>
                       <meter value="0.3"></meter>
                       <meter value="0.7"></meter>
                       <meter value="0.95"></meter>
@@ -279,13 +310,13 @@ export default controller(() => {
                     <spinner size={components.variant() || 'md'} tone="primary"></spinner>
                   </if>
                   <if {components.stage.emptyState()}>
-                    <empty-state variant="inline" size="sm" style({ box: w(full) })>
+                    <empty-state variant="inline" size="sm" style(stageHost)>
                       <strong slot="title">No results</strong>
                       Try another filter.
                     </empty-state>
                   </if>
                   <if {components.stage.errorState()}>
-                    <error-state variant="inline" code="ERR_THEME" style({ box: w(full) })>
+                    <error-state variant="inline" code="ERR_THEME" style(stageHost)>
                       Request failed — retry or check the connection.
                     </error-state>
                   </if>
@@ -295,7 +326,7 @@ export default controller(() => {
                     </error-boundary>
                   </if>
                   <if {components.stage.toast()}>
-                    <toast tone="success" duration="0" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <toast tone="success" duration="0" style(sampleMax)>
                       <strong>Saved.</strong> Sticky toast (duration 0).
                     </toast>
                   </if>
@@ -321,7 +352,7 @@ export default controller(() => {
                     </row>
                   </if>
                   <if {components.stage.card()}>
-                    <card variant={components.variant() || 'default'} padding="sm" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <card variant={components.variant() || 'default'} padding="sm" style(sampleMax)>
                       <column gap="2">
                         <p style(doorTitle)>Card surface</p>
                         <p style(fieldHint)>Judges component.card.radius when overridden.</p>
@@ -338,14 +369,14 @@ export default controller(() => {
                     <icon size={components.variant() || 'md'} name="sparkles" label="sparkles"></icon>
                   </if>
                   <if {components.stage.separator()}>
-                    <column gap="2" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <column gap="2" style(sampleMax)>
                       <p style(fieldHint)>above</p>
                       <separator variant={components.variant() || 'solid'}></separator>
                       <p style(fieldHint)>below</p>
                     </column>
                   </if>
                   <if {components.stage.accordion()}>
-                    <accordion style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <accordion style(sampleMax)>
                       <strong slot="trigger">Show details</strong>
                       <p style(fieldHint)>Accordion body content.</p>
                     </accordion>
@@ -355,12 +386,12 @@ export default controller(() => {
                     </p>
                   </if>
                   <if {components.stage.prose()}>
-                    <prose style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <prose style(sampleMax)>
                       <p>Body copy with <strong>strong</strong> and <em>emphasis</em>.</p>
                     </prose>
                   </if>
                   <if {components.stage.codeBlock()}>
-                    <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" style({  box: w(full).maxW(panel-max-w-sm)  })></code-block>
+                    <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" style(sampleMax)></code-block>
                   </if>
 
                   <!-- ── Overlay ────────────────────────────────────── -->
@@ -406,7 +437,7 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.contextMenu()}>
-                    <column gap="2" align="center" style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <column gap="2" align="center" style(sampleMax)>
                       <column id="theme-l1-ctx" gap="1" style({  box: w(full).pad(3), paint: borderWidth(1).border(border).radius(md)  })>
                         <p style(fieldHint)>Right-click this area</p>
                       </column>
@@ -433,7 +464,7 @@ export default controller(() => {
 
                   <!-- ── Navigation ─────────────────────────────────── -->
                   <if {components.stage.tabs()}>
-                    <tabs style({ box: w(full) })>
+                    <tabs style(stageHost)>
                       <tab-list variant={components.variant() || 'line'}>
                         <tab>Overview</tab>
                         <tab>Shape</tab>
@@ -482,7 +513,7 @@ export default controller(() => {
                     </row>
                   </if>
                   <if {components.stage.navbar()}>
-                    <navbar bordered style({ box: w(full) })>
+                    <navbar bordered style(stageHost)>
                       <strong slot="brand">SHIP</strong>
                       <a href="/themes">Themes</a>
                       <a href="/themes">Assets</a>
@@ -492,7 +523,7 @@ export default controller(() => {
 
                   <!-- ── Data / layout ──────────────────────────────── -->
                   <if {components.stage.table()}>
-                    <table dense style({ box: w(full) })>
+                    <table dense style(stageHost)>
                       <thead>
                         <tr><th>Name</th><th>Role</th></tr>
                       </thead>
@@ -517,7 +548,7 @@ export default controller(() => {
                     </scroll-area>
                   </if>
                   <if {components.stage.ticker()}>
-                    <ticker style({  box: w(full).maxW(panel-max-w-sm)  })>
+                    <ticker style(sampleMax)>
                       Live ticker · theme paint · radius overrides ·
                     </ticker>
                   </if>
@@ -537,11 +568,11 @@ export default controller(() => {
     </column>
 
     <!-- RIGHT: override inspector -->
-    <scroll-area components-editor components-inspector style({  box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })>
+    <scroll-area components-editor components-inspector style(panelInspector)>
       <column gap="5" style(inspectorCol)>
         <column gap="2">
           <p style(eyebrow)>Theme overrides</p>
-          <p style({ text: fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading) })>
+          <p style(inspectorTitle)>
             {components.selectedLabel()}
           </p>
           <p style(fieldHint)>{components.registryNote()}</p>
@@ -572,10 +603,10 @@ export default controller(() => {
                   </row>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
-                      <stack token-chip style({  box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0)  })>
+                      <stack token-chip style(tokenChip)>
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onComponentColor}></sail-color-picker>
                       </stack>
-                      <column gap="0" style({ box: grow(1).minW(0) })>
+                      <column gap="0" style(growMin)>
                         <p style(pathMeta)>{tok.hexLabel}</p>
                         <p style(fieldHint) token-layer={tok.layer}>Layer · {tok.layer}</p>
                         <if {!tok.isOverridden}>
@@ -614,10 +645,10 @@ export default controller(() => {
                   </column>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
-                      <stack token-chip style({  box: shrink(0).position(relative).w(9).h(9).minW(9).minH(9).overflow(hidden), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0)  })>
+                      <stack token-chip style(tokenChip)>
                         <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onGlobalColor}></sail-color-picker>
                       </stack>
-                      <column gap="0" style({ box: grow(1).minW(0) })>
+                      <column gap="0" style(growMin)>
                         <p style(pathMeta)>{tok.hexLabel}</p>
                         <p style(fieldHint) token-layer={tok.layer}>Layer · {tok.layer}</p>
                       </column>

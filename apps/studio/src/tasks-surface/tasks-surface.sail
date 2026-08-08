@@ -1,6 +1,36 @@
 <!--
   <tasks-surface> — thread list + conversation + composer.
 -->
+<scope>
+  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden) }
+  style pageHeader = { box: shrink(0).h(10).padX(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style growMin = { box: grow(1).minW(0) }
+  style shrink0 = { box: shrink(0) }
+  style titleMd = { text: fontSize(md).fontWeight(semibold) }
+  style countMono = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style filterOpen = { box: w(24) }
+  style filterActor = { box: w(28) }
+  style errorBand = { box: shrink(0).padX(3).h(7), paint: borderBWidth(1).borderB(border) }
+  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(xs).truncate() }
+  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
+  style navPane = { box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1) }
+  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
+  style listPad = { box: padY(1).padX(1) }
+  style detailPane = { box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden), paint: bg(surface-0) }
+  style emptyCenter = { box: grow(1).minH(0).h(full).pad(4) }
+  style fullW = { box: w(full) }
+  style detailHead = { box: shrink(0).h(10).padX(3).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style titleTruncate = { text: fontSize(md).truncate() }
+  style anchorRow = { box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
+  style pathMono = { box: grow(1).minW(0), text: fontSize(xs).fontFamily(mono).truncate() }
+  style attachRow = { box: shrink(0).padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle) }
+  style conversation = { box: grow(1).minH(0).basis(0).h(full).overflow(hidden) }
+  style mdScroll = { box: shrink(0).maxH(32).minH(0) }
+  style mdPad = { box: pad(3) }
+  style messagesHost = { box: grow(1).minH(0).h(full).w(full).basis(0) }
+  style composer = { box: shrink(0).pad(3), paint: borderTWidth(1).borderT(border-subtle).bg(surface-1) }
+</scope>
+
 <controller>
 import { createTasksSurface } from '../compositions/tasks-surface/tasks-surface-vm'
 export default controller(() => {
@@ -43,11 +73,11 @@ export default controller(() => {
 })
 </controller>
 
-<column surface="tasks" tasks-surface gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden)  })>
-  <row tasks-header align="center" justify="between" gap="3" nowrap style({  box: shrink(0).h(10).padX(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-    <row align="center" gap="3" nowrap style({ box: grow(1).minW(0) })>
-      <p style({ text: fontSize(md).fontWeight(semibold) })>Tasks</p>
-      <p thread-count style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>
+<column surface="tasks" tasks-surface gap="0" style(surfaceRoot)>
+  <row tasks-header align="center" justify="between" gap="3" nowrap style(pageHeader)>
+    <row align="center" gap="3" nowrap style(growMin)>
+      <p style(titleMd)>Tasks</p>
+      <p thread-count style(countMono)>
         {threadCountLabel()}
       </p>
       <select
@@ -55,7 +85,7 @@ export default controller(() => {
         size="sm"
         value={openFilterVal()}
         on:change={onTaskOpenFilter}
-        label="Open or all" style({ box: w(24) })>
+        label="Open or all" style(filterOpen)>
         <option value="open">Open</option>
         <option value="all">All</option>
       </select>
@@ -64,30 +94,30 @@ export default controller(() => {
         size="sm"
         value={actorFilterVal()}
         on:change={onTaskActorFilter}
-        label="Last reply" style({ box: w(28) })>
+        label="Last reply" style(filterActor)>
         <option value="all">Anyone</option>
         <option value="human">You</option>
         <option value="agent">Agent</option>
       </select>
     </row>
-    <button type="button" size="sm" tone="primary" new-task on:click={onNewTaskQuick} style({ box: shrink(0) })>
+    <button type="button" size="sm" tone="primary" new-task on:click={onNewTaskQuick} style(shrink0)>
       New task
     </button>
   </row>
 
   <if {showTaskErrorAlert()}>
-    <row tasks-error align="center" gap="2" style({  box: shrink(0).padX(3).h(7), paint: borderBWidth(1).borderB(border)  })>
-      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(xs).truncate() })>{taskError()}</p>
+    <row tasks-error align="center" gap="2" style(errorBand)>
+      <p style(errorText)>{taskError()}</p>
       <button type="button" size="sm" variant="ghost" retry-tasks on:click={onRetryTasks}>
         Retry
       </button>
     </row>
   </if>
 
-  <row tasks-workbench gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })>
-    <column threads-list tasks-nav gap="0" style({  box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-1)  })>
-      <scroll-area on:click={onTaskThreadClick} style({  box: grow(1).minH(0).basis(0).h(full)  })>
-        <column gap="0" tasks-table style({ box: padY(1).padX(1) })>
+  <row tasks-workbench gap="0" nowrap align="stretch" style(workbench)>
+    <column threads-list tasks-nav gap="0" style(navPane)>
+      <scroll-area on:click={onTaskThreadClick} style(scrollGrow)>
+        <column gap="0" tasks-table style(listPad)>
           <if {!hasTaskThreads()}>
             <if {!showTaskErrorAlert()}>
               <studio-empty tasks-empty title={emptyTitle()} size="sm">
@@ -105,7 +135,7 @@ export default controller(() => {
                 meta={row.updatedLabel}
                 selected={row.selected}
               >
-                <badge slot="leading" status-badge={row.status} tone={row.statusTone} size="sm" variant="soft" pill label={row.statusLabel} style({ box: shrink(0) })>
+                <badge slot="leading" status-badge={row.status} tone={row.statusTone} size="sm" variant="soft" pill label={row.statusLabel} style(shrink0)>
                   {row.statusLabel}
                 </badge>
               </studio-list-row>
@@ -115,10 +145,10 @@ export default controller(() => {
       </scroll-area>
     </column>
 
-    <column task-detail gap="0" style({  box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden), paint: bg(surface-0)  })>
+    <column task-detail gap="0" style(detailPane)>
       <if {!hasTaskSelected()}>
-        <column align="center" justify="center" style({  box: grow(1).minH(0).h(full).pad(4)  })>
-          <empty-state variant="placeholder" size="sm" task-detail-empty style({ box: w(full) })>
+        <column align="center" justify="center" style(emptyCenter)>
+          <empty-state variant="placeholder" size="sm" task-detail-empty style(fullW)>
             <strong slot="title">Select a task</strong>
             Or create a new one.
           </empty-state>
@@ -126,9 +156,9 @@ export default controller(() => {
       </if>
 
       <if {hasTaskSelected()}>
-        <row task-detail-header align="center" gap="2" nowrap justify="between" style({  box: shrink(0).h(10).padX(3).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-          <row align="center" gap="2" nowrap style({ box: grow(1).minW(0) })>
-            <strong style({ text: fontSize(md).truncate() })>{taskTitle()}</strong>
+        <row task-detail-header align="center" gap="2" nowrap justify="between" style(detailHead)>
+          <row align="center" gap="2" nowrap style(growMin)>
+            <strong style(titleTruncate)>{taskTitle()}</strong>
             <badge status-detail tone={taskStatusTone()} size="sm" variant="soft" pill>
               {taskStatusLabel()}
             </badge>
@@ -138,20 +168,19 @@ export default controller(() => {
           </button>
         </row>
 
-        <!-- Anchor: status only when present — no re-link/accept choreography in scaffold -->
         <if {taskAnchorHas()}>
-          <row anchor-card anchor-chip drift={taskAnchorStatusRaw()} align="center" gap="2" nowrap style({  box: shrink(0).padX(3).padY(2).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0)  })>
-            <badge anchor-drift={taskAnchorStatusRaw()} tone={taskAnchorTone()} size="sm" variant="soft" pill style({ box: shrink(0) })>
+          <row anchor-card anchor-chip drift={taskAnchorStatusRaw()} align="center" gap="2" nowrap style(anchorRow)>
+            <badge anchor-drift={taskAnchorStatusRaw()} tone={taskAnchorTone()} size="sm" variant="soft" pill style(shrink0)>
               {taskAnchorStatus()}
             </badge>
-            <p style({ box: grow(1).minW(0), text: fontSize(xs).fontFamily(mono).truncate() })>
+            <p style(pathMono)>
               {taskAnchorPath()}
             </p>
           </row>
         </if>
 
         <if {hasTaskAttach()}>
-          <row attachments gap="2" align="center" style({  box: shrink(0).padX(3).padY(2), paint: borderBWidth(1).borderB(border-subtle)  })>
+          <row attachments gap="2" align="center" style(attachRow)>
             <for {taskAttachChips() as a} key={a.key}>
               <badge attach-chip attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
                 {a.label}
@@ -160,30 +189,30 @@ export default controller(() => {
           </row>
         </if>
 
-        <column task-conversation gap="0" style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden)  })>
+        <column task-conversation gap="0" style(conversation)>
           <if {hasThreadMarkdown()}>
-            <scroll-area style({  box: shrink(0).maxH(32).minH(0)  })>
-              <column style({ box: pad(3) })>
+            <scroll-area style(mdScroll)>
+              <column style(mdPad)>
                 <sail-markdown thread-markdown value={threadMarkdown()}></sail-markdown>
               </column>
             </scroll-area>
           </if>
-          <sail-message-list messages-host messages sticky-bottom style({  box: grow(1).minH(0).h(full).w(full).basis(0)  })>
-            <empty-state slot="empty" variant="inline" size="sm" style({ box: w(full) })>
+          <sail-message-list messages-host messages sticky-bottom style(messagesHost)>
+            <empty-state slot="empty" variant="inline" size="sm" style(fullW)>
               <strong slot="title">No messages yet</strong>
               Write below to start.
             </empty-state>
           </sail-message-list>
         </column>
 
-        <column reply-composer gap="2" style({  box: shrink(0).pad(3), paint: borderTWidth(1).borderT(border-subtle).bg(surface-1)  })>
+        <column reply-composer gap="2" style(composer)>
           <sail-composer
             task-composer
             reply-input
             multiline
             disabled={composerDisabled()}
             placeholder="Message…"
-            on-submit={onComposerSubmit} style({ box: w(full) })>
+            on-submit={onComposerSubmit} style(fullW)>
             <row slot="trailing" gap="1" align="center" nowrap>
               <if {canAttachCrop()}>
                 <button

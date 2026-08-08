@@ -6,6 +6,32 @@
   style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
   style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
+  style navPane = { box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) }
+  style navHead = { box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) }
+  style detailPane = { box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) }
+  style detailHead = { box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
+  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
+  style listPad = { box: pad(3) }
+  style loadRow = { box: shrink(0).padX(4).padY(2) }
+  style shrink0 = { box: shrink(0) }
+  style growMin = { box: grow(1).minW(0) }
+  style detailTitle = { text: fontSize(lg).fontWeight(semibold).tracking(tight).truncate() }
+  style bodyPad = { box: pad(5).minW(0) }
+  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style trafficDots = { box: shrink(0).minW(12) }
+  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
+  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
+  style previewFrame = { box: minW(0).overflow(hidden), paint: shadow(lg) }
+  style previewBody = { box: pad(6).minH(32), paint: bg(background) }
+  style previewTitle = { text: fontSize(md).fontWeight(semibold).fontFamily(heading) }
+  style previewHint = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style propHead = { box: padY(1), paint: borderBWidth(1).borderB(border-subtle) }
+  style propRow = { box: padY(2), paint: borderBWidth(1).borderB(border-subtle) }
+  style kvLabel = { box: shrink(0).w(24), paint: fg(muted-foreground), text: fontSize(xs) }
+  style kvValue = { box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() }
+  style footnote = { box: padX(1), paint: fg(muted-foreground), text: fontSize(xs).leading(snug) }
 </scope>
 
 <controller>
@@ -18,13 +44,13 @@ export default controller(() => {
 })
 </controller>
 
-<column surface="components" components-surface components-library gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
-  <row components-workbench gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden)  })>
-    <column components-nav gap="0" style({  box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0)  })>
-      <column components-nav-head gap="2" style({  box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle)  })>
+<column surface="components" components-surface components-library gap="0" style(surfaceRoot)>
+  <row components-workbench gap="0" nowrap align="stretch" style(workbench)>
+    <column components-nav gap="0" style(navPane)>
+      <column components-nav-head gap="2" style(navHead)>
         <row align="center" justify="between" nowrap gap="2">
           <p style(eyebrow)>Components</p>
-          <button type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen} style({ box: shrink(0) })>
+          <button type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen} style(shrink0)>
             New…
           </button>
         </row>
@@ -47,14 +73,14 @@ export default controller(() => {
       </column>
 
       <if {library.isLoading()}>
-        <row align="center" gap="2" style({  box: shrink(0).padX(4).padY(2)  })>
+        <row align="center" gap="2" style(loadRow)>
           <spinner size="sm"></spinner>
           <p style(muted)>{library.loadingLabel()}</p>
         </row>
       </if>
 
-      <scroll-area components-list on:click={library.onListClick} style({  box: grow(1).minH(0).basis(0).h(full)  })>
-        <column gap="3" style({ box: pad(3) })>
+      <scroll-area components-list on:click={library.onListClick} style(scrollGrow)>
+        <column gap="3" style(listPad)>
           <column list-group="project" gap="1">
             <row align="center" justify="between" nowrap>
               <p style(eyebrow)>This project</p>
@@ -76,7 +102,7 @@ export default controller(() => {
                 meta={row.meta}
                 selected={row.selected}
               >
-                <badge slot="trailing" tone={row.originTone} size="sm" variant="outline" pill style({ box: shrink(0) })>
+                <badge slot="trailing" tone={row.originTone} size="sm" variant="outline" pill style(shrink0)>
                   {row.originLabel}
                 </badge>
               </studio-list-row>
@@ -99,14 +125,14 @@ export default controller(() => {
                 meta={row.meta}
                 selected={row.selected}
               >
-                <badge slot="trailing" tone="muted" size="sm" variant="outline" pill style({ box: shrink(0) })>
+                <badge slot="trailing" tone="muted" size="sm" variant="outline" pill style(shrink0)>
                   pack
                 </badge>
               </studio-list-row>
             </for>
           </column>
 
-          <p l1-footnote style({ box: padX(1), paint: fg(muted-foreground), text: fontSize(xs).leading(snug) })>
+          <p l1-footnote style(footnote)>
             Element skins live under Themes → Components — not listed here.
             <button type="button" size="sm" variant="ghost" tone="muted" themes-components on:click={session.goThemesComponents}>
               Open Themes
@@ -116,11 +142,11 @@ export default controller(() => {
       </scroll-area>
     </column>
 
-    <column components-detail gap="0" style({  box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background)  })>
-      <column components-detail-head gap="3" style({  box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0)  })>
+    <column components-detail gap="0" style(detailPane)>
+      <column components-detail-head gap="3" style(detailHead)>
         <row align="start" justify="between" gap="3" nowrap>
-          <column gap="1" style({ box: grow(1).minW(0) })>
-            <p detail-title style({ text: fontSize(lg).fontWeight(semibold).tracking(tight).truncate() })>
+          <column gap="1" style(growMin)>
+            <p detail-title style(detailTitle)>
               {library.detailTitle()}
             </p>
             <p detail-path style(pathMeta)>{library.detailPath()}</p>
@@ -131,7 +157,7 @@ export default controller(() => {
               </if>
             </row>
           </column>
-          <row gap="2" align="center" nowrap style({ box: shrink(0) })>
+          <row gap="2" align="center" nowrap style(shrink0)>
             <button
               type="button"
               size="sm"
@@ -170,8 +196,8 @@ export default controller(() => {
         </row>
       </column>
 
-      <scroll-area components-detail-body style({  box: grow(1).minH(0).basis(0).h(full)  })>
-        <column gap="4" style({ box: pad(5).minW(0) })>
+      <scroll-area components-detail-body style(scrollGrow)>
+        <column gap="4" style(bodyPad)>
           <if {session.showNewForm()}>
             <card new-form padding="md" style({ box: minW(0) })>
               <column gap="3">
@@ -201,22 +227,22 @@ export default controller(() => {
             </card>
           </if>
 
-          <card components-preview preview-specimen padding="none" style({ box: minW(0).overflow(hidden), paint: shadow(lg) })>
+          <card components-preview preview-specimen padding="none" style(previewFrame)>
             <column gap="0">
-              <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-                <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
-                  <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
-                  <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
-                  <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
+              <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+                <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
+                  <stack style(trafficDot, { paint: bg(destructive) })></stack>
+                  <stack style(trafficDot, { paint: bg(warning) })></stack>
+                  <stack style(trafficDot, { paint: bg(success) })></stack>
                 </row>
-                <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>
+                <p style(chromeTitle)>
                   {library.previewTitle()}
                 </p>
-                <badge tone="muted" size="sm" variant="outline" pill style({ box: shrink(0) })>preview</badge>
+                <badge tone="muted" size="sm" variant="outline" pill style(shrink0)>preview</badge>
               </row>
-              <column mode="dark" specimen-body gap="2" style({ box: pad(6).minH(32), paint: bg(background) })>
-                <p style({ text: fontSize(md).fontWeight(semibold).fontFamily(heading) })>{library.previewTitle()}</p>
-                <p style({ paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })>{library.previewHint()}</p>
+              <column mode="dark" specimen-body gap="2" style(previewBody)>
+                <p style(previewTitle)>{library.previewTitle()}</p>
+                <p style(previewHint)>{library.previewHint()}</p>
               </column>
             </column>
           </card>
@@ -236,8 +262,8 @@ export default controller(() => {
                   <p style(eyebrow)>Meta</p>
                   <for {library.kvRows() as kv} key={kv.key}>
                     <row kv-row gap="3" align="start" nowrap>
-                      <p style({  box: shrink(0).w(24), paint: fg(muted-foreground), text: fontSize(xs)  })>{kv.label}</p>
-                      <p style({ box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() })>{kv.value}</p>
+                      <p style(kvLabel)>{kv.label}</p>
+                      <p style(kvValue)>{kv.value}</p>
                     </row>
                   </for>
                 </column>
@@ -260,14 +286,14 @@ export default controller(() => {
                 </if>
                 <if {library.hasProps()}>
                   <column props-table gap="1">
-                    <row gap="3" nowrap style({ box: padY(1), paint: borderBWidth(1).borderB(border-subtle) })>
+                    <row gap="3" nowrap style(propHead)>
                       <p style(eyebrow, { box: grow(1) })>Name</p>
                       <p style(eyebrow)>Type</p>
                       <p style(eyebrow)>Default</p>
                     </row>
                     <for {library.propRows() as prop} key={prop.key}>
-                      <row prop-row gap="3" align="start" nowrap style({ box: padY(2), paint: borderBWidth(1).borderB(border-subtle) })>
-                        <column gap="0" style({ box: grow(1).minW(0) })>
+                      <row prop-row gap="3" align="start" nowrap style(propRow)>
+                        <column gap="0" style(growMin)>
                           <p style({ text: fontSize(sm).fontFamily(mono) })>{prop.name}</p>
                           <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>{prop.requiredLabel}</p>
                         </column>

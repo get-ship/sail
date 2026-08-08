@@ -34,10 +34,55 @@
   // Primary specimen card: radius.lg + elev + border + freeform fill (frost α live).
   style liveCard = { box: pad(5), paint: border(border) }
   style glassMini = { box: maxW(panel-max-w-sm).w(full).pad(4), paint: border(border) }
+  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style panelRail = { box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background) }
+  style specimenDock = { box: grow(1).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background) }
+  style specimenPad = { box: grow(1).minH(0).h(full).pad(4) }
+  style specimenFrame = { box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) }
+  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style trafficDots = { box: shrink(0).minW(12) }
+  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
+  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
+  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() }
+  style pageTitle = { text: fontSize(2xl).fontWeight(semibold).tracking(tight).fontFamily(heading) }
+  style growMin = { box: grow(1).minW(0) }
+  style elevHintCol = { box: minW(0) }
+  type ElevChipProps = {
+    elev: string
+    label: string
+    hint: string
+    on: boolean
+    canEdit: boolean
+  }
 </scope>
 
+<partial elev-chip props: ElevChipProps>
+  <button
+    type="button"
+    size="sm"
+    elev={elev}
+    variant="outline"
+    tone={on ? 'primary' : 'muted'}
+    pressed={on ? 'true' : 'false'}
+    disabled={!canEdit}
+  >
+    <row gap="2" align="center" nowrap>
+      <if {elev === 'none'}><stack hidden="true" style(elevMarkNone)></stack></if>
+      <if {elev === 'xs'}><stack hidden="true" style(elevMarkXs)></stack></if>
+      <if {elev === 'sm'}><stack hidden="true" style(elevMarkSm)></stack></if>
+      <if {elev === 'md'}><stack hidden="true" style(elevMarkMd)></stack></if>
+      <if {elev === 'lg'}><stack hidden="true" style(elevMarkLg)></stack></if>
+      <if {elev === 'xl'}><stack hidden="true" style(elevMarkXl)></stack></if>
+      <column gap="0" align="start" style(elevHintCol)>
+        <p style(doorTitle)>{label}</p>
+        <p style(pathMeta)>{hint}</p>
+      </column>
+    </row>
+  </button>
+</partial>
+
 <controller>
-import { effect, mountAmbient, signal } from '@ship/sail-runtime'
 import { createThemeSession } from '../compositions/theme-session/theme-session'
 import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
 import { createShapeEdit } from '../compositions/theme-shape-surface/theme-shape-edit'
@@ -48,86 +93,30 @@ export default controller(() => {
     saveSuccessMessage: 'Shape tokens saved to DTCG source.',
   })
   const shape = createShapeEdit(session)
-  const liveCardRadius = signal(shape.liveCardRadius())
-  const liveCardShadow = signal(shape.liveCardShadow())
-  const liveBorderW = signal(shape.liveBorderW())
-  const liveCardFill = signal(shape.liveCardFill())
-  const liveLadderSm = signal(shape.liveLadderSm())
-  const liveLadderMd = signal(shape.liveLadderMd())
-  const liveLadderLg = signal(shape.liveLadderLg())
-  const liveLadderXl = signal(shape.liveLadderXl())
-  const liveCornerSm = signal(shape.liveCornerSm())
-  const liveCornerMd = signal(shape.liveCornerMd())
-  const liveCornerLg = signal(shape.liveCornerLg())
-  const liveCornerXl = signal(shape.liveCornerXl())
-  const liveCardBox = signal('')
-  const liveGlassBox = signal('')
-  const liveLadderSmBox = signal('')
-  const liveLadderMdBox = signal('')
-  const liveLadderLgBox = signal('')
-  const liveLadderXlBox = signal('')
-  const liveCornerSmBox = signal('')
-  const liveCornerMdBox = signal('')
-  const liveCornerLgBox = signal('')
-  const liveCornerXlBox = signal('')
-  const packCard = () => {
-    const r = shape.liveCardRadius()
-    const sh = shape.liveCardShadow()
-    const bw = shape.liveBorderW()
-    const fill = shape.liveCardFill()
-    return `border-radius:${r};box-shadow:${sh};border-width:${bw};background:${fill}`
-  }
-  const packRadius = (r: string) => `border-radius:${r}`
-  mountAmbient(() =>
-    effect(() => {
-      liveCardRadius.set(shape.liveCardRadius())
-      liveCardShadow.set(shape.liveCardShadow())
-      liveBorderW.set(shape.liveBorderW())
-      liveCardFill.set(shape.liveCardFill())
-      liveLadderSm.set(shape.liveLadderSm())
-      liveLadderMd.set(shape.liveLadderMd())
-      liveLadderLg.set(shape.liveLadderLg())
-      liveLadderXl.set(shape.liveLadderXl())
-      liveCornerSm.set(shape.liveCornerSm())
-      liveCornerMd.set(shape.liveCornerMd())
-      liveCornerLg.set(shape.liveCornerLg())
-      liveCornerXl.set(shape.liveCornerXl())
-      liveCardBox.set(packCard())
-      liveGlassBox.set(packCard())
-      liveLadderSmBox.set(packRadius(shape.liveLadderSm()))
-      liveLadderMdBox.set(packRadius(shape.liveLadderMd()))
-      liveLadderLgBox.set(packRadius(shape.liveLadderLg()))
-      liveLadderXlBox.set(packRadius(shape.liveLadderXl()))
-      liveCornerSmBox.set(packRadius(shape.liveCornerSm()))
-      liveCornerMdBox.set(packRadius(shape.liveCornerMd()))
-      liveCornerLgBox.set(packRadius(shape.liveCornerLg()))
-      liveCornerXlBox.set(packRadius(shape.liveCornerXl()))
-    }),
-  )
   mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
   return {
     session,
     shape,
-    liveCardBox,
-    liveGlassBox,
-    liveLadderSmBox,
-    liveLadderMdBox,
-    liveLadderLgBox,
-    liveLadderXlBox,
-    liveCornerSmBox,
-    liveCornerMdBox,
-    liveCornerLgBox,
-    liveCornerXlBox,
+    liveCardBox: shape.liveCardBox,
+    liveGlassBox: shape.liveGlassBox,
+    liveLadderSmBox: shape.liveLadderSmBox,
+    liveLadderMdBox: shape.liveLadderMdBox,
+    liveLadderLgBox: shape.liveLadderLgBox,
+    liveLadderXlBox: shape.liveLadderXlBox,
+    liveCornerSmBox: shape.liveCornerSmBox,
+    liveCornerMdBox: shape.liveCornerMdBox,
+    liveCornerLgBox: shape.liveCornerLgBox,
+    liveCornerXlBox: shape.liveCornerXlBox,
   }
 })
 </controller>
 
-<column surface="themes" theme-shape-surface shape-chrome gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
+<column surface="themes" theme-shape-surface shape-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
     <row shape-error align="center" gap="2" style(bandError, { box: shrink(0) })>
-      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
+      <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" shape-retry on:click={session.onRetry}>
         Retry
       </button>
@@ -141,13 +130,12 @@ export default controller(() => {
     </row>
   </if>
 
-  <!-- Shape: left controls ~panel | right LARGE specimen (inverted vs Color). -->
-  <row shape-workbench gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
-    <scroll-area shape-controls style({  box: shrink(0).minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full), paint: borderRWidth(1).borderR(border-subtle).bg(background)  })>
+  <row shape-workbench gap="0" nowrap align="stretch" style(workbench)>
+    <scroll-area shape-controls style(panelRail)>
       <column gap="4" style(controlsCol)>
         <column shape-header gap="2">
           <p style(eyebrow)>Globals · character</p>
-          <p style({ text: fontSize(2xl).fontWeight(semibold).tracking(tight).fontFamily(heading) })>Shape</p>
+          <p style(pageTitle)>Shape</p>
           <p style(fieldHint)>
             Corners, elevation, and material. Theme character — not per-component skins.
           </p>
@@ -273,108 +261,15 @@ export default controller(() => {
             <p style(pathMeta)>elevation · {shape.elevLabel()}</p>
           </row>
           <grid cols="3" gap="2" elev-chips on:click={shape.onElevClick} label="Elevation steps">
-            <button
-              type="button"
-              size="sm"
-              elev="none"
-              variant="outline"
-              tone={shape.elevKey() === 'none' ? 'primary' : 'muted'}
-              pressed={shape.elevKey() === 'none' ? 'true' : 'false'}
-              disabled={!session.canEdit()}
-            >
-              <row gap="2" align="center" nowrap>
-                <stack hidden="true" style(elevMarkNone)></stack>
-                <column gap="0" align="start" style({ box: minW(0) })>
-                  <p style(doorTitle)>none</p>
-                  <p style(pathMeta)>flat</p>
-                </column>
-              </row>
-            </button>
-            <button
-              type="button"
-              size="sm"
-              elev="xs"
-              variant="outline"
-              tone={shape.elevKey() === 'xs' ? 'primary' : 'muted'}
-              pressed={shape.elevKey() === 'xs' ? 'true' : 'false'}
-              disabled={!session.canEdit()}
-            >
-              <row gap="2" align="center" nowrap>
-                <stack hidden="true" style(elevMarkXs)></stack>
-                <column gap="0" align="start" style({ box: minW(0) })>
-                  <p style(doorTitle)>xs</p>
-                  <p style(pathMeta)>hair</p>
-                </column>
-              </row>
-            </button>
-            <button
-              type="button"
-              size="sm"
-              elev="sm"
-              variant="outline"
-              tone={shape.elevKey() === 'sm' ? 'primary' : 'muted'}
-              pressed={shape.elevKey() === 'sm' ? 'true' : 'false'}
-              disabled={!session.canEdit()}
-            >
-              <row gap="2" align="center" nowrap>
-                <stack hidden="true" style(elevMarkSm)></stack>
-                <column gap="0" align="start" style({ box: minW(0) })>
-                  <p style(doorTitle)>sm</p>
-                  <p style(pathMeta)>rest</p>
-                </column>
-              </row>
-            </button>
-            <button
-              type="button"
-              size="sm"
-              elev="md"
-              variant="outline"
-              tone={shape.elevKey() === 'md' ? 'primary' : 'muted'}
-              pressed={shape.elevKey() === 'md' ? 'true' : 'false'}
-              disabled={!session.canEdit()}
-            >
-              <row gap="2" align="center" nowrap>
-                <stack hidden="true" style(elevMarkMd)></stack>
-                <column gap="0" align="start" style({ box: minW(0) })>
-                  <p style(doorTitle)>md</p>
-                  <p style(pathMeta)>card</p>
-                </column>
-              </row>
-            </button>
-            <button
-              type="button"
-              size="sm"
-              elev="lg"
-              variant="outline"
-              tone={shape.elevKey() === 'lg' ? 'primary' : 'muted'}
-              pressed={shape.elevKey() === 'lg' ? 'true' : 'false'}
-              disabled={!session.canEdit()}
-            >
-              <row gap="2" align="center" nowrap>
-                <stack hidden="true" style(elevMarkLg)></stack>
-                <column gap="0" align="start" style({ box: minW(0) })>
-                  <p style(doorTitle)>lg</p>
-                  <p style(pathMeta)>float</p>
-                </column>
-              </row>
-            </button>
-            <button
-              type="button"
-              size="sm"
-              elev="xl"
-              variant="outline"
-              tone={shape.elevKey() === 'xl' ? 'primary' : 'muted'}
-              pressed={shape.elevKey() === 'xl' ? 'true' : 'false'}
-              disabled={!session.canEdit()}
-            >
-              <row gap="2" align="center" nowrap>
-                <stack hidden="true" style(elevMarkXl)></stack>
-                <column gap="0" align="start" style({ box: minW(0) })>
-                  <p style(doorTitle)>xl</p>
-                  <p style(pathMeta)>modal</p>
-                </column>
-              </row>
-            </button>
+            <for {shape.elevChips() as c} key={c.key}>
+              <elev-chip
+                elev={c.elev}
+                label={c.label}
+                hint={c.hint}
+                on={c.on}
+                canEdit={session.canEdit()}
+              ></elev-chip>
+            </for>
           </grid>
           <p style(fieldHint)>Maps to shadow.card-rest from the chosen step.</p>
         </column>
@@ -464,26 +359,21 @@ export default controller(() => {
       </column>
     </scroll-area>
 
-    <!-- RIGHT: large specimen canvas (grow) -->
-    <column specimen-dock shape-canvas gap="0" style({  box: grow(1).minW(0).basis(0).minH(0).h(full).overflow(hidden), paint: bg(background)  })>
-      <column gap="0" style({  box: grow(1).minH(0).h(full).pad(4)  })>
-        <!--
-          One themed host only. Frame chrome = theme name + mode.
-          No external Specimen/Preview/light label stack.
-        -->
+    <column specimen-dock shape-canvas gap="0" style(specimenDock)>
+      <column gap="0" style(specimenPad)>
         <card
           shape-specimen
           preview-specimen
           mode={session.paintMode()}
-          padding="none" style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })>
+          padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-              <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
+            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+              <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
+                <stack style(trafficDot, { paint: bg(destructive) })></stack>
+                <stack style(trafficDot, { paint: bg(warning) })></stack>
+                <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
-              <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>
+              <p style(chromeTitle)>
                 {session.nameEdit()} · Shape
               </p>
               <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>

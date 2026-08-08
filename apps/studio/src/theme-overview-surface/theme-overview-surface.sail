@@ -20,7 +20,48 @@
   style bandStatus = { box: padX(4).padY(2) }
   style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
   style fullBtn = { box: w(full) }
+  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
+  style editorScroll = { box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background) }
+  style specimenDock = { box: grow(1).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) }
+  style specimenPad = { box: grow(1).minH(0).h(full).pad(4) }
+  style specimenFrame = { box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) }
+  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
+  style trafficDots = { box: shrink(0).minW(12) }
+  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
+  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
+  style errorText = { box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() }
+  style growMin = { box: grow(1).minW(0) }
+  style pickerHero = { box: w(full).h(20).minH(20) }
+  type HeroColorCardProps = {
+    token: string
+    value: string
+    label: string
+    canEdit: boolean
+    onChange: any
+  }
 </scope>
+
+<partial hero-color-card props: HeroColorCardProps>
+  <column hero-card token={token} gap="0" style(heroCard, { box: grow(1).minW(0) })>
+    <stack use:swatch={value} state={canEdit ? 'edit' : 'locked'} style(heroSwatch)>
+      <sail-color-picker
+        token={token}
+        value={value}
+        disabled={!canEdit}
+        variant="swatch"
+        showHex={false}
+        label={label}
+        on-change={onChange}
+        style(pickerHero)
+      ></sail-color-picker>
+    </stack>
+    <row align="center" justify="between" style(heroMeta)>
+      <p style(doorTitle)>{label}</p>
+      <p style(monoMeta)>{value}</p>
+    </row>
+  </column>
+</partial>
 
 <controller>
 import { effect, mountAmbient, signal } from '@ship/sail-runtime'
@@ -33,7 +74,7 @@ export default controller(() => {
     editGuardMessage: 'Add this theme to the project to edit identity.',
   })
   const overview = createOverviewEdit(session)
-  // sx bind() only sees setup-local signals (not factory re-exports).
+  // Style bind() only sees setup-local signals (not composition re-exports).
   const primaryHex = signal(overview.primaryHex())
   const secondaryHex = signal(overview.secondaryHex())
   const accentHex = signal(overview.accentHex())
@@ -50,18 +91,17 @@ export default controller(() => {
       specimenStackGap.set(overview.specimenStackGap())
     }),
   )
-  // Draft paint host — applyScope when T1 applier is set.
   mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
   return { session, overview, primaryHex, secondaryHex, accentHex, densityPad, specimenGap, specimenStackGap }
 })
 </controller>
 
-<column surface="themes" theme-overview-surface overview-chrome gap="0" style({  box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
+<column surface="themes" theme-overview-surface overview-chrome gap="0" style(surfaceRoot)>
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
     <row overview-error align="center" gap="2" style(bandError, { box: shrink(0) })>
-      <p style({ box: grow(1).minW(0), paint: fg(destructive), text: fontSize(sm).truncate() })>{session.errorText()}</p>
+      <p style(errorText)>{session.errorText()}</p>
       <button type="button" size="sm" variant="ghost" overview-retry on:click={session.onRetry}>
         Retry
       </button>
@@ -75,39 +115,33 @@ export default controller(() => {
     </row>
   </if>
 
-  <row overview-workbench editorial-split gap="0" nowrap align="stretch" style({  box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden), paint: bg(background)  })>
-    <scroll-area identity-column style({  box: grow(1).minW(0).minH(0).basis(0).h(full), paint: bg(background)  })>
+  <row overview-workbench editorial-split gap="0" nowrap align="stretch" style(workbench)>
+    <scroll-area identity-column style(editorScroll)>
       <column gap="8" style(identityCol)>
         <column color-hero gap="3">
           <p style(sectionTitle)>Color</p>
           <row hero-colors gap="3" align="stretch">
-            <column hero-card token="primary" gap="0" style(heroCard, { box: grow(1).minW(0) })>
-              <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
-                <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
-              </stack>
-              <row align="center" justify="between" style(heroMeta)>
-                <p style(doorTitle)>Primary</p>
-                <p style(monoMeta)>{primaryHex()}</p>
-              </row>
-            </column>
-            <column hero-card token="secondary" gap="0" style(heroCard, { box: grow(1).minW(0) })>
-              <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
-                <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
-              </stack>
-              <row align="center" justify="between" style(heroMeta)>
-                <p style(doorTitle)>Secondary</p>
-                <p style(monoMeta)>{secondaryHex()}</p>
-              </row>
-            </column>
-            <column hero-card token="accent" gap="0" style(heroCard, { box: grow(1).minW(0) })>
-              <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'} style(heroSwatch)>
-                <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on-change={overview.onHeroColor} style({ box: w(full).h(20).minH(20) })></sail-color-picker>
-              </stack>
-              <row align="center" justify="between" style(heroMeta)>
-                <p style(doorTitle)>Accent</p>
-                <p style(monoMeta)>{accentHex()}</p>
-              </row>
-            </column>
+            <hero-color-card
+              token="primary"
+              value={primaryHex()}
+              label="Primary"
+              canEdit={session.canEdit()}
+              onChange={overview.onHeroColor}
+            ></hero-color-card>
+            <hero-color-card
+              token="secondary"
+              value={secondaryHex()}
+              label="Secondary"
+              canEdit={session.canEdit()}
+              onChange={overview.onHeroColor}
+            ></hero-color-card>
+            <hero-color-card
+              token="accent"
+              value={accentHex()}
+              label="Accent"
+              canEdit={session.canEdit()}
+              onChange={overview.onHeroColor}
+            ></hero-color-card>
           </row>
           <if {session.catalogHint()}>
             <p catalog-hint style(fieldHint)>Add to project to edit.</p>
@@ -203,29 +237,26 @@ export default controller(() => {
       </column>
     </scroll-area>
 
-    <column specimen-dock gap="0" style({  box: grow(1).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background)  })>
-      <column gap="0" style({  box: grow(1).minH(0).h(full).pad(4)  })>
+    <column specimen-dock gap="0" style(specimenDock)>
+      <column gap="0" style(specimenPad)>
         <card
           overview-specimen
           preview-specimen
           mode={session.paintMode()}
           density={overview.specimenDensity()}
-          padding="none" style({ box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) })>
+          padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style({  box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1)  })>
-              <row gap="2" align="center" nowrap hidden="true" style({  box: shrink(0).minW(12)  })>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning)  })></stack>
-                <stack style({  box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success)  })></stack>
+            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+              <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
+                <stack style(trafficDot, { paint: bg(destructive) })></stack>
+                <stack style(trafficDot, { paint: bg(warning) })></stack>
+                <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
-              <p style({ box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() })>{session.nameEdit()}</p>
+              <p style(chromeTitle)>{session.nameEdit()}</p>
               <p style(monoMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
             <scroll-area style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })>
-              <!--
-                Plain host for density gap bind — layout column always ships sail-g-*
-                which beats sx.gap(bind). stack rejects style({ box: display(owns flex itself) }).
-              -->
+              <!-- Plain host: layout column always emits sail-g-* which beats gap(bind). -->
               <div
                 specimen-body style({ box: display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap)) })>
                 <row gap="2" align="center" nowrap specimen-buttons>
