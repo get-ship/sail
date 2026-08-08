@@ -109,4 +109,8 @@ Policies (from pack `sail.config.json`):
 
 Local on `job/idiomatic-components-2` — **DO NOT push.**
 
-**Tip SHA:** _(filled after commit)_
+**Tip SHA:** `c25b49c5` — local only, **not pushed**
+
+**Full tip SHA:** `c25b49c56d58f26301de6264b1dff76b1f3b5d64`
+
+**Feature commit (fine-comb):** `8b3db9e5`
