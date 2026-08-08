@@ -1,4 +1,4 @@
-<!-- fixture for CM tokenizer + explorer -->
+<!-- Fixture for CM tokenizer + explorer (static card + signal). -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 export default controller((_ctx: ControllerScope<any>) => {
@@ -6,8 +6,13 @@ export default controller((_ctx: ControllerScope<any>) => {
   return { ticks }
 })
 </controller>
+
+<scope>
+  style sampleCard = { box: pad(6), paint: radius(lg) }
+</scope>
+
 <column gap="4">
-  <card tone="primary" style({ box: pad(6), paint: radius(lg) })>
+  <card tone="primary" style(sampleCard)>
     <h3>Static, by default</h3>
     <p>Every route renders without JavaScript.</p>
     <row gap="2">
