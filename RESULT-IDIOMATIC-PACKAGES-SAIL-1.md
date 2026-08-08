@@ -107,10 +107,14 @@ Before shots omitted: several sources **did not compile** pre-fix (06/09 body St
 - No lesson-directory renames  
 - No feat/next / no push  
 - Starter pedagogical TODOs / planted flaws kept  
-- No inventing language APIs  
-
+- No inventing language APIs
 ## Commit
 
 Local on `job/idiomatic-packages-sail-1` — **DO NOT push.**
 
-**Tip SHA:** _(filled after commit)_
+**Tip SHA:** `5000dc83` — local only, **not pushed** (pin follow-up)
+
+**Full tip SHA:** `5000dc83bbd04c277cf500c81ab8b708afb1f8c6`
+
+**Feature commit (fine-comb):** `5000dc83`
+
