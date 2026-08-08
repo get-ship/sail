@@ -1,7 +1,7 @@
 <!--
   <field> — stack+gap layout; hint/error gates via structure Style.
-  Paint: hint/error from component.field tokens; control surface (bg/fg/border)
-  is shared with input/select/textarea via field / field.foreground / field.border.
+  Hint/error paint from component.field tokens; control surface shared with
+  input/select/textarea via field / field.foreground / field.border.
 -->
 
 <scope>

@@ -16,13 +16,13 @@
   style sizeSm = { box: padY(7) }
   style sizeLg = { box: padY(8).padX(6) }
   style variantDefault = { paint: borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) }
-  // Inline variant keeps destructive brand border + muted fill (intentional brand).
+  // Inline: brand-destructive border + muted fill (intentional).
   style variantInline = { box: padY(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none), text: textAlign(start) }
-  // Icon face is brand-destructive on muted wash (intentional brand, not pack rest).
+  // Icon face: brand-destructive on muted wash (intentional, not pack rest).
   style icon = { box: self(center).size(control-h-xl), paint: radius(lg).bg(muted).fg(destructive).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset) }
   style glyph = { box: size(control-h-2xs) }
   style copy = { box: self(stretch) }
-  // Strong title ink is intentional free foreground (same as empty-state-title alias).
+  // Strong title ink — free foreground (same path as empty-state title weight).
   style title = { paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) }
   style desc = { box: maxW(panel-ch-w-md), paint: fg(error-state.foreground), text: leading(loose).fontSize(sm) }
   style codeBox = { box: padY(1).padX(2).mt(1), paint: fg(error-state.foreground).bg(error-state).borderWidth(1).border(error-state.border).radius(sm), text: fontFamily(mono).fontSize(xs) }
@@ -35,8 +35,26 @@
   align="stretch"
   justify="center"
   gap="3"
-  use:recoverySurface style(base, { when: { forced-colors: { paint: border(CanvasText) } }, match: { size: { md: sizeMd, sm: sizeSm, lg: sizeLg }, variant: { default: variantDefault, inline: variantInline } } })>
-  <row inline nowrap align="center" justify="center" hidden="true" style(icon, { box: shrink(1), when: { forced-colors: { paint: bg(Canvas).fg(CanvasText) } } })>
+  use:recoverySurface
+  style(base, {
+    when: { forced-colors: { paint: border(CanvasText) } },
+    match: {
+      size: { md: sizeMd, sm: sizeSm, lg: sizeLg },
+      variant: { default: variantDefault, inline: variantInline },
+    },
+  })
+>
+  <row
+    inline
+    nowrap
+    align="center"
+    justify="center"
+    hidden="true"
+    style(icon, {
+      box: shrink(1),
+      when: { forced-colors: { paint: bg(Canvas).fg(CanvasText) } },
+    })
+  >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style(glyph)>
       <circle cx="12" cy="12" r="9"></circle>
       <path d="M12 8v5"></path>
@@ -54,7 +72,15 @@
     <button
       type="button"
       anatomy
-      expanded="false" style(detailsToggle, { when: { group-state-has-details: { box: display(inline-block) }, hover: { paint: fg(foreground).bg(error-state) }, focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) } } })>Show details</button>
+      expanded="false"
+      style(detailsToggle, {
+        when: {
+          group-state-has-details: { box: display(inline-block) },
+          hover: { paint: fg(foreground).bg(error-state) },
+          focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
+        },
+      })
+    >Show details</button>
     <div style(details, { when: { group-state-open: { box: display(block) } } })>
       <slot name="details"></slot>
     </div>
