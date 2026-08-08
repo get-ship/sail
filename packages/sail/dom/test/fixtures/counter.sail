@@ -1,4 +1,4 @@
-<div data-counter="true">
+<div>
   <p>count: <span data-test="value">{count()}</span></p>
   <button data-test="inc" on:click={() => count.set(count() + 1)}>
     increment

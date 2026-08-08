@@ -2,10 +2,10 @@
 import { controller, signal, derived } from '@ship/sail-runtime'
 
 export default controller(() => {
-    const count = signal(0)
-    const doubled = derived(() => count() * 2)
-    return { count, doubled }
-  })
+  const count = signal(0)
+  const doubled = derived(() => count() * 2)
+  return { count, doubled }
+})
 </controller>
 
 <div>
