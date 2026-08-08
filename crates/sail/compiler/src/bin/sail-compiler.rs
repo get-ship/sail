@@ -1208,6 +1208,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          - Identity binds for engines: `prop:tree={{table}}`, `prop:table={{…}}` — not querySelector.\n\
          - Control flow: `<if>` / `<for key={{…}}>` / `<match>` / `<when {{tablet}}>` — full grammar:\n  \
            MCP `sail_surface` topic `control-flow`.\n\
+         - In-file `<partial kebab props: Type>`: same-file functional component; invoke as\n  \
+           `<kebab …>`; body reads bare `{{title}}`; expanded at compile time (SPEC-PARTIAL-1).\n  \
+           No recursion; no `style(…)` on the invocation. Cross-file = component file.\n\
          - **Structural responsiveness** is `<when {{token}}>` (theme breakpoints:\n  \
            mobile/tablet/desktop). Different trees per viewport; SSR paints the\n  \
            `{{else => …}}` / default branch only (mobile-first), then hydrates with matchMedia.\n\

@@ -54,14 +54,14 @@ fn grammar_block_vocabulary_matches_compiler_manifest() {
     }
     assert_eq!(
         sail_compiler::block_manifest::BLOCKS.len(),
-        4,
+        5,
         "block_manifest::BLOCKS changed size — update grammar.js's block \
-         rules (if/for/match/when) and this test's expected count together.",
+         rules (if/for/match/when/partial) and this test's expected count together.",
     );
 }
 
 #[test]
-fn grammar_block_rules_are_if_for_match_when_only() {
+fn grammar_block_rules_are_if_for_match_when_partial_only() {
     assert!(
         !GRAMMAR_SRC.contains("while_loading_block")
             && !GRAMMAR_SRC.contains("while_error_block")
@@ -69,7 +69,7 @@ fn grammar_block_rules_are_if_for_match_when_only() {
             && !GRAMMAR_SRC.contains("default_clause")
             && !GRAMMAR_SRC.contains("else_if_clause")
             && !GRAMMAR_SRC.contains("else_clause"),
-        "grammar.js block element rules must be if/for/match/when only",
+        "grammar.js block element rules must be if/for/match/when/partial only",
     );
 }
 

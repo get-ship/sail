@@ -28,6 +28,8 @@ pub(super) const VOID_TAGS: &[&str] = &[
 /// Tags whose body is treated as raw text (no nested elements,
 /// closing handled by the literal `</tag>` match).
 pub(super) const RAW_TEXT_TAGS: &[&str] = &["script", "style", "controller", "scope"];
+// `<partial>` is expanded away in preprocess; if one remains it parses as a
+// normal element (declaration bodies are not raw-text — they hold markup).
 
 /// Parse a `.sail` source fragment into a flat list of top-level
 /// nodes. The fragment is parsed at "body" level — no document/html

@@ -1,6 +1,7 @@
 //! The template-block vocabulary — one source of truth for element control
-//! flow (`<if>`, `<for>`, `<match>`, `<when>`). Brace form (`{#if}`, …) is
-//! retired. Arms use `{pattern as binding => subtree}` inside the block.
+//! flow (`<if>`, `<for>`, `<match>`, `<when>`) and in-file `<partial>`
+//! (SPEC-PARTIAL-1). Brace form (`{#if}`, …) is retired. Arms use
+//! `{pattern as binding => subtree}` inside the block.
 //!
 //! The parser (`parse::template::blocks` + `control_elements`) enumerates
 //! these same block kinds; this table stays in lockstep with grammar /
@@ -22,7 +23,7 @@ pub struct BlockEntry {
     pub summary: &'static str,
 }
 
-/// The template block registry — four blocks only.
+/// The template block registry — control flow + in-file partials.
 pub const BLOCKS: &[BlockEntry] = &[
     BlockEntry {
         open: "<if {…}>",
@@ -44,6 +45,11 @@ pub const BLOCKS: &[BlockEntry] = &[
         clauses: &["{else => …}"],
         summary: "structural viewport branch on a theme breakpoint token (mobile/tablet/desktop); optional {else => …} is the SSR/mobile-first default; matchMedia swap on the client",
     },
+    BlockEntry {
+        open: "<partial kebab-name props: Type>",
+        clauses: &[],
+        summary: "in-file functional component (SPEC-PARTIAL-1): top-level only, same-file invoke as `<kebab-name …>`; static expand at preprocess; params are a plain scope type; body reads destructured bare `{title}`; no recursion; no tag-position style() on invocation",
+    },
 ];
 
 #[cfg(test)]
@@ -61,8 +67,8 @@ mod tests {
         assert!(all_clauses.iter().any(|c| c.contains("pattern as binding")));
         assert_eq!(
             BLOCKS.len(),
-            4,
-            "one row per block kind: if, for, match, when"
+            5,
+            "one row per block kind: if, for, match, when, partial"
         );
     }
 

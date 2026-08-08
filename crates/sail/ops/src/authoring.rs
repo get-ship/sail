@@ -293,8 +293,9 @@ Controllers never `.style` / `createElement`.\n\
             let _ = writeln!(md, "# Sail surface — control flow\n");
             let _ = writeln!(
                 md,
-                "Four blocks only: if / for / match / when. Arms use brace form\n\
-                 `{{pattern as binding => …}}`; binding lives in-brace.\n\n\
+                "Control-flow blocks: if / for / match / when, plus in-file `<partial>`\n\
+                 (SPEC-PARTIAL-1). Arms use brace form `{{pattern as binding => …}}`;\n\
+                 binding lives in-brace.\n\n\
                  ```\n\
                  <if {{open()}}>…{{else-if {{x()}} => …}}{{else => …}}</if>\n\
                  <for {{items() as item}} key={{item.id}}>…{{else => …}}</for>\n\
@@ -312,7 +313,23 @@ Controllers never `.style` / `createElement`.\n\
                  / default branch only (mobile-first); the client matchMedia-swaps when\n\
                  the query matches. Paint-level Style `.when({{ tablet: style.… }})` is\n\
                  separate and unchanged.\n\
-                 Match on LiveState/MutationState with a missing arm is a compile error.\n"
+                 Match on LiveState/MutationState with a missing arm is a compile error.\n\n\
+                 ### In-file `<partial>` (same file only)\n\n\
+                 ```\n\
+                 <scope>\n  \
+                   type ListTileProps = {{ title: string; icon?: Icon }}\n  \
+                   style card = {{ box: pad(2) }}\n\
+                 </scope>\n\
+                 <partial list-tile props: ListTileProps>\n  \
+                   <row style(card)><text>{{title}}</text><slot/></row>\n\
+                 </partial>\n\
+                 <list-tile title={{run.name}} icon={{run.icon}}><badge/></list-tile>\n\
+                 ```\n\n\
+                 Top-level only; invoke as `<kebab-name …>` in this file. Expanded at\n\
+                 preprocess — runtime never sees partials. Body reads params as bare\n\
+                 `{{title}}` (destructured). No recursion; no tag-position `style(…)` on\n\
+                 the invocation (paint inside the body or pass a Style param). Cross-file\n\
+                 reuse remains the component file (`src/<tag>/<tag>.sail`).\n"
             );
         }
     }

@@ -654,10 +654,23 @@ pub fn hover_at(
     line: usize,
     col: usize,
 ) -> Option<Hover> {
+    let offset = offset_of(source, line, col);
+    // SPEC-PARTIAL-1: file-local partial name / invocation tag hover (author
+    // source — partials expand away in `parse`, so this path is pre-parse).
+    if let Some(tag) = tag_name_at(source, offset)
+        && let Some(md) = crate::parse::partials::partial_hover(source, &tag)
+    {
+        return Some(Hover {
+            name: tag,
+            kind: "partial".into(),
+            source: md,
+            line,
+            col,
+        });
+    }
     let program = crate::parse::parse(source).ok()?;
     let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
-    let offset = offset_of(source, line, col);
     let root = root_ident_at(source.as_bytes(), offset)?;
     symbols_from_table(&table, controller.as_ref())
         .into_iter()
@@ -671,14 +684,72 @@ pub fn hover_at(
         })
 }
 
+/// Tag name under `offset` when the cursor sits on an element/partial tag.
+fn tag_name_at(source: &str, offset: usize) -> Option<String> {
+    let bytes = source.as_bytes();
+    if offset >= bytes.len() {
+        return None;
+    }
+    // Walk left to `<` or non-name.
+    let mut i = offset.min(bytes.len().saturating_sub(1));
+    while i > 0 && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-') {
+        i -= 1;
+    }
+    if bytes[i] == b'/' {
+        if i == 0 || bytes[i - 1] != b'<' {
+            return None;
+        }
+        i += 1;
+    } else if bytes[i] == b'<' {
+        i += 1;
+    } else if i + 1 <= offset && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-') {
+        // land mid-name without finding `<` in this walk — scan further left
+        while i > 0 && (bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'-') {
+            i -= 1;
+        }
+        if i == 0 || bytes[i - 1] != b'<' {
+            // maybe `</`
+            if i >= 2 && bytes[i - 1] == b'/' && bytes[i - 2] == b'<' {
+                // ok
+            } else {
+                return None;
+            }
+        }
+    } else {
+        return None;
+    }
+    let start = i;
+    let mut end = start;
+    while end < bytes.len() && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'-') {
+        end += 1;
+    }
+    if start >= end || offset < start || offset > end {
+        return None;
+    }
+    Some(source[start..end].to_string())
+}
+
 /// Every scope name available for completion, with its binding kind.
 pub fn completions_at(source: &str, source_path: Option<&Path>) -> Vec<Symbol> {
+    let mut out = Vec::new();
+    // SPEC-PARTIAL-1: file-local partial names (this file only).
+    for name in crate::parse::partials::partial_names(source) {
+        out.push(Symbol {
+            name,
+            kind: "partial".into(),
+            source: "partial".into(),
+            line: 0,
+            col: 0,
+        });
+    }
     let Ok(program) = crate::parse::parse(source) else {
-        return Vec::new();
+        return out;
     };
     let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
-    symbols_from_table(&table, controller.as_ref())
+    out.extend(symbols_from_table(&table, controller.as_ref()));
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    out
 }
 
 /// Position-aware completions (SPEC-STYLE-COMPLETE-1).

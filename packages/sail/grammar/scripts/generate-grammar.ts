@@ -449,7 +449,7 @@ function generateHighlights(v: Vocabulary): string {
   const uniqMarkers = [...new Set(openCloseMarkers)];
   const maxMarkerLen = Math.max(...uniqMarkers.map((m) => m.length), 1);
   const blockMarkers =
-    `; control-flow element tags (four blocks: if/for/match/when)\n((tag_name) @keyword.directive\n  (#match? @keyword.directive "^(${controlTagAlt})$"))\n` +
+    `; control-flow element tags (control-flow + partial blocks: if/for/match/when/partial)\n((tag_name) @keyword.directive\n  (#match? @keyword.directive "^(${controlTagAlt})$"))\n` +
     uniqMarkers
       .map((m) => `"${m}"${' '.repeat(maxMarkerLen - m.length + 3)}@keyword.directive`)
       .join('\n');

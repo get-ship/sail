@@ -34,8 +34,9 @@ pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use"];
 /// Element names that are directive-like in the grammar: the parser treats
 /// them as ordinary HTML elements, but the highlight query gives them a
 /// directive keyword scope so they stand out in editors. Must be kept in
-/// sync with the rows in `DIRECTIVES` that describe `<scope>` / `<slot>`.
-pub const DIRECTIVE_ELEMENTS: &[&str] = &["scope", "slot"];
+/// sync with the rows in `DIRECTIVES` that describe `<scope>` / `<slot>` /
+/// `<partial>`.
+pub const DIRECTIVE_ELEMENTS: &[&str] = &["scope", "slot", "partial"];
 
 /// The directive registry, in the order the docs present them.
 pub const DIRECTIVES: &[DirectiveEntry] = &[
@@ -66,6 +67,10 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
     DirectiveEntry {
         syntax: "<slot name=\"…\">fallback</slot>",
         summary: "declare a fill region; children of the <slot> render when the use site provides nothing",
+    },
+    DirectiveEntry {
+        syntax: "<partial kebab-name props: Type>…</partial>",
+        summary: "in-file functional component (same file only); invoke as <kebab-name …>; expanded at compile time; params are a plain scope type read as bare {title}",
     },
     DirectiveEntry {
         syntax: "<slot reflect-empty=\"data-attr\">",

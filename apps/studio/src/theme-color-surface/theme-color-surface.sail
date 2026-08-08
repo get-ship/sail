@@ -21,7 +21,37 @@
   style surfaceDot = { box: w(3).h(3).minW(3).minH(3), paint: radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor)) }
   style bandStatus = { box: padX(4).padY(2) }
   style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
+  type ColorTokenRowProps = {
+    token: string
+    value: string
+    label: string
+    path: string
+    disabled: boolean
+    onChange: any
+  }
 </scope>
+
+<partial color-token-row props: ColorTokenRowProps>
+  <row token-row token={token} align="center" gap="3" nowrap style(tokenRow)>
+    <stack token-chip style(tokenChip, { box: shrink(0) })>
+      <sail-color-picker
+        token={token}
+        value={value}
+        disabled={disabled}
+        variant="swatch"
+        showHex={false}
+        label={label}
+        on-change={onChange}
+      ></sail-color-picker>
+    </stack>
+    <column gap="0" style({ box: grow(1).minW(0) })>
+      <p style(doorTitle)>{label}</p>
+      <p style(pathMeta)>{path}</p>
+    </column>
+    <p style(monoMeta, { box: shrink(0) })>{value}</p>
+  </row>
+</partial>
+
 
 <controller>
 import { effect, mountAmbient, signal } from '@ship/sail-runtime'
@@ -212,78 +242,38 @@ export default controller(() => {
             <p style(pathMeta)>color.bg · surface · card</p>
           </row>
           <column token-list gap="1">
-            <row token-row token="bg" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="bg"
-                value={bgHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Background"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Background</p>
-                <p style(pathMeta)>color.bg</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{bgHex()}</p>
-            </row>
-            <row token-row token="surface1" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="surface1"
-                value={surface1Hex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Surface 1"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Surface 1</p>
-                <p style(pathMeta)>color.surface.1</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{surface1Hex()}</p>
-            </row>
-            <row token-row token="surface2" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="surface2"
-                value={surface2Hex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Surface 2"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Surface 2</p>
-                <p style(pathMeta)>color.surface.2</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{surface2Hex()}</p>
-            </row>
-            <row token-row token="card" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="card"
-                value={cardHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Card"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Card</p>
-                <p style(pathMeta)>color.surface.3</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{cardHex()}</p>
-            </row>
+            <color-token-row
+              token="bg"
+              value={bgHex()}
+              label="Background"
+              path="color.bg"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="surface1"
+              value={surface1Hex()}
+              label="Surface 1"
+              path="color.surface.1"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="surface2"
+              value={surface2Hex()}
+              label="Surface 2"
+              path="color.surface.2"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="card"
+              value={cardHex()}
+              label="Card"
+              path="color.surface.3"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
           </column>
           <row surface-chips gap="2" align="center" nowrap hidden="true">
             <row align="center" gap="1" style(surfaceChip)>
@@ -312,78 +302,38 @@ export default controller(() => {
             <p style(pathMeta)>color.fg · muted · border · ring</p>
           </row>
           <column token-list gap="1">
-            <row token-row token="fg" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="fg"
-                value={fgHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Foreground"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Foreground</p>
-                <p style(pathMeta)>color.foreground</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{fgHex()}</p>
-            </row>
-            <row token-row token="muted" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="muted"
-                value={mutedHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Muted"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Muted</p>
-                <p style(pathMeta)>color.muted</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{mutedHex()}</p>
-            </row>
-            <row token-row token="border" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="border"
-                value={borderHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Border"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Border</p>
-                <p style(pathMeta)>color.border</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{borderHex()}</p>
-            </row>
-            <row token-row token="ring" align="center" gap="3" nowrap style(tokenRow)>
-              <stack token-chip style(tokenChip, { box: shrink(0) })>
-              <sail-color-picker
-                token="ring"
-                value={ringHex()}
-                disabled={!session.canEdit()}
-                variant="swatch"
-                showHex={false}
-                label="Ring"
-                on-change={color.onRoleColor}
-              ></sail-color-picker>
-              </stack>
-              <column gap="0" style({ box: grow(1).minW(0) })>
-                <p style(doorTitle)>Ring</p>
-                <p style(pathMeta)>color.ring</p>
-              </column>
-              <p style(monoMeta, { box: shrink(0) })>{ringHex()}</p>
-            </row>
+            <color-token-row
+              token="fg"
+              value={fgHex()}
+              label="Foreground"
+              path="color.foreground"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="muted"
+              value={mutedHex()}
+              label="Muted"
+              path="color.muted"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="border"
+              value={borderHex()}
+              label="Border"
+              path="color.border"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
+            <color-token-row
+              token="ring"
+              value={ringHex()}
+              label="Ring"
+              path="color.ring"
+              disabled={!session.canEdit()}
+              on-change={color.onRoleColor}
+            />
           </column>
         </column>
 

@@ -19,7 +19,7 @@ const VOID_TAGS: &[&str] = &[
 ];
 
 /// Framework blocks that are not element hosts for Style attachment.
-const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style"];
+const SKIP_BODY_TAGS: &[&str] = &["scope", "controller", "script", "style", "partial"];
 
 pub fn preprocess(source: &str) -> Result<String, CompileError> {
     preprocess_impl(source, true)
@@ -44,10 +44,15 @@ pub fn prepare_fmt(source: &str) -> String {
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).
 pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<String, CompileError> {
+    // SPEC-PARTIAL-1: expand in-file `<partial>` BEFORE quote_brace_attrs so
+    // bare param reads inside attr values (`token={token}`) are still
+    // identifiers — quoting would bury them in `"{token}"` and block
+    // substitution. After expand, the tree is ordinary markup.
+    let s = super::partials::expand_partials(source)?;
     // Normalize, then lift tag-position `style(…)` → class (before stdlib so
     // use-site paint is class attrs when native hosts stamp). Layout keywords
     // lower after paint classes exist.
-    let s = expand_self_close(&quote_brace_attrs(source));
+    let s = expand_self_close(&quote_brace_attrs(&s));
     let s = lower_prop_shorthand(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
     let style_env = super::scope_block::style_env_from_source(&s);
@@ -2549,7 +2554,7 @@ fn derive_host_display(source: &str) -> String {
 /// The tag name of the first real template element — skipping HTML comments
 /// and the non-visual blocks (`<scope>`, `<controller>`, `<style>`).
 fn first_template_tag(source: &str) -> Option<String> {
-    const SKIP: &[&str] = &["scope", "controller", "style"];
+    const SKIP: &[&str] = &["scope", "controller", "style", "partial"];
     let bytes = source.as_bytes();
     let mut i = 0;
     while i < bytes.len() {

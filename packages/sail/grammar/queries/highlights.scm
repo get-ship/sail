@@ -32,7 +32,7 @@
 ; the runtime contract at a glance. Retired own-API tags are not listed
 ; (DEEMBALM: generic unknown-vocabulary after scrub).
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(scope|slot)$"))
+  (#match? @keyword.directive "^(scope|slot|partial)$"))
 
 ; ── binding attribute prefixes ───────────────────────────────────────
 ; `style:` and `let:` are deliberately absent: the compiler hard-refuses
@@ -44,17 +44,19 @@
 
 ; ── template control flow markers ────────────────────────────────────
 ; Four blocks only: if / for / match / when. Arms are brace interpolations.
-; control-flow element tags (four blocks: if/for/match/when)
+; control-flow element tags (control-flow + partial blocks: if/for/match/when/partial)
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(if|for|match|when)$"))
-"<if"        @keyword.directive
-"</if>"      @keyword.directive
-"<for"       @keyword.directive
-"</for>"     @keyword.directive
-"<match"     @keyword.directive
-"</match>"   @keyword.directive
-"<when"      @keyword.directive
-"</when>"    @keyword.directive
+  (#match? @keyword.directive "^(if|for|match|when|partial)$"))
+"<if"          @keyword.directive
+"</if>"        @keyword.directive
+"<for"         @keyword.directive
+"</for>"       @keyword.directive
+"<match"       @keyword.directive
+"</match>"     @keyword.directive
+"<when"        @keyword.directive
+"</when>"      @keyword.directive
+"<partial"     @keyword.directive
+"</partial>"   @keyword.directive
 
 ; Brace boundaries.
 "{" @punctuation.special
