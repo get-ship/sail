@@ -112,7 +112,9 @@ Before shots omitted: several sources **did not compile** pre-fix (06/09 body St
 
 Local on `job/idiomatic-packages-sail-1` — **DO NOT push.**
 
-**Feature commit (fine-comb):** `5000dc83` (`5000dc83bbd04c277cf500c81ab8b708afb1f8c6`)
+**Tip SHA:** `d857eef4` — local only, **not pushed**
 
-**Branch tip:** filled by tip-SHA chore.
+**Full tip SHA:** `d857eef41a35721e54365f4187fe575acc534791`
+
+**Feature commit (fine-comb):** `5000dc83`
 
