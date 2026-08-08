@@ -2,34 +2,54 @@
 export default null
 </controller>
 
-<div>
-  <h1>Sail demos</h1>
-  <p>
-    Small, single-feature views exercising one piece of the Sail surface each.
-    Each demo lives at <code>views/demos/&lt;name&gt;/</code> and is
-    50–100 lines of <code>page.sail</code> + <code>controller.ts</code>.
-  </p>
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style caption = { paint: fg(muted-foreground) }
+  type DemoLinkProps = { href: string; name: string; blurb: string }
+</scope>
 
-  <ul>
-    <li>
-      <a href="/demos/signals-and-derived" data-test="link-signals">signals-and-derived</a>
-      <span> — counter, derived double, history list. <code>scope:</code> + <code>derived:</code>.</span>
-    </li>
-    <li>
-      <a href="/demos/conditional-render" data-test="link-conditional">conditional-render</a>
-      <span> — checkbox toggles a panel. Block <code>if/else</code>.</span>
-    </li>
-    <li>
-      <a href="/demos/iteration" data-test="link-iteration">iteration</a>
-      <span> — todo list. Block <code>for</code> with <code>key=</code>.</span>
-    </li>
-    <li>
-      <a href="/demos/match" data-test="link-match">match</a>
-      <span> — alert tone selector. Block <code>match</code>.</span>
-    </li>
-    <li>
-      <a href="/demos/lifecycle" data-test="link-lifecycle">lifecycle</a>
-      <span> — mount tick log. <code>mount:</code> returns cleanup.</span>
-    </li>
-  </ul>
-</div>
+<partial demo-link props: DemoLinkProps>
+  <column gap="1" style({ box: pad(3), paint: borderWidth(1).border(border).radius(md).bg(surface-1) })>
+    <a href={href}>{name}</a>
+    <p style(caption)>{blurb}</p>
+  </column>
+</partial>
+
+<column gap="4" style(page)>
+  <column gap="1">
+    <h1>Sail demos</h1>
+    <p style(caption)>
+      Small, single-feature views exercising one piece of the Sail surface each.
+      Each demo lives at <code>views/demos/&lt;name&gt;/</code> as a short
+      <code>page.sail</code> with an inline controller.
+    </p>
+  </column>
+
+  <column gap="2">
+    <demo-link
+      href="/demos/signals-and-derived"
+      name="signals-and-derived"
+      blurb="counter, derived double, history list — signal + derived."
+    />
+    <demo-link
+      href="/demos/conditional-render"
+      name="conditional-render"
+      blurb="checkbox toggles a panel — block if/else."
+    />
+    <demo-link
+      href="/demos/iteration"
+      name="iteration"
+      blurb="todo list — keyed for over a signal array."
+    />
+    <demo-link
+      href="/demos/match"
+      name="match"
+      blurb="alert tone selector — block match."
+    />
+    <demo-link
+      href="/demos/lifecycle"
+      name="lifecycle"
+      blurb="mount tick log — effect mount cleanup."
+    />
+  </column>
+</column>

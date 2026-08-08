@@ -9,36 +9,38 @@
 // The controller owns ALL state. The template can bind only what this
 // function returns — nothing else exists on the other side of the boundary.
 export default controller(() => {
-    const elapsed = signal(0) // milliseconds
-    const running = signal(false)
+  const elapsed = signal(0) // milliseconds
+  const running = signal(false)
 
-    const clock = derived(() => {
-      const total = elapsed()
-      const m = Math.floor(total / 60000)
-      const s = Math.floor((total % 60000) / 1000)
-      const tenths = Math.floor((total % 1000) / 100)
-      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${tenths}`
-    })
+  const clock = derived(() => {
+    const total = elapsed()
+    const m = Math.floor(total / 60000)
+    const s = Math.floor((total % 60000) / 1000)
+    const tenths = Math.floor((total % 1000) / 100)
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${tenths}`
+  })
 
-    // TODO 1: the clock never ticks. Add an effect that starts a
-    // setInterval bumping `elapsed` by 100 while running() is true —
-    // and RETURN the clearInterval cleanup. The effect re-runs when
-    // `running` flips; the cleanup runs before each re-run and when
-    // the component unmounts, so the timer can never leak.
+  // TODO 1: the clock never ticks. Add an effect that starts a
+  // setInterval bumping `elapsed` by 100 while running() is true —
+  // and RETURN the clearInterval cleanup. The effect re-runs when
+  // `running` flips; the cleanup runs before each re-run and when
+  // the component unmounts, so the timer can never leak.
 
-    // TODO 2: add a `laps` signal (array of { id, at }) and a `lap()`
-    // handler that prepends the current clock() reading.
+  // TODO 2: add a `laps` signal (array of { id, at }) and a `lap()`
+  // handler that prepends the current clock() reading.
 
-    return {
-      clock,
-      running,
-      toggle: (): void => running.set(!running()),
-      reset: (): void => {
+  return {
+    clock,
+    running,
+    toggle: (): void => running.set(!running()),
+    reset: (): void => {
+      batch(() => {
         running.set(false)
         elapsed.set(0)
-      },
-    }
-  })
+      })
+    },
+  }
+})
 </controller>
 
 <scope>

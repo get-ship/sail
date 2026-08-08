@@ -20,20 +20,20 @@ interface Note {
 // This controller is fine. Every planted defect in this lesson lives in
 // the template — run the compiler on it and let the errors lead you.
 export default controller(() => {
-    const publishedAt = signal(new Date('2026-07-01T09:00:00Z'))
-    const notes = signal<Note[]>([
-      { id: 1, tag: 'feat', text: 'style.loop — ambient animation on Style' },
-      { id: 2, tag: 'fix', text: 'exit-hold no longer races the reconciler' },
-      { id: 3, tag: 'docs', text: 'the tutorial you are reading right now' },
-    ])
+  const publishedAt = signal(new Date('2026-07-01T09:00:00Z'))
+  const notes = signal<Note[]>([
+    { id: 1, tag: 'feat', text: 'style.loop — ambient animation on Style' },
+    { id: 2, tag: 'fix', text: 'exit-hold no longer races the reconciler' },
+    { id: 3, tag: 'docs', text: 'the tutorial you are reading right now' },
+  ])
 
-    return {
-      publishedAt,
-      notes,
-      formatDate: (d: Date): string =>
-        d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-    }
-  })
+  return {
+    publishedAt,
+    notes,
+    formatDate: (d: Date): string =>
+      d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+  }
+})
 </controller>
 
 <column gap="4" style({ box: pad(12px) })>

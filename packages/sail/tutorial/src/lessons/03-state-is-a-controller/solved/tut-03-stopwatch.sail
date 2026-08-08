@@ -14,43 +14,43 @@ interface Lap {
 // The controller owns ALL state. The template can bind only what this
 // function returns — nothing else exists on the other side of the boundary.
 export default controller(() => {
-    const elapsed = signal(0) // milliseconds
-    const running = signal(false)
-    const laps = signal<Lap[]>([])
+  const elapsed = signal(0) // milliseconds
+  const running = signal(false)
+  const laps = signal<Lap[]>([])
 
-    const clock = derived(() => {
-      const total = elapsed()
-      const m = Math.floor(total / 60000)
-      const s = Math.floor((total % 60000) / 1000)
-      const tenths = Math.floor((total % 1000) / 100)
-      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${tenths}`
-    })
+  const clock = derived(() => {
+    const total = elapsed()
+    const m = Math.floor(total / 60000)
+    const s = Math.floor((total % 60000) / 1000)
+    const tenths = Math.floor((total % 1000) / 100)
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${tenths}`
+  })
 
-    // The interval is OWNED by this effect. It re-runs when `running`
-    // flips; the returned cleanup runs before every re-run and when the
-    // component unmounts — the timer cannot leak, because teardown is
-    // part of the effect itself, not a separate lifecycle hook.
-    effect(() => {
-      if (!running()) return
-      const id = setInterval(() => elapsed.set((ms) => ms + 100), 100)
-      return () => clearInterval(id)
-    })
+  // Interval is owned by this effect: re-runs when `running` flips; the
+  // returned cleanup runs before every re-run and on unmount.
+  effect(() => {
+    if (!running()) return
+    const id = setInterval(() => elapsed.set((ms) => ms + 100), 100)
+    return () => clearInterval(id)
+  })
 
-    let lapId = 0
+  let lapId = 0
 
-    return {
-      clock,
-      running,
-      laps,
-      toggle: (): void => running.set(!running()),
-      lap: (): void => laps.set([{ id: ++lapId, at: clock() }, ...laps()]),
-      reset: (): void => {
+  return {
+    clock,
+    running,
+    laps,
+    toggle: (): void => running.set(!running()),
+    lap: (): void => laps.set([{ id: ++lapId, at: clock() }, ...laps()]),
+    reset: (): void => {
+      batch(() => {
         running.set(false)
         elapsed.set(0)
         laps.set([])
-      },
-    }
-  })
+      })
+    },
+  }
+})
 </controller>
 
 <scope>

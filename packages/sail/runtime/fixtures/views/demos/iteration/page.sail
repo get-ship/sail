@@ -4,55 +4,71 @@ import { controller, signal } from '@ship/sail-runtime'
 interface Todo { id: number; text: string }
 
 export default controller(() => {
-    const items = signal<Todo[]>([
-      { id: 1, text: 'Read ship-views skill' },
-      { id: 2, text: 'Open /demos' },
-    ])
-    const draft = signal('')
-    let nextId = 3
+  const items = signal<Todo[]>([
+    { id: 1, text: 'Read ship-views skill' },
+    { id: 2, text: 'Open /demos' },
+  ])
+  const draft = signal('')
+  let nextId = 3
 
-    return {
-      items,
-      draft,
-      onSubmit: (e: Event) => {
-        e.preventDefault()
-        const text = draft().trim()
-        if (!text) return
-        items.set([...items(), { id: nextId++, text }])
-        draft.set('')
-      },
-      remove: (id: number) => {
-        items.set(items().filter((t) => t.id !== id))
-      },
-    }
-  })
+  return {
+    items,
+    draft,
+    onSubmit: (e: Event) => {
+      e.preventDefault()
+      const text = draft().trim()
+      if (!text) return
+      items.set([...items(), { id: nextId++, text }])
+      draft.set('')
+    },
+    remove: (id: number) => {
+      items.set(items().filter((t) => t.id !== id))
+    },
+  }
+})
 </controller>
 
-<div data-demo="true">
+<scope>
+  style page = { box: pad(6).maxW(breakpoint-tablet).mx(auto) }
+  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style todoRow = {
+    box: padX(3).padY(2),
+    paint: borderWidth(1).border(border).radius(md).bg(surface-1),
+  }
+</scope>
+
+<column gap="4" style(page)>
   <p><a href="/demos">← demos</a></p>
-  <h1>iteration</h1>
-  <p>
-    Block <code>for</code> with a stable <code>key=</code>. The key tells
-    the runtime which DOM nodes belong to which item across re-renders.
-  </p>
+  <column gap="1">
+    <h1>iteration</h1>
+    <p style(muted)>
+      Block <code>for</code> with a stable <code>key=</code>. The key tells
+      the runtime which DOM nodes belong to which item across re-renders.
+    </p>
+  </column>
 
   <form on:submit={onSubmit}>
-    <input
-      type="text"
-      placeholder="What's next?"
-      data-test="todo-input"
-      bind:value={draft} />
-    <button type="submit" data-test="todo-add">add</button>
+    <row gap="2" align="center">
+      <input
+        type="text"
+        placeholder="What's next?"
+        data-test="todo-input"
+        bind:value={draft}
+      />
+      <button type="submit" data-test="todo-add" variant="solid" tone="primary">add</button>
+    </row>
   </form>
 
   <if {items().length === 0}>
-    <p data-muted="true" data-test="empty">List is empty.</p>
-  {else => <ul data-test="todos">
+    <p data-test="empty" style(muted)>List is empty.</p>
+  {else =>
+    <column gap="1" data-test="todos">
       <for {items() as t} key={t.id}>
-        <li>
+        <row align="center" justify="between" style(todoRow)>
           <span>{t.text}</span>
-          <button data-test="remove" on:click={() => remove(t.id)}>×</button>
-        </li>
+          <button data-test="remove" variant="ghost" size="sm" on:click={() => remove(t.id)}>×</button>
+        </row>
       </for>
-    </ul>}</if>
-</div>
+    </column>
+  }</if>
+</column>

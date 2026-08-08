@@ -4,11 +4,19 @@ import { controller, signal } from '@ship/sail-runtime'
 export default controller(() => ({ count: signal(0) }))
 </controller>
 
-<div data-counter="true">
+<scope>
+  style page = { box: pad(8).maxW(breakpoint-mobile).mx(auto), text: textAlign(center) }
+  style value = { text: fontFamily(mono).fontSize(2xl) }
+  style caption = { box: mt(6), paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
+
+<column gap="4" style(page)>
   <h1>Counter</h1>
-  <p>Count: <span data-test="value">{count()}</span></p>
-  <button data-test="dec" on:click={() => count.set(count() - 1)}>-</button>
-  <button data-test="inc" on:click={() => count.set(count() + 1)}>+</button>
-  <button data-test="reset" on:click={() => count.set(0)}>reset</button>
-  <p>Tier 1: no controller, declarative state, the simplest possible Ship Set view.</p>
-</div>
+  <p>Count: <span data-test="value" style(value)>{count()}</span></p>
+  <row gap="2" justify="center">
+    <button data-test="dec" variant="outline" on:click={() => count.set(count() - 1)}>-</button>
+    <button data-test="inc" variant="solid" tone="primary" on:click={() => count.set(count() + 1)}>+</button>
+    <button data-test="reset" variant="ghost" on:click={() => count.set(0)}>reset</button>
+  </row>
+  <p style(caption)>Tier 1: signal state, declarative template, the simplest possible Sail view.</p>
+</column>
