@@ -53,6 +53,10 @@ pub enum StyleBindingUnit {
     Number,
     /// String / untyped / unannotated derived: `syntax: '*'`.
     Untyped,
+    /// Tone-typed (token-group) prop: host writes var *references*
+    /// (`--tone: var(--primary)`, `--tone-foreground: var(--primary-foreground)`).
+    /// No `@property` registration — bridge vars are untyped custom props.
+    TokenGroup,
 }
 
 /// Dimension of the setter that accepted the bind (for units reconciliation).
@@ -76,7 +80,8 @@ pub struct StyleBinding {
     pub unit: StyleBindingUnit,
 }
 
-/// Resolve every `bind(name)` in this source. `Ok` carries the prop/signal/
+/// Resolve every `bind(name)` and every Tone-typed group path (`bg(tone)`,
+/// `fg(shade.foreground)`) in this source. `Ok` carries the prop/signal/
 /// derived matches to wire at emit (token + action-write matches need no
 /// component-local emission). `Err` is the first refusal, in source order.
 pub fn resolve(
@@ -91,6 +96,56 @@ pub fn resolve(
     let mut unit_demand: BTreeMap<String, StyleBindingUnit> = BTreeMap::new();
     let mut color_touch: BTreeSet<String> = BTreeSet::new();
     let mut length_touch: BTreeSet<String> = BTreeSet::new();
+
+    // §2.5: group-typed (Tone) props used as paint roots ride the same
+    // machinery as bind — host var-reference reflection, type-keyed.
+    // Only declared Tone-typed props qualify (so `border(solid)` / surface
+    // names never collide).
+    for site in find_group_path_sites(source) {
+        let scope_name = site.root.clone();
+        let Some(p) = program
+            .props
+            .iter()
+            .find(|p| camel_of(&p.name) == scope_name)
+        else {
+            continue;
+        };
+        if !prop_is_tone_typed(p) {
+            // Non-Tone prop name collided with a paint-arg scan — ignore unless
+            // the author wrote an explicit member path (`shade.foreground`).
+            if site.member.is_some() {
+                return Err(CompileError::new(format!(
+                    "`{scope_name}` is used as a token-group paint path \
+                     (`{scope_name}.{}`) but its type is not Tone — annotate the prop \
+                     with the Tone union (primary·info·success·warning·destructive·accent·muted).",
+                    site.member.as_deref().unwrap_or("")
+                ))
+                .with_span(site.span));
+            }
+            continue;
+        }
+        if !seen.insert(scope_name.clone()) {
+            continue;
+        }
+        // Invalid member on a known path (tone.hover when not universal).
+        if let Some(ref member) = site.member {
+            let path = vec![member.clone()];
+            if let Err(msg) = sail_lint::token_groups::bound_member_valid(&path) {
+                return Err(CompileError::new(format!(
+                    "`{scope_name}.{member}` is not a valid Tone group member — {msg}"
+                ))
+                .with_span(site.span));
+            }
+        }
+        let css_name = camel_to_kebab(&scope_name);
+        unit_demand.insert(scope_name.clone(), StyleBindingUnit::TokenGroup);
+        out.push(StyleBinding {
+            css_name,
+            scope_name,
+            source: StyleBindingSource::Prop,
+            unit: StyleBindingUnit::TokenGroup,
+        });
+    }
 
     for site in find_bind_sites(source) {
         let css_name = camel_to_kebab(&site.name);
@@ -340,6 +395,184 @@ struct BindSite {
     /// Setter that wraps the bind, if recoverable (`top` in `top(bind(x))`).
     setter: Option<String>,
     span: Span,
+}
+
+#[derive(Debug)]
+struct GroupPathSite {
+    /// Prop root (`tone`, `shade`).
+    root: String,
+    /// Optional member (`foreground`, `hover`).
+    member: Option<String>,
+    /// True when found inside a paint-ish setter call (heuristic).
+    #[allow(dead_code)]
+    in_paint: bool,
+    span: Span,
+}
+
+/// Tone-typed prop: union of Tone group names (no `'default'`).
+fn prop_is_tone_typed(p: &crate::ir::PropDecl) -> bool {
+    match &p.kind {
+        PropKind::Union(members) => sail_lint::token_groups::is_tone_union(members),
+        _ => false,
+    }
+}
+
+/// Find bound group paint paths: `tone`, `tone.foreground`, `shade.hover` used
+/// as paint-arg roots (not match axes / compounds). Heuristic scan over author
+/// source — same spirit as `find_bind_sites`.
+fn find_group_path_sites(source: &str) -> Vec<GroupPathSite> {
+    let mut out = Vec::new();
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        // Byte-prefix compares — `i` may land mid-multibyte char after +1.
+        if bytes[i..].starts_with(b"<controller") {
+            if let Some(rel) = find_bytes(bytes, i, b"</controller>") {
+                i = rel + b"</controller>".len();
+                continue;
+            }
+            break;
+        }
+        // Skip comments (HTML comments may contain multi-byte punctuation).
+        if bytes[i..].starts_with(b"<!--") {
+            if let Some(rel) = find_bytes(bytes, i, b"-->") {
+                i = rel + 3;
+                continue;
+            }
+            break;
+        }
+        // Identifier start (ASCII only).
+        if bytes[i].is_ascii_alphabetic() || bytes[i] == b'_' {
+            let start = i;
+            i += 1;
+            while i < bytes.len()
+                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_')
+            {
+                i += 1;
+            }
+            let root = std::str::from_utf8(&bytes[start..i]).unwrap_or("");
+            // `bind(name)` is plain bind, not a group path root.
+            if root == "bind" || (i < bytes.len() && bytes[i] == b'(') {
+                continue;
+            }
+            // Skip known static group stems and color tokens — those are not binds.
+            if sail_lint::token_groups::static_token_group(root).is_some() {
+                continue;
+            }
+            if sail_lint::tokens::color_values().iter().any(|c| *c == root) {
+                continue;
+            }
+            // Member segment?
+            let mut member = None;
+            let mut end = i;
+            if i < bytes.len() && bytes[i] == b'.' {
+                let mem_start = i + 1;
+                let mut j = mem_start;
+                while j < bytes.len()
+                    && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_')
+                {
+                    j += 1;
+                }
+                if j > mem_start {
+                    let m = std::str::from_utf8(&bytes[mem_start..j]).unwrap_or("");
+                    if matches!(m, "foreground" | "hover" | "default") {
+                        member = Some(m.to_string());
+                        end = j;
+                    }
+                }
+            }
+            let in_paint = looks_like_paint_arg_context(source, start);
+            if looks_like_match_key(source, start, end) {
+                continue;
+            }
+            if !in_paint && member.is_none() {
+                continue;
+            }
+            if in_paint || member.is_some() {
+                if root.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+                    && !root.is_empty()
+                    && root.chars().next().is_some_and(|c| c.is_ascii_lowercase())
+                {
+                    out.push(GroupPathSite {
+                        root: root.to_string(),
+                        member,
+                        in_paint,
+                        span: Span::new(start, end),
+                    });
+                }
+            }
+            continue;
+        }
+        // UTF-8 safe advance past this byte / multi-byte sequence.
+        i += 1;
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
+    }
+    out
+}
+
+fn find_bytes(hay: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
+    hay[from..]
+        .windows(needle.len())
+        .position(|w| w == needle)
+        .map(|p| from + p)
+}
+
+/// True when `ident_at` sits in a color-setter call arg list:
+/// `bg(tone)`, `fg(tone.foreground)`, `colorMix(tone, 15)`, `border(tone)`.
+fn looks_like_paint_arg_context(source: &str, ident_at: usize) -> bool {
+    let bytes = source.as_bytes();
+    let mut j = ident_at;
+    while j > 0 && bytes[j - 1].is_ascii_whitespace() {
+        j -= 1;
+    }
+    if j == 0 {
+        return false;
+    }
+    // Second arg: `border(1, tone)` / `colorMix(tone, 15)` — walk to `(`.
+    if bytes[j - 1] == b',' {
+        while j > 0 && bytes[j - 1] != b'(' {
+            j -= 1;
+        }
+    }
+    if j == 0 || bytes[j - 1] != b'(' {
+        return false;
+    }
+    // Identifier immediately before `(`.
+    let mut k = j - 1; // points at `(`
+    while k > 0 && bytes[k - 1].is_ascii_whitespace() {
+        k -= 1;
+    }
+    let end = k;
+    while k > 0 && (bytes[k - 1].is_ascii_alphanumeric() || bytes[k - 1] == b'_') {
+        k -= 1;
+    }
+    if k == end {
+        return false;
+    }
+    let setter = &source[k..end];
+    COLOR_SETTERS.contains(&setter)
+        || matches!(
+            setter,
+            "colorMix" | "colorDeepen" | "fill" | "stroke" | "from" | "via" | "to"
+        )
+}
+
+fn looks_like_match_key(source: &str, start: usize, end: usize) -> bool {
+    let bytes = source.as_bytes();
+    let mut j = end;
+    while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+        j += 1;
+    }
+    // `tone: primary` compound/match key form.
+    if j < bytes.len() && bytes[j] == b':' {
+        // Exclude TypeScript type positions in props — those use `tone: 'primary' |…`
+        // which we still want to skip (not a paint path).
+        let _ = start;
+        return true;
+    }
+    false
 }
 
 /// Find every `bind(name)` in author source (Style products + scope consts).
@@ -747,6 +980,51 @@ mod tests {
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("bind(anchorLeft)"), "{}", err.message);
     }
+
+    #[test]
+    fn tone_typed_prop_binds_as_token_group() {
+        let members: Vec<String> = sail_lint::token_groups::tone_group_names()
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        let program = program_with_props(vec![prop("tone", PropKind::Union(members.clone()))]);
+        let source = r#"<div style({ paint: bg(tone).fg(tone.foreground) })></div>"#;
+        let out = resolve(source, &program, None).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].scope_name, "tone");
+        assert_eq!(out[0].unit, StyleBindingUnit::TokenGroup);
+    }
+
+    #[test]
+    fn shade_tone_typed_prop_is_type_keyed() {
+        let members: Vec<String> = sail_lint::token_groups::tone_group_names()
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        let program = program_with_props(vec![prop("shade", PropKind::Union(members))]);
+        let source = r#"<div style({ paint: bg(shade) })></div>"#;
+        let out = resolve(source, &program, None).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].scope_name, "shade");
+        assert_eq!(out[0].unit, StyleBindingUnit::TokenGroup);
+    }
+
+    #[test]
+    fn tone_hover_member_refuses_when_not_universal() {
+        let members: Vec<String> = sail_lint::token_groups::tone_group_names()
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        let program = program_with_props(vec![prop("tone", PropKind::Union(members))]);
+        let source = r#"<div style({ paint: bg(tone.hover) })></div>"#;
+        let err = resolve(source, &program, None).unwrap_err();
+        assert!(
+            err.message.contains("hover") || err.message.contains("member"),
+            "{}",
+            err.message
+        );
+    }
+
 
     #[test]
     fn style_bind_form_returns_a_binding() {

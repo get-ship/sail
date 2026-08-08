@@ -136,7 +136,13 @@ pub(crate) fn register_properties_install_js(
                     name = b.css_name,
                 ));
             }
+            // TokenGroup bridges are plain custom props holding `var(--primary)` refs —
+            // no typed @property (and no initial-value floor that would block rest paint).
+            StyleBindingUnit::TokenGroup => {}
         }
+    }
+    if css.is_empty() {
+        return String::new();
     }
     let key = fnv1a32_hex(css.as_bytes());
     format!(

@@ -94,20 +94,28 @@ pub(super) fn emit_setup_body(
         mount_w.line("__cleanups.push(effect(() => {");
         mount_w.enter();
         for b in sx_var_bindings {
-            let css_prop = js_string(&format!("--{}", b.css_name));
             let scope_ident = js_ident(&b.scope_name);
-            // LengthPx: number sources mean px — never write a unitless number into a length slot.
-            let value_expr = match b.unit {
-                crate::check::binding::StyleBindingUnit::LengthPx => {
-                    format!(
-                        "(typeof __v === \"number\" ? __v + \"px\" : String(__v))"
-                    )
+            match b.unit {
+                // Tone / token-group: reflect var *references* for each member
+                // (`--tone: var(--primary)`, `--tone-foreground: var(--primary-foreground)`).
+                // Rest = unset → removeProperty so surface pack paint falls through.
+                crate::check::binding::StyleBindingUnit::TokenGroup => {
+                    emit_token_group_reflect(&mut mount_w, &b.scope_name, &b.css_name, scope_ident);
                 }
-                _ => "String(__v)".to_string(),
-            };
-            mount_w.line(&format!(
-                "{{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, {value_expr}); }}"
-            ));
+                other => {
+                    let css_prop = js_string(&format!("--{}", b.css_name));
+                    // LengthPx: number sources mean px — never write a unitless number into a length slot.
+                    let value_expr = match other {
+                        crate::check::binding::StyleBindingUnit::LengthPx => {
+                            "(typeof __v === \"number\" ? __v + \"px\" : String(__v))".to_string()
+                        }
+                        _ => "String(__v)".to_string(),
+                    };
+                    mount_w.line(&format!(
+                        "{{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, {value_expr}); }}"
+                    ));
+                }
+            }
         }
         mount_w.leave();
         mount_w.line("}));");
@@ -163,6 +171,68 @@ pub(super) fn emit_setup_body(
     w.leave();
     w.line("});");
     module_hoists
+}
+
+/// Reflect a Tone-typed prop onto bridge custom properties.
+///
+/// `prop="primary"` → `--{css}: var(--primary); --{css}-foreground: var(--primary-foreground)`.
+/// Unset / empty → removeProperty so component-surface rest paint falls through (IACVT).
+fn emit_token_group_reflect(
+    w: &mut Writer,
+    _scope_name: &str,
+    css_name: &str,
+    scope_ident: String,
+) {
+    // Full Tone table (registry-derived) as a compact JS object.
+    let mut map = String::from("{");
+    for (i, g) in sail_lint::token_groups::tone_groups().iter().enumerate() {
+        if i > 0 {
+            map.push(',');
+        }
+        map.push_str(&js_string(g.name));
+        map.push_str(":{");
+        for (j, m) in g.members.iter().enumerate() {
+            if j > 0 {
+                map.push(',');
+            }
+            let key = if m.name == "default" { "" } else { m.name };
+            map.push_str(&js_string(key));
+            map.push(':');
+            map.push_str(&js_string(m.public_name));
+        }
+        map.push('}');
+    }
+    map.push('}');
+    // All bridge prop names that any group might write (union of members).
+    let mut bridges: Vec<String> = Vec::new();
+    bridges.push(format!("--{css_name}"));
+    for g in sail_lint::token_groups::tone_groups() {
+        for m in g.members {
+            if m.name == "default" {
+                continue;
+            }
+            let p = format!("--{css_name}-{}", m.name);
+            if !bridges.contains(&p) {
+                bridges.push(p);
+            }
+        }
+    }
+    let bridges_js: Vec<String> = bridges.iter().map(|b| js_string(b)).collect();
+    let bridges_lit = bridges_js.join(", ");
+    // Build the effect body line carefully (nested braces / template literals).
+    let mut line = String::new();
+    line.push_str("{ const __v = ($scope.");
+    line.push_str(&scope_ident);
+    line.push_str("()); const __map = ");
+    line.push_str(&map);
+    line.push_str("; const __bridges = [");
+    line.push_str(&bridges_lit);
+    line.push_str("]; if (__v == null || __v === \"\") { for (const __p of __bridges) __root.style.removeProperty(__p); } else { const __g = __map[String(__v)]; for (const __p of __bridges) __root.style.removeProperty(__p); if (__g) { for (const __k of Object.keys(__g)) { const __prop = __k ? `--");
+    line.push_str(css_name);
+    line.push_str("-${__k}` : `--");
+    line.push_str(css_name);
+    line.push_str("`; __root.style.setProperty(__prop, `var(--${__g[__k]})`); } } } }");
+    w.line(&line);
 }
 
 /// Emit the `hydrate(root, ctx)` named property on a route's setup

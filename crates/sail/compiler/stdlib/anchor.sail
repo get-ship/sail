@@ -3,7 +3,7 @@
   variant set = button link. Do not default-stamp variant/tone — freeform
   would force every href into button chrome.
   Rest paint = component.button tokens when tone is omitted.
-  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone.
 -->
 
 <scope>

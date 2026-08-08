@@ -3,7 +3,7 @@
   Paint (Style product): track + ::before thumb; size via match; tone via bound paths.
   Rest track/border/thumb from component.switch tokens
   (cssNames switch, switch.border, switch.thumb). Checked rest = primary.
-  Semantic checked/focus = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic checked/focus = bound tone.
 -->
 
 <scope>

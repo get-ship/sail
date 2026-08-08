@@ -226,12 +226,11 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         out.structure_html,
         out.skin_css
     );
-    // Branded tones solid-fill via Style match; size/shape axes land.
+    // Branded tones solid-fill via bridge var (`var(--tone)`); size/shape axes land.
     assert!(
-        out.skin_css.contains("tone='primary'")
-            && (out.skin_css.contains("background-color:var(--primary)")
-                || out.skin_css.contains("background-color: var(--primary)")
-                || out.skin_css.contains("background-color:var(--tone)"))
+        (out.skin_css.contains("background-color:var(--tone)")
+            || out.skin_css.contains("background-color: var(--tone)")
+            || out.skin_css.contains("s-bgtone"))
             && out.skin_css.contains("size='xs'")
             && out.skin_css.contains("shape='square'"),
         "branded tone solid + size/shape via Style match:\n{}",
@@ -581,11 +580,10 @@ fn switch_host_track_paint_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("tone='primary'")
-            && (out.skin_css.contains("background-color:var(--primary)")
-                || out.skin_css.contains("background-color: var(--primary)")
-                || out.skin_css.contains("background-color:var(--tone)")
-                || out.skin_css.contains("background-color: var(--tone)")),
+        out.skin_css.contains("background-color:var(--tone)")
+            || out.skin_css.contains("background-color: var(--tone)")
+            || out.skin_css.contains("s-checked-bgtone")
+            || out.skin_css.contains("bgtone"),
         "branded tone checked:bg semantic must land:\n{}",
         out.skin_css
     );
@@ -763,12 +761,12 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // branded tone border via bound border(tone) (attr-gated) or residual compounds.
+    // branded tone border via bound border(tone) bridge var.
     assert!(
-        out.skin_css.contains("tone='primary'")
-            && (out.skin_css.contains("border-color:var(--primary)")
-                || out.skin_css.contains("border-color: var(--primary)")),
-        "branded tone border via CVA:\n{}",
+        out.skin_css.contains("border-color:var(--tone)")
+            || out.skin_css.contains("border-color: var(--tone)")
+            || out.skin_css.contains("s-bordertone"),
+        "branded tone border via bridge var:\n{}",
         out.skin_css
     );
 
@@ -1227,18 +1225,20 @@ fn alert_tone_stripe_before_on_host_sx() {
             ,
         "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
     );
-    // Rest stripe = alert-stripe; brand via bound tone (attr-gated), not hand match matrix.
+    // Rest stripe = alert-stripe; brand via bound tone bridge var, not hand match matrix.
     assert!(
         (src.contains("bg(alert.stripe)") || src.contains("bg(alert-stripe)"))
-            && (src.contains("bg(tone)") || out.skin_css.contains("tone='info'")),
+            && (src.contains("bg(tone)")
+                || out.skin_css.contains("var(--tone)")
+                || out.skin_css.contains("s-before-bgtone")),
         "stripe rest alert-stripe + bound tone brand"
     );
     assert!(
         out.skin_css.contains("var(--alert-stripe)")
-            && (out.skin_css.contains("tone='info'")
-                || out.skin_css.contains("var(--info)")
-                || out.skin_css.contains("background-color:var(--info)")),
-        "compiled stripe: rest alert-stripe + branded tone gates:\n{}",
+            && (out.skin_css.contains("var(--tone)")
+                || out.skin_css.contains("s-before-bgtone")
+                || out.skin_css.contains("background-color:var(--tone)")),
+        "compiled stripe: rest alert-stripe + branded tone bridge:\n{}",
         out.skin_css
     );
     assert!(
@@ -1260,8 +1260,10 @@ fn alert_tone_stripe_before_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("tone='info'") && out.skin_css.contains("var(--info)"),
-        "branded match(tone) before bg(info) must lower:\n{}",
+        out.skin_css.contains("var(--tone)")
+            || out.skin_css.contains("s-before-bgtone")
+            || (out.skin_css.contains("tone='info'") && out.skin_css.contains("var(--info)")),
+        "branded tone stripe via bridge var (or residual attr gate):\n{}",
         out.skin_css
     );
     assert!(

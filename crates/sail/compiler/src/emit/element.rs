@@ -164,12 +164,14 @@ pub struct ElementOutput {
     /// keyed on those classes never reaches a single element.
     pub host_classes: String,
     /// Prop defaults to stamp as host attributes when the use site omits them
-    /// (`tone="default"`, `size="md"`, …) so Style CVA selectors match.
-    /// Bool false is omitted; bool true is presence (`name` with empty value).
+    /// (`size="md"`, …) so Style match/compound attr selectors match.
+    /// Tone has no default — rest paint is omit. Bool false is omitted; bool
+    /// true is presence (`name` with empty value).
     pub default_attrs: Vec<(String, String)>,
-    /// Prop names bound via `bind(name)` with their unit realization — used by
-    /// use-site splice to inline static first-paint custom properties
-    /// (`offset="16"` → `style="--offset: 16px"`).
+    /// Prop names bound via `bind(name)` / Tone group paths with their unit
+    /// realization — use-site splice inlines static first-paint custom
+    /// properties (`offset="16"` → `style="--offset: 16px"`; `tone="primary"`
+    /// → `style="--tone: var(--primary); …"`).
     pub bound_props: Vec<(String, crate::check::binding::StyleBindingUnit)>,
     /// Skin CSS — keyed on `.sail-<name>` for spliced elements, on the bare
     /// tag selector for native-kind (from the source's `:host` idioms).

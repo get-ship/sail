@@ -1,7 +1,7 @@
 <!--
   <chip> — filter/selection pill.
   Rest paint = component.chip tokens when tone is omitted.
-  Semantic paint = bound tone group paths. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone group paths.
 -->
 
 <scope>

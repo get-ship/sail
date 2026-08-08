@@ -2,7 +2,7 @@
   <avatar> — L1 language element. Style value language only.
   avatarMedia child pack sizes injected img.
   Rest paint = primary-accent gradient when tone is omitted.
-  Semantic paint = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone.
 -->
 
 <scope>

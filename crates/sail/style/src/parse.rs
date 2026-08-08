@@ -1230,9 +1230,11 @@ fn parse_style_object(
 }
 
 /// Token-typed props refused as match axes (bind in paint instead).
+///
+/// `tone` remains the product convention name for the Tone axis; any
+/// Tone-typed prop binds in paint via group paths, not match expansion.
 fn is_token_typed_match_axis(prop: &str) -> bool {
-    // Bound token-group family roots (today: `tone`).
-    super::token_groups::bound_group_family(prop).is_some()
+    prop == "tone"
 }
 
 /// `when: { hover: partial, … }` — values are nested partials (no axes).
@@ -1860,7 +1862,7 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Pain
 }
 
 /// Resolve paint arg identity:
-/// - bound family root (`tone`, `tone.foreground`) → MemberPath
+/// - bound group prop (`tone`, `tone.foreground`, `shade` with Tone type) → MemberPath
 /// - L1 host surface (`chip`, `chip.foreground`) → MemberPath (host context only)
 /// - static group path (`primary.foreground`) → Token(public name)
 /// - bare non-group word → Token (legacy / global)
@@ -1872,25 +1874,9 @@ fn normalize_paint_arg(
 ) -> PaintArg {
     use super::component_surfaces::{current_surface_pack, resolve_surface_author};
     use super::token_groups::{
-        bound_group_family, bound_member_valid, resolve_static_member_path, static_token_group,
+        bound_member_valid, looks_like_bound_group_root, resolve_static_member_path,
+        static_token_group,
     };
-
-    if let Some(family) = bound_group_family(&root) {
-        if let Err(msg) = bound_member_valid(family, &path) {
-            diags.push(StyleDiagnostic::BadToken {
-                setter: String::new(),
-                value: if path.is_empty() {
-                    root.clone()
-                } else {
-                    format!("{root}.{}", path.join("."))
-                },
-                source: source.clone(),
-            });
-            // Still keep MemberPath so emit can no-op fail closed on bad member.
-            let _ = msg;
-        }
-        return PaintArg::MemberPath { root, path };
-    }
 
     // L1 host surface graph — identity stays MemberPath; emit maps to public name.
     if current_surface_pack() == Some(root.as_str()) {
@@ -1905,6 +1891,42 @@ fn normalize_paint_arg(
                 source: source.clone(),
             });
             let _ = msg;
+        }
+        return PaintArg::MemberPath { root, path };
+    }
+
+    // Static group stem first (`primary`, `primary.foreground`) → public Token.
+    if static_token_group(&root).is_some() {
+        if path.is_empty() {
+            // Bare stem is also a color token — Token path below.
+        } else {
+            match resolve_static_member_path(&root, &path) {
+                Ok(public) => return PaintArg::Token(public),
+                Err(_) => {
+                    let value = format!("{root}.{}", path.join("."));
+                    diags.push(StyleDiagnostic::BadToken {
+                        setter: String::new(),
+                        value: value.clone(),
+                        source: source.clone(),
+                    });
+                    return PaintArg::Token(value);
+                }
+            }
+        }
+    }
+
+    // Bound group-typed prop path: bridge-var emit (`var(--tone)`). Type check
+    // (Tone-typed prop) is the compiler binding regime — parse keeps shape.
+    if looks_like_bound_group_root(&root, &path) {
+        if let Err(_msg) = bound_member_valid(&path) {
+            // Non-empty invalid member (e.g. tone.hover when not universal).
+            if !path.is_empty() {
+                diags.push(StyleDiagnostic::BadToken {
+                    setter: String::new(),
+                    value: format!("{root}.{}", path.join(".")),
+                    source: source.clone(),
+                });
+            }
         }
         return PaintArg::MemberPath { root, path };
     }
@@ -1927,28 +1949,13 @@ fn normalize_paint_arg(
         return PaintArg::Token(value);
     }
 
-    if static_token_group(&root).is_some() {
-        match resolve_static_member_path(&root, &path) {
-            Ok(public) => PaintArg::Token(public),
-            Err(_) => {
-                let value = format!("{root}.{}", path.join("."));
-                diags.push(StyleDiagnostic::BadToken {
-                    setter: String::new(),
-                    value: value.clone(),
-                    source,
-                });
-                PaintArg::Token(value)
-            }
-        }
-    } else {
-        let value = format!("{root}.{}", path.join("."));
-        diags.push(StyleDiagnostic::BadToken {
-            setter: String::new(),
-            value: value.clone(),
-            source,
-        });
-        PaintArg::Token(value)
-    }
+    let value = format!("{root}.{}", path.join("."));
+    diags.push(StyleDiagnostic::BadToken {
+        setter: String::new(),
+        value: value.clone(),
+        source,
+    });
+    PaintArg::Token(value)
 }
 
 fn parse_match(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {

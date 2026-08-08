@@ -1,7 +1,7 @@
 <!--
   <spinner> — L1 language element. Style value language only.
   Rest paint = spinner.foreground when tone is omitted.
-  Semantic paint = bound tone (fg-only). Authors omit tone for rest (never tone="default").
+  Semantic paint = bound tone (fg-only).
   Host subset omits muted (no product muted rest path).
 -->
 

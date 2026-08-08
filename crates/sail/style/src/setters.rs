@@ -2377,13 +2377,11 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             let css = css_name_for_bind(name);
             return Ok(bind_css_props(spec, &css));
         }
-        // Bound member paths must be expanded at emit; static paths resolve at parse.
-        PaintArg::MemberPath { .. } => {
-            return Err(StyleDiagnostic::BadToken {
-                setter: op.setter.clone(),
-                value: arg.display(),
-                source: op.source.clone(),
-            });
+        // Bound group paths (`tone`, `tone.foreground`) → bridge vars.
+        // Host reflects `--tone: var(--primary)` from the Tone-typed prop.
+        PaintArg::MemberPath { root, path } => {
+            let css = crate::token_groups::bridge_var_name(root, path);
+            return Ok(bind_css_props(spec, &css));
         }
     };
     // Axis overflow / overscroll / text-align / tab-size / underline / list keywords
@@ -2808,11 +2806,52 @@ fn lower_gap_key_css(
                 _ => return None,
             }));
         }
-        PaintArg::MemberPath { .. } => {
-            return Some(Err(StyleDiagnostic::BadToken {
-                setter: op.setter.clone(),
-                value: arg.display(),
-                source: op.source.clone(),
+        PaintArg::MemberPath { root, path } => {
+            // Only gap-key setters consume this arm; color setters fall through
+            // to bridge-var lowering in lower_op_css.
+            let gap_keys = matches!(
+                name,
+                "clipPath"
+                    | "mask"
+                    | "maskImage"
+                    | "blur"
+                    | "brightness"
+                    | "contrast"
+                    | "grayscale"
+                    | "hueRotate"
+                    | "invert"
+                    | "sepia"
+                    | "saturate"
+                    | "perspective"
+                    | "rotateX"
+                    | "rotateY"
+                    | "rotateZ"
+                    | "containerType"
+                    | "container"
+                    | "containerName"
+            );
+            if !gap_keys {
+                return None;
+            }
+            let var = crate::token_groups::bridge_var_ref(root, path);
+            return Some(Ok(match name {
+                "clipPath" => vec![("clip-path".into(), var)],
+                "mask" | "maskImage" => vec![("mask-image".into(), var)],
+                "blur" | "brightness" | "contrast" | "grayscale" | "hueRotate" | "invert"
+                | "sepia" | "saturate" => {
+                    let fn_name = match name {
+                        "hueRotate" => "hue-rotate",
+                        other => other,
+                    };
+                    vec![("filter".into(), format!("{fn_name}({var})"))]
+                }
+                "perspective" => vec![("perspective".into(), var)],
+                "rotateX" => vec![("transform".into(), format!("rotateX({var})"))],
+                "rotateY" => vec![("transform".into(), format!("rotateY({var})"))],
+                "rotateZ" => vec![("transform".into(), format!("rotateZ({var})"))],
+                "containerType" | "container" => vec![("container-type".into(), var)],
+                "containerName" => vec![("container-name".into(), var)],
+                _ => return None,
             }));
         }
     };
@@ -3163,11 +3202,13 @@ fn lower_border_color_arg(
                 .map(|p| (p, var.clone()))
                 .collect())
         }
-        PaintArg::MemberPath { .. } => Err(StyleDiagnostic::BadToken {
-            setter: op.setter.clone(),
-            value: arg.display(),
-            source: op.source.clone(),
-        }),
+        PaintArg::MemberPath { root, path } => {
+            let var = crate::token_groups::bridge_var_ref(root, path);
+            Ok(border_props(spec.name, "color")
+                .into_iter()
+                .map(|p| (p, var.clone()))
+                .collect())
+        }
         PaintArg::Token(tok) => {
             let bare = strip_neg(tok).1;
             for cand in token_candidates(bare) {
@@ -3256,12 +3297,8 @@ fn lower_color_deepen_arg(
                 _ => format!("var(--{bare})"),
             }
         }
-        PaintArg::MemberPath { .. } => {
-            return Err(StyleDiagnostic::BadToken {
-                setter: "colorDeepen".into(),
-                value: token_arg.display(),
-                source: _op.source.clone(),
-            });
+        PaintArg::MemberPath { root, path } => {
+            crate::token_groups::bridge_var_ref(root, path)
         }
     };
     let pct = match pct_arg {
@@ -3299,12 +3336,8 @@ fn lower_color_mix_wash_arg(
                 _ => format!("var(--{bare})"),
             }
         }
-        PaintArg::MemberPath { .. } => {
-            return Err(StyleDiagnostic::BadToken {
-                setter: "colorMix".into(),
-                value: token_arg.display(),
-                source: _op.source.clone(),
-            });
+        PaintArg::MemberPath { root, path } => {
+            crate::token_groups::bridge_var_ref(root, path)
         }
     };
     let pct = match pct_arg {

@@ -111,9 +111,51 @@ export function bindShow(el: HTMLElement, get: () => unknown): Disposer {
  *
  * @see bindProp when binding to a typed JS property.
  */
+/**
+ * Tone group → members → public token name (mirrors registry-derived TONE table).
+ * Used when `data-sail-bridge` marks a group-typed attr so dynamic values
+ * reflect CSS var *references* (`--tone: var(--primary)`).
+ */
+const TONE_BRIDGE: Record<string, Record<string, string>> = {
+  primary: { '': 'primary', foreground: 'primary-foreground', hover: 'primary-hover' },
+  info: { '': 'info', foreground: 'info-foreground' },
+  success: { '': 'success', foreground: 'success-foreground' },
+  warning: { '': 'warning', foreground: 'warning-foreground' },
+  destructive: { '': 'destructive', foreground: 'destructive-foreground' },
+  accent: { '': 'accent', foreground: 'accent-foreground' },
+  muted: { '': 'muted', foreground: 'muted-foreground' },
+}
+
+const TONE_BRIDGE_MEMBERS = ['', 'foreground', 'hover'] as const
+
+/** Reflect a Tone group value onto `--{prop}` / `--{prop}-foreground` bridges. */
+function reflectToneBridge(el: Element, prop: string, value: string | null): void {
+  const style = (el as HTMLElement).style
+  if (!style || typeof style.setProperty !== 'function') return
+  for (const m of TONE_BRIDGE_MEMBERS) {
+    const css = m ? `--${prop}-${m}` : `--${prop}`
+    style.removeProperty(css)
+  }
+  if (value == null || value === '') return
+  const group = TONE_BRIDGE[value]
+  if (!group) return
+  for (const [m, pub] of Object.entries(group)) {
+    const css = m ? `--${prop}-${m}` : `--${prop}`
+    style.setProperty(css, `var(--${pub})`)
+  }
+}
+
+function bridgePropsFor(el: Element): string[] {
+  const raw = el.getAttribute('data-sail-bridge')
+  if (!raw) return []
+  return raw.split(/\s+/).filter(Boolean)
+}
+
 export function bindAttr(el: Element, name: string, get: () => unknown): Disposer {
   let prev: unknown
   let init = false
+  const bridges = bridgePropsFor(el)
+  const isBridge = bridges.includes(name)
   return effect(() => {
     const v = get()
     if (init && v === prev) return
@@ -122,6 +164,9 @@ export function bindAttr(el: Element, name: string, get: () => unknown): Dispose
     if (init || el.getAttribute(name) !== next) {
       if (next === null) el.removeAttribute(name)
       else el.setAttribute(name, next)
+    }
+    if (isBridge) {
+      reflectToneBridge(el, name, next)
     }
     prev = v
     init = true

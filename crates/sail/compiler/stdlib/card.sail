@@ -2,7 +2,7 @@
   <card> — L1 surface with header/body/footer slots, tone border, status rail,
   interactive lift, and optional accent bar.
   Rest border = border token when tone is omitted.
-  Semantic border = bound tone. Authors omit tone for rest (never tone="default").
+  Semantic border = bound tone.
 -->
 
 <scope>

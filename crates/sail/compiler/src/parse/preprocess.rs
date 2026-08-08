@@ -54,9 +54,13 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // lower after paint classes exist.
     let s = expand_self_close(&quote_brace_attrs(&s));
     let s = lower_prop_shorthand(&s);
+    // Type-keyed Tone props so `bg(tone)` / `bg(shade)` parse as bridge paths.
+    let tone_props = super::scope_block::tone_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let style_env = super::scope_block::style_env_from_source(&s);
-    let (s, style_css) = lift_tag_style(&s, &style_env)?;
+    let (s, style_css) = sail_lint::style::with_bound_group_props(&tone_props, || {
+        let style_env = super::scope_block::style_env_from_source(&s);
+        lift_tag_style(&s, &style_env)
+    })?;
     refuse_body_style_statements(&s)?;
     // L1 stdlib elements: splice structure; skins live in framework sheet.
     let (s, elements_css) = if expand_elements {
@@ -832,6 +836,7 @@ fn lower_into(
                         open_tag,
                         &el.out.host_classes,
                         &el.out.default_attrs,
+                        &el.out.bound_props,
                     ));
                     // Same bookkeeping as the spliced path: the tag was seen.
                     css_done.insert(tag);
@@ -1134,6 +1139,7 @@ fn stamp_native_host(
     open_tag: &str,
     host_classes: &str,
     default_attrs: &[(String, String)],
+    bound_props: &[(String, crate::check::binding::StyleBindingUnit)],
 ) -> String {
     let self_closing = open_tag.ends_with("/>");
     let inner = &open_tag[..open_tag.len() - if self_closing { 2 } else { 1 }];
@@ -1145,8 +1151,17 @@ fn stamp_native_host(
     let host_classes = if bare_link { "sail-a" } else { host_classes };
     // Defaults for bare `<a>` already skip variant/tone (default_prop_attrs).
     let default_attrs: &[(String, String)] = if bare_link { &[] } else { default_attrs };
+    let bridge_list: Vec<String> = if bare_link {
+        Vec::new()
+    } else {
+        bound_props
+            .iter()
+            .filter(|(_, u)| *u == crate::check::binding::StyleBindingUnit::TokenGroup)
+            .map(|(n, _)| kebab_of(n))
+            .collect()
+    };
 
-    if host_classes.trim().is_empty() && default_attrs.is_empty() {
+    if host_classes.trim().is_empty() && default_attrs.is_empty() && bridge_list.is_empty() {
         return open_tag.to_string();
     }
     let host_name = host_classes
@@ -1235,13 +1250,64 @@ fn stamp_native_host(
         outb.push_str(&format!(" class=\"{expr}\""));
     }
     outb.push_str(&format!(" data-sail-host=\"{host_name}\""));
+    if !bridge_list.is_empty() {
+        let list = bridge_list.join(" ");
+        outb.push_str(&format!(" data-sail-bridge=\"{list}\""));
+    }
+    // Static first-paint for TokenGroup props present as literal attrs.
+    let mut bind_style = String::new();
+    for (prop, unit) in bound_props {
+        if *unit != crate::check::binding::StyleBindingUnit::TokenGroup {
+            continue;
+        }
+        let raw = rest_attrs
+            .iter()
+            .find(|(n, _)| *n == prop.as_str() || camel_eq(n, prop))
+            .map(|(_, v)| v.trim_matches(['"', '\'']).to_string())
+            .or_else(|| {
+                default_attrs
+                    .iter()
+                    .find(|(n, _)| n == prop || camel_eq(n, prop))
+                    .map(|(_, v)| v.clone())
+            });
+        let Some(val) = raw.filter(|v| !v.is_empty() && !v.starts_with('{')) else {
+            continue;
+        };
+        let css = kebab_of(prop);
+        let Some(members) = sail_lint::token_groups::group_value_member_publics(&val) else {
+            continue;
+        };
+        for (member, public) in members {
+            if !bind_style.is_empty() {
+                bind_style.push(' ');
+            }
+            let bridge = if member.is_empty() {
+                css.clone()
+            } else {
+                format!("{css}-{member}")
+            };
+            bind_style.push_str(&format!("--{bridge}: var(--{public});"));
+        }
+    }
+    let mut wrote_style = false;
     for (n, v) in rest_attrs {
         outb.push(' ');
         outb.push_str(n);
+        if n == "style" && !bind_style.is_empty() {
+            let prev = v.trim_matches(['"', '\'']);
+            if !prev.starts_with('{') {
+                outb.push_str(&format!("=\"{prev} {bind_style}\""));
+                wrote_style = true;
+                continue;
+            }
+        }
         if !v.is_empty() {
             outb.push('=');
             outb.push_str(v);
         }
+    }
+    if !bind_style.is_empty() && !wrote_style {
+        outb.push_str(&format!(" style=\"{bind_style}\""));
     }
     for (n, v) in default_attrs {
         if present.contains(n.as_str()) {
@@ -1313,10 +1379,18 @@ fn splice_element(
         .collect();
     // Progressive enhancement: static attr values for bound props become
     // host custom properties so non-JS renderers see the real inset (not
-    // only the @property initial-value floor).
+    // only the @property initial-value floor). TokenGroup props also stamp
+    // `data-sail-bridge` so runtime bindAttr can reflect dynamic tone values.
     let mut bind_style = String::new();
+    let mut bridge_props: Vec<String> = Vec::new();
     if !el.bound_props.is_empty() {
         for (prop, unit) in &el.bound_props {
+            if *unit == crate::check::binding::StyleBindingUnit::TokenGroup {
+                let kb = kebab_of(prop);
+                if !bridge_props.contains(&kb) {
+                    bridge_props.push(kb);
+                }
+            }
             let raw = snippet_attrs
                 .iter()
                 .find(|(n, _)| n == prop || camel_eq(n, prop))
@@ -1331,18 +1405,54 @@ fn splice_element(
                 continue;
             };
             let css = kebab_of(prop);
-            let realized = match unit {
+            match unit {
+                // Tone-typed: static first-paint inlines var *references*
+                // (`--tone: var(--primary); --tone-foreground: var(--primary-foreground)`).
+                crate::check::binding::StyleBindingUnit::TokenGroup => {
+                    let Some(members) =
+                        sail_lint::token_groups::group_value_member_publics(&val)
+                    else {
+                        continue;
+                    };
+                    for (member, public) in members {
+                        if !bind_style.is_empty() {
+                            bind_style.push(' ');
+                        }
+                        let bridge = if member.is_empty() {
+                            css.clone()
+                        } else {
+                            format!("{css}-{member}")
+                        };
+                        bind_style.push_str(&format!("--{bridge}: var(--{public});"));
+                    }
+                }
                 crate::check::binding::StyleBindingUnit::LengthPx
                     if val.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-') =>
                 {
-                    format!("{val}px")
+                    if !bind_style.is_empty() {
+                        bind_style.push(' ');
+                    }
+                    bind_style.push_str(&format!("--{css}: {val}px;"));
                 }
-                _ => val,
-            };
-            if !bind_style.is_empty() {
-                bind_style.push(' ');
+                _ => {
+                    if !bind_style.is_empty() {
+                        bind_style.push(' ');
+                    }
+                    bind_style.push_str(&format!("--{css}: {val};"));
+                }
             }
-            bind_style.push_str(&format!("--{css}: {realized};"));
+        }
+    }
+    if !bridge_props.is_empty() {
+        let list = bridge_props.join(" ");
+        if let Some(slot) = snippet_attrs
+            .iter_mut()
+            .find(|(n, _)| n == "data-sail-bridge")
+        {
+            let prev = slot.1.trim_matches(['"', '\'']);
+            slot.1 = format!("\"{prev} {list}\"");
+        } else {
+            snippet_attrs.push(("data-sail-bridge".into(), format!("\"{list}\"")));
         }
     }
     if !bind_style.is_empty() {

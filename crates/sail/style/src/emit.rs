@@ -4,7 +4,6 @@ use std::collections::{HashMap, HashSet};
 
 use super::ir::{PaintArg, PaintOp, Style};
 use super::setters::{WhenTarget, lower_op_css, when_target};
-use super::token_groups::{bound_group_family, bound_public_name};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -156,12 +155,9 @@ fn emit_inner(
 }
 
 fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<String>) {
-    // Bound token-group paths (`bg(tone)`, `fg(tone.foreground)`) expand over
-    // the family with attribute-gated selectors — same mint as match/compound.
-    if let Some(family_prop) = first_bound_family_prop(op) {
-        expand_bound_group_op(op, family_prop, ctx, out, seen);
-        return;
-    }
+    // Bound token-group paths (`bg(tone)`, `fg(tone.foreground)`) lower to
+    // bridge vars (`var(--tone)`, `var(--tone-foreground)`). Host reflection
+    // writes `--tone: var(--primary)` etc. — no `[tone='x']` selector tables.
     // group marker: sail-grp class, no CSS rule body required.
     if op.setter == "group" {
         let class = "sail-grp".to_string();
@@ -278,8 +274,8 @@ fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
 
 fn op_has_surface_member(op: &PaintOp) -> bool {
     op.args.iter().any(|a| {
-        matches!(a, PaintArg::MemberPath { root, .. } if bound_group_family(root).is_none()
-            && super::component_surfaces::current_surface_pack() == Some(root.as_str()))
+        matches!(a, PaintArg::MemberPath { root, .. }
+            if super::component_surfaces::current_surface_pack() == Some(root.as_str()))
     })
 }
 
@@ -290,8 +286,7 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
         .iter()
         .map(|a| match a {
             PaintArg::MemberPath { root, path }
-                if bound_group_family(root).is_none()
-                    && super::component_surfaces::current_surface_pack() == Some(root.as_str()) =>
+                if super::component_surfaces::current_surface_pack() == Some(root.as_str()) =>
             {
                 match resolve_surface_author(root, path) {
                     Ok(public) => PaintArg::Token(public.to_string()),
@@ -305,60 +300,6 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
         setter: op.setter.clone(),
         args,
         source: op.source.clone(),
-    }
-}
-
-/// Prop name of the first bound group MemberPath in `op`, if any.
-fn first_bound_family_prop(op: &PaintOp) -> Option<&'static str> {
-    for a in &op.args {
-        if let PaintArg::MemberPath { root, .. } = a {
-            if let Some(f) = bound_group_family(root) {
-                return Some(f.prop);
-            }
-        }
-    }
-    None
-}
-
-/// Expand `bg(tone)` / `fg(tone.foreground)` / `colorMix(tone, 15)` over the
-/// Tone table: one attr-gated rule per group member.
-fn expand_bound_group_op(
-    op: &PaintOp,
-    family_prop: &str,
-    ctx: &Ctx,
-    out: &mut Vec<CssRule>,
-    seen: &mut HashSet<String>,
-) {
-    let Some(family) = bound_group_family(family_prop) else {
-        return;
-    };
-    for group in family.groups {
-        let mut args = Vec::with_capacity(op.args.len());
-        let mut ok = true;
-        for a in &op.args {
-            match a {
-                PaintArg::MemberPath { root, path } if root == family.prop => {
-                    match bound_public_name(family, group.name, path) {
-                        Some(public) => args.push(PaintArg::Token(public.to_string())),
-                        None => {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-                other => args.push(other.clone()),
-            }
-        }
-        if !ok {
-            continue;
-        }
-        let resolved = PaintOp {
-            setter: op.setter.clone(),
-            args,
-            source: op.source.clone(),
-        };
-        let next = ctx.with_attr(family.prop, group.name);
-        emit_op(&resolved, &next, out, seen);
     }
 }
 
