@@ -1,4 +1,4 @@
-<!-- PARITY-1 paint: stacked cards + solid primary button (RENDER-1 s003 path). Static only. -->
+<!-- Stacked settings cards + solid primary button. Static only. -->
 <column gap="6" style({ box: maxW(panel-max-w-md).pad(6) })>
   <h1 style({ paint: fg(foreground), text: fontSize(2xl).fontWeight(semibold) })>Settings</h1>
 

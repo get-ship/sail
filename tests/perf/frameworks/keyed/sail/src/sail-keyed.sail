@@ -1,9 +1,10 @@
-// FOREIGN js-framework-benchmark chrome — not a Sail product exemplar.
-// Owned at tests/perf/frameworks/keyed/sail; $BENCH_HOME/.../keyed/sail is sync output only.
-// Static Bootstrap class= strings match the benchmark's shared CSS sheet (driver layout).
-// Row highlight: local Action `benchDanger` toggles classList 'danger' for tr.danger only —
-// the webdriver-ts select contract. Do not copy this pattern into product Sail.
-
+<!--
+  FOREIGN js-framework-benchmark chrome — not a Sail product exemplar.
+  Owned at tests/perf/frameworks/keyed/sail; $BENCH_HOME keyed/sail is sync output only.
+  Bootstrap class strings match the benchmark shared CSS sheet (driver layout).
+  Row highlight: Action benchDanger toggles classList danger for tr.danger
+  (webdriver-ts select contract). Do not copy this pattern into product Sail.
+-->
 <controller>
 import { controller, signal, type Action } from '@ship/sail-runtime'
 
@@ -38,10 +39,8 @@ function buildData(count: number): Row[] {
   return data
 }
 
-// FOREIGN BENCHMARK DRIVER ONLY — js-framework-benchmark scores select via
-// `tbody>tr.danger` (webdriver-ts checkCountForSelector). Not a Sail app pattern.
-// Sail refuses class: / bare class= toggles; this single harness-local use: action
-// is the one allowed classList path for that foreign selector.
+// FOREIGN: webdriver-ts scores select via tbody>tr.danger. classList toggle is
+// harness-only — not a product Sail pattern.
 const benchDanger: Action<boolean> = (node, on) => {
   const apply = (v: boolean) => {
     if (v) node.classList.add('danger')
@@ -54,55 +53,53 @@ const benchDanger: Action<boolean> = (node, on) => {
 }
 
 export default controller(() => {
-    const rows = signal<Row[]>([])
-    // -1 = nothing selected (no row carries id -1, so the selected
-    // predicate is false for every row until one is clicked).
-    const selected = signal<number>(-1)
+  const rows = signal<Row[]>([])
+  // -1 = nothing selected (no row carries id -1).
+  const selected = signal<number>(-1)
 
-    return {
-      rows,
-      selected,
-      benchDanger,
+  return {
+    rows,
+    selected,
+    benchDanger,
 
-      // 01_run1k / runlots: replace the whole list.
-      run: (): void => rows.set(buildData(1000)),
-      runlots: (): void => rows.set(buildData(10000)),
+    // 01_run1k / runlots: replace the whole list.
+    run: (): void => rows.set(buildData(1000)),
+    runlots: (): void => rows.set(buildData(10000)),
 
-      // 08_create1k-after1k: append without disturbing existing rows.
-      add: (): void => rows.set(rows().concat(buildData(1000))),
+    // 08_create1k-after1k: append without disturbing existing rows.
+    add: (): void => rows.set(rows().concat(buildData(1000))),
 
-      // 03_update10th: new object for every 10th row (same id → keyed reuse,
-      // changed value → the row's label binding re-evaluates), new array.
-      update: (): void => {
-        const next = rows().slice()
-        for (let i = 0; i < next.length; i += 10) {
-          next[i] = { ...next[i]!, label: next[i]!.label + ' !!!' }
-        }
+    // 03_update10th: new object for every 10th row (same id → keyed reuse).
+    update: (): void => {
+      const next = rows().slice()
+      for (let i = 0; i < next.length; i += 10) {
+        next[i] = { ...next[i]!, label: next[i]!.label + ' !!!' }
+      }
+      rows.set(next)
+    },
+
+    // 09_clear.
+    clear: (): void => rows.set([]),
+
+    // 05_swap: swap rows 1 and 998 (benchmark fixed indices).
+    swaprows: (): void => {
+      const r = rows()
+      if (r.length > 998) {
+        const next = r.slice()
+        const tmp = next[1]!
+        next[1] = next[998]!
+        next[998] = tmp
         rows.set(next)
-      },
+      }
+    },
 
-      // 09_clear.
-      clear: (): void => rows.set([]),
+    // 04_select: highlight the clicked row.
+    select: (id: number): void => selected.set(id),
 
-      // 05_swap: swap rows 1 and 998 (the benchmark's fixed indices).
-      swaprows: (): void => {
-        const r = rows()
-        if (r.length > 998) {
-          const next = r.slice()
-          const tmp = next[1]!
-          next[1] = next[998]!
-          next[998] = tmp
-          rows.set(next)
-        }
-      },
-
-      // 04_select: highlight the clicked row.
-      select: (id: number): void => selected.set(id),
-
-      // 06_remove: drop the clicked row.
-      remove: (id: number): void => rows.set(rows().filter((r) => r.id !== id)),
-    }
-  })
+    // 06_remove: drop the clicked row.
+    remove: (id: number): void => rows.set(rows().filter((r) => r.id !== id)),
+  }
+})
 </controller>
 
 <div class="container">
@@ -137,14 +134,14 @@ export default controller(() => {
   </div>
   <table class="table table-hover table-striped test-data">
     <tbody>
-      {#for row of rows() key={row.id}}
+      <for {rows() as row} key={row.id}>
         <tr use:benchDanger={row.id === selected()}>
           <td class="col-md-1">{row.id}</td>
           <td class="col-md-4"><a on:click={() => select(row.id)}>{row.label}</a></td>
           <td class="col-md-1"><a on:click={() => remove(row.id)}><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>
           <td class="col-md-6"></td>
         </tr>
-      {/for}
+      </for>
     </tbody>
   </table>
   <span class="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>

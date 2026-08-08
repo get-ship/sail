@@ -1,8 +1,4 @@
-<!--
-  ambient-app home — fixture surface for plain tsc + ambient pack proof.
-  Controller is a sibling module (extracted shape) so tsc can see authored TS
-  without compiling the template (two-checker: sail-compiler owns the template).
--->
+<!-- ambient-app home — tsc + ambient-pack proof surface (controller is sibling .ts). -->
 <main>
   <h1>ambient app</h1>
   <p>count: {count()}</p>
