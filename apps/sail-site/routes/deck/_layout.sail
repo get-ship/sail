@@ -1,6 +1,4 @@
 <!--
-  Deck docs segment layout — nests inside the root layout
-  (routes/_layout.sail). deck mounts <sail-deck-rail> and projects this
-  segment’s routes into its <slot name="route">. See src/sail-deck-rail/.
+  /deck/* segment layout — Deck docs rail projects routes into its route slot.
 -->
 <sail-deck-rail></sail-deck-rail>

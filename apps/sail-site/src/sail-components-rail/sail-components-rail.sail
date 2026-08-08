@@ -1,15 +1,14 @@
 <!--
-  <sail-components-rail> — /components/* layout (no sidebar).
-
-  Parent is site-header <main> with overflow:hidden + a definite flex height.
-  This shell MUST fill that budget (h(full)) and own the only scrollport.
-  A bare <main grow overflowY auto> under a non-flex parent expands to content
-  height → parent clips → nothing scrolls. Same geometry as sail-docs-rail.
+  /components/* layout shell. Fills site-header main and owns the catalog scrollport
+  (parent is overflow-hidden with a definite flex height — shell must h(full)).
 -->
+<scope>
+  style shell = { box: w(full).grow(1).minW(0).minH(0).h(full).overflow(hidden) }
+  style scrollMain = { box: grow(1).minW(0).w(full).basis(0).minH(0).h(full).overflowY(auto).overflowX(hidden) }
+</scope>
 
-<!-- Fill site-header appMain; independent catalog scrollport. -->
-<row nowrap align="stretch" gap="0" components-shell style({  box: w(full).grow(1).minW(0).minH(0).h(full).overflow(hidden)  })>
-  <main components-scroll style({  box: grow(1).minW(0).w(full).basis(0).minH(0).h(full).overflowY(auto).overflowX(hidden)  })>
+<row nowrap align="stretch" gap="0" style(shell)>
+  <main style(scrollMain)>
     <slot name="route"></slot>
   </main>
 </row>

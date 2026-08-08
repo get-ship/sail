@@ -1,6 +1,4 @@
 <!--
-  AI docs segment layout — nests inside the root layout
-  (routes/_layout.sail). deck mounts <sail-ai-rail> and projects this
-  segment’s routes into its <slot name="route">. See src/sail-ai-rail/.
+  /ai/* segment layout — AI docs rail projects routes into its route slot.
 -->
 <sail-ai-rail></sail-ai-rail>
