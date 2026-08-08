@@ -1802,8 +1802,8 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
             && src.contains("data-field-error")
             && src.contains("use:describedControl")
             && !src.contains(" role=")
-            && (src.contains("field.hint") || src.contains("field-hint"))
-            && (src.contains("field.error") || src.contains("field-error")),
+            && src.contains("field.hint")
+            && src.contains("field.error"),
         "field structure must carry group + empty/group-invalid Style gates without part classes; alert via use:describedControl"
     );
     assert!(

@@ -542,9 +542,18 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     );
     sf.push_str("// The complete language surface, from the compiler's own tables: what the\n");
     sf.push_str("// lint enforces is what this file documents, by construction.\n\n");
+    // SPEC-D1: docs language-surface must not teach component public names as
+    // free Style color Tokens (validate rejects them). Filter at emit so
+    // prop-registry regen stays the single command for this surface.
     let atoms: Vec<serde_json::Value> = sail_lint::rules::sx::vocabulary()
         .into_iter()
-        .map(|(prop, values)| serde_json::json!({ "prop": prop, "values": values }))
+        .map(|(prop, values)| {
+            let values: Vec<String> = values
+                .into_iter()
+                .filter(|v| !sail_lint::component_surfaces::is_component_public_name(v))
+                .collect();
+            serde_json::json!({ "prop": prop, "values": values })
+        })
         .collect();
     sf.push_str("export interface SxAtom {\n  prop: string\n  values: string[]\n}\n\n");
     sf.push_str("export const SX_ATOMS: SxAtom[] = ");

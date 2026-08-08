@@ -122,3 +122,27 @@ describe('component token write behavior', () => {
     expect(getDesignState().dirty).toBe(true)
   })
 })
+
+describe('component state leaf parking (SPEC-D1 rest-only)', () => {
+  it('parked hover storage leaf write is a hard error (not a silent look no-op)', async () => {
+    const { setTokenValue } = await import('../src/design')
+    __setWorkingDocForTests({
+      $extensions: { ship: { themeId: 'comp-toy' } },
+      modes: { light: { component: { button: {} } } },
+    })
+    await setTokenValue('component.button.hover-bg', '#22c55e')
+    const err = getDesignState().lastWriteError
+    expect(err).toBeTruthy()
+    expect(String(err)).toMatch(/Parked component state path|not an editable rest surface/i)
+    expect(getDesignState().dirty).toBe(false)
+  })
+
+  it('isParkedComponentStateLeaf covers hover leaves but not hover-card pack rest', async () => {
+    const { isParkedComponentStateLeaf } = await import('../src/design')
+    expect(isParkedComponentStateLeaf('component.button.hover-bg')).toBe(true)
+    expect(isParkedComponentStateLeaf('component.field.border-hover')).toBe(true)
+    expect(isParkedComponentStateLeaf('component.button.bg')).toBe(false)
+    expect(isParkedComponentStateLeaf('component.hover-card.bg')).toBe(false)
+    expect(isParkedComponentStateLeaf('component.hover-card.fg')).toBe(false)
+  })
+})

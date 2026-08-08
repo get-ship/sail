@@ -12,6 +12,7 @@ import {
   clearTokenValue,
   getDesignState,
   getPathValue,
+  isParkedComponentStateLeaf,
   l1Label,
   setTokenValue,
   type L1Id,
@@ -143,6 +144,8 @@ function knobsForFace(face: FaceDef): TokenKnob[] {
   const set = new Set(face.tags)
   return allKnobs().filter((k) => {
     if (!k.path.startsWith('component.')) return false
+    // SPEC-D1: parked hover/focus storage leaves are not editable rest slots.
+    if (isParkedComponentStateLeaf(k.path)) return false
     const tag = k.path.split('.')[1]
     return tag != null && set.has(tag)
   })

@@ -27,7 +27,7 @@ import {
   setDensity,
   setPathValue,
 } from './theme-doc'
-import { getKnob } from './token-groups'
+import { getKnob, isParkedComponentStateLeaf } from './token-groups'
 import type {
   BlastRadius,
   DensityId,
@@ -338,6 +338,18 @@ export async function setTokenValueOn(
     .replace(/\.\$value$/, '')
   if (barePath.startsWith('component.') && !getKnob(barePath) && !getKnob(path)) {
     const msg = `Unknown component surface path "${barePath}" — not in the host surface schema`
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: msg,
+      statusNote: msg,
+    })
+    ctx.emit()
+    return
+  }
+  // SPEC-D1 rest-only: hover/focus storage leaves are not L1-spent; refuse
+  // silent costume writes that would not change look.
+  if (isParkedComponentStateLeaf(barePath) || isParkedComponentStateLeaf(path)) {
+    const msg = `Parked component state path "${barePath}" — not an editable rest surface (L1 hover uses free globals)`
     ctx.setState({
       ...ctx.getState(),
       lastWriteError: msg,

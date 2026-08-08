@@ -6,6 +6,11 @@
 //! Full matrix coverage is multi-pass. This suite locks the **measured slice**
 //! landed here and ratchets: packs must be read by skins, and the high-impact
 //! default surfaces may not re-paint free globals for channels they own.
+//!
+//! SPEC-D1 rest-only: state leaves (`*-hover-bg`, `field-border-hover`, …) are
+//! storage-only until a later state-surface decision. L1 hover paints free
+//! globals (`hover-bg` / `border-strong`). Lockstep fixtures must not demand
+//! skins read those unread component leaves.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -32,15 +37,13 @@ fn stdlib_dir() -> PathBuf {
 ///
 /// Consumers of shared packs (input/select/textarea → field) are listed so a
 /// pack cannot silently lose its only reader.
+///
+/// Rest-only (SPEC-D1): do **not** list state leaves (`*-hover-bg`,
+/// `field-border-hover`, `*-thumb-hover`, …) — L1 spends free globals for hover.
 const SLICE_READERS: &[(&str, &[&str])] = &[
     (
         "button",
-        &[
-            "button",
-            "button-foreground",
-            "button-border",
-            "button-hover-bg",
-        ],
+        &["button", "button-foreground", "button-border"],
     ),
     (
         "dialog",
@@ -59,7 +62,6 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
             "accordion",
             "accordion-foreground",
             "accordion-border",
-            "accordion-hover-bg",
             "accordion-chevron",
         ],
     ),
@@ -69,14 +71,10 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
     ("separator", &["separator-line"]),
     // Shared field surface — any of the three consumers counts as a reader,
     // but the tokens must appear (input/select/textarea all stamp them).
+    // Rest-only: field-border-hover is storage residual (ALLOWED_UNREAD).
     (
         "field-surface",
-        &[
-            "field",
-            "field-foreground",
-            "field-border",
-            "field-border-hover",
-        ],
+        &["field", "field-foreground", "field-border"],
     ),
     // Slice #2 — residual gauges / structure / form chrome.
     (
@@ -111,12 +109,7 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
     // Button-link chrome on <a variant=…> shares the button pack.
     (
         "a-button-link",
-        &[
-            "button",
-            "button-foreground",
-            "button-border",
-            "button-hover-bg",
-        ],
+        &["button", "button-foreground", "button-border"],
     ),
     // Slice #3 — residual pack-bearing surfaces + shared field control face.
     (
@@ -144,15 +137,12 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "page",
         &[
             "page-foreground",
-            "page-hover-bg",
             "page-current-bg",
             "page-current-foreground",
         ],
     ),
-    (
-        "scroll-area",
-        &["scroll-area-thumb", "scroll-area-thumb-hover"],
-    ),
+    // Rest thumb channel only — hover thumb uses free border-strong (D1c).
+    ("scroll-area", &["scroll-area-thumb"]),
     ("spinner", &["spinner-foreground", "spinner-track"]),
     (
         "tab",
@@ -173,13 +163,10 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
     // Combobox text field shares field pack (listbox still combobox*).
     (
         "combobox-field",
-        &["field", "field-foreground", "field-border", "field-border-hover"],
+        &["field", "field-foreground", "field-border"],
     ),
     // L1-POLISH-D — field hint/error channels (surface pack already gated).
-    (
-        "field-chrome",
-        &["field-hint", "field-error"],
-    ),
+    ("field-chrome", &["field-hint", "field-error"]),
     // Slice #4 — panel free borders + dialog anatomy + badge soft compound.
     (
         "popover",
@@ -208,11 +195,8 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "chip",
         &["chip", "chip-foreground", "chip-border"],
     ),
-    // L1-POLISH-C — menu row + panel hosts already on component tokens.
-    (
-        "menu-item",
-        &["menu-item-foreground", "menu-item-hover-bg"],
-    ),
+    // L1-POLISH-C — menu row rest ink from pack; hover → free hover-bg (D1c).
+    ("menu-item", &["menu-item-foreground"]),
 ];
 
 /// Default-rest free globals that a slice element must NOT use for its owned
@@ -233,6 +217,10 @@ const FREE_DEFAULT_PAINT: &[&str] = &[
 /// Per-element default class fragments that *must* prefer component tokens.
 /// Format: element comment banner in element-skins → banned free token names
 /// for that block's primary default paint.
+///
+/// SPEC-D1: intentional free globals are allowed where L1 rewired away from
+/// pack state leaves or foreign host surfaces (hover chrome, radio/combobox
+/// cross-host free face).
 const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     // button default variant rest
     (
@@ -298,10 +286,13 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
         "/* chip */",
         &["muted", "muted-foreground", "border", "foreground"],
     ),
-    ("/* radio */", &["foreground", "background"]),
-    ("/* combobox */", &["background", "foreground"]),
-    // L1-POLISH-C — menu-item rest ink/hover from pack (not free foreground/muted).
-    ("/* menu-item */", &["foreground", "muted", "hover-bg"]),
+    // D1c: radio control face spends free foreground/background (no foreign
+    // field surface as Style paint). Pack still owns radio-foreground label ink.
+    ("/* radio */", &[]),
+    // D1c: combobox text field free face (shared field pack still read in skins).
+    ("/* combobox */", &[]),
+    // L1-POLISH-C — menu-item rest ink from pack; hover intentionally free hover-bg.
+    ("/* menu-item */", &["foreground", "muted"]),
     // L1-POLISH-D — field hint/error channels (not free muted-foreground / destructive).
     ("/* field */", &["muted-foreground", "destructive"]),
 ];
@@ -386,9 +377,13 @@ fn every_component_pack_has_registry_paths() {
     );
 }
 
-/// Advanced channels that themes set today but the skin layer does not yet
-/// paint. Documented residual — not silent costume vars. Each entry must have
-/// a follow-up row in RESULT-L1-token-totality.md.
+/// Advanced / parked channels that themes may still store but the skin layer
+/// does not paint. Documented residual — not silent costume vars in product
+/// surfaces. Each entry must have a RESULT residual.
+///
+/// SPEC-D1 rest-only: component state leaves (`*-hover-bg`, `field-border-hover`,
+/// …) stay in the model for theme/CSS exhaust but L1 Style/skins spend free
+/// globals for hover. Studio must not list them as editable rest slots.
 const ALLOWED_UNREAD: &[&str] = &[
     // Card frost/texture layer: themes override the three channels; host skin
     // does not yet emit the texture pseudo. Wire in a later WI (no taste invent
@@ -397,51 +392,83 @@ const ALLOWED_UNREAD: &[&str] = &[
     "card-texture",
     "card-texture-blend",
     "card-texture-opacity",
+    // SPEC-D1 state storage residuals — L1 hover → free globals (hover-bg /
+    // border-strong). Not Style surface slots; parked until state-surface decision.
+    "accordion-hover-bg",
+    "button-hover-bg",
+    "field-border-hover",
+    "menu-item-hover-bg",
+    "page-hover-bg",
+    "scroll-area-thumb-hover",
+    "theme-picker-option-hover-bg",
 ];
+
+/// Whether stdlib Style text references a component public cssName — either
+/// legacy kebab (`fg(field-hint)`) or D1 dotted surface form derived from path
+/// (`fg(field.hint)`, `bg(chip)`, `bg(hover-card)`).
+fn stdlib_reads_component(path: &str, css: &str, stdlib_blob: &str, maps: &str) -> bool {
+    let var_ref = format!("var(--{css})");
+    if stdlib_blob.contains(&format!("({css})"))
+        || stdlib_blob.contains(&format!("({css},"))
+        || stdlib_blob.contains(&format!(", {css})"))
+        || stdlib_blob.contains(&format!(", {css},"))
+    {
+        return true;
+    }
+    if maps.contains(&var_ref) || maps.contains(&format!("--{css}")) {
+        return true;
+    }
+    // Dotted surface author form from storage path (component.chip.fg → chip.foreground
+    // is not recovered here; pack-leaf dotted forms cover common cases).
+    let Some(rest) = path.strip_prefix("component.") else {
+        return false;
+    };
+    let Some((pack, leaf)) = rest.split_once('.') else {
+        return false;
+    };
+    if leaf.contains('.') {
+        return false;
+    }
+    let author = match leaf {
+        "bg" | "track" => pack.to_string(),
+        "fg" => format!("{pack}.foreground"),
+        other => format!("{pack}.{other}"),
+    };
+    stdlib_blob.contains(&format!("({author})"))
+        || stdlib_blob.contains(&format!("({author},"))
+        || stdlib_blob.contains(&format!(", {author})"))
+        || stdlib_blob.contains(&format!(", {author},"))
+}
 
 #[test]
 fn every_component_css_name_has_a_skin_or_stdlib_reader() {
     // A pack with zero readers is a variable in a costume. Check every
-    // component cssName is read by element-skins, stdlib Style, or structure maps.
-    let packs = component_packs();
+    // component registry cssName is read by element-skins, stdlib Style, or
+    // structure maps — or listed in ALLOWED_UNREAD with a residual.
+    let paths = registry_component_paths();
     let maps = include_str!("../src/stdlib.rs");
-    let mut real = Vec::new();
-    for (pack, names) in &packs {
-        for css in names {
-            if ALLOWED_UNREAD.contains(&css.as_str()) {
-                continue;
-            }
-            let var_ref = format!("var(--{css})");
-            if SKINS_CSS.contains(&var_ref) {
-                continue;
-            }
-            let sail_hit = {
-                let mut hit = false;
-                for entry in fs::read_dir(stdlib_dir()).expect("stdlib") {
-                    let p = entry.expect("e").path();
-                    if p.extension().and_then(|e| e.to_str()) != Some("sail") {
-                        continue;
-                    }
-                    let text = fs::read_to_string(&p).unwrap_or_default();
-                    // Style atoms: bg(chip), fg(field-hint), border(badge-border), …
-                    if text.contains(&format!("({css})"))
-                        || text.contains(&format!("({css},"))
-                        || text.contains(&format!(", {css})"))
-                        || text.contains(&format!(", {css},"))
-                    {
-                        hit = true;
-                        break;
-                    }
-                }
-                if !hit {
-                    hit = maps.contains(&var_ref) || maps.contains(&format!("--{css}"));
-                }
-                hit
-            };
-            if !sail_hit {
-                real.push(format!("component.{pack} → --{css}"));
-            }
+    let mut stdlib_blob = String::new();
+    for entry in fs::read_dir(stdlib_dir()).expect("stdlib") {
+        let p = entry.expect("e").path();
+        if p.extension().and_then(|e| e.to_str()) != Some("sail") {
+            continue;
         }
+        stdlib_blob.push_str(&fs::read_to_string(&p).unwrap_or_default());
+        stdlib_blob.push('\n');
+    }
+    let mut real = Vec::new();
+    for (path, css) in &paths {
+        if ALLOWED_UNREAD.contains(&css.as_str()) {
+            continue;
+        }
+        let var_ref = format!("var(--{css})");
+        if SKINS_CSS.contains(&var_ref) {
+            continue;
+        }
+        if stdlib_reads_component(path, css, &stdlib_blob, maps) {
+            continue;
+        }
+        real.push(format!("{path} → --{css}"));
     }
     assert!(
         real.is_empty(),

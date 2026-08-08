@@ -209,9 +209,29 @@ const ALL_KNOBS = buildKnobs()
 const BY_PATH = new Map(ALL_KNOBS.map((k) => [k.path, k]))
 const BY_CSS = new Map(ALL_KNOBS.map((k) => [k.cssName, k]))
 
+/**
+ * SPEC-D1 rest-only: component storage leaves whose leaf id contains hover/focus
+ * are not Style surface slots and L1 does not spend them. Park from studio
+ * editable rest knobs until a later state-surface decision (costume write =
+ * silent no-op for look).
+ *
+ * Pack names like `hover-card` are fine — only the leaf segment is checked.
+ */
+export function isParkedComponentStateLeaf(path: string): boolean {
+  const bare = path
+    .replace(/^modes\.(light|dark)\./, '')
+    .replace(/\.\$value$/, '')
+  if (!bare.startsWith('component.')) return false
+  const parts = bare.split('.')
+  if (parts.length < 3) return false
+  const leaf = parts.slice(2).join('.')
+  return leaf.includes('hover') || leaf.includes('focus')
+}
+
 export function listTokenGroups(): TokenGroup[] {
   const map = new Map<string, TokenKnob[]>()
   for (const k of ALL_KNOBS) {
+    if (isParkedComponentStateLeaf(k.path)) continue
     const id = pathGroup(k.path)
     if (!map.has(id)) map.set(id, [])
     map.get(id)!.push(k)
@@ -228,8 +248,14 @@ export function listTokenGroups(): TokenGroup[] {
 }
 
 export function groupKnobs(groupId: string): TokenKnob[] {
-  return ALL_KNOBS.filter((k) => pathGroup(k.path) === groupId)
+  return ALL_KNOBS.filter((k) => {
+    if (pathGroup(k.path) !== groupId) return false
+    // Components facet / design group: hide parked state storage leaves.
+    if (groupId === 'component' && isParkedComponentStateLeaf(k.path)) return false
+    return true
+  })
 }
+
 
 export function getKnob(path: string): TokenKnob | undefined {
   return BY_PATH.get(path) || BY_CSS.get(path)
