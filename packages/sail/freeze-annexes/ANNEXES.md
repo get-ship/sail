@@ -1,7 +1,7 @@
 # SAIL Syntax Freeze — Annexes A–E (generated)
 
 > **Do not hand-edit.** Regenerate: `node scripts/gen-freeze-annexes.mjs`
-> Tip: `1b48804617692c5907f898aab6c1aec71d8e19c5` · Generated: 2026-08-07 · Content hash: `262036cae9e05aca`
+> Tip: `bdd7813a332383f11223e6591ec22e468a362db8` · Generated: 2026-08-08 · Content hash: `262036cae9e05aca`
 
 Normative freeze prose: mission scratch `SAIL-SYNTAX-FREEZE.md`. These files are the
 machine-readable inventory the freeze annexes point at.
@@ -333,7 +333,7 @@ Channels: **box · paint · text · animate**. Setters mapped: **164**.
 | `spring:snappy` | spring |
 
 
-### `.when()` media conditions
+### `when:` media conditions
 
 | Key | Media |
 | --- | --- |

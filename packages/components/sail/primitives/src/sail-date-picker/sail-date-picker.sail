@@ -82,7 +82,7 @@
     max = ''
     placeholder = 'YYYY-MM-DD'
     disabled = false
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 </scope>

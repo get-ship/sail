@@ -12,25 +12,19 @@ export const code = {
 
 <card>{title()}</card>`,
 
-  template: `<card>
-    style({ box: pad(4).w(full) })
+  template: `<card style({ box: pad(4).w(full) })>
   <row align="center" justify="between" nowrap>
-    <strong>
-      style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })
+    <strong style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })>
       {title()}</strong>
-    <span>
-      style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
+    <span style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })>
       {departed()} departed</span>
   </row>
-  <column gap="1">
-    style({ box: mt(3) })
+  <column gap="1" style({ box: mt(3) })>
     <for {flights() as f} key={f.id}>
       <row align="center" gap="3" nowrap>
-        <span>
-          style({ box: grow(1).minW(0), text: truncate().fontFamily(mono).fontSize(sm) })
+        <span style({ box: grow(1).minW(0), text: truncate().fontFamily(mono).fontSize(sm) })>
           {f.city}</span>
-        <span>
-          style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
+        <span style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })>
           {f.gate}</span>
         <match {f.status}>
           {'boarding' => <badge tone="success">Boarding</badge>}{'delayed' => <badge tone="destructive">Delayed</badge>}{else => <badge tone="muted">On time</badge>}</match>
@@ -75,15 +69,13 @@ export default controller((ctx) => {
 
   usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slotDef: `<card>
-    style({ box: pad(4).w(full) })
+  slotDef: `<card style({ box: pad(4).w(full) })>
   ...the board...
   <slot name="footer"></slot>
 </card>`,
 
   slotUse: `<departures-board title="Departures — SFO">
-  <p slot="footer">
-    style({ box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) })
+  <p slot="footer" style({ box: mt(3), paint: fg(muted-foreground), text: fontSize(xs) })>
     Gate changes are announced. Allegedly.
   </p>
 </departures-board>`,

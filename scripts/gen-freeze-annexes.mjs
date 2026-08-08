@@ -502,7 +502,7 @@ ${mdTable(
   channelE.motionPresets.map((p) => ['`' + p.name + '`', p.kind]),
 )}
 
-### \`.when()\` media conditions
+### \`when:\` media conditions
 
 ${mdTable(
   ['Key', 'Media'],

@@ -34,7 +34,7 @@
     value = 0
     min = 0
     max = 100
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     'low-threshold' = 0
     'high-threshold' = 0
     diameter = 140

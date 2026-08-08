@@ -21,7 +21,7 @@ pub const RULE: &str = "sail-style-match-exhaustive";
 /// Template match exhaustiveness rule id (errors).
 pub const TEMPLATE_RULE: &str = "sail-match-exhaustive";
 
-const MATCH_OPEN: &str = "style({ match: { : {  } } })";
+const MATCH_OPEN: &str = "match:";
 
 /// LiveState closed kinds.
 const LIVE_STATE_KINDS: &[&str] = &["loading", "error", "ok"];
@@ -49,7 +49,7 @@ pub fn collect(program: &Program, source: &str) -> Vec<Diagnostic> {
         return out;
     }
 
-    // `<scope>` Style consts â `const tones = match(variant, {â¦})`.
+    // `<scope>` Style consts — `const tones = style({ match: { … } })`.
     let env = crate::parse::scope_block::style_env_from_source(source);
     let mut seen_consts: HashSet<&str> = HashSet::new();
     for (body_start, body) in scope_bodies(source) {

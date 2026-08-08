@@ -12,26 +12,6 @@ pub(super) fn skip_trivia(bytes: &[u8], i: usize) -> usize {
     crate::scan::skip_trivia(bytes, i, bytes.len())
 }
 
-/// Skip a `//` comment up to and including the newline (or EOF).
-pub(super) fn skip_line_comment(bytes: &[u8], mut i: usize) -> usize {
-    while i < bytes.len() && bytes[i] != b'\n' {
-        i += 1;
-    }
-    i
-}
-
-/// Skip a `/* ... */` block comment, returning the offset just past `*/`.
-pub(super) fn skip_block_comment(bytes: &[u8], mut i: usize) -> usize {
-    i += 2;
-    while i + 1 < bytes.len() {
-        if bytes[i] == b'*' && bytes[i + 1] == b'/' {
-            return i + 2;
-        }
-        i += 1;
-    }
-    bytes.len()
-}
-
 /// Walk to the next `,` or `}` at depth zero. Used by object-literal
 /// parsers to find the end of a `key: value` entry.
 pub(super) fn next_top_separator(bytes: &[u8], start: usize, end: usize) -> usize {

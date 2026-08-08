@@ -14,7 +14,7 @@
     showHex = true
     /** swatch = color fill only (no hex field / "Pick color" chrome) — for design studio cards. */
     variant: 'default' | 'swatch' = 'default'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 </scope>

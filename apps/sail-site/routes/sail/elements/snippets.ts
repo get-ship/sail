@@ -3,12 +3,10 @@
 // one is the source of the live demo it sits next to.
 export const code = {
   useThem: `<!-- components are tags. Write them like HTML. -->
-<card>
-  style({ box: pad(4) })
+<card style({ box: pad(4) })>
   <row gap="3" align="center">
     <avatar></avatar>
-    <strong>
-      style({ box: grow(1).minW(0) })
+    <strong style({ box: grow(1).minW(0) })>
     Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>

@@ -43,12 +43,10 @@ export default controller(() => {
 
 <input placeholder="Filter people" bind:value={query} />
 <for {filtered() as p} key={p.id}>
-  <card>
-    style({ box: pad(4), animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })
+  <card style({ box: pad(4), animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) })>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong>
-        style({ box: grow(1) })
+      <strong style({ box: grow(1) })>
         {p.name}
       </strong>
       <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
@@ -66,10 +64,8 @@ export default controller(() => {
 <badge tone="success">Active</badge>
 <alert tone="info">Saved.</alert>`,
 
-  styling: `<card>
-    style({ box: pad(5), paint: bg(surface-1).radius(lg).shadow(sm) }).when(hover, { paint: shadow(md) })
-  <p>
-    style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  styling: `<card style({ box: pad(5), paint: bg(surface-1).radius(lg).shadow(sm), when: { hover: { paint: shadow(md) } } })>
+  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
     On the system, or it does not compile.</p>
 </card>`,
 
@@ -80,8 +76,7 @@ effect(() => console.log(count()))   // re-runs on change`,
   data: `const users = query(() => api.users.list())
 // users() is { kind: 'loading' } | { kind: 'ok', value } | { kind: 'error', error }`,
 
-  fx: `<card>
-    style({ animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) })
+  fx: `<card style({ animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) })>
     …</card>`,
 
   theming: `import { applyTheme } from '@ship/tokens/themes'

@@ -6632,7 +6632,7 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too"
   },
   {
-    "syntax": "style.… / style([…]) / style({…}) block statement",
+    "syntax": "style({…}) / style(partial, …) / style(name) tag call",
     "summary": "Style product paint on the element body — not an HTML attribute"
   },
   {
@@ -7286,7 +7286,7 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   {
     "form": "Style const",
     "syntax": "const filled = style({ paint: bg(primary), box: padX(2) })",
-    "summary": "compile-time Style value (channel / match / when / compound / list / ref); attach with block style(name) on the host",
+    "summary": "compile-time Style value (channels + when/match/compound keys / ref); attach with block style(name) on the host",
     "example": "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span>\n  style(filled)\n  {label}\n</span>"
   },
   {
@@ -7298,7 +7298,7 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   {
     "form": "residual compound array",
     "syntax": "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
-    "summary": "residual scope compound arrays are skipped (no paint); product form is host compound({…}, style.…)",
+    "summary": "residual scope compound arrays are skipped (no paint); product form is style({ compound: [ … ] })",
     "example": "<scope>\n  props: {\n    variant: 'solid' | 'soft' = 'solid'\n    size: 'sm' | 'lg' = 'sm'\n  }\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n</scope>\n<p>ok</p>"
   }
 ]

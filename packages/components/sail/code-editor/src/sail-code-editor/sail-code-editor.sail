@@ -11,7 +11,7 @@
   readonly (bool, false, reflect)  drop all editor interactions
   line-numbers (bool, true, reflect)
   size (sm|md|lg, md, reflect)     controls font-size + line-height
-  tone (default|info|success|warning|destructive, default, reflect)
+  tone (info|success|warning|destructive — omit for rest, reflect)
   theme (light|dark|auto, auto, reflect)
   wasm-url (string)        compiler WASM URL for browser structure diagnose
   ops-url (string)         SailAuthoring HTTP base (Studio). Empty = off.
@@ -42,7 +42,7 @@
     placeholder = ''
     readonly = false
     'line-numbers' = true
-    tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
+    tone: 'info' | 'success' | 'warning' | 'destructive'
     theme: 'auto' | 'light' | 'dark' = 'auto'
     'wasm-url' = '/sail_compiler_bg.wasm'
     /** SailAuthoring ops base URL. Empty disables; "/" = same-origin. */

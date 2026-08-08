@@ -266,7 +266,7 @@ compiled 1 file(s)
       <column gap="3" style({ box: pad(4), paint: bg(card).borderWidth(1).border(border).radius(md) })>
         <h3 style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })>tone: default | primary | info | success | warning | destructive | accent | muted</h3>
         <row gap="4">
-          <sail-thinking-dots tone="default"></sail-thinking-dots>
+          <sail-thinking-dots></sail-thinking-dots>
           <sail-thinking-dots tone="primary"></sail-thinking-dots>
           <sail-thinking-dots tone="info"></sail-thinking-dots>
           <sail-thinking-dots tone="success"></sail-thinking-dots>

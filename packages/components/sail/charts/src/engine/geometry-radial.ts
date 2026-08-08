@@ -100,7 +100,7 @@ export interface GaugeOptions {
   min: number
   max: number
   /**
-   * Explicit tone. `''` and `'default'` both mean "no explicit tone" and
+   * Explicit tone. Empty / omit means "no explicit tone" and
    * resolve from the thresholds: the framework `tone` channel is a closed
    * union whose neutral member IS `default`, so a caller reading the host's
    * tone prop can never hand us an empty string.
@@ -141,7 +141,7 @@ export function gaugeGeometry(value: number, opts: GaugeOptions): GaugeArc {
   const endAngle = GAUGE_START + (GAUGE_END - GAUGE_START) * ratio
   const fillD = ratio > 0 ? arcPath(cx, cy, r, GAUGE_START, endAngle) : ''
 
-  let resolved = opts.tone === 'default' ? '' : (opts.tone ?? '')
+  let resolved = opts.tone ?? ''
   if (!resolved) {
     if (low > 0 && value < low) resolved = 'destructive'
     else if (high > 0 && value < high) resolved = 'warning'

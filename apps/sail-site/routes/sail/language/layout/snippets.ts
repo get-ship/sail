@@ -8,8 +8,7 @@ export const code = {
 
   nowrap: `<row nowrap gap="4" align="stretch">
   <navbar>…</navbar>
-  <main>
-    style({ box: grow(1).minW(0) })
+  <main style({ box: grow(1).minW(0) })>
     …
   </main>
 </row>`,
@@ -31,25 +30,20 @@ export const code = {
 </grid>`,
 
   stack: `<stack align="start" justify="end">
-  <card>
-    style({ box: w(24).h(12), paint: bg(muted).radius(md) })
+  <card style({ box: w(24).h(12), paint: bg(muted).radius(md) })>
   </card>
-  <div>
-    style({ box: w(4).h(4), paint: radius(full).bg(primary) })
+  <div style({ box: w(4).h(4), paint: radius(full).bg(primary) })>
   </div>
 </stack>`,
 
-  center: `<center>
-    style({ box: minH(11) })
+  center: `<center style({ box: minH(11) })>
   <badge tone="primary">centered</badge>
 </center>`,
 
   grow: `<row gap="3" align="center">
-  <strong>
-    style({ box: grow(1).minW(0) })
+  <strong style({ box: grow(1).minW(0) })>
   Ada Lovelace</strong>
-  <badge tone="success">
-    style({ box: shrink(0) })
+  <badge tone="success" style({ box: shrink(0) })>
   Active</badge>
 </row>`,
 

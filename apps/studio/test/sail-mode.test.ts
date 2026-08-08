@@ -76,7 +76,7 @@ describe('CodeMirror sail mode tokenizer', () => {
   })
 
   it('skipBrace respects nested braces and quotes', () => {
-    const s = '{style({ box: pad(6) }).when(focus, "a}")}'
+    const s = '{style({ box: pad(6), when: { focus: { paint: bg("a}") } } })}'
     expect(skipBrace(s, 0)).toBe(s.length)
   })
 })

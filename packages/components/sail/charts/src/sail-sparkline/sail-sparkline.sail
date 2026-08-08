@@ -29,7 +29,7 @@
 <scope>
   props: {
     data = ''
-    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     width = 80
     height = 20
     fill = false

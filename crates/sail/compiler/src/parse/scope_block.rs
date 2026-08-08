@@ -1663,7 +1663,7 @@ mod tests {
     #[test]
     fn style_const_match_rhs_is_accepted() {
         let b = block(
-            "const soft = style({ paint: bg(muted) })\nconst paint = match(variant, { soft: soft, solid: style({ paint: bg(primary) }) })",
+            "const soft = style({ paint: bg(muted) })\nconst paint = style({ match: { variant: { soft: soft, solid: style({ paint: bg(primary) }) } } })",
         );
         assert!(b.style_env.contains_key("soft"));
         assert!(b.style_env.contains_key("paint"));

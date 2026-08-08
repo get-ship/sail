@@ -4,45 +4,36 @@
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">
-    <div>
-      style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })
+    <div style({ box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) })>
     </div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
 </if>`,
 
   lifecycle: `<if {open()}>
-  <card>
-    style({ animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })
+  <card style({ animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) })>
     I animate in, and I animate out.
   </card>
 </if>`,
 
-  express: `<div>
-    style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) })
+  express: `<div style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) })>
   </div>
-<div>
-  style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) })
+<div style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) })>
 </div>`,
 
-  reveal: `<card>
-    style({ animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) })
+  reveal: `<card style({ animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) })>
   This one fades up as it enters the viewport.
 </card>`,
 
-  loop: `<div>
-    style({ animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })
+  loop: `<div style({ animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })>
   </div>
 
-<div>
-  style({ animate: loop({ rotate: 'spin' }) })
+<div style({ animate: loop({ rotate: 'spin' }) })>
 </div>`,
 
-  gestures: `<button>
-    style({ animate: press({ scale: 'press' }) })
+  gestures: `<button style({ animate: press({ scale: 'press' }) })>
     press me</button>
-<button>
-  style({ animate: focus-visible({ scale: 'spring:snappy' }) })
+<button style({ animate: focus-visible({ scale: 'spring:snappy' }) })>
   tab to me</button>`,
 
   choreography: `<controller>
@@ -64,8 +55,7 @@ export default controller(() => {
 </controller>
 
 <input type="range" min="0" max="100" bind:value={scrubText} />
-<card>
-  style({ paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })
+<card style({ paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })>
 </card>`,
 
   drivers: `const p = () => Number(scrubText()) / 100  // the slider above

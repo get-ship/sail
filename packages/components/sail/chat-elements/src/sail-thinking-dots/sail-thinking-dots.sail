@@ -17,7 +17,7 @@
   ─────────────────────────────────────────────────────────────────────
   label   (string)  Overrides the announced label.
   size    (union)   sm | md | lg — scales the dots.
-  tone    (union)   Colors the dots; defaults to muted-foreground.
+  tone    (union)   Colors the dots; omit for muted-foreground rest.
   ─────────────────────────────────────────────────────────────────────
 -->
 
@@ -25,7 +25,7 @@
   props: {
     label = 'Assistant is thinking'
     size: 'md' | 'sm' | 'lg' = 'md'
-    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
   }
 </scope>
 
@@ -36,7 +36,7 @@
   <row
     gap={size() === 'lg' ? '2' : '1'}
     align="center"
-    data-state={tone() + ' ' + size()} style({ paint: group() })>
+    data-state={(tone() ?? '') + ' ' + size()} style({ paint: group() })>
     <span
 aria-hidden="true" style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }), when: { groupStateSm: { paint: scale(75) }, groupStateLg: { paint: scale(125) }, groupStatePrimary: { paint: bg(primary) }, groupStateInfo: { paint: bg(info) }, groupStateSuccess: { paint: bg(success) }, groupStateWarning: { paint: bg(warning) }, groupStateDestructive: { paint: bg(destructive) }, groupStateAccent: { paint: bg(accent) } } })></span>
     <span

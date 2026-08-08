@@ -276,7 +276,7 @@ pub enum MatchTest {
 }
 
 /// Structural viewport branch: different trees per theme breakpoint.
-/// Paint-level Style `.when()` is separate and untouched.
+/// Paint-level Style `when:` is separate and untouched.
 #[derive(Debug, Clone)]
 pub struct WhenInstr {
     /// Theme breakpoint token (`mobile` / `tablet` / `desktop`).

@@ -39,7 +39,7 @@
     values = ''
     rows = ''
     cols = ''
-    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     'cell-size' = 20
     gap = 3
     label = 'heatmap'

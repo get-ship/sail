@@ -52,7 +52,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}
-        tone={active() === t.id ? 'primary' : 'default'}
+        tone={active() === t.id ? 'primary' : undefined}
         pressed={active() === t.id ? 'true' : 'false'}
       >{t.label}</button>
     </for>

@@ -498,9 +498,6 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(input: &'a str, tokens: &'a [SpannedTok<'a>], allow_flat: bool) -> Self {
-        Self::new_full(input, tokens, allow_flat, false)
-    }
     fn new_full(
         input: &'a str,
         tokens: &'a [SpannedTok<'a>],

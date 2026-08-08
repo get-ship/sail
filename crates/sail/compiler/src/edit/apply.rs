@@ -557,10 +557,6 @@ fn arg_to_token(v: &serde_json::Value) -> Option<String> {
     }
 }
 
-fn format_sx_call(setter: &str, args: &[serde_json::Value]) -> String {
-    let args_s = format_sx_args(args);
-    format!("style.{setter}({args_s})")
-}
 
 fn format_sx_args(args: &[serde_json::Value]) -> String {
     args.iter()

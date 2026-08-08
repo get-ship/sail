@@ -198,7 +198,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               </column>
               <p style({ box: display(none), paint: fg(muted-foreground), text: fontSize(sm), when: { desktop: { box: display(block) } } })>{t.album}</p>
               <button on:click={(e) => { e.stopPropagation(); toggleLike(t.id) }}
-                    variant="ghost" size="sm" tone={liked().includes(t.id) ? 'primary' : 'default'}>
+                    variant="ghost" size="sm" tone={liked().includes(t.id) ? 'primary' : undefined}>
                 ♥
               </button>
               <span style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })>{t.len}</span>

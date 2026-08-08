@@ -38,10 +38,11 @@ error** — the language never silently drops what you wrote.
 
 Components speak two shared contracts:
 
-- **tone** — `default` / `primary` / `info` / `success` / `warning` /
-  `destructive` / `accent` / `muted`. Every toned component reads the
-  same token table, so `tone="destructive"` means the same thing on a
-  `<badge>`, a `<button>`, a `<card>`, and a `<switch>`.
+- **tone** — `primary` / `info` / `success` / `warning` /
+  `destructive` / `accent` / `muted`. Omit the attribute for rest paint.
+  Every toned component reads the same token table, so `tone="destructive"`
+  means the same thing on a `<badge>`, a `<button>`, a `<card>`, and a
+  `<switch>`.
 - **variant** (where it applies) — `solid`, `soft`, `outline`, `ghost` —
   how loudly the tone speaks. `size` scales controls (`sm`/`md`/`lg`).
 

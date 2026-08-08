@@ -108,7 +108,7 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "Style const",
         syntax: "const filled = style({ paint: bg(primary), box: padX(2) })",
-        summary: "compile-time Style value (channel / match / when / compound / list / ref); attach with tag-position style(name) on the host",
+        summary: "compile-time Style value (channels + when/match/compound keys / ref); attach with tag-position style(name) on the host",
         example: "<scope>\n  const filled = style({ paint: bg(primary), box: padX(2) })\n  props: { label = '' }\n</scope>\n<span style(filled)>\n  {label}\n</span>",
     },
     ScopeEntry {
@@ -120,7 +120,7 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "residual compound array",
         syntax: "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
-        summary: "residual scope compound arrays are skipped (no paint); product form is host compound({…}, style.…)",
+        summary: "residual scope compound arrays are skipped (no paint); product form is style({ compound: [ … ] })",
         example: "<scope>\n  props: {\n    variant: 'solid' | 'soft' = 'solid'\n    size: 'sm' | 'lg' = 'sm'\n  }\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n</scope>\n<p>ok</p>",
     },
 ];

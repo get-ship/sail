@@ -32,7 +32,7 @@
   props: {
     data = ''
     labels = ''
-    tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     orientation: 'vertical' | 'horizontal' = 'vertical'
     width = 300
     height = 200

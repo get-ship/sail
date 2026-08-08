@@ -1,6 +1,6 @@
 //! A11y IR checks: icon-only buttons require a `label` semantic prop.
 
-use crate::diagnostics::{CompileError, Span};
+use crate::diagnostics::CompileError;
 use crate::ir::*;
 
 /// Run a11y IR checks. Returns the first error.
@@ -195,6 +195,7 @@ fn is_decorative_child(instr: &Instr) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crate::diagnostics::Span;
     use super::*;
 
     fn sp() -> Span {

@@ -95,7 +95,7 @@ export default controller(() => {
 
   <row gap="2" align="center">
     <small style(muted)>the tone contract:</small>
-    <badge tone="default" variant="soft" size="sm">default</badge>
+    <badge variant="soft" size="sm">rest</badge>
     <badge tone="primary" variant="soft" size="sm">primary</badge>
     <badge tone="info" variant="soft" size="sm">info</badge>
     <badge tone="success" variant="soft" size="sm">success</badge>

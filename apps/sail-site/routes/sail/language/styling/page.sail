@@ -1,7 +1,7 @@
 <!--
-  /sail/language/styling — Style product chapter: style.* chains, match, when,
-  compound, scope Style consts. Every live demo paints with Style; code samples
-  match. Responsive paint uses style({ when: { tablet: desktop } }) locked to breakpoint
+  /sail/language/styling — Style product chapter: object Style, match:/when:/
+  compound keys, scope Style consts. Every live demo paints with Style; code samples
+  match. Responsive paint uses style({ when: { tablet: … } }) locked to breakpoint
   tokens — never tablet: utility prefixes.
 -->
 
@@ -24,9 +24,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h1>Styling</h1>
   <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
     Paint is the <strong>Style</strong> channel language:
-    <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> as a block
-    statement, plus <code>.style({})</code>, <code>match</code>,
-    <code>compound</code>, and scope Style consts. Values are design tokens —
+    <code>style&#40;&#123; box, paint, text, animate &#125;&#41;</code> on the host,
+    with optional <code>when</code>, <code>match</code>, and <code>compound</code>
+    keys for conditionality, plus scope Style consts. Values are design tokens —
     never raw hex. The compiler and the
     <a href="/sail/reference/sx">Style reference</a> share one table.
   </p>
@@ -51,8 +51,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Prefer a scope const when the same paint repeats:
     <code>const card = style&#40;&#123; box: pad(5), paint: bg(surface-1) &#125;&#41;…</code> then
-    attach <code>style&#40;card&#41;</code> or <code>style&#40;[base, emphasis]&#41;</code> as a
-    block statement on the host.
+    attach <code>style&#40;card&#41;</code> or compose partials
+    <code>style&#40;base, emphasis&#41;</code> on the host.
   </p>
 
   <h2>States with when</h2>
@@ -79,7 +79,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Breakpoints are Style product conditions locked to
     <code>breakpoint-*</code> tokens — not <code>tablet:</code> string
     prefixes. Unprefixed paint is the phone baseline; layer larger steps with
-    <code>when&#40;&#123; tablet: …, desktop: … &#125;&#41;</code>. Resize to see this panel
+    <code>style&#40;&#123; when: &#123; tablet: …, desktop: … &#125; &#125;&#41;</code>. Resize to see this panel
     pad more from 768px up:
   </p>
   <column gap="2" style({ box: pad(3), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), when: { tablet: { box: pad(6) } } })>
@@ -94,12 +94,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Variants with match and compound</h2>
   <p>
-    Named looks are data: typed props plus Style fragments composed with
-    <code>match</code> and <code>compound</code> — not CVA string maps. Each
-    arm is ordinary Style, same pipeline as a host
-    <code>style&#40;&#123; … &#125;&#41;</code> block. Variance authoring for
-    libraries may still need a directory permit; plain pages usually paint
-    with consts + match only.
+    Named looks are data: typed props plus Style partials composed with
+    <code>match:</code> and <code>compound:</code> keys — not CVA string maps or
+    free <code>match()</code> calls. Each arm is an ordinary partial, same
+    pipeline as a host <code>style&#40;&#123; … &#125;&#41;</code>. Variance
+    authoring for libraries may still need a directory permit; plain pages
+    usually paint with consts + <code>match:</code> only.
   </p>
   <code-block code={code.variants}></code-block>
   <p>Callers pick a look the way they set any field:</p>

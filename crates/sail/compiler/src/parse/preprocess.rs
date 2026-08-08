@@ -225,7 +225,7 @@ fn lift_tag_style(
             if let Some(bad) = find_bad_tag_style_token(source, tag_end, gt_pos) {
                 return Err(CompileError::new(
                     "style in tag position must be a call: style({ box: …, paint: … })  \
-                     or  style(name)  or  style([…])  — not bare `style`, `style=`, or `style={…}`",
+                     or  style(name) / style(partial, …)  — not bare `style`, `style=`, or `style={…}`",
                 )
                 .with_span(Span::new(bad, bad + 5))
                 .with_category("sail-sx"));
@@ -575,39 +575,6 @@ fn style_error(
         .with_span(Span::new(start, end))
         .with_category("sail-sx")
 }
-
-fn balanced_brace(bytes: &[u8], open: usize) -> Option<usize> {
-    if bytes.get(open) != Some(&b'{') {
-        return None;
-    }
-    let mut depth = 0i32;
-    let mut i = open;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'{' => depth += 1,
-            b'}' => {
-                depth -= 1;
-                if depth == 0 {
-                    return Some(i);
-                }
-            }
-            b'"' | b'\'' => {
-                let q = bytes[i];
-                i += 1;
-                while i < bytes.len() && bytes[i] != q {
-                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
-                        i += 1;
-                    }
-                    i += 1;
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    None
-}
-
 fn lower_sx_value(
     val: &str,
     env: &sail_lint::style::StyleEnv,
@@ -1680,7 +1647,7 @@ fn desugar_tag(tag: &str, tones: &[&str], sizes: &[&str], variants: &[&str]) -> 
     let mut i = 0;
     let mut quote: Option<u8> = None;
     // Only desugar bare tone/size/variant shorthands at *attribute* depth.
-    // Tag-position `style([…])` / compound maps can contain bare words like
+    // Tag-position `style({…})` / match/compound maps can contain bare words like
     // `outline` / `ghost` as Style condition values — rewriting those into
     // `variant="outline"` poisons compound CSS to `[variant='variant']`.
     let mut depth: i32 = 0;
@@ -1900,23 +1867,6 @@ fn merge_tag_classes(tag: &str) -> String {
     out.push_str(&tag[pos..]);
     out
 }
-
-fn is_eq_quote(rest: &[u8]) -> bool {
-    let mut k = 0;
-    while k < rest.len() && rest[k].is_ascii_whitespace() {
-        k += 1;
-    }
-    if k >= rest.len() || rest[k] != b'=' {
-        return false;
-    }
-    k += 1;
-    while k < rest.len() && rest[k].is_ascii_whitespace() {
-        k += 1;
-    }
-    // Quoted utility / Style form, or brace Style product form.
-    k < rest.len() && (rest[k] == b'"' || rest[k] == b'{')
-}
-
 /// Lower each layout keyword (`<column>`, `<row>`, `<grid>`, `<center>`,
 /// `<stack>`) to a `<div>` + atomic layout classes, returning the rewritten body
 /// and the deduped CSS. Axis props (gap/align/justify/min/flow) become classes
@@ -3346,13 +3296,11 @@ mod tests {
 
     #[test]
     fn bare_enum_shorthand_does_not_rewrite_inside_style_product() {
-        // Regression: `<button style([ compound({ variant: outline }, …) ])>`
-        // must keep condition value `outline` — not rewrite to variant="outline"
-        // which parses as compound value "variant" → CSS [variant='variant'].
+        // Regression: compound row values like `variant: outline` must stay as
+        // the enum member — not rewrite to variant="outline" which parses as
+        // compound value "variant" → CSS [variant='variant'].
         let src = r#"
-<button style([
-  compound({ orientation: vertical, variant: outline }, style({ box: mt(-px) })),
-])>x</button>
+<button style({ compound: [ { orientation: vertical, variant: outline, box: mt(-px) } ] })>x</button>
 "#;
         let out = preprocess(src).expect("preprocess");
         assert!(

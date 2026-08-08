@@ -6,7 +6,7 @@
 //!   children
 //! </div>
 //! ```
-//! Also: `style([ match(…), when(…) ])`, `style(constRef)`, or channel spines
+//! Also: `style({ match: {…}, when: {…} })`, `style(constRef)`, or channel spines
 //! with `.when(key, { … })` tails. Attribute hosts `style={…}` / `sx={…}` and
 //! body-nested Style statements are **not** the product attach form.
 //! Utility-string atoms (`style="p-4 bg-surface-2"`) are a **hard residual

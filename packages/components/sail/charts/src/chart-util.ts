@@ -2,7 +2,6 @@
 // Tone → CSS var, data parsing, path math.
 
 export type ChartTone =
-  | 'default'
   | 'primary'
   | 'info'
   | 'success'
@@ -14,7 +13,6 @@ export type ChartTone =
 const DEFAULT_TONE = 'var(--foreground)'
 
 const TONE_VARS: Record<string, string> = {
-  default: DEFAULT_TONE,
   primary: 'var(--primary)',
   info: 'var(--info)',
   success: 'var(--success)',

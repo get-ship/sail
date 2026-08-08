@@ -45,8 +45,6 @@ pub struct SurfaceSlot {
 
 struct SurfaceIndex {
     by_pack: BTreeMap<&'static str, &'static [SurfaceSlot]>,
-    /// public_name → storage path (all component color leaves).
-    public_to_path: HashMap<&'static str, &'static str>,
     /// storage path → public_name
     path_to_public: HashMap<&'static str, &'static str>,
     /// Every component public name (rest + state) — excluded from app color paint.
@@ -66,7 +64,6 @@ fn leak_str(s: impl Into<String>) -> &'static str {
 
 fn build_index() -> SurfaceIndex {
     let mut pack_slots: BTreeMap<String, Vec<SurfaceSlot>> = BTreeMap::new();
-    let mut public_to_path: HashMap<&'static str, &'static str> = HashMap::new();
     let mut path_to_public: HashMap<&'static str, &'static str> = HashMap::new();
     let mut all_public_names: HashSet<&'static str> = HashSet::new();
     let mut rest_public_names: HashSet<&'static str> = HashSet::new();
@@ -74,7 +71,6 @@ fn build_index() -> SurfaceIndex {
     for (path, css) in tokens::component_color_paths() {
         let path_s = leak_str(path);
         let css_s = leak_str(css);
-        public_to_path.insert(css_s, path_s);
         path_to_public.insert(path_s, css_s);
         all_public_names.insert(css_s);
 
@@ -113,7 +109,6 @@ fn build_index() -> SurfaceIndex {
 
     SurfaceIndex {
         by_pack,
-        public_to_path,
         path_to_public,
         all_public_names,
         rest_public_names,

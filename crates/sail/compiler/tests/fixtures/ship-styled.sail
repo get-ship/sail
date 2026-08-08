@@ -1,6 +1,6 @@
 <scope>
   props: {
-    tone: 'default' | 'primary' = 'default'
+    tone: 'primary'
   }
 </scope>
 <button>styled</button>
