@@ -9,7 +9,7 @@ import type { Scope } from './page.sail'
 import {
   REGION_CAPABILITY_MATRIX,
   CONTROLLER_SIZE_THRESHOLD,
-} from '../../../../src/language-surface.gen'
+} from '../../../../src/compositions/language-surface'
 
 const REGIONS = ['scope', 'controller', 'template', 'chain'] as const
 

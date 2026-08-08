@@ -15,7 +15,7 @@
 
 import { debounce, timeline, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-language-animation-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   const open = signal(true)
@@ -210,7 +210,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     reader — here, the slider’s value scaled to 0…1 — and a set of
     keyframes per property, and returns one signal per property. Those
     signals reach Style the way any signal does, through
-    <code>bind(name)</code> on a setter
+    <code>bind&#40;name&#41;</code> on a setter
     (<code>style&#40;&#123; paint: translateX(bind(tileX)) &#125;&#41;</code>):
   </p>
   <code-block code={code.choreography}></code-block>

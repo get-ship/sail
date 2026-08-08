@@ -10,7 +10,7 @@
 // out of packages/sail/tutorial) and is handed to the template unchanged.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { TUTORIAL_GROUPS, TUTORIAL_LESSONS, type TutorialGroup } from '../../../src/tutorial-data'
+import { TUTORIAL_GROUPS, TUTORIAL_LESSONS, type TutorialGroup } from '../../../src/compositions/tutorial-data'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   groups: (): TutorialGroup[] => TUTORIAL_GROUPS,

@@ -12,7 +12,7 @@ import {
   SX_CONDITION_PREFIXES,
   SX_REFUSALS,
   SX_EXTRA_FORMS,
-} from '../../../../src/language-surface.gen'
+} from '../../../../src/compositions/language-surface'
 
 // A few atoms register under the same `prop` name in more than one table
 // (e.g. a spacing sense and a color sense both named `border`) — merge
@@ -51,7 +51,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Product paint is a <strong>block statement</strong> on the host with a
       channel spine:
       <code>style&#40;&#123; box: padX(2), paint: bg(primary), text: fontSize(sm), animate: enter(&#123;…&#125;) &#125;&#41;</code>,
-      <code>style&#40;[base, style({ match: { : {  } } }), style({})]&#41;</code>, or <code>style&#40;constRef&#41;</code>.
+      <code>style&#40;[base, emphasis]&#41;</code>, or <code>style&#40;constRef&#41;</code>.
       Every setter argument is a design token from a closed scale — the rows
       below list those values. An off-list token is a compile error that names
       the same list.
@@ -59,7 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
       Utility-string <code>style="…"</code> / <code>sx="…"</code> is not product
       (dead form — refuse). Responsive and state paint use
-      <code>.style({ when: { tablet: 123 } })</code> / <code>.style({ when: { hover: 123 } })</code>
+      <code>.style&#40;&#123; when: &#123; tablet: 123 &#125; &#125;&#41;</code> / <code>.style&#40;&#123; when: &#123; hover: 123 &#125; &#125;&#41;</code>
       or map <code>when&#40;&#123; tablet: style… &#125;&#41;</code>, not
       <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
       {sxCount()} scale entries feed the setters. Region legality lives on the
@@ -147,7 +147,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p style({ box: maxW(breakpoint-tablet) })>
       <code>match&#40;prop, &#123; … &#125;&#41;</code> branches on a prop value;
       <code>compound&#40;&#123; … &#125;, style…&#41;</code> intersects prop arms;
-      <code>bind(signalName)</code> reads a controller signal as a CSS custom
+      <code>bind&#40;signalName&#41;</code> reads a controller signal as a CSS custom
       property (timeline tracks, range-driven paint).
     </p>
     <grid cols="2" gap="2">

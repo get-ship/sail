@@ -14,7 +14,7 @@
 // still document the seam.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { configExample, usageExample } from './snippets'
+import { configExample, usageExample } from '../../../src/compositions/deck-data-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ configExample, usageExample }))
 </controller>

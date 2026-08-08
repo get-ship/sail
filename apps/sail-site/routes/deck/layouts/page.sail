@@ -6,7 +6,7 @@
 // /deck/layouts — adapted from packages/deck/docs/routes/layouts.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { layoutFile, layoutChain } from './snippets'
+import { layoutFile, layoutChain } from '../../../src/compositions/deck-layouts-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ layoutFile, layoutChain }))
 </controller>

@@ -12,7 +12,7 @@
 // and the sniffEscapeHatches output never leak into the inferred scope.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { evalExample, hatchExample } from './snippets'
+import { evalExample, hatchExample } from '../../../src/compositions/ai-eval-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ evalExample, hatchExample }))
 </controller>

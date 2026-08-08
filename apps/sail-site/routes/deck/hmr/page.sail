@@ -6,7 +6,7 @@
 // /deck/hmr — adapted from packages/deck/docs/routes/hmr.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { devCmd } from './snippets'
+import { devCmd } from '../../../src/compositions/deck-hmr-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
 </controller>

@@ -4,7 +4,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { routeExample, readExample } from './snippets'
+import { routeExample, readExample } from '../../../src/compositions/deck-dynamic-routes-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ routeExample, readExample }))
 </controller>

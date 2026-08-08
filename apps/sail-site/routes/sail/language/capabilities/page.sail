@@ -5,7 +5,7 @@
 
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-language-capabilities-snippets'
 
 export default controller((ctx: ControllerScope<Scope>) => {
   const here = derived(() => ctx.route.pathname())

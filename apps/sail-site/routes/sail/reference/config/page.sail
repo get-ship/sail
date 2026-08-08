@@ -6,7 +6,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { CONFIG_KEYS } from '../../../../src/language-surface.gen'
+import { CONFIG_KEYS } from '../../../../src/compositions/language-surface'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   keys: () => CONFIG_KEYS,

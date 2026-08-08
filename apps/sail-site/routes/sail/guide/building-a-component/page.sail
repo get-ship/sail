@@ -8,7 +8,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../../src/compositions/sail-guide-building-a-component-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   return { code }
@@ -78,7 +78,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <p>
     <code>ctx</code> is how the controller reads its own props, so the
-    per-person share is <code>ctx.total() / people()</code>. Formatting is
+    per-person share is <code>ctx.total&#40;&#41; / people()</code>. Formatting is
     ordinary code and belongs here rather than in the markup.
   </p>
   <code-block code={code.controller} lang="sail"></code-block>

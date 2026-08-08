@@ -13,7 +13,7 @@ import {
   BIND_TARGETS,
   FOREIGN_IDIOMS,
   BLOCKS,
-} from '../../../../src/language-surface.gen'
+} from '../../../../src/compositions/language-surface'
 
 const MODIFIER_ROWS = EVENT_MODIFIERS.map((m) => ({
   key: m.canonical,

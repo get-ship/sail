@@ -6,7 +6,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
+import { PROP_REGISTRY } from '../../../src/compositions/prop-registry'
 import {
   SX_ATOMS,
   LAYOUT_KEYWORDS,
@@ -19,8 +19,8 @@ import {
   SEMANTIC_PROPS,
   AUTHORING_BANS,
   REGION_CAPABILITY_MATRIX,
-} from '../../../src/language-surface.gen'
-import { AUTHOR_RUNTIME_COUNT, RUNTIME_CATEGORIES } from '../../../src/runtime-surface.gen'
+} from '../../../src/compositions/language-surface'
+import { AUTHOR_RUNTIME_COUNT, RUNTIME_CATEGORIES } from '../../../src/compositions/runtime-surface'
 
 interface SectionCard {
   href: string

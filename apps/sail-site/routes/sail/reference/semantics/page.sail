@@ -10,7 +10,7 @@ import {
   SEMANTIC_PROPS,
   HOST_ANATOMY,
   AUTHORING_BANS,
-} from '../../../../src/language-surface.gen'
+} from '../../../../src/compositions/language-surface'
 
 function anatomySummary(a: {
   role: string | null

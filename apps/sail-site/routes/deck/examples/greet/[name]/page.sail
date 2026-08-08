@@ -1,17 +1,27 @@
 <!--
   /deck/examples/greet/[name] — adapted from
   packages/deck/docs/routes/examples/greet/[name]/page.sail. A live [param]
-  route: routes/examples/greet/[name]/page.sail matches /examples/greet/:name.
-  `route` is ambient in every route; route.params.name() reads the segment
-  as a signal, so the heading tracks the URL.
+  route: routes/deck/examples/greet/[name]/page.sail matches
+  /deck/examples/greet/:name. The controller reads ctx.route.params.name()
+  (host-granted on route files) so the heading tracks the URL.
 -->
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+
+export default controller((ctx: ControllerScope<Scope>) => {
+  const name = derived(() => ctx.route.params.name?.() ?? '')
+  return { name }
+})
+</controller>
+
 <article style({ box: maxW(breakpoint-tablet).mx(auto) })>
   <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Live example</p>
-  <h1>Hello, {route.params.name()}.</h1>
+  <h1>Hello, {name()}.</h1>
   <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
-    This page is <code>routes/examples/greet/[name]/page.sail</code>. The
-    <code style(name)></code> directory is a route parameter, and
-    <code>route.params.name()</code> reads it as a signal.
+    This page is <code>routes/deck/examples/greet/&#91;name&#93;/page.sail</code>. The
+    <code>&#91;name&#93;</code> directory is a route parameter, and
+    <code>ctx.route.params.name&#40;&#41;</code> reads it as a signal.
   </p>
   <p>
     Change the URL to change the greeting — try

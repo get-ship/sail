@@ -4,7 +4,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { routeTree, colocated } from './snippets'
+import { routeTree, colocated } from '../../../src/compositions/deck-routing-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ routeTree, colocated }))
 </controller>

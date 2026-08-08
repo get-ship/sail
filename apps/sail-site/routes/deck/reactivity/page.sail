@@ -9,7 +9,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { code } from './snippets'
+import { code } from '../../../src/compositions/deck-reactivity-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
 </controller>
@@ -35,14 +35,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
   <p>
     deck injects a <code>route</code> handle into every route scope, and its fields
     are signals — <code>route.params.&lt;name&gt;()</code>,
-    <code>route.query.&lt;name&gt;()</code>, <code>route.pathname()</code>, and
-    <code>route.hash()</code>. A client-side navigation updates them in place, so
+    <code>route.query.&lt;name&gt;()</code>, <code>route.pathname&#40;&#41;</code>, and
+    <code>route.hash&#40;&#41;</code>. A client-side navigation updates them in place, so
     only the bindings that read the URL re-run: no document reload, no re-mount.
   </p>
   <code-block code={code.routeSignals}></code-block>
   <p>
     See it live: the <a href="/deck/examples/greet/ada">greet</a> route reads
-    <code>route.params.name()</code>, so its heading tracks the URL as you follow
+    <code>route.params.name&#40;&#41;</code>, so its heading tracks the URL as you follow
     the links.
   </p>
 

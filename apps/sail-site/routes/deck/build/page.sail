@@ -6,7 +6,7 @@
 // /deck/build — adapted from packages/deck/docs/routes/build.
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { buildCmd, buildOut, baseCmd } from './snippets'
+import { buildCmd, buildOut, baseCmd } from '../../../src/compositions/deck-build-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ buildCmd, buildOut, baseCmd }))
 </controller>

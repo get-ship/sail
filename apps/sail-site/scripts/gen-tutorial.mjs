@@ -3,7 +3,8 @@
 // load `packages/sail/tutorial/src/prose/<slug>.md` (flat files: frontmatter +
 // body) and the paired `lessons/<slug>/{starter,solved}/` sources (one `.sail`
 // per dir, stem = custom-element tag, controller block inline when the lesson
-// has state), render the prose body to HTML here, and write `src/tutorial-data.ts`.
+// has state), render the prose body to HTML here, and write
+// `src/compositions/tutorial-data.ts` (import-convention home).
 //
 // Run: `node scripts/gen-tutorial.mjs` (from apps/sail-site). The output is
 // committed so the deck build needs no extra step.
@@ -16,7 +17,7 @@ const REPO = resolve(__dirname, '../../..')
 const TUT = join(REPO, 'packages/sail/tutorial/src')
 const PROSE = join(TUT, 'prose')
 const LESSONS = join(TUT, 'lessons')
-const OUT = resolve(__dirname, '../src/tutorial-data.ts')
+const OUT = resolve(__dirname, '../src/compositions/tutorial-data.ts')
 
 // ── tiny markdown → HTML ────────────────────────────────────────────────────
 // Handles: ATX headings, paragraphs, ul/ol lists, blockquotes, inline code,
