@@ -7,7 +7,7 @@
 // ./snippets.ts so the site-wide snippet guard compiles every one
 // of them.
 import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
-import { usage } from './snippets'
+import { usage } from './component-detail-snippets'
 
 export interface PropRow {
   name: string
@@ -32,7 +32,7 @@ export interface DetailEntry {
   usage: string
 }
 
-const TONES = 'default · primary · info · success · warning · destructive · accent · muted'
+const TONES = 'primary · info · success · warning · destructive · accent · muted'
 
 // The props table is GENERATED: names, types and defaults come from the
 // compiler's prop registry (the same <scope> props declarations the
