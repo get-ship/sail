@@ -1,15 +1,8 @@
 <!--
-  /theming — themes are the argument made visible: components read tokens,
-  never colors, so one attribute repaints the world. The page is its own
-  demo — every switch below restyles the page you are reading.
+  /sail/language/theming — themes as token sets; live pick repaints the page.
 -->
 
 <controller>
-// /theming — the live theme switchboard. `pick` is the same two calls the
-// top-bar <theme-picker> makes: applyTheme (theme + mode
-// class) and persistTheme (survives reload). The page IS the preview — every
-// component on it reads tokens, so the pick repaints the reader's world.
-
 import type { ControllerScope } from '@ship/sail-runtime'
 import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from '@ship/tokens/themes'
 import type { Scope } from './page.sail'
@@ -31,10 +24,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Concepts</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style list = { box: padL(6), paint: list(decimal) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column style(page)>
+  <p style(eyebrow)>Concepts</p>
   <h1>Theming</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     A theme is a complete aesthetic — palette, surfaces, radii, shadows,
     typography, motion — applied as one attribute. Nine ship with the
     framework. There is no light/dark switch; dark is a property a theme
@@ -81,7 +83,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     layer that captures intent; reach for primitives only when no semantic
     token fits.
   </p>
-  <ol style({ box: padL(6), paint: list(decimal) })>
+  <ol style(list)>
     <li>
       <strong>Semantic surfaces</strong> — <code>--surface-0..3</code>,
       <code>--card</code>, <code>--popover</code>, <code>--backdrop</code>.
@@ -94,7 +96,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
       <code>--muted</code> (and their <code>-foreground</code> partners).
       Status UI spends these directly via Style
-      (<code style({ paint: bg(destructive) })></code>, <code style({ paint: colorMix(primary, 15) })></code>).
+      (<code>style&#40;&#123; paint: bg(destructive) &#125;&#41;</code>,
+      <code>style&#40;&#123; paint: colorMix(primary, 15) &#125;&#41;</code>).
       The L1 <code>tone</code> prop selects which hue a component paints —
       it is not a CSS channel and there is no <code>tone-*-bg/fg</code> ramp.
     </li>
@@ -128,11 +131,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     few brand tokens, and every component keeps reading the same names.
   </p>
 
-  <p style({ box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(footNote)>
     For the full surface: <a href="/sail/reference/config">reference → Config</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/language/errors">← Errors</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>
   </row>

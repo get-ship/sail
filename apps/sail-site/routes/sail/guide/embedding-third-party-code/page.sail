@@ -1,9 +1,6 @@
 <!--
-  /sail/guide/embedding-third-party-code — the config-grant story told as a
-  task. Two real grants, two real components, two verbatim config files:
-  code-editor needs `unconfined` (dynamic import), canvas needs
-  `network: ["self"]` (fetch). Different grants, different reasons — the page
-  keeps them apart on purpose.
+  /sail/guide/embedding-third-party-code — config grants: network vs unconfined,
+  told via real canvas + code-editor packages.
 -->
 
 <controller>
@@ -16,10 +13,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Guide</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Guide</p>
   <h1>Embedding third-party code</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     Sooner or later a component needs something the language does not hand
     it: a library loaded on demand, or a call to a server. Both are
     available, and both are refused until a file next to your component says
@@ -82,7 +87,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>connect-src</code> Content-Security-Policy header from the same
     list, so the browser refuses the connection too.
   </p>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     A URL built at runtime rather than written as a literal is allowed only
     when the allowlist is non-empty; the compiler cannot check a value it
     cannot see, so it defers to the runtime and the CSP.
@@ -114,7 +119,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     The two grants are independent; neither implies the other. If your
     component talks to a server, you want <code>network</code>, with the
-    narrowest list that works — usually <code style("self")></code>. If it must
+    narrowest list that works — usually <code>"self"</code>. If it must
     evaluate code it chooses at runtime — a lazily loaded module, a plugin
     system — <code>unconfined</code> is the only option, and the honest way
     to use it is to keep that code in its own package so the grant covers as
@@ -138,7 +143,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>unconfined</code>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/guide/making-a-theme">← Making a theme</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>
   </row>

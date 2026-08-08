@@ -1,8 +1,6 @@
 <!--
-  /sail/guide/building-a-component — the walkthrough. One component,
-  apps/sail-site/src/bill-split/bill-split.sail, grown from an empty file in
-  six steps. Every snippet is a slice of that real file, and the finished
-  thing runs at the bottom of this page.
+  /sail/guide/building-a-component — walkthrough of bill-split.sail in six
+  steps. Snippets are slices of the real file; the finished tag runs below.
 -->
 
 <controller>
@@ -15,10 +13,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column gap="5" style({ box: maxW(breakpoint-tablet).mx(auto) })>
-  <p style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })>Guide</p>
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
+<column gap="5" style(page)>
+  <p style(eyebrow)>Guide</p>
   <h1>Building a component</h1>
-  <p style({ paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) })>
+  <p style(lead)>
     We are going to write one component from an empty file: a bill splitter
     that divides a total between however many people are at the table. Six
     steps, each one a small change to the step before it. At the end it runs
@@ -97,7 +104,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Channels group the setters — <code>box</code> for space and size,
     <code>paint</code> for color and border, <code>text</code> for type.
     Values are design tokens: <code>fontSize(sm)</code>,
-    <code>fg(muted-foreground)</code>, <code>pad(4)</code>.
+    <code>fg(muted-foreground)</code>, <code>pad(4)</code>. Prefer
+    <code>style name = &#123; … &#125;</code> in scope when the same paint
+    repeats, then attach <code>style&#40;name&#41;</code>.
   </p>
   <p>
     The values are a closed set. <code>fg(muted-foreground)</code> compiles;
@@ -135,11 +144,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.usage} lang="sail"></code-block>
   <p>And that is the component, running here:</p>
   <bill-split label="Dinner" total="96">
-    <p slot="note" style({ paint: fg(muted-foreground), text: fontSize(xs) })>
+    <p slot="note" style(mutedXs)>
       Tip included. Arguments not.
     </p>
   </bill-split>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>
+  <p style(mutedSm)>
     Press the buttons. The share is a <code>derived</code> value, so it
     follows the headcount without anything being wired between them.
   </p>
@@ -153,7 +162,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/language/animation">Animation</a>.
   </p>
 
-  <row justify="between" gap="2" style({ box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) })>
+  <row justify="between" gap="2" style(footNav)>
     <a variant="default" href="/sail/elements">← Using components</a>
     <a variant="solid" tone="primary" href="/sail/guide/forms">Forms →</a>
   </row>

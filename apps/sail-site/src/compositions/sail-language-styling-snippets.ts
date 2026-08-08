@@ -57,14 +57,13 @@ export const code = {
   dynamic: `<controller>
 export default controller(() => {
   const shift = signal("0")
-  const px = signal("0px")
-  effect(() => px.set(shift() + "px"))
-  return { shift, px }
+  const shiftPx = derived((): number => Number(shift()) || 0)
+  return { shift, shiftPx }
 })
 </controller>
 
 <input type="range" min="0" max="200" bind:value={shift} />
-<card style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(px)) })>
+<card style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(shiftPx)) })>
 </card>`,
 
   layout: `<row gap="3" align="center">...</row>
