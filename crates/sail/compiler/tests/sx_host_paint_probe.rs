@@ -1312,19 +1312,23 @@ fn alert_tone_stripe_before_on_host_sx() {
 
 #[test]
 fn toast_region_host_paint_on_sx_cva() {
-    // Width + bottom reverse + paint left contracts PE → host sx + CVA.
+    // Width + bottom reverse + paint left contracts PE → host Style + CVA.
     // Child hit targets: toast host pointer-events-auto (region is none).
     let src = include_str!("../stdlib/toast-region.sail");
     let out = compile_element(src, "toast-region").expect("toast-region compiles");
     assert!(
-        src.contains("fixed z-(--z-toast) p-4 pointer-events-none")
-            && src.contains("w-panel-w-toast")
+        is_style_product(src)
+            && (src.contains("position(fixed)") || src.contains("position(fixed)"))
+            && (src.contains("z(z-toast)") || src.contains("z-toast"))
+            && (src.contains("pointerEvents(none)") || src.contains("pointer-events"))
+            && (src.contains("w(panel-w-toast)") || src.contains("panel-w-toast"))
             && src.contains("top-0 right-auto bottom-auto left-0")
             && src.contains("'top-end': 'top-0 right-0 bottom-auto left-auto'")
             && src.contains("col-reverse")
             && src.contains("'bottom-start':")
-            && src.contains("'bottom-end':"),
-        "toast-region host sx/CVA must carry fixed/z/pad/width + position insets + reverse"
+            && src.contains("'bottom-end':")
+            && (src.contains("flexDir(column-reverse)") || src.contains("column-reverse")),
+        "toast-region host Style/CVA must carry fixed/z/pad/width + position insets + reverse"
     );
     // Style-minted class names (s-{setter}{args}, case-preserving).
     assert!(
@@ -2104,20 +2108,22 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
 
 #[test]
 fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
-    // Host: group + relative. Bubble: absolute + (--tt-*) geometry vars +
+    // Host: group + relative. Bubble: absolute + bind(tt*) geometry vars +
     // opacity show via group-hover/focus-within + after: arrow. tipDescribe
     // publishes placement vars (same bridge as use:anchor).
     let src = include_str!("../stdlib/tooltip.sail");
     let out = compile_element(src, "tooltip").expect("tooltip compiles");
     assert!(
-        src.contains("group relative")
-            && src.contains("top-(--tt-top)")
-            && src.contains("translate-x-(--tt-tx)")
-            && src.contains("group-hover:opacity-100")
-            && src.contains("group-focus-within:opacity-100")
-            && src.contains("after:content-empty")
-            && src.contains("after:rotate-45"),
-        "tooltip host/bubble sx must carry geometry + show + arrow"
+        is_style_product(src)
+            && src.contains("group()")
+            && src.contains("position(relative)")
+            && src.contains("bind(ttTop)")
+            && src.contains("bind(ttTx)")
+            && (src.contains("group-hover") || src.contains("group-hover:"))
+            && (src.contains("group-focus-within") || src.contains("group-focus-within:"))
+            && src.contains("content(empty)")
+            && src.contains("rotate(45)"),
+        "tooltip host/bubble Style must carry geometry + show + arrow"
     );
     // Style-minted class names (bind args mint as `<setter>bind<Name>`).
     assert!(

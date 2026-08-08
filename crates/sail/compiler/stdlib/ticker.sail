@@ -1,11 +1,11 @@
 <!--
   <ticker> — infinite linear marquee. Host overflow Style; track is a nowrap
-  row. Duration/reverse drive use:marquee (motion loop) — not contracts PE.
+  row. Duration/reverse drive use:marquee (motion loop).
 
-  Track is two identical copies side-by-side (second is decorative/hidden). Marquee
-  translates the track by -50% (or +50% reverse) so the seam is invisible.
-  w(max) on the track is required: without it the row collapses to host width
-  and percent translate moves nothing useful.
+  Track is two identical copies side-by-side (second is decorative/hidden).
+  Marquee translates the track by -50% (or +50% reverse) so the seam is
+  invisible. w(max) on the track is required: without it the row collapses to
+  host width and percent translate moves nothing useful.
 -->
 
 <scope>
