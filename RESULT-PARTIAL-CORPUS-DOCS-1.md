@@ -12,7 +12,7 @@ composition that was loosely called “partials.”
 
 ## SHA
 
-Branch tip on `job/partial-corpus-docs-1` (local only; no push). See `git log -1 --oneline`.
+`575e445b` on `job/partial-corpus-docs-1` (corpus + docs). Local only; no push.
 
 ## Delivered
 
