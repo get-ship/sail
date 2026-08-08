@@ -16,12 +16,12 @@
     seed: Flight[] = []
   }
 
-  const card = style({ box: pad(4).w(full) })
-  const titleText = style({ text: textCase(uppercase).tracking(wide).fontSize(sm) })
-  const meta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const list = style({ box: mt(3), text: fontFamily(mono).fontSize(sm) })
-  const city = style({ text: truncate() })
-  const gate = style({ paint: fg(muted-foreground) })
+  style card = { box: pad(4).w(full) }
+  style titleText = { text: textCase(uppercase).tracking(wide).fontSize(sm) }
+  style meta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style list = { box: mt(3), text: fontFamily(mono).fontSize(sm) }
+  style city = { text: truncate() }
+  style gate = { paint: fg(muted-foreground) }
 </scope>
 
 <controller>

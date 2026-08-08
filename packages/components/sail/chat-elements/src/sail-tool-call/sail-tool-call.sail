@@ -32,20 +32,20 @@
     open = false
   }
 
-  const host = style({ box: position(relative).overflow(hidden), paint: group().borderWidth(1).border(border).radius(md).bg(card) })
-  const statusBg = style({ when: { groupStateRunning: { paint: bg(info) }, groupStateOk: { paint: bg(success) }, groupStateError: { paint: bg(destructive) } } })
-  const statusFg = style({ when: { groupStateRunning: { paint: fg(info) }, groupStateOk: { paint: fg(success) }, groupStateError: { paint: fg(destructive) } } })
+  style host = { box: position(relative).overflow(hidden), paint: group().borderWidth(1).border(border).radius(md).bg(card) }
+  style statusBg = { when: { groupStateRunning: { paint: bg(info) }, groupStateOk: { paint: bg(success) }, groupStateError: { paint: bg(destructive) } } }
+  style statusFg = { when: { groupStateRunning: { paint: fg(info) }, groupStateOk: { paint: fg(success) }, groupStateError: { paint: fg(destructive) } } }
   // Status rail only — collapsible owns the caret (one disclosure chrome).
-  const rail = style({ box: position(absolute).left(0).top(0).bottom(0).w(1) })
-  const dot = style({ paint: shadow(none) })
-  const statusLabel = style({ box: ml(auto), text: fontSize(xs).textCase(uppercase).tracking(wide) })
+  style rail = { box: position(absolute).left(0).top(0).bottom(0).w(1) }
+  style dot = { paint: shadow(none) }
+  style statusLabel = { box: ml(auto), text: fontSize(xs).textCase(uppercase).tracking(wide) }
   // padS clears the absolute rail so the first glyph never sits under it.
-  const trigger = style({ box: padY(2).padS(4).padE(3) })
-  const nameText = style({ paint: fg(foreground), text: fontFamily(mono).fontSize(sm).fontWeight(medium).truncate() })
-  const body = style({ box: padY(2).padS(4).padE(3), paint: borderTWidth(1).borderT(border), text: fontFamily(mono).fontSize(sm).leading(normal) })
-  const sectionLabel = style({ box: display(block).mb(1), paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide) })
-  const pre = style({ text: whitespace(pre-wrap) })
-  const resultBlock = style({ box: mt(2) })
+  style trigger = { box: padY(2).padS(4).padE(3) }
+  style nameText = { paint: fg(foreground), text: fontFamily(mono).fontSize(sm).fontWeight(medium).truncate() }
+  style body = { box: padY(2).padS(4).padE(3), paint: borderTWidth(1).borderT(border), text: fontFamily(mono).fontSize(sm).leading(normal) }
+  style sectionLabel = { box: display(block).mb(1), paint: fg(muted-foreground), text: fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style pre = { text: whitespace(pre-wrap) }
+  style resultBlock = { box: mt(2) }
 </scope>
 
 <div data-state={status()} style(host)>

@@ -27,10 +27,10 @@
     content = ''
   }
 
-  const host = style({ box: position(relative), paint: group() })
+  style host = { box: position(relative), paint: group() }
   // No opacity transition — linger after leave was a real product bug.
-  const bubble = style({ box: position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).padY(1).padX(2), paint: translateX(bind(ttTx)).z(popover).opacity(0).bg(tooltip).fg(tooltip.foreground).radius(md).shadow(md).pointerEvents(none), text: fontFamily(body).fontSize(xs).fontWeight(medium).whitespace(nowrap) })
-  const arrow = style({ box: position(absolute).w(2).h(2).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt)), paint: content(empty).bg(tooltip).rotate(45) })
+  style bubble = { box: position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).padY(1).padX(2), paint: translateX(bind(ttTx)).z(popover).opacity(0).bg(tooltip).fg(tooltip.foreground).radius(md).shadow(md).pointerEvents(none), text: fontFamily(body).fontSize(xs).fontWeight(medium).whitespace(nowrap) }
+  style arrow = { box: position(absolute).w(2).h(2).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt)), paint: content(empty).bg(tooltip).rotate(45) }
 </scope>
 
 <span use:tipDescribe style(host)>

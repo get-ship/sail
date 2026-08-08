@@ -304,8 +304,11 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
                 });
             }
         }
-        // Style const values: `const doorCard = style({…}).when(…)` so template
-        // attachments that reference them typecheck under tsgo.
+        // Style values from `<scope>` so template attachments that reference
+        // them typecheck under tsgo.
+        // Legacy `const name = style(…)` is quoted as-authored.
+        // First-class `style name = …` stays Style — do not invent a TS
+        // `const name = style(…)` rewrite; only declare the binding name.
         let mut style_const_block = String::new();
         for style_src in collect_scope_style_consts(raw_body) {
             style_const_block.push_str(&quote_style_dsl_for_tsc(&style_src));
@@ -313,8 +316,13 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
                 style_const_block.push('\n');
             }
         }
+        for name in collect_scope_style_decl_names(raw_body) {
+            style_const_block.push_str("declare const ");
+            style_const_block.push_str(&name);
+            style_const_block.push_str(": any;\n");
+        }
         if !style_const_block.is_empty() {
-            view_text.push_str("\n// ── <scope> Style consts (channel form) ────────────────────\n");
+            view_text.push_str("\n// ── <scope> Style values (channel form) ────────────────────\n");
             view_text.push_str(&style_const_block);
         }
     }
@@ -1016,7 +1024,7 @@ fn collect_template_exprs(original: &str, stripped: &str) -> Vec<ExprEmbed> {
     out
 }
 
-/// Collect full `const name = style(…)` declarations from a `<scope>` body.
+/// Collect full legacy `const name = style(…)` declarations from a `<scope>` body.
 fn collect_scope_style_consts(scope_body: &str) -> Vec<String> {
     let mut out = Vec::new();
     let bytes = scope_body.as_bytes();
@@ -1075,6 +1083,110 @@ fn collect_scope_style_consts(scope_body: &str) -> Vec<String> {
         }
     }
     out
+}
+
+/// Collect names from first-class `style name = …` declarations in `<scope>`.
+///
+/// Does **not** invent a TS `const name = style(…)` form — callers declare the
+/// binding only so product `style(name)` refs typecheck.
+fn collect_scope_style_decl_names(scope_body: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = scope_body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !scope_body.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if !scope_body[i..].starts_with("style") {
+            i += 1;
+            continue;
+        }
+        // Word boundary before `style`
+        if i > 0 {
+            let prev = bytes[i - 1] as char;
+            if prev.is_ascii_alphanumeric() || prev == '_' || prev == '$' {
+                i += 1;
+                continue;
+            }
+        }
+        let after = i + 5;
+        // Not `style(` product call / `style.method`
+        let mut j = after;
+        while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+            j += 1;
+        }
+        if j >= bytes.len() || !scope_body.is_char_boundary(j) {
+            i = after;
+            continue;
+        }
+        if bytes[j] == b'(' || bytes[j] == b'.' {
+            i = after;
+            continue;
+        }
+        // Need `style <ident> =`
+        if !(bytes[j].is_ascii_alphabetic() || bytes[j] == b'_' || bytes[j] == b'$') {
+            i = after;
+            continue;
+        }
+        let name_start = j;
+        j += 1;
+        while j < bytes.len()
+            && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'$')
+        {
+            j += 1;
+        }
+        let name = scope_body[name_start..j].to_string();
+        let mut k = j;
+        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+            k += 1;
+        }
+        if bytes.get(k) != Some(&b'=') || bytes.get(k + 1) == Some(&b'>') {
+            i = after;
+            continue;
+        }
+        out.push(name);
+        // Advance past `=` and a best-effort RHS scan so we don't re-match.
+        k += 1;
+        while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+            k += 1;
+        }
+        i = scan_balanced_style_rhs_end(scope_body, k);
+    }
+    out
+}
+
+/// End index of a Style RHS starting at `start` (`;` / newline at depth 0).
+fn scan_balanced_style_rhs_end(s: &str, start: usize) -> usize {
+    let bytes = s.as_bytes();
+    let mut i = start;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' | b'(' | b'[' => depth += 1,
+            b'}' | b')' | b']' => depth -= 1,
+            b';' if depth == 0 => return i + 1,
+            b'\n' if depth <= 0 => {
+                if !s[start..i].trim().is_empty() {
+                    return i + 1;
+                }
+            }
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' {
+                        i += 2;
+                        continue;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    bytes.len()
 }
 
 /// Collect `style(…)` product expressions including trailing `.when(…)` chains.
@@ -1603,8 +1715,8 @@ export default controller((ctx) => ({ count: signal(0) }))
         let src = include_str!("../../../../apps/studio/src/studio-list-row/studio-list-row.sail");
         let v = build_virtual_ts(src).expect("virtual");
         assert!(
-            v.view_text.contains("style({") && v.view_text.contains(".when("),
-            "full style spine required, got:\n{}",
+            v.view_text.contains("style({") && v.view_text.contains("when:"),
+            "full style spine (style({{…}}) + object when:) required, got:\n{}",
             v.view_text
         );
         assert!(
@@ -1616,6 +1728,29 @@ export default controller((ctx) => ({ count: signal(0) }))
         assert!(
             !v.view_text.contains("void (() => (box:"),
             "brace-only channel body leak:\n{}",
+            v.view_text
+        );
+    }
+
+    #[test]
+    fn style_decl_names_are_declared_without_inventing_const() {
+        let src = r#"
+<scope>
+  style host = { paint: bg(primary) }
+  props: { label = '' }
+</scope>
+<div style(host)>{label()}</div>
+"#;
+        let v = build_virtual_ts(src).expect("virtual");
+        assert!(
+            v.view_text.contains("declare const host: any"),
+            "style name = should declare binding for tsc, got:\n{}",
+            v.view_text
+        );
+        // Do not invent TS `const host = style(…)` from the new form.
+        assert!(
+            !v.view_text.contains("const host = style"),
+            "must not invent const rewrite for style name =:\n{}",
             v.view_text
         );
     }

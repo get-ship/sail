@@ -3854,10 +3854,12 @@ mod tests {
     #[test]
     fn condition_prefix_wraps_in_media() {
         // Utility-string condition prefixes are residual product (hard error /
-        // empty lower). Style product uses when({…}) for browser state;
+        // empty lower). Style product uses object-key when: for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out = preprocess(r#"<div style(when({ hover: style({ paint: shadow(none) }) }))> x</div>"#)
-            .expect("preprocess");
+        let out = preprocess(
+            r#"<div style({ when: { hover: { paint: shadow(none) } } })> x</div>"#,
+        )
+        .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
             out.contains("box-shadow") || out.contains("shadow") || out.contains("sx-"),

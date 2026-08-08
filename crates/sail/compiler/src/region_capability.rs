@@ -57,11 +57,11 @@ pub const REGION_CAPABILITY_MATRIX: &[RegionCapability] = &[
     },
     RegionCapability {
         region: "scope",
-        capability: "Style consts (const name = style.…)",
+        capability: "Style declarations (style name = {…}; legacy const name = style.…)",
         legal: "yes",
         status: "enforced",
         enforcement: "parse::scope_block (StyleEnv) + sail-style lower",
-        notes: "Channel values as compile-time Style only",
+        notes: "Channel values as compile-time Style only; prefer style name =",
     },
     RegionCapability {
         region: "scope",

@@ -3,8 +3,8 @@
   Nav: buttons. Fields: table. Product copy only.
 -->
 <scope>
-  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
-  const muted = style({ paint: fg(muted-foreground), text: fontSize(sm) })
+  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
 <controller>

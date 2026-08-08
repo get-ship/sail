@@ -60,24 +60,24 @@ export default controller((ctx) => {
 
 <scope>
  // Fill the site-header <main> budget. Independent rail + main scrollports.
- const shell = style({ box: minH(0).h(full).minW(0).overflow(hidden) })
+ style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
  // Plain div rail: fixed width, never grows into the content pane.
  // Mobile base = display(none); tablet+ restores flex column.
  // NOT <column> — .sail-col { display:flex } beats .sx-displaynone.
  // 14rem rail (space-56 ≡ --panel-rail-w).
- const rail = style({ box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(navbar).fg(navbar-foreground), when: { tablet: { box: display(flex) } } })
- const railLabel = style({ box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) })
+ style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(navbar).fg(navbar-foreground), when: { tablet: { box: display(flex) } } }
+ style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
  // Current must paint over the base muted ink — use a filled pill so the
  // active page is obvious even when cascade order is unkind.
- const railLink = style({ box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } })
+ style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
  // Docs main: own scrollport (independent of rail).
- const mainDocs = style({ box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } })
+ style mainDocs = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
  // Workbench: flex column + h(fill). Route roots must also use h(fill)
  // (tutorial) — grow alone collapses when the slot host is a block wrapper.
- const mainWorkbench = style({ box: display(flex).flexDir(column).basis(0).minH(0).minW(0).h(fill).overflow(hidden) })
+ style mainWorkbench = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).h(fill).overflow(hidden) }
  // Mobile-only chrome — plain div so display:none wins at tablet+.
- const mobileBar = style({ box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar), when: { tablet: { box: display(none) } } })
- const contentCol = style({ box: minH(0).minW(0) })
+ style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(navbar), when: { tablet: { box: display(none) } } }
+ style contentCol = { box: minH(0).minW(0) }
 </scope>
 
 <if {workbench()}>

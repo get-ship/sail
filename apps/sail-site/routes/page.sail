@@ -54,49 +54,49 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   // Do NOT pair overflowX(hidden) with a height-capped flex parent and leave Y
   // visible: CSS coerces Y→auto and sections become independent scrollports.
   // Document shell is content-sized; overflowX alone is fine (no Y scrollport).
-  const page = style({ box: w(full).maxW(full).minW(0).overflowX(hidden), paint: bg(surface-0) })
+  style page = { box: w(full).maxW(full).minW(0).overflowX(hidden), paint: bg(surface-0) }
   // Marketing sections: overflowX clips tickers/bleed; shrink=0 in markup so
   // they never flex-compress into mini-scrollpanes under residual height locks.
-  const hero = style({ box: position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(20).padB(16) } } })
-  const glow = style({ box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).z(base) })
-  const heroInner = style({ box: position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
-  const eyebrow = style({ paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
+  style hero = { box: position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(20).padB(16) } } }
+  style glow = { box: left(0).right(0).top(0).h(64), paint: bgGlow(accent).z(base) }
+  style heroInner = { box: position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
   // minW(0) keeps the display word from forcing the page wider than the viewport.
-  const display = style({ box: minW(0).maxW(full).overflow(hidden), paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })
-  const line = style({ box: display(block).minW(0).overflow(hidden) })
-  const lead = style({ box: maxW(breakpoint-mobile).minW(0), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) })
-  const ctaRow = style({ box: w(full).minW(0) })
-  const cta = style({ box: padX(8), paint: radius(full) })
-  const tickerSection = style({ box: position(relative).w(full).maxW(full).h(44).overflow(hidden).my(8).minW(0), paint: z(elevated) })
-  const tickerBand = style({ box: position(absolute).left(-10).right(-10).top(24), paint: rotate(2) })
-  const tickerDark = style({ box: padY(3).overflow(hidden), paint: borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2) })
-  const tickerMono = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm).whitespace(nowrap) })
-  const tickerBandTop = style({ box: position(absolute).left(-10).right(-10).top(12), paint: rotate(-2).z(popover) })
-  const tickerPrimary = style({ box: padY(3).overflow(hidden), paint: bg(primary) })
-  const tickerBold = style({ paint: fg(primary-foreground), text: fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).whitespace(nowrap) })
-  const bento = style({ box: padX(4).padT(6).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(8).padB(12) } } })
-  const grid = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).minW(0) })
-  const cardLink = style({ box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none), when: { hover: { paint: fg(foreground) } } })
+  style display = { box: minW(0).maxW(full).overflow(hidden), paint: fg(foreground), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) }
+  style line = { box: display(block).minW(0).overflow(hidden) }
+  style lead = { box: maxW(breakpoint-mobile).minW(0), paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed).textAlign(center) }
+  style ctaRow = { box: w(full).minW(0) }
+  style cta = { box: padX(8), paint: radius(full) }
+  style tickerSection = { box: position(relative).w(full).maxW(full).h(44).overflow(hidden).my(8).minW(0), paint: z(elevated) }
+  style tickerBand = { box: position(absolute).left(-10).right(-10).top(24), paint: rotate(2) }
+  style tickerDark = { box: padY(3).overflow(hidden), paint: borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2) }
+  style tickerMono = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(sm).whitespace(nowrap) }
+  style tickerBandTop = { box: position(absolute).left(-10).right(-10).top(12), paint: rotate(-2).z(popover) }
+  style tickerPrimary = { box: padY(3).overflow(hidden), paint: bg(primary) }
+  style tickerBold = { paint: fg(primary-foreground), text: fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).whitespace(nowrap) }
+  style bento = { box: padX(4).padT(6).padB(10).minW(0).overflowX(hidden), when: { tablet: { box: padX(8).padT(8).padB(12) } } }
+  style grid = { box: w(full).maxW(breakpoint-desktop).mx(auto).minW(0) }
+  style cardLink = { box: display(block).minW(0).w(full), paint: fg(foreground), text: underline(none), when: { hover: { paint: fg(foreground) } } }
   // Equal-height bento cells — quiet surface, real pad. minH only from tablet up
   // so phone cards don’t become full-viewport towers.
-  const cardFill = style({ box: h(full).overflow(hidden), when: { tablet: { box: minH(52) } } })
-  const cardCol = style({ box: h(full).pad(4), when: { tablet: { box: pad(5) } } })
-  const cardEyebrow = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-  const cardTitle = style({ box: mt(1), paint: fg(foreground), text: fontSize(md).fontWeight(semibold).leading(snug) })
-  const cardBody = style({ box: mt(2), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
-  const cardFoot = style({ box: mt(auto).padT(5) })
-  const metric = style({ paint: fg(foreground), text: fontFamily(mono).fontSize(2xl).fontWeight(semibold).nums(tabular).leading(none) })
-  const metricUnit = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-  const swatch = style({ box: w(6).h(6), paint: radius(sm).borderWidth(1).border(border) })
-  const statusLine = style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-  const term = style({ box: padX(3).padY(2_5), paint: bg(surface-0).borderWidth(1).border(border).radius(md).fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })
-  const termAccent = style({ paint: fg(primary) })
-  const foot = style({ box: padX(4).padT(8), when: { tablet: { box: padX(8).padT(12) } } })
-  const footRow = style({ box: w(full).maxW(breakpoint-desktop).mx(auto).padB(6).gap(3), paint: borderBWidth(1).borderB(border).fg(muted-foreground), text: fontFamily(mono).fontSize(sm) })
-  const footLink = style({ paint: fg(muted-foreground), text: underline(none), when: { hover: { paint: fg(primary) } } })
-  const diamond = style({ box: display(inline-block).w(2).h(2), paint: rotate(45).bg(primary).radius(sm) })
-  const wordmarkWrap = style({ box: w(full).maxW(full).minW(0).overflow(hidden) })
-  const wordmark = style({ box: mb(-8).minW(0).maxW(full), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) })
+  style cardFill = { box: h(full).overflow(hidden), when: { tablet: { box: minH(52) } } }
+  style cardCol = { box: h(full).pad(4), when: { tablet: { box: pad(5) } } }
+  style cardEyebrow = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style cardTitle = { box: mt(1), paint: fg(foreground), text: fontSize(md).fontWeight(semibold).leading(snug) }
+  style cardBody = { box: mt(2), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style cardFoot = { box: mt(auto).padT(5) }
+  style metric = { paint: fg(foreground), text: fontFamily(mono).fontSize(2xl).fontWeight(semibold).nums(tabular).leading(none) }
+  style metricUnit = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style swatch = { box: w(6).h(6), paint: radius(sm).borderWidth(1).border(border) }
+  style statusLine = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style term = { box: padX(3).padY(2_5), paint: bg(surface-0).borderWidth(1).border(border).radius(md).fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style termAccent = { paint: fg(primary) }
+  style foot = { box: padX(4).padT(8), when: { tablet: { box: padX(8).padT(12) } } }
+  style footRow = { box: w(full).maxW(breakpoint-desktop).mx(auto).padB(6).gap(3), paint: borderBWidth(1).borderB(border).fg(muted-foreground), text: fontFamily(mono).fontSize(sm) }
+  style footLink = { paint: fg(muted-foreground), text: underline(none), when: { hover: { paint: fg(primary) } } }
+  style diamond = { box: display(inline-block).w(2).h(2), paint: rotate(45).bg(primary).radius(sm) }
+  style wordmarkWrap = { box: w(full).maxW(full).minW(0).overflow(hidden) }
+  style wordmark = { box: mb(-8).minW(0).maxW(full), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) }
 </scope>
 
 <column gap="0" style(page)>

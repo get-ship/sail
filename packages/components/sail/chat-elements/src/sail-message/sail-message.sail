@@ -39,11 +39,11 @@
     status: 'sent' | 'sending' | 'error' = 'sent'
   }
 
-  const host = style({ box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) })
-  const meta = style({ box: padX(half), paint: fg(muted-foreground), text: fontSize(xs) })
-  const fromLabel = style({ text: fontWeight(medium) })
-  const bubble = style({ box: padY(2).padX(3), paint: radius(lg).bg(card).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal), when: { groupStateUser: { paint: bg(hover-bg).borderWidth(1).border(primary) }, groupStateSystem: { paint: bg(muted).fg(muted-foreground) }, groupStateTool: { paint: bg(hover-bg).borderWidth(1).border(accent) }, groupStateError: { paint: borderWidth(1).border(destructive) }, groupStateSending: { paint: opacity(75) }, groupStateCode: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }, groupStateToolCall: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }, groupStateTerminalSnapshot: { paint: bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle), text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) } } })
-  const trailing = style({ box: display(contents) })
+  style host = { box: maxW(full), paint: group().fg(foreground), text: fontFamily(body) }
+  style meta = { box: padX(half), paint: fg(muted-foreground), text: fontSize(xs) }
+  style fromLabel = { text: fontWeight(medium) }
+  style bubble = { box: padY(2).padX(3), paint: radius(lg).bg(card).borderWidth(1).border(border).fg(foreground), text: fontSize(base).leading(normal), when: { groupStateUser: { paint: bg(hover-bg).borderWidth(1).border(primary) }, groupStateSystem: { paint: bg(muted).fg(muted-foreground) }, groupStateTool: { paint: bg(hover-bg).borderWidth(1).border(accent) }, groupStateError: { paint: borderWidth(1).border(destructive) }, groupStateSending: { paint: opacity(75) }, groupStateCode: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }, groupStateToolCall: { text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) }, groupStateTerminalSnapshot: { paint: bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle), text: fontFamily(mono).fontSize(sm).whitespace(pre-wrap) } } }
+  style trailing = { box: display(contents) }
 </scope>
 
 <column

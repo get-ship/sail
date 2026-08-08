@@ -12,8 +12,8 @@
     onDismiss: () => void
 }
 
-  const base = style({ box: padY(3).padX(4), paint: fg(toast.foreground).bg(toast).radius(md).shadow(md).borderWidth(1).border(toast.border).borderSWidth(3).borderS(toast.stripe).pointerEvents(auto), text: fontFamily(body).fontSize(sm) })
-  const close = style({ box: ms(auto), paint: fg(toast.foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer).opacity(70) })
+  style base = { box: padY(3).padX(4), paint: fg(toast.foreground).bg(toast).radius(md).shadow(md).borderWidth(1).border(toast.border).borderSWidth(3).borderS(toast.stripe).pointerEvents(auto), text: fontFamily(body).fontSize(sm) }
+  style close = { box: ms(auto), paint: fg(toast.foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer).opacity(70) }
 </scope>
 
 <row align="start" gap="3" use:autoDismiss use:dismissControl style(base, { paint: borderS(tone), compound: [ { tone: muted, paint: borderS(muted-foreground) } ] })>

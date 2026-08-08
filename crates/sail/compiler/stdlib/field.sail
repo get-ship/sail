@@ -9,10 +9,10 @@
     invalid = false
   }
 
-  const host = style({ paint: group(), text: fontFamily(body) })
-  const hint = style({ box: mt(1), paint: fg(field.hint), text: fontSize(xs).leading(snug) })
-  const error = style({ box: mt(1), paint: fg(field.error), text: fontSize(xs).leading(snug).fontWeight(medium) })
-  const icon = style({ box: size(icon-size-sm) })
+  style host = { paint: group(), text: fontFamily(body) }
+  style hint = { box: mt(1), paint: fg(field.hint), text: fontSize(xs).leading(snug) }
+  style error = { box: mt(1), paint: fg(field.error), text: fontSize(xs).leading(snug).fontWeight(medium) }
+  style icon = { box: size(icon-size-sm) }
 </scope>
 
 <column gap="1" use:describedControl style(host)>

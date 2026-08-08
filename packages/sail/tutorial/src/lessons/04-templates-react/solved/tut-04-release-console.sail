@@ -57,9 +57,9 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const envRow = style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
-  const envName = style({ text: fontSize(sm) })
-  const envRegion = style({ paint: fg(muted-foreground) })
+  style envRow = { box: padX(3).padY(2), paint: bg(surface-1).radius(md) }
+  style envName = { text: fontSize(sm) }
+  style envRegion = { paint: fg(muted-foreground) }
 </scope>
 
 <column gap="4">

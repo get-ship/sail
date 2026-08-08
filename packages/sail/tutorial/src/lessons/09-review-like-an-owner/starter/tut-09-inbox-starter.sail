@@ -11,11 +11,11 @@
     title = 'Support inbox'
   }
 
-  const messageRow = style({ box: padX(3).padY(2), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) })
-  const unreadDot = style({ box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(primary) })
-  const from = style({ text: fontSize(sm) })
-  const muted = style({ paint: fg(muted-foreground) })
-  const emptyImprovised = style({ box: pad(4), paint: fg(muted-foreground), text: fontSize(sm) })
+  style messageRow = { box: padX(3).padY(2), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) }
+  style unreadDot = { box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(primary) }
+  style from = { text: fontSize(sm) }
+  style muted = { paint: fg(muted-foreground) }
+  style emptyImprovised = { box: pad(4), paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 <controller>
 import { query } from '@ship/sail-runtime'

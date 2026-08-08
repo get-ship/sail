@@ -11,24 +11,24 @@
     code = ''
   }
 
-  const base = style({ box: padY(8).padX(4), paint: fg(error-state.foreground).borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs).group(), text: fontFamily(body).textAlign(center) })
-  const sizeMd = style({ box: padY(8).padX(4) })
-  const sizeSm = style({ box: padY(7) })
-  const sizeLg = style({ box: padY(8).padX(6) })
-  const variantDefault = style({ paint: borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) })
+  style base = { box: padY(8).padX(4), paint: fg(error-state.foreground).borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs).group(), text: fontFamily(body).textAlign(center) }
+  style sizeMd = { box: padY(8).padX(4) }
+  style sizeSm = { box: padY(7) }
+  style sizeLg = { box: padY(8).padX(6) }
+  style variantDefault = { paint: borderWidth(1).border(error-state.border).radius(lg).bg(error-state).shadow(xs), text: textAlign(center) }
   // Inline variant keeps destructive brand border + muted fill (intentional brand).
-  const variantInline = style({ box: padY(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none), text: textAlign(start) })
+  style variantInline = { box: padY(3).padX(4), paint: borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none), text: textAlign(start) }
   // Icon face is brand-destructive on muted wash (intentional brand, not pack rest).
-  const icon = style({ box: self(center).size(control-h-xl), paint: radius(lg).bg(muted).fg(destructive).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset) })
-  const glyph = style({ box: size(control-h-2xs) })
-  const copy = style({ box: self(stretch) })
+  style icon = { box: self(center).size(control-h-xl), paint: radius(lg).bg(muted).fg(destructive).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset) }
+  style glyph = { box: size(control-h-2xs) }
+  style copy = { box: self(stretch) }
   // Strong title ink is intentional free foreground (same as empty-state-title alias).
-  const title = style({ paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) })
-  const desc = style({ box: maxW(panel-ch-w-md), paint: fg(error-state.foreground), text: leading(loose).fontSize(sm) })
-  const codeBox = style({ box: padY(1).padX(2).mt(1), paint: fg(error-state.foreground).bg(error-state).borderWidth(1).border(error-state.border).radius(sm), text: fontFamily(mono).fontSize(xs) })
-  const detailsToggle = style({ box: display(none).mt(1).padY(1).padX(2), paint: borderWidth(0).bg(transparent).fg(error-state.foreground).radius(sm).cursor(pointer), text: fontFamily(body).fontSize(xs) })
-  const details = style({ box: display(none).mt(2).padY(2).padX(3).maxW(panel-ch-w-lg), paint: bg(error-state).radius(sm).fg(error-state.foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap).break(words).textAlign(start) })
-  const actions = style({ box: self(center) })
+  style title = { paint: fg(foreground), text: fontFamily(heading).fontWeight(semibold).leading(tight).fontSize(md) }
+  style desc = { box: maxW(panel-ch-w-md), paint: fg(error-state.foreground), text: leading(loose).fontSize(sm) }
+  style codeBox = { box: padY(1).padX(2).mt(1), paint: fg(error-state.foreground).bg(error-state).borderWidth(1).border(error-state.border).radius(sm), text: fontFamily(mono).fontSize(xs) }
+  style detailsToggle = { box: display(none).mt(1).padY(1).padX(2), paint: borderWidth(0).bg(transparent).fg(error-state.foreground).radius(sm).cursor(pointer), text: fontFamily(body).fontSize(xs) }
+  style details = { box: display(none).mt(2).padY(2).padX(3).maxW(panel-ch-w-lg), paint: bg(error-state).radius(sm).fg(error-state.foreground), text: fontFamily(mono).fontSize(xs).whitespace(pre-wrap).break(words).textAlign(start) }
+  style actions = { box: self(center) }
 </scope>
 
 <column

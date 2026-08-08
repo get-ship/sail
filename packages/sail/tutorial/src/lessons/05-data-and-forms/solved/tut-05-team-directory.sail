@@ -47,11 +47,11 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const muteLabel = style({ paint: fg(muted-foreground), text: fontSize(sm) })
-  const loadingRow = style({ box: pad(4), paint: bg(surface-1).radius(md) })
-  const muted = style({ paint: fg(muted-foreground) })
-  const memberRow = style({ box: padX(3).padY(2), paint: bg(surface-1).radius(md) })
-  const memberName = style({ text: fontSize(sm) })
+  style muteLabel = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style loadingRow = { box: pad(4), paint: bg(surface-1).radius(md) }
+  style muted = { paint: fg(muted-foreground) }
+  style memberRow = { box: padX(3).padY(2), paint: bg(surface-1).radius(md) }
+  style memberName = { text: fontSize(sm) }
 </scope>
 
 <column gap="4">

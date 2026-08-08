@@ -12,12 +12,12 @@
     centered = false
   }
 
-  const base = style({ box: display(inline-block).size(icon-size-md), paint: align(middle).fg(spinner.foreground) })
-  const sizeMd = style({ box: size(icon-size-md) })
-  const sizeXs = style({ box: size(icon-size-2xs) })
-  const sizeSm = style({ box: size(icon-size-sm) })
-  const sizeLg = style({ box: size(icon-size-xl) })
-  const ring = style({ box: display(block).size(full), paint: borderWidth(control-stroke).border(solid).border(spinner.track).borderR(currentColor).radius(full).animate(spin) })
+  style base = { box: display(inline-block).size(icon-size-md), paint: align(middle).fg(spinner.foreground) }
+  style sizeMd = { box: size(icon-size-md) }
+  style sizeXs = { box: size(icon-size-2xs) }
+  style sizeSm = { box: size(icon-size-sm) }
+  style sizeLg = { box: size(icon-size-xl) }
+  style ring = { box: display(block).size(full), paint: borderWidth(control-stroke).border(solid).border(spinner.track).borderR(currentColor).radius(full).animate(spin) }
 </scope>
 
 <span style(base, { paint: fg(tone), match: { size: { md: sizeMd, xs: sizeXs, sm: sizeSm, lg: sizeLg } }, compound: [ { centered: true, box: display(block).my(8).mx(auto) } ] })>

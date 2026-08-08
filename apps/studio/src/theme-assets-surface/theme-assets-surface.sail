@@ -3,18 +3,18 @@
   Thin shell: chrome + editor + specimen (draft paint via applyScope bind).
 -->
 <scope>
-  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
-  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const doorTitle = style({ text: fontWeight(semibold) })
-  const editorCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
-  const bandStatus = style({ box: padX(4).padY(2) })
-  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
-  const iconCell = style({ box: w(10).h(10).minW(10).minH(10), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
-  const fullBtn = style({ box: w(full) })
-  const fontHit = style({ box: pad(2_5).minW(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
-  const fontSample = style({ box: minW(0), paint: fg(foreground), text: fontSize(lg).leading(snug) })
-  const catChip = style({ when: { selected: { paint: bg(selected-bg).fg(foreground).border(border) } } })
+  style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
+  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style doorTitle = { text: fontWeight(semibold) }
+  style editorCol = { box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) }
+  style bandStatus = { box: padX(4).padY(2) }
+  style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
+  style iconCell = { box: w(10).h(10).minW(10).minH(10), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
+  style fullBtn = { box: w(full) }
+  style fontHit = { box: pad(2_5).minW(0), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
+  style fontSample = { box: minW(0), paint: fg(foreground), text: fontSize(lg).leading(snug) }
+  style catChip = { when: { selected: { paint: bg(selected-bg).fg(foreground).border(border) } } }
 </scope>
 
 <controller>

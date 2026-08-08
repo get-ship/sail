@@ -42,8 +42,8 @@ export default controller(() => {
 </controller>
 
 <scope>
-  const face = style({ box: pad(6), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) })
-  const clockFace = style({ text: fontSize(4xl).tracking(tight) })
+  style face = { box: pad(6), paint: bg(surface-1).borderWidth(1).border(border).radius(lg) }
+  style clockFace = { text: fontSize(4xl).tracking(tight) }
 </scope>
 
 <column gap="4">

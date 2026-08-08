@@ -20,13 +20,13 @@
 
   // Default solid rides component.chip tokens (muted secondary — not primary).
   // Brand tones only when tone= is set. gap-1 keeps the dismiss mark tight.
-  const base = style({ box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).borderWidth(1).border(solid).bg(chip).fg(chip.foreground).border(chip.border).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(xs) })
-  const sizeMd = style({ box: minH(control-h-2xs).padX(2_5), text: fontSize(sm) })
-  const sizeSm = style({ box: minH(control-h-2xs).padX(2), text: fontSize(xs) })
-  const sizeLg = style({ box: minH(control-h-xs).padX(3), text: fontSize(sm) })
-  const remove = style({ box: display(none).size(icon-size-xs).pad(0), paint: borderWidth(0).bg(transparent).fg(currentColor).cursor(pointer).radius(full).transition(colors).duration(fast).ease(out) })
-  const leading = style({ box: display(contents) })
-  const xmark = style({ box: display(block).size(full), paint: stroke(currentColor).fill(none) })
+  style base = { box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).borderWidth(1).border(solid).bg(chip).fg(chip.foreground).border(chip.border).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(xs) }
+  style sizeMd = { box: minH(control-h-2xs).padX(2_5), text: fontSize(sm) }
+  style sizeSm = { box: minH(control-h-2xs).padX(2), text: fontSize(xs) }
+  style sizeLg = { box: minH(control-h-xs).padX(3), text: fontSize(sm) }
+  style remove = { box: display(none).size(icon-size-xs).pad(0), paint: borderWidth(0).bg(transparent).fg(currentColor).cursor(pointer).radius(full).transition(colors).duration(fast).ease(out) }
+  style leading = { box: display(contents) }
+  style xmark = { box: display(block).size(full), paint: stroke(currentColor).fill(none) }
 </scope>
 
 <row

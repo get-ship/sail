@@ -125,38 +125,38 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <scope>
   // Gutter: catalog was flush to the viewport edge (rail + grid). Real pad.
-  const page = style({ box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } })
+  style page = { box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } }
   // Visible so tooltips/hover-cards can escape the tile; media stages clip themselves.
-  const tile = style({ box: overflow(visible) })
-  const tileCol = style({ box: h(full).overflow(visible) })
+  style tile = { box: overflow(visible) }
+  style tileCol = { box: h(full).overflow(visible) }
   // Flex via <row> (not <center>/grid place-items:center): auto grid tracks
   // collapse to max-content, so width:100% bars (progress/meter) measure 0.
   // Flex parent has a definite tile width, so w="full" children get a real track.
-  const preview = style({ box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) })
-  const tileMeta = style({ box: padX(3).padY(2) })
-  const tileName = style({ text: fontSize(sm).fontWeight(semibold).fontFamily(mono) })
-  const cat = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const mutedSm = style({ box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) })
-  const eyebrow = style({ box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) })
-  const sectionTitle = style({ box: mt(2), text: fontSize(sm).fontWeight(semibold) })
+  style preview = { box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
+  style tileMeta = { box: padX(3).padY(2) }
+  style tileName = { text: fontSize(sm).fontWeight(semibold).fontFamily(mono) }
+  style cat = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedSm = { box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sectionTitle = { box: mt(2), text: fontSize(sm).fontWeight(semibold) }
   // Packs are a wrapping chip strip above the grid (not a side rail).
   // Side-by-side via flexDir(row)+style({ when: { tablet: { } } }) loses the cascade war:
   // base w(full)/flexDir(column) can beat the tablet override, grid → 0 width.
-  const packStack = style({ box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) })
-  const packBtn = style({ box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } })
-  const packLabel = style({ text: fontSize(sm) })
-  const packCount = style({ paint: fg(primary), text: fontSize(xs).fontFamily(mono) })
-  const railNote = style({ paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) })
-  const search = style({ box: w(full).maxW(panel-max-w-sm) })
-  const mutedXs = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const count = style({ paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) })
-  const dormant = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) })
-  const fieldLabel = style({ text: fontSize(sm).fontWeight(medium) })
+  style packStack = { box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) }
+  style packBtn = { box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } }
+  style packLabel = { text: fontSize(sm) }
+  style packCount = { paint: fg(primary), text: fontSize(xs).fontFamily(mono) }
+  style railNote = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
+  style search = { box: w(full).maxW(panel-max-w-sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style count = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
+  style dormant = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) }
+  style fieldLabel = { text: fontSize(sm).fontWeight(medium) }
   // Definite box: CE host is display:contents, so the stage needs a real
   // height or the <img> collapses when the source fails / is aspect-less.
-  const mediaFrame = style({ box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) })
-  const mediaStage = style({ box: w(full).h(full).minH(40) })
-  const catRow = style({ box: overflowX(auto).maxW(full) })
+  style mediaFrame = { box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) }
+  style mediaStage = { box: w(full).h(full).minH(40) }
+  style catRow = { box: overflowX(auto).maxW(full) }
 </scope>
 
 <column gap="5" style(page, { box: w(full).minW(0) })>

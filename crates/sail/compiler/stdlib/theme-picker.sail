@@ -21,46 +21,46 @@
     onThemeChange: (detail: { theme: string; mode: string; preference: string }) => void
 }
 
-  const host = style({ paint: group() })
+  style host = { paint: group() }
 
-  const trigger = style({ box: size(control-h-sm).pad(0), paint: fg(theme-picker.trigger-fg).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) })
-  const modeTrigger = style({ box: size(control-h-sm).minW(control-h-sm).pad(0), paint: fg(theme-picker.trigger-fg).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) })
-  const triggerIcon = style({ box: size(icon-size-md).display(block) })
-  const glyph = style({ paint: fg(theme-picker.trigger-fg), text: fontSize(sm).leading(none) })
+  style trigger = { box: size(control-h-sm).pad(0), paint: fg(theme-picker.trigger-fg).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) }
+  style modeTrigger = { box: size(control-h-sm).minW(control-h-sm).pad(0), paint: fg(theme-picker.trigger-fg).bg(transparent).borderWidth(border-width).border(border).radius(full).cursor(pointer) }
+  style triggerIcon = { box: size(icon-size-md).display(block) }
+  style glyph = { paint: fg(theme-picker.trigger-fg), text: fontSize(sm).leading(none) }
 
-  const panel = style({ box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(0).w(panel-max-w-sm).maxW(panel-w-toast).minW(0).maxH(panel-vh-md).overflowX(hidden).overflowY(auto), paint: overscroll(contain).fg(theme-picker.foreground).bg(theme-picker).borderWidth(border-width).border(border).radius(lg).shadow(lg).z(popover) })
+  style panel = { box: position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(0).w(panel-max-w-sm).maxW(panel-w-toast).minW(0).maxH(panel-vh-md).overflowX(hidden).overflowY(auto), paint: overscroll(contain).fg(theme-picker.foreground).bg(theme-picker).borderWidth(border-width).border(border).radius(lg).shadow(lg).z(popover) }
 
-  const header = style({ box: w(full).minW(0).padX(3).padT(3).padB(0) })
-  const headerEyebrow = style({ paint: fg(theme-picker.option-fg), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform).leading(none) })
-  const headerTitle = style({ paint: fg(theme-picker.foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(base).leading(tight).truncate() })
-  const headerMeta = style({ paint: fg(theme-picker.option-fg), text: fontSize(xs).leading(none) })
+  style header = { box: w(full).minW(0).padX(3).padT(3).padB(0) }
+  style headerEyebrow = { paint: fg(theme-picker.option-fg), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform).leading(none) }
+  style headerTitle = { paint: fg(theme-picker.foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(base).leading(tight).truncate() }
+  style headerMeta = { paint: fg(theme-picker.option-fg), text: fontSize(xs).leading(none) }
 
   // Filter tabs — ALWAYS readable on popover chrome.
   // Selected: strong fill using hover-bg + primary underline (never primary fill — breaks on brut).
-  const modeSeg = style({ box: w(full).minW(0).gap(0).padX(1), paint: borderBWidth(1).borderB(border) })
-  const modeSegBtn = style({ box: minW(0).padY(2).padX(2), paint: fg(theme-picker.option-fg).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) })
+  style modeSeg = { box: w(full).minW(0).gap(0).padX(1), paint: borderBWidth(1).borderB(border) }
+  style modeSegBtn = { box: minW(0).padY(2).padX(2), paint: fg(theme-picker.option-fg).bg(transparent).borderWidth(0).borderBWidth(2).borderB(transparent).radiusT(sm).cursor(pointer).select(none).tapHighlight(none), text: fontSize(xs).fontWeight(medium).textAlign(center).whitespace(nowrap) }
 
-  const catalogHead = style({ box: w(full).minW(0).padX(3).padT(2).padB(1), paint: fg(theme-picker.option-fg), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform) })
+  style catalogHead = { box: w(full).minW(0).padX(3).padT(2).padB(1), paint: fg(theme-picker.option-fg), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(label-transform) }
 
-  const panelList = style({ box: w(full).minW(0).pad(1_5) })
-  const option = style({ box: w(full).minW(0).pad(0).overflow(hidden), paint: bg(transparent).borderWidth(border-width).border(transparent).radius(md).cursor(pointer), text: textAlign(start) })
-  const optionCol = style({ box: w(full).minW(0) })
+  style panelList = { box: w(full).minW(0).pad(1_5) }
+  style option = { box: w(full).minW(0).pad(0).overflow(hidden), paint: bg(transparent).borderWidth(border-width).border(transparent).radius(md).cursor(pointer), text: textAlign(start) }
+  style optionCol = { box: w(full).minW(0) }
 
   // Live specimen — full-bleed via theme= (theme fonts + tokens).
   // Same height as before (space-20); content rebalanced, not resized.
-  const swatch = style({ box: position(relative).w(full).minW(0).h(20).minH(20).overflow(hidden), paint: radius(md).isolate().bg(background).fg(foreground) })
-  const overlay = style({ box: position(absolute).inset(0), paint: z(1).pointerEvents(none).opacity(bind(surface-overlay-opacity)).mixBlend(bind(surface-overlay-blend)).bg(bind(surface-overlay)) })
-  const specimen = style({ box: position(relative).w(full).h(full).minW(0).pad(2_5), paint: z(2) })
+  style swatch = { box: position(relative).w(full).minW(0).h(20).minH(20).overflow(hidden), paint: radius(md).isolate().bg(background).fg(foreground) }
+  style overlay = { box: position(absolute).inset(0), paint: z(1).pointerEvents(none).opacity(bind(surface-overlay-opacity)).mixBlend(bind(surface-overlay-blend)).bg(bind(surface-overlay)) }
+  style specimen = { box: position(relative).w(full).h(full).minW(0).pad(2_5), paint: z(2) }
   // Name once — heading face of the previewed theme
-  const title = style({ paint: fg(foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(sm).leading(tight).truncate() })
+  style title = { paint: fg(foreground), text: fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(sm).leading(tight).truncate() }
   // Chromatic trio only: primary · secondary · accent (no card/fg that match the surface)
-  const stripPrimary = style({ box: h(3).minW(0), paint: radius(sm).bg(primary) })
-  const stripSecondary = style({ box: h(3).minW(0), paint: radius(sm).bg(secondary) })
-  const stripAccent = style({ box: h(3).minW(0), paint: radius(sm).bg(accent) })
+  style stripPrimary = { box: h(3).minW(0), paint: radius(sm).bg(primary) }
+  style stripSecondary = { box: h(3).minW(0), paint: radius(sm).bg(secondary) }
+  style stripAccent = { box: h(3).minW(0), paint: radius(sm).bg(accent) }
   // Real control chrome fills the lower row (body face from the theme)
-  const btnGhost = style({ box: padY(px).padX(1_5), paint: radius(sm).bg(transparent).fg(foreground).borderWidth(border-width).border(border), text: fontFamily(body).fontWeight(medium).fontSize(xs).leading(none) })
-  const btnSolid = style({ box: padY(px).padX(1_5), paint: radius(sm).bg(primary).fg(primary-foreground), text: fontFamily(body).fontWeight(medium).fontSize(xs).leading(none) })
-  const checkMark = style({ paint: fg(primary), text: fontSize(sm).fontWeight(semibold).leading(none) })
+  style btnGhost = { box: padY(px).padX(1_5), paint: radius(sm).bg(transparent).fg(foreground).borderWidth(border-width).border(border), text: fontFamily(body).fontWeight(medium).fontSize(xs).leading(none) }
+  style btnSolid = { box: padY(px).padX(1_5), paint: radius(sm).bg(primary).fg(primary-foreground), text: fontFamily(body).fontWeight(medium).fontSize(xs).leading(none) }
+  style checkMark = { paint: fg(primary), text: fontSize(sm).fontWeight(semibold).leading(none) }
 </scope>
 
 <row inline use:themeSelect data-theme-picker="1" style(host)>

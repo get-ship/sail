@@ -3,23 +3,23 @@
   Controller composition: session + overview domain.
 -->
 <scope>
-  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
-  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const mutedIcon = style({ paint: fg(muted-foreground) })
-  const panelCard = style({ box: pad(4).minW(0).h(full), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
-  const doorCard = style({ box: pad(3), paint: cursor(pointer), when: { hover: { paint: bg(hover-bg) } } })
-  const doorTitle = style({ text: fontWeight(semibold) })
-  const doorHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const heroCard = style({ box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
-  const heroSwatch = style({ box: position(relative).h(28).minH(28).w(full).overflow(hidden), paint: bg(bind(swatchColor)), when: { stateEdit: { paint: cursor(pointer) }, stateLocked: { paint: cursor(default) } } })
-  const heroColorInput = style({ box: position(absolute).top(0).left(0).w(full).h(full).pad(0), paint: borderWidth(0).cursor(pointer).opacity(0), when: { disabled: { paint: cursor(not-allowed) } } })
-  const heroMeta = style({ box: padX(3).padY(2) })
-  const identityCol = style({ box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) })
-  const iconCell = style({ box: w(9).h(9).minW(9).minH(9), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) })
-  const bandStatus = style({ box: padX(4).padY(2) })
-  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
-  const fullBtn = style({ box: w(full) })
+  style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
+  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style monoMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedIcon = { paint: fg(muted-foreground) }
+  style panelCard = { box: pad(4).minW(0).h(full), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) }
+  style doorCard = { box: pad(3), paint: cursor(pointer), when: { hover: { paint: bg(hover-bg) } } }
+  style doorTitle = { text: fontWeight(semibold) }
+  style doorHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style heroCard = { box: overflow(hidden).minW(0), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) }
+  style heroSwatch = { box: position(relative).h(28).minH(28).w(full).overflow(hidden), paint: bg(bind(swatchColor)), when: { stateEdit: { paint: cursor(pointer) }, stateLocked: { paint: cursor(default) } } }
+  style heroColorInput = { box: position(absolute).top(0).left(0).w(full).h(full).pad(0), paint: borderWidth(0).cursor(pointer).opacity(0), when: { disabled: { paint: cursor(not-allowed) } } }
+  style heroMeta = { box: padX(3).padY(2) }
+  style identityCol = { box: padX(6).padT(6).padB(10).maxW(panel-max-w-lg) }
+  style iconCell = { box: w(9).h(9).minW(9).minH(9), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-0) }
+  style bandStatus = { box: padX(4).padY(2) }
+  style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
+  style fullBtn = { box: w(full) }
 </scope>
 
 <controller>

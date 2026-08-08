@@ -4,36 +4,36 @@
   Live geometry via freeform px/shadow bind (not CSS-var product state).
 -->
 <scope>
-  const sectionTitle = style({ text: fontSize(sm).fontWeight(semibold) })
-  const fieldHint = style({ paint: fg(muted-foreground), text: fontSize(xs) })
-  const pathMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const monoMeta = style({ paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) })
-  const doorTitle = style({ text: fontWeight(semibold) })
-  const eyebrow = style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) })
-  const controlsCol = style({ box: padX(4).padT(4).padB(8).minW(0) })
-  const bandStatus = style({ box: padX(4).padY(2) })
-  const bandError = style({ box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) })
-  const fullBtn = style({ box: w(full) })
-  const chipCol = style({ box: minW(0) })
-  const sliderRow = style({ box: minW(0) })
-  const sectionPanel = style({ box: pad(3), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) })
-  const tokenStrip = style({ box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) })
+  style sectionTitle = { text: fontSize(sm).fontWeight(semibold) }
+  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style monoMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style doorTitle = { text: fontWeight(semibold) }
+  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase) }
+  style controlsCol = { box: padX(4).padT(4).padB(8).minW(0) }
+  style bandStatus = { box: padX(4).padY(2) }
+  style bandError = { box: padX(4).padY(2), paint: borderBWidth(1).borderB(border) }
+  style fullBtn = { box: w(full) }
+  style chipCol = { box: minW(0) }
+  style sliderRow = { box: minW(0) }
+  style sectionPanel = { box: pad(3), paint: radius(lg).borderWidth(1).border(border-subtle).bg(surface-1) }
+  style tokenStrip = { box: padX(2).padY(1), paint: fg(muted-foreground).radius(sm).bg(surface-0), text: fontSize(xs).fontFamily(mono) }
   // Outline chip shells — continuous radius via use:liveBox (token radius cannot drag continuously).
-  const ladderChip = style({ box: w(9).h(7).minW(9).minH(7), paint: borderWidth(1).border(border).bg(transparent) })
-  const ladderChipXl = style({ box: w(10).h(8).minW(10).minH(8), paint: borderWidth(1).border(border).bg(transparent) })
-  const cornerChip = style({ box: w(8).h(6).minW(8).minH(6), paint: borderWidth(1).border(border).bg(transparent) })
+  style ladderChip = { box: w(9).h(7).minW(9).minH(7), paint: borderWidth(1).border(border).bg(transparent) }
+  style ladderChipXl = { box: w(10).h(8).minW(10).minH(8), paint: borderWidth(1).border(border).bg(transparent) }
+  style cornerChip = { box: w(8).h(6).minW(8).minH(6), paint: borderWidth(1).border(border).bg(transparent) }
   // Elev chip marks — stepped vocabulary (none dashed → xl deep lift).
-  const elevMarkNone = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(dashed).border(border-subtle).bg(background) })
-  const elevMarkXs = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xs) })
-  const elevMarkSm = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(sm) })
-  const elevMarkMd = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(md) })
-  const elevMarkLg = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(lg) })
-  const elevMarkXl = style({ box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xl) })
-  const statCell = style({ box: pad(2_5).minW(0), paint: radius(sm).borderWidth(1).border(border-subtle) })
-  const stageSolid = style({ box: minH(0).h(full), paint: bg(background) })
+  style elevMarkNone = { box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(dashed).border(border-subtle).bg(background) }
+  style elevMarkXs = { box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xs) }
+  style elevMarkSm = { box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(sm) }
+  style elevMarkMd = { box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(md) }
+  style elevMarkLg = { box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(lg) }
+  style elevMarkXl = { box: w(5).h(4).minW(5).minH(4), paint: radius(sm).borderWidth(1).border(border-subtle).bg(background).shadow(xl) }
+  style statCell = { box: pad(2_5).minW(0), paint: radius(sm).borderWidth(1).border(border-subtle) }
+  style stageSolid = { box: minH(0).h(full), paint: bg(background) }
   // Primary specimen card: radius.lg + elev + border + freeform fill (frost α live).
-  const liveCard = style({ box: pad(5), paint: border(border) })
-  const glassMini = style({ box: maxW(panel-max-w-sm).w(full).pad(4), paint: border(border) })
+  style liveCard = { box: pad(5), paint: border(border) }
+  style glassMini = { box: maxW(panel-max-w-sm).w(full).pad(4), paint: border(border) }
 </scope>
 
 <controller>
