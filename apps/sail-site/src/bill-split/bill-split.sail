@@ -1,8 +1,6 @@
 <!--
-  <bill-split> — the component the "Building a component" guide grows, one
-  step at a time: markup, then props, then state, then styling, then a slot.
-  Split a bill between people; the per-person share follows the headcount.
-  The guide's snippets are slices of THIS file.
+  <bill-split> — split a bill between people; per-person share tracks headcount.
+  Used by the "Building a component" guide as the growing example.
 -->
 <scope>
   props: {

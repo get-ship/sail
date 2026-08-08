@@ -1,8 +1,5 @@
 <!--
-  /sail/reference/scope — every <scope> grammar construct, with a worked
-  example that actually compiles (compiled by scope_manifest’s own Rust
-  tests, never merely asserted here). Rendered from
-  src/language-surface.gen.ts (emitted by `sail-compiler prop-registry`).
+  /sail/reference/scope — every &lt;scope&gt; grammar construct with a compiling example.
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -15,11 +12,22 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" style({ box: minW(0) })>
-  <column gap="5" style({ box: maxW(breakpoint-tablet) })>
-    <p token="doc-eyebrow">Reference</p>
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoMuted = { paint: fg(muted-foreground) }
+  style formSummary = { box: maxW(breakpoint-tablet) }
+  style refuseSyntax = { paint: fg(destructive) }
+  style refuseAlt = { paint: fg(muted-foreground) }
+</scope>
+
+<column gap="6" style(root)>
+  <column gap="5" style(intro)>
+    <p style(eyebrow)>Reference</p>
     <h1>&lt;scope&gt; grammar</h1>
-    <p token="doc-lead">
+    <p style(lead)>
       Everything a <code>&lt;scope&gt;</code> block can declare: props forms,
       type aliases, and the variants table. Nothing in the block executes —
       it is types and literals only.
@@ -31,9 +39,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <column gap="2">
         <row gap="3" align="center">
           <h3>{g.form}</h3>
-          <code style({ paint: fg(muted-foreground) })>{g.syntax}</code>
+          <code style(monoMuted)>{g.syntax}</code>
         </row>
-        <p style({ box: maxW(breakpoint-tablet) })>{g.summary}</p>
+        <p style(formSummary)>{g.summary}</p>
         <code-block code={g.example} lang="sail"></code-block>
       </column>
     </for>
@@ -41,15 +49,15 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Refused</h3>
-    <p style({ box: maxW(breakpoint-tablet) })>
+    <p style(formSummary)>
       <code>&lt;scope&gt;</code> is types and literals only — these member
       kinds are refused with an error naming the alternative.
     </p>
     <column gap="3">
       <for {refusals() as r} key={r.syntax}>
         <column gap="1">
-          <code style({ paint: fg(destructive) })>{r.syntax}</code>
-          <small style({ paint: fg(muted-foreground) })>→ {r.instead}</small>
+          <code style(refuseSyntax)>{r.syntax}</code>
+          <small style(refuseAlt)>→ {r.instead}</small>
         </column>
       </for>
     </column>
