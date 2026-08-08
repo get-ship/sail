@@ -1,6 +1,11 @@
 <!--
-  /design → /themes (STUDIO-V1-THEMES cutover). Design product surface removed.
+  /design → /themes redirect.
 -->
+<scope>
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
+
 <controller>
 import { navigate } from '@ship/deck/router'
 import { appRouteBase } from '../../src/compositions/shell/shell-rail'
@@ -14,6 +19,6 @@ export default controller(() => {
 })
 </controller>
 
-<column studio-redirect design-redirect align="center" justify="center" style({  box: grow(1).minH(0).h(full), paint: bg(background)  })>
-  <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>Opening Themes…</p>
+<column studio-redirect design-redirect align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Opening Themes…</p>
 </column>
