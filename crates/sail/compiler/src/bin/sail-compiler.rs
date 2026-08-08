@@ -105,10 +105,10 @@ enum Command {
     },
     /// Generate the agent-authoring SKILL.md for a working directory. The
     /// content derives from the SAME sources the compiler enforces — the
-    /// resolved styling policy (`sail.config.json` walk-up), the sx vocabulary
+    /// resolved styling policy (`sail.config.json` walk-up), the Style vocabulary
     /// tables the lint validates against, the layout keywords, and the motion
     /// preset catalog — so the skill can never drift from the compiler. A
-    /// strict-policy directory gets a skill that never mentions sx; a
+    /// strict-policy directory gets a skill without the Style product surface; a
     /// full-policy (stdlib) directory gets the complete grammar.
     Skill {
         /// Directory the skill describes (policy resolves from here).
@@ -923,7 +923,7 @@ fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
 /// (`style({…})` on the open tag), not an HTML `style=` attribute. Plain string for `push_str`.
 ///
 /// `raw_containers`: when false, avoid bare `<div>`/`<span>` (no-raw policy).
-fn sx_skill_demo(raw_containers: bool) -> &'static str {
+fn style_skill_demo(raw_containers: bool) -> &'static str {
     if raw_containers {
         "```
 \
@@ -1053,8 +1053,8 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
             selection, …. Use the primitive before hand-rolling.\n\
          4. **`prop:tree={{table}}`** (identity bind) for sail-tree — NEVER\n   \
             `document.querySelector` + assign the host (same as `prop:table`).\n\
-         5. **sx + tokens** — only styling path. `style.cssText` / `.style` / raw\n   \
-            CSS / utility-string sx is a compile error.\n\
+         5. **Style + tokens** — only styling path. `style.cssText` / `.style` / raw\n   \
+            CSS / retired utility-string forms (`sx=\"…\"`) are compile errors.\n\
          6. **If the primitive is missing** — stop and report the language gap.\n   \
             Do not escape to DOM.\n\n\
          **Hard fails:** any PR with `createElement` / `cssText` / `querySelector`\n\
@@ -1068,7 +1068,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(
         md,
         "- NO `<style>` blocks, NO product Style as an HTML attribute. NO raw values (px/hex) — spend a token.\n\
-         - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is a **tag** Style call:\n  \
+         - NO retired utility-string / `sx=` forms (`sx=\"p-4 bg-surface-2\"`). Product is a **tag** Style call:\n  \
            `style({{ box: pad(4), paint: bg(surface-2) }})` / `.when(hover, {{ paint: … }})` / `match`.\n\
          - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
            `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
@@ -1095,13 +1095,14 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     if effective.sx {
         let _ = writeln!(md, "## Style product (core)\n");
         // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
-        // Block channel form is a plain string (sx_skill_demo). In writeln! format
+        // Block channel form is a plain string (style_skill_demo). In writeln! format
         // strings, `{{` / `}}` escape to single braces in the skill markdown.
-        md.push_str(sx_skill_demo(effective.raw_containers));
+        md.push_str(style_skill_demo(effective.raw_containers));
         let _ = writeln!(
             md,
-            "Attach Style as a **tag call** `style({{…}})` on the open tag — not `style=` / `sx=`.\n\
-             Scope Style consts, `style({{ match: {{…}}, when: {{…}}, compound: […] }})`,\n\
+            "Attach Style as a **tag call** `style({{…}})` on the open tag — not HTML `style=` or retired `sx=`.\n\
+             Prefer named Style `style name = {{…}}` (or scope Style consts where dual path still applies),\n\
+             `style({{ match: {{…}}, when: {{…}}, compound: […] }})`,\n\
              and first-class **`bind(name)`** for values that track props/signals/\n\
              derived/tokens/action writes. Style is compile-time static — no dynamic\n\
              JS expressions inside Style (computation lives in the controller; the\n\
@@ -1179,7 +1180,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     } else {
         let _ = writeln!(
             md,
-            "## sx is NOT available here\n\nApplication-tier directory: compose components with props/tokens only.\n"
+            "## Style is NOT available here\n\nApplication-tier directory: compose components with props/tokens only.\n"
         );
     }
     if effective.variants {
@@ -1236,7 +1237,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          - **No layout `matchMedia` in controllers** (`sail-controller-matchmedia-layout`):\n  \
            do not drive template-visible layout from `window.matchMedia('(min-width:…)')`\n  \
            / `max-width` / `orientation`. Use `<when {{tablet}}>` for structure; Style\n  \
-           `when` for sx. Non-layout media (`prefers-reduced-motion`, `prefers-color-scheme`,\n  \
+           `when` for paint/density. Non-layout media (`prefers-reduced-motion`, `prefers-color-scheme`,\n  \
            `print`) may stay imperative.\n\n\
          ```\n\
          <controller>\n  \
@@ -1962,11 +1963,11 @@ fn compile_one(
 
 #[cfg(test)]
 mod skill_demo_tests {
-    use super::sx_skill_demo;
+    use super::style_skill_demo;
 
     #[test]
-    fn raw_sx_demo_uses_block_channel_and_div_span() {
-        let md = sx_skill_demo(true);
+    fn raw_style_demo_uses_block_channel_and_div_span() {
+        let md = style_skill_demo(true);
         assert!(
             md.contains("style({"),
             "product Style is block channel form: {md}"
@@ -1987,13 +1988,19 @@ mod skill_demo_tests {
             !md.contains("when({{"),
             "nested when({{ is format-string leak: {md}"
         );
-        assert!(md.contains("<div>"), "full policy demos use raw div");
-        assert!(md.contains("<span>"), "full policy demos use raw span");
+        assert!(
+            md.contains("<div style("),
+            "full policy demos use raw div with Style attach: {md}"
+        );
+        assert!(
+            md.contains("<span style("),
+            "full policy demos use raw span with Style attach: {md}"
+        );
     }
 
     #[test]
-    fn no_raw_sx_demo_uses_layout_keywords_and_block_channel() {
-        let md = sx_skill_demo(false);
+    fn no_raw_style_demo_uses_layout_keywords_and_block_channel() {
+        let md = style_skill_demo(false);
         assert!(
             md.contains("style({"),
             "product Style is block channel form: {md}"
@@ -2015,7 +2022,7 @@ mod skill_demo_tests {
             "nested when({{ is format-string leak: {md}"
         );
         assert!(
-            md.contains("<column ") && md.contains("<p>"),
+            md.contains("<column ") && md.contains("<p style("),
             "no-raw demos use layout + content tags: {md}"
         );
         assert!(
