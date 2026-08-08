@@ -82,7 +82,7 @@
     },
     {
       "tag": "badge",
-      "description": "L1 language element. Style value language only:"
+      "description": "L1 language element. Style value language only."
     },
     {
       "tag": "breadcrumb",
@@ -226,7 +226,7 @@
     },
     {
       "tag": "spinner",
-      "description": "L1 language element. Style value language only:"
+      "description": "L1 language element. Style value language only."
     },
     {
       "tag": "switch",

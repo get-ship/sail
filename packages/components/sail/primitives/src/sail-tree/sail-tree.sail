@@ -214,7 +214,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         {else => <span aria-hidden="true" style({ box: w(density-icon).minW(density-icon) })></span>}</if>
 
         <if {selectable() === 'multi'}>
-          <span style(style)>
+          <span>
             <input
               type="checkbox"
               size="sm"

@@ -1,7 +1,7 @@
 # SAIL Syntax Freeze — Annexes A–E (generated)
 
 > **Do not hand-edit.** Regenerate: `node scripts/gen-freeze-annexes.mjs`
-> Tip: `bdd7813a332383f11223e6591ec22e468a362db8` · Generated: 2026-08-08 · Content hash: `262036cae9e05aca`
+> Tip: `cabd15da531db7775b593831dbde419ee306d8c1` · Generated: 2026-08-08 · Content hash: `6fdfca5406f610ae`
 
 Normative freeze prose: mission scratch `SAIL-SYNTAX-FREEZE.md`. These files are the
 machine-readable inventory the freeze annexes point at.
@@ -27,7 +27,7 @@ Source: compiler element manifest / stdlib (`language-surface.gen.ts` ELEMENTS).
 | `accordion` | ONE disclosure element (replaces collapsible + details). |
 | `alert` | L1 inline status banner. Style value language only. |
 | `avatar` | L1 language element. Style value language only. |
-| `badge` | L1 language element. Style value language only: |
+| `badge` | L1 language element. Style value language only. |
 | `breadcrumb` | trail host. ol/li/a anatomy + separators via compiler |
 | `button` | native <button>. L1 platform control. Style value language only. |
 | `card` | L1 language element (element mode). Generic surface: header/body/footer |
@@ -63,7 +63,7 @@ Source: compiler element manifest / stdlib (`language-surface.gen.ts` ELEMENTS).
 | `separator` | native <hr>. Style value language only. |
 | `skeleton` | loading placeholder sheen. Style product for geometry; |
 | `slider` | native range alias. use:rangeFill → --rng-pct (WebKit fill). |
-| `spinner` | L1 language element. Style value language only: |
+| `spinner` | L1 language element. Style value language only. |
 | `switch` | native checkbox restyled as sliding toggle. No controller. |
 | `tab` | paint + variant/size Style match for pill/enclosed and pad scale. |
 | `tab-list` | strip chrome. Sticky + variant Style. Orientation structural stamp from use:tabs. |

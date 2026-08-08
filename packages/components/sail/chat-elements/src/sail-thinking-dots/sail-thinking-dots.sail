@@ -32,7 +32,7 @@
 <span
   role="status"
   aria-live="polite"
-  aria-label={label()} style(style)>
+  aria-label={label()}>
   <row
     gap={size() === 'lg' ? '2' : '1'}
     align="center"
@@ -44,5 +44,4 @@ aria-hidden="true" style({ box: w(2).h(2), paint: radius(full).bg(muted-foregrou
     <span
 aria-hidden="true" style({ box: w(2).h(2), paint: radius(full).bg(muted-foreground), animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }), when: { groupStateSm: { paint: scale(75) }, groupStateLg: { paint: scale(125) }, groupStatePrimary: { paint: bg(primary) }, groupStateInfo: { paint: bg(info) }, groupStateSuccess: { paint: bg(success) }, groupStateWarning: { paint: bg(warning) }, groupStateDestructive: { paint: bg(destructive) }, groupStateAccent: { paint: bg(accent) } } })></span>
   </row>
-</span>
 </span>
