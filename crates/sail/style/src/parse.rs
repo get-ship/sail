@@ -1232,7 +1232,7 @@ fn parse_style_object(
 /// Token-typed props refused as match axes (bind in paint instead).
 ///
 /// `tone` remains the product convention name for the Tone axis; any
-/// Tone-typed prop binds in paint via group paths, not match expansion.
+/// Color-group typed prop binds in paint via group paths, not match expansion.
 fn is_token_typed_match_axis(prop: &str) -> bool {
     prop == "tone"
 }
@@ -1916,7 +1916,7 @@ fn normalize_paint_arg(
     }
 
     // Bound group-typed prop path: bridge-var emit (`var(--tone)`). Type check
-    // (Tone-typed prop) is the compiler binding regime — parse keeps shape.
+    // (color-group typed prop) is the compiler binding regime — parse keeps shape.
     if looks_like_bound_group_root(&root, &path) {
         if let Err(_msg) = bound_member_valid(&path) {
             // Non-empty invalid member (e.g. tone.hover when not universal).

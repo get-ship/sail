@@ -29,7 +29,7 @@ export default {
       group('ghost', 'type="single"', 'grid', items),
       group('segmented', 'type="single"', 'board', items),
       group('outline', 'type="multiple"', 'grid board', items),
-      group('outline', 'size="sm"', 'list', items) + ' ' + group('outline', 'size="lg"', 'list', items),
+      group('outline', 'orientation="vertical"', 'list', items),
     ]
   },
   probe() {

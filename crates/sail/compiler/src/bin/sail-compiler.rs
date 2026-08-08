@@ -1188,7 +1188,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
             md,
             "## variants\n\n\
              A variant is a prop. Prefer `match` / scope Style consts over residual\n\
-             utility maps. `tone`/`size` are ordinary props (CVA axes, not paint channels).\n"
+             utility maps. Token-group props (e.g. `tone: Tone`) and Size ladders are\n\
+             ordinary typed props — not special language features. Color groups bind\n\
+             in Style paint (`bg(tone)`); Size is discrete `match` conditionality.\n"
         );
     }
     if !effective.raw_containers {

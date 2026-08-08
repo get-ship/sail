@@ -1,8 +1,10 @@
 //! Compile-time token **group member** tables for Style paint args.
 //!
-//! A group is a semantic paint stem (`primary`, `info`, …) with members
+//! A color group is a semantic paint stem (`primary`, `info`, …) with members
 //! (`default`, `foreground`, optional `hover`) that map to public token ids
-//! (`primary`, `primary-foreground`, `primary-hover`).
+//! (`primary`, `primary-foreground`, `primary-hover`). The product type name
+//! for that set is **`Tone`** — one example of a group-typed prop, not a
+//! special language feature for the prop name `tone`.
 //!
 //! Style author forms:
 //! - Static: `bg(primary)`, `fg(primary.foreground)` — resolve to public names.
@@ -13,7 +15,11 @@
 //! **SSOT:** group tables are **derived** from the token registry (same DTCG
 //! paths that generate TS `Tone` / `TONE`), never dual hand tables.
 //!
-//! Binding is **type-keyed** (any Tone-typed prop), not name-keyed on `"tone"`.
+//! Binding is **type-keyed** (any prop whose type is the color-group union),
+//! not name-keyed on `"tone"`.
+//!
+//! **Size** is a separate discrete ladder type (`sm`/`md`/`lg`, optional
+//! `xs`/`xl`) for Style `match` conditionality — not continuous paint bind.
 
 use std::sync::OnceLock;
 
@@ -37,8 +43,8 @@ pub struct TokenGroup {
     pub members: &'static [GroupMember],
 }
 
-/// Preferred Tone allowlist order (membership from registry; this only sorts).
-const TONE_ORDER: &[&str] = &[
+/// Preferred color-group (Tone) allowlist order (membership from registry; this only sorts).
+const COLOR_GROUP_ORDER: &[&str] = &[
     "primary",
     "info",
     "success",
@@ -47,6 +53,9 @@ const TONE_ORDER: &[&str] = &[
     "accent",
     "muted",
 ];
+
+/// Canonical Size ladder steps (base). Hosts may extend with `xs` / `xl` / `full`.
+const SIZE_STEPS: &[&str] = &["xs", "sm", "md", "lg", "xl", "full"];
 
 /// DTCG path stem for a public Tone name (`accent` ← `brandAccent`).
 fn dtcg_stem(public_group: &str) -> &str {
@@ -72,12 +81,12 @@ fn leak_names(names: Vec<&'static str>) -> &'static [&'static str] {
     Box::leak(names.into_boxed_slice())
 }
 
-/// Build Tone groups from the token registry path map.
-fn derive_tone_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
-    let mut groups: Vec<TokenGroup> = Vec::with_capacity(TONE_ORDER.len());
-    let mut names: Vec<&'static str> = Vec::with_capacity(TONE_ORDER.len());
+/// Build color-group (Tone) tables from the token registry path map.
+fn derive_color_group_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
+    let mut groups: Vec<TokenGroup> = Vec::with_capacity(COLOR_GROUP_ORDER.len());
+    let mut names: Vec<&'static str> = Vec::with_capacity(COLOR_GROUP_ORDER.len());
 
-    for &name in TONE_ORDER {
+    for &name in COLOR_GROUP_ORDER {
         let stem = dtcg_stem(name);
         let mut members: Vec<GroupMember> = Vec::new();
 
@@ -134,22 +143,35 @@ fn derive_tone_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
     (leak_names(names), leak_groups(groups))
 }
 
-fn tone_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
+fn color_group_tables() -> (&'static [&'static str], &'static [TokenGroup]) {
     static CACHE: OnceLock<(&'static [&'static str], &'static [TokenGroup])> = OnceLock::new();
-    *CACHE.get_or_init(derive_tone_tables)
+    *CACHE.get_or_init(derive_color_group_tables)
 }
 
-/// Tone allowlist — curated semantic paint groups (not entire `color.*`).
+/// Color-group allowlist (product type name: **Tone**) — curated semantic paint
+/// groups (not entire `color.*`).
 ///
-/// `'default'` is **not** a Tone member. Rest paint = component tokens when
-/// the group-typed prop attribute is unset.
+/// `'default'` is **not** a member. Rest paint = component tokens when the
+/// group-typed prop attribute is unset.
+pub fn color_group_names() -> &'static [&'static str] {
+    color_group_tables().0
+}
+
+/// Alias — historic name; prefer [`color_group_names`].
+#[inline]
 pub fn tone_group_names() -> &'static [&'static str] {
-    tone_tables().0
+    color_group_names()
 }
 
 /// Group → members → public name. Derived from the token registry.
+pub fn color_groups() -> &'static [TokenGroup] {
+    color_group_tables().1
+}
+
+/// Alias — historic name; prefer [`color_groups`].
+#[inline]
 pub fn tone_groups() -> &'static [TokenGroup] {
-    tone_tables().1
+    color_groups()
 }
 
 /// Bridge CSS custom-property name for a bound group member path.
@@ -173,7 +195,7 @@ pub fn bridge_var_ref(prop: &str, path: &[String]) -> String {
 
 /// Public token id for one (group value, member path).
 pub fn public_name_for_group_value(group_value: &str, path: &[String]) -> Option<&'static str> {
-    let group = tone_groups().iter().find(|g| g.name == group_value)?;
+    let group = color_groups().iter().find(|g| g.name == group_value)?;
     resolve_group_member(group, path).ok()
 }
 
@@ -186,7 +208,7 @@ pub fn reflect_var_reference(group_value: &str, path: &[String]) -> Option<Strin
 pub fn group_value_member_publics(
     group_value: &str,
 ) -> Option<Vec<(&'static str, &'static str)>> {
-    let group = tone_groups().iter().find(|g| g.name == group_value)?;
+    let group = color_groups().iter().find(|g| g.name == group_value)?;
     Some(
         group
             .members
@@ -199,21 +221,51 @@ pub fn group_value_member_publics(
     )
 }
 
-/// Whether `members` is a Tone-shaped union (every member is a Tone group name,
-/// non-empty, no `'default'`). Used for type-keyed binding.
-pub fn is_tone_union(members: &[String]) -> bool {
+/// Whether `members` is a color-group (Tone) union — every member is a
+/// color-group name, non-empty, no `'default'`. Type-keyed paint binding.
+pub fn is_color_group_union(members: &[String]) -> bool {
     if members.is_empty() {
         return false;
     }
-    let names = tone_group_names();
+    let names = color_group_names();
     members
         .iter()
         .all(|m| m != "default" && names.iter().any(|n| *n == m.as_str()))
 }
 
+/// Alias — historic name; prefer [`is_color_group_union`].
+#[inline]
+pub fn is_tone_union(members: &[String]) -> bool {
+    is_color_group_union(members)
+}
+
+/// Whether `members` is a Size ladder union (only known size steps, ≥1 step,
+/// must include at least one of `sm`/`md`/`lg`). Discrete Style match — not paint bind.
+pub fn is_size_union(members: &[String]) -> bool {
+    if members.is_empty() {
+        return false;
+    }
+    let all_known = members
+        .iter()
+        .all(|m| SIZE_STEPS.iter().any(|s| *s == m.as_str()));
+    if !all_known {
+        return false;
+    }
+    // Reject pure specialty ladders that are not control size (e.g. only `full`).
+    members
+        .iter()
+        .any(|m| matches!(m.as_str(), "xs" | "sm" | "md" | "lg" | "xl"))
+}
+
+/// Canonical Size step names for ambient emission (base ladder; hosts may narrow/extend).
+pub fn size_step_names() -> &'static [&'static str] {
+    // Product ambient `Size` is the common sm|md|lg core; xs/xl/full are extensions.
+    &["sm", "md", "lg"]
+}
+
 /// Static group stem lookup (e.g. `primary` in `primary.foreground`).
 pub fn static_token_group(name: &str) -> Option<&'static TokenGroup> {
-    tone_groups().iter().find(|g| g.name == name)
+    color_groups().iter().find(|g| g.name == name)
 }
 
 /// Resolve a member path on a group. Empty `path` → `default` member.
@@ -255,9 +307,9 @@ pub fn resolve_static_member_path(root: &str, path: &[String]) -> Result<String,
     resolve_group_member(group, path).map(|s| s.to_string())
 }
 
-/// Whether every Tone group has the given member path (bound member validity).
+/// Whether every color group has the given member path (bound member validity).
 pub fn bound_member_valid(path: &[String]) -> Result<(), String> {
-    for g in tone_groups() {
+    for g in color_groups() {
         resolve_group_member(g, path)?;
     }
     Ok(())
@@ -267,8 +319,9 @@ pub fn bound_member_valid(path: &[String]) -> Result<(), String> {
 /// root — not a static group stem, not a surface.
 ///
 /// Type-keyed: only roots installed via
-/// [`crate::host_ctx::with_bound_group_props`] (plus product ambient `tone`)
-/// are recognized. Scale tokens (`sm`, `2`, `solid`) stay ordinary Tokens.
+/// [`crate::host_ctx::with_bound_group_props`] (plus product ambient `tone`
+/// as the common color-group prop name) are recognized. Scale tokens
+/// (`sm`, `2`, `solid`) stay ordinary Tokens.
 pub fn looks_like_bound_group_root(root: &str, path: &[String]) -> bool {
     let _ = path;
     if static_token_group(root).is_some() {
@@ -302,9 +355,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tone_allowlist_has_no_default_group() {
-        let names = tone_group_names();
-        let groups = tone_groups();
+    fn color_group_allowlist_has_no_default_group() {
+        let names = color_group_names();
+        let groups = color_groups();
         assert!(!names.contains(&"default"));
         assert_eq!(groups.len(), names.len());
         for (g, n) in groups.iter().zip(names.iter()) {
@@ -312,6 +365,9 @@ mod tests {
             assert!(g.members.iter().any(|m| m.name == "default"));
             assert!(g.members.iter().any(|m| m.name == "foreground"));
         }
+        // Historic aliases stay wired.
+        assert_eq!(tone_group_names(), color_group_names());
+        assert_eq!(tone_groups().len(), color_groups().len());
     }
 
     #[test]
@@ -358,8 +414,8 @@ mod tests {
     }
 
     #[test]
-    fn tone_union_detection() {
-        assert!(is_tone_union(&[
+    fn color_group_union_detection() {
+        assert!(is_color_group_union(&[
             "primary".into(),
             "info".into(),
             "success".into(),
@@ -368,7 +424,24 @@ mod tests {
             "accent".into(),
             "muted".into(),
         ]));
-        assert!(!is_tone_union(&["default".into(), "primary".into()]));
-        assert!(!is_tone_union(&["sm".into(), "md".into()]));
+        assert!(!is_color_group_union(&["default".into(), "primary".into()]));
+        assert!(!is_color_group_union(&["sm".into(), "md".into()]));
+        assert!(is_tone_union(&["primary".into(), "muted".into()]));
+    }
+
+    #[test]
+    fn size_union_detection() {
+        assert!(is_size_union(&["sm".into(), "md".into(), "lg".into()]));
+        assert!(is_size_union(&[
+            "xs".into(),
+            "sm".into(),
+            "md".into(),
+            "lg".into(),
+            "xl".into(),
+        ]));
+        assert!(is_size_union(&["sm".into(), "md".into(), "lg".into(), "full".into()]));
+        assert!(!is_size_union(&["primary".into(), "info".into()]));
+        assert!(!is_size_union(&["full".into()]));
+        assert_eq!(size_step_names(), &["sm", "md", "lg"]);
     }
 }

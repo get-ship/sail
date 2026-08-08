@@ -14,7 +14,7 @@ const host = (name: string) => `[data-sail-host="${name}"]`
  * unset defaults to the first tab.
  *
  * Orientation is structural; stamped onto tab-list / tab-panel so child axes
- * resolve. Size/variant paint is authored on children (or host CVA).
+ * resolve. Size/variant Style is authored on children (`<tab>`, `<tab-list>`).
  */
 export const tabs: Action<void> = (node) => {
   const root = node as HTMLElement

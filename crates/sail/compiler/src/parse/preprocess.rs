@@ -54,10 +54,10 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // lower after paint classes exist.
     let s = expand_self_close(&quote_brace_attrs(&s));
     let s = lower_prop_shorthand(&s);
-    // Type-keyed Tone props so `bg(tone)` / `bg(shade)` parse as bridge paths.
-    let tone_props = super::scope_block::tone_typed_prop_names(&s);
+    // Type-keyed color-group props so `bg(tone)` / `bg(shade)` parse as bridge paths.
+    let group_props = super::scope_block::color_group_typed_prop_names(&s);
     // Scope Style consts (`const filled = style(…)`) resolve Refs in host Style.
-    let (s, style_css) = sail_lint::style::with_bound_group_props(&tone_props, || {
+    let (s, style_css) = sail_lint::style::with_bound_group_props(&group_props, || {
         let style_env = super::scope_block::style_env_from_source(&s);
         lift_tag_style(&s, &style_env)
     })?;
@@ -1406,7 +1406,7 @@ fn splice_element(
             };
             let css = kebab_of(prop);
             match unit {
-                // Tone-typed: static first-paint inlines var *references*
+                // Color-group typed: static first-paint inlines var *references*
                 // (`--tone: var(--primary); --tone-foreground: var(--primary-foreground)`).
                 crate::check::binding::StyleBindingUnit::TokenGroup => {
                     let Some(members) =

@@ -53,9 +53,10 @@ pub enum StyleBindingUnit {
     Number,
     /// String / untyped / unannotated derived: `syntax: '*'`.
     Untyped,
-    /// Tone-typed (token-group) prop: host writes var *references*
-    /// (`--tone: var(--primary)`, `--tone-foreground: var(--primary-foreground)`).
-    /// No `@property` registration — bridge vars are untyped custom props.
+    /// Color token-group typed prop: host writes var *references*
+    /// (`--tone: var(--primary)`, `--shade-foreground: var(--primary-foreground)`).
+    /// Type-keyed (any prop whose union is the color-group set). No `@property`
+    /// — bridge vars are untyped custom props.
     TokenGroup,
 }
 
@@ -80,7 +81,7 @@ pub struct StyleBinding {
     pub unit: StyleBindingUnit,
 }
 
-/// Resolve every `bind(name)` and every Tone-typed group path (`bg(tone)`,
+/// Resolve every `bind(name)` and every color token-group path (`bg(tone)`,
 /// `fg(shade.foreground)`) in this source. `Ok` carries the prop/signal/
 /// derived matches to wire at emit (token + action-write matches need no
 /// component-local emission). `Err` is the first refusal, in source order.
@@ -97,10 +98,10 @@ pub fn resolve(
     let mut color_touch: BTreeSet<String> = BTreeSet::new();
     let mut length_touch: BTreeSet<String> = BTreeSet::new();
 
-    // §2.5: group-typed (Tone) props used as paint roots ride the same
+    // §2.5: color-group typed props used as paint roots ride the same
     // machinery as bind — host var-reference reflection, type-keyed.
-    // Only declared Tone-typed props qualify (so `border(solid)` / surface
-    // names never collide).
+    // Only props whose union is the color-group set qualify (so `border(solid)`
+    // / surface names never collide). Prop *name* is irrelevant (`tone`, `shade`).
     for site in find_group_path_sites(source) {
         let scope_name = site.root.clone();
         let Some(p) = program
@@ -110,14 +111,15 @@ pub fn resolve(
         else {
             continue;
         };
-        if !prop_is_tone_typed(p) {
-            // Non-Tone prop name collided with a paint-arg scan — ignore unless
-            // the author wrote an explicit member path (`shade.foreground`).
+        if !prop_is_color_group_typed(p) {
+            // Non color-group prop name collided with a paint-arg scan — ignore
+            // unless the author wrote an explicit member path (`shade.foreground`).
             if site.member.is_some() {
                 return Err(CompileError::new(format!(
                     "`{scope_name}` is used as a token-group paint path \
-                     (`{scope_name}.{}`) but its type is not Tone — annotate the prop \
-                     with the Tone union (primary·info·success·warning·destructive·accent·muted).",
+                     (`{scope_name}.{}`) but its type is not a color group \
+                     (Tone) — annotate the prop with the Tone union \
+                     (primary·info·success·warning·destructive·accent·muted).",
                     site.member.as_deref().unwrap_or("")
                 ))
                 .with_span(site.span));
@@ -132,7 +134,7 @@ pub fn resolve(
             let path = vec![member.clone()];
             if let Err(msg) = sail_lint::token_groups::bound_member_valid(&path) {
                 return Err(CompileError::new(format!(
-                    "`{scope_name}.{member}` is not a valid Tone group member — {msg}"
+                    "`{scope_name}.{member}` is not a valid color-group member — {msg}"
                 ))
                 .with_span(site.span));
             }
@@ -409,10 +411,11 @@ struct GroupPathSite {
     span: Span,
 }
 
-/// Tone-typed prop: union of Tone group names (no `'default'`).
-fn prop_is_tone_typed(p: &crate::ir::PropDecl) -> bool {
+/// Color token-group typed prop: union of color-group names (Tone set; no `'default'`).
+/// Type-keyed — prop name is irrelevant (`tone`, `shade`, …).
+fn prop_is_color_group_typed(p: &crate::ir::PropDecl) -> bool {
     match &p.kind {
-        PropKind::Union(members) => sail_lint::token_groups::is_tone_union(members),
+        PropKind::Union(members) => sail_lint::token_groups::is_color_group_union(members),
         _ => false,
     }
 }
@@ -982,8 +985,8 @@ mod tests {
     }
 
     #[test]
-    fn tone_typed_prop_binds_as_token_group() {
-        let members: Vec<String> = sail_lint::token_groups::tone_group_names()
+    fn color_group_typed_prop_binds_as_token_group() {
+        let members: Vec<String> = sail_lint::token_groups::color_group_names()
             .iter()
             .map(|s| (*s).to_string())
             .collect();
@@ -996,8 +999,8 @@ mod tests {
     }
 
     #[test]
-    fn shade_tone_typed_prop_is_type_keyed() {
-        let members: Vec<String> = sail_lint::token_groups::tone_group_names()
+    fn shade_color_group_prop_is_type_keyed() {
+        let members: Vec<String> = sail_lint::token_groups::color_group_names()
             .iter()
             .map(|s| (*s).to_string())
             .collect();
@@ -1010,8 +1013,8 @@ mod tests {
     }
 
     #[test]
-    fn tone_hover_member_refuses_when_not_universal() {
-        let members: Vec<String> = sail_lint::token_groups::tone_group_names()
+    fn color_group_hover_member_refuses_when_not_universal() {
+        let members: Vec<String> = sail_lint::token_groups::color_group_names()
             .iter()
             .map(|s| (*s).to_string())
             .collect();
@@ -1022,6 +1025,37 @@ mod tests {
             err.message.contains("hover") || err.message.contains("member"),
             "{}",
             err.message
+        );
+    }
+
+    #[test]
+    fn size_union_is_recognized_not_color_group() {
+        assert!(sail_lint::token_groups::is_size_union(&[
+            "sm".into(),
+            "md".into(),
+            "lg".into(),
+        ]));
+        assert!(sail_lint::token_groups::is_size_union(&[
+            "xs".into(),
+            "sm".into(),
+            "md".into(),
+            "lg".into(),
+            "xl".into(),
+        ]));
+        assert!(!sail_lint::token_groups::is_size_union(&[
+            "primary".into(),
+            "info".into(),
+        ]));
+        let program = program_with_props(vec![prop(
+            "size",
+            PropKind::Union(vec!["sm".into(), "md".into(), "lg".into()]),
+        )]);
+        // Size is match conditionality, not color-group paint bind.
+        let source = r#"<div style({ paint: bg(size) })></div>"#;
+        let out = resolve(source, &program, None).unwrap();
+        assert!(
+            out.iter().all(|b| b.unit != StyleBindingUnit::TokenGroup),
+            "size must not bind as color-group"
         );
     }
 

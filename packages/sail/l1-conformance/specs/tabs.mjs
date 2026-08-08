@@ -50,12 +50,12 @@ export default {
   width: 760,
   rows() {
     return [
-      tabs('line', 'tone="primary" class="l1-mark"', 'overview', set),
-      tabs('pill', 'tone="primary"', 'activity', set),
-      tabs('enclosed', 'tone="primary"', 'settings', set),
-      tabs('line', 'size="sm"', 'overview', set.slice(0, 3)) +
-        tabs('line', 'size="lg"', 'activity', set.slice(0, 3)),
-      tabs('line', 'orientation="vertical" tone="info"', 'overview', set.slice(0, 3)),
+      tabs('line', 'class="l1-mark"', 'overview', set),
+      tabs('pill', '', 'activity', set),
+      tabs('enclosed', '', 'settings', set),
+      tabs('line', '', 'overview', set.slice(0, 3).map(([n, l, x]) => [n, l, (x || '') + ' size="sm"'])) +
+        tabs('line', '', 'activity', set.slice(0, 3).map(([n, l, x]) => [n, l, (x || '') + ' size="lg"'])),
+      tabs('line', 'orientation="vertical"', 'overview', set.slice(0, 3)),
     ]
   },
   probe() {

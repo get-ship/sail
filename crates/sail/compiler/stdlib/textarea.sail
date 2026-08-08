@@ -6,7 +6,6 @@
 <scope>
   props: {
     size: 'xs' | 'sm' | 'md' | 'lg' = 'md'
-    tone: 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted'
     invalid = false
     disabled = false
     placeholder = ''

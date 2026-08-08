@@ -246,7 +246,7 @@ export default controller(() => {
                   </if>
                   <if {components.stage.slider()}>
                     <column gap="2" style(sampleMax)>
-                      <slider value={components.load()} min="0" max="100" tone={components.variant() || 'primary'} label="Sample slider"></slider>
+                      <slider value={components.load()} min="0" max="100" label="Sample slider"></slider>
                       <p style(fieldHint)>{components.load()}%</p>
                     </column>
                   </if>
@@ -498,7 +498,7 @@ export default controller(() => {
                     </breadcrumb>
                   </if>
                   <if {components.stage.pagination()}>
-                    <pagination value={components.pageNo()} size={components.variant() || 'md'} on-page-change={components.onPageChange}>
+                    <pagination value={components.pageNo()} on-page-change={components.onPageChange}>
                       <page value="1">1</page>
                       <page value="2">2</page>
                       <page value="3">3</page>

@@ -458,17 +458,6 @@
         ],
         "default": "md"
       },
-      "tone": {
-        "values": [
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ]
-      },
       "type": {
         "values": [
           "text",
@@ -593,14 +582,6 @@
       }
     },
     "pagination": {
-      "size": {
-        "values": [
-          "sm",
-          "md",
-          "lg"
-        ],
-        "default": "md"
-      },
       "value": {
         "type": "string",
         "default": ""
@@ -657,25 +638,6 @@
         "type": "bool",
         "default": "false"
       },
-      "size": {
-        "values": [
-          "sm",
-          "md",
-          "lg"
-        ],
-        "default": "md"
-      },
-      "tone": {
-        "values": [
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ]
-      },
       "value": {
         "type": "string",
         "default": ""
@@ -712,17 +674,6 @@
           "lg"
         ],
         "default": "md"
-      },
-      "tone": {
-        "values": [
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ]
       }
     },
     "separator": {
@@ -795,17 +746,6 @@
       "step": {
         "type": "number",
         "default": "1"
-      },
-      "tone": {
-        "values": [
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ]
       },
       "value": {
         "type": "number",
@@ -955,25 +895,6 @@
           "vertical"
         ],
         "default": "horizontal"
-      },
-      "size": {
-        "values": [
-          "sm",
-          "md",
-          "lg"
-        ],
-        "default": "md"
-      },
-      "tone": {
-        "values": [
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ]
       }
     },
     "textarea": {
@@ -1001,17 +922,6 @@
           "lg"
         ],
         "default": "md"
-      },
-      "tone": {
-        "values": [
-          "primary",
-          "info",
-          "success",
-          "warning",
-          "destructive",
-          "accent",
-          "muted"
-        ]
       }
     },
     "theme-picker": {
@@ -1099,14 +1009,6 @@
           "vertical"
         ],
         "default": "horizontal"
-      },
-      "size": {
-        "values": [
-          "sm",
-          "md",
-          "lg"
-        ],
-        "default": "md"
       },
       "type": {
         "values": [

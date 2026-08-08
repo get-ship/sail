@@ -154,8 +154,6 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'value', desc: 'the selected value, reflected', type: 'string' },
       { name: 'label', desc: 'accessible group name', type: 'string' },
       { name: 'name', desc: 'the native radio name', type: 'string' },
-      { name: 'tone', desc: 'accent colour token', type: TONES },
-      { name: 'size', desc: 'control scale', type: 'sm · md · lg' },
       { name: 'disabled / required', desc: 'platform states, styled', type: 'bool' },
     ],
   }),
@@ -175,28 +173,26 @@ export const DETAILS: Record<string, DetailEntry> = {
   slider: lang('slider', 'slider', {
     blurb:
       'A native range input, skinned. The platform owns drag, keyboard, role=slider and form submission; the language adds the filled track and the theme.',
-    variants: ['primary', 'success', 'warning', 'destructive'],
-    variantAttr: 'tone',
+    variants: ['sm', 'md', 'lg'],
+    variantAttr: 'size',
     props: [
       { name: 'bind:value', desc: 'two-way signal binding', type: 'signal' },
       { name: 'min / max / step', desc: 'the platform range model', type: 'number' },
-      { name: 'tone', desc: 'track and thumb colour', type: TONES },
       { name: 'size', desc: 'control scale', type: 'sm · md · lg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
     ],
   }),
   'toggle-group': lang('toggle-group', 'toggleGroup', {
     blurb:
-      'A row of toggles with one value (or many, with type=multiple). Roving focus, aria-pressed and the segmented look are all in the element.',
+      'A row of toggles with one value (or many, with type=multiple). Roving focus, aria-pressed and the segmented look are all in the element. Size is authored on each <toggle>.',
     variants: ['outline', 'ghost', 'segmented'],
     variantAttr: 'variant',
     props: [
       { name: 'type', desc: 'one value or many', type: 'single · multiple' },
       { name: 'value', desc: 'the selected value(s), reflected', type: 'string' },
       { name: 'variant', desc: 'the look of the group', type: 'outline · ghost · segmented' },
-      { name: 'size', desc: 'control scale', type: 'sm · md · lg' },
       { name: 'orientation', desc: 'stack it vertically', type: 'horizontal · vertical' },
-      { name: '<toggle value>', desc: 'the options', type: 'children' },
+      { name: '<toggle value size>', desc: 'the options — size on each toggle', type: 'children' },
     ],
   }),
   field: lang('field', 'field', {
@@ -534,18 +530,21 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Navigation ───────────────────────────────────────────────────────
   tabs: lang('tabs', 'tabs', {
     blurb:
-      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Three looks via variant on <tab-list>.',
+      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Three looks via variant on <tab-list>; size is authored on each <tab>.',
     variants: ['line', 'pill', 'enclosed'],
     variantAttr: 'variant',
     props: [
       { name: 'active', desc: 'initially selected tab', type: 'string' },
-      { name: 'size', desc: 'tab height and text', type: 'sm · md · lg' },
-      { name: 'tone', desc: 'accent colour token', type: TONES },
       { name: 'orientation', desc: 'stack the list vertically', type: 'horizontal · vertical' },
       {
         name: '<tab-list variant>',
         desc: 'the look of the tab strip — line · pill · enclosed (lives on the strip, not <tabs>)',
         type: 'line · pill · enclosed',
+      },
+      {
+        name: '<tab size>',
+        desc: 'each tab — size Style match lives here',
+        type: 'sm · md · lg',
       },
     ],
   }),
@@ -561,13 +560,12 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   pagination: lang('pagination', 'pagination', {
     blurb:
-      'A nav of <page> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch.',
-    variants: ['sm', 'md', 'lg'],
-    variantAttr: 'size',
+      'A nav of <page> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page>.',
+    variants: [],
+    variantAttr: '',
     props: [
       { name: 'value', desc: 'the current page', type: 'string' },
-      { name: '<page value>', desc: 'each control — prev/next are pages too', type: 'children' },
-      { name: 'size', desc: 'control scale', type: 'sm · md · lg' },
+      { name: '<page value size>', desc: 'each control — prev/next are pages too; size on each page', type: 'children' },
       { name: 'on-page-change', desc: 'page-change callback, { page }', type: 'callback' },
     ],
   }),

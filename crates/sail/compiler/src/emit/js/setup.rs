@@ -96,8 +96,8 @@ pub(super) fn emit_setup_body(
         for b in sx_var_bindings {
             let scope_ident = js_ident(&b.scope_name);
             match b.unit {
-                // Tone / token-group: reflect var *references* for each member
-                // (`--tone: var(--primary)`, `--tone-foreground: var(--primary-foreground)`).
+                // Color token-group: reflect var *references* for each member
+                // (`--tone: var(--primary)`, `--shade-foreground: var(--primary-foreground)`).
                 // Rest = unset → removeProperty so surface pack paint falls through.
                 crate::check::binding::StyleBindingUnit::TokenGroup => {
                     emit_token_group_reflect(&mut mount_w, &b.scope_name, &b.css_name, scope_ident);
@@ -173,7 +173,7 @@ pub(super) fn emit_setup_body(
     module_hoists
 }
 
-/// Reflect a Tone-typed prop onto bridge custom properties.
+/// Reflect a color-group typed prop onto bridge custom properties.
 ///
 /// `prop="primary"` → `--{css}: var(--primary); --{css}-foreground: var(--primary-foreground)`.
 /// Unset / empty → removeProperty so component-surface rest paint falls through (IACVT).
@@ -183,7 +183,7 @@ fn emit_token_group_reflect(
     css_name: &str,
     scope_ident: String,
 ) {
-    // Full Tone table (registry-derived) as a compact JS object.
+    // Full color-group table (registry-derived) as a compact JS object.
     let mut map = String::from("{");
     for (i, g) in sail_lint::token_groups::tone_groups().iter().enumerate() {
         if i > 0 {

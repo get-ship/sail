@@ -244,7 +244,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <span style(fieldLabel)>Volume</span>
                       <span style(cat)>{volume()}%</span>
                     </row>
-                    <slider bind:value={volume} tone="primary" style({ box: w(full) })></slider>
+                    <slider bind:value={volume} style({ box: w(full) })></slider>
                   </column>}{else-if {e.tag === 'toggle-group'} => <toggle-group value="day" label="Range">
                     <toggle value="day">Day</toggle>
                     <toggle value="week">Week</toggle>

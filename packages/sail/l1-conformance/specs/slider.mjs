@@ -10,10 +10,9 @@ export default {
   width: 900,
   rows() {
     return [
-      cell('primary 40', sl('value="40"')) +
-        cell('success 70', sl('tone="success" value="70"')) +
-        cell('destructive 25', sl('tone="destructive" value="25"')) +
+      cell('default 40', sl('value="40"')) +
         cell('sm 50', sl('size="sm" value="50"')) +
+        cell('md 70', sl('size="md" value="70"')) +
         cell('lg 85', sl('size="lg" value="85"')) +
         cell('disabled 60', sl('disabled value="60"')),
     ]
