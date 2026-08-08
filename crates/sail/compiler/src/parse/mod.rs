@@ -17,6 +17,7 @@ use crate::ir::*;
 
 pub mod expr;
 pub mod html;
+pub mod partials;
 pub mod preprocess;
 pub(crate) mod scope_block;
 pub mod template;

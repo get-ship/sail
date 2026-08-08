@@ -5,6 +5,11 @@ use crate::ir::Instr;
 /// Walk `instrs` recursively and return every distinct custom-element tag
 /// the template uses — i.e. every tag containing a `-` (`sail-*` / `ship-*`).
 ///
+/// In-file `<partial>` invocations are expanded away in preprocess
+/// (SPEC-PARTIAL-1), so this walk only sees post-expansion tags — partial
+/// names never appear here. The `<partial>` construct itself is listed in
+/// `block_manifest::BLOCKS` / grammar / surface, not in used-tag sets.
+///
 /// The compiler deliberately knows NOTHING about islands. Which of these
 /// tags are lazy separate bundles is derived downstream by the bundler's
 /// per-route tree-shaking resolver; deck-core intersects this used-tag set

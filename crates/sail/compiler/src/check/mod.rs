@@ -23,6 +23,7 @@ pub mod match_exhaustiveness;
 pub mod mount_ambient_shadow;
 pub mod on_callable;
 pub mod paired_controller;
+pub mod partials;
 pub mod policy;
 pub mod pure_derived;
 #[cfg(test)]
@@ -82,6 +83,12 @@ pub fn run(
             }
             expr_subset::check(e)
         })
+    )?;
+    // SPEC-PARTIAL-1: author-source checks (leakage, attrs-vs-type, collision).
+    // Expansion already ran in preprocess; this inspects the original text.
+    pass!(
+        "partials",
+        partials::check(source, controller, source_path)
     )?;
     pass!("mutations", check_mutations(program))?;
     // Bare names are the language's namespace — reject unknown bare tags
@@ -260,6 +267,7 @@ pub fn collect(
     // `controller` is resolved by the caller from the inline `<controller>`
     // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
+    diags.extend(partials::collect(source, controller, source_path));
     push(
         paired_controller::check(source, source_path),
         source,

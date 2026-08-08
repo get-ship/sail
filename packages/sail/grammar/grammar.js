@@ -32,6 +32,7 @@ export default grammar({
       $.for_block,
       $.match_block,
       $.when_block,
+      $.partial_block,
       $.element,
       $.interpolation,
       $.text,
@@ -195,6 +196,14 @@ export default grammar({
       '>',
       repeat($._template_node),
       '</when>',
+    ),
+
+    partial_block: $ => seq(
+      '<partial',
+      repeat($._attribute),
+      '>',
+      repeat($._template_node),
+      '</partial>',
     ),
 
     // `x of items` (bare binding) or `(x, i) of items` (parenthesized

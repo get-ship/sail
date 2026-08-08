@@ -291,6 +291,13 @@ pub fn hover_with_session(
         }
     }
     let h = sail_compiler::hover_at(source, path, line_1based as usize, col_1based as usize)?;
+    // SPEC-PARTIAL-1: partial hover carries preformatted markdown in `source`.
+    if h.kind == "partial" {
+        return Some(HoverPayload {
+            contents: h.source,
+            range: None,
+        });
+    }
     let loc = if h.line > 0 {
         format!("\n\nDeclared at controller {}:{}", h.line, h.col)
     } else {
