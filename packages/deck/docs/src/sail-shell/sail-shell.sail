@@ -1,59 +1,53 @@
+<!-- Docs chrome: top bar, sidebar, route slot. Persists across client navigations. -->
+
 <controller>
-// Controller for <sail-shell> — the docs chrome (top bar + sidebar + content).
-//
-// Owns the theme (brands <html data-theme="deck">, manages dark/light, dark-
-// first, persisted) and the current path for sidebar active-state. mountRouter
-// rebuilds the chrome on every client-side navigation, so reading
-// location.pathname at scope time always reflects the active route.
 import { controller, signal } from '@ship/sail-runtime'
 
 const MODE_KEY = 'deck-mode'
 
 export default controller(() => {
-    const root = document.documentElement
-    root.setAttribute('data-theme', 'deck')
+  const root = document.documentElement
+  root.setAttribute('data-theme', 'deck')
 
-    const stored = (() => {
-      try {
-        return localStorage.getItem(MODE_KEY)
-      } catch {
-        return null
-      }
-    })()
-    const dark = signal<boolean>(stored !== 'light') // dark-first
-    const apply = (isDark: boolean): void => {
-      if (isDark) root.removeAttribute('data-mode')
-      else root.setAttribute('data-mode', 'light')
+  const stored = (() => {
+    try {
+      return localStorage.getItem(MODE_KEY)
+    } catch {
+      return null
     }
-    apply(dark())
+  })()
+  // Dark-first; only 'light' in storage opts out.
+  const dark = signal<boolean>(stored !== 'light')
+  const apply = (isDark: boolean): void => {
+    if (isDark) root.removeAttribute('data-mode')
+    else root.setAttribute('data-mode', 'light')
+  }
+  apply(dark())
 
-    const toggleTheme = (): void => {
-      const next = !dark()
-      dark.set(next)
-      apply(next)
-      try {
-        localStorage.setItem(MODE_KEY, next ? 'dark' : 'light')
-      } catch {
-        /* no storage */
-      }
+  const toggleTheme = (): void => {
+    const next = !dark()
+    dark.set(next)
+    apply(next)
+    try {
+      localStorage.setItem(MODE_KEY, next ? 'dark' : 'light')
+    } catch {
+      /* no storage */
     }
+  }
 
-    const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
+  // mountRouter rebuilds chrome on each nav; path is re-read at scope time.
+  const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
 
-    return { dark, toggleTheme, path }
-  })
+  return { dark, toggleTheme, path }
+})
 </controller>
 
-<!--
-  <sail-shell> — the docs chrome: top bar + left sidebar nav + content slot.
-
-  routes/_layout.sail mounts this; deck finds the chrome by its first
-  custom-element tag, then mounts each route's content into <slot name="route">.
-  The chrome persists across client-side navigations; only the slot swaps. Nav
-  uses plain anchors — deck's router intercepts same-origin clicks via
-  composedPath(). The active link is `aria-current="page"`, which is both the
-  semantics a screen reader needs and the hook `current:` styles from.
--->
+<scope>
+  style brand = { text: fontSize(lg).tracking(tight) }
+  style brandDeck = { paint: fg(primary) }
+  style version = { box: padX(2), paint: fg(muted-foreground).borderWidth(1).border(border).radius(full), text: fontFamily(mono).fontSize(xs) }
+  style main = { box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet) }
+</scope>
 
 <navbar sticky bordered>
   <a slot="brand" href="/" aria-label="deck home">
@@ -63,8 +57,8 @@ export default controller(() => {
         <rect x="7" y="4" width="13" height="17" rx="3" fill="var(--primary)" opacity="0.75" />
         <rect x="10.5" y="1.5" width="13" height="17" rx="3" fill="var(--primary)" />
       </svg>
-      <strong style({ text: fontSize(lg).tracking(tight) })><b style({ paint: fg(primary) })>deck</b> docs</strong>
-      <small style({ box: padX(2), paint: fg(muted-foreground).borderWidth(1).border(border).radius(full), text: fontFamily(mono).fontSize(xs) })>0.2.0</small>
+      <strong style(brand)><b style(brandDeck)>deck</b> docs</strong>
+      <small style(version)>0.2.0</small>
     </row>
   </a>
 
@@ -94,7 +88,7 @@ export default controller(() => {
     <a href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
   </navbar>
 
-  <main style({  box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet)  })>
+  <main style(main)>
     <slot name="route"></slot>
   </main>
 </row>
