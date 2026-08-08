@@ -116,8 +116,8 @@ Unit tests: workspace `node_modules` not installed in this worktree; gate is **c
 
 Local on `job/idiomatic-components-3` — **DO NOT push.**
 
-**Tip SHA:** `PENDING` — local only, **not pushed**
+**Tip SHA:** `9bf413fb` — local only, **not pushed**
 
-**Full tip SHA:** `PENDING`
+**Full tip SHA:** `9bf413fb5fc29b37e9e8987dff262aac4b610aaa`
 
 **Feature commit (fine-comb):** `77c291cd`
