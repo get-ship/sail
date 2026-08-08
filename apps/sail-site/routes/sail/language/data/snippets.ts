@@ -5,7 +5,7 @@
 export const code = {
   demo: `<controller>
 import { query } from '@ship/sail-runtime'
-import { api } from './api'
+import { api } from '../../../../src/compositions/users-demo'
 export default controller(() => {
   const attempt = signal(1)
   // A signal read in the call args is a tracked dep: bump it and query()
@@ -29,7 +29,8 @@ export default controller(() => {
 
   source: `// the <controller> block body (inline in users.sail)
 import { query } from '@ship/sail-runtime'
-import { api } from './api' // an imported client — query() derives the key from it
+// an imported client under src/compositions — query() derives the key from it
+import { api } from '../../../../src/compositions/users-demo'
 
 export default controller(() => {
   // query() turns a client call into a reactive state signal:

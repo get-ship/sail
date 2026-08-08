@@ -7,7 +7,7 @@
 
 import { query, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { usersDemo } from './users-demo'
+import { usersDemo } from '../../../../src/compositions/users-demo'
 import { code } from './snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {

@@ -7,7 +7,7 @@
 <controller>
 import { form, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { profileApi, type Profile } from './profile-api'
+import { profileApi, type Profile } from '../../../../src/compositions/profile-api'
 import { code } from './snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {

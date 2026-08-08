@@ -5,7 +5,7 @@
 export const code = {
   demo: `<controller>
 import { form } from '@ship/sail-runtime'
-import { profileApi } from './profile-api'
+import { profileApi } from '../../../../src/compositions/profile-api'
 
 export default controller(() => {
   const sabotage = signal(false)      // "fail the next save" toggle

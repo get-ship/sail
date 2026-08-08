@@ -1,6 +1,8 @@
-// profile-api — the fake server behind /sail/guide/forms' live demo. A 900ms
-// delay keeps the pending state visible; `fail` lets the "Fail the next save"
-// button walk the reader through the error path on demand.
+// profile-api — the fake server behind /sail/guide/forms' live demo. Lives
+// under src/compositions so controllers may value-import it
+// (sail-controller-import-convention). A 900ms delay keeps the pending state
+// visible; `fail` lets the "Fail the next save" button walk the reader
+// through the error path on demand.
 
 export interface Profile {
   name: string

@@ -22,8 +22,11 @@ export const code = {
   liveData: `<!-- routes/feed/page.sail — subscribe a route to live server data -->
 <controller>
 import { query } from '@ship/sail-runtime'
-import { call } from 'ship'
-export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})) }))
+// Imported client under src/compositions — query() derives its cache key
+// from the member path. (Host-injected clients use the same call shape
+// once declared in the app manifest; never \`import { call } from 'ship'\`.)
+import { api } from '../../../src/compositions/demo-clock-api'
+export default controller((_ctx) => ({ t: query(() => api.demo.clock()) }))
 </controller>
 
 <match {t()}>
