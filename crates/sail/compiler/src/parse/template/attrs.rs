@@ -1353,7 +1353,7 @@ mod tests {
         "#;
         let pre = crate::parse::preprocess::preprocess(src).expect("preprocess tag Style");
         assert!(
-            pre.contains("sx-") || pre.contains("fontSize") || pre.contains("2xl"),
+            pre.contains("s-") || pre.contains("fontSize") || pre.contains("2xl"),
             "tag Style with scale tokens must lower:\n{pre}"
         );
         let _prog = crate::parse::parse_author(src)

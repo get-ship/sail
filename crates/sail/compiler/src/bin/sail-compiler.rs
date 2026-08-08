@@ -422,7 +422,7 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
                   * sail-base (platform document floor) rides in sail-base.css. */\n";
     // Same `sail` cascade layer as route/page style install. Page atomics
     // must not ship unlayered — they share class names with skins and would
-    // crush compound fills (e.g. solid bg loses to .sx-bgtransparent).
+    // crush compound fills (e.g. solid bg loses to .s-bgtransparent).
     let body = format!(
         "{banner}@layer sail {{\n{}}}\n",
         sail_compiler::stdlib::skins_css()
@@ -550,7 +550,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     // SPEC-D1: docs language-surface must not teach component public names as
     // free Style color Tokens (validate rejects them). Filter at emit so
     // prop-registry regen stays the single command for this surface.
-    let atoms: Vec<serde_json::Value> = sail_lint::rules::sx::vocabulary()
+    let atoms: Vec<serde_json::Value> = sail_lint::rules::style_rule::vocabulary()
         .into_iter()
         .map(|(prop, values)| {
             let values: Vec<String> = values
@@ -564,14 +564,14 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str("export const SX_ATOMS: SxAtom[] = ");
     sf.push_str(&serde_json::to_string_pretty(&atoms)?);
     sf.push_str("\n\n");
-    let states: Vec<serde_json::Value> = sail_lint::rules::sx::STATE_PREFIXES
+    let states: Vec<serde_json::Value> = sail_lint::rules::style_rule::STATE_PREFIXES
         .iter()
         .map(|(n, sel)| serde_json::json!({ "prefix": n, "selector": sel }))
         .collect();
     sf.push_str("export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = ");
     sf.push_str(&serde_json::to_string_pretty(&states)?);
     sf.push_str("\n\n");
-    let conds: Vec<serde_json::Value> = sail_lint::rules::sx::CONDITION_PREFIXES
+    let conds: Vec<serde_json::Value> = sail_lint::rules::style_rule::CONDITION_PREFIXES
         .iter()
         .map(|(n, m)| serde_json::json!({ "prefix": n, "media": m }))
         .collect();
@@ -586,11 +586,11 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&layout)?);
     sf.push_str("\n\n");
     // The REFUSED table — every atom the lint refuses, with the thing to use
-    // instead. Sourced from `sx_vocab::refusals()` (the same table the lint
+    // instead. Sourced from `style_vocab::refusals()` (the same table the lint
     // reads), so the docs teach the closure, by construction. The /reference
     // page renders this as the "Not sx — use this" table; the agent SKILL.md
     // leads with it.
-    let refusals: Vec<serde_json::Value> = sail_lint::sx_vocab::refusals()
+    let refusals: Vec<serde_json::Value> = sail_lint::style_vocab::refusals()
         .into_iter()
         .map(|(atom, instead)| serde_json::json!({ "atom": atom, "instead": instead }))
         .collect();
@@ -704,6 +704,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
                 "param": a.param,
                 "summary": a.summary,
                 "public": sail_compiler::action_manifest::is_public_action(a.name),
+                "writes": a.writes,
             })
         })
         .collect();
@@ -714,11 +715,12 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
                 "param": a.param,
                 "summary": a.summary,
                 "public": true,
+                "writes": a.writes,
             })
         })
         .collect();
     sf.push_str(
-        "export interface ActionDoc {\n  name: string\n  param: string\n  summary: string\n  public: boolean\n}\n\n",
+        "export interface ActionDoc {\n  name: string\n  param: string\n  summary: string\n  public: boolean\n  /** camelCase bind vocabulary this action writes (`anchorLeft`, …). */\n  writes: string[]\n}\n\n",
     );
     sf.push_str("export const ACTIONS: ActionDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&actions)?);
@@ -833,8 +835,8 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
 
     // SX EXTRAS — the group/state-<value>/(--var) forms that are grammar
     // rather than a closed name table, straight from
-    // sail_lint::rules::sx::SX_EXTRA_FORMS.
-    let sx_extras: Vec<serde_json::Value> = sail_lint::rules::sx::SX_EXTRA_FORMS
+    // sail_lint::rules::style_rule::SX_EXTRA_FORMS.
+    let sx_extras: Vec<serde_json::Value> = sail_lint::rules::style_rule::SX_EXTRA_FORMS
         .iter()
         .map(|(form, doc)| serde_json::json!({ "form": form, "doc": doc }))
         .collect();
@@ -1084,7 +1086,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            (`gap` / `align` / `justify` on row|column|grid) stay. Paint (bg, type,\n  \
            chrome) stays on paint/text channels.\n\
          - **Never `style.display(…)` on layout keywords** (`row`/`column`/`grid`/\n  \
-           `center`/`stack`). Bases own `display:flex|grid` and beat `.sx-displaynone`\n  \
+           `center`/`stack`). Bases own `display:flex|grid` and beat `.s-displaynone`\n  \
            (`.sail-col` footgun). Hide a plain host and nest the layout inside\n  \
            (`sail-display-on-layout`).\n\
          - Behavior is unrestricted TypeScript in `<controller>`. Static surface in\n  \
@@ -1100,10 +1102,26 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
             md,
             "Attach Style as a **tag call** `style({{…}})` on the open tag — not `style=` / `sx=`.\n\
              Scope Style consts, `style({{ match: {{…}}, when: {{…}}, compound: […] }})`,\n\
-             `bind(name)` for runtime CSS vars. Style is compile-time static — no\n\
-             dynamic JS in the Style host. Full closed setter table: MCP `sail_surface`\n\
-             topic `style`. Layout atoms refused by name: MCP topic `layout`\n\
-             (same `sx_vocab::refusals()`).\n"
+             and first-class **`bind(name)`** for values that track props/signals/\n\
+             derived/tokens/action writes. Style is compile-time static — no dynamic\n\
+             JS expressions inside Style (computation lives in the controller; the\n\
+             template names it). Full closed setter table: MCP `sail_surface` topic\n\
+             `style`. Layout atoms refused by name: MCP topic `layout`\n\
+             (same `style_vocab::refusals()`).\n\
+             \n\
+             ### `bind(name)` units contract\n\
+             \n\
+             | Source → setter | Realization |\n\
+             |---|---|\n\
+             | number → length (`top`, `w`, `pad`, …) | legal; means **px** (`@property` length + reflection) |\n\
+             | number → number (`opacity`, `z`) | direct |\n\
+             | string → any | pass-through (`syntax: '*'`) |\n\
+             | number → color (`bg`, `fg`, …) | **compile error** |\n\
+             | `derived` by name | allowed (read-only); annotate `(): number` for length |\n\
+             | action write (`use:anchor` → `anchorLeft`) | via action manifest `writes` |\n\
+             \n\
+             Do not enumerate a prop as ≥3 compound rows that only vary a setter arg —\n\
+             that is `sail-style-value-enumeration`; use `bind(name)` instead.\n"
         );
 
         // Core setters only — no full table dump.

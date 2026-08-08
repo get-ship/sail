@@ -114,7 +114,7 @@ fn rule_matches(selector: Selector, classes: &[&str], parent_classes: &[&str]) -
             let rest = c.strip_prefix(prefix);
             matches!(rest, Some(r) if r == value)
         }),
-        Selector::Sx(s) => classes.iter().any(|c| c.strip_prefix("sx-") == Some(s)),
+        Selector::Sx(s) => classes.iter().any(|c| c.strip_prefix("s-") == Some(s)),
         Selector::ParentBase(s) => parent_classes.contains(&s),
         Selector::Any(s) => classes.contains(&s),
     }
@@ -493,7 +493,7 @@ mod tests {
     fn sx_padding_resolves_to_rect() {
         let elem = Element {
             tag: "div".into(),
-            class: "sx-p4".into(),
+            class: "s-p4".into(),
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 1440.0);
@@ -505,7 +505,7 @@ mod tests {
     fn sx_width_full_resolves_to_percent() {
         let elem = Element {
             tag: "div".into(),
-            class: "sx-wfull".into(),
+            class: "s-wfull".into(),
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 1440.0);
@@ -516,7 +516,7 @@ mod tests {
     fn sx_hidden_sets_display_none() {
         let elem = Element {
             tag: "div".into(),
-            class: "sail-col sx-hidden".into(),
+            class: "sail-col s-hidden".into(),
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 1440.0);

@@ -8,17 +8,17 @@
 
 // Lowered Style stamps — component.tab + component.tab-list packs (not free globals).
 const TAB =
-  'sail-tab sx-padY2 sx-padX3 sx-fgtabforeground sx-bgtransparent sx-cursorpointer sx-selectnone sx-borderWidth0 sx-borderBWidth2 sx-borderBtransparent sx-radiusTsm sx-tapHighlightnone sx-transitioncolors sx-durationfast sx-easeout sx-fontFamilybody sx-fontWeightmedium sx-leadingnone sx-whitespacenowrap sx-fontSizesm sx-hover-fgtabselectedforeground sx-selected-fgtabselectedforeground sx-selected-borderBprimary sx-selected-fontWeightsemibold sx-disabled-opacity50 sx-disabled-cursornotallowed'
+  'sail-tab s-padY2 s-padX3 s-fgtabforeground s-bgtransparent s-cursorpointer s-selectnone s-borderWidth0 s-borderBWidth2 s-borderBtransparent s-radiusTsm s-tapHighlightnone s-transitioncolors s-durationfast s-easeout s-fontFamilybody s-fontWeightmedium s-leadingnone s-whitespacenowrap s-fontSizesm s-hover-fgtabselectedforeground s-selected-fgtabselectedforeground s-selected-borderBprimary s-selected-fontWeightsemibold s-disabled-opacity50 s-disabled-cursornotallowed'
 const TAB_PILL =
-  `${TAB} sx-variantpill-borderBWidth0 sx-variantpill-radiussm sx-variantpillselected-fgtabselectedforeground sx-variantpillselected-bgtabselectedbg sx-variantpillselected-shadowxs sx-variantpillselected-borderBtransparent`
+  `${TAB} s-variantpill-borderBWidth0 s-variantpill-radiussm s-variantpillselected-fgtabselectedforeground s-variantpillselected-bgtabselectedbg s-variantpillselected-shadowxs s-variantpillselected-borderBtransparent`
 const TAB_ENCLOSED =
-  `${TAB} sx-variantenclosed-borderWidth1 sx-variantenclosed-bordertransparent sx-variantenclosed-borderBWidth0 sx-variantenclosed-radiusTmd sx-variantenclosedselected-fgtabselectedforeground sx-variantenclosedselected-bordertabborder sx-variantenclosedselected-bgtabselectedbg sx-variantenclosedselected-translateYpx`
+  `${TAB} s-variantenclosed-borderWidth1 s-variantenclosed-bordertransparent s-variantenclosed-borderBWidth0 s-variantenclosed-radiusTmd s-variantenclosedselected-fgtabselectedforeground s-variantenclosedselected-bordertabborder s-variantenclosedselected-bgtabselectedbg s-variantenclosedselected-translateYpx`
 const LIST =
-  'sail-tab-list sx-borderBWidth1 sx-bordertablistborder sx-bgtablist'
-const LIST_LINE = `${LIST} sx-variantline-borderBWidth1 sx-variantline-bordertablistborder`
+  'sail-tab-list s-borderBWidth1 s-bordertablistborder s-bgtablist'
+const LIST_LINE = `${LIST} s-variantline-borderBWidth1 s-variantline-bordertablistborder`
 const LIST_PILL =
-  `${LIST} sx-variantpill-pad1 sx-variantpill-borderWidth0 sx-variantpill-radiusmd sx-variantpill-bgtablistrail sx-variantpill-borderBWidth0`
-const LIST_ENCLOSED = `${LIST} sx-variantenclosed-borderBWidth1 sx-variantenclosed-bordertablistborder`
+  `${LIST} s-variantpill-pad1 s-variantpill-borderWidth0 s-variantpill-radiusmd s-variantpill-bgtablistrail s-variantpill-borderBWidth0`
+const LIST_ENCLOSED = `${LIST} s-variantenclosed-borderBWidth1 s-variantenclosed-bordertablistborder`
 
 const tabCls = (variant) =>
   variant === 'pill' ? TAB_PILL : variant === 'enclosed' ? TAB_ENCLOSED : TAB
@@ -28,7 +28,7 @@ const listCls = (variant) =>
 const tab = (name, label, sel, variant, extra = '') =>
   `<button class="${tabCls(variant)}" name="${name}" role="tab" aria-selected="${sel ? 'true' : 'false'}" tabindex="${sel ? '0' : '-1'}" ${extra}>${label}</button>`
 const panel = (name, sel) =>
-  `<div class="sail-tab-panel sx-minW0 sx-orientationhorizontal-padT4" name="${name}" role="tabpanel" ${sel ? '' : 'hidden'}>${name} panel</div>`
+  `<div class="sail-tab-panel s-minW0 s-orientationhorizontal-padT4" name="${name}" role="tabpanel" ${sel ? '' : 'hidden'}>${name} panel</div>`
 
 const tabs = (variant, attrs, active, items) =>
   `<div class="sail-tabs" active="${active}" ${attrs}>` +

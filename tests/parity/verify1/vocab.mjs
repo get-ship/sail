@@ -58,7 +58,7 @@ export const VOCAB = {
     {
       id: 'grow',
       values: ['unset', '0', '1'],
-      notes: 'style.grow(0|1) / grow attr → sx-grow0/1; product is binary only',
+      notes: 'style.grow(0|1) / grow attr → s-grow0/1; product is binary only',
     },
     {
       id: 'shrink',
@@ -99,7 +99,7 @@ export const VOCAB = {
     {
       id: 'pad',
       values: ['unset', '0', '2', '4', '6', '8'],
-      notes: 'style.pad(N) → sx-padN; also padX/Y/T/R/B/L/S/E scale prefixes',
+      notes: 'style.pad(N) → s-padN; also padX/Y/T/R/B/L/S/E scale prefixes',
     },
   ]),
 
@@ -139,7 +139,7 @@ export const VOCAB = {
       'x-scroll',
       'y-scroll',
     ],
-    notes: 'style.overflow* → sx-overflow*; auto/scroll both map to taffy Scroll',
+    notes: 'style.overflow* → s-overflow*; auto/scroll both map to taffy Scroll',
   }),
 
   grid: /** @type {Dim[]} */ ([

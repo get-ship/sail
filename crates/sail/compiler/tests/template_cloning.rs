@@ -49,7 +49,7 @@ fn a_static_subtree_is_hoisted_and_cloned() {
         out.contains("__tpl("),
         "the markup is hoisted as a template:\n{out}"
     );
-    // <button> is a native stdlib tag: stamping bakes sail-button + sx-* classes
+    // <button> is a native stdlib tag: stamping bakes sail-button + s-* classes
     // and data-sail-host into the hoisted markup alongside data-test.
     assert!(
         out.contains(r#"data-test=\"go\""#)

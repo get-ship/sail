@@ -94,8 +94,8 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
     );
     // Host sx base still present (atomic classes on structure / rules in skin).
     assert!(
-        out.structure_html.contains("sx-roundedfull")
-            || out.structure_html.contains("sx-border")
+        out.structure_html.contains("s-roundedfull")
+            || out.structure_html.contains("s-border")
             || out.skin_css.contains("border-radius"),
         "host sx base survives: struct={} skin={}",
         out.structure_html,
@@ -109,21 +109,21 @@ fn badge_soft_base_on_host_sx() {
     let out = compile_element(src, "badge").expect("badge compiles");
     assert!(
         is_style_product(src)
-            && (out.structure_html.contains("sx-bgmuted")
+            && (out.structure_html.contains("s-bgmuted")
                 || out.structure_html.contains("bgmuted")
                 || out.skin_css.contains("var(--muted)")
-                || out.structure_html.contains("sx-bgtonebg"))
-            && (out.structure_html.contains("sx-fgmutedforeground")
+                || out.structure_html.contains("s-bgtonebg"))
+            && (out.structure_html.contains("s-fgmutedforeground")
                 || out.structure_html.contains("mutedforeground")
                 || out.skin_css.contains("var(--muted-foreground)")
-                || out.structure_html.contains("sx-texttonefg")
-                || out.structure_html.contains("sx-fg")),
+                || out.structure_html.contains("s-texttonefg")
+                || out.structure_html.contains("s-fg")),
         "soft default paint must be host Style (semantic tokens):\n{}",
         out.structure_html
     );
     assert!(
-        out.structure_html.contains("sx-fontFamilybody")
-            || out.structure_html.contains("sx-fontbody")
+        out.structure_html.contains("s-fontFamilybody")
+            || out.structure_html.contains("s-fontbody")
             || out.skin_css.contains("var(--body-font)"),
         "typeface on host sx:\n{}",
         out.structure_html
@@ -181,8 +181,8 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         "avatar must layout-center + avatar-media child pack"
     );
     assert!(
-        out.structure_html.contains("sx-trackingwide")
-            && (out.structure_html.contains("sx-shadowinsetring")
+        out.structure_html.contains("s-trackingwide")
+            && (out.structure_html.contains("s-shadowinsetring")
                 || out.skin_css.contains("box-shadow:var(--shadow-inset-ring)")
                 || out
                     .skin_css
@@ -192,12 +192,12 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.structure_html.contains("sx-size7")
-            && (out.structure_html.contains("sx-radiusfull")
-                || out.structure_html.contains("sx-roundedfull")
+        out.structure_html.contains("s-size7")
+            && (out.structure_html.contains("s-radiusfull")
+                || out.structure_html.contains("s-roundedfull")
                 || out.skin_css.contains("border-radius:var(--radius-full)"))
-            && (out.structure_html.contains("sx-fontFamilybody")
-                || out.structure_html.contains("sx-fontbody")
+            && (out.structure_html.contains("s-fontFamilybody")
+                || out.structure_html.contains("s-fontbody")
                 || out.skin_css.contains("var(--body-font)")),
         "attr-absent PE size=md + shape round + type on host sx:\n{}",
         out.structure_html
@@ -216,10 +216,10 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         "avatar skins must lower default gradient to CSS linear-gradient:\n{}",
         out.skin_css
     );
-    // avatar-media child pack → .sx-avatarmedia img { … }
+    // avatar-media child pack → .s-avatarmedia img { … }
     assert!(
-        out.structure_html.contains("sx-avatarmedia")
-            && (out.skin_css.contains(".sx-avatarmedia img")
+        out.structure_html.contains("s-avatarmedia")
+            && (out.skin_css.contains(".s-avatarmedia img")
                 || out.skin_css.contains("object-fit:contain")
                 || out.skin_css.contains("object-fit: contain")),
         "avatar-media must paint descendant img:\nstruct={}\nskin={}",
@@ -313,7 +313,7 @@ fn empty_state_child_paint_on_structure_sx() {
     assert!(
         out.skin_css.contains("background-color:var(--empty-state)")
             || out.skin_css.contains("background-color: var(--empty-state)")
-            || out.structure_html.contains("sx-bgemptystate"),
+            || out.structure_html.contains("s-bgemptystate"),
         "icon soft surface via empty-state component token (no free muted / tone-bg):\n{}",
         out.skin_css
     );
@@ -343,7 +343,7 @@ fn empty_state_child_paint_on_structure_sx() {
     );
     assert!(
         out.structure_html.contains("empty")
-            || out.structure_html.contains("sx-empty")
+            || out.structure_html.contains("s-empty")
             || out.skin_css.contains(":empty"),
         "empty gate must lower:\nstruct={}\nskin={}",
         out.structure_html,
@@ -508,7 +508,7 @@ fn switch_host_track_paint_on_host_sx() {
     );
     assert!(
         out.structure_html.contains("boxSizingborder")
-            || out.skin_css.contains("sx-boxSizingborder"),
+            || out.skin_css.contains("s-boxSizingborder"),
         "boxSizing class mint must stamp: struct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -524,7 +524,7 @@ fn switch_host_track_paint_on_host_sx() {
         "/../../../packages/sail/tokens/src/element-skins.css"
     ));
     assert!(
-        skins_file.contains(".sx-boxSizingborder{")
+        skins_file.contains(".s-boxSizingborder{")
             && (skins_file.contains("box-sizing:border-box")
                 || skins_file.contains("box-sizing: border-box")),
         "element-skins.css stale for boxSizing — run: cargo run -p sail-compiler -- framework-css"
@@ -620,9 +620,9 @@ fn toast_start_stripe_on_host_sx() {
     // + match(tone) semantic borderS tokens.
     let out = compile_element(include_str!("../stdlib/toast.sail"), "toast").expect("toast");
     assert!(
-        out.structure_html.contains("sx-borderSWidth3")
+        out.structure_html.contains("s-borderSWidth3")
             || out.structure_html.contains("borderSWidth")
-            || out.structure_html.contains("sx-borders3")
+            || out.structure_html.contains("s-borders3")
             || out.structure_html.contains("border-s-3")
             || out.skin_css.contains("border-inline-start-width:3px")
             || out.skin_css.contains("border-inline-start-width: 3px"),
@@ -661,7 +661,7 @@ fn toast_start_stripe_on_host_sx() {
         src.contains("data-toast-close")
             && (src.contains("ms(auto)") || src.contains("ms-auto") || src.contains("ms: auto"))
             && (out.structure_html.contains("data-toast-close")
-                || out.structure_html.contains("sx-msauto")),
+                || out.structure_html.contains("s-msauto")),
         "close control must be structure with sx:\n{}",
         out.structure_html
     );
@@ -683,7 +683,7 @@ fn card_host_paint_bulk_on_host_sx() {
         "card host sx must bind corner-image + backdrop tokens"
     );
     assert!(
-        out.structure_html.contains("sx-borderimagecornerimage")
+        out.structure_html.contains("s-borderimagecornerimage")
             || out.skin_css.contains("border-image:var(--corner-image)")
             || out.skin_css.contains("border-image: var(--corner-image)"),
         "border-image token must land:\nstruct={}\nskin={}",
@@ -691,7 +691,7 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.structure_html.contains("sx-backdropcardbackdropfilter")
+        out.structure_html.contains("s-backdropcardbackdropfilter")
             || out.structure_html.contains("card-backdrop-filter")
             || out
                 .skin_css
@@ -709,7 +709,7 @@ fn card_host_paint_bulk_on_host_sx() {
             || out
                 .skin_css
                 .contains("-webkit-backdrop-filter: var(--card-backdrop-filter)")
-            || out.structure_html.contains("sx-backdrop"),
+            || out.structure_html.contains("s-backdrop"),
         "webkit backdrop prefix must land with token:\nskin={}",
         out.skin_css
     );
@@ -812,8 +812,8 @@ fn card_host_paint_bulk_on_host_sx() {
     assert!(
         out.structure_html.contains(r#"slot name="header""#)
             && out.structure_html.contains(r#"slot name="footer""#)
-            && (out.structure_html.contains("sx-empty-hidden") || out.skin_css.contains(":empty"))
-            && (out.structure_html.contains("sx-fontheading")
+            && (out.structure_html.contains("s-empty-hidden") || out.skin_css.contains(":empty"))
+            && (out.structure_html.contains("s-fontheading")
                 || out.skin_css.contains("font-family:var(--heading-font)")
                 || out.skin_css.contains("font-family: var(--heading-font)")),
         "header/footer chrome must lower into structure/skin:\nstruct={}\nskin={}",
@@ -887,34 +887,34 @@ fn navbar_host_paint_on_sx_cva() {
         out.structure_html.contains("sail-row")
             && out.structure_html.contains("sail-nowrap")
             && (out.structure_html.contains("sail-g-4") || out.structure_html.contains("sail-g-"))
-            && (out.structure_html.contains("sx-bgnavbar")
+            && (out.structure_html.contains("s-bgnavbar")
                 || out.structure_html.contains("bgnavbar")
                 || out.skin_css.contains("var(--navbar)"))
             && (out.structure_html.contains("navbarforeground")
-                || out.structure_html.contains("sx-fgnavbar")
+                || out.structure_html.contains("s-fgnavbar")
                 || out.skin_css.contains("var(--navbar-foreground)"))
-            && (out.structure_html.contains("sx-minh14")
+            && (out.structure_html.contains("s-minh14")
                 || out.structure_html.contains("minh14")
                 || out.skin_css.contains("min-height"))
-            && (out.structure_html.contains("sx-displaycontents")
-                || out.structure_html.contains("sx-contents")
+            && (out.structure_html.contains("s-displaycontents")
+                || out.structure_html.contains("s-contents")
                 || out.structure_html.contains("display:contents")
                 || out.skin_css.contains("display:contents")
                 || out.skin_css.contains("display: contents"))
             && out.structure_html.contains("slot name=\"brand\"")
             && out.structure_html.contains("slot name=\"center\"")
             && out.structure_html.contains("slot name=\"actions\"")
-            && (out.structure_html.contains("sx-grow1")
+            && (out.structure_html.contains("s-grow1")
                 || out.structure_html.contains("grow1")
                 || out.structure_html.contains("grow-1")
                 || out.skin_css.contains("flex-grow:1")
                 || out.skin_css.contains("flex-grow: 1"))
-            && (out.structure_html.contains("sx-msauto")
+            && (out.structure_html.contains("s-msauto")
                 || out.structure_html.contains("msauto")
                 || out.structure_html.contains("ms-auto")
                 || out.skin_css.contains("margin-inline-start:auto")
                 || out.skin_css.contains("margin-inline-start: auto"))
-            && (out.structure_html.contains("sx-mtauto")
+            && (out.structure_html.contains("s-mtauto")
                 || out.structure_html.contains("mtauto")
                 || out.structure_html.contains("mt-auto")
                 || out.skin_css.contains("margin-top:auto")
@@ -1001,11 +1001,11 @@ fn error_state_child_paint_on_structure_sx() {
     assert!(
         (out.skin_css.contains("font-size:var(--text-md)")
             || out.skin_css.contains("font-size: var(--text-md)")
-            || out.structure_html.contains("sx-textmd")
+            || out.structure_html.contains("s-textmd")
             || out.structure_html.contains("fontsizemd"))
             && (out.skin_css.contains("font-size:var(--text-sm)")
                 || out.skin_css.contains("font-size: var(--text-sm)")
-                || out.structure_html.contains("sx-textsm")
+                || out.structure_html.contains("s-textsm")
                 || out.structure_html.contains("fontsizesm"))
             && (out.skin_css.contains("max-width:var(--panel-ch-w-md)")
                 || out.skin_css.contains("max-width: var(--panel-ch-w-md)"))
@@ -1243,7 +1243,7 @@ fn alert_tone_stripe_before_on_host_sx() {
     );
     assert!(
         out.structure_html.contains("before")
-            || out.structure_html.contains("sx-before")
+            || out.structure_html.contains("s-before")
             || out.skin_css.contains("::before"),
         "before stripe must lower into structure/skin:\n{}\n{}",
         out.structure_html,
@@ -1266,7 +1266,7 @@ fn alert_tone_stripe_before_on_host_sx() {
     );
     assert!(
         out.structure_html.contains("empty")
-            || out.structure_html.contains("sx-empty")
+            || out.structure_html.contains("s-empty")
             || out.skin_css.contains(":empty"),
         "empty gate must lower:\n{}\n{}",
         out.structure_html,
@@ -1324,14 +1324,14 @@ fn toast_region_host_paint_on_sx_cva() {
             && src.contains("'bottom-end':"),
         "toast-region host sx/CVA must carry fixed/z/pad/width + position insets + reverse"
     );
-    // Style-minted class names (sx-{setter}{args}, case-preserving).
+    // Style-minted class names (s-{setter}{args}, case-preserving).
     assert!(
-        out.structure_html.contains("sx-positionfixed")
-            && out.structure_html.contains("sx-zztoast")
-            && out.structure_html.contains("sx-pad4")
-            && out.structure_html.contains("sx-pointerEventsnone")
-            && out.structure_html.contains("sx-top0")
-            && (out.structure_html.contains("sx-wpanelwtoast")
+        out.structure_html.contains("s-positionfixed")
+            && out.structure_html.contains("s-zztoast")
+            && out.structure_html.contains("s-pad4")
+            && out.structure_html.contains("s-pointerEventsnone")
+            && out.structure_html.contains("s-top0")
+            && (out.structure_html.contains("s-wpanelwtoast")
                 || out.skin_css.contains("var(--panel-w-toast)")),
         "host paint atoms on structure:\n{}\nskin={}",
         out.structure_html,
@@ -1410,13 +1410,13 @@ fn theme_picker_host_paint_on_structure_sx() {
         "theme-picker structure must carry Style product without class anatomy; roles via use:themeSelect"
     );
     assert!(
-        (out.structure_html.contains("sx-sizecontrolhsm")
+        (out.structure_html.contains("s-sizecontrolhsm")
             || out.structure_html.contains("sizecontrolhsm")
             || out.skin_css.contains("var(--control-h-sm)"))
-            && (out.structure_html.contains("sx-bgthemepicker")
+            && (out.structure_html.contains("s-bgthemepicker")
                 || out.structure_html.contains("bgthemepicker")
                 || out.skin_css.contains("var(--theme-picker)"))
-            && (out.structure_html.contains("sx-isolate")
+            && (out.structure_html.contains("s-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
             && (out.structure_html.contains("data-theme-listbox")
@@ -1435,7 +1435,7 @@ fn theme_picker_host_paint_on_structure_sx() {
             && !out.structure_html.contains("class=\"tc-")
             && (out.structure_html.contains("data-theme-grid")
                 || out.structure_html.contains("value=\"sail\""))
-            && (out.structure_html.contains("sx-bgprimary")
+            && (out.structure_html.contains("s-bgprimary")
                 || out.structure_html.contains("bgprimary")
                 || out.skin_css.contains("var(--primary)"))
             && (out.skin_css.contains("CanvasText") || out.structure_html.contains("CanvasText")),
@@ -1497,19 +1497,19 @@ fn prose_host_paint_on_sx_descendants_generated() {
         "prose host Style must carry block + body type/color/leading"
     );
     assert!(
-        (out.structure_html.contains("sx-displayblock")
-            || out.structure_html.contains("sx-block")
+        (out.structure_html.contains("s-displayblock")
+            || out.structure_html.contains("s-block")
             || out.skin_css.contains("display:block")
             || out.skin_css.contains("display: block"))
-            && (out.structure_html.contains("sx-fontfamilybody")
-                || out.structure_html.contains("sx-fontbody")
+            && (out.structure_html.contains("s-fontfamilybody")
+                || out.structure_html.contains("s-fontbody")
                 || out.skin_css.contains("var(--body-font)"))
             && (out.structure_html.contains("proseforeground")
-                || out.structure_html.contains("sx-fgprose")
+                || out.structure_html.contains("s-fgprose")
                 || out.skin_css.contains("var(--prose-foreground)")
-                || out.structure_html.contains("sx-textforeground"))
+                || out.structure_html.contains("s-textforeground"))
             && (out.structure_html.contains("leadingloose")
-                || out.structure_html.contains("sx-leadingloose")
+                || out.structure_html.contains("s-leadingloose")
                 || out.skin_css.contains("var(--leading-loose)")),
         "host paint atoms on structure:\n{}",
         out.structure_html
@@ -1566,7 +1566,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     );
     assert!(
         (out.structure_html.contains("bgtablist")
-            || out.structure_html.contains("sx-bgbackground")
+            || out.structure_html.contains("s-bgbackground")
             || out.skin_css.contains("var(--tab-list)"))
             && (out.structure_html.contains("borderB")
                 || out.structure_html.contains("borderb")
@@ -1625,7 +1625,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && tab_out.skin_css.contains("size='lg'")
             && (tab_out.skin_css.contains("font-size:var(--text-sm)")
                 || tab_out.skin_css.contains("font-size: var(--text-sm)")
-                || tab_out.structure_html.contains("sx-textsm"))
+                || tab_out.structure_html.contains("s-textsm"))
             // Banned: legacy size channels --tab-py / --tab-h. Allowed: component
             // token reads --tab-foreground / --tab-selected*.
             && !tab_out.skin_css.contains("--tab-py")
@@ -1674,7 +1674,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
     );
     // Overflow / orientation always land.
     assert!(
-        out.structure_html.contains("sx-overflowyauto")
+        out.structure_html.contains("s-overflowyauto")
             || out.structure_html.contains("overflowyauto")
             || out.structure_html.contains("overflow-y-auto")
             || out.skin_css.contains("overflow-y:auto")
@@ -1743,10 +1743,10 @@ fn code_block_pre_tab_and_tok_generated() {
         "code-block pre Style must carry tab(2) + leading(code)"
     );
     assert!(
-        (out.structure_html.contains("sx-tab2")
+        (out.structure_html.contains("s-tab2")
             || out.structure_html.contains("tab2")
             || out.skin_css.contains("tab-size"))
-            && (out.structure_html.contains("sx-leadingcode")
+            && (out.structure_html.contains("s-leadingcode")
                 || out.structure_html.contains("leadingcode")
                 || out.skin_css.contains("var(--leading-code)")),
         "tab/leading atoms on structure:\n{}",
@@ -1755,7 +1755,7 @@ fn code_block_pre_tab_and_tok_generated() {
     assert!(
         out.skin_css.contains("tab-size:2")
             || out.skin_css.contains("tab-size: 2")
-            || out.structure_html.contains("sx-tab2")
+            || out.structure_html.contains("s-tab2")
             || out.structure_html.contains("tab2"),
         "tab-2 must lower:\n{}",
         out.skin_css
@@ -1763,7 +1763,7 @@ fn code_block_pre_tab_and_tok_generated() {
     assert!(
         out.skin_css.contains("line-height:var(--leading-code)")
             || out.skin_css.contains("line-height: var(--leading-code)")
-            || out.structure_html.contains("sx-leadingcode")
+            || out.structure_html.contains("s-leadingcode")
             || out.structure_html.contains("leadingcode"),
         "leading-code must lower:\n{}",
         out.skin_css
@@ -1873,7 +1873,7 @@ fn label_req_gate_in_element_skins_anatomy() {
     assert!(
         out.structure_html.contains("aria-hidden")
             && (out.structure_html.contains("displaynone")
-                || out.structure_html.contains("sx-")
+                || out.structure_html.contains("s-")
                 || out.skin_css.contains("display:none")
                 || out.skin_css.contains("display: none"))
             && (out.structure_html.contains("sail-grp")
@@ -1976,25 +1976,25 @@ fn overlay_family_anchor_geometry_on_host_sx() {
             "{tag} host Style/sx must carry anchor geometry + extras:\n{src}"
         );
         assert!(
-            (out.structure_html.contains("sx-positionfixed")
-                || out.structure_html.contains("sx-fixed")
+            (out.structure_html.contains("s-positionfixed")
+                || out.structure_html.contains("s-fixed")
                 || out.skin_css.contains("position:fixed")
                 || out.skin_css.contains("position: fixed"))
                 && (out.structure_html.contains("insetauto")
-                    || out.structure_html.contains("sx-insetauto")
+                    || out.structure_html.contains("s-insetauto")
                     || out.skin_css.contains("inset:auto")
                     || out.skin_css.contains("inset: auto"))
-                && (out.structure_html.contains("sx-m0")
+                && (out.structure_html.contains("s-m0")
                     || out.structure_html.contains("m0")
                     || out.skin_css.contains("margin:0")
                     || out.skin_css.contains("margin: 0"))
                 && (out.structure_html.contains("anchorLeft")
                     || out.structure_html.contains("anchorleft")
-                    || out.structure_html.contains("sx-leftanchorleft")
+                    || out.structure_html.contains("s-leftanchorleft")
                     || out.skin_css.contains("var(--anchor-left)"))
                 && (out.structure_html.contains("anchorTop")
                     || out.structure_html.contains("anchortop")
-                    || out.structure_html.contains("sx-topanchortop")
+                    || out.structure_html.contains("s-topanchortop")
                     || out.skin_css.contains("var(--anchor-top)")),
             "{tag} geometry atoms on structure:\n{}",
             out.structure_html
@@ -2050,23 +2050,23 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
         "listbox Style must carry anchor geometry + scroll"
     );
     assert!(
-        (out.structure_html.contains("sx-positionfixed")
-            || out.structure_html.contains("sx-fixed")
+        (out.structure_html.contains("s-positionfixed")
+            || out.structure_html.contains("s-fixed")
             || out.skin_css.contains("position:fixed")
             || out.skin_css.contains("position: fixed"))
             && (out.structure_html.contains("anchorWidth")
                 || out.structure_html.contains("anchorwidth")
-                || out.structure_html.contains("sx-minwanchorwidth")
+                || out.structure_html.contains("s-minwanchorwidth")
                 || out.skin_css.contains("var(--anchor-width)"))
             && (out.structure_html.contains("maxhpanelmaxhsm")
-                || out.structure_html.contains("sx-maxhpanelmaxhsm")
+                || out.structure_html.contains("s-maxhpanelmaxhsm")
                 || out.skin_css.contains("var(--panel-max-h-sm)"))
             && (out.structure_html.contains("overflowyauto")
-                || out.structure_html.contains("sx-overflowyauto")
+                || out.structure_html.contains("s-overflowyauto")
                 || out.skin_css.contains("overflow-y:auto")
                 || out.skin_css.contains("overflow-y: auto"))
             && (out.structure_html.contains("overscrollcontain")
-                || out.structure_html.contains("sx-overscrollcontain")
+                || out.structure_html.contains("s-overscrollcontain")
                 || out.skin_css.contains("overscroll-behavior:contain")
                 || out.skin_css.contains("overscroll-behavior: contain")),
         "listbox geometry on structure:\n{}",
@@ -2115,11 +2115,11 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
     // Style-minted class names (bind args mint as `<setter>bind<Name>`).
     assert!(
         out.structure_html.contains("sail-grp")
-            && out.structure_html.contains("sx-positionrelative")
-            && out.structure_html.contains("sx-positionabsolute")
-            && out.structure_html.contains("sx-topbindttTop")
-            && out.structure_html.contains("sx-grouphover-opacity100")
-            && out.structure_html.contains("sx-after-rotate45"),
+            && out.structure_html.contains("s-positionrelative")
+            && out.structure_html.contains("s-positionabsolute")
+            && out.structure_html.contains("s-topbindttTop")
+            && out.structure_html.contains("s-grouphover-opacity100")
+            && out.structure_html.contains("s-after-rotate45"),
         "tooltip structure atoms:\n{}",
         out.structure_html
     );

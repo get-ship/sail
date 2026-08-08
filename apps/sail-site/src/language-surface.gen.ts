@@ -6138,6 +6138,8 @@ export interface ActionDoc {
   param: string
   summary: string
   public: boolean
+  /** camelCase bind vocabulary this action writes (`anchorLeft`, …). */
+  writes: string[]
 }
 
 export const ACTIONS: ActionDoc[] = [
@@ -6145,307 +6147,424 @@ export const ACTIONS: ActionDoc[] = [
     "name": "anchor",
     "param": "AnchorPlacement | undefined",
     "summary": "Position a popper-like surface against an anchor element.",
-    "public": true
+    "public": true,
+    "writes": [
+      "anchorLeft",
+      "anchorTop",
+      "anchorWidth"
+    ]
   },
   {
     "name": "autoDismiss",
     "param": "void",
     "summary": "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; invokes `onDismiss` then removes the host.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "autosize",
     "param": "void",
     "summary": "Autosize a textarea (height) or single-line input (width) to its content.",
-    "public": true
+    "public": true,
+    "writes": [
+      "autosizeH"
+    ]
   },
   {
     "name": "catchRender",
     "param": "void",
     "summary": "Catch render errors thrown by descendants; show a fallback UI.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "cellPad",
     "param": "number | null | undefined",
     "summary": "Track the current cell's left/right padding for a virtualized grid.",
-    "public": false
+    "public": false,
+    "writes": [
+      "cellPs"
+    ]
   },
   {
     "name": "chromeOffset",
     "param": "void",
     "summary": "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale).",
-    "public": false
+    "public": false,
+    "writes": [
+      "chromeOffset"
+    ]
   },
   {
     "name": "clickOutside",
     "param": "(() => void) | undefined",
     "summary": "Fire a callback when a click lands outside the element.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "clipboard",
     "param": "ClipboardParam",
     "summary": "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "combobox",
     "param": "void",
     "summary": "Internal: L1 <combobox> closed behavior (not public use: — attach the widget).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "contextMenu",
     "param": "void",
     "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC.",
-    "public": true
+    "public": true,
+    "writes": [
+      "anchorLeft",
+      "anchorTop"
+    ]
   },
   {
     "name": "describedControl",
     "param": "void",
     "summary": "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "detailsDisabled",
     "param": "void",
     "summary": "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "detailsToggle",
     "param": "void",
     "summary": "On native <details> `toggle`, invoke `onToggle` with `{ open }`.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "dismissControl",
     "param": "void",
     "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) invokes `onDismiss` then removes the host; non-toast hosts gate on [dismissible].",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "dismissible",
     "param": "void",
     "summary": "Invoke `onRemove` on a `[removable]` host for Backspace/Delete or remove-button click — the attr-gated dismiss mix-in.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "dropzone",
     "param": "undefined",
     "summary": "Drag-and-drop file receiver; reads files into a controller-side handler.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "eventSpan",
     "param": "RectSpan | null | undefined",
     "summary": "Track the bounding rect of a pointer event target across the screen.",
-    "public": false
+    "public": false,
+    "writes": [
+      "evtTop",
+      "evtH",
+      "evtLeft",
+      "evtW"
+    ]
   },
   {
     "name": "focus",
     "param": "boolean | null | undefined | void",
     "summary": "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "gridTracks",
     "param": "string | null | undefined",
     "summary": "Measure a CSS grid's resolved track widths/positions for layout math.",
-    "public": false
+    "public": false,
+    "writes": [
+      "sailGridTemplate"
+    ]
   },
   {
     "name": "hotkeys",
     "param": "HotkeysMap | undefined",
     "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "hoverSurface",
     "param": "void",
     "summary": "Hover-triggered card; open on pointer-in, close on pointer-out with delay.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "icon",
     "param": "void",
     "summary": "Internal: L1 <icon> closed behavior (not public use: — attach the widget). Resolves a glyph from the icon cache.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "inView",
     "param": "InViewHandler | undefined",
     "summary": "Fire a callback when the host enters the viewport (IntersectionObserver).",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "liveBox",
     "param": "string | null | undefined",
     "summary": "Apply freeform CSS declarations for live specimen geometry (border-radius, box-shadow, …).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "liveRegion",
     "param": "void",
     "summary": "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "marquee",
     "param": "void",
     "summary": "Infinite seamless track scroll for L1 <ticker> (duration/reverse on host).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "maxWidth",
     "param": "number | string | null | undefined",
     "summary": "Cap the element's content width to a max (px or CSS length).",
-    "public": false
+    "public": false,
+    "writes": [
+      "maxW"
+    ]
   },
   {
     "name": "mediaFallback",
     "param": "void",
     "summary": "Image-with-fallback behavior for an <avatar> element.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "menu",
     "param": "void",
     "summary": "Internal: L1 <dropdown>/<context-menu> closed behavior (not public use: — attach the widget).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "pagination",
     "param": "void",
     "summary": "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "pin",
     "param": "PinPoint | null | undefined",
     "summary": "Pin one corner of an element to a fixed viewport coordinate.",
-    "public": false
+    "public": false,
+    "writes": [
+      "pinX",
+      "pinY"
+    ]
   },
   {
     "name": "portEdge",
     "param": "PortSide",
     "summary": "Anchor a fixed-size port to the midpoint of one of its parent's four edges.",
-    "public": false
+    "public": false,
+    "writes": [
+      "portTop",
+      "portLeft",
+      "portRight",
+      "portBottom"
+    ]
   },
   {
     "name": "pressable",
     "param": "void",
     "summary": "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "pressed",
     "param": "void",
     "summary": "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "radioGroup",
     "param": "void",
     "summary": "Internal: L1 <radio-group> closed behavior (not public use: — attach the widget).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "rangeFill",
     "param": "void",
     "summary": "Paint the filled portion of a <input type=range> on a custom track.",
-    "public": false
+    "public": false,
+    "writes": [
+      "rngPct"
+    ]
   },
   {
     "name": "recoverySurface",
     "param": "void",
     "summary": "Error-state element behavior; arms a retry action for the call-to-action slot.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "rect",
     "param": "BoxRect | null | undefined",
     "summary": "Track the element's bounding rect via ResizeObserver.",
-    "public": true
+    "public": true,
+    "writes": [
+      "boxTop",
+      "boxLeft",
+      "boxW",
+      "boxH"
+    ]
   },
   {
     "name": "spotlight",
     "param": "void",
     "summary": "Soft spotlight following the pointer; visual highlight for surfaces under it.",
-    "public": false
+    "public": false,
+    "writes": [
+      "spotX",
+      "spotY",
+      "spotStrength"
+    ]
   },
   {
     "name": "swatch",
     "param": "string | null | undefined",
     "summary": "Render a color swatch keyed by a token name from the active theme.",
-    "public": false
+    "public": false,
+    "writes": [
+      "swatchColor"
+    ]
   },
   {
     "name": "syntaxHighlight",
     "param": "string | null | undefined",
     "summary": "Syntax-highlight source for a <code-block>; prefer use:syntaxHighlight={code()}.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "tabs",
     "param": "void",
     "summary": "Internal: L1 <tabs> closed behavior (not public use: — attach the widget).",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "targetCursor",
     "param": "void",
     "summary": "Switch the cursor to a custom 'target' style while over the element.",
-    "public": false
+    "public": false,
+    "writes": [
+      "tcX",
+      "tcY"
+    ]
   },
   {
     "name": "themeSelect",
     "param": "void",
     "summary": "Theme switcher: click to write the picked theme to the host context.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "tipDescribe",
     "param": "void",
     "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
-    "public": true
+    "public": true,
+    "writes": [
+      "ttTop",
+      "ttBottom",
+      "ttLeft",
+      "ttRight",
+      "ttTx",
+      "ttArrowTop",
+      "ttArrowBottom",
+      "ttArrowLeft",
+      "ttArrowRight",
+      "ttArrowMl",
+      "ttArrowMt"
+    ]
   },
   {
     "name": "toggleGroup",
     "param": "void",
     "summary": "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "variantLive",
     "param": "void",
     "summary": "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation.",
-    "public": false
+    "public": false,
+    "writes": []
   },
   {
     "name": "virtualRow",
     "param": "number | null | undefined",
     "summary": "Register a virtualized row; tells the parent scroller its measured height.",
-    "public": true
+    "public": true,
+    "writes": [
+      "rowY"
+    ]
   },
   {
     "name": "virtualSpacer",
     "param": "number | null | undefined",
     "summary": "Spacer row in a virtualized list; the engine reads its measured height.",
-    "public": false
+    "public": false,
+    "writes": [
+      "rowsH"
+    ]
   },
   {
     "name": "worldTransform",
     "param": "string | null | undefined",
     "summary": "Track the cumulative CSS transform up the parent chain (for canvas positioning).",
-    "public": false
+    "public": false,
+    "writes": [
+      "worldTx"
+    ]
   },
   {
     "name": "zoomPan",
     "param": "ZoomPanState | null | undefined",
     "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
-    "public": true
+    "public": true,
+    "writes": [
+      "zoomTx"
+    ]
   }
 ]
 
@@ -6455,79 +6574,122 @@ export const PUBLIC_ACTIONS: ActionDoc[] = [
     "name": "anchor",
     "param": "AnchorPlacement | undefined",
     "summary": "Position a popper-like surface against an anchor element.",
-    "public": true
+    "public": true,
+    "writes": [
+      "anchorLeft",
+      "anchorTop",
+      "anchorWidth"
+    ]
   },
   {
     "name": "autosize",
     "param": "void",
     "summary": "Autosize a textarea (height) or single-line input (width) to its content.",
-    "public": true
+    "public": true,
+    "writes": [
+      "autosizeH"
+    ]
   },
   {
     "name": "clickOutside",
     "param": "(() => void) | undefined",
     "summary": "Fire a callback when a click lands outside the element.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "clipboard",
     "param": "ClipboardParam",
     "summary": "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "contextMenu",
     "param": "void",
     "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC.",
-    "public": true
+    "public": true,
+    "writes": [
+      "anchorLeft",
+      "anchorTop"
+    ]
   },
   {
     "name": "dropzone",
     "param": "undefined",
     "summary": "Drag-and-drop file receiver; reads files into a controller-side handler.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "focus",
     "param": "boolean | null | undefined | void",
     "summary": "Focus the host on mount, or whenever a truthy param updates (autofocus without the native race).",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "hotkeys",
     "param": "HotkeysMap | undefined",
     "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "inView",
     "param": "InViewHandler | undefined",
     "summary": "Fire a callback when the host enters the viewport (IntersectionObserver).",
-    "public": true
+    "public": true,
+    "writes": []
   },
   {
     "name": "rect",
     "param": "BoxRect | null | undefined",
     "summary": "Track the element's bounding rect via ResizeObserver.",
-    "public": true
+    "public": true,
+    "writes": [
+      "boxTop",
+      "boxLeft",
+      "boxW",
+      "boxH"
+    ]
   },
   {
     "name": "tipDescribe",
     "param": "void",
     "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
-    "public": true
+    "public": true,
+    "writes": [
+      "ttTop",
+      "ttBottom",
+      "ttLeft",
+      "ttRight",
+      "ttTx",
+      "ttArrowTop",
+      "ttArrowBottom",
+      "ttArrowLeft",
+      "ttArrowRight",
+      "ttArrowMl",
+      "ttArrowMt"
+    ]
   },
   {
     "name": "virtualRow",
     "param": "number | null | undefined",
     "summary": "Register a virtualized row; tells the parent scroller its measured height.",
-    "public": true
+    "public": true,
+    "writes": [
+      "rowY"
+    ]
   },
   {
     "name": "zoomPan",
     "param": "ZoomPanState | null | undefined",
     "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
-    "public": true
+    "public": true,
+    "writes": [
+      "zoomTx"
+    ]
   }
 ]
 
@@ -6611,6 +6773,11 @@ export const BLOCKS: BlockDoc[] = [
       "{else => …}"
     ],
     "summary": "structural viewport branch on a theme breakpoint token (mobile/tablet/desktop); optional {else => …} is the SSR/mobile-first default; matchMedia swap on the client"
+  },
+  {
+    "open": "<partial kebab-name props: Type>",
+    "clauses": [],
+    "summary": "in-file functional component (SPEC-PARTIAL-1): top-level only, same-file invoke as `<kebab-name …>`; static expand at preprocess; params are a plain scope type; body reads destructured bare `{title}`; no recursion; no tag-position style() on invocation"
   }
 ]
 export interface DirectiveDoc {
@@ -6646,6 +6813,10 @@ export const DIRECTIVES: DirectiveDoc[] = [
   {
     "syntax": "<slot name=\"…\">fallback</slot>",
     "summary": "declare a fill region; children of the <slot> render when the use site provides nothing"
+  },
+  {
+    "syntax": "<partial kebab-name props: Type>…</partial>",
+    "summary": "in-file functional component (same file only); invoke as <kebab-name …>; expanded at compile time; params are a plain scope type read as bare {title}"
   },
   {
     "syntax": "<slot reflect-empty=\"data-attr\">",

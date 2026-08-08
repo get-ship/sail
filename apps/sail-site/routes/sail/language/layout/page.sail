@@ -2,7 +2,7 @@
   /sail/language/layout — chapter 5, round 2 per owner review: lead with WHY
   one mechanism (many ways exist; one spelling is what tools and agents can
   reason about), render EVERY element live, explain in sentences not
-  keyword-lists, no "flow not clamp" jargon, no sx-refusal opener (that
+  keyword-lists, no "flow not clamp" jargon, no s-refusal opener (that
   lives on the styling page), no whole-vocabulary overclaim.
 -->
 

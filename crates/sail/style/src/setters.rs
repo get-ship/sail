@@ -4,8 +4,8 @@ use std::borrow::Cow;
 
 use crate::prefixes as sx_rules;
 use crate::scales;
-use crate::sx_ir::{self, SxDecl, SxValue};
-use crate::sx_vocab::{self, Resolved};
+use crate::style_ir::{self, SxDecl, SxValue};
+use crate::style_vocab::{self, Resolved};
 
 use super::ir::{PaintArg, PaintOp, StyleDiagnostic};
 
@@ -2043,7 +2043,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // scrollbar-thin bare composite (width + color vars).
     if spec.name == "scrollbarThin" {
-        if let Resolved::Ok(pairs) = sx_vocab::resolve("scrollbar-thin") {
+        if let Resolved::Ok(pairs) = style_vocab::resolve("scrollbar-thin") {
             return Ok(pairs);
         }
         return Ok(vec![
@@ -2057,7 +2057,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // truncate bare composite.
     if spec.name == "truncate" {
-        if let Resolved::Ok(pairs) = sx_vocab::resolve("truncate") {
+        if let Resolved::Ok(pairs) = style_vocab::resolve("truncate") {
             return Ok(pairs);
         }
         return Ok(vec![
@@ -2068,7 +2068,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // sr-only a11y clip pack.
     if spec.name == "srOnly" {
-        if let Resolved::Ok(pairs) = sx_vocab::resolve("sr-only") {
+        if let Resolved::Ok(pairs) = style_vocab::resolve("sr-only") {
             return Ok(pairs);
         }
         return Ok(vec![
@@ -2134,7 +2134,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
             let atom = format!("aspect-{bare_t}");
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             let css = match bare_t {
@@ -2164,7 +2164,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 });
             }
             let atom = format!("object-{bare_t}");
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             return Ok(vec![("object-fit".into(), bare_t.into())]);
@@ -2258,7 +2258,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     });
                 }
             };
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(atom) {
                 return Ok(pairs);
             }
             let css_val = match bare_t {
@@ -2279,7 +2279,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
             let atom = format!("origin-{bare_t}");
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             let css_val = bare_t.replace('-', " ");
@@ -2291,7 +2291,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
             let atom = format!("text-gradient-{bare_t}");
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             if matches!(bare_t, "primary" | "accent") {
@@ -2309,7 +2309,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         if let PaintArg::Token(t) = arg {
             let bare_t = strip_neg(t).1;
             let atom = format!("bg-glow-{bare_t}");
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             if matches!(bare_t, "primary" | "accent") {
@@ -2408,11 +2408,11 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 });
             }
             let atom = format!("{}-{}", spec.vocab, bare_t);
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             // tab map is numeric; underline map may use bare prop+value.
-            if let Some(pairs) = sx_ir::lower_decl(&SxDecl {
+            if let Some(pairs) = style_ir::lower_decl(&SxDecl {
                 prefixes: Vec::new(),
                 prop: spec.vocab.to_string(),
                 value: Some(SxValue::Token(bare_t.into())),
@@ -2529,8 +2529,8 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 };
                 for cand in token_candidates(bare_t) {
                     d.value = Some(SxValue::Token(cand.clone()));
-                    let atom = sx_ir::decl_atom(&d);
-                    if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                    let atom = style_ir::decl_atom(&d);
+                    if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                         return Ok(pairs);
                     }
                 }
@@ -2730,11 +2730,11 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     if bare_t == "1" {
                         // Also try name-1 first for explicit width token
                         let atom = format!("{bare_atom}-1");
-                        if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                        if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                             return Ok(pairs);
                         }
                     }
-                    if let Resolved::Ok(pairs) = sx_vocab::resolve(bare_atom) {
+                    if let Resolved::Ok(pairs) = style_vocab::resolve(bare_atom) {
                         return Ok(pairs);
                     }
                 }
@@ -2754,8 +2754,8 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         for cand in token_candidates(t) {
             let mut d = decl.clone();
             d.value = Some(SxValue::Token(cand.clone()));
-            let atom = sx_ir::decl_atom(&d);
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            let atom = style_ir::decl_atom(&d);
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             let atom2 = if negative {
@@ -2763,12 +2763,12 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             } else {
                 format!("{}-{}", spec.vocab, cand)
             };
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom2) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom2) {
                 return Ok(pairs);
             }
         }
     }
-    match sx_ir::lower_decl(&decl) {
+    match style_ir::lower_decl(&decl) {
         Some(pairs) => Ok(pairs),
         None => Err(StyleDiagnostic::BadToken {
             setter: op.setter.clone(),
@@ -3076,7 +3076,7 @@ fn validate_border_color_arg(
             if !neg {
                 for cand in token_candidates(bare) {
                     let atom = format!("{}-{}", spec.vocab, cand);
-                    if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                    if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                         if pairs.iter().all(|(p, _)| p.contains("color")) {
                             return Ok(());
                         }
@@ -3137,7 +3137,7 @@ fn lower_border_width_arg(
                 )]);
             }
             let atom = format!("{}-{}", spec.vocab, bare);
-            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+            if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                 return Ok(pairs);
             }
             Err(StyleDiagnostic::BadToken {
@@ -3172,7 +3172,7 @@ fn lower_border_color_arg(
             let bare = strip_neg(tok).1;
             for cand in token_candidates(bare) {
                 let atom = format!("{}-{}", spec.vocab, cand);
-                if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                if let Resolved::Ok(pairs) = style_vocab::resolve(&atom) {
                     if pairs.iter().all(|(p, _)| p.contains("color")) {
                         return Ok(pairs);
                     }
@@ -3458,7 +3458,7 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         bare: false,
         source: String::new(),
     };
-    if let Some(pairs) = sx_ir::lower_decl(&probe) {
+    if let Some(pairs) = style_ir::lower_decl(&probe) {
         return pairs.into_iter().map(|(p, _)| (p, var.clone())).collect();
     }
     let prop = match spec.name {

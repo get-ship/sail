@@ -607,7 +607,7 @@ export async function sailAuthoringSurface(
   return postJson<SurfaceRet>('/sail.ops.v1.SailAuthoring/Surface', args ?? {}, opts)
 }
 
-// SailAuthoring/Check — Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` is workspace-relative only (path escape refused — WI4).
+// SailAuthoring/Check — Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-style typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` is workspace-relative only (path escape refused — WI4).
 export async function sailAuthoringCheck(
   args: CheckArgs,
   opts?: ClientOptions,

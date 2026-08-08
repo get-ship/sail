@@ -499,7 +499,7 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
         return Err("setSx requires non-empty `setter`".into());
     }
     // Refusals (layout-as-sx)
-    for (atom, instead) in sail_lint::sx_vocab::refusals() {
+    for (atom, instead) in sail_lint::style_vocab::refusals() {
         if name == atom || name.replace('_', "-") == atom {
             return Err(format!(
                 "setSx `{name}` is off-vocab (refused): {instead}. Allowed setters: {}",

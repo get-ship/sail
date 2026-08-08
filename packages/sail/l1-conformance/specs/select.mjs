@@ -6,7 +6,7 @@
 // (field / field-foreground / field-border / field-border-hover) — not free globals.
 
 const SEL =
-  'sail-select sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padS3 sx-padE8 sx-wfull sx-fgfieldforeground sx-bgfield sx-borderWidth1 sx-borderfieldborder sx-radiusmd sx-shadowxs sx-cursorpointer sx-fontSizebase sx-hover-borderfieldborderhover sx-disabled-cursornotallowed sx-disabled-opacity50 sx-sizexs-minHcontrolh2xs sx-sizexs-padS2 sx-sizexs-fontSizexs sx-sizesm-minHcontrolhsm sx-sizesm-padS25 sx-sizesm-fontSizesm sx-sizemd-minHcontrolhmd sx-sizemd-padS3 sx-sizemd-fontSizebase sx-sizelg-minHcontrolhlg sx-sizelg-padS4 sx-sizelg-fontSizemd sx-invalidtrue-borderdestructive'
+  'sail-select s-displayblock s-minHcontrolhmd s-padY15 s-padS3 s-padE8 s-wfull s-fgfieldforeground s-bgfield s-borderWidth1 s-borderfieldborder s-radiusmd s-shadowxs s-cursorpointer s-fontSizebase s-hover-borderfieldborderhover s-disabled-cursornotallowed s-disabled-opacity50 s-sizexs-minHcontrolh2xs s-sizexs-padS2 s-sizexs-fontSizexs s-sizesm-minHcontrolhsm s-sizesm-padS25 s-sizesm-fontSizesm s-sizemd-minHcontrolhmd s-sizemd-padS3 s-sizemd-fontSizebase s-sizelg-minHcontrolhlg s-sizelg-padS4 s-sizelg-fontSizemd s-invalidtrue-borderdestructive'
 
 const sel = (attrs = '') => {
   const m = attrs.match(/class="([^"]*)"/)

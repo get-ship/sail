@@ -96,9 +96,9 @@ fn tag_default_size(tag: &str) -> Option<Size> {
     }
 }
 
-/// Product `sx-fontSize4xl` / legacy `text-4xl`.
+/// Product `s-fontSize4xl` / legacy `text-4xl`.
 pub fn size_from_class(c: &str) -> Option<Size> {
-    if let Some(tok) = c.strip_prefix("sx-fontSize") {
+    if let Some(tok) = c.strip_prefix("s-fontSize") {
         return Some(Size::from_class_token(tok));
     }
     if let Some(tok) = c.strip_prefix("text-") {
@@ -121,9 +121,9 @@ pub fn size_from_class(c: &str) -> Option<Size> {
     None
 }
 
-/// Product `sx-fontFamilydisplay` / legacy `font-mono`.
+/// Product `s-fontFamilydisplay` / legacy `font-mono`.
 pub fn family_from_class(c: &str) -> Option<Family> {
-    if let Some(tok) = c.strip_prefix("sx-fontFamily") {
+    if let Some(tok) = c.strip_prefix("s-fontFamily") {
         return match tok {
             "mono" | "monofont" => Some(Family::Mono),
             "display" | "displayfont" => Some(Family::Display),
@@ -243,7 +243,7 @@ mod tests {
         let mut all = vec![Element::default()];
         let span = Element {
             tag: "span".to_string(),
-            class: "sx-fontSize4xl sx-fontFamilydisplay".to_string(),
+            class: "s-fontSize4xl s-fontFamilydisplay".to_string(),
             ..Default::default()
         };
         all.push(span);

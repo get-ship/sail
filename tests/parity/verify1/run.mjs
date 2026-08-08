@@ -497,8 +497,8 @@ async function phaseErrors(corpus) {
       artifactById.set(c.id, {
         html: c.html,
         css: `@layer sail {
-.sx-h0{height:0}.sx-h8{height:var(--space-8)}.sx-h12{height:var(--space-12)}.sx-h16{height:var(--space-16)}.sx-h20{height:var(--space-20)}.sx-h24{height:var(--space-24)}
-.sx-wfull{width:100%}.sx-overflowhidden{overflow:hidden}.sx-shrink0{flex-shrink:0}
+.s-h0{height:0}.s-h8{height:var(--space-8)}.s-h12{height:var(--space-12)}.s-h16{height:var(--space-16)}.s-h20{height:var(--space-20)}.s-h24{height:var(--space-24)}
+.s-wfull{width:100%}.s-overflowhidden{overflow:hidden}.s-shrink0{flex-shrink:0}
 .sail-col{display:flex;flex-direction:column;min-width:0}.sail-ai-stretch{align-items:stretch}
 }`,
       })

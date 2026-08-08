@@ -69,7 +69,8 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-space-literal",
     "sail-state-set-call",
     "sail-surface-not-card",
-    "sail-sx",
+    "sail-style",
+    "sail-style-value-enumeration",
     "sail-virtualizer",
 ];
 

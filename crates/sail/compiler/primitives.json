@@ -558,8 +558,8 @@
         "default": "false"
       },
       "offset": {
-        "type": "string",
-        "default": ""
+        "type": "number",
+        "default": "0"
       },
       "placement": {
         "values": [

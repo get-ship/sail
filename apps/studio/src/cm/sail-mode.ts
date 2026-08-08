@@ -209,7 +209,7 @@ export const SAIL_TOKEN_CLASS: Record<SailTokenType, string> = {
   tagName: 'cm-sail-tagName',
   attrName: 'cm-sail-attrName',
   attrValue: 'cm-sail-attrValue',
-  sx: 'cm-sail-sx',
+  sx: 'cm-sail-style',
   expr: 'cm-sail-expr',
   directive: 'cm-sail-directive',
   comment: 'cm-sail-comment',

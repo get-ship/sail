@@ -329,7 +329,7 @@ pub fn channel_for_setter(name: &str) -> Option<Channel> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::parse_legacy as parse;
+    use crate::parse::parse as parse;
 
     #[test]
     fn text_bearing_list_covers_spec_and_prose() {
@@ -381,19 +381,19 @@ mod tests {
 
     #[test]
     fn geometry_in_interaction_when_refused() {
-        let (_, diags) = parse("style({ box: pad(2) }).when(hover, { box: pad(4) })");
+        let (_, diags) = parse("style({ box: pad(2), when: { hover: { box: pad(4) } } })");
         assert!(
             diags.iter().any(|d| d.message().contains("state can't gate layout")),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse("style({ box: pad(2) }).when(tablet, { box: pad(4) })");
+        let (_, diags) = parse("style({ box: pad(2), when: { tablet: { box: pad(4) } } })");
         assert!(
             !diags.iter().any(|d| d.message().contains("state can't gate layout")),
             "media may gate box: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse("style({ box: pad(2) }).when(hover, { paint: bg(muted) })");
+        let (_, diags) = parse("style({ box: pad(2), when: { hover: { paint: bg(muted) } } })");
         assert!(
             !diags.iter().any(|d| d.message().contains("state can't gate layout")),
             "paint under hover ok: {:?}",
@@ -412,24 +412,24 @@ mod tests {
 
         // Dimensional geometry under interaction keys — refuse.
         for key in ["hover", "group-hover", "state-open", "focusWithin"] {
-            let src = format!("style({{ box: pad(2) }}).when({key}, {{ box: pad(4) }})");
+            let src = format!("style({{ box: pad(2), when: {{ {key}: {{ box: pad(4) }} }} }})");
             assert!(gate_err(&src), "pad under {key} must refuse: {src}");
-            let src = format!("style({{ box: w(full) }}).when({key}, {{ box: gap(2) }})");
+            let src = format!("style({{ box: w(full), when: {{ {key}: {{ box: gap(2) }} }} }})");
             assert!(gate_err(&src), "gap under {key} must refuse: {src}");
         }
 
         // Media / preference may still gate box geometry.
         for key in ["tablet", "dark"] {
-            let src = format!("style({{ box: pad(2) }}).when({key}, {{ box: pad(4) }})");
+            let src = format!("style({{ box: pad(2), when: {{ {key}: {{ box: pad(4) }} }} }})");
             assert!(!gate_err(&src), "pad under media {key} must allow: {src}");
         }
 
         // Paint under interaction is legal.
         assert!(!gate_err(
-            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+            "style({ paint: bg(primary), when: { hover: { paint: bg(muted) } } })"
         ));
         assert!(!gate_err(
-            "style({ box: pad(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+            "style({ box: pad(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })"
         ));
 
         // Non-dimensional box (display/overflow) under interaction — currently legal
@@ -439,10 +439,10 @@ mod tests {
             "display/overflow stay non-geometry for interaction gate"
         );
         assert!(!gate_err(
-            "style({ box: display(none) }).when(hover, { box: display(block) })"
+            "style({ box: display(none), when: { hover: { box: display(block) } } })"
         ));
         assert!(!gate_err(
-            "style({ box: overflow(hidden) }).when(group-hover, { box: overflow(auto) })"
+            "style({ box: overflow(hidden), when: { group-hover: { box: overflow(auto) } } })"
         ));
     }
 

@@ -46,8 +46,30 @@ Or compose Style pieces as args: `style(base, emphasis)` — and in scope,
 `style quiet = host, { paint: bg(transparent) }`. That is paint
 composition on a host, not an in-file `<partial>` (template reuse). Computed
 class strings are not the product — utility-string atoms like
-`style="p-4 bg-muted"` do not compile. Moving a *value* at runtime is a
-different tool: `bind(name)`, which the Styling chapter covers.
+`style="p-4 bg-muted"` do not compile.
+
+## Values that track state: `bind(name)`
+
+When a style value *is* a prop, signal, derived, token, or action-written
+channel, name it — never invent CSS:
+
+```
+// number prop → length (px)
+style({ box: top(bind(offset)) })
+
+// setup-returned derived (annotate number for length setters)
+const doubled = derived((): number => offset() * 2)
+// …
+style({ box: w(bind(doubled)) })
+
+// action write (manifest `writes`)
+<div use:anchor style({ box: left(bind(anchorLeft)).top(bind(anchorTop)) })>
+```
+
+`name` is an identifier only — no `bind(derived(…))`, no `bind(a + b)`.
+Number→length means px; number→color is a compile error. Enumerating a
+prop as three-plus compound rows that only vary a setter arg is a lint
+(`sail-style-value-enumeration`); collapse it to `bind`.
 
 ## The compiler holds the line
 
@@ -61,7 +83,7 @@ This is not a convention — it is enforced. Write an off-system value:
 and the build stops with:
 
 ```
-Error: line 1 col 21: [sail-sx] style `pad(12px)` — value is not a token on this
+Error: line 1 col 21: [sail-style] style `pad(12px)` — value is not a token on this
 setter's scale
   suggest: sx is surface-only: spacing (p/m…, the Tailwind-aligned space ramp
   1..64 plus half-steps), colors (bg/fg), radius, text. Layout is the primitives'

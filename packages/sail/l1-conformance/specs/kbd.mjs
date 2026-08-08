@@ -2,7 +2,7 @@
 // Native host folds sx into utility classes (no .sail-kbd wrapper).
 // Paint stamps component.kbd tokens (not free muted / foreground / border).
 const CLS =
-  'sx-displayinlineblock sx-padYpx sx-padX15 sx-bgkbd sx-borderWidth1 sx-borderkbdborder sx-borderBWidth2 sx-radiussm sx-fgkbdforeground sx-alignmiddle sx-fontFamilymono sx-fontSizexs sx-leadingnone sx-whitespacenowrap'
+  's-displayinlineblock s-padYpx s-padX15 s-bgkbd s-borderWidth1 s-borderkbdborder s-borderBWidth2 s-radiussm s-fgkbdforeground s-alignmiddle s-fontFamilymono s-fontSizexs s-leadingnone s-whitespacenowrap'
 const k = (t) => `<kbd class="${CLS}">${t}</kbd>`
 export default {
   tag: 'kbd',

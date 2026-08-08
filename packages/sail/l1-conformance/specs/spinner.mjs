@@ -3,7 +3,7 @@
 // (spin), on itself or a descendant.
 
 const TONES = ['primary', 'info', 'success', 'warning', 'destructive', 'accent']
-const RING = 'sx-displayblock sx-sizefull sx-borderWidthcontrolstroke sx-bordersolid sx-borderspinnertrack sx-borderRcurrentColor sx-radiusfull sx-animatespin'
+const RING = 's-displayblock s-sizefull s-borderWidthcontrolstroke s-bordersolid s-borderspinnertrack s-borderRcurrentColor s-radiusfull s-animatespin'
 const sp = (a) => `<span class="sail-spinner" ${a}><span aria-hidden="true" class="${RING}"></span></span>`
 
 export default {

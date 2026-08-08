@@ -34,7 +34,7 @@ use super::writer::js_string;
 /// implement `querySelector`, so a hand-rolled `firstChild` walk is the only
 /// isomorphic option (and the dedupe only matters on re-mount, hit O(1)).
 ///
-/// CSS is always wrapped in `@layer sail` so page atomics (`.sx-bgtransparent`,
+/// CSS is always wrapped in `@layer sail` so page atomics (`.s-bgtransparent`,
 /// etc.) compete with element-skins by specificity — not as unlayered rules
 /// that beat every layered compound fill. Skins ship in the same layer.
 ///
@@ -47,7 +47,7 @@ pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
         return String::new();
     }
     // Same layer as element-skins.css — unlayered page atomics otherwise crush
-    // compound variant fills (e.g. solid primary bg loses to .sx-bgtransparent).
+    // compound variant fills (e.g. solid primary bg loses to .s-bgtransparent).
     let css = if css.starts_with("@layer ") {
         css.to_string()
     } else {
@@ -540,12 +540,12 @@ mod tests {
 
     #[test]
     fn styles_install_wraps_in_sail_layer() {
-        let js = styles_install_js(".sx-bgtransparent{background-color:transparent}", false);
+        let js = styles_install_js(".s-bgtransparent{background-color:transparent}", false);
         assert!(
             js.contains("@layer sail {"),
             "page atomics must ship in @layer sail so they don't crush element-skins compounds:\n{js}"
         );
-        assert!(js.contains(".sx-bgtransparent{background-color:transparent}"));
+        assert!(js.contains(".s-bgtransparent{background-color:transparent}"));
         // Already layered → leave alone (no double wrap).
         let once = styles_install_js("@layer sail {\n.x{color:red}\n}", false);
         assert_eq!(once.matches("@layer sail").count(), 1, "{once}");

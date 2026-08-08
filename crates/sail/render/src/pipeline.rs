@@ -305,7 +305,7 @@ fn attach_region_styles(
         }
         // Match `:empty` collapse: regions still exist from layout, but paint
         // is skipped — leave style None so parity doesn't false-positive chrome.
-        let paint = if class_has(&elem.class, "sx-empty-displaynone")
+        let paint = if class_has(&elem.class, "s-empty-displaynone")
             && elem.children.is_empty()
             && elem.text.trim().is_empty()
         {
@@ -349,7 +349,7 @@ fn build_node(
     // Layout taffy does not model :empty; skip paint so empty slots don't
     // reserve padded chrome. Regions still come from the shared layout pass.
     // Only the explicit product class — not every empty decorative box.
-    if class_has(&elem.class, "sx-empty-displaynone")
+    if class_has(&elem.class, "s-empty-displaynone")
         && elem.children.is_empty()
         && elem.text.trim().is_empty()
     {
@@ -471,15 +471,15 @@ fn has_explicit_block_display(class_attr: &str) -> bool {
     class_attr.split_whitespace().any(|c| {
         matches!(
             c,
-            "sx-displayblock"
-                | "sx-displayflex"
-                | "sx-displayinlineflex"
-                | "sx-displaygrid"
+            "s-displayblock"
+                | "s-displayflex"
+                | "s-displayinlineflex"
+                | "s-displaygrid"
                 | "sail-col"
                 | "sail-row"
                 | "sail-grid"
-        ) || c.starts_with("sx-displayblock")
-            || c == "sx-block"
+        ) || c.starts_with("s-displayblock")
+            || c == "s-block"
     })
 }
 

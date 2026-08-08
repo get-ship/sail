@@ -4,9 +4,9 @@
 // collide (radios share exclusivity by name document-wide).
 
 const RADIO_HOST =
-  'sail-radio sx-fontFamilybody sx-fontSizesm sx-fgradioforeground sx-cursorpointer sx-selectnone'
+  'sail-radio s-fontFamilybody s-fontSizesm s-fgradioforeground s-cursorpointer s-selectnone'
 const RADIO_IN =
-  'sx-appearancenone sx-displayinlineblock sx-alignmiddle sx-m0 sx-pad0 sx-minH0 sx-wiconsizesm sx-hiconsizesm sx-fontSizebase sx-borderWidth2 sx-borderborderstrong sx-bgbackground sx-shadowxs sx-radiusfull sx-cursorpointer sx-checked-bgprimary sx-checked-borderprimary sx-disabled-cursornotallowed sx-disabled-opacity50 sx-shrink0'
+  's-appearancenone s-displayinlineblock s-alignmiddle s-m0 s-pad0 s-minH0 s-wiconsizesm s-hiconsizesm s-fontSizebase s-borderWidth2 s-borderborderstrong s-bgbackground s-shadowxs s-radiusfull s-cursorpointer s-checked-bgprimary s-checked-borderprimary s-disabled-cursornotallowed s-disabled-opacity50 s-shrink0'
 
 const radio = (val, label, extra = '') =>
   `<label class="${RADIO_HOST}" value="${val}"${extra}><input type="radio" class="${RADIO_IN}"/><span class="rlabel">${label}</span></label>`

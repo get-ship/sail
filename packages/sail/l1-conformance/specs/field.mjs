@@ -6,15 +6,15 @@
 
 // Control surface stamps component.field (shared with input/select/textarea).
 const INPUT =
-  'sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padX3 sx-wfull sx-fgfieldforeground sx-bgfield sx-borderWidth1 sx-borderfieldborder sx-radiusmd sx-shadowxs sx-fontSizebase sx-hover-borderfieldborderhover sx-disabled-cursornotallowed sx-disabled-opacity50'
-const INPUT_INV = `${INPUT} sx-invalidtrue-borderdestructive`
-const HINT = 'sx-mt1 sx-fgfieldhint sx-fontSizexs sx-leadingsnug'
-const ERROR = 'sx-mt1 sx-fgfielderror sx-fontSizexs sx-leadingsnug sx-fontWeightmedium'
-const LBL = 'sx-fontFamilybody sx-fontWeightmedium sx-fontSizesm'
+  's-displayblock s-minHcontrolhmd s-padY15 s-padX3 s-wfull s-fgfieldforeground s-bgfield s-borderWidth1 s-borderfieldborder s-radiusmd s-shadowxs s-fontSizebase s-hover-borderfieldborderhover s-disabled-cursornotallowed s-disabled-opacity50'
+const INPUT_INV = `${INPUT} s-invalidtrue-borderdestructive`
+const HINT = 's-mt1 s-fgfieldhint s-fontSizexs s-leadingsnug'
+const ERROR = 's-mt1 s-fgfielderror s-fontSizexs s-leadingsnug s-fontWeightmedium'
+const LBL = 's-fontFamilybody s-fontWeightmedium s-fontSizesm'
 
 // Structure mirrors field.sail: label, control, hint, error-gate → [role=alert]
 const field = (id, invalid = false) =>
-  `<div class="sail-field sail-grp sx-fontFamilybody"${invalid ? ' invalid' : ''} style="width:300px">` +
+  `<div class="sail-field sail-grp s-fontFamilybody"${invalid ? ' invalid' : ''} style="width:300px">` +
   `<div><label for="${id}" class="${LBL}">Email address</label></div>` +
   `<div><input id="${id}" class="${invalid ? INPUT_INV : INPUT}" type="email" placeholder="you@example.com" value="${invalid ? 'not-an-email' : ''}"${invalid ? ' invalid' : ''}/></div>` +
   `<div class="${HINT}"${invalid ? ' style="display:none"' : ''}>We'll never share your email.</div>` +

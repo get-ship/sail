@@ -3,7 +3,7 @@
 // dropped native chrome via appearance:none, so a bare meter must still show).
 
 const MT =
-  'sail-meter sx-appearancenone sx-displayinlineblock sx-alignmiddle sx-wfull sx-h2 sx-borderWidth0 sx-radiusfull sx-overflowhidden sx-bgmuted sx-sizesm-h15 sx-sizemd-h2 sx-sizelg-h3'
+  'sail-meter s-appearancenone s-displayinlineblock s-alignmiddle s-wfull s-h2 s-borderWidth0 s-radiusfull s-overflowhidden s-bgmuted s-sizesm-h15 s-sizemd-h2 s-sizelg-h3'
 
 const mt = (a) => {
   const m = a.match(/class="([^"]*)"/)

@@ -265,7 +265,7 @@ fn sx_only_source_passes_real_compile_path() {
         .collect();
     assert!(
         class_errors.is_empty(),
-        "sx-only source must not produce a no-class Error: {diags:?}"
+        "s-only source must not produce a no-class Error: {diags:?}"
     );
 }
 

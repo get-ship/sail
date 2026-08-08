@@ -419,10 +419,10 @@ function classKey(cls) {
     .filter(
       (c) =>
         c.startsWith('sail-') ||
-        c.startsWith('sx-w') ||
-        c.startsWith('sx-grow') ||
-        c.startsWith('sx-shrink') ||
-        c.startsWith('sx-min') ||
+        c.startsWith('s-w') ||
+        c.startsWith('s-grow') ||
+        c.startsWith('s-shrink') ||
+        c.startsWith('s-min') ||
         c.includes('card') ||
         c.includes('pad'),
     )

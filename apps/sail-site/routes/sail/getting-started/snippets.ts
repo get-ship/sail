@@ -33,7 +33,7 @@ $ sail dev --project my-app
 
   feedback: `# Write something off the system and the build says no — precisely.
 $ sail dev
-Error: routes/page.sail: line 4 col 13: [sail-sx]
+Error: routes/page.sail: line 4 col 13: [sail-style]
   sx \`bg:blurple\` — \`blurple\` is not a token.
   allowed: accent, background, border, muted, primary, … (the token list)
   suggest: sx is surface-only: spacing 0-8 (p/m…), colors (bg/fg),

@@ -115,7 +115,7 @@ export async function layoutCheckAll(cases, opts = {}) {
 
 /**
  * Batch-compile .sail files; return map id → { html, css }.
- * CSS comes from the compiler-injected `__suiStyles` block (sx-* atomics are
+ * CSS comes from the compiler-injected `__suiStyles` block (s-* atomics are
  * NOT all present in static tokens CSS — only skins + sail-* primitives).
  * On batch failure, falls back to per-file compile.
  */
@@ -265,8 +265,8 @@ ${links.map((c) => `<link rel="stylesheet" href="${c}"/>`).join('\n')}
   .v1-case { width: ${width}px; min-height: 1px; box-sizing: border-box; }
   .tpl-frag { display: contents; }
 </style>
-<style id="v1-sx-atomics">
-/* Compiler-injected sx-* / sail-* atomics from compiled modules */
+<style id="v1-s-atomics">
+/* Compiler-injected s-* / sail-* atomics from compiled modules */
 ${cssChunks.join('\n')}
 </style>
 </head>
@@ -458,15 +458,15 @@ function classKey(cls) {
     .filter(
       (c) =>
         c.startsWith('sail-') ||
-        c.startsWith('sx-w') ||
-        c.startsWith('sx-h') ||
-        c.startsWith('sx-grow') ||
-        c.startsWith('sx-shrink') ||
-        c.startsWith('sx-min') ||
-        c.startsWith('sx-max') ||
-        c.startsWith('sx-pad') ||
-        c.startsWith('sx-overflow') ||
-        c.startsWith('sx-p') ||
+        c.startsWith('s-w') ||
+        c.startsWith('s-h') ||
+        c.startsWith('s-grow') ||
+        c.startsWith('s-shrink') ||
+        c.startsWith('s-min') ||
+        c.startsWith('s-max') ||
+        c.startsWith('s-pad') ||
+        c.startsWith('s-overflow') ||
+        c.startsWith('s-p') ||
         c.includes('card') ||
         c.includes('pad'),
     )

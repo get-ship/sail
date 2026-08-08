@@ -840,8 +840,8 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
 }
 
 /// Lower one participation attr to the same atomic class + CSS Style would
-/// emit for the matching setter (`style.grow(1)` → `sx-grow1{flex-grow:1}`,
-/// `style.w(full)` → `sx-wfull{width:100%}`, …). `None` when the value is
+/// emit for the matching setter (`style.grow(1)` → `s-grow1{flex-grow:1}`,
+/// `style.w(full)` → `s-wfull{width:100%}`, …). `None` when the value is
 /// off-vocab (lint reports it; preprocess skips) **or** when the attr is a
 /// grid span that stays on the host for CSS attribute selectors.
 pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> {
@@ -2098,19 +2098,19 @@ mod tests {
     #[test]
     fn lowers_participation_to_style_classes() {
         let (classes, css) = lower_participation("grow", "").unwrap();
-        assert!(classes.contains("sx-grow1"), "{classes}");
+        assert!(classes.contains("s-grow1"), "{classes}");
         assert!(css.contains("flex-grow:1"), "{css}");
 
         let (classes, css) = lower_participation("shrink", "0").unwrap();
-        assert!(classes.contains("sx-shrink0"), "{classes}");
+        assert!(classes.contains("s-shrink0"), "{classes}");
         assert!(css.contains("flex-shrink:0"), "{css}");
 
         let (classes, css) = lower_participation("w", "full").unwrap();
-        assert!(classes.contains("sx-wfull"), "{classes}");
+        assert!(classes.contains("s-wfull"), "{classes}");
         assert!(css.contains("width:100%"), "{css}");
 
         let (classes, css) = lower_participation("min-w", "0").unwrap();
-        assert!(classes.contains("sx-minW0"), "{classes}");
+        assert!(classes.contains("s-minW0"), "{classes}");
         assert!(css.contains("min-width:0"), "{css}");
     }
 

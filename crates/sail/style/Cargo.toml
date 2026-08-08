@@ -9,18 +9,6 @@ description = "Compile-time Style value language: parse, IR, emit, clash, scales
 name = "sail_style"
 path = "src/lib.rs"
 
-[[bin]]
-name = "sail-style-channels-codemod"
-path = "src/bin/channels_codemod.rs"
-
-[[bin]]
-name = "sail-style-teaching-codemod"
-path = "src/bin/teaching_codemod.rs"
-
-[[bin]]
-name = "sail-style-objectify-codemod"
-path = "src/bin/objectify_codemod.rs"
-
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

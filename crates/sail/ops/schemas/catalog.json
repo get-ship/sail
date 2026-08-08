@@ -41,7 +41,7 @@
       "service": "SailAuthoring",
       "method": "Check",
       "mcp_tool": "sail_check",
-      "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` is workspace-relative only (path escape refused — WI4).",
+      "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-style typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` is workspace-relative only (path escape refused — WI4).",
       "path": "/sail.ops.v1.SailAuthoring/Check",
       "inputSchema": {
         "type": "object",

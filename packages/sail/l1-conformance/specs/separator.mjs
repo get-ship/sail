@@ -4,7 +4,7 @@
 // border) for default solid rest.
 
 const SEP =
-  'sail-separator sx-displayblock sx-wfull sx-hborderwidth sx-my2 sx-pad0 sx-borderWidth0 sx-bgseparatorline'
+  'sail-separator s-displayblock s-wfull s-hborderwidth s-my2 s-pad0 s-borderWidth0 s-bgseparatorline'
 const sep = (a = '') => `<div class="${SEP}" ${a}></div>`
 
 export default {

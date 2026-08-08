@@ -84,7 +84,7 @@ fn rule_for_class<'a>(
         .map(|(_, decls)| decls)
 }
 
-/// First `sx-*` class token on an element after Style preprocess.
+/// First `s-*` class token on an element after Style preprocess.
 fn extract_first_sx_class(preprocessed: &str) -> Option<String> {
     let (html, _) = split_html_css(preprocessed);
     let mut search = html;
@@ -92,7 +92,7 @@ fn extract_first_sx_class(preprocessed: &str) -> Option<String> {
         let rest = &search[i + 7..];
         let end = rest.find('"')?;
         for tok in rest[..end].split_whitespace() {
-            if tok.starts_with("sx-") {
+            if tok.starts_with("s-") {
                 return Some(tok.to_string());
             }
         }
@@ -275,7 +275,7 @@ fn sx_width_full_matches_css() {
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
-    // Style emit mints atomic class names from paint ops (not fixed sx-wfull).
+    // Style emit mints atomic class names from paint ops (not fixed s-wfull).
     let class = extract_first_sx_class(&preprocessed).expect("sx class present");
     let rule = rule_for_class(&rules, &class).expect("width rule present");
     assert_eq!(rule["width"], "100%");
@@ -285,47 +285,47 @@ fn sx_width_full_matches_css() {
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
-/// Product box-channel `grow(1)` → `sx-grow1` (not residual `sx-grow` / bare attr).
+/// Product box-channel `grow(1)` → `s-grow1` (not residual `s-grow` / bare attr).
 #[test]
 fn grow_box_channel_maps_to_taffy_flex_grow() {
     let src = r#"<column><div style({ box: grow(1) })> body</div></column>"#;
     let preprocessed = preprocess(src);
     assert!(
-        preprocessed.contains("sx-grow1"),
+        preprocessed.contains("s-grow1"),
         "product grow class missing: {preprocessed}"
     );
-    let style = resolve_element_with_class(&preprocessed, "sx-grow1", 1440.0);
+    let style = resolve_element_with_class(&preprocessed, "s-grow1", 1440.0);
     assert!(
         (style.style.flex_grow - 1.0).abs() < f32::EPSILON,
-        "sx-grow1 must set flex_grow=1, got {}",
+        "s-grow1 must set flex_grow=1, got {}",
         style.style.flex_grow
     );
 }
 
-/// Product `style({ box: minW(0) })` → `sx-minW0` (camelCase, not `sx-minw0`).
+/// Product `style({ box: minW(0) })` → `s-minW0` (camelCase, not `s-minw0`).
 #[test]
 fn min_w_box_channel_maps_to_taffy_min_width() {
     let src = r#"<div style({ box: minW(0) })> x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
-        preprocessed.contains("sx-minW0"),
+        preprocessed.contains("s-minW0"),
         "product minW class missing: {preprocessed}"
     );
-    let style = resolve_element_with_class(&preprocessed, "sx-minW0", 1440.0);
+    let style = resolve_element_with_class(&preprocessed, "s-minW0", 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(style.style.min_size.width, Dimension::length(0.0));
 }
 
-/// Product `style({ box: pad(4) })` → `sx-pad4` (not residual `sx-p4`).
+/// Product `style({ box: pad(4) })` → `s-pad4` (not residual `s-p4`).
 #[test]
 fn style_pad_maps_to_taffy_padding() {
     let src = r#"<div style({ box: pad(4) })> x</div>"#;
     let preprocessed = preprocess(src);
     assert!(
-        preprocessed.contains("sx-pad4"),
+        preprocessed.contains("s-pad4"),
         "product pad class missing: {preprocessed}"
     );
-    let style = resolve_element_with_class(&preprocessed, "sx-pad4", 1440.0);
+    let style = resolve_element_with_class(&preprocessed, "s-pad4", 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(style.style.padding.top, LengthPercentage::length(16.0));
     assert_eq!(style.style.padding.left, LengthPercentage::length(16.0));
@@ -349,7 +349,7 @@ fn sx_hidden_matches_css() {
                     .next()
                     .unwrap_or("")
                     .to_string();
-                if c.starts_with("sx-") {
+                if c.starts_with("s-") {
                     return Some((c, decls));
                 }
             }

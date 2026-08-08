@@ -1,7 +1,7 @@
 //! Minimal HTML parser for **preprocessed** `.sail` source.
 //!
 //! `sail_compiler::parse::preprocess` has already done the heavy lifting:
-//! `<column>` is `<div class="sail-col …">`, `style="…"` is `class="sx-…"`. We
+//! `<column>` is `<div class="sail-col …">`, `style="…"` is `class="s-…"`. We
 //! just need a stream-friendly scanner that produces a flat element tree with
 //! raw `class=` / `style=` / `style:--foo=` attributes — enough for style
 //! resolution, not enough for rendering.
@@ -38,7 +38,7 @@ pub struct Element {
     /// layer — style resolution decodes CSS lengths from these).
     pub style: HashMap<String, String>,
     /// Other HTML attributes (tone, variant, type, …) used by L1 skin paint
-    /// matching (`[tone='primary'].sx-…`). Not consumed by the layout pass.
+    /// matching (`[tone='primary'].s-…`). Not consumed by the layout pass.
     pub attrs: HashMap<String, String>,
     /// Explicit grid-column span from language `col-span` (or legacy `data-col-span`).
     pub col_span: Option<u16>,

@@ -26,22 +26,22 @@ pub(crate) fn apply_scale_classes(
     }
 }
 
-/// Product Style mints `sx-{setter}{arg}` and CVA compounds
-/// `sx-{path}-{setter}{arg}` (hyphens stripped from args). Path is attr+pseudo
+/// Product Style mints `s-{setter}{arg}` and CVA compounds
+/// `s-{path}-{setter}{arg}` (hyphens stripped from args). Path is attr+pseudo
 /// tags concatenated; only bare atoms and compounds whose path matches host
 /// attrs (and is free of pseudo markers) apply.
 fn match_sx_scale_rule(c: &str, attrs: &HashMap<String, String>) -> Option<(String, SxScaleRule)> {
-    let rest = c.strip_prefix("sx-")?;
+    let rest = c.strip_prefix("s-")?;
     // Longest setter first (padX before pad, minH before h, …).
     for (prefix, rule) in SX_SCALE_RULES {
-        let setter = prefix.strip_prefix("sx-")?;
-        // Bare: sx-{setter}{arg}
+        let setter = prefix.strip_prefix("s-")?;
+        // Bare: s-{setter}{arg}
         if let Some(tail) = rest.strip_prefix(setter) {
             if is_plausible_scale_tail(tail, *rule) {
                 return Some((tail.to_string(), *rule));
             }
         }
-        // Compound: sx-{path}-{setter}{arg}
+        // Compound: s-{path}-{setter}{arg}
         let needle = format!("-{setter}");
         if let Some(idx) = rest.rfind(&needle) {
             let path = &rest[..idx];
@@ -491,7 +491,7 @@ mod tests {
     fn sx_size_sets_width_and_height() {
         let e = Element {
             tag: "div".into(),
-            class: "sx-size2".into(),
+            class: "s-size2".into(),
             ..Default::default()
         };
         let all = vec![Element::default(), e.clone()];
@@ -512,7 +512,7 @@ mod tests {
     fn switch_skin_size_classes_resolve_nonzero() {
         let elem = Element {
             tag: "input".into(),
-            class: "sail-switch sx-wcontrolhsm sx-hiconsizemd sx-shrink0".into(),
+            class: "sail-switch s-wcontrolhsm s-hiconsizemd s-shrink0".into(),
             ..Default::default()
         };
         let resolved = resolve(&elem, &[Element::default()], 480.0);
@@ -526,10 +526,10 @@ mod tests {
         // not win; only size=md compounds apply.
         let elem = Element {
             tag: "input".into(),
-            class: "sail-switch sx-wcontrolhsm sx-hiconsizemd \
-                    sx-sizesm-wcontrolhxs sx-sizesm-hiconsizesm \
-                    sx-sizemd-wcontrolhsm sx-sizemd-hiconsizemd \
-                    sx-sizelg-w7 sx-sizelg-hiconsizelg"
+            class: "sail-switch s-wcontrolhsm s-hiconsizemd \
+                    s-sizesm-wcontrolhxs s-sizesm-hiconsizesm \
+                    s-sizemd-wcontrolhsm s-sizemd-hiconsizemd \
+                    s-sizelg-w7 s-sizelg-hiconsizelg"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -556,8 +556,8 @@ mod tests {
         let elem = Element {
             tag: "input".into(),
             class:
-                "sail-input sx-wfull sx-typetext-minHcontrolhmd sx-typetext-padY15 sx-typetext-padX3 \
-                 sx-typetextsizelg-minHcontrolhlg"
+                "sail-input s-wfull s-typetext-minHcontrolhmd s-typetext-padY15 s-typetext-padX3 \
+                 s-typetextsizelg-minHcontrolhlg"
                     .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -582,8 +582,8 @@ mod tests {
     fn button_sizemd_minh_compound_resolves() {
         let elem = Element {
             tag: "button".into(),
-            class: "sail-button sx-sizemd-minHcontrolhmd sx-sizemd-padX3 \
-                    sx-sizelg-minHcontrolhlg sx-sizelg-padX4"
+            class: "sail-button s-sizemd-minHcontrolhmd s-sizemd-padX3 \
+                    s-sizelg-minHcontrolhlg s-sizelg-padX4"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -601,8 +601,8 @@ mod tests {
     fn accent_bar_before_height_does_not_size_card_host() {
         let elem = Element {
             tag: "div".into(),
-            class: "sail-card sx-padY4 sx-padX5 sx-accentbarstaticbefore-hhalf \
-                    sx-accentbarhoverbefore-hhalf sx-bgcard"
+            class: "sail-card s-padY4 s-padX5 s-accentbarstaticbefore-hhalf \
+                    s-accentbarhoverbefore-hhalf s-bgcard"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();
@@ -626,7 +626,7 @@ mod tests {
     fn paddingmd_compound_does_not_clobber_via_false_pad_prefix() {
         let elem = Element {
             tag: "div".into(),
-            class: "sx-padY4 sx-paddingmd-padY4".into(),
+            class: "s-padY4 s-paddingmd-padY4".into(),
             attrs: {
                 let mut m = HashMap::new();
                 m.insert("padding".into(), "md".into());
@@ -642,8 +642,8 @@ mod tests {
     fn placement_rail_compound_skipped_when_placement_top() {
         let elem = Element {
             tag: "div".into(),
-            class: "sx-minH14 sx-padY2 sx-placementrail-minH0 sx-placementrail-padY5 \
-                    sx-placementtop-minH14 sx-placementtop-padY2"
+            class: "s-minH14 s-padY2 s-placementrail-minH0 s-placementrail-padY5 \
+                    s-placementtop-minH14 s-placementtop-padY2"
                 .into(),
             attrs: {
                 let mut m = HashMap::new();

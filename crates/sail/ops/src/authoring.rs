@@ -95,7 +95,7 @@ Controllers never `.style` / `createElement`.\n\
                  - Participation on the box channel: `style({{ box: grow(1).minW(0) }})` \
                    (`sail-participation-style` refuses bare `grow`/`shrink`/`w`/`min-w`/`max-w`).\n\
                  - Never `style.display(…)` on layout keywords (`sail-display-on-layout`):\n  \
-                   `.sail-col` / `.sail-row` beat `.sx-displaynone`. Plain host + nest layout.\n\
+                   `.sail-col` / `.sail-row` beat `.s-displaynone`. Plain host + nest layout.\n\
                  - **a11y IR (SPEC-ARIA-1):** never free `aria-*` / free ARIA `role=` \
                    (Warning now, Error next). Semantic props: `label` `description` \
                    `expanded` `selected` `pressed` `current` `level` `live` `invalid` \
@@ -140,9 +140,9 @@ Controllers never `.style` / `createElement`.\n\
                 "\n**Participation (any element, box channel):** \
                  `style({{ box: grow(1).minW(0).w(full) }})` / `shrink(0)` — bare attrs refused \
                  (`sail-participation-style`). Axis sugar `gap`/`align`/`justify` stays on layout keywords.\n\n\
-                 **Refused layout-as-sx** (`sx_vocab::refusals()`):\n"
+                 **Refused layout-as-sx** (`style_vocab::refusals()`):\n"
             );
-            for (atom, instead) in sail_lint::sx_vocab::refusals() {
+            for (atom, instead) in sail_lint::style_vocab::refusals() {
                 let _ = writeln!(md, "- `{atom}` — {instead}");
             }
             let _ = writeln!(

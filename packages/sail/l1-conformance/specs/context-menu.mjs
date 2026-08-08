@@ -4,9 +4,9 @@
 // Paint classes mirror lowered Style: context-menu* panel + menu-item* rows.
 
 const CM =
-  'sail-context-menu sx-pad1 sx-fgcontextmenuforeground sx-bgcontextmenu sx-borderWidth1 sx-bordercontextmenuborder sx-radiusmd sx-shadowmd sx-zpopover'
+  'sail-context-menu s-pad1 s-fgcontextmenuforeground s-bgcontextmenu s-borderWidth1 s-bordercontextmenuborder s-radiusmd s-shadowmd s-zpopover'
 const MI =
-  'sail-menu-item sx-displayflex sx-gap25 sx-padY2 sx-padX3 sx-wfull sx-borderWidth0 sx-fgmenuitemforeground sx-bgtransparent sx-radiussm sx-cursorpointer sx-textAlignstart sx-fontFamilybody sx-fontSizesm sx-leadingtight sx-whitespacenowrap sx-hover-bgmenuitemhoverbg sx-focus-bgmenuitemhoverbg sx-focus-outlinesolid sx-focus-outline2 sx-focus-outlinering sx-disabled-opacity50 sx-disabled-cursornotallowed'
+  'sail-menu-item s-displayflex s-gap25 s-padY2 s-padX3 s-wfull s-borderWidth0 s-fgmenuitemforeground s-bgtransparent s-radiussm s-cursorpointer s-textAlignstart s-fontFamilybody s-fontSizesm s-leadingtight s-whitespacenowrap s-hover-bgmenuitemhoverbg s-focus-bgmenuitemhoverbg s-focus-outlinesolid s-focus-outline2 s-focus-outlinering s-disabled-opacity50 s-disabled-cursornotallowed'
 
 const item = (value, label) =>
   `<button type="button" class="${MI}" role="menuitem" value="${value}">${label}</button>`
