@@ -114,6 +114,32 @@ fn multiple_props_share_one_attach_call() {
     );
 }
 
+/// Named Style decls (`style name = { …, animate: … }` + `style(name)`) must
+/// still emit `__sail_motion_attach`. Pre-fix, `collect_motion_attaches`
+/// skipped `Style::Ref`, so every animation-page ambient/loop via a named
+/// style painted and never moved.
+#[test]
+fn named_style_ref_emits_runtime_motion_attach() {
+    let js = compile_motion(
+        r#"
+<scope>
+  style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+</scope>
+<div style(ambientDot)></div>
+"#,
+    )
+    .expect("compile");
+    assert!(
+        js.contains("__sail_motion_attach("),
+        "named style(ref) must still emit runtime motion attach:\n{js}"
+    );
+    assert!(js.contains("\"loop\""), "expected loop trigger:\n{js}");
+    assert!(
+        js.contains("property: \"translate-y\"") || js.contains("property:\"translate-y\""),
+        "expected translate-y property:\n{js}"
+    );
+}
+
 #[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
     let js =

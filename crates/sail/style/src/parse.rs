@@ -84,32 +84,67 @@ fn is_motion_chain_method(name: &str) -> bool {
 /// Collect `MotionAttach` nodes from a Style tree (pre-order, source order).
 /// Used by preprocess to inject compiler-private `_sail_m_*` attributes next
 /// to the lowered class list.
+///
+/// Does not resolve `Style::Ref` — callers that have a [`StyleEnv`] must use
+/// [`collect_motion_attaches_env`]. Tag-position `style(named)` is a Ref; if
+/// collection skips the env, the named style's `animate:` channel is dropped
+/// and motion attaches never reach the runtime (dead loops / enters with full
+/// paint classes still applied — the site red that sampling `translate` catches).
 pub fn collect_motion_attaches(style: &Style) -> Vec<(String, String)> {
+    collect_motion_attaches_env(style, &std::collections::HashMap::new())
+}
+
+/// Like [`collect_motion_attaches`], resolving scope Style consts via `env`.
+///
+/// CSS emit already expands `Style::Ref` through the same env; motion collection
+/// must follow the same path or `style(name)` / multi-ref `style(a, b)` loses
+/// every `MotionAttach` that lives only on the named declaration.
+pub fn collect_motion_attaches_env(
+    style: &Style,
+    env: &std::collections::HashMap<String, Style>,
+) -> Vec<(String, String)> {
     let mut out = Vec::new();
-    collect_motion_attaches_inner(style, &mut out);
+    collect_motion_attaches_inner(style, env, &mut out, &mut std::collections::HashSet::new());
     out
 }
 
-fn collect_motion_attaches_inner(style: &Style, out: &mut Vec<(String, String)>) {
+fn collect_motion_attaches_inner(
+    style: &Style,
+    env: &std::collections::HashMap<String, Style>,
+    out: &mut Vec<(String, String)>,
+    resolving: &mut std::collections::HashSet<String>,
+) {
     match style {
-        Style::Empty | Style::Set(_) | Style::Ref(_) => {}
+        Style::Empty | Style::Set(_) => {}
         Style::MotionAttach { trigger, config } => {
             out.push((trigger.clone(), config.clone()));
         }
+        Style::Ref(name) => {
+            // Cycle guard mirrors emit_inner / style_uses_text_channel_env.
+            if !resolving.insert(name.clone()) {
+                return;
+            }
+            if let Some(s) = env.get(name) {
+                collect_motion_attaches_inner(s, env, out, resolving);
+            }
+            resolving.remove(name);
+        }
         Style::Chain(items) | Style::List(items) => {
             for i in items {
-                collect_motion_attaches_inner(i, out);
+                collect_motion_attaches_inner(i, env, out, resolving);
             }
         }
         Style::Match { arms, .. } => {
             for (_, body) in arms {
-                collect_motion_attaches_inner(body, out);
+                collect_motion_attaches_inner(body, env, out, resolving);
             }
         }
-        Style::Compound { body, .. } => collect_motion_attaches_inner(body, out),
+        Style::Compound { body, .. } => {
+            collect_motion_attaches_inner(body, env, out, resolving)
+        }
         Style::When { entries } => {
             for (_, body) in entries {
-                collect_motion_attaches_inner(body, out);
+                collect_motion_attaches_inner(body, env, out, resolving);
             }
         }
     }

@@ -26,6 +26,7 @@ pub mod style {
         CONDITION_PREFIXES, Channel, CssRule, OBJECT_KEYS, PaintArg, PaintOp, Style,
         StyleCompleteContext, StyleCompleteItem, StyleCompleteKind, StyleDiagnostic, StyleEnv,
         TEXT_BEARING_ELEMENTS, channel_for_setter, clash, collect_motion_attaches,
+        collect_motion_attaches_env,
         collect_style_const_names, color_paint_vocabulary, condition_media, conditions, emit,
         emit_style, ir, is_geometry_setter, is_interaction_when_key, is_text_bearing,
         looks_like_utility_string_product, lower_style, lower_style_source,

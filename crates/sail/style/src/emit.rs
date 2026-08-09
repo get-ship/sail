@@ -370,7 +370,11 @@ pub fn lower_style_source_with_motion(
     }) {
         return Err(diags);
     }
-    let motions = super::parse::collect_motion_attaches(&style);
+    // Resolve Style::Ref through env so named style decls
+    // (`style ambientDot = { …, animate: loop({…}) }` + `style(ambientDot)`)
+    // still inject `_sail_m_*` attrs. CSS emit already expands refs; motion
+    // collection must not skip them or ambient/enter/exit on named styles die.
+    let motions = super::parse::collect_motion_attaches_env(&style, env);
     let rules = emit_style(&style, env);
     let mut classes = Vec::new();
     for r in &rules {

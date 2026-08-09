@@ -43,7 +43,8 @@ pub use emit::{
 };
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
-    collect_motion_attaches, looks_like_utility_string_product, parse, parse_style_const_rhs,
+    collect_motion_attaches, collect_motion_attaches_env, looks_like_utility_string_product, parse,
+    parse_style_const_rhs,
 };
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
@@ -1028,6 +1029,56 @@ mod tests {
             "config preserved: {:?}",
             attaches[0].1
         );
+    }
+
+    /// Regression: `style(name)` is a Style::Ref. CSS emit expands the ref via
+    /// StyleEnv, but motion collection used to skip Ref — so every named style
+    /// with an `animate:` channel painted correctly and never moved.
+    #[test]
+    fn named_style_ref_collects_motion_via_env() {
+        let (named, diags) = parse(
+            "style({ box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let mut env = HashMap::new();
+        env.insert("ambientDot".into(), named);
+
+        // Tag-position `style(ambientDot)` parses as a bare Ref.
+        let (host, host_diags) = parse("ambientDot");
+        assert!(
+            host_diags.is_empty(),
+            "{:?}",
+            host_diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        assert!(
+            collect_motion_attaches(&host).is_empty(),
+            "without env a bare Ref must yield no attaches (no false positives)"
+        );
+        let via_env = collect_motion_attaches_env(&host, &env);
+        assert_eq!(via_env.len(), 1, "env must surface the named loop: {via_env:?}");
+        assert_eq!(via_env[0].0, "loop");
+        assert!(
+            via_env[0].1.contains("translate-y"),
+            "config preserved: {:?}",
+            via_env[0].1
+        );
+
+        // lower_style_source_with_motion is the product path preprocess uses.
+        let mut css = String::new();
+        let mut seen = std::collections::HashSet::new();
+        let (_classes, motions) =
+            lower_style_source_with_motion("ambientDot", &env, &mut css, &mut seen)
+                .expect("named style lowers");
+        assert_eq!(
+            motions.len(),
+            1,
+            "product lower must inject motion for style(name): {motions:?}"
+        );
+        assert_eq!(motions[0].0, "loop");
     }
 
     #[test]
