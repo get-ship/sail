@@ -6,7 +6,7 @@
  * Contract: regenerate adjacent `.sail.d.ts` companions, then `tsc --noEmit`
  * per component pack. Invokes scripts/gen-component-types.mjs first.
  *
- * Keep scripts/ ≤2 files; do not add one-shots here — use `cargo xtask`.
+ * Keep scripts/ to load-bearing root helpers only — no one-shot generators.
  */
 // Typecheck every sail component pack. Regenerates the adjacent `.sail.d.ts` type
 // companions FIRST (they're gitignored, so a clean checkout has none) so each

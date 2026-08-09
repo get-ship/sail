@@ -7,7 +7,7 @@
  * Contract: emit adjacent `<stem>.sail.d.ts` companions for component packs
  * so controllers can `import type { Scope } from './x.sail'`.
  *
- * Keep scripts/ ≤2 files; cross-language bake goes in `cargo xtask`.
+ * Keep scripts/ to load-bearing root helpers only — no one-shot generators.
  */
 // Generate the `<stem>.sail.d.ts` type companions for every component pack so
 // `tsc` can resolve each controller's `import type { Scope } from './<stem>.sail'`.
