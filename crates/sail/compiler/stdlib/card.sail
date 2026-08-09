@@ -22,9 +22,18 @@
   style padNone = { box: pad(0) }
   style padSm = { box: padY(2).padX(3) }
   style padLg = { box: padY(5).padX(6) }
-  // Negative margins cancel host padMd so header/footer bleed edge-to-edge under default padding.
-  style headerChrome = { box: mt(-4).mx(-5).mb(3).padX(5).padY(4), paint: borderB(1, border-subtle), text: fontFamily(heading) }
-  style footerChrome = { box: mt(3).mx(-5).mb(-4).padX(5).padY(4), paint: borderT(1, border-subtle) }
+  // Header/footer chrome: negative margins cancel host pad so chrome bleeds edge-to-edge.
+  // Each step mirrors the padding match (sm/md/lg/none) — never hard-code padMd only.
+  style headerChromeBase = { paint: borderB(1, border-subtle), text: fontFamily(heading) }
+  style headerChromeMd = { box: mt(-4).mx(-5).mb(3).padX(5).padY(4) }
+  style headerChromeSm = { box: mt(-2).mx(-3).mb(2).padX(3).padY(2) }
+  style headerChromeLg = { box: mt(-5).mx(-6).mb(4).padX(6).padY(5) }
+  style headerChromeNone = { box: mb(3).padY(3).padX(0) }
+  style footerChromeBase = { paint: borderT(1, border-subtle) }
+  style footerChromeMd = { box: mt(3).mx(-5).mb(-4).padX(5).padY(4) }
+  style footerChromeSm = { box: mt(2).mx(-3).mb(-2).padX(3).padY(2) }
+  style footerChromeLg = { box: mt(4).mx(-6).mb(-5).padX(6).padY(5) }
+  style footerChromeNone = { box: mt(3).padY(3).padX(0) }
   // Shared ::before stripe for accent-bar static/hover; opacity differs per arm.
   style accentBar = { box: position(absolute).left(0).right(0).top(0).h(half), paint: content(empty).bgImage(primary-accent).radiusT(lg).pointerEvents(none).transition(opacity).duration(medium).ease(out) }
 </scope>
@@ -75,11 +84,35 @@
     ],
   })
 >
-  <div style(headerChrome, { when: { empty: { box: display(none) } } })>
+  <div
+    style(headerChromeBase, {
+      match: {
+        padding: {
+          md: headerChromeMd,
+          sm: headerChromeSm,
+          lg: headerChromeLg,
+          none: headerChromeNone,
+        },
+      },
+      when: { empty: { box: display(none) } },
+    })
+  >
     <slot name="header"></slot>
   </div>
   <slot></slot>
-  <div style(footerChrome, { when: { empty: { box: display(none) } } })>
+  <div
+    style(footerChromeBase, {
+      match: {
+        padding: {
+          md: footerChromeMd,
+          sm: footerChromeSm,
+          lg: footerChromeLg,
+          none: footerChromeNone,
+        },
+      },
+      when: { empty: { box: display(none) } },
+    })
+  >
     <slot name="footer"></slot>
   </div>
 </div>
