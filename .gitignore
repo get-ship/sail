@@ -116,3 +116,7 @@ tests/parity/paint/out/
 
 # Parity runner output (regenerated per run)
 tests/parity/*/out/
+
+# local minified scratch
+**/.tmp-*.min.js
+**/.tmp-*
