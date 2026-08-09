@@ -472,6 +472,77 @@ export function modesForTheme(id: string): readonly string[] {
   return modes
 }
 
+/**
+ * Paint mode for a **nested** themed host (`theme=` on a subtree, not `:root`).
+ *
+ * Product rule (C-TH-NEST-1): nested roots should carry **theme + mode**.
+ * When the author only sets `theme=`, stamp `data-mode` with this helper so
+ * dual-mode themes pick the correct CSS block and `color-scheme` matches.
+ *
+ * Resolution order:
+ * 1. Explicit `preferred` (light|dark|system → paint) if the theme supports it
+ * 2. Document `data-mode` when the nested theme declares that mode
+ * 3. Theme defaultMode / first declared mode
+ *
+ * Single-mode themes (paper/console/…) always resolve to their only mode —
+ * never invent a dark paper block.
+ */
+export function resolveNestedPaintMode(
+  themeId: string,
+  preferred?: string | null,
+  documentRoot: HTMLElement | null = typeof document !== 'undefined'
+    ? document.documentElement
+    : null,
+): PaintMode {
+  const modes = modesForTheme(themeId)
+  const clamp = (raw: string | null | undefined): PaintMode | null => {
+    if (!raw) return null
+    const paint = paintMode(raw)
+    return modes.includes(paint) ? paint : null
+  }
+
+  const fromPreferred = clamp(preferred)
+  if (fromPreferred) return fromPreferred
+
+  const docMode = documentRoot?.getAttribute('data-mode')
+  const fromDoc = clamp(docMode)
+  if (fromDoc) return fromDoc
+
+  const meta = lookupThemeMeta(themeId)
+  const fallback =
+    (meta?.defaultMode && modes.includes(meta.defaultMode)
+      ? meta.defaultMode
+      : null) ??
+    THEME_BY_ID[themeId]?.defaultMode ??
+    (modes.includes('light') ? 'light' : modes[0]) ??
+    DEFAULT_MODE
+  return paintMode(fallback)
+}
+
+/**
+ * Apply theme + paint mode on a **nested** host (not the document product root).
+ * Sets `theme` + `data-mode` only — no persistence, no `ship:theme:change`.
+ * Use for demos / previews / framed apps (e.g. shanty on `/showcase`).
+ */
+export function applyNestedTheme(
+  themeId: unknown,
+  host: HTMLElement,
+  preferredMode?: string | null,
+): { theme: string; mode: PaintMode } {
+  const next: string = isValidTheme(themeId)
+    ? themeId
+    : typeof themeId === 'string' && themeId.length > 0
+      ? themeId
+      : DEFAULT_THEME
+  const mode = resolveNestedPaintMode(next, preferredMode)
+  host.setAttribute('theme', next)
+  host.dataset.mode = mode
+  host.removeAttribute('data-theme')
+  host.removeAttribute('data-theme-preview')
+  host.classList.remove('dark')
+  return { theme: next, mode }
+}
+
 /** True when the theme declares the paint mode. */
 export function themeSupportsMode(id: string, mode: string): boolean {
   const paint = mode === 'system' ? 'system' : mode
