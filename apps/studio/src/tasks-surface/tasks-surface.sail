@@ -61,7 +61,7 @@ export default controller(() => {
     hasMessageItems: c.hasMessageItems,
     composerDisabled: c.composerDisabled,
     canAttachCrop: c.canAttachCrop,
-    onTaskThreadClick: (e: Event) => c.onTaskThreadClick(e),
+    onTaskThreadClick: (id: string) => c.onTaskThreadClick(id),
     onTaskOpenFilter: (e: Event) => c.onTaskOpenFilter(e),
     onTaskActorFilter: (e: Event) => c.onTaskActorFilter(e),
     onComposerSubmit: (detail: { text?: string; attachments?: unknown[] }) => c.onComposerSubmit(detail),
@@ -116,7 +116,7 @@ export default controller(() => {
 
   <row tasks-workbench gap="0" nowrap align="stretch" style(workbench)>
     <column threads-list tasks-nav gap="0" style(navPane)>
-      <scroll-area on:click={onTaskThreadClick} style(scrollGrow)>
+      <scroll-area style(scrollGrow)>
         <column gap="0" tasks-table style(listPad)>
           <if {!hasTaskThreads()}>
             <if {!showTaskErrorAlert()}>
@@ -128,12 +128,12 @@ export default controller(() => {
           <if {hasTaskThreads()}>
             <for {taskThreadRows() as row} key={row.key}>
               <studio-list-row
-                task-id={row.id}
                 thread-row
                 drift={row.drift}
                 title={row.title}
                 meta={row.updatedLabel}
                 selected={row.selected}
+                on:click={() => onTaskThreadClick(row.id)}
               >
                 <badge slot="leading" status-badge={row.status} tone={row.statusTone} size="sm" variant="soft" pill label={row.statusLabel} style(shrink0)>
                   {row.statusLabel}

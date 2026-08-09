@@ -826,6 +826,11 @@ describe('rule groups + autofix + re-check + empty', () => {
     expect(surface).toMatch(/Select element/)
     expect(surface).toMatch(/finding-action="open-source"/)
     expect(surface).toMatch(/finding-action="select-in-app"/)
+    expect(surface).toMatch(/on:click=\{\(\)\s*=>\s*onFindingClick\(f\.id\)\}/)
+    expect(surface).toMatch(
+      /on:click=\{\(e\)\s*=>\s*onFindingAction\(f\.id,\s*['"]open-source['"]/,
+    )
+    expect(surface).not.toMatch(/finding-id=\{/)
     expect(surface).toMatch(/<sail-diff\b/)
     expect(surface).toMatch(/autofix-mode/)
     expect(surface).toMatch(/recheck/)
@@ -834,6 +839,9 @@ describe('rule groups + autofix + re-check + empty', () => {
     expect(surface).toMatch(/rule-info|showInfoBadge/)
     expect(surface).toMatch(/Here's what was checked|emptyChecked|Run checks/)
     expect(surface).toMatch(/showDiff|showSuggestDiff/)
+    expect(vm).not.toMatch(/dataset\.findingId/)
+    expect(vm).not.toMatch(/closest\?\.\(\s*['"]\[finding-id\]/)
+    expect(vm).toMatch(/const onFindingClick = \(id: string\)/)
     expect(vm).toMatch(/createTable/)
     expect(vm).toMatch(/assignTableHost/)
     expect(vm).toMatch(/groupsFromTable|table\.rows\s*\(/)

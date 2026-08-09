@@ -307,9 +307,9 @@ describe('tasks workbench (ops + store)', () => {
     // Removed scaffold junk actions / diary
     // Master–detail workbench
     expect(surface).toMatch(/tasks-workbench/)
-    // Anchor strip before conversation body
+    // Anchor strip before conversation body (host marker, not style messagesHost)
     const anchorAt = surface.indexOf('anchor-card')
-    const messagesAt = surface.indexOf('messages')
+    const messagesAt = surface.indexOf('messages-host')
     expect(anchorAt).toBeGreaterThan(0)
     expect(messagesAt).toBeGreaterThan(anchorAt)
     // No hand-rolled reply input — composer owns the field
@@ -317,6 +317,12 @@ describe('tasks workbench (ops + store)', () => {
     expect(surface).toMatch(/<empty-state\b/)
     expect(surface).toMatch(/<studio-empty\b/)
     expect(surface).toMatch(/tasks-header/)
+    // Id via closed-over handler — not task-id / dataset bus
+    expect(surface).toMatch(/on:click=\{\(\)\s*=>\s*onTaskThreadClick\(row\.id\)\}/)
+    expect(surface).not.toMatch(/task-id=\{/)
+    expect(ctrl).not.toMatch(/dataset\.taskId/)
+    expect(ctrl).not.toMatch(/closest\?\.\(\s*['"]\[task-id\]/)
+    expect(ctrl).toMatch(/const onTaskThreadClick = \(id: string\)/)
     expect(ctrl).toMatch(/from ['"]@ship\/studio\/tasks['"]/)
     expect(ctrl).toMatch(/loadThreads/)
     expect(ctrl).toMatch(/assignMessageListHost|uiMessageListItems/)

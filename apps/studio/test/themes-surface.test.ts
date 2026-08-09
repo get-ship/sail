@@ -20,11 +20,12 @@ import {
 import { setThemeConfirm } from '../src/compositions/theme-session/theme-confirm'
 import { createThemesSurface } from '../src/compositions/themes-surface/themes-surface-vm'
 // mountAmbient requires a setup scope window (controller/setup).
+// Import from the package entry so CURRENT_SCOPE matches @ship/sail-runtime's mount.
 import {
   createScope,
   withScope,
   type EffectScope,
-} from '../../../packages/sail/runtime/src/effect-scope'
+} from '@ship/sail-runtime/internal'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const SURFACE = join(REPO, 'apps/studio/src/themes-surface/themes-surface.sail')
@@ -198,9 +199,24 @@ describe('themes home — UI contracts (source)', () => {
     expect(vm).toMatch(/addThemeToProject|openTheme|loadThemes/)
   })
 
+  it('passes theme ids via closed-over handlers (not theme-id / dataset)', () => {
+    const sail = readFileSync(SURFACE, 'utf8')
+    const vm = readFileSync(VM, 'utf8')
+    // Markup closes over id — fails if closures dropped back to DOM bus.
+    expect(sail).toMatch(/on:click=\{\(\)\s*=>\s*onListClick\(id\)\}/)
+    expect(sail).toMatch(/on:click=\{\(e\)\s*=>\s*onMenuOpen\(id,\s*e\)\}/)
+    expect(sail).toMatch(/on:click=\{\(e\)\s*=>\s*onAddToProject\(id,\s*e\)\}/)
+    expect(sail).not.toMatch(/theme-id=\{/)
+    expect(vm).not.toMatch(/dataset\.themeId/)
+    expect(vm).not.toMatch(/closest\?\.\(\s*['"]\[theme-id\]/)
+    expect(vm).toMatch(/const onListClick = \(id: string\)/)
+    expect(vm).toMatch(/const onMenuOpen = \(id: string/)
+    expect(vm).toMatch(/const onAddToProject = \(id: string/)
+  })
+
   it('paints catalog/project hosts via theme={id}', () => {
     const sail = readFileSync(SURFACE, 'utf8')
-    expect(sail).toMatch(/theme=\{row\.previewId\}/)
+    expect(sail).toMatch(/theme=\{previewId\}|theme=\{row\.previewId\}/)
     expect(sail).toMatch(/theme=\{previewPaintId\(\)\}/)
   })
 
@@ -209,7 +225,7 @@ describe('themes home — UI contracts (source)', () => {
     // themes.css selects [theme=id][data-mode=light|dark]. App markup must not
     // author data-mode= (sail-no-data-attr); local use: action stamps the cascade bit.
     expect(sail).toMatch(/use:paintMode=\{previewModeId\(\)\}/)
-    expect(sail).toMatch(/use:paintMode=\{row\.paintMode\}/)
+    expect(sail).toMatch(/use:paintMode=\{paintMode\}|use:paintMode=\{row\.paintMode\}/)
     expect(sail).toMatch(/const paintMode:\s*Action/)
     expect(sail).toMatch(/setAttribute\(['"]data-mode['"]/)
   })
@@ -227,6 +243,22 @@ describe('themes home — UI contracts (source)', () => {
 })
 
 describe('themes home — surface handlers (behavioral)', () => {
+  it('list click selects theme id + marks active row (closure path)', async () => {
+    wireProjectAndCatalog({ projectFiles: ['my-ship.json'] })
+    await loadThemes({ themeId: 'ship' })
+    const vm = makeSurface()
+    // Catalog ship is selected from load; switch to project id via id-param handler.
+    expect(vm.selectedId()).toBe('ship')
+    vm.onListClick('my-ship')
+    expect(vm.selectedId()).toBe('my-ship')
+    expect(vm.hasSelected()).toBe(true)
+    const row = vm.projectRows().find((r) => r.id === 'my-ship')
+    expect(row?.selected).toBe(true)
+    // Preview hosts follow selection (theme= paint id for registered/project tables).
+    expect(vm.previewThemeId()).toBe('my-ship')
+    expect(vm.previewPaintId()).toBeTruthy()
+  })
+
   it('delete menu + confirm true → deleteTheme (project only)', async () => {
     const deleted: string[] = []
     wireProjectAndCatalog({ onDelete: (p) => deleted.push(p) })
@@ -241,12 +273,8 @@ describe('themes home — surface handlers (behavioral)', () => {
     const vm = makeSurface()
     // Project row selected
     expect(vm.projectRows().some((r) => r.id === 'my-ship')).toBe(true)
-    // Drive menuTarget via onMenuOpen then onRowMenu
-    const btn = document.createElement('button')
-    btn.dataset.themeId = 'my-ship'
-    btn.setAttribute('theme-id', 'my-ship')
-    document.body.appendChild(btn)
-    vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
+    // Drive menuTarget via onMenuOpen(id) then onRowMenu — no DOM dataset bus
+    vm.onMenuOpen('my-ship')
     vm.onRowMenu(menuDetail('delete'))
 
     // Wait microtasks for deleteTheme promise
@@ -262,11 +290,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     setThemeConfirm(() => false)
 
     const vm = makeSurface()
-    const btn = document.createElement('button')
-    btn.dataset.themeId = 'my-ship'
-    btn.setAttribute('theme-id', 'my-ship')
-    document.body.appendChild(btn)
-    vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
+    vm.onMenuOpen('my-ship')
     vm.onRowMenu(menuDetail('delete'))
     await new Promise((r) => setTimeout(r, 20))
     expect(deleted).toEqual([])
@@ -284,11 +308,7 @@ describe('themes home — surface handlers (behavioral)', () => {
 
     const vm = makeSurface()
     expect(vm.catalogRows().some((r) => r.id === 'ship')).toBe(true)
-    const btn = document.createElement('button')
-    btn.dataset.themeId = 'ship'
-    btn.setAttribute('theme-id', 'ship')
-    document.body.appendChild(btn)
-    vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
+    vm.onMenuOpen('ship')
     vm.onRowMenu(menuDetail('delete'))
     await new Promise((r) => setTimeout(r, 20))
     expect(deleted).toEqual([])
@@ -305,11 +325,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     setThemeConfirm(() => true)
 
     const vm = makeSurface()
-    const btn = document.createElement('button')
-    btn.dataset.themeId = 'ship'
-    btn.setAttribute('theme-id', 'ship')
-    document.body.appendChild(btn)
-    vm.onAddToProject({ target: btn, stopPropagation() {} } as unknown as Event)
+    vm.onAddToProject('ship')
     await new Promise((r) => setTimeout(r, 30))
     expect(forks.length).toBe(1)
     expect(forks[0]!.new_id).toBe('my-ship')
@@ -326,11 +342,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     setThemeConfirm(() => false)
 
     const vm = makeSurface()
-    const btn = document.createElement('button')
-    btn.dataset.themeId = 'ship'
-    btn.setAttribute('theme-id', 'ship')
-    document.body.appendChild(btn)
-    vm.onAddToProject({ target: btn, stopPropagation() {} } as unknown as Event)
+    vm.onAddToProject('ship')
     await new Promise((r) => setTimeout(r, 20))
     expect(forks).toEqual([])
     expect(vm.toastMessage()).toMatch(/cancelled/i)

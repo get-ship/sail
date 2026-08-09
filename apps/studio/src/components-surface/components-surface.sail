@@ -79,7 +79,7 @@ export default controller(() => {
         </row>
       </if>
 
-      <scroll-area components-list on:click={library.onListClick} style(scrollGrow)>
+      <scroll-area components-list style(scrollGrow)>
         <column gap="3" style(listPad)>
           <column list-group="project" gap="1">
             <row align="center" justify="between" nowrap>
@@ -97,10 +97,10 @@ export default controller(() => {
             <for {library.projectRows() as row} key={row.key}>
               <studio-list-row
                 component-row
-                component-id={row.id}
                 title={row.title}
                 meta={row.meta}
                 selected={row.selected}
+                on:click={() => library.onListClick(row.id)}
               >
                 <badge slot="trailing" tone={row.originTone} size="sm" variant="outline" pill style(shrink0)>
                   {row.originLabel}
@@ -120,10 +120,10 @@ export default controller(() => {
             <for {library.packRows() as row} key={row.key}>
               <studio-list-row
                 component-row
-                component-id={row.id}
                 title={row.title}
                 meta={row.meta}
                 selected={row.selected}
+                on:click={() => library.onListClick(row.id)}
               >
                 <badge slot="trailing" tone="muted" size="sm" variant="outline" pill style(shrink0)>
                   pack

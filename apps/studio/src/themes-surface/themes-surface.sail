@@ -64,6 +64,7 @@
     paintMode: any
     scope: string
     isCatalog: boolean
+    onListClick: any
     onAddToProject: any
     onMenuOpen: any
     onRowMenu: any
@@ -90,7 +91,6 @@
 <partial theme-list-row props: ThemeListRowProps>
   <row
     theme-row
-    theme-id={id}
     theme-scope={scope}
     selected={selected ? 'true' : 'false'}
     current={selected ? 'true' : null}
@@ -98,6 +98,7 @@
     align="center"
     nowrap
     style(themeRow)
+    on:click={() => onListClick(id)}
   >
     <theme-swatches previewId={previewId} paintMode={paintMode}></theme-swatches>
     <column gap="0" style(growMin)>
@@ -113,9 +114,8 @@
           variant="outline"
           tone="primary"
           theme-add-project
-          theme-id={id}
           label="Add to project"
-          on:click={onAddToProject}
+          on:click={(e) => onAddToProject(id, e)}
         >
           Add
         </button>
@@ -126,9 +126,8 @@
           tone="muted"
           popovertarget={menuId}
           theme-menu
-          theme-id={id}
           label="Theme menu"
-          on:click={onMenuOpen}
+          on:click={(e) => onMenuOpen(id, e)}
         >
           <icon name="ellipsis" size="sm"></icon>
         </button>
@@ -148,9 +147,8 @@
           tone="muted"
           popovertarget={menuId}
           theme-menu
-          theme-id={id}
           label="Theme menu"
-          on:click={onMenuOpen}
+          on:click={(e) => onMenuOpen(id, e)}
         >
           <icon name="ellipsis" size="sm"></icon>
         </button>
@@ -214,9 +212,9 @@ export default controller(() => {
     projectCountLabel: vm.projectCountLabel,
     catalogCountLabel: vm.catalogCountLabel,
     paintMode,
-    onListClick: (e: Event) => vm.onListClick(e),
-    onMenuOpen: (e: Event) => vm.onMenuOpen(e),
-    onAddToProject: (e: Event) => vm.onAddToProject(e),
+    onListClick: (id: string) => vm.onListClick(id),
+    onMenuOpen: (id: string, e?: Event) => vm.onMenuOpen(id, e),
+    onAddToProject: (id: string, e?: Event) => vm.onAddToProject(id, e),
     onPreviewOpen: () => vm.onPreviewOpen(),
     onPreviewAddToProject: () => vm.onPreviewAddToProject(),
     onPreviewModeSwitch: (e: Event) => vm.onPreviewModeSwitch(e),
@@ -268,7 +266,7 @@ export default controller(() => {
         </p>
       </column>
 
-      <scroll-area themes-list on:click={onListClick} style(scrollGrow)>
+      <scroll-area themes-list style(scrollGrow)>
         <column gap="1" style(listPad)>
           <if {!hasAnyThemes()}>
             <if {!hasThemesError()}>
@@ -292,6 +290,7 @@ export default controller(() => {
                 paintMode={row.paintMode}
                 scope="project"
                 isCatalog={false}
+                onListClick={onListClick}
                 onAddToProject={onAddToProject}
                 onMenuOpen={onMenuOpen}
                 onRowMenu={onRowMenu}
@@ -312,6 +311,7 @@ export default controller(() => {
                 paintMode={row.paintMode}
                 scope="catalog"
                 isCatalog={true}
+                onListClick={onListClick}
                 onAddToProject={onAddToProject}
                 onMenuOpen={onMenuOpen}
                 onRowMenu={onRowMenu}

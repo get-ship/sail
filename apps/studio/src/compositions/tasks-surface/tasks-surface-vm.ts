@@ -188,13 +188,12 @@ export function createTasksSurface() {
     return () => unsub()
   })
 
-  const onTaskThreadClick = (e: Event) => {
-    const t = (e.target as Element | null)?.closest?.('[task-id]') as HTMLElement | null
-    if (!t?.dataset.taskId) return
+  const onTaskThreadClick = (id: string) => {
+    if (!id) return
     composerStatus.set('idle')
     composerStatusLabel.set('')
     showComposerStatus.set(false)
-    void selectThread(t.dataset.taskId).then(() => sync())
+    void selectThread(id).then(() => sync())
   }
 
   const onTaskOpenFilter = (e: Event) => {
