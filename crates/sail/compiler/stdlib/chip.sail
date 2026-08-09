@@ -57,27 +57,57 @@
         lg: sizeLg,
       },
       variant: {
+        // Rest solid (no tone) keeps base chip tokens. Tone+solid is compound.
         solid: {
-          paint: bg(tone).fg(tone.foreground).border(tone),
+          paint: bg(chip).fg(chip.foreground).border(chip.border),
           when: { hover: { paint: opacity(90) } },
         },
+        // Soft without tone: muted wash. Soft+tone: colorMix via --tone.
         soft: {
-          paint: colorMix(tone, 15).border(tone).fg(tone),
-          when: { hover: { paint: colorMix(tone, 25) } },
+          paint: colorMix(muted, 15).border(border).fg(muted-foreground),
+          when: { hover: { paint: colorMix(muted, 25) } },
         },
         outline: {
-          paint: bg(transparent).fg(tone).border(tone),
+          paint: bg(transparent).fg(chip.foreground).border(chip.border),
           when: { hover: { paint: bg(hover-bg) } },
         },
         ghost: {
-          paint: bg(transparent).border(transparent).fg(tone),
+          paint: bg(transparent).border(transparent).fg(chip.foreground),
           when: { hover: { paint: bg(hover-bg) } },
         },
       },
     },
     compound: [
+      // Tone + solid
+      { tone: primary, variant: solid, paint: bg(primary).fg(primary-foreground).border(primary) },
+      { tone: info, variant: solid, paint: bg(info).fg(info-foreground).border(info) },
+      { tone: success, variant: solid, paint: bg(success).fg(success-foreground).border(success) },
+      { tone: warning, variant: solid, paint: bg(warning).fg(warning-foreground).border(warning) },
+      { tone: destructive, variant: solid, paint: bg(destructive).fg(destructive-foreground).border(destructive) },
+      { tone: accent, variant: solid, paint: bg(accent).fg(accent-foreground).border(accent) },
       { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) },
+      // Tone + soft (wash)
+      { tone: primary, variant: soft, paint: colorMix(primary, 15).border(primary).fg(primary), when: { hover: { paint: colorMix(primary, 25) } } },
+      { tone: info, variant: soft, paint: colorMix(info, 15).border(info).fg(info), when: { hover: { paint: colorMix(info, 25) } } },
+      { tone: success, variant: soft, paint: colorMix(success, 15).border(success).fg(success), when: { hover: { paint: colorMix(success, 25) } } },
+      { tone: warning, variant: soft, paint: colorMix(warning, 15).border(warning).fg(warning), when: { hover: { paint: colorMix(warning, 25) } } },
+      { tone: destructive, variant: soft, paint: colorMix(destructive, 15).border(destructive).fg(destructive), when: { hover: { paint: colorMix(destructive, 25) } } },
+      { tone: accent, variant: soft, paint: colorMix(accent, 15).border(accent).fg(accent), when: { hover: { paint: colorMix(accent, 25) } } },
+      { tone: muted, variant: soft, paint: colorMix(muted, 15).border(border).fg(muted-foreground), when: { hover: { paint: colorMix(muted, 25) } } },
+      // Tone + outline / ghost
+      { tone: primary, variant: outline, paint: bg(transparent).fg(primary).border(primary) },
+      { tone: info, variant: outline, paint: bg(transparent).fg(info).border(info) },
+      { tone: success, variant: outline, paint: bg(transparent).fg(success).border(success) },
+      { tone: warning, variant: outline, paint: bg(transparent).fg(warning).border(warning) },
+      { tone: destructive, variant: outline, paint: bg(transparent).fg(destructive).border(destructive) },
+      { tone: accent, variant: outline, paint: bg(transparent).fg(accent).border(accent) },
       { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) },
+      { tone: primary, variant: ghost, paint: bg(transparent).border(transparent).fg(primary) },
+      { tone: info, variant: ghost, paint: bg(transparent).border(transparent).fg(info) },
+      { tone: success, variant: ghost, paint: bg(transparent).border(transparent).fg(success) },
+      { tone: warning, variant: ghost, paint: bg(transparent).border(transparent).fg(warning) },
+      { tone: destructive, variant: ghost, paint: bg(transparent).border(transparent).fg(destructive) },
+      { tone: accent, variant: ghost, paint: bg(transparent).border(transparent).fg(accent) },
       { tone: muted, variant: ghost, paint: fg(muted-foreground) },
       { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
       { selected: true, tone: muted, paint: bg(primary).fg(primary-foreground).border(primary) },
