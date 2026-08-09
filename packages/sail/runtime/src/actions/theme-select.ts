@@ -236,9 +236,54 @@ export const themeSelect: Action<void> = (node) => {
   const catalogLabel = root.querySelector<HTMLElement>('[data-catalog-label]')
   const pickerHeader = root.querySelector<HTMLElement>('[data-picker-header]')
 
-  // Local catalog filter — independent of document mode preference.
-  // Initialize from stored preference without re-applying theme.
-  let catalogFilter: ModePreference = readModePreference()
+  const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
+  const modeOf = (el: Element): string => el.getAttribute('data-mode') ?? ''
+
+  const options = (): HTMLElement[] =>
+    Array.from(root.querySelectorAll<HTMLElement>('[role="option"][value]'))
+
+  /** Filter tabs only — scoped to [data-mode-bar], never mode-only icons. */
+  const modeButtons = (): HTMLElement[] => {
+    if (!modeBar) return []
+    return Array.from(
+      modeBar.querySelectorAll<HTMLElement>(
+        'button[data-mode], [role="tab"][data-mode], [role="button"][data-mode]',
+      ),
+    )
+  }
+
+  const modesFor = (id: ThemeId): readonly PaintMode[] => {
+    const meta = THEMES.find((t) => t.id === id)
+    const raw = meta?.modes?.length ? meta.modes : (['light', 'dark'] as const)
+    return raw.filter((m): m is PaintMode => PAINT_MODES.has(m as PaintMode))
+  }
+
+  const currentTheme = (): ThemeId => {
+    const attr =
+      root.getAttribute('value') || document.documentElement.getAttribute('theme')
+    return isValidTheme(attr) ? attr : 'sail'
+  }
+
+  const currentPaint = (): PaintMode => {
+    const fromDom = document.documentElement.dataset.mode
+    if (fromDom === 'light' || fromDom === 'dark') return fromDom
+    if (fromDom === 'system' || fromDom) {
+      const healed = paintMode(fromDom)
+      if (document.documentElement.dataset.mode !== healed) {
+        document.documentElement.dataset.mode = healed
+      }
+      return healed
+    }
+    const meta = THEMES.find((t) => t.id === currentTheme())
+    return paintMode(meta?.defaultMode ?? 'light')
+  }
+
+  // Catalog filter follows **live paint** so an unpersisted / config-dark boot
+  // still shows dark-capable themes (incl. 8bit). Storage preference alone can
+  // lag the DOM after external applyTheme.
+  let catalogFilter: ModePreference = currentPaint()
+  /** Last observed document paint — used to detect external theme/mode flips. */
+  let lastPaint: PaintMode = currentPaint()
 
   /**
    * Per-action ops EffectiveIds session.
@@ -303,48 +348,6 @@ export const themeSelect: Action<void> = (node) => {
     }
     trigger = fullTrigger ?? legacyTrigger
     root.removeAttribute('data-mode-only')
-  }
-
-  const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
-  const modeOf = (el: Element): string => el.getAttribute('data-mode') ?? ''
-
-  const options = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('[role="option"][value]'))
-
-  /** Filter tabs only — scoped to [data-mode-bar], never mode-only icons. */
-  const modeButtons = (): HTMLElement[] => {
-    if (!modeBar) return []
-    return Array.from(
-      modeBar.querySelectorAll<HTMLElement>(
-        'button[data-mode], [role="tab"][data-mode], [role="button"][data-mode]',
-      ),
-    )
-  }
-
-  const modesFor = (id: ThemeId): readonly PaintMode[] => {
-    const meta = THEMES.find((t) => t.id === id)
-    const raw = meta?.modes?.length ? meta.modes : (['light', 'dark'] as const)
-    return raw.filter((m): m is PaintMode => PAINT_MODES.has(m as PaintMode))
-  }
-
-  const currentTheme = (): ThemeId => {
-    const attr =
-      root.getAttribute('value') || document.documentElement.getAttribute('theme')
-    return isValidTheme(attr) ? attr : 'sail'
-  }
-
-  const currentPaint = (): PaintMode => {
-    const fromDom = document.documentElement.dataset.mode
-    if (fromDom === 'light' || fromDom === 'dark') return fromDom
-    if (fromDom === 'system' || fromDom) {
-      const healed = paintMode(fromDom)
-      if (document.documentElement.dataset.mode !== healed) {
-        document.documentElement.dataset.mode = healed
-      }
-      return healed
-    }
-    const meta = THEMES.find((t) => t.id === currentTheme())
-    return paintMode(meta?.defaultMode ?? 'light')
   }
 
   const currentPreference = (): ModePreference => readModePreference()
@@ -485,6 +488,13 @@ export const themeSelect: Action<void> = (node) => {
 
     const cur = currentTheme()
     const paint = currentPaint()
+    // External theme/mode change (other writers): if the filter was still
+    // tracking the previous paint, follow the new live paint so the dark list
+    // is not empty when the document is dark.
+    if (paint !== lastPaint && catalogFilter === lastPaint) {
+      catalogFilter = paint
+    }
+    lastPaint = paint
     const pref = currentPreference()
     const themeMeta = THEMES.find((t) => t.id === cur)
     const name = themeMeta?.label ?? cur
@@ -644,6 +654,9 @@ export const themeSelect: Action<void> = (node) => {
       return
     }
     catalogFilter = raw
+    // User intentionally browsed another mode tab — pin lastPaint so sync
+    // does not immediately snap the filter back to live paint.
+    lastPaint = currentPaint()
     root.setAttribute('data-catalog-filter', catalogFilter)
     sync()
   }

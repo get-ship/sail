@@ -14,7 +14,7 @@
 // separate channels. Side-effect CSS imports live here so the module graph
 // keeps them (export-less clients modules get tree-shaken).
 import { siteTokenCss } from '../compositions/site-token-css'
-import { applyTheme, readStoredTheme, isValidTheme, DEFAULT_THEME } from '@ship/tokens/themes'
+import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 void siteTokenCss
 
 function productFor(p: string): string {
@@ -54,16 +54,11 @@ export default controller((ctx) => {
       root.setAttribute('data-product', productAttr(product()))
     })
 
-    // applyTheme writes theme/mode only; picker owns persistence. Marketing
-    // home leads with ship/dark when stored theme is still the package default.
+    // One honest boot path: storage → config default (meta) → package default.
+    // Picker is the only session writer (persistTheme on user select). No
+    // route-local unpersisted force — navigating never re-litigates theme.
     effect(() => {
-      const stored = readStoredTheme()
-      if (path() === '/' && stored === DEFAULT_THEME) {
-        applyTheme('ship', document.documentElement, 'dark')
-        return
-      }
-      if (isValidTheme(stored)) applyTheme(stored)
-      else applyTheme(DEFAULT_THEME)
+      applyTheme(readStoredTheme())
     })
 
     const landing = derived(() => path() === '/')

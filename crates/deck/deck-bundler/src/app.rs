@@ -1004,6 +1004,12 @@ pub async fn bundle_app_with_base(
     // wired in when it does. (`routes.gen.ts` is data-only and never mounts.)
     let entry_module = "entry.gen.ts";
     let html = crate::templates::render_index_html(&project_name, &importmap_json, entry_module);
+    // Static build: same theme meta stamps as the dev serve path (assets.rs).
+    // Without these, the product picker falls back to full THEMES and pre-paint
+    // cannot read project theme.default / defaultMode.
+    let html = deck_core::inject_project_themes_meta(&html, project);
+    let html = deck_core::inject_effective_themes_meta(&html, project);
+    let html = deck_core::inject_theme_defaults_meta(&html, project);
     // Atomic publication (dev-loop-atomic): the old flow deleted the LIVE out
     // dir here and wrote `index.html` last, so every request during a watch
     // rebuild saw `scaffold '<app>' not built (missing .deck/index.html)` for

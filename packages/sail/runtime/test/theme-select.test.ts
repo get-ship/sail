@@ -689,14 +689,13 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(document.documentElement.getAttribute('theme')).toBe('ship')
   })
 
-  it('initial catalog filter follows readModePreference without re-applying theme', () => {
+  it('initial catalog filter follows live paint (not storage preference alone)', () => {
+    // Storage says light, document is dark (config boot / external apply).
     applyTheme('ship', document.documentElement, 'dark')
-    persistMode('dark')
-    const themeBefore = document.documentElement.getAttribute('theme')
-    const modeBefore = document.documentElement.dataset.mode
+    persistMode('light')
+    expect(readModePreference()).toBe('light')
 
     const { root } = harness()
-    // harness overwrites dataset — restore after mount prep
     document.documentElement.setAttribute('theme', 'ship')
     document.documentElement.dataset.mode = 'dark'
 
@@ -704,8 +703,32 @@ describe('themeSelect — catalog filter + theme apply', () => {
     destroy = action?.destroy
 
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
-    expect(document.documentElement.getAttribute('theme')).toBe(themeBefore)
-    expect(document.documentElement.dataset.mode).toBe(modeBefore)
+    expect(document.documentElement.getAttribute('theme')).toBe('ship')
+    expect(document.documentElement.dataset.mode).toBe('dark')
+    expect(
+      root.querySelector('button[data-mode="dark"]')?.getAttribute('aria-selected'),
+    ).toBe('true')
+    // Dark-capable catalog row (8bit) is visible under dark filter.
+    const eight = root.querySelector<HTMLElement>('[role="option"][value="8bit"]')
+    expect(eight).toBeTruthy()
+    expect(eight!.hidden).toBe(false)
+  })
+
+  it('sync reconciles catalog filter to live paint after external theme change', () => {
+    applyTheme('ship', document.documentElement, 'light')
+    persistMode('light')
+    const { root } = harness()
+    document.documentElement.setAttribute('theme', 'ship')
+    document.documentElement.dataset.mode = 'light'
+    const action = themeSelect(root)
+    destroy = action?.destroy
+    expect(root.getAttribute('data-catalog-filter')).toBe('light')
+
+    // External writer flips paint without going through the filter tabs.
+    applyTheme('ship', document.documentElement, 'dark')
+    document.dispatchEvent(new CustomEvent('ship:theme:change'))
+
+    expect(root.getAttribute('data-catalog-filter')).toBe('dark')
     expect(
       root.querySelector('button[data-mode="dark"]')?.getAttribute('aria-selected'),
     ).toBe('true')

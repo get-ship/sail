@@ -23,7 +23,16 @@
 /// literal drifting on either side.
 pub const ROOT_ID: &str = "root";
 
+/// Pre-paint FOUC guard body — owned by `@ship/tokens`
+/// (`packages/sail/tokens/src/prepaint-theme.js` / `PREPAINT_THEME_SCRIPT`).
+/// Deck pastes; does **not** hand-write storage keys or seam attr names.
+const PREPAINT_THEME_SCRIPT: &str =
+    include_str!("../../../../packages/sail/tokens/src/prepaint-theme.js");
+
 /// The minimal `index.html` template for a deck project.
+///
+/// `{{prepaint_theme_script}}` is replaced with the tokens-owned
+/// `PREPAINT_THEME_SCRIPT` body. Other placeholders are project-specific.
 pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
 <html lang="en">
 <head>
@@ -53,25 +62,11 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
     body { margin: 0; min-height: 100vh; }
   </style>
 
-  <!-- Pre-paint theme + mode (FOUC guard, U2.1b). Preference may be
-       light|dark|system under ship-site-theme-mode; data-mode is always
-       light|dark (system resolves via prefers-color-scheme). Keys match
-       @ship/tokens THEME_STORAGE_KEY / THEME_MODE_STORAGE_KEY. -->
+  <!-- Pre-paint theme + mode (FOUC guard). Body owned by @ship/tokens
+       (bootTheme / PREPAINT_THEME_SCRIPT) — deck pastes, never encodes
+       storage keys or theme|data-mode seam knowledge. -->
   <script>
-    try {
-      var _d = document.documentElement;
-      var _t = localStorage.getItem('ship-site-theme');
-      if (_t) _d.setAttribute('theme', _t);
-      var _m = localStorage.getItem('ship-site-theme-mode');
-      var _paint = 'light';
-      if (_m === 'dark') _paint = 'dark';
-      else if (_m === 'light') _paint = 'light';
-      else if (_m === 'system') {
-        _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
-          ? 'dark' : 'light';
-      }
-      _d.setAttribute('data-mode', _paint);
-    } catch (_e) {}
+{{prepaint_theme_script}}
   </script>
 </head>
 <body>
@@ -93,4 +88,41 @@ pub fn render_index_html(project_name: &str, importmap_json: &str, entry_module:
         .replace("{{project_name}}", project_name)
         .replace("{{importmap}}", importmap_json)
         .replace("{{entry_module}}", entry_module)
+        .replace(
+            "{{prepaint_theme_script}}",
+            PREPAINT_THEME_SCRIPT.trim_end(),
+        )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn prepaint_script_comes_from_tokens_not_hardcoded_keys_in_template() {
+        // Template must not embed storage keys / seam attrs itself — only the
+        // placeholder. The pasted body carries ship-site-theme from tokens.
+        assert!(
+            !INDEX_HTML_TEMPLATE.contains("ship-site-theme"),
+            "template must paste tokens prepaint, not hardcode storage keys"
+        );
+        assert!(INDEX_HTML_TEMPLATE.contains("{{prepaint_theme_script}}"));
+        let html = render_index_html("demo", "{}", "entry.gen.ts");
+        assert!(
+            html.contains("ship-site-theme"),
+            "rendered HTML must include tokens prepaint body"
+        );
+        assert!(
+            html.contains("setAttribute('theme'"),
+            "prepaint must stamp theme attr: {html}"
+        );
+        assert!(
+            html.contains("data-mode"),
+            "prepaint must stamp data-mode: {html}"
+        );
+        assert!(
+            html.contains("sail-default-theme"),
+            "prepaint must read config default meta: {html}"
+        );
+    }
 }

@@ -72,8 +72,8 @@ pub use assets::{
 pub use form_inject::inject_form_actions;
 pub use meta::{DaemonBuildInfo, serve_meta};
 pub use mode_html::{
-    inject_effective_themes_meta, inject_mode_meta, inject_project_themes_meta, inject_render_meta,
-    mode_str, sail_project_rel_from_root,
+    inject_effective_themes_meta, inject_mode_meta, inject_project_themes_meta,
+    inject_render_meta, inject_theme_defaults_meta, mode_str, sail_project_rel_from_root,
 };
 pub use resolver::{Resolution, resolve_project_root_with};
 // (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.

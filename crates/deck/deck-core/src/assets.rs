@@ -333,6 +333,8 @@ pub fn serve_scaffold(
     let html = crate::mode_html::inject_project_themes_meta(&html, meta_root);
     // Product theme picker: effective emit set (project ∪ theme.enabled).
     let html = crate::mode_html::inject_effective_themes_meta(&html, meta_root);
+    // Boot defaults (theme.default / defaultMode) for pre-paint + runtime fallback.
+    let html = crate::mode_html::inject_theme_defaults_meta(&html, meta_root);
     // SSR (`render: ssr`): render the matched `routes/` page server-side and
     // inject its first-paint HTML into the (otherwise empty) mount root, so the
     // client HYDRATES it instead of building from scratch. The mount-root id is
