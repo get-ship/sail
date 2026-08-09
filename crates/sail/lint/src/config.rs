@@ -41,11 +41,15 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
 ///
-/// Layer discipline (SPEC-HARDENING-1 WI5): every key is POLICY (capability /
-/// serve / safety) or TASTE (product preference). No behavior knobs that
-/// change language semantics under the author's feet. See [`CONFIG_KEY_DOCS`]
-/// column "layer" via the 5th field on each row.
-pub const RECOGNIZED_KEYS: [&str; 16] = [
+/// Layer discipline (SPEC-HARDENING-1 WI5 / SPEC-SAIL-CONFIG-1): every key is
+/// POLICY (capability / serve / safety) or TASTE (product preference). No
+/// behavior knobs that change language semantics under the author's feet.
+/// See [`CONFIG_KEY_DOCS`] column "layer" via the 5th field on each row.
+///
+/// Bundler/serve settings live under the top-level **`deck`** object only
+/// (`deck.render`, `deck.entry`, `deck.injectGlobals`). Top-level `render` /
+/// `entry` / `injectGlobals` are unknown keys and refuse loudly — no dual-read.
+pub const RECOGNIZED_KEYS: [&str; 14] = [
     "preset",
     "sx",
     "variants",
@@ -58,10 +62,8 @@ pub const RECOGNIZED_KEYS: [&str; 16] = [
     "theme",
     "layout",
     "policy",
-    // Serve keys (deck AppServeConfig) — same file, POLICY layer.
-    "render",
-    "entry",
-    "injectGlobals",
+    // Deck bundler/serve object (AppServeConfig) — POLICY layer.
+    "deck",
     // Studio product preference (deep-link scheme) — TASTE layer.
     "editor",
 ];
@@ -156,24 +158,10 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "POLICY",
     ),
     (
-        "render",
-        "\"csr\" | \"ssr\"",
-        "csr",
-        "first-paint mode the host serves (empty #root vs server HTML); not a language semantic",
-        "POLICY",
-    ),
-    (
-        "entry",
-        "{ clientsModule, exposeNames[] }",
-        "none — host may supply bootstrap another way",
-        "host-owned entry bootstrap for generated entry.gen.ts (client factory map)",
-        "POLICY",
-    ),
-    (
-        "injectGlobals",
-        "{ [windowKey]: valueTemplate }",
-        "none",
-        "host URL-capture → window.<k> injections stamped into index.html",
+        "deck",
+        "{ render?: \"csr\"|\"ssr\", entry?: { clientsModule, exposeNames[] }, injectGlobals?: { [k]: template } }",
+        "absent — fully conventional serve defaults (csr, no entry, no inject)",
+        "Deck bundler/serve settings (SPEC-SAIL-CONFIG-1); nested only — top-level render/entry/injectGlobals refuse as unknown",
         "POLICY",
     ),
     (
@@ -359,11 +347,11 @@ pub fn grant_hint(path: &Path, key: &str) -> String {
 /// refusal/announcement message.
 ///
 /// **Note:** Capability Policy still prefers pure `.json` package configs
-/// (primitives packs, routes). App-level `.jsonc` may carry serve/theme keys
-/// (`render`, `entry`, `injectGlobals`, `editor`) which are now recognized
-/// ([`RECOGNIZED_KEYS`]) as POLICY/TASTE and do not fail closed. Layout
-/// severity still uses [`layout_is_error_for`], which may walk past a
-/// capability config that has no `"layout"` key up to an app-level profile.
+/// (primitives packs, routes). App-level `.jsonc` may carry `theme`, `deck`,
+/// and `editor` which are recognized ([`RECOGNIZED_KEYS`]) as POLICY/TASTE.
+/// Serve keys nest under `deck` only. Layout severity still uses
+/// [`layout_is_error_for`], which may walk past a capability config that has
+/// no `"layout"` key up to an app-level profile.
 pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
     let mut cur = Some(dir);
     while let Some(d) = cur {
@@ -540,6 +528,33 @@ mod config_doc_tests {
         assert!(!soft.layout_is_error());
         let absent = SailConfig::from_json(r#"{ "sx": true }"#);
         assert!(!absent.layout_is_error());
+    }
+
+    /// SPEC-SAIL-CONFIG-1 C1: top-level serve keys are unknown after cutover.
+    #[test]
+    fn top_level_serve_keys_are_unknown() {
+        for key in ["render", "entry", "injectGlobals"] {
+            let body = format!(r#"{{ "{key}": "csr" }}"#);
+            let cfg = SailConfig::from_json(&body);
+            let unknown = cfg.unknown_keys();
+            assert!(
+                unknown.iter().any(|k| k == key),
+                "top-level `{key}` must be unknown; got {unknown:?}"
+            );
+        }
+    }
+
+    /// Nested `deck` is recognized; leftover top-level `render` still refuses.
+    #[test]
+    fn deck_object_recognized_top_level_render_still_unknown() {
+        let ok = SailConfig::from_json(r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#);
+        assert!(ok.unknown_keys().is_empty(), "nested deck is recognized");
+        assert!(ok.has_key("deck"));
+
+        let legacy = SailConfig::from_json(
+            r#"{ "render": "ssr", "deck": { "render": "csr" } }"#,
+        );
+        assert_eq!(legacy.unknown_keys(), vec!["render".to_string()]);
     }
 
     #[test]

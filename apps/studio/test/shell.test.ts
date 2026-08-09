@@ -568,7 +568,9 @@ describe('Studio routes + chrome', () => {
 
   it('sail.config renders client-side (SPA workbench)', () => {
     const cfg = readFileSync(join(REPO, 'apps/studio/sail.config.jsonc'), 'utf8')
-    expect(cfg).toMatch(/"render"\s*:\s*"csr"/)
+    // Nested under deck (SPEC-SAIL-CONFIG-1) — not top-level render.
+    expect(cfg).toMatch(/"deck"\s*:\s*\{[\s\S]*"render"\s*:\s*"csr"/)
+    expect(cfg).not.toMatch(/^\s*"render"\s*:/m)
   })
 })
 

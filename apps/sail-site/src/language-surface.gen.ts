@@ -7593,24 +7593,10 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "layer": "POLICY"
   },
   {
-    "key": "render",
-    "type": "\"csr\" | \"ssr\"",
-    "default": "csr",
-    "doc": "first-paint mode the host serves (empty #root vs server HTML); not a language semantic",
-    "layer": "POLICY"
-  },
-  {
-    "key": "entry",
-    "type": "{ clientsModule, exposeNames[] }",
-    "default": "none — host may supply bootstrap another way",
-    "doc": "host-owned entry bootstrap for generated entry.gen.ts (client factory map)",
-    "layer": "POLICY"
-  },
-  {
-    "key": "injectGlobals",
-    "type": "{ [windowKey]: valueTemplate }",
-    "default": "none",
-    "doc": "host URL-capture → window.<k> injections stamped into index.html",
+    "key": "deck",
+    "type": "{ render?: \"csr\"|\"ssr\", entry?: { clientsModule, exposeNames[] }, injectGlobals?: { [k]: template } }",
+    "default": "absent — fully conventional serve defaults (csr, no entry, no inject)",
+    "doc": "Deck bundler/serve settings (SPEC-SAIL-CONFIG-1); nested only — top-level render/entry/injectGlobals refuse as unknown",
     "layer": "POLICY"
   },
   {

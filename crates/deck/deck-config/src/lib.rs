@@ -12,15 +12,19 @@
 //!
 //! ## Per-app serve config (`sail.config.jsonc` / `sail.config.json`)
 //!
-//! Serve keys live on the project's single sail config file:
+//! Bundler/serve settings live under the top-level **`deck`** object
+//! (SPEC-SAIL-CONFIG-1 — no dual-read of legacy top-level keys):
 //!
-//! - `render` (`csr` default | `ssr`)
-//! - `injectGlobals` — URL-capture → `window.<k>` injections
-//! - `entry` — host entry bootstrap (`clientsModule` + `exposeNames`)
+//! - `deck.render` (`csr` default | `ssr`)
+//! - `deck.injectGlobals` — URL-capture → `window.<k>` injections
+//! - `deck.entry` — host entry bootstrap (`clientsModule` + `exposeNames`)
 //!
-//! [`AppServeConfig::load_from_project`] reads those keys (unknown keys
-//! such as `theme` are ignored). Absence of a sail config means fully
-//! conventional defaults. A leftover `deck.jsonc` is a hard migration error.
+//! [`AppServeConfig::load_from_project`] reads **only** the nested `deck`
+//! object (other top-level keys such as `theme` are ignored by this loader;
+//! Sail's recognized-key table refuses leftover top-level `render` /
+//! `entry` / `injectGlobals`). Absence of a sail config or of `deck`
+//! means fully conventional defaults. A leftover `deck.jsonc` is a hard
+//! migration error.
 //!
 //! Host-set only (never from the file): `name`, `route`, `source`,
 //! `ops_project`. Framework singletons are provider-declared via
@@ -76,13 +80,19 @@ pub fn load_sail_config_text(project_root: &Path) -> Option<(PathBuf, String)> {
     None
 }
 
-/// One app's serve configuration — serve keys from the project's
-/// `sail.config.jsonc` / `sail.config.json` (or `Default::default()`
-/// when absent), and the shape deck's per-app router consumes. shipd
-/// (or any deck host) builds a `Vec<AppServeConfig>` via
+/// One app's serve configuration — nested `deck` keys from the project's
+/// `sail.config.jsonc` / `sail.config.json` (or `Default::default()` when
+/// absent / when `deck` is omitted), and the shape deck's per-app router
+/// consumes. shipd (or any deck host) builds a `Vec<AppServeConfig>` via
 /// [`AppServeConfig::load_from_project`] and pairs each with the route
 /// the host's orchestration list declares. The framework does NOT know
 /// the list; that is the host's concern.
+///
+/// # Ownership (SPEC-SAIL-CONFIG-1)
+///
+/// Sail owns product keys (`theme`, icons, fonts, network, layout, …).
+/// Deck owns the **schema** of the nested `deck` object and is the sole
+/// reader of serve settings. Deck does not parse icon/theme catalogs.
 ///
 /// # What lives here vs. what is convention
 ///
@@ -97,7 +107,7 @@ pub fn load_sail_config_text(project_root: &Path) -> Option<(PathBuf, String)> {
 /// - `frameworkClients` → provider-declared discovery via
 ///   `package.json#deckFramework` (see `deck_bundler::app`).
 ///
-/// What stays:
+/// What stays (authored under `deck` in sail.config):
 ///
 /// - `render` — the rendering-modes flag (csr default | ssr).
 /// - `injectGlobals` — host-owned URL-capture → `window.<k>` injections.
@@ -182,7 +192,7 @@ pub struct AppServeConfig {
 }
 
 /// Host-owned entry bootstrap. The bundler reads this from the project's
-/// sail.config `entry` and emits `entry.gen.ts` next to the data-only
+/// sail.config `deck.entry` and emits `entry.gen.ts` next to the data-only
 /// `routes.gen.ts`. Decoupled so the host can wire ANY clients it needs —
 /// the framework ships `mountRouter` and a `clients` injection surface;
 /// which keys the host puts on the map is the host's call.
@@ -209,12 +219,13 @@ pub struct EntryBootstrap {
 }
 
 impl AppServeConfig {
-    /// Parse serve-config JSONC into the serve config.
+    /// Parse a **serve-object** JSONC body (the value of `deck` in
+    /// sail.config) into the serve config.
     ///
-    /// Strips JSONC extensions, then deserializes. Unknown keys (e.g.
-    /// `theme`) are ignored. Every field is optional; empty input is
-    /// `Default::default()`. Hosts may call this on raw bytes; project
-    /// load uses [`Self::load_from_project`].
+    /// Strips JSONC extensions, then deserializes. Unknown keys are
+    /// ignored by serde. Every field is optional; empty input is
+    /// `Default::default()`. Project load uses [`Self::load_from_project`],
+    /// which extracts the nested `deck` object first.
     pub fn parse_deck_jsonc(raw: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&strip_jsonc_comments(raw))
     }
@@ -222,17 +233,21 @@ impl AppServeConfig {
     /// Load app serve config from the project root.
     ///
     /// - Presence of `deck.jsonc` is a hard migration error (move serve
-    ///   keys into `sail.config.jsonc` / `sail.config.json`, then delete
-    ///   `deck.jsonc`).
+    ///   keys under `deck` in `sail.config.jsonc` / `sail.config.json`,
+    ///   then delete `deck.jsonc`).
     /// - Prefer `sail.config.jsonc` over `sail.config.json` when both exist.
-    /// - Unknown sail.config keys are ignored; only `render`,
-    ///   `injectGlobals`, and `entry` affect this struct.
-    /// - No sail config ⇒ fully conventional defaults.
+    /// - **Nested `deck` only** (SPEC-SAIL-CONFIG-1 C1): top-level
+    ///   `render` / `entry` / `injectGlobals` are not read. Sail refuses
+    ///   them as unknown keys; this loader never dual-reads.
+    /// - Absent sail config or absent `deck` ⇒ fully conventional defaults.
     pub fn load_from_project(project: &Path) -> Result<Self, String> {
         let deck_path = project.join("deck.jsonc");
         if deck_path.is_file() {
             return Err(format!(
-                "deck.jsonc is no longer supported (found at {}).                  Move serve keys (render, injectGlobals, entry) into                  sail.config.jsonc (or sail.config.json) and delete deck.jsonc.",
+                "deck.jsonc is no longer supported (found at {}). \
+                 Move serve keys under \"deck\" in sail.config.jsonc \
+                 (or sail.config.json) — e.g. {{ \"deck\": {{ \"render\": \"ssr\" }} }} — \
+                 and delete deck.jsonc.",
                 deck_path.display()
             ));
         }
@@ -244,8 +259,25 @@ impl AppServeConfig {
             }
             let raw = std::fs::read_to_string(&path)
                 .map_err(|e| format!("read {}: {e}", path.display()))?;
-            return Self::parse_deck_jsonc(&raw)
-                .map_err(|e| format!("parse {}: {e}", path.display()));
+            let stripped = strip_jsonc_comments(&raw);
+            let value: serde_json::Value = serde_json::from_str(&stripped)
+                .map_err(|e| format!("parse {}: {e}", path.display()))?;
+            let Some(deck) = value.get("deck") else {
+                // Theme-only / product-only sail.config — conventional serve.
+                return Ok(Self::default());
+            };
+            if deck.is_null() {
+                return Ok(Self::default());
+            }
+            if !deck.is_object() {
+                return Err(format!(
+                    "parse {}: \"deck\" must be an object (got {})",
+                    path.display(),
+                    deck
+                ));
+            }
+            return serde_json::from_value(deck.clone())
+                .map_err(|e| format!("parse {}.deck: {e}", path.display()));
         }
 
         Ok(Self::default())
@@ -626,7 +658,7 @@ mod tests {
         std::fs::write(dir.path().join("deck.jsonc"), r#"{ "render": "ssr" }"#).unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
-            r#"{ "render": "csr", "theme": { "default": "ship" } }"#,
+            r#"{ "deck": { "render": "csr" }, "theme": { "default": "ship" } }"#,
         )
         .unwrap();
         let err = AppServeConfig::load_from_project(dir.path()).unwrap_err();
@@ -637,7 +669,21 @@ mod tests {
     }
 
     #[test]
-    fn load_from_project_sail_only_serve_keys() {
+    fn load_from_project_nested_deck_serve_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+    }
+
+    /// No dual-read: top-level serve keys are ignored by the loader
+    /// (Sail refuses them as unknown keys; deck never migrates them).
+    #[test]
+    fn load_from_project_top_level_serve_keys_ignored() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
@@ -645,7 +691,11 @@ mod tests {
         )
         .unwrap();
         let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
-        assert_eq!(cfg.render, RenderMode::Ssr);
+        assert_eq!(
+            cfg,
+            AppServeConfig::default(),
+            "top-level render must not dual-read into serve config"
+        );
     }
 
     #[test]
@@ -666,9 +716,11 @@ mod tests {
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
             r#"{
-  "render": "ssr",
-  "injectGlobals": { "DECK_APP_ID": "$id" },
-  "entry": { "clientsModule": "./src/clients.ts", "exposeNames": ["store"] }
+  "deck": {
+    "render": "ssr",
+    "injectGlobals": { "DECK_APP_ID": "$id" },
+    "entry": { "clientsModule": "./src/clients.ts", "exposeNames": ["store"] }
+  }
 }"#,
         )
         .unwrap();
@@ -688,12 +740,12 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("sail.config.json"),
-            r#"{ "render": "ssr" }"#,
+            r#"{ "deck": { "render": "ssr" } }"#,
         )
         .unwrap();
         std::fs::write(
             dir.path().join("sail.config.jsonc"),
-            r#"{ "render": "csr" }"#,
+            r#"{ "deck": { "render": "csr" } }"#,
         )
         .unwrap();
         let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
@@ -707,10 +759,12 @@ mod tests {
             dir.path().join("sail.config.jsonc"),
             r#"{
   "theme": { "default": "studio" },
-  "render": "csr",
-  "entry": {
-    "clientsModule": "./src/clients.ts",
-    "exposeNames": []
+  "deck": {
+    "render": "csr",
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": []
+    }
   }
 }"#,
         )
@@ -720,5 +774,20 @@ mod tests {
         let entry = cfg.entry.expect("entry");
         assert_eq!(entry.clients_module, "./src/clients.ts");
         assert!(entry.expose_names.is_empty());
+    }
+
+    #[test]
+    fn load_from_project_deck_must_be_object() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "deck": "ssr" }"#,
+        )
+        .unwrap();
+        let err = AppServeConfig::load_from_project(dir.path()).unwrap_err();
+        assert!(
+            err.contains("\"deck\" must be an object"),
+            "unexpected err: {err}"
+        );
     }
 }

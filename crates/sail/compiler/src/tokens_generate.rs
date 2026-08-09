@@ -2269,16 +2269,20 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
     let path = project_dir.join("sail.config.jsonc");
     let body = format!(
         "{{\n\
-         \x20\x20// Sail app config — theme section (T0).\n\
+         \x20\x20// Sail app config — theme (product) + deck (bundler/serve).\n\
          \x20\x20// `default` / `defaultMode` drive first paint (theme / data-mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
          \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
          \x20\x20// Project themes under themes/ always emit. Package generate\n\
          \x20\x20// (shared @ship/tokens, monorepo only) emits full catalog + overrides.\n\
+         \x20\x20// Serve keys nest under `deck` only (SPEC-SAIL-CONFIG-1) — never top-level.\n\
          \x20\x20\"theme\": {{\n\
          \x20\x20\x20\x20\"default\": \"{theme_id}\",\n\
          \x20\x20\x20\x20\"defaultMode\": \"light\",\n\
          \x20\x20\x20\x20\"enabled\": [\"{theme_id}\"]\n\
+         \x20\x20}},\n\
+         \x20\x20\"deck\": {{\n\
+         \x20\x20\x20\x20\"render\": \"csr\"\n\
          \x20\x20}}\n\
          }}\n"
     );

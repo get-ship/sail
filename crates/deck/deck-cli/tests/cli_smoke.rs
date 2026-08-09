@@ -383,7 +383,7 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
 // ── scaffold theme (C5) ─────────────────────────────────────────────────────
 
 /// `deck scaffold theme --project <tmp>` copies one catalog theme into
-/// `themes/` and writes a thin `sail.config.jsonc` theme section.
+/// `themes/` and writes a thin `sail.config.jsonc` (theme + nested deck).
 #[test]
 fn scaffold_theme_copies_default_and_writes_config() {
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -428,6 +428,10 @@ fn scaffold_theme_copies_default_and_writes_config() {
     assert!(
         body.contains("\"enabled\": [\"ship\"]"),
         "config must thin-enable only ship: {body}"
+    );
+    assert!(
+        body.contains("\"deck\"") && body.contains("\"render\": \"csr\""),
+        "scaffold must emit nested deck.render csr: {body}"
     );
     assert!(
         !body.contains("paper") && !body.contains("glass"),

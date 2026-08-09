@@ -1020,16 +1020,17 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // (`AppBuild::url_namespace`) rather than recomputing it here, killing
         // the second namespace derivation that could silently drift from the
         // bake. `source` is the build out dir relative to the project root.
-        // sail.config serve keys for injectGlobals / render / entry —
-        // name/route/source are host-bound here, never the file's.
+        // sail.config nested `deck` serve keys for injectGlobals / render /
+        // entry — name/route/source are host-bound here, never the file's.
         let mut app_cfg = deck_config::AppServeConfig::load_from_project(&project_dir)
             .map_err(|e| anyhow::anyhow!("app serve config: {e}"))?;
         // SSR engine: only spin up ship-js (V8) when this app opts into SSR
-        // (`sail.config { "render": "ssr" }`). A CSR app (the default) pays no
-        // V8 cost. Standalone dev has no live data port, so the engine renders
-        // with NoopData (None). The engine is a MOUNT-SCOPED handle layered as
-        // an Extension below — not a process-global install. If it can't start,
-        // log + continue; the serve path falls back to CSR (`renderer = None`).
+        // (`sail.config { "deck": { "render": "ssr" } }`). A CSR app (the
+        // default) pays no V8 cost. Standalone dev has no live data port, so
+        // the engine renders with NoopData (None). The engine is a MOUNT-SCOPED
+        // handle layered as an Extension below — not a process-global install.
+        // If it can't start, log + continue; the serve path falls back to CSR
+        // (`renderer = None`).
         let renderer: Option<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>> =
             if app_cfg.render == deck_config::RenderMode::Ssr {
                 match deck_ssr::serve::engine(None) {

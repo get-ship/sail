@@ -2,9 +2,11 @@
 
 export const configExample = `// sail.config.jsonc
 {
-  "entry": {
-    "clientsModule": "./src/clients.ts",
-    "exposeNames": ["store"]
+  "deck": {
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": ["store"]
+    }
   }
 }`
 

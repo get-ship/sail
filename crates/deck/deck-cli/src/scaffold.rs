@@ -345,7 +345,7 @@ fn validate_app_name(name: &str) -> Result<()> {
 /// ```text
 /// my-app/
 ///   package.json         # registry-style @ship/* deps (no file:/workspace:*)
-///   sail.config.jsonc    # theme section
+///   sail.config.jsonc    # theme + deck.render (nested serve)
 ///   routes/page.sail     # hello-world source
 ///   themes/ship.json     # modern project theme SSOT (baked catalog)
 ///   .gitignore           # includes .deck/ (build output — never commit)

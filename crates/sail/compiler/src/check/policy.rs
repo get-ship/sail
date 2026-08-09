@@ -794,6 +794,38 @@ mod tests {
         );
     }
 
+    /// SPEC-SAIL-CONFIG-1 C1: top-level serve keys refuse; nested `deck` is ok.
+    #[test]
+    fn top_level_serve_keys_rejected_nested_deck_recognized() {
+        for key in ["render", "entry", "injectGlobals"] {
+            let body = format!(r#"{{"{key}":"csr"}}"#);
+            assert_eq!(tier(&body), Policy::STRICT, "key={key}");
+            let k = kind(&body);
+            let ResolutionKind::Rejected(r) = k else {
+                panic!("top-level `{key}` must Rejected; got {k:?}");
+            };
+            assert!(
+                r.contains(key) && r.contains("allowed keys:"),
+                "must name offending key and allowed list: {r}"
+            );
+            // Allowed set includes nested `deck`, not the three legacy top-level serve keys.
+            assert!(
+                r.contains("policy, deck, editor"),
+                "allowed list should end …policy, deck, editor: {r}"
+            );
+        }
+        // Nested deck alone is well-formed (no capability signal) — NoSignal, not Rejected.
+        assert!(matches!(
+            kind(r#"{"deck":{"render":"ssr"}}"#),
+            ResolutionKind::NoSignal(hint) if hint.contains("deck")
+        ));
+        // deck + capability is Recognized, not Rejected.
+        assert!(matches!(
+            kind(r#"{"deck":{"render":"csr"},"preset":"full"}"#),
+            ResolutionKind::Recognized(s) if s.contains("preset: full")
+        ));
+    }
+
     #[test]
     fn stylesheets_only_config_is_no_signal_not_rejected() {
         // The original bug: a config declaring ONLY `stylesheets` is
