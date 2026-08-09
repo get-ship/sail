@@ -3,9 +3,8 @@
   tiles (no clipping text); full expression leads and presets are one
   paragraph; scroll/loop prose in plain English; choreography demo full-width
   with the code below it; Under the hood answers where Sail ends and the
-  embedded Motion library begins. The animate:reveal demos are correct as
-  written — the reveal trigger currently attaches nothing at runtime
-  (known regression; this page is the visual gate).
+  embedded Motion library begins. Scroll-reveal is not a product trigger —
+  only enter / exit / press / focus / loop (and timeline()) ship here.
 -->
 
 <controller>
@@ -68,8 +67,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style enterCard = { box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
   style loopTileFast = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
   style loopTileSlow = { box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
-  style revealCard = { box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
-  style revealSpring = { box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
   style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
   style ambientDotDim = { box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
   style spinTile = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) }
@@ -87,14 +84,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h1>Animation</h1>
   <p style(lead)>
     Animation is declared on the element via the Style <strong>animate
-    channel</strong>. <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code> /
-    <code>exit</code> / <code>loop</code> / <code>reveal</code> name a
-    <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
-    <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
-    <strong>config</strong>: which properties move, how far, how fast. When
-    something else owns the clock — a slider, the scroll position —
-    <code>timeline()</code> turns keyframes into signals. This page is both,
-    in that order.
+    channel</strong>. <code>style&#40;&#123; animate: enter(&#123;…&#125;) &#125;&#41;</code>,
+    <code>exit</code>, <code>press</code>, <code>focus</code> /
+    <code>focus-visible</code>, and <code>loop</code> name a
+    <strong>trigger</strong> and a <strong>config</strong>: which properties
+    move, how far, how fast. When something else owns the clock — a slider,
+    the scroll position — <code>timeline()</code> turns keyframes into
+    signals. This page is both, in that order.
   </p>
 
   <row gap="3" align="center">
@@ -160,21 +156,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     quoted is a literal, unquoted is code — which is how a signal goes
     anywhere a number can.
   </p>
-
-  <h2>On scroll — <code>reveal</code></h2>
-  <p>
-    <code>reveal</code> plays the animation when the element scrolls into the
-    viewport. Same configs as everything else:
-  </p>
-  <column gap="4">
-    <card style(revealCard)>
-      <h3>This one fades up as it enters the viewport.</h3>
-    </card>
-    <card style(revealSpring)>
-      <h3>And this one springs in.</h3>
-    </card>
-  </column>
-  <code-block code={code.reveal}></code-block>
 
   <h2>Forever — <code>loop</code></h2>
   <p>
@@ -256,7 +237,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p style(mutedSm)>enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
+      <p style(mutedSm)>enter · exit · press · focus · focus-visible · loop · timeline()</p>
     </column>
     <column gap="1">
       <label>Properties</label>

@@ -13,7 +13,7 @@
   style base = { paint: fg(label.foreground).cursor(pointer).group(), text: fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fontSize(base) }
   style sizeMd = { text: fontSize(base) }
   style sizeSm = { text: fontSize(sm) }
-  style sizeLg = { text: fontSize(sm) }
+  style sizeLg = { text: fontSize(lg) }
   style req = { box: display(none).ms(1), paint: fg(label.required), text: fontWeight(bold) }
 </scope>
 

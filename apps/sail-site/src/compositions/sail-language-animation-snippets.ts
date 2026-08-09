@@ -21,10 +21,6 @@ export const code = {
 <div style({ animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) })>
 </div>`,
 
-  reveal: `<card style({ animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) })>
-  This one fades up as it enters the viewport.
-</card>`,
-
   loop: `<div style({ animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) })>
   </div>
 

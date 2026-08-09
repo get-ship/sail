@@ -60,8 +60,8 @@
             when: { hover: { paint: opacity(90) } },
           },
           soft: {
-            paint: fg(tone),
-            when: { hover: { paint: opacity(90) } },
+            paint: colorMix(tone, 15).border(tone).fg(tone),
+            when: { hover: { paint: colorMix(tone, 25) } },
           },
           outline: {
             paint: bg(transparent).fg(tone).border(tone),
@@ -75,6 +75,7 @@
       },
       compound: [
         { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) },
+        { tone: muted, variant: soft, paint: bg(muted).fg(muted-foreground).border(border) },
         { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) },
         { tone: muted, variant: ghost, paint: fg(muted-foreground) },
         { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
