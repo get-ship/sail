@@ -98,7 +98,7 @@ libc = "0.2"
 # Misc
 ulid = "1"
 regex = "1"
-takumi = { version = "=2.3.2", features = ["raster-backend", "woff2"] }
+takumi = { version = "=2.5.11", features = ["raster-backend", "woff2"] }
 
 # Type-bridging (RC pin shared by every consumer)
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
@@ -146,8 +146,3 @@ lto = "thin"
 codegen-units = 1
 strip = "debuginfo"
 
-# RENDER-0: local patch of takumi-core 0.6.2 — avoid parley line_break assert
-# on tiny/zero content widths (viewport-as-text-max_height forced a fragile path).
-# Remove when upgrading past a takumi release that fixes this upstream.
-[patch.crates-io]
-takumi-core = { path = "third_party/takumi-core" }
