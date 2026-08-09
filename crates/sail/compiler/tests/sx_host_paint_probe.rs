@@ -2049,6 +2049,10 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
             && (src.contains("bind(anchorWidth)")
                 || src.contains("min-w-(--anchor-width)")
                 || src.contains("min-w: (--anchor-width)"))
+            // List width = trigger: both w and minW from --anchor-width (C-CB-1).
+            && (src.contains("w(bind(anchorWidth))")
+                || src.contains("w-(--anchor-width)")
+                || src.contains("width: (--anchor-width)"))
             && (src.contains("maxH(panel-max-h-sm)")
                 || src.contains("max-h-panel-max-h-sm")
                 || src.contains("panel-max-h-sm"))
@@ -2068,6 +2072,7 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
             && (out.structure_html.contains("anchorWidth")
                 || out.structure_html.contains("anchorwidth")
                 || out.structure_html.contains("s-minwanchorwidth")
+                || out.structure_html.contains("s-wbindanchorwidth")
                 || out.skin_css.contains("var(--anchor-width)"))
             && (out.structure_html.contains("maxhpanelmaxhsm")
                 || out.structure_html.contains("s-maxhpanelmaxhsm")

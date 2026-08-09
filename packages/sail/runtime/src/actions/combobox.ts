@@ -19,6 +19,11 @@ import { invokeCallback } from '../callback'
  *
  * Options are plain `<option>`s in the light DOM. The author's markup stays the
  * thing they'd write anyway.
+ *
+ * Picker-first (shadcn bar): focus / pointerdown / ArrowDown opens the **full**
+ * list; typing filters by label **or** value; empty query shows everything.
+ * Note: `popovertarget` on a text `<input>` is not a platform invoker — open is
+ * always programmatic via `showPopover`.
  */
 
 let uid = 0
@@ -46,7 +51,8 @@ export const combobox: Action<void> = (node) => {
   list.id ||= `${id}-list`
   input.id ||= `${id}-input`
 
-  // The trigger is the input itself — the platform opens the popover for us.
+  // Identity link for use:anchor (trigger = input). Not a native invoker for
+  // type=text — open paths below call showPopover themselves.
   input.setAttribute('popovertarget', list.id)
   input.setAttribute('role', 'combobox')
   input.setAttribute('aria-controls', list.id)
@@ -65,6 +71,9 @@ export const combobox: Action<void> = (node) => {
   })
 
   let active: HTMLElement | null = null
+  // `:popover-open` throws without support; mirror from toggle so isOpen works
+  // under jsdom / older engines the same way use:anchor / use:menu do.
+  let openMirror = false
 
   const setActive = (o: HTMLElement | null): void => {
     if (active) {
@@ -76,18 +85,27 @@ export const combobox: Action<void> = (node) => {
       o.setAttribute('data-active', '')
       o.setAttribute('aria-selected', 'true')
       input.setAttribute('aria-activedescendant', o.id)
-      o.scrollIntoView({ block: 'nearest' })
+      // jsdom has no scrollIntoView on <option>; real browsers do.
+      o.scrollIntoView?.({ block: 'nearest' })
     } else {
       input.removeAttribute('aria-activedescendant')
     }
   }
 
-  const isOpen = (): boolean => list.matches(':popover-open')
+  const isOpen = (): boolean => {
+    try {
+      if (list.matches(':popover-open')) return true
+    } catch {
+      /* pseudo unsupported */
+    }
+    return openMirror
+  }
 
   const open = (): void => {
     if (isOpen()) return
     try {
       list.showPopover?.()
+      openMirror = true
     } catch {
       /* no popover support */
     }
@@ -96,18 +114,24 @@ export const combobox: Action<void> = (node) => {
     if (!isOpen()) return
     try {
       list.hidePopover?.()
+      openMirror = false
     } catch {
       /* already closed */
     }
   }
 
-  // Filter as you type. An empty query shows everything — the listbox is a
-  // picker first and a search second.
+  /** Clear hidden flags — full picker, not a residual filter. */
+  const showAll = (): void => {
+    for (const o of options()) o.hidden = false
+  }
+
+  // Filter as you type. Match label text OR value. Empty query shows everything.
   const filter = (): void => {
     const q = input.value.trim().toLowerCase()
     for (const o of options()) {
       const text = (o.textContent ?? '').toLowerCase()
-      o.hidden = q !== '' && !text.includes(q)
+      const value = (o.getAttribute('value') ?? '').toLowerCase()
+      o.hidden = q !== '' && !text.includes(q) && !value.includes(q)
     }
     const vis = shown()
     if (!vis.length) {
@@ -117,6 +141,37 @@ export const combobox: Action<void> = (node) => {
     }
     if (!active || active.hidden) setActive(vis[0] ?? null)
     open()
+  }
+
+  /**
+   * Picker-first open: full list (or current typeahead filter when the field
+   * still holds an abandoned query). Committed selections clear hidden on
+   * commit; reopening with a selected label still shows the full list so the
+   * control reads as a picker, not “must type to see options.”
+   */
+  const openPicker = (): void => {
+    const q = input.value.trim()
+    const sel = root.getAttribute('value')
+    // Selected label in the field is not a search query — open full list.
+    if (sel) {
+      const committed = options().find((o) => o.getAttribute('value') === sel)
+      const label = committed?.textContent?.trim() ?? ''
+      if (q === '' || q === label) {
+        showAll()
+        open()
+        const cur = committed && !committed.hasAttribute('disabled') ? committed : (shown()[0] ?? null)
+        setActive(cur)
+        return
+      }
+    }
+    // Empty field or abandoned typeahead — filter (empty q ⇒ all).
+    if (q === '') {
+      showAll()
+      open()
+      setActive(shown()[0] ?? null)
+      return
+    }
+    filter()
   }
 
   const commit = (o: HTMLElement | null): void => {
@@ -129,7 +184,7 @@ export const combobox: Action<void> = (node) => {
     // happened to match — so drop it, and reopen on the full list with the
     // selection as the cursor. (An ABANDONED query is different: light-dismiss
     // leaves the text in the field, so its filter correctly survives.)
-    for (const opt of options()) opt.hidden = false
+    showAll()
     close()
     invokeCallback(root, 'onSelect', { value, label: input.value })
   }
@@ -137,7 +192,7 @@ export const combobox: Action<void> = (node) => {
   const move = (delta: number): void => {
     const vis = shown()
     if (!vis.length) return
-    if (!isOpen()) open()
+    if (!isOpen()) openPicker()
     const i = active ? vis.indexOf(active) : -1
     const next = (i + delta + vis.length) % vis.length
     setActive(vis[next] ?? null)
@@ -145,15 +200,36 @@ export const combobox: Action<void> = (node) => {
 
   const onInput = (): void => filter()
 
+  const onFocus = (): void => {
+    openPicker()
+  }
+
+  // pointerdown (not click): open before focus settles; text inputs are not
+  // popover invokers, so this is the click-open path.
+  const onFieldPointerDown = (): void => {
+    openPicker()
+  }
+
   const onKeydown = (e: KeyboardEvent): void => {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        isOpen() ? move(1) : (open(), setActive(shown()[0] ?? null))
+        if (!isOpen()) {
+          openPicker()
+          setActive(shown()[0] ?? null)
+        } else {
+          move(1)
+        }
         break
       case 'ArrowUp':
         e.preventDefault()
-        move(-1)
+        if (!isOpen()) {
+          openPicker()
+          const vis = shown()
+          setActive(vis[vis.length - 1] ?? null)
+        } else {
+          move(-1)
+        }
         break
       case 'Home':
         if (isOpen()) {
@@ -195,10 +271,11 @@ export const combobox: Action<void> = (node) => {
     }
   }
 
-  // The popover owns open/close (trigger, Escape, light-dismiss) — we only mirror
-  // its state into ARIA, so there is exactly one source of truth for "is it open".
+  // The popover owns open/close (Escape, light-dismiss, showPopover) — we only
+  // mirror its state into ARIA + openMirror.
   const onToggle = (e: Event): void => {
     const open_ = (e as ToggleEvent).newState === 'open'
+    openMirror = open_
     input.setAttribute('aria-expanded', String(open_))
     if (!open_) return setActive(null)
     if (active) return
@@ -210,6 +287,8 @@ export const combobox: Action<void> = (node) => {
   }
 
   input.addEventListener('input', onInput)
+  input.addEventListener('focus', onFocus)
+  input.addEventListener('pointerdown', onFieldPointerDown)
   input.addEventListener('keydown', onKeydown)
   list.addEventListener('pointerdown', onPointerdown as EventListener)
   list.addEventListener('toggle', onToggle)
@@ -217,6 +296,8 @@ export const combobox: Action<void> = (node) => {
   return {
     destroy: () => {
       input.removeEventListener('input', onInput)
+      input.removeEventListener('focus', onFocus)
+      input.removeEventListener('pointerdown', onFieldPointerDown)
       input.removeEventListener('keydown', onKeydown)
       list.removeEventListener('pointerdown', onPointerdown as EventListener)
       list.removeEventListener('toggle', onToggle)
