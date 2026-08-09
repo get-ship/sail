@@ -36,7 +36,7 @@ pub mod style;
 /// Viewport dimensions and device-pixel-ratio resolution.
 pub mod viewport;
 
-/// Vendored resvg 0.47 (see `resvg/mod.rs` for provenance and stripped features).
+/// Vendored resvg 0.48.1 (see `resvg/mod.rs` for provenance and stripped features).
 /// `dead_code` stays allowed until the unused upstream API surface is pruned.
 #[cfg(feature = "svg")]
 #[allow(
@@ -49,6 +49,8 @@ pub mod viewport;
   deprecated
 )]
 mod resvg;
+#[cfg(feature = "svg")]
+mod svg_vector;
 
 /// Backend painting helpers (gradient LUTs, tile positioning, transfer tables)
 /// shared with the raster and SVG renderers. Deliberately kept out of `style`

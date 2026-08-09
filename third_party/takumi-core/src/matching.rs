@@ -1,8 +1,8 @@
-//! Selector matching over an abstract node tree.
+//! Selector matching over the [`Node`] tree.
 //!
 //! All interaction with the `selectors` crate lives here so it stays out of
-//! takumi's public API. Callers implement [`MatchableNode`] for their node type
-//! and receive back the declaration blocks that apply to each node.
+//! takumi's public API. Callers pass a node tree and receive back the
+//! declaration blocks that apply to each node.
 
 use std::{collections::HashMap, fmt};
 
@@ -16,6 +16,7 @@ use selectors::{
 use smallvec::SmallVec;
 
 use crate::{
+  layout::node::Node,
   style::{
     StyleDeclarationBlock,
     selector::{CssRule, Ident, PseudoClass, PseudoElement, SelectorImpl, StyleSheet},
@@ -23,51 +24,23 @@ use crate::{
   viewport::Viewport,
 };
 
-/// A node the cascade can match selectors against.
-///
-/// Implemented by the caller's node type; the matcher only reads the queries
-/// below, so the caller does not depend on the `selectors` crate.
-pub(crate) trait MatchableNode {
-  /// The element's tag name, if any.
-  fn tag_name(&self) -> Option<&str>;
-  /// The element's `id`, if any.
-  fn id(&self) -> Option<&str>;
-  /// The element's whitespace-separated class list, if any.
-  fn class_name(&self) -> Option<&str>;
-  /// The value of an attribute by name.
-  fn attr(&self, name: &str) -> Option<&str>;
-  /// Whether this is a replaced element (`<img>`-like), which suppresses
-  /// `::before`/`::after`.
-  fn is_replaced(&self) -> bool;
-  /// The element's children in source order.
-  fn children(&self) -> Option<&[Self]>
-  where
-    Self: Sized;
+struct StyleArena<'a> {
+  nodes: Vec<StyleNode<'a>>,
 }
-
-struct StyleArena<'a, N> {
-  nodes: Vec<StyleNode<'a, N>>,
-}
-struct StyleNode<'a, N> {
-  node: &'a N,
+struct StyleNode<'a> {
+  node: &'a Node,
   parent: Option<usize>,
   prev_sibling: Option<usize>,
   next_sibling: Option<usize>,
   first_child: Option<usize>,
 }
-struct ArenaElement<'a, N> {
-  tree: &'a StyleArena<'a, N>,
+#[derive(Clone, Copy)]
+struct ArenaElement<'a> {
+  tree: &'a StyleArena<'a>,
   index: usize,
 }
 
-impl<N> Clone for ArenaElement<'_, N> {
-  fn clone(&self) -> Self {
-    *self
-  }
-}
-impl<N> Copy for ArenaElement<'_, N> {}
-
-impl<N> fmt::Debug for ArenaElement<'_, N> {
+impl fmt::Debug for ArenaElement<'_> {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     f.debug_struct("ArenaElement")
       .field("index", &self.index)
@@ -75,17 +48,22 @@ impl<N> fmt::Debug for ArenaElement<'_, N> {
   }
 }
 
-impl<'a, N: MatchableNode> StyleArena<'a, N> {
-  fn new(root: &'a N) -> Self {
+impl<'a> StyleArena<'a> {
+  fn new(root: &'a Node) -> Self {
     let mut arena = StyleArena { nodes: Vec::new() };
     arena.add_node(root, None, None);
     arena
   }
 
-  fn add_node(&mut self, node: &'a N, parent: Option<usize>, prev_sibling: Option<usize>) -> usize {
-    struct ChildFrame<'a, N> {
+  fn add_node(
+    &mut self,
+    node: &'a Node,
+    parent: Option<usize>,
+    prev_sibling: Option<usize>,
+  ) -> usize {
+    struct ChildFrame<'a> {
       parent_index: usize,
-      children: &'a [N],
+      children: &'a [Node],
       next_child: usize,
       current_prev: Option<usize>,
     }
@@ -133,7 +111,7 @@ impl<'a, N: MatchableNode> StyleArena<'a, N> {
 
   fn push_node(
     &mut self,
-    node: &'a N,
+    node: &'a Node,
     parent: Option<usize>,
     prev_sibling: Option<usize>,
   ) -> usize {
@@ -163,7 +141,7 @@ fn hash_ascii_case_insensitive(value: &str) -> u32 {
   hash
 }
 
-fn add_node_unique_hashes_to_filter<N: MatchableNode>(node: &N, filter: &mut BloomFilter) -> bool {
+fn add_node_unique_hashes_to_filter(node: &Node, filter: &mut BloomFilter) -> bool {
   let mut added = false;
 
   if let Some(tag) = node.tag_name() {
@@ -186,7 +164,23 @@ fn add_node_unique_hashes_to_filter<N: MatchableNode>(node: &N, filter: &mut Blo
   added
 }
 
-impl<'a, N: MatchableNode> Element for ArenaElement<'a, N> {
+fn remove_node_unique_hashes_from_filter(node: &Node, filter: &mut BloomFilter) {
+  if let Some(tag) = node.tag_name() {
+    filter.remove_hash(hash_ascii_case_insensitive(tag));
+  }
+
+  if let Some(id) = node.id() {
+    filter.remove_hash(hash_ascii_case_insensitive(id));
+  }
+
+  if let Some(classes) = node.class_name() {
+    for class_name in classes.split_whitespace() {
+      filter.remove_hash(hash_ascii_case_insensitive(class_name));
+    }
+  }
+}
+
+impl Element for ArenaElement<'_> {
   type Impl = SelectorImpl;
 
   fn opaque(&self) -> OpaqueElement {
@@ -425,21 +419,11 @@ enum SelectorTarget {
 
 /// Matches every rule in `stylesheet` against the tree rooted at `root`,
 /// returning the declaration blocks that apply to each node in tree order.
-pub(crate) fn match_stylesheets_view<'a, N: MatchableNode>(
-  root: &N,
+pub(crate) fn match_stylesheets_view<'a>(
+  root: &Node,
   stylesheet: &'a StyleSheet,
   viewport: Viewport,
 ) -> Vec<NodeMatchedDeclarations<'a>> {
-  let arena = StyleArena::new(root);
-  let node_count = arena.nodes.len();
-  let mut per_node = vec![NodeMatchedDeclarations::default(); node_count];
-
-  let mut matched_element: Vec<Vec<MatchedRule<'a>>> = vec![Vec::new(); node_count];
-  let mut matched_before: Vec<Vec<MatchedRule<'a>>> = vec![Vec::new(); node_count];
-  let mut matched_after: Vec<Vec<MatchedRule<'a>>> = vec![Vec::new(); node_count];
-
-  let mut ancestor_bloom_filters = vec![BloomFilter::new(); node_count];
-  let mut selector_ancestor_hashes_cache: HashMap<usize, AncestorHashes> = HashMap::new();
   let flattened_rules: Vec<&CssRule> = stylesheet
     .rules
     .iter()
@@ -451,18 +435,39 @@ pub(crate) fn match_stylesheets_view<'a, N: MatchableNode>(
     })
     .collect();
 
-  for i in 0..node_count {
-    let Some(parent) = arena.nodes[i].parent else {
-      continue;
-    };
-    ancestor_bloom_filters[i] = ancestor_bloom_filters[parent].clone();
-    add_node_unique_hashes_to_filter(arena.nodes[parent].node, &mut ancestor_bloom_filters[i]);
+  let arena = StyleArena::new(root);
+  let node_count = arena.nodes.len();
+  let mut per_node = vec![NodeMatchedDeclarations::default(); node_count];
+
+  // No rules survive the media-query filter, so every node keeps the default
+  // declarations. Skip the per-node match buckets and the matching walk.
+  if flattened_rules.is_empty() {
+    return per_node;
   }
+
+  let mut matched_element: Vec<Vec<MatchedRule<'a>>> = vec![Vec::new(); node_count];
+  let mut matched_before: Vec<Vec<MatchedRule<'a>>> = vec![Vec::new(); node_count];
+  let mut matched_after: Vec<Vec<MatchedRule<'a>>> = vec![Vec::new(); node_count];
+
+  let mut ancestor_bloom_filter = BloomFilter::new();
+  let mut ancestor_stack: Vec<usize> = Vec::new();
+  let mut selector_ancestor_hashes_cache: HashMap<usize, AncestorHashes> = HashMap::new();
 
   let mut element_caches = SelectorCaches::default();
   let mut pseudo_caches = SelectorCaches::default();
 
+  // Arena order is DFS preorder, so one counting filter walked along the
+  // ancestor chain replaces a per-node filter copy: pop-and-remove until the
+  // stack top is this node's parent, match against strict-ancestor hashes
+  // only, then push self before descending.
   for i in 0..node_count {
+    while ancestor_stack.last().copied() != arena.nodes[i].parent {
+      let Some(left) = ancestor_stack.pop() else {
+        break;
+      };
+      remove_node_unique_hashes_from_filter(arena.nodes[left].node, &mut ancestor_bloom_filter);
+    }
+
     let element = ArenaElement {
       tree: &arena,
       index: i,
@@ -471,7 +476,7 @@ pub(crate) fn match_stylesheets_view<'a, N: MatchableNode>(
 
     let mut element_ctx = MatchingContext::new(
       MatchingMode::Normal,
-      Some(&ancestor_bloom_filters[i]),
+      Some(&ancestor_bloom_filter),
       &mut element_caches,
       QuirksMode::NoQuirks,
       NeedsSelectorFlags::No,
@@ -479,7 +484,7 @@ pub(crate) fn match_stylesheets_view<'a, N: MatchableNode>(
     );
     let mut pseudo_ctx = MatchingContext::new(
       MatchingMode::ForStatelessPseudoElement,
-      Some(&ancestor_bloom_filters[i]),
+      Some(&ancestor_bloom_filter),
       &mut pseudo_caches,
       QuirksMode::NoQuirks,
       NeedsSelectorFlags::No,
@@ -547,6 +552,9 @@ pub(crate) fn match_stylesheets_view<'a, N: MatchableNode>(
         &mut matched_after[i],
       );
     }
+
+    ancestor_stack.push(i);
+    add_node_unique_hashes_to_filter(arena.nodes[i].node, &mut ancestor_bloom_filter);
   }
 
   for (i, matched) in per_node.iter_mut().enumerate() {
@@ -577,22 +585,26 @@ fn record_matches<'a>(
   let Some(specificity) = best_specificity else {
     return;
   };
-  let normal_layer_order = rule.layer_order.map_or(layer_count, |order| order);
-  bucket.push(MatchedRule {
-    important: false,
-    layer_order: normal_layer_order,
-    specificity,
-    source_order,
-    declarations: &rule.normal_declarations,
-  });
-  let important_layer_order = rule.layer_order.map_or(0, |order| layer_count - order);
-  bucket.push(MatchedRule {
-    important: true,
-    layer_order: important_layer_order,
-    specificity,
-    source_order,
-    declarations: &rule.important_declarations,
-  });
+  if !rule.normal_declarations.is_empty() {
+    let normal_layer_order = rule.layer_order.map_or(layer_count, |order| order);
+    bucket.push(MatchedRule {
+      important: false,
+      layer_order: normal_layer_order,
+      specificity,
+      source_order,
+      declarations: &rule.normal_declarations,
+    });
+  }
+  if !rule.important_declarations.is_empty() {
+    let important_layer_order = rule.layer_order.map_or(0, |order| layer_count - order);
+    bucket.push(MatchedRule {
+      important: true,
+      layer_order: important_layer_order,
+      specificity,
+      source_order,
+      declarations: &rule.important_declarations,
+    });
+  }
 }
 
 fn finalize_bucket<'a>(

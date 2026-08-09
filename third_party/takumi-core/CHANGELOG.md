@@ -1,3 +1,171 @@
+## takumi-core@0.16.0
+
+### Clip elements with `clip-path`
+
+`inset()`, `ellipse()`, `polygon()` and `path()` now clip an element and its decorations, as a real PDF clipping path rather than a rasterized mask.
+
+`clip_shape_commands` in takumi-core resolves a basic shape to path commands, which is where the raster backend's copy of that geometry now lives too.
+
+### Link to anchors inside the document
+
+`<a href="#section">` now resolves to the element with that `id` and lands on the page holding it, so a table of contents works inside the PDF. A fragment matching no element is dropped rather than written as a link that goes nowhere.
+
+`Node::id` is public, alongside the existing `href`, `alt` and `tag_name` accessors.
+
+### Bound allocations and loops driven by untrusted input
+
+Three denial-of-service paths are closed. SVG rasterization and canvas allocation now cap at 16M pixels and return an error past it, instead of aborting on a huge allocation. A `background-size` past `i32::MAX` no longer wraps a repeat step negative and loops forever.
+
+## takumi-core@0.15.0
+
+### Vendored resvg updated to 0.48.1
+
+Pulls the upstream parser and filter fixes: nested `svg` transforms are no longer applied twice, a missing `width`/`height` is computed from the viewBox aspect ratio, `href` takes precedence over `xlink:href`, `fr` is inherited for radial gradients referenced via `href`, and oversized filter regions no longer panic.
+
+### `Node::alt` keeps empty values
+
+`alt()` now returns `Some("")` for an explicitly empty attribute, so callers can tell a decorative image apart from a missing `alt`.
+
+## takumi-core@0.14.1
+
+### Render bare `border-t`/`border-r`/`border-b`/`border-l`/`border-x`/`border-y`
+
+The side utilities only parsed with a width suffix, so plain `border-b` drew nothing.
+
+## takumi-core@0.14.0
+
+### Add PDF hyperlinks, outline, and document metadata
+
+Anchors with an `href` become clickable link annotations, at the box for block anchors and per text run for inline ones. An `outline: true` option builds PDF bookmarks from `h1`–`h6` headings, and a `metadata` option fills the document's title, description, authors, keywords, and creator.
+
+## takumi-core@0.13.0
+
+### Add corner-shape
+
+`corner-shape` and its per-corner longhands render `round`, `squircle`, `bevel`, `scoop`, `notch`, `square`, and `superellipse(<number>)` corners, and interpolate in animations per the spec. The shape applies wherever `border-radius` does: borders, backgrounds, box shadows, masks, and overflow clipping. Corner curves use Chromium's superellipse approximation, so a squircle here matches one drawn by a browser.
+
+## takumi-core@0.12.0
+
+### Add box-decoration-break
+
+`box-decoration-break: slice | clone` parses. The paged PDF backend uses it to decide how a box painted across page fragments closes its edges: `slice` (the default) leaves the edge at a break open, matching browser print behavior, while `clone` paints every fragment's complete borders and background. Cloned padding is paint-only and does not reserve layout space.
+
+### Paint fractional border widths evenly
+
+Layout rounding snapped border widths to whole pixels per edge, so a uniform 2.5px border could come out as a 2px top and a 3px bottom depending on where each edge landed on the pixel grid. Border widths now keep their fractional values through layout rounding and paint with coverage antialiasing, matching how browsers draw them.
+
+### Add break-before, break-after, and break-inside
+
+The three fragmentation properties parse with their page values: `break-before: page`, `break-after: page`, and `break-inside: avoid`. Raster and SVG output ignores them; the paged PDF backend consumes them. `ShapedRun` now carries its source text range and per-glyph cluster ranges for text-extraction backends, and the JPEG, WebP, and GIF decoders sit behind a new default-on `image-decoding` feature so slim builds can drop them.
+
+## takumi-core@0.11.0
+
+### Place the underline below descenders with text-underline-position
+
+`text-underline-position` now parses and applies. `under` puts the underline at the bottom edge of the em box rather than at the font's underline metric, so it clears descenders. `auto` and `from-font` keep the font's underline metric, which is what the renderer already did. `left` and `right` are rejected, since they only mean something in vertical writing modes, which takumi does not support.
+
+## takumi-core@0.10.0
+
+### Register a font from bytes the caller already holds
+
+`FontSource::from_shared` takes an `Arc<dyn AsRef<[u8]> + Send + Sync>` and passes it to the font system untouched, so a memory-mapped face stays paged from disk instead of being copied onto the heap, which for a CJK family is tens of megabytes that never reach the heap at all. WOFF and WOFF2 still decompress into a fresh buffer.
+
+### Register a font straight out of the binary
+
+`FontSource::from_static` takes a `&'static [u8]`, so an `include_bytes!` face is read where it already sits, in the read-only segment, and the caller writes no `Arc` of its own: the one held internally wraps the slice reference, never a copy of the font. Its blob id comes from the address and length instead of a hash of the content, so registering a 30 MiB CJK face no longer reads through every page of it and the face is paged in a glyph at a time.
+
+## takumi-core@0.9.0
+
+### Bound calc() depth, var() substitution size, and list interpolation length
+
+Four places in the CSS value layer let caller-supplied text drive unbounded recursion or allocation. `calc()` recursed once per leading unary sign and once per nested `calc(`. `var()` substitution capped neither its nesting nor its total substituted bytes; its cycle guard is pushed and popped per reference, so it stops a property referencing itself but not fan-out, and `--n: var(--n-1)var(--n-1)` doubles per link. `RepeatToLcm` list interpolation allocated the full LCM of the two list lengths. A `calc()` resolving to NaN or infinity reached taffy unclamped, where every other `Length` arm is clamped on its way through `to_px`.
+
+Release builds abort on panic, so a stack overflow or a failed allocation here took down the host process instead of returning an error. The limits match Blink: depth 100, 2 MiB of substituted text (the value the spec and Firefox use as well), and 1000 interpolated list entries.
+
+### Replace `ResolvedGlyphPlacement` with `geometry::Placement`
+
+`Placement` moves into `takumi_core::geometry` and takes over from `ResolvedGlyphPlacement`, which described the same four fields. `BuiltInlineLayout::resolved_glyphs` is now keyed to `Arc<ResolvedGlyph>`, so a glyph cache hit stops copying the outline commands.
+
+### Key the glyph caches on font content instead of blob identity
+
+`Blob::new` draws its id from a global counter, and that id is part of the key for the shared resolved-glyph and glyph-mask caches, as well as parley's shaping data cache. Registering the same face again produced a fresh id, so a second renderer, or one rebuilt to reclaim memory, missed every glyph the face had already resolved and filled the budget with entries nothing would hit again. The id is now a hash of the decoded font bytes, so identical faces share cache entries no matter how often they are registered.
+
+### Couple the overflow axes and stop mixed overflow from blanking a node
+
+`overflow-x` and `overflow-y` were read straight off the computed style, so `overflow-x: hidden` next to `overflow-y: visible` stayed mixed. CSS Overflow 3 says a `visible` axis paired with one that is neither `visible` nor `clip` computes to a scrolling value instead, which is why Chrome clips both axes there. `resolve_overflows` now applies that coupling, so the pair reaches layout, painting, and the SVG backend already resolved. `clip` next to `visible` is a legal combination and still passes through untouched.
+
+That legal pair then hit a second bug. The mask builder marks an unclipped axis with `u32::MAX`, and the identity-transform fast path narrowed it with `as i32`, which truncates to `-1` rather than saturating. The clip rectangle came out empty, so the node rendered nothing at all. The comparison now clamps before narrowing, matching the rotated path, which had always compared in `u32`.
+
+## takumi-core@0.8.0
+
+### Share the glyph caches across worker threads
+
+The glyph mask and resolved-glyph caches were thread-local maps under one process-wide byte counter, but eviction only pruned the inserting thread. An idle worker kept its share forever, so real retention multiplied with the thread pool (the emoji-bitmap growth noted in #1023). Both caches are now process-global `quick_cache` instances splitting the same 8 MiB budget: a glyph resolved on one thread is a hit on every thread, and eviction is global. `GlyphCache` methods take `&self` and `get` returns a clone; `set_glyph_cache_max_bytes` now applies to caches not yet used, so call it before the first render.
+
+## takumi-core@0.7.0
+
+### Move resolved-glyph types to `resources::glyph`
+
+Glyph rasterization — resolving a shaped glyph to a bitmap or vector outline — now lives in its own `resources::glyph` module, split out of the font registry it was tangled with. `ResolvedGlyph`, `ResolvedOutlineGlyph`, and `ResolvedColorLayer` move there from `resources::font`; imports of those types need updating.
+
+### Decode animated GIF frames on demand instead of holding the whole timeline
+
+Once a render scrubbed past the first frame, an animated GIF decoded and kept every remaining frame, so the encoded bytes, the first frame, and all later frames stayed resident at once — and none of it counted against the image cache budget. Frames past the first now decode at draw size when they are sampled and drop right after, so a GIF holds only its encoded bytes and first frame. Output is unchanged.
+
+### Stop untrusted SVG from reading local files via `<image href>`
+
+An `<image>` or `<feImage>` element whose href is a filesystem path is no longer read from disk when parsing untrusted SVG markup or applying SVG filters. The string href resolver is disabled at both entry points, matching the nested-SVG path that already ignored external references. `data:` URI images keep working.
+
+### Bound the thread-local glyph caches by bytes
+
+The resolved-glyph and glyph-mask caches were thread-local maps capped at 4096 entries each: per-entry size was unbounded, the cap multiplied per worker thread, and overflowing flushed the whole map so hot glyphs paid the rebuild cost. Both caches now weigh entries in bytes against one process-wide 8 MiB budget, tunable through `takumi_core::resources::glyph_cache::set_glyph_cache_max_bytes`. Going over budget first drops entries no recent render touched, then only as many fresh ones as the overage requires; the map is never flushed whole. A retention test renders the same content 200 times and asserts live heap bytes stay flat, so budget regressions fail in CI.
+
+### Halve peak memory for native WebP decode
+
+Native WebP decode now writes straight into a caller-owned buffer via `WebPDecode` with external memory, dropping the extra full-frame copy `WebPDecodeRGBA` required. Already-RGBA sources decoded through the `image` crate also skip one transient full-frame clone (`into_rgba8`). Output is bit-identical.
+
+### Cut wasted work in style matching
+
+`record_matches` no longer pushes entries for empty declaration blocks, and the per-node ancestor bloom filters (one multi-kilobyte copy per node) are replaced by a single counting filter walked along the DFS ancestor chain. Rendered output is unchanged.
+
+### Unify decoded resources behind one budgeted cache
+
+Decoded images had a byte budget, but each SVG kept up to 32 rasterized pixmaps outside it, and every render re-parsed its stylesheets from scratch. `ImageCache` is now `ResourceCache`: SVG sources, their rasterized pixmaps, and parsed stylesheets all weigh against the same budget as decoded images. The default budget drops from 64 MiB to 16 MiB and becomes configurable — `new Renderer({ cacheMaxBytes })` in the bindings, `ResourceCache::new(max_bytes)` in Rust, with `0` disabling caching. SVG rasters and parsed stylesheets now also survive across renders, so a server re-rendering the same template stops re-rasterizing and re-parsing per request. Rust callers: `RenderOptions.stylesheet` is now `Arc<StyleSheet>`; pass `sheet.into()`.
+
+### Skip the style-match arena allocations when no CSS rules apply
+
+`match_stylesheets_view` now filters the stylesheet rules before it builds the per-node match buckets, and returns early when nothing survives. Renders driven only by inline styles or Tailwind classes (the common case) no longer allocate the per-node bucket vectors or walk the matcher for zero rules. Rendered output is unchanged.
+
+### Decode downscaled WebP at the target size
+
+Native WebP sources drawn smaller than their pixel size now decode through libwebp's `use_scaling`, so the full-size frame is never allocated (~6 MB instead of ~48 MB for a 12 MP hero). libwebp's rescaler replaces the in-house resampler on this path, which can shift pixels slightly; wasm keeps the full-decode path.
+
+### Add `font-kerning` and `tab-size`
+
+`font-kerning: auto | normal | none` toggles the shaper's `kern` feature; an explicit `font-feature-settings` still wins on a tag conflict. `tab-size: <number>` expands preserved tabs to that many spaces (default 8) before shaping. Preserved tabs previously reached the shaper as U+0009 and rendered a font-dependent glyph, so tab characters under `white-space: pre` now render correctly.
+
+### Share one path-builder helper between layout and raster
+
+`takumi-core` and `takumi-raster` each kept a private single-impl trait wrapping `Vec<PathCommand>` pushes, plus two more one-method traits that existed only for method-call syntax. The push helpers now live once as the public `takumi_core::geometry::PathBuilder` trait; the private traits are gone. Rendered output is unchanged.
+
+## takumi-core@0.6.3
+
+### Drop whitespace between absolute-only block siblings
+
+When every element child of a block container was absolutely positioned, the whitespace text nodes from pretty-printed HTML formed an inline formatting context that swallowed the out-of-flow boxes, so none of them rendered. The whitespace drop now also runs when the only in-flow content is whitespace, keeping the absolute children in the layout.
+
+### Serialize `text-fit: none` without its target and limit
+
+The computed value of `text-fit` kept the target and limit keywords after `none`, so `none per-line 50%` round-tripped verbatim. Chromium drops both, since neither scales anything when the value is `none`. The serializer now stops after `none`.
+
+### Keep whitespace collapse state across empty inline spans
+
+An empty span with `white-space: pre` reset the cross-span collapse state, so a boundary space next to it could double up or vanish. Empty spans now leave the state untouched, matching Blink's opaque-to-collapsing empty text items.
+
+### Honour per-element white-space when collapsing inline text
+
+Inline whitespace collapsing read the block's white-space value for every span, so a `white-space: pre` child inside a normal-collapsing parent lost its spaces and line breaks. Each span now collapses against its own value. `<br>` also carries a `white-space: pre` preset, so its line break survives.
+
 ## takumi-core@0.6.2
 
 ### Ellipsize nowrap text without a break opportunity

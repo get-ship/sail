@@ -2,13 +2,13 @@ use std::{
   borrow::Cow,
   cell::RefCell,
   collections::{BTreeSet, HashMap, hash_map::Entry},
+  fmt::{self, Debug, Formatter},
   iter::once,
   rc::Rc,
   str::FromStr,
   sync::Arc,
 };
 
-use image::{Rgba, RgbaImage};
 use parley::{
   FontFamilyName, GenericFamily as ParleyGenericFamily, GlyphRun, LayoutContext, TextStyle,
   TreeBuilder,
@@ -18,592 +18,22 @@ use parley::{
   },
 };
 use skrifa::{
-  FontRef, GlyphId, MetadataProvider,
-  bitmap::{BitmapData, BitmapGlyph, BitmapStrikes, Origin},
-  color::{
-    Brush, ColorGlyphCollection, ColorGlyphFormat, ColorPainter, CompositeMode,
-    PaintCachedColorGlyph, Transform,
-  },
+  FontRef, MetadataProvider,
   instance::{LocationRef, Size},
-  outline::{DrawSettings, OutlineGlyphCollection, OutlinePen},
-  raw::types::{BoundingBox, F2Dot14, Tag},
+  raw::types::{F2Dot14, Tag},
 };
 use thiserror::Error;
+use xxhash_rust::xxh3::{Xxh3, xxh3_64};
 
 use crate::{
   context::RenderContext,
-  geometry::{PathCommand as Command, Point},
   layout::inline::{InlineBrush, InlineLayout},
-  resources::{image_buffer::ImageBuffer, image_decoder::decode_png},
+  resources::{
+    glyph::{BOLD_THRESHOLD, GlyphResolveContext, ResolvedGlyph, synthesis_embolden_strength},
+    glyph_cache::resolved_glyph,
+  },
   style::{FontFamily, FontStyle as CssFontStyle},
 };
-
-/// A resolved glyph, either an embedded bitmap or a vector outline.
-#[derive(Clone)]
-pub enum ResolvedGlyph {
-  /// Embedded bitmap glyph.
-  Bitmap(ResolvedBitmapGlyph),
-  /// Vector outline glyph.
-  Outline(ResolvedOutlineGlyph),
-}
-
-/// A glyph backed by an embedded bitmap.
-#[derive(Clone)]
-pub struct ResolvedBitmapGlyph {
-  /// Source bitmap.
-  pub image: ImageBuffer,
-  /// Horizontal scale from source to placement.
-  pub scale_x: f32,
-  /// Vertical scale from source to placement.
-  pub scale_y: f32,
-  /// Pixel placement of the glyph.
-  pub placement: ResolvedGlyphPlacement,
-}
-
-impl ResolvedBitmapGlyph {
-  /// Write the glyph's alpha channel into `mask`, scaling to the placement size.
-  pub fn write_alpha_mask(&self, mask: &mut [u8]) {
-    let width = self.placement.width as usize;
-    let height = self.placement.height as usize;
-    if width == 0 || height == 0 {
-      return;
-    }
-
-    let alpha_len = width.saturating_mul(height);
-    let mask_len = mask.len();
-    let write_len = alpha_len.min(mask_len);
-    let mask = &mut mask[..write_len];
-    let source_width = self.image.width() as usize;
-    let source_height = self.image.height() as usize;
-    let source_raw = self.image.data();
-
-    if source_width == width && source_height == height {
-      for (i, alpha) in source_raw.iter().skip(3).step_by(4).copied().enumerate() {
-        if i >= mask.len() {
-          break;
-        }
-        mask[i] = alpha;
-      }
-      return;
-    }
-
-    if source_width == 0 || source_height == 0 {
-      return;
-    }
-
-    for y in 0..height {
-      let mapped_y = ((y as f32 + 0.5) / self.scale_y - 0.5).round();
-      let source_y = mapped_y.clamp(0.0, (source_height.saturating_sub(1)) as f32) as usize;
-
-      for x in 0..width {
-        let mapped_x = ((x as f32 + 0.5) / self.scale_x - 0.5).round();
-        let source_x = mapped_x.clamp(0.0, (source_width.saturating_sub(1)) as f32) as usize;
-        let source_index = (source_y * source_width + source_x) * 4 + 3;
-        let mask_index = y * width + x;
-        if mask_index >= mask.len() || source_index >= source_raw.len() {
-          continue;
-        }
-        mask[mask_index] = source_raw[source_index];
-      }
-    }
-  }
-}
-
-/// An outline glyph, either single-color or multi-layer color.
-#[derive(Clone)]
-pub enum ResolvedOutlineGlyph {
-  /// Single-color outline.
-  Plain {
-    /// Outline path commands.
-    paths: Vec<Command>,
-    /// Synthetic bold amount, if any.
-    embolden: Option<f32>,
-    /// Hash identifying this outline for caching.
-    cache_signature: u64,
-  },
-  /// Multi-layer color outline (COLR).
-  Color {
-    /// Combined outline path commands.
-    paths: Vec<Command>,
-    /// Per-layer colored outlines.
-    layers: Vec<ResolvedColorLayer>,
-    /// Hash identifying this outline for caching.
-    cache_signature: u64,
-  },
-}
-
-/// One palette-colored layer of a color glyph.
-#[derive(Clone)]
-pub struct ResolvedColorLayer {
-  /// Outline path commands for this layer.
-  pub paths: Vec<Command>,
-  /// Index into the font's color palette.
-  pub palette_index: u16,
-  /// Layer opacity, 0..=1.
-  pub alpha: f32,
-}
-
-/// Pixel placement of a rendered glyph.
-#[derive(Clone, Copy)]
-pub struct ResolvedGlyphPlacement {
-  /// Left offset in pixels.
-  pub left: i32,
-  /// Top offset in pixels.
-  pub top: i32,
-  /// Width in pixels.
-  pub width: u32,
-  /// Height in pixels.
-  pub height: u32,
-}
-
-impl ResolvedOutlineGlyph {
-  /// Outline path commands for the glyph.
-  pub fn paths(&self) -> &[Command] {
-    match self {
-      Self::Plain { paths, .. } | Self::Color { paths, .. } => paths,
-    }
-  }
-
-  /// Hash identifying this resolved outline for caching.
-  pub fn cache_signature(&self) -> u64 {
-    match self {
-      Self::Plain {
-        cache_signature, ..
-      }
-      | Self::Color {
-        cache_signature, ..
-      } => *cache_signature,
-    }
-  }
-
-  /// Synthetic bold amount, if any.
-  pub fn embolden(&self) -> Option<f32> {
-    match self {
-      Self::Plain { embolden, .. } => *embolden,
-      Self::Color { .. } => None,
-    }
-  }
-
-  /// Color layers for a color glyph, else `None`.
-  pub fn color_layers(&self) -> Option<&[ResolvedColorLayer]> {
-    match self {
-      Self::Plain { .. } => None,
-      Self::Color { layers, .. } => Some(layers),
-    }
-  }
-}
-
-impl ResolvedGlyph {
-  /// Conservative ink extents relative to the glyph's pen origin, in device
-  /// pixels: `(min_x, min_y, max_x, max_y)`. Curve control points are included,
-  /// so the box may slightly overestimate but never undercuts, and the
-  /// faux-bold stroke outset is accounted for.
-  pub fn ink_extents(&self) -> Option<(f32, f32, f32, f32)> {
-    match self {
-      Self::Bitmap(bitmap) => {
-        let placement = bitmap.placement;
-        (placement.width > 0 && placement.height > 0).then(|| {
-          (
-            placement.left as f32,
-            placement.top as f32,
-            (placement.left + placement.width as i32) as f32,
-            (placement.top + placement.height as i32) as f32,
-          )
-        })
-      }
-      Self::Outline(outline) => {
-        let mut min = Point {
-          x: f32::INFINITY,
-          y: f32::INFINITY,
-        };
-        let mut max = Point {
-          x: f32::NEG_INFINITY,
-          y: f32::NEG_INFINITY,
-        };
-        let mut include = |point: &Point<f32>| {
-          min.x = min.x.min(point.x);
-          min.y = min.y.min(point.y);
-          max.x = max.x.max(point.x);
-          max.y = max.y.max(point.y);
-        };
-
-        for command in outline.paths() {
-          match command {
-            Command::MoveTo(point) | Command::LineTo(point) => include(point),
-            Command::QuadTo(control, point) => {
-              include(control);
-              include(point);
-            }
-            Command::CubicTo(control1, control2, point) => {
-              include(control1);
-              include(control2);
-              include(point);
-            }
-            Command::Close => {}
-          }
-        }
-
-        if !min.x.is_finite() {
-          return None;
-        }
-
-        let outset = outline.embolden().map_or(0.0, |embolden| embolden / 2.0);
-        Some((
-          min.x - outset,
-          min.y - outset,
-          max.x + outset,
-          max.y + outset,
-        ))
-      }
-    }
-  }
-}
-
-/// CSS `kBoldThreshold` — weights at or above this synthesize bold when no bolder face
-/// exists; lighter weights do not. https://drafts.csswg.org/css-fonts-4/#font-weight-prop
-const BOLD_THRESHOLD: f32 = 600.0;
-
-/// Skia's fake-bold stroke width as a fraction of text size: `1/24` at 9px and below,
-/// easing to `1/32` at 36px and above, linearly interpolated in between. A constant factor
-/// over-emboldens large text. See Skia's `SkTextFormatParams.h`.
-fn skia_fake_bold_factor(font_size: f32) -> f32 {
-  const SMALL_SIZE: f32 = 9.0;
-  const LARGE_SIZE: f32 = 36.0;
-  const SMALL_FACTOR: f32 = 1.0 / 24.0;
-  const LARGE_FACTOR: f32 = 1.0 / 32.0;
-
-  let t = ((font_size - SMALL_SIZE) / (LARGE_SIZE - SMALL_SIZE)).clamp(0.0, 1.0);
-  SMALL_FACTOR + t * (LARGE_FACTOR - SMALL_FACTOR)
-}
-
-/// Stroke width for synthesized (faux) bold — the emboldened glyph is the filled outline
-/// plus a centered stroke of this width, matching Skia's fake bold.
-pub(crate) fn synthesis_embolden_strength(font_size: f32) -> f32 {
-  font_size * skia_fake_bold_factor(font_size)
-}
-
-fn hash_path_commands(paths: &[Command]) -> u64 {
-  use xxhash_rust::xxh3::Xxh3;
-  let mut h = Xxh3::new();
-  for cmd in paths {
-    match cmd {
-      Command::MoveTo(p) => {
-        h.update(&[0u8]);
-        h.update(&p.x.to_le_bytes());
-        h.update(&p.y.to_le_bytes());
-      }
-      Command::LineTo(p) => {
-        h.update(&[1u8]);
-        h.update(&p.x.to_le_bytes());
-        h.update(&p.y.to_le_bytes());
-      }
-      Command::QuadTo(p1, p2) => {
-        h.update(&[2u8]);
-        h.update(&p1.x.to_le_bytes());
-        h.update(&p1.y.to_le_bytes());
-        h.update(&p2.x.to_le_bytes());
-        h.update(&p2.y.to_le_bytes());
-      }
-      Command::CubicTo(p1, p2, p3) => {
-        h.update(&[3u8]);
-        h.update(&p1.x.to_le_bytes());
-        h.update(&p1.y.to_le_bytes());
-        h.update(&p2.x.to_le_bytes());
-        h.update(&p2.y.to_le_bytes());
-        h.update(&p3.x.to_le_bytes());
-        h.update(&p3.y.to_le_bytes());
-      }
-      Command::Close => {
-        h.update(&[4u8]);
-      }
-    }
-  }
-  h.digest()
-}
-
-#[derive(Default)]
-struct GlyphOutlinePen {
-  paths: Vec<Command>,
-}
-
-impl GlyphOutlinePen {
-  fn finish(self) -> Vec<Command> {
-    self.paths
-  }
-}
-
-impl OutlinePen for GlyphOutlinePen {
-  fn move_to(&mut self, x: f32, y: f32) {
-    self.paths.push(Command::MoveTo(Point::new(x, -y)));
-  }
-
-  fn line_to(&mut self, x: f32, y: f32) {
-    self.paths.push(Command::LineTo(Point::new(x, -y)));
-  }
-
-  fn quad_to(&mut self, cx0: f32, cy0: f32, x: f32, y: f32) {
-    self
-      .paths
-      .push(Command::QuadTo(Point::new(cx0, -cy0), Point::new(x, -y)));
-  }
-
-  fn curve_to(&mut self, cx0: f32, cy0: f32, cx1: f32, cy1: f32, x: f32, y: f32) {
-    self.paths.push(Command::CubicTo(
-      Point::new(cx0, -cy0),
-      Point::new(cx1, -cy1),
-      Point::new(x, -y),
-    ));
-  }
-
-  fn close(&mut self) {
-    self.paths.push(Command::Close);
-  }
-}
-
-struct ColorLayerCollector<'a, 'g> {
-  outline_glyphs: &'g OutlineGlyphCollection<'a>,
-  size: Size,
-  location: LocationRef<'a>,
-  layers: Vec<ResolvedColorLayer>,
-}
-
-impl<'a, 'g> ColorLayerCollector<'a, 'g> {
-  fn new(
-    outline_glyphs: &'g OutlineGlyphCollection<'a>,
-    size: Size,
-    location: LocationRef<'a>,
-  ) -> Self {
-    Self {
-      outline_glyphs,
-      size,
-      location,
-      layers: Vec::new(),
-    }
-  }
-
-  fn into_layers(self) -> Vec<ResolvedColorLayer> {
-    self.layers
-  }
-}
-
-struct GlyphResolveContext<'a> {
-  outline_glyphs: OutlineGlyphCollection<'a>,
-  color_glyphs: ColorGlyphCollection<'a>,
-  bitmap_strikes: BitmapStrikes<'a>,
-  font_size: f32,
-  size: Size,
-  location: LocationRef<'a>,
-  skew: Option<f32>,
-  embolden: Option<f32>,
-}
-
-impl<'a> GlyphResolveContext<'a> {
-  fn resolve_glyph(&self, glyph_id: u32) -> Option<ResolvedGlyph> {
-    let glyph_id = GlyphId::new(glyph_id);
-
-    self
-      .resolve_bitmap_glyph(glyph_id)
-      .map(ResolvedGlyph::Bitmap)
-      .or_else(|| {
-        self
-          .resolve_color_outline_glyph(glyph_id)
-          .map(ResolvedGlyph::Outline)
-      })
-      .or_else(|| {
-        self
-          .resolve_plain_outline_glyph(glyph_id)
-          .map(ResolvedGlyph::Outline)
-      })
-  }
-
-  fn resolve_bitmap_glyph(&self, glyph_id: GlyphId) -> Option<ResolvedBitmapGlyph> {
-    let bitmap = self.bitmap_strikes.glyph_for_size(self.size, glyph_id)?;
-    scale_bitmap_glyph(bitmap, self.font_size)
-  }
-
-  fn resolve_color_outline_glyph(&self, glyph_id: GlyphId) -> Option<ResolvedOutlineGlyph> {
-    let color_glyph = self
-      .color_glyphs
-      .get_with_format(glyph_id, ColorGlyphFormat::ColrV0)?;
-    let mut collector = ColorLayerCollector::new(&self.outline_glyphs, self.size, self.location);
-    color_glyph.paint(self.location, &mut collector).ok()?;
-    let color_layers = collector.into_layers();
-    if color_layers.is_empty() {
-      return None;
-    }
-
-    let mut paths = Vec::new();
-    for layer in &color_layers {
-      paths.extend(layer.paths.iter().copied());
-    }
-    let cache_signature = hash_path_commands(&paths);
-
-    Some(ResolvedOutlineGlyph::Color {
-      paths,
-      layers: color_layers,
-      cache_signature,
-    })
-  }
-
-  fn resolve_plain_outline_glyph(&self, glyph_id: GlyphId) -> Option<ResolvedOutlineGlyph> {
-    let mut paths =
-      resolve_outline_commands(&self.outline_glyphs, glyph_id, self.size, self.location)?;
-    if let Some(skew_degrees) = self.skew {
-      transform_commands(&mut paths, skew_degrees);
-    }
-    let cache_signature = hash_path_commands(&paths);
-
-    Some(ResolvedOutlineGlyph::Plain {
-      paths,
-      embolden: self.embolden,
-      cache_signature,
-    })
-  }
-}
-
-/// `ColorPainter` for `ColorLayerCollector` that only records COLR v0 layer
-/// stacking. `push_transform`, `pop_transform`, `push_clip_glyph`,
-/// `push_clip_box`, `pop_clip`, and `push_layer` are intentional no-ops, and
-/// `fill_glyph` only records `Brush::Solid` layers, so gradients and other
-/// non-solid brushes are silently skipped.
-impl ColorPainter for ColorLayerCollector<'_, '_> {
-  fn push_transform(&mut self, _transform: Transform) {}
-
-  fn pop_transform(&mut self) {}
-
-  fn push_clip_glyph(&mut self, _glyph_id: GlyphId) {}
-
-  fn push_clip_box(&mut self, _clip_box: BoundingBox<f32>) {}
-
-  fn pop_clip(&mut self) {}
-
-  fn fill(&mut self, _brush: Brush<'_>) {}
-
-  fn fill_glyph(
-    &mut self,
-    glyph_id: GlyphId,
-    _brush_transform: Option<Transform>,
-    brush: Brush<'_>,
-  ) {
-    let Brush::Solid {
-      palette_index,
-      alpha,
-    } = brush
-    else {
-      return;
-    };
-
-    let Some(paths) =
-      resolve_outline_commands(self.outline_glyphs, glyph_id, self.size, self.location)
-    else {
-      return;
-    };
-
-    self.layers.push(ResolvedColorLayer {
-      paths,
-      palette_index,
-      alpha,
-    });
-  }
-
-  fn paint_cached_color_glyph(
-    &mut self,
-    _glyph: GlyphId,
-  ) -> Result<PaintCachedColorGlyph, skrifa::color::PaintError> {
-    Ok(PaintCachedColorGlyph::Unimplemented)
-  }
-
-  fn push_layer(&mut self, _composite_mode: CompositeMode) {}
-}
-
-fn resolve_outline_commands(
-  outline_glyphs: &OutlineGlyphCollection<'_>,
-  glyph_id: GlyphId,
-  size: Size,
-  location: LocationRef<'_>,
-) -> Option<Vec<Command>> {
-  let glyph = outline_glyphs.get(glyph_id)?;
-  let mut pen = GlyphOutlinePen::default();
-  glyph
-    .draw(DrawSettings::unhinted(size, location), &mut pen)
-    .ok()?;
-  Some(pen.finish())
-}
-
-fn transform_commands(paths: &mut [Command], skew_degrees: f32) {
-  let skew_tangent = skew_degrees.to_radians().tan();
-  for command in paths {
-    match command {
-      Command::MoveTo(point) | Command::LineTo(point) => {
-        point.x += point.y * skew_tangent;
-      }
-      Command::QuadTo(control, point) => {
-        control.x += control.y * skew_tangent;
-        point.x += point.y * skew_tangent;
-      }
-      Command::CubicTo(control1, control2, point) => {
-        control1.x += control1.y * skew_tangent;
-        control2.x += control2.y * skew_tangent;
-        point.x += point.y * skew_tangent;
-      }
-      Command::Close => {}
-    }
-  }
-}
-
-fn decode_bitmap_image(bitmap: &BitmapGlyph<'_>) -> Option<(ImageBuffer, Origin)> {
-  let image = match &bitmap.data {
-    BitmapData::Png(bytes) => decode_png(bytes).ok()?,
-    BitmapData::Bgra(bytes) => {
-      let image = RgbaImage::from_fn(bitmap.width, bitmap.height, |x, y| {
-        let index = ((y * bitmap.width + x) * 4) as usize;
-        Rgba([
-          bytes[index + 2],
-          bytes[index + 1],
-          bytes[index],
-          bytes[index + 3],
-        ])
-      });
-      let (width, height) = (image.width(), image.height());
-      ImageBuffer::from_rgba_bytes(image.into_raw(), width, height)?
-    }
-    BitmapData::Mask(_) => return None,
-  };
-
-  Some((image, bitmap.placement_origin))
-}
-
-fn scale_bitmap_glyph(bitmap: BitmapGlyph<'_>, font_size: f32) -> Option<ResolvedBitmapGlyph> {
-  let (image, origin) = decode_bitmap_image(&bitmap)?;
-  let scale_x = if bitmap.ppem_x > 0.0 {
-    font_size / bitmap.ppem_x
-  } else {
-    1.0
-  };
-  let scale_y = if bitmap.ppem_y > 0.0 {
-    font_size / bitmap.ppem_y
-  } else {
-    1.0
-  };
-  let width = ((image.width() as f32) * scale_x).round().max(1.0) as u32;
-  let height = ((image.height() as f32) * scale_y).round().max(1.0) as u32;
-  let top = match origin {
-    Origin::TopLeft => bitmap.inner_bearing_y,
-    Origin::BottomLeft => bitmap.inner_bearing_y + bitmap.height as f32,
-  };
-
-  Some(ResolvedBitmapGlyph {
-    image,
-    scale_x,
-    scale_y,
-    placement: ResolvedGlyphPlacement {
-      left: (bitmap.inner_bearing_x * scale_x).round() as i32,
-      top: (top * scale_y).round() as i32,
-      width,
-      height,
-    },
-  })
-}
 
 /// Errors that can occur during font loading and conversion.
 #[derive(Debug, Error)]
@@ -683,11 +113,7 @@ fn guess_font_format(source: &[u8]) -> Result<FontFormat, FontError> {
 
 thread_local! {
   static LAYOUT_CONTEXT: RefCell<LayoutContext<InlineBrush>> = RefCell::new(LayoutContext::new());
-  static SHARED_RESOLVED_GLYPH_CACHE: RefCell<HashMap<u64, ResolvedGlyph>> =
-    RefCell::new(HashMap::new());
 }
-
-const RESOLVED_GLYPH_CACHE_MAX_ENTRIES: usize = 4096;
 
 fn resolved_glyph_cache_key(
   font_id: u64,
@@ -698,7 +124,6 @@ fn resolved_glyph_cache_key(
   skew: Option<f32>,
   glyph_id: u32,
 ) -> u64 {
-  use xxhash_rust::xxh3::Xxh3;
   let mut h = Xxh3::new();
   h.update(&font_id.to_le_bytes());
   h.update(&font_index.to_le_bytes());
@@ -892,7 +317,7 @@ impl Fonts {
     run: &GlyphRun<'_, InlineBrush>,
     font_ref: FontRef,
     glyph_ids: impl Iterator<Item = u32> + Clone,
-  ) -> HashMap<u32, ResolvedGlyph> {
+  ) -> HashMap<u32, Arc<ResolvedGlyph>> {
     let has_emoji_cluster = run
       .run()
       .visual_clusters()
@@ -933,7 +358,7 @@ impl Fonts {
       skew,
     };
 
-    let mut result: HashMap<u32, ResolvedGlyph> = HashMap::new();
+    let mut result: HashMap<u32, Arc<ResolvedGlyph>> = HashMap::new();
     for glyph_id in glyph_ids {
       if let Entry::Vacant(slot) = result.entry(glyph_id) {
         let key = resolved_glyph_cache_key(
@@ -945,24 +370,8 @@ impl Fonts {
           skew,
           glyph_id,
         );
-        let cached = SHARED_RESOLVED_GLYPH_CACHE.with(|c| c.borrow().get(&key).cloned());
-        let glyph = if let Some(g) = cached {
-          Some(g)
-        } else {
-          let resolved = resolver.resolve_glyph(glyph_id);
-          if let Some(g) = resolved.as_ref() {
-            SHARED_RESOLVED_GLYPH_CACHE.with(|c| {
-              let mut cache = c.borrow_mut();
-              if cache.len() > RESOLVED_GLYPH_CACHE_MAX_ENTRIES {
-                cache.clear();
-              }
-              cache.insert(key, g.clone());
-            });
-          }
-          resolved
-        };
-        if let Some(g) = glyph {
-          slot.insert(g);
+        if let Some(glyph) = resolved_glyph(key, || resolver.resolve_glyph(glyph_id)) {
+          slot.insert(glyph);
         }
       }
     }
@@ -1082,13 +491,51 @@ impl RenderContext {
   }
 }
 
-/// A font source buffer. Construct from raw bytes via `From`; woff/woff2 are
+/// Bytes the caller already holds behind an `Arc`, taken as they are.
+type SharedBytes = Arc<dyn AsRef<[u8]> + Send + Sync>;
+
+enum FontBytes<'a> {
+  Inline(Cow<'a, [u8]>),
+  Shared(SharedBytes),
+}
+
+impl FontBytes<'_> {
+  fn into_owned(self) -> Vec<u8> {
+    match self {
+      Self::Inline(bytes) => bytes.into_owned(),
+      Self::Shared(bytes) => (*bytes).as_ref().to_vec(),
+    }
+  }
+}
+
+impl Debug for FontBytes<'_> {
+  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    f.debug_tuple("FontBytes")
+      .field(&self.as_ref().len())
+      .finish()
+  }
+}
+
+impl AsRef<[u8]> for FontBytes<'_> {
+  fn as_ref(&self) -> &[u8] {
+    match self {
+      Self::Inline(bytes) => bytes,
+      Self::Shared(bytes) => (**bytes).as_ref(),
+    }
+  }
+}
+
+/// A font source buffer. Construct from raw bytes via `From`, or from bytes the
+/// caller keeps alive elsewhere via [`FontSource::from_shared`]; woff/woff2 are
 /// decompressed internally when the font is registered.
 #[derive(Debug)]
 pub struct FontSource<'a> {
-  bytes: Cow<'a, [u8]>,
+  bytes: FontBytes<'a>,
   /// Whether `bytes` is already decompressed (woff/woff2 expanded to raw sfnt).
   is_decoded: bool,
+  /// Blob id to use in place of hashing the decoded bytes, set by
+  /// [`FontSource::from_static`].
+  cache_id: Option<u64>,
 }
 
 impl<'a, T> From<T> for FontSource<'a>
@@ -1097,38 +544,93 @@ where
 {
   fn from(value: T) -> Self {
     Self {
-      bytes: value.into(),
+      bytes: FontBytes::Inline(value.into()),
       is_decoded: false,
+      cache_id: None,
     }
   }
 }
 
 impl<'a> FontSource<'a> {
+  /// Takes shared bytes as they are, so registering the font copies nothing: a
+  /// memory-mapped file stays paged from disk and the process never holds a second
+  /// copy on the heap. Only sfnt (ttf/otf/ttc) is passed through — woff and woff2
+  /// still decompress into a fresh buffer.
+  pub fn from_shared(bytes: Arc<dyn AsRef<[u8]> + Send + Sync>) -> Self {
+    Self {
+      bytes: FontBytes::Shared(bytes),
+      is_decoded: false,
+      cache_id: None,
+    }
+  }
+
+  /// Takes bytes that live as long as the process, `include_bytes!` above all.
+  /// Nothing is copied, and the blob id comes from the address and length rather
+  /// than from the content, so registering a 30 MiB face never reads through it.
+  /// A face embedded in the binary is then paged in one glyph at a time.
+  ///
+  /// The same slice always yields the same id, which is what the glyph caches
+  /// need. Two faces with the same bytes may still land on separate ids, and
+  /// resolve their glyphs separately, if one of them arrives as a `Vec`.
+  pub fn from_static(bytes: &'static [u8]) -> Self {
+    let mut id = Xxh3::new();
+
+    id.update(&bytes.as_ptr().addr().to_le_bytes());
+    id.update(&bytes.len().to_le_bytes());
+
+    Self {
+      bytes: FontBytes::Shared(Arc::new(bytes)),
+      is_decoded: false,
+      cache_id: Some(id.digest()),
+    }
+  }
+
+  /// Whether the bytes can go to the font system untouched.
+  fn is_sfnt(&self) -> bool {
+    matches!(
+      guess_font_format(self.bytes.as_ref()),
+      Ok(FontFormat::Ttf | FontFormat::Otf | FontFormat::Ttc)
+    )
+  }
+
   fn into_decoded(self) -> Result<Self, FontError> {
-    if self.is_decoded {
-      return Ok(self);
+    if self.is_decoded || (matches!(self.bytes, FontBytes::Shared(_)) && self.is_sfnt()) {
+      return Ok(Self {
+        is_decoded: true,
+        ..self
+      });
     }
 
     Ok(Self {
-      bytes: Cow::Owned(load_font(self.bytes, None)?),
+      bytes: FontBytes::Inline(Cow::Owned(load_font(
+        Cow::Owned(self.bytes.into_owned()),
+        None,
+      )?)),
       is_decoded: true,
+      cache_id: self.cache_id,
     })
   }
 
   fn into_blob(self) -> Result<Blob<u8>, FontError> {
-    let decoded = if self.is_decoded {
-      self.bytes.into_owned()
-    } else {
-      load_font(self.bytes, None)?
+    let passthrough = self.is_decoded || self.is_sfnt();
+    let cache_id = self.cache_id;
+    let decoded: SharedBytes = match self.bytes {
+      FontBytes::Shared(bytes) if passthrough => bytes,
+      bytes => Arc::new(load_font(Cow::Owned(bytes.into_owned()), None)?),
     };
 
-    Ok(Blob::new(Arc::new(decoded)))
+    // `Blob::new` draws its id from a global counter, and that id keys the shared glyph
+    // caches. Registering the same face again — a second renderer, a rebuilt one — would
+    // then miss every glyph it had already resolved, so the id comes from the content.
+    let id = cache_id.unwrap_or_else(|| xxh3_64((*decoded).as_ref()));
+
+    Ok(Blob::from_raw_parts(decoded, id))
   }
 }
 
 impl<'a> AsRef<[u8]> for FontSource<'a> {
   fn as_ref(&self) -> &[u8] {
-    &self.bytes
+    self.bytes.as_ref()
   }
 }
 
@@ -1343,6 +845,71 @@ mod tests {
   }
 
   #[test]
+  fn shared_sfnt_bytes_reach_the_font_system_uncopied() {
+    let sfnt = load_font(Cow::Owned(geist_bytes()), None).unwrap();
+    let bytes: Arc<dyn AsRef<[u8]> + Send + Sync> = Arc::new(sfnt);
+    let address = (*bytes).as_ref().as_ptr();
+    let blob = FontSource::from_shared(Arc::clone(&bytes))
+      .into_blob()
+      .unwrap();
+
+    assert_eq!(blob.data().as_ptr(), address);
+  }
+
+  #[test]
+  fn static_bytes_keep_one_blob_id_without_reading_them() {
+    static TTF: &[u8] = &[0x00, 0x01, 0x00, 0x00];
+    static OTF: &[u8] = b"OTTO";
+
+    let id = |bytes| FontSource::from_static(bytes).into_blob().unwrap().id();
+
+    // Same slice, same id, so a re-registered face keeps the glyphs it resolved.
+    assert_eq!(id(TTF), id(TTF));
+    assert_ne!(id(TTF), id(OTF));
+  }
+
+  #[test]
+  fn static_sfnt_bytes_reach_the_font_system_uncopied() {
+    let sfnt: &'static [u8] = load_font(Cow::Owned(geist_bytes()), None).unwrap().leak();
+    let blob = FontSource::from_static(sfnt).into_blob().unwrap();
+
+    assert_eq!(blob.data().as_ptr(), sfnt.as_ptr());
+  }
+
+  #[test]
+  fn a_static_woff2_face_keeps_its_id_through_decompression() {
+    let woff2: &'static [u8] = geist_bytes().leak();
+    let registered = FontSource::from_static(woff2).into_blob().unwrap();
+    let resolved_first = FontSource::from_static(woff2)
+      .into_decoded()
+      .unwrap()
+      .into_blob()
+      .unwrap();
+
+    // The bytes the font system holds are the decompressed sfnt either way, so only
+    // the id carried past decompression keeps the two from being separate faces.
+    assert_ne!(registered.data().as_ptr(), woff2.as_ptr());
+    assert_eq!(registered.id(), resolved_first.id());
+  }
+
+  #[test]
+  fn shared_woff2_bytes_still_decompress() {
+    let mut fonts = Fonts::default();
+    let bytes: Arc<dyn AsRef<[u8]> + Send + Sync> = Arc::new(geist_bytes());
+    let families = fonts
+      .register(
+        FontResource::new(FontSource::from_shared(bytes)).override_info(FontOverride {
+          family_name: Some("Shared Geist".into()),
+          ..Default::default()
+        }),
+      )
+      .unwrap();
+
+    assert_eq!(families[0].name, "Shared Geist");
+    assert!(!families[0].faces.is_empty());
+  }
+
+  #[test]
   fn registering_same_bytes_twice_is_idempotent_in_order() {
     let mut fonts = Fonts::default();
     register_named(&mut fonts, geist_bytes(), "Geist Test");
@@ -1434,6 +1001,24 @@ mod tests {
     // Registered first, but selected last: a last-resort family never shadows caller fonts.
     assert_eq!(fonts.order, vec!["User Font".to_string()]);
     assert_eq!(fonts.last_resort_order, vec!["Embedded".to_string()]);
+  }
+
+  #[test]
+  fn same_bytes_produce_the_same_blob_id() {
+    let first = FontSource::from(geist_bytes()).into_blob().unwrap();
+    // Decoded up front rather than during `into_blob`, so the id has to come from the
+    // decoded sfnt and not from whatever the caller happened to hand over.
+    let second = FontSource::from(geist_bytes())
+      .into_decoded()
+      .unwrap()
+      .into_blob()
+      .unwrap();
+    let other = FontSource::from(geist_mono_bytes()).into_blob().unwrap();
+
+    // The glyph caches key on this id, so a re-registered face has to keep the entries
+    // it already resolved.
+    assert_eq!(first.id(), second.id());
+    assert_ne!(first.id(), other.id());
   }
 
   #[test]

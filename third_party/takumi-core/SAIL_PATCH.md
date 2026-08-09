@@ -1,7 +1,11 @@
-# Sail patch of takumi-core 0.6.2 (RENDER-0)
+# Sail patch of takumi-core 0.16.0 (RENDER-0)
 
-Vendored from crates.io `takumi-core 0.6.2` with a minimal fix for a parley
-panic when measuring non-empty text at tiny/zero content widths.
+Vendored from crates.io `takumi-core 0.16.0` (transitive of workspace `takumi = "=2.5.11"`)
+with a minimal fix for a parley panic when measuring non-empty text at tiny/zero
+content widths.
+
+This is **not** the old Sail 0.6.2 vendor tree. Same two semantic edits as the
+prior RENDER-0 patch, re-applied to 0.16.x `src/layout/inline.rs`.
 
 ## Changes (`src/layout/inline.rs`)
 
@@ -46,8 +50,20 @@ regression fixture (`parley-unclamped-tall-text.sail` + golden test) pins that
 measure completes without panic and yields a non-zero text height; it does not
 assert pixel parity with upstream’s viewport-capped measure.
 
+## Upstream status (checked 2026-08-09)
+
+| Package | Version | Has SAIL_PATCH semantics? |
+|---------|---------|---------------------------|
+| `takumi` | 2.5.11 (workspace pin) | no (via core 0.16.0) |
+| `takumi` | 2.6.0 (crates.io latest) | no (via core 0.17.0) |
+| `takumi-core` | 0.16.0 / 0.17.0 | **no** — both still apply viewport-as-max_height |
+
 ## Remove when
 
 Upstream takumi (or parley) ships an equivalent fix; then drop the
 `[patch.crates-io] takumi-core` entry in the workspace `Cargo.toml` and this
-directory.
+directory. Prefer filing/landing upstream against
+https://github.com/kane50613/takumi rather than growing this tree.
+
+**Expiry intent:** temporary RENDER-0 safety patch only. Re-evaluate on every
+takumi bump; do not re-expand to older 0.6.2 sources.

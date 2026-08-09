@@ -3468,19 +3468,8 @@ version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1562dc717473dbaa4c1f85a36410e03c047b2e7df7f45ee938fbef64ae7fadf"
 dependencies = [
- "phf_macros 0.13.1",
+ "phf_macros",
  "phf_shared 0.13.1",
- "serde",
-]
-
-[[package]]
-name = "phf"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "010378780309880b08997fae13be7834dba947d36393bd372f2b1556deb2a2f6"
-dependencies = [
- "phf_macros 0.14.0",
- "phf_shared 0.14.0",
  "serde",
 ]
 
@@ -3525,16 +3514,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "phf_generator"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aeb62e0959d5a1bebc965f4d15d9e2b7cea002b6b0f5ba8cde6cc26738467100"
-dependencies = [
- "fastrand",
- "phf_shared 0.14.0",
-]
-
-[[package]]
 name = "phf_macros"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3542,19 +3521,6 @@ checksum = "812f032b54b1e759ccd5f8b6677695d5268c588701effba24601f6932f8269ef"
 dependencies = [
  "phf_generator 0.13.1",
  "phf_shared 0.13.1",
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "phf_macros"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fa8d0ca26d424d27630da600c6624696e7dec8bf7b3b492b383c5dc49e5e085"
-dependencies = [
- "phf_generator 0.14.0",
- "phf_shared 0.14.0",
  "proc-macro2",
  "quote",
  "syn 2.0.117",
@@ -3574,15 +3540,6 @@ name = "phf_shared"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e57fef6bc5981e38c2ce2d63bfa546861309f875b8a75f092d1d54ae2d64f266"
-dependencies = [
- "siphasher",
-]
-
-[[package]]
-name = "phf_shared"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6fd9027e2d9319be6349febd1db4e8d02aa544921200c9b777720ac34a3aa89"
 dependencies = [
  "siphasher",
 ]
@@ -4803,9 +4760,9 @@ dependencies = [
 
 [[package]]
 name = "selectors"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bad7c25c97cc59c4858df8724a3789caa6ee509b628dfe6df34e8a8084c8a84e"
+checksum = "eeee001a77567bb05e71652718d3ff76d8697c151ac523e68e9513194eb2b75a"
 dependencies = [
  "bitflags 2.13.1",
  "cssparser",
@@ -5375,9 +5332,9 @@ dependencies = [
 
 [[package]]
 name = "takumi"
-version = "2.3.2"
+version = "2.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0b95ebf82ab39c7c595b7021171edc9e9cde39b3ceb8d4a34b158145d2c0fbd"
+checksum = "d4e4dd4b5f14afae5db550b2e5702d7ec8e29760ef95311f527164289325c0b8"
 dependencies = [
  "takumi-core",
  "takumi-raster",
@@ -5385,22 +5342,19 @@ dependencies = [
 
 [[package]]
 name = "takumi-core"
-version = "0.6.2"
+version = "0.16.0"
 dependencies = [
  "bitflags 2.13.1",
  "bytemuck",
  "color",
  "cssparser",
  "data-url",
- "gif",
  "image",
- "image-webp",
  "kurbo",
- "libwebp-sys",
  "log",
  "parley",
  "paste",
- "phf 0.14.0",
+ "phf 0.13.1",
  "png 0.18.1",
  "precomputed-hash",
  "quick_cache",
@@ -5426,9 +5380,9 @@ dependencies = [
 
 [[package]]
 name = "takumi-raster"
-version = "0.3.4"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "189fb3242aa628fe1cfa6b69c03bcc1e154afdf38c5a5cbed838de6486eef545"
+checksum = "8e47925d63778908a4561c8e357716b5b452e8462f2f4eab6d4cbcd35df9ea91"
 dependencies = [
  "bytemuck",
  "color",
@@ -5445,6 +5399,7 @@ dependencies = [
  "takumi-core",
  "tiny-skia",
  "typed-builder",
+ "xxhash-rust",
 ]
 
 [[package]]

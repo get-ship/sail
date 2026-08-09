@@ -152,6 +152,40 @@ fn font_variant_ligatures_none_disables_defaults() {
 }
 
 #[test]
+fn font_kerning_expands_to_kern_feature() {
+  let auto = inherited_style_from_pairs([("font-kerning", "auto")], &ComputedStyle::default());
+  assert!(auto.resolved_font_features().is_empty());
+
+  let normal = inherited_style_from_pairs([("font-kerning", "normal")], &ComputedStyle::default());
+  assert_eq!(
+    feature_tags(&normal.resolved_font_features()),
+    vec![("kern".into(), 1)],
+  );
+
+  let none = inherited_style_from_pairs([("font-kerning", "none")], &ComputedStyle::default());
+  assert_eq!(
+    feature_tags(&none.resolved_font_features()),
+    vec![("kern".into(), 0)],
+  );
+}
+
+#[test]
+fn font_feature_settings_override_font_kerning() {
+  let style = inherited_style_from_pairs(
+    [
+      ("font-kerning", "none"),
+      ("font-feature-settings", "\"kern\" 1"),
+    ],
+    &ComputedStyle::default(),
+  );
+
+  assert_eq!(
+    feature_tags(&style.resolved_font_features()),
+    vec![("kern".into(), 0), ("kern".into(), 1)],
+  );
+}
+
+#[test]
 fn font_variant_shorthand_distributes_and_settings_win() {
   let style = inherited_style_from_pairs(
     [
@@ -1185,6 +1219,29 @@ fn test_var_resolves_inside_nested_blocks() {
 }
 
 #[test]
+fn test_var_gives_up_on_exponential_fan_out() {
+  let mut custom_properties = HashMap::from([("--l0".to_owned(), "x".to_owned())]);
+  for level in 1..=24 {
+    custom_properties.insert(
+      format!("--l{level}"),
+      format!("var(--l{prev})var(--l{prev})", prev = level - 1),
+    );
+  }
+
+  let resolved = resolve_var_references("var(--l24)", &custom_properties, &mut Vec::new());
+
+  assert_eq!(resolved, None);
+}
+
+#[test]
+fn test_var_gives_up_on_deeply_nested_blocks() {
+  let specified_value = format!("{}1px{}", "(".repeat(200), ")".repeat(200));
+  let resolved = resolve_var_references(&specified_value, &HashMap::new(), &mut Vec::new());
+
+  assert_eq!(resolved, None);
+}
+
+#[test]
 fn test_var_drops_declaration_when_substitution_stays_invalid() {
   let style = inherited_style_from_pairs(
     [("--size", "red"), ("width", "var(--size)")],
@@ -1259,5 +1316,39 @@ fn test_border_radius_calc_infinity_parses_from_stylesheet_declaration() {
     i32::MAX as f32,
     "parsed={:?}",
     style.border_top_left_radius.x
+  );
+}
+
+#[test]
+fn overflow_visible_paired_with_hidden_computes_to_hidden() {
+  let mixed = inherited_style_from_pairs(
+    [("overflow-x", "hidden"), ("overflow-y", "visible")],
+    &ComputedStyle::default(),
+  );
+  assert_eq!(
+    mixed.resolve_overflows(),
+    SpacePair::from_pair(Overflow::Hidden, Overflow::Hidden)
+  );
+
+  let mirrored = inherited_style_from_pairs(
+    [("overflow-x", "visible"), ("overflow-y", "hidden")],
+    &ComputedStyle::default(),
+  );
+  assert_eq!(
+    mirrored.resolve_overflows(),
+    SpacePair::from_pair(Overflow::Hidden, Overflow::Hidden)
+  );
+}
+
+#[test]
+fn overflow_visible_paired_with_clip_stays_mixed() {
+  let style = inherited_style_from_pairs(
+    [("overflow-x", "clip"), ("overflow-y", "visible")],
+    &ComputedStyle::default(),
+  );
+
+  assert_eq!(
+    style.resolve_overflows(),
+    SpacePair::from_pair(Overflow::Clip, Overflow::Visible)
   );
 }

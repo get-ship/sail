@@ -6,7 +6,7 @@ use taffy::{CompactLength, Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style::{
   AspectRatio, CssSyntaxKind, CssToken, FromCss, FromCssStr, MakeComputed, ParseResult,
   SizingContext, ToCss,
-  calc::{CalcFormula, CalcValue, parse_calc_sum},
+  calc::{CalcFormula, CalcLinear, CalcValue, parse_calc_sum},
   tw::{TW_VAR_SPACING, TailwindPropertyParser},
   unexpected_token,
 };
@@ -126,6 +126,39 @@ pub enum Length {
   Px(f32),
   /// calc(...) expression
   Calc(CalcFormula),
+}
+
+impl Length {
+  /// Hashes the unit and value by bit pattern.
+  pub(crate) fn hash_bits(&self, hasher: &mut impl core::hash::Hasher) {
+    use core::hash::Hash;
+
+    core::mem::discriminant(self).hash(hasher);
+    match self {
+      Self::Auto => {}
+      Self::Calc(formula) => formula.hash_bits(hasher),
+      Self::Percentage(value)
+      | Self::Rem(value)
+      | Self::Em(value)
+      | Self::Lh(value)
+      | Self::Rlh(value)
+      | Self::Vh(value)
+      | Self::Vw(value)
+      | Self::CqH(value)
+      | Self::CqW(value)
+      | Self::CqMin(value)
+      | Self::CqMax(value)
+      | Self::VMin(value)
+      | Self::VMax(value)
+      | Self::Cm(value)
+      | Self::Mm(value)
+      | Self::In(value)
+      | Self::Q(value)
+      | Self::Pt(value)
+      | Self::Pc(value)
+      | Self::Px(value) => value.to_bits().hash(hasher),
+    }
+  }
 }
 
 impl Length {
@@ -413,16 +446,22 @@ impl Length {
       | Length::VMax(_) => CompactLength::length(self.to_px_pre_dpr(sizing, 0.0)),
       Length::Calc(formula) => {
         let linear = formula.resolve(sizing);
+        let px = clamp_px_for_integer_cast(linear.px);
+        let percent = clamp_px_for_integer_cast(linear.percent);
 
-        if is_near_zero(linear.percent) {
-          return CompactLength::length(linear.px);
+        if is_near_zero(percent) {
+          return CompactLength::length(px);
         }
 
-        if is_near_zero(linear.px) {
-          return CompactLength::percent(linear.percent);
+        if is_near_zero(px) {
+          return CompactLength::percent(percent);
         }
 
-        CompactLength::calc(sizing.calc_arena.register_linear(linear))
+        CompactLength::calc(
+          sizing
+            .calc_arena
+            .register_linear(CalcLinear { px, percent }),
+        )
       }
       _ => CompactLength::length(self.to_px(
         sizing,
@@ -890,5 +929,56 @@ mod tests {
 
     assert_eq!(resolved, SAFE_INT_MAX_PX);
     assert!(resolved.is_finite());
+  }
+
+  #[test]
+  fn calc_non_finite_never_reaches_compact_length() {
+    let sizing = sizing();
+
+    for css in [
+      "calc(1px * nan)",
+      "calc(1px * infinity)",
+      "calc(1px * -infinity)",
+      "calc(100% * nan)",
+      "calc(100% * nan + 1px)",
+    ] {
+      let parsed = Length::from_css_str(css);
+      assert!(parsed.is_ok(), "expected {css} to parse, got {parsed:?}");
+      let Ok(length) = parsed else {
+        continue;
+      };
+      let compact = length.to_compact_length(&sizing);
+
+      assert!(
+        compact.is_calc() || compact.value().is_finite(),
+        "{css} produced a non-finite CompactLength"
+      );
+    }
+  }
+
+  #[test]
+  fn calc_rejects_deeply_nested_unary_signs() {
+    let css = format!("calc({}1px)", "- ".repeat(200));
+
+    assert!(Length::from_css_str(&css).is_err());
+  }
+
+  #[test]
+  fn calc_rejects_deeply_nested_calc_functions() {
+    let css = format!("{}1px{}", "calc(".repeat(200), ")".repeat(200));
+
+    assert!(Length::from_css_str(&css).is_err());
+  }
+
+  #[test]
+  fn calc_still_accepts_shallow_nesting() {
+    let sizing = sizing();
+    let parsed = Length::from_css_str("calc(calc(calc(1px + 2px)))");
+    assert!(parsed.is_ok(), "expected successful parse, got {parsed:?}");
+    let Ok(length) = parsed else {
+      return;
+    };
+
+    assert_near(length.to_px(&sizing, 200.0), sizing.to_device(3.0));
   }
 }

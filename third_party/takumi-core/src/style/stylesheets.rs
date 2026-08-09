@@ -342,7 +342,6 @@ macro_rules! define_style {
         }
 
         /// Resolves a property from a camelCase name.
-        #[allow(dead_code)]
         pub(crate) fn from_camel_case(name: &str) -> Self {
           PropertyId::from_name(name, normalize_camel_property_name)
         }
@@ -1087,6 +1086,10 @@ define_style! {
     border_top_right_radius: SpacePair<Length> = SpacePair::from_single(Length::zero()),
     border_bottom_right_radius: SpacePair<Length> = SpacePair::from_single(Length::zero()),
     border_bottom_left_radius: SpacePair<Length> = SpacePair::from_single(Length::zero()),
+    corner_top_left_shape: Superellipse,
+    corner_top_right_shape: Superellipse,
+    corner_bottom_right_shape: Superellipse,
+    corner_bottom_left_shape: Superellipse,
     border_top_width: LineWidth,
     border_right_width: LineWidth,
     border_bottom_width: LineWidth,
@@ -1145,6 +1148,7 @@ define_style! {
     font_variant_east_asian: FontVariantEastAsian where inherit = true,
     font_variant_caps: FontVariantCaps where inherit = true,
     font_variant_position: FontVariantPosition where inherit = true,
+    font_kerning: FontKerning where inherit = true,
     font_synthesis_weight: FontSynthesic where inherit = true,
     font_synthesis_style: FontSynthesic where inherit = true,
     max_lines: Option<u32>,
@@ -1158,9 +1162,14 @@ define_style! {
     text_shadow: Option<TextShadows> where inherit = true,
     text_decoration_line: Option<TextDecorationLines>,
     text_decoration_style: TextDecorationStyle,
+    break_before: BreakBetween,
+    break_after: BreakBetween,
+    break_inside: BreakInside,
+    box_decoration_break: BoxDecorationBreak,
     text_decoration_color: ColorInput,
     text_decoration_thickness: TextDecorationThickness,
     text_underline_offset: TextUnderlineOffset where inherit = true,
+    text_underline_position: TextUnderlinePosition where inherit = true,
     text_decoration_skip_ink: TextDecorationSkipInk where inherit = true,
     text_indent: TextIndent where inherit = true,
     letter_spacing: Length where inherit = true,
@@ -1171,6 +1180,7 @@ define_style! {
     clip_path: Option<BasicShape>,
     clip_rule: FillRule where inherit = true,
     white_space_collapse: WhiteSpaceCollapse where inherit = true,
+    tab_size: TabSize where inherit = true,
     text_wrap_mode: TextWrapMode where inherit = true,
     text_wrap_style: TextWrapStyle where inherit = true,
     direction: Direction where inherit = true,
@@ -1330,6 +1340,16 @@ define_style! {
         border_top_right_radius,
         border_bottom_right_radius,
         border_bottom_left_radius
+      );
+    },
+    corner_shape: Sides<Superellipse> => [CornerTopLeftShape, CornerTopRightShape, CornerBottomRightShape, CornerBottomLeftShape] |value, target| {
+      push_four_side_declarations!(
+        target,
+        value.0,
+        corner_top_left_shape,
+        corner_top_right_shape,
+        corner_bottom_right_shape,
+        corner_bottom_left_shape
       );
     },
     border_width: Sides<LineWidth> => [BorderTopWidth, BorderRightWidth, BorderBottomWidth, BorderLeftWidth] |value, target| {

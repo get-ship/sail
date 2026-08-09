@@ -9,8 +9,13 @@ use std::sync::{Arc, OnceLock, Weak};
 
 #[cfg(feature = "svg")]
 use crate::resvg::{
-  apply_filters_to_layer,
+  apply_filters_to_layer, render as render_svg_tree,
   usvg::{Options, Transform, Tree, filters_from_markup},
+};
+#[cfg(feature = "svg")]
+pub use crate::svg_vector::{
+  SvgFill, SvgGradient, SvgGradientStop, SvgLineCap, SvgLineJoin, SvgOp, SvgPaint, SvgSpreadMethod,
+  SvgStrokeStyle,
 };
 use quick_cache::{
   Weighter,
@@ -23,18 +28,24 @@ use serde::Deserialize;
 use thiserror::Error;
 #[cfg(feature = "svg")]
 use tiny_skia::Pixmap;
-use xxhash_rust::xxh3::xxh3_64;
+use xxhash_rust::xxh3::{Xxh3, xxh3_64};
 
 use crate::{
   resources::{
     image_buffer::ImageBuffer,
     image_decoder::{
       DecodedGifFrame, bitmap_dimensions, decode_bitmap_scaled, decode_gif_frames, decode_image,
-      gif_dimensions, is_gif,
+      gif_dimensions, gif_frame_durations, is_gif,
     },
   },
-  style::{ImageScalingAlgorithm, IntrinsicSizing, SizingContext},
+  style::{ImageScalingAlgorithm, IntrinsicSizing, SizingContext, StyleSheet},
 };
+
+const MAX_RASTER_PIXELS: u64 = 16 << 20;
+
+fn within_raster_pixel_budget(width: u32, height: u32) -> bool {
+  u64::from(width) * u64::from(height) <= MAX_RASTER_PIXELS
+}
 
 /// Represents the state of an image resource.
 pub(crate) type ImageResult = Result<ImageSource, ImageError>;
@@ -65,7 +76,8 @@ pub struct SvgSource {
   /// Intrinsic dimensions (non-percentage `width`/`height`) and `viewBox`
   /// aspect ratio, for CSS `background-size`/`mask-size` resolution.
   intrinsic: SvgIntrinsic,
-  raster_cache: SvgRasterCache,
+  hash: u64,
+  cache: Weak<SharedResourceCache>,
 }
 
 #[cfg(feature = "svg")]
@@ -81,6 +93,14 @@ impl SvgSource {
   pub fn source(&self) -> &str {
     &self.source
   }
+
+  /// Flattens the SVG into backend-agnostic vector drawing ops in SVG canvas
+  /// coordinates. `raster_scale` is the device-pixels-per-user-unit factor
+  /// used when a subtree (filters, embedded bitmaps) has to fall back to
+  /// rasterization.
+  pub fn vector_ops(&self, raster_scale: f32) -> Vec<SvgOp> {
+    crate::svg_vector::flatten(&self.tree, raster_scale)
+  }
 }
 
 /// Intrinsic width/height (in SVG user units) and aspect ratio of an SVG root.
@@ -92,8 +112,11 @@ struct SvgIntrinsic {
   ratio: Option<f32>,
 }
 
-/// A lazily decoded animated GIF: only the first frame is decoded up front,
-/// the rest of the stream the first time a render samples past it.
+/// A lazily decoded animated GIF. Only the first frame and the (pixel-free)
+/// per-frame timing are retained; every later frame is decoded on demand at the
+/// size it is drawn and dropped afterwards, so the whole timeline never sits in
+/// memory at once. No cache holds decoded frames — retention stays a single
+/// frame, and the byte budget can account for it exactly.
 #[derive(Debug, Clone)]
 pub struct GifSource {
   inner: Arc<GifInner>,
@@ -105,17 +128,16 @@ struct GifInner {
   width: u32,
   height: u32,
   first: DecodedGifFrame,
-  rest: OnceLock<RestFrames>,
+  timing: OnceLock<GifTiming>,
 }
 
-/// Every frame after the first, decoded in one pass.
+/// Per-frame timing for the whole animation, decoded once without pixels.
 #[derive(Debug)]
-struct RestFrames {
-  frames: Box<[DecodedGifFrame]>,
-  /// Duration of the whole animation, first frame included.
-  total_duration_ms: u64,
-  /// Size the frames were decoded at; `None` means canvas size.
-  target: Option<(u32, u32)>,
+struct GifTiming {
+  /// Millisecond delay of each frame in stream order, first frame included.
+  durations: Box<[u32]>,
+  /// Duration of the whole loop.
+  total_ms: u64,
 }
 
 impl GifSource {
@@ -135,7 +157,7 @@ impl GifSource {
         width,
         height,
         first,
-        rest: OnceLock::new(),
+        timing: OnceLock::new(),
       }),
     })
   }
@@ -145,51 +167,43 @@ impl GifSource {
     (self.inner.width, self.inner.height)
   }
 
-  /// The first caller decides the memoized frame size and filter; renders of
-  /// the same GIF use one draw box in practice, and a single slot is what keeps
-  /// the timeline's memory bounded.
-  fn rest(&self, target: (u32, u32, ImageScalingAlgorithm)) -> &RestFrames {
-    self.inner.rest.get_or_init(|| {
-      let mut frames = Vec::new();
-      let mut total_duration_ms = self.inner.first.duration_ms as u64;
-      let _ = decode_gif_frames(&self.inner.bytes, 1, None, Some(target), |frame| {
-        total_duration_ms += frame.duration_ms as u64;
-        frames.push(frame);
-      });
-      RestFrames {
-        target: frames
-          .first()
-          .map(|frame: &DecodedGifFrame| (frame.buffer.width(), frame.buffer.height())),
-        frames: frames.into(),
-        total_duration_ms,
+  /// Per-frame timing, decoded once (pixel-free) and memoized. Falls back to a
+  /// single-frame loop if the stream can't be re-read.
+  fn timing(&self) -> &GifTiming {
+    self.inner.timing.get_or_init(|| {
+      let durations = gif_frame_durations(&self.inner.bytes)
+        .ok()
+        .filter(|durations| !durations.is_empty())
+        .unwrap_or_else(|| Box::from([self.inner.first.duration_ms]));
+      let total_ms = durations.iter().map(|&duration| duration as u64).sum();
+
+      GifTiming {
+        durations,
+        total_ms,
       }
     })
   }
 
-  /// Index into `rest.frames` for the given playback time, or `None` when the
-  /// time falls on the first frame.
-  fn rest_index_at(&self, rest: &RestFrames, time_ms: u64) -> Option<usize> {
-    if rest.total_duration_ms == 0 {
-      return None;
+  /// Stream index of the frame shown at the given playback time, looping over
+  /// the total duration.
+  fn frame_index_at(&self, timing: &GifTiming, time_ms: u64) -> usize {
+    if timing.total_ms == 0 || timing.durations.len() <= 1 {
+      return 0;
     }
 
-    let mut elapsed_ms = self.inner.first.duration_ms as u64;
-    let target_time = time_ms % rest.total_duration_ms;
-    if target_time < elapsed_ms {
-      return None;
-    }
-
-    for (index, frame) in rest.frames.iter().enumerate() {
-      elapsed_ms += frame.duration_ms as u64;
+    let target_time = time_ms % timing.total_ms;
+    let mut elapsed_ms = 0_u64;
+    for (index, &duration) in timing.durations.iter().enumerate() {
+      elapsed_ms += duration as u64;
       if target_time < elapsed_ms {
-        return Some(index);
+        return index;
       }
     }
 
-    None
+    timing.durations.len() - 1
   }
 
-  /// Shared frame shown at the given playback time, looping over total duration.
+  /// Frame shown at the given playback time, looping over total duration.
   #[cfg(test)]
   fn frame_at_time(&self, time_ms: u64) -> Arc<ImageBuffer> {
     self.frame_at_time_covering(
@@ -200,11 +214,10 @@ impl GifSource {
     )
   }
 
-  /// Shared frame shown at the given playback time, looping over total
-  /// duration. Frames past the first decode scaled to cover a `width` x
-  /// `height` draw box (never upscaled), so the memoized timeline holds
-  /// draw-sized frames; a request larger than the memoized size decodes that
-  /// frame fresh.
+  /// Frame shown at the given playback time, looping over total duration,
+  /// decoded to cover a `width` x `height` draw box (never upscaled). The first
+  /// frame is served from the retained copy; any later frame is decoded fresh
+  /// and not retained.
   pub fn frame_at_time_covering(
     &self,
     time_ms: u64,
@@ -212,50 +225,36 @@ impl GifSource {
     height: u32,
     algorithm: ImageScalingAlgorithm,
   ) -> Arc<ImageBuffer> {
-    let first = &self.inner.first;
-    if time_ms < first.duration_ms as u64 {
-      return first.buffer.clone();
+    let timing = self.timing();
+    let index = self.frame_index_at(timing, time_ms);
+    if index == 0 {
+      return self.inner.first.buffer.clone();
     }
 
-    let requested = cover_target((self.inner.width, self.inner.height), (width, height));
-    let rest = self.rest((requested.0, requested.1, algorithm));
-    let Some(index) = self.rest_index_at(rest, time_ms) else {
-      return first.buffer.clone();
-    };
+    // ponytail: decode-to-index each call — GIF disposal is stateful, so
+    // reaching frame N replays frames 0..N. O(N) per sample, O(1) retained;
+    // fine for a static render (one sample per GIF). A GIF re-encoded to an
+    // animation samples every frame → O(N²); if that path gets hot, cache a
+    // thread-local resumable decode cursor (canvas + position) keyed by GIF id.
+    let (target_width, target_height) =
+      cover_target((self.inner.width, self.inner.height), (width, height));
+    let mut frame = None;
+    let _ = decode_gif_frames(
+      &self.inner.bytes,
+      index,
+      Some(1),
+      Some((target_width, target_height, algorithm)),
+      |decoded| frame = Some(decoded.buffer),
+    );
 
-    let memoized = rest.target.unwrap_or((self.inner.width, self.inner.height));
-    if requested.0 > memoized.0 || requested.1 > memoized.1 {
-      let mut frame = None;
-      let target = (requested.0, requested.1, algorithm);
-      let _ = decode_gif_frames(
-        &self.inner.bytes,
-        index + 1,
-        Some(1),
-        Some(target),
-        |decoded| frame = Some(decoded.buffer),
-      );
-      if let Some(frame) = frame {
-        return frame;
-      }
-    }
-
-    rest.frames[index].buffer.clone()
+    frame.unwrap_or_else(|| self.inner.first.buffer.clone())
   }
 
+  /// Bytes retained for cache budgeting: the encoded stream plus the single
+  /// decoded first frame. Later frames are decoded on demand and dropped, so
+  /// they never count.
   fn decoded_bytes(&self) -> usize {
-    let rest = self.inner.rest.get().map_or(0, |rest| {
-      rest
-        .frames
-        .iter()
-        .map(|frame| frame.buffer.data().len())
-        .sum()
-    });
-    self.inner.first.buffer.data().len() + rest + self.inner.bytes.len()
-  }
-
-  #[cfg(test)]
-  fn decoded_frame_count(&self) -> usize {
-    1 + self.inner.rest.get().map_or(0, |rest| rest.frames.len())
+    self.inner.first.buffer.data().len() + self.inner.bytes.len()
   }
 }
 
@@ -268,7 +267,7 @@ impl From<SvgSource> for ImageSource {
 
 /// An encoded bitmap (PNG/JPEG/WebP) that decodes lazily at draw time, scaled
 /// down to the box it is drawn into. Decoded results are stored in the owning
-/// [`ImageCache`] keyed by content and target size, so a source drawn at a
+/// [`ResourceCache`] keyed by content and target size, so a source drawn at a
 /// stable size decodes once while the retained bytes track the draw size, not
 /// the source size.
 #[derive(Debug)]
@@ -277,7 +276,7 @@ pub struct EncodedBitmap {
   width: u32,
   height: u32,
   hash: u64,
-  cache: Weak<SharedImageCache>,
+  cache: Weak<SharedResourceCache>,
 }
 
 impl EncodedBitmap {
@@ -321,11 +320,11 @@ impl EncodedBitmap {
       return self.decode_uncached(width, height, algorithm);
     };
 
-    let key = ImageCacheKey::sized(self.hash, width, height, algorithm);
+    let key = ResourceCacheKey::sized(self.hash, width, height, algorithm);
 
     match cache.get_value_or_guard(&key, None) {
       GuardResult::Value(CacheEntry::Sized(buffer)) => Ok(buffer),
-      GuardResult::Value(CacheEntry::Source(_)) => self.decode_uncached(width, height, algorithm),
+      GuardResult::Value(_) => self.decode_uncached(width, height, algorithm),
       GuardResult::Guard(guard) => {
         let buffer = self.decode_uncached(width, height, algorithm)?;
         let _ = guard.insert(CacheEntry::Sized(buffer.clone()));
@@ -375,44 +374,21 @@ impl From<ImageBuffer> for ImageSource {
   }
 }
 
+/// Parse options for untrusted SVG markup: the string href resolver is
+/// disabled so `<image>`/`<feImage href>` cannot read local files. `data:`
+/// URIs still resolve through the default data resolver.
 #[cfg(feature = "svg")]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct SvgRasterCacheKey {
-  width: u32,
-  height: u32,
-  image_rendering: u8,
+fn svg_parse_options() -> Options<'static> {
+  let mut options = Options::default();
+  options.image_href_resolver.resolve_string = Box::new(|_, _| None);
+  options
 }
 
 #[cfg(feature = "svg")]
-impl SvgRasterCacheKey {
-  fn new(width: u32, height: u32, image_rendering: ImageScalingAlgorithm) -> Self {
-    Self {
-      width,
-      height,
-      image_rendering: match image_rendering {
-        ImageScalingAlgorithm::Smooth => 1,
-        ImageScalingAlgorithm::Pixelated => 2,
-        _ => 0,
-      },
-    }
-  }
-}
-
-/// An SVG is rasterized at only a handful of distinct sizes; this caps that.
-#[cfg(feature = "svg")]
-const SVG_RASTER_CACHE_CAPACITY: usize = 32;
-
-/// Per-`SvgSource` cache of rasterized bitmaps keyed by target size. Count-bounded and lock-free
-/// (the same `quick_cache` as `ImageCache`); byte-budget it if a huge SVG cached at many sizes ever
-/// bloats memory.
-#[cfg(feature = "svg")]
-type SvgRasterCache = Cache<SvgRasterCacheKey, Arc<ImageBuffer>>;
-
-#[cfg(feature = "svg")]
-impl FromStr for SvgSource {
-  type Err = ImageError;
-
-  fn from_str(src: &str) -> Result<Self, Self::Err> {
+impl SvgSource {
+  /// Parses SVG markup; rasterized pixmaps go into `cache` while it is alive,
+  /// keyed by content hash and target size. A dead handle rasterizes per call.
+  fn parse(src: &str, hash: u64, cache: Weak<SharedResourceCache>) -> Result<Self, ImageError> {
     // One parse, shared with usvg via `from_xmltree` (what `from_str` does
     // internally). No text stripping: usvg drops `<text>`/`<tspan>` with its
     // `text` feature off.
@@ -422,44 +398,87 @@ impl FromStr for SvgSource {
     };
     let document = Document::parse_with_options(src, options).map_err(ImageError::svg_parse)?;
 
-    let tree = Tree::from_xmltree(&document, &Options::default()).map_err(ImageError::svg_parse)?;
+    let tree =
+      Tree::from_xmltree(&document, &svg_parse_options()).map_err(ImageError::svg_parse)?;
     let intrinsic = svg_intrinsic_sizing(document.root_element(), tree.size());
 
     Ok(SvgSource {
       source: Box::from(src),
       tree,
       intrinsic,
-      raster_cache: SvgRasterCache::new(SVG_RASTER_CACHE_CAPACITY),
+      hash,
+      cache,
     })
+  }
+
+  fn rasterize(&self, width: u32, height: u32) -> Result<Arc<ImageBuffer>, ImageError> {
+    if !within_raster_pixel_budget(width, height) {
+      return Err(ImageError::InvalidPixmapSize);
+    }
+
+    let mut pixmap = Pixmap::new(width, height).ok_or(ImageError::InvalidPixmapSize)?;
+
+    let original_size = self.tree.size();
+    let sx = width as f32 / original_size.width();
+    let sy = height as f32 / original_size.height();
+
+    render_svg_tree(
+      &self.tree,
+      Transform::from_scale(sx, sy),
+      &mut pixmap.as_mut(),
+    );
+
+    ImageBuffer::from_premultiplied_rgba(pixmap.data().to_vec(), width, height)
+      .map(Arc::new)
+      .ok_or(ImageError::InvalidPixmapSize)
+  }
+
+  fn rasterize_cached(
+    &self,
+    width: u32,
+    height: u32,
+    image_rendering: ImageScalingAlgorithm,
+  ) -> Result<Arc<ImageBuffer>, ImageError> {
+    let Some(cache) = self.cache.upgrade() else {
+      return self.rasterize(width, height);
+    };
+
+    let key = ResourceCacheKey::sized(self.hash, width, height, image_rendering);
+
+    match cache.get_value_or_guard(&key, None) {
+      GuardResult::Value(CacheEntry::Sized(buffer)) => Ok(buffer),
+      GuardResult::Value(_) => self.rasterize(width, height),
+      GuardResult::Guard(guard) => {
+        let buffer = self.rasterize(width, height)?;
+        let _ = guard.insert(CacheEntry::Sized(buffer.clone()));
+        Ok(buffer)
+      }
+      // `None` timeout never times out.
+      GuardResult::Timeout => self.rasterize(width, height),
+    }
+  }
+}
+
+#[cfg(feature = "svg")]
+impl FromStr for SvgSource {
+  type Err = ImageError;
+
+  fn from_str(src: &str) -> Result<Self, Self::Err> {
+    Self::parse(src, xxh3_64(src.as_bytes()), Weak::new())
   }
 }
 
 impl ImageSource {
-  /// Approximate decoded size in bytes, used for cache budgeting.
+  /// Approximate retained size in bytes, used for cache budgeting.
   pub(crate) fn estimated_bytes(&self) -> usize {
     match self {
       Self::Bitmap(buffer) => buffer.data().len(),
       Self::Gif(gif) => gif.decoded_bytes(),
       Self::Encoded(encoded) => encoded.bytes.len(),
+      // Markup plus a parsed-tree estimate; rasterized pixmaps are weighted
+      // separately as their own sized entries.
       #[cfg(feature = "svg")]
-      Self::Svg(svg) => svg.source.len(),
-    }
-  }
-
-  /// Whether this decoded source is safe to retain in the byte-budgeted cache.
-  ///
-  /// SVGs and GIFs are excluded: their lazily-populated state (rasterized
-  /// pixmaps, memoized frames) grows after insertion and isn't counted by
-  /// [`estimated_bytes`](Self::estimated_bytes), so caching them across renders
-  /// would let memory exceed the configured budget. Encoded bitmaps stay
-  /// cacheable: their decoded-at-size buffers live in the same budgeted cache
-  /// as their own weighted entries.
-  pub(crate) fn is_cacheable(&self) -> bool {
-    match self {
-      Self::Bitmap(_) | Self::Encoded(_) => true,
-      Self::Gif(_) => false,
-      #[cfg(feature = "svg")]
-      Self::Svg(_) => false,
+      Self::Svg(svg) => svg.source.len() * 3,
     }
   }
 
@@ -487,19 +506,22 @@ impl ImageSource {
   }
 
   /// [`from_bytes`](Self::from_bytes), but bitmaps stay encoded and decode at
-  /// draw size. Sized decodes go into `cache` while it is alive; a dead handle
-  /// (inline node bytes, data URIs) decodes per render.
+  /// draw size, and SVG rasters go into `cache`. Sized entries go into `cache`
+  /// while it is alive; a dead handle (inline node bytes, data URIs) decodes
+  /// per render.
   pub(crate) fn from_bytes_lazy(
     bytes: &[u8],
     hash: u64,
-    cache: Weak<SharedImageCache>,
+    cache: Weak<SharedResourceCache>,
   ) -> ImageResult {
     #[cfg(feature = "svg")]
     {
       if let Ok(text) = from_utf8(bytes)
         && is_svg_like(text)
       {
-        return Ok(ImageSource::Svg(Arc::new(text.parse()?)));
+        return Ok(ImageSource::Svg(Arc::new(SvgSource::parse(
+          text, hash, cache,
+        )?)));
       }
     }
 
@@ -564,28 +586,11 @@ impl ImageSource {
         })
       }
       #[cfg(feature = "svg")]
-      ImageSource::Svg(svg) => {
-        let cache_key = SvgRasterCacheKey::new(width, height, image_rendering);
-        if let Some(pixmap) = svg.raster_cache.get(&cache_key) {
-          return Ok(RenderedImage::Rasterized(pixmap));
-        }
-
-        let tree = &svg.tree;
-        let mut pixmap = Pixmap::new(width, height).ok_or(ImageError::InvalidPixmapSize)?;
-
-        let original_size = tree.size();
-        let sx = width as f32 / original_size.width();
-        let sy = height as f32 / original_size.height();
-
-        crate::resvg::render(tree, Transform::from_scale(sx, sy), &mut pixmap.as_mut());
-
-        let buffer = ImageBuffer::from_premultiplied_rgba(pixmap.data().to_vec(), width, height)
-          .ok_or(ImageError::InvalidPixmapSize)?;
-        let buffer = Arc::new(buffer);
-        svg.raster_cache.insert(cache_key, buffer.clone());
-
-        Ok(RenderedImage::Rasterized(buffer))
-      }
+      ImageSource::Svg(svg) => Ok(RenderedImage::Rasterized(svg.rasterize_cached(
+        width,
+        height,
+        image_rendering,
+      )?)),
     }
   }
 
@@ -651,6 +656,7 @@ pub(crate) fn is_svg_like(src: &str) -> bool {
 
 /// A decoded `data:` URI body with its `type/subtype` MIME string.
 pub(crate) struct DecodedDataUri {
+  #[cfg_attr(not(feature = "svg"), allow(dead_code))]
   pub mime: String,
   pub bytes: Vec<u8>,
 }
@@ -699,7 +705,7 @@ pub fn apply_svg_filter(
     filter_id,
     width as f32,
     height as f32,
-    &Options::default(),
+    &svg_parse_options(),
   )
   .map_err(ImageError::svg_parse)?;
 
@@ -841,10 +847,12 @@ impl ImageError {
   }
 }
 
-/// Decoded-image budget before entries start getting evicted.
-const DEFAULT_MAX_BYTES: u64 = 64 << 20; // 64 MiB
+/// Resource budget before entries start getting evicted. Deliberately
+/// conservative: a single-template server's working set fits comfortably, and
+/// heavier workloads raise it through [`ResourceCache::new`].
+const DEFAULT_MAX_BYTES: u64 = 16 << 20; // 16 MiB
 
-/// Cache policy for a decoded image, applied per [`ImageCache::get_or_decode`] call.
+/// Cache policy for a decoded image, applied per [`ResourceCache::get_or_decode`] call.
 #[derive(Clone, Copy, Default, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
@@ -857,22 +865,29 @@ pub enum ImageCacheMode {
 }
 
 /// Cache key: the content hash alone addresses a source entry; a target size
-/// and filter address a decoded-at-size entry.
+/// and filter address a decoded-at-size entry; a stylesheet hash addresses a
+/// parsed sheet. `kind` keeps the hash domains apart.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct ImageCacheKey {
+pub(crate) struct ResourceCacheKey {
   hash: u64,
   width: u32,
   height: u32,
   algorithm: u8,
+  kind: u8,
 }
 
-impl ImageCacheKey {
+const KIND_SOURCE: u8 = 0;
+const KIND_SIZED: u8 = 1;
+const KIND_STYLESHEET: u8 = 2;
+
+impl ResourceCacheKey {
   fn source(hash: u64) -> Self {
     Self {
       hash,
       width: 0,
       height: 0,
       algorithm: 0,
+      kind: KIND_SOURCE,
     }
   }
 
@@ -886,6 +901,17 @@ impl ImageCacheKey {
         ImageScalingAlgorithm::Pixelated => 2,
         _ => 0,
       },
+      kind: KIND_SIZED,
+    }
+  }
+
+  fn stylesheet(hash: u64) -> Self {
+    Self {
+      hash,
+      width: 0,
+      height: 0,
+      algorithm: 0,
+      kind: KIND_STYLESHEET,
     }
   }
 }
@@ -894,36 +920,42 @@ impl ImageCacheKey {
 pub(crate) enum CacheEntry {
   Source(ImageSource),
   Sized(Arc<ImageBuffer>),
+  Stylesheet { sheet: Arc<StyleSheet>, weight: u32 },
 }
 
 #[derive(Clone)]
-pub(crate) struct ImageWeighter;
+pub(crate) struct ResourceWeighter;
 
-impl Weighter<ImageCacheKey, CacheEntry> for ImageWeighter {
-  fn weight(&self, _key: &ImageCacheKey, entry: &CacheEntry) -> u64 {
+impl Weighter<ResourceCacheKey, CacheEntry> for ResourceWeighter {
+  fn weight(&self, _key: &ResourceCacheKey, entry: &CacheEntry) -> u64 {
     let bytes = match entry {
       CacheEntry::Source(source) => source.estimated_bytes(),
       CacheEntry::Sized(buffer) => buffer.data().len(),
+      CacheEntry::Stylesheet { weight, .. } => *weight as usize,
     };
     (bytes as u64).max(1)
   }
 }
 
-pub(crate) type SharedImageCache = Cache<ImageCacheKey, CacheEntry, ImageWeighter>;
+pub(crate) type SharedResourceCache = Cache<ResourceCacheKey, CacheEntry, ResourceWeighter>;
 
-/// Content-addressed store of decoded images with a byte budget, used by the renderer to avoid re-decoding.
-pub struct ImageCache {
-  cache: Arc<SharedImageCache>,
+/// Content-addressed store of decoded render resources — images, SVG rasters,
+/// parsed stylesheets — sharing one byte budget, used by the renderer to avoid
+/// re-decoding and re-parsing.
+pub struct ResourceCache {
+  cache: Arc<SharedResourceCache>,
 }
 
-impl Default for ImageCache {
+impl Default for ResourceCache {
   fn default() -> Self {
-    Self::with_capacity(DEFAULT_MAX_BYTES)
+    Self::new(DEFAULT_MAX_BYTES)
   }
 }
 
-impl ImageCache {
-  fn with_capacity(max_bytes: u64) -> Self {
+impl ResourceCache {
+  /// Creates a cache holding at most `max_bytes` across every entry kind.
+  /// `0` disables retention: lookups miss and nothing is kept.
+  pub fn new(max_bytes: u64) -> Self {
     // ~64 KiB average decoded image ⇒ a reasonable item-count hint for the budget.
     let estimated_items = (max_bytes / (64 << 10)).max(1) as usize;
 
@@ -931,7 +963,7 @@ impl ImageCache {
       cache: Arc::new(Cache::with_weighter(
         estimated_items,
         max_bytes,
-        ImageWeighter,
+        ResourceWeighter,
       )),
     }
   }
@@ -943,7 +975,7 @@ impl ImageCache {
   /// decodes while the others wait, so each unique image is decoded once.
   pub fn get_or_decode(&self, bytes: &[u8], mode: ImageCacheMode) -> ImageResult {
     let hash = xxh3_64(bytes);
-    let key = ImageCacheKey::source(hash);
+    let key = ResourceCacheKey::source(hash);
 
     if matches!(mode, ImageCacheMode::None) {
       return match self.cache.get(&key) {
@@ -954,26 +986,58 @@ impl ImageCache {
 
     match self.cache.get_value_or_guard(&key, None) {
       GuardResult::Value(CacheEntry::Source(source)) => Ok(source),
-      GuardResult::Value(CacheEntry::Sized(_)) => ImageSource::from_bytes(bytes),
+      GuardResult::Value(_) => ImageSource::from_bytes(bytes),
       GuardResult::Guard(guard) => {
         let source = ImageSource::from_bytes_lazy(bytes, hash, Arc::downgrade(&self.cache))?;
-        if source.is_cacheable() {
-          let _ = guard.insert(CacheEntry::Source(source.clone()));
-        }
+        let _ = guard.insert(CacheEntry::Source(source.clone()));
         Ok(source)
       }
       // `None` timeout never times out.
       GuardResult::Timeout => ImageSource::from_bytes(bytes),
     }
   }
+
+  /// Returns the parsed sheet for `sources`, parsing on a miss. Keyed by the
+  /// source text, so a server re-sending the same CSS parses it once.
+  pub fn get_or_parse_stylesheet(&self, sources: Vec<String>) -> Arc<StyleSheet> {
+    let mut hasher = Xxh3::new();
+    for source in &sources {
+      hasher.update(source.as_bytes());
+      hasher.update(&(source.len() as u64).to_le_bytes());
+    }
+    let key = ResourceCacheKey::stylesheet(hasher.digest());
+
+    // Parsed rules retain roughly this much beyond the source text.
+    let weight = sources
+      .iter()
+      .map(String::len)
+      .sum::<usize>()
+      .saturating_mul(3)
+      .min(u32::MAX as usize) as u32;
+
+    match self.cache.get_value_or_guard(&key, None) {
+      GuardResult::Value(CacheEntry::Stylesheet { sheet, .. }) => sheet,
+      GuardResult::Value(_) => Arc::new(StyleSheet::parse_owned_list_loosy(sources)),
+      GuardResult::Guard(guard) => {
+        let sheet = Arc::new(StyleSheet::parse_owned_list_loosy(sources));
+        let _ = guard.insert(CacheEntry::Stylesheet {
+          sheet: sheet.clone(),
+          weight,
+        });
+        sheet
+      }
+      // `None` timeout never times out.
+      GuardResult::Timeout => Arc::new(StyleSheet::parse_owned_list_loosy(sources)),
+    }
+  }
 }
 
 #[cfg(test)]
-mod image_cache_tests {
+mod resource_cache_tests {
   use quick_cache::sync::Cache;
 
   use super::{
-    CacheEntry, ImageCache, ImageCacheKey, ImageCacheMode, ImageWeighter, RenderedImage,
+    CacheEntry, ImageCacheMode, RenderedImage, ResourceCache, ResourceCacheKey, ResourceWeighter,
   };
   use crate::{
     resources::{image::ImageSource, image_buffer::ImageBuffer},
@@ -987,7 +1051,7 @@ mod image_cache_tests {
 
   #[test]
   fn decodes_and_reuses_on_hit() {
-    let cache = ImageCache::default();
+    let cache = ResourceCache::default();
     let bytes = png_bytes();
 
     let first = cache.get_or_decode(&bytes, ImageCacheMode::Auto).unwrap();
@@ -1028,7 +1092,7 @@ mod image_cache_tests {
 
   #[test]
   fn encoded_decodes_at_draw_size_and_reuses() {
-    let cache = ImageCache::default();
+    let cache = ResourceCache::default();
     let bytes = sized_png_bytes(64, 64);
     let source = cache.get_or_decode(&bytes, ImageCacheMode::Auto).unwrap();
 
@@ -1042,7 +1106,7 @@ mod image_cache_tests {
 
   #[test]
   fn encoded_covers_the_larger_axis() {
-    let cache = ImageCache::default();
+    let cache = ResourceCache::default();
     let bytes = sized_png_bytes(64, 64);
     let source = cache.get_or_decode(&bytes, ImageCacheMode::Auto).unwrap();
 
@@ -1054,7 +1118,7 @@ mod image_cache_tests {
 
   #[test]
   fn encoded_never_upscales() {
-    let cache = ImageCache::default();
+    let cache = ResourceCache::default();
     let bytes = sized_png_bytes(8, 8);
     let source = cache.get_or_decode(&bytes, ImageCacheMode::Auto).unwrap();
 
@@ -1066,7 +1130,7 @@ mod image_cache_tests {
 
   #[test]
   fn store_false_does_not_populate_cache() {
-    let cache = ImageCache::default();
+    let cache = ResourceCache::default();
     let bytes = png_bytes();
 
     let a = cache.get_or_decode(&bytes, ImageCacheMode::None).unwrap();
@@ -1080,19 +1144,59 @@ mod image_cache_tests {
 
   #[cfg(feature = "svg")]
   #[test]
-  fn svg_is_not_cached() {
-    let cache = ImageCache::default();
+  fn svg_source_and_raster_are_cached() {
+    let cache = ResourceCache::default();
     let svg = br#"<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>"#;
 
     let a = cache.get_or_decode(svg, ImageCacheMode::Auto).unwrap();
     let b = cache.get_or_decode(svg, ImageCacheMode::Auto).unwrap();
 
-    assert!(matches!(a, ImageSource::Svg(_)));
     match (&a, &b) {
       (ImageSource::Svg(x), ImageSource::Svg(y)) => {
-        assert!(!std::sync::Arc::ptr_eq(x, y))
+        assert!(std::sync::Arc::ptr_eq(x, y))
       }
       _ => panic!("expected svgs"),
+    }
+
+    let (first, second) = (rendered_raster(&a, 4, 4), rendered_raster(&b, 4, 4));
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+  }
+
+  #[cfg(feature = "svg")]
+  fn rendered_raster(source: &ImageSource, width: u32, height: u32) -> std::sync::Arc<ImageBuffer> {
+    match source
+      .render_for_layout(width, height, ImageScalingAlgorithm::Auto, 0)
+      .unwrap()
+    {
+      RenderedImage::Rasterized(buffer) => buffer,
+      _ => panic!("expected rasterized"),
+    }
+  }
+
+  #[test]
+  fn stylesheet_is_parsed_once() {
+    let cache = ResourceCache::default();
+    let sources = vec![".a { color: red; }".to_string()];
+
+    let first = cache.get_or_parse_stylesheet(sources.clone());
+    let second = cache.get_or_parse_stylesheet(sources);
+
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+  }
+
+  #[test]
+  fn zero_budget_disables_retention() {
+    let cache = ResourceCache::new(0);
+    let bytes = png_bytes();
+
+    let a = cache.get_or_decode(&bytes, ImageCacheMode::Auto).unwrap();
+    let b = cache.get_or_decode(&bytes, ImageCacheMode::Auto).unwrap();
+
+    match (&a, &b) {
+      (ImageSource::Encoded(x), ImageSource::Encoded(y)) => {
+        assert!(!std::sync::Arc::ptr_eq(x, y))
+      }
+      _ => panic!("expected encoded bitmaps"),
     }
   }
 
@@ -1105,10 +1209,13 @@ mod image_cache_tests {
   #[test]
   fn eviction_stays_within_byte_budget() {
     let max_bytes = 4096u64;
-    let cache = Cache::with_weighter(8, max_bytes, ImageWeighter);
+    let cache = Cache::with_weighter(8, max_bytes, ResourceWeighter);
 
     for key in 0..64u64 {
-      cache.insert(ImageCacheKey::source(key), CacheEntry::Source(image(1024)));
+      cache.insert(
+        ResourceCacheKey::source(key),
+        CacheEntry::Source(image(1024)),
+      );
     }
 
     assert!(cache.weight() <= max_bytes);
@@ -1257,26 +1364,6 @@ mod tests {
     Ok(())
   }
 
-  #[cfg(feature = "svg")]
-  #[test]
-  fn svg_reuses_rasterized_pixmap() -> Result<(), ImageError> {
-    let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect x="0" y="0" width="4" height="4" fill="#ff0000"/></svg>"##;
-    let image: ImageSource = SvgSource::from_str(svg)?.into();
-
-    let first = image.render_for_layout(4, 4, ImageScalingAlgorithm::Auto, 0)?;
-    let second = image.render_for_layout(4, 4, ImageScalingAlgorithm::Auto, 0)?;
-
-    let RenderedImage::Rasterized(first) = first else {
-      return Ok(());
-    };
-    let RenderedImage::Rasterized(second) = second else {
-      return Ok(());
-    };
-
-    assert!(Arc::ptr_eq(&first, &second));
-    Ok(())
-  }
-
   /// usvg drops `<text>`/`<tspan>` (text feature off), so we no longer strip
   /// them: the SVG renders identically with and without the text nodes.
   #[cfg(feature = "svg")]
@@ -1351,20 +1438,23 @@ mod tests {
     Ok(())
   }
 
+  #[cfg(feature = "svg")]
+  #[test]
+  fn svg_rasterization_rejects_oversized_target() {
+    let source: ImageSource = "<svg width=\"1\" height=\"1\"/>"
+      .parse::<SvgSource>()
+      .unwrap()
+      .into();
+
+    let result = source.render_for_layout(4097, 4096, ImageScalingAlgorithm::Auto, 0);
+
+    assert_matches!(result, Err(ImageError::InvalidPixmapSize));
+  }
+
   #[test]
   fn gif_source_rejects_undecodable_stream() {
     let result = ImageSource::from_bytes(b"GIF89a\x01\x02\x03");
     assert_matches!(result, Err(_));
-  }
-
-  #[test]
-  fn gif_static_render_decodes_only_first_frame() {
-    let gif = gif_source(&[(0, 10), (1, 10), (2, 10)]);
-    assert_eq!(gif.decoded_frame_count(), 1);
-
-    let frame = gif.frame_at_time(0);
-    assert_eq!(gif.decoded_frame_count(), 1);
-    assert_eq!(frame.pixel(2, 2), GIF_COLORS[0]);
   }
 
   #[test]
@@ -1377,7 +1467,6 @@ mod tests {
       let expected_color = GIF_COLORS[expected_frame_index(&durations, time_ms)];
       assert_eq!(gif.frame_at_time(time_ms).pixel(2, 2), expected_color);
     }
-    assert_eq!(gif.decoded_frame_count(), 3);
   }
 
   #[test]
@@ -1390,30 +1479,17 @@ mod tests {
   }
 
   #[test]
-  fn gif_source_clone_shares_decoded_state() {
-    let gif = gif_source(&[(0, 10), (1, 10), (2, 10)]);
-    let cloned = gif.clone();
-
-    drop(cloned.frame_at_time(25));
-    assert_eq!(gif.decoded_frame_count(), 3);
-  }
-
-  #[test]
-  fn gif_frames_memoize_at_draw_size() {
+  fn gif_later_frame_decodes_at_draw_size() {
     let gif = gif_source(&[(0, 10), (1, 10), (2, 10)]);
 
     let scaled = gif.frame_at_time_covering(15, 2, 2, ImageScalingAlgorithm::Auto);
     assert_eq!((scaled.width(), scaled.height()), (2, 2));
 
-    let again = gif.frame_at_time_covering(15, 2, 2, ImageScalingAlgorithm::Auto);
-    assert!(Arc::ptr_eq(&scaled, &again));
-
     let smaller = gif.frame_at_time_covering(15, 1, 1, ImageScalingAlgorithm::Auto);
-    assert!(Arc::ptr_eq(&scaled, &smaller));
+    assert_eq!((smaller.width(), smaller.height()), (1, 1));
 
     let larger = gif.frame_at_time_covering(15, 4, 4, ImageScalingAlgorithm::Auto);
     assert_eq!((larger.width(), larger.height()), (4, 4));
-    assert!(!Arc::ptr_eq(&scaled, &larger));
   }
 
   #[test]
@@ -1422,7 +1498,6 @@ mod tests {
 
     let first = gif.frame_at_time_covering(0, 2, 2, ImageScalingAlgorithm::Auto);
     assert_eq!((first.width(), first.height()), (4, 4));
-    assert_eq!(gif.decoded_frame_count(), 1);
   }
 
   #[test]
@@ -1446,9 +1521,36 @@ mod tests {
   }
 
   #[test]
-  fn gif_dimensions_come_from_header_without_full_decode() {
+  fn gif_dimensions_come_from_header() {
     let gif = gif_source(&[(0, 10), (1, 10)]);
     assert_eq!(gif.dimensions(), (4, 4));
-    assert_eq!(gif.decoded_frame_count(), 1);
+  }
+
+  /// An `<image>` whose href is a local file path must not be read from disk;
+  /// the referenced file's pixels must never appear in the rasterized output.
+  #[cfg(feature = "svg")]
+  #[test]
+  fn svg_image_href_local_path_is_not_read() {
+    let opaque_red = ImageBuffer::from_rgba_bytes([255, 0, 0, 255].repeat(4 * 4), 4, 4)
+      .unwrap()
+      .encode_png()
+      .unwrap();
+    let path = std::env::temp_dir().join(format!("takumi_lfi_{}.png", std::process::id()));
+    std::fs::write(&path, &opaque_red).unwrap();
+
+    let ns = r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
+    let svg = format!(
+      r#"<svg {ns} width="8" height="8"><image xlink:href="{}" x="0" y="0" width="8" height="8"/></svg>"#,
+      path.display()
+    );
+    let source = svg.parse::<SvgSource>().unwrap();
+    let rasterized = source.rasterize(8, 8).unwrap();
+
+    std::fs::remove_file(&path).ok();
+
+    assert!(
+      rasterized.data().iter().all(|&byte| byte == 0),
+      "local file was read and composited into the SVG output"
+    );
   }
 }

@@ -22,7 +22,6 @@ use crate::{
   context::RenderContext,
   geometry::{AvailableSpace, Size},
   layout::{inline::InlineContentKind, node::image::image_url},
-  matching::MatchableNode,
   resources::{
     image::{ImageError, ImageResult, ImageSource},
     image_buffer::ImageBuffer,
@@ -671,6 +670,17 @@ impl Node {
     matches!(self.kind, NodeKind::Image(_))
   }
 
+  /// The element's `href` attribute, when present and non-empty.
+  pub fn href(&self) -> Option<&str> {
+    self.attribute("href").filter(|href| !href.is_empty())
+  }
+
+  /// The element's `alt` attribute, when present. An explicitly empty value
+  /// marks a decorative image, distinct from a missing attribute.
+  pub fn alt(&self) -> Option<&str> {
+    self.attribute("alt")
+  }
+
   /// `id` and `class` resolve to the structured metadata fields rather than
   /// the `attributes` map.
   pub(crate) fn attribute(&self, name: &str) -> Option<&str> {
@@ -706,28 +716,32 @@ pub(crate) struct NodeStyleLayers {
   pub(crate) lang: Option<Lang>,
 }
 
-impl MatchableNode for Node {
-  fn tag_name(&self) -> Option<&str> {
+/// Selector-matching queries read by [`crate::matching`].
+impl Node {
+  /// The element's tag name.
+  pub fn tag_name(&self) -> Option<&str> {
     self.metadata.tag_name.as_deref()
   }
 
-  fn id(&self) -> Option<&str> {
+  /// The element's `id` attribute, when present.
+  pub fn id(&self) -> Option<&str> {
     self.metadata.id.as_deref()
   }
 
-  fn class_name(&self) -> Option<&str> {
+  /// The element's `class` attribute, space-separated.
+  pub fn class_name(&self) -> Option<&str> {
     self.metadata.class_name.as_deref()
   }
 
-  fn attr(&self, name: &str) -> Option<&str> {
+  pub(crate) fn attr(&self, name: &str) -> Option<&str> {
     self.attribute(name)
   }
 
-  fn is_replaced(&self) -> bool {
+  pub(crate) fn is_replaced(&self) -> bool {
     self.is_replaced_element()
   }
 
-  fn children(&self) -> Option<&[Self]> {
+  pub(crate) fn children(&self) -> Option<&[Self]> {
     self.children_ref()
   }
 }
@@ -738,6 +752,17 @@ mod tests {
 
   use super::*;
   use crate::style::{BackgroundImage, Style, StyleDeclaration, TailwindValues};
+
+  #[test]
+  fn alt_distinguishes_missing_from_empty() {
+    let node = Node::container(Vec::new());
+
+    assert_eq!(node.alt(), None);
+
+    let node = node.with_attributes(BTreeMap::from([("alt".into(), "".into())]));
+
+    assert_eq!(node.alt(), Some(""));
+  }
 
   #[test]
   fn image_source_input_deserializes_raw_rgba() {

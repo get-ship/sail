@@ -20,14 +20,20 @@ pub fn collect_repeat_tile_positions(
     return SmallVec::default();
   }
 
-  let mut start = origin;
-  if start > 0 {
-    let n = ((start as f32) / tile_size as f32).ceil() as i32;
-    start -= n * tile_size as i32;
-  }
+  // The arithmetic runs in i64 so a dimension near the u32 range neither
+  // wraps nor drops tiles; every emitted position also fits the area, which
+  // callers keep within the canvas pixel budget.
+  let area_end = i64::from(area_size);
+  let tile_size = i64::from(tile_size);
+  // Any origin normalizes to the phase-equivalent first tile at or just
+  // before the area start, so a far-negative origin cannot make the walk
+  // begin billions of tiles away.
+  let rem = i64::from(origin).rem_euclid(tile_size);
+  let start = if rem == 0 { 0 } else { rem - tile_size };
 
-  successors(Some(start), |&x| Some(x + tile_size as i32))
-    .take_while(|&x| x < area_size as i32)
+  successors(Some(start), |&x| Some(x + tile_size))
+    .take_while(|&x| x < area_end)
+    .filter_map(|x| i32::try_from(x).ok())
     .collect()
 }
 
@@ -242,6 +248,30 @@ mod tests {
       let reparsed = BackgroundRepeat::from_css_str(&parsed.to_css_string()).unwrap();
       assert_eq!(parsed, reparsed, "failed for {css}");
     }
+  }
+
+  #[test]
+  fn oversized_repeat_tile_does_not_wrap_into_an_infinite_iterator() {
+    assert_eq!(
+      collect_repeat_tile_positions(100, u32::MAX, 0).as_slice(),
+      &[0]
+    );
+  }
+
+  #[test]
+  fn far_negative_origin_normalizes_to_the_area_edge() {
+    // i32::MIN is a multiple of 1: the walk starts at 0, not two billion
+    // tiles below the area.
+    let positions = collect_repeat_tile_positions(100, 1, i32::MIN);
+
+    assert_eq!(positions.len(), 100);
+    assert_eq!(positions.first(), Some(&0));
+    assert_eq!(positions.last(), Some(&99));
+    // The phase survives normalization: -25 and -5 are the same tile grid.
+    assert_eq!(
+      collect_repeat_tile_positions(30, 10, -25).as_slice(),
+      &[-5, 5, 15, 25]
+    );
   }
 
   #[test]

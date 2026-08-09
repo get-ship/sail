@@ -1,21 +1,26 @@
-use std::{borrow::Cow, collections::HashMap, ops::Range};
+use std::{borrow::Cow, cell::RefCell, collections::HashMap, ops::Range, rc::Rc, sync::Arc};
 
 use parley::{
   BreakReason, GlyphRun, IndentOptions, InlineBox, InlineBoxKind, Line, LineMetrics,
   PositionedInlineBox, PositionedLayoutItem, TextStyle, TreeBuilder, YieldData,
 };
-use skrifa::{FontRef, MetadataProvider};
+use skrifa::{FontRef, MetadataProvider, raw::TableProvider};
+use xxhash_rust::xxh3::Xxh3;
 
 use crate::{
   context::RenderContext,
   font_style::SizedFontStyle,
-  geometry::{AvailableSpace, ComputedLayout, PathCommand, Point, Rect, Size},
-  layout::{border::BorderPath, node::Node, tree::RenderNode},
-  resources::font::{FontError, ResolvedColorLayer, ResolvedGlyph, ResolvedOutlineGlyph},
+  geometry::{AvailableSpace, ComputedLayout, PathBuilder, PathCommand, Point, Rect, Size},
+  layout::{node::Node, tree::RenderNode},
+  resources::{
+    font::FontError,
+    glyph::{ResolvedColorLayer, ResolvedGlyph, ResolvedOutlineGlyph},
+  },
   style::{
-    Affine, BoxSizing, Color, Float, FontSynthesis, Length, ResolvedVerticalAlign,
+    Affine, BoxSizing, Color, Float, FontSynthesis, Lang, Length, ResolvedVerticalAlign,
     SizedTextDecorationThickness, TextDecorationLines, TextDecorationSkipInk, TextFitMode,
-    TextFitTarget, TextOverflow, TextWrapMode, TextWrapStyle, VerticalAlign, VerticalAlignKeyword,
+    TextFitTarget, TextOverflow, TextUnderlinePosition, TextWrapMode, TextWrapStyle, VerticalAlign,
+    VerticalAlignKeyword,
   },
   text_processing::{
     MaxHeight, RebreakOptions, apply_text_transform, apply_white_space_collapse,
@@ -39,6 +44,51 @@ pub struct InlineLayoutRequest<'c> {
   pub context: &'c RenderContext,
   /// Measure or draw.
   pub mode: InlineLayoutMode,
+  /// Whether text-only shaping may be served from the per-render shape
+  /// cache, deduplicating repeated measure calls, scene building, and
+  /// drawing of the same content.
+  pub shape_cacheable: bool,
+}
+
+/// A per-render cache of shaped text-only parley layouts, keyed by a hash of
+/// the span texts and styles. Shaping is width-independent for pure text
+/// (inline boxes bake in measured sizes, so they bypass the cache); line
+/// breaking and alignment run on a clone per call. A layout is stored only
+/// once its fingerprint repeats (`None` marks first sight), so single-use
+/// text costs one map entry, not a retained layout clone.
+pub(crate) type ShapeCache = Rc<RefCell<HashMap<u64, Option<(InlineLayout, String)>>>>;
+
+/// Per-render map from a text node's measure inputs to its measured size.
+/// Keyed by content hash plus text length as a cheap collision guard.
+pub(crate) type MeasureCache = Rc<RefCell<HashMap<(u64, u32), Size<f32>>>>;
+
+/// Hashes everything shaping depends on: each span's processed text and
+/// style, plus the root style and language.
+fn shape_fingerprint(
+  spans: &[ProcessedInlineSpan<'_>],
+  style: &SizedFontStyle<'_>,
+  lang: Option<&str>,
+) -> u64 {
+  use std::hash::{Hash, Hasher};
+
+  let mut hasher = Xxh3::new();
+
+  style.hash_shaping_inputs(&mut hasher);
+  lang.hash(&mut hasher);
+  for span in spans {
+    if let ProcessedInlineSpan::Text {
+      span_id,
+      text,
+      style,
+      ..
+    } = span
+    {
+      span_id.hash(&mut hasher);
+      text.hash(&mut hasher);
+      style.hash_shaping_inputs(&mut hasher);
+    }
+  }
+  hasher.finish()
 }
 
 /// A completed inline layout with its source text, spans, and per-line scales.
@@ -134,12 +184,20 @@ impl BuiltInlineLayout<'_> {
               height *= setup.state.scale;
             }
 
+            let link = glyph_run.style().brush.source_span_id.and_then(|span_id| {
+              match self.spans.get(span_id as usize) {
+                Some(ProcessedInlineSpan::Text { link, .. }) => link.as_deref(),
+                _ => None,
+              }
+            });
+
             runs.push(MeasuredInlineRun {
               text,
               x,
               y,
               width,
               height,
+              link,
             });
           }
           PositionedLayoutItem::InlineBox(positioned_box) => {
@@ -241,7 +299,9 @@ pub enum ProcessedInlineSpan<'c> {
     /// Processed text content.
     text: String,
     /// Resolved font style.
-    style: SizedFontStyle<'c>,
+    style: Box<SizedFontStyle<'c>>,
+    /// URI of the nearest enclosing anchor's `href`, if any.
+    link: Option<Arc<str>>,
   },
   /// An inline box.
   Box(InlineBoxItem<'c>),
@@ -260,30 +320,40 @@ pub enum InlineItem<'c> {
     text: Cow<'c, str>,
     /// Render context for the text.
     context: &'c RenderContext,
+    /// URI of the nearest enclosing anchor's `href`, if any.
+    link: Option<Arc<str>>,
   },
 }
 
 /// Flatten a render node subtree into its inline items.
 pub fn collect_inline_items<'n>(root: &'n RenderNode) -> Vec<InlineItem<'n>> {
   let mut items = Vec::new();
-  collect_inline_items_impl(root, 0, &mut items);
+  collect_inline_items_impl(root, 0, None, &mut items);
   items
 }
 
 fn collect_inline_items_impl<'n>(
   node: &'n RenderNode,
   depth: usize,
+  link: Option<&Arc<str>>,
   items: &mut Vec<InlineItem<'n>>,
 ) {
   if depth > 0 && node.participates_as_inline_box() {
     items.push(InlineItem::RenderNode { render_node: node });
     return;
   }
+  let anchor = node
+    .node
+    .as_ref()
+    .and_then(Node::href)
+    .map(Arc::<str>::from);
+  let link = anchor.as_ref().or(link);
 
   if let Some(text) = node.anonymous_text_content.as_deref() {
     items.push(InlineItem::Text {
       text: Cow::Borrowed(text),
       context: &node.context,
+      link: link.cloned(),
     });
   }
 
@@ -293,13 +363,14 @@ fn collect_inline_items_impl<'n>(
       InlineContentKind::Text(text) => items.push(InlineItem::Text {
         text,
         context: &node.context,
+        link: link.cloned(),
       }),
     }
   }
 
   if let Some(children) = &node.children {
     for child in children {
-      collect_inline_items_impl(child, depth + 1, items);
+      collect_inline_items_impl(child, depth + 1, link, items);
     }
   }
 }
@@ -341,6 +412,8 @@ pub struct InlineBrush {
   pub decoration_thickness: SizedTextDecorationThickness,
   /// Extra offset of the underline away from the text, in pixels.
   pub underline_offset: f32,
+  /// Which baseline the underline is measured from.
+  pub underline_position: TextUnderlinePosition,
   /// Which decoration lines to draw.
   pub decoration_line: TextDecorationLines,
   /// Whether decorations skip over glyph ink.
@@ -360,6 +433,7 @@ impl Default for InlineBrush {
       decoration_color: Color::black(),
       decoration_thickness: SizedTextDecorationThickness::Value(0.0),
       underline_offset: 0.0,
+      underline_position: TextUnderlinePosition::default(),
       decoration_line: TextDecorationLines::empty(),
       decoration_skip_ink: TextDecorationSkipInk::default(),
       stroke_color: Color::black(),
@@ -427,7 +501,7 @@ fn tail_text_span<'a, 'c>(
   spans: &'a [ProcessedInlineSpan<'c>],
 ) -> Option<(&'a SizedFontStyle<'c>, u64)> {
   spans.iter().rev().find_map(|span| match span {
-    ProcessedInlineSpan::Text { span_id, style, .. } => Some((style, *span_id)),
+    ProcessedInlineSpan::Text { span_id, style, .. } => Some((style.as_ref(), *span_id)),
     ProcessedInlineSpan::Box(_) => None,
   })
 }
@@ -1133,7 +1207,7 @@ fn text_span_style_by_id<'a, 'c>(
       span_id: current_span_id,
       style,
       ..
-    } if *current_span_id == span_id => Some(style),
+    } if *current_span_id == span_id => Some(style.as_ref()),
     ProcessedInlineSpan::Text { .. } | ProcessedInlineSpan::Box(_) => None,
   })
 }
@@ -1237,6 +1311,7 @@ fn build_inline_layout_tree<'c>(
   available_space: Size<AvailableSpace>,
   style: &'c SizedFontStyle,
   context: &'c RenderContext,
+  shape_cacheable: bool,
 ) -> BuiltInlineLayout<'c> {
   // Build spans first: measuring an inline box re-enters layout, so it must run
   // before `tree_builder` holds the shared font borrow.
@@ -1247,12 +1322,17 @@ fn build_inline_layout_tree<'c>(
 
   for item in items {
     match item {
-      InlineItem::Text { text, context } => {
+      InlineItem::Text {
+        text,
+        context,
+        link,
+      } => {
         let span_style = SizedFontStyle::from_style(&context.style, context);
         let transformed = apply_text_transform(text, context.style.text_transform);
         let collapsed = apply_white_space_collapse(
           &transformed,
-          style.parent.white_space_collapse,
+          context.style.white_space_collapse,
+          context.style.tab_size.spaces(),
           &mut previous_collapsible_space,
           &mut previous_was_line_break,
         );
@@ -1265,7 +1345,8 @@ fn build_inline_layout_tree<'c>(
           span_id,
           byte_range: start..end,
           text: collapsed.into_owned(),
-          style: span_style,
+          style: Box::new(span_style),
+          link: link.clone(),
         });
       }
       InlineItem::RenderNode { render_node } => {
@@ -1359,9 +1440,48 @@ fn build_inline_layout_tree<'c>(
     }
   }
 
-  let (layout, text) = context.tree_builder(style.into(), |builder| {
-    push_spans_into_builder(builder, &spans)
+  // Inline boxes bake constraint-dependent measured sizes into the layout, so
+  // only pure-text content is safe to cache across calls.
+  let cacheable = shape_cacheable
+    && spans
+      .iter()
+      .all(|span| matches!(span, ProcessedInlineSpan::Text { .. }));
+  let cache_key = cacheable
+    .then(|| shape_fingerprint(&spans, style, context.style.lang.as_ref().map(Lang::as_str)));
+  // The stored text double-checks the fingerprint against hash collisions.
+  let expected_text = cacheable.then(|| {
+    spans.iter().fold(String::new(), |mut joined, span| {
+      if let ProcessedInlineSpan::Text { text, .. } = span {
+        joined.push_str(text);
+      }
+      joined
+    })
   });
+  let (cached, seen) = match (cache_key, &expected_text) {
+    (Some(key), Some(expected)) => match context.shape_cache.borrow().get(&key) {
+      Some(Some((layout, text))) if text == expected => {
+        ((Some((layout.clone(), text.clone()))), true)
+      }
+      Some(_) => (None, true),
+      None => (None, false),
+    },
+    _ => (None, false),
+  };
+  let (layout, text) = match cached {
+    Some(cached) => cached,
+    None => {
+      let (layout, text) = context.tree_builder(style.into(), |builder| {
+        push_spans_into_builder(builder, &spans)
+      });
+
+      if let Some(key) = cache_key {
+        let stored = seen.then(|| (layout.clone(), text.clone()));
+
+        context.shape_cache.borrow_mut().insert(key, stored);
+      }
+      (layout, text)
+    }
+  };
 
   BuiltInlineLayout {
     layout,
@@ -1548,8 +1668,10 @@ pub fn create_inline_layout<'c>(request: InlineLayoutRequest<'c>) -> BuiltInline
     style,
     context,
     mode,
+    shape_cacheable,
   } = request;
-  let mut built = build_inline_layout_tree(&items, available_space, style, context);
+  let mut built =
+    build_inline_layout_tree(&items, available_space, style, context, shape_cacheable);
   let (text_wrap_mode, line_height_hint) =
     prepare_inline_layout(&mut built, max_width, max_height, style);
 
@@ -1999,6 +2121,51 @@ pub struct RunMetrics {
   pub strikethrough_size: f32,
 }
 
+/// Per-glyph cluster text ranges for a [`GlyphRun`], aligned to its positioned
+/// glyphs. A `GlyphRun` is a style-split window into its underlying run, so the
+/// full visual-order cluster expansion is matched against the positioned glyph
+/// ids to find the window offset; the common single-style case starts at zero.
+/// Returns an empty vec when no window matches (alignment unknown).
+fn glyph_cluster_ranges(
+  glyph_run: &GlyphRun<'_, InlineBrush>,
+  positioned: &[PositionedGlyph],
+) -> Vec<Range<usize>> {
+  let mut full: Vec<(u32, Range<usize>)> = Vec::new();
+
+  for cluster in glyph_run.run().visual_clusters() {
+    let range = cluster.text_range();
+    let before = full.len();
+
+    for glyph in cluster.glyphs() {
+      full.push((glyph.id, range.clone()));
+    }
+    // A glyph-less cluster is a ligature continuation: fold its text into the
+    // carrying glyph so the ligature maps to its full source text.
+    if full.len() == before
+      && let Some((_, last)) = full.last_mut()
+    {
+      last.start = last.start.min(range.start);
+      last.end = last.end.max(range.end);
+    }
+  }
+  let count = positioned.len();
+
+  let matches_at = |start: usize| {
+    full[start..start + count]
+      .iter()
+      .zip(positioned)
+      .all(|((id, _), glyph)| *id == glyph.id)
+  };
+  let Some(start) = (0..=full.len().saturating_sub(count)).find(|&s| matches_at(s)) else {
+    return Vec::new();
+  };
+
+  full[start..start + count]
+    .iter()
+    .map(|(_, range)| range.clone())
+    .collect()
+}
+
 /// A shaped, positioned glyph run — the core-owned replacement for
 /// `parley::GlyphRun`. Owns everything both backends need to paint a run; carries
 /// no borrow into the parley layout.
@@ -2015,8 +2182,17 @@ pub struct ShapedRun {
   pub brush: InlineBrush,
   /// Vertical font metrics for the run.
   pub metrics: RunMetrics,
+  /// Font size the run was shaped at, in pixels.
+  pub font_size: f32,
   /// Collection index for `skrifa::FontRef::from_index`, paired with [`Self::font_data`].
   pub font_index: u32,
+  /// Byte range of the run's source text within its inline layout's
+  /// [`BuiltInlineLayout::text`].
+  pub text_range: Range<usize>,
+  /// Per-glyph cluster byte ranges into [`BuiltInlineLayout::text`], parallel
+  /// to [`Self::glyphs`] (visual order). Empty when alignment failed; treat as
+  /// unknown.
+  pub cluster_ranges: Vec<Range<usize>>,
   // Accessor, not a `pub` field: the backing `parley` blob must not leak into the public API.
   font_data: parley::fontique::Blob<u8>,
 }
@@ -2025,6 +2201,51 @@ impl ShapedRun {
   /// Font bytes for `skrifa::FontRef::from_index`, paired with [`Self::font_index`].
   pub fn font_data(&self) -> &[u8] {
     self.font_data.as_ref()
+  }
+
+  /// Stable identifier of the backing font blob, usable as a cache key.
+  pub fn font_id(&self) -> u64 {
+    self.font_data.id()
+  }
+
+  /// Underline top edge relative to the run's baseline, positive downwards.
+  pub fn underline_offset_from_baseline(&self) -> f32 {
+    let from_metrics = match self.brush.underline_position {
+      TextUnderlinePosition::Auto | TextUnderlinePosition::FromFont => {
+        -self.metrics.underline_offset
+      }
+      TextUnderlinePosition::Under => self.em_box_descent(),
+    };
+
+    from_metrics + self.brush.underline_offset
+  }
+
+  /// Bottom edge of the em box below the baseline. The typographic ascender and
+  /// descender are normalized to sum to the font size, keeping their ratio, which is
+  /// how browsers derive the em box: https://drafts.csswg.org/css-inline-3/#ascent-descent
+  fn em_box_descent(&self) -> f32 {
+    let (ascent, descent) = self.typographic_ascent_descent();
+    let height = ascent + descent;
+
+    if height <= 0.0 || ascent < 0.0 {
+      return self.metrics.descent;
+    }
+
+    self.font_size * descent / height
+  }
+
+  fn typographic_ascent_descent(&self) -> (f32, f32) {
+    FontRef::from_index(self.font_data(), self.font_index)
+      .ok()
+      .and_then(|font| font.os2().ok())
+      .map(|os2| {
+        (
+          f32::from(os2.s_typo_ascender()),
+          -f32::from(os2.s_typo_descender()),
+        )
+      })
+      .filter(|(ascent, descent)| ascent + descent > 0.0)
+      .unwrap_or((self.metrics.ascent, self.metrics.descent))
   }
 }
 
@@ -2035,7 +2256,7 @@ pub struct PositionedInlineRun {
   /// The shaped glyph run (metrics, brush, positioned glyphs, font).
   pub glyph_run: ShapedRun,
   /// Glyphs resolved to outlines/bitmaps, keyed by glyph id.
-  pub resolved_glyphs: HashMap<u32, ResolvedGlyph>,
+  pub resolved_glyphs: HashMap<u32, Arc<ResolvedGlyph>>,
   /// Text-fit scale state for the line.
   pub(crate) line_scale: LineScaleState,
   /// Cumulative in-flow inline-box width before this run on the line.
@@ -2182,15 +2403,17 @@ pub fn resolve_inline_runs(
           }
 
           let metrics = run.metrics();
+          let glyphs: Vec<PositionedGlyph> = glyph_run
+            .positioned_glyphs()
+            .map(|g| PositionedGlyph {
+              id: g.id,
+              x: g.x,
+              y: g.y,
+            })
+            .collect();
+          let cluster_ranges = glyph_cluster_ranges(&glyph_run, &glyphs);
           let shaped = ShapedRun {
-            glyphs: glyph_run
-              .positioned_glyphs()
-              .map(|g| PositionedGlyph {
-                id: g.id,
-                x: g.x,
-                y: g.y,
-              })
-              .collect(),
+            glyphs,
             offset: glyph_run.offset(),
             baseline: glyph_run.baseline(),
             advance: glyph_run.advance(),
@@ -2203,8 +2426,11 @@ pub fn resolve_inline_runs(
               strikethrough_offset: metrics.strikethrough_offset,
               strikethrough_size: metrics.strikethrough_size,
             },
-            font_data: run.font().data.clone(),
+            font_size: run.font_size(),
             font_index: run.font().index,
+            text_range: run.text_range(),
+            cluster_ranges,
+            font_data: run.font().data.clone(),
           };
 
           runs.push(PositionedInlineRun {
@@ -2273,6 +2499,8 @@ pub struct MeasuredInlineRun<'a> {
   pub width: f32,
   /// Run height.
   pub height: f32,
+  /// URI of the nearest enclosing anchor's `href`, if any.
+  pub link: Option<&'a str>,
 }
 
 /// A measured inline box's local bounding box, with text-fit line scaling
@@ -2384,7 +2612,7 @@ pub fn run_decorations(
   };
   if lines.contains(TextDecorationLines::UNDERLINE) {
     emit(
-      baseline - metrics.underline_offset + brush.underline_offset,
+      baseline + glyph_run.underline_offset_from_baseline(),
       thickness(metrics.underline_size),
       false,
     );
@@ -2651,6 +2879,64 @@ mod tests {
     context
   }
 
+  fn shaped_run(position: TextUnderlinePosition, underline_offset: f32) -> ShapedRun {
+    ShapedRun {
+      glyphs: Vec::new(),
+      offset: 0.0,
+      baseline: 0.0,
+      advance: 0.0,
+      brush: InlineBrush {
+        underline_offset,
+        underline_position: position,
+        ..Default::default()
+      },
+      metrics: RunMetrics {
+        ascent: 40.0,
+        descent: 10.0,
+        underline_offset: -5.0,
+        underline_size: 2.0,
+        strikethrough_offset: 20.0,
+        strikethrough_size: 2.0,
+      },
+      font_size: 100.0,
+      font_index: 0,
+      text_range: 0..0,
+      cluster_ranges: Vec::new(),
+      // Not a font: `em_box_descent` falls back to the run metrics instead of OS/2.
+      font_data: parley::fontique::Blob::new(Arc::new(Vec::new())),
+    }
+  }
+
+  #[test]
+  fn underline_offset_from_baseline_follows_the_underline_position() {
+    // The font's underline offset is negative above the baseline, so `auto` flips it.
+    assert_eq!(
+      shaped_run(TextUnderlinePosition::Auto, 0.0).underline_offset_from_baseline(),
+      5.0
+    );
+    assert_eq!(
+      shaped_run(TextUnderlinePosition::FromFont, 0.0).underline_offset_from_baseline(),
+      5.0
+    );
+    // 100px em split in the metrics' 40:10 ratio puts the em box bottom 20px down.
+    assert_eq!(
+      shaped_run(TextUnderlinePosition::Under, 0.0).underline_offset_from_baseline(),
+      20.0
+    );
+  }
+
+  #[test]
+  fn underline_offset_from_baseline_adds_the_style_offset() {
+    assert_eq!(
+      shaped_run(TextUnderlinePosition::Auto, 3.0).underline_offset_from_baseline(),
+      8.0
+    );
+    assert_eq!(
+      shaped_run(TextUnderlinePosition::Under, -4.0).underline_offset_from_baseline(),
+      16.0
+    );
+  }
+
   #[test]
   fn slice_text_at_char_boundaries_trims_invalid_utf8_edges() {
     let text = "a🦀b";
@@ -2692,6 +2978,7 @@ mod tests {
       style: &font_style,
       context: &render_node.context,
       mode: InlineLayoutMode::Measure,
+      shape_cacheable: false,
     });
 
     built
