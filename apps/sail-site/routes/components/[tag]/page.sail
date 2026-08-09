@@ -120,8 +120,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
   style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
   style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(full).maxW(panel-max-w-sm) }
-  style stageColMd = { box: w(full).maxW(panel-max-w-md) }
+  // Explicit width (not minW) — `.sail-col > * { min-width: 0 }` zeros any
+  // min-width on children, so minW(panel-*) never lands. width: token wins.
+  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
+  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
   style meterCol = { box: w(panel-max-w-sm) }
   style grow1 = { box: grow(1) }
   style cardPad = { box: pad(4) }
@@ -157,7 +159,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       rows={knownPack() ? packProps() : props()}
       on-variant-change={onVariantChange}
     >
-      <column slot="stage" gap="4" align="center">
+      <column slot="stage" gap="4" align="center" style({ box: w(full).minW(0) })>
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
               <column gap="3" align="center">
@@ -675,13 +677,16 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.sailComposer()}>
-              <column gap="3" align="center" tile-stage="sail-pack-composer">
-                <sail-composer placeholder="Message the agent…"></sail-composer>
+              <column gap="3" tile-stage="sail-pack-composer" style(stageColMd)>
+                <sail-composer placeholder="Message the agent…" style({ box: w(full).minW(0) })></sail-composer>
               </column>
             </if>
             <if {stage.sailThinkingDots()}>
-              <column gap="3" align="center" tile-stage="sail-pack-thinking-dots">
-                <sail-thinking-dots></sail-thinking-dots>
+              <column gap="3" align="center" tile-stage="sail-pack-thinking-dots" style(stageCol)>
+                <row gap="2" align="center">
+                  <sail-thinking-dots></sail-thinking-dots>
+                  <span style({ paint: fg(muted-foreground), text: fontSize(sm) })>Agent is thinking…</span>
+                </row>
               </column>
             </if>
             <if {stage.sailToolCall()}>

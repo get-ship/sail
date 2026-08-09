@@ -1,8 +1,10 @@
 <!--
-  <sail-composer> — chat message input + send. Multiline grow is the product
-  default (textarea + use:autosize); set multiline={false} for a single-line
-  field. Enter submits, Shift+Enter newline (multiline only). Attachments are
-  consumer-owned (slot + host JS property); echoed on submit, never fabricated.
+  <sail-composer> — chat message input + send.
+
+  Product default is a multi-line growing field (not a one-line form input).
+  Empty state still shows ~3 lines of room so the control reads as a composer.
+  multiline={false} opts into a single-line field.
+  Enter submits; Shift+Enter newline (multiline only).
   Callback: onSubmit({ text, attachments }) / on-submit= in templates.
 -->
 
@@ -14,25 +16,27 @@
   }
 
   style frame = {
-    box: pad(2),
+    box: w(full).minW(0).pad(3),
     paint: fg(foreground).bg(background).borderWidth(1).border(border).radius(lg),
     when: {
       focusWithin: { paint: borderWidth(1).border(primary).outline(ring) },
       stateDisabled: { paint: bg(muted).opacity(75) },
     },
   }
-  style body = { box: display(contents), text: fontFamily(body) }
-  style field = {
-    box: grow(1).minW(0).minH(0).padY(1_5).padX(2),
-    paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
-    text: fontFamily(body).fontSize(base).leading(normal),
-  }
+  // Chat field: full width. rows="3" + fixed autosize (never height:0) is the
+  // empty-state floor — L1 size=md minH(control-h-md) only floors, it does not
+  // cap. maxH caps the open box once content grows.
   style fieldMulti = {
-    box: grow(1).minW(0).minH(0).padY(1_5).padX(2).overflowY(auto),
+    box: w(full).minW(0).minH(20).maxH(48).padY(2).padX(2).overflowY(auto),
+    paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
+    text: fontFamily(body).fontSize(base).leading(relaxed),
+  }
+  style field = {
+    box: w(full).minW(0).minH(control-h-md).padY(1_5).padX(2),
     paint: fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none),
     text: fontFamily(body).fontSize(base).leading(normal),
   }
-  style actions = { box: shrink(0) }
+  style actions = { box: w(full) }
   style send = { box: shrink(0) }
 </scope>
 
@@ -43,7 +47,6 @@ import type { Scope } from './sail-composer.sail'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const text = signal('')
-    // Consumer-owned payloads; composer only echoes them on submit.
     const attachments = signal<unknown[]>([])
     let hostEl: Element | null = null
 
@@ -73,7 +76,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       submit()
     }
 
-    // multiline swaps textarea/input; action rebinds on whichever mounts.
     const fieldKeys: Action<void> = (node) => {
       node.addEventListener('keydown', onKeydown as EventListener)
       return { destroy: () => node.removeEventListener('keydown', onKeydown as EventListener) }
@@ -93,34 +95,44 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   data-state={disabled() ? 'disabled' : ''}
   style(frame)
 >
-  <span style(body)>
-    <div style({ box: display(contents) })>
-      <slot name="attachments"></slot>
-    </div>
-    <!-- nowrap keeps Send beside the field in tight tiles. -->
-    <row nowrap gap="2" align="center">
-      <if {multiline()}>
-        <textarea
-          rows="1"
-          placeholder={placeholder()}
-          disabled={disabled()}
-          bind:value={text}
-          use:fieldKeys
-          use:autosize
-          style(fieldMulti)
-        ></textarea>
-      </if>
-      <if {!multiline()}>
-        <input
-          type="text"
-          placeholder={placeholder()}
-          disabled={disabled()}
-          bind:value={text}
-          use:fieldKeys
-          style(field)
-        >
-      </if>
-      <row nowrap gap="1" align="center" style(actions)>
+  <div style({ box: display(contents) })>
+    <slot name="attachments"></slot>
+  </div>
+  <if {multiline()}>
+    <textarea
+      rows="3"
+      placeholder={placeholder()}
+      disabled={disabled()}
+      bind:value={text}
+      use:fieldKeys
+      use:autosize
+      style(fieldMulti)
+    ></textarea>
+    <row nowrap gap="1" align="center" justify="end" style(actions)>
+      <slot name="trailing"></slot>
+      <button
+        use:sendClick
+        type="button"
+        variant="solid"
+        tone="primary"
+        size="sm"
+        aria-label="Send"
+        disabled={disabled() || text().trim().length === 0}
+        style(send)
+      >Send</button>
+    </row>
+  </if>
+  <if {!multiline()}>
+    <row nowrap gap="2" align="center" style({ box: w(full) })>
+      <input
+        type="text"
+        placeholder={placeholder()}
+        disabled={disabled()}
+        bind:value={text}
+        use:fieldKeys
+        style(field)
+      >
+      <row nowrap gap="1" align="center" style({ box: shrink(0) })>
         <slot name="trailing"></slot>
         <button
           use:sendClick
@@ -134,5 +146,5 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         >Send</button>
       </row>
     </row>
-  </span>
+  </if>
 </column>

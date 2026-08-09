@@ -1,7 +1,11 @@
 <!--
-  <sail-thinking-dots> — three pulsing dots (assistant composing). Presentational.
+  <sail-thinking-dots> — three bouncing dots (assistant composing). Presentational.
   Polite live region; dots decorative. size/tone via data-state group paint;
   pulse is .loop with 150ms stagger phase per sibling.
+
+  Use explicit px travel on translate-y only — not opacity bounce (0→1 pins
+  rest at 0 and reads as "not animating"). -10px on an 8px dot is an obvious
+  hop; loop+alternate is the bounce rhythm.
 -->
 
 <scope>
@@ -15,7 +19,10 @@
   style dot = {
     box: w(2).h(2),
     paint: radius(full).bg(muted-foreground),
-    animate: loop({ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }),
+    animate: loop({
+      translate-y: { from: 0, to: '-10px', duration: 480, easing: 'ease-in-out' },
+      stagger: '150ms',
+    }),
     when: {
       groupStateSm: { paint: scale(75) },
       groupStateLg: { paint: scale(125) },

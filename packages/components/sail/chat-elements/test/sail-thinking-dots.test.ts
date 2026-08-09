@@ -1,13 +1,12 @@
 // Behavioral suite for <sail-thinking-dots>. AOT registration: importing the
 // compiled output calls customElements.define() at module load.
 //
-// Animation gate: the dots are wired through `fx:loop` with the
-// `bounce` preset (translateY 0→-100% + opacity 0.4→1, infinite, alternate,
-// 150ms stagger step). The `pulse` preset that the migration originally
-// picked was a 1.04× scale, sub-pixel on a 7-12px dot — invisible. The
-// runtime-dispatched test below stubs `__sail_motion_attach` and asserts
-// the bounce preset reaches the runtime, so a regression that swaps back
-// to `pulse` (or to a fixed scale) fails the suite.
+// Animation gate: the dots use `style.loop` with explicit translate-y px
+// travel (not the opacity-bearing `bounce` preset — opacity 0→1 pins rest
+// at 0 and reads as "not animating"). The runtime-dispatched test below
+// stubs `__sail_motion_attach` and asserts a translate-y loop with a real
+// negative `to` reaches the runtime, so a regression that swaps back to
+// `pulse`/scale-only (invisible on an 8px dot) fails the suite.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 interface MotionCall {
@@ -15,6 +14,8 @@ interface MotionCall {
   trigger: string
   preset: string
   property: string
+  from?: number | string
+  to?: number | string
   stagger?: number
 }
 
@@ -32,7 +33,12 @@ let motionAttachImpl: ((el: Element, config: MotionAttachStubConfig) => () => vo
 
 interface MotionAttachStubConfig {
   trigger: string
-  motions: Array<{ preset: string; property: string }>
+  motions: Array<{
+    preset: string
+    property: string
+    from?: number | string
+    to?: number | string
+  }>
   stagger?: number
 }
 
@@ -55,6 +61,8 @@ function installMotionStub(): void {
         trigger: config.trigger,
         preset: m.preset,
         property: m.property,
+        from: m.from,
+        to: m.to,
         stagger: config.stagger,
       })
     }
@@ -119,20 +127,19 @@ describe('<sail-thinking-dots>', () => {
     expect(el.getAttribute('size')).toBe('lg')
   })
 
-  it('attaches the runtime bounce to every dot — translateY 0→-100% on a 7-12px dot is visible motion', () => {
+  it('attaches a visible translate-y loop to every dot (explicit px travel, not opacity)', () => {
     const el = mount('<sail-thinking-dots></sail-thinking-dots>')
     const d = dots(el)
     expect(d.length).toBe(3)
-    // Every dot must reach the runtime with a `bounce` preset, on the
-    // `translate-y` axis (the migration lost the original translateY-25%
-    // axis when it baked `pulse` as scale). The `bounce` preset's
-    // `from: 0, to: 1` is the runtime's contract for the per-axis
-    // property; the actual -100% translation is computed from the
-    // element's own height in the runtime.
+    // Explicit px `to` (e.g. -10px) — not scale pulse, not opacity-only.
     for (const dot of d) {
       const dotCalls = motionCalls.filter((c) => c.target === dot)
-      const bounce = dotCalls.find((c) => c.preset === 'bounce' && c.property === 'translate-y')
-      expect(bounce, `dot missing translate-y:bounce`).toBeDefined()
+      const hop = dotCalls.find((c) => c.property === 'translate-y' && c.trigger === 'loop')
+      expect(hop, `dot missing translate-y loop`).toBeDefined()
+      const to = String(hop!.to ?? '')
+      expect(to.includes('-'), `dot translate-y to must be negative px travel, got ${to}`).toBe(true)
+      const opacity = dotCalls.find((c) => c.property === 'opacity')
+      expect(opacity, 'opacity channel must not ride the dots (pins rest at 0)').toBeUndefined()
     }
   })
 
