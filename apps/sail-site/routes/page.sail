@@ -74,10 +74,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style barFull = { box: w(1_5).h(14), paint: radius(sm).bg(primary) }
   style bar60b = { box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) }
   style bar40b = { box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) }
+  // Empty prop bags for in-file partials (no params; expand at preprocess).
   type MotionBarsProps = {}
+  type BentoCardProps = {}
+  // Reactivity card needs the live signal — partials cannot read controller bindings.
+  type BentoReactivityProps = {
+    ticks: number
+  }
 </scope>
 
-<!-- Motion foot reused in tablet + mobile bento grids. -->
+<!-- Motion foot reused by the animation bento card. -->
 <partial motion-bars props: MotionBarsProps>
   <row gap="1" align="end" id="landing-motion-bars" style(cardFoot)>
     <div testid="landing-motion-bar" style(bar40)></div>
@@ -89,10 +95,108 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
 </partial>
 
-<!--
-  Six cards are listed twice only to swap grid track count — <grid cols> is not
-  breakpoint-aware (language gap). Structural <when {tablet}> owns the breakpoint.
--->
+<!-- Bento cards declared once; structural <when {tablet}> only swaps grid cols. -->
+<partial bento-animation props: BentoCardProps>
+  <a href="/sail/language/animation" style(cardLink)>
+    <card interactive style(cardFill)>
+      <column gap="0" style(cardCol)>
+        <p style(cardEyebrow)>Animation</p>
+        <strong style(cardTitle)>Motion as a language surface</strong>
+        <p style(cardBody)>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
+        <motion-bars></motion-bars>
+      </column>
+    </card>
+  </a>
+</partial>
+
+<partial bento-theming props: BentoCardProps>
+  <a href="/sail/language/theming" style(cardLink)>
+    <card interactive style(cardFill)>
+      <column gap="0" style(cardCol)>
+        <p style(cardEyebrow)>Theming</p>
+        <strong style(cardTitle)>Nine themes. One token graph.</strong>
+        <p style(cardBody)>Swap theme and every surface, ink, and control re-resolves.</p>
+        <row gap="2" style(cardFoot)>
+          <div style(swatch, { paint: bg(primary) })></div>
+          <div style(swatch, { paint: bg(accent) })></div>
+          <div style(swatch, { paint: bg(success) })></div>
+          <div style(swatch, { paint: bg(warning) })></div>
+          <div style(swatch, { paint: bg(info) })></div>
+          <div style(swatch, { paint: bg(muted) })></div>
+        </row>
+      </column>
+    </card>
+  </a>
+</partial>
+
+<partial bento-reactivity props: BentoReactivityProps>
+  <a href="/sail/language/state" style(cardLink)>
+    <card interactive style(cardFill)>
+      <column gap="0" style(cardCol)>
+        <p style(cardEyebrow)>Reactivity</p>
+        <strong style(cardTitle)>Signals you can inspect</strong>
+        <p style(cardBody)>Derived state and effects are first-class — no store glue layer.</p>
+        <row gap="3" align="baseline" style(cardFoot)>
+          <strong style(metric)>{ticks}</strong>
+          <span style(metricUnit)>ticks · live signal</span>
+        </row>
+      </column>
+    </card>
+  </a>
+</partial>
+
+<partial bento-deck props: BentoCardProps>
+  <a href="/deck" style(cardLink)>
+    <card interactive style(cardFill)>
+      <column gap="0" style(cardCol)>
+        <p style(cardEyebrow)>Deck</p>
+        <strong style(cardTitle)>SSR, routes, and HMR</strong>
+        <p style(cardBody)>The app host is already wired — layouts, data, and hot reload included.</p>
+        <column gap="2" style(cardFoot)>
+          <row gap="2" align="center"><span dot tone="success"></span><span style(statusLine)>ssr · streaming</span></row>
+          <row gap="2" align="center"><span dot tone="primary"></span><span style(statusLine)>file-based routes</span></row>
+          <row gap="2" align="center"><span dot tone="info"></span><span style(statusLine)>hmr · sub-second</span></row>
+        </column>
+      </column>
+    </card>
+  </a>
+</partial>
+
+<partial bento-components props: BentoCardProps>
+  <a href="/components" style(cardLink)>
+    <card interactive style(cardFill)>
+      <column gap="0" style(cardCol)>
+        <p style(cardEyebrow)>Components</p>
+        <strong style(cardTitle)>48 primitives, plus packs</strong>
+        <p style(cardBody)>Forms, overlays, and feedback — themed and accessible by construction.</p>
+        <row gap="2" align="center" style(cardFoot)>
+          <badge tone="primary" size="sm">48 L1</badge>
+          <badge tone="muted" size="sm" variant="soft">charts</badge>
+          <badge tone="muted" size="sm" variant="soft">chat</badge>
+          <badge tone="muted" size="sm" variant="soft">editor</badge>
+        </row>
+      </column>
+    </card>
+  </a>
+</partial>
+
+<partial bento-ai props: BentoCardProps>
+  <a href="/ai" style(cardLink)>
+    <card interactive style(cardFill)>
+      <column gap="0" style(cardCol)>
+        <p style(cardEyebrow)>AI</p>
+        <strong style(cardTitle)>Agents stay inside the language</strong>
+        <p style(cardBody)>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
+        <div style(term, cardFoot)>
+          <p><span style(termAccent)>$</span> sail check app/</p>
+          <p>ok · 0 refusals · 214 modules</p>
+        </div>
+      </column>
+    </card>
+  </a>
+</partial>
+
+<!-- cols not breakpoint-aware — structural when owns layout. -->
 <column gap="0" style(page)>
 
   <section style(hero, { box: shrink(0) })>
@@ -139,172 +243,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <section style(bento, { box: shrink(0) })>
     <when {tablet}>
       <grid cols="3" gap="4" style(grid)>
-        <a href="/sail/language/animation" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Animation</p>
-              <strong style(cardTitle)>Motion as a language surface</strong>
-              <p style(cardBody)>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <motion-bars></motion-bars>
-            </column>
-          </card>
-        </a>
-        <a href="/sail/language/theming" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Theming</p>
-              <strong style(cardTitle)>Nine themes. One token graph.</strong>
-              <p style(cardBody)>Swap theme and every surface, ink, and control re-resolves.</p>
-              <row gap="2" style(cardFoot)>
-                <div style(swatch, { paint: bg(primary) })></div>
-                <div style(swatch, { paint: bg(accent) })></div>
-                <div style(swatch, { paint: bg(success) })></div>
-                <div style(swatch, { paint: bg(warning) })></div>
-                <div style(swatch, { paint: bg(info) })></div>
-                <div style(swatch, { paint: bg(muted) })></div>
-              </row>
-            </column>
-          </card>
-        </a>
-        <a href="/sail/language/state" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Reactivity</p>
-              <strong style(cardTitle)>Signals you can inspect</strong>
-              <p style(cardBody)>Derived state and effects are first-class — no store glue layer.</p>
-              <row gap="3" align="baseline" style(cardFoot)>
-                <strong style(metric)>{ticks()}</strong>
-                <span style(metricUnit)>ticks · live signal</span>
-              </row>
-            </column>
-          </card>
-        </a>
-        <a href="/deck" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Deck</p>
-              <strong style(cardTitle)>SSR, routes, and HMR</strong>
-              <p style(cardBody)>The app host is already wired — layouts, data, and hot reload included.</p>
-              <column gap="2" style(cardFoot)>
-                <row gap="2" align="center"><span dot tone="success"></span><span style(statusLine)>ssr · streaming</span></row>
-                <row gap="2" align="center"><span dot tone="primary"></span><span style(statusLine)>file-based routes</span></row>
-                <row gap="2" align="center"><span dot tone="info"></span><span style(statusLine)>hmr · sub-second</span></row>
-              </column>
-            </column>
-          </card>
-        </a>
-        <a href="/components" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Components</p>
-              <strong style(cardTitle)>48 primitives, plus packs</strong>
-              <p style(cardBody)>Forms, overlays, and feedback — themed and accessible by construction.</p>
-              <row gap="2" align="center" style(cardFoot)>
-                <badge tone="primary" size="sm">48 L1</badge>
-                <badge tone="muted" size="sm" variant="soft">charts</badge>
-                <badge tone="muted" size="sm" variant="soft">chat</badge>
-                <badge tone="muted" size="sm" variant="soft">editor</badge>
-              </row>
-            </column>
-          </card>
-        </a>
-        <a href="/ai" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>AI</p>
-              <strong style(cardTitle)>Agents stay inside the language</strong>
-              <p style(cardBody)>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
-              <div style(term, cardFoot)>
-                <p><span style(termAccent)>$</span> sail check app/</p>
-                <p>ok · 0 refusals · 214 modules</p>
-              </div>
-            </column>
-          </card>
-        </a>
+        <bento-animation></bento-animation>
+        <bento-theming></bento-theming>
+        <bento-reactivity ticks={ticks()}></bento-reactivity>
+        <bento-deck></bento-deck>
+        <bento-components></bento-components>
+        <bento-ai></bento-ai>
       </grid>
     {else => <grid cols="1" gap="3" style(grid)>
-        <a href="/sail/language/animation" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Animation</p>
-              <strong style(cardTitle)>Motion as a language surface</strong>
-              <p style(cardBody)>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <motion-bars></motion-bars>
-            </column>
-          </card>
-        </a>
-        <a href="/sail/language/theming" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Theming</p>
-              <strong style(cardTitle)>Nine themes. One token graph.</strong>
-              <p style(cardBody)>Swap theme and every surface, ink, and control re-resolves.</p>
-              <row gap="2" style(cardFoot)>
-                <div style(swatch, { paint: bg(primary) })></div>
-                <div style(swatch, { paint: bg(accent) })></div>
-                <div style(swatch, { paint: bg(success) })></div>
-                <div style(swatch, { paint: bg(warning) })></div>
-                <div style(swatch, { paint: bg(info) })></div>
-                <div style(swatch, { paint: bg(muted) })></div>
-              </row>
-            </column>
-          </card>
-        </a>
-        <a href="/sail/language/state" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Reactivity</p>
-              <strong style(cardTitle)>Signals you can inspect</strong>
-              <p style(cardBody)>Derived state and effects are first-class — no store glue layer.</p>
-              <row gap="3" align="baseline" style(cardFoot)>
-                <strong style(metric)>{ticks()}</strong>
-                <span style(metricUnit)>ticks · live signal</span>
-              </row>
-            </column>
-          </card>
-        </a>
-        <a href="/deck" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Deck</p>
-              <strong style(cardTitle)>SSR, routes, and HMR</strong>
-              <p style(cardBody)>The app host is already wired — layouts, data, and hot reload included.</p>
-              <column gap="2" style(cardFoot)>
-                <row gap="2" align="center"><span dot tone="success"></span><span style(statusLine)>ssr · streaming</span></row>
-                <row gap="2" align="center"><span dot tone="primary"></span><span style(statusLine)>file-based routes</span></row>
-                <row gap="2" align="center"><span dot tone="info"></span><span style(statusLine)>hmr · sub-second</span></row>
-              </column>
-            </column>
-          </card>
-        </a>
-        <a href="/components" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>Components</p>
-              <strong style(cardTitle)>48 primitives, plus packs</strong>
-              <p style(cardBody)>Forms, overlays, and feedback — themed and accessible by construction.</p>
-              <row gap="2" align="center" style(cardFoot)>
-                <badge tone="primary" size="sm">48 L1</badge>
-                <badge tone="muted" size="sm" variant="soft">charts</badge>
-                <badge tone="muted" size="sm" variant="soft">chat</badge>
-                <badge tone="muted" size="sm" variant="soft">editor</badge>
-              </row>
-            </column>
-          </card>
-        </a>
-        <a href="/ai" style(cardLink)>
-          <card interactive style(cardFill)>
-            <column gap="0" style(cardCol)>
-              <p style(cardEyebrow)>AI</p>
-              <strong style(cardTitle)>Agents stay inside the language</strong>
-              <p style(cardBody)>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
-              <div style(term, cardFoot)>
-                <p><span style(termAccent)>$</span> sail check app/</p>
-                <p>ok · 0 refusals · 214 modules</p>
-              </div>
-            </column>
-          </card>
-        </a>
+        <bento-animation></bento-animation>
+        <bento-theming></bento-theming>
+        <bento-reactivity ticks={ticks()}></bento-reactivity>
+        <bento-deck></bento-deck>
+        <bento-components></bento-components>
+        <bento-ai></bento-ai>
       </grid>}</when>
   </section>
 
