@@ -20,7 +20,7 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   page.on('pageerror', (err) => log.push(`[pageerror] ${err.message}`))
 
   await page.goto('/sail/tutorial/01-a-page-is-markup', { waitUntil: 'domcontentloaded' })
-  await page.waitForSelector('iframe[data-testid="tut-preview"], iframe[title="Tutorial preview"]', {
+  await page.waitForSelector('[testid="tut-preview"], [data-testid="tut-preview"]', {
     state: 'attached',
     timeout: 60_000,
   })
@@ -35,7 +35,11 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   // whole `.sail` file.
   await page.waitForFunction(
     () => {
-      const src = document.querySelector('sail-code-editor[data-pane="source"]') as HTMLElement | null
+      const src = (
+        document.querySelector('sail-code-editor[pane="source"]') ??
+        document.querySelector('sail-code-editor[data-pane="source"]') ??
+        document.querySelector('sail-code-editor')
+      ) as HTMLElement | null
       return !!src?.shadowRoot?.querySelector('.cm-editor') ||
         !!src?.querySelector?.('.cm-editor')
     },
@@ -52,7 +56,11 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   // defined by the controller) and the language is 'sail' so the LSP effect
   // gates-open.
   const before = await page.evaluate(() => {
-    const src = document.querySelector('sail-code-editor[data-pane="source"]') as (HTMLElement & { setDiagnostics?: unknown; setCompletions?: unknown; value?: string }) | null
+    const src = (
+      document.querySelector('sail-code-editor[pane="source"]') ??
+      document.querySelector('sail-code-editor[data-pane="source"]') ??
+      document.querySelector('sail-code-editor')
+    ) as (HTMLElement & { setDiagnostics?: unknown; setCompletions?: unknown; value?: string }) | null
     return {
       hasSetDiag: typeof src?.setDiagnostics === 'function',
       hasSetComp: typeof src?.setCompletions === 'function',
@@ -68,7 +76,11 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   // change — 350ms debounce, then `lspDiagnose(text, wasmUrl())` is awaited
   // and the resulting SailDiagnostic[] pushed into the lint gutter.
   await page.evaluate(async () => {
-    const src = document.querySelector('sail-code-editor[data-pane="source"]') as HTMLElement & { value: string } | null
+    const src = (
+      document.querySelector('sail-code-editor[pane="source"]') ??
+      document.querySelector('sail-code-editor[data-pane="source"]') ??
+      document.querySelector('sail-code-editor')
+    ) as (HTMLElement & { value: string }) | null
     if (!src) throw new Error('source editor not mounted')
     const broken = '<div>unclosed\n<another nope=\n  <sail-counter'
     src.value = broken
@@ -80,7 +92,11 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   await page.waitForTimeout(8000)
 
   const probe = await page.evaluate(() => {
-    const src = document.querySelector('sail-code-editor[data-pane="source"]') as Element | null
+    const src = (
+      document.querySelector('sail-code-editor[pane="source"]') ??
+      document.querySelector('sail-code-editor[data-pane="source"]') ??
+      document.querySelector('sail-code-editor')
+    ) as Element | null
     // Light DOM (display:contents host) — cm-editor is a descendant, not shadow.
     const cm = (src?.shadowRoot?.querySelector('.cm-editor') ??
       src?.querySelector?.('.cm-editor')) as HTMLElement | null

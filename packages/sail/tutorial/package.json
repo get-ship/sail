@@ -8,6 +8,7 @@
   "exports": {
     "./lessons/*": "./src/lessons/*",
     "./prose/*": "./src/prose/*",
+    "./compositions/*": "./src/compositions/*",
     "./package.json": "./package.json"
   },
   "files": [

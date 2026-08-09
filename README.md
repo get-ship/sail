@@ -34,8 +34,7 @@ bun run dev                              # default 127.0.0.1:7890 (SAIL_SITE_ADD
 ```
 
 Do not invent `public/fonts` — faces are at `GET /_deck/fonts/{file}`.
-Do not commit bake outputs under `.deck/` or `public/sail_compiler_bg.wasm` /
-`public/tut-preview-theme.css`.
+Do not commit bake outputs under `.deck/` or `public/sail_compiler_bg.wasm`.
 
 ## Test
 
@@ -107,7 +106,7 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 | Command | Class | What it runs |
 |---------|-------|--------------|
 | `bun install` → `cargo run -p deck-cli -- build-assets` → `cargo build` | Law | Framework bake + default Rust members |
-| `cd apps/sail-site && bun run gen` | Law | wasm · prop-registry · grammar · runtime surface · bake · tutorial · tut-preview CSS |
+| `cd apps/sail-site && bun run gen` | Law | wasm · prop-registry · grammar · runtime surface · bake · tutorial |
 | `cd apps/sail-site && bun run dev` / `build` | Law | `gen` then deck CLI |
 | `bun run test` | Law | vitest + `tests/hygiene` repo guards |
 | `bun run typecheck` | Law | `scripts/typecheck-components.mjs` (also runs `gen-component-types`) |
@@ -130,9 +129,7 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 | Path | Class | Notes |
 |------|-------|-------|
 | `gen-runtime-surface.mjs` | Law | Tier-B runtime surface → `src/runtime-surface.gen.ts` (`bun run gen`) |
-| `gen-tutorial.mjs` | Law | Tutorial prose/lessons → `src/tutorial-data.ts` |
-| `gen-tut-preview-theme.mjs` | Law | Framework CSS concat + font URL rewrite → `public/tut-preview-theme.css` |
-| `gen-tut-preview-theme.test.mjs` | Recipe | `bun:test` unit tests for font rewrite (not on root vitest) |
+| `gen-tutorial.mjs` | Law | Tutorial prose/lessons → `src/compositions/tutorial-data.ts` |
 | `theme-preview-proof.mjs` | Recipe | Headless proof of `theme.preview` token hatch |
 
 ### `apps/sail-site/qa/`

@@ -1,10 +1,19 @@
 // Tutorial playground machinery — the FFI seams ONLY. This module owns the
-// things a Sail template cannot be: the wasm compiler call, the sandboxed
-// preview iframe's postMessage protocol, and the theme-attribute observer.
+// things a Sail template cannot be: the wasm compiler call and the same-
+// document preview mount (compile → inline module → __mount into a host).
 //
-// It does not touch page DOM: playground UI state (active tab, status,
+// It does not touch page chrome: playground UI state (active tab, status,
 // console lines, editor values) lives as signals in the route's <controller>,
 // and the template reads it.
+//
+// Preview is same-document (Option A): the lesson shares the parent page's
+// Sail runtime, customElements registry, and theme/token CSS. There is no
+// iframe, no postMessage protocol, and no parallel CSS concat.
+//
+// CSP note: deck serves `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'`
+// — no `unsafe-eval`, no `blob:`. So we cannot use `new Function` or blob
+// module URLs. Inline `<script type="module">` (allowed by 'unsafe-inline')
+// plus the page importmap is the mount path that works under that policy.
 
 import { debounce } from '@ship/sail-runtime'
 
@@ -16,24 +25,64 @@ export type CompileResult =
 /** The bound compile function (source, opts) → result. */
 export type CompileFn = (
   source: string,
-  opts?: { componentName?: string; shadow?: boolean; setupUrl?: string },
+  opts?: {
+    mode?: 'view' | 'component' | 'auto'
+    componentName?: string
+    shadow?: boolean
+    setupUrl?: string
+    setupMarker?: string
+  },
 ) => CompileResult
 
-// Slugs that ship a mock-daemon scenario (public/tut-<slug>.js). Explicit set
-// so we don't HEAD-probe non-existent scenarios and surface 404s as errors.
-//
-// Empty since the 25-step tutorial was replaced by the nine lessons in
-// `packages/sail/tutorial`: none of them needs a mock daemon (lesson 05 and
-// lesson 09 use in-repo client modules instead). The set — and `pushScenario`
-// below — are kept because the mechanism is still the answer if a future
-// lesson needs a scripted backend; add the slug here and drop the script at
-// `public/tut-<slug>.js`. It previously held three retired slugs, which made
-// `pushScenario` dead code that read as live.
-const SCENARIO_SLUGS = new Set<string>([])
+/** Marker the compiler stamps as `import setup from "<marker>"`; rewritten at mount. */
+const SETUP_MARKER = './__tutorial__.controller.ts'
+
+/**
+ * Ambient controller vocabulary (mirrors crates/sail/compiler runtime_ambient).
+ * Inline `<controller>` bodies use these without imports; the real emit path
+ * injects them via wrap_controller_body. We do the same before inlining.
+ * Each entry: [authored, exported] — aliased when they differ (mount).
+ */
+const RUNTIME_AMBIENT: Array<[string, string]> = [
+  ['batch', 'batch'],
+  ['controller', 'controller'],
+  ['derived', 'derived'],
+  ['effect', 'effect'],
+  ['mount', 'mountAmbient'],
+  ['onCleanup', 'onCleanup'],
+  ['signal', 'signal'],
+  ['untrack', 'untrack'],
+]
+const RUNTIME_SPECIFIER = '@ship/sail-runtime/internal'
+
+/** Inject ambient runtime imports a lesson controller references but does not bind. */
+function wrapControllerBody(body: string): string {
+  const bound = new Set<string>()
+  for (const m of body.matchAll(/\bimport\s*\{([^}]+)\}\s*from/g)) {
+    for (const part of m[1].split(',')) {
+      const t = part.trim()
+      if (!t) continue
+      const as = /\bas\s+(\w+)\s*$/.exec(t)
+      bound.add(as ? as[1] : t.split(/\s+/)[0]!)
+    }
+  }
+  for (const m of body.matchAll(/\b(?:const|let|var|function|class)\s+(\w+)/g)) {
+    bound.add(m[1]!)
+  }
+  const needed: string[] = []
+  for (const [authored, exported] of RUNTIME_AMBIENT) {
+    if (bound.has(authored)) continue
+    // word-boundary reference (not already part of a longer ident)
+    if (!new RegExp(`\\b${authored}\\b`).test(body)) continue
+    needed.push(authored === exported ? authored : `${exported} as ${authored}`)
+  }
+  if (needed.length === 0) return body
+  return `import { ${needed.join(', ')} } from '${RUNTIME_SPECIFIER}';\n${body}`
+}
 
 /** Strip TypeScript-only syntax from a (simple) lesson controller so it runs
- *  as ESM in the preview iframe. The lesson controllers are simple and this
- *  transform is framework-agnostic. */
+ *  as plain ESM. The lesson controllers are simple and this transform is
+ *  framework-agnostic. */
 export function tsToEsm(src: string): string {
   let s = src
   s = s.replace(/^\s*import\s+type\s+\{[^}]*\}\s+from\s+["'][^"']+["']\s*;?\s*$/gm, '')
@@ -102,105 +151,289 @@ export function extractController(source: string): string {
   return source.slice(bodyStart + 1, close).trim()
 }
 
-/** Compile the lesson source and post the run into the preview iframe.
- *
- *  ONE source: the `.sail` file the student edits, `<controller>` block and all.
- *  The compiler resolves the block into the scope it checks the template
- *  against, so the playground rejects exactly what `sail-compiler` rejects, and
- *  an error's line number points at the row in the editor. The block's body is
- *  extracted separately only because the preview iframe loads it as the ESM
- *  module the emitted template imports.
- *
- *  Pure seam: no status writes, no logging — the caller owns that state. */
-export function runInPreview(
-  compile: CompileFn,
-  iframe: HTMLIFrameElement,
-  opts: { tag: string; source: string },
-): CompileResult {
-  const result = compile(opts.source, {
-    componentName: opts.tag,
-    shadow: false,
-    setupUrl: `./${opts.tag}.controller.ts`,
-  })
-  if (result.kind === 'err') return result
-  iframe.contentWindow?.postMessage(
-    {
-      kind: 'tutorial:run',
-      template: result.js,
-      controller: tsToEsm(extractController(opts.source)),
-      tag: opts.tag,
-    },
-    '*',
-  )
-  return result
+export interface PreviewMount {
+  dispose: () => void
 }
 
-/** (Re)load the preview host page, matching the reader's resolved theme. */
-export function reloadPreview(iframe: HTMLIFrameElement): void {
-  // DOMDEC: no ambient document — keep base src, light mode default.
-  const base = iframe.getAttribute('data-base-src') ?? iframe.dataset?.baseSrc ?? '/tut-host.html'
-  iframe.src = `${base}?mode=light&_=${Date.now()}`
+type TutWaiter = {
+  resolve: (v: { dispose: () => void }) => void
+  reject: (e: unknown) => void
 }
 
-/** Push a lesson's mock-daemon scenario into the ready iframe, if it has one. */
-export async function pushScenario(iframe: HTMLIFrameElement, slug: string): Promise<void> {
-  if (!SCENARIO_SLUGS.has(slug)) return
-  try {
-    const scenarioUrl = `/tut-${slug}.js`
-    // DOMDEC: ambient fetch banned — dynamic scenario load is a gap.
-    return
-    const mod = null as unknown as { default: Record<string, unknown> }
-    iframe.contentWindow?.postMessage({ kind: 'tutorial:scenario', scenario: mod.default }, '*')
-    await new Promise((r) => setTimeout(r, 80))
-  } catch (err) {
-    console.warn('[sail-site/tutorial] scenario load skipped:', err)
+declare global {
+  interface Window {
+    __tutWaiters?: Record<string, TutWaiter>
   }
 }
 
-export interface PreviewHooks {
-  /** console.{log,warn,error} forwarded from inside the preview iframe. */
-  onConsole(level: string, text: string): void
-  /** The host page booted and is listening for tutorial:run. */
-  onReady(): void
+function ensureWaiters(): Record<string, TutWaiter> {
+  if (!window.__tutWaiters) window.__tutWaiters = {}
+  return window.__tutWaiters
 }
 
-/** Listen to the preview iframe's message channel. Returns dispose. */
-export function listenPreview(
-  iframe: () => HTMLIFrameElement | null,
-  hooks: PreviewHooks,
-): () => void {
-  const onMessage = (e: MessageEvent): void => {
-    const el = iframe()
-    if (!el || e.source !== el.contentWindow) return
-    if (e.data?.kind === 'tutorial:console') {
-      hooks.onConsole(String(e.data.level ?? 'log'), String(e.data.text ?? ''))
-      return
+/**
+ * Build one ESM module source that:
+ *  1. runs the lesson controller (export default → const __tutSetup)
+ *  2. rewrites the compiled template's `import setup from "…"` to that const
+ *  3. mounts the view into the host and resolves a waiter on window
+ *
+ * Relative lesson mock clients are rewritten onto package exports so the page
+ * importmap / bundler graph can resolve them (no blob: URLs — CSP forbids them).
+ */
+function buildMountModule(opts: {
+  runId: string
+  hostAttr: string
+  controllerSrc: string
+  templateJs: string
+  css: string | null | undefined
+}): string {
+  let controller = opts.controllerSrc
+    ? wrapControllerBody(tsToEsm(opts.controllerSrc))
+    : 'const __tutSetup = { setup: () => ({}) };'
+  if (opts.controllerSrc) {
+    // Relative compositions → package export paths the app can resolve.
+    controller = controller.replace(
+      /from\s*["'][^"']*compositions\/([^"']+)["']/g,
+      (_m, bare: string) => {
+        const key = bare.replace(/\.ts$/, '')
+        return `from ${JSON.stringify(`@ship/sail-tutorial/compositions/${key}`)}`
+      },
+    )
+    controller = controller.replace(/\bexport\s+default\s+/g, 'const __tutSetup = ')
+    if (!/const __tutSetup\s*=/.test(controller)) {
+      controller += '\nconst __tutSetup = { setup: () => ({}) };'
     }
-    if (e.data?.kind === 'tutorial:ready') hooks.onReady()
   }
-  // sail-allow sail-no-ambient-events — preview iframe postMessage channel
-  window.addEventListener('message', onMessage)
-  return () => {
-    // sail-allow sail-no-ambient-events — dispose pairs with add above
-    window.removeEventListener('message', onMessage)
+
+  let template = opts.templateJs.replace(
+    /^\s*import\s+setup\s+from\s+["'][^"']+["']\s*;?\s*$/gm,
+    'const setup = __tutSetup;',
+  )
+  // Capture the default export instead of re-exporting.
+  template = template.replace(/\bexport\s+default\s+/g, 'const __tutDef = ')
+
+  const cssLit = opts.css ? JSON.stringify(opts.css) : 'null'
+  const hostAttrLit = JSON.stringify(opts.hostAttr)
+  const runIdLit = JSON.stringify(opts.runId)
+
+  return `${controller}
+
+${template}
+
+;(async () => {
+  const runId = ${runIdLit}
+  const hostAttr = ${hostAttrLit}
+  const waiters = (window.__tutWaiters = window.__tutWaiters || {})
+  const waiter = waiters[runId]
+  try {
+    const host = document.querySelector('[' + hostAttr + ']')
+    if (!host) throw new Error('preview host not found')
+    while (host.firstChild) host.removeChild(host.firstChild)
+    const css = ${cssLit}
+    let styleEl = null
+    if (css) {
+      styleEl = document.createElement('style')
+      styleEl.setAttribute('data-tut-preview-css', '')
+      styleEl.textContent = css
+      host.appendChild(styleEl)
+    }
+    const def = __tutDef
+    if (!def || typeof def.setup !== 'function') {
+      throw new Error('compiled module has no setup')
+    }
+    const ctx = {
+      route: { params: {}, path: '/', query: {}, hash: '' },
+      navigate: () => {},
+    }
+    // Prefer a real route factory when the importmap has it; fall through.
+    try {
+      const routeMod = await import('@ship/sail-runtime/route')
+      if (typeof routeMod.route === 'function') {
+        ctx.route = routeMod.route({ url: new URL('http://localhost/') })
+      }
+    } catch { /* route is optional for lesson mounts */ }
+    const scope = def.setup(ctx)
+    if (!scope || typeof scope.__mount !== 'function') {
+      throw new Error('setup() did not return __mount')
+    }
+    const before = new Set(Array.from(host.childNodes))
+    const cleanup = scope.__mount(host)
+    const dispose = () => {
+      try { cleanup() } catch { /* best-effort */ }
+      for (const n of Array.from(host.childNodes)) {
+        if (!before.has(n) || n === styleEl) n.parentNode && n.parentNode.removeChild(n)
+      }
+      if (styleEl) styleEl.remove()
+    }
+    if (waiter) waiter.resolve({ dispose })
+  } catch (err) {
+    if (waiter) waiter.reject(err)
+    else console.error('[tutorial-preview]', err)
+  } finally {
+    delete waiters[runId]
+  }
+})();
+`
+}
+
+let runSeq = 0
+let activeScript: HTMLScriptElement | null = null
+
+/**
+ * Compile the lesson source and mount it into a same-document host element.
+ *
+ * ONE source: the `.sail` file the student edits, `<controller>` block and all.
+ * The compiler resolves the block into the scope it checks the template
+ * against; the block body is inlined as the setup the emitted template uses.
+ *
+ * Compile errors return `{kind:'err'}` without disposing the prior mount
+ * (last-good preview stays). A clean compile tears down the previous mount
+ * before the new one appends.
+ */
+export function runInHost(
+  compile: CompileFn,
+  host: HTMLElement,
+  opts: { tag: string; source: string },
+  prev?: PreviewMount | null,
+): { result: CompileResult; mount: PreviewMount | null; ready?: Promise<PreviewMount | null> } {
+  const result = compile(opts.source, {
+    setupUrl: SETUP_MARKER,
+    setupMarker: SETUP_MARKER,
+  })
+  if (result.kind === 'err') return { result, mount: prev ?? null }
+
+  const runId = `tut-run-${++runSeq}`
+  const hostAttr = `data-tut-host="${runId}"`
+  // Stamp the host so the inline module can find it without holding a closed-
+  // over node reference across the module boundary.
+  for (const a of Array.from(host.attributes)) {
+    if (a.name.startsWith('data-tut-host')) host.removeAttribute(a.name)
+  }
+  host.setAttribute('data-tut-host', runId)
+
+  const ctrlBody = extractController(opts.source)
+  const moduleSrc = buildMountModule({
+    runId,
+    hostAttr: `data-tut-host="${runId}"`,
+    controllerSrc: ctrlBody,
+    templateJs: result.js,
+    css: result.css,
+  })
+
+  const waiters = ensureWaiters()
+  const ready = new Promise<PreviewMount>((resolve, reject) => {
+    waiters[runId] = { resolve, reject }
+  })
+
+  // Tear prior mount only after we know compile succeeded.
+  try {
+    prev?.dispose()
+  } catch {
+    /* best-effort */
+  }
+  if (activeScript) {
+    activeScript.remove()
+    activeScript = null
+  }
+
+  const script = document.createElement('script')
+  script.type = 'module'
+  script.setAttribute('data-tut-mount', runId)
+  script.textContent = moduleSrc
+  activeScript = script
+  document.head.appendChild(script)
+
+  const mountPromise = ready
+    .then((m) => m)
+    .catch((err) => {
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(message)
+    })
+
+  // Synchronous return for compile-ok; page controller awaits ready when present.
+  const mount: PreviewMount = {
+    dispose: () => {
+      void mountPromise
+        .then((m) => m.dispose())
+        .catch(() => {})
+      script.remove()
+      if (activeScript === script) activeScript = null
+      host.removeAttribute('data-tut-host')
+    },
+  }
+
+  return {
+    result,
+    mount,
+    ready: mountPromise
+      .then((m) => {
+        // Replace dispose with the real one once ready.
+        mount.dispose = () => {
+          try {
+            m.dispose()
+          } catch {
+            /* best-effort */
+          }
+          script.remove()
+          if (activeScript === script) activeScript = null
+          host.removeAttribute('data-tut-host')
+        }
+        return mount
+      })
+      .catch((err) => {
+        script.remove()
+        if (activeScript === script) activeScript = null
+        return Promise.reject(err)
+      }),
   }
 }
 
-/** The reader's theme lives on <html theme + data-mode> — an external DOM
- *  channel, so a MutationObserver is the honest seam. Returns dispose. */
-export function observeTheme(_onChange: () => void): () => void {
-  // DOMDEC: no ambient document MutationObserver — theme change bus gap.
-  return () => {}
+/** Install same-document console.{log,warn,error,info} capture. Returns dispose. */
+export function installConsoleCapture(
+  onConsole: (level: string, text: string) => void,
+): () => void {
+  const levels = ['log', 'warn', 'error', 'info'] as const
+  const originals = new Map<string, (...args: unknown[]) => void>()
+  for (const level of levels) {
+    const orig = console[level].bind(console) as (...args: unknown[]) => void
+    originals.set(level, orig)
+    console[level] = ((...args: unknown[]) => {
+      try {
+        const text = args
+          .map((a) => {
+            if (typeof a === 'string') return a
+            try {
+              return JSON.stringify(a)
+            } catch {
+              return String(a)
+            }
+          })
+          .join(' ')
+        onConsole(level, text)
+      } catch {
+        /* forwarding is best-effort */
+      }
+      orig(...args)
+    }) as typeof console.log
+  }
+  return () => {
+    for (const level of levels) {
+      const orig = originals.get(level)
+      if (orig) (console[level] as unknown) = orig
+    }
+  }
 }
 
 /** Imperative surface of an upgraded <sail-code-editor> (its published API). */
 export interface CodeEditorHost extends HTMLElement {
   value: string
-  setDiagnostics?: (diags: Array<{
-    line: number
-    column?: number
-    severity: 'error' | 'warning' | 'info'
-    message: string
-    source?: string
-  }>) => void
+  setDiagnostics?: (
+    diags: Array<{
+      line: number
+      column?: number
+      severity: 'error' | 'warning' | 'info'
+      message: string
+      source?: string
+    }>,
+  ) => void
 }
