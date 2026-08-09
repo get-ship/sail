@@ -149,7 +149,9 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
   return {
     update: (p) => {
       place = p ?? ((el.getAttribute('placement') as AnchorPlacement) || 'bottom')
-      if (isOpen()) scheduleReposition()
+      // Param changes re-place synchronously (geometry already measured). Open
+      // uses scheduleReposition so slotted content can settle first.
+      if (isOpen()) reposition()
     },
     destroy: () => {
       el.removeEventListener('toggle', onToggle)

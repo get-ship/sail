@@ -118,11 +118,35 @@ export default {
         bad.push({ why: 'aria-controls-not-wired', ...aria })
       if (aria.expanded !== 'false') bad.push({ why: 'expanded-not-false-at-rest' })
 
-      // TYPE → filters + opens
+      // FOCUS / click opens the FULL list (picker-first — no type-first gate)
       await input.click()
+      await page.waitForTimeout(120)
+      if (!(await list.isVisible())) bad.push({ why: 'focus-did-not-open-full-list' })
+      const allOpen = await page.evaluate(() =>
+        [...document.querySelectorAll('#cb option')].filter((o) => !o.hidden).map((o) => o.getAttribute('value')),
+      )
+      if (JSON.stringify(allOpen) !== JSON.stringify(['apple', 'banana', 'mango', 'melon']))
+        bad.push({ why: 'focus-not-full-list', allOpen })
+      if ((await input.getAttribute('aria-expanded')) !== 'true')
+        bad.push({ why: 'expanded-not-synced-on-open' })
+
+      // List width matches the field (w + minW from --anchor-width)
+      const widths = await page.evaluate(() => {
+        const i = document.querySelector('#cb .input')
+        const l = document.querySelector('#cb .listbox')
+        return {
+          input: i.getBoundingClientRect().width,
+          list: l.getBoundingClientRect().width,
+          anchorW: getComputedStyle(l).getPropertyValue('--anchor-width').trim(),
+        }
+      })
+      if (Math.abs(widths.input - widths.list) > 1)
+        bad.push({ why: 'list-width-not-trigger', ...widths })
+
+      // TYPE → filters
       await input.type('an')
       await page.waitForTimeout(120)
-      if (!(await list.isVisible())) bad.push({ why: 'typing-did-not-open' })
+      if (!(await list.isVisible())) bad.push({ why: 'typing-did-not-keep-open' })
       const visible = await page.evaluate(() =>
         [...document.querySelectorAll('#cb option')].filter((o) => !o.hidden).map((o) => o.getAttribute('value')),
       )

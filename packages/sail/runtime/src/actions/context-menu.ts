@@ -6,13 +6,29 @@ import type { Action } from '../action'
  * it defaults to the menu's parent); we suppress the native context menu, place
  * the popover at the pointer, and show it. Item semantics/keyboard come from
  * `use:menu`; light-dismiss + top-layer come from the native popover.
+ *
+ * Target resolution is **live**: `for` may be set after mount, and the target
+ * node may appear later (catalog tile mount order). Resolve on every
+ * `contextmenu` and rebind the listener when `for` / the target changes.
  */
 export const contextMenu: Action<void> = (node) => {
   const root = node as HTMLElement & { showPopover?: () => void; hidePopover?: () => void }
 
-  const target = (): HTMLElement | null => {
+  const resolveTarget = (): HTMLElement | null => {
     const id = root.getAttribute('for')
-    if (id) return document.getElementById(id)
+    if (id) {
+      const byId = document.getElementById(id)
+      if (byId) return byId
+      // Same light-DOM / residual shadow fallback as use:anchor.
+      const safe =
+        typeof CSS !== 'undefined' && typeof CSS.escape === 'function' ? CSS.escape(id) : id
+      const rn = root.getRootNode() as ParentNode & { host?: Element }
+      return (
+        rn.querySelector?.<HTMLElement>(`#${safe}`) ??
+        rn.host?.querySelector<HTMLElement>(`#${safe}`) ??
+        null
+      )
+    }
     return root.parentElement
   }
 
@@ -53,14 +69,53 @@ export const contextMenu: Action<void> = (node) => {
     }, 0)
   }
 
-  const t = target()
-  t?.addEventListener('contextmenu', onContext)
+  let bound: HTMLElement | null = null
+  const detach = (): void => {
+    if (!bound) return
+    bound.removeEventListener('contextmenu', onContext)
+    bound = null
+  }
+  const rebind = (): void => {
+    const next = resolveTarget()
+    if (next === bound) return
+    detach()
+    bound = next
+    bound?.addEventListener('contextmenu', onContext)
+  }
+
+  rebind()
+
+  let raf = 0
+  const scheduleRebind = (): void => {
+    if (raf) return
+    raf =
+      typeof requestAnimationFrame === 'function'
+        ? requestAnimationFrame(() => {
+            raf = 0
+            rebind()
+          })
+        : 0
+    if (!raf) rebind()
+  }
+  const mo = new MutationObserver(scheduleRebind)
+  const scope = root.getRootNode()
+  const observeRoot =
+    scope instanceof Document ? scope.documentElement : (scope as Node)
+  mo.observe(observeRoot, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['id'],
+  })
+  mo.observe(root, { attributes: true, attributeFilter: ['for'] })
 
   return {
     destroy: () => {
       if (pending) clearTimeout(pending)
       pending = undefined
-      t?.removeEventListener('contextmenu', onContext)
+      if (raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(raf)
+      mo.disconnect()
+      detach()
     },
   }
 }

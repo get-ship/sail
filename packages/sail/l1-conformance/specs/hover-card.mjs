@@ -32,7 +32,7 @@ export default {
         `<div class="sail-hover-card" id="hc1" popover placement="top" open-delay="60" close-delay="40">Profile</div>`,
       ]
     },
-    attach: [['.sail-hover-card', 'anchor'], ['.sail-hover-card', 'hoverCard']],
+    attach: [['.sail-hover-card', 'anchor'], ['.sail-hover-card', 'hoverSurface']],
     async run(page) {
       const bad = []
       const hc = page.locator('#hc1')
