@@ -247,14 +247,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
   style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
   style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) }
-  style card = { box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  // Desktop: editor | preview+console side by side (not stacked).
+  style split = { box: grow(1).basis(0).minW(0).minH(0) }
+  style card = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style cardBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style paneCol = { box: grow(1).minH(0).overflow(hidden) }
+  style toolbar = { box: shrink(0).padY(1).padX(2) }
+  style paneCol = { box: grow(1).minH(0).minW(0).overflow(hidden) }
   style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
   style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
   style pgLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
   style recipeSelect = { box: minW(48).maxW(64) }
-  style previewBand = { box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  // Side-by-side pane: fill height of the split; console stays a fixed foot.
+  style previewBand = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
   style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
@@ -287,67 +291,75 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <when {tablet}>
 <column gap="1" style(workbench, playground)>
-  <column gap="0" style(card)>
-    <row align="center" justify="between" gap="2" style(cardBar)>
-      <row gap="3" align="center">
-        <p style(pgLabel)>PLAYGROUND</p>
-        <select
-          size="sm"
-          bind:value={recipeId}
-          label="Recipe"
-          testid="pg-recipe"
-          style(recipeSelect)
-        >
-          <for {recipes as r} key={r.id}>
-            <option value={r.id}>{r.title}</option>
-          </for>
-        </select>
-        <small style(desc)>{recipeDesc()}</small>
-      </row>
-      <row gap="1" align="center">
-        <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
-        <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
-      </row>
-    </row>
-    <column gap="0" style(paneCol)>
-      <sail-code-editor
-        pane="source"
-        language="sail"
+  <!-- Toolbar spans full width; panes sit side by side below. -->
+  <row align="center" justify="between" gap="2" style(toolbar)>
+    <row gap="3" align="center">
+      <p style(pgLabel)>PLAYGROUND</p>
+      <select
         size="sm"
-        chrome="flush"
-        wasm-url="/sail_compiler_bg.wasm"
-        use:captureEditor
-        on-change={onSourceChange}
-      ></sail-code-editor>
-    </column>
-  </column>
-
-  <column gap="0" style(previewBand)>
-    <row align="center" justify="between" gap="2" style(previewBar)>
-      <row gap="2" align="center">
-        <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
-        <small style(countLabel)>PREVIEW · {recipeTitle()}</small>
-      </row>
-      <button variant="ghost" size="sm" on:click={clearConsole}>Clear console</button>
-    </row>
-    <column gap="0" style(paneCol)>
-      <div
-        testid="pg-preview"
-        label="Playground preview"
-        use:captureHost
-        style(previewHost)
-      ></div>
-    </column>
-    <column live="polite" label="Playground console" gap="0" style(console)>
-      <span style(monoContents)>
-        <for {logs() as line} key={line.id}>
-          <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+        bind:value={recipeId}
+        label="Recipe"
+        testid="pg-recipe"
+        style(recipeSelect)
+      >
+        <for {recipes as r} key={r.id}>
+          <option value={r.id}>{r.title}</option>
         </for>
-      </span>
+      </select>
+      <small style(desc)>{recipeDesc()}</small>
+    </row>
+    <row gap="1" align="center">
+      <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
+      <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
+    </row>
+  </row>
+
+  <row nowrap gap="1" align="stretch" style(split)>
+    <column gap="0" style(card)>
+      <row align="center" justify="between" gap="2" style(cardBar)>
+        <small style(countLabel)>SOURCE</small>
+      </row>
+      <column gap="0" style(paneCol)>
+        <sail-code-editor
+          pane="source"
+          language="sail"
+          size="sm"
+          chrome="flush"
+          wasm-url="/sail_compiler_bg.wasm"
+          use:captureEditor
+          on-change={onSourceChange}
+        ></sail-code-editor>
+      </column>
     </column>
-  </column>
+
+    <column gap="0" style(previewBand)>
+      <row align="center" justify="between" gap="2" style(previewBar)>
+        <row gap="2" align="center">
+          <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
+          <small style(countLabel)>PREVIEW · {recipeTitle()}</small>
+        </row>
+        <button variant="ghost" size="sm" on:click={clearConsole}>Clear console</button>
+      </row>
+      <column gap="0" style(paneCol)>
+        <div
+          testid="pg-preview"
+          label="Playground preview"
+          use:captureHost
+          style(previewHost)
+        ></div>
+      </column>
+      <column live="polite" label="Playground console" gap="0" style(console)>
+        <span style(monoContents)>
+          <for {logs() as line} key={line.id}>
+            <log-line ts={line.ts} kind={line.kind} msg={line.msg}></log-line>
+          </for>
+        </span>
+      </column>
+    </column>
+  </row>
 </column>
 {else =>
+<!-- Phone: stacked editor over preview. -->
 <column gap="0" style(workbenchMobile, playground)>
   <column gap="0" style(card)>
     <row align="center" justify="between" gap="2" style(cardBar)>
