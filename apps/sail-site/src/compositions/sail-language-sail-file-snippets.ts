@@ -1,4 +1,4 @@
-// Snippets for /sail/language/sail-file — SLICES of one real component
+// Snippets for /docs/concepts/sail-file — SLICES of one real component
 // (apps/sail-site/src/departures-board/departures-board.sail, the board at the
 // top of the page), walked part by part. Never the whole file at once.
 export const code = {

@@ -1,50 +1,20 @@
-<!--
-  /sail/reference/layout — layout keyword vocabulary from language-surface.
--->
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { LAYOUT_KEYWORDS } from '../../../../src/compositions/language-surface'
-
-const LAYOUT_ROWS = LAYOUT_KEYWORDS.map((k) => ({ tag: k.tag, props: k.props.join(', ') }))
-
-export default controller((_ctx: ControllerScope<Scope>) => ({
-  layoutRows: () => LAYOUT_ROWS,
-}))
-</controller>
-
+<!-- Legacy path redirect → /docs/reference/layout -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style cardMin = { box: minW(0) }
-  style propsLine = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p style(eyebrow)>Reference</p>
-    <h1>Layout keywords</h1>
-    <p style(lead)>
-      Structure is elements, not CSS. Each keyword takes a closed set of
-      axis props; anything else is a compile error.
-    </p>
-  </column>
+<controller>
+import { navigate } from '@ship/deck/router'
 
-  <grid cols="3" gap="2">
-    <for {layoutRows() as k} key={k.tag}>
-      <card padding="sm" style(cardMin)>
-        <column gap="1">
-          <code>&lt;{k.tag}&gt;</code>
-          <small style(propsLine)>{k.props}</small>
-        </column>
-      </card>
-    </for>
-  </grid>
+export default controller(() => {
+  mount(() => {
+    navigate('/docs/reference/layout', { replace: true })
+  })
+  return {}
+})
+</controller>
 
-  <row>
-    <a variant="default" href="/sail/reference/elements">← Elements</a>
-    <a variant="solid" href="/sail/reference/sx">Style →</a>
-  </row>
+<column align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Redirecting to Reference…</p>
 </column>

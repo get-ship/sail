@@ -1,4 +1,4 @@
 <!--
-  /deck/* segment layout — Deck docs rail projects routes into its route slot.
+  Legacy /deck/* redirects — fill shell (no product rail).
 -->
-<sail-deck-rail></sail-deck-rail>
+<sail-fill-shell></sail-fill-shell>

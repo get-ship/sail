@@ -1,5 +1,5 @@
-// The component-library guide (/sail/elements) and the Errors chapter
-// (/sail/language/errors): the live demos must actually run headless —
+// The component-library guide (/docs/guide/using-components) and the Errors chapter
+// (/docs/concepts/errors): the live demos must actually run headless —
 // icons fetch and inject, tabs answer clicks, and the error-boundary demo
 // exposes the fallback UI and a working Retry.
 
@@ -12,7 +12,7 @@ test('elements guide: icons inject, tabs demo answers clicks, no errors', async 
     if (m.type() === 'error') errors.push(m.text())
   })
 
-  await page.goto('/sail/elements', { waitUntil: 'domcontentloaded' })
+  await page.goto('/docs/guide/using-components', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Using components' })).toBeVisible({
     timeout: 60_000,
   })
@@ -33,13 +33,13 @@ test('elements guide: icons inject, tabs demo answers clicks, no errors', async 
 })
 
 test('errors chapter: rail entry renders, boundary fallback UI is present, retry restores', async ({ page }) => {
-  await page.goto('/sail/language/errors', { waitUntil: 'domcontentloaded' })
+  await page.goto('/docs/concepts/errors', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Errors', exact: true })).toBeVisible()
 
   // The docs rail renders the new Concepts entry and marks it current.
   // Drawer dialog also mounts the same links (always-mounted L1 dialog).
   await expect(
-    page.locator('nav a[href="/sail/language/errors"][aria-current="page"]').first(),
+    page.locator('nav a[href="/docs/concepts/errors"][aria-current="page"]').first(),
   ).toBeVisible()
 
   // The live demo is in its healthy state.

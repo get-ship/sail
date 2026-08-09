@@ -4,7 +4,7 @@
 //   - `route` is the reactive URL handle deck injects into every route scope;
 //     its fields are signals (packages/sail/runtime/src/route-signals.ts).
 //   - `query()` is deck's live-data seam, exactly as the conformance
-//     route drives it (crates/deck/deck-conformance/app/routes/feed/page.sail).
+//     route drives it (crates/docs/app/docs/app-conformance/app/routes/feed/page.sail).
 export const code = {
   // The URL as a reactive source. Navigating re-runs only the bindings that
   // read `route`, with no document reload and no component re-mount.

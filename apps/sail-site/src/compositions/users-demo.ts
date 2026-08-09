@@ -1,4 +1,4 @@
-// users-demo — the data FIXTURE behind /sail/language/data's three-states
+// users-demo — the data FIXTURE behind /docs/concepts/data's three-states
 // demo. Lives under src/compositions so controllers may value-import it
 // (sail-controller-import-convention). Was an inline `new Promise(...)`
 // closure; extracted into an ES-imported client so `query()` can derive

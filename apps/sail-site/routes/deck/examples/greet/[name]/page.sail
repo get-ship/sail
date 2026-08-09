@@ -1,37 +1,20 @@
-<!--
-  Live [name] param route — heading tracks ctx.route.params.name().
--->
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
+<!-- Legacy path redirect → /docs/app/examples/greet/ada -->
+<scope>
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
 
-export default controller((ctx: ControllerScope<Scope>) => {
-  const name = derived(() => ctx.route.params.name?.() ?? '')
-  return { name }
+<controller>
+import { navigate } from '@ship/deck/router'
+
+export default controller(() => {
+  mount(() => {
+    navigate('/docs/app/examples/greet/ada', { replace: true })
+  })
+  return {}
 })
 </controller>
 
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
-
-<article style(page)>
-  <p style(eyebrow)>Live example</p>
-  <h1>Hello, {name()}.</h1>
-  <p style(lead)>
-    This page is <code>routes/deck/examples/greet/&#91;name&#93;/page.sail</code>. The
-    <code>&#91;name&#93;</code> directory is a route parameter, and
-    <code>ctx.route.params.name&#40;&#41;</code> reads it as a signal.
-  </p>
-  <p>
-    Change the URL to change the greeting — try
-    <a href="/deck/examples/greet/ada">/deck/examples/greet/ada</a> or
-    <a href="/deck/examples/greet/deck">/deck/examples/greet/deck</a>.
-  </p>
-  <row style(footNav)>
-    <a href="/deck/dynamic-routes">← Dynamic routes</a>
-  </row>
-</article>
+<column align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Redirecting to App example…</p>
+</column>

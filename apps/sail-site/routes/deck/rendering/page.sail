@@ -1,41 +1,20 @@
-<!--
-  /deck/rendering — CSR default, SSR opt-in, sail build static out.
--->
-
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { ssrConfig, buildCmd } from '../../../src/compositions/deck-rendering-snippets'
-
-export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildCmd }))
-</controller>
-
+<!-- Legacy path redirect → /docs/app/rendering -->
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
-<article style(page)>
-  <p style(eyebrow)>Rendering &amp; build</p>
-  <h1>Rendering modes</h1>
-  <p style(lead)>deck paints a route one of two ways. The default renders on the client; opt into server rendering for first paint and SEO.</p>
+<controller>
+import { navigate } from '@ship/deck/router'
 
-  <h2>CSR (default)</h2>
-  <p>deck serves an empty <code>&lt;div id="root"&gt;</code> and an importmap shell. The client entry mounts the <code>routes/</code> SPA and paints. The initial document is near-empty; everything is drawn in the browser.</p>
+export default controller(() => {
+  mount(() => {
+    navigate('/docs/app/rendering', { replace: true })
+  })
+  return {}
+})
+</controller>
 
-  <h2>SSR</h2>
-  <p>Set <code>"render": "ssr"</code> in <code>sail.config.jsonc</code>. The matched route is server-rendered (via ship-js) into <code>#root</code>, and the client hydrates it in place.</p>
-  <code-block code={ssrConfig} lang="json"></code-block>
-  <p>With SSR the route’s markup is in the <strong>raw server bytes</strong> — good for first paint and for crawlers. (This docs site itself runs CSR; deck’s SSR path is proven by the framework’s own browser test harness.)</p>
-
-  <h2>Either way, one static dir</h2>
-  <p>Whichever mode you pick, <code>sail build</code> produces a self-contained static directory.</p>
-  <code-block code={buildCmd} lang="bash"></code-block>
-
-  <row style(footNav)>
-    <a href="/deck/data">← The data seam</a>
-    <a href="/deck/hmr">HMR →</a>
-  </row>
-</article>
+<column align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Redirecting to App docs…</p>
+</column>

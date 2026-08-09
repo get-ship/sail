@@ -1,7 +1,10 @@
 <!--
-  <sail-site-header> — site chrome: brand, product switcher, theme picker.
-  Mounted by routes/_layout.sail at prefix `/`. Segment sidebars live in
-  routes/<segment>/_layout.sail + rail — not here.
+  <sail-site-header> — site chrome: brand, Docs/Components/Playground nav,
+  theme picker, GitHub. Mounted by routes/_layout.sail at prefix `/`.
+
+  Modes:
+  - full: /docs/*, /components/* — product pill row
+  - compact: /, /playground — brand + theme + GitHub only
 
   Shell: outer column is viewport-locked (h(screen)) so fill/grow children
   resolve height. Landing (`/`) scrolls on <main>; document routes hide
@@ -17,21 +20,26 @@ import { siteTokenCss } from '../compositions/site-token-css'
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 void siteTokenCss
 
-function productFor(p: string): string {
-  if (p === '/') return 'ship'
-  if (p === '/deck' || p.startsWith('/deck/')) return 'deck'
-  if (p === '/ai' || p.startsWith('/ai/')) return 'ai'
+function sectionFor(p: string): string {
+  if (p === '/') return 'home'
+  if (p === '/playground' || p.startsWith('/playground/')) return 'playground'
   if (p === '/components' || p.startsWith('/components/')) return 'components'
-  return 'sail'
+  if (p === '/docs' || p.startsWith('/docs/')) return 'docs'
+  // Legacy / residual paths (tutorial parked under /sail/tutorial)
+  if (p === '/sail' || p.startsWith('/sail/')) return 'docs'
+  if (p === '/docs/app' || p.startsWith('/docs/app/')) return 'docs'
+  if (p === '/docs/ai' || p.startsWith('/docs/ai/')) return 'docs'
+  return 'docs'
 }
 
-function productAttr(product: string): string {
-  switch (product) {
-    case 'ship':
-    case 'deck':
+function productAttr(section: string): string {
+  switch (section) {
+    case 'home':
+      return 'ship'
     case 'components':
-    case 'ai':
-      return product
+      return 'components'
+    case 'playground':
+      return 'sail'
     default:
       return 'sail'
   }
@@ -49,9 +57,14 @@ function livePath(ctx: { route?: { pathname?: () => string } }): string {
 export default controller((ctx) => {
     const root = document.documentElement
     const path = derived(() => livePath(ctx as { route?: { pathname?: () => string } }))
-    const product = derived(() => productFor(path()))
+    const section = derived(() => sectionFor(path()))
+    const compact = derived(() => {
+      const s = section()
+      return s === 'home' || s === 'playground'
+    })
+    const landing = derived(() => path() === '/')
     effect(() => {
-      root.setAttribute('data-product', productAttr(product()))
+      root.setAttribute('data-product', productAttr(section()))
     })
 
     // One honest boot path: storage → config default (meta) → package default.
@@ -61,9 +74,7 @@ export default controller((ctx) => {
       applyTheme(readStoredTheme())
     })
 
-    const landing = derived(() => path() === '/')
-
-    return { path, product, landing }
+    return { path, section, compact, landing }
 })
 </controller>
 
@@ -84,6 +95,7 @@ export default controller((ctx) => {
   // Docs/workbench: flex column so nested shells resolve h(full). Without
   // display:flex, overflow:hidden on main clips and catalog cannot scroll.
   style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
+  style githubLink = { box: display(inline-flex).pad(1), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
 </scope>
 
 <column gap="0" style(shell, { box: w(full) })>
@@ -101,14 +113,28 @@ export default controller((ctx) => {
       </row>
     </a>
 
-    <row slot="center" gap="1" align="center" nowrap label="Products" style(productSwitch, { box: minW(0) })>
-      <a href="/sail/overview" current={product() === 'sail' ? 'page' : null} style(productLink, { box: shrink(0) })>Sail</a>
-      <a href="/deck" current={product() === 'deck' ? 'page' : null} style(productLink, { box: shrink(0) })>Deck</a>
-      <a href="/components" current={product() === 'components' ? 'page' : null} style(productLink, { box: shrink(0) })>Components</a>
-      <a href="/ai" current={product() === 'ai' ? 'page' : null} style(productLink, { box: shrink(0) })>AI</a>
-    </row>
+    <if {compact()}>
+      <span slot="center"></span>
+    {else => <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { box: minW(0) })>
+      <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { box: shrink(0) })>Docs</a>
+      <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { box: shrink(0) })>Components</a>
+      <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { box: shrink(0) })>Playground</a>
+    </row>}</if>
 
-    <theme-picker slot="actions"></theme-picker>
+    <row slot="actions" gap="2" align="center" nowrap>
+      <a
+        href="https://github.com/get-ship/sail"
+        target="_blank"
+        rel="noopener noreferrer"
+        label="Sail on GitHub"
+        style(githubLink)
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" hidden="true">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+        </svg>
+      </a>
+      <theme-picker></theme-picker>
+    </row>
   </navbar>
 
   <if {landing()}>

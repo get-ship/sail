@@ -1,42 +1,20 @@
-<!--
-  /sail/getting-started — install placeholder until public binary/npm story ships.
-  Authoring content lives in language + Tutorial, not here.
--->
+<!-- Legacy path redirect → /docs/guide/getting-started -->
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style card = { box: pad(5), paint: borderWidth(1).border(border).bg(surface-1) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) }
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
-<column gap="4" style(page)>
-  <p style(eyebrow)>Start here</p>
-  <h1>Installation</h1>
+<controller>
+import { navigate } from '@ship/deck/router'
 
-  <card style(card)>
-    <column gap="2">
-      <row gap="2" align="center">
-        <badge tone="warning">Under construction</badge>
-      </row>
-      <p>
-        This page ships with the public release. Sail installs as a single
-        downloadable binary, with an npm wrapper for package-manager
-        workflows — the packages and this page land together.
-      </p>
-    </column>
-  </card>
+export default controller(() => {
+  mount(() => {
+    navigate('/docs/guide/getting-started', { replace: true })
+  })
+  return {}
+})
+</controller>
 
-  <p style(muted)>
-    In the meantime, the <a href="/sail/tutorial">Tutorial</a> and
-    <a href="/sail/playground">Playground</a> run entirely in your browser —
-    no install required.
-  </p>
-
-  <row gap="2" style(footNav)>
-    <a variant="solid" tone="primary" href="/sail/tutorial">Tutorial →</a>
-    <a variant="default" href="/sail/playground">Playground</a>
-    <a variant="default" href="/sail/overview">Introduction</a>
-    <a variant="default" href="/sail/why">Why Sail</a>
-  </row>
+<column align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Redirecting to Installation…</p>
 </column>

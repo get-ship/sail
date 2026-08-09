@@ -15,6 +15,8 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
+    // Sail authors `testid=` (not data-testid).
+    testIdAttribute: 'testid',
     trace: 'off',
     headless: true,
     viewport: { width: 1280, height: 800 },

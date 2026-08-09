@@ -1,4 +1,4 @@
-// Snippets for /sail/guide/making-a-theme. Every excerpt is VERBATIM from
+// Snippets for /docs/guide/making-a-theme. Every excerpt is VERBATIM from
 // packages/sail/tokens — themes.css, themes.ts, tokens.test.ts, products.css.
 // Never invent a token name here: the guide's whole value is that a reader
 // can paste it.

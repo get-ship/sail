@@ -1,4 +1,4 @@
-// Code snippets for the /ai/authoring page.
+// Code snippets for the /docs/ai/authoring page.
 
 export const loopDiagram = `            ┌──────────────────────────────────────┐
             │ 1. Load skill         docs/ship-sail/ │
