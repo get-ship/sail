@@ -790,7 +790,9 @@ fn style_const_diag_message(diags: &[StyleDiagnostic]) -> Option<String> {
     diags.first().map(|d| d.message())
 }
 
-/// End of a Style RHS: `;` or newline at depth 0 once the expression has content.
+/// End of a Style RHS: balanced `{}`/`()`/`[]` (strings/comments skipped).
+/// Compose may continue after `,` across newlines; a closed group ends the
+/// RHS unless the next non-trivia token is `,`.
 fn scan_style_expr_end(s: &str, start: usize) -> usize {
     let bytes = s.as_bytes();
     let mut i = start;
@@ -803,10 +805,24 @@ fn scan_style_expr_end(s: &str, start: usize) -> usize {
         }
         match bytes[i] {
             b'{' | b'(' | b'[' => depth += 1,
-            b'}' | b')' | b']' => depth -= 1,
+            b'}' | b')' | b']' => {
+                if depth == 0 {
+                    // Stray closer — stop before it so the outer loop diagnoses.
+                    return i;
+                }
+                depth -= 1;
+                if depth == 0 {
+                    // Group closed. End here unless compose continues with `,`.
+                    let k = skip_trivia(s, i + 1, None);
+                    if k >= bytes.len() || bytes[k] != b',' {
+                        return i + 1;
+                    }
+                }
+            }
             b';' if depth == 0 => return i,
-            b'\n' if depth <= 0 => {
-                if !s[start..i].trim().is_empty() {
+            b'\n' if depth == 0 => {
+                let before = s[start..i].trim_end();
+                if !before.is_empty() && !before.ends_with(',') {
                     return i;
                 }
             }
@@ -1922,5 +1938,179 @@ mod tests {
     fn empty_scope_is_valid() {
         let b = block("");
         assert!(b.props.is_empty() && b.types.is_empty() && b.style_env.is_empty());
+    }
+
+    #[test]
+    fn style_decl_nested_when_hover_multiline() {
+        let b = block(
+            r#"
+style host = {
+  box: pad(2),
+  when: {
+    hover: {
+      paint: bg(primary)
+    }
+  }
+}
+style next = {
+  paint: bg(muted)
+}
+props: { label = '' }
+"#,
+        );
+        assert!(b.style_env.contains_key("host"), "host: {:?}", b.style_env.keys());
+        assert!(b.style_env.contains_key("next"), "next: {:?}", b.style_env.keys());
+        assert_eq!(b.style_env.len(), 2);
+    }
+
+    #[test]
+    fn style_decl_string_with_braces() {
+        // Quoted match-arm key keeps `}` inside a string so depth stays honest.
+        let b = block(
+            r#"
+style a = {
+  match: {
+    kind: {
+      "has } brace": { box: pad(1) }
+    }
+  }
+}
+style b = { box: pad(1) }
+"#,
+        );
+        assert!(b.style_env.contains_key("a"));
+        assert!(b.style_env.contains_key("b"));
+    }
+
+    #[test]
+    fn style_decl_comments_with_braces() {
+        let b = block(
+            r#"
+style a = {
+  // closing } here is comment
+  /* } { */
+  paint: bg(primary)
+}
+style b = { box: pad(1) }
+"#,
+        );
+        assert!(b.style_env.contains_key("a"));
+        assert!(b.style_env.contains_key("b"));
+    }
+
+    #[test]
+    fn style_decl_compose_multiline_after_comma() {
+        let b = block(
+            r#"
+style a = { box: pad(1) }
+style b = a,
+{ box: pad(2) }
+style c = a,
+style({ box: pad(3) })
+"#,
+        );
+        assert!(b.style_env.contains_key("a"));
+        assert!(b.style_env.contains_key("b"));
+        assert!(b.style_env.contains_key("c"));
+        match b.style_env.get("b") {
+            Some(sail_lint::style::Style::List(parts)) => {
+                assert_eq!(parts.len(), 2, "a, {{…}} compose");
+            }
+            other => panic!("expected List compose for b, got {other:?}"),
+        }
+        match b.style_env.get("c") {
+            Some(sail_lint::style::Style::List(parts)) => {
+                assert_eq!(parts.len(), 2, "a, style({{…}}) compose");
+            }
+            other => panic!("expected List compose for c, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn style_decl_back_to_back_objects() {
+        let b = block(
+            r#"
+style a = { box: pad(1) }
+style b = { box: pad(2) }
+style c = { when: { hover: { paint: bg(primary) } } }
+"#,
+        );
+        assert_eq!(b.style_env.len(), 3);
+        for name in ["a", "b", "c"] {
+            assert!(b.style_env.contains_key(name), "missing {name}");
+        }
+    }
+
+    #[test]
+    fn style_decl_trailing_comment_before_next() {
+        let b = block(
+            r#"
+style a = { box: pad(1) } // keep
+style b = { box: pad(2) }
+"#,
+        );
+        assert!(b.style_env.contains_key("a"));
+        assert!(b.style_env.contains_key("b"));
+    }
+
+    #[test]
+    fn unknown_word_still_refused() {
+        let e = err("filled = { box: pad(1) }");
+        assert!(
+            e.message.contains("`filled` is not a `<scope>` member"),
+            "{}",
+            e.message
+        );
+    }
+
+    /// LSP path (`check_all_with_tier`) must not emit scope-member noise on
+    /// the multi-line Style shapes that used to re-enter mid-declaration.
+    #[test]
+    fn check_all_with_tier_clean_on_multiline_style_scope() {
+        let src = r#"
+<scope>
+  style host = {
+    box: pad(2),
+    when: {
+      hover: {
+        paint: bg(primary)
+      }
+    }
+  }
+  style quiet = host,
+  {
+    box: pad(1)
+  }
+  style labeled = {
+    match: {
+      kind: {
+        "has } brace": { box: pad(1) }
+      }
+    }
+  }
+  // } in comment
+  style noted = {
+    /* } { */
+    paint: bg(muted)
+  }
+</scope>
+<div style(host)></div>
+"#;
+        let diags = crate::check_all_with_tier(
+            src,
+            None,
+            &[],
+            None,
+            crate::DiagnosticTier::OnType,
+        );
+        let scope_noise: Vec<_> = diags
+            .iter()
+            .filter(|d| d.message.contains("is not a `<scope>` member"))
+            .map(|d| d.message.as_str())
+            .collect();
+        assert!(
+            scope_noise.is_empty(),
+            "false scope-member diags: {scope_noise:?}\nall={diags:?}"
+        );
     }
 }
