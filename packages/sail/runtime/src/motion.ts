@@ -690,28 +690,43 @@ function observeProgressFallback(el: Element, kind: 'reveal' | 'scroll', c: Anim
 /** Re-time a freshly created animation set onto its progress timeline.
  *  Runs synchronously after `createAnimations` (via the `afterCreate`
  *  hook), before the just-started time-driven animation can advance or
- *  finish. Returns the disposer for whatever the fallback installed. */
+ *  finish. Returns the disposer for whatever the fallback installed.
+ *
+ *  REVEAL vs VIEWTIMELINE — measured failure (2026-08-09, Chromium):
+ *  App shells nest the document in `overflow-y: auto` (docs rail, main
+ *  chrome). ViewTimeline + `entry 0%…100%` (and `cover`) then report
+ *  *negative* progress for the entire time the subject is on screen, so
+ *  fill:both pins opacity/translate at the FROM keyframe (invisible)
+ *  while the user is looking at it. Max opacity while `inView` with
+ *  entry ranges: **0**. Progress only advances after the element has
+ *  scrolled *past* the viewport — the opposite of "reveal on enter".
+ *
+ *  `style.reveal`'s author contract is "play when it enters the
+ *  viewport", not scrub-linked scroll progress. IntersectionObserver
+ *  play-once is the correct primary path for that contract in nested
+ *  scrollports. ViewTimeline scrub stays available for `scroll` (page
+ *  progress), which is not entry-gated the same way.
+ */
 function attachProgressTimeline(el: Element, kind: 'reveal' | 'scroll', controls: AnimControls[]): Disposer {
+  if (kind === 'reveal') {
+    const detachers: Disposer[] = []
+    for (const c of controls) {
+      detachers.push(observeProgressFallback(el, 'reveal', c))
+    }
+    return () => { for (const d of detachers) d() }
+  }
+
   const timeline = makeProgressTimeline(kind, el)
   const detachers: Disposer[] = []
   for (const c of controls) {
     if (typeof c.attachTimeline === 'function') {
-      // motion-dom's own seam: with a timeline (and scroll-timeline
-      // support) it re-homes the WAAPI animation; without one it calls
-      // `observe` for the JS fallback. `entry 0% → entry 100%` scopes a
-      // view reveal to the element's ENTRY into the viewport — the card
-      // is fully arrived once it is fully visible, rather than scrubbing
-      // across the whole `cover` range and never settling on screen.
       detachers.push(
         c.attachTimeline({
           timeline,
-          ...(kind === 'reveal' && timeline ? { rangeStart: 'entry 0%', rangeEnd: 'entry 100%' } : {}),
           observe: () => observeProgressFallback(el, kind, c),
         }),
       )
     } else {
-      // A driver without `attachTimeline` (a test double) still gets the
-      // viewport GATE, just not the scrub.
       detachers.push(observeProgressFallback(el, kind, c))
     }
   }
