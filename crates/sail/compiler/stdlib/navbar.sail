@@ -24,9 +24,14 @@
   style placeBar = { box: position(relative).minH(14).padY(2).padX(4) }
   style placeRail = { box: minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column) }
   style brand = { box: shrink(0).minW(0), text: fontWeight(semibold) }
-  // Geometric center of the bar (not "between brand and actions").
+  // True geometric center: fill the bar, then justify-center the pills.
+  // MUST use inset(0) (or w(full)+h(full)) — left(0).right(0).top(0).bottom(0)
+  // emits s-right0/s-bottom0 atoms that are often ABSENT from the global
+  // skins sheet, so right/bottom stay auto and the track shrink-wraps to
+  // content width at left:0 (nav stuck under the brand). inset(0) is present
+  // in element-skins and fills the relative bar.
   style centerTrack = {
-    box: position(absolute).left(0).right(0).top(0).bottom(0).pointerEvents(none).minW(0),
+    box: position(absolute).inset(0).pointerEvents(none).minW(0),
   }
   style centerInner = { box: pointerEvents(auto).minW(0).maxW(full) }
   style actions = { box: shrink(0).ms(auto).minW(0) }
