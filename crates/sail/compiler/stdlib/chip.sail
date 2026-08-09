@@ -75,7 +75,6 @@
       },
       compound: [
         { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) },
-        { tone: muted, variant: soft, paint: bg(muted).fg(muted-foreground).border(border) },
         { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) },
         { tone: muted, variant: ghost, paint: fg(muted-foreground) },
         { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
