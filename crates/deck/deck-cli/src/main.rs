@@ -150,17 +150,20 @@ enum Command {
         project: Option<PathBuf>,
     },
 
-    /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`) for tsc/tsgo.
+    /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
+    /// for tsc/tsgo.
     ///
     /// Regenerated from compiler manifests (runtime ambients + Style setters +
     /// token scales). Pair with `@ship/sail-tsconfig/base` or
     /// `deck build --typecheck`. tsc owns controller/logic types; sail-compiler
     /// owns template/layout/vocabulary.
     Types {
-        /// Project directory that receives `.sail/types.d.ts`. Default: cwd.
+        /// Project directory that receives `node_modules/.sail/types.d.ts`.
+        /// Default: cwd.
         #[arg(long)]
         project: Option<PathBuf>,
-        /// Write ambient pack to this path instead of `<project>/.sail/types.d.ts`.
+        /// Write ambient pack to this path instead of
+        /// `<project>/node_modules/.sail/types.d.ts`.
         #[arg(long)]
         out: Option<PathBuf>,
         /// Also write a recommended project tsconfig (use `-` for stdout).

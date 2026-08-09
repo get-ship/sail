@@ -1,5 +1,5 @@
 //! Rolldown bundler — drives Rolldown with the SAIL plugin to bundle each target.
-//! Output goes to `assets_dir_for` (sail-out/dist) — no source-tree writes.
+//! Output goes to `assets_dir_for` (under `.deck/` / dist) — no source-tree writes.
 //!
 //! The SAIL resolve/load plugin lives in `sail_plugin.rs`; this module owns the
 //! target-to-bundle driver and its integration tests.

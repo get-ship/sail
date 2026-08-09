@@ -58,6 +58,7 @@ const SAIL_README: &str = r#"# Sail local store (gitignored)
 
 - `tasks/` — ephemeral agent/human threads for this machine
 - Build output is `.deck/`, not here
+- Ambient types are `node_modules/.sail/types.d.ts` (regenerate: `sail types`)
 "#;
 
 /// Result of [`ensure_sail_gitignore`].

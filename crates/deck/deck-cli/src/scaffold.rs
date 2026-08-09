@@ -351,9 +351,9 @@ fn validate_app_name(name: &str) -> Result<()> {
 ///   .gitignore           # includes .deck/ (build output — never commit)
 /// ```
 ///
-/// Also seeds `.sail/types.d.ts`, strict `tsconfig.json` (TOOLING-1 WI2), and
-/// `.oxlintrc.json` so typecheck + oxlint work out of the box with zero hand
-/// edits. Does **not** publish to a registry (operator).
+/// Also seeds `node_modules/.sail/types.d.ts`, strict `tsconfig.json`
+/// (TOOLING-1 WI2), and `.oxlintrc.json` so typecheck + oxlint work out of the
+/// box with zero hand edits. Does **not** publish to a registry (operator).
 pub fn run_create(name: PathBuf) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let app_dir = if name.as_os_str().is_empty() {
@@ -439,8 +439,8 @@ pub fn run_create(name: PathBuf) -> Result<()> {
         .map_err(|e| anyhow!("ensure project store (.gitignore / .sail): {e}"))?;
 
     // Ambient pack + strict tsconfig + oxlint so `tsc` / `oxlint` work with
-    // zero hand edits (TOOLING-1 WI2). `.sail/types.d.ts` is gitignored via
-    // ensure_project_store; regenerate with `sail types` after clone if needed.
+    // zero hand edits (TOOLING-1 WI2). Pack lives under `node_modules/.sail/`
+    // (SPEC-OUTPUT-1 §4); regenerate with `sail types` after install.
     let _ = sail_compiler::ambients::write_project_types(&app_dir)?;
     let tsconfig = sail_compiler::ambients::emit_project_tsconfig_json(&[
         "src/**/*.ts",
@@ -467,7 +467,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
             .display()
     );
     println!("[create]   .gitignore  (includes .deck/)");
-    println!("[create]   tsconfig.json  .sail/types.d.ts  .oxlintrc.json");
+    println!("[create]   tsconfig.json  node_modules/.sail/types.d.ts  .oxlintrc.json");
     println!("[create] next steps:");
     println!("  1. cd {rel}");
     println!("  2. bun install   # after @ship packages are published");

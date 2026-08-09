@@ -1,13 +1,13 @@
 //! End-to-end tsc proof on a sail-app-shaped consumer fixture.
 //!
 //! Proves the acceptance path ambient smoke alone does not cover:
-//!   1. emit ambient pack into the project's `.sail/types.d.ts`
+//!   1. emit ambient pack into `node_modules/.sail/types.d.ts`
 //!   2. project tsconfig extends `@ship/sail-tsconfig` base + includes the pack
 //!   3. `tsc --noEmit` EXIT 0 with **zero** hand ambient shims in app source
 //!   4. authored controller uses `signal` / `controller` / `style`
 //!
 //! Fixture lives at `tests/fixtures/ambient-app/` (committed project shape;
-//! pack is generated, never committed — `.sail/` is gitignored).
+//! pack is generated, never committed — under `node_modules/.sail/`).
 //!
 //! Opt-in when `node_modules/.bin/tsc` is present (same stance as synthetic_tsc).
 
@@ -49,7 +49,7 @@ fn assert_no_hand_ambient_shims(project: &Path) {
             let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
                 continue;
             };
-            // Only authored .ts under routes/src — not generated .sail/
+            // Only authored .ts under routes/src — not generated packs.
             if !name.ends_with(".ts") {
                 continue;
             }
@@ -108,7 +108,8 @@ fn ambient_app_fixture_tsc_no_emit_green() {
         "fixture tsconfig must extend sail base defaults:\n{tsconfig}"
     );
     assert!(
-        tsconfig.contains(".sail/types.d.ts"),
+        tsconfig.contains("node_modules/.sail/types.d.ts")
+            || tsconfig.contains(ambients::PROJECT_TYPES_REL),
         "fixture tsconfig must include generated ambient pack:\n{tsconfig}"
     );
 
@@ -135,13 +136,14 @@ fn ambient_app_fixture_tsc_no_emit_green() {
 
     assert_no_hand_ambient_shims(&project);
 
-    // Emit path consumers use: `sail types` / `write_project_types` → `.sail/types.d.ts`
+    // Emit path consumers use: `sail types` / `write_project_types` →
+    // `node_modules/.sail/types.d.ts` (SPEC-OUTPUT-1 §4).
     let pack = ambients::write_project_types(&project).expect("write ambient pack");
     assert!(
         pack.ends_with(ambients::PROJECT_TYPES_REL.replace('/', std::path::MAIN_SEPARATOR_STR))
-            || pack.ends_with(".sail/types.d.ts")
-            || pack.ends_with(".sail\\types.d.ts"),
-        "pack path should be project .sail/types.d.ts, got {}",
+            || pack.ends_with("node_modules/.sail/types.d.ts")
+            || pack.ends_with("node_modules\\.sail\\types.d.ts"),
+        "pack path should be project node_modules/.sail/types.d.ts, got {}",
         pack.display()
     );
     let pack_text = fs::read_to_string(&pack).expect("read pack");

@@ -2,7 +2,7 @@
   "name": "@ship/sail-tsconfig",
   "version": "0.1.0",
   "private": true,
-  "description": "Base TypeScript + oxlint defaults for sail projects (TOOLING-1 WI2). Pair tsconfig with `.sail/types.d.ts` from `sail types`. Oxlint covers TS regions only; sail-compiler owns sail-specific rules.",
+  "description": "Base TypeScript + oxlint defaults for sail projects (TOOLING-1 WI2). Pair tsconfig with `node_modules/.sail/types.d.ts` from `sail types`. Oxlint covers TS regions only; sail-compiler owns sail-specific rules.",
   "files": [
     "tsconfig.base.json",
     "oxlint.base.json"

@@ -29,7 +29,7 @@ const SKIP_DIRS = new Set([
   '.claude',
   '.grok',
   '.agents', // org scratch; not product surface
-  '.sail-out', // compiler emit cache (absolute paths)
+  '.sail-out', // residual pre-OUTPUT-1 emit dir (not product default)
   'out', // test/parity runner output (absolute paths, regenerable)
   'runs',
   'eval',

@@ -59,8 +59,8 @@ for (const target of targets) {
   // src/ when esbuild walks the import graph (`./` from src/dist/
   // → src/). Matches the Krausest harness layout; the only reason
   // we pass --out here is to override the compiler's default of
-  // writing to <repo-root>/.ship/sail-out/, which is awkward for a
-  // standalone example that lives in a tree containing a .ship/.
+  // writing to <repo-root>/.deck/, which is awkward for a
+  // standalone example that wants a local dist/ next to sources.
   const outDir = resolve(dirname(target), 'dist')
   mkdirSync(outDir, { recursive: true })
   console.log(`compiling ${target.replace(root + '/', '')}`)

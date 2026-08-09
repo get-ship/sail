@@ -1,8 +1,9 @@
 //! Component catalog aggregation.
 //!
 //! Walk per-component CEMs from published packages (each package's
-//! `customElements` manifest) AND from `.sail-out/**/*.custom-elements.json`
-//! (non-packaged: shell-local, view-local), merge into the canonical workspace
+//! `customElements` manifest) AND from the compiler emit mirror under
+//! `<out>/**/*.custom-elements.json` (default out is `.deck/` — SPEC-OUTPUT-1;
+//! non-packaged: shell-local, view-local), merge into the canonical workspace
 //! catalog document. Filesystem-only, deterministic (sort by tagName).
 //! Pass-through CEM arrays are kept as raw JSON so component metadata isn't
 //! lost to a typed schema.
@@ -82,7 +83,7 @@ pub fn build_catalog_scoped(
     all.extend(entries_from_sail_out(repo_root, &packages));
 
     all.sort_by(|a, b| a.tagName.cmp(&b.tagName));
-    // Dedup by tagName, first wins (packaged entries precede sail-out ones).
+    // Dedup by tagName, first wins (packaged entries precede emit-mirror ones).
     let mut seen = std::collections::HashSet::new();
     all.retain(|e| seen.insert(e.tagName.clone()));
 
@@ -314,7 +315,7 @@ fn entries_from_sail_out(repo_root: &Path, packages: &[WorkspacePackage]) -> Vec
         // Owning pack with a resolvable aggregated manifest → served from there;
         // skip. When the manifest path is declared in `package.json` but the
         // file is absent (the pack hasn't been built), fall through to the
-        // `.sail-out/` path — that's what we just compiled.
+        // emit-mirror path — that's what we just compiled.
         if let Some((_, p)) = owning {
             if let Some(ce) = &p.custom_elements {
                 if p.root.join(ce).exists() {
@@ -380,7 +381,7 @@ fn find_owning_package<'a>(
 }
 
 /// Repo-relative source `.sail` path for a per-component CEM under
-/// `.sail-out/<mirror>/<stem>.custom-elements.json`.
+/// `<out>/<mirror>/<stem>.custom-elements.json` (default out: `.deck/`).
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel
@@ -442,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn aggregates_packaged_and_sail_out() {
+    fn aggregates_packaged_and_emit_mirror() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         write(
@@ -458,9 +459,9 @@ mod tests {
             &root.join("packages/charts/dist/custom-elements.json"),
             &cem("sail-bar"),
         );
-        // A shell-local component in the sail-out mirror.
+        // A shell-local component in the product emit mirror (`.deck/`).
         write(
-            &root.join(".sail-out/apps/shell/src/sail-x/sail-x.custom-elements.json"),
+            &root.join(".deck/apps/shell/src/sail-x/sail-x.custom-elements.json"),
             &cem("sail-x"),
         );
 
@@ -482,7 +483,7 @@ mod tests {
             .unwrap();
         assert_eq!(bar.package, "@ship/charts");
         assert!(!bar.private);
-        // A sail-out CEM under apps/shell falls through to the workspace
+        // A emit-mirror CEM under apps/shell falls through to the workspace
         // origin: `workspace:apps`. The catalog has no per-app projection.
         let x = workspace
             .entries
@@ -494,14 +495,14 @@ mod tests {
     }
 
     #[test]
-    fn aggregates_sail_out_zero_config() {
-        // A sail-out CEM with no matching package falls through to
+    fn aggregates_emit_mirror_zero_config() {
+        // An emit-mirror CEM with no matching package falls through to
         // origin_for_non_packaged_source → workspace:apps.
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         write(&root.join("package.json"), r#"{"workspaces":[]}"#);
         write(
-            &root.join(".sail-out/apps/shell/src/sail-x/sail-x.custom-elements.json"),
+            &root.join(".deck/apps/shell/src/sail-x/sail-x.custom-elements.json"),
             &cem("sail-x"),
         );
         let workspace = build_catalog(root).unwrap();

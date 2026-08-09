@@ -5,7 +5,7 @@
 //! locates sail-compiler once, then `build`/`build_all` drive Rolldown
 //! (`rolldown_bundle`) directly, and `start_watching` re-bundles affected
 //! targets on filesystem change (via `notify`), emitting `BundlerEvent`s on a
-//! broadcast channel for HMR. Output lands in `assets_dir_for` (sail-out/dist).
+//! broadcast channel for HMR. Output lands in `assets_dir_for` (under `.deck/`).
 
 pub mod dup_version_check;
 pub mod paths;

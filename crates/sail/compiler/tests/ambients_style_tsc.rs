@@ -1,6 +1,6 @@
 //! tsc proof for the ambient Style pack.
 //!
-//! Writes a tiny fixture against the generated `.sail/types.d.ts` and asserts:
+//! Writes a tiny fixture against the generated `node_modules/.sail/types.d.ts` and asserts:
 //! - good Style usage typechecks green
 //! - wrong setter / wrong token type is a tsc error
 //!
