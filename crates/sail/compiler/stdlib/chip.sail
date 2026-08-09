@@ -109,8 +109,12 @@
       { tone: destructive, variant: ghost, paint: bg(transparent).border(transparent).fg(destructive) },
       { tone: accent, variant: ghost, paint: bg(transparent).border(transparent).fg(accent) },
       { tone: muted, variant: ghost, paint: fg(muted-foreground) },
+      // Selected beats tone×variant (same/higher attr count so it can win cascade).
       { selected: true, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
-      { selected: true, tone: muted, paint: bg(primary).fg(primary-foreground).border(primary) },
+      { selected: true, variant: solid, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
+      { selected: true, variant: soft, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
+      { selected: true, variant: outline, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
+      { selected: true, variant: ghost, paint: bg(primary).fg(primary-foreground).border(primary).shadow(xs) },
       { selected: true, when: { hover: { paint: opacity(90) } } },
     ],
   })
