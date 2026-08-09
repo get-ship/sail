@@ -57,7 +57,8 @@ let uid = 0
 const PAINT_MODES = new Set<PaintMode>(['light', 'dark'])
 
 /** Theme id shape aligned with sail-compiler `validate_theme_id` (no path chars). */
-const SAFE_THEME_ID = /^[a-z][a-z0-9-]*$/
+/** Catalog theme ids — digit-leading allowed (e.g. `8bit`). Path-like rejected elsewhere. */
+const SAFE_THEME_ID = /^[a-z0-9][a-z0-9-]*$/
 
 /**
  * Per-action ops session for the product grid.
@@ -404,8 +405,12 @@ export const themeSelect: Action<void> = (node) => {
   const ensureCatalog = (): void => {
     if (!themeGrid || modeOnly) return
 
+    // Seed markup is a single `<button value="sail">` WITHOUT role=option —
+    // configureOption stamps role after clone. Scan grid values, not role.
     const byId = new Map<string, HTMLElement>()
-    for (const o of options()) {
+    for (const o of Array.from(
+      themeGrid.querySelectorAll<HTMLElement>('button[value], [role="option"][value]'),
+    )) {
       const v = valueOf(o)
       if (v) byId.set(v, o)
     }

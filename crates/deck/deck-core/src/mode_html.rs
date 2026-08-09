@@ -152,16 +152,40 @@ fn project_themes_rel_path(project_rel: &str, project_root: &std::path::Path) ->
 ///
 /// When effective ids fail, HTML is unchanged (client falls back to full
 /// `THEMES` or ops fetch).
+/// Catalog theme id stamp filter: `/^[a-z0-9][a-z0-9-]*$/`, no path segments.
+/// Digit-leading ids (e.g. `8bit`) are valid catalog members.
+fn is_safe_catalog_theme_id(id: &str) -> bool {
+    let mut chars = id.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_lowercase() || first.is_ascii_digit()) {
+        return false;
+    }
+    if !chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+        return false;
+    }
+    !id.contains("..") && !id.contains('/') && !id.contains('\\')
+}
+
 pub fn inject_effective_themes_meta(html: &str, project_root: &std::path::Path) -> String {
+    // Prefer live monorepo catalog when present (includes digit-leading ids like
+    // `8bit`); external apps fall back to the baked catalog.
+    let workspace = project_root.ancestors().find(|p| {
+        p.join(sail_compiler::tokens_generate::MONOREPO_MODEL_REL)
+            .join("themes")
+            .is_dir()
+    });
     let Ok(ids) =
-        sail_compiler::tokens_generate::effective_theme_ids_opt(None, project_root)
+        sail_compiler::tokens_generate::effective_theme_ids_opt(workspace, project_root)
     else {
         return html.to_string();
     };
     let mut safe: Vec<String> = Vec::new();
     for id in ids.all_ids() {
-        // Same shape as compiler validate_theme_id — never stamp path-like ids.
-        if sail_compiler::tokens_generate::validate_theme_id(&id).is_ok() {
+        // Catalog ids may be digit-leading (`8bit`). Reject path-like only —
+        // do not use scaffold validate_theme_id (letter-first) here.
+        if is_safe_catalog_theme_id(&id) {
             safe.push(id);
         }
     }
