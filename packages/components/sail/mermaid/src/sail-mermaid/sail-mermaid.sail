@@ -1,6 +1,10 @@
 <!--
   <sail-mermaid> — mermaid source text → themed SVG. `value` is source (not URL).
   Lazy pack (`lazy: true`); async render into bindHtml via use:paintDiagram.
+
+  C-MMD-1: never paint Mermaid's stock bomb ("Syntax error in text / mermaid
+  version …"). suppressErrorRendering forces throws; we only bindHtml success
+  SVG or our themed error tile. Init once (module); theme-only reconfigure.
 -->
 
 <scope>
@@ -17,6 +21,12 @@ type RenderResult =
   | { ok: true; svg: string }
   | { ok: false; error: string };
 
+/** Module-scope init: one mermaid.initialize for the pack lifetime; theme
+ *  flips reconfigure only when dark/light actually changes — not on every
+ *  value effect (avoids global-state races that left orphan bomb SVGs). */
+let mermaidReady = false;
+let mermaidTheme: "dark" | "default" | null = null;
+
 /** Dark surface via data-mode on <html>. */
 function isDark(): boolean {
   return document.documentElement.dataset.mode === "dark";
@@ -26,24 +36,56 @@ function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+function ensureMermaid(theme: "dark" | "default"): void {
+  if (mermaidReady && mermaidTheme === theme) return;
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    // Throw on parse/render failure instead of drawing the stock bomb SVG.
+    suppressErrorRendering: true,
+    theme,
+    themeVariables: {
+      fontFamily: cssVar("--font-body") || "inherit",
+      background: "transparent",
+    },
+    flowchart: { useMaxWidth: true },
+  });
+  mermaidReady = true;
+  mermaidTheme = theme;
+}
+
+/** Mermaid parks temp nodes as `#id`, `#d{id}`, `#i{id}` on document.body.
+ *  Success path removes them; some error paths historically did not — always
+ *  scrub after every attempt so bomb chrome cannot bleed outside our host. */
+function cleanMermaidTemp(id: string): void {
+  for (const eid of [id, `d${id}`, `i${id}`]) {
+    document.getElementById(eid)?.remove();
+  }
+}
+
+/** Belt-and-suspenders: if an old mermaid build still returns error art,
+ *  treat it as failure so bindHtml never paints the bomb. */
+function isStockErrorSvg(svg: string): boolean {
+  return /Syntax error in text/i.test(svg);
+}
+
 async function renderMermaid(src: string, dark: boolean): Promise<RenderResult> {
   const theme: "dark" | "default" = dark ? "dark" : "default";
+  const id = `sail-mmd-${Math.random().toString(36).slice(2)}`;
   try {
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "strict",
-      theme,
-      themeVariables: {
-        fontFamily: cssVar("--font-body") || "inherit",
-        background: "transparent",
-      },
-      flowchart: { useMaxWidth: true },
-    });
-    const id = `sail-mmd-${Math.random().toString(36).slice(2)}`;
+    ensureMermaid(theme);
     const { svg } = await mermaid.render(id, src);
+    if (!svg || isStockErrorSvg(svg)) {
+      return {
+        ok: false,
+        error: !svg ? "Empty diagram SVG" : "Mermaid stock error diagram suppressed",
+      };
+    }
     return { ok: true, svg };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  } finally {
+    cleanMermaidTemp(id);
   }
 }
 
@@ -86,6 +128,7 @@ export default controller((ctx) => {
           if (!res.ok) {
             ;(host as any).onError?.({ message: res.error, source: src });
           }
+          // Only success SVG ever reaches bindHtml — never Mermaid error art.
           html.set(res.ok ? res.svg : "");
           error.set(res.ok ? "" : res.error);
         });
