@@ -162,12 +162,19 @@ type TutWaiter = {
 declare global {
   interface Window {
     __tutWaiters?: Record<string, TutWaiter>
+    /** runId → host element for same-doc mount (avoids attribute query races). */
+    __tutHosts?: Record<string, HTMLElement>
   }
 }
 
 function ensureWaiters(): Record<string, TutWaiter> {
   if (!window.__tutWaiters) window.__tutWaiters = {}
   return window.__tutWaiters
+}
+
+function ensureHosts(): Record<string, HTMLElement> {
+  if (!window.__tutHosts) window.__tutHosts = {}
+  return window.__tutHosts
 }
 
 /**
@@ -181,7 +188,6 @@ function ensureWaiters(): Record<string, TutWaiter> {
  */
 function buildMountModule(opts: {
   runId: string
-  hostAttr: string
   controllerSrc: string
   templateJs: string
   css: string | null | undefined
@@ -212,7 +218,6 @@ function buildMountModule(opts: {
   template = template.replace(/\bexport\s+default\s+/g, 'const __tutDef = ')
 
   const cssLit = opts.css ? JSON.stringify(opts.css) : 'null'
-  const hostAttrLit = JSON.stringify(opts.hostAttr)
   const runIdLit = JSON.stringify(opts.runId)
 
   return `${controller}
@@ -221,11 +226,11 @@ ${template}
 
 ;(async () => {
   const runId = ${runIdLit}
-  const hostAttr = ${hostAttrLit}
   const waiters = (window.__tutWaiters = window.__tutWaiters || {})
+  const hosts = (window.__tutHosts = window.__tutHosts || {})
   const waiter = waiters[runId]
   try {
-    const host = document.querySelector('[' + hostAttr + ']')
+    const host = hosts[runId]
     if (!host) throw new Error('preview host not found')
     while (host.firstChild) host.removeChild(host.firstChild)
     const css = ${cssLit}
@@ -270,6 +275,7 @@ ${template}
     else console.error('[tutorial-preview]', err)
   } finally {
     delete waiters[runId]
+    delete hosts[runId]
   }
 })();
 `
@@ -302,29 +308,8 @@ export function runInHost(
   if (result.kind === 'err') return { result, mount: prev ?? null }
 
   const runId = `tut-run-${++runSeq}`
-  const hostAttr = `data-tut-host="${runId}"`
-  // Stamp the host so the inline module can find it without holding a closed-
-  // over node reference across the module boundary.
-  for (const a of Array.from(host.attributes)) {
-    if (a.name.startsWith('data-tut-host')) host.removeAttribute(a.name)
-  }
-  host.setAttribute('data-tut-host', runId)
 
-  const ctrlBody = extractController(opts.source)
-  const moduleSrc = buildMountModule({
-    runId,
-    hostAttr: `data-tut-host="${runId}"`,
-    controllerSrc: ctrlBody,
-    templateJs: result.js,
-    css: result.css,
-  })
-
-  const waiters = ensureWaiters()
-  const ready = new Promise<PreviewMount>((resolve, reject) => {
-    waiters[runId] = { resolve, reject }
-  })
-
-  // Tear prior mount only after we know compile succeeded.
+  // Tear prior mount before registering the next host.
   try {
     prev?.dispose()
   } catch {
@@ -334,6 +319,25 @@ export function runInHost(
     activeScript.remove()
     activeScript = null
   }
+
+  // Register host by runId — mount module looks it up on window.__tutHosts
+  // (attribute querySelector raced with dispose wiping the stamp on re-run).
+  const hosts = ensureHosts()
+  hosts[runId] = host
+  host.setAttribute('data-tut-host', runId)
+
+  const ctrlBody = extractController(opts.source)
+  const moduleSrc = buildMountModule({
+    runId,
+    controllerSrc: ctrlBody,
+    templateJs: result.js,
+    css: result.css,
+  })
+
+  const waiters = ensureWaiters()
+  const ready = new Promise<PreviewMount>((resolve, reject) => {
+    waiters[runId] = { resolve, reject }
+  })
 
   const script = document.createElement('script')
   script.type = 'module'
@@ -349,6 +353,13 @@ export function runInHost(
       throw new Error(message)
     })
 
+  const clearHostReg = (): void => {
+    if (hosts[runId] === host) delete hosts[runId]
+    if (host.getAttribute('data-tut-host') === runId) {
+      host.removeAttribute('data-tut-host')
+    }
+  }
+
   // Synchronous return for compile-ok; page controller awaits ready when present.
   const mount: PreviewMount = {
     dispose: () => {
@@ -357,7 +368,7 @@ export function runInHost(
         .catch(() => {})
       script.remove()
       if (activeScript === script) activeScript = null
-      host.removeAttribute('data-tut-host')
+      clearHostReg()
     },
   }
 
@@ -375,13 +386,14 @@ export function runInHost(
           }
           script.remove()
           if (activeScript === script) activeScript = null
-          host.removeAttribute('data-tut-host')
+          clearHostReg()
         }
         return mount
       })
       .catch((err) => {
         script.remove()
         if (activeScript === script) activeScript = null
+        clearHostReg()
         return Promise.reject(err)
       }),
   }
