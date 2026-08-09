@@ -278,16 +278,9 @@ export function createComponentsLibrary(session: ComponentsSession) {
     syncRows()
   }
 
-  const onListClick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.(
-      '[component-id]',
-    ) as HTMLElement | null
-    if (!el?.dataset.componentId) return
-    const ctrl = (e.target as Element | null)?.closest?.(
-      'button, a, input, [popover]',
-    )
-    if (ctrl && ctrl !== el) return
-    select(el.dataset.componentId)
+  const onListClick = (id: string) => {
+    if (!id) return
+    select(id)
   }
 
   const onOpenInEdit = () => {

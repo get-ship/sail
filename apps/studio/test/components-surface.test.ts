@@ -71,6 +71,16 @@ describe('components-surface', () => {
     expect(inspectSail).toMatch(/return \{ session, inspect \}/)
   })
 
+  it('passes component ids via closed-over handlers (not component-id / dataset)', () => {
+    const sail = readFileSync(SURFACE, 'utf8')
+    const library = readFileSync(LIBRARY, 'utf8')
+    expect(sail).toMatch(/on:click=\{\(\)\s*=>\s*library\.onListClick\(row\.id\)\}/)
+    expect(sail).not.toMatch(/component-id=\{/)
+    expect(library).not.toMatch(/dataset\.componentId/)
+    expect(library).not.toMatch(/closest\?\.\(\s*['"]\[component-id\]/)
+    expect(library).toMatch(/const onListClick = \(id: string\)/)
+  })
+
   it('session uses openDocument + createThread + generation-safe domains', () => {
     const session = readFileSync(SESSION, 'utf8')
     const library = readFileSync(LIBRARY, 'utf8')

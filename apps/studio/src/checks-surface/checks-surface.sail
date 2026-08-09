@@ -73,8 +73,12 @@ export default controller(() => {
     onRuleFilter: (e: Event) => c.onRuleFilter(e),
     onFileFilter: (e: Event) => c.onFileFilter(e),
     onSeverityFilter: (e: Event) => c.onSeverityFilter(e),
-    onFindingClick: (e: Event) => c.onFindingClick(e),
-    onFindingAction: (e: Event) => c.onFindingAction(e),
+    onFindingClick: (id: string) => c.onFindingClick(id),
+    onFindingAction: (
+      id: string,
+      action: 'open-source' | 'select-in-app' | 'apply-fix',
+      e?: Event,
+    ) => c.onFindingAction(id, action, e),
     onRuleToggle: (e: Event) => c.onRuleToggle(e),
     onApplyRule: (e: Event) => c.onApplyRule(e),
     onRetryChecks: () => c.onRetryChecks(),
@@ -179,7 +183,7 @@ export default controller(() => {
     </row>
   </if>
 
-  <scroll-area findings-list findings-table findings-table-host on:click={onFindingClick} style(findingsScroll)>
+  <scroll-area findings-list findings-table findings-table-host style(findingsScroll)>
     <column gap="0" style({ box: padY(1) })>
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
@@ -262,10 +266,10 @@ export default controller(() => {
             <for {g.rows as f} key={f.key}>
               <accordion
                 open={f.expanded}
-                finding-id={f.id}
                 selected={f.selected ? 'true' : 'false'}
                 severity={f.severity}
                 rule={f.rule}
+                on:click={() => onFindingClick(f.id)}
               >
                 <row
                   slot="trigger"
@@ -293,10 +297,7 @@ export default controller(() => {
                     <p fix-chip style(fixChip)>fix</p>
                   </if>
                 </row>
-                <column
-                  gap="2"
-
-                  on:click={onFindingAction} style(detailPad)>
+                <column gap="2" style(detailPad)>
                   <card finding-detail variant="outline" padding="sm">
                     <column gap="2">
                       <p style(mutedXs)>Why</p>
@@ -332,6 +333,7 @@ export default controller(() => {
                           deeplink-url={f.openSourceUrl}
                           variant="soft"
                           tone="primary"
+                          on:click={(e) => onFindingAction(f.id, 'open-source', e)}
                         >
                           Open in Edit
                         </button>
@@ -341,6 +343,7 @@ export default controller(() => {
                           finding-action="select-in-app"
                           variant="soft"
                           tone="muted"
+                          on:click={(e) => onFindingAction(f.id, 'select-in-app', e)}
                         >
                           Select element
                         </button>
@@ -356,6 +359,7 @@ export default controller(() => {
                             finding-action="apply-fix"
                             variant="soft"
                             tone="primary"
+                            on:click={(e) => onFindingAction(f.id, 'apply-fix', e)}
                           >
                             Apply fix
                           </button>

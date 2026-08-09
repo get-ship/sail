@@ -570,15 +570,8 @@ export function createChecksSurface() {
     }
   }
 
-  const onFindingClick = (e: Event) => {
-    const t = (e.target as Element | null)?.closest?.(
-      '[finding-id]',
-    ) as HTMLElement | null
-    if (!t?.dataset.findingId) return
-    if ((e.target as Element).closest?.('[finding-action]')) return
-    if ((e.target as Element).closest?.('[rule-toggle]')) return
-    if ((e.target as Element).closest?.('[apply-rule]')) return
-    const id = t.dataset.findingId
+  const onFindingClick = (id: string) => {
+    if (!id) return
     const next = getChecksState().selectedId === id ? null : id
     selectFinding(next)
     if (next) {
@@ -589,20 +582,17 @@ export function createChecksSurface() {
     sync()
   }
 
-  const onFindingAction = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.(
-      '[finding-action]',
-    ) as HTMLElement | null
-    const row = (e.target as Element | null)?.closest?.(
-      '[finding-id]',
-    ) as HTMLElement | null
-    if (!btn?.dataset.findingAction || !row?.dataset.findingId) return
-    e.stopPropagation?.()
-    selectFinding(row.dataset.findingId)
-    const action = btn.dataset.findingAction
+  const onFindingAction = (
+    id: string,
+    action: 'open-source' | 'select-in-app' | 'apply-fix',
+    e?: Event,
+  ) => {
+    if (!id || !action) return
+    e?.stopPropagation?.()
+    selectFinding(id)
     if (action === 'open-source') {
       // Primary: open the file in Studio Edit at the finding span.
-      const f = getChecksState().findings.find((x) => x.id === row.dataset.findingId)
+      const f = getChecksState().findings.find((x) => x.id === id)
       if (f?.path) {
         void openDocument(f.path, {
           loadPreview: false,
@@ -626,7 +616,7 @@ export function createChecksSurface() {
     } else if (action === 'select-in-app') {
       selectInApp()
     } else if (action === 'apply-fix') {
-      applyFix(row.dataset.findingId)
+      applyFix(id)
     }
     sync()
   }

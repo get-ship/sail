@@ -75,7 +75,7 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
       const opened = await page.evaluate(() => {
         const link =
           (document.querySelector('a[href*="/themes/"]') as HTMLAnchorElement | null) ||
-          (document.querySelector('[theme-id]') as HTMLElement | null)
+          (document.querySelector('[theme-row]') as HTMLElement | null)
         if (link instanceof HTMLAnchorElement && link.href) {
           return link.href
         }
