@@ -5,11 +5,15 @@
 // When the host has `autohide` (navbar prop), the bar slides away after scroll-down
 // to reclaim space, and returns on scroll-up or pointer near the top edge. Hidden
 // chrome publishes offset 0 so fill panes reclaim the viewport.
+//
+// Scroll is listened in *capture* on document so nested scrollports (landing
+// <main>, playground panes) still drive hide/show — window.scrollY alone is
+// often 0 on viewport-locked shells.
 
 import type { Action } from '../action'
 
 const TOP_REVEAL_PX = 56
-const HIDE_AFTER_Y = 72
+const HIDE_AFTER_Y = 48
 
 /**
  * `use:chromeOffset` — measure host height → `--chrome-offset`.
@@ -28,12 +32,10 @@ export const chromeOffset: Action<void> = (node) => {
   const readEnabled = (): boolean => {
     if (!el.hasAttribute('autohide')) return false
     const v = el.getAttribute('autohide')
-    // Boolean prop reflection: "", "true", "autohide" → on; "false" → off
     return v !== 'false' && v !== '0'
   }
 
   const measureNatural = (): void => {
-    // offsetHeight ignores transform; getBoundingClientRect is collapsed when hidden.
     const h = Math.round(el.offsetHeight)
     if (h > 0) naturalH = h
   }
@@ -59,7 +61,7 @@ export const chromeOffset: Action<void> = (node) => {
     }
     hidden = next
     el.style.transform = next ? 'translateY(-100%)' : 'translateY(0)'
-    // Keep hit-testing at the top strip while hidden so hover can reveal.
+    // While tucked, bar does not steal clicks; a fixed top edge still reveals.
     el.style.pointerEvents = next ? 'none' : ''
     publish()
   }
@@ -70,52 +72,32 @@ export const chromeOffset: Action<void> = (node) => {
     else publish()
   }
 
-  const scrollYOf = (t: EventTarget | null): number => {
-    if (!t || typeof window === 'undefined') return 0
-    if (t === window || t === document || t === document.documentElement) {
+  const scrollYFromEvent = (e: Event): number => {
+    const t = e.target
+    if (t === document || t === document.documentElement || t === document.body) {
       return window.scrollY || document.documentElement.scrollTop || 0
     }
-    if (t instanceof Element) return t.scrollTop
-    return 0
+    if (t instanceof Element) {
+      // Prefer the element's own scroll; fall back to window.
+      if (t.scrollTop > 0 || t.scrollHeight > t.clientHeight + 1) return t.scrollTop
+    }
+    return window.scrollY || document.documentElement.scrollTop || 0
   }
 
   const onScroll = (e: Event): void => {
     if (!enabled) return
-    const y = scrollYOf(e.target === document ? window : e.target)
+    const y = scrollYFromEvent(e)
     if (y < HIDE_AFTER_Y) {
       applyHidden(false)
-    } else if (y > lastY + 2) {
+    } else if (y > lastY + 4) {
       applyHidden(true)
-    } else if (y < lastY - 2) {
+    } else if (y < lastY - 4) {
       applyHidden(false)
     }
     lastY = y
   }
 
-  /** Window + any overflow scroll ancestor (landing main is the real scrollport). */
-  const scrollTargets: EventTarget[] = []
-  const bindScrollTargets = (): void => {
-    for (const t of scrollTargets) {
-      t.removeEventListener('scroll', onScroll)
-    }
-    scrollTargets.length = 0
-    if (typeof window === 'undefined') return
-    scrollTargets.push(window)
-    let p: Element | null = el.parentElement
-    while (p) {
-      const st = getComputedStyle(p)
-      const oy = st.overflowY
-      if (oy === 'auto' || oy === 'scroll' || oy === 'overlay') {
-        scrollTargets.push(p)
-      }
-      p = p.parentElement
-    }
-    for (const t of scrollTargets) {
-      t.addEventListener('scroll', onScroll, { passive: true })
-    }
-  }
-
-  // Invisible hit target along the top of the viewport when chrome is tucked away.
+  // Hit strip at top of viewport when chrome is tucked (pointer-events on bar are none).
   let edge: HTMLElement | null = null
   const ensureEdge = (): void => {
     if (typeof document === 'undefined' || edge) return
@@ -123,7 +105,7 @@ export const chromeOffset: Action<void> = (node) => {
     edge.setAttribute('data-chrome-reveal-edge', '')
     edge.setAttribute('aria-hidden', 'true')
     edge.style.cssText =
-      'position:fixed;left:0;right:0;top:0;height:12px;z-index:9998;pointer-events:auto;'
+      'position:fixed;left:0;right:0;top:0;height:14px;z-index:9998;pointer-events:auto;'
     edge.addEventListener('mouseenter', () => {
       if (enabled) applyHidden(false)
     })
@@ -155,7 +137,6 @@ export const chromeOffset: Action<void> = (node) => {
     publish()
   }
 
-  // React to autohide attr flips (SPA path modes).
   const mo =
     typeof MutationObserver !== 'undefined'
       ? new MutationObserver(() => {
@@ -164,10 +145,11 @@ export const chromeOffset: Action<void> = (node) => {
       : null
   mo?.observe(el, { attributes: true, attributeFilter: ['autohide'] })
 
+  // Capture phase: nested scrollports (landing main, workbench panes) fire here.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true })
+  }
   if (typeof window !== 'undefined') {
-    bindScrollTargets()
-    // Parent scrollports may mount after the navbar (layout chain).
-    requestAnimationFrame(() => bindScrollTargets())
     window.addEventListener('resize', publish)
     window.addEventListener('mousemove', onMouseMove, { passive: true })
   }
@@ -176,10 +158,9 @@ export const chromeOffset: Action<void> = (node) => {
     destroy: () => {
       ro?.disconnect()
       mo?.disconnect()
-      for (const t of scrollTargets) {
-        t.removeEventListener('scroll', onScroll)
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('scroll', onScroll, { capture: true } as EventListenerOptions)
       }
-      scrollTargets.length = 0
       if (typeof window !== 'undefined') {
         window.removeEventListener('resize', publish)
         window.removeEventListener('mousemove', onMouseMove)

@@ -1,7 +1,8 @@
 <!--
   <navbar> — application nav bar. Placements top/rail/bottom; sticky; bordered.
-  Three-track layout: brand | center | actions — equal flex sides so center is
-  geometrically centered (not biased by asymmetric action width).
+
+  Top/bottom geometry: brand (start) · center (true center, absolute) · actions (end).
+  Absolute center avoids flex asymmetry from unequal brand vs actions widths.
 
   autohide: with sticky + use:chromeOffset, bar tucks on scroll-down and returns
   on scroll-up or pointer near the top edge (space reclaim without losing nav).
@@ -20,13 +21,15 @@
     paint: bg(navbar).fg(navbar.foreground),
     text: underline(none),
   }
-  // Top + bottom share bar geometry; rail is a column panel.
-  style placeBar = { box: minH(14).padY(2).padX(4) }
+  style placeBar = { box: position(relative).minH(14).padY(2).padX(4) }
   style placeRail = { box: minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column) }
-  style brand = { text: fontWeight(semibold) }
-  // Equal side tracks → true center for the middle slot.
-  style side = { box: basis(0).grow(1).minW(0) }
-  style centerTrack = { box: shrink(0).minW(0) }
+  style brand = { box: shrink(0).minW(0), text: fontWeight(semibold) }
+  // Geometric center of the bar (not "between brand and actions").
+  style centerTrack = {
+    box: position(absolute).left(0).right(0).top(0).bottom(0).pointerEvents(none).minW(0),
+  }
+  style centerInner = { box: pointerEvents(auto).minW(0).maxW(full) }
+  style actions = { box: shrink(0).ms(auto).minW(0) }
 </scope>
 
 <row
@@ -44,7 +47,6 @@
     },
     compound: [
       { sticky: true, box: position(sticky).top(bind(offset)), paint: z(sticky) },
-      // Fixed top so scroll can tuck the bar without sticky reflow fights.
       {
         autohide: true,
         sticky: true,
@@ -64,14 +66,16 @@
     ],
   })
 >
-  <row inline nowrap align="center" justify="start" gap="2" style(brand, side)>
+  <row inline nowrap align="center" justify="start" gap="2" style(brand)>
     <slot name="brand"></slot>
   </row>
-  <row nowrap align="center" justify="center" gap="2" style(centerTrack)>
-    <slot name="center"></slot>
-    <slot></slot>
+  <row nowrap align="center" justify="center" style(centerTrack)>
+    <row nowrap align="center" justify="center" gap="2" style(centerInner)>
+      <slot name="center"></slot>
+      <slot></slot>
+    </row>
   </row>
-  <row inline nowrap align="center" justify="end" gap="2" style(side)>
+  <row inline nowrap align="center" justify="end" gap="2" style(actions)>
     <slot name="actions"></slot>
   </row>
 </row>
