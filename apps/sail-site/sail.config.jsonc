@@ -1,5 +1,5 @@
 {
-  // App-level Sail config (theme + serve). Project themes: themes/*.json.
+  // App-level Sail config (theme + deck serve). Project themes: themes/*.json.
   // `enabled` catalog allowlist:
   //   omit / []  → thin (no catalog themes)
   //   ["ship"]   → only those catalog ids
@@ -10,9 +10,11 @@
     "defaultMode": "dark",
     "enabled": "all"
   },
-  // clientsModule is side-effect-only (no named providers).
-  "entry": {
-    "clientsModule": "./src/clients.ts",
-    "exposeNames": []
+  // Deck bundler/serve (SPEC-SAIL-CONFIG-1). clientsModule is side-effect-only.
+  "deck": {
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": []
+    }
   }
 }

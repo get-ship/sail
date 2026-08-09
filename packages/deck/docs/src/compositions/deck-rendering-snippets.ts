@@ -4,7 +4,9 @@
 
 export const ssrConfig = `// sail.config.jsonc
 {
-  "render": "ssr"
+  "deck": {
+    "render": "ssr"
+  }
 }`
 
 export const buildCmd = `$ sail build --project .

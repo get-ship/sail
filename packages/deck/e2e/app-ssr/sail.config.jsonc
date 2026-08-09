@@ -1,4 +1,6 @@
 {
-  // Opt this app into server-side first paint.
-  "render": "ssr"
+  // Opt this app into server-side first paint (nested under deck).
+  "deck": {
+    "render": "ssr"
+  }
 }

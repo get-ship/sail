@@ -1,7 +1,9 @@
 {
   // deck docs playground — CSR with a named store client.
-  "entry": {
-    "clientsModule": "./src/clients.ts",
-    "exposeNames": ["store"]
+  "deck": {
+    "entry": {
+      "clientsModule": "./src/clients.ts",
+      "exposeNames": ["store"]
+    }
   }
 }
