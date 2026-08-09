@@ -249,6 +249,50 @@ export const THEME_STORAGE_KEY = 'ship-site-theme'
 export const THEME_MODE_STORAGE_KEY = 'ship-site-theme-mode'
 export const DEFAULT_MODE = 'light'
 
+/** Deck/meta stamp: project `theme.default` (see `inject_theme_defaults_meta`). */
+export const THEME_DEFAULT_META = 'sail-default-theme'
+/** Deck/meta stamp: project `theme.defaultMode`. */
+export const THEME_DEFAULT_MODE_META = 'sail-default-mode'
+
+/**
+ * Classic FOUC-guard body for deck `index.html`.
+ *
+ * Source of truth for the pre-paint seam (storage keys + `theme`/`data-mode`
+ * attrs). Deck pastes this via `include_str!` of `./prepaint-theme.js` —
+ * tokens tests keep that file equal to this constant. No modules available
+ * yet when this runs.
+ */
+export const PREPAINT_THEME_SCRIPT = [
+  'try {',
+  '  var _d = document.documentElement;',
+  '  var _t = null;',
+  `  try { _t = localStorage.getItem('${THEME_STORAGE_KEY}'); } catch (_e) {}`,
+  '  if (!_t) {',
+  `    var _mt = document.querySelector('meta[name="${THEME_DEFAULT_META}"]');`,
+  `    _t = (_mt && _mt.getAttribute('content')) || '${DEFAULT_THEME}';`,
+  '  }',
+  "  _d.setAttribute('theme', _t);",
+  "  _d.removeAttribute('data-theme');",
+  "  _d.removeAttribute('data-theme-preview');",
+  '  var _m = null;',
+  `  try { _m = localStorage.getItem('${THEME_MODE_STORAGE_KEY}'); } catch (_e) {}`,
+  '  if (!_m) {',
+  `    var _mm = document.querySelector('meta[name="${THEME_DEFAULT_MODE_META}"]');`,
+  `    _m = (_mm && _mm.getAttribute('content')) || '${DEFAULT_MODE}';`,
+  '  }',
+  "  var _paint = 'light';",
+  "  if (_m === 'dark') _paint = 'dark';",
+  "  else if (_m === 'light') _paint = 'light';",
+  "  else if (_m === 'system') {",
+  "    _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)",
+  "      ? 'dark' : 'light';",
+  '  }',
+  "  _d.setAttribute('data-mode', _paint);",
+  "  if (_d.classList) _d.classList.remove('dark');",
+  '} catch (_e) {}',
+  '',
+].join('\n')
+
 export const isValidTheme = (value: unknown): value is ThemeId =>
   typeof value === 'string' && value in THEME_BY_ID
 
@@ -292,9 +336,45 @@ export function paintMode(mode: string | null | undefined): PaintMode {
 }
 
 /**
+ * Project default theme from `<meta name="sail-default-theme">` (deck stamp
+ * of `sail.config` `theme.default`). Falls back to {@link DEFAULT_THEME}.
+ */
+export function readConfigDefaultTheme(): ThemeId {
+  if (typeof document !== 'undefined') {
+    try {
+      const raw = document
+        .querySelector(`meta[name="${THEME_DEFAULT_META}"]`)
+        ?.getAttribute('content')
+      if (isValidTheme(raw)) return raw
+    } catch {
+      /* SSR / non-DOM */
+    }
+  }
+  return DEFAULT_THEME
+}
+
+/**
+ * Project default mode preference from `<meta name="sail-default-mode">`
+ * (deck stamp of `theme.defaultMode`). Falls back to {@link DEFAULT_MODE}.
+ */
+export function readConfigDefaultMode(): ModePreference {
+  if (typeof document !== 'undefined') {
+    try {
+      const raw = document
+        .querySelector(`meta[name="${THEME_DEFAULT_MODE_META}"]`)
+        ?.getAttribute('content')
+      if (raw === 'light' || raw === 'dark' || raw === 'system') return raw
+    } catch {
+      /* SSR / non-DOM */
+    }
+  }
+  return DEFAULT_MODE as ModePreference
+}
+
+/**
  * Read the persisted mode **preference** (`light` | `dark` | `system`).
- * Invalid / missing values normalize to `light` (or a paint mode when the
- * stored string resolves via `paintMode` to light|dark but is not a pref).
+ * Invalid / missing values fall back to the project config default (meta),
+ * then package {@link DEFAULT_MODE}.
  */
 export function readModePreference(): ModePreference {
   const stored = readStoredMode()
@@ -303,7 +383,7 @@ export function readModePreference(): ModePreference {
     // Legacy / unknown paint strings → treat as explicit light|dark preference.
     return paintMode(stored)
   }
-  return 'light'
+  return readConfigDefaultMode()
 }
 
 /**
@@ -404,28 +484,37 @@ export function themeSupportsMode(id: string, mode: string): boolean {
   return modesForTheme(id).includes(paint)
 }
 
-/** Resolve mode: explicit arg → stored → themes-meta default → DEFAULT_MODE.
+/** Resolve mode: explicit arg → stored → project config → themes-meta → DEFAULT_MODE.
  * Always clamps to a mode the theme declares (single-mode lock).
  */
 function resolveMode(id: ThemeId, mode?: string | null): string {
   const modes = modesForTheme(id)
   const meta = lookupThemeMeta(id)
-  const fallback =
+  const themeFallback =
     (meta?.defaultMode && modes.includes(meta.defaultMode)
       ? meta.defaultMode
       : null) ??
     THEME_BY_ID[id]?.defaultMode ??
     (modes.includes('light') ? 'light' : modes[0]) ??
     DEFAULT_MODE
+  // Project defaultMode (meta) beats per-theme default when neither storage
+  // nor an explicit arg is present — marketing first impression from config.
+  const cfg = readConfigDefaultMode()
+  const fallback =
+    cfg === 'system' || modes.includes(cfg) ? cfg : themeFallback
 
   const clamp = (raw: string): string => {
     if (raw === 'system') {
       // Only honor system when both paint modes exist; else fall back.
       if (modes.includes('light') && modes.includes('dark')) return 'system'
-      return fallback
+      return typeof fallback === 'string' && fallback !== 'system'
+        ? fallback
+        : themeFallback
     }
     if (modes.includes(raw)) return raw
-    return fallback
+    return typeof fallback === 'string' && fallback !== 'system'
+      ? fallback
+      : themeFallback
   }
 
   if (typeof mode === 'string' && mode.length > 0) return clamp(mode)
@@ -433,7 +522,57 @@ function resolveMode(id: ThemeId, mode?: string | null): string {
   // Stored "system" is a preference, not a paint key — resolve via paintMode later.
   if (stored && stored !== 'system' && modes.includes(stored)) return stored
   if (stored === 'system') return clamp('system')
-  return fallback
+  return clamp(fallback)
+}
+
+/**
+ * Pre-paint / early boot: stamp current seam attrs from storage → project
+ * config meta → package defaults. Same writer family as {@link applyTheme}
+ * (`theme` + `data-mode` light|dark; strip legacy `data-theme`). Does **not**
+ * persist and does **not** dispatch `ship:theme:change` (pre-module FOUC path).
+ *
+ * Classic-script twin: {@link PREPAINT_THEME_SCRIPT} / `prepaint-theme.js`.
+ */
+export function bootTheme(
+  root: HTMLElement = document.documentElement,
+): { theme: string; mode: PaintMode } {
+  let themeRaw: string | null = null
+  if (typeof localStorage !== 'undefined') {
+    try {
+      themeRaw = localStorage.getItem(THEME_STORAGE_KEY)
+    } catch {
+      themeRaw = null
+    }
+  }
+  const theme =
+    themeRaw && isValidTheme(themeRaw)
+      ? themeRaw
+      : themeRaw && themeRaw.length > 0
+        ? themeRaw
+        : readConfigDefaultTheme()
+
+  let modeRaw: string | null = null
+  if (typeof localStorage !== 'undefined') {
+    try {
+      modeRaw = localStorage.getItem(THEME_MODE_STORAGE_KEY)
+    } catch {
+      modeRaw = null
+    }
+  }
+  const preference: ModePreference =
+    modeRaw === 'light' || modeRaw === 'dark' || modeRaw === 'system'
+      ? modeRaw
+      : modeRaw
+        ? paintMode(modeRaw)
+        : readConfigDefaultMode()
+  const mode = paintMode(preference)
+
+  root.setAttribute('theme', theme)
+  root.removeAttribute('data-theme')
+  root.removeAttribute('data-theme-preview')
+  root.dataset.mode = mode
+  root.classList.remove('dark')
+  return { theme, mode }
 }
 
 /** Meta lookup from generated themes-meta. */
@@ -496,16 +635,17 @@ export function applyMode(
 }
 
 /**
- * Read the persisted theme from localStorage, fall back to
- * DEFAULT_THEME. Safe to call server-side (returns default).
+ * Read the persisted theme from localStorage, fall back to project config
+ * default (meta), then {@link DEFAULT_THEME}. Safe server-side (config meta
+ * when document exists, else package default).
  */
 export function readStoredTheme(): ThemeId {
-  if (typeof localStorage === 'undefined') return DEFAULT_THEME
+  if (typeof localStorage === 'undefined') return readConfigDefaultTheme()
   try {
     const raw = localStorage.getItem(THEME_STORAGE_KEY)
-    return isValidTheme(raw) ? raw : DEFAULT_THEME
+    return isValidTheme(raw) ? raw : readConfigDefaultTheme()
   } catch {
-    return DEFAULT_THEME
+    return readConfigDefaultTheme()
   }
 }
 

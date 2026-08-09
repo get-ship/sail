@@ -6,7 +6,8 @@
   //   "all"      → explicit full catalog (marketing site)
   "theme": {
     "default": "ship",
-    "defaultMode": "light",
+    // Marketing first impression: ship/dark (honest config boot — no route force).
+    "defaultMode": "dark",
     "enabled": "all"
   },
   // clientsModule is side-effect-only (no named providers).

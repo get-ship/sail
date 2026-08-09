@@ -27,12 +27,17 @@ import {
   CORE_THEME_IDS,
   DEFAULT_THEME,
   DEFAULT_MODE,
+  PREPAINT_THEME_SCRIPT,
+  THEME_DEFAULT_META,
+  THEME_DEFAULT_MODE_META,
   THEME_MODE_STORAGE_KEY,
   THEME_OVERRIDE_ORDER,
   THEME_ROOT_KEYS,
+  THEME_STORAGE_KEY,
   THEMES,
   applyMode,
   applyTheme,
+  bootTheme,
   isCoreTheme,
   isDarkTheme,
   isValidTheme,
@@ -41,7 +46,10 @@ import {
   paintMode,
   persistMode,
   pickerModesForTheme,
+  readConfigDefaultMode,
+  readConfigDefaultTheme,
   readModePreference,
+  readStoredTheme,
   resolveOverrideLayer,
   resolveTokenLayer,
   subscribeSystemPreference,
@@ -383,6 +391,107 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(root.getAttribute('theme')).toBe(DEFAULT_THEME)
     expect(root.dataset.mode).toBe(DEFAULT_MODE)
     expect(root.classList.contains('dark')).toBe(false)
+  })
+
+  it('PREPAINT_THEME_SCRIPT matches prepaint-theme.js (deck include_str SoT)', () => {
+    const file = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../src/prepaint-theme.js'),
+      'utf8',
+    )
+    expect(file.trimEnd()).toBe(PREPAINT_THEME_SCRIPT.trimEnd())
+    expect(PREPAINT_THEME_SCRIPT).toContain(THEME_STORAGE_KEY)
+    expect(PREPAINT_THEME_SCRIPT).toContain(THEME_MODE_STORAGE_KEY)
+    expect(PREPAINT_THEME_SCRIPT).toContain(THEME_DEFAULT_META)
+    expect(PREPAINT_THEME_SCRIPT).toContain("setAttribute('theme'")
+    expect(PREPAINT_THEME_SCRIPT).toContain('data-mode')
+    expect(PREPAINT_THEME_SCRIPT).toContain("removeAttribute('data-theme')")
+  })
+
+  it('bootTheme uses config meta defaults when storage is empty', () => {
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
+    for (const n of [THEME_DEFAULT_META, THEME_DEFAULT_MODE_META]) {
+      document.querySelector(`meta[name="${n}"]`)?.remove()
+    }
+    const tMeta = document.createElement('meta')
+    tMeta.setAttribute('name', THEME_DEFAULT_META)
+    tMeta.setAttribute('content', 'ship')
+    document.head.appendChild(tMeta)
+    const mMeta = document.createElement('meta')
+    mMeta.setAttribute('name', THEME_DEFAULT_MODE_META)
+    mMeta.setAttribute('content', 'dark')
+    document.head.appendChild(mMeta)
+
+    const root = document.documentElement
+    root.removeAttribute('theme')
+    root.removeAttribute('data-mode')
+    root.setAttribute('data-theme', 'legacy')
+    root.classList.add('dark')
+
+    const result = bootTheme(root)
+    expect(result.theme).toBe('ship')
+    expect(result.mode).toBe('dark')
+    expect(root.getAttribute('theme')).toBe('ship')
+    expect(root.dataset.mode).toBe('dark')
+    expect(root.hasAttribute('data-theme')).toBe(false)
+    expect(root.classList.contains('dark')).toBe(false)
+    expect(readConfigDefaultTheme()).toBe('ship')
+    expect(readConfigDefaultMode()).toBe('dark')
+    expect(readStoredTheme()).toBe('ship')
+    expect(readModePreference()).toBe('dark')
+  })
+
+  it('bootTheme prefers storage over config meta', () => {
+    try {
+      localStorage.clear()
+      localStorage.setItem(THEME_STORAGE_KEY, 'console')
+      localStorage.setItem(THEME_MODE_STORAGE_KEY, 'dark')
+    } catch {
+      /* */
+    }
+    for (const n of [THEME_DEFAULT_META, THEME_DEFAULT_MODE_META]) {
+      document.querySelector(`meta[name="${n}"]`)?.remove()
+    }
+    const tMeta = document.createElement('meta')
+    tMeta.setAttribute('name', THEME_DEFAULT_META)
+    tMeta.setAttribute('content', 'ship')
+    document.head.appendChild(tMeta)
+
+    const root = document.documentElement
+    const result = bootTheme(root)
+    expect(result.theme).toBe('console')
+    expect(result.mode).toBe('dark')
+    expect(root.getAttribute('theme')).toBe('console')
+  })
+
+  it('bootTheme falls back to package defaults without meta or storage', () => {
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
+    for (const n of [THEME_DEFAULT_META, THEME_DEFAULT_MODE_META]) {
+      document.querySelector(`meta[name="${n}"]`)?.remove()
+    }
+    const root = document.documentElement
+    const result = bootTheme(root)
+    expect(result.theme).toBe(DEFAULT_THEME)
+    expect(result.mode).toBe(DEFAULT_MODE)
+  })
+
+  // Clear config meta so later applyTheme / readModePreference tests stay package-default.
+  it('cleans bootTheme meta fixtures', () => {
+    for (const n of [THEME_DEFAULT_META, THEME_DEFAULT_MODE_META]) {
+      document.querySelector(`meta[name="${n}"]`)?.remove()
+    }
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
   })
 
   it('applyMode(dark) sets data-mode dark without .dark class', () => {

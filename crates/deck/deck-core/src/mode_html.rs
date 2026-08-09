@@ -152,21 +152,67 @@ fn project_themes_rel_path(project_rel: &str, project_root: &std::path::Path) ->
 ///
 /// When effective ids fail, HTML is unchanged (client falls back to full
 /// `THEMES` or ops fetch).
+/// Catalog theme id stamp filter: `/^[a-z0-9][a-z0-9-]*$/`, no path segments.
+/// Digit-leading ids (e.g. `8bit`) are valid catalog members.
+fn is_safe_catalog_theme_id(id: &str) -> bool {
+    let mut chars = id.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_lowercase() || first.is_ascii_digit()) {
+        return false;
+    }
+    if !chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+        return false;
+    }
+    !id.contains("..") && !id.contains('/') && !id.contains('\\')
+}
+
 pub fn inject_effective_themes_meta(html: &str, project_root: &std::path::Path) -> String {
+    // Prefer live monorepo catalog when present (includes digit-leading ids like
+    // `8bit`); external apps fall back to the baked catalog.
+    let workspace = project_root.ancestors().find(|p| {
+        p.join(sail_compiler::tokens_generate::MONOREPO_MODEL_REL)
+            .join("themes")
+            .is_dir()
+    });
     let Ok(ids) =
-        sail_compiler::tokens_generate::effective_theme_ids_opt(None, project_root)
+        sail_compiler::tokens_generate::effective_theme_ids_opt(workspace, project_root)
     else {
         return html.to_string();
     };
     let mut safe: Vec<String> = Vec::new();
     for id in ids.all_ids() {
-        // Same shape as compiler validate_theme_id — never stamp path-like ids.
-        if sail_compiler::tokens_generate::validate_theme_id(&id).is_ok() {
+        // Catalog ids may be digit-leading (`8bit`). Reject path-like only —
+        // do not use scaffold validate_theme_id (letter-first) here.
+        if is_safe_catalog_theme_id(&id) {
             safe.push(id);
         }
     }
     // Empty content = explicit empty emit set (picker shows no catalog rows).
     inject_named_meta(html, "sail-effective-themes", &safe.join(","))
+}
+
+/// Inject project theme boot defaults from `sail.config` so pre-paint
+/// (`bootTheme` / `PREPAINT_THEME_SCRIPT`) and runtime fallbacks share one
+/// config path:
+/// - `<meta name="sail-default-theme" content="{theme.default}">`
+/// - `<meta name="sail-default-mode" content="{theme.defaultMode}">`
+///
+/// Missing config → compiler defaults (`ship` / `light`). Unparseable config
+/// leaves HTML unchanged (config-loud elsewhere).
+pub fn inject_theme_defaults_meta(html: &str, project_root: &std::path::Path) -> String {
+    let Ok(cfg) = sail_compiler::tokens_generate::load_theme_config(project_root) else {
+        return html.to_string();
+    };
+    let theme = cfg.default_theme_id();
+    let mode = cfg
+        .default_mode
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("light");
+    let html = inject_named_meta(html, "sail-default-theme", theme);
+    inject_named_meta(&html, "sail-default-mode", mode)
 }
 
 #[cfg(test)]
@@ -329,6 +375,44 @@ mod tests {
         assert!(
             out.contains("name=\"sail-effective-themes\" content=\"ship\""),
             "expected default ship from baked catalog: {out}"
+        );
+    }
+
+    #[test]
+    fn inject_theme_defaults_meta_from_sail_config() {
+        let dir = tempfile::tempdir().unwrap();
+        let app = dir.path().join("apps").join("marketing");
+        std::fs::create_dir_all(&app).unwrap();
+        std::fs::write(
+            app.join("sail.config.jsonc"),
+            r#"{ "theme": { "default": "ship", "defaultMode": "dark", "enabled": "all" } }"#,
+        )
+        .unwrap();
+        let html = "<head>\n<title>X</title>\n</head>";
+        let out = inject_theme_defaults_meta(html, &app);
+        assert!(
+            out.contains("name=\"sail-default-theme\" content=\"ship\""),
+            "{out}"
+        );
+        assert!(
+            out.contains("name=\"sail-default-mode\" content=\"dark\""),
+            "{out}"
+        );
+    }
+
+    #[test]
+    fn inject_theme_defaults_meta_uses_compiler_defaults_without_config() {
+        let dir = tempfile::tempdir().unwrap();
+        let html = "<head>\n<title>X</title>\n</head>";
+        let out = inject_theme_defaults_meta(html, dir.path());
+        // DEFAULT_PROJECT_THEME_ID = ship; omitted defaultMode → light.
+        assert!(
+            out.contains("name=\"sail-default-theme\" content=\"ship\""),
+            "{out}"
+        );
+        assert!(
+            out.contains("name=\"sail-default-mode\" content=\"light\""),
+            "{out}"
         );
     }
 }
