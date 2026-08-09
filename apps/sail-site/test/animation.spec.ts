@@ -177,7 +177,8 @@ test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) ac
 
   await page.goto('/docs/concepts/animation', { waitUntil: 'domcontentloaded' })
 
-  const chip = page.locator('[data-testid="inline-demo"]')
+  // Sail authors `testid=` (playwright.config testIdAttribute) — not data-testid.
+  const chip = page.getByTestId('inline-demo')
   await expect(chip).toBeVisible()
 
   // Inline translate-x loop: from 0 to 80px, duration 500ms, infinite.

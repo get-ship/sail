@@ -68,12 +68,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style wordmarkWrap = { box: w(full).maxW(full).minW(0).overflow(hidden) }
   style wordmark = { box: mb(-8).minW(0).maxW(full), paint: textGradient(primary).select(none), text: fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center) }
   style wordPrimary = { paint: fg(primary) }
-  style bar40 = { box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40) }
-  style bar60 = { box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60) }
-  style bar70 = { box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70) }
-  style barFull = { box: w(1_5).h(14), paint: radius(sm).bg(primary) }
-  style bar60b = { box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60) }
-  style bar40b = { box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40) }
+  // Spring bar-loop — the MOTION bento's live proof that style.loop moves
+  // translate-y (animation.spec.ts samples computed translate over time).
+  style bar40 = { box: w(1_5).h(6), paint: radius(sm).bg(primary).opacity(40), animate: loop({ translate-y: 'spring:bouncy' }) }
+  style bar60 = { box: w(1_5).h(10), paint: radius(sm).bg(primary).opacity(60), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
+  style bar70 = { box: w(1_5).h(8), paint: radius(sm).bg(primary).opacity(70), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
+  style barFull = { box: w(1_5).h(14), paint: radius(sm).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
+  style bar60b = { box: w(1_5).h(9), paint: radius(sm).bg(primary).opacity(60), animate: loop({ translate-y: 'spring:bouncy', stagger: '0.12s' }) }
+  style bar40b = { box: w(1_5).h(11), paint: radius(sm).bg(primary).opacity(40), animate: loop({ translate-y: 'spring:gentle', stagger: '0.12s' }) }
   // Empty prop bags for in-file partials (no params; expand at preprocess).
   type MotionBarsProps = {}
   type BentoCardProps = {}
