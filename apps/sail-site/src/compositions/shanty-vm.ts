@@ -1,6 +1,7 @@
 // SHANTY showcase playback + library graph. Controller wires interval/signals only.
 
 import { derived, effect, interval, signal } from '@ship/sail-runtime'
+import { applyNestedTheme, resolveNestedPaintMode } from '@ship/tokens/themes'
 
 export interface Track {
   id: number
@@ -109,6 +110,43 @@ export function createShanty() {
   const volume = signal(70)
   const theme = signal('sail')
 
+  // Nested frame: theme + mode (C-TH-NEST-1). Template binds theme=;
+  // applyNestedTheme stamps data-mode (data-* banned in app .sail markup).
+  // Inherit document paint when the nested theme supports it; single-mode
+  // themes clamp to their only mode.
+  const stampFrameMode = (id: string): boolean => {
+    if (typeof document === 'undefined') return false
+    const host = document.getElementById('shanty-frame')
+    if (!host) return false
+    applyNestedTheme(id, host)
+    return true
+  }
+
+  /** Stamp now, or rAF-retry until #shanty-frame mounts. */
+  const stampFrameModeSoon = (id: string): void => {
+    if (stampFrameMode(id)) return
+    if (typeof requestAnimationFrame !== 'function') return
+    requestAnimationFrame(() => {
+      if (!stampFrameMode(id)) requestAnimationFrame(() => stampFrameMode(id))
+    })
+  }
+
+  effect(() => {
+    stampFrameModeSoon(theme())
+  })
+
+  // Also re-stamp when the document product mode flips (dual-mode nested).
+  if (typeof document !== 'undefined') {
+    const onDocTheme = (): void => stampFrameModeSoon(theme())
+    document.addEventListener('ship:theme:change', onDocTheme)
+  }
+
+  const setTheme = (id: string): void => {
+    theme.set(id)
+    // Immediate stamp so chip click paints before the next microtask.
+    stampFrameModeSoon(id)
+  }
+
   return {
     query,
     filteredPlaylists,
@@ -133,6 +171,9 @@ export function createShanty() {
     likedTracks,
     volume,
     theme,
+    setTheme,
     THEMES: SHANTY_THEMES,
+    // Expose for tests / debugging without re-importing tokens.
+    nestedMode: () => resolveNestedPaintMode(theme()),
   }
 }

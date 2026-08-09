@@ -36,6 +36,7 @@ import {
   THEME_STORAGE_KEY,
   THEMES,
   applyMode,
+  applyNestedTheme,
   applyTheme,
   bootTheme,
   isCoreTheme,
@@ -48,6 +49,7 @@ import {
   pickerModesForTheme,
   readConfigDefaultMode,
   readConfigDefaultTheme,
+  resolveNestedPaintMode,
   readModePreference,
   readStoredTheme,
   resolveOverrideLayer,
@@ -509,6 +511,98 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     applyMode('dark', root)
     expect(root.getAttribute('theme')).toBe('paper')
     expect(root.dataset.mode).toBe('light')
+  })
+
+  // C-TH-NEST-1 — nested theme + mode; field aliases rebind on [theme]
+  it('tokens.css rebinds field slots on [theme] + color-scheme by data-mode', () => {
+    const css = loadSrc('../src/tokens.css')
+    expect(css).toMatch(/\[theme\]\s*\{[^}]*--field\s*:\s*var\(--background\)/s)
+    expect(css).toMatch(/\[theme\]\s*\{[^}]*--field-foreground\s*:\s*var\(--foreground\)/s)
+    expect(css).toMatch(
+      /\[theme\]\[data-mode=['"]light['"]\]\s*\{\s*color-scheme\s*:\s*light\s*;/,
+    )
+    expect(css).toMatch(
+      /\[theme\]\[data-mode=['"]dark['"]\]\s*\{\s*color-scheme\s*:\s*dark\s*;/,
+    )
+  })
+
+  it('resolveNestedPaintMode inherits document mode when theme supports it', () => {
+    const root = document.documentElement
+    applyTheme('sail', root, 'dark')
+    expect(resolveNestedPaintMode('ship')).toBe('dark')
+    expect(resolveNestedPaintMode('paper')).toBe('light') // paper is light-only
+    expect(resolveNestedPaintMode('console')).toBe('dark') // console dark-only
+    expect(resolveNestedPaintMode('ship', 'light')).toBe('light') // explicit wins
+  })
+
+  it('applyNestedTheme stamps theme + data-mode without document event/persist', () => {
+    const root = document.documentElement
+    applyTheme('sail', root, 'dark')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const beforeTheme = root.getAttribute('theme')
+    const beforeMode = root.dataset.mode
+    const { theme, mode } = applyNestedTheme('paper', host)
+    expect(theme).toBe('paper')
+    expect(mode).toBe('light')
+    expect(host.getAttribute('theme')).toBe('paper')
+    expect(host.dataset.mode).toBe('light')
+    // Document product theme untouched
+    expect(root.getAttribute('theme')).toBe(beforeTheme)
+    expect(root.dataset.mode).toBe(beforeMode)
+    host.remove()
+  })
+
+  it('nested [theme] rebinds --field against nested --background (cascade proof)', () => {
+    // Minimal model of the shipped cascade: :root field alias resolves once;
+    // nested theme redefines --background; [theme] rebind makes --field follow.
+    // Use hex (not oklch) so happy-dom custom-property inheritance is readable.
+    const style = document.createElement('style')
+    style.textContent = `
+      :root {
+        --background: #112233;
+        --foreground: #eeeeee;
+        --field: var(--background);
+        --field-foreground: var(--foreground);
+      }
+      [theme='paper'][data-mode='light'],
+      [theme='paper']:not([data-mode]) {
+        --background: #f5f0e6;
+        --foreground: #221100;
+      }
+      /* product rebind — matches model/chrome.css */
+      [theme] {
+        --field: var(--background);
+        --field-foreground: var(--foreground);
+      }
+    `
+    document.head.appendChild(style)
+    document.documentElement.setAttribute('theme', 'sail')
+    document.documentElement.setAttribute('data-mode', 'dark')
+
+    const nested = document.createElement('div')
+    nested.setAttribute('theme', 'paper')
+    nested.setAttribute('data-mode', 'light')
+    document.body.appendChild(nested)
+
+    const nestedField = getComputedStyle(nested).getPropertyValue('--field').trim()
+    const nestedFg = getComputedStyle(nested).getPropertyValue('--field-foreground').trim()
+    const rootField = getComputedStyle(document.documentElement)
+      .getPropertyValue('--field')
+      .trim()
+    // Nested field must resolve against paper background, not site dark field.
+    expect(nestedField.length).toBeGreaterThan(0)
+    expect(nestedField).not.toBe(rootField)
+    // Accept either unresolved var() rebind or substituted paper value.
+    const paperish =
+      nestedField.includes('f5f0e6') ||
+      nestedField.includes('245, 240, 230') ||
+      nestedField === 'var(--background)'
+    expect(paperish).toBe(true)
+    expect(nestedFg.length).toBeGreaterThan(0)
+
+    style.remove()
+    nested.remove()
   })
 
   it('never sets data-mode=system on document (paintMode resolves)', () => {

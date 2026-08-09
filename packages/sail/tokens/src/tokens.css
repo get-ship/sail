@@ -594,6 +594,37 @@ body::after {
   [theme]:not(:root)::after { display: none; }
 }
 
+/* ─── Nested theme: component field aliases + UA color-scheme ──────────
+ *
+ * Component slots like `--field: var(--background)` are declared on `:root`.
+ * Custom properties inherit their *computed* value, so a nested `[theme]`
+ * that redefines `--background` does NOT re-point inherited `--field` —
+ * L1 inputs keep the site field paint while buttons (reading `--primary`
+ * set on the themed host) follow the nested theme.
+ *
+ * Re-bind field slots on every themed host so `var(--field*)` resolves
+ * against the nearest theme's globals. Pair with `data-mode` so dual-mode
+ * nested roots select the right mode block; stamp mode from the document
+ * paint when the author only sets `theme=` (see resolveNestedPaintMode).
+ *
+ * `color-scheme` on the themed subtree keeps native form chrome (UA
+ * autofill, date pickers, scrollbars) aligned with nested light|dark. */
+[theme] {
+  --field: var(--background);
+  --field-foreground: var(--foreground);
+  --field-border: var(--border);
+  --field-border-hover: var(--border-strong);
+  --field-hint: var(--muted-foreground);
+  --field-error: var(--destructive);
+  --fieldset-border: var(--border);
+}
+[theme][data-mode='light'] {
+  color-scheme: light;
+}
+[theme][data-mode='dark'] {
+  color-scheme: dark;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* duration token overrides emitted from model/reduced-motion.json */
   /* :where(...) carries zero specificity, and neither property below is
