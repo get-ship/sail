@@ -206,13 +206,17 @@ impl TemplateEmitter {
         // Hoisted handler — emitted into `boundary_hoists`, drained
         // into the setup body before the `return`.
         let mut h = Writer::new();
-        let ap = self.machinery_param("anchor", "Comment");
+        // Param must NOT be named `anchor` — that shadows the imported
+        // `use:anchor` action, so `runAction(el, anchor)` inside a branch
+        // would pass the Comment placeholder and popovers would never
+        // position (left/top stuck at 0). Property key stays `anchor:`.
+        let ap = self.machinery_param("cfAnchor", "Comment");
         h.line(&format!(
             "const __wireBoundary_{key} = ({ap}{host}) => bindIf({{",
             host = self.boundary_host_param(needs_host)
         ));
         h.enter();
-        h.line("anchor,");
+        h.line("anchor: cfAnchor,");
         h.line("test: () => {");
         h.enter();
         // D5: subscribe to every branch condition's row-field deps so a
@@ -304,13 +308,14 @@ impl TemplateEmitter {
         let body_needs_v = body_references_for_vars(&instr.body, var, instr.index_name.as_deref());
 
         let mut h = Writer::new();
-        let ap = self.machinery_param("anchor", "Comment");
+        // See emit_if: param name must not shadow `use:anchor`.
+        let ap = self.machinery_param("cfAnchor", "Comment");
         h.line(&format!(
             "const __wireBoundary_{key} = ({ap}{host}) => bindFor({{",
             host = self.boundary_host_param(needs_host)
         ));
         h.enter();
-        h.line("anchor,");
+        h.line("anchor: cfAnchor,");
         h.line(&format!("items: () => ({it_rw}),"));
         if let Some(k) = &instr.key {
             let k_rw = self.rw(&k.source, &[var.as_str(), idx_name]);
@@ -604,13 +609,14 @@ impl TemplateEmitter {
 
         let disc_rw = self.rw(&instr.discriminant.source, &[]);
         let mut h = Writer::new();
-        let ap = self.machinery_param("anchor", "Comment");
+        // See emit_if: param name must not shadow `use:anchor`.
+        let ap = self.machinery_param("cfAnchor", "Comment");
         h.line(&format!(
             "const __wireBoundary_{key} = ({ap}{host}) => bindIf({{",
             host = self.boundary_host_param(needs_host)
         ));
         h.enter();
-        h.line("anchor,");
+        h.line("anchor: cfAnchor,");
         h.line("test: () => {");
         h.enter();
         // Subscribe to discriminant (+ expr-arm) row-field deps so keyed
@@ -758,13 +764,14 @@ impl TemplateEmitter {
         }
 
         let mut h = Writer::new();
-        let ap = self.machinery_param("anchor", "Comment");
+        // See emit_if: param name must not shadow `use:anchor`.
+        let ap = self.machinery_param("cfAnchor", "Comment");
         h.line(&format!(
             "const __wireBoundary_{key} = ({ap}{host}) => bindWhen({{",
             host = self.boundary_host_param(needs_host)
         ));
         h.enter();
-        h.line("anchor,");
+        h.line("anchor: cfAnchor,");
         h.line(&format!("query: {},", js_string(&instr.media_query)));
         h.line("then_:");
         self.emit_branch(&mut h, &instr.body);
