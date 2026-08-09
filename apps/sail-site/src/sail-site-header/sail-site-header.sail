@@ -72,6 +72,8 @@ export default controller((ctx) => {
   style brandMark = { paint: fg(primary) }
   // Fixed-height track; overflow-x scrolls if product links overflow.
   style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
+  // Fixed h + padX only — vertical balance comes from flex items/justify center
+  // (sail-base floor on a.sail-a.s-displayinlineflex). Do not use padY(px) here.
   style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
   // Phone: logo only. Tablet+: SHIP UI wordmark.
   style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }

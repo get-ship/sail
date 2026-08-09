@@ -16,6 +16,8 @@
   }
 
   // Default solid rides component.chip tokens. Brand tones only when tone= is set.
+  // minH + padX own the box; padY(px) is a hairline so border does not kiss glyphs.
+  // Vertical label centering is the paint-span floor in sail-base.css (items:center).
   style base = { box: display(inline-flex).minH(control-h-2xs).padX(2).padY(px), paint: group().appearance(none).cursor(pointer).select(none).tapHighlight(none).radius(full).borderWidth(1).border(solid).bg(chip).fg(chip.foreground).border(chip.border).transition(colors).duration(fast).ease(out), text: fontFamily(body).fontWeight(medium).leading(none).whitespace(nowrap).fontSize(xs) }
   style sizeMd = { box: minH(control-h-2xs).padX(2_5), text: fontSize(sm) }
   style sizeSm = { box: minH(control-h-2xs).padX(2), text: fontSize(xs) }
