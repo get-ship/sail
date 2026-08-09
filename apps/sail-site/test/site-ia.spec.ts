@@ -105,20 +105,22 @@ test.describe('SPA layout integrity', () => {
 })
 
 test.describe('header mode', () => {
-  test('compact on / and /playground; full product nav on /docs', async ({ page }) => {
+  test('Docs · Components · Playground always available (incl. playground + home)', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
 
-    await page.goto('/docs', { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('a[href="/docs"]').filter({ hasText: 'Docs' }).first()).toBeVisible()
-    await expect(page.locator('a[href="/components"]').filter({ hasText: 'Components' }).first()).toBeVisible()
-    await expect(page.locator('a[href="/playground"]').filter({ hasText: 'Playground' }).first()).toBeVisible()
-
-    await page.goto('/playground', { waitUntil: 'domcontentloaded' })
-    // Product pill row absent in compact mode
-    await expect(page.locator('[testid="site-nav"]')).toHaveCount(0)
-
-    await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('[testid="site-nav"]')).toHaveCount(0)
+    for (const path of ['/docs', '/playground', '/'] as const) {
+      await page.goto(path, { waitUntil: 'domcontentloaded' })
+      await expect(page.locator('[testid="site-nav"]').first()).toBeVisible()
+      await expect(page.locator('a[href="/docs"]').filter({ hasText: 'Docs' }).first()).toBeVisible()
+      await expect(
+        page.locator('a[href="/components"]').filter({ hasText: 'Components' }).first(),
+      ).toBeVisible()
+      await expect(
+        page.locator('a[href="/playground"]').filter({ hasText: 'Playground' }).first(),
+      ).toBeVisible()
+    }
   })
 })
 

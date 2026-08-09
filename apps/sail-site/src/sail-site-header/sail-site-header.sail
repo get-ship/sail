@@ -1,21 +1,13 @@
 <!--
   <sail-site-header> — site chrome: brand, Docs/Components/Playground nav,
-  theme picker, GitHub. Mounted by routes/_layout.sail at prefix `/`.
+  theme picker, GitHub. Always shows product nav (never strips exit links).
 
-  Modes:
-  - full: /docs/*, /components/* — product pill row
-  - compact: /, /playground — brand + theme + GitHub only
-
-  Shell: outer column is viewport-locked (h(screen)) so fill/grow children
-  resolve height. Landing (`/`) scrolls on <main>; document routes hide
-  overflow on <main> so nested rails own scrollports. One chrome tree so
-  theme-picker never remounts on SPA navigation.
+  On landing + playground, navbar autohide reclaims vertical space: bar tucks
+  on scroll-down, returns on scroll-up or pointer near the top. Docs/components
+  keep a persistent bar.
 -->
 
 <controller>
-// Theme (applyTheme) and product accent (data-product from path) are
-// separate channels. Side-effect CSS imports live here so the module graph
-// keeps them (export-less clients modules get tree-shaken).
 import { siteTokenCss } from '../compositions/site-token-css'
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 void siteTokenCss
@@ -25,10 +17,7 @@ function sectionFor(p: string): string {
   if (p === '/playground' || p.startsWith('/playground/')) return 'playground'
   if (p === '/components' || p.startsWith('/components/')) return 'components'
   if (p === '/docs' || p.startsWith('/docs/')) return 'docs'
-  // Legacy / residual paths (tutorial parked under /sail/tutorial)
   if (p === '/sail' || p.startsWith('/sail/')) return 'docs'
-  if (p === '/docs/app' || p.startsWith('/docs/app/')) return 'docs'
-  if (p === '/docs/ai' || p.startsWith('/docs/ai/')) return 'docs'
   return 'docs'
 }
 
@@ -45,10 +34,8 @@ function productAttr(section: string): string {
   }
 }
 
-/** Live pathname — subscribe to route.pathname when present, always read location. */
 function livePath(ctx: { route?: { pathname?: () => string } }): string {
   const r = ctx.route
-  // Touch the signal so SPA navigations re-run this derived when chrome is reused.
   if (r?.pathname) void r.pathname()
   if (typeof location !== 'undefined' && location.pathname) return location.pathname
   return r?.pathname?.() ?? '/'
@@ -58,7 +45,8 @@ export default controller((ctx) => {
     const root = document.documentElement
     const path = derived(() => livePath(ctx as { route?: { pathname?: () => string } }))
     const section = derived(() => sectionFor(path()))
-    const compact = derived(() => {
+    // Reclaim space on long scroll surfaces — never strip nav links.
+    const autohide = derived(() => {
       const s = section()
       return s === 'home' || s === 'playground'
     })
@@ -66,40 +54,28 @@ export default controller((ctx) => {
     effect(() => {
       root.setAttribute('data-product', productAttr(section()))
     })
-
-    // One honest boot path: storage → config default (meta) → package default.
-    // Picker is the only session writer (persistTheme on user select). No
-    // route-local unpersisted force — navigating never re-litigates theme.
     effect(() => {
       applyTheme(readStoredTheme())
     })
 
-    return { path, section, compact, landing }
+    return { path, section, autohide, landing }
 })
 </controller>
 
 <scope>
   style brand = { text: fontSize(lg).tracking(tight).whitespace(nowrap) }
   style brandMark = { paint: fg(primary) }
-  // Fixed-height track; overflow-x scrolls if product links overflow.
   style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
-  // Fixed h + padX only — vertical balance comes from flex items/justify center
-  // (sail-base floor on a.sail-a.s-displayinlineflex). Do not use padY(px) here.
   style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
-  // Phone: logo only. Tablet+: SHIP UI wordmark.
   style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }
-  // Do NOT overflow:hidden the outer column — taffy silent-clip + popover hosts.
   style shell = { box: minH(screen).h(screen) }
-  // Landing: continuous scrollport. Children shrink=0 so sections do not compress.
   style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
-  // Docs/workbench: flex column so nested shells resolve h(full). Without
-  // display:flex, overflow:hidden on main clips and catalog cannot scroll.
   style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
   style githubLink = { box: display(inline-flex).pad(1), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
 </scope>
 
 <column gap="0" style(shell, { box: w(full) })>
-  <navbar sticky bordered use:chromeOffset>
+  <navbar sticky bordered autohide={autohide()} use:chromeOffset>
     <a slot="brand" href="/" label="SHIP UI home" style({ box: shrink(0) })>
       <row gap="2" align="center" nowrap>
         <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
@@ -113,13 +89,11 @@ export default controller((ctx) => {
       </row>
     </a>
 
-    <if {compact()}>
-      <span slot="center"></span>
-    {else => <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { box: minW(0) })>
+    <row slot="center" gap="1" align="center" nowrap testid="site-nav" label="Site" style(productSwitch, { box: minW(0) })>
       <a href="/docs" current={section() === 'docs' ? 'page' : null} style(productLink, { box: shrink(0) })>Docs</a>
       <a href="/components" current={section() === 'components' ? 'page' : null} style(productLink, { box: shrink(0) })>Components</a>
       <a href="/playground" current={section() === 'playground' ? 'page' : null} style(productLink, { box: shrink(0) })>Playground</a>
-    </row>}</if>
+    </row>
 
     <row slot="actions" gap="2" align="center" nowrap>
       <a
