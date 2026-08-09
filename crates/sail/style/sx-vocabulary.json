@@ -1729,11 +1729,7 @@
         ],
         [
           "object-fit",
-          "contain"
-        ],
-        [
-          "padding",
-          "10%"
+          "cover"
         ],
         [
           "box-sizing",

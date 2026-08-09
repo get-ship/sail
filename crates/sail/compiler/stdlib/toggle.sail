@@ -2,6 +2,7 @@
   <toggle> — pressed-button cell for <toggle-group> only (standalone died).
   First/last join + variant/orientation/size Style.
   Binary form control → use <switch>. Action button → use <button>.
+  Selected = primary tokens (not raw fg/bg invert); pressed+hover keeps identity.
 -->
 
 <scope>
@@ -33,7 +34,13 @@
   style(base, {
     when: {
       hover: { paint: bg(hover-bg).fg(foreground) },
-      pressed: { paint: bg(foreground).fg(background).border(foreground).z(1) },
+      pressed: {
+        paint: bg(primary).fg(primary-foreground).border(primary).z(1),
+        when: {
+          // Selected must survive hover (not hover-bg wash / unselected look).
+          hover: { paint: bg(primary).fg(primary-foreground).border(primary).opacity(90) },
+        },
+      },
       disabled: { paint: opacity(50).cursor(not-allowed) },
       focus: { paint: outline(solid).outline(2).outline(ring).z(2) },
     },

@@ -408,7 +408,7 @@
   --spinner-track: var(--border-subtle);
   --switch: var(--muted);
   --switch-border: var(--border-strong);
-  --switch-thumb: var(--surface-1);
+  --switch-thumb: oklch(1 0 0);
   --tab-list: var(--background);
   --tab-list-border: var(--border);
   --tab-list-rail: var(--muted);

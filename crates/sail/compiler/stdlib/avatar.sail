@@ -1,8 +1,8 @@
 <!--
   <avatar> — L1 language element. Style value language only.
-  avatarMedia child pack sizes injected img.
+  avatarMedia child pack: cover for photo src; contain+pad when icon-slug.
   Rest paint = primary-accent gradient when tone is omitted.
-  Semantic paint = bound tone.
+  Semantic paint = bound tone only when tone is present (no empty --tone stomp).
 -->
 
 <scope>
@@ -32,7 +32,6 @@
   use:mediaFallback
   style(base, {
     box: shrink(0),
-    paint: bgImage(none).bg(tone).fg(tone.foreground),
     match: {
       size: {
         md: sizeMd,
@@ -47,6 +46,8 @@
       },
     },
     compound: [
+      // Tone present → solid fill; rest keeps primary-accent gradient.
+      { tone: *, paint: bgImage(none).bg(tone).fg(tone.foreground) },
       { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar.foreground) },
     ],
   })

@@ -1269,3 +1269,26 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod avatar_media_emit_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn avatar_media_emits_cover_and_icon_slug_contain() {
+        let (style, diags) = parse("style({ paint: avatarMedia(true) })");
+        assert!(diags.is_empty(), "{:?}", diags);
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("object-fit:cover") || css.contains("object-fit: cover"),
+            "photo cover: {css}"
+        );
+        assert!(
+            css.contains("[icon-slug]")
+                && (css.contains("object-fit:contain") || css.contains("object-fit: contain")),
+            "icon contain: {css}"
+        );
+        assert!(css.contains("padding:10%") || css.contains("padding: 10%"), "pad: {css}");
+    }
+}

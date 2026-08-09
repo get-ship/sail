@@ -1113,6 +1113,8 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
     const css = loadSrc('../src/tokens.css')
     expect(css).toMatch(/--switch\s*:\s*var\(--muted\)/)
+    // Thumb is a light knob (contrast floor vs muted track), not surface-1.
+    expect(css).toMatch(/--switch-thumb\s*:\s*oklch\(1\s+0\s+0\)/)
     expect(css).toMatch(/--label-foreground\s*:\s*var\(--foreground\)/)
     expect(css).toMatch(/--field-hint\s*:\s*var\(--muted-foreground\)/)
     expect(css).toMatch(/--field\s*:\s*var\(--background\)/)

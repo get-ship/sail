@@ -1,7 +1,8 @@
 <!--
   <separator> — native <hr>. Style value language only.
   Rest paint = separator.line when tone is omitted.
-  Semantic paint = bound tone.
+  Semantic paint = bound tone via presence compound only (never unconditional
+  bg(tone) — empty --tone would stomp the rest line).
   Host subset: muted | primary | destructive (not full Tone).
   Orientation × dashed compounds remain (not pure group-member paint).
 -->
@@ -28,15 +29,17 @@
     match: {
       orientation: { horizontal: orientH, vertical: orientV },
       variant: {
-        solid: style(solid, { paint: bg(tone) }),
+        solid: solid,
         dashed: dashed,
       },
     },
     compound: [
       { orientation: horizontal, variant: dashed, box: h(0), paint: borderTWidth(1).border(dashed).borderT(separator.line) },
       { orientation: vertical, variant: dashed, box: w(0), paint: borderLWidth(1).border(dashed).borderL(separator.line) },
-      { orientation: horizontal, variant: dashed, paint: borderT(tone) },
-      { orientation: vertical, variant: dashed, paint: borderL(tone) },
+      // Tone only when present — never empty bg(tone)/border*(tone) on rest.
+      { tone: *, variant: solid, paint: bg(tone) },
+      { orientation: horizontal, tone: *, variant: dashed, paint: borderT(tone) },
+      { orientation: vertical, tone: *, variant: dashed, paint: borderL(tone) },
       { tone: muted, variant: solid, paint: bg(border-subtle) },
       { orientation: horizontal, tone: muted, variant: dashed, paint: borderT(border-subtle) },
       { orientation: vertical, tone: muted, variant: dashed, paint: borderL(border-subtle) },

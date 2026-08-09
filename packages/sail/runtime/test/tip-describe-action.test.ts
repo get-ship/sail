@@ -25,8 +25,10 @@ describe('tipDescribe action', () => {
     const { host, bubble, dispose } = mountTooltip()
     expect(bubble.getAttribute('role')).toBe('tooltip')
     expect(bubble.textContent).toBe('Hello tip')
+    // Caret Style match is on the bubble — placement must be mirrored.
+    expect(bubble.getAttribute('placement')).toBe('top')
     expect(host.style.getPropertyValue('--tt-bottom')).toBeTruthy()
-    // Arrow centering uses space-1 half-shift (token), not a free px literal.
+    // Arrow centering uses half of border-triangle base (token, not free px).
     expect(host.style.getPropertyValue('--tt-arrow-ml')).toBe(
       'calc(-1 * var(--space-1))',
     )
