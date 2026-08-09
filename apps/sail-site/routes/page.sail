@@ -97,7 +97,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <!-- Bento cards declared once; structural <when {tablet}> only swaps grid cols. -->
 <partial bento-animation props: BentoCardProps>
-  <a href="/sail/language/animation" style(cardLink)>
+  <a href="/docs/concepts/animation" style(cardLink)>
     <card interactive style(cardFill)>
       <column gap="0" style(cardCol)>
         <p style(cardEyebrow)>Animation</p>
@@ -110,7 +110,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <partial bento-theming props: BentoCardProps>
-  <a href="/sail/language/theming" style(cardLink)>
+  <a href="/docs/concepts/theming" style(cardLink)>
     <card interactive style(cardFill)>
       <column gap="0" style(cardCol)>
         <p style(cardEyebrow)>Theming</p>
@@ -130,7 +130,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <partial bento-reactivity props: BentoReactivityProps>
-  <a href="/sail/language/state" style(cardLink)>
+  <a href="/docs/concepts/state" style(cardLink)>
     <card interactive style(cardFill)>
       <column gap="0" style(cardCol)>
         <p style(cardEyebrow)>Reactivity</p>
@@ -146,7 +146,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <partial bento-deck props: BentoCardProps>
-  <a href="/deck" style(cardLink)>
+  <a href="/docs/app" style(cardLink)>
     <card interactive style(cardFill)>
       <column gap="0" style(cardCol)>
         <p style(cardEyebrow)>Deck</p>
@@ -181,7 +181,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <partial bento-ai props: BentoCardProps>
-  <a href="/ai" style(cardLink)>
+  <a href="/docs/ai" style(cardLink)>
     <card interactive style(cardFill)>
       <column gap="0" style(cardCol)>
         <p style(cardEyebrow)>AI</p>
@@ -221,8 +221,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </p>
 
       <row gap="4" justify="center" align="center" style(ctaRow)>
-        <a variant="solid" tone="primary" href="/sail/getting-started" style(cta)>Get started</a>
-        <a variant="outline" href="/sail/why" style(cta)>Why Sail</a>
+        <a variant="solid" tone="primary" href="/docs/guide/getting-started" style(cta)>Get started</a>
+        <a variant="outline" href="/docs/guide/why" style(cta)>Why Sail</a>
       </row>
     </column>
   </section>
@@ -263,7 +263,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <section style(foot, { box: shrink(0) })>
     <row justify="between" align="center" style(footRow)>
       <row gap="6" align="center">
-        <a href="/sail/overview" style(footLink)>Docs</a>
+        <a href="/docs/guide/introduction" style(footLink)>Docs</a>
         <a href="https://github.com/get-ship/sail" style(footLink)>GitHub</a>
       </row>
       <row gap="3" align="center">

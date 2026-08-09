@@ -713,7 +713,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
     <row gap="2">
       <a variant="default" href="/components">← All components</a>
-      <a variant="solid" tone="primary" href="/sail/reference">API reference</a>
+      <a variant="solid" tone="primary" href="/docs/reference">API reference</a>
     </row>
   {else => <breadcrumb>
       <a href="/components">components</a>

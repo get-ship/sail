@@ -1,4 +1,4 @@
-// Code snippets for the /ai/eval page. The original 11-sail-eval lesson
+// Code snippets for the /docs/ai/eval page. The original 11-sail-eval lesson
 // shows `import ... from '@ship/sail-eval'` lines; we omit the `import`
 // statement here so the bundler doesn't try to externalize the
 // `@ship/sail-eval` bare specifier (this site doesn't depend on it).

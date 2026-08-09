@@ -1,4 +1,4 @@
-// Code snippets for the /ai/tooling page.
+// Code snippets for the /docs/ai/tooling page.
 
 export const lintCmd = `cargo run -p sail-lint --example check -- routes/tasks/page.sail`
 

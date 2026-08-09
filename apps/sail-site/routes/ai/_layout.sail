@@ -1,4 +1,4 @@
 <!--
-  /ai/* segment layout — AI docs rail projects routes into its route slot.
+  Legacy /ai/* redirects — fill shell (no product rail).
 -->
-<sail-ai-rail></sail-ai-rail>
+<sail-fill-shell></sail-fill-shell>

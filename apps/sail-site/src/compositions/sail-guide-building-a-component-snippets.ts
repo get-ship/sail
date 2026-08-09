@@ -1,4 +1,4 @@
-// Snippets for /sail/guide/building-a-component. Each one is a STEP of the
+// Snippets for /docs/guide/building-a-component. Each one is a STEP of the
 // same file — apps/sail-site/src/bill-split/bill-split.sail — so the guide's
 // last snippet and the component running at the bottom of the page are the
 // same source. Every SAIL sample here is compiled by the build

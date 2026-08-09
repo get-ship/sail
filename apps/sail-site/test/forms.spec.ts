@@ -1,4 +1,4 @@
-// Forms guide live-demo smoke — drives /sail/guide/forms end to end:
+// Forms guide live-demo smoke — drives /docs/guide/forms end to end:
 // errors gate on the first submit attempt, a valid submit walks through
 // pending (900ms fake API) into the success alert, "Fail the next save"
 // surfaces lastError, and Reset returns the form to its untouched state.
@@ -9,8 +9,9 @@ import { test, expect, type Page } from '@playwright/test'
 // query must be scoped INSIDE the live form or it also matches the
 // code blocks.
 const goto = async (page: Page) => {
-  await page.goto('/sail/guide/forms', { waitUntil: 'domcontentloaded' })
-  const demo = page.getByTestId('forms-demo')
+  await page.goto('/docs/guide/forms', { waitUntil: 'domcontentloaded' })
+  // Sail authors `testid=`; Playwright's default getByTestId looks for data-testid.
+  const demo = page.locator('[testid="forms-demo"], [data-testid="forms-demo"]')
   await expect(demo).toBeVisible()
   return demo
 }
@@ -28,7 +29,7 @@ test('forms guide: empty submit shows errors, no page reload', async ({ page }) 
   await expect(demo.getByText('must include an @')).toBeVisible()
 
   // The submit handler owns preventDefault — still on the same page.
-  expect(page.url()).toContain('/sail/guide/forms')
+  expect(page.url()).toContain('/docs/guide/forms')
   expect(errors).toEqual([])
 })
 

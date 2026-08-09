@@ -1,4 +1,5 @@
 <!--
-  /sail/* segment layout — Sail docs rail projects routes into its route slot.
+  Residual /sail/* — parked tutorial + legacy redirect stubs.
+  Full-bleed fill shell (no docs rail).
 -->
-<sail-docs-rail></sail-docs-rail>
+<sail-fill-shell></sail-fill-shell>

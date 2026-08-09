@@ -1,4 +1,4 @@
-// Snippets for /sail/guide/embedding-third-party-code. The config files are
+// Snippets for /docs/guide/embedding-third-party-code. The config files are
 // VERBATIM copies of the real ones — packages/components/sail/*/sail.config.json.
 // Never invent one: a reader pastes these.
 export const code = {

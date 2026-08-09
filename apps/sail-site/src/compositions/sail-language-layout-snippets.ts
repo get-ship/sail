@@ -1,4 +1,4 @@
-// Snippets for /sail/language/layout. Sail samples are compiled by the build;
+// Snippets for /docs/concepts/layout. Sail samples are compiled by the build;
 // the diagnostic sample is real compiler output, captured verbatim.
 export const code = {
   row: `<row gap="3" align="center" justify="between">

@@ -1,4 +1,4 @@
-// Snippets for /sail/language/templates. Every Sail sample is compiled by the
+// Snippets for /docs/concepts/templates. Every Sail sample is compiled by the
 // build (site_snippets_compile) — nothing here is pseudo-code.
 export const code = {
   read: `<p>Signed in as {user().name}.</p>

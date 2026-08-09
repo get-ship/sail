@@ -1,13 +1,12 @@
 <!--
-  <sail-docs-rail> — Sail docs sidebar + content main for every /sail/* route.
-  Tutorial LESSON pages (/sail/tutorial/<slug>) and the free playground
-  (/sail/playground) drop the rail (full-bleed workbench).
+  <sail-docs-rail> — single docs sidebar + content main for every /docs/* route.
+  Workbench routes (/playground, tutorial lessons) use their OWN layout prefixes —
+  never a path-if branch inside this rail.
 
   Geometry (viewport-locked site-header <main> is the parent):
   - shell h(full) + overflow hidden — fill the budget, no page-level window scroll
   - rail: independent overflowY(auto), fixed width, stretches to shell height
   - mainDocs: independent overflowY(auto) — content scrolls; rail does not leave
-  - workbench: no rail, main h(fill) for tutorial / playground split panes
 
   Responsive — CSS media queries, NOT matchMedia unmount:
   - tablet+ (768px): fixed-width side rail
@@ -20,45 +19,66 @@
 
 <controller>
 /**
- * Path for aria-current on rail links. Layout chrome stays mounted across leaf
- * navigations — subscribe to route.pathname (Deck updates the shared signal on
- * navigate).
+ * Live pathname for aria-current. Layout chrome stays mounted across leaf
+ * navigations under /docs/* — route.pathname + location + history hooks so
+ * rail current moves without remounting the shell.
  */
-function useLivePath(ctx: { route?: { pathname?: () => string } }) {
-  return derived(() => {
-    const fromRoute = ctx.route?.pathname?.()
-    if (typeof fromRoute === 'string' && fromRoute.length > 0) return fromRoute
-    if (typeof location !== 'undefined' && location.pathname) return location.pathname
-    return '/'
-  })
+function readPath(ctx: { route?: { pathname?: () => string } }): string {
+  const r = ctx.route
+  if (r?.pathname) void r.pathname()
+  if (typeof location !== 'undefined' && location.pathname) return location.pathname
+  return r?.pathname?.() ?? '/'
 }
 
 export default controller((ctx) => {
-  const path = useLivePath(ctx as { route?: { pathname?: () => string } })
-  // Hub /sail/tutorial stays in docs chrome; lesson pages + free playground are workbench.
-  const workbench = derived(() => {
-    const p = path()
-    return p.startsWith('/sail/tutorial/') || p === '/sail/playground' || p.startsWith('/sail/playground/')
+  const routeCtx = ctx as { route?: { pathname?: () => string } }
+  const path = signal(readPath(routeCtx))
+  // Keep path() current while this layout stays mounted across leaf SPA nav.
+  effect(() => {
+    path.set(readPath(routeCtx))
   })
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
   const closeNav = (): void => navOpen.set(false)
   const noopNav = (): void => {}
-  // Close drawer when viewport crosses into tablet+ (CSS shows the rail).
   mount(() => {
     if (typeof window === 'undefined') return
+    const sync = (): void => {
+      path.set(typeof location !== 'undefined' ? location.pathname : path())
+    }
+    // pushState/replaceState do not fire popstate — wrap history so rail updates
+    // on same-layout SPA navigations when route signals lag a frame.
+    const hist = window.history
+    const push = hist.pushState.bind(hist)
+    const replace = hist.replaceState.bind(hist)
+    hist.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
+      const ret = push(...args)
+      queueMicrotask(sync)
+      return ret
+    }
+    hist.replaceState = function (this: History, ...args: Parameters<History['replaceState']>) {
+      const ret = replace(...args)
+      queueMicrotask(sync)
+      return ret
+    }
+    window.addEventListener('popstate', sync)
     const mq = window.matchMedia('(min-width: 768px)')
     const onChange = (): void => {
       if (mq.matches) navOpen.set(false)
     }
     mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
+    return () => {
+      hist.pushState = push
+      hist.replaceState = replace
+      window.removeEventListener('popstate', sync)
+      mq.removeEventListener('change', onChange)
+    }
   })
   effect(() => {
     path()
     navOpen.set(false)
   })
-  return { path, workbench, navOpen, openNav, closeNav, noopNav }
+  return { path, navOpen, openNav, closeNav, noopNav }
 })
 </controller>
 
@@ -74,8 +94,6 @@ export default controller((ctx) => {
   // Current must paint over the base muted ink — filled pill for active page.
   style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
   style mainDocs = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
-  // Workbench: flex column + h(fill). Route roots must also use h(fill).
-  style mainWorkbench = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).h(fill).overflow(hidden) }
   // Mobile-only chrome — plain div so display:none wins at tablet+.
   style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
   style contentCol = { box: minH(0).minW(0) }
@@ -91,76 +109,82 @@ export default controller((ctx) => {
 
 <!-- Same link tree for side rail and mobile drawer; onNav closes drawer (noop on rail). -->
 <partial docs-nav props: DocsNavProps>
-  <p style(railLabel)>Getting started</p>
-  <a href="/sail/overview" on:click={onNav} current={path() === '/sail/overview' ? 'page' : null} style(railLink)>Introduction</a>
-  <a href="/sail/getting-started" on:click={onNav} current={path() === '/sail/getting-started' ? 'page' : null} style(railLink)>Installation</a>
-  <a href="/sail/why" on:click={onNav} current={path() === '/sail/why' ? 'page' : null} style(railLink)>Why Sail</a>
-  <a href="/sail/tutorial" on:click={onNav} current={path().startsWith('/sail/tutorial') ? 'page' : null} style(railLink)>Tutorial</a>
-  <a href="/sail/playground" on:click={onNav} current={path().startsWith('/sail/playground') ? 'page' : null} style(railLink)>Playground</a>
-  <a href="/showcase" on:click={onNav} current={path() === '/showcase' ? 'page' : null} style(railLink)>Showcase</a>
+  <p style(railLabel)>Guide</p>
+  <a href="/docs" on:click={onNav} current={path() === '/docs' ? 'page' : null} style(railLink)>Docs hub</a>
+  <a href="/docs/guide/introduction" on:click={onNav} current={path() === '/docs/guide/introduction' ? 'page' : null} style(railLink)>Introduction</a>
+  <a href="/docs/guide/why" on:click={onNav} current={path() === '/docs/guide/why' ? 'page' : null} style(railLink)>Why Sail</a>
+  <a href="/docs/guide/getting-started" on:click={onNav} current={path() === '/docs/guide/getting-started' ? 'page' : null} style(railLink)>Installation</a>
+  <a href="/docs/guide/using-components" on:click={onNav} current={path() === '/docs/guide/using-components' ? 'page' : null} style(railLink)>Using components</a>
+  <a href="/docs/guide/building-a-component" on:click={onNav} current={path() === '/docs/guide/building-a-component' ? 'page' : null} style(railLink)>Building a component</a>
+  <a href="/docs/guide/forms" on:click={onNav} current={path() === '/docs/guide/forms' ? 'page' : null} style(railLink)>Forms</a>
+  <a href="/docs/guide/making-a-theme" on:click={onNav} current={path() === '/docs/guide/making-a-theme' ? 'page' : null} style(railLink)>Making a theme</a>
+  <a href="/docs/guide/embedding-third-party-code" on:click={onNav} current={path() === '/docs/guide/embedding-third-party-code' ? 'page' : null} style(railLink)>Embedding third-party code</a>
 
   <p style(railLabel)>Concepts</p>
-  <a href="/sail/language/sail-file" on:click={onNav} current={path() === '/sail/language/sail-file' ? 'page' : null} style(railLink)>Components</a>
-  <a href="/sail/language/state" on:click={onNav} current={path() === '/sail/language/state' ? 'page' : null} style(railLink)>State</a>
-  <a href="/sail/language/templates" on:click={onNav} current={path() === '/sail/language/templates' ? 'page' : null} style(railLink)>Templates</a>
-  <a href="/sail/language/styling" on:click={onNav} current={path() === '/sail/language/styling' ? 'page' : null} style(railLink)>Styling</a>
-  <a href="/sail/language/layout" on:click={onNav} current={path() === '/sail/language/layout' ? 'page' : null} style(railLink)>Layout</a>
-  <a href="/sail/language/animation" on:click={onNav} current={path() === '/sail/language/animation' ? 'page' : null} style(railLink)>Animation</a>
-  <a href="/sail/language/actions" on:click={onNav} current={path() === '/sail/language/actions' ? 'page' : null} style(railLink)>Actions</a>
-  <a href="/sail/language/data" on:click={onNav} current={path() === '/sail/language/data' ? 'page' : null} style(railLink)>Data</a>
-  <a href="/sail/language/capabilities" on:click={onNav} current={path() === '/sail/language/capabilities' ? 'page' : null} style(railLink)>Capabilities</a>
-  <a href="/sail/language/errors" on:click={onNav} current={path() === '/sail/language/errors' ? 'page' : null} style(railLink)>Errors</a>
-  <a href="/sail/language/theming" on:click={onNav} current={path() === '/sail/language/theming' ? 'page' : null} style(railLink)>Theming</a>
+  <a href="/docs/concepts/sail-file" on:click={onNav} current={path() === '/docs/concepts/sail-file' ? 'page' : null} style(railLink)>Components</a>
+  <a href="/docs/concepts/state" on:click={onNav} current={path() === '/docs/concepts/state' ? 'page' : null} style(railLink)>State</a>
+  <a href="/docs/concepts/templates" on:click={onNav} current={path() === '/docs/concepts/templates' ? 'page' : null} style(railLink)>Templates</a>
+  <a href="/docs/concepts/styling" on:click={onNav} current={path() === '/docs/concepts/styling' ? 'page' : null} style(railLink)>Styling</a>
+  <a href="/docs/concepts/layout" on:click={onNav} current={path() === '/docs/concepts/layout' ? 'page' : null} style(railLink)>Layout</a>
+  <a href="/docs/concepts/animation" on:click={onNav} current={path() === '/docs/concepts/animation' ? 'page' : null} style(railLink)>Animation</a>
+  <a href="/docs/concepts/actions" on:click={onNav} current={path() === '/docs/concepts/actions' ? 'page' : null} style(railLink)>Actions</a>
+  <a href="/docs/concepts/data" on:click={onNav} current={path() === '/docs/concepts/data' ? 'page' : null} style(railLink)>Data</a>
+  <a href="/docs/concepts/capabilities" on:click={onNav} current={path() === '/docs/concepts/capabilities' ? 'page' : null} style(railLink)>Capabilities</a>
+  <a href="/docs/concepts/errors" on:click={onNav} current={path() === '/docs/concepts/errors' ? 'page' : null} style(railLink)>Errors</a>
+  <a href="/docs/concepts/theming" on:click={onNav} current={path() === '/docs/concepts/theming' ? 'page' : null} style(railLink)>Theming</a>
 
-  <p style(railLabel)>Guide</p>
-  <a href="/sail/elements" on:click={onNav} current={path() === '/sail/elements' ? 'page' : null} style(railLink)>Using components</a>
-  <a href="/sail/guide/building-a-component" on:click={onNav} current={path() === '/sail/guide/building-a-component' ? 'page' : null} style(railLink)>Building a component</a>
-  <a href="/sail/guide/forms" on:click={onNav} current={path() === '/sail/guide/forms' ? 'page' : null} style(railLink)>Forms</a>
-  <a href="/sail/guide/making-a-theme" on:click={onNav} current={path() === '/sail/guide/making-a-theme' ? 'page' : null} style(railLink)>Making a theme</a>
-  <a href="/sail/guide/embedding-third-party-code" on:click={onNav} current={path() === '/sail/guide/embedding-third-party-code' ? 'page' : null} style(railLink)>Embedding third-party code</a>
+  <p style(railLabel)>App</p>
+  <a href="/docs/app" on:click={onNav} current={path() === '/docs/app' ? 'page' : null} style(railLink)>Overview</a>
+  <a href="/docs/app/getting-started" on:click={onNav} current={path() === '/docs/app/getting-started' ? 'page' : null} style(railLink)>Getting started</a>
+  <a href="/docs/app/routing" on:click={onNav} current={path() === '/docs/app/routing' ? 'page' : null} style(railLink)>Routing</a>
+  <a href="/docs/app/dynamic-routes" on:click={onNav} current={path() === '/docs/app/dynamic-routes' ? 'page' : null} style(railLink)>Dynamic routes</a>
+  <a href="/docs/app/layouts" on:click={onNav} current={path() === '/docs/app/layouts' ? 'page' : null} style(railLink)>Layouts</a>
+  <a href="/docs/app/rendering" on:click={onNav} current={path() === '/docs/app/rendering' ? 'page' : null} style(railLink)>Rendering</a>
+  <a href="/docs/app/reactivity" on:click={onNav} current={path() === '/docs/app/reactivity' ? 'page' : null} style(railLink)>Reactivity</a>
+  <a href="/docs/app/data" on:click={onNav} current={path() === '/docs/app/data' ? 'page' : null} style(railLink)>Live data</a>
+  <a href="/docs/app/hmr" on:click={onNav} current={path() === '/docs/app/hmr' ? 'page' : null} style(railLink)>HMR</a>
+  <a href="/docs/app/build" on:click={onNav} current={path() === '/docs/app/build' ? 'page' : null} style(railLink)>Build</a>
+
+  <p style(railLabel)>AI</p>
+  <a href="/docs/ai" on:click={onNav} current={path() === '/docs/ai' ? 'page' : null} style(railLink)>Overview</a>
+  <a href="/docs/ai/authoring" on:click={onNav} current={path() === '/docs/ai/authoring' ? 'page' : null} style(railLink)>Authoring</a>
+  <a href="/docs/ai/tooling" on:click={onNav} current={path() === '/docs/ai/tooling' ? 'page' : null} style(railLink)>Tooling</a>
+  <a href="/docs/ai/eval" on:click={onNav} current={path() === '/docs/ai/eval' ? 'page' : null} style(railLink)>Eval</a>
 
   <p style(railLabel)>Reference</p>
-  <a href="/sail/reference" on:click={onNav} current={path() === '/sail/reference' ? 'page' : null} style(railLink)>API reference</a>
-  <a href="/sail/reference/sx" on:click={onNav} current={path() === '/sail/reference/sx' ? 'page' : null} style(railLink)>Style</a>
-  <a href="/sail/reference/template" on:click={onNav} current={path() === '/sail/reference/template' ? 'page' : null} style(railLink)>Template / callbacks</a>
-  <a href="/sail/reference/regions" on:click={onNav} current={path() === '/sail/reference/regions' ? 'page' : null} style(railLink)>Region matrix</a>
+  <a href="/docs/reference" on:click={onNav} current={path() === '/docs/reference' ? 'page' : null} style(railLink)>API reference</a>
+  <a href="/docs/reference/sx" on:click={onNav} current={path() === '/docs/reference/sx' ? 'page' : null} style(railLink)>Style</a>
+  <a href="/docs/reference/template" on:click={onNav} current={path() === '/docs/reference/template' ? 'page' : null} style(railLink)>Template / callbacks</a>
+  <a href="/docs/reference/regions" on:click={onNav} current={path() === '/docs/reference/regions' ? 'page' : null} style(railLink)>Region matrix</a>
 </partial>
 
-<if {workbench()}>
-  <row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
-    <column gap="0" style(contentCol, { box: grow(1).minW(0) })>
-      <main style(mainWorkbench, { box: grow(1).minW(0).w(full) })>
-        <slot name="route"></slot>
-      </main>
-    </column>
-  </row>
-{else => <row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
-  <nav label="Sail docs" style(rail, { box: shrink(0) })>
+<row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
+  <nav label="Docs" testid="docs-rail" style(rail, { box: shrink(0) })>
     <docs-nav path={path} onNav={noopNav}></docs-nav>
   </nav>
 
   <column gap="0" style(contentCol, { box: grow(1).minW(0) })>
     <div style(mobileBar)>
       <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
-      <small style(mobileLabel)>Sail docs</small>
+      <small style(mobileLabel)>Docs</small>
     </div>
     <main style(mainDocs, { box: grow(1).minW(0) })>
       <slot name="route"></slot>
     </main>
   </column>
-</row>}</if>
+</row>
 
 <dialog
   id="sail-docs-drawer"
   open={navOpen()}
   side="start"
   size="sm"
-  label="Sail docs navigation"
+  label="Docs navigation"
   on-close={closeNav}
 >
   <header>
     <row align="center" justify="between" gap="2" style(fullW)>
-      <strong style(drawerTitle)>Sail docs</strong>
+      <strong style(drawerTitle)>Docs</strong>
       <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
     </row>
   </header>

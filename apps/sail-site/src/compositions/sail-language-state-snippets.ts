@@ -1,4 +1,4 @@
-// Snippets for /sail/language/state. Kept OUT of the controller so the
+// Snippets for /docs/concepts/state. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
 // inside these strings. The graph snippet IS the page's own controller — the
 // source beside the live demo matches what the demo runs.

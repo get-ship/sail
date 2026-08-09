@@ -1,70 +1,20 @@
-<!--
-  /sail/reference/scope — every &lt;scope&gt; grammar construct with a compiling example.
--->
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { SCOPE_GRAMMAR, SCOPE_REFUSALS } from '../../../../src/compositions/language-surface'
-
-export default controller((_ctx: ControllerScope<Scope>) => ({
-  grammar: () => SCOPE_GRAMMAR,
-  refusals: () => SCOPE_REFUSALS,
-}))
-</controller>
-
+<!-- Legacy path redirect → /docs/reference/scope -->
 <scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style monoMuted = { paint: fg(muted-foreground) }
-  style formSummary = { box: maxW(breakpoint-tablet) }
-  style refuseSyntax = { paint: fg(destructive) }
-  style refuseAlt = { paint: fg(muted-foreground) }
+  style redirectRoot = { box: grow(1).minH(0).h(full), paint: bg(background) }
+  style redirectText = { paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 
-<column gap="6" style(root)>
-  <column gap="5" style(intro)>
-    <p style(eyebrow)>Reference</p>
-    <h1>&lt;scope&gt; grammar</h1>
-    <p style(lead)>
-      Everything a <code>&lt;scope&gt;</code> block can declare: props forms,
-      type aliases, and the variants table. Nothing in the block executes —
-      it is types and literals only.
-    </p>
-  </column>
+<controller>
+import { navigate } from '@ship/deck/router'
 
-  <column gap="4">
-    <for {grammar() as g} key={g.form}>
-      <column gap="2">
-        <row gap="3" align="center">
-          <h3>{g.form}</h3>
-          <code style(monoMuted)>{g.syntax}</code>
-        </row>
-        <p style(formSummary)>{g.summary}</p>
-        <code-block code={g.example} lang="sail"></code-block>
-      </column>
-    </for>
-  </column>
+export default controller(() => {
+  mount(() => {
+    navigate('/docs/reference/scope', { replace: true })
+  })
+  return {}
+})
+</controller>
 
-  <column gap="3">
-    <h3>Refused</h3>
-    <p style(formSummary)>
-      <code>&lt;scope&gt;</code> is types and literals only — these member
-      kinds are refused with an error naming the alternative.
-    </p>
-    <column gap="3">
-      <for {refusals() as r} key={r.syntax}>
-        <column gap="1">
-          <code style(refuseSyntax)>{r.syntax}</code>
-          <small style(refuseAlt)>→ {r.instead}</small>
-        </column>
-      </for>
-    </column>
-  </column>
-
-  <row>
-    <a variant="default" href="/sail/reference/template">← Template</a>
-    <a variant="solid" href="/sail/reference/runtime">Runtime →</a>
-  </row>
+<column align="center" justify="center" style(redirectRoot)>
+  <p style(redirectText)>Redirecting to Reference…</p>
 </column>

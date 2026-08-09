@@ -52,7 +52,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </for>
 
   <row style(footNav)>
-    <a variant="default" href="/sail/language/state">← State</a>
+    <a variant="default" href="/docs/concepts/state">← State</a>
     <a variant="solid" tone="primary" href="/sail/tutorial/01-a-page-is-markup">Start lesson 1 →</a>
   </row>
 </column>

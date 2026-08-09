@@ -17,7 +17,7 @@ const statusText = (page: Page): Promise<string> =>
   page.locator('.sail-badge').first().innerText()
 
 async function openPlayground(page: Page): Promise<void> {
-  await page.goto('/sail/playground', { waitUntil: 'domcontentloaded' })
+  await page.goto('/playground', { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
     () => {
       const el =

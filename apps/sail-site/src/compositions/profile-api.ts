@@ -1,4 +1,4 @@
-// profile-api — the fake server behind /sail/guide/forms' live demo. Lives
+// profile-api — the fake server behind /docs/guide/forms' live demo. Lives
 // under src/compositions so controllers may value-import it
 // (sail-controller-import-convention). A 900ms delay keeps the pending state
 // visible; `fail` lets the "Fail the next save" button walk the reader
