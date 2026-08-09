@@ -138,6 +138,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <row gap="2" style(ctaRow)>
       <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
       <a variant="default" href="/sail/tutorial">Tutorial</a>
+      <a variant="default" href="/sail/playground">Playground</a>
       <a variant="default" href="/showcase">Showcase</a>
       <a variant="default" href="/sail/why">Why Sail</a>
     </row>

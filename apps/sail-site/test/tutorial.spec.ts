@@ -3,9 +3,9 @@
 //
 // The contract these tests hold: the editor holds ONE file (the lesson `.sail`,
 // `<controller>` block and template together), the wasm compiler accepts that
-// file, and the preview renders it. When the compiler's SFC handling regressed,
-// every lesson silently compiled with an empty scope — the page still "loaded",
-// so nothing but a real run catches it.
+// file, and the preview renders it in the same document (no iframe). When the
+// compiler's SFC handling regressed, every lesson silently compiled with an
+// empty scope — the page still "loaded", so nothing but a real run catches it.
 
 import { test, expect, type Page } from '@playwright/test'
 
@@ -14,7 +14,11 @@ test.setTimeout(90_000)
 
 const editorValue = (page: Page): Promise<string> =>
   page.evaluate(() => {
-    const el = document.querySelector('sail-code-editor[data-pane="source"]')
+    // CE attr is `pane=`, not always mirrored as `data-pane=`.
+    const el =
+      document.querySelector('sail-code-editor[pane="source"]') ??
+      document.querySelector('sail-code-editor[data-pane="source"]') ??
+      document.querySelector('sail-code-editor')
     return (el as unknown as { value?: string })?.value ?? ''
   })
 
@@ -27,7 +31,10 @@ async function openLesson(page: Page, slug: string): Promise<void> {
   await page.goto(`/sail/tutorial/${slug}`, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
     () => {
-      const el = document.querySelector('sail-code-editor[data-pane="source"]')
+      const el =
+        document.querySelector('sail-code-editor[pane="source"]') ??
+        document.querySelector('sail-code-editor[data-pane="source"]') ??
+        document.querySelector('sail-code-editor')
       return Boolean((el as unknown as { value?: string })?.value)
     },
     undefined,
@@ -52,15 +59,19 @@ test('the lesson compiles and the preview runs it', async ({ page }) => {
   })
   await openLesson(page, '03-state-is-a-controller')
 
-  // 'running' is only reached when the wasm compiler returned js AND the iframe
-  // accepted the run. A compile error lands as 'compile error'.
+  // 'running' is only reached when the wasm compiler returned js AND the
+  // same-document host mounted the result. A compile error lands as
+  // 'compile error'.
   await expect
     .poll(() => statusText(page), { timeout: 60_000 })
     .toBe('running')
 
-  // The preview really rendered the lesson's component, not an empty document.
-  const frame = page.frameLocator('iframe')
-  await expect(frame.locator('body')).not.toBeEmpty()
+  // The preview really rendered the lesson's component into the same doc —
+  // not an empty host. No iframe. (testid stays as attr `testid`, not data-.)
+  const preview = page.locator('[testid="tut-preview"], [data-testid="tut-preview"]')
+  await expect(preview).toBeVisible()
+  await expect(preview).not.toBeEmpty()
+  expect(await page.locator('iframe[testid="tut-preview"], iframe[data-testid="tut-preview"]').count()).toBe(0)
   expect(errors.filter((e) => /not declared in scope/i.test(e))).toEqual([])
 })
 
@@ -76,7 +87,11 @@ test('editing the source recompiles; a broken edit reports the editor row', asyn
   const brokenRow = lines.length + 1
   await page.evaluate(
     (next) => {
-      const el = document.querySelector('sail-code-editor[data-pane="source"]') as unknown as {
+      const el = (
+        document.querySelector('sail-code-editor[pane="source"]') ??
+        document.querySelector('sail-code-editor[data-pane="source"]') ??
+        document.querySelector('sail-code-editor')
+      ) as unknown as {
         value: string
         dispatchEvent: (e: Event) => boolean
       }

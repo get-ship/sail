@@ -1,12 +1,13 @@
 <!--
   <sail-docs-rail> — Sail docs sidebar + content main for every /sail/* route.
-  Tutorial LESSON pages (/sail/tutorial/<slug>) drop the rail (full-bleed workbench).
+  Tutorial LESSON pages (/sail/tutorial/<slug>) and the free playground
+  (/sail/playground) drop the rail (full-bleed workbench).
 
   Geometry (viewport-locked site-header <main> is the parent):
   - shell h(full) + overflow hidden — fill the budget, no page-level window scroll
   - rail: independent overflowY(auto), fixed width, stretches to shell height
   - mainDocs: independent overflowY(auto) — content scrolls; rail does not leave
-  - workbench: no rail, main h(fill) for tutorial split panes
+  - workbench: no rail, main h(fill) for tutorial / playground split panes
 
   Responsive — CSS media queries, NOT matchMedia unmount:
   - tablet+ (768px): fixed-width side rail
@@ -34,8 +35,11 @@ function useLivePath(ctx: { route?: { pathname?: () => string } }) {
 
 export default controller((ctx) => {
   const path = useLivePath(ctx as { route?: { pathname?: () => string } })
-  // Hub /sail/tutorial stays in docs chrome; only /sail/tutorial/<slug> is workbench.
-  const workbench = derived(() => path().startsWith('/sail/tutorial/'))
+  // Hub /sail/tutorial stays in docs chrome; lesson pages + free playground are workbench.
+  const workbench = derived(() => {
+    const p = path()
+    return p.startsWith('/sail/tutorial/') || p === '/sail/playground' || p.startsWith('/sail/playground/')
+  })
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
   const closeNav = (): void => navOpen.set(false)
@@ -92,6 +96,7 @@ export default controller((ctx) => {
   <a href="/sail/getting-started" on:click={onNav} current={path() === '/sail/getting-started' ? 'page' : null} style(railLink)>Installation</a>
   <a href="/sail/why" on:click={onNav} current={path() === '/sail/why' ? 'page' : null} style(railLink)>Why Sail</a>
   <a href="/sail/tutorial" on:click={onNav} current={path().startsWith('/sail/tutorial') ? 'page' : null} style(railLink)>Tutorial</a>
+  <a href="/sail/playground" on:click={onNav} current={path().startsWith('/sail/playground') ? 'page' : null} style(railLink)>Playground</a>
   <a href="/showcase" on:click={onNav} current={path() === '/showcase' ? 'page' : null} style(railLink)>Showcase</a>
 
   <p style(railLabel)>Concepts</p>

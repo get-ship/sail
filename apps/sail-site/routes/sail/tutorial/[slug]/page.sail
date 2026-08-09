@@ -1,9 +1,9 @@
 <!--
   /tutorial/[slug] — two-pane lesson: prose + stepper left; editor, preview,
-  console right. Playground state is signals; tutorial-boot owns wasm/iframe
-  seams; use: capture actions hold editor/iframe refs. Workbench chrome via
-  sail-docs-rail. Language gaps: no column clamp atom (uses max-w panel token);
-  no transform/gradient stepper polish.
+  console right. Playground state is signals; live-sail-boot owns wasm + same-
+  document preview mount; use: capture actions hold editor/host refs. Workbench
+  chrome via sail-docs-rail. Language gaps: no column clamp atom (uses max-w
+  panel token); no transform/gradient stepper polish.
 -->
 <controller>
 import type { Action, ControllerScope } from '@ship/sail-runtime'
@@ -13,14 +13,11 @@ import type { Scope } from './page.sail'
 import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../../src/compositions/tutorial-data'
 import {
   createDebouncer,
-  listenPreview,
-  observeTheme,
-  pushScenario,
-  reloadPreview,
-  runInPreview,
+  runInHost,
   type CodeEditorHost,
   type CompileFn,
-} from '../../../../src/compositions/tutorial-boot'
+  type PreviewMount,
+} from '../../../../src/compositions/live-sail-boot'
 
 const BY_SLUG: Record<string, TutorialLesson> = {}
 for (const l of TUTORIAL_LESSONS) BY_SLUG[l.slug] = l
@@ -58,14 +55,25 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const nextSlug = derived(() => lesson()?.next ?? '')
 
         const editorEl = signal<CodeEditorHost | null>(null)
-    const iframeEl = signal<HTMLIFrameElement | null>(null)
+    const hostEl = signal<HTMLElement | null>(null)
+    let previewMount: PreviewMount | null = null
     const captureEditor: Action<void> = (node) => {
       editorEl.set(node as CodeEditorHost)
       return { destroy: () => editorEl.set(null) }
     }
-    const captureIframe: Action<void> = (node) => {
-      iframeEl.set(node as HTMLIFrameElement)
-      return { destroy: () => iframeEl.set(null) }
+    const captureHost: Action<void> = (node) => {
+      hostEl.set(node as HTMLElement)
+      return {
+        destroy: () => {
+          try {
+            previewMount?.dispose()
+          } catch {
+            /* best-effort */
+          }
+          previewMount = null
+          hostEl.set(null)
+        },
+      }
     }
 
         const tab = signal<string>('source')
@@ -102,21 +110,26 @@ export default controller((ctx: ControllerScope<Scope>) => {
     }
 
         let tagSeq = 0
-    let iframeReady = false
     let lastSourceSlug = ''
     let lastPushedKey = ''
     const schedule = createDebouncer(200)
 
     const runNow = (): void => {
       const c = compile()
-      const iframe = iframeEl()
-      if (!c || !iframe || !iframeReady) return
+      const host = hostEl()
+      if (!c || !host) return
       setStatus('running', 'compiling…')
       const safeSlug = (lesson()?.slug || 'lesson').replace(/[^a-z0-9-]/gi, '')
-      const result = runInPreview(c, iframe, {
-        tag: `tut-${safeSlug}-${++tagSeq}`,
-        source: srcValue(),
-      })
+      const { result, mount, ready } = runInHost(
+        c,
+        host,
+        {
+          tag: `tut-${safeSlug}-${++tagSeq}`,
+          source: srcValue(),
+        },
+        previewMount,
+      )
+      previewMount = mount
       if (result.kind === 'err') {
         setStatus('error', 'compile error')
         // The full compiler message lands in the console, destructive-toned, and
@@ -132,8 +145,23 @@ export default controller((ctx: ControllerScope<Scope>) => {
         return
       }
       editorEl()?.setDiagnostics?.([])
-      setStatus('ok', 'running')
-      log('▶ ran ' + fileName(), 'success')
+      // Inline module mount is async under CSP; settle status when the host paints.
+      if (ready) {
+        void ready
+          .then((m) => {
+            previewMount = m
+            setStatus('ok', 'running')
+            log('▶ ran ' + fileName(), 'success')
+          })
+          .catch((err: unknown) => {
+            const message = err instanceof Error ? err.message : String(err)
+            setStatus('error', 'compile error')
+            log('mount: ' + message, 'error')
+          })
+      } else {
+        setStatus('ok', 'running')
+        log('▶ ran ' + fileName(), 'success')
+      }
     }
 
     /** Push source into the signal AND the upgraded editor host (when ready). */
@@ -184,9 +212,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
       runNow()
     }
 
-        // Source seed is independent of wasm / preview iframe. The e2e contract is
+        // Source seed is independent of wasm / preview host. The e2e contract is
     // that sail-code-editor[pane]=source].value holds the lesson `.sail` as
-    // soon as the editor upgrades — gating that on compile/iframe left the
+    // soon as the editor upgrades — gating that on compile/host left the
     // editor empty whenever the host ref raced the one-shot write, or when
     // wasm was still loading.
     //
@@ -227,41 +255,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
       push()
     })
 
+    // Re-run when the preview host, compile seam, or lesson slug is ready.
+    // Do NOT subscribe to srcValue here — keystrokes are debounced via
+    // onSourceChange → schedule(runNow); applyCode / run call runNow directly.
     let lastPreviewSlug = ''
     effect(() => {
       const l = lesson()
-      const iframe = iframeEl()
-      if (!l || !iframe || !compile()) return
-      if (l.slug === lastPreviewSlug) return
+      const host = hostEl()
+      const c = compile()
+      if (!l || !host || !c) return
+      if (l.slug === lastPreviewSlug && previewMount) return
       lastPreviewSlug = l.slug
-      iframeReady = false
-      reloadPreview(iframe)
+      runNow()
     })
 
-    const disposePreview = listenPreview(iframeEl, {
-      onConsole: (level, text) => {
-        log(`[preview] ${text}`, level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'info')
-      },
-      onReady: () => {
-        const l = lesson()
-        const go = (): void => {
-          iframeReady = true
-          runNow()
-        }
-        if (l) void pushScenario(iframeEl()!, l.slug).then(go)
-        else go()
-      },
-    })
-    const disposeTheme = observeTheme(() => {
-      const iframe = iframeEl()
-      if (iframe) {
-        iframeReady = false
-        reloadPreview(iframe)
-      }
-    })
     effect(() => () => {
-      disposePreview()
-      disposeTheme()
+      try {
+        previewMount?.dispose()
+      } catch {
+        /* best-effort */
+      }
+      previewMount = null
     })
 
         // The lesson's real filename — the tab is the file, so it says so.
@@ -286,7 +300,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       srcValue,
       fileName,
       captureEditor,
-      captureIframe,
+      captureHost,
       prose,
       steps,
       onSourceChange,
@@ -343,7 +357,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   style previewBand = { box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style iframeStyle = { box: w(full).h(full).minH(0), paint: borderWidth(0).bg(surface-0) }
+  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
   style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
   style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
   style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
@@ -467,12 +481,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
       <column gap="0" style(paneCol)>
-        <iframe
+        <div
           testid="tut-preview"
-          base-src="/tut-host.html"
-          title="Tutorial preview"
-          sandbox="allow-scripts allow-same-origin"
-          use:captureIframe style(iframeStyle)></iframe>
+          label="Tutorial preview"
+          use:captureHost style(previewHost)></div>
       </column>
       <!-- h(16) ≈ 4rem ≈ 5 mono lines; was maxH(7)=28px under a gap-4 column. -->
       <column live="polite" label="Preview console" gap="0" style(console)>
@@ -539,12 +551,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
       <column gap="0" style(paneCol)>
-        <iframe
+        <div
           testid="tut-preview"
-          base-src="/tut-host.html"
-          title="Tutorial preview"
-          sandbox="allow-scripts allow-same-origin"
-          use:captureIframe style(iframeStyle)></iframe>
+          label="Tutorial preview"
+          use:captureHost style(previewHost)></div>
       </column>
       <column live="polite" label="Preview console" gap="0" style(consoleMobile)>
         <span style(monoContents)>
@@ -556,4 +566,3 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
   </column>
 </column>}</when>
-

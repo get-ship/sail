@@ -106,5 +106,6 @@
     <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
     <a variant="default" href="/sail/overview">Introduction</a>
     <a variant="default" href="/sail/tutorial">Tutorial</a>
+    <a variant="default" href="/sail/playground">Playground</a>
   </row>
 </column>

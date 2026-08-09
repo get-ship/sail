@@ -28,12 +28,14 @@
   </card>
 
   <p style(muted)>
-    In the meantime, the <a href="/sail/tutorial">Tutorial</a> runs entirely in
-    your browser — no install required.
+    In the meantime, the <a href="/sail/tutorial">Tutorial</a> and
+    <a href="/sail/playground">Playground</a> run entirely in your browser —
+    no install required.
   </p>
 
   <row gap="2" style(footNav)>
     <a variant="solid" tone="primary" href="/sail/tutorial">Tutorial →</a>
+    <a variant="default" href="/sail/playground">Playground</a>
     <a variant="default" href="/sail/overview">Introduction</a>
     <a variant="default" href="/sail/why">Why Sail</a>
   </row>
