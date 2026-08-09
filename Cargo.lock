@@ -5343,8 +5343,6 @@ dependencies = [
 [[package]]
 name = "takumi-core"
 version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2c6fd820fb35e98abbe3df2cbbd2f481a1ed410230243b27b82d88093eb5508"
 dependencies = [
  "bitflags 2.13.1",
  "bytemuck",
@@ -6798,6 +6796,10 @@ name = "sail-compiler"
 version = "0.1.0"
 
 [[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6819,8 +6821,4 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
 version = "0.1.0"

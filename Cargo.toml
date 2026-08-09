@@ -146,3 +146,11 @@ lto = "thin"
 codegen-units = 1
 strip = "debuginfo"
 
+# RENDER-0: path-patch of crates.io takumi-core 0.16.0 (not the old 0.6.2 vendor).
+# Sail semantics: drop viewport-as-text-max_height unless clamp_lines; clamp
+# layout_max/line_max advances so parley 0.11 BreakLines cannot assert.
+# Upstream takumi 2.5.11 / 2.6.0 and core 0.16.0 / 0.17.0 still lack the fix.
+# Remove when upstream ships an equivalent fix (see third_party/takumi-core/SAIL_PATCH.md).
+[patch.crates-io]
+takumi-core = { path = "third_party/takumi-core" }
+
