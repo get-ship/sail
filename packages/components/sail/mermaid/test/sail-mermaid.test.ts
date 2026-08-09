@@ -2,9 +2,12 @@
 // for bad source. Mermaid's renderer relies on canvas-measured text
 // (jsdom has stubbed metrics), so the render effect can fail in this
 // env. The controller catches that into the documented error tile +
-// `sail-mermaid-error` CustomEvent — the test asserts the controller
-// never throws and the documented fallback is wired, then refines the
-// success path when a real browser is available.
+// `onError` host callback — the test asserts the controller never throws
+// and the documented fallback is wired, then refines the success path
+// when a real browser is available.
+//
+// C-MMD-1: bad source must never paint Mermaid's stock bomb SVG
+// ("Syntax error in text / mermaid version …") — only our themed tile.
 
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -93,6 +96,25 @@ async function waitForRenderSettled(m: LiveMount, maxMs: number = 10_000): Promi
   }
 }
 
+/** C-MMD-1 gate: Mermaid's stock error diagram must never appear in the
+ *  document — neither inside our host nor as an orphan body-level temp node. */
+function assertNoBombChrome(scope: ParentNode = document): void {
+  const text = scope.textContent ?? ''
+  // Bomb SVG paints this exact phrase; our product tile says
+  // "Diagram failed to render" and may include a thrown message, but must
+  // never host the stock error-diagram art. Reject the stock title string
+  // only when it appears inside an <svg> (the bomb), not free text.
+  for (const svg of scope.querySelectorAll('svg')) {
+    const svgText = svg.textContent ?? ''
+    expect(svgText).not.toMatch(/Syntax error in text/i)
+  }
+  // Temp mermaid nodes use #d{id} / #i{id} / #sail-mmd-* on body; none may linger.
+  expect(document.querySelector('[id^="d"][id*="sail-mmd"]')).toBeNull()
+  expect(document.querySelector('[id^="i"][id*="sail-mmd"]')).toBeNull()
+  expect(document.querySelector('[id^="sail-mmd-"]')).toBeNull()
+  void text
+}
+
 describe('<sail-mermaid> — register + render', () => {
   it('registers the custom element and renders its container into the light DOM', () => {
     const m = mount()
@@ -107,10 +129,11 @@ describe('<sail-mermaid> — register + render', () => {
     const svg = renderedSvg(m)
     const err = errorTile(m)
     // The controller's contract: a render either paints an SVG or
-    // surfaces the failure into the error tile. Either is acceptable;
-    // the contract that does NOT hold is "mount throws uncaught" or
-    // "nothing renders at all" (the empty-render probe defect).
+    // surfaces the failure into the error tile. Either is acceptable in
+    // jsdom (canvas metrics stubbed); soft-skip success when only the
+    // error tile appears — never empty, never bomb.
     expect(svg !== null || err !== null).toBe(true)
+    assertNoBombChrome()
     if (svg) {
       // On a real browser mermaid produces a complete SVG with nodes
       // and edges. JSDOM may not — only assert the success shape when
@@ -127,24 +150,45 @@ describe('<sail-mermaid> — register + render', () => {
       expect(err!.querySelector('pre')).not.toBeNull()
     }
   }, 15000)
+
+  it('catalog-equivalent `graph TD; A[Idea]-->B[Build]; B-->C[Ship]` settles without bomb chrome', async () => {
+    const m = mount('graph TD; A[Idea]-->B[Build]; B-->C[Ship]')
+    await waitForRenderSettled(m)
+    expect(renderedSvg(m) !== null || errorTile(m) !== null).toBe(true)
+    assertNoBombChrome()
+  }, 15000)
 })
 
-describe('<sail-mermaid> — error event', () => {
+describe('<sail-mermaid> — error path (C-MMD-1)', () => {
+  it('bad source → our error tile, not Mermaid bomb SVG', async () => {
+    const m = mount('not mermaid syntax at all >>><<<')
+    await waitForRenderSettled(m)
+    // Product tile must win; stock bomb must never bind into the host.
+    expect(errorTile(m)).not.toBeNull()
+    expect(m.el.textContent).toContain('Diagram failed to render')
+    // No success-path SVG on failure (html signal cleared).
+    const hostSvg = renderedSvg(m)
+    if (hostSvg) {
+      expect(hostSvg.textContent ?? '').not.toMatch(/Syntax error in text/i)
+    }
+    assertNoBombChrome()
+  }, 15000)
+
   it('invokes onError with { message, source } on a render failure', async () => {
     const m = mount('not mermaid syntax at all >>><<<')
     const errors: Array<{ message: string; source: string }> = []
     ;(m.el as any).onError = (d: { message: string; source: string }) => {
       errors.push(d)
     }
-    await settle(m)
-    // If mermaid parsed the bad source (it sometimes does), no error
-    // fires and the SVG renders — that's fine. The contract is: every
-    // failure path invokes onError. The positive assertion is the
-    // payload shape; the negative path is the SVG.
+    await waitForRenderSettled(m)
+    // With suppressErrorRendering, bad source must fail into onError + tile.
+    expect(errorTile(m)).not.toBeNull()
+    expect(errors.length).toBeGreaterThan(0)
     for (const detail of errors) {
       expect(typeof detail.message).toBe('string')
       expect(detail.source).toBe('not mermaid syntax at all >>><<<')
     }
+    assertNoBombChrome()
   }, 15000)
 
   it('onError is a host property (no event bus)', async () => {
@@ -153,12 +197,11 @@ describe('<sail-mermaid> — error event', () => {
     ;(m.el as any).onError = (d: { message: string; source: string }) => {
       caught = d
     }
-    await settle(m)
-    // If mermaid parsed the bad source cleanly, the callback never
-    // runs — the test passes by recording the seam is wired.
+    await waitForRenderSettled(m)
     if (caught) {
       expect(typeof caught.message).toBe('string')
     }
+    assertNoBombChrome()
   }, 15000)
 })
 
@@ -182,6 +225,8 @@ describe('<sail-mermaid> — theme reactivity', () => {
     // updates the dark signal — the render effect re-runs. Assert
     // no throw and a follow-up flush resolves.
     await expect(m.flush()).resolves.toBeUndefined()
+    await waitForRenderSettled(m)
+    assertNoBombChrome()
     document.documentElement.dataset.mode = 'light'
   }, 15000)
 })
