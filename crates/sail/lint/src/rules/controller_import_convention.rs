@@ -1,27 +1,16 @@
-//! `sail-controller-import-convention` — controllers import only from
-//! conventional dirs + runtime/stdlib packages (SAIL-SYNTAX-FREEZE §1 / §13).
+//! `sail-controller-import-convention` — controller value imports are
+//! restricted to allowed surfaces.
 //!
-//! Allowed value-import sources (**L3 / non-pack**):
-//! - `@ship/*` packages (runtime, tokens, deck, studio-shell, …)
-//! - relative paths that resolve under `src/actions/`, `src/compositions/`,
-//!   or `src/serverfns/` (ACTIONS-1 + composition + D4 conventions)
-//! - relative `.sail` modules (Scope / type surface of a partial)
+//! Allowed (apps):
+//! - `@ship/*`
+//! - relative `.sail`
+//! - relative paths under `src/actions/`, `src/compositions/`, `src/serverfns/`
 //!
-//! **Pack import envelope** (PACK-IMPORTS-1): a controller whose package root
-//! is a declared component pack (sibling `package.json` with a
-//! `customElements` field — the same structural marker CEM generation uses)
-//! may also value-import:
-//! - relative modules that resolve **inside the pack root** (engine helpers,
-//!   internals, co-located glue — not only `src/actions|compositions|serverfns`)
-//! - bare / scoped packages declared in that pack's `dependencies` or
-//!   `peerDependencies` (e.g. `@codemirror/state`, `mermaid`)
+//! Allowed (component packs, structural — pack root has `customElements` in
+//! package.json): pack-relative modules + pack `dependencies` /
+//! `peerDependencies`.
 //!
-//! Type-only imports (`import type`, `import { type X }`) are free — they
-//! carry no runtime coupling.
-//!
-//! Severity: **Error** (freeze: arbitrary module paths are a compile error
-//! naming the convention). Exemption is structural (declared pack), never a
-//! per-file lint disable.
+//! Type-only imports are free. Severity: Error.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -36,17 +25,14 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-controller-import-convention";
 
-const MESSAGE: &str = "controller import is outside the freeze convention — value \
-     imports must come from `@ship/*` packages, relative `.sail` modules, or \
-     `src/actions/` · `src/compositions/` · `src/serverfns/`. Inside a declared \
-     component pack, relative modules under the pack root and packages listed in \
-     that pack's `package.json` dependencies are also allowed. Type-only imports \
-     (`import type`) are free anywhere.";
+// Product-facing: name the law, name the path. No process jargon, no strategy essay.
+const MESSAGE: &str = "disallowed controller import — value imports must be \
+     `@ship/*`, a relative `.sail` module, or under `src/actions/`, \
+     `src/compositions/`, or `src/serverfns/`";
 
 const SUGGEST: &str = "Move the module under `src/actions/`, `src/compositions/`, \
-     or `src/serverfns/`, import it from an `@ship/*` package, declare the vendor \
-     in the pack's `package.json` dependencies (pack controllers only), or switch \
-     to `import type` if only types are needed.";
+     or `src/serverfns/`; import from `@ship/*`; or use `import type` if only \
+     types are needed.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
@@ -515,8 +501,8 @@ mod tests {
         assert!(
             f[0].suggest
                 .as_deref()
-                .is_some_and(|s| s.contains("package.json") || s.contains("`@ship/*`")),
-            "teaching suggest missing: {:?}",
+                .is_some_and(|s| s.contains("`@ship/*`") || s.contains("src/")),
+            "suggest missing: {:?}",
             f[0].suggest
         );
     }
@@ -541,7 +527,7 @@ mod tests {
 
     #[test]
     fn non_pack_project_refuses_codemirror_vendor() {
-        // L3 app path with no pack package.json — must keep the freeze Error.
+        // App path with no pack package.json — hard error, plain wording.
         let f = lint_at(
             "apps/demo/src/page.controller.ts",
             "import { EditorState } from '@codemirror/state'\n\
@@ -556,9 +542,13 @@ mod tests {
             f[0].message
         );
         assert!(
-            f[0].message.contains("freeze convention")
-                || f[0].message.contains("outside the freeze"),
-            "teaching diagnostic missing: {}",
+            f[0].message.contains("disallowed controller import"),
+            "product diagnostic missing: {}",
+            f[0].message
+        );
+        assert!(
+            !f[0].message.contains("freeze"),
+            "must not leak process jargon: {}",
             f[0].message
         );
     }

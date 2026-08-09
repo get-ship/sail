@@ -340,9 +340,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <if {stage.chip()}>
               <column gap="3" align="center">
                 <row gap="2" align="center">
-                  <chip variant={variant()} selected>Selected</chip>
+                  <!-- tone= so soft/outline/ghost match arms resolve --tone (rest solid = no tone). -->
+                  <chip variant={variant()} tone="primary" selected>Selected</chip>
                   <if {kept()}>
-                    <chip variant={variant()} removable on-remove={dropChip}>Removable</chip>
+                    <chip variant={variant()} tone="primary" removable on-remove={dropChip}>Removable</chip>
                   </if>
                   <if {!kept()}>
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>

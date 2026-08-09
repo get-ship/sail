@@ -125,22 +125,14 @@ a.sail-a:not([variant]):not(.s-displayinlineflex):not(.sx-displayinlineflex):not
   line-height: inherit;
   vertical-align: baseline;
 }
-/* Badge is the paint host. Chip wraps an inner paint <span> — center both. */
+/* Badge + chip: host is the paint surface — center label/chrome. */
 :where(.sail-badge, [data-sail-host='badge'], .sail-chip, [data-sail-host='chip']) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  vertical-align: middle;
-}
-/* Chip chrome lives on the first child span (minH + pad); without items:center
- * label text sits top-heavy (≈1px above / 8px below). */
-:where(.sail-chip, [data-sail-host='chip']) > span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   line-height: 1;
+  vertical-align: middle;
 }
 /* Dropzone — attribute floor for freeform `<div dropzone>`. Centered label,
  * dashed frame, real min-height so preview tiles don't look top-left smashed. */
