@@ -105,12 +105,10 @@ test.describe('SPA layout integrity', () => {
 })
 
 test.describe('header mode', () => {
-  test('Docs · Components · Playground always available (incl. playground + home)', async ({
-    page,
-  }) => {
+  test('Docs · Components · Playground on site chrome (docs + home)', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
 
-    for (const path of ['/docs', '/playground', '/'] as const) {
+    for (const path of ['/docs', '/'] as const) {
       await page.goto(path, { waitUntil: 'domcontentloaded' })
       await expect(page.locator('[testid="site-nav"]').first()).toBeVisible()
       await expect(page.locator('a[href="/docs"]').filter({ hasText: 'Docs' }).first()).toBeVisible()
@@ -121,6 +119,22 @@ test.describe('header mode', () => {
         page.locator('a[href="/playground"]').filter({ hasText: 'Playground' }).first(),
       ).toBeVisible()
     }
+  })
+
+  test('playground is single workbench chrome (no site navbar tax)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/playground', { waitUntil: 'domcontentloaded' })
+    // Site product bar is gone — pixels go to the editor.
+    await expect(page.locator('.sail-navbar')).toHaveCount(0)
+    await expect(page.locator('[testid="site-nav"]')).toHaveCount(0)
+    await expect(page.locator('[testid="pg-toolbar"], [testid="pg-back"]').first()).toBeVisible()
+    await expect(page.locator('a[href="/docs"]').first()).toBeVisible()
+    // Theme lives in the workbench toolbar, not a second site bar.
+    await expect(
+      page.locator('[testid="pg-toolbar"] button[popovertarget], [testid="pg-toolbar"] button[aria-label*="Theme"]').first(),
+    ).toBeVisible({ timeout: 15_000 })
+    // SOURCE row tax removed
+    await expect(page.getByText('SOURCE', { exact: true })).toHaveCount(0)
   })
 })
 

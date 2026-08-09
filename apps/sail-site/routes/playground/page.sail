@@ -246,17 +246,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <scope>
   style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
   style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
-  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) }
+  // Full-bleed workbench: single chrome bar, no site navbar tax.
+  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(half), paint: bg(surface-0) }
   // Desktop: editor | preview+console side by side (not stacked).
   style split = { box: grow(1).basis(0).minW(0).minH(0) }
   style card = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style cardBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style toolbar = { box: shrink(0).padY(1).padX(2) }
+  style toolbar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
   style paneCol = { box: grow(1).minH(0).minW(0).overflow(hidden) }
   style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
   style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
   style pgLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
+  style backLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
   style recipeSelect = { box: minW(48).maxW(64) }
+  style descClamp = { box: minW(0).maxW(64).overflow(hidden), paint: fg(muted-foreground), text: fontSize(sm).whitespace(nowrap) }
   // Side-by-side pane: fill height of the split; console stays a fixed foot.
   style previewBand = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
@@ -271,8 +273,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style logErr = { paint: fg(destructive) }
   style logInfo = { paint: fg(muted-foreground) }
   style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
-  style desc = { paint: fg(muted-foreground), text: fontSize(sm) }
-
   type LogLineProps = {
     ts: string
     kind: string
@@ -290,10 +290,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <when {tablet}>
-<column gap="1" style(workbench, playground)>
-  <!-- Toolbar spans full width; panes sit side by side below. -->
-  <row align="center" justify="between" gap="2" style(toolbar)>
-    <row gap="3" align="center">
+<column gap="0" style(workbench, playground)>
+  <!-- One chrome bar: exit + recipe + theme + run. No site navbar, no SOURCE tax. -->
+  <row align="center" justify="between" gap="2" style(toolbar) testid="pg-toolbar">
+    <row gap="2" align="center" nowrap style({ box: minW(0).grow(1) })>
+      <a href="/docs" label="Back to Docs" style(backLink) testid="pg-back">← Docs</a>
       <p style(pgLabel)>PLAYGROUND</p>
       <select
         size="sm"
@@ -306,19 +307,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <option value={r.id}>{r.title}</option>
         </for>
       </select>
-      <small style(desc)>{recipeDesc()}</small>
+      <small style(descClamp)>{recipeDesc()}</small>
     </row>
-    <row gap="1" align="center">
+    <row gap="1" align="center" nowrap style({ box: shrink(0) })>
+      <theme-picker></theme-picker>
       <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
       <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
     </row>
   </row>
 
-  <row nowrap gap="1" align="stretch" style(split)>
+  <row nowrap gap="1" align="stretch" style(split, { box: pad(half) })>
     <column gap="0" style(card)>
-      <row align="center" justify="between" gap="2" style(cardBar)>
-        <small style(countLabel)>SOURCE</small>
-      </row>
       <column gap="0" style(paneCol)>
         <sail-code-editor
           pane="source"
@@ -359,23 +358,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
 </column>
 {else =>
-<!-- Phone: stacked editor over preview. -->
+<!-- Phone: stacked editor over preview — still one chrome bar. -->
 <column gap="0" style(workbenchMobile, playground)>
-  <column gap="0" style(card)>
-    <row align="center" justify="between" gap="2" style(cardBar)>
-      <row gap="2" align="center">
-        <p style(pgLabel)>PLAYGROUND</p>
-        <select size="sm" bind:value={recipeId} label="Recipe" testid="pg-recipe">
-          <for {recipes as r} key={r.id}>
-            <option value={r.id}>{r.title}</option>
-          </for>
-        </select>
-      </row>
-      <row gap="1" align="center">
-        <button variant="ghost" size="sm" on:click={reset}>↺</button>
-        <button variant="outline" tone="primary" size="sm" on:click={run}>▶</button>
-      </row>
+  <row align="center" justify="between" gap="2" style(toolbar) testid="pg-toolbar">
+    <row gap="2" align="center" nowrap style({ box: minW(0).grow(1) })>
+      <a href="/docs" label="Back to Docs" style(backLink) testid="pg-back">← Docs</a>
+      <select size="sm" bind:value={recipeId} label="Recipe" testid="pg-recipe" style(recipeSelect)>
+        <for {recipes as r} key={r.id}>
+          <option value={r.id}>{r.title}</option>
+        </for>
+      </select>
     </row>
+    <row gap="1" align="center" nowrap style({ box: shrink(0) })>
+      <theme-picker></theme-picker>
+      <button variant="ghost" size="sm" on:click={reset}>↺</button>
+      <button variant="outline" tone="primary" size="sm" on:click={run}>▶</button>
+    </row>
+  </row>
+  <column gap="0" style(card, { box: grow(1).minH(0) })>
     <column gap="0" style(paneCol)>
       <sail-code-editor
         pane="source"
