@@ -88,6 +88,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const plan = signal('pro')
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
+    // Catalog toast tile: dismiss removes the instance; re-push remounts.
+    let catalogToastSeq = 0
+    const catalogToastItems = signal<{ key: string }[]>([{ key: 'catalog-toast-0' }])
+    const pushCatalogToast = (): void => {
+      catalogToastSeq += 1
+      catalogToastItems.set([{ key: `catalog-toast-${catalogToastSeq}` }])
+    }
+    const onCatalogToastDismiss = (): void => {
+      catalogToastItems.set([])
+    }
     // Code-editor tile sample — template exprs ban the `function` keyword.
     const editorSample = () =>
       "const greet = (name) => {\n  return `hello, ${name}`\n}\n\ngreet('sail')\n"
@@ -114,7 +124,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     return {
       query, packSel, catSel, pickPack, pickCat,
       packs, cats, visibleList, countLabel, none,
-      email, agreed, notify, volume, team, plan, kept, dropChip, editorSample, toolArgs, toolResult,
+      email, agreed, notify, volume, team, plan, kept, dropChip,
+      catalogToastItems, pushCatalogToast, onCatalogToastDismiss,
+      editorSample, toolArgs, toolResult,
     }
 })
 </controller>
@@ -287,7 +299,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     Retry in a moment — the registry is slow.
                   </error-state>}{else-if {e.tag === 'error-boundary'} => <error-boundary>
                     <p style(mutedXs)>Child tree isolated from render faults.</p>
-                  </error-boundary>}{else-if {e.tag === 'toast'} => <toast tone="primary" duration="0">Invite sent to ada@ship.dev</toast>}{else-if {e.tag === 'badge'} => <row gap="2" align="center">
+                  </error-boundary>}{else-if {e.tag === 'toast'} => <column gap="2" style({ box: w(full).minW(0) })>
+                    <button type="button" size="sm" variant="ghost" on:click={pushCatalogToast} toast-show>Show toast</button>
+                    <for {catalogToastItems() as t} key={t.key}>
+                      <toast tone="primary" duration="0" on-dismiss={onCatalogToastDismiss}>Invite sent to ada@ship.dev</toast>
+                    </for>
+                  </column>}{else-if {e.tag === 'badge'} => <row gap="2" align="center">
                     <badge tone="primary">v0.4</badge>
                     <badge tone="success" variant="soft">Healthy</badge>
                     <badge tone="destructive" variant="outline">3 errors</badge>

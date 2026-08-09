@@ -210,12 +210,24 @@ export default controller(() => ({ loading: signal(true) }))
   </card>
 </error-boundary>`,
 
-  toast: `<toast-region position="bottom-end">
-    style({ animate: enter({ opacity: 'fade' }) })
-  <toast tone="success" duration="0">
-    <strong>Saved.</strong> Your changes are live.
-    <button data-toast-close variant="ghost" size="sm">×</button>
-  </toast>
+  toast: `<controller>
+export default controller(() => {
+  let seq = 0
+  const items = signal([{ key: 'toast-0' }])
+  const push = () => { seq += 1; items.set([{ key: \`toast-\${seq}\` }]) }
+  const onDismiss = () => items.set([])
+  return { items, push, onDismiss }
+})
+</controller>
+
+<button type="button" on:click={push}>Show toast</button>
+<toast-region position="bottom-end">
+  <for {items() as t} key={t.key}>
+    <toast tone="success" duration="0" on-dismiss={onDismiss}>
+      style({ animate: enter({ opacity: 'fade' }) })
+      <strong>Saved.</strong> Your changes are live.
+    </toast>
+  </for>
 </toast-region>`,
 
   badge: `<row gap="2" align="center">

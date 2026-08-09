@@ -82,7 +82,11 @@ export const PACK_PROPS: Record<string, { name: string; type: string; desc: stri
     { name: 'source', type: 'string', desc: 'Citation source label.' },
     { name: 'href', type: 'string', desc: 'Click target.' },
   ],
-  'sail-composer': [{ name: 'placeholder', type: 'string', desc: 'Empty-state copy.' }],
+  'sail-composer': [
+    { name: 'placeholder', type: 'string', desc: 'Empty-state copy.' },
+    { name: 'multiline', type: 'bool', desc: 'Growing textarea (default true). Set false for a single-line field.' },
+    { name: 'disabled', type: 'bool', desc: 'Blocks input and submit.' },
+  ],
   'sail-thinking-dots': [{ name: 'label', type: 'string', desc: 'Live-region label.' }],
   'sail-tool-call': [
     { name: 'name', type: 'string', desc: 'Tool name.' },
@@ -131,7 +135,7 @@ export function packBlurbFor(tag: string): string {
     case 'sail-citation':
       return 'Citation pill with source/label; click to follow href.'
     case 'sail-composer':
-      return 'Chat-composer input with submit + cancel events.'
+      return 'Chat composer: multiline grow by default, Enter submits, Shift+Enter newline.'
     case 'sail-thinking-dots':
       return 'Three bouncing dots with polite live status.'
     case 'sail-tool-call':
