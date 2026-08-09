@@ -216,14 +216,21 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         "avatar skins must lower default gradient to CSS linear-gradient:\n{}",
         out.skin_css
     );
-    // avatar-media child pack → .s-avatarmedia img { … }
+    // avatar-media child pack → photo cover + icon-slug contain/pad.
     assert!(
         out.structure_html.contains("s-avatarmedia")
             && (out.skin_css.contains(".s-avatarmedia img")
-                || out.skin_css.contains("object-fit:contain")
-                || out.skin_css.contains("object-fit: contain")),
-        "avatar-media must paint descendant img:\nstruct={}\nskin={}",
+                || out.skin_css.contains("object-fit:cover")
+                || out.skin_css.contains("object-fit: cover")),
+        "avatar-media photo path must cover descendant img:\nstruct={}\nskin={}",
         out.structure_html,
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains("[icon-slug]")
+            && (out.skin_css.contains("object-fit:contain")
+                || out.skin_css.contains("object-fit: contain")),
+        "avatar-media icon-slug path must contain+pad:\n{}",
         out.skin_css
     );
     // Branded tones solid-fill via bridge var (`var(--tone)`); size/shape axes land.
@@ -486,19 +493,19 @@ fn switch_host_track_paint_on_host_sx() {
             && src.contains("size(3)")
             && src.contains("left(auto)")
             && src.contains("right(px)")
-            && src.contains("bg(hover-bg)")
+            && !src.contains("bg(hover-bg)")
             && src.contains("bg(primary)")
             && src.contains("border(selected-border)")
             && src.contains("outline(primary)")
             && src.contains("outlineOffset(ring-offset)")
             && src.contains("saturate(60)")
-            && (src.contains("bg(info)") || src.contains("bg(primary)"))
-            && (src.contains("outline(info)") || src.contains("outline(primary)"))
+            && (src.contains("bg(info)") || src.contains("bg(primary)") || src.contains("bg(tone)"))
+            && (src.contains("outline(info)") || src.contains("outline(primary)") || src.contains("outline(tone)"))
             && src.contains("match:") && src.contains("size:")
             && src.contains("size(2_5)")
             && src.contains("w(7)")
             && src.contains("size(icon-size-sm)"),
-        "switch Style host: track + before thumb + size/tone match + semantic tones"
+        "switch Style host: track + before thumb + size/tone match + no hover-bg wash"
     );
     // boxSizing class mint + live skin + committed element-skins.css lockstep.
     assert!(
@@ -610,6 +617,75 @@ fn switch_host_track_paint_on_host_sx() {
             "switch PE fully deleted from contracts"
         );
     }
+}
+
+#[test]
+fn separator_rest_line_without_empty_tone_stomp() {
+    // C-SEP-1: solid rest is separator.line; bg(tone) only under [tone] presence.
+    let src = include_str!("../stdlib/separator.sail");
+    let out = compile_element(src, "separator").expect("separator compiles");
+    assert!(
+        src.contains("bg(separator.line)")
+            && !src.contains("solid: style(solid, { paint: bg(tone) })")
+            && src.contains("tone: *"),
+        "separator must not unconditional bg(tone) on solid; tone via presence compound"
+    );
+    assert!(
+        (out.skin_css.contains("background-color:var(--separator-line)")
+            || out.skin_css.contains("background-color: var(--separator-line)"))
+            && (out.skin_css.contains("[tone]")
+                || out.skin_css.contains("[tone='primary']")
+                || out.structure_html.contains("tone")),
+        "rest separator.line + tone-gated paint in skin:\n{}",
+        out.skin_css
+    );
+    // Solid arm must not apply bare .s-*-bgtone without [tone].
+    let solid_tone_unconditional = out
+        .skin_css
+        .split('}')
+        .any(|rule| {
+            rule.contains("bgtone")
+                && rule.contains("background-color")
+                && !rule.contains("[tone")
+                && rule.contains("variant='solid'")
+        });
+    assert!(
+        !solid_tone_unconditional,
+        "solid+tone must be presence-gated, not [variant=solid] alone:\n{}",
+        out.skin_css
+    );
+}
+
+#[test]
+fn toggle_pressed_uses_primary_not_invert() {
+    // C-TG-1: selected = primary tokens; pressed+hover keeps identity.
+    let src = include_str!("../stdlib/toggle.sail");
+    let out = compile_element(src, "toggle").expect("toggle compiles");
+    assert!(
+        src.contains("bg(primary)")
+            && src.contains("fg(primary-foreground)")
+            && !src.contains("bg(foreground).fg(background)")
+            && src.contains("hover:"),
+        "toggle pressed must use primary, not raw fg/bg invert"
+    );
+    assert!(
+        (out.skin_css.contains("background-color:var(--primary)")
+            || out.skin_css.contains("background-color: var(--primary)"))
+            && (out.skin_css.contains("[aria-pressed='true']")
+                || out.skin_css.contains("aria-pressed")),
+        "pressed primary must lower:\n{}",
+        out.skin_css
+    );
+    // pressed+hover compound present (higher-spec than bare :hover wash).
+    assert!(
+        out.skin_css.contains(":hover")
+            && (out.skin_css.contains("opacity:0.9")
+                || out.skin_css.contains("opacity: 0.9")
+                || out.skin_css.contains("opacity:90")
+                || src.contains("opacity(90)")),
+        "pressed+hover must keep selected identity:\n{}",
+        out.skin_css
+    );
 }
 
 #[test]
@@ -2122,8 +2198,9 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && (src.contains("group-hover") || src.contains("group-hover:"))
             && (src.contains("group-focus-within") || src.contains("group-focus-within:"))
             && src.contains("content(empty)")
-            && src.contains("rotate(45)"),
-        "tooltip host/bubble Style must carry geometry + show + arrow"
+            && !src.contains("rotate(45)")
+            && (src.contains("borderT(tooltip)") || src.contains("borderL(tooltip)")),
+        "tooltip host/bubble Style must carry geometry + show + border caret (not diamond)"
     );
     // Style-minted class names (bind args mint as `<setter>bind<Name>`).
     assert!(
@@ -2132,8 +2209,10 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && out.structure_html.contains("s-positionabsolute")
             && out.structure_html.contains("s-topbindttTop")
             && out.structure_html.contains("s-grouphover-opacity100")
-            && out.structure_html.contains("s-after-rotate45"),
-        "tooltip structure atoms:\n{}",
+            && (out.structure_html.contains("borderTtooltip")
+                || out.skin_css.contains("border-top-color:var(--tooltip)")
+                || out.skin_css.contains("border-top-color: var(--tooltip)")),
+        "tooltip structure atoms (border caret):\n{}",
         out.structure_html
     );
     let contracts = include_str!(concat!(

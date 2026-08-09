@@ -2598,13 +2598,14 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     "linear-gradient(135deg, var(--primary), var(--accent))".into(),
                 )]);
             }
+            // Photo path default: cover fill (no letterbox). Icon-slug path is
+            // a second rule in emit (`[icon-slug] img` → contain + pad).
             ("avatarMedia", "true" | "on") => {
                 return Ok(vec![
                     ("display".into(), "block".into()),
                     ("width".into(), "100%".into()),
                     ("height".into(), "100%".into()),
-                    ("object-fit".into(), "contain".into()),
-                    ("padding".into(), "10%".into()),
+                    ("object-fit".into(), "cover".into()),
                     ("box-sizing".into(), "border-box".into()),
                 ]);
             }

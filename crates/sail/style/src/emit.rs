@@ -197,11 +197,34 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
     let key = format!("{selector}|{decls:?}|{:?}", ctx.media);
     if seen.insert(key) {
         out.push(CssRule {
-            class,
+            class: class.clone(),
             selector,
             declarations: decls,
             media: ctx.media.clone(),
         });
+    }
+    // Avatar media roles: photos (`src`) cover the disc; brand glyphs
+    // (`icon-slug`) keep contain + pad so simpleicons logos aren't clipped.
+    if op.setter == "avatarMedia" {
+        let icon_decls = vec![
+            ("display".into(), "block".into()),
+            ("width".into(), "100%".into()),
+            ("height".into(), "100%".into()),
+            ("object-fit".into(), "contain".into()),
+            ("padding".into(), "10%".into()),
+            ("box-sizing".into(), "border-box".into()),
+        ];
+        // Presence gate on host: `.s-avatarmedia[icon-slug] img`
+        let icon_selector = format!(".{class}[icon-slug] img");
+        let icon_key = format!("{icon_selector}|{icon_decls:?}|{:?}", ctx.media);
+        if seen.insert(icon_key) {
+            out.push(CssRule {
+                class,
+                selector: icon_selector,
+                declarations: icon_decls,
+                media: ctx.media.clone(),
+            });
+        }
     }
 }
 
@@ -381,7 +404,15 @@ pub fn lower_style_source_with_motion(
             }
             continue;
         }
-        if seen.insert(r.class.clone()) {
+        // Dedupe CSS by selector (not class). avatarMedia emits two rules that
+        // share class `s-avatarmedia` but differ: `img` cover vs `[icon-slug] img`
+        // contain+pad. Class-keyed dedupe would drop the icon path.
+        let dedupe_key = if r.selector.is_empty() {
+            r.class.clone()
+        } else {
+            r.selector.clone()
+        };
+        if seen.insert(dedupe_key) {
             css.push_str(&render_rule(r));
         }
         if !classes.iter().any(|c| c == &r.class) {

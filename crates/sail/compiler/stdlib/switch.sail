@@ -4,6 +4,7 @@
   Rest track/border/thumb from component.switch tokens
   (cssNames switch, switch.border, switch.thumb). Checked rest = primary.
   Semantic checked/focus = bound tone.
+  Hover paints track only (never host hover wash); checked+hover keeps primary/tone.
 -->
 
 <scope>
@@ -31,19 +32,32 @@
   style(base, {
     box: shrink(0),
     when: {
-      hover: { paint: bg(hover-bg) },
-      checked: { paint: bg(primary).border(selected-border).shadow(xs) },
+      // Track hover only — never global hover wash (equalizes with thumb / kills checked).
+      hover: { paint: border(muted-foreground) },
+      checked: {
+        paint: bg(primary).border(selected-border).shadow(xs),
+        when: {
+          // Keep selected identity under pointer.
+          hover: { paint: bg(primary).border(selected-border).opacity(90) },
+          before: { box: left(auto).right(px), paint: bg(primary-foreground) },
+        },
+      },
       focus: { paint: outline(solid).outline(2).outline(primary).outlineOffset(ring-offset) },
       disabled: { paint: cursor(not-allowed).bg(switch).border(border).saturate(60).shadow(none) },
       before: {
         box: position(absolute).top(0).bottom(0).my(auto).left(px).size(3),
         paint: content(empty).bg(switch.thumb).radius(full).shadow(sm).transition(all).duration(fast).ease(out),
       },
-      checked: { when: { before: { box: left(auto).right(px), paint: bg(primary-foreground) } } },
       disabled: { when: { before: { paint: shadow(xs) } } },
-      checked: { paint: bg(tone).border(selected-border).shadow(xs) },
+      // Bound tone checked (when tone attr present via host bridge).
+      checked: {
+        paint: bg(tone).border(selected-border).shadow(xs),
+        when: {
+          hover: { paint: bg(tone).border(selected-border).opacity(90) },
+          before: { paint: bg(tone.foreground) },
+        },
+      },
       focus: { paint: outline(tone) },
-      checked: { when: { before: { paint: bg(tone.foreground) } } },
       motion-reduce: { when: { before: { paint: transition(none) } } },
       forced-colors: { paint: border(CanvasText) },
       forced-colors: { when: { checked: { paint: bg(Highlight) }, focus: { paint: outline(CanvasText) } } },
@@ -57,7 +71,7 @@
     },
     compound: [
       { tone: muted, when: { checked: { paint: bg(muted-foreground) }, focus: { paint: outline(muted-foreground) } } },
-      { tone: muted, when: { checked: { when: { before: { paint: bg(background) } } } } },
+      { tone: muted, when: { checked: { when: { before: { paint: bg(background) }, hover: { paint: bg(muted-foreground).opacity(90) } } } } },
     ],
   })
 >

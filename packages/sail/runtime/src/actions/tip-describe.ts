@@ -13,8 +13,10 @@ type Placement = 'top' | 'bottom' | 'left' | 'right'
 const applyPlacement = (el: HTMLElement, raw: string | null): void => {
   const p = (raw === 'bottom' || raw === 'left' || raw === 'right' ? raw : 'top') as Placement
   const gap = 'calc(100% + var(--space-2))'
-  const arrow = 'calc(-1 * var(--space-1))'
-  // Half of arrow size (w/h = space-2) so left/top 50% centers the diamond.
+  // Border-triangle caret (border*Width(4) = 4px ≈ space-1): tuck base under
+  // the bubble edge so the filled edge meets the fill (no diamond double seam).
+  const arrow = 'calc(-1 * var(--space-1) + 1px)'
+  // Half of triangle base (2 × 4px) for left/top 50% centering.
   const shift = 'calc(-1 * var(--space-1))'
 
   // Reset box + arrow sides.
@@ -98,11 +100,18 @@ export const tipDescribe: Action<void> = (node) => {
   }
 
   const sync = (): void => {
-    applyPlacement(el, el.getAttribute('placement'))
+    const rawPlacement = el.getAttribute('placement')
+    applyPlacement(el, rawPlacement)
     if (bubble) {
       if (!bubble.hasAttribute('role')) bubble.setAttribute('role', 'tooltip')
       bubble.id = bubbleId
       bubble.textContent = el.getAttribute('content') ?? ''
+      // Border-triangle caret match lives on the bubble node — mirror placement.
+      const p =
+        rawPlacement === 'bottom' || rawPlacement === 'left' || rawPlacement === 'right'
+          ? rawPlacement
+          : 'top'
+      bubble.setAttribute('placement', p)
     }
     const trigger = Array.from(el.children).find((c) => c !== bubble) as
       | HTMLElement

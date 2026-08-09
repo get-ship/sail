@@ -3114,7 +3114,7 @@
       "path": "component.switch.thumb",
       "cssName": "switch-thumb",
       "type": "color",
-      "value": "var(--surface-1)"
+      "value": "oklch(1 0 0)"
     },
     "tab-list": {
       "path": "component.tab-list.bg",
