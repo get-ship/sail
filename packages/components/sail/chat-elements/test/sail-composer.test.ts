@@ -1,5 +1,6 @@
-// Behavioral suite for <sail-composer> — submit/keydown event contracts.
+// Behavioral suite for <sail-composer> — submit/keydown via onSubmit callback.
 // AOT registration on import; the send action is a bare <button>.
+// Product default is multiline grow (textarea + use:autosize).
 import { afterEach, describe, expect, it } from 'vitest'
 import '../src/sail-composer/sail-composer.compiled.js'
 
@@ -24,21 +25,18 @@ const mount = async (markup = '<sail-composer></sail-composer>'): Promise<HTMLEl
   await flush()
   return el
 }
-// The field is the composer's text control — an <input>, or a <textarea> in
-// multiline mode. Light DOM: query the real control off the host.
-const field = (el: HTMLElement): HTMLInputElement =>
-  el.querySelector<HTMLInputElement>('input, textarea')!
+// Default <textarea>; <input> when multiline={false}. Light DOM control.
+const field = (el: HTMLElement): HTMLInputElement | HTMLTextAreaElement =>
+  el.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea')!
 const sendButton = (el: HTMLElement): HTMLElement =>
   el.querySelector<HTMLElement>('button[aria-label="Send"]')!
 
-/** Drive the field as a user would: set the value + fire input so the
- *  controller's text signal tracks it, then return the captured submit
- *  detail (or null if no submit fired). */
+/** Capture host onSubmit (product callback; not a CustomEvent bus). */
 function captureSubmit(el: HTMLElement): { detail: SubmitDetail | null } {
   const rec: { detail: SubmitDetail | null } = { detail: null }
-  el.addEventListener('sail-composer-submit', (e) => {
-    rec.detail = (e as CustomEvent).detail
-  })
+  ;(el as HTMLElement & { onSubmit?: (d: SubmitDetail) => void }).onSubmit = (d) => {
+    rec.detail = d
+  }
   return rec
 }
 function type(el: HTMLElement, value: string): void {
@@ -57,14 +55,27 @@ describe('<sail-composer>', () => {
     expect(customElements.get('sail-composer')).toBeDefined()
   })
 
-  it('emits sail-composer-submit with trimmed text on Enter, then clears the field', async () => {
+  it('defaults to a multiline textarea with use:autosize', async () => {
+    const el = await mount()
+    const ta = el.querySelector('textarea')
+    expect(ta).not.toBeNull()
+    expect(el.querySelector('input')).toBeNull()
+    expect(ta!.hasAttribute('data-autosize')).toBe(true)
+  })
+
+  it('multiline={false} mounts a single-line input', async () => {
+    const el = await mount('<sail-composer multiline="false"></sail-composer>')
+    expect(el.querySelector('input')).not.toBeNull()
+    expect(el.querySelector('textarea')).toBeNull()
+  })
+
+  it('invokes onSubmit with trimmed text on Enter, then clears the field', async () => {
     const el = await mount()
     const rec = captureSubmit(el)
     type(el, '  hello  ')
     await flush()
     pressEnter(el)
     expect(rec.detail).toEqual({ text: 'hello', attachments: [] })
-    // Field resets after a successful submit so the next turn starts clean.
     expect(field(el).value).toBe('')
   })
 
@@ -87,15 +98,26 @@ describe('<sail-composer>', () => {
   })
 
   it('Shift+Enter in multiline mode inserts a newline instead of submitting', async () => {
-    const el = await mount('<sail-composer multiline></sail-composer>')
+    const el = await mount()
     const rec = captureSubmit(el)
     type(el, 'line one')
     await flush()
     pressEnter(el, { shift: true })
     expect(rec.detail).toBeNull()
-    // Plain Enter still submits in multiline mode.
     pressEnter(el)
     expect(rec.detail).toEqual({ text: 'line one', attachments: [] })
+  })
+
+  it('autosize publishes --autosize-h for multi-line content', async () => {
+    const el = await mount()
+    const ta = el.querySelector('textarea')!
+    Object.defineProperty(ta, 'scrollHeight', {
+      configurable: true,
+      get: () => (ta.value.split('\n').length || 1) * 20,
+    })
+    type(el, 'line one\nline two\nline three')
+    await flush()
+    expect(ta.style.getPropertyValue('--autosize-h')).toBe('60px')
   })
 
   it('never submits while disabled', async () => {
@@ -107,7 +129,7 @@ describe('<sail-composer>', () => {
     expect(rec.detail).toBeNull()
   })
 
-  it('echoes the consumer-owned attachments array back in the submit event', async () => {
+  it('echoes the consumer-owned attachments array back in onSubmit', async () => {
     const el = await mount()
     const attachments = [{ kind: 'file', name: 'a.png' }]
     ;(el as HTMLElement & { attachments: unknown[] }).attachments = attachments
@@ -116,19 +138,6 @@ describe('<sail-composer>', () => {
     await flush()
     pressEnter(el)
     expect(rec.detail!.attachments).toEqual(attachments)
-    // The composer copies rather than aliasing the consumer's array.
     expect(rec.detail!.attachments).not.toBe(attachments)
-  })
-
-  it('the submit event reaches the document (bubbles + composed)', async () => {
-    const el = await mount()
-    let seenAtDocument = false
-    document.addEventListener('sail-composer-submit', () => { seenAtDocument = true }, {
-      once: true,
-    })
-    type(el, 'x')
-    await flush()
-    pressEnter(el)
-    expect(seenAtDocument).toBe(true)
   })
 })

@@ -119,19 +119,21 @@ export default controller(() => ({
   <section>
     <h2 style(sectionH)>sail-composer</h2>
     <p style(sectionBody)>
-      Message input + send control. Single-line by default; <code>multiline</code>
-      grows to a textarea. Emits <code>sail-composer-submit</code> on send.
+      Message input + send control. Multiline grow is the product default
+      (textarea + autosize); set multiline false for a single-line field.
+      Emits <code>sail-composer-submit</code> on send. Enter submits;
+      Shift+Enter inserts a newline when multiline.
     </p>
 
     <column gap="3">
       <column gap="3" style(card)>
-        <h3 style(cardLabel)>default — single-line, placeholder</h3>
+        <h3 style(cardLabel)>default — multiline grow, placeholder</h3>
         <sail-composer placeholder="Message the agent…"></sail-composer>
       </column>
 
       <column gap="3" style(card)>
-        <h3 style(cardLabel)>multiline — Shift+Enter for newlines</h3>
-        <sail-composer placeholder="Write a long message…" multiline></sail-composer>
+        <h3 style(cardLabel)>single-line — multiline false</h3>
+        <sail-composer placeholder="Quick reply…" multiline={false}></sail-composer>
       </column>
 
       <column gap="3" style(card)>

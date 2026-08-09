@@ -335,13 +335,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   toast: lang('toast', 'toast', {
     blurb:
-      'A transient announcement. It auto-dismisses after duration ms (0 = sticky), pauses while hovered or focused, and lives in a <toast-region> stack.',
+      'A transient announcement. It auto-dismisses after duration ms (0 = sticky), pauses while hovered or focused, and lives in a <toast-region> stack. Dismiss removes the instance — re-push from your controller to show again.',
     variants: ['success', 'info', 'warning', 'destructive'],
     variantAttr: 'tone',
     props: [
       { name: 'tone', desc: 'semantic colour token', type: TONES },
       { name: 'duration', desc: 'ms until dismiss — 0 is sticky', type: 'number' },
-      { name: 'data-toast-close', desc: 'marks the close button', type: 'attr' },
+      { name: 'onDismiss', desc: 'fires before remove — drop the instance from your list', type: 'callback' },
+      { name: 'data-toast-close', desc: 'marks a custom close control (L1 ships one)', type: 'attr' },
       { name: '<toast-region position>', desc: 'the fixed stack it lives in', type: 'top/bottom-start/end' },
     ],
   }),

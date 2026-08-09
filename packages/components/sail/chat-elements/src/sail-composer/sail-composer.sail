@@ -1,15 +1,16 @@
 <!--
-  <sail-composer> — message input + send. multiline → growing textarea;
-  Enter submits, Shift+Enter newline (multiline only). Attachments are
+  <sail-composer> — chat message input + send. Multiline grow is the product
+  default (textarea + use:autosize); set multiline={false} for a single-line
+  field. Enter submits, Shift+Enter newline (multiline only). Attachments are
   consumer-owned (slot + host JS property); echoed on submit, never fabricated.
-  Events: sail-composer-submit { text, attachments }.
+  Callback: onSubmit({ text, attachments }) / on-submit= in templates.
 -->
 
 <scope>
   props: {
     placeholder = ''
     disabled = false
-    multiline = false
+    multiline = true
   }
 
   style frame = {
@@ -105,6 +106,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           disabled={disabled()}
           bind:value={text}
           use:fieldKeys
+          use:autosize
           style(fieldMulti)
         ></textarea>
       </if>

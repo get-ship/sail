@@ -78,6 +78,24 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
     const restoreChip = (): void => kept.set(true)
+    // Toast stage owns instances (push → dismiss → re-push). L1 remove() is
+    // correct; the stage must remount via signal, not treat one node as forever.
+    let toastSeq = 0
+    const toastItems = signal<{ key: string }[]>([{ key: 'toast-0' }])
+    const pushToast = (): void => {
+      toastSeq += 1
+      toastItems.set([{ key: `toast-${toastSeq}` }])
+    }
+    const onToastDismiss = (): void => {
+      toastItems.set([])
+    }
+    // Re-seed when navigating onto the toast detail (scope is reused).
+    effect(() => {
+      if (tag() === 'toast') {
+        toastSeq = 0
+        toastItems.set([{ key: 'toast-0' }])
+      }
+    })
     const sheetSide = () => (variant() === 'sheet' ? 'end' : null)
     const people = () => [
       { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
@@ -91,6 +109,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       blurb, props, packBlurb, packProps, packLabel, usageCode, stage, slotCopy,
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
+      toastItems, pushToast, onToastDismiss,
       sheetSide, people,
     }
 })
@@ -321,10 +340,16 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.toast()}>
-              <toast tone={variant()} duration="0" style(stageCol)>
-                <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
-                <button toast-close variant="ghost" size="sm">×</button>
-              </toast>
+              <column gap="3" align="center" style(toastStage)>
+                <button type="button" variant="outline" size="sm" on:click={pushToast} toast-show>
+                  Show toast
+                </button>
+                <for {toastItems() as t} key={t.key}>
+                  <toast tone={variant()} duration="0" on-dismiss={onToastDismiss} style(stageCol)>
+                    <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
+                  </toast>
+                </for>
+              </column>
             </if>
 
             <!-- ══ Display ═════════════════════════════════════════════ -->
