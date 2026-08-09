@@ -623,7 +623,7 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "\"moduleResolution\": \"Bundler\"",
         "\"target\": \"ESNext\"",
         "\"skipLibCheck\": true",
-        ".sail/types.d.ts",
+        "node_modules/.sail/types.d.ts",
     ] {
         assert!(
             tsconfig.contains(flag),
@@ -631,8 +631,8 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         );
     }
     assert!(
-        app.join(".sail/types.d.ts").is_file(),
-        "create must emit ambient pack .sail/types.d.ts"
+        app.join("node_modules/.sail/types.d.ts").is_file(),
+        "create must emit ambient pack node_modules/.sail/types.d.ts"
     );
     let oxlint = std::fs::read_to_string(app.join(".oxlintrc.json")).expect(".oxlintrc.json");
     assert!(

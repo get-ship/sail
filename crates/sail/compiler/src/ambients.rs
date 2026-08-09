@@ -1,8 +1,9 @@
 //! Generated ambient pack for sail TypeScript regions.
 //!
-//! Emit path: `<project>/.sail/types.d.ts` via `sail-compiler types` (or the
-//! deck `--typecheck` hook). The pack is **not** hand-authored in app source —
-//! every name comes from the same tables the compiler / lint already own:
+//! Emit path: `<project>/node_modules/.sail/types.d.ts` via `sail-compiler
+//! types` (or the deck `--typecheck` hook) — SPEC-OUTPUT-1 Option B. The pack
+//! is **not** hand-authored in app source — every name comes from the same
+//! tables the compiler / lint already own:
 //!
 //! - [`crate::runtime_ambient::RUNTIME_AMBIENT`] — controller vocabulary
 //! - `sail_lint::style::setters` + scales — Style builder surface
@@ -31,8 +32,10 @@ use sail_lint::scales;
 use sail_lint::style::setters::{SetterSpec, setters};
 use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_names};
 
-/// Relative path of the ambient pack inside a sail project.
-pub const PROJECT_TYPES_REL: &str = ".sail/types.d.ts";
+/// Relative path of the ambient pack inside a sail project (SPEC-OUTPUT-1 §4).
+/// Lives under `node_modules/.sail/` so `rm -rf node_modules` clears it;
+/// `.deck/` stays purely servable output; ops session stays under `.sail/`.
+pub const PROJECT_TYPES_REL: &str = "node_modules/.sail/types.d.ts";
 
 /// Regenerated header — agents/humans must not hand-edit the pack.
 const HEADER: &str = "\
@@ -261,7 +264,7 @@ pub fn emit_types_dts() -> String {
     out
 }
 
-/// Write `<project>/.sail/types.d.ts`. Creates `.sail/` as needed.
+/// Write `<project>/node_modules/.sail/types.d.ts`. Creates parents as needed.
 pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     let path = project.join(PROJECT_TYPES_REL);
     if let Some(parent) = path.parent() {
@@ -340,8 +343,7 @@ pub fn emit_project_oxlintrc_json() -> String {
     "**/node_modules/**",
     "**/dist/**",
     "**/.deck/**",
-    "**/.sail/**",
-    "**/.sail-out/**"
+    "**/.sail/**"
   ]
 }
 "#
@@ -356,24 +358,21 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
     Ok(path)
 }
 
-/// Build a project-root `tsconfig.json` body that includes the ambient pack.
+/// Build a project-root `tsconfig.json` body that registers the ambient pack.
 ///
 /// `include_globs` are relative to the project (e.g. `src/**/*.ts`).
-/// The generated ambient pack ([`PROJECT_TYPES_REL`]) is always first in
-/// `include` so globals (`signal`, `controller`, `style`, …) register under
-/// tsc with zero hand ambient shims.
+/// The generated ambient pack ([`PROJECT_TYPES_REL`]) is listed under `files`
+/// (not `include`) so tsc still loads it when `exclude` contains `node_modules`
+/// — pack lives under `node_modules/.sail/` (SPEC-OUTPUT-1 §4 Option B).
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
-    let mut includes = Vec::with_capacity(include_globs.len() + 1);
-    includes.push(format!("\"{PROJECT_TYPES_REL}\""));
-    for g in include_globs {
-        includes.push(format!("\"{g}\""));
-    }
+    let includes: Vec<String> = include_globs.iter().map(|g| format!("\"{g}\"")).collect();
     format!(
         "{{\n  \
-         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2). Ambient pack registered via include of {pack}.\",\n  \
+         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2). Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
          \"compilerOptions\": {opts},\n  \
+         \"files\": [\"{pack}\"],\n  \
          \"include\": [{inc}],\n  \
-         \"exclude\": [\"node_modules\", \"dist\", \".deck\", \".sail-out\"]\n\
+         \"exclude\": [\"node_modules\", \"dist\", \".deck\"]\n\
          }}\n",
         pack = PROJECT_TYPES_REL,
         opts = sail_tsconfig_compiler_options_json(),
@@ -1498,8 +1497,10 @@ mod tests {
             );
         }
         assert!(
-            body.contains(PROJECT_TYPES_REL),
-            "project tsconfig must include ambient pack path:\n{body}"
+            body.contains(PROJECT_TYPES_REL)
+                && body.contains("\"files\"")
+                && body.contains(format!("\"{PROJECT_TYPES_REL}\"").as_str()),
+            "project tsconfig must list ambient pack under files:\n{body}"
         );
         assert!(
             body.contains("\"src/**/*.ts\"") && body.contains("\"routes/**/*.ts\""),

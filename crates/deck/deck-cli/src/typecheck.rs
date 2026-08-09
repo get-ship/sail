@@ -8,7 +8,8 @@
 //! ## Two-checker contract
 //!
 //! - **tsc** — controller / scope / logic types; Style builder types when the
-//!   source is valid TypeScript; ambient globals from `.sail/types.d.ts`.
+//!   source is valid TypeScript; ambient globals from
+//!   `node_modules/.sail/types.d.ts`.
 //! - **sail-compiler** — template / layout / vocabulary; Style DSL forms that
 //!   are not expressible as TS (hyphenated bare tokens, etc.).
 //!
@@ -50,7 +51,7 @@ fn find_tsc(project: &Path, repo_root: &Path) -> Option<PathBuf> {
 /// live in the build output dir while still covering the project tree —
 /// `@ship/*` resolves through the consumer's own `node_modules`.
 fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
-    // Project-local pack (gitignored `.sail/types.d.ts`) so editors + tsc share
+    // Project-local pack (`node_modules/.sail/types.d.ts`) so editors + tsc share
     // one ambient surface. Also mirror into out_dir for the ephemeral project.
     let ambient = sail_compiler::ambients::write_project_types(project)?;
     let ambient_copy = out_dir.join("sail-types.d.ts");
@@ -64,9 +65,11 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
 
     let proj = project.display().to_string().replace('\\', "/");
     let out = out_dir.display().to_string().replace('\\', "/");
-    let ambient_abs = ambient
+    // Prefer the out_dir copy so `exclude: node_modules` cannot drop the pack
+    // (project pack lives under `node_modules/.sail/`).
+    let ambient_for_tsc = ambient_copy
         .canonicalize()
-        .unwrap_or(ambient.clone())
+        .unwrap_or(ambient_copy)
         .display()
         .to_string()
         .replace('\\', "/");
@@ -83,11 +86,11 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
     {opts_inner},
     "baseUrl": "{proj}"
   }},
+  "files": ["{ambient_for_tsc}"],
   "include": [
-    "{proj}/**/*.ts",
-    "{ambient_abs}"
+    "{proj}/**/*.ts"
   ],
-  "exclude": ["{proj}/node_modules", "{out}", "{proj}/.deck", "{proj}/.sail-out"]
+  "exclude": ["{proj}/node_modules", "{out}", "{proj}/.deck"]
 }}"#
     );
     let path = out_dir.join("tsconfig.typecheck.json");

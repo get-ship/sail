@@ -12,7 +12,6 @@
     "**/node_modules/**",
     "**/dist/**",
     "**/.deck/**",
-    "**/.sail/**",
-    "**/.sail-out/**"
+    "**/.sail/**"
   ]
 }

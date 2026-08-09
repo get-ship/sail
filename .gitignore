@@ -51,12 +51,11 @@ crates/deck/deck-core/assets/sail-custom-elements.json
 # Task artifacts (CLAUDE.md: artifacts → .artifacts/)
 .artifacts/
 
-# Ship-harness output + runtime (mirror og Ship/ship). `.ship/` holds tracked
-# config too, so ignore selectively: the sail-compiler's `.ship/sail-out/` mirror,
-# worktrees, and local dbs are generated/runtime — never committed.
+# Product build output is `.deck/` (above). Residual local dirs only:
 .sail-out/
-# Project ambient pack — regenerate via `sail-compiler types` / `sail types`.
+# Ops session (tasks/scratch) — not types (types: node_modules/.sail/).
 .sail/
+# Ship harness runtime leftovers.
 .ship/sail-out/
 .ship/worktrees/
 .ship/.trash/

@@ -1,8 +1,8 @@
 //! `sail-compiler` CLI. Compiles a single `.sail` file or a directory of
 //! them, writing the emitted JS (and CEM/schema/meta/dts/ssr.html sidecars)
-//! into a project-level mirror tree at `<repo-root>/.sail-out/<source-
-//! relative-path>/`. Pass `--out <dir>` to override and emit every file to
-//! a single directory (legacy behaviour).
+//! into a project-level mirror tree at `<repo-root>/.deck/<source-
+//! relative-path>/` (SPEC-OUTPUT-1 product out). Pass `--out <dir>` to
+//! override and emit every file to a single directory (legacy behaviour).
 //! MIGRATION-DEBT: dies with CLI-legacy cleanup (`--out` single-dir mode).
 //! Errors render with file path, line, and column.
 //
@@ -74,7 +74,7 @@ enum Command {
         /// Path to a `.sail` file or a directory.
         input: PathBuf,
         /// Output directory. When omitted, each file's outputs land in the
-        /// project mirror tree at `<repo-root>/.sail-out/<source-rel>/`
+        /// project mirror tree at `<repo-root>/.deck/<source-rel>/`
         /// and the JS module is named `<stem>.compiled.js`. When supplied,
         /// every file is emitted into this single directory and the JS
         /// module is named `<stem>.js` (legacy behaviour).
@@ -216,12 +216,13 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
-    /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`) from the
-    /// same manifests that drive the compiler (runtime ambient vocabulary +
-    /// Style setters + token scales). Project-local artifact for tsc/tsgo —
-    /// not hand-authored app source.
+    /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
+    /// from the same manifests that drive the compiler (runtime ambient
+    /// vocabulary + Style setters + token scales). Regenerable editor helper —
+    /// not hand-authored app source (SPEC-OUTPUT-1 §4).
     Types {
-        /// Project directory that receives `.sail/types.d.ts`. Default: cwd.
+        /// Project directory that receives `node_modules/.sail/types.d.ts`.
+        /// Default: cwd.
         #[arg(long)]
         project: Option<PathBuf>,
         /// Optional path for a committed base `tsconfig` snippet (stdout if
@@ -229,7 +230,8 @@ enum Command {
         /// project tsconfig that includes the ambient pack.
         #[arg(long)]
         tsconfig_out: Option<PathBuf>,
-        /// Write the pack to this path instead of `<project>/.sail/types.d.ts`.
+        /// Write the pack to this path instead of
+        /// `<project>/node_modules/.sail/types.d.ts`.
         #[arg(long)]
         out: Option<PathBuf>,
     },
@@ -298,7 +300,7 @@ fn main() -> Result<()> {
     }
 }
 
-/// Ambient pack → `<project>/.sail/types.d.ts` (+ optional tsconfig body).
+/// Ambient pack → `<project>/node_modules/.sail/types.d.ts` (+ optional tsconfig).
 fn gen_types(
     project: Option<PathBuf>,
     tsconfig_out: Option<PathBuf>,
@@ -1855,7 +1857,7 @@ fn compile_one(
         sail_compiler::parse::preprocess::extract_controller_block(&orig_source).1;
     let mode = mode.map(|m| m.into()).unwrap_or(CompileMode::Auto);
     // Resolve the emit dir for this file. Without --out, outputs land in
-    // the project mirror tree at `<repo-root>/.sail-out/<src-rel>/`;
+    // the project mirror tree at `<repo-root>/.deck/<src-rel>/`;
     // with --out, all files share that directory (legacy single-dir mode).
     let mirror_mode = out_override.is_none();
     let out_dir: PathBuf = match out_override {
@@ -1952,7 +1954,7 @@ fn compile_one(
     // ADJACENT to the `.sail` (not into the build mirror like the JS/CEM/SSR
     // artifacts). That lets a controller's `import type { Scope } from
     // './<name>.sail'` resolve natively to the sibling `.d.ts` — no `rootDirs`
-    // round-trip into `.ship/sail-out` in every consumer's tsconfig (which was
+    // round-trip into a build mirror in every consumer's tsconfig (which was
     // fragile and, when mispathed, silently masked type errors as `any`).
     // Gitignored via `*.sail.d.ts`.
     if let Some(dts) = result.dts {
