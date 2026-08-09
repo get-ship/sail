@@ -1,6 +1,6 @@
 <!--
   /tutorial/[slug] — two-pane lesson: prose + stepper left; editor, preview,
-  console right. Playground state is signals; tutorial-boot owns wasm + same-
+  console right. Playground state is signals; live-sail-boot owns wasm + same-
   document preview mount; use: capture actions hold editor/host refs. Workbench
   chrome via sail-docs-rail. Language gaps: no column clamp atom (uses max-w
   panel token); no transform/gradient stepper polish.
@@ -17,7 +17,7 @@ import {
   type CodeEditorHost,
   type CompileFn,
   type PreviewMount,
-} from '../../../../src/compositions/tutorial-boot'
+} from '../../../../src/compositions/live-sail-boot'
 
 const BY_SLUG: Record<string, TutorialLesson> = {}
 for (const l of TUTORIAL_LESSONS) BY_SLUG[l.slug] = l

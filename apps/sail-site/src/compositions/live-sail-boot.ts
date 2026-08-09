@@ -1,14 +1,13 @@
-// Tutorial playground machinery — the FFI seams ONLY. This module owns the
-// things a Sail template cannot be: the wasm compiler call and the same-
-// document preview mount (compile → inline module → __mount into a host).
+// Live Sail boot — shared FFI seams for tutorial + free playground.
+// Owns the wasm compile call and same-document preview mount
+// (compile → inline module → __mount into a host).
 //
-// It does not touch page chrome: playground UI state (active tab, status,
-// console lines, editor values) lives as signals in the route's <controller>,
-// and the template reads it.
+// Does not own page chrome: editor values, status, console lines, and tabs
+// live as signals in each route's <controller>; the template reads them.
 //
-// Preview is same-document (Option A): the lesson shares the parent page's
-// Sail runtime, customElements registry, and theme/token CSS. There is no
-// iframe, no postMessage protocol, and no parallel CSS concat.
+// Preview is same-document: the surface shares the parent page's Sail
+// runtime, customElements registry, and theme/token CSS. No iframe, no
+// postMessage protocol, no parallel CSS concat.
 //
 // CSP note: deck serves `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'`
 // — no `unsafe-eval`, no `blob:`. So we cannot use `new Function` or blob
