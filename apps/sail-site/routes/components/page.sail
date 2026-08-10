@@ -286,9 +286,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <label style({ text: fontSize(sm) })><input type="checkbox" checked /> Include trials</label>
                       <label style({ text: fontSize(sm) })><input type="checkbox" /> Annual discount</label>
                     </column>
-                  </fieldset>}{else-if {e.tag === 'legend'} => <fieldset>
-                    <legend>Account details</legend>
-                    <p style(mutedXs)>Caption for the group · component.legend.fg</p>
                   </fieldset>}{else-if {e.tag === 'dropzone'} => <div dropzone style({  box: w(full).minH(14).pad(3)  })>
                     <p style({ text: fontSize(sm).fontWeight(medium) })>Drop manifests here</p>
                     <p style(mutedXs)>or click to browse · .json, .yaml</p>
