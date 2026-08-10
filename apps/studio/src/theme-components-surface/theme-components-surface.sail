@@ -248,8 +248,28 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.input()}>
-                    <column gap="2" style(sampleMax)>
-                      <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Text field · sizes · component.field.bg/fg/border</p>
+                        <input type="text" size="sm" placeholder="sm field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
+                        <input type="text" size="md" placeholder="md field" />
+                        <input type="text" size="lg" placeholder="lg field" />
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Invalid · disabled</p>
+                        <input type="email" size="sm" value="not-an-email" invalid />
+                        <input type="text" size="sm" placeholder="Disabled" disabled />
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Checkbox type (not a separate tag) · range</p>
+                        <row gap="3" align="center">
+                          <input type="checkbox" checked />
+                          <input type="checkbox" />
+                          <input type="checkbox" disabled />
+                          <input type="checkbox" size="lg" checked />
+                        </row>
+                        <input type="range" min="0" max="100" value="40" />
+                      </column>
                     </column>
                   </if>
                   <if {components.stage.textarea()}>

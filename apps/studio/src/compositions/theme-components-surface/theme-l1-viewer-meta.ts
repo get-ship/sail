@@ -168,6 +168,12 @@ const VARIANT_META: Partial<
     blurb:
       'One option · component.radio.fg label ink; value + disabled only; exclusivity via radio-group.',
   },
+  input: {
+    variants: ['xs', 'sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb:
+      'Native input · type-gated skins; component.field.* surface; size + invalid + disabled; checkbox is type= not a tag; no filled/unstyled variant.',
+  },
   prose: {
     variants: [],
     variantAttr: '',
