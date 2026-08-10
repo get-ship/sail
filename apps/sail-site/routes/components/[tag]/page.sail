@@ -35,6 +35,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const ICON_SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
     const SKEL_SIZES = ['sm', 'md', 'lg'] as const
+    const ES_SIZES = ['sm', 'md', 'lg'] as const
     const METER_SIZES = ['sm', 'md', 'lg'] as const
     const PRG_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
@@ -61,6 +62,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const iconName = signal('sparkles')
     const iconLabeled = signal(false)
     // Skeleton: shape via variant(); size ladder; sheen always component.skeleton.*
+    // Empty-state: variant chrome + size pad + tone on icon only; rest = component.empty-state.*
+    const emptyTone = signal('')
     // Meter: value + size; low/high/optimum fixed for band demo (native thresholds).
     const meterVal = signal(55)
     // Progress: value/max native; omit value = indeterminate; size sm|md|lg; paint component.progress.*
@@ -94,6 +97,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const skelSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SKEL_SIZES.length - 1)
       return SKEL_SIZES[i] ?? 'md'
+    })
+    const emptySize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ES_SIZES.length - 1)
+      return ES_SIZES[i] ?? 'md'
     })
     const meterSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), METER_SIZES.length - 1)
@@ -144,6 +151,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
       } else if (tag() === 'skeleton') {
         variant.set('text')
         sizeIdx.set(1) // md
+      } else if (tag() === 'empty-state') {
+        variant.set('default')
+        sizeIdx.set(1) // md
+        emptyTone.set('')
       } else if (tag() === 'meter') {
         variant.set('')
         sizeIdx.set(1) // md
@@ -179,6 +190,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const clearChipTone = (): void => chipTone.set('')
     const pickSpinnerTone = (t: string): void => spinnerTone.set(t)
     const clearSpinnerTone = (): void => spinnerTone.set('')
+    const pickEmptyTone = (t: string): void => emptyTone.set(t)
+    const clearEmptyTone = (): void => emptyTone.set('')
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
     const badgeMeta = derived(() => {
       const t = badgeTone()
@@ -245,6 +258,21 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const sizeNote = sh === 'block' ? 'size n/a (block)' : skelSize()
       return `${sh} · ${sizeNote} · sheen component.skeleton.*`
     })
+    const emptyMeta = derived(() => {
+      const v = variant() || 'default'
+      const t = emptyTone()
+      const live = v === 'connecting' ? 'status/polite' : 'note/off'
+      return `${v} · ${emptySize()} · ${t || 'rest (empty-state.*)'} · ${live}`
+    })
+    const emptyTitle = derived(() =>
+      (variant() || 'default') === 'connecting' ? 'Connecting…' : 'No results',
+    )
+    const emptyBody = derived(() =>
+      (variant() || 'default') === 'connecting'
+        ? 'Establishing a secure session.'
+        : 'Try a different search, or clear a filter.',
+    )
+    const emptyIsConnecting = derived(() => (variant() || 'default') === 'connecting')
     // Band labels match fixed low=33 high=66 optimum=100 (HTML meter regions).
     const meterBand = derived(() => {
       const v = Number(meterVal()) || 0
@@ -274,7 +302,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'skeleton' ||
       tag() === 'meter' ||
       tag() === 'progress' ||
-      tag() === 'icon'
+      tag() === 'icon' ||
+      tag() === 'empty-state'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -342,6 +371,14 @@ const kbdExChord = () =>
       `<row gap="3" align="center">\n  <skeleton shape="circle" size="md"></skeleton>\n  <column gap="2" style({ box: grow(1) })>\n    <skeleton shape="text" size="sm"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
     const skelExRest = () =>
       `<skeleton shape="block"></skeleton>\n<!-- sheen → component.skeleton.bg / highlight (themeable) -->`
+    const esExDefault = () =>
+      `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">No results</strong>\n  Try a different search, or clear a filter.\n  <button slot="action" variant="outline" size="sm">Clear filters</button>\n</empty-state>`
+    const esExInline = () =>
+      `<empty-state variant="inline" size="sm">\n  <strong slot="title">Nothing in this view</strong>\n  Adjust filters to see more results.\n  <button slot="action" variant="ghost" size="sm">Reset</button>\n</empty-state>`
+    const esExConnecting = () =>
+      `<empty-state variant="connecting">\n  <spinner slot="icon" size="sm"></spinner>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>\n<!-- connecting → role=status · aria-live=polite -->`
+    const esExRest = () =>
+      `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">Empty inbox</strong>\n  Messages you receive land here.\n</empty-state>\n<!-- no tone → component.empty-state.* (themeable) -->`
     const mtrExMeasure = () =>
       `<column gap="2">\n  <p>Disk free — 72%</p>\n  <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>\n</column>`
     const mtrExSizes = () =>
@@ -449,6 +486,9 @@ const kbdExChord = () =>
       iconSize, iconSpin, iconName, iconLabeled, iconMeta, iconLabelAttr,
       iconExNamed, iconExSizes, iconExSpin, iconExColor,
       skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
+      emptyTone, emptySize, emptyMeta, emptyTitle, emptyBody, emptyIsConnecting,
+      pickEmptyTone, clearEmptyTone,
+      esExDefault, esExInline, esExConnecting, esExRest,
       meterVal, meterSize, meterMeta, meterBand,
       mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
       progSize, progIndeterminate, progMeta,
@@ -1028,10 +1068,111 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.emptyState()}>
-              <empty-state variant={variant()} style(fullW)>
-                <strong slot="title">No results</strong>
-                Try a different search, or clear a filter.
-              </empty-state>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="stretch" style(fullW)>
+                    <if {emptyTone()}>
+                      <empty-state
+                        variant={variant() || 'default'}
+                        size={emptySize()}
+                        tone={emptyTone()}
+                        style(fullW)
+                      >
+                        <if {emptyIsConnecting()}>
+                          <spinner slot="icon" size="sm"></spinner>
+                        {else =>
+                          <icon slot="icon" name="inbox"></icon>}</if>
+                        <strong slot="title">{emptyTitle()}</strong>
+                        {emptyBody()}
+                        <if {!emptyIsConnecting()}>
+                          <button slot="action" type="button" variant="outline" size="sm">
+                            Clear filters
+                          </button>
+                        </if>
+                      </empty-state>
+                    {else =>
+                      <empty-state
+                        variant={variant() || 'default'}
+                        size={emptySize()}
+                        style(fullW)
+                      >
+                        <if {emptyIsConnecting()}>
+                          <spinner slot="icon" size="sm"></spinner>
+                        {else =>
+                          <icon slot="icon" name="inbox"></icon>}</if>
+                        <strong slot="title">{emptyTitle()}</strong>
+                        {emptyBody()}
+                        <if {!emptyIsConnecting()}>
+                          <button slot="action" type="button" variant="outline" size="sm">
+                            Clear filters
+                          </button>
+                        </if>
+                      </empty-state>}</if>
+                    <p style(monoXs)>{emptyMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Variant</label>
+                    <select size="sm" bind:value={variant} label="Variant">
+                      <option value="default">default</option>
+                      <option value="inline">inline</option>
+                      <option value="placeholder">placeholder</option>
+                      <option value="connecting">connecting</option>
+                    </select>
+                    <p style(mutedXs)>
+                      default = card chrome · inline = dashed · placeholder/connecting = bare.
+                      connecting upgrades live region to status/polite.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{emptySize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="rest — component.empty-state tokens" placement="top">
+                        <div label="rest" on:click={clearEmptyTone} selected={!emptyTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickEmptyTone('primary')} selected={emptyTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickEmptyTone('info')} selected={emptyTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickEmptyTone('success')} selected={emptyTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickEmptyTone('warning')} selected={emptyTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickEmptyTone('destructive')} selected={emptyTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickEmptyTone('accent')} selected={emptyTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickEmptyTone('muted')} selected={emptyTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                    </row>
+                    <p style(mutedXs)>
+                      Tone brands the <code>icon</code> slot only. Omit for themeable
+                      <code>component.empty-state</code> leaves (bg · fg · border · title).
+                      <code>muted</code> keeps rest icon ink.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.errorState()}>
               <error-state variant={variant()} code="ERR_TIMEOUT" style(fullW)>
@@ -2399,6 +2540,70 @@ const kbdExChord = () =>
               <skeleton shape="text" size="md"></skeleton>
             </column>
             <code-block code={skelExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.emptyState()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Default empty list</h3>
+            <p style(exampleLead)>
+              Card chrome with icon, title, body, and a recovery action. Empty slots
+              collapse — omit icon or action when you do not need them.
+            </p>
+            <empty-state style(fullW)>
+              <icon slot="icon" name="inbox"></icon>
+              <strong slot="title">No results</strong>
+              Try a different search, or clear a filter.
+              <button slot="action" type="button" variant="outline" size="sm">Clear filters</button>
+            </empty-state>
+            <code-block code={esExDefault()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Inline in a panel</h3>
+            <p style(exampleLead)>
+              <code>variant="inline"</code> uses dashed border and start-aligned copy —
+              good inside filters, sidebars, and nested views.
+            </p>
+            <empty-state variant="inline" size="sm" style(fullW)>
+              <strong slot="title">Nothing in this view</strong>
+              Adjust filters to see more results.
+              <button slot="action" type="button" variant="ghost" size="sm">Reset</button>
+            </empty-state>
+            <code-block code={esExInline()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Connecting (live status)</h3>
+            <p style(exampleLead)>
+              Bare chrome plus a spinner in the icon slot. Host becomes
+              <code>role="status"</code> / <code>aria-live="polite"</code> via
+              <code>use:variantLive</code> — other variants stay note/off.
+            </p>
+            <empty-state variant="connecting" style(fullW)>
+              <spinner slot="icon" size="sm"></spinner>
+              <strong slot="title">Connecting…</strong>
+              Establishing a secure session.
+            </empty-state>
+            <code-block code={esExConnecting()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              No <code>tone</code> → surface from <code>component.empty-state</code>
+              (bg · fg · border · title). Override those leaves in Studio themes.
+              Tone only recolors the icon slot.
+            </p>
+            <empty-state style(fullW)>
+              <icon slot="icon" name="inbox"></icon>
+              <strong slot="title">Empty inbox</strong>
+              Messages you receive land here.
+            </empty-state>
+            <code-block code={esExRest()}></code-block>
           </column>
         </column>
       </if>

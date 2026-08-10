@@ -115,6 +115,12 @@ const VARIANT_META: Partial<
     variantAttr: 'shape',
     blurb: 'Loading sheen · component.skeleton.bg / highlight.',
   },
+  'empty-state': {
+    variants: ['default', 'inline', 'placeholder', 'connecting'],
+    variantAttr: 'variant',
+    blurb:
+      'Nothing-here surface · rest uses component.empty-state.*; tone brands icon only; connecting → status/polite.',
+  },
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',

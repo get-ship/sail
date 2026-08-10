@@ -341,14 +341,26 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'empty-state': lang('empty-state', 'emptyState', {
     blurb:
-      'The nothing-here surface: icon slot, title slot, body — sized and toned by attributes so every list, table and panel empties the same way.',
-    variants: ['default', 'inline', 'placeholder', 'connecting'],
-    variantAttr: 'variant',
+      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). Omit tone for component.empty-state.* (themeable rest); set tone to brand the icon only. connecting upgrades to role=status / aria-live=polite via use:variantLive.',
+    // Stage owns variant/size/tone knobs — hide generic viewer chips.
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'variant', desc: 'the container it empties', type: 'default · inline · placeholder · connecting' },
-      { name: 'size', desc: 'padding scale', type: 'sm · md · lg' },
-      { name: 'tone', desc: 'accent colour token', type: TONES },
-      { name: 'slot="title"', desc: 'the headline', type: 'slot' },
+      {
+        name: 'variant',
+        desc: 'chrome: default card, inline dashed, bare placeholder, or connecting live status',
+        type: 'default · inline · placeholder · connecting',
+      },
+      { name: 'size', desc: 'padding scale (sm · md · lg)', type: 'sm · md · lg' },
+      {
+        name: 'tone',
+        desc: 'icon brand when set; omit for component.empty-state rest; muted keeps rest icon fg',
+        type: TONES,
+      },
+      { name: 'slot="icon"', desc: 'optional leading glyph (hidden when empty)', type: 'slot' },
+      { name: 'slot="title"', desc: 'optional headline (hidden when empty)', type: 'slot' },
+      { name: 'slot="action"', desc: 'optional action row (hidden when empty)', type: 'slot' },
+      { name: 'children', desc: 'description body (hidden when empty)', type: 'slot' },
     ],
   }),
   'error-state': lang('error-state', 'errorState', {

@@ -213,9 +213,10 @@ export default controller(() => ({ loading: signal(true) }))
 </row>`,
 
   'empty-state': `<empty-state>
-    style({ animate: enter({ opacity: 'fade' }) })
+  <icon slot="icon" name="inbox"></icon>
   <strong slot="title">No results</strong>
   Try a different search, or clear a filter.
+  <button slot="action" variant="outline" size="sm">Clear filters</button>
 </empty-state>`,
 
   'error-state': `<error-state code="ERR_TIMEOUT">

@@ -75,6 +75,13 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.border.subtle', label: 'Border subtle (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · toned)' },
   ],
+  'empty-state': [
+    { path: 'color.muted.default', label: 'Muted (global · rest bg)' },
+    { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink)' },
+    { path: 'color.border.default', label: 'Border (global · rest frame)' },
+    { path: 'color.foreground', label: 'Foreground (global · title)' },
+    { path: 'color.primary.default', label: 'Primary (global · toned icon)' },
+  ],
   meter: [
     { path: 'color.muted.default', label: 'Muted (global · track)' },
     { path: 'color.success.default', label: 'Success (global · optimum)' },
@@ -132,6 +139,7 @@ const FACE_HINTS: Record<string, string> = {
   kbd: 'Keycaps · component.kbd.* faces',
   prose: 'Typography scope · component.prose.fg host leaf',
   spinner: 'Indeterminate wait · fg + track leaves',
+  'empty-state': 'Nothing-here · bg/fg/border/title leaves · tone on icon',
   meter: 'Gauge · track + optimum band leaves',
   progress: 'Bar · track + fill leaves',
   icon: 'Glyph host · icon scale sizes · currentColor ink',

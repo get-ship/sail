@@ -416,10 +416,32 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.emptyState()}>
-                    <empty-state variant="inline" size="sm" style(stageHost)>
-                      <strong slot="title">No results</strong>
-                      Try another filter.
-                    </empty-state>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.empty-state (bg · fg · border · title)</p>
+                        <empty-state size="sm" style(stageHost)>
+                          <icon slot="icon" name="inbox"></icon>
+                          <strong slot="title">Empty inbox</strong>
+                          Messages you receive land here.
+                        </empty-state>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Inline · dashed chrome + tone on icon</p>
+                        <empty-state variant="inline" size="sm" tone="primary" style(stageHost)>
+                          <icon slot="icon" name="inbox"></icon>
+                          <strong slot="title">No results</strong>
+                          Try another filter.
+                        </empty-state>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Connecting · bare + status live region</p>
+                        <empty-state variant="connecting" size="sm" style(stageHost)>
+                          <spinner slot="icon" size="sm"></spinner>
+                          <strong slot="title">Connecting…</strong>
+                          Establishing a secure session.
+                        </empty-state>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.errorState()}>
                     <error-state variant="inline" code="ERR_THEME" style(stageHost)>
