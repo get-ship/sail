@@ -1,10 +1,10 @@
 // /components — the catalog the browser filters over.
 //
-// The `lang` rows are the FULL L1 component-primitives surface — the same 48
-// elements the conformance gate (packages/sail/l1-conformance/specs, minus
-// the motion spec) renders on every commit. Featured tiles on page.sail
-// render LIVE; catalog tiles mix static (takumi/l1) previews with a detail
-// link. The pack rail and category chips both key off this list.
+// Lang hub tiles are SSOT'd from filesystem docs packages
+// (`src/component-docs/*/meta.ts` via registry). Pack rows stay hand-listed
+// until packs grow their own packages. No hand "parts list" for L1 cells.
+
+import { DOC_PACKAGES } from '../component-docs/registry'
 
 export type PackId =
   | 'lang'
@@ -86,63 +86,17 @@ const P = (
   cat,
 })
 
+/** Lang rows: one hub tile per docs package (no legend package ⇒ no tile). */
+const LANG_CATALOG: CatalogEntry[] = DOC_PACKAGES.map((m) =>
+  L(m.tag ?? m.slug, m.key, m.category),
+)
+
 export const CATALOG: CatalogEntry[] = [
-  // ── Component primitives: the 48-element L1 surface ────────────────
-  L('button', 'button', 'inputs'),
-  L('a', 'a', 'navigation'),
-  L('input', 'input', 'inputs'),
-  L('textarea', 'textarea', 'inputs'),
-  L('select', 'select', 'inputs'),
-  L('combobox', 'combobox', 'inputs'),
-  L('checkbox', 'checkbox', 'inputs'),
-  L('radio', 'radio', 'inputs'),
-  L('radio-group', 'radioGroup', 'inputs'),
-  L('switch', 'switchToggle', 'inputs'),
-  L('slider', 'slider', 'inputs'),
-  L('toggle-group', 'toggleGroup', 'inputs'),
-  L('field', 'field', 'inputs'),
-  L('label', 'label', 'inputs'),
-  L('fieldset', 'fieldset', 'inputs'),
-  L('legend', 'legend', 'inputs'),
-  L('dropzone', 'dropzone', 'inputs'),
-  L('theme-picker', 'themePicker', 'inputs'),
-  L('alert', 'alert', 'feedback'),
-  L('progress', 'progressBar', 'feedback'),
-  L('meter', 'meter', 'feedback'),
-  L('spinner', 'spinner', 'feedback'),
-  L('skeleton', 'skeleton', 'feedback'),
-  L('empty-state', 'emptyState', 'feedback'),
-  L('error-state', 'errorState', 'feedback'),
-  L('error-boundary', 'errorBoundary', 'feedback'),
-  L('toast', 'toast', 'feedback'),
-  L('badge', 'badge', 'display'),
-  L('chip', 'chip', 'display'),
-  L('card', 'card', 'display'),
-  L('avatar', 'avatar', 'display'),
-  L('icon', 'icon', 'display'),
-  // separator IS the themed <hr> (stdlib lowers to native hr). Do not catalog bare `hr`.
-  L('separator', 'separator', 'display'),
-  L('kbd', 'kbd', 'display'),
-  L('code-block', 'codeBlock', 'display'),
-  L('accordion', 'accordion', 'display'),
-  L('prose', 'prose', 'display'),
-  L('tooltip', 'tooltip', 'overlay'),
-  L('hover-card', 'hoverCard', 'overlay'),
-  L('popover', 'popover', 'overlay'),
-  L('dropdown', 'dropdown', 'overlay'),
-  L('context-menu', 'contextMenu', 'overlay'),
-  L('dialog', 'dialog', 'overlay'),
-  L('tabs', 'tabs', 'navigation'),
-  L('breadcrumb', 'breadcrumb', 'navigation'),
-  L('pagination', 'pagination', 'navigation'),
-  L('navbar', 'navbar', 'navigation'),
-  L('table', 'table', 'data'),
-  L('layout', 'layout', 'layout'),
-  L('scroll-area', 'scrollArea', 'layout'),
-  L('ticker', 'ticker', 'effects'),
+  // ── Component primitives — SSOT: component-docs/*/meta.ts ───────────
+  ...LANG_CATALOG,
   // Actions (`spotlight`, `targetCursor`, etc.) are stdlib and live in
   // the action table. They are not elements; this catalog is
-  // elements only.
+  // elements only. Legend is documented only inside the fieldset package.
 
   // ── @ship/sail-charts — 7 SVG-rendered data viz primitives ───────────
   P('charts', 'sail-area-chart', 'sailAreaChart', 'data'),

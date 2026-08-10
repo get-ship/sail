@@ -1,0 +1,14 @@
+import type { DocMeta } from '../types'
+
+/** Docs package meta — hub tile exists iff this file exists. */
+export const meta = {
+  slug: 'alert',
+  tag: 'alert',
+  key: 'alert',
+  category: 'feedback',
+  kind: 'host',
+  blurb: "Inline status banner. Omit tone for component.alert tokens (themeable rest); set tone and the left stripe + icon brand paint. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).",
+  heading: "prose",
+  host: 'legacy',
+  stageOwnsKnobs: false,
+} as const satisfies DocMeta

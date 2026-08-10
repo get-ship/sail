@@ -311,24 +311,20 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   fieldset: lang('fieldset', 'fieldset', {
     blurb:
-      'Native form group with a themeable border (component.fieldset.border). Put a legend first, then controls. disabled freezes every control inside (platform) and dims the host; no tone/size/variant axes.',
+      'Native form group with a themeable border (component.fieldset.border). Put a <legend> first (caption ink from component.legend.fg — not a separate hub tile), then controls. disabled freezes every control inside (platform) and dims the host; no tone/size/variant axes.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'disabled', desc: 'native — freezes controls inside; PE dims opacity', type: 'bool' },
-      { name: '<legend>', desc: 'group caption (compose legend PE)', type: 'children' },
+      {
+        name: '<legend>',
+        desc: 'group caption — native legend PE (component.legend.fg); document only here, not as a top-level catalog entry',
+        type: 'children',
+      },
       { name: 'default', desc: 'controls and copy inside the group', type: 'slot' },
     ],
   }),
-  legend: lang('legend', 'legend', {
-    blurb:
-      'Native <legend> fieldset caption — medium sm type with horizontal pad. Ink from component.legend.fg (--legend-foreground); no size/variant/tone props (theme the leaf; nest inside <fieldset>).',
-    variants: [],
-    variantAttr: '',
-    props: [
-      { name: '(children)', desc: 'caption text for the group', type: 'children' },
-    ],
-  }),
+  // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
   dropzone: lang('dropzone', 'dropzone', {
     blurb:
       'An attribute, not a component: put dropzone on a surface and use:dropzone wires dragover states, click-to-browse and the file input.',
