@@ -37,6 +37,10 @@ use sail_lint::token_groups::{self, color_group_names, color_groups, size_step_n
 /// `.deck/` stays purely servable output; ops session stays under `.sail/`.
 pub const PROJECT_TYPES_REL: &str = "node_modules/.sail/types.d.ts";
 
+/// Relative path of the action observation ambient (SPEC-PLATFORM-NEUTRALITY-1 §1).
+/// Pair with [`TypeEnv::Action`] + [`lib_for_type_env`] (ESNext only — no DOM lib).
+pub const PROJECT_ACTION_OBSERVATION_REL: &str = "node_modules/.sail/action-observation.d.ts";
+
 /// Regenerated header — agents/humans must not hand-edit the pack.
 const HEADER: &str = "\
 // GENERATED FILE — do not edit by hand.
@@ -264,7 +268,9 @@ pub fn emit_types_dts() -> String {
     out
 }
 
-/// Write `<project>/node_modules/.sail/types.d.ts`. Creates parents as needed.
+/// Write `<project>/node_modules/.sail/types.d.ts` and the action observation
+/// ambient beside it. Creates parents as needed. Returns the types pack path
+/// (primary ambient).
 pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     let path = project.join(PROJECT_TYPES_REL);
     if let Some(parent) = path.parent() {
@@ -273,7 +279,263 @@ pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     }
     let text = emit_types_dts();
     fs::write(&path, text).with_context(|| format!("write {}", path.display()))?;
+    // Always materialize the observation pack so Action-kind typechecks can
+    // reference it without a separate generate step (SPEC-PLATFORM-NEUTRALITY-1).
+    let _ = write_project_action_observation(project)?;
     Ok(path)
+}
+
+/// Write [`PROJECT_ACTION_OBSERVATION_REL`] for the project. Creates parents.
+pub fn write_project_action_observation(project: &Path) -> Result<PathBuf> {
+    let path = project.join(PROJECT_ACTION_OBSERVATION_REL);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("mkdir {}", parent.display()))?;
+    }
+    let text = emit_action_observation_dts();
+    fs::write(&path, text).with_context(|| format!("write {}", path.display()))?;
+    Ok(path)
+}
+
+// ── Per-kind type environments (SPEC-PLATFORM-NEUTRALITY-1 §1 / S2.1) ───────
+//
+// Product branches the TypeScript lib/ambient by file kind so app
+// controllers/compositions/stores cannot name document/window/localStorage.
+// Action files get the observation port only. Framework packages keep DOM.
+//
+// Gate: crates/sail/compiler/tests/type_env_per_kind.rs
+
+/// Per-kind TypeScript type environment (SPEC-PLATFORM-NEUTRALITY-1 §1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TypeEnv {
+    /// controller / scope / composition / store — ESNext only; DOM globals unnameable.
+    Pure,
+    /// author action — observation set only (no `document` / `window`).
+    Action,
+    /// framework runtime packages — full DOM lib allowed.
+    Framework,
+}
+
+/// Map a classified [`crate::project_map::FileKind`] to its type environment.
+///
+/// | Kind | Env |
+/// |------|-----|
+/// | Route / Component (controllers + scopes) | Pure |
+/// | Composition / Store | Pure |
+/// | Action | Action |
+/// | Theme / Other | Pure (apps never gain free DOM via kind alone) |
+///
+/// Framework packages are selected via [`type_env_for_path`], not this table.
+pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
+    use crate::project_map::FileKind;
+    match kind {
+        FileKind::Action => TypeEnv::Action,
+        FileKind::Route
+        | FileKind::Component
+        | FileKind::Composition
+        | FileKind::Store
+        | FileKind::Theme
+        | FileKind::Other => TypeEnv::Pure,
+    }
+}
+
+/// Path-aware type-env selection.
+///
+/// 1. Framework packages (`packages/sail/**`) → [`TypeEnv::Framework`]
+/// 2. Else [`crate::project_map::classify`] → [`type_env_for_kind`]
+///
+/// Framework wins over path-shaped Action (runtime catalog may live under
+/// `…/actions/**` and is still allowed full DOM).
+pub fn type_env_for_path(path: &Path, source: Option<&str>) -> TypeEnv {
+    if is_framework_package_path(path) {
+        return TypeEnv::Framework;
+    }
+    type_env_for_kind(crate::project_map::classify(path, source).kind)
+}
+
+/// True when `path` sits under a framework package that may use the full DOM lib.
+///
+/// Matches `packages/sail/**` (runtime, dom, tokens, …). App / component
+/// packages do **not** get free DOM — they go through [`type_env_for_kind`].
+fn is_framework_package_path(path: &Path) -> bool {
+    use std::path::Component;
+    let segs: Vec<_> = path
+        .components()
+        .filter_map(|c| match c {
+            Component::Normal(s) => Some(s.to_string_lossy()),
+            _ => None,
+        })
+        .collect();
+    segs.windows(2)
+        .any(|w| w[0] == "packages" && w[1] == "sail")
+}
+
+/// `compilerOptions.lib` entries for `env`.
+///
+/// - [`TypeEnv::Pure`] / [`TypeEnv::Action`]: ESNext only — no `DOM` / `DOM.Iterable`
+/// - [`TypeEnv::Framework`]: `ESNext` + `DOM` + `DOM.Iterable`
+///
+/// Action observation names (rAF, observers, `getComputedStyle`) come from
+/// [`emit_action_observation_dts`], not from the DOM lib.
+pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
+    match env {
+        TypeEnv::Pure | TypeEnv::Action => &["ESNext"],
+        TypeEnv::Framework => &["ESNext", "DOM", "DOM.Iterable"],
+    }
+}
+
+/// Ambient `.d.ts` body for the action observation port.
+///
+/// Declares:
+/// - `requestAnimationFrame` / `cancelAnimationFrame`
+/// - `IntersectionObserver`, `ResizeObserver`, `MutationObserver`
+/// - `getComputedStyle`
+/// - a minimal `Element` handle for the action first argument
+///
+/// Does **not** introduce usable ambient `document`, `window`, or `localStorage`
+/// (those stay unnameable under the Action lib).
+pub fn emit_action_observation_dts() -> String {
+    // Teaching comments may name banned globals; product code must not declare them.
+    r#"// GENERATED FILE — do not edit by hand.
+//
+// Sail action observation ambient (SPEC-PLATFORM-NEUTRALITY-1 §1).
+// Pair with compilerOptions.lib = ["ESNext"] only — never DOM.
+//
+// Actions receive a handed Element (`node`) and may observe it via rAF,
+// ResizeObserver / IntersectionObserver / MutationObserver, and getComputedStyle.
+// They must not name document / window / localStorage — those stay unnameable
+// under the Action type environment (no ambient declaration here).
+//
+// Regenerate: cargo run -p sail-compiler -- types [--project <dir>]
+//
+
+/** Minimal host element handle for the action first argument `(node, param)`. */
+interface Element {
+  readonly nodeType: number
+  readonly nodeName: string
+  readonly tagName: string
+}
+
+/** Read-only geometry used by observer entries. */
+interface DOMRectReadOnly {
+  readonly x: number
+  readonly y: number
+  readonly width: number
+  readonly height: number
+  readonly top: number
+  readonly right: number
+  readonly bottom: number
+  readonly left: number
+}
+
+interface CSSStyleDeclaration {
+  getPropertyValue(property: string): string
+}
+
+declare function getComputedStyle(
+  elt: Element,
+  pseudoElt?: string | null,
+): CSSStyleDeclaration
+
+declare function requestAnimationFrame(
+  callback: (time: number) => void,
+): number
+declare function cancelAnimationFrame(handle: number): void
+
+// ── ResizeObserver ──────────────────────────────────────────────────────────
+
+interface ResizeObserverOptions {
+  box?: 'content-box' | 'border-box' | 'device-pixel-content-box'
+}
+
+interface ResizeObserverEntry {
+  readonly target: Element
+  readonly contentRect: DOMRectReadOnly
+}
+
+interface ResizeObserverCallback {
+  (entries: ResizeObserverEntry[], observer: ResizeObserver): void
+}
+
+declare class ResizeObserver {
+  constructor(callback: ResizeObserverCallback)
+  observe(target: Element, options?: ResizeObserverOptions): void
+  unobserve(target: Element): void
+  disconnect(): void
+}
+
+// ── IntersectionObserver ────────────────────────────────────────────────────
+
+interface IntersectionObserverInit {
+  root?: Element | null
+  rootMargin?: string
+  threshold?: number | number[]
+}
+
+interface IntersectionObserverEntry {
+  readonly target: Element
+  readonly isIntersecting: boolean
+  readonly intersectionRatio: number
+  readonly boundingClientRect: DOMRectReadOnly
+  readonly intersectionRect: DOMRectReadOnly
+  readonly rootBounds: DOMRectReadOnly | null
+  readonly time: number
+}
+
+interface IntersectionObserverCallback {
+  (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void
+}
+
+declare class IntersectionObserver {
+  constructor(
+    callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit,
+  )
+  readonly root: Element | null
+  readonly rootMargin: string
+  readonly thresholds: ReadonlyArray<number>
+  observe(target: Element): void
+  unobserve(target: Element): void
+  disconnect(): void
+  takeRecords(): IntersectionObserverEntry[]
+}
+
+// ── MutationObserver ────────────────────────────────────────────────────────
+
+type MutationRecordType = 'attributes' | 'characterData' | 'childList'
+
+interface MutationRecord {
+  readonly type: MutationRecordType
+  readonly target: Element
+  readonly addedNodes: ReadonlyArray<Element>
+  readonly removedNodes: ReadonlyArray<Element>
+  readonly attributeName: string | null
+  readonly attributeNamespace: string | null
+  readonly oldValue: string | null
+}
+
+interface MutationObserverInit {
+  childList?: boolean
+  attributes?: boolean
+  characterData?: boolean
+  subtree?: boolean
+  attributeFilter?: string[]
+  attributeOldValue?: boolean
+  characterDataOldValue?: boolean
+}
+
+interface MutationCallback {
+  (mutations: MutationRecord[], observer: MutationObserver): void
+}
+
+declare class MutationObserver {
+  constructor(callback: MutationCallback)
+  observe(target: Element, options?: MutationObserverInit): void
+  disconnect(): void
+  takeRecords(): MutationRecord[]
+}
+"#
+    .to_string()
 }
 
 /// TOOLING-1 WI2 flags that every sail project tsconfig must carry.
@@ -293,18 +555,37 @@ pub const SAIL_TSCONFIG_REQUIRED_FLAGS: &[&str] = &[
     "\"skipLibCheck\": true",
 ];
 
-/// Default sail project `compilerOptions` shared by typecheck + scaffold.
+/// Default sail project `compilerOptions` (Framework / full-project typecheck).
 ///
 /// Mirrors `packages/sail/tsconfig/tsconfig.base.json` (TOOLING-1 WI2).
+/// `lib` comes from [`lib_for_type_env`]([`TypeEnv::Framework`]) so the DOM
+/// entries cannot drift from the per-kind table.
+///
+/// Per-kind (Pure / Action) options: [`sail_tsconfig_compiler_options_json_for`].
 /// Ambient pack registration is **not** a `compilerOptions.types` package
 /// name: the generated file lives at [`PROJECT_TYPES_REL`] and is wired via
-/// `include` in [`emit_project_tsconfig_json`] so globals resolve under tsc.
-pub fn sail_tsconfig_compiler_options_json() -> &'static str {
-    r#"{
+/// `files` in [`emit_project_tsconfig_json`] so globals resolve under tsc.
+pub fn sail_tsconfig_compiler_options_json() -> String {
+    sail_tsconfig_compiler_options_json_for(TypeEnv::Framework)
+}
+
+/// `compilerOptions` JSON object body for a specific [`TypeEnv`].
+///
+/// Pure/Action get ESNext-only `lib` (document unnameable). Framework keeps
+/// DOM. Shared TOOLING-1 WI2 flags are identical across envs.
+pub fn sail_tsconfig_compiler_options_json_for(env: TypeEnv) -> String {
+    let lib = lib_for_type_env(env);
+    let lib_arr = lib
+        .iter()
+        .map(|e| format!("\"{e}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        r#"{{
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "lib": [{lib_arr}],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -315,7 +596,8 @@ pub fn sail_tsconfig_compiler_options_json() -> &'static str {
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true
-  }"#
+  }}"#
+    )
 }
 
 /// Relative path of the scaffolded oxlint config inside a sail project.
@@ -360,6 +642,10 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 
 /// Build a project-root `tsconfig.json` body that registers the ambient pack.
 ///
+/// Default uses [`TypeEnv::Framework`] (DOM lib) for whole-project typecheck /
+/// scaffold until multi-config projects land. For per-kind emission use
+/// [`emit_project_tsconfig_json_for`].
+///
 /// `include_globs` are relative to the project (e.g. `src/**/*.ts`).
 /// The generated ambient pack ([`PROJECT_TYPES_REL`]) is listed under `files`
 /// (not `include`) so tsc still loads it when `exclude` contains `node_modules`
@@ -369,8 +655,17 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 /// [`crate::project_map::at_alias_paths`] (SPEC-PROJECT-STRUCTURE-1 §3) so
 /// editors/tsc and deck resolve share one alias map.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
+    emit_project_tsconfig_json_for(TypeEnv::Framework, include_globs)
+}
+
+/// Project `tsconfig.json` body for a specific [`TypeEnv`].
+///
+/// - `lib` from [`lib_for_type_env`]
+/// - [`TypeEnv::Action`] also lists [`PROJECT_ACTION_OBSERVATION_REL`] under
+///   `files` so the observation set is nameable without the DOM lib
+pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> String {
     let includes: Vec<String> = include_globs.iter().map(|g| format!("\"{g}\"")).collect();
-    let opts = sail_tsconfig_compiler_options_json();
+    let opts = sail_tsconfig_compiler_options_json_for(env);
     // Drop outer braces so we can inject baseUrl + paths from the SSOT.
     let opts_inner = opts
         .trim()
@@ -382,16 +677,28 @@ pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
         .map(|m| format!("      \"{}\": [\"{}\"]", m.pattern, m.target))
         .collect();
     let paths_block = path_entries.join(",\n");
+    let mut files = vec![format!("\"{PROJECT_TYPES_REL}\"")];
+    if env == TypeEnv::Action {
+        files.push(format!("\"{PROJECT_ACTION_OBSERVATION_REL}\""));
+    }
+    let env_note = match env {
+        TypeEnv::Pure => "TypeEnv::Pure — ESNext only; document unnameable.",
+        TypeEnv::Action => {
+            "TypeEnv::Action — ESNext + action-observation.d.ts; no document/window."
+        }
+        TypeEnv::Framework => "TypeEnv::Framework — ESNext + DOM (framework packages).",
+    };
     format!(
         "{{\n  \
-         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2). Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
+         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). {env_note} Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
          \"compilerOptions\": {{\n    {opts_inner},\n    \"baseUrl\": \".\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
-         \"files\": [\"{pack}\"],\n  \
+         \"files\": [{files}],\n  \
          \"include\": [{inc}],\n  \
          \"exclude\": [\"node_modules\", \"dist\", \".deck\"]\n\
          }}\n",
         pack = PROJECT_TYPES_REL,
         paths = paths_block,
+        files = files.join(", "),
         inc = includes.join(", "),
     )
 }
@@ -1505,6 +1812,13 @@ mod tests {
                 "sail_tsconfig_compiler_options_json missing {flag}:\n{opts}"
             );
         }
+        // Default project emit is Framework — lib comes from lib_for_type_env SSOT.
+        for entry in lib_for_type_env(TypeEnv::Framework) {
+            assert!(
+                opts.contains(&format!("\"{entry}\"")),
+                "default opts must include Framework lib entry {entry}:\n{opts}"
+            );
+        }
         let body = emit_project_tsconfig_json(&["src/**/*.ts", "routes/**/*.ts"]);
         for flag in SAIL_TSCONFIG_REQUIRED_FLAGS {
             assert!(
@@ -1522,6 +1836,50 @@ mod tests {
             body.contains("\"src/**/*.ts\"") && body.contains("\"routes/**/*.ts\""),
             "project tsconfig must include authored globs:\n{body}"
         );
+    }
+
+    #[test]
+    fn pure_and_action_tsconfig_emit_esnext_only_lib() {
+        for env in [TypeEnv::Pure, TypeEnv::Action] {
+            let opts = sail_tsconfig_compiler_options_json_for(env);
+            assert!(
+                opts.contains("\"ESNext\""),
+                "{env:?} opts need ESNext:\n{opts}"
+            );
+            assert!(
+                !opts.contains("\"DOM\""),
+                "{env:?} opts must not include DOM:\n{opts}"
+            );
+        }
+        let action_body =
+            emit_project_tsconfig_json_for(TypeEnv::Action, &["src/actions/**/*.ts"]);
+        assert!(
+            action_body.contains(PROJECT_ACTION_OBSERVATION_REL),
+            "Action tsconfig must list observation ambient:\n{action_body}"
+        );
+        let pure_body =
+            emit_project_tsconfig_json_for(TypeEnv::Pure, &["src/compositions/**/*.ts"]);
+        assert!(
+            !pure_body.contains(PROJECT_ACTION_OBSERVATION_REL),
+            "Pure tsconfig must not list action observation pack:\n{pure_body}"
+        );
+    }
+
+    #[test]
+    fn type_env_selection_and_observation_pack_smoke() {
+        use crate::project_map::FileKind;
+        assert_eq!(type_env_for_kind(FileKind::Composition), TypeEnv::Pure);
+        assert_eq!(type_env_for_kind(FileKind::Action), TypeEnv::Action);
+        assert_eq!(
+            type_env_for_path(Path::new("packages/sail/runtime/src/index.ts"), None),
+            TypeEnv::Framework
+        );
+        let dts = emit_action_observation_dts();
+        assert!(dts.contains("requestAnimationFrame"));
+        assert!(dts.contains("ResizeObserver"));
+        assert!(!dts.lines().filter(|l| !l.trim_start().starts_with("//")).any(|l| {
+            l.contains("declare var document") || l.contains("declare const document")
+        }));
     }
 
     #[test]
