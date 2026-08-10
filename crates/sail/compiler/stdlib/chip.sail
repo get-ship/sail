@@ -62,10 +62,10 @@
           paint: bg(chip).fg(chip.foreground).border(chip.border),
           when: { hover: { paint: opacity(90) } },
         },
-        // Soft without tone: muted wash. Soft+tone: colorMix via --tone.
+        // Soft without tone: component.chip.* (themeable rest). Soft+tone: wash compounds below.
         soft: {
-          paint: colorMix(muted, 15).border(border).fg(muted-foreground),
-          when: { hover: { paint: colorMix(muted, 25) } },
+          paint: bg(chip).fg(chip.foreground).border(chip.border),
+          when: { hover: { paint: opacity(90) } },
         },
         outline: {
           paint: bg(transparent).fg(chip.foreground).border(chip.border),

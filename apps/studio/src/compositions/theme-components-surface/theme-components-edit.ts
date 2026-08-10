@@ -55,6 +55,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.muted.foreground', label: 'Muted (global)' },
   ],
+  chip: [
+    { path: 'color.primary.default', label: 'Primary (global)' },
+    { path: 'color.muted.foreground', label: 'Muted (global)' },
+    { path: 'color.border.default', label: 'Border (global)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },

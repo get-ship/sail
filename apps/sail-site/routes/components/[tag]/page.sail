@@ -31,18 +31,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Configurator knobs (Mantine-style): per-tag size ladders + shared tone swatches.
     const BTN_SIZES = ['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] as const
     const BDG_SIZES = ['sm', 'md', 'lg'] as const
-    const sizeIdx = signal(2) // md for button; remapped for badge
+    const CHIP_SIZES = ['sm', 'md', 'lg'] as const
+    const sizeIdx = signal(2) // md for button; remapped for badge/chip
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
     const badgeTone = signal('primary')
     const badgePill = signal(false)
-// Separator: empty tone = rest component.separator.line (never empty bg(tone)).
+    // Separator: empty tone = rest component.separator.line (never empty bg(tone)).
     const sepOrientation = signal('horizontal')
     const sepTone = signal('')
     // Alert: empty tone = rest component.alert.*; dismiss remount via visible flag.
     const alertTone = signal('info')
     const alertDismissible = signal(false)
     const alertVisible = signal(true)
+    // Chip: empty tone = rest component.chip.*; selected/removable bools.
+    const chipTone = signal('primary')
+    const chipSelected = signal(false)
+    const chipRemovable = signal(true)
+    // Chip dismiss demo (re-seed with chip knobs; restore after ×).
+    const kept = signal(true)
+    const dropChip = (): void => kept.set(false)
+    const restoreChip = (): void => kept.set(true)
     const btnSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), BTN_SIZES.length - 1)
       return BTN_SIZES[i] ?? 'md'
@@ -50,6 +59,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const badgeSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), BDG_SIZES.length - 1)
       return BDG_SIZES[i] ?? 'md'
+    })
+    const chipSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), CHIP_SIZES.length - 1)
+      return CHIP_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -62,7 +75,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         badgeTone.set('primary')
         badgePill.set(false)
-} else if (tag() === 'separator') {
+    } else if (tag() === 'separator') {
         variant.set('solid')
         sepOrientation.set('horizontal')
         sepTone.set('')
@@ -71,6 +84,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
         alertTone.set('info')
         alertDismissible.set(false)
         alertVisible.set(true)
+      } else if (tag() === 'chip') {
+        variant.set('solid')
+        sizeIdx.set(1) // md
+        chipTone.set('primary')
+        chipSelected.set(false)
+        chipRemovable.set(true)
+        kept.set(true)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -81,7 +101,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const pickTone = (t: string): void => btnTone.set(t)
     const pickBadgeTone = (t: string): void => badgeTone.set(t)
     const clearBadgeTone = (): void => badgeTone.set('')
-const pickSepTone = (t: string): void => sepTone.set(t)
+    const pickSepTone = (t: string): void => sepTone.set(t)
     const clearSepTone = (): void => sepTone.set('')
     const pickAlertTone = (t: string): void => {
       alertTone.set(t)
@@ -93,12 +113,14 @@ const pickSepTone = (t: string): void => sepTone.set(t)
     }
     const onAlertDismiss = (): void => alertVisible.set(false)
     const restoreAlert = (): void => alertVisible.set(true)
+    const pickChipTone = (t: string): void => chipTone.set(t)
+    const clearChipTone = (): void => chipTone.set('')
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
     const badgeMeta = derived(() => {
       const t = badgeTone()
       return `${variant()} · ${badgeSize()} · ${t || 'rest (component tokens)'} · pill ${badgePill() ? 'on' : 'off'}`
     })
-const sepMeta = derived(() => {
+    const sepMeta = derived(() => {
       const t = sepTone()
       return `${sepOrientation()} · ${variant() || 'solid'} · ${t || 'rest (separator.line)'}`
     })
@@ -141,13 +163,17 @@ const sepMeta = derived(() => {
           return 'Rest paint uses component.alert.* leaves — themeable in Studio.'
       }
     })
+    const chipMeta = derived(() => {
+      const t = chipTone()
+      return `${variant()} · ${chipSize()} · ${t || 'rest (component tokens)'} · selected ${chipSelected() ? 'on' : 'off'} · removable ${chipRemovable() ? 'on' : 'off'}`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
     })
     // Hide viewer variant strip when stage owns knobs.
-const stageOwnsKnobs = () =>
-      tag() === 'button' || tag() === 'badge' || tag() === 'separator' || tag() === 'alert'
+    const stageOwnsKnobs = () =>
+      tag() === 'button' || tag() === 'badge' || tag() === 'separator' || tag() === 'alert' || tag() === 'chip'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -163,7 +189,7 @@ const stageOwnsKnobs = () =>
       `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
     const bdgExRest = () =>
       `<badge variant="soft">rest tokens</badge>\n<!-- no tone → component.badge.* (themeable) -->`
-const sepExBoth = () =>
+    const sepExBoth = () =>
       `<column gap="2">\n  <p>Section A</p>\n  <separator></separator>\n  <p>Section B</p>\n  <row gap="2" align="center">\n    <span>Left</span>\n    <separator orientation="vertical"></separator>\n    <span>Right</span>\n  </row>\n</column>`
     const sepExVariant = () =>
       `<separator variant="dashed"></separator>\n<separator variant="solid" tone="primary"></separator>`
@@ -175,6 +201,12 @@ const sepExBoth = () =>
       `<alert tone="warning" dismissible onDismiss={onDismiss}>\n  <strong slot="title">Check your input</strong>\n  Two fields need attention.\n</alert>`
     const alrtExRest = () =>
       `<alert>\n  <strong slot="title">Notice</strong>\n  Rest tokens — component.alert.*\n</alert>\n<!-- no tone → themeable component leaves -->`
+    const chipExFilter = () =>
+      `<chip variant="solid" tone="primary" selected>Design</chip>\n<chip variant="outline" tone="muted">Research</chip>`
+    const chipExRemove = () =>
+      `<chip variant="soft" tone="info" removable on-remove={onRemove}>typescript</chip>`
+    const chipExRest = () =>
+      `<chip variant="solid">rest tokens</chip>\n<!-- no tone → component.chip.* (themeable) -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -215,9 +247,6 @@ const sepExBoth = () =>
     const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
     const pageNo = signal('2')
     const goPage = (detail: { page?: string; value?: string }): void => pageNo.set(detail?.page ?? detail?.value ?? '1')
-    const kept = signal(true)
-    const dropChip = (): void => kept.set(false)
-    const restoreChip = (): void => kept.set(true)
     // Toast stage owns instances (push → dismiss → re-push). L1 remove() is
     // correct; the stage must remount via signal, not treat one node as forever.
     let toastSeq = 0
@@ -256,11 +285,13 @@ const sepExBoth = () =>
       btnExWithIcon, btnExIconOnly, btnExSizes,
       badgeTone, badgeSize, badgePill, badgeMeta, pickBadgeTone, clearBadgeTone,
       bdgExStatus, bdgExPill, bdgExRest,
-sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
+      sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
       sepExBoth, sepExVariant, sepExRest,
       alertTone, alertDismissible, alertVisible, alertMeta, alertTitle, alertBody,
       pickAlertTone, clearAlertTone, onAlertDismiss, restoreAlert,
       alrtExTones, alrtExDismiss, alrtExRest,
+      chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
+      chipExFilter, chipExRemove, chipExRest,
     }
 })
 </controller>
@@ -768,19 +799,103 @@ sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
               </row>
             </if>
             <if {stage.chip()}>
-              <column gap="3" align="center">
-                <row gap="2" align="center">
-                  <!-- tone= so soft/outline/ghost match arms resolve --tone (rest solid = no tone). -->
-                  <chip variant={variant()} tone="primary" selected>Selected</chip>
-                  <if {kept()}>
-                    <chip variant={variant()} tone="primary" removable on-remove={dropChip}>Removable</chip>
-                  </if>
-                  <if {!kept()}>
-                    <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
-                  </if>
-                </row>
-                <p style(monoXs)>× or Backspace fires sail-remove</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center">
+                    <if {kept()}>
+                      <if {chipTone()}>
+                        <chip
+                          variant={variant()}
+                          size={chipSize()}
+                          tone={chipTone()}
+                          selected={chipSelected() ? 'true' : null}
+                          removable={chipRemovable() ? 'true' : null}
+                          on-remove={dropChip}
+                        >
+                          {chipTone()}
+                        </chip>
+                      {else =>
+                        <chip
+                          variant={variant()}
+                          size={chipSize()}
+                          selected={chipSelected() ? 'true' : null}
+                          removable={chipRemovable() ? 'true' : null}
+                          on-remove={dropChip}
+                        >
+                          rest
+                        </chip>}</if>
+                    {else =>
+                      <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>}</if>
+                    <p style(monoXs)>{chipMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Variant</label>
+                    <select size="sm" bind:value={variant} label="Variant">
+                      <option value="solid">solid</option>
+                      <option value="soft">soft</option>
+                      <option value="outline">outline</option>
+                      <option value="ghost">ghost</option>
+                    </select>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="rest — component.chip tokens" placement="top">
+                        <div label="rest" on:click={clearChipTone} selected={!chipTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickChipTone('primary')} selected={chipTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickChipTone('success')} selected={chipTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickChipTone('warning')} selected={chipTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickChipTone('destructive')} selected={chipTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickChipTone('accent')} selected={chipTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickChipTone('muted')} selected={chipTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickChipTone('info')} selected={chipTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{chipSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Selected</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={chipSelected} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{chipSelected() ? 'aria-pressed' : 'idle'}</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Removable</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={chipRemovable} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{chipRemovable() ? '× + Backspace' : 'no dismiss'}</span>
+                    </row>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.statusDot()}>
               <row gap="2" align="center">
@@ -1300,7 +1415,7 @@ sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
         </column>
       </if>
 
-<if {stage.separator()}>
+      <if {stage.separator()}>
         <column gap="5" style(exampleBlock)>
           <p style(sectionLabel)>Examples</p>
 
@@ -1403,6 +1518,54 @@ sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
               Rest paint — component.alert.* leaves.
             </alert>
             <code-block code={alrtExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.chip()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Filter selection</h3>
+            <p style(exampleLead)>
+              <code>selected</code> is the pressed state (ARIA-synced). Use tone for brand
+              filters; outline + muted for idle peers in a strip.
+            </p>
+            <row gap="2" align="center">
+              <chip variant="solid" tone="primary" selected>Design</chip>
+              <chip variant="outline" tone="muted">Research</chip>
+              <chip variant="soft" tone="info">Ops</chip>
+            </row>
+            <code-block code={chipExFilter()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Removable tags</h3>
+            <p style(exampleLead)>
+              <code>removable</code> shows the ×; click or Backspace/Delete fires
+              <code>on-remove</code>. The stage above remounts after dismiss.
+            </p>
+            <row gap="2" align="center">
+              <chip variant="soft" tone="info" removable>typescript</chip>
+              <chip variant="solid" tone="success" removable size="sm">shipped</chip>
+            </row>
+            <code-block code={chipExRemove()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              No <code>tone</code> → solid/soft/outline/ghost paint from
+              <code>component.chip.*</code>. Override those leaves in Studio themes.
+            </p>
+            <row gap="2" align="center">
+              <chip variant="solid">solid rest</chip>
+              <chip variant="soft">soft rest</chip>
+              <chip variant="outline">outline rest</chip>
+              <chip variant="ghost">ghost rest</chip>
+            </row>
+            <code-block code={chipExRest()}></code-block>
           </column>
         </column>
       </if>
