@@ -354,7 +354,26 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.spinner()}>
-                    <spinner size={components.variant() || 'md'} tone="primary"></spinner>
+                    <column gap="3" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.spinner.fg + track (theme override)</p>
+                        <row gap="4" align="center" nowrap>
+                          <spinner size="sm"></spinner>
+                          <spinner></spinner>
+                          <spinner size="lg"></spinner>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Toned · size ladder + host tones</p>
+                        <row gap="4" align="center" nowrap>
+                          <spinner size="xs" tone="primary"></spinner>
+                          <spinner size="sm" tone="info"></spinner>
+                          <spinner size={components.variant() || 'md'} tone="success"></spinner>
+                          <spinner size="lg" tone="destructive"></spinner>
+                          <spinner tone="accent"></spinner>
+                        </row>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.emptyState()}>
                     <empty-state variant="inline" size="sm" style(stageHost)>

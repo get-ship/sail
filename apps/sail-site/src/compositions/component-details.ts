@@ -293,13 +293,18 @@ export const DETAILS: Record<string, DetailEntry> = {
     ],
   }),
   spinner: lang('spinner', 'spinner', {
-    blurb: 'An indeterminate wait. Size and tone are attributes; centered parks it in the middle of its container.',
-    variants: ['sm', 'md', 'lg'],
-    variantAttr: 'size',
+    blurb:
+      'Indeterminate wait ring. Size scales the host; omit tone for themeable spinner.foreground / spinner.track; centered parks it in the middle of its container.',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'size', desc: 'spinner scale', type: 'xs · sm · md · lg' },
-      { name: 'tone', desc: 'ring colour', type: 'default · primary · info · success · warning · destructive · accent' },
-      { name: 'centered', desc: 'centers itself in the parent', type: 'bool' },
+      { name: 'size', desc: 'ring scale (icon-size ladder)', type: 'xs · sm · md · lg' },
+      {
+        name: 'tone',
+        desc: 'active arc colour (fg). Omit → component.spinner.fg rest; track always spinner.track',
+        type: 'primary · info · success · warning · destructive · accent',
+      },
+      { name: 'centered', desc: 'block + auto horizontal margin in the parent', type: 'bool' },
     ],
   }),
   skeleton: lang('skeleton', 'skeleton', {
