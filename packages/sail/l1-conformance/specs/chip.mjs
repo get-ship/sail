@@ -2,23 +2,34 @@
 // capability mix-ins). States: every tone, every variant, and the behavioural
 // gates (selected/removable/icon/disabled/size). Paint classes mirror lowered
 // Style: soft/outline/ghost rest ride chip* tokens (not free muted/foreground).
+//
+// Lead/remove visibility is controlled by product skins (display:contents lead,
+// display:none remove, .sail-grp[removable] shows remove) — no inline display stamps.
 
 const dot =
-  '<svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" style="display:block;width:8px;height:8px"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>'
-const x =
-  '<button class="remove" type="button" aria-label="Remove" tabindex="-1" style="display:none"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg></button>'
-const xRem =
-  '<button class="remove" type="button" aria-label="Remove" tabindex="-1" style="display:inline-flex"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg></button>'
+  '<svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" style="width:8px;height:8px;display:block"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>'
+// Product remove: display:none base + group-removable shows when host is sail-grp[removable].
+// Also .sail-chip:not([removable]) button[aria-label=Remove] { display:none }.
+const REMOVE =
+  '<button class="remove s-displaynone s-sizeiconsizexs s-pad0 s-borderWidth0 s-bgtransparent s-fgcurrentColor s-shrink0 s-groupremovable-displayinlineflex" type="button" aria-label="Remove" tabindex="-1"><svg viewBox="0 0 10 10" aria-hidden="true" width="10" height="10" style="display:block;width:100%;height:100%"><path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.75" fill="none"/></svg></button>'
 
 // Base rest paint: solid default + soft rest both stamp chip / chip-foreground / chip-border.
+// sail-grp mirrors freeform group() so removable group rules fire.
 const CHIP =
-  'sail-chip s-displayinlineflex s-minHcontrolh2xs s-padX2 s-padYpx s-appearancenone s-cursorpointer s-selectnone s-tapHighlightnone s-radiusfull s-borderWidth1 s-bordersolid s-bgchip s-fgchipforeground s-borderchipborder s-transitioncolors s-durationfast s-easeout s-fontFamilybody s-fontWeightmedium s-leadingnone s-whitespacenowrap s-fontSizexs'
+  'sail-chip sail-grp s-displayinlineflex s-minHcontrolh2xs s-padX2 s-padYpx s-gap1 s-appearancenone s-cursorpointer s-selectnone s-tapHighlightnone s-radiusfull s-borderWidth1 s-bordersolid s-bgchip s-fgchipforeground s-borderchipborder s-transitioncolors s-durationfast s-easeout s-fontFamilybody s-fontWeightmedium s-leadingnone s-whitespacenowrap s-fontSizexs'
 const CHIP_SOFT =
   `${CHIP} s-variantsoft-bgchip s-variantsoft-fgchipforeground s-variantsoft-borderchipborder`
 const CHIP_OUTLINE =
   `${CHIP} s-variantoutline-bgtransparent s-variantoutline-fgchipforeground s-variantoutline-borderchipborder`
 const CHIP_GHOST =
   `${CHIP} s-variantghost-bgtransparent s-variantghost-fgchipforeground s-variantghost-bordertransparent`
+
+/** Freeform size stamps (pair with size= for [size].s-size* rules). */
+const sizeCls = {
+  sm: 's-sizesm-minHcontrolh2xs s-sizesm-padX2 s-sizesm-fontSizexs',
+  md: 's-sizemd-minHcontrolh2xs s-sizemd-padX25 s-sizemd-fontSizesm',
+  lg: 's-sizelg-minHcontrolhxs s-sizelg-padX3 s-sizelg-fontSizesm',
+}
 
 const paintCls = (variant) => {
   if (variant === 'soft') return CHIP_SOFT
@@ -29,12 +40,11 @@ const paintCls = (variant) => {
 
 const chip = (label, attrs = '', icon = false, variant = 'solid') => {
   const extra = attrs ? ` ${attrs}` : ''
-  const removable = /\bremovable\b/.test(attrs)
-  // Leading: contents when empty (product empty:hidden ≈ no layout); inline when glyph.
-  const lead = icon
-    ? `<span class="leading" style="display:inline-flex">${dot}</span>`
-    : `<span class="leading" style="display:contents"></span>`
-  return `<span class="${paintCls(variant)}"${extra}>${lead}${label}${removable ? xRem : x}</span>`
+  const size = /size="([^"]+)"/.exec(attrs || '')?.[1] || ''
+  const sc = size && sizeCls[size] ? ` ${sizeCls[size]}` : ''
+  // Leading always product display:contents — SVG with intrinsic size still paints.
+  const lead = `<span class="leading s-displaycontents">${icon ? dot : ''}</span>`
+  return `<span class="${paintCls(variant)}${sc}"${extra}>${lead}${label}${REMOVE}</span>`
 }
 
 export default {
@@ -56,6 +66,7 @@ export default {
         chip('with icon', 'tone="success"', true),
         chip('disabled', 'tone="primary" disabled'),
         chip('sm', 'tone="primary" size="sm"'),
+        chip('md', 'tone="primary" size="md"'),
         chip('lg', 'tone="primary" size="lg"'),
       ].join(''),
     ]
@@ -64,24 +75,20 @@ export default {
     const bad = []
     const clear = (v) => v === 'rgba(0, 0, 0, 0)' || v === 'transparent' || v === ''
     document.querySelectorAll('.sail-chip').forEach((el) => {
-      // chip controller essentials (ARIA + gates; full keyboard in runtime test)
       if (!el.hasAttribute('role')) el.setAttribute('role', 'button')
       const disabled = el.hasAttribute('disabled')
       el.setAttribute('aria-pressed', el.hasAttribute('selected') ? 'true' : 'false')
       if (disabled) { el.setAttribute('aria-disabled', 'true'); el.setAttribute('tabindex', '-1') }
       else el.setAttribute('tabindex', '0')
-      // invariants
       const roleOk = el.getAttribute('role') === 'button'
       const pressedOk = el.getAttribute('aria-pressed') === (el.hasAttribute('selected') ? 'true' : 'false')
       const tabOk = el.getAttribute('tabindex') === (disabled ? '-1' : '0')
-      const remove = el.querySelector('.remove')
+      const remove = el.querySelector('.remove, button[aria-label="Remove"]')
       const leading = el.querySelector('.leading')
       const glyph = el.querySelector('.leading svg')
+      // Product CSS gates (not harness inline display):
       const removeShown = remove ? getComputedStyle(remove).display !== 'none' : false
       const removeExpected = el.hasAttribute('removable')
-      // Independent lead gates (not tautological):
-      // 1) Glyph present → SVG must render a non-zero box.
-      // 2) Glyph absent → leading must not paint a real layout box (none|contents|0×0).
       if (glyph) {
         const gr = glyph.getBoundingClientRect()
         if (gr.width <= 0 || gr.height <= 0) {
@@ -97,7 +104,6 @@ export default {
       }
       if (!roleOk || !pressedOk || !tabOk) bad.push({ why: 'aria', roleOk, pressedOk, tabOk })
       if (removeShown !== removeExpected) bad.push({ why: 'remove-gate', removeShown, removeExpected })
-      // Soft/solid rest: filled surface + readable ink (chip* tokens).
       const variant = el.getAttribute('variant') || 'solid'
       const cs = getComputedStyle(el)
       if ((variant === 'soft' || variant === 'solid') && !el.hasAttribute('selected') && clear(cs.backgroundColor)) {
@@ -105,8 +111,15 @@ export default {
       }
       if (clear(cs.color)) bad.push({ why: 'no-token-fg', variant })
     })
-    // Soft rest fill must resolve on ship (component.chip.*). Cross-theme divergence
-    // is operator taste when pack aliases muted in both modes.
+    // Size ladder monotonicity when freeform size classes stamp (ship).
+    const h = (s) => {
+      const el = document.querySelector(`[theme='ship'] .sail-chip[size='${s}']`)
+      return el ? el.getBoundingClientRect().height : 0
+    }
+    const [sm, md, lg] = [h('sm'), h('md'), h('lg')]
+    if (sm > 0 && md > 0 && lg > 0 && !(sm <= md && md <= lg && sm < lg)) {
+      bad.push({ why: 'size-not-monotonic', sm, md, lg })
+    }
     const softRest = document.querySelector("[theme='ship'] .sail-chip[variant='soft']:not([tone])")
     if (softRest && clear(getComputedStyle(softRest).backgroundColor)) {
       bad.push({ why: 'soft-rest-no-fill' })

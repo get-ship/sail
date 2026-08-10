@@ -5,13 +5,13 @@
  * Fail closed when:
  * - Registry axis missing from docs knobs (first-class packages)
  * - Docs knob not in prop-registry / contract (hosts) — reverse fantasy
+ * - Docs select option values drift from contract.values
  * - Face path not in token registry
- * - Visual spec missing default row or enum value on visual.cross
- * - Hub tile without component-docs/<slug>/meta.ts
- * - legend appears as hub tile or top-level DETAILS key
+ * - Visual missing real default/rest row or visual.cross enum/bool
+ * - First-class slug in DOC_CE_SLUGS without <doc-slug> mount in shell
+ * - Hub tile without meta; legend hub/DETAILS ban
  *
  * Usage: bun apps/sail-site/scripts/check-l1-surface-contract.mjs
- * Exit 1 on any failure.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -23,6 +23,7 @@ const DOCS = path.join(SITE, 'src/component-docs')
 const DETAILS = path.join(SITE, 'src/compositions/component-details.ts')
 const TOKEN_REG = path.join(ROOT, 'packages/sail/tokens/src/token-registry.json')
 const SPECS = path.join(ROOT, 'packages/sail/l1-conformance/specs')
+const SHELL = path.join(SITE, 'routes/components/[tag]/page.sail')
 
 const errors = []
 const warn = (m) => console.warn(`warn: ${m}`)
@@ -58,6 +59,31 @@ for (const slug of hubSlugs) {
   if (!fs.existsSync(path.join(DOCS, slug, 'meta.ts'))) fail(`hub package ${slug} missing meta.ts`)
 }
 
+// ── Shell DOC_CE_SLUGS ↔ <doc-*> mount pairing ──────────────────────────
+const shellSrc = fs.existsSync(SHELL) ? fs.readFileSync(SHELL, 'utf8') : ''
+const docCeSlugs = new Set()
+const ceMatch = shellSrc.match(/DOC_CE_SLUGS\s*=\s*new Set\(\[([\s\S]*?)\]\)/)
+if (ceMatch) {
+  for (const m of ceMatch[1].matchAll(/['"]([a-z0-9-]+)['"]/g)) docCeSlugs.add(m[1])
+}
+for (const slug of docCeSlugs) {
+  // Require a mount: <doc-{slug} or use{Slug} that eventually mounts it.
+  // Prefer literal CE tag in template.
+  const tagRe = new RegExp(`<doc-${slug}[\\s>]`)
+  if (!tagRe.test(shellSrc)) {
+    fail(`shell: DOC_CE_SLUGS has "${slug}" but no <doc-${slug}> mount in page.sail`)
+  }
+}
+// First-class packages should be in DOC_CE_SLUGS once contracted
+for (const c of CONTRACTS) {
+  const metaPath = path.join(DOCS, c.slug, 'meta.ts')
+  if (!fs.existsSync(metaPath)) continue
+  const metaSrc = fs.readFileSync(metaPath, 'utf8')
+  if (/host:\s*['"]doc-/.test(metaSrc) && !docCeSlugs.has(c.slug)) {
+    fail(`shell: first-class "${c.slug}" missing from DOC_CE_SLUGS`)
+  }
+}
+
 /** Known knob labels → axis names (docs configurator chrome only). */
 const KNOB_LABELS = {
   variant: 'variant',
@@ -78,21 +104,14 @@ const KNOB_LABELS = {
   indeterminate: 'indeterminate',
 }
 
-/**
- * Extract docs knob axes from first-class hosts.
- * Only knobs with style(knobLabel) labels or bind targets for known axes —
- * never free-form label="primary" swatch a11y names.
- */
 function extractDocAxes(docSrc) {
   const axes = new Set()
-  // <label style(knobLabel) …>Tone</label>
   for (const m of docSrc.matchAll(
     /<label[^>]*style\(knobLabel\)[^>]*>\s*([A-Za-z][A-Za-z0-9\s-]*)\s*<\/label>/g,
   )) {
     const key = m[1].trim().toLowerCase()
     if (KNOB_LABELS[key]) axes.add(KNOB_LABELS[key])
   }
-  // select/slider with label="Variant" on the control next to knobLabel sections
   for (const m of docSrc.matchAll(
     /<(?:select|slider|switch|input)[^>]*\blabel=["']([A-Za-z][A-Za-z0-9\s-]*)["']/g,
   )) {
@@ -100,6 +119,25 @@ function extractDocAxes(docSrc) {
     if (KNOB_LABELS[key]) axes.add(KNOB_LABELS[key])
   }
   return axes
+}
+
+/** Extract option value= sets under selects that look like axis knobs. */
+function extractSelectOptionValues(docSrc) {
+  const byAxis = {}
+  // Split on select tags with label= matching a known axis
+  const re =
+    /<select([^>]*)>([\s\S]*?)<\/select>/gi
+  let m
+  while ((m = re.exec(docSrc))) {
+    const attrs = m[1]
+    const body = m[2]
+    const labelM = attrs.match(/\blabel=["']([^"']+)["']/)
+    const axis = labelM ? KNOB_LABELS[labelM[1].trim().toLowerCase()] : null
+    if (!axis) continue
+    const vals = [...body.matchAll(/<option[^>]*\bvalue=["']([^"']+)["']/g)].map((x) => x[1])
+    if (vals.length) byAxis[axis] = vals
+  }
+  return byAxis
 }
 
 async function loadVisualRowsText(tag) {
@@ -116,40 +154,88 @@ async function loadVisualRowsText(tag) {
   }
 }
 
-/** Defaults often omitted from markup — treat as covered if axis appears at all or default is the PE default. */
-function isDefaultEnumValue(axis, val, def) {
-  if (def?.default !== undefined && String(def.default) === String(val)) return true
-  // common PE defaults
-  if (axis === 'size' && val === 'md') return true
-  if (axis === 'variant' && (val === 'default' || val === 'soft' || val === 'solid')) return true
-  if (axis === 'orientation' && val === 'horizontal') return true
-  if (axis === 'shape' && val === 'text') return true
-  return false
+/** Only contract.default counts as the PE default (no soft/solid hardcodes). */
+function isContractDefault(val, def) {
+  if (def?.default === undefined || def.default === null) return false
+  return String(def.default) === String(val)
 }
 
 function enumCovered(axis, val, text, specSrc) {
   const hay = text + '\n' + specSrc
-  // attr forms
   const patterns = [
     new RegExp(`${axis}=["']${val}["']`, 'i'),
-    new RegExp(`\\b${axis}="${val}"`, 'i'),
-    // size/variant/tone/shape commonly as bare attrs
     new RegExp(`(?:size|variant|tone|shape|orientation)=["']${val}["']`, 'i'),
   ]
   if (patterns.some((re) => re.test(hay))) return true
-  // size ladder bare cells: sm/md/lg labels in harness text nodes
-  if (axis === 'size' && new RegExp(`>${val}<|\\('${val}'|size=['"]${val}`, 'i').test(hay)) return true
-  if (axis === 'variant' && new RegExp(`variant=["']${val}["']`, 'i').test(hay)) return true
-  if (axis === 'tone' && new RegExp(`tone=["']${val}["']`, 'i').test(hay)) return true
-  if (axis === 'shape' && new RegExp(`shape=["']${val}["']`, 'i').test(hay)) return true
+  if (axis === 'size' && new RegExp(`size=['"]${val}['"]`, 'i').test(hay)) return true
   return false
 }
 
-function boolCovered(axis, text, specSrc) {
+function familyPresent(axis, text, specSrc) {
   const hay = text + '\n' + specSrc
-  // attribute presence: disabled, spin, centered, pill, selected, removable, dismissible
-  if (new RegExp(`\\b${axis}\\b`, 'i').test(hay)) return true
+  if (axis === 'size') return /size=/.test(hay)
+  if (axis === 'variant') return /variant=/.test(hay)
+  if (axis === 'shape') return /shape=/.test(hay)
+  if (axis === 'orientation') return /orientation=/.test(hay)
+  if (axis === 'tone') return /tone=/.test(hay)
+  return new RegExp(`\\b${axis}=`).test(hay)
+}
+
+function boolCovered(axis, text, specSrc) {
+  return new RegExp(`\\b${axis}\\b`, 'i').test(text + '\n' + specSrc)
+}
+
+/**
+ * Real default/rest row — no vacuous `<` match.
+ * Requires explicit rest/default markers or untoned/zero-config host cell.
+ */
+function hasDefaultRestRow(text, specSrc, tag, c) {
+  const hay = text + '\n' + specSrc
+  // Explicit markers used by harnesses
+  if (
+    /soft-default|outline-default|ghost-default|soft-rest|rest-default|zero-config|no tone|omit value|indeterminate|l1-mark/i.test(
+      hay,
+    )
+  ) {
+    return true
+  }
+  // tone="default" rest path (badge matrix)
+  if (/tone=["']default["']/.test(text)) return true
+  // Optional tone: require at least one host cell without tone=
+  if (c.axes?.tone?.optional) {
+    // class="sail-{tag}..." without tone= on same open tag
+    const openTags = text.match(/<[^>]+>/g) || []
+    const untoned = openTags.some(
+      (t) =>
+        (t.includes(`sail-${tag}`) || new RegExp(`^<${tag}[\\s>]`).test(t)) &&
+        !/\btone=/.test(t),
+    )
+    if (untoned) return true
+    // chip()/helper forms with no tone in attrs string
+    if (/variant=["'][^"']+["'](?![^"'<>]*tone=)/.test(text)) return true
+  }
+  // No tone axis: bare host is zero-config
+  if (!c.axes?.tone) {
+    if (new RegExp(`<(${tag}|[a-z-]+\\s[^>]*sail-${tag})`, 'i').test(text)) return true
+  }
+  // button default variant
+  if (tag === 'button' && /variant=["']default["']/.test(text)) return true
   return false
+}
+
+/** Optional tone: rest path AND ≥1 toned cell required once. */
+function optionalToneCoverageOk(text, specSrc, def) {
+  const hay = text + '\n' + specSrc
+  const hasRest =
+    /soft-default|outline-default|ghost-default|:not\(\[tone\]\)|no tone|tone=["']default["']/i.test(
+      hay,
+    ) ||
+    (text.match(/<[^>]+>/g) || []).some(
+      (t) => (t.includes('sail-') || t.startsWith('<')) && !/\btone=/.test(t) && /class=|variant=/.test(t),
+    )
+  const tonedValues = (def.values || []).filter((v) => v && v !== 'default')
+  const hasToned = tonedValues.some((v) => enumCovered('tone', v, text, specSrc))
+  return hasRest && hasToned
 }
 
 for (const c of CONTRACTS) {
@@ -200,7 +286,6 @@ for (const c of CONTRACTS) {
     const docAxes = extractDocAxes(docSrc)
 
     for (const axis of requiredDocAxes) {
-      // knobLabel text, data-axis (if ever allowed), or bind/signal name
       const has =
         docAxes.has(axis) ||
         new RegExp(`style\\(knobLabel\\)[^>]*>\\s*${axis}\\s*<`, 'i').test(docSrc) ||
@@ -211,13 +296,27 @@ for (const c of CONTRACTS) {
       if (!has) fail(`${slug}: registry/contract axis "${axis}" missing from docs knobs`)
     }
 
-    // Reverse fantasy: only axes extracted from knob chrome
     for (const axis of docAxes) {
       if (demoOnly.has(axis)) continue
       if (contractAxes.has(axis)) continue
       fail(
         `${slug}: docs knob "${axis}" not in prop-registry/contract (fantasy or unlisted demoOnly)`,
       )
+    }
+
+    // Option value sets vs contract.values (select knobs only)
+    const optionSets = extractSelectOptionValues(docSrc)
+    for (const [axis, opts] of Object.entries(optionSets)) {
+      const def = c.axes[axis]
+      if (!def?.values?.length) continue
+      const expected = new Set(def.values.map(String))
+      const got = new Set(opts.map(String))
+      for (const v of expected) {
+        if (!got.has(v)) fail(`${slug}: docs options for ${axis} missing contract value "${v}"`)
+      }
+      for (const v of got) {
+        if (!expected.has(v)) fail(`${slug}: docs options for ${axis} has non-contract value "${v}"`)
+      }
     }
   } else if (!hostIsLegacy && c.kind === 'host') {
     warn(`${slug}: contracted but meta.host is not first-class or legacy`)
@@ -238,12 +337,16 @@ for (const c of CONTRACTS) {
         const text = String(rowsText)
 
         if (c.visual?.defaultRow) {
-          // Require some rest/default/untoned/zero-config marker or any row content for thin hosts
-          const ok =
-            /default|rest|soft-default|:not\(\[tone\]\)|no tone|omit value|indeterminate|variant=["']soft["']|variant=["']solid["']|size=["']md["']|</i.test(
-              text + '\n' + specSrc,
-            )
-          if (!ok) fail(`${slug}: visual missing default/rest row (visual.defaultRow)`)
+          if (!hasDefaultRestRow(text, specSrc, tag, c)) {
+            fail(`${slug}: visual missing default/rest row (visual.defaultRow)`)
+          }
+        }
+
+        // Optional tone: one-time rest + ≥1 toned assert
+        if (c.axes.tone?.optional && (c.visual?.cross || []).includes('tone')) {
+          if (!optionalToneCoverageOk(text, specSrc, c.axes.tone)) {
+            fail(`${slug}: visual optional tone needs rest path AND ≥1 toned value`)
+          }
         }
 
         for (const axis of c.visual?.cross || []) {
@@ -253,26 +356,27 @@ for (const c of CONTRACTS) {
           if (def.values && def.values.length) {
             for (const val of def.values) {
               if (val === '' || val == null) continue
-              if (isDefaultEnumValue(axis, val, def)) {
-                // still require axis family present unless pure optional omit
-                if (axis === 'tone' && def.optional) {
-                  // optional tone: require at least one toned value OR rest path
-                  continue
+
+              // Optional tone values are covered by optionalToneCoverageOk (not per-value default soft-pass)
+              if (axis === 'tone' && def.optional) {
+                // Still require each listed non-empty tone value to appear
+                if (val === 'default') continue
+                if (!enumCovered(axis, val, text, specSrc)) {
+                  fail(`${slug}: visual missing enum value ${axis}=${val}`)
                 }
-                // default size/variant covered if any size/variant markup exists
-                if (enumCovered(axis, val, text, specSrc)) continue
-                if (
-                  (axis === 'size' && /size=/.test(text + specSrc)) ||
-                  (axis === 'variant' && /variant=/.test(text + specSrc)) ||
-                  (axis === 'shape' && /shape=/.test(text + specSrc)) ||
-                  (axis === 'orientation' && /orientation=/.test(text + specSrc))
-                ) {
-                  continue
-                }
+                continue
               }
+
+              if (isContractDefault(val, def)) {
+                // Default may be omitted in markup if family present or explicitly covered
+                if (enumCovered(axis, val, text, specSrc)) continue
+                if (familyPresent(axis, text, specSrc)) continue
+                // No family and no explicit — fail
+                fail(`${slug}: visual missing default enum ${axis}=${val} (not omitted with family)`)
+                continue
+              }
+
               if (!enumCovered(axis, val, text, specSrc)) {
-                // optional tone: rest path may omit some tones only if ALL non-default fail — require each listed
-                if (axis === 'tone' && def.optional && val === 'default') continue
                 fail(`${slug}: visual missing enum value ${axis}=${val}`)
               }
             }

@@ -145,6 +145,7 @@ export default controller((_ctx: Scope) => {
           <column gap="2">
             <label style(knobLabel)>Variant</label>
             <select size="sm" bind:value={variant} label="Variant">
+              <option value="default">default</option>
               <option value="solid">solid</option>
               <option value="soft">soft</option>
               <option value="outline">outline</option>
