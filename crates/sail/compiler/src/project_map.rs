@@ -137,6 +137,54 @@ pub fn misplacement_message(kind: FileKind, path: &Path) -> String {
     format!("{label} live in `{home}` — move {name}.")
 }
 
+/// One TypeScript `compilerOptions.paths` entry (deck resolve twin).
+///
+/// SPEC-PROJECT-STRUCTURE-1 §3 — shared so tsconfig emit and the deck
+/// bundler cannot drift.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AtAliasMapping {
+    /// `paths` key, e.g. `"@/*"` or `"@/stores/*"`.
+    pub pattern: &'static str,
+    /// Project-relative target, e.g. `"./src/*"` or `"./src/stores/*"`.
+    pub target: &'static str,
+}
+
+/// SSOT `@/` alias table for project tsconfig `paths` + deck `resolve_id`.
+///
+/// SPEC-PROJECT-STRUCTURE-1 §3 fixed import roots:
+/// - `@/components/*` → `./src/components/*`
+/// - `@/compositions/*` → `./src/compositions/*`
+/// - `@/stores/*` → `./src/stores/*`
+/// - `@/actions/*` → `./src/actions/*`
+/// - `@/themes/*` → `./themes/*`
+///
+/// Keep this table as the only source of truth — `emit_project_tsconfig_json`
+/// and deck resolve must not invent parallel maps.
+pub fn at_alias_paths() -> &'static [AtAliasMapping] {
+    &[
+        AtAliasMapping {
+            pattern: "@/components/*",
+            target: "./src/components/*",
+        },
+        AtAliasMapping {
+            pattern: "@/compositions/*",
+            target: "./src/compositions/*",
+        },
+        AtAliasMapping {
+            pattern: "@/stores/*",
+            target: "./src/stores/*",
+        },
+        AtAliasMapping {
+            pattern: "@/actions/*",
+            target: "./src/actions/*",
+        },
+        AtAliasMapping {
+            pattern: "@/themes/*",
+            target: "./themes/*",
+        },
+    ]
+}
+
 fn home_for(kind: FileKind) -> &'static str {
     match kind {
         FileKind::Route => "routes/",
