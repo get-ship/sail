@@ -54,7 +54,7 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// - `"strict": true` — every lint finding is Error at the build gate
 /// - `"lint": { "severity", "rules" }` — global floor + per-rule tree (dual-read
 ///   with nested `policy.lint.severity.*`)
-pub const RECOGNIZED_KEYS: [&str; 16] = [
+pub const RECOGNIZED_KEYS: [&str; 18] = [
     "preset",
     "sx",
     "variants",
@@ -66,6 +66,9 @@ pub const RECOGNIZED_KEYS: [&str; 16] = [
     "unconfined",
     "theme",
     "layout",
+    // SPEC-LAYOUT-DIAG-1 / S4.1 — experimental layout finding kinds.
+    "layoutExperimental",
+    "layoutTextMetrics",
     "policy",
     // SPEC-LINTS-1 §3 — global lint severity floor + strict gate (S3.2).
     "strict",
@@ -156,6 +159,20 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "\"warn\" | \"error\"",
         "warn — taffy soft findings stay warnings; silent-clip stays Error",
         "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile)",
+        "POLICY",
+    ),
+    (
+        "layoutExperimental",
+        "boolean",
+        "false",
+        "enable experimental layout kinds (unintended-overflow, clipped-text) without full lint strict (SPEC-LAYOUT-DIAG-1 / S4.1)",
+        "POLICY",
+    ),
+    (
+        "layoutTextMetrics",
+        "boolean",
+        "false",
+        "enable text-metrics-dependent layout kind clipped-text (noisy until takumi-grade metrics; S4.1)",
         "POLICY",
     ),
     (
@@ -334,6 +351,25 @@ impl SailConfig {
         matches!(
             self.raw.get("layout").and_then(|v| v.as_str()),
             Some(s) if s.eq_ignore_ascii_case("error")
+        )
+    }
+
+    /// S4.1 / SPEC-LAYOUT-DIAG-1 — top-level `"layoutExperimental": true`
+    /// enables experimental layout kinds (`unintended-overflow`,
+    /// `clipped-text`) without full lint `strict`. Absent / wrong-typed → false.
+    pub fn layout_experimental(&self) -> bool {
+        matches!(
+            self.raw.get("layoutExperimental").and_then(|v| v.as_bool()),
+            Some(true)
+        )
+    }
+
+    /// S4.1 — top-level `"layoutTextMetrics": true` enables text-metrics
+    /// kinds (`clipped-text`). Absent / wrong-typed → false.
+    pub fn layout_text_metrics(&self) -> bool {
+        matches!(
+            self.raw.get("layoutTextMetrics").and_then(|v| v.as_bool()),
+            Some(true)
         )
     }
 
