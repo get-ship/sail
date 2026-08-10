@@ -162,6 +162,12 @@ const VARIANT_META: Partial<
     blurb:
       'Form group · component.fieldset.border; disabled freezes controls + dims host; legend as child.',
   },
+  textarea: {
+    variants: ['xs', 'sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb:
+      'Native multi-line · component.field.bg/fg/border (shared with input/select); size xs–lg · rows · invalid · disabled; no tone.',
+  },
   radio: {
     variants: [],
     variantAttr: '',

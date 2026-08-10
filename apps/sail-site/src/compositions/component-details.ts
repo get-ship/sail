@@ -132,13 +132,16 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   textarea: lang('textarea', 'textarea', {
     blurb:
-      'The platform textarea, themed. bind:value for two-way state; rows and the rest of the native surface pass straight through.',
+      'Native multi-line field on the shared component.field surface (bg · fg · border with input/select). bind:value locks the host to a signal. size xs|sm|md|lg scales min-height + type; rows sets initial height (default 3). invalid paints border(destructive); disabled is native freeze + PE opacity. No tone prop — theme component.field.*; use:autosize grows height with content.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding', type: 'signal' },
-      { name: 'placeholder', desc: 'hint text', type: 'string' },
-      { name: 'rows', desc: 'initial height, in lines', type: 'number' },
+      { name: 'bind:value', desc: 'two-way signal binding (lockstep with host)', type: 'signal' },
+      { name: 'size', desc: 'control height + type scale (default md)', type: 'xs · sm · md · lg' },
+      { name: 'rows', desc: 'initial height in lines (default 3)', type: 'number' },
+      { name: 'placeholder', desc: 'hint text in the empty field', type: 'string' },
+      { name: 'invalid', desc: 'destructive border for validation chrome', type: 'bool' },
+      { name: 'disabled', desc: 'native freeze; PE opacity + not-allowed', type: 'bool' },
     ],
   }),
   select: lang('select', 'select', {

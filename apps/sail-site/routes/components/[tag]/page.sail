@@ -41,6 +41,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const ERR_SIZES = ['sm', 'md', 'lg'] as const
     const LBL_SIZES = ['sm', 'md', 'lg'] as const
     const SW_SIZES = ['sm', 'md', 'lg'] as const
+    const TA_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
@@ -93,6 +94,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Radio: value + disabled only; label ink component.radio.fg; group wiring is radio-group.
     const radioDisabled = signal(false)
     const radioValue = signal('monthly')
+    // Textarea: size xs|sm|md|lg; rows native; invalid → destructive border; disabled native.
+    // Rest paint = component.field.* shared with input/select (no tone prop).
+    const textareaInvalid = signal(false)
+    const textareaDisabled = signal(false)
+    const textareaRows = signal(3)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -144,6 +150,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const switchSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SW_SIZES.length - 1)
       return SW_SIZES[i] ?? 'md'
+    })
+    const textareaSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), TA_SIZES.length - 1)
+      return TA_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -227,6 +237,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         radioDisabled.set(false)
         radioValue.set('monthly')
+      } else if (tag() === 'textarea') {
+        variant.set('')
+        sizeIdx.set(2) // md
+        textareaInvalid.set(false)
+        textareaDisabled.set(false)
+        textareaRows.set(3)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -398,6 +414,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const radioMeta = derived(() => {
       return `value "${radioValue()}" · disabled ${radioDisabled() ? 'on' : 'off'} · component.radio.fg`
     })
+    const textareaMeta = derived(() => {
+      const inv = textareaInvalid() ? 'invalid' : 'valid'
+      const d = textareaDisabled() ? 'disabled' : 'enabled'
+      return `${textareaSize()} · rows ${textareaRows()} · ${inv} · ${d} · component.field.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -421,7 +442,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'label' ||
       tag() === 'code-block' ||
       tag() === 'switch' ||
-      tag() === 'radio'
+      tag() === 'radio' ||
+      tag() === 'textarea'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -569,6 +591,14 @@ const kbdExChord = () =>
       `<switch tone="success" checked></switch>\n<switch tone="warning" checked></switch>\n<switch tone="destructive" checked></switch>\n<!-- tone paints checked track only; thumb stays switch.thumb -->`
     const swExRest = () =>
       `<switch></switch>\n<switch checked></switch>\n<!-- off → component.switch.track + border; checked (no tone) → primary; thumb → switch.thumb -->`
+    const taExBind = () =>
+      `<controller>\nexport default controller(() => ({ bio: signal('') }))\n</controller>\n\n<textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>\n<p>{bio().length} characters</p>`
+    const taExSizes = () =>
+      `<textarea size="xs" rows="2" placeholder="xs"></textarea>\n<textarea size="sm" rows="2" placeholder="sm"></textarea>\n<textarea rows="2" placeholder="md"></textarea>\n<textarea size="lg" rows="2" placeholder="lg"></textarea>`
+    const taExInvalid = () =>
+      `<textarea invalid rows="3" placeholder="Needs a real description"></textarea>\n<!-- invalid → border(destructive); rest border → component.field.border -->`
+    const taExRest = () =>
+      `<textarea rows="3" placeholder="Notes"></textarea>\n<!-- bg/fg/border → component.field.*; hover border-strong (D1 free global); use:autosize grows height -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -607,6 +637,10 @@ const kbdExChord = () =>
     const agreed = signal(false)
     const name = signal('')
     const bio = signal('')
+    // Textarea stage re-seeds bind value on tag entry (bio is declared late).
+    effect(() => {
+      if (tag() === 'textarea') bio.set('')
+    })
     const team = signal('Design')
     const fw = signal('')
     const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
@@ -686,6 +720,8 @@ const kbdExChord = () =>
       swExBind, swExSizes, swExTones, swExRest,
       radioDisabled, radioValue, radioMeta,
       radioExOption, radioExDisabled, radioExRest, radioExGroup,
+      textareaSize, textareaInvalid, textareaDisabled, textareaRows, textareaMeta,
+      taExBind, taExSizes, taExInvalid, taExRest,
     }
 })
 </controller>
@@ -948,10 +984,111 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.textarea()}>
-              <column gap="3" style(stageCol)>
-                <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-                <p style(monoXs)>{bio().length} characters</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {textareaDisabled()}>
+                      <if {textareaInvalid()}>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          invalid
+                          disabled
+                          style(fullW)
+                        ></textarea>
+                      {else =>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          disabled
+                          style(fullW)
+                        ></textarea>}</if>
+                    {else => <if {textareaInvalid()}>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          invalid
+                          style(fullW)
+                        ></textarea>
+                      {else =>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          style(fullW)
+                        ></textarea>}</if>}</if>
+                    <p style(monoXs)>{bio().length} characters · {textareaMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{textareaSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Control height + type scale (default <code>md</code>). Same ladder as
+                      <code>input</code> / <code>select</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Rows</label>
+                      <span style(sizeValue)>{textareaRows()}</span>
+                    </row>
+                    <slider bind:value={textareaRows} min="1" max="8" step="1" size="sm" label="Rows"></slider>
+                    <p style(mutedXs)>
+                      Native <code>rows</code> sets initial height (default <code>3</code>).
+                      Pair with <code>use:autosize</code> to grow with content.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Invalid</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={textareaInvalid} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{textareaInvalid() ? 'destructive border' : 'field.border'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      <code>invalid</code> paints <code>border(destructive)</code> — validation
+                      chrome, not a tone prop.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={textareaDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{textareaDisabled() ? 'not-allowed' : 'interactive'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Platform freeze + PE opacity. Compose a <code>label</code> outside the control.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Rest surface shared with input/select:
+                      <code>component.field.bg</code> · <code>fg</code> · <code>border</code>
+                      (<code>--field</code> / <code>--field-foreground</code> /
+                      <code>--field-border</code>). Hover uses free
+                      <code>border-strong</code> (D1 rest-only — field-border-hover is parked).
+                      No tone prop.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.select()}>
               <column gap="3" style(stageCol)>
@@ -3625,6 +3762,70 @@ const kbdExChord = () =>
           </column>
         </column>
       </if>
+
+      <if {stage.textarea()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>bind:value</h3>
+            <p style(exampleLead)>
+              Native multi-line field — keyboard, forms, and spellcheck come from the
+              platform. <code>bind:value</code> keeps the host and a signal in lockstep.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
+              <p style(mutedSm)>{bio().length} characters</p>
+            </column>
+            <code-block code={taExBind()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> scale
+              min-height, pad, and type (default <code>md</code>) — same control ladder as
+              <code>input</code> / <code>select</code>.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea size="xs" rows="2" placeholder="xs"></textarea>
+              <textarea size="sm" rows="2" placeholder="sm"></textarea>
+              <textarea rows="2" placeholder="md"></textarea>
+              <textarea size="lg" rows="2" placeholder="lg"></textarea>
+            </column>
+            <code-block code={taExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Invalid</h3>
+            <p style(exampleLead)>
+              <code>invalid</code> paints a destructive border for validation feedback.
+              Pair with a <code>field</code> + error copy when you need the full form
+              pattern — the PE only owns the control chrome.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea invalid rows="3" placeholder="Needs a real description"></textarea>
+            </column>
+            <code-block code={taExInvalid()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Surface from <code>component.field.bg</code> · <code>fg</code> ·
+              <code>border</code> (shared with input/select). Hover border uses free
+              <code>border-strong</code> (D1 rest-only). No tone prop — theme the field
+              leaves. Attach <code>use:autosize</code> when the box should grow with text.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea rows="3" placeholder="Notes"></textarea>
+              <textarea disabled rows="2" placeholder="Disabled"></textarea>
+            </column>
+            <code-block code={taExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
       <if {stage.radio()}>
         <column gap="5" style(exampleBlock)>
           <p style(sectionLabel)>Examples</p>

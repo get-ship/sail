@@ -59,8 +59,14 @@ export default controller(() => ({ name: signal('') }))
 export default controller(() => ({ bio: signal('') }))
 </controller>
 
-<textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-<p>{bio().length} characters</p>`,
+<textarea
+  placeholder="Tell us about yourself"
+  size="md"
+  rows="3"
+  bind:value={bio}
+></textarea>
+<p>{bio().length} characters</p>
+<!-- rest → component.field.*; invalid → destructive border; use:autosize optional -->`,
 
   select: `<controller>
 export default controller(() => ({ team: signal('Design') }))
