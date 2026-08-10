@@ -188,10 +188,8 @@ export default controller(() => ({ done: signal(64) }))
 <p>{done()}% uploaded — a native element, themed</p>`,
 
   meter: `<column gap="2">
-    style({ animate: enter({ opacity: 'fade' }) })
-  <meter value="0.3"></meter>
-  <meter value="0.7"></meter>
-  <meter value="0.95"></meter>
+  <p>Disk free — 72%</p>
+  <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>
 </column>`,
 
   spinner: `<controller>
