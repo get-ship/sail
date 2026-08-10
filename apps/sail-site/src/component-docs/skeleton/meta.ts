@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Loading placeholder sheen. Shape + size draw the geometry; paint is always the shimmer from component.skeleton.bg / highlight (themeable). No tone axis — compose width with layout Style.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-skeleton',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

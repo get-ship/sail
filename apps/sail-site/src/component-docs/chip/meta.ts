@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "An interactive filter pill — the host is the control (role, keyboard, aria-pressed). Omit tone for component.chip rest tokens; set tone and the semantic colour always paints. removable adds the ×; Backspace/Delete fires on-remove.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-chip',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

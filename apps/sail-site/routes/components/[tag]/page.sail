@@ -2,7 +2,7 @@
   /components/[tag] — thin detail shell.
   Docs SSOT: apps/sail-site/src/component-docs/<slug>/meta.ts
   Mounts exactly one docs host:
-    - first-class package CE (doc-button, doc-badge, doc-fieldset, …)
+    - first-class package CE (doc-button, doc-badge, …)
     - or <doc-legacy-detail> for unmigrated packages
     - empty state when no package / pack meta
 -->
@@ -28,10 +28,32 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const showViewer = derived(() => knownDoc() || knownPack())
 
   // First-class packages own their full detail body (viewer + stage + examples).
-  const useButton = derived(() => tag() === 'button' && FIRST_CLASS_HOSTS.has('button'))
-  const useBadge = derived(() => tag() === 'badge' && FIRST_CLASS_HOSTS.has('badge'))
-  const useFieldset = derived(() => tag() === 'fieldset' && FIRST_CLASS_HOSTS.has('fieldset'))
-  const useFirstClass = derived(() => useButton() || useBadge() || useFieldset())
+  const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
+  const useButton = derived(() => tag() === 'button' && firstClass())
+  const useBadge = derived(() => tag() === 'badge' && firstClass())
+  const useFieldset = derived(() => tag() === 'fieldset' && firstClass())
+  const useChip = derived(() => tag() === 'chip' && firstClass())
+  const useAlert = derived(() => tag() === 'alert' && firstClass())
+  const useSeparator = derived(() => tag() === 'separator' && firstClass())
+  const useSpinner = derived(() => tag() === 'spinner' && firstClass())
+  const useSkeleton = derived(() => tag() === 'skeleton' && firstClass())
+  const useIcon = derived(() => tag() === 'icon' && firstClass())
+  const useProgress = derived(() => tag() === 'progress' && firstClass())
+  const useMeter = derived(() => tag() === 'meter' && firstClass())
+  const useFirstClass = derived(
+    () =>
+      useButton() ||
+      useBadge() ||
+      useFieldset() ||
+      useChip() ||
+      useAlert() ||
+      useSeparator() ||
+      useSpinner() ||
+      useSkeleton() ||
+      useIcon() ||
+      useProgress() ||
+      useMeter(),
+  )
   // Everything else that is known goes through the legacy residual host.
   const useLegacy = derived(() => showViewer() && !useFirstClass())
 
@@ -51,6 +73,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useButton,
     useBadge,
     useFieldset,
+    useChip,
+    useAlert,
+    useSeparator,
+    useSpinner,
+    useSkeleton,
+    useIcon,
+    useProgress,
+    useMeter,
     useFirstClass,
     useLegacy,
     heading,
@@ -75,6 +105,30 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useFieldset()}>
     <doc-fieldset></doc-fieldset>
+  </if>
+  <if {useChip()}>
+    <doc-chip></doc-chip>
+  </if>
+  <if {useAlert()}>
+    <doc-alert></doc-alert>
+  </if>
+  <if {useSeparator()}>
+    <doc-separator></doc-separator>
+  </if>
+  <if {useSpinner()}>
+    <doc-spinner></doc-spinner>
+  </if>
+  <if {useSkeleton()}>
+    <doc-skeleton></doc-skeleton>
+  </if>
+  <if {useIcon()}>
+    <doc-icon></doc-icon>
+  </if>
+  <if {useProgress()}>
+    <doc-progress></doc-progress>
+  </if>
+  <if {useMeter()}>
+    <doc-meter></doc-meter>
   </if>
   <if {useLegacy()}>
     <doc-legacy-detail doc-tag={tag()}></doc-legacy-detail>

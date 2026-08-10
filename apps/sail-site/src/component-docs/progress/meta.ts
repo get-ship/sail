@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Native progress bar, themed. value/max are the platform model; omit value for the indeterminate sweep (no separate prop). size is sm|md|lg track height. Paint always from component.progress.track + fill — no tone axis.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-progress',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

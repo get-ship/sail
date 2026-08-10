@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for themeable component.separator.line; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-separator',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

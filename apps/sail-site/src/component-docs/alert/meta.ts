@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Inline status banner. Omit tone for component.alert tokens (themeable rest); set tone and the left stripe + icon brand paint. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-alert',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

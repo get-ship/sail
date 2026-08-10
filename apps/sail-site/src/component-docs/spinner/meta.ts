@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Indeterminate wait ring. Size scales the host; omit tone for themeable spinner.foreground / spinner.track; centered parks it in the middle of its container.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-spinner',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

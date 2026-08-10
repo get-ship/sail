@@ -1,0 +1,39 @@
+import type { SurfaceContract } from '../contract-types'
+
+/** Surface contract for chip — axes from prop-registry only. */
+export const contract = {
+  slug: 'chip',
+  tag: 'chip',
+  kind: 'host',
+  axes: {
+    variant: {
+      values: ['solid', 'soft', 'outline', 'ghost'] as const,
+      default: 'solid',
+      control: 'select',
+    },
+    tone: {
+      values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
+      optional: true,
+      control: 'swatches',
+    },
+    size: {
+      values: ['sm', 'md', 'lg'] as const,
+      default: 'md',
+      control: 'slider',
+    },
+    selected: { default: false, control: 'switch' },
+    removable: { default: false, control: 'switch' },
+    disabled: { default: false, control: 'switch', docsSkip: true },
+    onRemove: { control: 'none', event: true },
+  },
+  faces: [
+    { path: 'component.chip.bg', label: 'Fill' },
+    { path: 'component.chip.fg', label: 'Ink' },
+    { path: 'component.chip.border', label: 'Border' },
+  ],
+  visual: {
+    defaultRow: true,
+    cross: ['variant', 'tone', 'size', 'selected', 'removable', 'disabled'],
+  },
+  examples: true,
+} as const satisfies SurfaceContract

@@ -124,20 +124,13 @@ export default controller((ctx: Scope) => {
     label: is('label'),
     dropzone: is('dropzone'),
     themePicker: is('theme-picker'),
-    alert: is('alert'),
-    progressBar: is('progress'),
-    meter: is('meter'),
-    spinner: is('spinner'),
-    skeleton: is('skeleton'),
+    // B1 peeled → first-class doc-* packages (alert/chip/separator/spinner/skeleton/icon/progress/meter)
     emptyState: is('empty-state'),
     errorState: is('error-state'),
     errorBoundary: is('error-boundary'),
     toast: is('toast'),
-    chip: is('chip'),
     card: is('card'),
     avatar: is('avatar'),
-    icon: is('icon'),
-    separator: is('separator'),
     kbd: is('kbd'),
     codeBlock: is('code-block'),
     accordion: is('accordion'),
@@ -370,36 +363,6 @@ export default controller((ctx: Scope) => {
       <if {stage.themePicker()}>
         <theme-picker></theme-picker>
       </if>
-      <if {stage.alert()}>
-        <alert tone="info" style(stageColMd)>
-          <strong slot="title">Heads up</strong>
-          A new version is available.
-        </alert>
-      </if>
-      <if {stage.progressBar()}>
-        <column gap="2" style(stageColMd)>
-          <progress value={volume()} max="100"></progress>
-          <p style(monoXs)>{volume()}% · omit value for indeterminate</p>
-        </column>
-      </if>
-      <if {stage.meter()}>
-        <column gap="2" style(stageColMd)>
-          <meter value={volume()} min="0" max="100" low="33" high="66" optimum="100"></meter>
-          <p style(monoXs)>value {volume()}</p>
-        </column>
-      </if>
-      <if {stage.spinner()}>
-        <row gap="2" align="center">
-          <spinner tone="primary"></spinner>
-          <p style(mutedSm)>fetching…</p>
-        </row>
-      </if>
-      <if {stage.skeleton()}>
-        <column gap="2" style(stageCol)>
-          <skeleton shape="text" size="md"></skeleton>
-          <skeleton shape="text" size="sm"></skeleton>
-        </column>
-      </if>
       <if {stage.emptyState()}>
         <empty-state style(stageColMd)>
           <icon slot="icon" name="inbox"></icon>
@@ -430,15 +393,6 @@ export default controller((ctx: Scope) => {
           </for>
         </column>
       </if>
-      <if {stage.chip()}>
-        <row gap="2" align="center">
-          <if {kept()}>
-            <chip variant="solid" tone="primary" removable on-remove={dropChip}>typescript</chip>
-          </if>
-          <chip variant="outline" tone="muted">a11y</chip>
-          <chip variant="outline">ssr</chip>
-        </row>
-      </if>
       <if {stage.card()}>
         <card style({ box: pad(4).w(full).maxW(panel-max-w-sm) })>
           <strong>Harbor Signals</strong>
@@ -451,26 +405,6 @@ export default controller((ctx: Scope) => {
           <avatar name="Grace Hopper" tone="accent"></avatar>
           <avatar initials="SK" size="sm"></avatar>
         </row>
-      </if>
-      <if {stage.icon()}>
-        <row gap="3" align="center">
-          <icon name="check"></icon>
-          <icon name="search"></icon>
-          <icon name="settings"></icon>
-          <icon name="sparkles" size="lg"></icon>
-        </row>
-      </if>
-      <if {stage.separator()}>
-        <column gap="2" style(stageCol)>
-          <p style(mutedSm)>Section A</p>
-          <separator></separator>
-          <p style(mutedSm)>Section B</p>
-          <row gap="3" align="center" style(sepVRow)>
-            <span style(mutedSm)>Left</span>
-            <separator orientation="vertical"></separator>
-            <span style(mutedSm)>Right</span>
-          </row>
-        </column>
       </if>
       <if {stage.kbd()}>
         <row gap="1" align="center">
