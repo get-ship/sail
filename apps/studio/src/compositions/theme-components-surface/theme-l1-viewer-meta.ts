@@ -46,9 +46,10 @@ const VARIANT_META: Partial<
     blurb: 'Tone × variant platform button — press and focus states included.',
   },
   switch: {
-    variants: ['md', 'sm', 'lg'],
+    variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
-    blurb: 'Checkbox in switch costume; size chips drive the track scale.',
+    blurb:
+      'Native checkbox · role=switch · component.switch.track + border + thumb; tone = checked track only; size sm|md|lg.',
   },
   slider: {
     variants: ['primary', 'success', 'warning', 'destructive'],

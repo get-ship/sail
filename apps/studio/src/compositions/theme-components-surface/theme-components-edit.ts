@@ -130,8 +130,9 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'radius.lg', label: 'Radius lg (global)' },
   ],
   switch: [
-    { path: 'color.primary.default', label: 'Primary (global)' },
-    { path: 'color.border.default', label: 'Border (global)' },
+    { path: 'color.muted.default', label: 'Muted (global · rest track alias)' },
+    { path: 'color.border.strong', label: 'Border strong (global · rest border alias)' },
+    { path: 'color.primary.default', label: 'Primary (global · checked track default)' },
   ],
   tabs: [
     { path: 'color.primary.default', label: 'Primary (global)' },
@@ -157,7 +158,7 @@ const FACE_HINTS: Record<string, string> = {
   tabs: 'Tabs (list + tab + panel as one face)',
   toast: 'Toasts + region',
   'radio-group': 'Radio set',
-  switch: 'Binary toggles',
+  switch: 'Binary toggles · component.switch.track + border + thumb',
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
   'code-block': 'Source block · component.code-block bg/fg · .tok-* via --syntax-*',

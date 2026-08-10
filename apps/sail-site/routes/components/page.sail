@@ -249,7 +249,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <label style({ text: fontSize(sm) })><input type="radio" name="catalog-plan" value="pro" /> Pro — team seats</label>
                     <label style({ text: fontSize(sm) })><input type="radio" name="catalog-plan" value="enterprise" /> Enterprise</label>
                   </radio-group>}{else-if {e.tag === 'switch'} => <row gap="2" align="center">
-                    <switch bind:checked={notify} label="Desktop notifications"></switch>
+                    <switch bind:checked={notify}></switch>
                     <p style(mutedXs)>{notify() ? 'Notifications on' : 'Notifications off'}</p>
                   </row>}{else-if {e.tag === 'slider'} => <column gap="1" style({ box: w(full) })>
                     <row justify="between" align="center">
