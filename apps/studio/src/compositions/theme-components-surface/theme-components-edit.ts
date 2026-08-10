@@ -85,6 +85,12 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.default', label: 'Muted (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · fill)' },
   ],
+  icon: [
+    { path: 'color.foreground', label: 'Foreground (global · currentColor ink)' },
+    { path: 'color.primary.default', label: 'Primary (global · parent fg)' },
+    { path: 'icon.md', label: 'Icon md (global size scale)' },
+    { path: 'icon.xl', label: 'Icon xl (global size scale)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },
@@ -128,6 +134,7 @@ const FACE_HINTS: Record<string, string> = {
   spinner: 'Indeterminate wait · fg + track leaves',
   meter: 'Gauge · track + optimum band leaves',
   progress: 'Bar · track + fill leaves',
+  icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
 }
