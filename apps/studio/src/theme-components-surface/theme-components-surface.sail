@@ -308,9 +308,40 @@ export default controller(() => {
 
                   <!-- ── Feedback ───────────────────────────────────── -->
                   <if {components.stage.alert()}>
-                    <alert tone={components.variant() || 'info'} style(stageHost)>
-                      <strong>Heads up.</strong> Live alert under theme paint.
-                    </alert>
+                    <column gap="3" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.alert tokens (theme override)</p>
+                        <alert style(stageHost)>
+                          <strong slot="title">Notice</strong>
+                          Rest paint uses component.alert.* leaves.
+                        </alert>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Toned · stripe + icon brand (host fill stays component leaves)</p>
+                        <column gap="2">
+                          <alert tone="info" style(stageHost)>
+                            <strong slot="title">Heads up</strong>
+                            Info stripe under theme paint.
+                          </alert>
+                          <alert tone="success" style(stageHost)>
+                            <strong slot="title">Saved</strong>
+                            Success stripe under theme paint.
+                          </alert>
+                          <alert tone="warning" style(stageHost)>
+                            <strong slot="title">Check input</strong>
+                            Warning is assertive liveRegion.
+                          </alert>
+                          <alert tone="destructive" style(stageHost)>
+                            <strong slot="title">Failed</strong>
+                            Destructive is assertive liveRegion.
+                          </alert>
+                          <alert tone="muted" style(stageHost)>
+                            <strong slot="title">Note</strong>
+                            Muted keeps alert.stripe honesty.
+                          </alert>
+                        </column>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.progressBar()}>
                     <progress value={components.load()} max="100" style(sampleMax)></progress>

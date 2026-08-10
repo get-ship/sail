@@ -255,13 +255,21 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Feedback ─────────────────────────────────────────────────────────
   alert: lang('alert', 'alert', {
     blurb:
-      'An inline announcement with the right role for assistive tech. Tone sets the icon and colour; dismissible adds the close affordance.',
-    variants: ['info', 'success', 'warning', 'destructive'],
-    variantAttr: 'tone',
+      'Inline status banner. Omit tone for component.alert tokens (themeable rest); set tone and the left stripe + icon brand paint. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
+    // No variant axis — stage owns tone/dismiss knobs (viewer chips hidden).
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'tone', desc: 'semantic colour + icon', type: 'default · info · success · warning · destructive · muted' },
-      { name: 'dismissible', desc: 'adds the close button', type: 'bool' },
-      { name: 'style.exit', desc: 'held in the DOM until the exit ends', type: 'preset' },
+      {
+        name: 'tone',
+        desc: 'stripe + icon brand when set; omit for component.alert rest tokens',
+        type: 'muted · info · success · warning · destructive',
+      },
+      { name: 'dismissible', desc: 'shows the close control ([data-dismiss])', type: 'bool' },
+      { name: 'onDismiss', desc: 'fires before the host removes itself', type: 'callback' },
+      { name: 'slot="title"', desc: 'optional title line', type: 'slot' },
+      { name: 'slot="icon"', desc: 'optional leading icon', type: 'slot' },
+      { name: 'slot="actions"', desc: 'optional action row', type: 'slot' },
     ],
   }),
   progress: lang('progress', 'progressBar', {

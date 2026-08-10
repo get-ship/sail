@@ -36,6 +36,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
     const badgeTone = signal('primary')
     const badgePill = signal(false)
+    // Alert: empty tone = rest component.alert.*; dismiss remount via visible flag.
+    const alertTone = signal('info')
+    const alertDismissible = signal(false)
+    const alertVisible = signal(true)
     const btnSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), BTN_SIZES.length - 1)
       return BTN_SIZES[i] ?? 'md'
@@ -55,6 +59,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         badgeTone.set('primary')
         badgePill.set(false)
+      } else if (tag() === 'alert') {
+        variant.set('')
+        alertTone.set('info')
+        alertDismissible.set(false)
+        alertVisible.set(true)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -65,17 +74,66 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const pickTone = (t: string): void => btnTone.set(t)
     const pickBadgeTone = (t: string): void => badgeTone.set(t)
     const clearBadgeTone = (): void => badgeTone.set('')
+    const pickAlertTone = (t: string): void => {
+      alertTone.set(t)
+      alertVisible.set(true)
+    }
+    const clearAlertTone = (): void => {
+      alertTone.set('')
+      alertVisible.set(true)
+    }
+    const onAlertDismiss = (): void => alertVisible.set(false)
+    const restoreAlert = (): void => alertVisible.set(true)
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
     const badgeMeta = derived(() => {
       const t = badgeTone()
       return `${variant()} · ${badgeSize()} · ${t || 'rest (component tokens)'} · pill ${badgePill() ? 'on' : 'off'}`
+    })
+    const alertMeta = derived(() => {
+      const t = alertTone()
+      const d = alertDismissible() ? 'dismissible' : 'sticky'
+      const live =
+        t === 'warning' || t === 'destructive' ? 'assertive alert' : 'polite status'
+      return `${t || 'rest (component tokens)'} · ${d} · ${live}${alertVisible() ? '' : ' · dismissed'}`
+    })
+    const alertTitle = derived(() => {
+      switch (alertTone()) {
+        case 'success':
+          return 'Saved'
+        case 'warning':
+          return 'Check your input'
+        case 'destructive':
+          return 'Something went wrong'
+        case 'muted':
+          return 'Note'
+        case 'info':
+          return 'Heads up'
+        default:
+          return 'Notice'
+      }
+    })
+    const alertBody = derived(() => {
+      switch (alertTone()) {
+        case 'success':
+          return 'All changes were written successfully.'
+        case 'warning':
+          return 'Two fields need attention before you continue.'
+        case 'destructive':
+          return 'We could not reach the server. Try again.'
+        case 'muted':
+          return 'Neutral callout painted from component.alert tokens and muted stripe.'
+        case 'info':
+          return 'A new version is available. Refresh when you get a chance.'
+        default:
+          return 'Rest paint uses component.alert.* leaves — themeable in Studio.'
+      }
     })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
     })
     // Hide viewer variant strip when stage owns knobs.
-    const stageOwnsKnobs = () => tag() === 'button' || tag() === 'badge'
+    const stageOwnsKnobs = () => tag() === 'button' || tag() === 'badge' || tag() === 'alert'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -91,6 +149,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
       `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
     const bdgExRest = () =>
       `<badge variant="soft">rest tokens</badge>\n<!-- no tone → component.badge.* (themeable) -->`
+    const alrtExTones = () =>
+      `<alert tone="info">\n  <strong slot="title">Heads up</strong>\n  A new version is available.\n</alert>\n<alert tone="success">\n  <strong slot="title">Saved</strong>\n  All changes were written.\n</alert>`
+    const alrtExDismiss = () =>
+      `<alert tone="warning" dismissible onDismiss={onDismiss}>\n  <strong slot="title">Check your input</strong>\n  Two fields need attention.\n</alert>`
+    const alrtExRest = () =>
+      `<alert>\n  <strong slot="title">Notice</strong>\n  Rest tokens — component.alert.*\n</alert>\n<!-- no tone → themeable component leaves -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -172,6 +236,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
       btnExWithIcon, btnExIconOnly, btnExSizes,
       badgeTone, badgeSize, badgePill, badgeMeta, pickBadgeTone, clearBadgeTone,
       bdgExStatus, bdgExPill, bdgExRest,
+      alertTone, alertDismissible, alertVisible, alertMeta, alertTitle, alertBody,
+      pickAlertTone, clearAlertTone, onAlertDismiss, restoreAlert,
+      alrtExTones, alrtExDismiss, alrtExRest,
     }
 })
 </controller>
@@ -458,9 +525,73 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Feedback ════════════════════════════════════════════ -->
             <if {stage.alert()}>
-              <alert tone={variant()} style(fullW)>
-                <strong>Heads up.</strong> The tone chips above restyle me — colour and icon both.
-              </alert>
+              <!-- Specimen left + prop rail (Mantine configurator). Tone swatches — not variant chips. -->
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="stretch" style(fullW)>
+                    <if {alertVisible()}>
+                      <if {alertTone()}>
+                        <alert
+                          tone={alertTone()}
+                          dismissible={alertDismissible()}
+                          on-dismiss={onAlertDismiss}
+                          style(fullW)
+                        >
+                          <strong slot="title">{alertTitle()}</strong>
+                          {alertBody()}
+                        </alert>
+                      {else =>
+                        <alert
+                          dismissible={alertDismissible()}
+                          on-dismiss={onAlertDismiss}
+                          style(fullW)
+                        >
+                          <strong slot="title">{alertTitle()}</strong>
+                          {alertBody()}
+                        </alert>}</if>
+                    {else =>
+                      <column gap="3" align="center">
+                        <p style(mutedSm)>Dismissed — restore to try the knobs again.</p>
+                        <button type="button" variant="outline" size="sm" on:click={restoreAlert}>
+                          Restore alert
+                        </button>
+                      </column>}</if>
+                    <p style(monoXs)>{alertMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="rest — component.alert tokens" placement="top">
+                        <div label="rest" on:click={clearAlertTone} selected={!alertTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickAlertTone('info')} selected={alertTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickAlertTone('success')} selected={alertTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickAlertTone('warning')} selected={alertTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickAlertTone('destructive')} selected={alertTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickAlertTone('muted')} selected={alertTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Dismissible</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={alertDismissible} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{alertDismissible() ? 'close control on' : 'sticky'}</span>
+                    </row>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.progressBar()}>
               <column gap="3" style(stageCol)>
@@ -1091,6 +1222,60 @@ export default controller((ctx: ControllerScope<Scope>) => {
               <badge variant="outline">outline rest</badge>
             </row>
             <code-block code={bdgExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.alert()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Status tones</h3>
+            <p style(exampleLead)>
+              Tone brands the left stripe and icon colour. Host fill stays
+              <code>component.alert</code> tokens so themes stay coherent.
+              <code>warning</code> / <code>destructive</code> flip liveRegion to
+              assertive <code>role="alert"</code>.
+            </p>
+            <column gap="2" style(fullW)>
+              <alert tone="info">
+                <strong slot="title">Heads up</strong>
+                A new version is available.
+              </alert>
+              <alert tone="success">
+                <strong slot="title">Saved</strong>
+                All changes were written.
+              </alert>
+            </column>
+            <code-block code={alrtExTones()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Dismissible</h3>
+            <p style(exampleLead)>
+              <code>dismissible</code> shows the close control.
+              <code>onDismiss</code> fires before the host removes itself — keep the
+              instance in a list/signal if you need to restore it.
+            </p>
+            <alert tone="warning" dismissible>
+              <strong slot="title">Check your input</strong>
+              Two fields need attention before you continue.
+            </alert>
+            <code-block code={alrtExDismiss()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              No <code>tone</code> → bg/fg/border/stripe from <code>component.alert.*</code>.
+              Override those leaves in Studio themes to rebrand every rest alert.
+            </p>
+            <alert>
+              <strong slot="title">Notice</strong>
+              Rest paint — component.alert.* leaves.
+            </alert>
+            <code-block code={alrtExRest()}></code-block>
           </column>
         </column>
       </if>
