@@ -1,7 +1,7 @@
 /**
  * Themes → Components facet — component-scoped DTCG overrides for this theme.
  * - List faces with component.* tokens (or explicit global hooks).
- * - Composite faces (tabs, toast, radio) collapse sub-tags.
+ * - Composite faces (tabs, toast) collapse sub-tags; radio is its own face.
  * - Defaults: model/registry aliases → theme color paths (never var(--*) labels).
  * - Overrides write component.* leaves; Clear removes them.
  */
@@ -36,8 +36,8 @@ const FACE_MERGE: Record<string, string> = {
   'tab-panel': 'tabs',
   toast: 'toast',
   'toast-region': 'toast',
-  radio: 'radio-group',
-  'radio-group': 'radio-group',
+  // radio keeps its own face (component.radio.fg). radio-group is layout +
+  // closed action composition — audited separately; no component.radio-group.* yet.
 }
 
 /** Globals useful when customizing a face (override global or set component leaf). */
@@ -142,6 +142,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.border.default', label: 'Border (global · rest fieldset.border)' },
     { path: 'radius.md', label: 'Radius md (global · group chrome)' },
   ],
+  radio: [
+    { path: 'color.foreground', label: 'Foreground (global · rest radio.fg)' },
+    { path: 'color.primary.default', label: 'Primary (global · checked face)' },
+    { path: 'color.background', label: 'Background (global · control face)' },
+  ],
 }
 
 const FACE_HINTS: Record<string, string> = {
@@ -151,7 +156,7 @@ const FACE_HINTS: Record<string, string> = {
   card: 'Surfaces · glass leaves',
   tabs: 'Tabs (list + tab + panel as one face)',
   toast: 'Toasts + region',
-  'radio-group': 'Radio set',
+  radio: 'Radio option · component.radio.fg leaf',
   switch: 'Binary toggles',
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
@@ -198,11 +203,10 @@ function buildFaces(): FaceDef[] {
   const faces: FaceDef[] = []
   for (const [id, set] of [...byFace.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
     const tagsArr = [...set]
-    const stageTag =
-      id === 'tabs' ? 'tabs' : id === 'toast' ? 'toast' : id === 'radio-group' ? 'radio-group' : tagsArr[0]!
+    const stageTag = id === 'tabs' ? 'tabs' : id === 'toast' ? 'toast' : tagsArr[0]!
     faces.push({
       id,
-      label: id === 'tabs' ? 'Tabs' : id === 'radio-group' ? 'Radio group' : l1Label(id),
+      label: id === 'tabs' ? 'Tabs' : l1Label(id),
       tags: tagsArr,
       stageTag: (L1_CATALOG as readonly string[]).includes(stageTag) ? stageTag : tagsArr[0]!,
     })

@@ -244,10 +244,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <label style({ paint: fg(muted-foreground), text: fontSize(sm) })>
                       <input type="checkbox" disabled /> Admin-only (disabled)
                     </label>
+                  </column>}{else-if {e.tag === 'radio'} => <column gap="2">
+                    <radio value="pro">Pro — team seats</radio>
+                    <radio value="free" disabled>Free (disabled)</radio>
                   </column>}{else-if {e.tag === 'radio-group'} => <radio-group name="catalog-plan" value={plan()}>
-                    <label style({ text: fontSize(sm) })><input type="radio" name="catalog-plan" value="free" /> Free — community</label>
-                    <label style({ text: fontSize(sm) })><input type="radio" name="catalog-plan" value="pro" /> Pro — team seats</label>
-                    <label style({ text: fontSize(sm) })><input type="radio" name="catalog-plan" value="enterprise" /> Enterprise</label>
+                    <radio value="free">Free — community</radio>
+                    <radio value="pro">Pro — team seats</radio>
+                    <radio value="enterprise">Enterprise</radio>
                   </radio-group>}{else-if {e.tag === 'switch'} => <row gap="2" align="center">
                     <switch bind:checked={notify} label="Desktop notifications"></switch>
                     <p style(mutedXs)>{notify() ? 'Notifications on' : 'Notifications off'}</p>

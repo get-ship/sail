@@ -91,10 +91,13 @@ export default controller(() => ({ agreed: signal(false) }))
 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
 <p>{agreed() ? 'thank you' : 'the checkbox is the platform one, skinned'}</p>`,
 
-  'radio-group': `<radio-group label="Billing period">
-    style({ animate: enter({ opacity: 'fade' }) })
-  <label><input type="radio" name="plan" checked /> Monthly</label>
-  <label><input type="radio" name="plan" /> Yearly</label>
+  radio: `<radio value="monthly">Monthly</radio>
+<radio value="yearly" disabled>Yearly (locked)</radio>
+<!-- ink → component.radio.fg; exclusivity via <radio-group> -->`,
+
+  'radio-group': `<radio-group label="Billing period" name="plan" value="monthly">
+  <radio value="monthly">Monthly</radio>
+  <radio value="yearly">Yearly</radio>
 </radio-group>`,
 
   switch: `<controller>

@@ -94,6 +94,7 @@ export const CATALOG: CatalogEntry[] = [
   L('select', 'select', 'inputs'),
   L('combobox', 'combobox', 'inputs'),
   L('checkbox', 'checkbox', 'inputs'),
+  L('radio', 'radio', 'inputs'),
   L('radio-group', 'radioGroup', 'inputs'),
   L('switch', 'switchToggle', 'inputs'),
   L('slider', 'slider', 'inputs'),

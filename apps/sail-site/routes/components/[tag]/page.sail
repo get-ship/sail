@@ -79,6 +79,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const fieldsetDisabled = signal(false)
     // Label: size sm|md|lg; required shows * via group-required + component.label.required.
     const labelRequired = signal(true)
+    // Radio: value + disabled only; label ink component.radio.fg; group wiring is radio-group.
+    const radioDisabled = signal(false)
+    const radioValue = signal('monthly')
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -193,6 +196,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         sizeIdx.set(1) // md
         labelRequired.set(true)
+      } else if (tag() === 'radio') {
+        variant.set('')
+        radioDisabled.set(false)
+        radioValue.set('monthly')
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -327,6 +334,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const labelMeta = derived(() => {
       return `${labelSize()} · required ${labelRequired() ? 'on' : 'off'} · component.label.fg + required`
     })
+    const radioMeta = derived(() => {
+      return `value "${radioValue()}" · disabled ${radioDisabled() ? 'on' : 'off'} · component.radio.fg`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -346,7 +356,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'empty-state' ||
       tag() === 'error-state' ||
       tag() === 'fieldset' ||
-      tag() === 'label'
+      tag() === 'label' ||
+      tag() === 'radio'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -418,6 +429,14 @@ const kbdExChord = () =>
       `<fieldset disabled>\n  <legend>Billing (locked)</legend>\n  <column gap="2">\n    <input placeholder="Card" />\n    <button type="button" variant="solid" size="sm">Save</button>\n  </column>\n</fieldset>\n<!-- native disabled freezes controls; PE dims opacity -->`
     const fsExRest = () =>
       `<fieldset>\n  <legend>Profile</legend>\n  …\n</fieldset>\n<!-- border → component.fieldset.border (themeable) -->`
+    const radioExOption = () =>
+      `<radio value="monthly">Monthly</radio>\n<radio value="yearly">Yearly</radio>`
+    const radioExDisabled = () =>
+      `<radio value="enterprise" disabled>Enterprise (locked)</radio>\n<!-- host dims; radio-group also sets input.disabled -->`
+    const radioExRest = () =>
+      `<radio value="a">Option A</radio>\n<!-- label ink → component.radio.fg (--radio-foreground) -->`
+    const radioExGroup = () =>
+      `<radio-group label="Plan" name="plan" value="monthly">\n  <radio value="monthly">Monthly</radio>\n  <radio value="yearly">Yearly</radio>\n</radio-group>\n<!-- exclusivity / name / onChange — radio-group (separate L1) -->`
     const spnExCentered = () =>
       `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
     const iconExNamed = () =>
@@ -571,6 +590,8 @@ const kbdExChord = () =>
       fsExGroup, fsExDisabled, fsExRest,
       labelSize, labelRequired, labelMeta,
       lblExFor, lblExSizes, lblExRequired, lblExRest,
+      radioDisabled, radioValue, radioMeta,
+      radioExOption, radioExDisabled, radioExRest, radioExGroup,
     }
 })
 </controller>
@@ -791,10 +812,60 @@ const kbdExChord = () =>
                 <p style(monoXs)>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
               </column>
             </if>
+            <if {stage.radio()}>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <column gap="2" style(stageCol)>
+                      <if {radioDisabled()}>
+                        <radio value={radioValue()} disabled>Live option</radio>
+                      {else =>
+                        <radio value={radioValue()}>Live option</radio>}</if>
+                      <radio value="other" disabled>Always disabled peer</radio>
+                    </column>
+                    <p style(monoXs)>{radioMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Value</label>
+                    <select size="sm" bind:value={radioValue} label="Value">
+                      <option value="monthly">monthly</option>
+                      <option value="yearly">yearly</option>
+                      <option value="enterprise">enterprise</option>
+                    </select>
+                    <p style(mutedXs)>
+                      This option’s <code>value</code> string. Inside
+                      <code>radio-group</code>, the group selects the child whose value
+                      matches the group value.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={radioDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{radioDisabled() ? 'on' : 'off'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Host attribute for <code>radio-group</code> composition —
+                      the group sets nested <code>input.disabled</code> so Style
+                      PE dims the control. Separate L1 owns exclusivity.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Label ink from <code>component.radio.fg</code>
+                      (<code>--radio-foreground</code>). No size or tone prop — theme
+                      the leaf. Checked disc is primary + RADIO_INPUT_MAP inset.
+                    </p>
+                  </column>
+                </column>
+              </row>
+            </if>
             <if {stage.radioGroup()}>
-              <radio-group label="Billing period">
-                <label><input type="radio" name="stage-plan" checked /> Monthly</label>
-                <label><input type="radio" name="stage-plan" /> Yearly</label>
+              <radio-group label="Billing period" name="stage-plan" value="monthly">
+                <radio value="monthly">Monthly</radio>
+                <radio value="yearly">Yearly</radio>
               </radio-group>
             </if>
             <if {stage.switchToggle()}>
@@ -3012,6 +3083,67 @@ const kbdExChord = () =>
               Messages you receive land here.
             </empty-state>
             <code-block code={esExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.radio()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Option unit</h3>
+            <p style(exampleLead)>
+              Each <code>&lt;radio&gt;</code> is one labelled option — native radio inside
+              a label host. <code>value</code> is this option’s value string.
+            </p>
+            <column gap="2" style(stageCol)>
+              <radio value="monthly">Monthly</radio>
+              <radio value="yearly">Yearly</radio>
+            </column>
+            <code-block code={radioExOption()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Disabled option</h3>
+            <p style(exampleLead)>
+              <code>disabled</code> is a host attribute. Compose with
+              <code>radio-group</code> so the nested input is disabled for
+              platform interaction and Style PE paint (group sync).
+            </p>
+            <column gap="2" style(stageCol)>
+              <radio value="enterprise" disabled>Enterprise (locked)</radio>
+            </column>
+            <code-block code={radioExDisabled()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Label ink always rides <code>component.radio.fg</code>
+              (<code>--radio-foreground</code>). No tone or size axis — override that
+              leaf in Studio themes. Control face uses free foreground/background;
+              checked paints primary with RADIO_INPUT_MAP inset disc.
+            </p>
+            <column gap="2" style(stageCol)>
+              <radio value="a">Option A</radio>
+            </column>
+            <code-block code={radioExRest()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>With radio-group (composition)</h3>
+            <p style(exampleLead)>
+              Shared name, exclusivity, keyboard, and <code>onChange</code> are owned by
+              <code>radio-group</code> — a separate L1 (out of this tag’s audit scope).
+              Prefer <code>&lt;radio&gt;</code> children, not freeform
+              <code>&lt;input type="radio"&gt;</code> labels.
+            </p>
+            <radio-group label="Plan" name="ex-radio-plan" value="monthly" style(stageCol)>
+              <radio value="monthly">Monthly</radio>
+              <radio value="yearly">Yearly</radio>
+            </radio-group>
+            <code-block code={radioExGroup()}></code-block>
           </column>
         </column>
       </if>
