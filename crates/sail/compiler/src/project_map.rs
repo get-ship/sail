@@ -189,78 +189,125 @@ fn is_sail(path: &Path) -> bool {
 }
 
 /// Conservative source scan: `defineStore(` as a call site (not a full AST).
+///
+/// Comments, string-literal bodies, and template-literal bodies are ignored.
+/// Only real code tokens count — `"defineStore("` in a string must not trip Store.
 fn source_has_define_store(source: &str) -> bool {
-    // Strip // and /* */ comments roughly so commented-out defineStore does not trip.
-    let stripped = strip_ts_comments(source);
+    let stripped = strip_ts_noise(source);
     stripped.contains("defineStore(")
 }
 
-fn strip_ts_comments(source: &str) -> String {
-    let mut out = String::with_capacity(source.len());
+/// Drop // and /* */ comments plus string/template interiors so shape scans
+/// only see code tokens. Empty delimiters remain so adjacent tokens don't fuse.
+///
+/// Template `${…}` expressions are code and are retained (static template text
+/// is not). Nested noise rules apply inside those expressions.
+fn strip_ts_noise(source: &str) -> String {
     let bytes = source.as_bytes();
+    let mut out = String::with_capacity(source.len());
     let mut i = 0;
-    let n = bytes.len();
-    while i < n {
-        // line comment
-        if bytes[i] == b'/' && i + 1 < n && bytes[i + 1] == b'/' {
-            i += 2;
-            while i < n && bytes[i] != b'\n' {
-                i += 1;
-            }
-            continue;
-        }
-        // block comment
-        if bytes[i] == b'/' && i + 1 < n && bytes[i + 1] == b'*' {
-            i += 2;
-            while i + 1 < n && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
-                i += 1;
-            }
-            i = (i + 2).min(n);
-            continue;
-        }
-        // string literals — keep structure, skip content that could false-positive
-        if bytes[i] == b'"' || bytes[i] == b'\'' {
-            let quote = bytes[i];
-            out.push(quote as char);
-            i += 1;
-            while i < n {
-                let b = bytes[i];
-                out.push(b as char);
-                i += 1;
-                if b == b'\\' && i < n {
-                    out.push(bytes[i] as char);
-                    i += 1;
-                    continue;
-                }
-                if b == quote {
-                    break;
-                }
-            }
-            continue;
-        }
-        // template literals
-        if bytes[i] == b'`' {
-            out.push('`');
-            i += 1;
-            while i < n {
-                let b = bytes[i];
-                out.push(b as char);
-                i += 1;
-                if b == b'\\' && i < n {
-                    out.push(bytes[i] as char);
-                    i += 1;
-                    continue;
-                }
-                if b == b'`' {
-                    break;
-                }
-            }
-            continue;
-        }
-        out.push(bytes[i] as char);
-        i += 1;
+    while i < bytes.len() {
+        i = emit_code_byte(bytes, i, &mut out);
     }
     out
+}
+
+/// Process one span starting at `i`: either skip noise, or emit a code byte.
+/// Returns the next index to process.
+fn emit_code_byte(bytes: &[u8], i: usize, out: &mut String) -> usize {
+    let n = bytes.len();
+    if i >= n {
+        return n;
+    }
+
+    // line comment
+    if bytes[i] == b'/' && i + 1 < n && bytes[i + 1] == b'/' {
+        let mut j = i + 2;
+        while j < n && bytes[j] != b'\n' {
+            j += 1;
+        }
+        return j;
+    }
+    // block comment
+    if bytes[i] == b'/' && i + 1 < n && bytes[i + 1] == b'*' {
+        let mut j = i + 2;
+        while j + 1 < n && !(bytes[j] == b'*' && bytes[j + 1] == b'/') {
+            j += 1;
+        }
+        return (j + 2).min(n);
+    }
+    // string — keep delimiters, drop body
+    if bytes[i] == b'"' || bytes[i] == b'\'' {
+        let quote = bytes[i];
+        out.push(quote as char);
+        let mut j = i + 1;
+        while j < n {
+            let b = bytes[j];
+            j += 1;
+            if b == b'\\' && j < n {
+                j += 1;
+                continue;
+            }
+            if b == quote {
+                out.push(quote as char);
+                break;
+            }
+        }
+        return j;
+    }
+    // template — keep delimiters + `${ expr }` code; drop static text
+    if bytes[i] == b'`' {
+        out.push('`');
+        let mut j = i + 1;
+        while j < n {
+            let b = bytes[j];
+            if b == b'\\' && j + 1 < n {
+                j += 2;
+                continue;
+            }
+            if b == b'`' {
+                out.push('`');
+                return j + 1;
+            }
+            if b == b'$' && j + 1 < n && bytes[j + 1] == b'{' {
+                out.push_str("${");
+                j += 2;
+                let mut depth = 1usize;
+                while j < n && depth > 0 {
+                    if bytes[j] == b'{' {
+                        // only count braces outside noise
+                        out.push('{');
+                        depth += 1;
+                        j += 1;
+                        continue;
+                    }
+                    if bytes[j] == b'}' {
+                        depth -= 1;
+                        out.push('}');
+                        j += 1;
+                        continue;
+                    }
+                    // Reuse noise rules for comments/strings/templates inside expr.
+                    // `{` / `}` above short-circuit first so depth stays accurate for
+                    // bare braces; emit_code_byte handles the rest (may emit `{`/`}`
+                    // only when they appear as code — already handled).
+                    let before = j;
+                    j = emit_code_byte(bytes, j, out);
+                    if j == before {
+                        // safety: always advance
+                        out.push(bytes[j] as char);
+                        j += 1;
+                    }
+                }
+                continue;
+            }
+            j += 1;
+        }
+        return j;
+    }
+
+    out.push(bytes[i] as char);
+    i + 1
 }
 
 #[cfg(test)]
@@ -285,5 +332,47 @@ mod tests {
         assert!(!c.ok);
         assert!(misplacement_message(c.kind, Path::new("apps/x/src/compositions/x.ts"))
             .contains("src/stores/"));
+    }
+
+    #[test]
+    fn define_store_inside_string_does_not_trigger_store() {
+        // Review bug: string body used to keep interiors → false Store.
+        let src = "const note = \"call defineStore( later)\";\nexport function useFoo() { return 1 }\n";
+        let c = classify(
+            Path::new("apps/x/src/compositions/use-foo.ts"),
+            Some(src),
+        );
+        assert_eq!(
+            c.kind,
+            FileKind::Composition,
+            "defineStore( only inside a string must not classify as Store"
+        );
+        assert!(c.ok);
+        assert!(!source_has_define_store(src));
+    }
+
+    #[test]
+    fn define_store_inside_template_static_does_not_trigger_store() {
+        let src = "const tip = `use defineStore( in stores/`;\nexport const x = 1\n";
+        assert!(
+            !source_has_define_store(src),
+            "template static text must not count as a call site"
+        );
+        let c = classify(Path::new("apps/x/src/compositions/tip.ts"), Some(src));
+        assert_eq!(c.kind, FileKind::Composition);
+    }
+
+    #[test]
+    fn define_store_in_comment_does_not_trigger() {
+        let src = "// defineStore('x', () => ({}))\nexport const y = 1\n";
+        assert!(!source_has_define_store(src));
+        let src2 = "/* defineStore( */\nexport const y = 1\n";
+        assert!(!source_has_define_store(src2));
+    }
+
+    #[test]
+    fn real_define_store_call_still_detected() {
+        let src = "export const x = defineStore('x', () => ({}))\n";
+        assert!(source_has_define_store(src));
     }
 }
