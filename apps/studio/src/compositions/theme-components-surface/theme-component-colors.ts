@@ -133,9 +133,10 @@ export type EffectiveColor = {
 }
 
 function formatDefaultLabel(hex: string, defaultPath: string): string {
-  if (hex) return `Default · ${hex}`
-  if (defaultPath) return `Default · ${defaultPath}`
-  return 'Default'
+  // Compact: hex only when resolved; path is for agents/devtools, not the card title.
+  if (hex) return hex
+  if (defaultPath) return defaultPath
+  return 'theme default'
 }
 
 function formatOverrideLabel(hex: string, raw: string): string {

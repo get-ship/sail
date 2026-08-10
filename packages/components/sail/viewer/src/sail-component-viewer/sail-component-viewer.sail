@@ -109,9 +109,10 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
       </row>
     </row>
 
-    <center data-stage style({ box: grow(1).pad(6).minH(9) })>
+    <!-- Full-width stage (not <center>) so configurators can split specimen | knobs. -->
+    <div data-stage style({ box: w(full).minW(0).grow(1).pad(0).minH(64) })>
       <slot name="stage"></slot>
-    </center>
+    </div>
   </column>
 
   <if {hasUsage()}>

@@ -482,19 +482,50 @@ export function extractTypeRoles(
   }
 }
 
+/**
+ * True CSS cascade form of a token (generator emit). Never a UI face name.
+ * Product model uses DTCG `{font-display}` or concrete stacks; CSS uses var(--…).
+ */
+function cssVarTokenName(raw: string): string | null {
+  const m = raw.trim().match(/^var\(\s*--([a-zA-Z0-9_-]+)\s*(?:,[^)]*)?\)$/)
+  return m?.[1] ?? null
+}
+
 /** First family name from a concrete stack: `"Fraunces", …` or bare `Fraunces, serif`. */
 function familyName(raw: string | null): string {
   if (!raw) return ''
   const t = raw.trim()
-  if (!t || t.startsWith('{')) return ''
+  // Reject aliases + generated cascade — never treat CSS as a font face label.
+  if (!t || t.startsWith('{') || t.includes('var(') || t.startsWith('--')) return ''
   const m = t.match(/"([^"]+)"/)
   if (m) return m[1].replace(/\s+Variable$/, '')
-  return t.split(',')[0]?.replace(/"/g, '').trim() ?? ''
+  const first = t.split(',')[0]?.replace(/"/g, '').trim() ?? ''
+  if (!first || first.includes('var(') || first.startsWith('--')) return ''
+  return first
+}
+
+/**
+ * Resolve a token ref (`{cssName}` or cascade `var(--cssName)`) to a face name.
+ */
+function resolveTokenRef(
+  doc: Record<string, unknown>,
+  ref: string,
+  modeId: 'light' | 'dark',
+  depth: number,
+): string {
+  if (!ref || depth > 6) return ''
+  const platform = PLATFORM_STACK_FACE[ref]
+  if (platform) return platform
+  const path = FONT_CSS_TO_PATH[ref] ?? (ref.includes('.') ? ref : null)
+  if (path) {
+    return resolveFaceName(doc, getPathValue(doc, path, modeId), modeId, depth + 1)
+  }
+  return ''
 }
 
 /**
  * Resolve a DTCG font $value to a UI face name.
- * Walks whole-value `{alias}` through the same doc + known base stacks.
+ * Walks whole-value `{alias}` and cascade `var(--cssName)` (never keeps var() as a face).
  * Never invents Fraunces when the theme aliases to Press Start / mono.
  */
 function resolveFaceName(
@@ -507,16 +538,18 @@ function resolveFaceName(
   const t = raw.trim()
   if (!t) return ''
   if (t.startsWith('{') && t.endsWith('}')) {
-    if (depth > 6) return ''
-    const ref = t.slice(1, -1)
-    if (!ref) return ''
-    const platform = PLATFORM_STACK_FACE[ref]
-    if (platform) return platform
-    const path = FONT_CSS_TO_PATH[ref] ?? (ref.includes('.') ? ref : null)
-    if (path) {
-      return resolveFaceName(doc, getPathValue(doc, path, modeId), modeId, depth + 1)
-    }
-    // Bare cssName without path map — try path-join kebab → dotted under typography
+    return resolveTokenRef(doc, t.slice(1, -1), modeId, depth)
+  }
+  // Generated CSS may leak into docs / inspector as var(--font-display). That is emit,
+  // not a face — walk the public name like a DTCG alias. Never return "var(--…)".
+  const cssName = cssVarTokenName(t)
+  if (cssName) {
+    return resolveTokenRef(doc, cssName, modeId, depth)
+  }
+  // Stacks that start with a var (e.g. var(--font-display), sans-serif) — resolve head only.
+  if (t.includes('var(')) {
+    const head = t.match(/var\(\s*--([a-zA-Z0-9_-]+)/)
+    if (head?.[1]) return resolveTokenRef(doc, head[1], modeId, depth)
     return ''
   }
   return familyName(t)

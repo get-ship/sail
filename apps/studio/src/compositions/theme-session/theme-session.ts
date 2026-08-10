@@ -132,10 +132,28 @@ export function createThemeSession(opts: ThemeSessionOpts) {
   let usedByRefreshedForId = ''
   const domainSyncs = new Set<() => void>()
 
+  /**
+   * Active paint mode for a registered paint id.
+   * Dual themes: session choice (modeByPaintId) → **theme defaultMode**.
+   * Never inherit shell/app modeId — that painted SHIP light as studio/shell dark.
+   * alignPaintMode keeps design store modeId in lockstep (draft paint reads modeId).
+   */
   const resolvePaintMode = (pid: string): 'light' | 'dark' => {
     const info = modesForPaintId(pid)
     if (!info.dual) return info.defaultMode
-    return modeByPaintId.get(pid) ?? info.defaultMode
+    const remembered = modeByPaintId.get(pid)
+    if (remembered && info.modes.includes(remembered)) return remembered
+    return info.defaultMode
+  }
+
+  /** Align chrome label + design store + draft paint (one mode SSOT). */
+  const alignPaintMode = (pid: string) => {
+    const info = modesForPaintId(pid)
+    const mode = resolvePaintMode(pid)
+    if (info.dual) modeByPaintId.set(pid, mode)
+    paintMode.set(mode)
+    if (getDesignState().modeId !== mode) setDesignMode(mode)
+    return mode
   }
 
   const setNote = (msg: string, tone = 'muted') => {
@@ -180,8 +198,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
           paintWarnForId = id
           setNote(resolved.warning, 'warning')
         }
-        const mode = resolvePaintMode(resolved.paintId)
-        if (getDesignState().modeId !== mode) setDesignMode(mode)
+        alignPaintMode(resolved.paintId)
         nameEdit.set(themeDisplayName(getDesignState().themeId || id))
         const usageToken = facetUsageToken()
         if (usageToken && usedByRefreshedForId !== id) {
@@ -276,8 +293,8 @@ export function createThemeSession(opts: ThemeSessionOpts) {
       setNote(resolved.warning, 'warning')
     }
     const info = modesForPaintId(resolved.paintId)
-    const mode = resolvePaintMode(resolved.paintId)
-    paintMode.set(mode)
+    // Keep UI label + design modeId + applyScope mode identical (preview bug: light chrome / dark host).
+    const mode = alignPaintMode(resolved.paintId)
     modesLabel.set(info.modesLabel)
     canToggleMode.set(info.dual)
     showAddMode.set(!info.dual)

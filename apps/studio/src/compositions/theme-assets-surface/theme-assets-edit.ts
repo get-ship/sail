@@ -41,9 +41,16 @@ export type FontHitUi = {
   family: string
   category: string
   mono: boolean
-  /** Inline style so the row previews in the real face. */
-  previewStyle: string
   sample: string
+}
+
+/** Real typeface name only — never CSS cascade, DTCG braces, or token cssNames. */
+function isFaceName(v: string): boolean {
+  const t = v.trim()
+  if (!t) return false
+  if (t.startsWith('{') || t.includes('var(') || t.startsWith('--')) return false
+  if (t.startsWith('font-') || t.endsWith('-font') || t.endsWith('-app')) return false
+  return true
 }
 
 const FONT_CATEGORIES = [
@@ -61,7 +68,7 @@ function fontOpts(list: string[], current: string): FontOpt[] {
   const seen = new Set<string>()
   const vals: string[] = []
   for (const v of [current, ...list]) {
-    if (!v || seen.has(v)) continue
+    if (!v || !isFaceName(v) || seen.has(v)) continue
     seen.add(v)
     vals.push(v)
   }
@@ -116,7 +123,7 @@ export function createAssetsEdit(session: ThemeSession) {
   const iconScaleMasterPx = signal(16)
 
   const rememberFamily = (family: string) => {
-    if (!family) return
+    if (!isFaceName(family)) return
     const next = fontOpts([...knownFamilies(), family], family).map((o) => o.value)
     knownFamilies.set(next)
   }
@@ -130,9 +137,10 @@ export function createAssetsEdit(session: ThemeSession) {
 
   const sync = () => {
     const ds = getDesignState()
-    const display = ds.typeRoles.display || 'Inter'
-    const body = ds.typeRoles.body || 'Inter'
-    const mono = ds.typeRoles.mono || 'JetBrains Mono'
+    // typeRoles must already be face names (extractTypeRoles rejects CSS var cascade).
+    const display = isFaceName(ds.typeRoles.display) ? ds.typeRoles.display : 'Inter'
+    const body = isFaceName(ds.typeRoles.body) ? ds.typeRoles.body : 'Inter'
+    const mono = isFaceName(ds.typeRoles.mono) ? ds.typeRoles.mono : 'JetBrains Mono'
     typeDisplay.set(display)
     typeBody.set(body)
     typeMono.set(mono)
@@ -244,14 +252,16 @@ export function createAssetsEdit(session: ThemeSession) {
     void searchFonts(query, { category: catArg, limit: 36 }).then((result) => {
       if (gen !== fontSearchGen) return
       fontSearching.set(false)
-      const hits: FontHitUi[] = (result.hits || []).map((h) => ({
-        key: h.family,
-        family: h.family,
-        category: h.category || 'Other',
-        mono: Boolean(h.mono),
-        previewStyle: `font-family: '${h.family.replace(/'/g, "\\'")}', system-ui, sans-serif`,
-        sample: PREVIEW_SAMPLE,
-      }))
+      // Preview via `face=` + Sail style tokens only — never authored CSS font-family strings.
+      const hits: FontHitUi[] = (result.hits || [])
+        .filter((h) => isFaceName(h.family))
+        .map((h) => ({
+          key: h.family,
+          family: h.family,
+          category: h.category || 'Other',
+          mono: Boolean(h.mono),
+          sample: PREVIEW_SAMPLE,
+        }))
       fontSearchHits.set(hits)
       hasFontHits.set(hits.length > 0)
       const n = result.catalogSize || result.count
@@ -303,6 +313,10 @@ export function createAssetsEdit(session: ThemeSession) {
 
   const applyRole = async (family: string, role: 'display' | 'body' | 'mono') => {
     if (!session.guardEdit()) return
+    if (!isFaceName(family)) {
+      session.setNote('That is not a typeface name (CSS vars / token aliases are not fonts).', 'destructive')
+      return
+    }
     rememberFamily(family)
     ensurePreviewFaces([family])
     await setTypeRole(role, family)

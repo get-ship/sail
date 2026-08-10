@@ -364,17 +364,16 @@ export default controller(() => {
         <card
           shape-specimen
           preview-specimen
-          mode={session.paintMode()}
           padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+            <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { paint: bg(destructive) })></stack>
                 <stack style(trafficDot, { paint: bg(warning) })></stack>
                 <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
               <p style(chromeTitle)>
-                {session.nameEdit()} · Shape
+                Preview · {session.nameEdit()} · Shape
               </p>
               <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>

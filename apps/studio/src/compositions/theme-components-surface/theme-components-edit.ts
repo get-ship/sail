@@ -371,8 +371,9 @@ export function createComponentsEdit(session: ThemeSession) {
   }
 
   const onSelect = (e: Event) => {
+    // Rail rows author `l1=` (data-* banned). dataset.l1 never sees plain attrs.
     const el = (e.target as Element | null)?.closest?.('[l1]') as HTMLElement | null
-    const id = el?.dataset.l1
+    const id = el?.getAttribute('l1') ?? ''
     if (!id || !FACES.some((f) => f.id === id)) return
     selectedId.set(id)
     seedVariant(id)
@@ -417,18 +418,19 @@ export function createComponentsEdit(session: ThemeSession) {
   }
 
   const onVariantPick = (e: Event) => {
+    // Plain `variant=` attr (not data-variant) — same as rail l1 / facet doors.
     const el = (e.target as Element | null)?.closest?.('[variant]') as HTMLElement | null
-    const v = el?.dataset.variant
+    const v = el?.getAttribute('variant')
     if (v != null) variant.set(v)
   }
   const onSizePick = (e: Event) => {
     const el = (e.target as Element | null)?.closest?.('[size]') as HTMLElement | null
-    const v = el?.dataset.size
+    const v = el?.getAttribute('size')
     if (v != null) size.set(v)
   }
   const onTonePick = (e: Event) => {
     const el = (e.target as Element | null)?.closest?.('[tone]') as HTMLElement | null
-    const v = el?.dataset.tone
+    const v = el?.getAttribute('tone')
     if (v != null) tone.set(v)
   }
 

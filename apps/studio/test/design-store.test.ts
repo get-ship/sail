@@ -600,6 +600,36 @@ describe('brand color + mode-aware paths + decisions', () => {
     expect(heading).toMatch(/Playfair Display/)
   })
 
+  it('type roles never treat CSS var(--font-*) cascade as a face name', async () => {
+    const { extractTypeRoles } = await import('../src/design')
+    // Generator emit uses var(--font-display) → app stack. Product UI must show Syne, not the CSS.
+    const leaked = {
+      modes: {
+        light: {
+          typography: {
+            heading: {
+              font: { $value: 'var(--font-display)', $type: 'fontFamily' },
+            },
+            body: {
+              font: { $value: 'var(--font-body-app)', $type: 'fontFamily' },
+            },
+            monoFont: {
+              $value: 'var(--font-mono), ui-monospace, monospace',
+              $type: 'fontFamily',
+            },
+          },
+        },
+      },
+    }
+    const roles = extractTypeRoles(leaked, 'light')
+    expect(roles.display).toBe('Syne')
+    expect(roles.body).toBe('DM Sans')
+    expect(roles.mono).toBe('JetBrains Mono')
+    expect(roles.display).not.toMatch(/var\(/)
+    expect(roles.body).not.toMatch(/var\(/)
+    expect(roles.mono).not.toMatch(/var\(/)
+  })
+
   it('requestSaveTheme two-step: review open then confirm', async () => {
     const {
       requestSaveTheme,

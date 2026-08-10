@@ -242,17 +242,16 @@ export default controller(() => {
         <card
           overview-specimen
           preview-specimen
-          mode={session.paintMode()}
           density={overview.specimenDensity()}
           padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+            <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { paint: bg(destructive) })></stack>
                 <stack style(trafficDot, { paint: bg(warning) })></stack>
                 <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
-              <p style(chromeTitle)>{session.nameEdit()}</p>
+              <p style(chromeTitle)>Preview · {session.nameEdit()}</p>
               <p style(monoMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
             <scroll-area style({  box: grow(1).minH(0).basis(0).h(full), paint: bg(background)  })>

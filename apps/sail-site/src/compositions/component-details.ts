@@ -77,12 +77,16 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Inputs ───────────────────────────────────────────────────────────
   button: lang('button', 'button', {
     blurb:
-      'The platform button, already styled. tone picks the colour, variant picks how much of it you get — five variants by eight tones, and disabled/focus/press states come with it.',
-    variants: ['default', 'solid', 'soft', 'outline', 'ghost'],
+      'The platform button. tone paints the colour; variant is how much of it you get (solid fill, soft, outline, ghost). default is an alias of solid.',
+    variants: ['solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
-      { name: 'variant', desc: 'how much colour it gets', type: 'default · solid · soft · outline · ghost' },
-      { name: 'tone', desc: 'semantic colour (omit for rest / solid invert)', type: TONES },
+      {
+        name: 'variant',
+        desc: 'fill model — default ≡ solid; soft / outline / ghost take less paint',
+        type: 'default · solid · soft · outline · ghost',
+      },
+      { name: 'tone', desc: 'semantic colour — always applied when set', type: TONES },
       { name: 'size', desc: 'text control height, or square icon hit target', type: 'xs · sm · md · lg · icon · iconSm · iconLg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
       { name: 'children', desc: 'label and optional <icon> siblings (gap is built-in)', type: 'slot' },
@@ -351,14 +355,19 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Display ──────────────────────────────────────────────────────────
   badge: lang('badge', 'badge', {
     blurb:
-      'A small statement of state. Soft by default, solid or outline when it must shout or whisper — all eight tones, sized to sit inside a table cell.',
+      'A small statement of state. Soft by default; solid or outline when it must shout or whisper. Omit tone to use component.badge tokens (themeable rest); set tone and the semantic colour always paints.',
     variants: ['soft', 'solid', 'outline'],
     variantAttr: 'variant',
     props: [
-      { name: 'tone', desc: 'semantic colour token', type: TONES },
-      { name: 'variant', desc: 'fill strength', type: 'solid · soft · outline' },
-      { name: 'size', desc: 'badge scale', type: 'sm · md · lg' },
-      { name: 'pill', desc: 'fully rounded — counters', type: 'bool' },
+      { name: 'variant', desc: 'fill strength — soft default', type: 'soft · solid · outline' },
+      {
+        name: 'tone',
+        desc: 'semantic colour when set; omit for component.badge rest tokens',
+        type: TONES,
+      },
+      { name: 'size', desc: 'badge scale for table cells and chrome', type: 'sm · md · lg' },
+      { name: 'pill', desc: 'fully rounded — counters and filters', type: 'bool' },
+      { name: 'children', desc: 'label text (keep short)', type: 'slot' },
     ],
   }),
   chip: lang('chip', 'chip', {

@@ -1,5 +1,6 @@
 <!--
-  /components/[tag] — detail route. Live stage + variant chips + usage + props.
+  /components/[tag] — detail route. Live stage + prop inspector + usage + props.
+  Button pilot: specimen left, select knobs right (Mantine-style configurator).
   L1 from component-details; pack tags from component-pack-meta. Template reads
   only zero-arg calls (`entry()`, `stage.button()`).
 -->
@@ -27,47 +28,56 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const showViewer = derived(() => known() || knownPack())
 
     const variant = signal('')
-    // Button owns its own axis toolbar (variant/size/tone) — not the viewer's single chip row.
-    const btnSize = signal('md')
+    // Configurator knobs (Mantine-style): per-tag size ladders + shared tone swatches.
+    const BTN_SIZES = ['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] as const
+    const BDG_SIZES = ['sm', 'md', 'lg'] as const
+    const sizeIdx = signal(2) // md for button; remapped for badge
     const btnTone = signal('primary')
+    // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
+    const badgeTone = signal('primary')
+    const badgePill = signal(false)
+    const btnSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), BTN_SIZES.length - 1)
+      return BTN_SIZES[i] ?? 'md'
+    })
+    const badgeSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), BDG_SIZES.length - 1)
+      return BDG_SIZES[i] ?? 'md'
+    })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
-      variant.set(entry()?.variants[0] ?? '')
       if (tag() === 'button') {
-        btnSize.set('md')
+        variant.set('solid')
+        sizeIdx.set(2)
         btnTone.set('primary')
+      } else if (tag() === 'badge') {
+        variant.set('soft')
+        sizeIdx.set(1) // md
+        badgeTone.set('primary')
+        badgePill.set(false)
+      } else {
+        variant.set(entry()?.variants[0] ?? '')
       }
     })
     const pick = (v: string): void => variant.set(v)
     const onVariantChange = (detail: { variant: string }): void =>
       variant.set(detail?.variant ?? '')
-    const pickBtnVariant = (v: string): void => variant.set(v)
-    const pickBtnSize = (s: string): void => btnSize.set(s)
-    const pickBtnTone = (t: string): void => btnTone.set(t)
-    // Derived chip rows — templates only allow zero-arg reads.
-    const variantChips = derived(() =>
-      (['default', 'solid', 'soft', 'outline', 'ghost'] as const).map((v) => ({
-        v,
-        chip: variant() === v ? 'solid' : 'ghost',
-      })),
-    )
-    const sizeChips = derived(() =>
-      (['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] as const).map((s) => ({
-        s,
-        chip: btnSize() === s ? 'solid' : 'ghost',
-      })),
-    )
-    const toneChips = derived(() =>
-      (['primary', 'success', 'warning', 'destructive', 'accent', 'muted'] as const).map((t) => ({
-        t,
-        chip: btnTone() === t ? 'solid' : 'ghost',
-      })),
-    )
+    const pickTone = (t: string): void => btnTone.set(t)
+    const pickBadgeTone = (t: string): void => badgeTone.set(t)
+    const clearBadgeTone = (): void => badgeTone.set('')
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
-    const isIconSize = derived(() => btnSize().startsWith('icon'))
-    // Hide viewer variant strip for button — we own a unified axis toolbar.
-    const viewerVariants = () => (tag() === 'button' ? [] : entry()?.variants ?? [])
-    const viewerVariantAttr = () => (tag() === 'button' ? '' : entry()?.variantAttr ?? '')
+    const badgeMeta = derived(() => {
+      const t = badgeTone()
+      return `${variant()} · ${badgeSize()} · ${t || 'rest (component tokens)'} · pill ${badgePill() ? 'on' : 'off'}`
+    })
+    const isIconSize = derived(() => {
+      const s = btnSize()
+      return s === 'icon' || s === 'iconSm' || s === 'iconLg'
+    })
+    // Hide viewer variant strip when stage owns knobs.
+    const stageOwnsKnobs = () => tag() === 'button' || tag() === 'badge'
+    const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
+    const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
     const btnExWithIcon = () =>
       `<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
@@ -75,7 +85,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
       `<button variant="solid" tone="primary" size="icon" label="Settings">\n  <icon name="settings"></icon>\n</button>\n<button variant="ghost" size="iconSm" label="Search">\n  <icon name="search" size="sm"></icon>\n</button>`
     const btnExSizes = () =>
       `<button variant="solid" tone="primary" size="xs">xs</button>\n<button variant="solid" tone="primary" size="lg">lg</button>`
-
+    const bdgExStatus = () =>
+      `<badge variant="soft" tone="success" size="sm">active</badge>\n<badge variant="outline" tone="muted" size="sm">away</badge>`
+    const bdgExPill = () =>
+      `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
+    const bdgExRest = () =>
+      `<badge variant="soft">rest tokens</badge>\n<!-- no tone → component.badge.* (themeable) -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -153,15 +168,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       toastItems, pushToast, onToastDismiss,
       sheetSide, people,
-      btnSize, btnTone, pickBtnVariant, pickBtnSize, pickBtnTone,
-      variantChips, sizeChips, toneChips, btnMeta, isIconSize,
+      sizeIdx, btnSize, btnTone, btnMeta, isIconSize, pickTone,
       btnExWithIcon, btnExIconOnly, btnExSizes,
+      badgeTone, badgeSize, badgePill, badgeMeta, pickBadgeTone, clearBadgeTone,
+      bdgExStatus, bdgExPill, bdgExRest,
     }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  // Desktop width — configurator needs room for specimen + 320px prop rail.
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
   style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
   style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
@@ -185,10 +202,43 @@ export default controller((ctx: ControllerScope<Scope>) => {
   style skeletonBox = { box: w(7).h(7) }
   style ctxCard = { box: pad(6).w(full) }
   style toastStage = { box: w(full).maxW(panel-max-w-sm) }
-  // Fixed-width axis keys so variant / size / tone rows share one vertical grid.
-  style axisKey = { box: w(16).shrink(0), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style axisChips = { box: grow(1).minW(0) }
-  style stageCanvas = { box: w(full).padY(8).minH(14) }
+  // Mantine-style configurator: tall specimen canvas | fixed prop rail.
+  style stageSplit = { box: w(full).minW(0).minH(64) }
+  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
+  style knobPanel = {
+    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
+    paint: borderLWidth(1).borderL(border-subtle),
+  }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style swatchRow = { box: w(full) }
+  style tickRow = { box: w(full).padT(1) }
+  style tick = {
+    box: grow(1).basis(0).minW(0),
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontFamily(mono).textAlign(center),
+  }
+  // Color swatches (token paint). selected ring via Style when:{selected}.
+  style swatch = {
+    box: w(7).h(7).shrink(0),
+    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
+    when: {
+      selected: { paint: border(foreground).shadow(sm) },
+      hover: { paint: opacity(90) },
+    },
+  }
+  style swatchPrimary = { paint: bg(primary) }
+  style swatchSuccess = { paint: bg(success) }
+  style swatchWarning = { paint: bg(warning) }
+  style swatchDestructive = { paint: bg(destructive) }
+  style swatchAccent = { paint: bg(accent) }
+  style swatchMuted = { paint: bg(muted).border(border) }
+  style swatchInfo = { paint: bg(info) }
+  // Rest / clear-tone marker (component.badge leaves paint the specimen, not this chip).
+  style swatchRest = { paint: bg(background).border(border) }
   style exampleBlock = { box: w(full).padY(2) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
@@ -210,36 +260,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
-              <!-- Unified axis toolbar (left grid) + centered specimen. No breadcrumb / disable toy. -->
-              <column gap="5" style(fullW)>
-                <column gap="2" style(fullW)>
-                  <row gap="3" align="center" style(fullW)>
-                    <span style(axisKey)>variant</span>
-                    <row gap="1" align="center" style(axisChips)>
-                      <for {variantChips() as c} key={c.v}>
-                        <button size="sm" tone="primary" variant={c.chip} on:click={() => pickBtnVariant(c.v)}>{c.v}</button>
-                      </for>
-                    </row>
-                  </row>
-                  <row gap="3" align="center" style(fullW)>
-                    <span style(axisKey)>size</span>
-                    <row gap="1" align="center" style(axisChips)>
-                      <for {sizeChips() as c} key={c.s}>
-                        <button size="sm" tone="primary" variant={c.chip} on:click={() => pickBtnSize(c.s)}>{c.s}</button>
-                      </for>
-                    </row>
-                  </row>
-                  <row gap="3" align="center" style(fullW)>
-                    <span style(axisKey)>tone</span>
-                    <row gap="1" align="center" style(axisChips)>
-                      <for {toneChips() as c} key={c.t}>
-                        <button size="sm" tone="primary" variant={c.chip} on:click={() => pickBtnTone(c.t)}>{c.t}</button>
-                      </for>
-                    </row>
-                  </row>
-                </column>
+              <!-- Specimen fills the canvas; prop rail is a real sidebar (Mantine configurator). -->
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
                 <center style(stageCanvas)>
-                  <column gap="2" align="center">
+                  <column gap="4" align="center">
                     <if {isIconSize()}>
                       <button
                         variant={variant()}
@@ -265,7 +289,61 @@ export default controller((ctx: ControllerScope<Scope>) => {
                     <p style(monoXs)>{btnMeta()}</p>
                   </column>
                 </center>
-              </column>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Variant</label>
+                    <select size="sm" bind:value={variant} label="Variant">
+                      <option value="solid">solid</option>
+                      <option value="soft">soft</option>
+                      <option value="outline">outline</option>
+                      <option value="ghost">ghost</option>
+                    </select>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <!-- Plain divs — L1 <button> skins would override bg(tone) paint. -->
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickTone('primary')} selected={btnTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickTone('success')} selected={btnTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickTone('warning')} selected={btnTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickTone('destructive')} selected={btnTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickTone('accent')} selected={btnTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickTone('muted')} selected={btnTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickTone('info')} selected={btnTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{btnSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="6" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                      <span style(tick)>icon</span>
+                      <span style(tick)>iSm</span>
+                      <span style(tick)>iLg</span>
+                    </row>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.input()}>
               <column gap="3" style(stageCol)>
@@ -454,12 +532,83 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Display ═════════════════════════════════════════════ -->
             <if {stage.badge()}>
-              <row gap="2" align="center">
-                <badge variant={variant()} tone="primary">primary</badge>
-                <badge variant={variant()} tone="success">success</badge>
-                <badge variant={variant()} tone="warning">warning</badge>
-                <badge variant={variant()} tone="destructive">destructive</badge>
-                <badge variant={variant()} tone="muted">muted</badge>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center">
+                    <if {badgeTone()}>
+                      <badge
+                        variant={variant()}
+                        size={badgeSize()}
+                        tone={badgeTone()}
+                        pill={badgePill()}
+                      >
+                        {badgeTone()}
+                      </badge>
+                    {else =>
+                      <badge variant={variant()} size={badgeSize()} pill={badgePill()}>
+                        rest
+                      </badge>}</if>
+                    <p style(monoXs)>{badgeMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Variant</label>
+                    <select size="sm" bind:value={variant} label="Variant">
+                      <option value="soft">soft</option>
+                      <option value="solid">solid</option>
+                      <option value="outline">outline</option>
+                    </select>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="rest — component.badge tokens" placement="top">
+                        <div label="rest" on:click={clearBadgeTone} selected={!badgeTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickBadgeTone('primary')} selected={badgeTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickBadgeTone('success')} selected={badgeTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickBadgeTone('warning')} selected={badgeTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickBadgeTone('destructive')} selected={badgeTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickBadgeTone('accent')} selected={badgeTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickBadgeTone('muted')} selected={badgeTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickBadgeTone('info')} selected={badgeTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{badgeSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Pill</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={badgePill} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{badgePill() ? 'full radius' : 'sm radius'}</span>
+                    </row>
+                  </column>
+                </column>
               </row>
             </if>
             <if {stage.chip()}>
@@ -898,6 +1047,53 @@ export default controller((ctx: ControllerScope<Scope>) => {
           </column>
         </column>
       </if>
+
+      <if {stage.badge()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Status in a table cell</h3>
+            <p style(exampleLead)>
+              Soft + tone for readable density. Omit tone when you want the theme’s
+              <code>component.badge</code> tokens (rest swatch on the stage).
+            </p>
+            <row gap="2" align="center">
+              <badge variant="soft" tone="success" size="sm">active</badge>
+              <badge variant="outline" tone="muted" size="sm">away</badge>
+              <badge variant="soft" tone="warning" size="sm">pending</badge>
+            </row>
+            <code-block code={bdgExStatus()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Pill counters</h3>
+            <p style(exampleLead)>
+              <code>pill</code> sets full radius — counts, filters, “new” marks.
+            </p>
+            <row gap="2" align="center">
+              <badge variant="solid" tone="primary" pill>12</badge>
+              <badge variant="soft" tone="destructive" pill>3</badge>
+              <badge variant="outline" tone="accent" pill>beta</badge>
+            </row>
+            <code-block code={bdgExPill()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              No <code>tone</code> → soft/solid/outline paint from <code>component.badge.*</code>.
+              Override those leaves in Studio themes to rebrand every rest badge.
+            </p>
+            <row gap="2" align="center">
+              <badge variant="soft">soft rest</badge>
+              <badge variant="solid">solid rest</badge>
+              <badge variant="outline">outline rest</badge>
+            </row>
+            <code-block code={bdgExRest()}></code-block>
+          </column>
+        </column>
+      </if>
     </sail-component-viewer>
 
     <row gap="2">
@@ -917,3 +1113,4 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>}</if>
 </column>
+

@@ -107,7 +107,7 @@ export default controller(() => {
       <column gap="3" style(railCol)>
         <column gap="2">
           <p style(eyebrow)>Components</p>
-          <p style({ text: fontSize(md).fontWeight(semibold).tracking(tight) })>Theme overrides</p>
+          <p style({ text: fontSize(md).fontWeight(semibold).tracking(tight) })>Components</p>
           <p l1-facet-blurb style(fieldHint)>
             Per-element exceptions for this theme — not the project Components library.
           </p>
@@ -144,20 +144,20 @@ export default controller(() => {
 
     <column specimen-dock components-stage gap="0" style(specimenDock)>
       <column gap="0" style(specimenPad)>
+        <!-- Preview host: draft paint via applyScope (theme + data-mode). No free mode= attr. -->
         <card
           components-specimen
           preview-specimen
-          mode={session.paintMode()}
           padding="none" style(specimenFrame)>
           <column gap="0" style({  box: grow(1).minH(0).h(full)  })>
-            <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
+            <row preview-chrome align="center" gap="2" nowrap style(specimenChrome)>
               <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
                 <stack style(trafficDot, { paint: bg(destructive) })></stack>
                 <stack style(trafficDot, { paint: bg(warning) })></stack>
                 <stack style(trafficDot, { paint: bg(success) })></stack>
               </row>
               <p style(chromeTitle)>
-                {session.nameEdit()} · {components.selectedLabel()}
+                Preview · {session.nameEdit()} · {components.selectedLabel()}
               </p>
               <p style(pathMeta, { box: shrink(0) })>{session.paintMode()}</p>
             </row>
@@ -198,13 +198,29 @@ export default controller(() => {
 
                   <!-- ── Inputs ─────────────────────────────────────── -->
                   <if {components.stage.button()}>
-                    <column gap="3" style(stageHost)>
-                      <row gap="2" align="center" nowrap>
-                        <button type="button" size="sm" variant={components.variant() || 'solid'} tone="primary">Primary</button>
-                        <button type="button" size="sm" variant={components.variant() || 'solid'} tone="accent">Accent</button>
-                        <button type="button" size="sm" variant={components.variant() || 'outline'} tone="primary">Outline</button>
-                        <button type="button" size="sm" variant={components.variant() || 'ghost'} tone="muted">Ghost</button>
-                      </row>
+                    <column gap="4" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Solid · tones</p>
+                        <row gap="2" align="center" nowrap>
+                          <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
+                          <button type="button" size="sm" variant="solid" tone="success">Success</button>
+                          <button type="button" size="sm" variant="solid" tone="warning">Warning</button>
+                          <button type="button" size="sm" variant="solid" tone="destructive">Destructive</button>
+                          <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
+                          <button type="button" size="icon" variant="solid" tone="primary" label="Settings">
+                            <icon name="settings"></icon>
+                          </button>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Soft · outline · ghost</p>
+                        <row gap="2" align="center" nowrap>
+                          <button type="button" size="sm" variant="soft" tone="primary">Soft</button>
+                          <button type="button" size="sm" variant="outline" tone="primary">Outline</button>
+                          <button type="button" size="sm" variant="ghost" tone="muted">Ghost</button>
+                          <button type="button" size="sm" variant={components.variant() || 'solid'} tone="primary">Active chip</button>
+                        </row>
+                      </column>
                     </column>
                   </if>
                   <if {components.stage.input()}>
@@ -339,11 +355,26 @@ export default controller(() => {
 
                   <!-- ── Display ────────────────────────────────────── -->
                   <if {components.stage.badge()}>
-                    <row gap="2" align="center" nowrap>
-                      <badge variant={components.variant() || 'soft'} tone="primary" size="sm">primary</badge>
-                      <badge variant={components.variant() || 'soft'} tone="success" size="sm">success</badge>
-                      <badge variant={components.variant() || 'soft'} tone="warning" size="sm" pill>warn</badge>
-                    </row>
+                    <column gap="3" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.badge tokens (theme override)</p>
+                        <row gap="2" align="center" nowrap>
+                          <badge variant="soft" size="sm">soft</badge>
+                          <badge variant="solid" size="sm">solid</badge>
+                          <badge variant="outline" size="sm">outline</badge>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Toned · soft + solid + pill</p>
+                        <row gap="2" align="center" nowrap>
+                          <badge variant="soft" tone="primary" size="sm">primary</badge>
+                          <badge variant="soft" tone="success" size="sm">success</badge>
+                          <badge variant="solid" tone="warning" size="sm" pill>warn</badge>
+                          <badge variant="outline" tone="destructive" size="sm">err</badge>
+                          <badge variant="soft" tone="accent" size="sm" pill>12</badge>
+                        </row>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.chip()}>
                     <row gap="2" align="center" nowrap>
@@ -571,98 +602,81 @@ export default controller(() => {
     <scroll-area components-editor components-inspector style(panelInspector)>
       <column gap="5" style(inspectorCol)>
         <column gap="2">
-          <p style(eyebrow)>Theme overrides</p>
+          <p style(eyebrow)>Overrides</p>
           <p style(inspectorTitle)>
             {components.selectedLabel()}
           </p>
-          <p style(fieldHint)>{components.registryNote()}</p>
+          <p style(fieldHint)>
+            Edit colors for this face. Defaults come from the theme; “set” means a component.* exception.
+          </p>
           <if {session.catalogHint()}>
             <p catalog-hint style(fieldHint)>Add to project to edit.</p>
           </if>
         </column>
 
-        <column section="component-tokens" gap="3">
+        <column section="component-tokens" gap="2">
           <row align="baseline" justify="between" gap="2" nowrap>
-            <p style(sectionTitle)>Component tokens</p>
-            <p style(pathMeta)>component.*</p>
+            <p style(sectionTitle)>This component</p>
+            <p style(fieldHint)>overrides theme defaults</p>
           </row>
           <if {components.hasComponentKnobs()}>
-            <column gap="3" component-knob-list>
+            <column gap="2" component-knob-list>
               <for {components.componentKnobs() as tok} key={tok.key}>
-                <column token-path={tok.path} gap="1" style(tokenRow)>
-                  <row align="center" justify="between" gap="2" nowrap>
-                    <column gap="0" style({ box: grow(1).minW(0) })>
-                      <p style(doorTitle)>{tok.label}</p>
-                      <p style(pathMeta)>{tok.path}</p>
-                    </column>
-                    <if {tok.isOverridden}>
-                      <button type="button" size="sm" variant="ghost" tone="muted" token-path={tok.path} on:click={components.onClearComponent} disabled={!session.canEdit()}>
-                        Clear
-                      </button>
-                    </if>
-                  </row>
+                <row token-path={tok.path} align="center" gap="2" nowrap style(tokenRow)>
                   <if {tok.isColor}>
-                    <row align="center" gap="2" nowrap>
-                      <stack token-chip style(tokenChip)>
-                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onComponentColor}></sail-color-picker>
-                      </stack>
-                      <column gap="0" style(growMin)>
-                        <p style(pathMeta)>{tok.hexLabel}</p>
-                        <p style(fieldHint) token-layer={tok.layer}>Layer · {tok.layer}</p>
-                        <if {!tok.isOverridden}>
-                          <p style(fieldHint)>Default · pick to override for this component only</p>
-                        </if>
-                      </column>
-                    </row>
+                    <stack token-chip style(tokenChip)>
+                      <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onComponentColor}></sail-color-picker>
+                    </stack>
                   </if>
-                  <if {!tok.isColor}>
-                    <p style(fieldHint)>{tok.raw}</p>
+                  <column gap="0" style(growMin)>
+                    <p style(doorTitle)>{tok.label}</p>
+                    <p style(pathMeta)>{tok.hexLabel}{tok.isOverridden ? '' : ' · theme default'}</p>
+                  </column>
+                  <if {tok.isOverridden}>
+                    <badge tone="primary" size="sm" variant="soft" pill token-layer={tok.layer} style(shrink0)>set</badge>
+                    <button type="button" size="xs" variant="ghost" tone="muted" token-path={tok.path} on:click={components.onClearComponent} disabled={!session.canEdit()} style(shrink0)>
+                      Clear
+                    </button>
                   </if>
-                </column>
+                  <if {!tok.isOverridden}>
+                    <badge tone="muted" size="sm" variant="outline" pill token-layer={tok.layer} style(shrink0)>default</badge>
+                  </if>
+                </row>
               </for>
             </column>
           </if>
           <if {!components.hasComponentKnobs()}>
-            <p style(fieldHint)>No component-scoped tokens for this face in the registry.</p>
+            <p style(fieldHint)>No component.* leaves for this face.</p>
           </if>
         </column>
 
-        <column section="global-tokens" gap="3">
+        <column section="global-tokens" gap="2">
           <row align="baseline" justify="between" gap="2" nowrap>
-            <p style(sectionTitle)>Theme tokens this face uses</p>
-            <p style(pathMeta)>theme-wide</p>
+            <p style(sectionTitle)>Theme-wide</p>
+            <p style(fieldHint)>shared by many components</p>
           </row>
-          <p style(fieldHint)>
-            Edit a shared theme color here, or set a component token above to override only this component.
-          </p>
           <if {components.hasGlobalKnobs()}>
-            <column gap="3" global-knob-list>
+            <column gap="2" global-knob-list>
               <for {components.globalKnobs() as tok} key={tok.key}>
-                <column token-path={tok.path} gap="1" style(tokenRow)>
-                  <column gap="0">
-                    <p style(doorTitle)>{tok.label}</p>
-                    <p style(pathMeta)>{tok.path}</p>
-                  </column>
+                <row token-path={tok.path} align="center" gap="2" nowrap style(tokenRow)>
                   <if {tok.isColor}>
-                    <row align="center" gap="2" nowrap>
-                      <stack token-chip style(tokenChip)>
-                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onGlobalColor}></sail-color-picker>
-                      </stack>
-                      <column gap="0" style(growMin)>
-                        <p style(pathMeta)>{tok.hexLabel}</p>
-                        <p style(fieldHint) token-layer={tok.layer}>Layer · {tok.layer}</p>
-                      </column>
-                    </row>
+                    <stack token-chip style(tokenChip)>
+                      <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on-change={components.onGlobalColor}></sail-color-picker>
+                    </stack>
                   </if>
-                  <if {!tok.isColor}>
-                    <p style(fieldHint)>{tok.raw}</p>
+                  <column gap="0" style(growMin)>
+                    <p style(doorTitle)>{tok.label}</p>
+                    <p style(pathMeta)>{tok.hexLabel}</p>
+                  </column>
+                  <if {tok.isOverridden}>
+                    <badge tone="primary" size="sm" variant="soft" pill style(shrink0)>set</badge>
                   </if>
-                </column>
+                </row>
               </for>
             </column>
           </if>
           <if {!components.hasGlobalKnobs()}>
-            <p style(fieldHint)>No related globals listed for this face.</p>
+            <p style(fieldHint)>No related theme-wide knobs for this face.</p>
           </if>
         </column>
       </column>

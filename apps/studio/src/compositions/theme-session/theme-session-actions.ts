@@ -129,8 +129,9 @@ export function makeSessionShellActions(ctx: SessionActionCtx) {
   }
 
   const onFacet = (e: Event) => {
+    // Authored attr is `facet=` (data-* banned). dataset.facet only works for data-facet.
     const el = (e.target as Element | null)?.closest?.('[facet]') as HTMLElement | null
-    const f = el?.dataset.facet
+    const f = el?.getAttribute('facet') ?? ''
     if (!f) return
     if (isFacet(f)) {
       ctx.navigateFacet(f)
