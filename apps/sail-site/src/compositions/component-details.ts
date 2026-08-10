@@ -212,13 +212,18 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   label: lang('label', 'label', {
     blurb:
-      'A real <label> — for= lands on the native element, so clicking it focuses the control. required renders the marker; size matches the control scale.',
-    variants: ['sm', 'md', 'lg'],
-    variantAttr: 'size',
+      'Native <label> — for= focuses the control. size sm|md|lg matches the control type ladder. required shows the * marker from component.label.required; host ink from component.label.fg and weight from typography.label.weight. No tone prop.',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'for', desc: 'the native association — click to focus', type: 'id' },
-      { name: 'required', desc: 'renders the required marker', type: 'bool' },
-      { name: 'size', desc: 'label scale', type: 'sm · md · lg' },
+      { name: 'for', desc: 'native association — click focuses the control', type: 'id' },
+      { name: 'size', desc: 'type scale matching control size', type: 'sm · md · lg' },
+      {
+        name: 'required',
+        desc: 'shows * marker (component.label.required via group-required)',
+        type: 'bool',
+      },
+      { name: '(children)', desc: 'label text', type: 'children' },
     ],
   }),
   fieldset: lang('fieldset', 'fieldset', {

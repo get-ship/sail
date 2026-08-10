@@ -63,7 +63,8 @@ const VARIANT_META: Partial<
   label: {
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
-    blurb: 'Real label — for= focuses the control.',
+    blurb:
+      'Native label · component.label.fg + required; weight typography.label.weight; size sm|md|lg.',
   },
   alert: {
     variants: ['info', 'success', 'warning', 'destructive'],

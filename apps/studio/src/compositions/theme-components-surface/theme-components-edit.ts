@@ -91,6 +91,10 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.warning.default', label: 'Warning (global · suboptimum)' },
     { path: 'color.destructive.default', label: 'Danger (global · even-less-good)' },
   ],
+  label: [
+    { path: 'color.foreground', label: 'Foreground (global · rest ink)' },
+    { path: 'color.destructive.default', label: 'Danger (global · required marker)' },
+  ],
   progress: [
     { path: 'color.muted.default', label: 'Muted (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · fill)' },
@@ -156,6 +160,7 @@ const FACE_HINTS: Record<string, string> = {
   spinner: 'Indeterminate wait · fg + track leaves',
   'empty-state': 'Nothing-here · bg/fg/border/title leaves · tone on icon',
   meter: 'Gauge · track + optimum band leaves',
+  label: 'Form labels · component.label.fg + required leaves',
   progress: 'Bar · track + fill leaves',
   'error-state': 'Recovery · component.error-state leaves + brand destructive',
   icon: 'Glyph host · icon scale sizes · currentColor ink',

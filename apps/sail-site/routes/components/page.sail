@@ -266,8 +266,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <input type="email" placeholder="you@ship.dev" />
                     <span slot="hint" style(mutedXs)>We’ll never share this.</span>
                   </field>}{else-if {e.tag === 'label'} => <column gap="1">
-                    <label for="demo-label-input">Display name</label>
-                    <input id="demo-label-input" placeholder="Ada Lovelace" />
+                    <label for="demo-label-input" required>Display name</label>
+                    <input id="demo-label-input" size="sm" placeholder="Ada Lovelace" />
                   </column>}{else-if {e.tag === 'fieldset'} => <fieldset>
                     <legend>Billing options</legend>
                     <column gap="1">
