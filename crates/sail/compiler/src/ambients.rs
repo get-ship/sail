@@ -364,18 +364,34 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 /// The generated ambient pack ([`PROJECT_TYPES_REL`]) is listed under `files`
 /// (not `include`) so tsc still loads it when `exclude` contains `node_modules`
 /// — pack lives under `node_modules/.sail/` (SPEC-OUTPUT-1 §4 Option B).
+///
+/// `compilerOptions.baseUrl` + `paths` come from
+/// [`crate::project_map::at_alias_paths`] (SPEC-PROJECT-STRUCTURE-1 §3) so
+/// editors/tsc and deck resolve share one alias map.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
     let includes: Vec<String> = include_globs.iter().map(|g| format!("\"{g}\"")).collect();
+    let opts = sail_tsconfig_compiler_options_json();
+    // Drop outer braces so we can inject baseUrl + paths from the SSOT.
+    let opts_inner = opts
+        .trim()
+        .trim_start_matches('{')
+        .trim_end_matches('}')
+        .trim();
+    let path_entries: Vec<String> = crate::project_map::at_alias_paths()
+        .iter()
+        .map(|m| format!("      \"{}\": [\"{}\"]", m.pattern, m.target))
+        .collect();
+    let paths_block = path_entries.join(",\n");
     format!(
         "{{\n  \
          \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2). Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
-         \"compilerOptions\": {opts},\n  \
+         \"compilerOptions\": {{\n    {opts_inner},\n    \"baseUrl\": \".\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
          \"files\": [\"{pack}\"],\n  \
          \"include\": [{inc}],\n  \
          \"exclude\": [\"node_modules\", \"dist\", \".deck\"]\n\
          }}\n",
         pack = PROJECT_TYPES_REL,
-        opts = sail_tsconfig_compiler_options_json(),
+        paths = paths_block,
         inc = includes.join(", "),
     )
 }

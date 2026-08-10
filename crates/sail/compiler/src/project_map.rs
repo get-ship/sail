@@ -151,11 +151,38 @@ pub struct AtAliasMapping {
 
 /// SSOT `@/` alias table for project tsconfig `paths` + deck `resolve_id`.
 ///
-/// Must cover SPEC §3 roots: `@/components|compositions|stores|actions|themes/…`.
-/// Product (S1.2) fills this; empty stub keeps gate tests compile-red→runtime-red.
+/// SPEC-PROJECT-STRUCTURE-1 §3 fixed import roots:
+/// - `@/components/*` → `./src/components/*`
+/// - `@/compositions/*` → `./src/compositions/*`
+/// - `@/stores/*` → `./src/stores/*`
+/// - `@/actions/*` → `./src/actions/*`
+/// - `@/themes/*` → `./themes/*`
+///
+/// Keep this table as the only source of truth — `emit_project_tsconfig_json`
+/// and deck resolve must not invent parallel maps.
 pub fn at_alias_paths() -> &'static [AtAliasMapping] {
-    // Intentionally empty until product lands the fixed map.
-    &[]
+    &[
+        AtAliasMapping {
+            pattern: "@/components/*",
+            target: "./src/components/*",
+        },
+        AtAliasMapping {
+            pattern: "@/compositions/*",
+            target: "./src/compositions/*",
+        },
+        AtAliasMapping {
+            pattern: "@/stores/*",
+            target: "./src/stores/*",
+        },
+        AtAliasMapping {
+            pattern: "@/actions/*",
+            target: "./src/actions/*",
+        },
+        AtAliasMapping {
+            pattern: "@/themes/*",
+            target: "./themes/*",
+        },
+    ]
 }
 
 fn home_for(kind: FileKind) -> &'static str {
