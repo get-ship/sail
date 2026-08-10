@@ -5906,7 +5906,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "toast-region",
-      "description": "fixed stacking region. Style value language only."
+      "description": "fixed stacking region for toasts."
     },
     {
       "tag": "toggle",
@@ -5914,7 +5914,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "toggle-group",
-      "description": "segmented Style match; structural orientation stamp on cells only."
+      "description": "segmented Style match; structural orientation stamp on cells."
     },
     {
       "tag": "tooltip",

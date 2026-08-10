@@ -138,7 +138,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "size",
-      "type": "xs · sm · md · lg",
+      "type": "xs · sm · md · lg · icon · iconSm · iconLg",
       "default": "md"
     },
     {
@@ -496,6 +496,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "bordered",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "autohide",
       "type": "bool",
       "default": "false"
     },

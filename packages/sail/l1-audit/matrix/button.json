@@ -9,7 +9,7 @@
   "props": {
     "variant": ["default", "solid", "soft", "outline", "ghost"],
     "tone": ["primary", "info", "success", "warning", "destructive", "accent", "muted"],
-    "size": ["xs", "sm", "md", "lg"],
+    "size": ["xs", "sm", "md", "lg", "icon", "iconSm", "iconLg"],
     "disabled": true
   },
   "patterns": [

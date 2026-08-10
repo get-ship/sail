@@ -150,7 +150,10 @@
           "xs",
           "sm",
           "md",
-          "lg"
+          "lg",
+          "icon",
+          "iconSm",
+          "iconLg"
         ],
         "default": "md"
       },
@@ -542,6 +545,10 @@
       }
     },
     "navbar": {
+      "autohide": {
+        "type": "bool",
+        "default": "false"
+      },
       "bordered": {
         "type": "bool",
         "default": "false"

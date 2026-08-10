@@ -83,8 +83,9 @@ export const DETAILS: Record<string, DetailEntry> = {
     props: [
       { name: 'variant', desc: 'how much colour it gets', type: 'default · solid · soft · outline · ghost' },
       { name: 'tone', desc: 'semantic colour (omit for rest / solid invert)', type: TONES },
-      { name: 'size', desc: 'control height', type: 'xs · sm · md · lg' },
+      { name: 'size', desc: 'text control height, or square icon hit target', type: 'xs · sm · md · lg · icon · iconSm · iconLg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
+      { name: 'children', desc: 'label and optional <icon> siblings (gap is built-in)', type: 'slot' },
       { name: 'style({ animate: press })', desc: 'press scale feedback', type: 'preset' },
     ],
   }),

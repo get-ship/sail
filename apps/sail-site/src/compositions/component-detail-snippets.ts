@@ -19,6 +19,29 @@ export default controller(() => {
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 
+  // Example programs for the detail walkthrough (not the primary usage block).
+  'button.with-icon': `<button variant="solid" tone="primary">
+  <icon name="check" size="sm"></icon>
+  Save
+</button>
+
+<button variant="outline">
+  Export
+  <icon name="download" size="sm"></icon>
+</button>`,
+
+  'button.icon-only': `<button variant="solid" tone="primary" size="icon" label="Settings">
+  <icon name="settings"></icon>
+</button>
+<button variant="ghost" size="iconSm" label="Search">
+  <icon name="search" size="sm"></icon>
+</button>`,
+
+  'button.sizes': `<button variant="solid" tone="primary" size="xs">xs</button>
+<button variant="solid" tone="primary" size="sm">sm</button>
+<button variant="solid" tone="primary" size="md">md</button>
+<button variant="solid" tone="primary" size="lg">lg</button>`,
+
   input: `<controller>
 export default controller(() => ({ name: signal('') }))
 </controller>

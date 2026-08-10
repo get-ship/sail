@@ -17,12 +17,14 @@ export default {
       // tones (variant=solid)
       ['default', 'primary', 'success', 'warning', 'destructive', 'info', 'accent']
         .map((t) => btn(t, `variant="solid" tone="${t}"`)).join(''),
-      // sizes + disabled (stdlib size: xs · sm · md · lg)
+      // sizes + disabled (text: xs–lg; square: icon / icon-sm / icon-lg)
       [
         btn('xs', 'variant="solid" tone="primary" size="xs"'),
         btn('sm', 'variant="solid" tone="primary" size="sm"'),
         btn('md', 'variant="solid" tone="primary"'),
         btn('lg', 'variant="solid" tone="primary" size="lg"'),
+        btn('◆', 'variant="solid" tone="primary" size="icon" label="icon"'),
+        btn('◆', 'variant="outline" size="iconSm" label="iconSm"'),
         btn('disabled', 'variant="solid" tone="primary" disabled'),
         btn('outline off', 'variant="outline" tone="destructive" disabled'),
       ].join(''),

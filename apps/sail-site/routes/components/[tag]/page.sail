@@ -48,7 +48,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const toggleBtnDisabled = (): void => btnDisabled.set((d) => !d)
     // Derived chip rows — templates only allow zero-arg reads (no chip(s) calls).
     const sizeChips = derived(() =>
-      (['xs', 'sm', 'md', 'lg'] as const).map((s) => ({
+      (['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] as const).map((s) => ({
         s,
         variant: btnSize() === s ? 'solid' : 'ghost',
       })),
@@ -64,6 +64,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const dis = btnDisabled() ? ' · disabled' : ''
       return `${variant()} · ${btnSize()} · ${btnTone()}${dis} · press ×${presses()}`
     })
+    const isIconSize = derived(() => btnSize().startsWith('icon'))
+    // Example walkthrough snippets (code + prose below the stage — not a second matrix).
+    const btnExWithIcon = () =>
+      `<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
+    const btnExIconOnly = () =>
+      `<button variant="solid" tone="primary" size="icon" label="Settings">\n  <icon name="settings"></icon>\n</button>\n<button variant="ghost" size="iconSm" label="Search">\n  <icon name="search" size="sm"></icon>\n</button>`
+    const btnExSizes = () =>
+      `<button variant="solid" tone="primary" size="xs">xs</button>\n<button variant="solid" tone="primary" size="lg">lg</button>`
 
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
@@ -142,7 +150,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       toastItems, pushToast, onToastDismiss,
       sheetSide, people,
       btnSize, btnTone, btnDisabled, pickBtnSize, pickBtnTone, toggleBtnDisabled,
-      sizeChips, toneChips, btnDisabledLabel, btnMeta,
+      sizeChips, toneChips, btnDisabledLabel, btnMeta, isIconSize,
+      btnExWithIcon, btnExIconOnly, btnExSizes,
     }
 })
 </controller>
@@ -173,8 +182,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
   style ctxCard = { box: pad(6).w(full) }
   style toastStage = { box: w(full).maxW(panel-max-w-sm) }
   style axisLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style exampleCard = { box: w(full).maxW(panel-max-w-md).pad(4), paint: borderWidth(1).border(border-subtle).radius(md).bg(surface-1) }
-  style exampleTitle = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase) }
+  style stageAxes = { box: w(full).maxW(panel-max-w-md).padT(2) }
+  style exampleBlock = { box: w(full).padY(2) }
+  style exampleH = { text: fontSize(md).fontWeight(semibold) }
+  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
 </scope>
 
 <column gap="4" style(page)>
@@ -197,9 +209,21 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <column slot="stage" gap="4" align="center" style({ box: w(full).minW(0) })>
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
-              <column gap="5" align="center" style(fullW)>
-                <!-- Live mount: one specimen; axes below (variant chips live on the viewer). -->
-                <column gap="3" align="center">
+              <!-- Single live specimen. Axes only — examples live below usage as code walkthroughs. -->
+              <column gap="4" align="center" style(fullW)>
+                <if {isIconSize()}>
+                  <button
+                    variant={variant()}
+                    size={btnSize()}
+                    tone={btnTone()}
+                    disabled={btnDisabled()}
+                    on:click={press}
+                    label="Settings"
+                    style(pressBtn)
+                  >
+                    <icon name="settings"></icon>
+                  </button>
+                {else =>
                   <button
                     variant={variant()}
                     size={btnSize()}
@@ -208,12 +232,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
                     on:click={press}
                     style(pressBtn)
                   >
+                    <icon name="check" size="sm"></icon>
                     Save changes
-                  </button>
-                  <p style(monoXs)>{btnMeta()}</p>
-                </column>
-
-                <column gap="2" align="center" style(fullW)>
+                  </button>}</if>
+                <p style(monoXs)>{btnMeta()}</p>
+                <column gap="2" align="start" style(stageAxes)>
                   <row gap="2" align="center">
                     <span style(axisLabel)>size</span>
                     <for {sizeChips() as c} key={c.s}>
@@ -229,46 +252,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
                   <button size="sm" variant="outline" on:click={toggleBtnDisabled}>
                     {btnDisabledLabel()} specimen
                   </button>
-                </column>
-
-                <!-- Examples: same L1, compositions for docs/agents (not a second mount tech). -->
-                <column gap="3" style(fullW) align="stretch">
-                  <p style(exampleTitle)>Examples</p>
-                  <column gap="2" style(exampleCard)>
-                    <p style(monoXs)>Form actions</p>
-                    <row gap="2" align="center">
-                      <button variant="solid" tone="primary">Save</button>
-                      <button variant="outline">Cancel</button>
-                      <button variant="ghost" tone="destructive" size="sm">Delete</button>
-                    </row>
-                  </column>
-                  <column gap="2" style(exampleCard)>
-                    <p style(monoXs)>Solid tones</p>
-                    <row gap="2" align="center">
-                      <button variant="solid" tone="primary" size="sm">Primary</button>
-                      <button variant="solid" tone="success" size="sm">Success</button>
-                      <button variant="solid" tone="warning" size="sm">Warning</button>
-                      <button variant="solid" tone="destructive" size="sm">Destructive</button>
-                      <button variant="solid" tone="muted" size="sm">Muted</button>
-                    </row>
-                  </column>
-                  <column gap="2" style(exampleCard)>
-                    <p style(monoXs)>Sizes (solid primary)</p>
-                    <row gap="2" align="center">
-                      <button variant="solid" tone="primary" size="xs">xs</button>
-                      <button variant="solid" tone="primary" size="sm">sm</button>
-                      <button variant="solid" tone="primary" size="md">md</button>
-                      <button variant="solid" tone="primary" size="lg">lg</button>
-                    </row>
-                  </column>
-                  <column gap="2" style(exampleCard)>
-                    <p style(monoXs)>Solid without tone (invert rest)</p>
-                    <row gap="2" align="center">
-                      <button variant="solid">Solid</button>
-                      <button variant="default">Default</button>
-                      <button variant="soft">Soft</button>
-                    </row>
-                  </column>
                 </column>
               </column>
             </if>
@@ -841,6 +824,67 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
       <if {slotCopy()}>
         <p slot="stage" style(monoXs)>{slotCopy()}</p>
+      </if>
+
+      <!-- Walkthroughs: prose + code (after usage/props). Not a second live matrix. -->
+      <if {stage.button()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>With icons</h3>
+            <p style(exampleLead)>
+              Children compose: put <code>&lt;icon&gt;</code> before or after the label.
+              The button is inline-flex with gap — no left/right section props.
+            </p>
+            <row gap="2" align="center">
+              <button variant="solid" tone="primary">
+                <icon name="check" size="sm"></icon>
+                Save
+              </button>
+              <button variant="outline">
+                Export
+                <icon name="download" size="sm"></icon>
+              </button>
+            </row>
+            <code-block code={btnExWithIcon()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Icon-only</h3>
+            <p style(exampleLead)>
+              Use <code>size="icon"</code>, <code>iconSm</code>, or <code>iconLg</code> for a square hit target.
+              Always set <code>label</code> for accessible name when there is no text.
+            </p>
+            <row gap="2" align="center">
+              <button variant="solid" tone="primary" size="icon" label="Settings">
+                <icon name="settings"></icon>
+              </button>
+              <button variant="ghost" size="iconSm" label="Search">
+                <icon name="search" size="sm"></icon>
+              </button>
+              <button variant="outline" size="iconLg" label="Add">
+                <icon name="plus" size="lg"></icon>
+              </button>
+            </row>
+            <code-block code={btnExIconOnly()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Sizes</h3>
+            <p style(exampleLead)>
+              Text controls: <code>xs</code>–<code>lg</code>. Defaults to <code>md</code>.
+              Drive the live stage above for the full matrix; these are the named steps.
+            </p>
+            <row gap="2" align="center">
+              <button variant="solid" tone="primary" size="xs">xs</button>
+              <button variant="solid" tone="primary" size="sm">sm</button>
+              <button variant="solid" tone="primary" size="md">md</button>
+              <button variant="solid" tone="primary" size="lg">lg</button>
+            </row>
+            <code-block code={btnExSizes()}></code-block>
+          </column>
+        </column>
       </if>
     </sail-component-viewer>
 
