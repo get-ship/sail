@@ -115,6 +115,11 @@ const VARIANT_META: Partial<
     variantAttr: '',
     blurb: 'Keycap · component.kbd bg/fg/border; no size/variant props.',
   },
+  prose: {
+    variants: [],
+    variantAttr: '',
+    blurb: 'Typography scope · component.prose.fg; nested tags via type map; no size/variant props.',
+  },
   tooltip: {
     variants: ['top', 'bottom', 'left', 'right'],
     variantAttr: 'placement',

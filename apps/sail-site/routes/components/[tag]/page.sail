@@ -252,6 +252,12 @@ const kbdExChord = () =>
       `<kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>⌥</kbd> <kbd>⌃</kbd> <kbd>Esc</kbd> <kbd>F12</kbd>`
     const kbdExRest = () =>
       `<kbd>Enter</kbd>\n<!-- paint from component.kbd (bg · foreground · border) — themeable -->`
+    const proseExScale = () =>
+      `<prose>\n  <h1>Heading one</h1>\n  <h2>Heading two</h2>\n  <p>Body sets the baseline.</p>\n</prose>`
+    const proseExBlocks = () =>
+      `<prose>\n  <p>Inline <strong>strong</strong>, <em>emphasis</em>, <code>code()</code>, <mark>mark</mark>.</p>\n  <blockquote>A quotation carries its own rule.</blockquote>\n  <ul><li>Unordered</li><li>Items</li></ul>\n</prose>`
+    const proseExRest = () =>
+      `<prose>\n  <p>Markdown blobs and long copy.</p>\n</prose>\n<!-- host fg → component.prose.fg; descendants via PROSE_MAP -->`
     const spnExInline = () =>
       `<row gap="2" align="center">\n  <spinner size="sm" tone="primary"></spinner>\n  <p>fetching…</p>\n</row>`
     const spnExSizes = () =>
@@ -352,6 +358,7 @@ const kbdExChord = () =>
       chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
       chipExFilter, chipExRemove, chipExRest,
       kbdExChord, kbdExModifiers, kbdExRest,
+      proseExScale, proseExBlocks, proseExRest,
       spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
       spnExInline, spnExSizes, spnExRest, spnExCentered,
       skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
@@ -1173,11 +1180,19 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.prose()}>
-              <column gap="2" style(stageColMd)>
-                <h3>Plain tags, already styled</h3>
-                <p>Body copy sets the baseline — <strong>strong</strong>, <em>emphasis</em>,
-                   <code>inline_code()</code> and <mark>a highlight</mark> need no classes.</p>
-                <blockquote>A quotation carries its own rule.</blockquote>
+              <!-- Zero PE props — specimen-only stage; host is <prose> + PROSE_MAP descendants -->
+              <column gap="3" style(stageColMd)>
+                <prose>
+                  <h2>Plain tags, already styled</h2>
+                  <p>Body copy sets the baseline — <strong>strong</strong>, <em>emphasis</em>,
+                     <code>inline_code()</code> and <mark>a highlight</mark> need no classes.</p>
+                  <blockquote>A quotation carries its own rule.</blockquote>
+                  <ul>
+                    <li>Unordered lists keep markers</li>
+                    <li>Indented under the measure</li>
+                  </ul>
+                </prose>
+                <p style(monoXs)>component.prose · foreground · descendant type scale</p>
               </column>
             </if>
 
@@ -1685,6 +1700,64 @@ const kbdExChord = () =>
               <kbd>/</kbd>
             </row>
             <code-block code={kbdExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.prose()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Type scale under the scope</h3>
+            <p style(exampleLead)>
+              Wrap long copy in <code>&lt;prose&gt;</code>. Nested <code>h1</code>…<code>h4</code> and
+              <code>p</code> pick up the framework type scale — no size or variant props on the host.
+            </p>
+            <prose style(stageColMd)>
+              <h1>Heading one</h1>
+              <h2>Heading two</h2>
+              <h3>Heading three</h3>
+              <p>Body sets the baseline measure and leading.</p>
+            </prose>
+            <code-block code={proseExScale()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Inlines and blocks</h3>
+            <p style(exampleLead)>
+              Strong, emphasis, code, mark, blockquote, and lists are plain tags. Taste comes from the
+              prose descendant map (not hand classes or a second Title/Text API).
+            </p>
+            <prose style(stageColMd)>
+              <p>
+                Inline <strong>strong</strong>, <em>emphasis</em>,
+                <code>inline_code()</code>, and <mark>a highlight</mark>.
+              </p>
+              <blockquote>A quotation carries its own rule.</blockquote>
+              <ul>
+                <li>Unordered item</li>
+                <li>Another item</li>
+              </ul>
+              <ol>
+                <li>Ordered item</li>
+                <li>Another item</li>
+              </ol>
+            </prose>
+            <code-block code={proseExBlocks()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Themeable host leaf</h3>
+            <p style(exampleLead)>
+              Host ink is <code>component.prose.fg</code> (<code>--prose-foreground</code>).
+              Descendants use shared design tokens (heading font, text steps, primary link).
+              No tone/size ladder on the tag — theme the leaf and type roles.
+            </p>
+            <prose style(stageColMd)>
+              <p>Markdown blobs, docs bodies, and rendered content share this scope.</p>
+            </prose>
+            <code-block code={proseExRest()}></code-block>
           </column>
         </column>
       </if>

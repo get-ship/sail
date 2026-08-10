@@ -543,9 +543,21 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.prose()}>
-                    <prose style(sampleMax)>
-                      <p>Body copy with <strong>strong</strong> and <em>emphasis</em>.</p>
-                    </prose>
+                    <column gap="3" style(sampleMax)>
+                      <p style(fieldHint)>Rest · component.prose.fg (theme override)</p>
+                      <prose>
+                        <h2>Typography scope</h2>
+                        <p>
+                          Body copy with <strong>strong</strong>, <em>emphasis</em>,
+                          <code>inline()</code>, and <mark>mark</mark>.
+                        </p>
+                        <blockquote>A quotation carries its own rule.</blockquote>
+                        <ul>
+                          <li>List item one</li>
+                          <li>List item two</li>
+                        </ul>
+                      </prose>
+                    </column>
                   </if>
                   <if {components.stage.codeBlock()}>
                     <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" style(sampleMax)></code-block>

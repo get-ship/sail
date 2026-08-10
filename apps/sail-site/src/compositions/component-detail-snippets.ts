@@ -322,14 +322,13 @@ export default controller(() => {
 
   kbd: `<p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.</p>`,
 
-  prose: `<column gap="2">
-    style({ animate: enter({ opacity: 'fade' }) })
+  prose: `<prose>
   <h2>Plain tags, already styled</h2>
   <p>Body copy sets the baseline — <strong>strong</strong>,
      <em>emphasis</em>, <code>inline_code()</code> and
      <mark>a highlight</mark> need no classes.</p>
   <blockquote>A quotation carries its own rule.</blockquote>
-</column>`,
+</prose>`,
 
   tooltip: `<tooltip content="Deletes the branch — cannot be undone"
  placement="top">

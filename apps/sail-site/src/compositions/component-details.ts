@@ -485,13 +485,11 @@ export const DETAILS: Record<string, DetailEntry> = {
   prose: lang('prose', 'prose', {
     heading: 'prose',
     blurb:
-      'Not a tag — a promise. Plain h1/p/blockquote/code get taste from the framework stylesheet, so text never needs sx or a styling escape hatch.',
+      'Typography scope for rendered content — wrap markdown blobs and long copy in <prose>. Host ink is component.prose.fg; nested h1…p, lists, blockquote, and code pick up the framework type map. No size/variant/tone props (theme the leaf + type roles, not a Title API).',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'h1 … h4, p', desc: 'the type scale, already set', type: 'tags' },
-      { name: 'blockquote · ul · ol · dl', desc: 'structured text, styled', type: 'tags' },
-      { name: 'code · mark · abbr · small', desc: 'inline semantics, styled', type: 'tags' },
+      { name: '(children)', desc: 'plain tags — h1…h6, p, lists, blockquote, table, pre/code, inlines', type: 'children' },
     ],
   }),
 

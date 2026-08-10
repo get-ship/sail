@@ -65,6 +65,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.foreground', label: 'Foreground (global)' },
     { path: 'color.border.default', label: 'Border (global)' },
   ],
+  prose: [
+    { path: 'color.foreground', label: 'Foreground (global · rest host ink)' },
+    { path: 'color.primary.default', label: 'Primary (global · links / quote rule)' },
+    { path: 'color.muted.foreground', label: 'Muted fg (global · quote / markers)' },
+  ],
   spinner: [
     { path: 'color.muted.foreground', label: 'Muted fg (global · rest arc)' },
     { path: 'color.border.subtle', label: 'Border subtle (global · track)' },
@@ -109,6 +114,7 @@ const FACE_HINTS: Record<string, string> = {
   switch: 'Binary toggles',
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
+  prose: 'Typography scope · component.prose.fg host leaf',
   spinner: 'Indeterminate wait · fg + track leaves',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
