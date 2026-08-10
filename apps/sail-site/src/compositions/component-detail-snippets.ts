@@ -19,6 +19,12 @@ export default controller(() => {
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 
+  a: `<p>
+  Read the <a href="/docs">docs</a>, or open the
+  <a href="/components" variant="solid" tone="primary">component catalog</a>.
+</p>
+<!-- bare <a> = text link · variant set = button-link (component.button.* rest) -->`,
+
   // Example programs for the detail walkthrough (not the primary usage block).
   'button.with-icon': `<button variant="solid" tone="primary">
   <icon name="check" size="sm"></icon>

@@ -43,6 +43,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const SW_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
+    // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
+    const aTone = signal('primary')
+    const aDisabled = signal(false)
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
     const badgeTone = signal('primary')
     const badgePill = signal(false)
@@ -148,6 +151,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('solid')
         sizeIdx.set(2)
         btnTone.set('primary')
+      } else if (tag() === 'a') {
+        variant.set('default')
+        aTone.set('primary')
+        aDisabled.set(false)
       } else if (tag() === 'badge') {
         variant.set('soft')
         sizeIdx.set(1) // md
@@ -228,6 +235,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const onVariantChange = (detail: { variant: string }): void =>
       variant.set(detail?.variant ?? '')
     const pickTone = (t: string): void => btnTone.set(t)
+    const pickATone = (t: string): void => aTone.set(t)
+    const clearATone = (): void => aTone.set('')
     const pickBadgeTone = (t: string): void => badgeTone.set(t)
     const clearBadgeTone = (): void => badgeTone.set('')
     const pickSepTone = (t: string): void => sepTone.set(t)
@@ -251,6 +260,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const pickSwitchTone = (t: string): void => switchTone.set(t)
     const clearSwitchTone = (): void => switchTone.set('')
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
+    const aMeta = derived(() => {
+      const t = aTone()
+      const d = aDisabled() ? 'aria-disabled' : 'live'
+      return `${variant() || 'default'} · ${t || 'rest (component.button.*)'} · ${d}`
+    })
     const badgeMeta = derived(() => {
       const t = badgeTone()
       return `${variant()} · ${badgeSize()} · ${t || 'rest (component tokens)'} · pill ${badgePill() ? 'on' : 'off'}`
@@ -391,6 +405,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Hide viewer variant strip when stage owns knobs.
     const stageOwnsKnobs = () =>
       tag() === 'button' ||
+      tag() === 'a' ||
       tag() === 'badge' ||
       tag() === 'separator' ||
       tag() === 'alert' ||
@@ -416,6 +431,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
       `<button variant="solid" tone="primary" size="icon" label="Settings">\n  <icon name="settings"></icon>\n</button>\n<button variant="ghost" size="iconSm" label="Search">\n  <icon name="search" size="sm"></icon>\n</button>`
     const btnExSizes = () =>
       `<button variant="solid" tone="primary" size="xs">xs</button>\n<button variant="solid" tone="primary" size="lg">lg</button>`
+    const aExBare = () =>
+      `<p>See the <a href="/docs">documentation</a> for setup.</p>\n<!-- no variant → text link (sail-base); freeform never stamps chrome -->`
+    const aExButton = () =>
+      `<a href="/components" variant="solid" tone="primary">Open catalog</a>\n<a href="/docs" variant="outline">Read docs</a>\n<a href="#" variant="ghost" tone="muted">Cancel</a>`
+    const aExRest = () =>
+      `<a href="/app" variant="default">Continue</a>\n<!-- variant set, no tone → component.button.* (themeable); default ≠ solid invert -->`
     const bdgExStatus = () =>
       `<badge variant="soft" tone="success" size="sm">active</badge>\n<badge variant="outline" tone="muted" size="sm">away</badge>`
     const bdgExPill = () =>
@@ -627,6 +648,8 @@ const kbdExChord = () =>
       sheetSide, people,
       sizeIdx, btnSize, btnTone, btnMeta, isIconSize, pickTone,
       btnExWithIcon, btnExIconOnly, btnExSizes,
+      aTone, aDisabled, aMeta, pickATone, clearATone,
+      aExBare, aExButton, aExRest,
       badgeTone, badgeSize, badgePill, badgeMeta, pickBadgeTone, clearBadgeTone,
       bdgExStatus, bdgExPill, bdgExRest,
       sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
@@ -838,6 +861,82 @@ const kbdExChord = () =>
                       <span style(tick)>iSm</span>
                       <span style(tick)>iLg</span>
                     </row>
+                  </column>
+                </column>
+              </row>
+            </if>
+            <if {stage.a()}>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center">
+                    <if {aTone()}>
+                      <if {aDisabled()}>
+                        <a href="#" variant={variant()} tone={aTone()} aria-disabled="true">Open catalog</a>
+                      {else =>
+                        <a href="#" variant={variant()} tone={aTone()}>Open catalog</a>}</if>
+                    {else =>
+                      <if {aDisabled()}>
+                        <a href="#" variant={variant()} aria-disabled="true">Continue</a>
+                      {else =>
+                        <a href="#" variant={variant()}>Continue</a>}</if>}</if>
+                    <p style(monoXs)>{aMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Variant</label>
+                    <select size="sm" bind:value={variant} label="Variant">
+                      <option value="default">default</option>
+                      <option value="solid">solid</option>
+                      <option value="soft">soft</option>
+                      <option value="outline">outline</option>
+                      <option value="ghost">ghost</option>
+                    </select>
+                    <p style(mutedXs)>
+                      Omit <code>variant</code> for a bare text link. Stage always sets it
+                      so knobs show button-link chrome. <code>default</code> ≠ solid invert —
+                      rest uses <code>component.button.*</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="rest — component.button tokens" placement="top">
+                        <div label="rest" on:click={clearATone} selected={!aTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickATone('primary')} selected={aTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickATone('success')} selected={aTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickATone('warning')} selected={aTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickATone('destructive')} selected={aTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickATone('accent')} selected={aTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickATone('muted')} selected={aTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickATone('info')} selected={aTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled paint</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={aDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{aDisabled() ? 'aria-disabled' : 'live'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Anchors are not form controls — demo uses <code>aria-disabled</code>
+                      so PE dim + not-allowed paint apply. No size axis on <code>&lt;a&gt;</code>.
+                    </p>
                   </column>
                 </column>
               </row>
@@ -2434,6 +2533,54 @@ const kbdExChord = () =>
               <button variant="solid" tone="primary" size="lg">lg</button>
             </row>
             <code-block code={btnExSizes()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.a()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Bare text link</h3>
+            <p style(exampleLead)>
+              No <code>variant</code> attr → inline text link (sail-base colour). Freeform never
+              stamps <code>variant</code>/<code>tone</code>, so ordinary <code>href</code>s stay
+              text links site-wide.
+            </p>
+            <p>
+              See the <a href="/docs">documentation</a> for setup.
+            </p>
+            <code-block code={aExBare()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Button links</h3>
+            <p style(exampleLead)>
+              Set <code>variant</code> for control chrome — solid / outline / ghost match the
+              button family. Prefer <code>&lt;button&gt;</code> when you need size or form submit.
+            </p>
+            <row gap="2" align="center">
+              <a href="/components" variant="solid" tone="primary">Open catalog</a>
+              <a href="/docs" variant="outline">Read docs</a>
+              <a href="#" variant="ghost" tone="muted">Cancel</a>
+            </row>
+            <code-block code={aExButton()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              <code>variant</code> set, no <code>tone</code> → rest paint from
+              <code>component.button.*</code>. <code>default</code> is the soft button surface,
+              not solid invert — override those leaves in Studio themes.
+            </p>
+            <row gap="2" align="center">
+              <a href="/app" variant="default">Continue</a>
+              <a href="/app" variant="soft">soft rest</a>
+              <a href="/app" variant="outline">outline rest</a>
+            </row>
+            <code-block code={aExRest()}></code-block>
           </column>
         </column>
       </if>

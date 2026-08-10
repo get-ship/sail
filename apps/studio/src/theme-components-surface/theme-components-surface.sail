@@ -223,6 +223,30 @@ export default controller(() => {
                       </column>
                     </column>
                   </if>
+                  <if {components.stage.a()}>
+                    <column gap="4" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Bare text · + rest button-links (component.button.*)</p>
+                        <row gap="2" align="center" nowrap>
+                          <a href="#">text link</a>
+                          <a href="#" variant="default">default</a>
+                          <a href="#" variant="soft">soft</a>
+                          <a href="#" variant="outline">outline</a>
+                          <a href="#" variant="ghost">ghost</a>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Toned button-links · active chip</p>
+                        <row gap="2" align="center" nowrap>
+                          <a href="#" variant={components.variant() || 'solid'} tone="primary">Primary</a>
+                          <a href="#" variant="solid" tone="success">Success</a>
+                          <a href="#" variant="outline" tone="warning">Warn</a>
+                          <a href="#" variant="ghost" tone="destructive">Danger</a>
+                          <a href="#" variant="soft" tone="accent">Accent</a>
+                        </row>
+                      </column>
+                    </column>
+                  </if>
                   <if {components.stage.input()}>
                     <column gap="2" style(sampleMax)>
                       <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
