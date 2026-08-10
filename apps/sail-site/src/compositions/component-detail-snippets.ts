@@ -133,7 +133,6 @@ export default controller(() => ({ load: signal(62) }))
 </field>`,
 
   label: `<column gap="1">
-    style({ animate: enter({ opacity: 'fade' }) })
   <label for="email" required>Email</label>
   <input id="email" placeholder="ada@lovelace.dev" />
 </column>`,

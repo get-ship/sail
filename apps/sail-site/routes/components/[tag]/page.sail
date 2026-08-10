@@ -39,6 +39,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const METER_SIZES = ['sm', 'md', 'lg'] as const
     const PRG_SIZES = ['sm', 'md', 'lg'] as const
     const ERR_SIZES = ['sm', 'md', 'lg'] as const
+    const LBL_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
@@ -74,6 +75,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Error-state: variant × size × code; details slot optional (gates Show details).
     const errCode = signal('ERR_TIMEOUT')
     const errDetails = signal(true)
+    // Label: size sm|md|lg; required shows * via group-required + component.label.required.
+    const labelRequired = signal(true)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -117,6 +120,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const errSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ERR_SIZES.length - 1)
       return ERR_SIZES[i] ?? 'md'
+    })
+    const labelSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), LBL_SIZES.length - 1)
+      return LBL_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -177,6 +184,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         errCode.set('ERR_TIMEOUT')
         errDetails.set(true)
+      } else if (tag() === 'label') {
+        variant.set('')
+        sizeIdx.set(1) // md
+        labelRequired.set(true)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -305,6 +316,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const d = errDetails() ? 'details' : 'no details'
       return `${variant() || 'default'} · ${errSize()} · ${c || 'no code'} · ${d} · component.error-state.*`
     })
+    const labelMeta = derived(() => {
+      return `${labelSize()} · required ${labelRequired() ? 'on' : 'off'} · component.label.fg + required`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -322,7 +336,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'progress' ||
       tag() === 'icon' ||
       tag() === 'empty-state' ||
-      tag() === 'error-state'
+      tag() === 'error-state' ||
+      tag() === 'label'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -422,6 +437,14 @@ const kbdExChord = () =>
       `<progress max="100"></progress>\n<!-- omit value → native indeterminate + PROGRESS_MAP shimmer -->`
     const prgExRest = () =>
       `<progress value="64" max="100"></progress>\n<!-- track/fill → component.progress.track + fill (themeable) -->`
+    const lblExFor = () =>
+      `<column gap="1">\n  <label for="email" required>Email</label>\n  <input id="email" placeholder="ada@lovelace.dev" />\n</column>`
+    const lblExSizes = () =>
+      `<label for="a" size="sm">sm</label>\n<label for="b">md</label>\n<label for="c" size="lg">lg</label>`
+    const lblExRequired = () =>
+      `<label for="email" required>Email</label>\n<!-- * → component.label.required; omit required for optional -->`
+    const lblExRest = () =>
+      `<label for="name">Display name</label>\n<!-- ink → component.label.fg; weight → typography.label.weight -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -520,6 +543,8 @@ const kbdExChord = () =>
       mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
       progSize, progIndeterminate, progMeta,
       prgExDeterminate, prgExSizes, prgExIndeterminate, prgExRest,
+      labelSize, labelRequired, labelMeta,
+      lblExFor, lblExSizes, lblExRequired, lblExRest,
     }
 })
 </controller>
@@ -779,10 +804,57 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.label()}>
-              <column gap="1" style(stageCol)>
-                <label for="stage-email" required size={variant()}>Email</label>
-                <input id="stage-email" placeholder="ada@lovelace.dev" />
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <column gap="1" style(stageCol)>
+                      <if {labelRequired()}>
+                        <label for="stage-email" required size={labelSize()}>Email</label>
+                      {else =>
+                        <label for="stage-email" size={labelSize()}>Email</label>}</if>
+                      <input id="stage-email" size={labelSize()} placeholder="ada@lovelace.dev" />
+                    </column>
+                    <p style(monoXs)>{labelMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{labelSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Match the control size ladder. Default <code>md</code> · type from
+                      <code>fontSize(sm|base|lg)</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Required</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={labelRequired} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{labelRequired() ? 'marker on' : 'optional'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      <code>required</code> shows the <code>*</code> via
+                      <code>group-required</code> · colour from
+                      <code>component.label.required</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Host ink from <code>component.label.fg</code>; weight from
+                      <code>typography.label.weight</code> (<code>--label-weight</code>).
+                      No tone prop — theme the leaves.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.fieldset()}>
               <fieldset style(stageCol)>
@@ -2768,6 +2840,82 @@ const kbdExChord = () =>
               Messages you receive land here.
             </empty-state>
             <code-block code={esExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.label()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>for= association</h3>
+            <p style(exampleLead)>
+              A real native <code>&lt;label&gt;</code> — <code>for=</code> lands on the host so
+              clicking the text focuses the control. Pair with a matching <code>id</code>.
+            </p>
+            <column gap="1" style(stageCol)>
+              <label for="ex-label-email" required>Email</label>
+              <input id="ex-label-email" placeholder="ada@lovelace.dev" />
+            </column>
+            <code-block code={lblExFor()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>sm</code> · <code>md</code> · <code>lg</code> scale type to match the
+              control size ladder. Default is <code>md</code> (<code>fontSize(base)</code>).
+            </p>
+            <column gap="3" style(stageCol)>
+              <column gap="1">
+                <label for="ex-label-sm" size="sm">Small</label>
+                <input id="ex-label-sm" size="sm" placeholder="sm" />
+              </column>
+              <column gap="1">
+                <label for="ex-label-md">Medium</label>
+                <input id="ex-label-md" placeholder="md" />
+              </column>
+              <column gap="1">
+                <label for="ex-label-lg" size="lg">Large</label>
+                <input id="ex-label-lg" size="lg" placeholder="lg" />
+              </column>
+            </column>
+            <code-block code={lblExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Required marker</h3>
+            <p style(exampleLead)>
+              <code>required</code> reveals the <code>*</code> (aria-hidden) via
+              <code>group-required</code>. Colour from <code>component.label.required</code>
+              (defaults to destructive).
+            </p>
+            <column gap="3" style(stageCol)>
+              <column gap="1">
+                <label for="ex-label-req" required>Required field</label>
+                <input id="ex-label-req" placeholder="must fill" />
+              </column>
+              <column gap="1">
+                <label for="ex-label-opt">Optional field</label>
+                <input id="ex-label-opt" placeholder="can skip" />
+              </column>
+            </column>
+            <code-block code={lblExRequired()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Host ink from <code>component.label.fg</code> (<code>--label-foreground</code>);
+              weight from <code>typography.label.weight</code> (<code>--label-weight</code>).
+              No tone prop — override those leaves in Studio themes.
+            </p>
+            <column gap="1" style(stageCol)>
+              <label for="ex-label-rest">Display name</label>
+              <input id="ex-label-rest" placeholder="Ada Lovelace" />
+            </column>
+            <code-block code={lblExRest()}></code-block>
           </column>
         </column>
       </if>

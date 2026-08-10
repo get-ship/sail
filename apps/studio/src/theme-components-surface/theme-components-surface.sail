@@ -282,9 +282,23 @@ export default controller(() => {
                     </field>
                   </if>
                   <if {components.stage.label()}>
-                    <column gap="1" style(sampleMax)>
-                      <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
-                      <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · sizes · component.label.fg + weight</p>
+                        <label for="theme-l1-label-sm" size="sm">Email sm</label>
+                        <label for="theme-l1-label-md" size={components.variant() || 'md'}>Email md</label>
+                        <label for="theme-l1-label-lg" size="lg">Email lg</label>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Required · component.label.required marker</p>
+                        <label for="theme-l1-label" size={components.variant() || 'md'} required>Email</label>
+                        <input id="theme-l1-label" size="sm" placeholder="ada@example.com" />
+                      </column>
+                      <column gap="1">
+                        <p style(fieldHint)>Optional (no marker)</p>
+                        <label for="theme-l1-label-opt" size="sm">Nickname</label>
+                        <input id="theme-l1-label-opt" size="sm" placeholder="optional" />
+                      </column>
                     </column>
                   </if>
                   <if {components.stage.fieldset()}>
