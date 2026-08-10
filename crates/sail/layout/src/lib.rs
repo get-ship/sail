@@ -140,23 +140,21 @@ pub fn check_preprocessed(preprocessed: &str, viewport: (f32, f32)) -> anyhow::R
 
 /// Like [`check_preprocessed`], with explicit experimental-kind options.
 ///
-/// Stub: currently ignores `options` and only runs the landed finding kinds.
-/// Implementer must thread `options` into the scan so `unintended-overflow` /
-/// `clipped-text` emit only when enabled.
+/// `unintended-overflow` emits when [`CheckOptions::experimental`] is true;
+/// `clipped-text` also requires [`CheckOptions::text_metrics_enabled`].
 pub fn check_preprocessed_with(
     preprocessed: &str,
     viewport: (f32, f32),
     options: CheckOptions,
 ) -> anyhow::Result<ScanResult> {
-    let _ = options; // S4.1 stub — wire into diagnostics::scan
     // 1. Parse the lowered HTML (controller-style block already extracted).
     let elements = parse_source(preprocessed);
 
     // 2. Resolve every element to a taffy style and compute the tree.
     let tree = taffy_tree::build(elements, viewport)?;
 
-    // 3. Walk the computed tree and emit diagnostics.
-    diagnostics::scan(&tree, viewport)
+    // 3. Walk the computed tree and emit diagnostics (experimental kinds gated).
+    diagnostics::scan_with(&tree, viewport, options)
 }
 
 /// Convenience for standalone callers that have their own preprocessor.

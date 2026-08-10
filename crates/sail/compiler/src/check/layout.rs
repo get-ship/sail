@@ -16,6 +16,10 @@ const MOBILE_VIEWPORT: (f32, f32) = (390.0, 844.0);
 /// Soft taffy findings elevated to Error under `"layout": "error"` (studio).
 const PROMOTE_KINDS: &[&str] = &["child-overflows-parent", "zero-main-axis"];
 
+/// Experimental layout kinds (SPEC-LAYOUT-DIAG-1 / S4.1). Under top-level
+/// `strict: true` these promote to Error at the gate.
+const EXPERIMENTAL_KINDS: &[&str] = &["unintended-overflow", "clipped-text"];
+
 /// Viewports used by [`collect`]: mobile reference + source/desktop default.
 /// Dedups when the source already pins a mobile-sized viewport.
 /// Public for MCP / agent layout reports that need the same viewport set.
@@ -35,6 +39,11 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
 /// profile), which promotes those gate-gap kinds so `sail check` / `compile`
 /// exit non-zero.
 ///
+/// Experimental kinds (`unintended-overflow`, `clipped-text`) emit only when
+/// the nearest config has `"strict": true` or `"layoutExperimental": true`.
+/// `clipped-text` additionally requires `"layoutTextMetrics": true`. Under
+/// `strict`, experimental findings are Error at the gate.
+///
 /// Runs the taffy pass at **at least two viewports** (mobile ~390 and the
 /// source/`data-viewport` desktop default). Identical findings (same mapped
 /// span + message) are deduped.
@@ -46,7 +55,8 @@ pub fn collect(source: &str) -> Vec<Diagnostic> {
 }
 
 /// Like [`collect`], with optional `source_path` for `"layout": "error"`
-/// severity promotion from the nearest `sail.config`.
+/// severity promotion and experimental-kind enablement from the nearest
+/// `sail.config`.
 pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
     let Ok(preprocessed) = crate::parse::preprocess::preprocess(source) else {
         return Vec::new();
@@ -55,6 +65,7 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     let promote = source_path
         .map(sail_lint::config::layout_is_error_for)
         .unwrap_or(false);
+    let (strict, check_opts) = layout_check_options_for(source_path);
 
     let mut out: Vec<Diagnostic> = Vec::new();
     let mut seen: std::collections::HashSet<(usize, usize, usize, usize, String)> =
@@ -63,11 +74,11 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     let mut any_pass_err = false;
 
     for viewport in viewports {
-        match sail_layout::check_preprocessed(&preprocessed, viewport) {
+        match sail_layout::check_preprocessed_with(&preprocessed, viewport, check_opts) {
             Ok(result) => {
                 any_pass_ok = true;
                 for d in result.diagnostics {
-                    let mapped = map_diagnostic(source, &preprocessed, d, promote);
+                    let mapped = map_diagnostic(source, &preprocessed, d, promote, strict);
                     let key = (
                         mapped.line,
                         mapped.col,
@@ -103,11 +114,49 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     out
 }
 
+/// Resolve experimental layout check options from the nearest package config.
+///
+/// - `experimental` ← `strict` **or** `layoutExperimental`
+/// - `text_metrics` ← `layoutTextMetrics` only (explicit; noisy path stays opt-in)
+fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::CheckOptions) {
+    let Some(path) = source_path else {
+        return (false, sail_layout::CheckOptions::default());
+    };
+    let Some(dir) = path.parent() else {
+        return (false, sail_layout::CheckOptions::default());
+    };
+    let Some((_, cfg)) = sail_lint::config::resolve(dir) else {
+        return (false, sail_layout::CheckOptions::default());
+    };
+    let strict = cfg.strict();
+    let experimental = strict || cfg.layout_experimental();
+    let text_metrics = cfg.layout_text_metrics();
+    (
+        strict,
+        sail_layout::CheckOptions {
+            experimental,
+            text_metrics: Some(text_metrics),
+        },
+    )
+}
+
+/// Stable rule id for a taffy finding kind. Experimental kinds get dedicated
+/// `sail-*` ids for the diagnostic ratchet; landed kinds stay under
+/// `sail-layout`.
+fn rule_id_for_kind(kind: &str) -> &'static str {
+    match kind {
+        "unintended-overflow" => "sail-unintended-overflow",
+        "clipped-text" => "sail-clipped-text",
+        _ => "sail-layout",
+    }
+}
+
 fn map_diagnostic(
     original: &str,
     preprocessed: &str,
     diag: sail_layout::Diagnostic,
     promote_soft: bool,
+    strict: bool,
 ) -> Diagnostic {
     let (line, col, end_line, end_col) = match find_original_span(original, preprocessed, &diag) {
         Some((start, end)) => {
@@ -134,6 +183,11 @@ fn map_diagnostic(
     if promote_soft && severity == DiagSeverity::Warning && PROMOTE_KINDS.contains(&diag.kind) {
         severity = DiagSeverity::Error;
     }
+    // S3.2 / S4.1: under top-level strict, experimental layout findings are
+    // Error at the gate (not merely soft warnings).
+    if strict && EXPERIMENTAL_KINDS.contains(&diag.kind) {
+        severity = DiagSeverity::Error;
+    }
 
     Diagnostic {
         line,
@@ -142,7 +196,7 @@ fn map_diagnostic(
         end_col,
         severity,
         message: diag.message,
-        rule: Some("sail-layout".to_string()),
+        rule: Some(rule_id_for_kind(diag.kind).to_string()),
     }
 }
 

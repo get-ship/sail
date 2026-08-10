@@ -18,6 +18,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-animate-token-only",
     "sail-attr-bool-prop",
     "sail-attr-presence",
+    "sail-clipped-text",
     "sail-controller-context",
     "sail-controller-empty",
     "sail-controller-import-convention",
@@ -68,9 +69,10 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-route-inline-style",
     "sail-space-literal",
     "sail-state-set-call",
-    "sail-surface-not-card",
     "sail-style",
     "sail-style-value-enumeration",
+    "sail-surface-not-card",
+    "sail-unintended-overflow",
     "sail-virtualizer",
 ];
 

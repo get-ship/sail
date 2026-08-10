@@ -1,6 +1,6 @@
-//! Walk a computed layout and emit the three unambiguous box-tree diagnostics
-//! the spike targets.
+//! Walk a computed layout and emit box-tree diagnostics.
 //!
+//! Landed kinds:
 //! 1. **collapsed-into-overflow-hidden-parent** — the parent collapsed to 0px
 //!    on its main axis while a child wants space AND the parent has
 //!    `overflow:hidden` (silent-clip). This is the 1779px-in-900px regression.
@@ -10,9 +10,17 @@
 //! 3. **zero-main-axis** — the parent has 0 main axis + non-zero child sum
 //!    regardless of overflow.
 //!
+//! Experimental kinds (SPEC-LAYOUT-DIAG-1 / S4.1, gated by [`crate::CheckOptions`]):
+//! 4. **unintended-overflow** — child extents exceed the container and the
+//!    author did not opt in (no scroll-area, overflow setter, or truncate).
+//! 5. **clipped-text** — measured text run exceeds its box without a truncate
+//!    marker (text-metrics path).
+//!
 //! Each span is into the **preprocessed** source.
 
+use crate::metrics::{self, table as metrics_table};
 use crate::taffy_tree::Layout;
+use crate::CheckOptions;
 use serde::Serialize;
 use taffy::style::Overflow;
 
@@ -75,7 +83,17 @@ fn is_control_flow_tag(tag: &str) -> bool {
     )
 }
 
+/// Scan with default (non-experimental) options.
 pub fn scan(layout: &Layout, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
+    scan_with(layout, viewport, CheckOptions::default())
+}
+
+/// Scan with explicit experimental-kind options (SPEC-LAYOUT-DIAG-1 / S4.1).
+pub fn scan_with(
+    layout: &Layout,
+    viewport: (f32, f32),
+    options: CheckOptions,
+) -> anyhow::Result<ScanResult> {
     let mut boxes = Vec::new();
     for (i, elem) in layout.elements.iter().enumerate() {
         if i == 0 {
@@ -222,6 +240,25 @@ pub fn scan(layout: &Layout, viewport: (f32, f32)) -> anyhow::Result<ScanResult>
                 message: msg,
                 span: layout.elements[cidx].span,
             });
+
+            // Case 4 (experimental): same geometry, no author opt-in for
+            // overflow/scroll/truncate → unintended-overflow.
+            if options.experimental && !has_overflow_opt_in(elem, &layout.styles[i]) {
+                out.push(Diagnostic {
+                    kind: "unintended-overflow",
+                    severity: Severity::Warning,
+                    element_index: cidx,
+                    element_tag: layout.elements[cidx].tag.clone(),
+                    element_class: layout.elements[cidx].class.clone(),
+                    message: format!(
+                        "<{}> ({:.0}px main) overflows <{}> ({:.0}px main) without an overflow \
+                         opt-in — add `overflowY(auto)` / `overflow(scroll)`, a `<scroll-area>`, \
+                         or `truncate()` if the overflow is intentional.",
+                        layout.elements[cidx].tag, child_main, elem.tag, main_size,
+                    ),
+                    span: layout.elements[cidx].span,
+                });
+            }
             continue;
         }
 
@@ -267,10 +304,118 @@ pub fn scan(layout: &Layout, viewport: (f32, f32)) -> anyhow::Result<ScanResult>
         }
     }
 
+    // Case 5 (experimental + text_metrics): text run wider than its box
+    // without a truncate marker while overflow clips on the inline axis.
+    if options.experimental && options.text_metrics_enabled() {
+        scan_clipped_text(layout, &mut out)?;
+    }
+
     Ok(ScanResult {
         diagnostics: out,
         boxes,
         viewport,
+    })
+}
+
+/// True when the author opted into overflow/clip/scroll via vocabulary.
+fn has_overflow_opt_in(elem: &crate::html::Element, style: &crate::style::ResolvedStyle) -> bool {
+    if is_scroll_area_tag(&elem.tag) {
+        return true;
+    }
+    if class_has_overflow_or_truncate_opt_in(&elem.class) {
+        return true;
+    }
+    let o = style.style.overflow;
+    !matches!(o.x, Overflow::Visible) || !matches!(o.y, Overflow::Visible)
+}
+
+fn is_scroll_area_tag(tag: &str) -> bool {
+    tag == "scroll-area" || tag.ends_with("-scroll-area") || tag == "scrollarea"
+}
+
+fn class_has_overflow_or_truncate_opt_in(class: &str) -> bool {
+    class.split_whitespace().any(|c| {
+        // Product Style emit keeps camelCase (`s-overflowXhidden`); fold case.
+        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
+        s == "truncate" || s.starts_with("overflow")
+    })
+}
+
+fn class_has_truncate(class: &str) -> bool {
+    class.split_whitespace().any(|c| {
+        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
+        s == "truncate" || s.ends_with("-truncate")
+    })
+}
+
+fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
+    let metrics = metrics_table();
+    for (i, elem) in layout.elements.iter().enumerate() {
+        if i == 0 {
+            continue;
+        }
+        if elem.text.trim().is_empty() {
+            continue;
+        }
+        if class_has_truncate(&elem.class) {
+            continue;
+        }
+        let Some(node) = layout.nodes[i] else {
+            continue;
+        };
+        let computed = layout.taffy.layout(node).cloned()?;
+        let box_w = computed.size.width;
+        if box_w <= EPSILON {
+            continue;
+        }
+
+        // Only report when the box actually clips on the inline axis —
+        // visible overflow is not "clipped text".
+        let overflow_x = layout.styles[i].style.overflow.x;
+        let clips_x = matches!(overflow_x, Overflow::Hidden | Overflow::Clip)
+            || class_clips_x(&elem.class);
+        if !clips_x {
+            continue;
+        }
+
+        let (family, size) = metrics::resolve_family_size(i, &layout.elements);
+        let Some(m) = metrics.get(&(family, size)) else {
+            continue;
+        };
+        let text_w: f32 = elem.text.chars().map(|c| metrics::char_width(m, c)).sum();
+        if text_w > box_w + EPSILON {
+            out.push(Diagnostic {
+                kind: "clipped-text",
+                severity: Severity::Warning,
+                element_index: i,
+                element_tag: elem.tag.clone(),
+                element_class: elem.class.clone(),
+                message: format!(
+                    "<{}> text measures ~{:.0}px but its box is {:.0}px wide — glyphs are \
+                     clipped without `truncate()`. Add `text: truncate()` if ellipsis is \
+                     intentional, or widen the box / allow wrapping.",
+                    elem.tag, text_w, box_w,
+                ),
+                span: elem.span,
+            });
+        }
+    }
+    Ok(())
+}
+
+fn class_clips_x(class: &str) -> bool {
+    class.split_whitespace().any(|c| {
+        // Product Style mints `s-overflowXhidden` (camelCase); mapping tokens
+        // are lowercase. Fold so either form counts as an inline clip opt-in.
+        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
+        matches!(
+            s.as_str(),
+            "overflowhidden"
+                | "overflowclip"
+                | "overflowxhidden"
+                | "overflowxclip"
+                | "truncate"
+        )
     })
 }
 
