@@ -276,6 +276,83 @@ pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     Ok(path)
 }
 
+// ── Per-kind type environments (SPEC-PLATFORM-NEUTRALITY-1 §1 / S2.1) ───────
+//
+// Product must branch the TypeScript lib/ambient by file kind so app
+// controllers/compositions/stores cannot name document/window/localStorage.
+// Action files get the observation port only. Framework packages keep DOM.
+//
+// Stubbed red until the implementer lands real selection + observation ambient.
+// Gate: crates/sail/compiler/tests/type_env_per_kind.rs
+
+/// Per-kind TypeScript type environment (SPEC-PLATFORM-NEUTRALITY-1 §1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TypeEnv {
+    /// controller / scope / composition / store — ESNext only; DOM globals unnameable.
+    Pure,
+    /// author action — observation set only (no `document` / `window`).
+    Action,
+    /// framework runtime packages — full DOM lib allowed.
+    Framework,
+}
+
+/// Map a classified [`crate::project_map::FileKind`] to its type environment.
+///
+/// | Kind | Env |
+/// |------|-----|
+/// | Route / Component (controllers + scopes) | Pure |
+/// | Composition / Store | Pure |
+/// | Action | Action |
+/// | Theme / Other | Pure (apps never gain free DOM via kind alone) |
+///
+/// Framework packages are selected via [`type_env_for_path`], not this table.
+pub fn type_env_for_kind(kind: crate::project_map::FileKind) -> TypeEnv {
+    // Intentionally wrong stub: today's single global env is DOM everywhere.
+    let _ = kind;
+    TypeEnv::Framework
+}
+
+/// Path-aware type-env selection.
+///
+/// 1. Framework packages (`packages/sail/**`, etc.) → [`TypeEnv::Framework`]
+/// 2. Else [`crate::project_map::classify`] → [`type_env_for_kind`]
+///
+/// Framework wins over path-shaped Action (runtime catalog may live under
+/// `…/actions/**` and is still allowed full DOM).
+pub fn type_env_for_path(path: &Path, source: Option<&str>) -> TypeEnv {
+    // Intentionally wrong stub — always Framework (global DOM) until product.
+    let _ = (path, source);
+    TypeEnv::Framework
+}
+
+/// `compilerOptions.lib` entries for `env`.
+///
+/// - [`TypeEnv::Pure`] / [`TypeEnv::Action`]: ESNext only — no `DOM` / `DOM.Iterable`
+/// - [`TypeEnv::Framework`]: `ESNext` + `DOM` + `DOM.Iterable`
+///
+/// Action observation names (rAF, observers, `getComputedStyle`) come from
+/// [`emit_action_observation_dts`], not from the DOM lib.
+pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
+    // Intentionally wrong stub: mirror today's hard-coded global DOM for all envs.
+    let _ = env;
+    &["ESNext", "DOM", "DOM.Iterable"]
+}
+
+/// Ambient `.d.ts` body for the action observation port.
+///
+/// Must declare (at least):
+/// - `requestAnimationFrame` / `cancelAnimationFrame`
+/// - `IntersectionObserver`, `ResizeObserver`, `MutationObserver`
+/// - `getComputedStyle`
+/// - a minimal node/Element handle surface for the action first argument
+///
+/// Must **not** introduce usable ambient `document`, `window`, or `localStorage`
+/// (those stay unnameable under the Action lib).
+pub fn emit_action_observation_dts() -> String {
+    // Intentionally empty until product lands the observation ambient.
+    String::new()
+}
+
 /// TOOLING-1 WI2 flags that every sail project tsconfig must carry.
 ///
 /// Kept as a public list so scaffold smoke tests and package drift checks
