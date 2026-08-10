@@ -99,10 +99,56 @@ mod layout_pass_counter_tests {
     }
 }
 
+/// Options for experimental layout finding kinds (SPEC-LAYOUT-DIAG-1 / S4.1).
+///
+/// Default is **off** — `unintended-overflow` and `clipped-text` ship under
+/// strict / experimental only (rollout protocol). Implementer wires these
+/// flags into [`diagnostics::scan`]; this struct is the product surface.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CheckOptions {
+    /// Emit experimental kinds (`unintended-overflow`, `clipped-text`).
+    pub experimental: bool,
+    /// Text-metrics-dependent kinds (`clipped-text`). `None` follows
+    /// [`Self::experimental`]. SPEC may also gate behind `layout.textMetrics`.
+    pub text_metrics: Option<bool>,
+}
+
+impl CheckOptions {
+    /// Strict / experimental rollout defaults: both experimental kinds on,
+    /// including text-metrics path.
+    pub fn experimental() -> Self {
+        Self {
+            experimental: true,
+            text_metrics: Some(true),
+        }
+    }
+
+    /// Whether text-metrics kinds should run.
+    pub fn text_metrics_enabled(self) -> bool {
+        self.text_metrics.unwrap_or(self.experimental)
+    }
+}
+
 /// Compute a layout for an already-preprocessed `.sail` template at `viewport`
 /// px and emit diagnostics. This is the primary entry point for callers that
 /// already have a preprocessor (e.g. `sail-compiler`).
+///
+/// Experimental kinds are **not** enabled (see [`check_preprocessed_with`]).
 pub fn check_preprocessed(preprocessed: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
+    check_preprocessed_with(preprocessed, viewport, CheckOptions::default())
+}
+
+/// Like [`check_preprocessed`], with explicit experimental-kind options.
+///
+/// Stub: currently ignores `options` and only runs the landed finding kinds.
+/// Implementer must thread `options` into the scan so `unintended-overflow` /
+/// `clipped-text` emit only when enabled.
+pub fn check_preprocessed_with(
+    preprocessed: &str,
+    viewport: (f32, f32),
+    options: CheckOptions,
+) -> anyhow::Result<ScanResult> {
+    let _ = options; // S4.1 stub — wire into diagnostics::scan
     // 1. Parse the lowered HTML (controller-style block already extracted).
     let elements = parse_source(preprocessed);
 

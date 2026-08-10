@@ -337,6 +337,28 @@ impl SailConfig {
         )
     }
 
+    /// S4.1 / SPEC-LAYOUT-DIAG-1 — top-level `"layoutExperimental": true`
+    /// enables experimental layout kinds (`unintended-overflow`,
+    /// `clipped-text`) without full lint `strict`. Absent / wrong-typed → false.
+    ///
+    /// Stub surface for the red gate; implementer must also register the key in
+    /// [`RECOGNIZED_KEYS`] and wire the flag into the layout check bridge.
+    pub fn layout_experimental(&self) -> bool {
+        matches!(
+            self.raw.get("layoutExperimental").and_then(|v| v.as_bool()),
+            Some(true)
+        )
+    }
+
+    /// S4.1 — top-level `"layoutTextMetrics": true` enables text-metrics
+    /// kinds (`clipped-text`). Absent / wrong-typed → false.
+    pub fn layout_text_metrics(&self) -> bool {
+        matches!(
+            self.raw.get("layoutTextMetrics").and_then(|v| v.as_bool()),
+            Some(true)
+        )
+    }
+
     /// Top-level `"strict": true` — every lint finding is Error at the build
     /// gate (SPEC-LINTS-1 §3). Absent / wrong-typed / `false` → `false`.
     /// Does **not** downgrade compiler/parse errors; per-rule `off` still
