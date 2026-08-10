@@ -221,9 +221,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <a href="#">text link</a>
                     <a href="#" variant="solid" tone="primary">solid</a>
                     <a href="#" variant="outline">outline</a>
-                  </row>}{else-if {e.tag === 'input'} => <column gap="1" style({ box: w(full) })>
-                    <label style(fieldLabel)>Work email</label>
-                    <input type="email" placeholder="you@company.com" bind:value={email} />
+                  </row>}{else-if {e.tag === 'input'} => <column gap="2" style({ box: w(full) })>
+                    <input type="email" size="sm" placeholder="you@company.com" bind:value={email} />
+                    <row gap="2" align="center">
+                      <input type="checkbox" checked />
+                      <input type="checkbox" />
+                      <input type="checkbox" disabled />
+                    </row>
                   </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Release notes</label>
                     <textarea size="sm" rows="2" placeholder="What changed in this ship?"></textarea>
@@ -248,6 +252,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <label style({ paint: fg(muted-foreground), text: fontSize(sm) })>
                       <input type="checkbox" disabled /> Admin-only (disabled)
                     </label>
+                    <p style(mutedXs)>input type=checkbox — not a separate tag</p>
                   </column>}{else-if {e.tag === 'radio'} => <column gap="2">
                     <radio value="pro">Pro — team seats</radio>
                     <radio value="free" disabled>Free (disabled)</radio>

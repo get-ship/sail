@@ -120,14 +120,29 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   input: lang('input', 'input', {
     blurb:
-      'The platform input, skinned by the theme. bind:value keeps it and a signal in lockstep; every type=, form wiring and validity state is the native one.',
+      'Native <input> with type-gated Style skins — text-like fields share component.field.* with select/textarea; checkbox/radio get checkSized/radioSized (no separate <checkbox> tag); range/color/file/hidden have dedicated arms. size xs|sm|md|lg; invalid → destructive border; disabled native + PE dim. No tone, no filled/unstyled variant. bind:value / bind:checked are language directives.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding', type: 'signal' },
-      { name: 'placeholder', desc: 'hint text in the empty field', type: 'string' },
-      { name: 'type', desc: 'the full platform set', type: 'text · email · password · …' },
-      { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
+      {
+        name: 'type',
+        desc: 'gates the skin: text-like → fieldSized; checkbox/radio → boxes; range/color/file/hidden/submit special-cased',
+        type: 'text · email · password · number · search · tel · url · date · time · datetime-local · month · week · file · color · checkbox · radio · range · submit · hidden',
+      },
+      {
+        name: 'size',
+        desc: 'control-h ladder on fields/file; icon-size on checkbox/radio (xs≡sm); n/a height for range/color/hidden',
+        type: 'xs · sm · md · lg',
+      },
+      {
+        name: 'invalid',
+        desc: 'compound destructive border (field chrome); not a separate error surface',
+        type: 'bool',
+      },
+      { name: 'disabled', desc: 'native disabled + PE opacity / not-allowed', type: 'bool' },
+      { name: 'placeholder', desc: 'hint text for empty text-like fields', type: 'string' },
+      { name: 'bind:value', desc: 'two-way signal binding for value-bearing types', type: 'signal' },
+      { name: 'bind:checked', desc: 'two-way signal binding for checkbox/radio types', type: 'signal' },
     ],
   }),
   textarea: lang('textarea', 'textarea', {
@@ -184,13 +199,15 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   checkbox: lang('checkbox', 'checkbox', {
     blurb:
-      'The platform checkbox in theme colours. bind:checked pairs it with a signal; indeterminate, forms and keyboard are the native ones.',
+      'Catalog alias only — there is no <checkbox> L1 tag. Use <input type="checkbox"> (checkSized skin on input). size, invalid, disabled, and bind:checked are input props. Open the input detail for type knobs.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:checked', desc: 'two-way signal binding', type: 'signal' },
-      { name: 'checked', desc: 'initial state', type: 'bool' },
-      { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
+      { name: 'type="checkbox"', desc: 'required — this is an input type, not a separate PE', type: 'fixed' },
+      { name: 'bind:checked', desc: 'two-way signal binding (language directive)', type: 'signal' },
+      { name: 'size', desc: 'icon-size ladder via input size prop (xs≡sm · md · lg)', type: 'xs · sm · md · lg' },
+      { name: 'invalid', desc: 'input compound — destructive border when set', type: 'bool' },
+      { name: 'disabled', desc: 'native disabled + PE dim', type: 'bool' },
     ],
   }),
   radio: lang('radio', 'radio', {

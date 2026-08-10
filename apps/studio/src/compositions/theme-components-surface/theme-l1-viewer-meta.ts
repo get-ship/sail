@@ -187,6 +187,12 @@ const VARIANT_META: Partial<
     blurb:
       'Native closed picker · component.field bg/fg/border; size xs–lg; invalid + disabled + multiple; not combobox.',
   },
+  input: {
+    variants: ['xs', 'sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb:
+      'Native input · type-gated skins; component.field.* surface; size + invalid + disabled; checkbox is type= not a tag; no filled/unstyled variant.',
+  },
   prose: {
     variants: [],
     variantAttr: '',

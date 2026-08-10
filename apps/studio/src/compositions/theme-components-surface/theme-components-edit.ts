@@ -157,9 +157,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.surface.1', label: 'Surface 1 (global)' },
   ],
   input: [
-    { path: 'color.border.default', label: 'Border (global)' },
-    { path: 'color.ring.default', label: 'Ring (global)' },
-    { path: 'radius.md', label: 'Radius md (global)' },
+    { path: 'color.background', label: 'Background (global · field.bg alias)' },
+    { path: 'color.foreground', label: 'Foreground (global · field.fg alias)' },
+    { path: 'color.border.default', label: 'Border (global · field.border alias)' },
+    { path: 'color.destructive.default', label: 'Destructive (global · invalid border)' },
+    { path: 'radius.md', label: 'Radius md (global · text fields)' },
   ],
   textarea: [
   select: [
@@ -222,6 +224,7 @@ const FACE_HINTS: Record<string, string> = {
   textarea: 'Multiline · component.field.* shared with input/select',
   select:
     'Native closed picker · component.field surface (shared) · size + invalid + disabled + multiple',
+  input: 'Native input · type-gated skins · component.field.* (shared select/textarea)',
   fieldset: 'Form group · component.fieldset.border leaf',
 }
 

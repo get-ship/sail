@@ -46,6 +46,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const SLD_SIZES = ['sm', 'md', 'lg'] as const
     const TA_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const SEL_SIZES = ['xs', 'sm', 'md', 'lg'] as const
+    // Input: size xs|sm|md|lg; type-gated skins (field / check / radio / range / …).
+    const IN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
@@ -119,6 +121,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const selectInvalid = signal(false)
     const selectDisabled = signal(false)
     const selectMultiple = signal(false)
+    // Input: type-gated skins; size + invalid + disabled; field surface = component.field.*.
+    // No variant/filled/unstyled — deliberate. Checkbox is type=checkbox, not a separate tag.
+    const inputType = signal('text')
+    const inputInvalid = signal(false)
+    const inputDisabled = signal(false)
+    const inputPlaceholder = signal('Ada Lovelace')
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -186,6 +194,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const selectSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SEL_SIZES.length - 1)
       return SEL_SIZES[i] ?? 'md'
+    })
+    const inputSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), IN_SIZES.length - 1)
+      return IN_SIZES[i] ?? 'md'
     })
     })
     // Scope is reused across detail navigations — re-seed on tag change.
@@ -294,6 +306,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
         selectInvalid.set(false)
         selectDisabled.set(false)
         selectMultiple.set(false)
+      } else if (tag() === 'input') {
+        variant.set('')
+        sizeIdx.set(2) // md
+        inputType.set('text')
+        inputInvalid.set(false)
+        inputDisabled.set(false)
+        inputPlaceholder.set('Ada Lovelace')
+        load.set(40)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -489,6 +509,22 @@ export default controller((ctx: ControllerScope<Scope>) => {
       ]
       return `${bits.join(' · ')} · component.field.* · closed native picker`
     })
+    // Skin family for live stage branching (type gates Style match arms).
+    const inputSkin = derived(() => {
+      const t = inputType()
+      if (t === 'checkbox' || t === 'radio') return 'check'
+      if (t === 'range') return 'range'
+      if (t === 'color') return 'color'
+      if (t === 'file') return 'file'
+      if (t === 'hidden') return 'hidden'
+      if (t === 'submit') return 'submit'
+      return 'field'
+    })
+    const inputMeta = derived(() => {
+      const inv = inputInvalid() ? 'invalid' : 'valid'
+      const d = inputDisabled() ? 'disabled' : 'enabled'
+      return `${inputType()} · ${inputSize()} · ${inv} · ${d} · skin ${inputSkin()} · component.field.*`
+    })
     })
     const isIconSize = derived(() => {
       const s = btnSize()
@@ -518,7 +554,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'scroll-area' ||
       tag() === 'slider' ||
       tag() === 'textarea' ||
-      tag() === 'select'
+      tag() === 'select' ||
+      tag() === 'input'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -708,6 +745,18 @@ const kbdExChord = () =>
       `<textarea invalid rows="3" placeholder="Needs a real description"></textarea>\n<!-- invalid → border(destructive); rest border → component.field.border -->`
     const taExRest = () =>
       `<textarea rows="3" placeholder="Notes"></textarea>\n<!-- bg/fg/border → component.field.*; hover border-strong (D1 free global); use:autosize grows height -->`
+    const inpExField = () =>
+      `<input type="email" placeholder="ada@lovelace.dev" bind:value={email} />\n<!-- text-like types share fieldSized + component.field.* -->`
+    const inpExSizes = () =>
+      `<input size="xs" placeholder="xs" />\n<input size="sm" placeholder="sm" />\n<input placeholder="md" />\n<input size="lg" placeholder="lg" />`
+    const inpExInvalid = () =>
+      `<input type="email" value="not-an-email" invalid />\n<!-- compound invalid → border(destructive) -->`
+    const inpExCheck = () =>
+      `<label><input type="checkbox" bind:checked={agreed} /> I agree</label>\n<!-- checkbox is type= on <input>, not a separate tag; checkSized + primary checked -->`
+    const inpExRange = () =>
+      `<input type="range" min="0" max="100" bind:value={volume} />\n<!-- range skin; slider L1 is a richer PE on the same host model -->`
+    const inpExRest = () =>
+      `<input placeholder="Theme me" />\n<!-- rest field → component.field.bg / fg / border (shared with select · textarea) -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -745,6 +794,13 @@ const kbdExChord = () =>
     })
     const agreed = signal(false)
     const name = signal('')
+    // Input stage re-seeds bind targets declared late.
+    effect(() => {
+      if (tag() === 'input') {
+        name.set('')
+        agreed.set(false)
+      }
+    })
     const bio = signal('')
     // Textarea stage re-seeds bind value on tag entry (bio is declared late).
     effect(() => {
@@ -843,6 +899,9 @@ const kbdExChord = () =>
       taExBind, taExSizes, taExInvalid, taExRest,
       selectSize, selectInvalid, selectDisabled, selectMultiple, selectMeta,
       selExBind, selExSizes, selExInvalid, selExRest, selExNotCombobox,
+      inputType, inputSize, inputInvalid, inputDisabled, inputPlaceholder,
+      inputSkin, inputMeta,
+      inpExField, inpExSizes, inpExInvalid, inpExCheck, inpExRange, inpExRest,
     }
 })
 </controller>
@@ -1107,10 +1166,138 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.input()}>
-              <column gap="3" style(stageCol)>
-                <input placeholder="Ada Lovelace" bind:value={name} />
-                <p style(monoXs)>hello, {name() || 'stranger'}</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {inputSkin() === 'check'}>
+                      <label style(mutedSm)>
+                        <if {inputDisabled()}>
+                          <if {inputInvalid()}>
+                            <input type={inputType()} size={inputSize()} invalid disabled bind:checked={agreed} />
+                          {else =>
+                            <input type={inputType()} size={inputSize()} disabled bind:checked={agreed} />}</if>
+                        {else => <if {inputInvalid()}>
+                            <input type={inputType()} size={inputSize()} invalid bind:checked={agreed} />
+                          {else =>
+                            <input type={inputType()} size={inputSize()} bind:checked={agreed} />}</if>}</if>
+                        Option label
+                      </label>
+                    {else-if {inputSkin() === 'range'} => <if {inputDisabled()}>
+                        <input type="range" min="0" max="100" size={inputSize()} disabled bind:value={load} style(fullW) />
+                      {else =>
+                        <input type="range" min="0" max="100" size={inputSize()} bind:value={load} style(fullW) />}</if>}
+                    {else-if {inputSkin() === 'color'} => <if {inputDisabled()}>
+                        <input type="color" value="#6366f1" disabled />
+                      {else =>
+                        <input type="color" value="#6366f1" />}</if>}
+                    {else-if {inputSkin() === 'file'} => <if {inputDisabled()}>
+                        <if {inputInvalid()}>
+                          <input type="file" size={inputSize()} invalid disabled />
+                        {else =>
+                          <input type="file" size={inputSize()} disabled />}</if>
+                      {else => <if {inputInvalid()}>
+                          <input type="file" size={inputSize()} invalid />
+                        {else =>
+                          <input type="file" size={inputSize()} />}</if>}</if>}
+                    {else-if {inputSkin() === 'hidden'} =>
+                      <p style(mutedSm)>type=hidden — display none (no painted face)</p>}
+                    {else => <if {inputDisabled()}>
+                        <if {inputInvalid()}>
+                          <input type={inputType()} size={inputSize()} placeholder={inputPlaceholder()} invalid disabled bind:value={name} style(fullW) />
+                        {else =>
+                          <input type={inputType()} size={inputSize()} placeholder={inputPlaceholder()} disabled bind:value={name} style(fullW) />}</if>
+                      {else => <if {inputInvalid()}>
+                          <input type={inputType()} size={inputSize()} placeholder={inputPlaceholder()} invalid bind:value={name} style(fullW) />
+                        {else =>
+                          <input type={inputType()} size={inputSize()} placeholder={inputPlaceholder()} bind:value={name} style(fullW) />}</if>}</if>}</if>
+                    <p style(monoXs)>{inputMeta()}</p>
+                    <if {inputSkin() === 'field'}>
+                      <p style(monoXs)>value: {name() || '∅'}</p>
+                    {else-if {inputSkin() === 'check'} =>
+                      <p style(monoXs)>{agreed() ? 'checked' : 'unchecked'}</p>}
+                    {else-if {inputSkin() === 'range'} =>
+                      <p style(monoXs)>{load()}</p>}</if>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Type</label>
+                    <select size="sm" bind:value={inputType} label="Type">
+                      <option value="text">text</option>
+                      <option value="email">email</option>
+                      <option value="password">password</option>
+                      <option value="number">number</option>
+                      <option value="search">search</option>
+                      <option value="tel">tel</option>
+                      <option value="url">url</option>
+                      <option value="date">date</option>
+                      <option value="time">time</option>
+                      <option value="datetime-local">datetime-local</option>
+                      <option value="month">month</option>
+                      <option value="week">week</option>
+                      <option value="file">file</option>
+                      <option value="color">color</option>
+                      <option value="checkbox">checkbox</option>
+                      <option value="radio">radio (native)</option>
+                      <option value="range">range</option>
+                      <option value="submit">submit</option>
+                      <option value="hidden">hidden</option>
+                    </select>
+                    <p style(mutedXs)>
+                      Style match on <code>type</code> picks the skin: text-like
+                      → <code>fieldSized</code>; <code>checkbox</code>/<code>radio</code>
+                      → check/radio boxes; <code>range</code>/<code>color</code>/<code>file</code>/<code>hidden</code>
+                      have their own arms. No filled/unstyled variant axis.
+                      Prefer <code>&lt;radio&gt;</code> PE + <code>radio-group</code> for option sets.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row justify="between" align="center">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{inputSize()}</span>
+                    </row>
+                    <input type="range" min="0" max="3" step="1" bind:value={sizeIdx} label="Size" />
+                    <row gap="0" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Fields and file use control-h ladder; checkbox/radio use icon-size
+                      (xs≡sm). Range/color/hidden ignore height sizing.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Invalid</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={inputInvalid} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{inputInvalid() ? 'destructive border' : 'rest border'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Compound <code>invalid</code> → <code>border(destructive)</code> on
+                      field skins (and file). Not a separate error component.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={inputDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{inputDisabled() ? 'not-allowed' : 'interactive'}</span>
+                    </row>
+                    <p style(mutedXs)>Native <code>disabled</code> + PE opacity / cursor.</p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Placeholder</label>
+                    <input type="text" size="sm" bind:value={inputPlaceholder} label="Placeholder" />
+                    <p style(mutedXs)>
+                      Text-like types only. Rest paint from
+                      <code>component.field</code> (bg · fg · border) —
+                      shared with select and textarea.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.textarea()}>
               <row nowrap gap="0" align="stretch" style(stageSplit)>
@@ -1364,9 +1551,15 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.checkbox()}>
-              <column gap="3" align="center">
-                <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-                <p style(monoXs)>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
+              <column gap="3" align="center" style(stageCol)>
+                <label style(mutedSm)>
+                  <input type="checkbox" bind:checked={agreed} /> I agree to the terms
+                </label>
+                <p style(monoXs)>{agreed() ? 'thank you' : 'unchecked'}</p>
+                <p style(mutedXs)>
+                  Not a separate L1 tag — use <code>&lt;input type="checkbox"&gt;</code>
+                  (see <a href="/components/input">input</a> type knobs).
+                </p>
               </column>
             </if>
             <if {stage.radio()}>
@@ -4107,6 +4300,103 @@ const kbdExChord = () =>
               Messages you receive land here.
             </empty-state>
             <code-block code={esExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.input()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Text-like field</h3>
+            <p style(exampleLead)>
+              Default skin is a themed text field. <code>type</code> values like
+              <code>email</code>, <code>password</code>, <code>search</code>, dates, and
+              <code>submit</code> share <code>fieldSized</code> +
+              <code>component.field</code> surface tokens with select and textarea.
+              <code>bind:value</code> keeps the host and a signal in lockstep.
+            </p>
+            <column gap="2" style(stageCol)>
+              <input type="email" placeholder="ada@lovelace.dev" bind:value={name} />
+              <p style(mutedSm)>hello, {name() || 'stranger'}</p>
+            </column>
+            <code-block code={inpExField()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> scale
+              control height and type (default <code>md</code>). Checkbox and radio types
+              map onto the icon-size scale instead.
+            </p>
+            <column gap="2" style(stageCol)>
+              <input size="xs" placeholder="xs" />
+              <input size="sm" placeholder="sm" />
+              <input placeholder="md" />
+              <input size="lg" placeholder="lg" />
+            </column>
+            <code-block code={inpExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Invalid</h3>
+            <p style(exampleLead)>
+              Bool <code>invalid</code> compounds a destructive border — field chrome stays
+              otherwise themeable. Pair with <code>field</code> for label + error copy.
+            </p>
+            <column gap="2" style(stageCol)>
+              <input type="email" value="not-an-email" invalid />
+            </column>
+            <code-block code={inpExInvalid()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Checkbox as type (not a tag)</h3>
+            <p style(exampleLead)>
+              There is no <code>&lt;checkbox&gt;</code> PE. Use
+              <code>&lt;input type="checkbox"&gt;</code> — Style applies
+              <code>checkSized</code> (border from field.foreground, checked primary).
+              Same host owns <code>bind:checked</code>, size, invalid, and disabled.
+            </p>
+            <column gap="2" style(stageCol)>
+              <label style(mutedSm)>
+                <input type="checkbox" bind:checked={agreed} /> I agree
+              </label>
+              <label style(mutedSm)>
+                <input type="checkbox" checked disabled /> Locked on
+              </label>
+            </column>
+            <code-block code={inpExCheck()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Range skin</h3>
+            <p style(exampleLead)>
+              <code>type="range"</code> uses the range arm (transparent track host;
+              thumb/fill from shared range CSS). For a richer labelled control prefer
+              the <code>slider</code> L1.
+            </p>
+            <column gap="2" style(stageCol)>
+              <input type="range" min="0" max="100" bind:value={load} />
+              <p style(mutedSm)>{load()}</p>
+            </column>
+            <code-block code={inpExRange()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Field surfaces ride <code>component.field</code>
+              (<code>--field</code> · <code>--field-foreground</code> ·
+              <code>--field-border</code>). No tone or filled/unstyled variant — override
+              those leaves in Studio themes (shared with select / textarea).
+            </p>
+            <column gap="2" style(stageCol)>
+              <input placeholder="Theme me" />
+            </column>
+            <code-block code={inpExRest()}></code-block>
           </column>
         </column>
       </if>

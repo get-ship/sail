@@ -49,11 +49,13 @@ export default controller(() => {
 <button variant="solid" tone="primary" size="lg">lg</button>`,
 
   input: `<controller>
-export default controller(() => ({ name: signal('') }))
+export default controller(() => ({ name: signal(''), agreed: signal(false) }))
 </controller>
 
-<input placeholder="Ada Lovelace" bind:value={name} />
-<p>hello, {name() || 'stranger'}</p>`,
+<input type="email" placeholder="Ada Lovelace" bind:value={name} size="md" />
+<input type="email" value="not-an-email" invalid />
+<label><input type="checkbox" bind:checked={agreed} /> I agree</label>
+<!-- type gates skins; field → component.field.*; no filled/unstyled variant -->`,
 
   textarea: `<controller>
 export default controller(() => ({ bio: signal('') }))
@@ -102,8 +104,9 @@ export default controller(() => {
 export default controller(() => ({ agreed: signal(false) }))
 </controller>
 
-<label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
-<p>{agreed() ? 'thank you' : 'the checkbox is the platform one, skinned'}</p>`,
+<!-- no <checkbox> tag — input type only -->
+<label><input type="checkbox" bind:checked={agreed} size="md" /> I agree to the terms</label>
+<p>{agreed() ? 'thank you' : 'use input type=checkbox'}</p>`,
 
   radio: `<radio value="monthly">Monthly</radio>
 <radio value="yearly" disabled>Yearly (locked)</radio>

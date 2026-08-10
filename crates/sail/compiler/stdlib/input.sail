@@ -1,6 +1,10 @@
 <!--
   <input> — native field / toggle / range surface. Style product only.
-  type axes paint: text-like fields, checkbox, radio, range, color, file.
+  type gates skins: text-like → fieldSized (component.field.* shared with
+  select/textarea); checkbox/radio → checkSized/radioSized (no <checkbox> tag);
+  range / color / file / hidden / submit have dedicated arms.
+  Props: type · size xs|sm|md|lg · invalid · disabled · placeholder.
+  No tone. No filled/unstyled variant (deliberate — not a Mantine Input clone).
   Freeform <input type=…> stamps host classes; CSS attribute gates activate.
 -->
 
