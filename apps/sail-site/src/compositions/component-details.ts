@@ -768,13 +768,25 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Effects ──────────────────────────────────────────────────────────
   ticker: lang('ticker', 'ticker', {
     blurb:
-      'Infinite linear marquee. Two copies of the slot ride a track; use:marquee loops translate-x so the seam never shows. duration and reverse are props.',
+      'Infinite linear marquee. Host is geometry only (overflow clip); use:marquee dual-copies the slot and loops translate-x. duration · reverse on host. No component.ticker.* — author paint. Reduced motion settles via motion runtime.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'duration', desc: 'loop speed', type: 'fast · normal · slow' },
-      { name: 'reverse', desc: 'flip direction', type: 'boolean' },
-      { name: 'children', desc: 'the band content — duplicated for a seamless seam', type: 'slot' },
+      {
+        name: 'duration',
+        desc: 'loop length for use:marquee (fast 16s · normal 24s · slow 32s)',
+        type: 'fast · normal · slow',
+      },
+      {
+        name: 'reverse',
+        desc: 'presence attr — flip to +50% (rightward)',
+        type: 'boolean',
+      },
+      {
+        name: 'children',
+        desc: 'band content — second copy is decorative/aria-hidden for the seam',
+        type: 'slot',
+      },
     ],
   }),
   // Actions live in the action table, not in this element detail

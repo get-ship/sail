@@ -907,9 +907,21 @@ export default controller(() => {
                     </scroll-area>
                   </if>
                   <if {components.stage.ticker()}>
-                    <ticker style(sampleMax)>
-                      Live ticker · theme paint · radius overrides ·
-                    </ticker>
+                    <column gap="3" style(sampleMax)>
+                      <p style(fieldHint)>
+                        Geometry host + use:marquee · no component.ticker.* · author paint
+                      </p>
+                      <ticker duration="normal" style(sampleMax, { box: overflow(hidden).padY(2), paint: bg(muted).radius(md) })>
+                        <span style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>
+                          Live ticker · muted band · normal ·&nbsp;
+                        </span>
+                      </ticker>
+                      <ticker duration="slow" reverse style(sampleMax, { box: overflow(hidden).padY(2), paint: bg(primary).radius(md) })>
+                        <span style({ box: padX(3), paint: fg(primary-foreground), text: fontSize(sm).fontWeight(bold).whitespace(nowrap) })>
+                          Reverse · slow · brand paint ·&nbsp;
+                        </span>
+                      </ticker>
+                    </column>
                   </if>
                   <if {components.stage.a()}>
                     <row gap="3" align="center" nowrap>

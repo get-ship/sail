@@ -41,6 +41,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const ERR_SIZES = ['sm', 'md', 'lg'] as const
     const LBL_SIZES = ['sm', 'md', 'lg'] as const
     const SW_SIZES = ['sm', 'md', 'lg'] as const
+    // Ticker duration ladder (maps onto use:marquee seconds: fast 16 / normal 24 / slow 32).
+    const TICKER_DURATIONS = ['fast', 'normal', 'slow'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
@@ -93,6 +95,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Radio: value + disabled only; label ink component.radio.fg; group wiring is radio-group.
     const radioDisabled = signal(false)
     const radioValue = signal('monthly')
+    // Ticker: duration × reverse only; paint is author style (no component.ticker.*).
+    // use:marquee reads host attrs; reverse is presence-driven.
+    const tickerReverse = signal(false)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -144,6 +149,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const switchSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SW_SIZES.length - 1)
       return SW_SIZES[i] ?? 'md'
+    })
+    const tickerDuration = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), TICKER_DURATIONS.length - 1)
+      return TICKER_DURATIONS[i] ?? 'normal'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -227,6 +236,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         radioDisabled.set(false)
         radioValue.set('monthly')
+      } else if (tag() === 'ticker') {
+        variant.set('')
+        sizeIdx.set(1) // normal
+        tickerReverse.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -398,6 +411,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const radioMeta = derived(() => {
       return `value "${radioValue()}" · disabled ${radioDisabled() ? 'on' : 'off'} · component.radio.fg`
     })
+    const tickerMeta = derived(() => {
+      return `duration ${tickerDuration()} · reverse ${tickerReverse() ? 'on' : 'off'} · use:marquee · author paint`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -421,7 +437,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'label' ||
       tag() === 'code-block' ||
       tag() === 'switch' ||
-      tag() === 'radio'
+      tag() === 'radio' ||
+      tag() === 'ticker'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -569,6 +586,14 @@ const kbdExChord = () =>
       `<switch tone="success" checked></switch>\n<switch tone="warning" checked></switch>\n<switch tone="destructive" checked></switch>\n<!-- tone paints checked track only; thumb stays switch.thumb -->`
     const swExRest = () =>
       `<switch></switch>\n<switch checked></switch>\n<!-- off → component.switch.track + border; checked (no tone) → primary; thumb → switch.thumb -->`
+    const tickerExBasic = () =>
+      `<ticker duration="normal" style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })>\n  <p style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>\n    tokens · signals · a11y · hot reload ·&nbsp;\n  </p>\n</ticker>`
+    const tickerExDuration = () =>
+      `<ticker duration="fast">…</ticker>\n<ticker duration="normal">…</ticker>\n<ticker duration="slow">…</ticker>\n<!-- use:marquee: fast 16s · normal 24s · slow 32s per full loop -->`
+    const tickerExReverse = () =>
+      `<ticker duration="slow" reverse style({ box: w(full).overflow(hidden).padY(2), paint: bg(surface-2) })>\n  <p style({ box: padX(3), paint: fg(muted-foreground), text: whitespace(nowrap) })>…</p>\n</ticker>`
+    const tickerExPaint = () =>
+      `<ticker style({ box: w(full).overflow(hidden).padY(3), paint: bg(primary) })>\n  <p style({ paint: fg(primary-foreground), text: fontWeight(bold).whitespace(nowrap) })>\n    AUTHOR PAINT · NO component.ticker.* ·&nbsp;\n  </p>\n</ticker>\n<!-- host is geometry only; band chrome is free style on host + slot -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -686,6 +711,8 @@ const kbdExChord = () =>
       swExBind, swExSizes, swExTones, swExRest,
       radioDisabled, radioValue, radioMeta,
       radioExOption, radioExDisabled, radioExRest, radioExGroup,
+      tickerDuration, tickerReverse, tickerMeta,
+      tickerExBasic, tickerExDuration, tickerExReverse, tickerExPaint,
     }
 })
 </controller>
@@ -709,6 +736,9 @@ const kbdExChord = () =>
   style fullW = { box: w(full) }
   style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
   style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
+  // Author-paint demo — no component.ticker.* leaves; free brand surface.
+  style tickerPrimaryDemo = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(primary).radius(md) }
+  style tickerBoldDemo = { box: padX(4), paint: fg(primary-foreground), text: fontSize(sm).fontWeight(bold).textCase(uppercase).tracking(wide).whitespace(nowrap) }
   style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
   style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
   style pressBtn = { animate: press({ scale: 'press' }) }
@@ -2338,11 +2368,54 @@ const kbdExChord = () =>
               </scroll-area>
             </if>
             <if {stage.ticker()}>
-              <ticker duration="normal" style(ticker)>
-                <p style(tickerText)>
-                  tokens · signals · a11y · hot reload · forms ·&nbsp;
-                </p>
-              </ticker>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="stretch" style(fullW)>
+                    <if {tickerReverse()}>
+                      <ticker duration={tickerDuration()} reverse style(ticker)>
+                        <p style(tickerText)>
+                          tokens · signals · a11y · hot reload · forms ·&nbsp;
+                        </p>
+                      </ticker>
+                    {else =>
+                      <ticker duration={tickerDuration()} style(ticker)>
+                        <p style(tickerText)>
+                          tokens · signals · a11y · hot reload · forms ·&nbsp;
+                        </p>
+                      </ticker>}</if>
+                    <p style(monoXs)>{tickerMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Duration</label>
+                      <span style(sizeValue)>{tickerDuration()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Duration"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>fast</span>
+                      <span style(tick)>normal</span>
+                      <span style(tick)>slow</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Loop length for <code>use:marquee</code> (16s · 24s · 32s). Host
+                      geometry only — no <code>component.ticker.*</code> paint leaves.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Reverse</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={tickerReverse} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{tickerReverse() ? '+50% (right)' : '−50% (left)'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Presence attr on the host. Motion settles under
+                      <code>prefers-reduced-motion</code> (runtime, not a prop).
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
 
             <!-- ══ Pack components ═══════════════════════════════════════ -->
@@ -3682,6 +3755,77 @@ const kbdExChord = () =>
               <radio value="yearly">Yearly</radio>
             </radio-group>
             <code-block code={radioExGroup()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.ticker()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Basic band</h3>
+            <p style(exampleLead)>
+              Slot content is duplicated for a seamless seam. Host clips overflow;
+              author styles paint the band (muted panel here).
+            </p>
+            <ticker duration="normal" style(ticker)>
+              <p style(tickerText)>
+                tokens · signals · a11y · hot reload · forms ·&nbsp;
+              </p>
+            </ticker>
+            <code-block code={tickerExBasic()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Duration ladder</h3>
+            <p style(exampleLead)>
+              <code>fast</code> · <code>normal</code> · <code>slow</code> map to fixed
+              loop lengths in <code>use:marquee</code> (16s · 24s · 32s). Default is
+              <code>normal</code>.
+            </p>
+            <column gap="2" style(fullW)>
+              <ticker duration="fast" style(ticker)>
+                <p style(tickerText)>fast · 16s loop ·&nbsp;</p>
+              </ticker>
+              <ticker duration="normal" style(ticker)>
+                <p style(tickerText)>normal · 24s loop ·&nbsp;</p>
+              </ticker>
+              <ticker duration="slow" style(ticker)>
+                <p style(tickerText)>slow · 32s loop ·&nbsp;</p>
+              </ticker>
+            </column>
+            <code-block code={tickerExDuration()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Reverse direction</h3>
+            <p style(exampleLead)>
+              <code>reverse</code> flips translate to <code>+50%</code> (content moves
+              right). Same dual-copy seam. Reduced motion settles the track at rest
+              via the motion runtime — not a separate prop.
+            </p>
+            <ticker duration="slow" reverse style(ticker)>
+              <p style(tickerText)>
+                reverse · slow · crossing bands ·&nbsp;
+              </p>
+            </ticker>
+            <code-block code={tickerExReverse()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Author paint (no component leaves)</h3>
+            <p style(exampleLead)>
+              There is no <code>component.ticker.*</code> family — host Style is geometry
+              only (<code>overflow</code> · full width · <code>minW(0)</code>). Band chrome
+              and ink are free styles on the host and slot (landing page diagonals, brand
+              bars, mono status lines).
+            </p>
+            <ticker style(tickerPrimaryDemo)>
+              <p style(tickerBoldDemo)>
+                AUTHOR PAINT · SIGNALS · TOKENS · A11Y ·&nbsp;
+              </p>
+            </ticker>
+            <code-block code={tickerExPaint()}></code-block>
           </column>
         </column>
       </if>

@@ -173,10 +173,8 @@ export default controller(() => ({ load: signal(62) }))
   style({ animate: enter({ opacity: 'fade' }) })
 </theme-picker>`,
 
-  ticker: `<ticker duration="normal">
-    style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })
-  <p>
-    style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })
+  ticker: `<ticker duration="normal" style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })>
+  <p style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>
     tokens · signals · a11y · hot reload ·&nbsp;
   </p>
 </ticker>`,

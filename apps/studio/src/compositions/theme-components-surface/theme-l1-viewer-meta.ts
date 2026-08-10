@@ -173,6 +173,12 @@ const VARIANT_META: Partial<
     variantAttr: '',
     blurb: 'Typography scope · component.prose.fg; nested tags via type map; no size/variant props.',
   },
+  ticker: {
+    variants: ['fast', 'normal', 'slow'],
+    variantAttr: 'duration',
+    blurb:
+      'Infinite marquee · duration/reverse drive use:marquee; host geometry only — no component.ticker.*; author paint; reduced-motion settles.',
+  },
   tooltip: {
     variants: ['top', 'bottom', 'left', 'right'],
     variantAttr: 'placement',

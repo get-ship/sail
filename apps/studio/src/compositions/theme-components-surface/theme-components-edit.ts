@@ -160,6 +160,14 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.primary.default', label: 'Primary (global · checked face)' },
     { path: 'color.background', label: 'Background (global · control face)' },
   ],
+  // Ticker has no component.ticker.* — specimen uses free global paint (muted / primary / radius).
+  ticker: [
+    { path: 'color.muted.default', label: 'Muted (global · demo band fill)' },
+    { path: 'color.muted.foreground', label: 'Muted fg (global · demo ink)' },
+    { path: 'color.primary.default', label: 'Primary (global · brand band)' },
+    { path: 'color.primary.foreground', label: 'Primary fg (global · brand ink)' },
+    { path: 'radius.md', label: 'Radius md (global · demo clip)' },
+  ],
 }
 
 const FACE_HINTS: Record<string, string> = {
@@ -174,6 +182,7 @@ const FACE_HINTS: Record<string, string> = {
   switch: 'Binary toggles · component.switch.track + border + thumb',
   radio: 'Radio option · component.radio.fg leaf',
   switch: 'Binary toggles',
+  ticker: 'Marquee host · duration/reverse · author paint (no component leaves)',
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
   'code-block': 'Source block · component.code-block bg/fg · .tok-* via --syntax-*',
