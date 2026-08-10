@@ -503,12 +503,11 @@ export default controller(() => ({
   </center>
 </column>`,
 
-  'scroll-area': `<scroll-area>
-    style({ box: maxH(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md), animate: enter({ opacity: 'fade' }) })
-  <p>Constrain it, and the overflow scrolls behind thin,
-     themed scrollbars…</p>
-  <p>…line after line…</p>
-  <p>…after line.</p>
+  'scroll-area': `<scroll-area orientation="vertical"
+  style({ box: maxH(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+  <p>Constrain height/width with Style — overflow scrolls behind thin themed thumbs.</p>
+  <p>orientation picks the axis (vertical · horizontal · both).</p>
+  <p>Rest thumb → component.scroll-area.thumb; hover → border-strong.</p>
 </scroll-area>`,
 
   // Action snippets (spotlight / targetCursor) moved to the action
