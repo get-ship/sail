@@ -1,8 +1,14 @@
 <!--
-  <select> — native picker. Field surface + size ladder (Style).
-  Chevron + option popup ink: SELECT_MAP (data-URI glyph / option colors).
+  <select> — native closed picker only (Style PE). Not a combobox/listbox.
+  Rest surface shares component.field.* with input/textarea
+  (fg · bg · border → --field-foreground / --field / --field-border).
+  Hover spends free border-strong (SPEC-D1 rest-only; field-border-hover is
+  storage residual, not a PE rest leaf). invalid → destructive border.
+  Chevron + option popup ink: SELECT_MAP (data-URI glyph / option field colors).
   padS on the size ladder + padE(8) on base leave chevron room; size must
   not use padX (that shorthand overwrites end pad and collides with the glyph).
+  multiple = native multi-select attr (no PE chrome change). Styled listbox
+  with arbitrary item content is <combobox> — a different L1.
 -->
 
 <scope>
@@ -13,7 +19,7 @@
     multiple = false
   }
 
-  // Shares component.field surface with input/textarea (global fallbacks in the pack).
+  // Rest: component.field surface (shared with input/textarea).
   style base = {
     box: display(block).minH(control-h-md).padY(1_5).padS(3).padE(8).w(full),
     paint: fg(field.foreground).bg(field).borderWidth(1).border(field.border).radius(md).shadow(xs).cursor(pointer),

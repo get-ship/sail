@@ -146,13 +146,28 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   select: lang('select', 'select', {
     blurb:
-      "The native select — keyboard, form submission and mobile pickers come from the platform. The theme restyles the closed control; the option list is the OS's own.",
+      'Native closed picker — keyboard, form submission, and mobile sheets come from the platform. Rest surface is component.field (bg · fg · border) shared with input/textarea; size xs|sm|md|lg; invalid → destructive border; disabled dims. SELECT_MAP draws the chevron + option ink. Not a combobox — open listbox chrome is a different L1.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding', type: 'signal' },
-      { name: '<option>', desc: 'the platform option model', type: 'children' },
-      { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
+      { name: 'bind:value', desc: 'two-way signal binding (single-select)', type: 'signal' },
+      {
+        name: 'size',
+        desc: 'control height + type scale (default md); padE reserved for chevron',
+        type: 'xs · sm · md · lg',
+      },
+      {
+        name: 'invalid',
+        desc: 'PE attr — paints destructive border (compound), like input',
+        type: 'bool',
+      },
+      { name: 'disabled', desc: 'native freeze; PE opacity + not-allowed cursor', type: 'bool' },
+      {
+        name: 'multiple',
+        desc: 'native multi-select attr — no PE chrome change; open list stays the OS picker',
+        type: 'bool',
+      },
+      { name: '<option> / <optgroup>', desc: 'platform option model (children)', type: 'children' },
     ],
   }),
   combobox: lang('combobox', 'combobox', {

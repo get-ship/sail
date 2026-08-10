@@ -2,8 +2,9 @@
 // picker IS the L1 select — it gets the platform's keyboard, typeahead, mobile
 // sheet and form participation for free. A styled listbox with arbitrary item
 // content is a <combobox>, a different primitive; this is not it.
-// Markup mirrors lowered Style stamp: sail-select + component.field surface atoms
-// (field / field-foreground / field-border / field-border-hover) — not free globals.
+// Markup mirrors lowered Style stamp: sail-select + component.field rest atoms
+// (field / field-foreground / field-border). Hover spends free border-strong
+// (SPEC-D1 rest-only; field-border-hover is storage residual, not PE rest).
 
 const SEL =
   'sail-select s-displayblock s-minHcontrolhmd s-padY15 s-padS3 s-padE8 s-wfull s-fgfieldforeground s-bgfield s-borderWidth1 s-borderfieldborder s-radiusmd s-shadowxs s-cursorpointer s-fontSizebase s-hover-borderfieldborderhover s-disabled-cursornotallowed s-disabled-opacity50 s-sizexs-minHcontrolh2xs s-sizexs-padS2 s-sizexs-fontSizexs s-sizesm-minHcontrolhsm s-sizesm-padS25 s-sizesm-fontSizesm s-sizemd-minHcontrolhmd s-sizemd-padS3 s-sizemd-fontSizebase s-sizelg-minHcontrolhlg s-sizelg-padS4 s-sizelg-fontSizemd s-invalidtrue-borderdestructive'

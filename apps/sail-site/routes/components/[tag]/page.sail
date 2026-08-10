@@ -45,6 +45,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const TICKER_DURATIONS = ['fast', 'normal', 'slow'] as const
     const SLD_SIZES = ['sm', 'md', 'lg'] as const
     const TA_SIZES = ['xs', 'sm', 'md', 'lg'] as const
+    const SEL_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
@@ -113,6 +114,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const textareaInvalid = signal(false)
     const textareaDisabled = signal(false)
     const textareaRows = signal(3)
+    // Select: size xs|sm|md|lg; invalid/disabled/multiple native+PE; rest component.field.*
+    // Closed picker only — combobox is a different L1 (not invented here).
+    const selectInvalid = signal(false)
+    const selectDisabled = signal(false)
+    const selectMultiple = signal(false)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -176,6 +182,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const textareaSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), TA_SIZES.length - 1)
       return TA_SIZES[i] ?? 'md'
+    })
+    const selectSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SEL_SIZES.length - 1)
+      return SEL_SIZES[i] ?? 'md'
     })
     })
     // Scope is reused across detail navigations — re-seed on tag change.
@@ -278,6 +288,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
         textareaInvalid.set(false)
         textareaDisabled.set(false)
         textareaRows.set(3)
+      } else if (tag() === 'select') {
+        variant.set('')
+        sizeIdx.set(2) // md
+        selectInvalid.set(false)
+        selectDisabled.set(false)
+        selectMultiple.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -464,6 +480,16 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const d = textareaDisabled() ? 'disabled' : 'enabled'
       return `${textareaSize()} · rows ${textareaRows()} · ${inv} · ${d} · component.field.*`
     })
+    const selectMeta = derived(() => {
+      const bits = [
+        selectSize(),
+        selectInvalid() ? 'invalid' : 'valid',
+        selectDisabled() ? 'disabled' : 'enabled',
+        selectMultiple() ? 'multiple' : 'single',
+      ]
+      return `${bits.join(' · ')} · component.field.* · closed native picker`
+    })
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -491,7 +517,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'ticker' ||
       tag() === 'scroll-area' ||
       tag() === 'slider' ||
-      tag() === 'textarea'
+      tag() === 'textarea' ||
+      tag() === 'select'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -583,6 +610,16 @@ const kbdExChord = () =>
       `<radio value="a">Option A</radio>\n<!-- label ink → component.radio.fg (--radio-foreground) -->`
     const radioExGroup = () =>
       `<radio-group label="Plan" name="plan" value="monthly">\n  <radio value="monthly">Monthly</radio>\n  <radio value="yearly">Yearly</radio>\n</radio-group>\n<!-- exclusivity / name / onChange — radio-group (separate L1) -->`
+    const selExBind = () =>
+      `<controller>\nexport default controller(() => ({ team: signal('Design') }))\n</controller>\n\n<select bind:value={team}>\n  <option>Engineering</option>\n  <option>Design</option>\n  <option>Research</option>\n</select>\n<p>team: {team()}</p>`
+    const selExSizes = () =>
+      `<select size="xs">…</select>\n<select size="sm">…</select>\n<select size="md">…</select>\n<select size="lg">…</select>\n<!-- padE(8) on base keeps chevron room at every size -->`
+    const selExInvalid = () =>
+      `<select invalid>\n  <option>Pick a team</option>\n  <option>Engineering</option>\n</select>\n<!-- invalid → destructive border (same compound as input) -->`
+    const selExRest = () =>
+      `<select>\n  <option>Engineering</option>\n  <option>Design</option>\n</select>\n<!-- rest → component.field bg/fg/border; hover free border-strong; chevron SELECT_MAP -->`
+    const selExNotCombobox = () =>
+      `<!-- <select> is the native closed picker only.\n     Filterable listbox with custom rows is <combobox> — separate L1. -->\n<select>\n  <optgroup label="Team">\n    <option>Ada</option>\n    <option>Grace</option>\n  </optgroup>\n  <option>Alan</option>\n</select>`
     const spnExCentered = () =>
       `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
     const iconExNamed = () =>
@@ -714,6 +751,10 @@ const kbdExChord = () =>
       if (tag() === 'textarea') bio.set('')
     })
     const team = signal('Design')
+    // Select stage re-seeds value on tag entry (team is declared late).
+    effect(() => {
+      if (tag() === 'select') team.set('Design')
+    })
     const fw = signal('')
     const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
     const pageNo = signal('2')
@@ -800,6 +841,8 @@ const kbdExChord = () =>
       sldExBind, sldExSizes, sldExDisabled, sldExRest,
       textareaSize, textareaInvalid, textareaDisabled, textareaRows, textareaMeta,
       taExBind, taExSizes, taExInvalid, taExRest,
+      selectSize, selectInvalid, selectDisabled, selectMultiple, selectMeta,
+      selExBind, selExSizes, selExInvalid, selExRest, selExNotCombobox,
     }
 })
 </controller>
@@ -1177,14 +1220,135 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.select()}>
-              <column gap="3" style(stageCol)>
-                <select bind:value={team}>
-                  <option>Engineering</option>
-                  <option>Design</option>
-                  <option>Research</option>
-                </select>
-                <p style(monoXs)>team: {team()}</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <column gap="2" style(stageColMd)>
+                      <if {selectMultiple()}>
+                        <if {selectDisabled()}>
+                          <if {selectInvalid()}>
+                            <select size={selectSize()} multiple invalid disabled>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                              <option>Product</option>
+                            </select>
+                          {else =>
+                            <select size={selectSize()} multiple disabled>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                              <option>Product</option>
+                            </select>}</if>
+                        {else => <if {selectInvalid()}>
+                            <select size={selectSize()} multiple invalid>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                              <option>Product</option>
+                            </select>
+                          {else =>
+                            <select size={selectSize()} multiple>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                              <option>Product</option>
+                            </select>}</if>}</if>
+                      {else => <if {selectDisabled()}>
+                          <if {selectInvalid()}>
+                            <select bind:value={team} size={selectSize()} invalid disabled>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                            </select>
+                          {else =>
+                            <select bind:value={team} size={selectSize()} disabled>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                            </select>}</if>
+                        {else => <if {selectInvalid()}>
+                            <select bind:value={team} size={selectSize()} invalid>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                            </select>
+                          {else =>
+                            <select bind:value={team} size={selectSize()}>
+                              <option>Engineering</option>
+                              <option>Design</option>
+                              <option>Research</option>
+                            </select>}</if>}</if>}
+                    </column>
+                    <if {selectMultiple()}>
+                      <p style(monoXs)>multi-select (native)</p>
+                    {else =>
+                      <p style(monoXs)>team: {team()}</p>}</if>
+                    <p style(monoXs)>{selectMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{selectSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Height + type scale. Base <code>padE(8)</code> keeps room for the
+                      SELECT_MAP chevron at every step (size uses <code>padS</code>, not
+                      <code>padX</code>).
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Invalid</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={selectInvalid} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{selectInvalid() ? 'on' : 'off'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      PE <code>invalid</code> compound paints <code>destructive</code> border —
+                      same field pattern as input/textarea.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={selectDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{selectDisabled() ? 'not-allowed' : 'interactive'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Native <code>disabled</code> freezes the control; PE drops opacity and sets
+                      not-allowed cursor.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Multiple</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={selectMultiple} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{selectMultiple() ? 'on' : 'off'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Native multi-select attr only — no PE chrome change. Open list is still
+                      the OS picker.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Rest surface from <code>component.field</code> (<code>--field</code> ·
+                      <code>--field-foreground</code> · <code>--field-border</code>), shared with
+                      input/textarea. Hover uses free <code>border-strong</code> (SPEC-D1).
+                      Not a combobox — filterable listbox is a separate L1.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.combobox()}>
               <column gap="3" style(stageCol)>
@@ -4287,6 +4451,109 @@ const kbdExChord = () =>
               <textarea disabled rows="2" placeholder="Disabled"></textarea>
             </column>
             <code-block code={taExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.select()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>bind:value</h3>
+            <p style(exampleLead)>
+              Platform select with themed closed chrome. <code>bind:value</code> keeps the
+              control and a signal in lockstep for single-select. Keyboard, form submit, and
+              mobile sheets are native.
+            </p>
+            <column gap="2" style(stageColMd)>
+              <select bind:value={team}>
+                <option>Engineering</option>
+                <option>Design</option>
+                <option>Research</option>
+              </select>
+              <p style(mutedSm)>team: {team()}</p>
+            </column>
+            <code-block code={selExBind()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> (default
+              <code>md</code>). End padding is reserved for the chevron glyph.
+            </p>
+            <column gap="2" style(stageColMd)>
+              <select size="xs">
+                <option>xs</option>
+                <option>Engineering</option>
+              </select>
+              <select size="sm">
+                <option>sm</option>
+                <option>Engineering</option>
+              </select>
+              <select size="md">
+                <option>md</option>
+                <option>Engineering</option>
+              </select>
+              <select size="lg">
+                <option>lg</option>
+                <option>Engineering</option>
+              </select>
+            </column>
+            <code-block code={selExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Invalid + disabled</h3>
+            <p style(exampleLead)>
+              <code>invalid</code> paints a destructive border (compound). <code>disabled</code>
+              freezes interaction and dims the host.
+            </p>
+            <column gap="2" style(stageColMd)>
+              <select invalid>
+                <option>Pick a team</option>
+                <option>Engineering</option>
+              </select>
+              <select disabled>
+                <option>Locked</option>
+              </select>
+            </column>
+            <code-block code={selExInvalid()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Closed surface from <code>component.field</code> bg / fg / border — shared with
+              input and textarea. Override those leaves in Studio themes. Chevron + option ink
+              come from SELECT_MAP.
+            </p>
+            <column gap="2" style(stageColMd)>
+              <select>
+                <option>Engineering</option>
+                <option>Design</option>
+              </select>
+            </column>
+            <code-block code={selExRest()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Native options — not combobox</h3>
+            <p style(exampleLead)>
+              <code>&lt;option&gt;</code> / <code>&lt;optgroup&gt;</code> children only. A
+              filterable listbox with custom rows is <code>&lt;combobox&gt;</code> — separate
+              L1, deliberately out of this control’s API.
+            </p>
+            <column gap="2" style(stageColMd)>
+              <select>
+                <optgroup label="Team">
+                  <option>Ada</option>
+                  <option>Grace</option>
+                </optgroup>
+                <option>Alan</option>
+              </select>
+            </column>
+            <code-block code={selExNotCombobox()}></code-block>
           </column>
         </column>
       </if>

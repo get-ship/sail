@@ -72,12 +72,14 @@ export default controller(() => ({ bio: signal('') }))
 export default controller(() => ({ team: signal('Design') }))
 </controller>
 
-<select bind:value={team}>
+<!-- size xs|sm|md|lg · invalid · disabled · multiple — rest → component.field.* -->
+<select bind:value={team} size="md">
   <option>Engineering</option>
   <option>Design</option>
   <option>Research</option>
 </select>
-<p>team: {team()}</p>`,
+<p>team: {team()}</p>
+<!-- closed control only; styled filter listbox is <combobox> -->`,
 
   combobox: `<controller>
 export default controller(() => {
