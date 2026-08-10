@@ -301,7 +301,7 @@ compiled 1 file(s)
   <section>
     <h2 style(sectionH)>sail-tool-call</h2>
     <p style(sectionBody)>
-      Collapsible record of one tool invocation. Header shows name + status dot;
+      Collapsible record of one tool invocation. Header shows name + status;
       body shows args (default slot) and result (<code>result</code> slot).
     </p>
 

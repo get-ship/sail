@@ -519,7 +519,7 @@
   --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%);
 
   /* Pill sentinel — SPLIT from --radius-full.
-   * --radius-full (9999px) was doing double duty: a shape token meaning "this element is a circle/pill" AND the top of the radius scale. A theme that squared off its radius scale had no way to say "…but the status dot is still round", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.
+   * --radius-full (9999px) was doing double duty: a shape token meaning "this element is a circle/pill" AND the top of the radius scale. A theme that squared off its radius scale had no way to say "…but intrinsically round elements stay round", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.
    */
   --shape-pill: 9999px;
 

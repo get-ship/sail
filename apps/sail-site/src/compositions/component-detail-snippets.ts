@@ -279,12 +279,6 @@ export default controller(() => {
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
 </if>`,
 
-  'status-dot': `<row gap="2" align="center">
-    style({ animate: enter({ opacity: 'fade' }) })
-  <status-dot tone="success"></status-dot>
-  <p>all systems live</p>
-</row>`,
-
   card: `<card interactive>
     style({ box: pad(5) })
   <strong>A surface</strong>

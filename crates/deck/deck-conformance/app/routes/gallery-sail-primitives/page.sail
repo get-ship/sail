@@ -388,18 +388,6 @@ export default controller(() => ({
     </row>
   </section>
 
-  <!-- Status dot -->
-  <section>
-    <h2 style(sectionH)>sail-status-dot</h2>
-    <row gap="3" align="start">
-      <sail-status-dot tone="success" label="Online"></sail-status-dot>
-      <sail-status-dot tone="warning" pulse label="Pending"></sail-status-dot>
-      <sail-status-dot tone="destructive" label="Error"></sail-status-dot>
-      <sail-status-dot tone="muted" label="Offline"></sail-status-dot>
-      <sail-status-dot tone="info" size="sm" label="Small"></sail-status-dot>
-    </row>
-  </section>
-
   <!-- Switch -->
   <section>
     <h2 style(sectionH)>sail-switch</h2>

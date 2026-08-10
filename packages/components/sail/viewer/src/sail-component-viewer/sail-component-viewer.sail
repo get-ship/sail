@@ -104,8 +104,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
         </if>
       </row>
       <row gap="2" align="center">
-        <status-dot tone="success"></status-dot>
-        <span style({ paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) })>live</span>
+        <badge size="sm" variant="soft" tone="success">live</badge>
       </row>
     </row>
 

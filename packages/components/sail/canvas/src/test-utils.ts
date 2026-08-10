@@ -43,9 +43,8 @@ export function createContainerRegistry(): TestContainerRegistry {
  * afterEach(() => reg.cleanup())
  *
  * it('reflects tone', () => {
- *   const { el, shadow } = mount(reg, 'sail-status-dot', { tone: 'primary', pulse: true })
+ *   const { el, shadow } = mount(reg, 'sail-badge', { tone: 'primary' })
  *   expect(el.getAttribute('tone')).toBe('primary')
- *   expect(shadow!.querySelector('.dot')).not.toBeNull()
  * })
  * ```
  */

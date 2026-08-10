@@ -1,10 +1,10 @@
 // Closed product keyframe catalog — ambient CSS loops for L1 surfaces.
 //
 // SSOT for product @keyframes + --animate-* vars. Style.animate(name)
-// lowers to `animation: var(--animate-{name})`; L1 skins (status-dot,
-// skeleton L1 map, progress) reference the same vars. Not Style motion
-// interaction catalog (crates/sail/lint/animation-presets.json) — infinite
-// spinners / shimmers stay on CSS PE, not style.loop.
+// lowers to `animation: var(--animate-{name})`; L1 skins (skeleton map,
+// progress) reference the same vars. Not Style motion interaction catalog
+// (crates/sail/lint/animation-presets.json) — infinite spinners / shimmers
+// stay on CSS PE, not style.loop.
 //
 // Closed ambient loops; materialised in sail-base.css.
 
@@ -38,15 +38,6 @@ export const KEYFRAME_CATALOG: readonly KeyframeCatalogEntry[] = [
     reducedMotion: 'sail-spin 1.5s linear infinite',
     styleAnimate: true,
     doc: 'Continuous rotation — spinner rings and Style.animate(spin)',
-  },
-  {
-    name: 'pulse',
-    keyframe: 'sail-status-dot-pulse',
-    frames:
-      '0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); }',
-    animation: 'sail-status-dot-pulse 2.5s var(--ease-out) infinite',
-    styleAnimate: false,
-    doc: 'Status-dot attention pulse (span[dot][pulse])',
   },
   {
     name: 'shimmer',

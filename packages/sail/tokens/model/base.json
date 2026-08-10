@@ -787,7 +787,7 @@
     "shapePill": {
       "$value": "9999px",
       "$type": "dimension",
-      "$description": "Pill sentinel — SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"…but the status dot is still round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
+      "$description": "Pill sentinel — SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"…but intrinsically round elements stay round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
       "$extensions": {
         "sail": {
           "channel": true

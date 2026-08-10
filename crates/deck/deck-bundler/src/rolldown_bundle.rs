@@ -620,7 +620,6 @@ mod tests {
             "sail-badge",
             "sail-button",
             "sail-separator",
-            "sail-status-dot",
             "sail-table",
             "sail-bar-chart",
             "sail-sparkline",

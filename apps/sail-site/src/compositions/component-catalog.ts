@@ -114,7 +114,6 @@ export const CATALOG: CatalogEntry[] = [
   L('toast', 'toast', 'feedback'),
   L('badge', 'badge', 'display'),
   L('chip', 'chip', 'display'),
-  L('status-dot', 'statusDot', 'display'),
   L('card', 'card', 'display'),
   L('avatar', 'avatar', 'display'),
   L('icon', 'icon', 'display'),

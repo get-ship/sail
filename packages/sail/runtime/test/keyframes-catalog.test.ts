@@ -18,7 +18,6 @@ describe('keyframes catalog', () => {
   it('names', () => {
     expect(KEYFRAME_CATALOG.map((e) => e.name)).toEqual([
       'spin',
-      'pulse',
       'shimmer',
       'progress-indeterminate',
     ])

@@ -37,10 +37,9 @@
 
 @layer sail {
 @keyframes sail-spin { to { transform: rotate(360deg); } }
-@keyframes sail-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }
 @keyframes sail-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
-:root { --animate-spin: sail-spin 0.7s linear infinite; --animate-pulse: sail-status-dot-pulse 2.5s var(--ease-out) infinite; --animate-shimmer: sail-skeleton-shimmer 1.5s ease-in-out infinite; --animate-progress-indeterminate: sail-progress-indeterminate 1.2s ease-in-out infinite; }
+:root { --animate-spin: sail-spin 0.7s linear infinite; --animate-shimmer: sail-skeleton-shimmer 1.5s ease-in-out infinite; --animate-progress-indeterminate: sail-progress-indeterminate 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { font-family: var(--font-body); color: var(--foreground); background: var(--background); }
@@ -162,21 +161,8 @@ a.sail-a:not([variant]):not(.s-displayinlineflex):not(.sx-displayinlineflex):not
   color: var(--foreground);
 }
 
-/* Status dot — attribute floor (no L1 host). Skeleton is L1 stdlib (.sail-skeleton). */
-:where(span[dot]) { display: inline-block; vertical-align: middle; flex-shrink: 0; width: var(--icon-size-3xs, 0.5rem); height: var(--icon-size-3xs, 0.5rem); border-radius: 999px; background: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
-:where(span[dot][size='sm']) { width: var(--space-1_5, 0.375rem); height: var(--space-1_5, 0.375rem); }
-:where(span[dot][size='md']) { width: var(--icon-size-3xs, 0.5rem); height: var(--icon-size-3xs, 0.5rem); }
-:where(span[dot][size='lg']) { width: var(--space-2_5, 0.625rem); height: var(--space-2_5, 0.625rem); }
-:where(span[dot][tone='primary']) { background: var(--primary); }
-:where(span[dot][tone='info']) { background: var(--info); }
-:where(span[dot][tone='success']) { background: var(--success); }
-:where(span[dot][tone='warning']) { background: var(--warning); }
-:where(span[dot][tone='destructive']) { background: var(--destructive); }
-:where(span[dot][tone='accent']) { background: var(--accent); }
-:where(span[dot][tone='muted']) { background: var(--muted-foreground); }
-:where(span[dot][pulse]) { animation: var(--animate-pulse); }
 @media (prefers-reduced-motion: reduce) {
-  :where(span[dot][pulse]), :where(.sail-skeleton) { animation: none !important; }
+  :where(.sail-skeleton) { animation: none !important; }
 }
 :where(input, textarea, select) { appearance: none; }
 /* Listbox floor: ul reset + option anatomy for role='listbox' popovers

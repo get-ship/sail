@@ -897,12 +897,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </column>
               </row>
             </if>
-            <if {stage.statusDot()}>
-              <row gap="2" align="center">
-                <status-dot tone={variant()}></status-dot>
-                <p style(mutedSm)>the tone is the message</p>
-              </row>
-            </if>
             <if {stage.card()}>
               <card variant={variant()} interactive style(cardPad5)>
                 <strong>A surface</strong>

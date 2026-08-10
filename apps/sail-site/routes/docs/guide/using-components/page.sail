@@ -90,7 +90,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <row gap="1" align="center">
         <badge size="sm" variant="soft" tone="muted">badge</badge>
         <badge size="sm" variant="soft" tone="muted">chip</badge>
-        <badge size="sm" variant="soft" tone="muted">status-dot</badge>
         <badge size="sm" variant="soft" tone="muted">card</badge>
         <badge size="sm" variant="soft" tone="muted">avatar</badge>
         <badge size="sm" variant="soft" tone="muted">icon</badge>

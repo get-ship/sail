@@ -314,11 +314,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     </if>
                     <chip size="sm" variant="outline">a11y</chip>
                     <chip size="sm" variant="outline">ssr</chip>
-                  </row>}{else-if {e.tag === 'status-dot'} => <column gap="1">
-                    <row gap="2" align="center"><span dot tone="success"></span><span style(mutedXs)>Online</span></row>
-                    <row gap="2" align="center"><span dot tone="warning" pulse></span><span style(mutedXs)>Degraded</span></row>
-                    <row gap="2" align="center"><span dot tone="destructive"></span><span style(mutedXs)>Down</span></row>
-                  </column>}{else-if {e.tag === 'card'} => <card interactive style({ box: pad(3).w(full) })>
+                  </row>}{else-if {e.tag === 'card'} => <card interactive style({ box: pad(3).w(full) })>
                     <strong>Harbor Signals</strong>
                     <p style(mutedXs)>4 tracks · last played today</p>
                   </card>}{else-if {e.tag === 'avatar'} => <row gap="2" align="center">

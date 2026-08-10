@@ -788,10 +788,8 @@ describe('@ship/tokens — representative token in every theme (reskin-by-token 
 describe('@ship/tokens — sail-base.css layer (host baseline + platform tone)', () => {
   const base = loadSrc('../src/sail-base.css')
   it('has no [tone=] universal channel; no --size-h channel', () => {
-    // Tone is an ordinary element prop on native <button> / <a>. Status-dot
-    // helpers may use span[dot][tone=…]; strip those and ban residual channels.
-    const withoutDotTones = base.replace(/span\[dot\]\[tone=['"][^'"]+['"]\]/g, 'span[dot]')
-    expect(withoutDotTones).not.toMatch(/\[tone=['"]/)
+    // Tone is an ordinary element prop on native hosts (button / a / …).
+    expect(base).not.toMatch(/\[tone=['"]/)
     expect(base).not.toMatch(/--tone\s*:/)
     // --size-h channel stays gone; size maps to control-h/text tokens directly.
     expect(base).not.toMatch(/\[size=['"]sm['"]\]\s*\{[^}]*--size-h/)

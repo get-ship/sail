@@ -399,12 +399,6 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'children', desc: 'label text (keep short)', type: 'slot' },
     ],
   }),
-  'status-dot': lang('status-dot', 'statusDot', {
-    blurb: 'The smallest possible statement: a toned dot. Pair it with text; the tone is the message.',
-    variants: ['success', 'warning', 'destructive'],
-    variantAttr: 'tone',
-    props: [{ name: 'tone', desc: 'semantic colour token', type: TONES }],
-  }),
   card: lang('card', 'card', {
     blurb:
       'The surface everything else sits on. Padding, tone, an accent bar and the hover lift are attributes — the card never needs a stylesheet.',

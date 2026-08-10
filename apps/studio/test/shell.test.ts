@@ -530,7 +530,7 @@ describe('Studio routes + chrome', () => {
     expect(page).toMatch(/<themes-surface\b/)
   })
 
-  it('tasks-surface: status dots and chat-elements', () => {
+  it('tasks-surface: badges and chat-elements', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/tasks-surface/tasks-surface.sail'),
       'utf8',
