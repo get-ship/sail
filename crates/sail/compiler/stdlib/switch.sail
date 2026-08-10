@@ -1,13 +1,18 @@
 <!--
   <switch> — native checkbox restyled as sliding toggle. No controller.
-  Paint (Style product): track + ::before thumb; size via match; tone via bound paths.
-  Rest track/border/thumb from component.switch tokens
-  (cssNames switch, switch.border, switch.thumb). Checked rest = primary.
-  Semantic checked/focus = bound tone ONLY when tone is present
-  (never unconditional bg(tone)/bg(tone.foreground) — empty --tone invalidates
-  at computed-value time to transparent and the thumb disappears; same trap as
-  separator/avatar). Hover paints track color only — never host opacity wash
-  (that equalizes track+thumb and makes checked look “all dark”).
+
+  Design tokens (component.switch.* → cssNames switch / switch.border / switch.thumb):
+    track rest  → switch
+    border rest → switch.border
+    thumb ALWAYS → switch.thumb  (light contrast knob; themes override this token —
+                                  never primary-foreground / tone.foreground, which
+                                  collapse into the track when those resolve dark
+                                  or when --tone is unset)
+
+  Checked track = primary (rest brand). Tone present → track uses bound tone
+  via compound { tone: * } only (same presence gate as separator/avatar —
+  Style product contract, not a CSS escape hatch). Thumb stays switch.thumb
+  in every state so track vs knob contrast is owned by the token model.
 -->
 
 <scope>
@@ -35,14 +40,14 @@
   style(base, {
     box: shrink(0),
     when: {
-      // Track hover only — never global opacity wash (kills thumb contrast).
       hover: { paint: border(muted-foreground) },
       checked: {
         paint: bg(primary).border(selected-border).shadow(xs),
         when: {
-          // Keep selected identity under pointer — track color, not opacity.
+          // Track only — never host opacity wash (would fade switch.thumb).
           hover: { paint: bg(primary).border(selected-border) },
-          before: { box: left(auto).right(px), paint: bg(primary-foreground) },
+          // Slide the knob; paint stays switch.thumb from rest before.
+          before: { box: left(auto).right(px) },
         },
       },
       focus: { paint: outline(solid).outline(2).outline(primary).outlineOffset(ring-offset) },
@@ -64,12 +69,12 @@
       },
     },
     compound: [
-      // Tone present → bridge vars are set. Never emit empty var(--tone) on rest.
+      // Tone present → track (and focus) only. Thumb never leaves switch.thumb.
       { tone: *, when: { checked: { paint: bg(tone).border(selected-border).shadow(xs) } } },
-      { tone: *, when: { checked: { when: { before: { paint: bg(tone.foreground) }, hover: { paint: bg(tone).border(selected-border) } } } } },
+      { tone: *, when: { checked: { when: { hover: { paint: bg(tone).border(selected-border) } } } } },
       { tone: *, when: { focus: { paint: outline(tone) } } },
       { tone: muted, when: { checked: { paint: bg(muted-foreground) }, focus: { paint: outline(muted-foreground) } } },
-      { tone: muted, when: { checked: { when: { before: { paint: bg(background) }, hover: { paint: bg(muted-foreground) } } } } },
+      { tone: muted, when: { checked: { when: { hover: { paint: bg(muted-foreground) } } } } },
     ],
   })
 >
