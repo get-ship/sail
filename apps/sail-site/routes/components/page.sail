@@ -217,6 +217,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <button variant="solid" tone="primary">Save</button>
                     <button variant="outline">Cancel</button>
                     <button variant="ghost" tone="destructive" size="sm">Delete</button>
+                  </row>}{else-if {e.tag === 'a'} => <row gap="2" align="center">
+                    <a href="#">text link</a>
+                    <a href="#" variant="solid" tone="primary">solid</a>
+                    <a href="#" variant="outline">outline</a>
                   </row>}{else-if {e.tag === 'input'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Work email</label>
                     <input type="email" placeholder="you@company.com" bind:value={email} />

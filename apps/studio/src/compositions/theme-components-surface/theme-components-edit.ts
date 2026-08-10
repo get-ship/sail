@@ -119,6 +119,13 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.success.default', label: 'Success (global)' },
     { path: 'radius.lg', label: 'Radius lg (global)' },
   ],
+  a: [
+    { path: 'color.primary.default', label: 'Primary (global · toned links)' },
+    { path: 'color.foreground', label: 'Foreground (global · solid invert)' },
+    { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink alias)' },
+    { path: 'color.border.default', label: 'Border (global · rest button.border)' },
+    { path: 'radius.md', label: 'Radius md (global · button-link)' },
+  ],
   card: [
     { path: 'color.surface.3', label: 'Card surface (global)' },
     { path: 'color.foreground', label: 'Foreground (global)' },
@@ -148,6 +155,7 @@ const FACE_HINTS: Record<string, string> = {
   alert: 'Callouts · tone maps to globals + component leaves',
   badge: 'Status chips',
   button: 'Actions — globals until component.button.* exists',
+  a: 'Links · bare text or button-link chrome · component.button.* rest',
   card: 'Surfaces · glass leaves',
   tabs: 'Tabs (list + tab + panel as one face)',
   toast: 'Toasts + region',

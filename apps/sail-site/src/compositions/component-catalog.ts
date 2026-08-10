@@ -89,6 +89,7 @@ const P = (
 export const CATALOG: CatalogEntry[] = [
   // ── Component primitives: the 48-element L1 surface ────────────────
   L('button', 'button', 'inputs'),
+  L('a', 'a', 'navigation'),
   L('input', 'input', 'inputs'),
   L('textarea', 'textarea', 'inputs'),
   L('select', 'select', 'inputs'),

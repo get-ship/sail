@@ -93,6 +93,31 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'style({ animate: press })', desc: 'press scale feedback', type: 'preset' },
     ],
   }),
+  a: lang('a', 'a', {
+    blurb:
+      'Native <a>. Bare (no variant attr) stays a text link — freeform never stamps variant/tone. With variant set it becomes a button-link: default rest uses component.button.*; solid / soft / outline / ghost match the button family (default ≠ solid). tone always paints when set. No size axis — use <button> for sized CTAs. disabled paint needs aria-disabled on anchors.',
+    variants: ['default', 'solid', 'soft', 'outline', 'ghost'],
+    variantAttr: 'variant',
+    props: [
+      {
+        name: 'variant',
+        desc: 'omit for text link; set for button-link chrome — default rest = component.button.* (not solid invert)',
+        type: 'default · solid · soft · outline · ghost',
+      },
+      {
+        name: 'tone',
+        desc: 'semantic colour when button-link — always applied when set; omit for rest button tokens',
+        type: TONES,
+      },
+      {
+        name: 'disabled',
+        desc: 'dim + not-allowed cursor when aria-disabled (native disabled is not a real <a> state)',
+        type: 'bool',
+      },
+      { name: 'href', desc: 'native navigation target', type: 'string' },
+      { name: 'children', desc: 'link label (and optional <icon> siblings in button-link mode)', type: 'slot' },
+    ],
+  }),
   input: lang('input', 'input', {
     blurb:
       'The platform input, skinned by the theme. bind:value keeps it and a signal in lockstep; every type=, form wiring and validity state is the native one.',

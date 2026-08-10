@@ -45,6 +45,12 @@ const VARIANT_META: Partial<
     variantAttr: 'variant',
     blurb: 'Tone × variant platform button — press and focus states included.',
   },
+  a: {
+    variants: ['default', 'solid', 'soft', 'outline', 'ghost'],
+    variantAttr: 'variant',
+    blurb:
+      'Native link · bare = text; variant set = button-link. Rest component.button.*; tone always paints; default ≠ solid invert; no size.',
+  },
   switch: {
     variants: ['md', 'sm', 'lg'],
     variantAttr: 'size',
