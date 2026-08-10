@@ -440,13 +440,16 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   icon: lang('icon', 'icon', {
     blurb:
-      'A sizing and ink wrapper around a slotted SVG. currentColor inheritance does the colouring; spin reuses the spinner’s keyframe.',
-    variants: ['sm', 'md', 'lg', 'xl'],
-    variantAttr: 'size',
+      'Glyph box on the icon-size ladder. Prefer name for pack ids (local /_deck/icons resolve — never CDN); src only same-origin SVG. Empty label is decorative (aria-hidden); set label for role=img. Ink is currentColor + glyphFill (no tone prop). spin is owned by use:icon motion.',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: '<svg>', desc: 'the glyph — slotted, inked by currentColor', type: 'children' },
-      { name: 'size', desc: 'glyph scale', type: 'xs · sm · md · lg · xl' },
-      { name: 'spin', desc: 'rotate it — loading glyphs', type: 'bool' },
+      { name: 'name', desc: 'pack glyph id → local /_deck/icons/{name}.svg', type: 'string' },
+      { name: 'src', desc: 'same-origin / relative SVG only (no CDN)', type: 'string' },
+      { name: 'label', desc: 'a11y name; empty → decorative aria-hidden', type: 'string' },
+      { name: 'size', desc: 'glyph box on icon-size scale (xs→2xs … xl→2xl)', type: 'xs · sm · md · lg · xl' },
+      { name: 'spin', desc: 'loop rotate via use:icon (not a CSS class)', type: 'bool' },
+      { name: '(slot)', desc: 'optional one-off SVG when not using name/src', type: 'children' },
     ],
   }),
   separator: lang('separator', 'separator', {

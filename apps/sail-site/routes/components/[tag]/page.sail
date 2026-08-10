@@ -33,6 +33,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const BDG_SIZES = ['sm', 'md', 'lg'] as const
     const CHIP_SIZES = ['sm', 'md', 'lg'] as const
     const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
+    const ICON_SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
     const SKEL_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
@@ -53,6 +54,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Spinner: empty tone = rest component.spinner.fg; track always spinner.track.
     const spinnerTone = signal('primary')
     const spinnerCentered = signal(false)
+    // Icon: size ladder + spin (use:icon) + name/label; ink is currentColor (no tone).
+    const iconSpin = signal(false)
+    const iconName = signal('sparkles')
+    const iconLabeled = signal(false)
     // Skeleton: shape via variant(); size ladder; sheen always component.skeleton.*
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
@@ -73,6 +78,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const spinnerSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SPN_SIZES.length - 1)
       return SPN_SIZES[i] ?? 'md'
+    })
+    const iconSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ICON_SIZES.length - 1)
+      return ICON_SIZES[i] ?? 'md'
     })
     const skelSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SKEL_SIZES.length - 1)
@@ -110,6 +119,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(2) // md
         spinnerTone.set('primary')
         spinnerCentered.set(false)
+      } else if (tag() === 'icon') {
+        variant.set('')
+        sizeIdx.set(2) // md
+        iconSpin.set(false)
+        iconName.set('sparkles')
+        iconLabeled.set(false)
       } else if (tag() === 'skeleton') {
         variant.set('text')
         sizeIdx.set(1) // md
@@ -195,6 +210,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const t = spinnerTone()
       return `${spinnerSize()} · ${t || 'rest (spinner.foreground)'} · centered ${spinnerCentered() ? 'on' : 'off'}`
     })
+    const iconMeta = derived(() => {
+      const lab = iconLabeled() ? `label "${iconName()}"` : 'decorative'
+      return `${iconName()} · ${iconSize()} · spin ${iconSpin() ? 'on' : 'off'} · ${lab}`
+    })
+    const iconLabelAttr = derived(() => (iconLabeled() ? iconName() : null))
     const skelMeta = derived(() => {
       const sh = variant() || 'text'
       const sizeNote = sh === 'block' ? 'size n/a (block)' : skelSize()
@@ -212,6 +232,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'alert' ||
       tag() === 'chip' ||
       tag() === 'spinner' ||
+      tag() === 'icon' ||
       tag() === 'skeleton'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
@@ -260,6 +281,14 @@ const kbdExChord = () =>
       `<spinner></spinner>\n<!-- no tone → component.spinner.fg + spinner.track (themeable) -->`
     const spnExCentered = () =>
       `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
+    const iconExNamed = () =>
+      `<icon name="check" size="sm"></icon>\n<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
+    const iconExSizes = () =>
+      `<icon name="sparkles" size="xs"></icon>\n<icon name="sparkles" size="sm"></icon>\n<icon name="sparkles"></icon>\n<icon name="sparkles" size="lg"></icon>\n<icon name="sparkles" size="xl"></icon>`
+    const iconExSpin = () =>
+      `<icon name="refresh-cw" spin label="Refreshing"></icon>\n<!-- use:icon owns spin motion; label → role=img -->`
+    const iconExColor = () =>
+      `<span style({ paint: fg(primary) })>\n  <icon name="heart"></icon>\n</span>\n<!-- no tone prop — ink is currentColor -->`
     const skelExLines = () =>
       `<column gap="2">\n  <skeleton shape="text" size="md"></skeleton>\n  <skeleton shape="text" size="sm"></skeleton>\n  <skeleton shape="line" size="sm"></skeleton>\n</column>`
     const skelExAvatar = () =>
@@ -354,6 +383,8 @@ const kbdExChord = () =>
       kbdExChord, kbdExModifiers, kbdExRest,
       spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
       spnExInline, spnExSizes, spnExRest, spnExCentered,
+      iconSize, iconSpin, iconName, iconLabeled, iconMeta, iconLabelAttr,
+      iconExNamed, iconExSizes, iconExSpin, iconExColor,
       skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
     }
 })
@@ -1074,16 +1105,62 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.icon()}>
-              <row gap="4" align="center">
-                <icon size={variant()}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                </icon>
-                <icon size={variant()}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-                </icon>
-                <icon size={variant()} spin>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
-                </icon>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(fullW)>
+                    <icon
+                      name={iconName()}
+                      size={iconSize()}
+                      spin={iconSpin() ? 'true' : null}
+                      label={iconLabelAttr()}
+                    ></icon>
+                    <p style(monoXs)>{iconMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Name</label>
+                    <select size="sm" bind:value={iconName} label="Name">
+                      <option value="sparkles">sparkles</option>
+                      <option value="check">check</option>
+                      <option value="settings">settings</option>
+                      <option value="search">search</option>
+                      <option value="heart">heart</option>
+                      <option value="refresh-cw">refresh-cw</option>
+                    </select>
+                    <p style(mutedXs)>Pack glyph via <code>name</code> (local <code>/_deck/icons/</code>). Use <code>src</code> only for same-origin SVG.</p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{iconSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="4" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                      <span style(tick)>xl</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Spin</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={iconSpin} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{iconSpin() ? 'use:icon loop' : 'static'}</span>
+                    </row>
+                    <p style(mutedXs)><code>use:icon</code> owns spin motion — not a CSS class on the host.</p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Label</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={iconLabeled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{iconLabeled() ? 'role=img' : 'decorative'}</span>
+                    </row>
+                    <p style(mutedXs)>Empty label → <code>aria-hidden</code>. Set label for meaningful glyphs.</p>
+                  </column>
+                </column>
               </row>
             </if>
             <if {stage.separator()}>
@@ -1636,6 +1713,83 @@ const kbdExChord = () =>
               <separator variant="dashed"></separator>
             </column>
             <code-block code={sepExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.icon()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Named pack glyphs</h3>
+            <p style(exampleLead)>
+              Prefer <code>name</code> for Lucide (and other pack) ids. The action fetches
+              local <code>/_deck/icons/</code> assets — never a CDN. Slot raw SVG only when
+              you author a one-off glyph.
+            </p>
+            <row gap="3" align="center">
+              <icon name="check" size="sm"></icon>
+              <icon name="search" size="sm"></icon>
+              <icon name="settings" size="sm"></icon>
+              <button variant="solid" tone="primary">
+                <icon name="check" size="sm"></icon>
+                Save
+              </button>
+            </row>
+            <code-block code={iconExNamed()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> · <code>xl</code>
+              map onto the theme <code>icon-size</code> scale (xs→2xs, lg→xl, xl→2xl boxes).
+              Default is <code>md</code>.
+            </p>
+            <row gap="4" align="center">
+              <icon name="sparkles" size="xs"></icon>
+              <icon name="sparkles" size="sm"></icon>
+              <icon name="sparkles"></icon>
+              <icon name="sparkles" size="lg"></icon>
+              <icon name="sparkles" size="xl"></icon>
+            </row>
+            <code-block code={iconExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Spin + label</h3>
+            <p style(exampleLead)>
+              <code>spin</code> is owned by <code>use:icon</code> (loop rotate motion).
+              Set <code>label</code> when the glyph is meaningful — empty label stays decorative
+              (<code>aria-hidden</code>).
+            </p>
+            <row gap="4" align="center">
+              <icon name="refresh-cw" spin label="Refreshing"></icon>
+              <icon name="loader-circle" spin label="Loading"></icon>
+            </row>
+            <code-block code={iconExSpin()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Ink via currentColor</h3>
+            <p style(exampleLead)>
+              There is no tone prop. Host paint is <code>fg(currentColor)</code> +
+              <code>glyphFill</code> so stroke and fill follow the parent foreground.
+              Theme icon boxes with the global <code>icon</code> size scale in Studio Assets.
+            </p>
+            <row gap="4" align="center">
+              <span style({ paint: fg(primary) })>
+                <icon name="heart"></icon>
+              </span>
+              <span style({ paint: fg(destructive) })>
+                <icon name="heart"></icon>
+              </span>
+              <span style({ paint: fg(success) })>
+                <icon name="check"></icon>
+              </span>
+            </row>
+            <code-block code={iconExColor()}></code-block>
           </column>
         </column>
       </if>

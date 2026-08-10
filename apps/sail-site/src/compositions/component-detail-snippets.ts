@@ -292,15 +292,9 @@ export default controller(() => {
 </row>`,
 
   icon: `<row gap="3" align="center">
-    style({ animate: enter({ opacity: 'fade' }) })
-  <icon>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5" /></svg>
-  </icon>
-  <icon spin>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
-  </icon>
+  <icon name="check" size="sm"></icon>
+  <icon name="search"></icon>
+  <icon name="refresh-cw" spin label="Refreshing"></icon>
 </row>`,
 
   separator: `<column gap="2">

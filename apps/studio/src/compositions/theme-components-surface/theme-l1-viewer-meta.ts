@@ -91,9 +91,9 @@ const VARIANT_META: Partial<
     blurb: 'Face / initials glyph box.',
   },
   icon: {
-    variants: ['md', 'sm', 'lg'],
+    variants: ['xs', 'sm', 'md', 'lg', 'xl'],
     variantAttr: 'size',
-    blurb: 'Glyph host with size ladder.',
+    blurb: 'Glyph host · size from theme icon scale; ink currentColor (no component.icon paint leaves).',
   },
   spinner: {
     variants: ['xs', 'sm', 'md', 'lg'],

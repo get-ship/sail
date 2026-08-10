@@ -70,6 +70,12 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.border.subtle', label: 'Border subtle (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · toned)' },
   ],
+  icon: [
+    { path: 'color.foreground', label: 'Foreground (global · currentColor ink)' },
+    { path: 'color.primary.default', label: 'Primary (global · parent fg)' },
+    { path: 'icon.md', label: 'Icon md (global size scale)' },
+    { path: 'icon.xl', label: 'Icon xl (global size scale)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },
@@ -110,6 +116,7 @@ const FACE_HINTS: Record<string, string> = {
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
   spinner: 'Indeterminate wait · fg + track leaves',
+  icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
 }

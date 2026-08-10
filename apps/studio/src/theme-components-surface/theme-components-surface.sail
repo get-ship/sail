@@ -484,7 +484,30 @@ export default controller(() => {
                     </row>
                   </if>
                   <if {components.stage.icon()}>
-                    <icon size={components.variant() || 'md'} name="sparkles" label="sparkles"></icon>
+                    <column gap="3" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Size ladder · theme icon scale (xs–xl)</p>
+                        <row gap="4" align="center" nowrap>
+                          <icon name="sparkles" size="xs" label="xs"></icon>
+                          <icon name="sparkles" size="sm" label="sm"></icon>
+                          <icon name="sparkles" size={components.variant() || 'md'} label="md"></icon>
+                          <icon name="sparkles" size="lg" label="lg"></icon>
+                          <icon name="sparkles" size="xl" label="xl"></icon>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Spin · use:icon motion · currentColor ink</p>
+                        <row gap="4" align="center" nowrap>
+                          <icon name="refresh-cw" spin label="Refreshing"></icon>
+                          <span style({ paint: fg(primary) })>
+                            <icon name="heart" size="lg" label="primary ink"></icon>
+                          </span>
+                          <span style({ paint: fg(destructive) })>
+                            <icon name="heart" size="lg" label="destructive ink"></icon>
+                          </span>
+                        </row>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.separator()}>
                     <column gap="3" style(sampleMax)>
