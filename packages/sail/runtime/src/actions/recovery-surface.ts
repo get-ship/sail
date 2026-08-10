@@ -5,6 +5,7 @@ import type { Action } from '../action'
  * tile, and the details/toggle visibility are PURE CSS gated on the reserved
  * `data-state` attribute (`has-details` / `open` tokens — group-state-*: in
  * structure sx). This action supplies what CSS can't:
+ *  - stamp role=alert + aria-live=assertive (recovery is urgent; no tone axis);
  *  - fill the code chip from the `code` attribute (re-synced on change);
  *  - detect whether the details region has content → stamp
  *    `data-state="has-details"` so the Show/Hide toggle appears, and wire the
@@ -40,6 +41,10 @@ export const recoverySurface: Action<void> = (node) => {
     }
     if (target.getAttribute(name) !== next) target.setAttribute(name, next)
   }
+
+  // Recovery surfaces announce immediately — always alert/assertive (no tone ladder).
+  writeAttr(el, 'role', 'alert')
+  writeAttr(el, 'aria-live', 'assertive')
 
   const syncCode = (): void => {
     if (code) writeText(code, el.getAttribute('code') ?? '')

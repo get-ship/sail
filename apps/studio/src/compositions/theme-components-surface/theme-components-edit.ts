@@ -85,6 +85,13 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.default', label: 'Muted (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · fill)' },
   ],
+  'error-state': [
+    { path: 'color.muted.default', label: 'Muted (global · rest bg alias)' },
+    { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink)' },
+    { path: 'color.border.default', label: 'Border (global · rest edge)' },
+    { path: 'color.destructive.default', label: 'Danger (global · icon / inline)' },
+    { path: 'color.foreground', label: 'Foreground (global · title)' },
+  ],
   icon: [
     { path: 'color.foreground', label: 'Foreground (global · currentColor ink)' },
     { path: 'color.primary.default', label: 'Primary (global · parent fg)' },
@@ -134,6 +141,7 @@ const FACE_HINTS: Record<string, string> = {
   spinner: 'Indeterminate wait · fg + track leaves',
   meter: 'Gauge · track + optimum band leaves',
   progress: 'Bar · track + fill leaves',
+  'error-state': 'Recovery · component.error-state leaves + brand destructive',
   icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',

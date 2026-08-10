@@ -115,6 +115,12 @@ const VARIANT_META: Partial<
     variantAttr: 'shape',
     blurb: 'Loading sheen · component.skeleton.bg / highlight.',
   },
+  'error-state': {
+    variants: ['default', 'inline'],
+    variantAttr: 'variant',
+    blurb:
+      'Recovery surface · rest uses component.error-state bg/fg/border; icon + inline border brand destructive; code + details via recoverySurface.',
+  },
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
