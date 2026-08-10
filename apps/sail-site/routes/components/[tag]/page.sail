@@ -34,6 +34,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const CHIP_SIZES = ['sm', 'md', 'lg'] as const
     const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const SKEL_SIZES = ['sm', 'md', 'lg'] as const
+    const METER_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
@@ -54,6 +55,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const spinnerTone = signal('primary')
     const spinnerCentered = signal(false)
     // Skeleton: shape via variant(); size ladder; sheen always component.skeleton.*
+    // Meter: value + size; low/high/optimum fixed for band demo (native thresholds).
+    const meterVal = signal(55)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -77,6 +80,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const skelSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SKEL_SIZES.length - 1)
       return SKEL_SIZES[i] ?? 'md'
+    })
+    const meterSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), METER_SIZES.length - 1)
+      return METER_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -113,6 +120,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
       } else if (tag() === 'skeleton') {
         variant.set('text')
         sizeIdx.set(1) // md
+      } else if (tag() === 'meter') {
+        variant.set('')
+        sizeIdx.set(1) // md
+        meterVal.set(55)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -200,6 +211,16 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const sizeNote = sh === 'block' ? 'size n/a (block)' : skelSize()
       return `${sh} · ${sizeNote} · sheen component.skeleton.*`
     })
+    // Band labels match fixed low=33 high=66 optimum=100 (HTML meter regions).
+    const meterBand = derived(() => {
+      const v = Number(meterVal()) || 0
+      if (v >= 66) return 'optimum'
+      if (v >= 33) return 'suboptimum'
+      return 'even-less-good'
+    })
+    const meterMeta = derived(() => {
+      return `${meterSize()} · value ${meterVal()} · ${meterBand()} · component.meter.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -212,7 +233,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'alert' ||
       tag() === 'chip' ||
       tag() === 'spinner' ||
-      tag() === 'skeleton'
+      tag() === 'skeleton' ||
+      tag() === 'meter'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -272,6 +294,14 @@ const kbdExChord = () =>
       `<row gap="3" align="center">\n  <skeleton shape="circle" size="md"></skeleton>\n  <column gap="2" style({ box: grow(1) })>\n    <skeleton shape="text" size="sm"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
     const skelExRest = () =>
       `<skeleton shape="block"></skeleton>\n<!-- sheen → component.skeleton.bg / highlight (themeable) -->`
+    const mtrExMeasure = () =>
+      `<column gap="2">\n  <p>Disk free — 72%</p>\n  <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>\n</column>`
+    const mtrExSizes = () =>
+      `<meter value="0.55" size="sm"></meter>\n<meter value="0.55"></meter>\n<meter value="0.55" size="lg"></meter>`
+    const mtrExBands = () =>
+      `<meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- even-less-good → component.meter.sub-suboptimum -->\n<meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- suboptimum → component.meter.suboptimum -->\n<meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- optimum → component.meter.optimum -->`
+    const mtrExRest = () =>
+      `<meter value="0.55"></meter>\n<!-- track → component.meter.track; bands → optimum / suboptimum / sub-suboptimum -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -362,6 +392,8 @@ const kbdExChord = () =>
       spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
       spnExInline, spnExSizes, spnExRest, spnExCentered,
       skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
+      meterVal, meterSize, meterMeta, meterBand,
+      mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
     }
 })
 </controller>
@@ -730,13 +762,49 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.meter()}>
-              <!-- Fixed width: meter has no intrinsic width, and a percentage
-                   can’t resolve inside the content-sized <center> stage. -->
-              <column gap="2" style(meterCol)>
-                <meter value="0.3"></meter>
-                <meter value="0.7"></meter>
-                <meter value="0.95"></meter>
-              </column>
+              <!-- Fixed width: meter has no intrinsic width; rail owns knobs. -->
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(meterCol)>
+                    <meter
+                      value={meterVal()}
+                      min="0"
+                      max="100"
+                      low="33"
+                      high="66"
+                      optimum="100"
+                      size={meterSize()}
+                    ></meter>
+                    <p style(monoXs)>{meterMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Value</label>
+                      <span style(sizeValue)>{meterVal()} · {meterBand()}</span>
+                    </row>
+                    <slider bind:value={meterVal} min="0" max="100" size="sm" label="Value"></slider>
+                    <p style(mutedXs)>
+                      Fixed thresholds <code>low=33</code> · <code>high=66</code> ·
+                      <code>optimum=100</code> — drag value to hit optimum / suboptimum /
+                      even-less-good bands.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{meterSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.spinner()}>
               <row nowrap gap="0" align="stretch" style(stageSplit)>
@@ -1860,6 +1928,79 @@ const kbdExChord = () =>
               <chip variant="ghost">ghost rest</chip>
             </row>
             <code-block code={chipExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.meter()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Labeled measurement</h3>
+            <p style(exampleLead)>
+              A gauge for a quantity in range — disk free, battery, score — not task
+              completion. Pair with copy; the native element exposes the measurement to
+              AT via <code>value</code> / <code>min</code> / <code>max</code>.
+            </p>
+            <column gap="2" style(meterCol)>
+              <p style(mutedSm)>Disk free — 72%</p>
+              <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>
+            </column>
+            <code-block code={mtrExMeasure()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>sm</code> · <code>md</code> · <code>lg</code> scale bar height
+              (same ladder as progress). Default is <code>md</code>. Width comes from
+              the parent — give the host a definite width.
+            </p>
+            <column gap="3" style(meterCol)>
+              <meter value="0.55" size="sm"></meter>
+              <meter value="0.55"></meter>
+              <meter value="0.55" size="lg"></meter>
+            </column>
+            <code-block code={mtrExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Optimum bands</h3>
+            <p style(exampleLead)>
+              <code>low</code> / <code>high</code> / <code>optimum</code> drive the
+              platform’s three fill regions. Paint maps through
+              <code>component.meter.optimum</code>, <code>suboptimum</code>, and
+              <code>sub-suboptimum</code> (METER_MAP skins).
+            </p>
+            <column gap="3" style(meterCol)>
+              <column gap="1">
+                <p style(monoXs)>value 20 · even-less-good</p>
+                <meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>
+              </column>
+              <column gap="1">
+                <p style(monoXs)>value 50 · suboptimum</p>
+                <meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>
+              </column>
+              <column gap="1">
+                <p style(monoXs)>value 85 · optimum</p>
+                <meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>
+              </column>
+            </column>
+            <code-block code={mtrExBands()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Track from <code>component.meter.track</code> (<code>--meter</code>);
+              bands from the three optimum leaves. Override those leaves in Studio
+              themes — there is no tone prop.
+            </p>
+            <column gap="2" style(meterCol)>
+              <meter value="0.55"></meter>
+            </column>
+            <code-block code={mtrExRest()}></code-block>
           </column>
         </column>
       </if>

@@ -284,12 +284,17 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   meter: lang('meter', 'meter', {
     blurb:
-      'The native meter — a measurement, not progress. low/high/optimum drive the platform’s good/warn colours, mapped onto theme tokens.',
+      'Native <meter> gauge — a measurement in range, not task progress. value/min/max set the reading; low/high/optimum drive platform fill bands painted from component.meter.track / optimum / suboptimum / sub-suboptimum. size scales bar height. No tone prop.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value / min / max', desc: 'the measurement', type: 'number' },
-      { name: 'low / high / optimum', desc: 'platform thresholds → tone colours', type: 'number' },
+      { name: 'value / min / max', desc: 'the measurement (platform meter model)', type: 'number' },
+      {
+        name: 'low / high / optimum',
+        desc: 'thresholds → optimum · suboptimum · even-less-good band tokens',
+        type: 'number',
+      },
+      { name: 'size', desc: 'bar height', type: 'sm · md · lg' },
     ],
   }),
   spinner: lang('spinner', 'spinner', {

@@ -75,6 +75,12 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.border.subtle', label: 'Border subtle (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · toned)' },
   ],
+  meter: [
+    { path: 'color.muted.default', label: 'Muted (global · track)' },
+    { path: 'color.success.default', label: 'Success (global · optimum)' },
+    { path: 'color.warning.default', label: 'Warning (global · suboptimum)' },
+    { path: 'color.destructive.default', label: 'Danger (global · even-less-good)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },
@@ -116,6 +122,7 @@ const FACE_HINTS: Record<string, string> = {
   kbd: 'Keycaps · component.kbd.* faces',
   prose: 'Typography scope · component.prose.fg host leaf',
   spinner: 'Indeterminate wait · fg + track leaves',
+  meter: 'Gauge · track + optimum band leaves',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
 }

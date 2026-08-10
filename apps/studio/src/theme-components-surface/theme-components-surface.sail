@@ -347,10 +347,19 @@ export default controller(() => {
                     <progress value={components.load()} max="100" style(sampleMax)></progress>
                   </if>
                   <if {components.stage.meter()}>
-                    <column gap="2" style(sampleMax)>
-                      <meter value="0.3"></meter>
-                      <meter value="0.7"></meter>
-                      <meter value="0.95"></meter>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · sizes · component.meter.track + bands</p>
+                        <meter value="0.55" size="sm"></meter>
+                        <meter value="0.55"></meter>
+                        <meter value="0.55" size="lg"></meter>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Bands · low=33 high=66 optimum=100</p>
+                        <meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>
+                        <meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>
+                        <meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>
+                      </column>
                     </column>
                   </if>
                   <if {components.stage.spinner()}>

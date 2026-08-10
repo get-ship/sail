@@ -100,6 +100,11 @@ const VARIANT_META: Partial<
     variantAttr: 'size',
     blurb: 'Loading ring · rest uses component.spinner.fg + track; tone paints active arc.',
   },
+  meter: {
+    variants: ['sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb: 'Native gauge · component.meter.track + optimum/suboptimum/sub-suboptimum bands.',
+  },
   skeleton: {
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
