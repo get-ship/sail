@@ -444,9 +444,33 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.errorState()}>
-                    <error-state variant="inline" code="ERR_THEME" style(stageHost)>
-                      Request failed — retry or check the connection.
-                    </error-state>
+                    <column gap="4" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.error-state bg/fg/border</p>
+                        <error-state code="ERR_THEME" size="sm">
+                          <strong slot="title">Couldn't load preview</strong>
+                          Rest chrome — override component.error-state leaves.
+                          <button slot="action" type="button" variant="outline" size="sm">Retry</button>
+                        </error-state>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Inline · brand-destructive border</p>
+                        <error-state variant="inline" size="sm" code="ERR_INLINE">
+                          Inline recovery row on muted fill.
+                          <button slot="action" type="button" variant="ghost" size="sm">Retry</button>
+                        </error-state>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Details + code chip</p>
+                        <error-state size="sm" code="ERR_STACK">
+                          <strong slot="title">Upstream failed</strong>
+                          Stack collapses behind Show details.
+                          <span slot="details">at fetchData (api.ts:42)
+  Error: gateway timeout</span>
+                          <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+                        </error-state>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.errorBoundary()}>
                     <error-boundary message="Panel failed to load.">

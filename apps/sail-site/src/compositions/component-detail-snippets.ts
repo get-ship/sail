@@ -220,8 +220,9 @@ export default controller(() => ({ loading: signal(true) }))
 </empty-state>`,
 
   'error-state': `<error-state code="ERR_TIMEOUT">
-    style({ animate: enter({ opacity: 'fade' }) })
+  <strong slot="title">Couldn't load your data</strong>
   The request timed out. Retry, or check the connection.
+  <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
 </error-state>`,
 
   'error-boundary': `<error-boundary message="This panel could not load.">

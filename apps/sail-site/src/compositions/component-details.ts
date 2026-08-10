@@ -365,13 +365,25 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'error-state': lang('error-state', 'errorState', {
     blurb:
-      'The something-broke surface — destructive-toned sibling of empty-state, with a code line for the part a human pastes into a bug report.',
+      'Recovery surface for failed loads and partial failures. Rest chrome paints component.error-state (bg · fg · border); icon + inline border keep brand destructive. code fills a mono chip; details slot gates Show details; action slot holds Retry. use:recoverySurface stamps role=alert, syncs code, and focuses the first action.',
     variants: ['default', 'inline'],
     variantAttr: 'variant',
     props: [
-      { name: 'variant', desc: 'block or inline', type: 'default · inline' },
-      { name: 'size', desc: 'padding scale', type: 'sm · md · lg' },
-      { name: 'code', desc: 'the machine-readable line', type: 'string' },
+      {
+        name: 'variant',
+        desc: 'default = centered card on component leaves; inline = start-aligned row with destructive border + muted fill',
+        type: 'default · inline',
+      },
+      { name: 'size', desc: 'padding scale (default md)', type: 'sm · md · lg' },
+      {
+        name: 'code',
+        desc: 'machine-readable line for the code chip; omit or empty hides the chip',
+        type: 'string',
+      },
+      { name: 'slot="title"', desc: 'headline (default: Something went wrong)', type: 'slot' },
+      { name: 'children', desc: 'description body', type: 'slot' },
+      { name: 'slot="details"', desc: 'stack / diagnostic block — reveals Show details when non-empty', type: 'slot' },
+      { name: 'slot="action"', desc: 'recovery controls (Retry, Go back); first control is auto-focused', type: 'slot' },
     ],
   }),
   'error-boundary': lang('error-boundary', 'errorBoundary', {

@@ -83,6 +83,27 @@ function registerErrorLike(tag: string): void {
 }
 
 describe('recoverySurface + late dynamic default slot (G6)', () => {
+  it('stamps role=alert + aria-live=assertive on the recovery host', () => {
+    const root = document.createElement('div')
+    root.innerHTML = `
+      <div class="icon"></div>
+      <div class="copy">
+        <div class="title">Broken</div>
+        <div class="desc">try again</div>
+        <div class="code"></div>
+        <button type="button">Show details</button>
+        <div class="details"></div>
+      </div>
+      <div class="actions"></div>
+    `
+    document.body.appendChild(root)
+    const handle = recoverySurface(root)
+    expect(root.getAttribute('role')).toBe('alert')
+    expect(root.getAttribute('aria-live')).toBe('assertive')
+    handle?.destroy?.()
+    root.remove()
+  })
+
   it('mounts with dynamic default-slot body after async state flip without MO storm', async () => {
     const mo = watchMO(80)
     try {

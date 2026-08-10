@@ -38,6 +38,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const ES_SIZES = ['sm', 'md', 'lg'] as const
     const METER_SIZES = ['sm', 'md', 'lg'] as const
     const PRG_SIZES = ['sm', 'md', 'lg'] as const
+    const ERR_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
@@ -70,6 +71,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // load is also reused by the slider detail stage (shared 0–100 signal).
     const load = signal(62)
     const progIndeterminate = signal(false)
+    // Error-state: variant × size × code; details slot optional (gates Show details).
+    const errCode = signal('ERR_TIMEOUT')
+    const errDetails = signal(true)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -109,6 +113,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const progSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), PRG_SIZES.length - 1)
       return PRG_SIZES[i] ?? 'md'
+    })
+    const errSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ERR_SIZES.length - 1)
+      return ERR_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -164,6 +172,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         load.set(62)
         progIndeterminate.set(false)
+      } else if (tag() === 'error-state') {
+        variant.set('default')
+        sizeIdx.set(1) // md
+        errCode.set('ERR_TIMEOUT')
+        errDetails.set(true)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -287,6 +300,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
       if (progIndeterminate()) return `${progSize()} · indeterminate (no value) · track/fill component.progress.*`
       return `${progSize()} · ${load()}% of 100 · track/fill component.progress.*`
     })
+    const errMeta = derived(() => {
+      const c = errCode()
+      const d = errDetails() ? 'details' : 'no details'
+      return `${variant() || 'default'} · ${errSize()} · ${c || 'no code'} · ${d} · component.error-state.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -303,7 +321,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'meter' ||
       tag() === 'progress' ||
       tag() === 'icon' ||
-      tag() === 'empty-state'
+      tag() === 'empty-state' ||
+      tag() === 'error-state'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -355,6 +374,14 @@ const kbdExChord = () =>
       `<spinner size="xs" tone="primary"></spinner>\n<spinner size="sm" tone="primary"></spinner>\n<spinner tone="primary"></spinner>\n<spinner size="lg" tone="primary"></spinner>`
     const spnExRest = () =>
       `<spinner></spinner>\n<!-- no tone → component.spinner.fg + spinner.track (themeable) -->`
+    const errExDefault = () =>
+      `<error-state code="ERR_TIMEOUT">\n  <strong slot="title">Couldn't load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
+    const errExInline = () =>
+      `<error-state variant="inline" size="sm" code="ERR_NETWORK">\n  Connection lost — retry when you are back online.\n  <button slot="action" type="button" variant="outline" size="sm">Retry</button>\n</error-state>`
+    const errExDetails = () =>
+      `<error-state code="ERR_GATEWAY">\n  <strong slot="title">Upstream failed</strong>\n  The gateway timed out.\n  <span slot="details">at fetchData (api.ts:42)\\n  Error: gateway timeout</span>\n  <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
+    const errExRest = () =>
+      `<error-state>\n  <strong slot="title">Something went wrong</strong>\n  Rest chrome — component.error-state bg/fg/border.\n</error-state>\n<!-- icon + inline border keep brand destructive -->`
     const spnExCentered = () =>
       `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
     const iconExNamed = () =>
@@ -1175,9 +1202,83 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.errorState()}>
-              <error-state variant={variant()} code="ERR_TIMEOUT" style(fullW)>
-                The request timed out. Retry, or check the connection.
-              </error-state>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(fullW)>
+                    <error-state
+                      variant={variant() || 'default'}
+                      size={errSize()}
+                      code={errCode()}
+                      style(fullW)
+                    >
+                      <strong slot="title">Couldn't load your data</strong>
+                      The request failed after 3 retries. Check your connection and try again.
+                      <if {errDetails()}>
+                        <span slot="details">at fetchData (api.ts:42)
+  at load (dashboard.ts:19)
+  Error: gateway timeout</span>
+                      </if>
+                      <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+                        Retry
+                      </button>
+                      <button slot="action" type="button" variant="outline" size="sm">
+                        Go back
+                      </button>
+                    </error-state>
+                    <p style(monoXs)>{errMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Variant</label>
+                    <select size="sm" bind:value={variant} label="Variant">
+                      <option value="default">default</option>
+                      <option value="inline">inline</option>
+                    </select>
+                    <p style(mutedXs)>
+                      <code>default</code> centers on <code>component.error-state</code> leaves.
+                      <code>inline</code> is start-aligned with a brand-destructive border.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{errSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Code</label>
+                    <select size="sm" bind:value={errCode} label="Code">
+                      <option value="">(none)</option>
+                      <option value="ERR_TIMEOUT">ERR_TIMEOUT</option>
+                      <option value="ERR_NETWORK">ERR_NETWORK</option>
+                      <option value="ERR_NETWORK_503">ERR_NETWORK_503</option>
+                      <option value="ERR_PERMISSION">ERR_PERMISSION</option>
+                    </select>
+                    <p style(mutedXs)>
+                      <code>code</code> fills the mono chip via <code>use:recoverySurface</code>.
+                      Empty hides the chip.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Details slot</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={errDetails} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{errDetails() ? 'has stack' : 'empty'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Non-empty <code>slot="details"</code> reveals Show details.
+                      Rest paint: <code>component.error-state</code> bg/fg/border.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.errorBoundary()}>
               <column gap="3" style(stageCol)>
@@ -2490,6 +2591,69 @@ const kbdExChord = () =>
               <spinner centered tone="primary"></spinner>
             </column>
             <code-block code={spnExCentered()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.errorState()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Default recovery card</h3>
+            <p style(exampleLead)>
+              Centered card with title, body, machine <code>code</code>, and action-slot
+              recovery controls. First action is auto-focused.
+            </p>
+            <error-state code="ERR_TIMEOUT" style(fullW)>
+              <strong slot="title">Couldn't load your data</strong>
+              The request failed after 3 retries.
+              <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+            </error-state>
+            <code-block code={errExDefault()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Inline banner</h3>
+            <p style(exampleLead)>
+              <code>variant="inline"</code> start-aligns copy and paints a brand-destructive
+              border on a muted fill — for list rows and panel footers.
+            </p>
+            <error-state variant="inline" size="sm" code="ERR_NETWORK" style(fullW)>
+              Connection lost — retry when you are back online.
+              <button slot="action" type="button" variant="outline" size="sm">Retry</button>
+            </error-state>
+            <code-block code={errExInline()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Collapsible details</h3>
+            <p style(exampleLead)>
+              Project a non-empty <code>slot="details"</code> stack — Show details appears
+              and expands the mono diagnostic block.
+            </p>
+            <error-state code="ERR_GATEWAY" style(fullW)>
+              <strong slot="title">Upstream failed</strong>
+              The gateway timed out.
+              <span slot="details">at fetchData (api.ts:42)
+  Error: gateway timeout</span>
+              <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+            </error-state>
+            <code-block code={errExDetails()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Host chrome uses <code>component.error-state</code> bg / fg / border
+              (<code>--error-state</code> · <code>--error-state-foreground</code> ·
+              <code>--error-state-border</code>). Icon face and inline border stay brand
+              destructive by design.
+            </p>
+            <error-state style(fullW)>
+              <strong slot="title">Something went wrong</strong>
+              Rest chrome — override component.error-state leaves in Studio themes.
+            </error-state>
+            <code-block code={errExRest()}></code-block>
           </column>
         </column>
       </if>

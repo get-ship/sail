@@ -121,6 +121,12 @@ const VARIANT_META: Partial<
     blurb:
       'Nothing-here surface · rest uses component.empty-state.*; tone brands icon only; connecting → status/polite.',
   },
+  'error-state': {
+    variants: ['default', 'inline'],
+    variantAttr: 'variant',
+    blurb:
+      'Recovery surface · rest uses component.error-state bg/fg/border; icon + inline border brand destructive; code + details via recoverySurface.',
+  },
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
