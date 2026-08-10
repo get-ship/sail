@@ -38,6 +38,7 @@ pub mod block_manifest;
 pub mod breakpoints;
 pub mod check;
 pub mod authoring_bans;
+pub mod diag_ratchet;
 pub mod diagnostics;
 pub mod directive_manifest;
 pub mod edit;
