@@ -161,6 +161,14 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.ring.default', label: 'Ring (global)' },
     { path: 'radius.md', label: 'Radius md (global)' },
   ],
+  textarea: [
+    { path: 'color.background', label: 'Background (global · rest field.bg)' },
+    { path: 'color.foreground', label: 'Foreground (global · rest field.fg)' },
+    { path: 'color.border.default', label: 'Border (global · rest field.border)' },
+    { path: 'color.border.strong', label: 'Border strong (global · hover)' },
+    { path: 'color.destructive.default', label: 'Danger (global · invalid border)' },
+    { path: 'radius.md', label: 'Radius md (global · field radius)' },
+  ],
   fieldset: [
     { path: 'color.border.default', label: 'Border (global · rest fieldset.border)' },
     { path: 'radius.md', label: 'Radius md (global · group chrome)' },
@@ -209,6 +217,7 @@ const FACE_HINTS: Record<string, string> = {
   icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
+  textarea: 'Multiline · component.field.* shared with input/select',
   fieldset: 'Form group · component.fieldset.border leaf',
 }
 

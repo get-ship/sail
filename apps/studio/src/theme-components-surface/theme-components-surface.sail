@@ -253,7 +253,20 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.textarea()}>
-                    <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" style(sampleMax)></textarea>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Sizes · component.field.* surface</p>
+                        <textarea size="xs" rows="2" placeholder="xs"></textarea>
+                        <textarea size="sm" rows="2" placeholder="sm"></textarea>
+                        <textarea size={components.variant() || 'md'} rows="3" placeholder="md (chip or default)"></textarea>
+                        <textarea size="lg" rows="2" placeholder="lg"></textarea>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Invalid · disabled</p>
+                        <textarea invalid rows="2" placeholder="invalid → destructive border"></textarea>
+                        <textarea disabled rows="2" placeholder="disabled"></textarea>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.select()}>
                     <select size="sm" label="Sample select" style(sampleMax)>

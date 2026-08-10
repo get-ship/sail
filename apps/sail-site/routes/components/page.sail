@@ -226,7 +226,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <input type="email" placeholder="you@company.com" bind:value={email} />
                   </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Release notes</label>
-                    <textarea placeholder="What changed in this ship?" rows="2"></textarea>
+                    <textarea size="sm" rows="2" placeholder="What changed in this ship?"></textarea>
                   </column>}{else-if {e.tag === 'select'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Team</label>
                     <select bind:value={team}>

@@ -44,6 +44,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Ticker duration ladder (maps onto use:marquee seconds: fast 16 / normal 24 / slow 32).
     const TICKER_DURATIONS = ['fast', 'normal', 'slow'] as const
     const SLD_SIZES = ['sm', 'md', 'lg'] as const
+    const TA_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
@@ -107,6 +108,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // hover free border-strong (SPEC-D1 — scroll-area-thumb-hover parked unread).
     // Constrain with Style box (not a PE prop) so content overflows on the active axis.
     const scrollOrientation = signal('vertical')
+    // Textarea: size xs|sm|md|lg; rows native; invalid → destructive border; disabled native.
+    // Rest paint = component.field.* shared with input/select (no tone prop).
+    const textareaInvalid = signal(false)
+    const textareaDisabled = signal(false)
+    const textareaRows = signal(3)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -166,6 +172,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const sliderSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SLD_SIZES.length - 1)
       return SLD_SIZES[i] ?? 'md'
+    })
+    const textareaSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), TA_SIZES.length - 1)
+      return TA_SIZES[i] ?? 'md'
     })
     })
     // Scope is reused across detail navigations — re-seed on tag change.
@@ -262,6 +272,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         load.set(62)
         sliderDisabled.set(false)
+      } else if (tag() === 'textarea') {
+        variant.set('')
+        sizeIdx.set(2) // md
+        textareaInvalid.set(false)
+        textareaDisabled.set(false)
+        textareaRows.set(3)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -443,6 +459,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const d = sliderDisabled() ? 'disabled' : 'interactive'
       return `${sliderSize()} · ${load()} of 0–100 · ${d} · track/fill component.slider.*`
     })
+    const textareaMeta = derived(() => {
+      const inv = textareaInvalid() ? 'invalid' : 'valid'
+      const d = textareaDisabled() ? 'disabled' : 'enabled'
+      return `${textareaSize()} · rows ${textareaRows()} · ${inv} · ${d} · component.field.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -469,7 +490,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'radio' ||
       tag() === 'ticker' ||
       tag() === 'scroll-area' ||
-      tag() === 'slider'
+      tag() === 'slider' ||
+      tag() === 'textarea'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -641,6 +663,14 @@ const kbdExChord = () =>
       `<slider value="40" disabled></slider>\n<!-- native freeze + opacity; fill still shows value -->`
     const sldExRest = () =>
       `<slider value="62" min="0" max="100"></slider>\n<!-- track/fill/border → component.slider.track + fill + track-border; thumb face = field, rim = fill -->`
+    const taExBind = () =>
+      `<controller>\nexport default controller(() => ({ bio: signal('') }))\n</controller>\n\n<textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>\n<p>{bio().length} characters</p>`
+    const taExSizes = () =>
+      `<textarea size="xs" rows="2" placeholder="xs"></textarea>\n<textarea size="sm" rows="2" placeholder="sm"></textarea>\n<textarea rows="2" placeholder="md"></textarea>\n<textarea size="lg" rows="2" placeholder="lg"></textarea>`
+    const taExInvalid = () =>
+      `<textarea invalid rows="3" placeholder="Needs a real description"></textarea>\n<!-- invalid → border(destructive); rest border → component.field.border -->`
+    const taExRest = () =>
+      `<textarea rows="3" placeholder="Notes"></textarea>\n<!-- bg/fg/border → component.field.*; hover border-strong (D1 free global); use:autosize grows height -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -679,6 +709,10 @@ const kbdExChord = () =>
     const agreed = signal(false)
     const name = signal('')
     const bio = signal('')
+    // Textarea stage re-seeds bind value on tag entry (bio is declared late).
+    effect(() => {
+      if (tag() === 'textarea') bio.set('')
+    })
     const team = signal('Design')
     const fw = signal('')
     const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
@@ -764,6 +798,8 @@ const kbdExChord = () =>
       saExVertical, saExHorizontal, saExBoth, saExRest,
       sliderSize, sliderDisabled, sliderMeta,
       sldExBind, sldExSizes, sldExDisabled, sldExRest,
+      textareaSize, textareaInvalid, textareaDisabled, textareaRows, textareaMeta,
+      taExBind, taExSizes, taExInvalid, taExRest,
     }
 })
 </controller>
@@ -1034,10 +1070,111 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.textarea()}>
-              <column gap="3" style(stageCol)>
-                <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
-                <p style(monoXs)>{bio().length} characters</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {textareaDisabled()}>
+                      <if {textareaInvalid()}>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          invalid
+                          disabled
+                          style(fullW)
+                        ></textarea>
+                      {else =>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          disabled
+                          style(fullW)
+                        ></textarea>}</if>
+                    {else => <if {textareaInvalid()}>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          invalid
+                          style(fullW)
+                        ></textarea>
+                      {else =>
+                        <textarea
+                          size={textareaSize()}
+                          rows={textareaRows()}
+                          placeholder="Tell us about yourself"
+                          bind:value={bio}
+                          style(fullW)
+                        ></textarea>}</if>}</if>
+                    <p style(monoXs)>{bio().length} characters · {textareaMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{textareaSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Control height + type scale (default <code>md</code>). Same ladder as
+                      <code>input</code> / <code>select</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Rows</label>
+                      <span style(sizeValue)>{textareaRows()}</span>
+                    </row>
+                    <slider bind:value={textareaRows} min="1" max="8" step="1" size="sm" label="Rows"></slider>
+                    <p style(mutedXs)>
+                      Native <code>rows</code> sets initial height (default <code>3</code>).
+                      Pair with <code>use:autosize</code> to grow with content.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Invalid</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={textareaInvalid} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{textareaInvalid() ? 'destructive border' : 'field.border'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      <code>invalid</code> paints <code>border(destructive)</code> — validation
+                      chrome, not a tone prop.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={textareaDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{textareaDisabled() ? 'not-allowed' : 'interactive'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Platform freeze + PE opacity. Compose a <code>label</code> outside the control.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Rest surface shared with input/select:
+                      <code>component.field.bg</code> · <code>fg</code> · <code>border</code>
+                      (<code>--field</code> / <code>--field-foreground</code> /
+                      <code>--field-border</code>). Hover uses free
+                      <code>border-strong</code> (D1 rest-only — field-border-hover is parked).
+                      No tone prop.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.select()}>
               <column gap="3" style(stageCol)>
@@ -3877,130 +4014,6 @@ const kbdExChord = () =>
         </column>
       </if>
 
-      <if {stage.slider()}>
-        <column gap="5" style(exampleBlock)>
-          <p style(sectionLabel)>Examples</p>
-
-          <column gap="2">
-            <h3 style(exampleH)>bind:value</h3>
-            <p style(exampleLead)>
-              A native <code>type=range</code> control — drag, keyboard, form submission, and
-              <code>role=slider</code> come from the platform. <code>bind:value</code> keeps
-              the thumb and a signal in lockstep. Pair with adjacent copy for the readout.
-            </p>
-            <column gap="2" style(stageCol)>
-              <row justify="between" align="center">
-                <span style(mutedSm)>Volume</span>
-                <span style(monoXs)>{load()}%</span>
-              </row>
-              <slider bind:value={load} min="0" max="100" style(fullW)></slider>
-            </column>
-            <code-block code={sldExBind()}></code-block>
-          </column>
-
-          <column gap="2">
-            <h3 style(exampleH)>Size ladder</h3>
-            <p style(exampleLead)>
-              <code>sm</code> · <code>md</code> · <code>lg</code> scale track height and thumb
-              diameter (default <code>md</code>). Width follows the parent.
-            </p>
-            <column gap="3" style(stageCol)>
-              <slider value="50" size="sm" style(fullW)></slider>
-              <slider value="50" style(fullW)></slider>
-              <slider value="50" size="lg" style(fullW)></slider>
-            </column>
-            <code-block code={sldExSizes()}></code-block>
-          </column>
-
-          <column gap="2">
-            <h3 style(exampleH)>Disabled</h3>
-            <p style(exampleLead)>
-              Native <code>disabled</code> freezes interaction. The filled track still shows
-              the current value so the control stays legible.
-            </p>
-            <column gap="2" style(stageCol)>
-              <slider value="40" disabled style(fullW)></slider>
-            </column>
-            <code-block code={sldExDisabled()}></code-block>
-          </column>
-
-          <column gap="2">
-            <h3 style(exampleH)>Rest tokens (themeable)</h3>
-            <p style(exampleLead)>
-              Track from <code>component.slider.track</code>; fill from
-              <code>component.slider.fill</code>; inset rim from
-              <code>component.slider.track-border</code>. Thumb face is <code>field</code>;
-              rim reuses fill. No tone prop — override those leaves in Studio themes.
-              Single thumb only (dual-value range is a deliberate product follow-up).
-            </p>
-            <column gap="2" style(stageCol)>
-              <slider value="62" min="0" max="100" style(fullW)></slider>
-            </column>
-            <code-block code={sldExRest()}></code-block>
-          </column>
-        </column>
-      </if>
-
-      <if {stage.radio()}>
-        <column gap="5" style(exampleBlock)>
-          <p style(sectionLabel)>Examples</p>
-
-          <column gap="2">
-            <h3 style(exampleH)>Option unit</h3>
-            <p style(exampleLead)>
-              Each <code>&lt;radio&gt;</code> is one labelled option — native radio inside
-              a label host. <code>value</code> is this option’s value string.
-            </p>
-            <column gap="2" style(stageCol)>
-              <radio value="monthly">Monthly</radio>
-              <radio value="yearly">Yearly</radio>
-            </column>
-            <code-block code={radioExOption()}></code-block>
-          </column>
-
-          <column gap="2">
-            <h3 style(exampleH)>Disabled option</h3>
-            <p style(exampleLead)>
-              <code>disabled</code> is a host attribute. Compose with
-              <code>radio-group</code> so the nested input is disabled for
-              platform interaction and Style PE paint (group sync).
-            </p>
-            <column gap="2" style(stageCol)>
-              <radio value="enterprise" disabled>Enterprise (locked)</radio>
-            </column>
-            <code-block code={radioExDisabled()}></code-block>
-          </column>
-
-          <column gap="2">
-            <h3 style(exampleH)>Rest tokens (themeable)</h3>
-            <p style(exampleLead)>
-              Label ink always rides <code>component.radio.fg</code>
-              (<code>--radio-foreground</code>). No tone or size axis — override that
-              leaf in Studio themes. Control face uses free foreground/background;
-              checked paints primary with RADIO_INPUT_MAP inset disc.
-            </p>
-            <column gap="2" style(stageCol)>
-              <radio value="a">Option A</radio>
-            </column>
-            <code-block code={radioExRest()}></code-block>
-          </column>
-
-          <column gap="2">
-            <h3 style(exampleH)>With radio-group (composition)</h3>
-            <p style(exampleLead)>
-              Shared name, exclusivity, keyboard, and <code>onChange</code> are owned by
-              <code>radio-group</code> — a separate L1 (out of this tag’s audit scope).
-              Prefer <code>&lt;radio&gt;</code> children, not freeform
-              <code>&lt;input type="radio"&gt;</code> labels.
-            </p>
-            <radio-group label="Plan" name="ex-radio-plan" value="monthly" style(stageCol)>
-              <radio value="monthly">Monthly</radio>
-              <radio value="yearly">Yearly</radio>
-            </radio-group>
-            <code-block code={radioExGroup()}></code-block>
-          </column>
-        </column>
-      </if>
       <if {stage.ticker()}>
         <column gap="5" style(exampleBlock)>
           <p style(sectionLabel)>Examples</p>
@@ -4149,6 +4162,131 @@ const kbdExChord = () =>
               <p>Line eight.</p>
             </scroll-area>
             <code-block code={saExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.slider()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>bind:value</h3>
+            <p style(exampleLead)>
+              A native <code>type=range</code> control — drag, keyboard, form submission, and
+              <code>role=slider</code> come from the platform. <code>bind:value</code> keeps
+              the thumb and a signal in lockstep. Pair with adjacent copy for the readout.
+            </p>
+            <column gap="2" style(stageCol)>
+              <row justify="between" align="center">
+                <span style(mutedSm)>Volume</span>
+                <span style(monoXs)>{load()}%</span>
+              </row>
+              <slider bind:value={load} min="0" max="100" style(fullW)></slider>
+            </column>
+            <code-block code={sldExBind()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>sm</code> · <code>md</code> · <code>lg</code> scale track height and thumb
+              diameter (default <code>md</code>). Width follows the parent.
+            </p>
+            <column gap="3" style(stageCol)>
+              <slider value="50" size="sm" style(fullW)></slider>
+              <slider value="50" style(fullW)></slider>
+              <slider value="50" size="lg" style(fullW)></slider>
+            </column>
+            <code-block code={sldExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Disabled</h3>
+            <p style(exampleLead)>
+              Native <code>disabled</code> freezes interaction. The filled track still shows
+              the current value so the control stays legible.
+            </p>
+            <column gap="2" style(stageCol)>
+              <slider value="40" disabled style(fullW)></slider>
+            </column>
+            <code-block code={sldExDisabled()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Track from <code>component.slider.track</code>; fill from
+              <code>component.slider.fill</code>; inset rim from
+              <code>component.slider.track-border</code>. Thumb face is <code>field</code>;
+              rim reuses fill. No tone prop — override those leaves in Studio themes.
+              Single thumb only (dual-value range is a deliberate product follow-up).
+            </p>
+            <column gap="2" style(stageCol)>
+              <slider value="62" min="0" max="100" style(fullW)></slider>
+            </column>
+            <code-block code={sldExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.textarea()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>bind:value</h3>
+            <p style(exampleLead)>
+              Native multi-line field — keyboard, forms, and spellcheck come from the
+              platform. <code>bind:value</code> keeps the host and a signal in lockstep.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
+              <p style(mutedSm)>{bio().length} characters</p>
+            </column>
+            <code-block code={taExBind()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> scale
+              min-height, pad, and type (default <code>md</code>) — same control ladder as
+              <code>input</code> / <code>select</code>.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea size="xs" rows="2" placeholder="xs"></textarea>
+              <textarea size="sm" rows="2" placeholder="sm"></textarea>
+              <textarea rows="2" placeholder="md"></textarea>
+              <textarea size="lg" rows="2" placeholder="lg"></textarea>
+            </column>
+            <code-block code={taExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Invalid</h3>
+            <p style(exampleLead)>
+              <code>invalid</code> paints a destructive border for validation feedback.
+              Pair with a <code>field</code> + error copy when you need the full form
+              pattern — the PE only owns the control chrome.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea invalid rows="3" placeholder="Needs a real description"></textarea>
+            </column>
+            <code-block code={taExInvalid()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Surface from <code>component.field.bg</code> · <code>fg</code> ·
+              <code>border</code> (shared with input/select). Hover border uses free
+              <code>border-strong</code> (D1 rest-only). No tone prop — theme the field
+              leaves. Attach <code>use:autosize</code> when the box should grow with text.
+            </p>
+            <column gap="2" style(stageCol)>
+              <textarea rows="3" placeholder="Notes"></textarea>
+              <textarea disabled rows="2" placeholder="Disabled"></textarea>
+            </column>
+            <code-block code={taExRest()}></code-block>
           </column>
         </column>
       </if>
