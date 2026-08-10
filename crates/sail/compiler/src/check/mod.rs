@@ -347,11 +347,19 @@ pub fn collect(
     let mut resolved = overrides.to_vec();
     resolved.extend(defaults);
     let overrides = &resolved[..];
-    let template_findings =
-        crate::check::lint_overrides::enforce_floor(crate::check::lint_overrides::apply_overrides(
-            sail_lint::lint_sail_template_source(lint_path, source),
-            overrides,
-        ));
+    // Order: natural findings → per-rule overrides (incl. off kill switch) →
+    // unconditional styling floor → SPEC-LINTS-1 strict / lint.severity floor
+    // (Warn→Error). Off must run before the global floor so the escape hatch
+    // still silences under strict.
+    let template_findings = crate::check::lint_overrides::apply_strict_or_severity_floor(
+        crate::check::lint_overrides::enforce_floor(
+            crate::check::lint_overrides::apply_overrides(
+                sail_lint::lint_sail_template_source(lint_path, source),
+                overrides,
+            ),
+        ),
+        lint_path,
+    );
     for f in template_findings {
         diags.push(finding_to_diag(&f));
     }
@@ -381,6 +389,10 @@ pub fn collect(
             overrides,
         );
         controller_findings.extend(ambient_findings);
+        let controller_findings = crate::check::lint_overrides::apply_strict_or_severity_floor(
+            controller_findings,
+            &c.path,
+        );
         for f in controller_findings {
             diags.push(finding_to_diag(&f));
         }

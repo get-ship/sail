@@ -175,3 +175,35 @@ pub fn enforce_floor(findings: Vec<sail_lint::Finding>) -> Vec<sail_lint::Findin
         })
         .collect()
 }
+
+/// SPEC-LINTS-1 §3 — promote remaining lint findings Warn → Error when the
+/// nearest config sets `"strict": true` or `"lint": { "severity": "error" }`.
+///
+/// Runs **after** [`apply_overrides`] so per-rule `off` has already dropped
+/// findings (kill switch still works under strict). Never touches compiler
+/// diagnostics — only `sail_lint::Finding` streams. Floor rules are already
+/// Error via [`enforce_floor`]; this pass only raises natural-Warn lints.
+///
+/// Re-derives from [`crate::policy::resolve_for_source`] (same config walk as
+/// capability / registry resolution — not a second reader of a different
+/// shape). Synthetic / missing config → no promotion.
+pub fn apply_strict_or_severity_floor(
+    findings: Vec<sail_lint::Finding>,
+    source_path: &std::path::Path,
+) -> Vec<sail_lint::Finding> {
+    let promote = crate::policy::resolve_for_source(source_path)
+        .map(|r| r.promotes_lint_warn_to_error())
+        .unwrap_or(false);
+    if !promote {
+        return findings;
+    }
+    findings
+        .into_iter()
+        .map(|mut f| {
+            if f.severity == sail_lint::Severity::Warn {
+                f.severity = sail_lint::Severity::Error;
+            }
+            f
+        })
+        .collect()
+}
