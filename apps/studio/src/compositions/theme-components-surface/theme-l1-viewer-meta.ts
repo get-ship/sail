@@ -103,7 +103,7 @@ const VARIANT_META: Partial<
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
-    blurb: 'Horizontal or vertical rule.',
+    blurb: 'Divider · rest uses component.separator.line; tone optional.',
   },
   tooltip: {
     variants: ['top', 'bottom', 'left', 'right'],

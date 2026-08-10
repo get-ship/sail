@@ -314,7 +314,6 @@ export default controller(() => {
 </row>`,
 
   separator: `<column gap="2">
-    style({ animate: enter({ opacity: 'fade' }) })
   <p>above</p>
   <separator></separator>
   <p>below — and vertical, between inline things:</p>

@@ -428,12 +428,12 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   separator: lang('separator', 'separator', {
     blurb:
-      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; tone and dashed when it must speak. There is no separate `hr` catalog entry.',
+      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for themeable component.separator.line; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.',
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
     props: [
       { name: 'orientation', desc: 'which axis it divides', type: 'horizontal · vertical' },
-      { name: 'tone', desc: 'line colour', type: 'default · muted · primary · destructive' },
+      { name: 'tone', desc: 'optional line colour — omit for rest separator.line tokens', type: 'muted · primary · destructive' },
       { name: 'variant', desc: 'line style', type: 'solid · dashed' },
     ],
   }),

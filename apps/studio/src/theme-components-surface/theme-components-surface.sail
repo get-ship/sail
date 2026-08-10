@@ -400,10 +400,27 @@ export default controller(() => {
                     <icon size={components.variant() || 'md'} name="sparkles" label="sparkles"></icon>
                   </if>
                   <if {components.stage.separator()}>
-                    <column gap="2" style(sampleMax)>
-                      <p style(fieldHint)>above</p>
-                      <separator variant={components.variant() || 'solid'}></separator>
-                      <p style(fieldHint)>below</p>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.separator.line (theme override)</p>
+                        <separator></separator>
+                        <separator variant="dashed"></separator>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Vertical · same face between labels</p>
+                        <row gap="3" align="center" style({ box: h(10) })>
+                          <span style(fieldHint)>A</span>
+                          <separator orientation="vertical"></separator>
+                          <span style(fieldHint)>B</span>
+                          <separator orientation="vertical" variant="dashed"></separator>
+                          <span style(fieldHint)>C</span>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Toned · solid + dashed (free tones, not rest leaf)</p>
+                        <separator tone="primary"></separator>
+                        <separator variant="dashed" tone="destructive"></separator>
+                      </column>
                     </column>
                   </if>
                   <if {components.stage.accordion()}>
