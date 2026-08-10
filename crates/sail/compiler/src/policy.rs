@@ -7,11 +7,19 @@
 //! - `layout.raw_containers` (bool, default `false`)
 //! - `lint.severity.<rule-id>` (per-rule tree of `error` | `warn` | `off`)
 //!
+//! Plus the SPEC-LINTS-1 §3 operator surface (S3.2), resolved here so one
+//! [`ResolvedPolicy`] carries the full lint gate dial:
+//!
+//! - top-level `"strict": true` — every lint finding → Error at the build gate
+//! - top-level `"lint": { "severity": "error"|"warn"|"off", "rules": { … } }`
+//!   — global floor + per-rule tree (merged with nested `policy.lint.severity.*`)
+//!
 //! No `platforms` field — one platform today. Scope is always `project`.
 //!
 //! ## Config surface
 //!
-//! Values live under the top-level `"policy"` object of `sail.config.json(c)`:
+//! Registry knobs live under the top-level `"policy"` object of
+//! `sail.config.json(c)`:
 //!
 //! ```json
 //! {
@@ -22,9 +30,23 @@
 //! }
 //! ```
 //!
+//! SPEC-LINTS-1 §3 also accepts the product shape at the top level (dual-read
+//! with the nested tree — both land in [`ResolvedPolicy::lint_severities`]):
+//!
+//! ```jsonc
+//! {
+//!   "strict": true,
+//!   "lint": {
+//!     "severity": "error",
+//!     "rules": { "sail-no-free-aria": "off" }
+//!   }
+//! }
+//! ```
+//!
 //! Legacy top-level `"raw_containers"` still feeds the same knob (no behavior
 //! change for existing projects). Unknown keys under `"policy"` are a hard
-//! error that names the closest valid key.
+//! error that names the closest valid key. Compiler/parse errors are never
+//! severity-configurable through this surface.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -178,8 +200,16 @@ pub struct ResolvedPolicy {
     /// top-level keys consult this so a policy-only lint.severity tree does
     /// not clobber `preset: full`.
     pub raw_containers_explicit: bool,
-    /// Explicit per-rule severity overrides from `lint.severity.*`.
+    /// Explicit per-rule severity overrides from `policy.lint.severity.*` and
+    /// top-level `lint.rules.*` (dual-read; one merged tree).
     pub lint_severities: BTreeMap<String, LintSeverityValue>,
+    /// Top-level `"strict": true` — promote every remaining lint finding to
+    /// Error at the build gate. Per-rule `off` still silences.
+    pub strict: bool,
+    /// Global lint severity floor from top-level `"lint": { "severity": … }`.
+    /// `Some(Error)` alone promotes Warn→Error (same gate effect as `strict`
+    /// for promotion; does not force every rule on). `None` = natural severities.
+    pub lint_severity_floor: Option<LintSeverityValue>,
     /// Source path of the config that supplied values, when known.
     pub config_path: Option<std::path::PathBuf>,
 }
@@ -191,8 +221,16 @@ impl ResolvedPolicy {
             raw_containers: false,
             raw_containers_explicit: false,
             lint_severities: BTreeMap::new(),
+            strict: false,
+            lint_severity_floor: None,
             config_path: None,
         }
+    }
+
+    /// True when the build gate must promote remaining lint findings from
+    /// Warn → Error (`strict: true` or global floor `error`).
+    pub fn promotes_lint_warn_to_error(&self) -> bool {
+        self.strict || self.lint_severity_floor == Some(LintSeverityValue::Error)
     }
 
     /// Lint overrides implied by the severity tree (empty when none set).
@@ -430,12 +468,14 @@ pub fn resolve_for_source(source_file: &Path) -> Result<ResolvedPolicy, PolicyEr
         resolved.raw_containers = applied.raw_containers;
         resolved.raw_containers_explicit = applied.raw_containers_explicit;
         resolved.lint_severities = applied.lint_severities;
+        resolved.strict = applied.strict;
+        resolved.lint_severity_floor = applied.lint_severity_floor;
         Ok(resolved)
     }
 }
 
 /// Merge a nested `"policy"` object (and legacy top-level `raw_containers`)
-/// into an existing [`ResolvedPolicy`] already seeded from defaults.
+/// plus SPEC-LINTS-1 top-level `"strict"` / `"lint"` into a [`ResolvedPolicy`].
 ///
 /// Used by `check::policy::classify` so capability tier + registry share one
 /// parse of the config body.
@@ -445,6 +485,10 @@ pub fn resolve_for_source(source_file: &Path) -> Result<ResolvedPolicy, PolicyEr
 /// 2. Legacy top-level `"raw_containers"` (explicit flag stays false — the
 ///    capability-tier loop still owns the signal line)
 /// 3. Registry default (`false`)
+///
+/// Precedence for per-rule severities (dual-read):
+/// 1. Nested `policy.lint.severity.<rule>` (seeded first)
+/// 2. Top-level `lint.rules.<rule>` overlays (SPEC product shape wins on clash)
 pub fn apply_config_to_resolved(
     cfg: &sail_lint::config::SailConfig,
 ) -> Result<ResolvedPolicy, PolicyError> {
@@ -460,6 +504,25 @@ pub fn apply_config_to_resolved(
     } else if let Some(b) = cfg.bool_key("raw_containers") {
         resolved.raw_containers = b;
     }
+
+    // SPEC-LINTS-1 §3 — top-level strict + lint floor/rules.
+    resolved.strict = cfg.strict();
+    if let Some(floor) = cfg.lint_severity_floor() {
+        // Token already canonicalized by SailConfig; parse is infallible here.
+        resolved.lint_severity_floor = LintSeverityValue::parse(floor);
+    }
+    for (rule, sev_str) in cfg.lint_rules() {
+        let Some(sev) = LintSeverityValue::parse(&sev_str) else {
+            return Err(PolicyError {
+                message: format!(
+                    "unrecognized severity \"{sev_str}\" for lint.rules.{rule} (expected error|warn|off)"
+                ),
+            });
+        };
+        // Top-level lint.rules overlays nested policy.lint.severity (SPEC path).
+        resolved.lint_severities.insert(rule, sev);
+    }
+
     Ok(resolved)
 }
 

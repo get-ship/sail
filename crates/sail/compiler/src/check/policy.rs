@@ -522,15 +522,38 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             registry.raw_containers
         ));
     }
-    if policy_object_present && !registry.lint_severities.is_empty() {
+    if !registry.lint_severities.is_empty() {
+        // Dual-read: nested policy.lint.severity.* and top-level lint.rules.*
+        // both land in the same tree via apply_config_to_resolved.
+        let source = if policy_object_present && cfg.has_key("lint") {
+            "lint.severity"
+        } else if policy_object_present {
+            "policy.lint.severity"
+        } else {
+            "lint.rules"
+        };
         signal.push(format!(
-            "policy.lint.severity: {} override(s)",
+            "{source}: {} override(s)",
             registry.lint_severities.len()
         ));
     } else if policy_object_present && !registry.raw_containers_explicit {
         // Empty or lint-only policy object still counts as tier signal so a
         // policy-only config is not classified as NoSignal.
         signal.push("policy: registry".to_string());
+    }
+
+    // SPEC-LINTS-1 §3 — top-level strict + lint severity floor are operator
+    // signal (not unknown keys, not NoSignal-only). Floor alone is enough to
+    // avoid fail-closed STRICT with zero announce when an app opts in.
+    if cfg.has_key("strict") {
+        signal.push(format!("strict: {}", registry.strict));
+    }
+    if let Some(floor) = registry.lint_severity_floor {
+        signal.push(format!("lint.severity: {}", floor.as_str()));
+    } else if cfg.has_key("lint") && registry.lint_severities.is_empty() {
+        // Present lint object with neither floor nor rules — still signal so
+        // a typo'd nested shape is not silent NoSignal after recognition.
+        signal.push("lint: present".to_string());
     }
     if let Some(af) = cfg.string_key("autofix") {
         match AutofixPreset::parse(&af) {
@@ -808,10 +831,11 @@ mod tests {
                 r.contains(key) && r.contains("allowed keys:"),
                 "must name offending key and allowed list: {r}"
             );
-            // Allowed set includes nested `deck`, not the three legacy top-level serve keys.
+            // Allowed set includes nested `deck` + SPEC-LINTS-1 strict/lint,
+            // not the three legacy top-level serve keys.
             assert!(
-                r.contains("policy, deck, editor"),
-                "allowed list should end …policy, deck, editor: {r}"
+                r.contains("policy, strict, lint, deck, editor"),
+                "allowed list should end …policy, strict, lint, deck, editor: {r}"
             );
         }
         // Nested deck alone is well-formed (no capability signal) — NoSignal, not Rejected.

@@ -49,7 +49,12 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// Bundler/serve settings live under the top-level **`deck`** object only
 /// (`deck.render`, `deck.entry`, `deck.injectGlobals`). Top-level `render` /
 /// `entry` / `injectGlobals` are unknown keys and refuse loudly — no dual-read.
-pub const RECOGNIZED_KEYS: [&str; 14] = [
+///
+/// Lint severity floor + top-level `strict` (SPEC-LINTS-1 §3 / S3.2):
+/// - `"strict": true` — every lint finding is Error at the build gate
+/// - `"lint": { "severity", "rules" }` — global floor + per-rule tree (dual-read
+///   with nested `policy.lint.severity.*`)
+pub const RECOGNIZED_KEYS: [&str; 16] = [
     "preset",
     "sx",
     "variants",
@@ -62,6 +67,9 @@ pub const RECOGNIZED_KEYS: [&str; 14] = [
     "theme",
     "layout",
     "policy",
+    // SPEC-LINTS-1 §3 — global lint severity floor + strict gate (S3.2).
+    "strict",
+    "lint",
     // Deck bundler/serve object (AppServeConfig) — POLICY layer.
     "deck",
     // Studio product preference (deep-link scheme) — TASTE layer.
@@ -155,6 +163,20 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str, &str)] = &[
         "{ layout.raw_containers?, lint.severity.<rule-id>? }",
         "registry defaults (see `sail-compiler policy`)",
         "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key",
+        "POLICY",
+    ),
+    (
+        "strict",
+        "boolean",
+        "false",
+        "every lint finding is Error at the build gate (Warn→Error); per-rule off still silences; never downgrades compiler errors",
+        "POLICY",
+    ),
+    (
+        "lint",
+        "{ severity?: \"off\"|\"warn\"|\"error\", rules?: { <rule-id>: \"off\"|\"warn\"|\"error\" } }",
+        "natural rule severities (no global floor, no per-rule tree)",
+        "global lint severity floor + per-rule overrides (SPEC-LINTS-1 §3); dual-read with policy.lint.severity.*",
         "POLICY",
     ),
     (
@@ -313,6 +335,56 @@ impl SailConfig {
             self.raw.get("layout").and_then(|v| v.as_str()),
             Some(s) if s.eq_ignore_ascii_case("error")
         )
+    }
+
+    /// Top-level `"strict": true` — every lint finding is Error at the build
+    /// gate (SPEC-LINTS-1 §3). Absent / wrong-typed / `false` → `false`.
+    /// Does **not** downgrade compiler/parse errors; per-rule `off` still
+    /// silences individual lints (kill switch).
+    pub fn strict(&self) -> bool {
+        matches!(self.raw.get("strict").and_then(|v| v.as_bool()), Some(true))
+    }
+
+    /// Global lint severity floor from top-level `"lint": { "severity": … }`.
+    ///
+    /// Returns a canonical token `"error"` | `"warn"` | `"off"` when the key is
+    /// present and a recognized severity string; `None` when absent or
+    /// wrong-typed / unrecognized (lenient extract — never hard-fails a build
+    /// for a lint floor typo; unknown top-level keys are the loud path).
+    ///
+    /// Lives on [`SailConfig`] (lint crate) so consumers do not depend on
+    /// compiler severity enums. The compiler maps the token onto
+    /// `LintSeverityValue` in `apply_config_to_resolved`.
+    pub fn lint_severity_floor(&self) -> Option<&str> {
+        let s = self
+            .raw
+            .get("lint")
+            .and_then(|lint| lint.get("severity"))
+            .and_then(|v| v.as_str())?;
+        match s.trim().to_ascii_lowercase().as_str() {
+            "error" => Some("error"),
+            "warn" | "warning" => Some("warn"),
+            "off" | "false" | "0" => Some("off"),
+            _ => None,
+        }
+    }
+
+    /// Per-rule severity map from top-level `"lint": { "rules": { … } }`.
+    /// Empty when absent or wrong-typed. Values are the raw severity strings
+    /// as authored; the compiler parses them into `LintSeverityValue`.
+    pub fn lint_rules(&self) -> Vec<(String, String)> {
+        let Some(rules) = self
+            .raw
+            .get("lint")
+            .and_then(|lint| lint.get("rules"))
+            .and_then(|v| v.as_object())
+        else {
+            return Vec::new();
+        };
+        rules
+            .iter()
+            .filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string())))
+            .collect()
     }
 
     /// Parse JSON or JSONC body (// and /* */ comments + trailing commas).
