@@ -96,9 +96,9 @@ const VARIANT_META: Partial<
     blurb: 'Glyph host with size ladder.',
   },
   spinner: {
-    variants: ['md', 'sm', 'lg'],
+    variants: ['xs', 'sm', 'md', 'lg'],
     variantAttr: 'size',
-    blurb: 'Loading ring.',
+    blurb: 'Loading ring · rest uses component.spinner.fg + track; tone paints active arc.',
   },
   separator: {
     variants: ['solid', 'dashed'],

@@ -32,7 +32,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const BTN_SIZES = ['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] as const
     const BDG_SIZES = ['sm', 'md', 'lg'] as const
     const CHIP_SIZES = ['sm', 'md', 'lg'] as const
-    const sizeIdx = signal(2) // md for button; remapped for badge/chip
+    const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
+    const sizeIdx = signal(2) // md for button; remapped for badge/chip/spinner
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
     const badgeTone = signal('primary')
@@ -48,6 +49,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const chipTone = signal('primary')
     const chipSelected = signal(false)
     const chipRemovable = signal(true)
+    // Spinner: empty tone = rest component.spinner.fg; track always spinner.track.
+    const spinnerTone = signal('primary')
+    const spinnerCentered = signal(false)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -63,6 +67,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const chipSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), CHIP_SIZES.length - 1)
       return CHIP_SIZES[i] ?? 'md'
+    })
+    const spinnerSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SPN_SIZES.length - 1)
+      return SPN_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -91,6 +99,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         chipSelected.set(false)
         chipRemovable.set(true)
         kept.set(true)
+      } else if (tag() === 'spinner') {
+        variant.set('')
+        sizeIdx.set(2) // md
+        spinnerTone.set('primary')
+        spinnerCentered.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -115,6 +128,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const restoreAlert = (): void => alertVisible.set(true)
     const pickChipTone = (t: string): void => chipTone.set(t)
     const clearChipTone = (): void => chipTone.set('')
+    const pickSpinnerTone = (t: string): void => spinnerTone.set(t)
+    const clearSpinnerTone = (): void => spinnerTone.set('')
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
     const badgeMeta = derived(() => {
       const t = badgeTone()
@@ -167,13 +182,22 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const t = chipTone()
       return `${variant()} · ${chipSize()} · ${t || 'rest (component tokens)'} · selected ${chipSelected() ? 'on' : 'off'} · removable ${chipRemovable() ? 'on' : 'off'}`
     })
+    const spinnerMeta = derived(() => {
+      const t = spinnerTone()
+      return `${spinnerSize()} · ${t || 'rest (spinner.foreground)'} · centered ${spinnerCentered() ? 'on' : 'off'}`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
     })
     // Hide viewer variant strip when stage owns knobs.
     const stageOwnsKnobs = () =>
-      tag() === 'button' || tag() === 'badge' || tag() === 'separator' || tag() === 'alert' || tag() === 'chip'
+      tag() === 'button' ||
+      tag() === 'badge' ||
+      tag() === 'separator' ||
+      tag() === 'alert' ||
+      tag() === 'chip' ||
+      tag() === 'spinner'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -207,6 +231,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
       `<chip variant="soft" tone="info" removable on-remove={onRemove}>typescript</chip>`
     const chipExRest = () =>
       `<chip variant="solid">rest tokens</chip>\n<!-- no tone → component.chip.* (themeable) -->`
+    const spnExInline = () =>
+      `<row gap="2" align="center">\n  <spinner size="sm" tone="primary"></spinner>\n  <p>fetching…</p>\n</row>`
+    const spnExSizes = () =>
+      `<spinner size="xs" tone="primary"></spinner>\n<spinner size="sm" tone="primary"></spinner>\n<spinner tone="primary"></spinner>\n<spinner size="lg" tone="primary"></spinner>`
+    const spnExRest = () =>
+      `<spinner></spinner>\n<!-- no tone → component.spinner.fg + spinner.track (themeable) -->`
+    const spnExCentered = () =>
+      `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -292,6 +324,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       alrtExTones, alrtExDismiss, alrtExRest,
       chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
       chipExFilter, chipExRemove, chipExRest,
+      spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
+      spnExInline, spnExSizes, spnExRest, spnExCentered,
     }
 })
 </controller>
@@ -666,10 +700,72 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.spinner()}>
-              <row gap="4" align="center">
-                <spinner size={variant()}></spinner>
-                <spinner size={variant()} tone="primary"></spinner>
-                <spinner size={variant()} tone="destructive"></spinner>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(fullW)>
+                    <if {spinnerTone()}>
+                      <spinner
+                        size={spinnerSize()}
+                        tone={spinnerTone()}
+                        centered={spinnerCentered() ? 'true' : null}
+                      ></spinner>
+                    {else =>
+                      <spinner
+                        size={spinnerSize()}
+                        centered={spinnerCentered() ? 'true' : null}
+                      ></spinner>}</if>
+                    <p style(monoXs)>{spinnerMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{spinnerSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>xs</span>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="rest — component.spinner.fg" placement="top">
+                        <div label="rest" on:click={clearSpinnerTone} selected={!spinnerTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickSpinnerTone('primary')} selected={spinnerTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickSpinnerTone('info')} selected={spinnerTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickSpinnerTone('success')} selected={spinnerTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickSpinnerTone('warning')} selected={spinnerTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickSpinnerTone('destructive')} selected={spinnerTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickSpinnerTone('accent')} selected={spinnerTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                    </row>
+                    <p style(mutedXs)>Omit tone for themeable <code>spinner.foreground</code>. Track always <code>spinner.track</code>. No muted (host omits).</p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Centered</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={spinnerCentered} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{spinnerCentered() ? 'block + mx auto' : 'inline'}</span>
+                    </row>
+                  </column>
+                </column>
               </row>
             </if>
             <if {stage.skeleton()}>
@@ -1566,6 +1662,66 @@ export default controller((ctx: ControllerScope<Scope>) => {
               <chip variant="ghost">ghost rest</chip>
             </row>
             <code-block code={chipExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.spinner()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Inline with status copy</h3>
+            <p style(exampleLead)>
+              Pair a small spinner with a short wait message. The ring is decorative
+              (<code>aria-hidden</code>); announce loading in surrounding copy or a live region.
+            </p>
+            <row gap="2" align="center">
+              <spinner size="sm" tone="primary"></spinner>
+              <p style(mutedSm)>fetching…</p>
+            </row>
+            <code-block code={spnExInline()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> map to the
+              icon-size scale. Default is <code>md</code>.
+            </p>
+            <row gap="4" align="center">
+              <spinner size="xs" tone="primary"></spinner>
+              <spinner size="sm" tone="primary"></spinner>
+              <spinner tone="primary"></spinner>
+              <spinner size="lg" tone="primary"></spinner>
+            </row>
+            <code-block code={spnExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              No <code>tone</code> → active arc from <code>component.spinner.fg</code>
+              (<code>--spinner-foreground</code>); track from <code>component.spinner.track</code>.
+              Override those leaves in Studio themes.
+            </p>
+            <row gap="4" align="center">
+              <spinner></spinner>
+              <spinner size="lg"></spinner>
+            </row>
+            <code-block code={spnExRest()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Centered in a container</h3>
+            <p style(exampleLead)>
+              <code>centered</code> makes the host a block with auto horizontal margins —
+              useful inside a panel or empty stage.
+            </p>
+            <column gap="2" style(centerBox)>
+              <spinner centered tone="primary"></spinner>
+            </column>
+            <code-block code={spnExCentered()}></code-block>
           </column>
         </column>
       </if>

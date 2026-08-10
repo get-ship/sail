@@ -60,6 +60,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.foreground', label: 'Muted (global)' },
     { path: 'color.border.default', label: 'Border (global)' },
   ],
+  spinner: [
+    { path: 'color.muted.foreground', label: 'Muted fg (global · rest arc)' },
+    { path: 'color.border.subtle', label: 'Border subtle (global · track)' },
+    { path: 'color.primary.default', label: 'Primary (global · toned)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },
@@ -98,6 +103,7 @@ const FACE_HINTS: Record<string, string> = {
   'radio-group': 'Radio set',
   switch: 'Binary toggles',
   chip: 'Filters and tags',
+  spinner: 'Indeterminate wait · fg + track leaves',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
 }
