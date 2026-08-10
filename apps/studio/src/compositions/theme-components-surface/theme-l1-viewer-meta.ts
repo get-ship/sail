@@ -104,6 +104,7 @@ const VARIANT_META: Partial<
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
     blurb: 'Native gauge · component.meter.track + optimum/suboptimum/sub-suboptimum bands.',
+  },
   progress: {
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
