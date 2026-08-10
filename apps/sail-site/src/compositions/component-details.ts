@@ -372,15 +372,23 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   chip: lang('chip', 'chip', {
     blurb:
-      'An interactive filter pill — the element itself is the button (role, keyboard, aria-pressed). removable adds the ×, and Backspace fires sail-remove.',
-    variants: ['soft', 'solid', 'outline', 'ghost'],
+      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). Omit tone for component.chip rest tokens; set tone and the semantic colour always paints. removable adds the ×; Backspace/Delete fires on-remove.',
+    variants: ['solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
-      { name: 'tone', desc: 'semantic colour token', type: TONES },
-      { name: 'variant', desc: 'fill strength', type: 'solid · soft · outline · ghost' },
+      { name: 'variant', desc: 'fill strength — solid default', type: 'solid · soft · outline · ghost' },
+      {
+        name: 'tone',
+        desc: 'semantic colour when set; omit for component.chip rest tokens',
+        type: TONES,
+      },
+      { name: 'size', desc: 'chip scale for filters and dense chrome', type: 'sm · md · lg' },
       { name: 'selected', desc: 'pressed state, ARIA-synced', type: 'bool' },
       { name: 'removable', desc: 'the × button + Backspace/Delete', type: 'bool' },
+      { name: 'disabled', desc: 'non-interactive; muted rest paint', type: 'bool' },
       { name: 'on-remove', desc: 'remove callback (× and keyboard)', type: 'callback' },
+      { name: 'leading', desc: 'optional leading icon/slot', type: 'slot' },
+      { name: 'children', desc: 'label text (keep short)', type: 'slot' },
     ],
   }),
   'status-dot': lang('status-dot', 'statusDot', {

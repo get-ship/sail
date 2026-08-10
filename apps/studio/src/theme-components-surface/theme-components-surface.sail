@@ -377,10 +377,27 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.chip()}>
-                    <row gap="2" align="center" nowrap>
-                      <chip variant={components.variant() || 'solid'} selected>Selected</chip>
-                      <chip variant={components.variant() || 'solid'} tone="muted">Chip</chip>
-                    </row>
+                    <column gap="3" style(stageHost)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.chip tokens (theme override)</p>
+                        <row gap="2" align="center" nowrap>
+                          <chip variant="solid" size="sm">solid</chip>
+                          <chip variant="soft" size="sm">soft</chip>
+                          <chip variant="outline" size="sm">outline</chip>
+                          <chip variant="ghost" size="sm">ghost</chip>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Toned · selected · removable</p>
+                        <row gap="2" align="center" nowrap>
+                          <chip variant={components.variant() || 'solid'} tone="primary" size="sm" selected>Selected</chip>
+                          <chip variant="soft" tone="success" size="sm">success</chip>
+                          <chip variant="outline" tone="warning" size="sm">warn</chip>
+                          <chip variant="solid" tone="destructive" size="sm" removable>err</chip>
+                          <chip variant="soft" tone="accent" size="sm">12</chip>
+                        </row>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.card()}>
                     <card variant={components.variant() || 'default'} padding="sm" style(sampleMax)>
