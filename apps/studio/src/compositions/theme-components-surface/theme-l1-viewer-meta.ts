@@ -100,6 +100,11 @@ const VARIANT_META: Partial<
     variantAttr: 'size',
     blurb: 'Loading ring · rest uses component.spinner.fg + track; tone paints active arc.',
   },
+  progress: {
+    variants: ['sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb: 'Native bar · component.progress.track + fill; omit value = indeterminate.',
+  },
   skeleton: {
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',

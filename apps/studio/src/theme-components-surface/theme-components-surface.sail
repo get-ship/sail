@@ -344,7 +344,18 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.progressBar()}>
-                    <progress value={components.load()} max="100" style(sampleMax)></progress>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Track/fill · component.progress.track + fill</p>
+                        <progress value="30" max="100" size="sm"></progress>
+                        <progress value={components.load()} max="100"></progress>
+                        <progress value="90" max="100" size="lg"></progress>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Indeterminate · omit value (native + PROGRESS_MAP)</p>
+                        <progress max="100"></progress>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.meter()}>
                     <column gap="2" style(sampleMax)>

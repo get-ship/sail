@@ -274,12 +274,21 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   progress: lang('progress', 'progressBar', {
     blurb:
-      'The native progress element, themed. Give it value/max and the platform announces it; leave value off for the indeterminate sweep.',
+      'Native progress bar, themed. value/max are the platform model; omit value for the indeterminate sweep (no separate prop). size is sm|md|lg track height. Paint always from component.progress.track + fill — no tone axis.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value / max', desc: 'the platform progress model', type: 'number' },
-      { name: '(no value)', desc: 'indeterminate — the platform sweep', type: 'state' },
+      {
+        name: 'value',
+        desc: 'current amount; omit attribute entirely for native indeterminate + PROGRESS_MAP shimmer',
+        type: 'number',
+      },
+      { name: 'max', desc: 'upper bound of the range (default 1 on the PE host)', type: 'number' },
+      {
+        name: 'size',
+        desc: 'track height ladder (default md)',
+        type: 'sm · md · lg',
+      },
     ],
   }),
   meter: lang('meter', 'meter', {
