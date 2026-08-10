@@ -40,6 +40,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const PRG_SIZES = ['sm', 'md', 'lg'] as const
     const ERR_SIZES = ['sm', 'md', 'lg'] as const
     const LBL_SIZES = ['sm', 'md', 'lg'] as const
+    const SW_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
@@ -79,6 +80,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const fieldsetDisabled = signal(false)
     // Label: size sm|md|lg; required shows * via group-required + component.label.required.
     const labelRequired = signal(true)
+    // Switch: size sm|md|lg; tone on checked track (omit → primary); thumb always switch.thumb.
+    // Off track/border = component.switch.track + border. notify signal is bind:checked.
+    const switchTone = signal('primary')
+    const switchDisabled = signal(false)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -126,6 +131,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const labelSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), LBL_SIZES.length - 1)
       return LBL_SIZES[i] ?? 'md'
+    })
+    const switchSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SW_SIZES.length - 1)
+      return SW_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -193,6 +202,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         sizeIdx.set(1) // md
         labelRequired.set(true)
+      } else if (tag() === 'switch') {
+        variant.set('')
+        sizeIdx.set(1) // md
+        switchTone.set('primary')
+        switchDisabled.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -221,6 +235,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const clearSpinnerTone = (): void => spinnerTone.set('')
     const pickEmptyTone = (t: string): void => emptyTone.set(t)
     const clearEmptyTone = (): void => emptyTone.set('')
+    const pickSwitchTone = (t: string): void => switchTone.set(t)
+    const clearSwitchTone = (): void => switchTone.set('')
     const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
     const badgeMeta = derived(() => {
       const t = badgeTone()
@@ -327,6 +343,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const labelMeta = derived(() => {
       return `${labelSize()} · required ${labelRequired() ? 'on' : 'off'} · component.label.fg + required`
     })
+    const switchMeta = derived(() => {
+      const t = switchTone()
+      const on = notify() ? 'on' : 'off'
+      const d = switchDisabled() ? 'disabled' : 'enabled'
+      // No tone → checked track paints primary (PE default); off always component.switch.*
+      return `${switchSize()} · ${t || 'no tone (checked→primary)'} · ${on} · ${d} · thumb switch.thumb`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -346,7 +369,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'empty-state' ||
       tag() === 'error-state' ||
       tag() === 'fieldset' ||
-      tag() === 'label'
+      tag() === 'label' ||
+      tag() === 'switch'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -466,6 +490,14 @@ const kbdExChord = () =>
       `<label for="email" required>Email</label>\n<!-- * → component.label.required; omit required for optional -->`
     const lblExRest = () =>
       `<label for="name">Display name</label>\n<!-- ink → component.label.fg; weight → typography.label.weight -->`
+    const swExBind = () =>
+      `<controller>\nexport default controller(() => ({ notify: signal(true) }))\n</controller>\n\n<row gap="3" align="center">\n  <switch bind:checked={notify}></switch>\n  <p>{notify() ? 'on' : 'off'}</p>\n</row>`
+    const swExSizes = () =>
+      `<switch size="sm" checked></switch>\n<switch checked></switch>\n<switch size="lg" checked></switch>`
+    const swExTones = () =>
+      `<switch tone="success" checked></switch>\n<switch tone="warning" checked></switch>\n<switch tone="destructive" checked></switch>\n<!-- tone paints checked track only; thumb stays switch.thumb -->`
+    const swExRest = () =>
+      `<switch></switch>\n<switch checked></switch>\n<!-- off → component.switch.track + border; checked (no tone) → primary; thumb → switch.thumb -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -497,6 +529,10 @@ const kbdExChord = () =>
     const presses = signal(0)
     const press = (): void => presses.set((n) => n + 1)
     const notify = signal(true)
+    // Switch stage re-seeds checked on tag entry (notify is declared late).
+    effect(() => {
+      if (tag() === 'switch') notify.set(true)
+    })
     const agreed = signal(false)
     const name = signal('')
     const bio = signal('')
@@ -571,6 +607,8 @@ const kbdExChord = () =>
       fsExGroup, fsExDisabled, fsExRest,
       labelSize, labelRequired, labelMeta,
       lblExFor, lblExSizes, lblExRequired, lblExRest,
+      switchSize, switchTone, switchDisabled, switchMeta, pickSwitchTone, clearSwitchTone,
+      swExBind, swExSizes, swExTones, swExRest,
     }
 })
 </controller>
@@ -798,9 +836,109 @@ const kbdExChord = () =>
               </radio-group>
             </if>
             <if {stage.switchToggle()}>
-              <row gap="3" align="center">
-                <switch bind:checked={notify} size={variant()} tone="primary"></switch>
-                <p style(monoXs)>{notify() ? 'on' : 'off'} · size {variant()}</p>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center">
+                    <row gap="3" align="center">
+                      <if {switchDisabled()}>
+                        <if {switchTone()}>
+                          <switch
+                            bind:checked={notify}
+                            size={switchSize()}
+                            tone={switchTone()}
+                            disabled
+                          ></switch>
+                        {else =>
+                          <switch bind:checked={notify} size={switchSize()} disabled></switch>}</if>
+                      {else => <if {switchTone()}>
+                          <switch
+                            bind:checked={notify}
+                            size={switchSize()}
+                            tone={switchTone()}
+                          ></switch>
+                        {else =>
+                          <switch bind:checked={notify} size={switchSize()}></switch>}</if>}</if>
+                      <p style(monoXs)>{notify() ? 'on' : 'off'}</p>
+                    </row>
+                    <p style(monoXs)>{switchMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{switchSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tone</label>
+                    <row gap="2" align="center" style(swatchRow)>
+                      <tooltip content="no tone — checked track paints primary" placement="top">
+                        <div label="rest" on:click={clearSwitchTone} selected={!switchTone() ? 'true' : null} style(swatch, swatchRest)></div>
+                      </tooltip>
+                      <tooltip content="primary" placement="top">
+                        <div label="primary" on:click={() => pickSwitchTone('primary')} selected={switchTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
+                      </tooltip>
+                      <tooltip content="success" placement="top">
+                        <div label="success" on:click={() => pickSwitchTone('success')} selected={switchTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
+                      </tooltip>
+                      <tooltip content="warning" placement="top">
+                        <div label="warning" on:click={() => pickSwitchTone('warning')} selected={switchTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
+                      </tooltip>
+                      <tooltip content="destructive" placement="top">
+                        <div label="destructive" on:click={() => pickSwitchTone('destructive')} selected={switchTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
+                      </tooltip>
+                      <tooltip content="accent" placement="top">
+                        <div label="accent" on:click={() => pickSwitchTone('accent')} selected={switchTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
+                      </tooltip>
+                      <tooltip content="muted" placement="top">
+                        <div label="muted" on:click={() => pickSwitchTone('muted')} selected={switchTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
+                      </tooltip>
+                      <tooltip content="info" placement="top">
+                        <div label="info" on:click={() => pickSwitchTone('info')} selected={switchTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
+                      </tooltip>
+                    </row>
+                    <p style(mutedXs)>
+                      Tone paints the <strong>checked track</strong> only. Thumb always
+                      <code>component.switch.thumb</code> — never tone.foreground.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Checked</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={notify} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{notify() ? 'on' : 'off'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      <code>bind:checked</code> keeps the live specimen and a signal in lockstep.
+                      Stage click also toggles when not disabled.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={switchDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{switchDisabled() ? 'not-allowed' : 'interactive'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Native <code>disabled</code> freezes interaction; PE keeps
+                      <code>component.switch.track</code> off paint and drops thumb shadow.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Off track/border from <code>component.switch.track</code> +
+                      <code>border</code> (<code>--switch</code> / <code>--switch-border</code>).
+                      Knob always <code>--switch-thumb</code>. No tone → checked uses primary.
+                    </p>
+                  </column>
+                </column>
               </row>
             </if>
             <if {stage.slider()}>
@@ -3012,6 +3150,73 @@ const kbdExChord = () =>
               Messages you receive land here.
             </empty-state>
             <code-block code={esExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.switchToggle()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>bind:checked</h3>
+            <p style(exampleLead)>
+              A native checkbox with <code>role=switch</code> — keyboard and forms come from
+              the platform. <code>bind:checked</code> keeps the control and a signal in lockstep.
+            </p>
+            <row gap="3" align="center">
+              <switch bind:checked={notify}></switch>
+              <p style(mutedSm)>{notify() ? 'Notifications on' : 'Muted'}</p>
+            </row>
+            <code-block code={swExBind()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>sm</code> · <code>md</code> · <code>lg</code> scale track and thumb
+              (default <code>md</code>). Geometry is size tokens — not a free CSS width.
+            </p>
+            <row gap="3" align="center">
+              <switch size="sm" checked></switch>
+              <switch checked></switch>
+              <switch size="lg" checked></switch>
+            </row>
+            <code-block code={swExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Tone on the checked track</h3>
+            <p style(exampleLead)>
+              When <code>tone</code> is set, the <strong>on</strong> track (and focus ring) use
+              that tone. The thumb never leaves <code>component.switch.thumb</code> — contrast
+              is owned by the token model, not tone.foreground.
+            </p>
+            <row gap="3" align="center">
+              <switch tone="success" checked></switch>
+              <switch tone="warning" checked></switch>
+              <switch tone="destructive" checked></switch>
+              <switch tone="info" checked></switch>
+              <switch tone="muted" checked></switch>
+            </row>
+            <code-block code={swExTones()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Off track from <code>component.switch.track</code> (<code>--switch</code>);
+              border from <code>component.switch.border</code>; thumb from
+              <code>component.switch.thumb</code> (light knob — not surface-1). Checked without
+              tone paints <code>primary</code>. Override the component leaves in Studio themes.
+            </p>
+            <row gap="3" align="center">
+              <switch></switch>
+              <switch checked></switch>
+              <switch disabled></switch>
+              <switch checked disabled></switch>
+            </row>
+            <code-block code={swExRest()}></code-block>
           </column>
         </column>
       </if>

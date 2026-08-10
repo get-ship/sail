@@ -102,9 +102,10 @@ export default controller(() => ({ notify: signal(true) }))
 </controller>
 
 <row gap="3" align="center">
-  <switch bind:checked={notify}></switch>
+  <switch bind:checked={notify} size="md" tone="primary"></switch>
   <p>{notify() ? 'Notifications on' : 'Muted'}</p>
-</row>`,
+</row>
+<!-- off → component.switch.track + border; thumb → switch.thumb; tone = checked track only -->`,
 
   slider: `<controller>
 export default controller(() => ({ load: signal(62) }))

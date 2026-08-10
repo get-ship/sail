@@ -255,10 +255,34 @@ export default controller(() => {
                     </radio-group>
                   </if>
                   <if {components.stage.switchToggle()}>
-                    <row gap="3" align="center">
-                      <switch size={components.variant() || 'md'} tone="primary" checked={components.notify()} label="Sample switch"></switch>
-                      <p style(fieldHint)>{components.notify() ? 'on' : 'off'}</p>
-                    </row>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Sizes · component.switch.track + thumb</p>
+                        <row gap="3" align="center">
+                          <switch size="sm" checked></switch>
+                          <switch size={components.variant() || 'md'} checked></switch>
+                          <switch size="lg" checked></switch>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Off / on / disabled (rest leaves)</p>
+                        <row gap="3" align="center">
+                          <switch></switch>
+                          <switch checked={components.notify()}></switch>
+                          <switch disabled></switch>
+                          <switch checked disabled></switch>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Tone · checked track only; thumb stays switch.thumb</p>
+                        <row gap="3" align="center">
+                          <switch tone="primary" checked></switch>
+                          <switch tone="success" checked></switch>
+                          <switch tone="warning" checked></switch>
+                          <switch tone="destructive" checked></switch>
+                        </row>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.slider()}>
                     <column gap="2" style(sampleMax)>

@@ -164,15 +164,19 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   switch: lang('switch', 'switchToggle', {
     blurb:
-      'A checkbox in a switch costume — role, keyboard and forms come from the platform. bind:checked keeps it and a signal in lockstep.',
-    variants: ['md', 'sm', 'lg'],
-    variantAttr: 'size',
+      'Native checkbox restyled as a sliding toggle (role=switch). bind:checked locks the host to a signal. size sm|md|lg scales track + thumb. tone paints the checked track only; omit tone and checked uses primary. Off track/border from component.switch.track + border; thumb always component.switch.thumb (never tone.foreground).',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'bind:checked', desc: 'two-way signal binding', type: 'signal' },
-      { name: 'checked', desc: 'initial state', type: 'bool' },
-      { name: 'tone', desc: 'track colour when on', type: TONES },
-      { name: 'size', desc: 'switch scale', type: 'sm · md · lg' },
-      { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
+      { name: 'bind:checked', desc: 'two-way signal binding (lockstep with host)', type: 'signal' },
+      { name: 'checked', desc: 'on/off state (also reflectable)', type: 'bool' },
+      {
+        name: 'tone',
+        desc: 'checked track (+ focus) only; omit → primary when on',
+        type: TONES,
+      },
+      { name: 'size', desc: 'track + thumb scale (default md)', type: 'sm · md · lg' },
+      { name: 'disabled', desc: 'native freeze; PE keeps off-track tokens + lighter thumb shadow', type: 'bool' },
     ],
   }),
   slider: lang('slider', 'slider', {
