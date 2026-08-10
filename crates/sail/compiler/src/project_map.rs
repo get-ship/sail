@@ -137,6 +137,27 @@ pub fn misplacement_message(kind: FileKind, path: &Path) -> String {
     format!("{label} live in `{home}` — move {name}.")
 }
 
+/// One TypeScript `compilerOptions.paths` entry (deck resolve twin).
+///
+/// SPEC-PROJECT-STRUCTURE-1 §3 — shared so tsconfig emit and the deck
+/// bundler cannot drift.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AtAliasMapping {
+    /// `paths` key, e.g. `"@/*"` or `"@/stores/*"`.
+    pub pattern: &'static str,
+    /// Project-relative target, e.g. `"./src/*"` or `"./src/stores/*"`.
+    pub target: &'static str,
+}
+
+/// SSOT `@/` alias table for project tsconfig `paths` + deck `resolve_id`.
+///
+/// Must cover SPEC §3 roots: `@/components|compositions|stores|actions|themes/…`.
+/// Product (S1.2) fills this; empty stub keeps gate tests compile-red→runtime-red.
+pub fn at_alias_paths() -> &'static [AtAliasMapping] {
+    // Intentionally empty until product lands the fixed map.
+    &[]
+}
+
 fn home_for(kind: FileKind) -> &'static str {
     match kind {
         FileKind::Route => "routes/",
