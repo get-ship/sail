@@ -168,6 +168,12 @@ const VARIANT_META: Partial<
     blurb:
       'One option · component.radio.fg label ink; value + disabled only; exclusivity via radio-group.',
   },
+  select: {
+    variants: ['xs', 'sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb:
+      'Native closed picker · component.field bg/fg/border; size xs–lg; invalid + disabled + multiple; not combobox.',
+  },
   prose: {
     variants: [],
     variantAttr: '',

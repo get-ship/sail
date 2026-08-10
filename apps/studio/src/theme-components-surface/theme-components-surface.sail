@@ -256,11 +256,44 @@ export default controller(() => {
                     <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" style(sampleMax)></textarea>
                   </if>
                   <if {components.stage.select()}>
-                    <select size="sm" label="Sample select" style(sampleMax)>
-                      <option>Option A</option>
-                      <option>Option B</option>
-                      <option>Option C</option>
-                    </select>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Sizes · component.field surface + SELECT_MAP chevron</p>
+                        <select size="xs">
+                          <option>xs</option>
+                          <option>Engineering</option>
+                        </select>
+                        <select size="sm">
+                          <option>sm</option>
+                          <option>Engineering</option>
+                        </select>
+                        <select size={components.variant() || 'md'}>
+                          <option>md</option>
+                          <option>Design</option>
+                        </select>
+                        <select size="lg">
+                          <option>lg</option>
+                          <option>Research</option>
+                        </select>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest / invalid / disabled</p>
+                        <select>
+                          <option>Rest field tokens</option>
+                          <option>Design</option>
+                        </select>
+                        <select invalid>
+                          <option>Invalid border</option>
+                          <option>Engineering</option>
+                        </select>
+                        <select disabled>
+                          <option>Disabled</option>
+                        </select>
+                      </column>
+                      <p style(fieldHint)>
+                        component.field bg/fg/border · hover free border-strong · not combobox
+                      </p>
+                    </column>
                   </if>
                   <if {components.stage.combobox()}>
                     <combobox placeholder="Type to filter…" style(sampleMax)>
