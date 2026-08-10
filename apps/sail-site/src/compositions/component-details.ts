@@ -231,6 +231,15 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'disabled', desc: 'disables every control inside — platform', type: 'bool' },
     ],
   }),
+  legend: lang('legend', 'legend', {
+    blurb:
+      'Native <legend> fieldset caption — medium sm type with horizontal pad. Ink from component.legend.fg (--legend-foreground); no size/variant/tone props (theme the leaf; nest inside <fieldset>).',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: '(children)', desc: 'caption text for the group', type: 'children' },
+    ],
+  }),
   dropzone: lang('dropzone', 'dropzone', {
     blurb:
       'An attribute, not a component: put dropzone on a surface and use:dropzone wires dragover states, click-to-browse and the file input.',

@@ -147,6 +147,14 @@ export default controller(() => ({ load: signal(62) }))
   </column>
 </fieldset>`,
 
+  legend: `<fieldset>
+  <legend>Account details</legend>
+  <column gap="2">
+    <input placeholder="Name" />
+    <input placeholder="Email" />
+  </column>
+</fieldset>`,
+
   dropzone: `<card dropzone>
     style({ box: pad(6), animate: enter({ opacity: 'fade' }) })
   Drop a file, or click to browse

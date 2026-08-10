@@ -101,6 +101,7 @@ export const CATALOG: CatalogEntry[] = [
   L('field', 'field', 'inputs'),
   L('label', 'label', 'inputs'),
   L('fieldset', 'fieldset', 'inputs'),
+  L('legend', 'legend', 'inputs'),
   L('dropzone', 'dropzone', 'inputs'),
   L('theme-picker', 'themePicker', 'inputs'),
   L('alert', 'alert', 'feedback'),

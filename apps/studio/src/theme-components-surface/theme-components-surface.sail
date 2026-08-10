@@ -297,10 +297,20 @@ export default controller(() => {
                     </fieldset>
                   </if>
                   <if {components.stage.legend()}>
-                    <fieldset style(sampleMax)>
-                      <legend>Legend specimen</legend>
-                      <p style(fieldHint)>Legend lives on a fieldset.</p>
-                    </fieldset>
+                    <column gap="3" style(sampleMax)>
+                      <p style(fieldHint)>Rest · component.legend.fg (theme override)</p>
+                      <fieldset>
+                        <legend>Account details</legend>
+                        <column gap="2">
+                          <input size="sm" placeholder="Name" />
+                          <input size="sm" placeholder="Email" />
+                        </column>
+                      </fieldset>
+                      <fieldset>
+                        <legend>Billing options</legend>
+                        <p style(fieldHint)>Caption only — nest inside fieldset.</p>
+                      </fieldset>
+                    </column>
                   </if>
                   <if {components.stage.themePicker()}>
                     <theme-picker></theme-picker>

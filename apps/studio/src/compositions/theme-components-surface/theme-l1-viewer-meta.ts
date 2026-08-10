@@ -137,6 +137,11 @@ const VARIANT_META: Partial<
     variantAttr: '',
     blurb: 'Keycap · component.kbd bg/fg/border; no size/variant props.',
   },
+  legend: {
+    variants: [],
+    variantAttr: '',
+    blurb: 'Fieldset caption · component.legend.fg; nest in fieldset; no size/variant props.',
+  },
   prose: {
     variants: [],
     variantAttr: '',

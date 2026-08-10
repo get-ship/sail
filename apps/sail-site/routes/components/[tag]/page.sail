@@ -362,6 +362,12 @@ const kbdExChord = () =>
       `<kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>⌥</kbd> <kbd>⌃</kbd> <kbd>Esc</kbd> <kbd>F12</kbd>`
     const kbdExRest = () =>
       `<kbd>Enter</kbd>\n<!-- paint from component.kbd (bg · foreground · border) — themeable -->`
+    const legendExGroup = () =>
+      `<fieldset>\n  <legend>Account details</legend>\n  <column gap="2">\n    <input placeholder="Name" />\n    <input placeholder="Email" />\n  </column>\n</fieldset>`
+    const legendExDisabled = () =>
+      `<fieldset disabled>\n  <legend>Read-only profile</legend>\n  <input placeholder="Display name" />\n</fieldset>`
+    const legendExRest = () =>
+      `<fieldset>\n  <legend>Themeable caption</legend>\n  <!-- ink from component.legend.fg (--legend-foreground) -->\n</fieldset>`
     const proseExScale = () =>
       `<prose>\n  <h1>Heading one</h1>\n  <h2>Heading two</h2>\n  <p>Body sets the baseline.</p>\n</prose>`
     const proseExBlocks = () =>
@@ -507,6 +513,7 @@ const kbdExChord = () =>
       chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
       chipExFilter, chipExRemove, chipExRest,
       kbdExChord, kbdExModifiers, kbdExRest,
+      legendExGroup, legendExDisabled, legendExRest,
       proseExScale, proseExBlocks, proseExRest,
       spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
       spnExInline, spnExSizes, spnExRest, spnExCentered,
@@ -792,6 +799,19 @@ const kbdExChord = () =>
                   <input placeholder="Email" />
                 </column>
               </fieldset>
+            </if>
+            <if {stage.legend()}>
+              <!-- Zero PE props — specimen-only stage; nest legend in fieldset -->
+              <column gap="4" style(stageColMd)>
+                <fieldset>
+                  <legend>Account details</legend>
+                  <column gap="2">
+                    <input placeholder="Name" />
+                    <input placeholder="Email" />
+                  </column>
+                </fieldset>
+                <p style(monoXs)>component.legend · foreground</p>
+              </column>
             </if>
             <if {stage.dropzone()}>
               <card dropzone style({ box: pad(6).w(full).maxW(panel-max-w-sm) })>Drop a file, or click to browse</card>
@@ -2241,6 +2261,54 @@ const kbdExChord = () =>
               <kbd>/</kbd>
             </row>
             <code-block code={kbdExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.legend()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Caption a fieldset</h3>
+            <p style(exampleLead)>
+              Nest native <code>legend</code> as the first child of <code>fieldset</code>.
+              Grouping and form semantics stay platform — the PE only paints the caption.
+            </p>
+            <fieldset style(stageColMd)>
+              <legend>Account details</legend>
+              <column gap="2">
+                <input placeholder="Name" />
+                <input placeholder="Email" />
+              </column>
+            </fieldset>
+            <code-block code={legendExGroup()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Disabled group</h3>
+            <p style(exampleLead)>
+              Put <code>disabled</code> on the fieldset — every control inside greys out.
+              The legend still names the group; no extra prop on the caption tag.
+            </p>
+            <fieldset disabled style(stageColMd)>
+              <legend>Read-only profile</legend>
+              <input placeholder="Display name" />
+            </fieldset>
+            <code-block code={legendExDisabled()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Themeable leaf</h3>
+            <p style(exampleLead)>
+              Ink is always <code>component.legend.fg</code> (<code>--legend-foreground</code>).
+              Override that leaf in Studio themes — there is no size, variant, or tone prop.
+            </p>
+            <fieldset style(stageColMd)>
+              <legend>Themeable caption</legend>
+              <p style(mutedSm)>Caption rides the legend leaf; border is fieldset.</p>
+            </fieldset>
+            <code-block code={legendExRest()}></code-block>
           </column>
         </column>
       </if>
