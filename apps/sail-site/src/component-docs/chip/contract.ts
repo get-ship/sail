@@ -23,6 +23,7 @@ export const contract = {
     },
     selected: { default: false, control: 'switch' },
     removable: { default: false, control: 'switch' },
+    // PE complete; visual row exercises disabled. Docs knob deferred (docsSkip).
     disabled: { default: false, control: 'switch', docsSkip: true },
     onRemove: { control: 'none', event: true },
   },
@@ -33,6 +34,7 @@ export const contract = {
   ],
   visual: {
     defaultRow: true,
+    // disabled stays on visual.cross for harness coverage; docsSkip only skips docs knob.
     cross: ['variant', 'tone', 'size', 'selected', 'removable', 'disabled'],
   },
   examples: true,

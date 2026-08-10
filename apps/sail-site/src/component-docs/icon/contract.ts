@@ -11,7 +11,8 @@ export const contract = {
   axes: {
     name: { default: '', control: 'select' },
     src: { default: '', control: 'none', docsSkip: true },
-    label: { default: '', control: 'switch' },
+    // Registry type is string; docs UI toggles decorative vs label={name}.
+    label: { default: '', control: 'text', docsControl: 'switch' },
     size: {
       values: ['xs', 'sm', 'md', 'lg', 'xl'] as const,
       default: 'md',

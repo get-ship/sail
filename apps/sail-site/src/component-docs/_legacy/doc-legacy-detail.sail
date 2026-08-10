@@ -1,8 +1,10 @@
 <!--
   <doc-legacy-detail> — residual docs host for packages without a first-class
-  doc-<slug> host yet. Full configurators live in first-class packages
-  (doc-button, doc-badge, doc-fieldset); peel remaining stages out of here
-  into component-docs/<slug>/ over time.
+  doc-<slug> host yet.
+
+  First-class (do NOT re-add stages here): button, badge, fieldset, chip, alert,
+  separator, spinner, skeleton, icon, progress, meter. Peel remaining tags into
+  component-docs/<slug>/doc-<slug>.sail over time.
 
   Specimens are intentional live demos (hub-quality), not random float.
   Props/usage come from DETAILS + pack meta. Viewer variant chips drive tags
@@ -62,8 +64,6 @@ export default controller((ctx: Scope) => {
   const pageNo = signal('2')
   const goPage = (detail: { page?: string; value?: string }): void =>
     pageNo.set(detail?.page ?? detail?.value ?? '1')
-  const kept = signal(true)
-  const dropChip = (): void => kept.set(false)
   const presses = signal(0)
   const press = (): void => presses.set((n) => n + 1)
   let toastSeq = 0
@@ -203,8 +203,6 @@ export default controller((ctx: Scope) => {
     pickFw,
     pageNo,
     goPage,
-    kept,
-    dropChip,
     presses,
     press,
     toastItems,

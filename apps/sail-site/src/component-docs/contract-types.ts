@@ -17,7 +17,13 @@ export interface AxisDef {
   /** Enum values when the prop is a closed union. */
   values?: readonly string[]
   default?: string | boolean | number
+  /** Registry-shaped control hint (select/slider/…). */
   control: AxisControl
+  /**
+   * Docs UI widget when it differs from registry control (e.g. label string prop
+   * driven by a decorative/role switch in the configurator).
+   */
+  docsControl?: AxisControl
   /** True when omit is a valid rest path (e.g. tone → component.* leaves). */
   optional?: boolean
   /** Handler / identity props not exposed as docs knobs. */
@@ -38,6 +44,11 @@ export interface SurfaceContract {
   tag: string | null
   kind: 'host' | 'alias' | 'action' | 'keywords'
   axes: Record<string, AxisDef>
+  /**
+   * Docs-only demo knobs that are not PE props (e.g. progress indeterminate =
+   * omit value). Checker allowlists these for reverse fantasy checks.
+   */
+  demoOnly?: readonly string[]
   /** component.* leaves this host actually paints (host paint only). */
   faces: readonly FaceLeaf[]
   visual: {

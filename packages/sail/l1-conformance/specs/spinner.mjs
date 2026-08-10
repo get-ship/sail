@@ -11,8 +11,10 @@ export default {
   width: 640,
   rows() {
     return [
-      [sp('size="xs" tone="primary"'), sp('size="sm" tone="primary"'), sp('tone="primary"'), sp('size="lg" tone="primary"')].join(' '),
+      [sp('size="xs" tone="primary"'), sp('size="sm" tone="primary"'), sp('size="md" tone="primary"'), sp('size="lg" tone="primary"')].join(' '),
       TONES.map((t) => sp(`tone="${t}"`)).join(' '),
+      // rest (no tone) + centered bool
+      [sp(''), sp('centered tone="primary"')].join(' '),
     ]
   },
   probe() {

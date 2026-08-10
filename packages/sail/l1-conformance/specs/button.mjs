@@ -14,17 +14,18 @@ export default {
       // variants (tone=primary)
       ['default', 'solid', 'soft', 'outline', 'ghost']
         .map((v) => btn(v, `variant="${v}" tone="primary"`)).join(''),
-      // tones (variant=solid)
-      ['default', 'primary', 'success', 'warning', 'destructive', 'info', 'accent']
+      // tones (variant=solid) — full registry enum including muted
+      ['default', 'primary', 'success', 'warning', 'destructive', 'info', 'accent', 'muted']
         .map((t) => btn(t, `variant="solid" tone="${t}"`)).join(''),
-      // sizes + disabled (text: xs–lg; square: icon / icon-sm / icon-lg)
+      // sizes + disabled (text: xs–lg; square: icon / iconSm / iconLg)
       [
         btn('xs', 'variant="solid" tone="primary" size="xs"'),
         btn('sm', 'variant="solid" tone="primary" size="sm"'),
-        btn('md', 'variant="solid" tone="primary"'),
+        btn('md', 'variant="solid" tone="primary" size="md"'),
         btn('lg', 'variant="solid" tone="primary" size="lg"'),
         btn('◆', 'variant="solid" tone="primary" size="icon" label="icon"'),
         btn('◆', 'variant="outline" size="iconSm" label="iconSm"'),
+        btn('◆', 'variant="solid" tone="primary" size="iconLg" label="iconLg"'),
         btn('disabled', 'variant="solid" tone="primary" disabled'),
         btn('outline off', 'variant="outline" tone="destructive" disabled'),
       ].join(''),

@@ -3,9 +3,12 @@
 // gates (selected/removable/icon/disabled/size). Paint classes mirror lowered
 // Style: soft/outline/ghost rest ride chip* tokens (not free muted/foreground).
 
-const dot = '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>'
+const dot =
+  '<svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" style="display:block;width:8px;height:8px"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>'
 const x =
-  '<button class="remove" type="button" aria-label="Remove" tabindex="-1"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg></button>'
+  '<button class="remove" type="button" aria-label="Remove" tabindex="-1" style="display:none"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg></button>'
+const xRem =
+  '<button class="remove" type="button" aria-label="Remove" tabindex="-1" style="display:inline-flex"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg></button>'
 
 // Base rest paint: solid default + soft rest both stamp chip / chip-foreground / chip-border.
 const CHIP =
@@ -26,7 +29,12 @@ const paintCls = (variant) => {
 
 const chip = (label, attrs = '', icon = false, variant = 'solid') => {
   const extra = attrs ? ` ${attrs}` : ''
-  return `<span class="${paintCls(variant)}"${extra}><span class="leading">${icon ? dot : ''}</span>${label}${x}</span>`
+  const removable = /\bremovable\b/.test(attrs)
+  // Leading: contents when empty (product empty:hidden ≈ no layout); inline when glyph.
+  const lead = icon
+    ? `<span class="leading" style="display:inline-flex">${dot}</span>`
+    : `<span class="leading" style="display:contents"></span>`
+  return `<span class="${paintCls(variant)}"${extra}>${lead}${label}${removable ? xRem : x}</span>`
 }
 
 export default {
@@ -34,7 +42,7 @@ export default {
   width: 760,
   rows() {
     return [
-      ['default', 'primary', 'info', 'success', 'warning', 'destructive', 'accent']
+      ['default', 'primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted']
         .map((tn) => chip(tn, `tone="${tn}"`)).join(''),
       ['solid', 'soft', 'outline', 'ghost']
         .map((v) => chip(v, `tone="primary" variant="${v}"`, false, v)).join(''),
@@ -68,18 +76,27 @@ export default {
       const tabOk = el.getAttribute('tabindex') === (disabled ? '-1' : '0')
       const remove = el.querySelector('.remove')
       const leading = el.querySelector('.leading')
+      const glyph = el.querySelector('.leading svg')
       const removeShown = remove ? getComputedStyle(remove).display !== 'none' : false
       const removeExpected = el.hasAttribute('removable')
-      // Leading glyph gate: presence of SVG (empty slot may stay display:contents — product residual).
-      const leadHasGlyph = !!el.querySelector('.leading svg')
-      const leadExpected = leadHasGlyph
-      // Treat contents-with-svg as shown (glyph inherits); empty contents as hidden.
-      const leadShown = leadHasGlyph
+      // Independent lead gates (not tautological):
+      // 1) Glyph present → SVG must render a non-zero box.
+      // 2) Glyph absent → leading must not paint a real layout box (none|contents|0×0).
+      if (glyph) {
+        const gr = glyph.getBoundingClientRect()
+        if (gr.width <= 0 || gr.height <= 0) {
+          bad.push({ why: 'lead-glyph-not-rendered', w: gr.width, h: gr.height })
+        }
+      } else if (leading) {
+        const d = getComputedStyle(leading).display
+        const lr = leading.getBoundingClientRect()
+        const emptyOk = d === 'none' || d === 'contents' || (lr.width <= 1 && lr.height <= 1)
+        if (!emptyOk) {
+          bad.push({ why: 'lead-empty-visible-box', display: d, w: lr.width, h: lr.height })
+        }
+      }
       if (!roleOk || !pressedOk || !tabOk) bad.push({ why: 'aria', roleOk, pressedOk, tabOk })
       if (removeShown !== removeExpected) bad.push({ why: 'remove-gate', removeShown, removeExpected })
-      // leadShown === leadExpected by construction (glyph presence); keep assert for clarity.
-      if (leadShown !== leadExpected) bad.push({ why: 'lead-gate', leadShown, leadExpected })
-      void leading
       // Soft/solid rest: filled surface + readable ink (chip* tokens).
       const variant = el.getAttribute('variant') || 'solid'
       const cs = getComputedStyle(el)
@@ -88,9 +105,12 @@ export default {
       }
       if (clear(cs.color)) bad.push({ why: 'no-token-fg', variant })
     })
-    // Soft rest rides component.chip.* which currently aliases muted in both
-    // ship + console — identical paint is expected pack default, not a freeze bug.
-    // (Token differentiation is operator taste / theme pairing, not scaffold floor.)
+    // Soft rest fill must resolve on ship (component.chip.*). Cross-theme divergence
+    // is operator taste when pack aliases muted in both modes.
+    const softRest = document.querySelector("[theme='ship'] .sail-chip[variant='soft']:not([tone])")
+    if (softRest && clear(getComputedStyle(softRest).backgroundColor)) {
+      bad.push({ why: 'soft-rest-no-fill' })
+    }
     return { count: document.querySelectorAll('.sail-chip').length, bad: bad.slice(0, 10) }
   },
 }

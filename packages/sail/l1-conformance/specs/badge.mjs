@@ -1,7 +1,7 @@
 // L1 conformance spec: <badge> (mechanism-1, compiles-away). variant × tone
 // matrix + sizes + pill. Probe asserts per-variant chrome (soft/solid filled,
-// solid readable, outline bordered), pill is rounder than square, frozen-token
-// guard on the soft rest surface.
+// solid readable, outline bordered), pill is rounder than square, soft-rest
+// fill on ship, and size ladder monotonicity when freeform size classes stamp.
 //
 // Harness HTML mirrors freeform class stamps + tone bridge vars
 // (`--tone: var(--primary)` etc.) that runtime bind applies at mount.
@@ -11,10 +11,16 @@ const TONES = ['default', 'primary', 'info', 'success', 'warning', 'destructive'
 const BASE =
   'sail-badge s-displayinlineflex s-minHcontrolh2xs s-padX2 s-padYpx s-borderWidth1 s-radiussm s-fontFamilybody s-fontWeightsemibold s-leadingnone s-whitespacenowrap s-fontSizexs'
 
+/** Freeform size utility stamps (must pair with size= attr for [size].s-size* rules). */
+const sizeCls = {
+  sm: 's-sizesm-minH4 s-sizesm-padX15 s-sizesm-fontSizexs',
+  md: 's-sizemd-minHcontrolh2xs s-sizemd-padX2 s-sizemd-fontSizexs',
+  lg: 's-sizelg-minHcontrolhxs s-sizelg-padX25 s-sizelg-fontSizexs',
+}
+
 /** Tone bridge style — mirrors runtime reflectToneBridge for prop `tone`. */
 const toneStyle = (tone) => {
   if (!tone || tone === 'default') return ''
-  // muted uses dedicated compounds in freeform; still bridge for soft/solid paths.
   return ` style="--tone:var(--${tone});--tone-foreground:var(--${tone}-foreground)"`
 }
 
@@ -31,7 +37,6 @@ const paint = (variant, toned) => {
     }
     return `${BASE} s-variantoutline-bgtransparent s-variantoutline-fgbadgeforeground s-variantoutline-borderbadgeborder`
   }
-  // soft
   if (toned) {
     return `${BASE} s-variantsoft-colorMixtone15 s-variantsoft-bordertone s-variantsoft-fgtone`
   }
@@ -41,8 +46,8 @@ const paint = (variant, toned) => {
 const bdg = (attrs, label, variant = 'soft') => {
   const v = /variant="([^"]+)"/.exec(attrs || '')?.[1] || variant
   const tone = /tone="([^"]+)"/.exec(attrs || '')?.[1] || ''
+  const size = /size="([^"]+)"/.exec(attrs || '')?.[1] || ''
   const toned = !!tone && tone !== 'default'
-  // muted×variant compounds from freeform
   let cls = paint(v, toned)
   if (tone === 'muted' && v === 'solid') {
     cls = `${BASE} s-tonemutedvariantsolid-bgmuted s-tonemutedvariantsolid-fgmutedforeground s-tonemutedvariantsolid-borderborder`
@@ -51,8 +56,8 @@ const bdg = (attrs, label, variant = 'soft') => {
   } else if (tone === 'muted' && v === 'outline') {
     cls = `${BASE} s-tonemutedvariantoutline-fgmutedforeground s-tonemutedvariantoutline-borderborder s-variantoutline-bgtransparent`
   }
+  if (size && sizeCls[size]) cls += ` ${sizeCls[size]}`
   if (/\bpill\b/.test(attrs || '')) cls += ' s-pilltrue-radiusfull'
-  // Always stamp variant= so [variant='soft'].s-variantsoft-* selectors match.
   const hasVariant = /variant=/.test(attrs || '')
   const attrBits = [!hasVariant ? `variant="${v}"` : '', attrs || ''].filter(Boolean).join(' ')
   const a = attrBits ? ` ${attrBits}` : ''
@@ -84,13 +89,11 @@ export default {
       const variant = el.getAttribute('variant') || 'soft'
       const bg = cs(el, 'backgroundColor')
       const fg = cs(el, 'color')
-      const border = cs(el, 'borderTopColor')
       if ((variant === 'soft' || variant === 'solid') && clear(bg))
         bad.push({ variant, tone: el.getAttribute('tone'), why: 'expected-fill' })
       if (variant === 'solid' && bg === fg) bad.push({ variant, why: 'text=fill' })
       if (clear(fg)) bad.push({ variant, why: 'no-text' })
     })
-    // Outline border floor in a bordered theme (glass/halo may be borderless by design).
     document.querySelectorAll("[theme='ship'] .sail-badge[variant='outline']").forEach((el) => {
       const border = cs(el, 'borderTopColor')
       if (clear(border)) bad.push({ variant: 'outline', why: 'no-border', tone: el.getAttribute('tone') })
@@ -102,8 +105,15 @@ export default {
       const sqR = parseFloat(cs(sqEl, 'borderRadius'))
       if (!(pillR > sqR)) bad.push({ why: 'pill-not-rounder', pillR, sqR })
     }
-    // Soft rest must paint (component.badge.*). Light vs dark divergence is operator taste
-    // when pack defaults alias the same muted ramp in both modes.
+    // Size ladder: freeform size classes + size= must yield monotonic min-height on ship.
+    const h = (s) => {
+      const el = document.querySelector(`[theme='ship'] .sail-badge[size='${s}']`)
+      return el ? el.getBoundingClientRect().height : 0
+    }
+    const [sm, md, lg] = [h('sm'), h('md'), h('lg')]
+    if (!(sm > 0 && md > 0 && lg > 0 && sm <= md && md <= lg && sm < lg)) {
+      bad.push({ why: 'size-not-monotonic', sm, md, lg })
+    }
     const rest = document.querySelector("[theme='ship'] .sail-badge[variant='soft'][tone='default']")
     if (rest && clear(cs(rest, 'backgroundColor')))
       bad.push({ why: 'soft-rest-no-fill' })

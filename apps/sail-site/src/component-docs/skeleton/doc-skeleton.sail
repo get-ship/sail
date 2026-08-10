@@ -10,14 +10,14 @@ import { DETAILS } from '../../compositions/component-details'
 export default controller((_ctx: Scope) => {
 
   const SKEL_SIZES = ['sm', 'md', 'lg'] as const
-  const variant = signal('text')
+  const shape = signal('text')
   const sizeIdx = signal(1)
   const skelSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SKEL_SIZES.length - 1)
     return SKEL_SIZES[i] ?? 'md'
   })
   const skelMeta = derived(() => {
-    const sh = variant() || 'text'
+    const sh = shape() || 'text'
     const sizeNote = sh === 'block' ? 'size n/a (block)' : skelSize()
     return `${sh} · ${sizeNote} · sheen component.skeleton.*`
   })
@@ -33,7 +33,7 @@ export default controller((_ctx: Scope) => {
   const skelExRest = () =>
     `<skeleton shape="block"></skeleton>\n<!-- sheen → component.skeleton.bg / highlight -->`
   return {
-    variant, sizeIdx, skelSize, skelMeta,
+    shape, sizeIdx, skelSize, skelMeta,
     heading, blurb, props, usageCode, skelExLines, skelExAvatar, skelExRest,
   }
 
@@ -43,11 +43,7 @@ export default controller((_ctx: Scope) => {
 <scope>
   style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
   style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
   style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
-  style meterCol = { box: w(panel-max-w-sm) }
   style fullW = { box: w(full) }
   style grow1 = { box: grow(1) }
   style stageSplit = { box: w(full).minW(0).minH(64) }
@@ -61,38 +57,19 @@ export default controller((_ctx: Scope) => {
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style swatchRow = { box: w(full) }
   style tickRow = { box: w(full).padT(1) }
   style tick = {
     box: grow(1).basis(0).minW(0),
     paint: fg(muted-foreground),
     text: fontSize(xs).fontFamily(mono).textAlign(center),
   }
-  style swatch = {
-    box: w(7).h(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style swatchInfo = { paint: bg(info) }
-  style swatchRest = { paint: bg(background).border(border) }
   style exampleBlock = { box: w(full).padY(2) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style sepVRow = { box: h(10) }
-  style sepStageCol = { box: w(full).maxW(panel-max-w-sm) }
   style skelStageCol = { box: w(full).maxW(panel-max-w-sm) }
   style skelBlock = { box: w(full).maxW(panel-max-w-sm) }
-  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
+
 </scope>
 
 <column gap="4" style(page)>
@@ -109,13 +86,13 @@ export default controller((_ctx: Scope) => {
       <row nowrap gap="0" align="stretch" style(stageSplit)>
         <center style(stageCanvas)>
           <column gap="4" align="center" style(skelStageCol)>
-            <if {variant() === 'circle'}>
+            <if {shape() === 'circle'}>
               <skeleton shape="circle" size={skelSize()}></skeleton>
-            {else-if {variant() === 'block'} =>
+            {else-if {shape() === 'block'} =>
               <skeleton shape="block" style(skelBlock)></skeleton>
             }{else =>
               <column gap="2" style(fullW)>
-                <skeleton shape={variant() || 'text'} size={skelSize()}></skeleton>
+                <skeleton shape={shape() || 'text'} size={skelSize()}></skeleton>
               </column>}</if>
             <p style(monoXs)>{skelMeta()}</p>
           </column>
@@ -123,7 +100,7 @@ export default controller((_ctx: Scope) => {
         <column gap="5" style(knobPanel)>
           <column gap="2">
             <label style(knobLabel)>Shape</label>
-            <select size="sm" bind:value={variant} label="Shape">
+            <select size="sm" bind:value={shape} label="Shape">
               <option value="text">text</option>
               <option value="line">line</option>
               <option value="block">block</option>

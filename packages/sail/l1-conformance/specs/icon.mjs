@@ -28,6 +28,8 @@ export default {
     return [
       ['xs', 'sm', 'md', 'lg', 'xl'].map((s) => ic(s)).join(' '),
       `<span style="color:var(--primary)">${ic()}</span> <span style="color:var(--destructive)">${ic()}</span> <span style="color:var(--success)">${ic()}</span>`,
+      // spin bool coverage (use:icon owns motion; harness stamps attribute)
+      `<span class="sail-icon s-displayinlineblock s-sizeiconsizemd s-alignmiddle s-fgcurrentColor s-glyphfill s-shrink0 ${sizeCls.md}" size="md" spin>${svg}</span>`,
     ]
   },
   probe() {

@@ -51,13 +51,6 @@ export default controller((_ctx: Scope) => {
 <scope>
   style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
   style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
-  style meterCol = { box: w(panel-max-w-sm) }
-  style fullW = { box: w(full) }
-  style grow1 = { box: grow(1) }
   style stageSplit = { box: w(full).minW(0).minH(64) }
   style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
   style knobPanel = {
@@ -96,11 +89,7 @@ export default controller((_ctx: Scope) => {
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style sepVRow = { box: h(10) }
-  style sepStageCol = { box: w(full).maxW(panel-max-w-sm) }
-  style skelStageCol = { box: w(full).maxW(panel-max-w-sm) }
-  style skelBlock = { box: w(full).maxW(panel-max-w-sm) }
-  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
+
 </scope>
 
 <column gap="4" style(page)>

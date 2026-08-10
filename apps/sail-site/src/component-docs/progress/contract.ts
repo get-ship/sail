@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for progress.
- * Indeterminate = omit value (no separate PE prop) — demo switch is docs-only.
+ * Indeterminate = omit value (no separate PE prop) — listed under demoOnly.
  */
 export const contract = {
   slug: 'progress',
@@ -17,6 +17,8 @@ export const contract = {
       control: 'slider',
     },
   },
+  /** Docs configurator switch: omit value for native indeterminate sweep. */
+  demoOnly: ['indeterminate'] as const,
   faces: [
     { path: 'component.progress.track', label: 'Track' },
     { path: 'component.progress.fill', label: 'Fill' },
