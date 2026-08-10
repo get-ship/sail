@@ -184,8 +184,9 @@ export default controller(() => {
 export default controller(() => ({ done: signal(64) }))
 </controller>
 
-<progress value={done()} max="100"></progress>
-<p>{done()}% uploaded — a native element, themed</p>`,
+<progress value={done()} max="100" size="md"></progress>
+<p>{done()}% uploaded — native value/max; paint from component.progress.*</p>
+<!-- omit value for indeterminate shimmer -->`,
 
   meter: `<column gap="2">
   <p>Disk free — 72%</p>

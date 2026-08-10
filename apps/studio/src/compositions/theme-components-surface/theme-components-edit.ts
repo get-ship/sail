@@ -81,6 +81,10 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.warning.default', label: 'Warning (global · suboptimum)' },
     { path: 'color.destructive.default', label: 'Danger (global · even-less-good)' },
   ],
+  progress: [
+    { path: 'color.muted.default', label: 'Muted (global · track)' },
+    { path: 'color.primary.default', label: 'Primary (global · fill)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },
@@ -123,6 +127,7 @@ const FACE_HINTS: Record<string, string> = {
   prose: 'Typography scope · component.prose.fg host leaf',
   spinner: 'Indeterminate wait · fg + track leaves',
   meter: 'Gauge · track + optimum band leaves',
+  progress: 'Bar · track + fill leaves',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
 }

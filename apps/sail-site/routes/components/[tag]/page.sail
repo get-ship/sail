@@ -35,6 +35,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
     const SKEL_SIZES = ['sm', 'md', 'lg'] as const
     const METER_SIZES = ['sm', 'md', 'lg'] as const
+    const PRG_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
@@ -57,6 +58,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Skeleton: shape via variant(); size ladder; sheen always component.skeleton.*
     // Meter: value + size; low/high/optimum fixed for band demo (native thresholds).
     const meterVal = signal(55)
+    // Progress: value/max native; omit value = indeterminate; size sm|md|lg; paint component.progress.*
+    // load is also reused by the slider detail stage (shared 0–100 signal).
+    const load = signal(62)
+    const progIndeterminate = signal(false)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -84,6 +89,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const meterSize = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), METER_SIZES.length - 1)
       return METER_SIZES[i] ?? 'md'
+    })
+    const progSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), PRG_SIZES.length - 1)
+      return PRG_SIZES[i] ?? 'md'
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -124,6 +133,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         sizeIdx.set(1) // md
         meterVal.set(55)
+      } else if (tag() === 'progress') {
+        variant.set('')
+        sizeIdx.set(1) // md
+        load.set(62)
+        progIndeterminate.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -221,6 +235,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const meterMeta = derived(() => {
       return `${meterSize()} · value ${meterVal()} · ${meterBand()} · component.meter.*`
     })
+    const progMeta = derived(() => {
+      if (progIndeterminate()) return `${progSize()} · indeterminate (no value) · track/fill component.progress.*`
+      return `${progSize()} · ${load()}% of 100 · track/fill component.progress.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -234,7 +252,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'chip' ||
       tag() === 'spinner' ||
       tag() === 'skeleton' ||
-      tag() === 'meter'
+      tag() === 'meter' ||
+      tag() === 'progress'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -302,6 +321,14 @@ const kbdExChord = () =>
       `<meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- even-less-good → component.meter.sub-suboptimum -->\n<meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- suboptimum → component.meter.suboptimum -->\n<meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- optimum → component.meter.optimum -->`
     const mtrExRest = () =>
       `<meter value="0.55"></meter>\n<!-- track → component.meter.track; bands → optimum / suboptimum / sub-suboptimum -->`
+    const prgExDeterminate = () =>
+      `<progress value={done()} max="100"></progress>\n<p>{done()}% uploaded</p>`
+    const prgExSizes = () =>
+      `<progress value="50" max="100" size="sm"></progress>\n<progress value="50" max="100"></progress>\n<progress value="50" max="100" size="lg"></progress>`
+    const prgExIndeterminate = () =>
+      `<progress max="100"></progress>\n<!-- omit value → native indeterminate + PROGRESS_MAP shimmer -->`
+    const prgExRest = () =>
+      `<progress value="64" max="100"></progress>\n<!-- track/fill → component.progress.track + fill (themeable) -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -334,7 +361,6 @@ const kbdExChord = () =>
     const press = (): void => presses.set((n) => n + 1)
     const notify = signal(true)
     const agreed = signal(false)
-    const load = signal(62)
     const name = signal('')
     const bio = signal('')
     const team = signal('Design')
@@ -394,6 +420,8 @@ const kbdExChord = () =>
       skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
       meterVal, meterSize, meterMeta, meterBand,
       mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
+      progSize, progIndeterminate, progMeta,
+      prgExDeterminate, prgExSizes, prgExIndeterminate, prgExRest,
     }
 })
 </controller>
@@ -755,11 +783,60 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.progressBar()}>
-              <column gap="3" style(stageCol)>
-                <slider bind:value={load} min="0" max="100"></slider>
-                <progress value={load()} max="100"></progress>
-                <p style(monoXs)>one signal drives both — {load()}%</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {progIndeterminate()}>
+                      <progress max="100" size={progSize()} style(fullW)></progress>
+                    {else =>
+                      <progress value={load()} max="100" size={progSize()} style(fullW)></progress>}</if>
+                    <p style(monoXs)>{progMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{progSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Value</label>
+                      <span style(sizeValue)>{progIndeterminate() ? '—' : `${load()}%`}</span>
+                    </row>
+                    <slider bind:value={load} min="0" max="100" size="sm" label="Value"></slider>
+                    <p style(mutedXs)>
+                      <code>value</code> / <code>max</code> are the native progress model (stage uses max 100).
+                      Value is ignored while indeterminate is on.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Indeterminate</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={progIndeterminate} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{progIndeterminate() ? 'no value attr' : 'determinate'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Omit <code>value</code> for the native indeterminate sweep
+                      (<code>PROGRESS_MAP</code> shimmer). No separate indeterminate prop.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Paint always from <code>component.progress.track</code> /
+                      <code>fill</code> (<code>--progress</code> / <code>--progress-fill</code>).
+                      No tone axis — override those leaves in Studio themes.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.meter()}>
               <!-- Fixed width: meter has no intrinsic width; rail owns knobs. -->
@@ -2004,7 +2081,64 @@ const kbdExChord = () =>
           </column>
         </column>
       </if>
+      <if {stage.progressBar()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
 
+          <column gap="2">
+            <h3 style(exampleH)>Determinate bar</h3>
+            <p style(exampleLead)>
+              Bind <code>value</code> and <code>max</code> — the platform announces completion.
+              One signal can drive both a control and the bar (upload, install, long task).
+            </p>
+            <column gap="2" style(stageCol)>
+              <progress value={load()} max="100"></progress>
+              <p style(mutedSm)>{load()}% complete</p>
+            </column>
+            <code-block code={prgExDeterminate()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>sm</code> · <code>md</code> · <code>lg</code> set track height
+              (default <code>md</code>). Width follows the parent (<code>w(full)</code>).
+            </p>
+            <column gap="3" style(stageCol)>
+              <progress value="50" max="100" size="sm"></progress>
+              <progress value="50" max="100"></progress>
+              <progress value="50" max="100" size="lg"></progress>
+            </column>
+            <code-block code={prgExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Indeterminate (omit value)</h3>
+            <p style(exampleLead)>
+              There is no <code>indeterminate</code> prop. Leave <code>value</code> off and
+              the native element + <code>PROGRESS_MAP</code> shimmer run the sweep. Max may
+              still be set for a11y / consistency.
+            </p>
+            <column gap="2" style(stageCol)>
+              <progress max="100"></progress>
+            </column>
+            <code-block code={prgExIndeterminate()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Track from <code>component.progress.track</code> (<code>--progress</code>);
+              fill from <code>component.progress.fill</code> (<code>--progress-fill</code>).
+              No tone prop — override those leaves in Studio themes.
+            </p>
+            <column gap="2" style(stageCol)>
+              <progress value="64" max="100"></progress>
+            </column>
+            <code-block code={prgExRest()}></code-block>
+          </column>
+        </column>
+      </if>
       <if {stage.spinner()}>
         <column gap="5" style(exampleBlock)>
           <p style(sectionLabel)>Examples</p>
