@@ -104,6 +104,10 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.default', label: 'Muted (global · track)' },
     { path: 'color.primary.default', label: 'Primary (global · fill)' },
   ],
+  'scroll-area': [
+    { path: 'color.border.default', label: 'Border (global · rest thumb alias)' },
+    { path: 'color.border.strong', label: 'Border strong (global · hover thumb)' },
+  ],
   'error-state': [
     { path: 'color.muted.default', label: 'Muted (global · rest bg alias)' },
     { path: 'color.muted.foreground', label: 'Muted fg (global · rest ink)' },
@@ -184,6 +188,7 @@ const FACE_HINTS: Record<string, string> = {
   meter: 'Gauge · track + optimum band leaves',
   label: 'Form labels · component.label.fg + required leaves',
   progress: 'Bar · track + fill leaves',
+  'scroll-area': 'Overflow · component.scroll-area.thumb; hover border-strong',
   'error-state': 'Recovery · component.error-state leaves + brand destructive',
   icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',

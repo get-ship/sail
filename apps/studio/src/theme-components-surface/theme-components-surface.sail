@@ -893,18 +893,31 @@ export default controller(() => {
                     </table>
                   </if>
                   <if {components.stage.scrollArea()}>
-                    <scroll-area style({ box: maxH(32).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+                    <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <p style(fieldHint)>Scroll me — themed scrollbars.</p>
-                        <p style(fieldHint)>Line 2</p>
-                        <p style(fieldHint)>Line 3</p>
-                        <p style(fieldHint)>Line 4</p>
-                        <p style(fieldHint)>Line 5</p>
-                        <p style(fieldHint)>Line 6</p>
-                        <p style(fieldHint)>Line 7</p>
-                        <p style(fieldHint)>Line 8</p>
+                        <p style(fieldHint)>Vertical · rest thumb component.scroll-area.thumb · hover border-strong</p>
+                        <scroll-area orientation="vertical" style({ box: maxH(32).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+                          <column gap="2">
+                            <p style(fieldHint)>Scroll me — themed thin scrollbar.</p>
+                            <p style(fieldHint)>Line 2</p>
+                            <p style(fieldHint)>Line 3</p>
+                            <p style(fieldHint)>Line 4</p>
+                            <p style(fieldHint)>Line 5</p>
+                            <p style(fieldHint)>Line 6</p>
+                            <p style(fieldHint)>Line 7</p>
+                            <p style(fieldHint)>Line 8</p>
+                          </column>
+                        </scroll-area>
                       </column>
-                    </scroll-area>
+                      <column gap="2">
+                        <p style(fieldHint)>Horizontal · orientation="horizontal"</p>
+                        <scroll-area orientation="horizontal" style({ box: w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
+                          <p style({ box: padY(1), text: whitespace(nowrap) })>
+                            Wide band that overflows on the x axis → scroll with thin themed thumb · component.scroll-area.*
+                          </p>
+                        </scroll-area>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.ticker()}>
                     <ticker style(sampleMax)>

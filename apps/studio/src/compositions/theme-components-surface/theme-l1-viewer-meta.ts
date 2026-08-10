@@ -118,6 +118,12 @@ const VARIANT_META: Partial<
     variantAttr: 'size',
     blurb: 'Native bar · component.progress.track + fill; omit value = indeterminate.',
   },
+  'scroll-area': {
+    variants: ['vertical', 'horizontal', 'both'],
+    variantAttr: 'orientation',
+    blurb:
+      'Overflow box · orientation vertical|horizontal|both; rest component.scroll-area.thumb; hover free border-strong; constrain with Style.',
+  },
   skeleton: {
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',

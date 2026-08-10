@@ -93,6 +93,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Radio: value + disabled only; label ink component.radio.fg; group wiring is radio-group.
     const radioDisabled = signal(false)
     const radioValue = signal('monthly')
+    // Scroll-area: orientation only; rest thumb = component.scroll-area.thumb;
+    // hover free border-strong (SPEC-D1 — scroll-area-thumb-hover parked unread).
+    // Constrain with Style box (not a PE prop) so content overflows on the active axis.
+    const scrollOrientation = signal('vertical')
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -227,6 +231,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         radioDisabled.set(false)
         radioValue.set('monthly')
+      } else if (tag() === 'scroll-area') {
+        variant.set('')
+        scrollOrientation.set('vertical')
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -398,6 +405,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const radioMeta = derived(() => {
       return `value "${radioValue()}" · disabled ${radioDisabled() ? 'on' : 'off'} · component.radio.fg`
     })
+    const scrollMeta = derived(() => {
+      return `${scrollOrientation()} · thumb component.scroll-area.thumb · hover border-strong`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -421,7 +431,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'label' ||
       tag() === 'code-block' ||
       tag() === 'switch' ||
-      tag() === 'radio'
+      tag() === 'radio' ||
+      tag() === 'scroll-area'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -569,6 +580,14 @@ const kbdExChord = () =>
       `<switch tone="success" checked></switch>\n<switch tone="warning" checked></switch>\n<switch tone="destructive" checked></switch>\n<!-- tone paints checked track only; thumb stays switch.thumb -->`
     const swExRest = () =>
       `<switch></switch>\n<switch checked></switch>\n<!-- off → component.switch.track + border; checked (no tone) → primary; thumb → switch.thumb -->`
+    const saExVertical = () =>
+      `<scroll-area orientation="vertical" style({ box: maxH(panel-max-h-sm).pad(3) })>\n  <p>Line 1</p>\n  <p>Line 2</p>\n  …\n</scroll-area>`
+    const saExHorizontal = () =>
+      `<scroll-area orientation="horizontal" style({ box: maxW(panel-max-w-sm).pad(3) })>\n  <p style({ text: whitespace(nowrap) })>Wide content that overflows →</p>\n</scroll-area>`
+    const saExBoth = () =>
+      `<scroll-area orientation="both" style({ box: maxH(panel-max-h-sm).maxW(panel-max-w-sm).pad(3) })>\n  …tall and wide content…\n</scroll-area>`
+    const saExRest = () =>
+      `<scroll-area style({ box: maxH(panel-max-h-sm).pad(3) })>\n  …\n</scroll-area>\n<!-- rest thumb → component.scroll-area.thumb; hover → border-strong (SPEC-D1) -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -686,6 +705,8 @@ const kbdExChord = () =>
       swExBind, swExSizes, swExTones, swExRest,
       radioDisabled, radioValue, radioMeta,
       radioExOption, radioExDisabled, radioExRest, radioExGroup,
+      scrollOrientation, scrollMeta,
+      saExVertical, saExHorizontal, saExBoth, saExRest,
     }
 })
 </controller>
@@ -710,6 +731,11 @@ const kbdExChord = () =>
   style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
   style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
   style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  // Horizontal: cap width so a nowrap band overflows on x.
+  style scrollDemoH = { box: w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  // Both: cap both axes so content can overflow on x and y.
+  style scrollDemoBoth = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).h(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style scrollWide = { box: padY(1), text: whitespace(nowrap) }
   style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
   style pressBtn = { animate: press({ scale: 'press' }) }
   style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
@@ -2324,18 +2350,71 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.scrollArea()}>
-              <scroll-area style(scrollDemo)>
-                <p>Constrain it, and the overflow scrolls behind thin, themed scrollbars.</p>
-                <p>Line two.</p>
-                <p>Line three.</p>
-                <p>Line four.</p>
-                <p>Line five.</p>
-                <p>Line six.</p>
-                <p>Line seven.</p>
-                <p>Line eight.</p>
-                <p>Line nine.</p>
-                <p>Line ten — still scrolling.</p>
-              </scroll-area>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {scrollOrientation() === 'horizontal'}>
+                      <scroll-area orientation="horizontal" style(scrollDemoH)>
+                        <p style(scrollWide)>
+                          Wide content that overflows horizontally → thin themed scrollbar thumb from component.scroll-area.* · keep scrolling this band past the clip →
+                        </p>
+                      </scroll-area>
+                    {else-if {scrollOrientation() === 'both'} =>
+                      <scroll-area orientation="both" style(scrollDemoBoth)>
+                        <column gap="2">
+                          <p style(scrollWide)>Wide + tall band — both axes overflow with thin themed thumbs.</p>
+                          <p>Line two.</p>
+                          <p>Line three.</p>
+                          <p>Line four.</p>
+                          <p>Line five.</p>
+                          <p>Line six.</p>
+                          <p>Line seven.</p>
+                          <p>Line eight.</p>
+                          <p style(scrollWide)>Another wide row that still needs horizontal room past the box edge →</p>
+                          <p>Line ten — still scrolling.</p>
+                        </column>
+                      </scroll-area>
+                    {else =>
+                      <scroll-area orientation="vertical" style(scrollDemo)>
+                        <p>Constrain height, and the overflow scrolls behind thin, themed scrollbars.</p>
+                        <p>Line two.</p>
+                        <p>Line three.</p>
+                        <p>Line four.</p>
+                        <p>Line five.</p>
+                        <p>Line six.</p>
+                        <p>Line seven.</p>
+                        <p>Line eight.</p>
+                        <p>Line nine.</p>
+                        <p>Line ten — still scrolling.</p>
+                      </scroll-area>}</if>
+                    <p style(monoXs)>{scrollMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Orientation</label>
+                    <select size="sm" bind:value={scrollOrientation} label="Orientation">
+                      <option value="vertical">vertical</option>
+                      <option value="horizontal">horizontal</option>
+                      <option value="both">both</option>
+                    </select>
+                    <p style(mutedXs)>
+                      Only PE axis. Default <code>vertical</code> — overflow-y auto, overflow-x hidden.
+                      <code>horizontal</code> flips axes; <code>both</code> is overflow auto.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Constrain the host with Style <code>box</code> (max height / width) so content overflows —
+                      not a prop. Rest thumb from <code>component.scroll-area.thumb</code>;
+                      hover uses free <code>border-strong</code> (SPEC-D1 —
+                      <code>thumb-hover</code> leaf is parked unread). Standard
+                      <code>scrollbar-width</code> / color only (WebKit scrollbar
+                      pseudos have no Style setters yet).
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.ticker()}>
               <ticker duration="normal" style(ticker)>
@@ -3682,6 +3761,87 @@ const kbdExChord = () =>
               <radio value="yearly">Yearly</radio>
             </radio-group>
             <code-block code={radioExGroup()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.scrollArea()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Vertical (default)</h3>
+            <p style(exampleLead)>
+              Default <code>orientation="vertical"</code> — overflow-y auto, overflow-x hidden.
+              Cap height with Style so the slot overflows.
+            </p>
+            <scroll-area orientation="vertical" style(scrollDemo)>
+              <p>Line one — constrained host.</p>
+              <p>Line two.</p>
+              <p>Line three.</p>
+              <p>Line four.</p>
+              <p>Line five.</p>
+              <p>Line six.</p>
+              <p>Line seven.</p>
+              <p>Line eight.</p>
+            </scroll-area>
+            <code-block code={saExVertical()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Horizontal</h3>
+            <p style(exampleLead)>
+              <code>orientation="horizontal"</code> flips axes (x auto, y hidden).
+              Cap width and put wide/nowrap content inside.
+            </p>
+            <scroll-area orientation="horizontal" style(scrollDemoH)>
+              <p style(scrollWide)>
+                Wide content that overflows horizontally → keep going past the clip with a thin themed thumb →
+              </p>
+            </scroll-area>
+            <code-block code={saExHorizontal()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Both axes</h3>
+            <p style(exampleLead)>
+              <code>orientation="both"</code> is overflow auto on the host. Constrain both
+              dimensions when content can grow in either direction.
+            </p>
+            <scroll-area orientation="both" style(scrollDemoBoth)>
+              <column gap="2">
+                <p style(scrollWide)>Wide + tall band for dual-axis overflow.</p>
+                <p>Line two.</p>
+                <p>Line three.</p>
+                <p>Line four.</p>
+                <p>Line five.</p>
+                <p>Line six.</p>
+                <p>Line seven.</p>
+                <p>Line eight.</p>
+              </column>
+            </scroll-area>
+            <code-block code={saExBoth()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Rest thumb from <code>component.scroll-area.thumb</code> (<code>--scroll-area-thumb</code>).
+              Hover spends free <code>border-strong</code> (SPEC-D1 — the
+              <code>component.scroll-area.thumb-hover</code> leaf stays parked unread).
+              Track is transparent. Standard scrollbar-width/color only — no WebKit pseudo setters yet.
+            </p>
+            <scroll-area style(scrollDemo)>
+              <p>Theme the rest thumb leaf in Studio — no tone prop on this PE.</p>
+              <p>Line two.</p>
+              <p>Line three.</p>
+              <p>Line four.</p>
+              <p>Line five.</p>
+              <p>Line six.</p>
+              <p>Line seven.</p>
+              <p>Line eight.</p>
+            </scroll-area>
+            <code-block code={saExRest()}></code-block>
           </column>
         </column>
       </if>
