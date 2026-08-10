@@ -53,6 +53,7 @@ pub mod lower;
 pub mod out_layout;
 pub mod parse;
 pub mod policy;
+pub mod project_map;
 pub mod region_capability;
 pub mod runtime_ambient;
 pub(crate) mod scan;
