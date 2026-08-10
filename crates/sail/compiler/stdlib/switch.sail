@@ -3,8 +3,11 @@
   Paint (Style product): track + ::before thumb; size via match; tone via bound paths.
   Rest track/border/thumb from component.switch tokens
   (cssNames switch, switch.border, switch.thumb). Checked rest = primary.
-  Semantic checked/focus = bound tone.
-  Hover paints track only (never host hover wash); checked+hover keeps primary/tone.
+  Semantic checked/focus = bound tone ONLY when tone is present
+  (never unconditional bg(tone)/bg(tone.foreground) — empty --tone invalidates
+  at computed-value time to transparent and the thumb disappears; same trap as
+  separator/avatar). Hover paints track color only — never host opacity wash
+  (that equalizes track+thumb and makes checked look “all dark”).
 -->
 
 <scope>
@@ -32,13 +35,13 @@
   style(base, {
     box: shrink(0),
     when: {
-      // Track hover only — never global hover wash (equalizes with thumb / kills checked).
+      // Track hover only — never global opacity wash (kills thumb contrast).
       hover: { paint: border(muted-foreground) },
       checked: {
         paint: bg(primary).border(selected-border).shadow(xs),
         when: {
-          // Keep selected identity under pointer.
-          hover: { paint: bg(primary).border(selected-border).opacity(90) },
+          // Keep selected identity under pointer — track color, not opacity.
+          hover: { paint: bg(primary).border(selected-border) },
           before: { box: left(auto).right(px), paint: bg(primary-foreground) },
         },
       },
@@ -49,15 +52,6 @@
         paint: content(empty).bg(switch.thumb).radius(full).shadow(sm).transition(all).duration(fast).ease(out),
       },
       disabled: { when: { before: { paint: shadow(xs) } } },
-      // Bound tone checked (when tone attr present via host bridge).
-      checked: {
-        paint: bg(tone).border(selected-border).shadow(xs),
-        when: {
-          hover: { paint: bg(tone).border(selected-border).opacity(90) },
-          before: { paint: bg(tone.foreground) },
-        },
-      },
-      focus: { paint: outline(tone) },
       motion-reduce: { when: { before: { paint: transition(none) } } },
       forced-colors: { paint: border(CanvasText) },
       forced-colors: { when: { checked: { paint: bg(Highlight) }, focus: { paint: outline(CanvasText) } } },
@@ -70,8 +64,12 @@
       },
     },
     compound: [
+      // Tone present → bridge vars are set. Never emit empty var(--tone) on rest.
+      { tone: *, when: { checked: { paint: bg(tone).border(selected-border).shadow(xs) } } },
+      { tone: *, when: { checked: { when: { before: { paint: bg(tone.foreground) }, hover: { paint: bg(tone).border(selected-border) } } } } },
+      { tone: *, when: { focus: { paint: outline(tone) } } },
       { tone: muted, when: { checked: { paint: bg(muted-foreground) }, focus: { paint: outline(muted-foreground) } } },
-      { tone: muted, when: { checked: { when: { before: { paint: bg(background) }, hover: { paint: bg(muted-foreground).opacity(90) } } } } },
+      { tone: muted, when: { checked: { when: { before: { paint: bg(background) }, hover: { paint: bg(muted-foreground) } } } } },
     ],
   })
 >
