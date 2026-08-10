@@ -74,6 +74,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Error-state: variant × size × code; details slot optional (gates Show details).
     const errCode = signal('ERR_TIMEOUT')
     const errDetails = signal(true)
+    // Fieldset: native disabled only; border = component.fieldset.border.
+    const fieldsetDisabled = signal(false)
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -177,6 +179,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         errCode.set('ERR_TIMEOUT')
         errDetails.set(true)
+      } else if (tag() === 'fieldset') {
+        variant.set('')
+        fieldsetDisabled.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -305,6 +310,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const d = errDetails() ? 'details' : 'no details'
       return `${variant() || 'default'} · ${errSize()} · ${c || 'no code'} · ${d} · component.error-state.*`
     })
+    const fieldsetMeta = derived(() => {
+      return `disabled ${fieldsetDisabled() ? 'on' : 'off'} · border component.fieldset.border`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -322,7 +330,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'progress' ||
       tag() === 'icon' ||
       tag() === 'empty-state' ||
-      tag() === 'error-state'
+      tag() === 'error-state' ||
+      tag() === 'fieldset'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -382,6 +391,12 @@ const kbdExChord = () =>
       `<error-state code="ERR_GATEWAY">\n  <strong slot="title">Upstream failed</strong>\n  The gateway timed out.\n  <span slot="details">at fetchData (api.ts:42)\\n  Error: gateway timeout</span>\n  <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
     const errExRest = () =>
       `<error-state>\n  <strong slot="title">Something went wrong</strong>\n  Rest chrome — component.error-state bg/fg/border.\n</error-state>\n<!-- icon + inline border keep brand destructive -->`
+    const fsExGroup = () =>
+      `<fieldset>\n  <legend>Account details</legend>\n  <column gap="2">\n    <input placeholder="Name" />\n    <input placeholder="Email" />\n  </column>\n</fieldset>`
+    const fsExDisabled = () =>
+      `<fieldset disabled>\n  <legend>Billing (locked)</legend>\n  <column gap="2">\n    <input placeholder="Card" />\n    <button type="button" variant="solid" size="sm">Save</button>\n  </column>\n</fieldset>\n<!-- native disabled freezes controls; PE dims opacity -->`
+    const fsExRest = () =>
+      `<fieldset>\n  <legend>Profile</legend>\n  …\n</fieldset>\n<!-- border → component.fieldset.border (themeable) -->`
     const spnExCentered = () =>
       `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
     const iconExNamed = () =>
@@ -520,6 +535,10 @@ const kbdExChord = () =>
       mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
       progSize, progIndeterminate, progMeta,
       prgExDeterminate, prgExSizes, prgExIndeterminate, prgExRest,
+      errSize, errCode, errDetails, errMeta,
+      errExDefault, errExInline, errExDetails, errExRest,
+      fieldsetDisabled, fieldsetMeta,
+      fsExGroup, fsExDisabled, fsExRest,
     }
 })
 </controller>
@@ -785,13 +804,45 @@ const kbdExChord = () =>
               </column>
             </if>
             <if {stage.fieldset()}>
-              <fieldset style(stageCol)>
-                <legend>Account details</legend>
-                <column gap="2">
-                  <input placeholder="Name" />
-                  <input placeholder="Email" />
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {fieldsetDisabled()}>
+                      <fieldset disabled style(stageCol)>
+                        <legend>Account details</legend>
+                        <column gap="2">
+                          <input placeholder="Name" />
+                          <input placeholder="Email" />
+                          <button type="button" variant="solid" size="sm">Save</button>
+                        </column>
+                      </fieldset>
+                    {else =>
+                      <fieldset style(stageCol)>
+                        <legend>Account details</legend>
+                        <column gap="2">
+                          <input placeholder="Name" />
+                          <input placeholder="Email" />
+                          <button type="button" variant="solid" size="sm">Save</button>
+                        </column>
+                      </fieldset>}</if>
+                    <p style(monoXs)>{fieldsetMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={fieldsetDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{fieldsetDisabled() ? 'on' : 'off'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Native <code>disabled</code> freezes every control inside the group.
+                      Style PE dims opacity and sets <code>cursor: not-allowed</code>.
+                      Border always paints <code>component.fieldset.border</code>.
+                    </p>
+                  </column>
                 </column>
-              </fieldset>
+              </row>
             </if>
             <if {stage.dropzone()}>
               <card dropzone style({ box: pad(6).w(full).maxW(panel-max-w-sm) })>Drop a file, or click to browse</card>
@@ -2654,6 +2705,59 @@ const kbdExChord = () =>
               Rest chrome — override component.error-state leaves in Studio themes.
             </error-state>
             <code-block code={errExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.fieldset()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Group with legend</h3>
+            <p style(exampleLead)>
+              Put a <code>legend</code> first, then related controls. Native form grouping —
+              no composite PE, no closed actions.
+            </p>
+            <fieldset style(stageCol)>
+              <legend>Account details</legend>
+              <column gap="2">
+                <input placeholder="Name" />
+                <input placeholder="Email" />
+              </column>
+            </fieldset>
+            <code-block code={fsExGroup()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Disabled set</h3>
+            <p style(exampleLead)>
+              <code>disabled</code> is the only PE prop. The platform freezes every control
+              inside; Style dims the host (<code>opacity(50)</code> · <code>not-allowed</code>).
+            </p>
+            <fieldset disabled style(stageCol)>
+              <legend>Billing (locked)</legend>
+              <column gap="2">
+                <input placeholder="Card" />
+                <button type="button" variant="solid" size="sm">Save</button>
+              </column>
+            </fieldset>
+            <code-block code={fsExDisabled()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest border (themeable)</h3>
+            <p style(exampleLead)>
+              Chrome border always rides <code>component.fieldset.border</code>
+              (<code>--fieldset-border</code>). Override that leaf in Studio themes — there is
+              no tone or variant axis.
+            </p>
+            <fieldset style(stageCol)>
+              <legend>Profile</legend>
+              <column gap="2">
+                <input placeholder="Display name" />
+              </column>
+            </fieldset>
+            <code-block code={fsExRest()}></code-block>
           </column>
         </column>
       </if>

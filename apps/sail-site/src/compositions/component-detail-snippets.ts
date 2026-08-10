@@ -139,7 +139,6 @@ export default controller(() => ({ load: signal(62) }))
 </column>`,
 
   fieldset: `<fieldset>
-    style({ animate: enter({ opacity: 'fade' }) })
   <legend>Account details</legend>
   <column gap="2">
     <input placeholder="Name" />
