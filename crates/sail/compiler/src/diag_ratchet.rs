@@ -48,9 +48,6 @@ pub enum SiteClass {
 /// reduction does not require a pin update in the same PR.
 const ANONYMOUS_BASELINE: usize = 140;
 
-/// Lines after a construction site to search for id attachment.
-const WINDOW_LINES: usize = 20;
-
 /// Return `true` when `id` is a stable sail rule id (`^sail-[a-z0-9-]+$`).
 pub fn is_stable_rule_id(id: &str) -> bool {
     let Some(rest) = id.strip_prefix("sail-") else {
@@ -64,15 +61,18 @@ pub fn is_stable_rule_id(id: &str) -> bool {
 
 /// Classify a throw-site source window (fixture snippet or live file slice).
 ///
-/// Detects id attachment in the snippet:
+/// Detects id attachment on **this** construction only (not a neighbor):
 /// - `.with_category("sail-…")` string literal
 /// - `.with_category(CONST)` resolving to `sail-…` via same-file const
 /// - `rule: Some("sail-…")` or `rule: Some(CONST)` resolving to `sail-…`
 ///
+/// When `source` contains a construction site, classification is scoped to that
+/// site's statement (`CompileError` builder chain) or brace block (`Diagnostic`).
 /// Missing category / free-form categories → [`SiteClass::Anonymous`].
 pub fn classify_snippet(source: &str) -> SiteClass {
     let consts = collect_str_consts(source);
-    classify_with_consts(source, &consts)
+    let window = first_site_window(source).unwrap_or(source);
+    classify_with_consts(window, &consts)
 }
 
 /// Count anonymous throw sites under live `crates/sail/compiler/src/**/*.rs`.
@@ -347,7 +347,7 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
         // CompileError::new(
         if src[i..].starts_with("CompileError::new(") {
             let line = line_number(src, i);
-            let window = line_window(src, i, WINDOW_LINES);
+            let window = compile_error_statement_window(src, i);
             let class = classify_with_consts(window, &consts);
             sites.push(Site {
                 path: path.to_path_buf(),
@@ -375,7 +375,7 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
                     i = next_char_boundary(src, j + 1);
                     continue;
                 }
-                let window = line_window(src, i, WINDOW_LINES);
+                let window = diagnostic_brace_window(src, i, j);
                 // product emissions set `message:`; type fields alone aren't emissions
                 if has_message_field(window) {
                     let line = line_number(src, i);
@@ -446,21 +446,128 @@ fn has_message_field(window: &str) -> bool {
     false
 }
 
-fn line_window(src: &str, start: usize, max_lines: usize) -> &str {
-    let mut end = start;
-    let mut lines = 0;
-    let bytes = src.as_bytes();
-    while end < bytes.len() && lines < max_lines {
-        if bytes[end] == b'\n' {
-            lines += 1;
-        }
-        end += 1;
-    }
-    &src[start..end]
-}
-
 fn line_number(src: &str, offset: usize) -> usize {
     src[..offset].bytes().filter(|&b| b == b'\n').count() + 1
+}
+
+/// First construction site's scoped window in `source`, if any.
+///
+/// Used by [`classify_snippet`] so multi-site fixture strings do not inherit a
+/// neighbor's category/rule.
+fn first_site_window(source: &str) -> Option<&str> {
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if let Some(next) = skip_non_code(bytes, i) {
+            i = next_char_boundary(source, next);
+            continue;
+        }
+        if source[i..].starts_with("CompileError::new(") {
+            return Some(compile_error_statement_window(source, i));
+        }
+        if source[i..].starts_with("Diagnostic") {
+            let after_name = i + "Diagnostic".len();
+            if after_name < bytes.len() && is_ident_byte(bytes[after_name]) {
+                i = next_char_boundary(source, i + 1);
+                continue;
+            }
+            let j = skip_ws(bytes, after_name);
+            if j < bytes.len() && bytes[j] == b'{' {
+                let line_start = source[..i].rfind('\n').map(|p| p + 1).unwrap_or(0);
+                let line_end = source[i..].find('\n').map(|p| i + p).unwrap_or(source.len());
+                let line_text = &source[line_start..line_end];
+                if line_text.contains("struct") {
+                    i = next_char_boundary(source, j + 1);
+                    continue;
+                }
+                return Some(diagnostic_brace_window(source, i, j));
+            }
+        }
+        i = next_char_boundary(source, i + 1);
+    }
+    None
+}
+
+/// Scope a `CompileError::new(` site to **this** statement / builder chain only.
+///
+/// Walks from `start` (at `CompileError`) tracking paren/bracket/brace depth.
+/// Ends at:
+/// - `;` at relative depth 0 (statement terminator), or
+/// - `,` at relative depth 0 after the call has opened (arg / match-arm separator), or
+/// - a closing `)`/`]`/`}` that would pop below relative depth 0 (outer context), or
+/// - EOF.
+///
+/// Never extends into a neighboring throw site.
+fn compile_error_statement_window(src: &str, start: usize) -> &str {
+    let bytes = src.as_bytes();
+    let mut i = start;
+    let mut depth: i32 = 0;
+    let mut opened = false;
+    while i < bytes.len() {
+        if let Some(next) = skip_non_code(bytes, i) {
+            i = next;
+            continue;
+        }
+        match bytes[i] {
+            b'(' | b'[' | b'{' => {
+                depth += 1;
+                opened = true;
+                i += 1;
+            }
+            b')' | b']' | b'}' => {
+                if depth == 0 {
+                    // Closes an outer delimiter opened before this site.
+                    return &src[start..i];
+                }
+                depth -= 1;
+                i += 1;
+            }
+            b';' if opened && depth == 0 => {
+                return &src[start..i + 1];
+            }
+            b',' if opened && depth == 0 => {
+                return &src[start..i];
+            }
+            _ => {
+                i = next_char_boundary(src, i + 1);
+            }
+        }
+    }
+    &src[start..]
+}
+
+/// Scope a `Diagnostic { … }` site to the matching brace block only.
+///
+/// `start` points at `Diagnostic`; `brace_open` at the opening `{`.
+/// Includes from `Diagnostic` through the matching `}` so `rule: Some(…)` is
+/// visible without neighboring struct literals.
+fn diagnostic_brace_window(src: &str, start: usize, brace_open: usize) -> &str {
+    let bytes = src.as_bytes();
+    let mut i = brace_open;
+    let mut depth: i32 = 0;
+    while i < bytes.len() {
+        if let Some(next) = skip_non_code(bytes, i) {
+            i = next;
+            continue;
+        }
+        match bytes[i] {
+            b'{' => {
+                depth += 1;
+                i += 1;
+            }
+            b'}' => {
+                depth -= 1;
+                i += 1;
+                if depth == 0 {
+                    return &src[start..i];
+                }
+            }
+            _ => {
+                i = next_char_boundary(src, i + 1);
+            }
+        }
+    }
+    &src[start..]
 }
 
 // ---------------------------------------------------------------------------
@@ -674,6 +781,69 @@ mod tests {
     fn freeform_category_anonymous() {
         let src = r#"CompileError::new("x").with_category("expression")"#;
         assert_eq!(classify_snippet(src), SiteClass::Anonymous);
+    }
+
+    /// Neighbor id attachment must not launder an earlier bare throw.
+    ///
+    /// Pre-fix: a flat 20-line window would see the second site's
+    /// `.with_category("sail-x")` and mis-classify the first as Idd.
+    #[test]
+    fn neighbor_category_does_not_launder_anonymous() {
+        let src = r#"
+            fn f() {
+                return Err(CompileError::new("bare anonymous"));
+                return Err(CompileError::new("id'd neighbor")
+                    .with_category("sail-neighbor-id"));
+            }
+        "#;
+        assert_eq!(
+            classify_snippet(src),
+            SiteClass::Anonymous,
+            "first CompileError::new must stay anonymous; neighbor sail-* must not leak"
+        );
+
+        // Live-scan path: both sites recorded, only the second is Idd.
+        let mut sites = Vec::new();
+        scan_file(Path::new("fixture.rs"), src, &mut sites);
+        assert_eq!(sites.len(), 2, "expected two construction sites");
+        assert_eq!(sites[0].class, SiteClass::Anonymous);
+        assert_eq!(sites[1].class, SiteClass::Idd);
+    }
+
+    #[test]
+    fn neighbor_rule_does_not_launder_anonymous_diagnostic() {
+        let src = r#"
+            out.push(Diagnostic {
+                message: "anonymous".into(),
+                rule: None,
+            });
+            out.push(Diagnostic {
+                message: "id'd".into(),
+                rule: Some("sail-layout".into()),
+            });
+        "#;
+        assert_eq!(
+            classify_snippet(src),
+            SiteClass::Anonymous,
+            "first Diagnostic must stay anonymous; neighbor rule must not leak"
+        );
+
+        let mut sites = Vec::new();
+        scan_file(Path::new("fixture.rs"), src, &mut sites);
+        assert_eq!(sites.len(), 2);
+        assert_eq!(sites[0].class, SiteClass::Anonymous);
+        assert_eq!(sites[1].class, SiteClass::Idd);
+    }
+
+    #[test]
+    fn statement_window_includes_builder_chain() {
+        let src = r#"
+            CompileError::new("bad")
+                .with_span(span)
+                .with_category("sail-query-key");
+            CompileError::new("other");
+        "#;
+        assert_eq!(classify_snippet(src), SiteClass::Idd);
     }
 
     #[test]
