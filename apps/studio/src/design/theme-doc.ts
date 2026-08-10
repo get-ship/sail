@@ -140,6 +140,7 @@ export function patchIconScale(
  */
 export const L1_CATALOG = [
   'spinner',
+  'skeleton',
   'button',
   'input',
   'textarea',

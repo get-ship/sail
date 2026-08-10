@@ -356,6 +356,26 @@ export default controller(() => {
                   <if {components.stage.spinner()}>
                     <spinner size={components.variant() || 'md'} tone="primary"></spinner>
                   </if>
+                  <if {components.stage.skeleton()}>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Sheen · component.skeleton.bg / highlight</p>
+                        <column gap="2">
+                          <skeleton shape="text" size="md"></skeleton>
+                          <skeleton shape="text" size="sm"></skeleton>
+                          <skeleton shape="line" size="sm"></skeleton>
+                        </column>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Shapes · circle + block</p>
+                        <row gap="3" align="center">
+                          <skeleton shape="circle" size="md"></skeleton>
+                          <skeleton shape="circle" size="sm"></skeleton>
+                          <skeleton shape="block" style({ box: w(24).minH(16) })></skeleton>
+                        </row>
+                      </column>
+                    </column>
+                  </if>
                   <if {components.stage.emptyState()}>
                     <empty-state variant="inline" size="sm" style(stageHost)>
                       <strong slot="title">No results</strong>
