@@ -330,7 +330,7 @@ export default controller(() => {
   <p>Animated open and close — and it remembers its state.</p>
 </accordion>`,
 
-  kbd: `<p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd>.</p>`,
+  kbd: `<p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.</p>`,
 
   prose: `<column gap="2">
     style({ animate: enter({ opacity: 'fade' }) })

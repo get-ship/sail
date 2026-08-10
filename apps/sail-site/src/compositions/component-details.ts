@@ -467,10 +467,13 @@ export const DETAILS: Record<string, DetailEntry> = {
     ],
   }),
   kbd: lang('kbd', 'kbd', {
-    blurb: 'Mono keycap chip — muted surface, doubled bottom edge.',
+    blurb:
+      'Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Paint from component.kbd (bg · foreground · border); no size/variant/tone props (theme the leaves, compose chords in markup).',
     variants: [],
     variantAttr: '',
-    props: [],
+    props: [
+      { name: '(children)', desc: 'key label — Ctrl, K, ⌘, F12, …', type: 'children' },
+    ],
   }),
   prose: lang('prose', 'prose', {
     heading: 'prose',

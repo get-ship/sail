@@ -60,6 +60,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.muted.foreground', label: 'Muted (global)' },
     { path: 'color.border.default', label: 'Border (global)' },
   ],
+  kbd: [
+    { path: 'color.muted.default', label: 'Muted (global)' },
+    { path: 'color.foreground', label: 'Foreground (global)' },
+    { path: 'color.border.default', label: 'Border (global)' },
+  ],
   button: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.secondary.default', label: 'Secondary (global)' },
@@ -98,6 +103,7 @@ const FACE_HINTS: Record<string, string> = {
   'radio-group': 'Radio set',
   switch: 'Binary toggles',
   chip: 'Filters and tags',
+  kbd: 'Keycaps · component.kbd.* faces',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
 }
