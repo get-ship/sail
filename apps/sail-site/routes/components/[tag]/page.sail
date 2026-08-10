@@ -27,44 +27,47 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const showViewer = derived(() => known() || knownPack())
 
     const variant = signal('')
-    // Button stage axes (viewer chips drive variant only; size/tone live on stage).
+    // Button owns its own axis toolbar (variant/size/tone) — not the viewer's single chip row.
     const btnSize = signal('md')
     const btnTone = signal('primary')
-    const btnDisabled = signal(false)
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
       variant.set(entry()?.variants[0] ?? '')
       if (tag() === 'button') {
         btnSize.set('md')
         btnTone.set('primary')
-        btnDisabled.set(false)
       }
     })
     const pick = (v: string): void => variant.set(v)
     const onVariantChange = (detail: { variant: string }): void =>
       variant.set(detail?.variant ?? '')
+    const pickBtnVariant = (v: string): void => variant.set(v)
     const pickBtnSize = (s: string): void => btnSize.set(s)
     const pickBtnTone = (t: string): void => btnTone.set(t)
-    const toggleBtnDisabled = (): void => btnDisabled.set((d) => !d)
-    // Derived chip rows — templates only allow zero-arg reads (no chip(s) calls).
+    // Derived chip rows — templates only allow zero-arg reads.
+    const variantChips = derived(() =>
+      (['default', 'solid', 'soft', 'outline', 'ghost'] as const).map((v) => ({
+        v,
+        chip: variant() === v ? 'solid' : 'ghost',
+      })),
+    )
     const sizeChips = derived(() =>
       (['xs', 'sm', 'md', 'lg', 'icon', 'iconSm', 'iconLg'] as const).map((s) => ({
         s,
-        variant: btnSize() === s ? 'solid' : 'ghost',
+        chip: btnSize() === s ? 'solid' : 'ghost',
       })),
     )
     const toneChips = derived(() =>
       (['primary', 'success', 'warning', 'destructive', 'accent', 'muted'] as const).map((t) => ({
         t,
-        variant: btnTone() === t ? 'solid' : 'ghost',
+        chip: btnTone() === t ? 'solid' : 'ghost',
       })),
     )
-    const btnDisabledLabel = derived(() => (btnDisabled() ? 'Enable' : 'Disable'))
-    const btnMeta = derived(() => {
-      const dis = btnDisabled() ? ' · disabled' : ''
-      return `${variant()} · ${btnSize()} · ${btnTone()}${dis} · press ×${presses()}`
-    })
+    const btnMeta = derived(() => `${variant()} · ${btnSize()} · ${btnTone()} · press ×${presses()}`)
     const isIconSize = derived(() => btnSize().startsWith('icon'))
+    // Hide viewer variant strip for button — we own a unified axis toolbar.
+    const viewerVariants = () => (tag() === 'button' ? [] : entry()?.variants ?? [])
+    const viewerVariantAttr = () => (tag() === 'button' ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
     const btnExWithIcon = () =>
       `<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
@@ -144,13 +147,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
     return {
       tag, entry, known, knownPack, showViewer, heading,
       variant, pick, onVariantChange, variants, hasVariants, variantAttr,
+      viewerVariants, viewerVariantAttr,
       blurb, props, packBlurb, packProps, packLabel, usageCode, stage, slotCopy,
       presses, press, notify, agreed, load, name, bio, team,
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       toastItems, pushToast, onToastDismiss,
       sheetSide, people,
-      btnSize, btnTone, btnDisabled, pickBtnSize, pickBtnTone, toggleBtnDisabled,
-      sizeChips, toneChips, btnDisabledLabel, btnMeta, isIconSize,
+      btnSize, btnTone, pickBtnVariant, pickBtnSize, pickBtnTone,
+      variantChips, sizeChips, toneChips, btnMeta, isIconSize,
       btnExWithIcon, btnExIconOnly, btnExSizes,
     }
 })
@@ -181,8 +185,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
   style skeletonBox = { box: w(7).h(7) }
   style ctxCard = { box: pad(6).w(full) }
   style toastStage = { box: w(full).maxW(panel-max-w-sm) }
-  style axisLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style stageAxes = { box: w(full).maxW(panel-max-w-md).padT(2) }
+  // Fixed-width axis keys so variant / size / tone rows share one vertical grid.
+  style axisKey = { box: w(16).shrink(0), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style axisChips = { box: grow(1).minW(0) }
+  style stageCanvas = { box: w(full).padY(8).minH(14) }
   style exampleBlock = { box: w(full).padY(2) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
@@ -191,68 +197,74 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 <column gap="4" style(page)>
   <if {showViewer()}>
-    <breadcrumb>
-      <a href="/components">components</a>
-      <small>{tag()}</small>
-    </breadcrumb>
-
     <sail-component-viewer
       name={heading()}
       blurb={knownPack() ? packBlurb() : blurb()}
       pack={knownPack() ? packLabel() : 'Component primitives'}
-      variant-attr={variantAttr()}
+      variant-attr={viewerVariantAttr()}
       usage={usageCode()}
-      variants={variants()}
+      variants={viewerVariants()}
       rows={knownPack() ? packProps() : props()}
       on-variant-change={onVariantChange}
     >
-      <column slot="stage" gap="4" align="center" style({ box: w(full).minW(0) })>
+      <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
-              <!-- Single live specimen. Axes only — examples live below usage as code walkthroughs. -->
-              <column gap="4" align="center" style(fullW)>
-                <if {isIconSize()}>
-                  <button
-                    variant={variant()}
-                    size={btnSize()}
-                    tone={btnTone()}
-                    disabled={btnDisabled()}
-                    on:click={press}
-                    label="Settings"
-                    style(pressBtn)
-                  >
-                    <icon name="settings"></icon>
-                  </button>
-                {else =>
-                  <button
-                    variant={variant()}
-                    size={btnSize()}
-                    tone={btnTone()}
-                    disabled={btnDisabled()}
-                    on:click={press}
-                    style(pressBtn)
-                  >
-                    <icon name="check" size="sm"></icon>
-                    Save changes
-                  </button>}</if>
-                <p style(monoXs)>{btnMeta()}</p>
-                <column gap="2" align="start" style(stageAxes)>
-                  <row gap="2" align="center">
-                    <span style(axisLabel)>size</span>
-                    <for {sizeChips() as c} key={c.s}>
-                      <button size="sm" tone="primary" variant={c.variant} on:click={() => pickBtnSize(c.s)}>{c.s}</button>
-                    </for>
+              <!-- Unified axis toolbar (left grid) + centered specimen. No breadcrumb / disable toy. -->
+              <column gap="5" style(fullW)>
+                <column gap="2" style(fullW)>
+                  <row gap="3" align="center" style(fullW)>
+                    <span style(axisKey)>variant</span>
+                    <row gap="1" align="center" style(axisChips)>
+                      <for {variantChips() as c} key={c.v}>
+                        <button size="sm" tone="primary" variant={c.chip} on:click={() => pickBtnVariant(c.v)}>{c.v}</button>
+                      </for>
+                    </row>
                   </row>
-                  <row gap="2" align="center">
-                    <span style(axisLabel)>tone</span>
-                    <for {toneChips() as c} key={c.t}>
-                      <button size="sm" tone="primary" variant={c.variant} on:click={() => pickBtnTone(c.t)}>{c.t}</button>
-                    </for>
+                  <row gap="3" align="center" style(fullW)>
+                    <span style(axisKey)>size</span>
+                    <row gap="1" align="center" style(axisChips)>
+                      <for {sizeChips() as c} key={c.s}>
+                        <button size="sm" tone="primary" variant={c.chip} on:click={() => pickBtnSize(c.s)}>{c.s}</button>
+                      </for>
+                    </row>
                   </row>
-                  <button size="sm" variant="outline" on:click={toggleBtnDisabled}>
-                    {btnDisabledLabel()} specimen
-                  </button>
+                  <row gap="3" align="center" style(fullW)>
+                    <span style(axisKey)>tone</span>
+                    <row gap="1" align="center" style(axisChips)>
+                      <for {toneChips() as c} key={c.t}>
+                        <button size="sm" tone="primary" variant={c.chip} on:click={() => pickBtnTone(c.t)}>{c.t}</button>
+                      </for>
+                    </row>
+                  </row>
                 </column>
+                <center style(stageCanvas)>
+                  <column gap="2" align="center">
+                    <if {isIconSize()}>
+                      <button
+                        variant={variant()}
+                        size={btnSize()}
+                        tone={btnTone()}
+                        on:click={press}
+                        label="Settings"
+                        style(pressBtn)
+                      >
+                        <icon name="settings"></icon>
+                      </button>
+                    {else =>
+                      <button
+                        variant={variant()}
+                        size={btnSize()}
+                        tone={btnTone()}
+                        on:click={press}
+                        style(pressBtn)
+                      >
+                        <icon name="check" size="sm"></icon>
+                        Save changes
+                      </button>}</if>
+                    <p style(monoXs)>{btnMeta()}</p>
+                  </column>
+                </center>
               </column>
             </if>
             <if {stage.input()}>
