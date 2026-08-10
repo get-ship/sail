@@ -309,12 +309,20 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   skeleton: lang('skeleton', 'skeleton', {
     blurb:
-      'Loading placeholder sheen. Shape and size props draw the shimmer block — no import, no attribute floor.',
+      'Loading placeholder sheen. Shape + size draw the geometry; paint is always the shimmer from component.skeleton.bg / highlight (themeable). No tone axis — compose width with layout Style.',
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
     props: [
-      { name: 'shape', desc: 'what it stands in for', type: 'text · line · block · circle' },
-      { name: 'size', desc: 'text-row height or circle scale', type: 'sm · md · lg' },
+      {
+        name: 'shape',
+        desc: 'geometry: text/line bars, block tile, or circle avatar stand-in (default text)',
+        type: 'text · line · block · circle',
+      },
+      {
+        name: 'size',
+        desc: 'text/line bar height and circle diameter; block ignores size (fixed min height)',
+        type: 'sm · md · lg',
+      },
     ],
   }),
   'empty-state': lang('empty-state', 'emptyState', {

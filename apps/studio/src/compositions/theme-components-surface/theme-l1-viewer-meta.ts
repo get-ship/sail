@@ -100,6 +100,11 @@ const VARIANT_META: Partial<
     variantAttr: 'size',
     blurb: 'Loading ring · rest uses component.spinner.fg + track; tone paints active arc.',
   },
+  skeleton: {
+    variants: ['text', 'line', 'block', 'circle'],
+    variantAttr: 'shape',
+    blurb: 'Loading sheen · component.skeleton.bg / highlight.',
+  },
   separator: {
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',

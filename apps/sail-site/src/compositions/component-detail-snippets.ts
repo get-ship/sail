@@ -206,12 +206,8 @@ export default controller(() => ({ loading: signal(true) }))
 </if>`,
 
   skeleton: `<row gap="3" align="center">
-    style({ animate: enter({ opacity: 'fade' }) })
-  <skeleton shape="circle">
-    style({ box: w(7).h(7) })
-  </skeleton>
-  <column gap="2">
-    style({ box: grow(1) })
+  <skeleton shape="circle" size="md"></skeleton>
+  <column gap="2" style({ box: grow(1) })>
     <skeleton shape="text" size="sm"></skeleton>
     <skeleton shape="text" size="sm"></skeleton>
   </column>

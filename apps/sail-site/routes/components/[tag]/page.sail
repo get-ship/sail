@@ -33,7 +33,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const BDG_SIZES = ['sm', 'md', 'lg'] as const
     const CHIP_SIZES = ['sm', 'md', 'lg'] as const
     const SPN_SIZES = ['xs', 'sm', 'md', 'lg'] as const
-    const sizeIdx = signal(2) // md for button; remapped for badge/chip/spinner
+    const SKEL_SIZES = ['sm', 'md', 'lg'] as const
+    const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Badge: empty tone = rest component.badge.* tokens (theme-customizable).
     const badgeTone = signal('primary')
@@ -52,6 +53,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Spinner: empty tone = rest component.spinner.fg; track always spinner.track.
     const spinnerTone = signal('primary')
     const spinnerCentered = signal(false)
+    // Skeleton: shape via variant(); size ladder; sheen always component.skeleton.*
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -72,6 +74,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SPN_SIZES.length - 1)
       return SPN_SIZES[i] ?? 'md'
     })
+    const skelSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SKEL_SIZES.length - 1)
+      return SKEL_SIZES[i] ?? 'md'
+    })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
       if (tag() === 'button') {
@@ -83,7 +89,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(1) // md
         badgeTone.set('primary')
         badgePill.set(false)
-    } else if (tag() === 'separator') {
+      } else if (tag() === 'separator') {
         variant.set('solid')
         sepOrientation.set('horizontal')
         sepTone.set('')
@@ -104,6 +110,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
         sizeIdx.set(2) // md
         spinnerTone.set('primary')
         spinnerCentered.set(false)
+      } else if (tag() === 'skeleton') {
+        variant.set('text')
+        sizeIdx.set(1) // md
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -186,6 +195,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const t = spinnerTone()
       return `${spinnerSize()} · ${t || 'rest (spinner.foreground)'} · centered ${spinnerCentered() ? 'on' : 'off'}`
     })
+    const skelMeta = derived(() => {
+      const sh = variant() || 'text'
+      const sizeNote = sh === 'block' ? 'size n/a (block)' : skelSize()
+      return `${sh} · ${sizeNote} · sheen component.skeleton.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -197,7 +211,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'separator' ||
       tag() === 'alert' ||
       tag() === 'chip' ||
-      tag() === 'spinner'
+      tag() === 'spinner' ||
+      tag() === 'skeleton'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -245,6 +260,12 @@ const kbdExChord = () =>
       `<spinner></spinner>\n<!-- no tone → component.spinner.fg + spinner.track (themeable) -->`
     const spnExCentered = () =>
       `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
+    const skelExLines = () =>
+      `<column gap="2">\n  <skeleton shape="text" size="md"></skeleton>\n  <skeleton shape="text" size="sm"></skeleton>\n  <skeleton shape="line" size="sm"></skeleton>\n</column>`
+    const skelExAvatar = () =>
+      `<row gap="3" align="center">\n  <skeleton shape="circle" size="md"></skeleton>\n  <column gap="2" style({ box: grow(1) })>\n    <skeleton shape="text" size="sm"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
+    const skelExRest = () =>
+      `<skeleton shape="block"></skeleton>\n<!-- sheen → component.skeleton.bg / highlight (themeable) -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -333,6 +354,7 @@ const kbdExChord = () =>
       kbdExChord, kbdExModifiers, kbdExRest,
       spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
       spnExInline, spnExSizes, spnExRest, spnExCentered,
+      skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
     }
 })
 </controller>
@@ -361,6 +383,9 @@ const kbdExChord = () =>
   style pressBtn = { animate: press({ scale: 'press' }) }
   style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
   style skeletonBox = { box: w(7).h(7) }
+  // Skeleton stage: bar/block need a definite width (w(full) resolves against this).
+  style skelStageCol = { box: w(full).maxW(panel-max-w-sm) }
+  style skelBlock = { box: w(full).maxW(panel-max-w-sm) }
   style ctxCard = { box: pad(6).w(full) }
   style toastStage = { box: w(full).maxW(panel-max-w-sm) }
   // Mantine-style configurator: tall specimen canvas | fixed prop rail.
@@ -776,11 +801,46 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.skeleton()}>
-              <row gap="3" align="center" style(stageCol)>
-                <skeleton shape={variant()} style(skeletonBox)></skeleton>
-                <column gap="2" style(grow1)>
-                  <skeleton shape={variant()} size="sm"></skeleton>
-                  <skeleton shape={variant()} size="sm"></skeleton>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(skelStageCol)>
+                    <if {variant() === 'circle'}>
+                      <skeleton shape="circle" size={skelSize()}></skeleton>
+                    {else-if {variant() === 'block'} =>
+                      <skeleton shape="block" style(skelBlock)></skeleton>
+                    {else =>
+                      <column gap="2" style(fullW)>
+                        <skeleton shape={variant() || 'text'} size={skelSize()}></skeleton>
+                      </column>}</if>
+                    <p style(monoXs)>{skelMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Shape</label>
+                    <select size="sm" bind:value={variant} label="Shape">
+                      <option value="text">text</option>
+                      <option value="line">line</option>
+                      <option value="block">block</option>
+                      <option value="circle">circle</option>
+                    </select>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{skelSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Size scales text/line height and circle diameter. Block has a fixed min height
+                      (size is ignored). Sheen always uses <code>component.skeleton</code> tokens.
+                    </p>
+                  </column>
                 </column>
               </row>
             </if>
@@ -1787,6 +1847,56 @@ const kbdExChord = () =>
               <spinner centered tone="primary"></spinner>
             </column>
             <code-block code={spnExCentered()}></code-block>
+          </column>
+        </column>
+      </if>
+      <if {stage.skeleton()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Text lines</h3>
+            <p style(exampleLead)>
+              Stack <code>shape="text"</code> / <code>line</code> bars for a paragraph
+              placeholder. Width comes from the parent — PE defaults to full width of the
+              containing box.
+            </p>
+            <column gap="2" style(skelStageCol)>
+              <skeleton shape="text" size="md"></skeleton>
+              <skeleton shape="text" size="sm"></skeleton>
+              <skeleton shape="line" size="sm"></skeleton>
+            </column>
+            <code-block code={skelExLines()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Avatar row</h3>
+            <p style(exampleLead)>
+              Compose <code>circle</code> with text bars for a list-item or card header
+              loading state. Size on circle sets diameter; text size sets bar height.
+            </p>
+            <row gap="3" align="center" style(skelStageCol)>
+              <skeleton shape="circle" size="md"></skeleton>
+              <column gap="2" style(grow1)>
+                <skeleton shape="text" size="sm"></skeleton>
+                <skeleton shape="text" size="sm"></skeleton>
+              </column>
+            </row>
+            <code-block code={skelExAvatar()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Sheen tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Band colours always ride <code>component.skeleton.bg</code> /
+              <code>highlight</code> (<code>--skeleton</code> / <code>--skeleton-highlight</code>).
+              Override those leaves in Studio themes — there is no tone prop.
+            </p>
+            <column gap="2" style(skelStageCol)>
+              <skeleton shape="block"></skeleton>
+              <skeleton shape="text" size="md"></skeleton>
+            </column>
+            <code-block code={skelExRest()}></code-block>
           </column>
         </column>
       </if>
