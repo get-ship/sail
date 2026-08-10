@@ -323,6 +323,11 @@ export default controller(() => {
 
   kbd: `<p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.</p>`,
 
+  'code-block': `<code-block
+  code={'const n = signal(0)\nconst double = derived(() => n() * 2)'}
+  lang="ts"
+></code-block>`,
+
   prose: `<prose>
   <h2>Plain tags, already styled</h2>
   <p>Body copy sets the baseline — <strong>strong</strong>,

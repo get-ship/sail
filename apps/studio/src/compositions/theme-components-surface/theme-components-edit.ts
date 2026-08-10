@@ -65,6 +65,11 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.foreground', label: 'Foreground (global)' },
     { path: 'color.border.default', label: 'Border (global)' },
   ],
+  'code-block': [
+    { path: 'color.surface.1', label: 'Surface 1 (global · rest bg)' },
+    { path: 'color.foreground', label: 'Foreground (global · rest ink)' },
+    { path: 'color.border.default', label: 'Border (global · frame)' },
+  ],
   legend: [
     { path: 'color.foreground', label: 'Foreground (global · rest caption ink)' },
   ],
@@ -155,6 +160,7 @@ const FACE_HINTS: Record<string, string> = {
   switch: 'Binary toggles',
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
+  'code-block': 'Source block · component.code-block bg/fg · .tok-* via --syntax-*',
   legend: 'Fieldset caption · component.legend.fg leaf',
   prose: 'Typography scope · component.prose.fg host leaf',
   spinner: 'Indeterminate wait · fg + track leaves',

@@ -121,6 +121,7 @@ export const CATALOG: CatalogEntry[] = [
   // separator IS the themed <hr> (stdlib lowers to native hr). Do not catalog bare `hr`.
   L('separator', 'separator', 'display'),
   L('kbd', 'kbd', 'display'),
+  L('code-block', 'codeBlock', 'display'),
   L('accordion', 'accordion', 'display'),
   L('prose', 'prose', 'display'),
   L('tooltip', 'tooltip', 'overlay'),

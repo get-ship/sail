@@ -538,6 +538,16 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: '(children)', desc: 'key label — Ctrl, K, ⌘, F12, …', type: 'children' },
     ],
   }),
+  'code-block': lang('code-block', 'codeBlock', {
+    blurb:
+      'Syntax-highlighted source block. Host is a div with use:syntaxHighlight; paint on the inner pre from component.code-block (bg · foreground) plus global border/radius. Pass code as a string prop (not children). lang defaults to sail and is an authoring attr — the highlighter classifies by content shape (markup vs code), not by inventing line numbers or a copy chrome.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: 'code', desc: 'source text to highlight into the pre', type: 'string' },
+      { name: 'lang', desc: 'authoring language label (default sail); highlighter auto-classifies markup vs code', type: 'string' },
+    ],
+  }),
   prose: lang('prose', 'prose', {
     heading: 'prose',
     blurb:

@@ -138,6 +138,12 @@ const VARIANT_META: Partial<
     variantAttr: '',
     blurb: 'Keycap · component.kbd bg/fg/border; no size/variant props.',
   },
+  'code-block': {
+    variants: [],
+    variantAttr: '',
+    blurb:
+      'Syntax-highlighted pre · component.code-block bg/fg; code + lang props; use:syntaxHighlight; no line numbers / copy chrome.',
+  },
   legend: {
     variants: [],
     variantAttr: '',

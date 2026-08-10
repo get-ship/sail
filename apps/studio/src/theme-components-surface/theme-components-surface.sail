@@ -688,7 +688,17 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.codeBlock()}>
-                    <code-block code={'const x = 1\nconsole.log(x)'} lang="ts" style(sampleMax)></code-block>
+                    <column gap="3" style(sampleMax)>
+                      <p style(fieldHint)>Rest · component.code-block.bg + fg (theme override)</p>
+                      <code-block
+                        code={'const n = signal(0)\nconst double = derived(() => n() * 2)\n// .tok-* ink via --syntax-*'}
+                        lang="ts"
+                      ></code-block>
+                      <code-block
+                        code={'<button variant="solid" tone="primary">\n  Save\n</button>'}
+                        lang="sail"
+                      ></code-block>
+                    </column>
                   </if>
 
                   <!-- ── Overlay ────────────────────────────────────── -->

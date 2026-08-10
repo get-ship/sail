@@ -79,6 +79,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const fieldsetDisabled = signal(false)
     // Label: size sm|md|lg; required shows * via group-required + component.label.required.
     const labelRequired = signal(true)
+    // Code-block: code string + lang authoring attr; highlight via use:syntaxHighlight.
+    // No line-numbers / copy chrome (deliberate PE — not leader clone).
+    const codeLang = signal('sail')
     // Chip dismiss demo (re-seed with chip knobs; restore after ×).
     const kept = signal(true)
     const dropChip = (): void => kept.set(false)
@@ -193,6 +196,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
         variant.set('')
         sizeIdx.set(1) // md
         labelRequired.set(true)
+      } else if (tag() === 'code-block') {
+        variant.set('')
+        codeLang.set('sail')
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -327,6 +333,24 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const labelMeta = derived(() => {
       return `${labelSize()} · required ${labelRequired() ? 'on' : 'off'} · component.label.fg + required`
     })
+    const codeSample = derived(() => {
+      switch (codeLang()) {
+        case 'ts':
+          return 'const n = signal(0)\nconst double = derived(() => n() * 2)'
+        case 'css':
+          return '.card {\n  border-radius: var(--radius-lg);\n  background: var(--surface-1);\n}'
+        case 'json':
+          return '{\n  "theme": "ship",\n  "mode": "dark"\n}'
+        case 'rust':
+          return 'fn main() {\n  println!("hello");\n}'
+        case 'sail':
+        default:
+          return '<button variant="solid" tone="primary">\n  Save\n</button>'
+      }
+    })
+    const codeMeta = derived(() => {
+      return `lang ${codeLang()} · code prop · component.code-block.bg + fg · use:syntaxHighlight`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -346,7 +370,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'empty-state' ||
       tag() === 'error-state' ||
       tag() === 'fieldset' ||
-      tag() === 'label'
+      tag() === 'label' ||
+      tag() === 'code-block'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -392,6 +417,12 @@ const kbdExChord = () =>
       `<fieldset disabled>\n  <legend>Read-only profile</legend>\n  <input placeholder="Display name" />\n</fieldset>`
     const legendExRest = () =>
       `<fieldset>\n  <legend>Themeable caption</legend>\n  <!-- ink from component.legend.fg (--legend-foreground) -->\n</fieldset>`
+    const codeExBasic = () =>
+      `<code-block\n  code={'const n = signal(0)\\nconst double = derived(() => n() * 2)'}\n  lang="ts"\n></code-block>`
+    const codeExSail = () =>
+      `<code-block\n  code={'<button variant="solid" tone="primary">\\n  Save\\n</button>'}\n  lang="sail"\n></code-block>`
+    const codeExRest = () =>
+      `<code-block code={'export const ok = true'} lang="ts"></code-block>\n<!-- pre paint: component.code-block.bg + fg; .tok-* via --syntax-* -->`
     const proseExScale = () =>
       `<prose>\n  <h1>Heading one</h1>\n  <h2>Heading two</h2>\n  <p>Body sets the baseline.</p>\n</prose>`
     const proseExBlocks = () =>
@@ -571,6 +602,8 @@ const kbdExChord = () =>
       fsExGroup, fsExDisabled, fsExRest,
       labelSize, labelRequired, labelMeta,
       lblExFor, lblExSizes, lblExRequired, lblExRest,
+      codeLang, codeSample, codeMeta,
+      codeExBasic, codeExSail, codeExRest,
     }
 })
 </controller>
@@ -1802,6 +1835,40 @@ const kbdExChord = () =>
                 <p style(monoXs)>component.prose · foreground · descendant type scale</p>
               </column>
             </if>
+            <if {stage.codeBlock()}>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" style(fullW)>
+                    <code-block code={codeSample()} lang={codeLang()}></code-block>
+                    <p style(monoXs)>{codeMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <label style(knobLabel)>Lang</label>
+                    <select size="sm" bind:value={codeLang} label="Lang">
+                      <option value="sail">sail</option>
+                      <option value="ts">ts</option>
+                      <option value="css">css</option>
+                      <option value="json">json</option>
+                      <option value="rust">rust</option>
+                    </select>
+                    <p style(mutedXs)>
+                      <code>lang</code> is the authoring attr (default <code>sail</code>).
+                      Highlighting classifies by content shape (markup vs code) — not line numbers or a copy button.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Tokens</label>
+                    <p style(mutedXs)>
+                      Pre fill/ink from <code>component.code-block.bg</code> /
+                      <code>component.code-block.fg</code>. Token ink uses global
+                      <code>--syntax-*</code> via the compiler <code>.tok-*</code> map.
+                    </p>
+                  </column>
+                </column>
+              </row>
+            </if>
 
             <!-- ══ Overlay ═════════════════════════════════════════════ -->
             <if {stage.tooltip()}>
@@ -2490,6 +2557,51 @@ const kbdExChord = () =>
               <p>Markdown blobs, docs bodies, and rendered content share this scope.</p>
             </prose>
             <code-block code={proseExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.codeBlock()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>Code prop + lang</h3>
+            <p style(exampleLead)>
+              Pass source as the <code>code</code> string prop (not children).
+              <code>use:syntaxHighlight</code> on the host paints <code>.tok-*</code> spans into the inner
+              <code>pre</code>. Default <code>lang</code> is <code>sail</code>.
+            </p>
+            <code-block
+              code={'const n = signal(0)\nconst double = derived(() => n() * 2)'}
+              lang="ts"
+            ></code-block>
+            <code-block code={codeExBasic()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Markup samples</h3>
+            <p style(exampleLead)>
+              Snippets that start with a tag (or binding) highlight as markup — tags, attrs, and
+              <code>{'{…}'}</code> binds get their own token classes. Prefer <code>lang="sail"</code> for docs.
+            </p>
+            <code-block
+              code={'<button variant="solid" tone="primary">\n  Save\n</button>'}
+              lang="sail"
+            ></code-block>
+            <code-block code={codeExSail()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Themeable surface</h3>
+            <p style(exampleLead)>
+              Rest paint is <code>component.code-block.bg</code> and <code>component.code-block.fg</code>
+              on the pre. Frame border uses the global border token. Syntax colours are
+              <code>--syntax-*</code> (theme chrome), not component leaves.
+              No line-number gutter or copy button on the PE — compose those if a product surface needs them.
+            </p>
+            <code-block code={'export const ok = true'} lang="ts"></code-block>
+            <code-block code={codeExRest()}></code-block>
           </column>
         </column>
       </if>

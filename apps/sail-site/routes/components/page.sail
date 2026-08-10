@@ -344,7 +344,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <kbd>Ctrl</kbd>
                     <span style(mutedXs)>+</span>
                     <kbd>K</kbd>
-                  </row>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
+                  </row>}{else-if {e.tag === 'code-block'} => <code-block code={'const x = signal(1)'} lang="ts" style({ box: w(full).minW(0) })></code-block>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
                   <tooltip content="Copy URL" placement="bottom">
                     <span style({ paint: fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help), text: fontSize(sm) })>ship.dev/d/ab12</span>
                   </tooltip>}{else-if {e.tag === 'hover-card'} => <column gap="2" align="center">
