@@ -105,6 +105,11 @@ const VARIANT_META: Partial<
     variantAttr: 'variant',
     blurb: 'Divider · rest uses component.separator.line; tone optional.',
   },
+  kbd: {
+    variants: [],
+    variantAttr: '',
+    blurb: 'Keycap · component.kbd bg/fg/border; no size/variant props.',
+  },
   tooltip: {
     variants: ['top', 'bottom', 'left', 'right'],
     variantAttr: 'placement',

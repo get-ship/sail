@@ -207,6 +207,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
       `<chip variant="soft" tone="info" removable on-remove={onRemove}>typescript</chip>`
     const chipExRest = () =>
       `<chip variant="solid">rest tokens</chip>\n<!-- no tone → component.chip.* (themeable) -->`
+    const kbdExChord = () =>
+      `<p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.</p>`
+    const kbdExModifiers = () =>
+      `<kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>⌥</kbd> <kbd>⌃</kbd> <kbd>Esc</kbd> <kbd>F12</kbd>`
+    const kbdExRest = () =>
+      `<kbd>Enter</kbd>\n<!-- paint from component.kbd (bg · foreground · border) — themeable -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -292,6 +298,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       alrtExTones, alrtExDismiss, alrtExRest,
       chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
       chipExFilter, chipExRemove, chipExRest,
+      kbdExChord, kbdExModifiers, kbdExRest,
     }
 })
 </controller>
@@ -991,8 +998,23 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </accordion>
             </if>
             <if {stage.kbd()}>
-              <p style(mutedSm)>                Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
-              </p>
+              <!-- Zero PE props — specimen-only stage (no knobs); paint is component.kbd.* -->
+              <column gap="4" align="center" style(stageColMd)>
+                <row gap="2" align="center">
+                  <kbd>Ctrl</kbd>
+                  <span style(mutedSm)>+</span>
+                  <kbd>K</kbd>
+                </row>
+                <row gap="2" align="center">
+                  <kbd>⌘</kbd>
+                  <kbd>⇧</kbd>
+                  <kbd>⌥</kbd>
+                  <kbd>⌃</kbd>
+                  <kbd>Esc</kbd>
+                  <kbd>F12</kbd>
+                </row>
+                <p style(monoXs)>component.kbd · bg · foreground · border</p>
+              </column>
             </if>
             <if {stage.prose()}>
               <column gap="2" style(stageColMd)>
@@ -1458,6 +1480,55 @@ export default controller((ctx: ControllerScope<Scope>) => {
               <separator variant="dashed"></separator>
             </column>
             <code-block code={sepExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
+      <if {stage.kbd()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>In prose chords</h3>
+            <p style(exampleLead)>
+              Drop native <code>kbd</code> inline. Compose combinations with plain text between keycaps —
+              no group component and no size/variant props.
+            </p>
+            <p style(mutedSm)>
+              Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.
+            </p>
+            <code-block code={kbdExChord()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Modifiers and function keys</h3>
+            <p style(exampleLead)>
+              Glyphs and short labels share the same mono keycap chrome (doubled bottom edge).
+            </p>
+            <row gap="2" align="center">
+              <kbd>⌘</kbd>
+              <kbd>⇧</kbd>
+              <kbd>⌥</kbd>
+              <kbd>⌃</kbd>
+              <kbd>Esc</kbd>
+              <kbd>F12</kbd>
+            </row>
+            <code-block code={kbdExModifiers()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Themeable tokens</h3>
+            <p style(exampleLead)>
+              Paint is always <code>component.kbd</code> leaves
+              (<code>--kbd</code>, <code>--kbd-foreground</code>, <code>--kbd-border</code>).
+              Override those in Studio themes — there is no tone prop on the tag.
+            </p>
+            <row gap="2" align="center">
+              <kbd>Enter</kbd>
+              <kbd>Tab</kbd>
+              <kbd>/</kbd>
+            </row>
+            <code-block code={kbdExRest()}></code-block>
           </column>
         </column>
       </if>

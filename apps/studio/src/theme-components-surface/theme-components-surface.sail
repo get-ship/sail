@@ -478,8 +478,30 @@ export default controller(() => {
                     </accordion>
                   </if>
                   <if {components.stage.kbd()}>
-                    <p style(fieldHint)>                      Press <kbd>Ctrl</kbd> + <kbd>K</kbd>
-                    </p>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Rest · component.kbd (bg · fg · border)</p>
+                        <row gap="2" align="center">
+                          <kbd>Ctrl</kbd>
+                          <span style(fieldHint)>+</span>
+                          <kbd>K</kbd>
+                        </row>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Modifiers · mono keycap chrome</p>
+                        <row gap="2" align="center">
+                          <kbd>⌘</kbd>
+                          <kbd>⇧</kbd>
+                          <kbd>⌥</kbd>
+                          <kbd>⌃</kbd>
+                          <kbd>Esc</kbd>
+                          <kbd>F12</kbd>
+                        </row>
+                      </column>
+                      <p style(fieldHint)>
+                        Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> in docs.
+                      </p>
+                    </column>
                   </if>
                   <if {components.stage.prose()}>
                     <prose style(sampleMax)>

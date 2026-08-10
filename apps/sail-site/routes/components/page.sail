@@ -337,8 +337,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>}{else-if {e.tag === 'accordion'} => <accordion style({ box: w(full) })>
                     <span slot="trigger" style({ text: fontSize(sm).fontWeight(semibold) })>Webhook endpoints</span>
                     <p style(mutedXs)>POST /v1/hooks · signed with your workspace secret.</p>
-                  </accordion>}{else-if {e.tag === 'kbd'} => <p style(mutedXs)>                    Press <kbd>Ctrl</kbd> + <kbd>K</kbd>
-                  </p>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
+                  </accordion>}{else-if {e.tag === 'kbd'} => <row gap="1" align="center">
+                    <kbd>Ctrl</kbd>
+                    <span style(mutedXs)>+</span>
+                    <kbd>K</kbd>
+                  </row>}{else-if {e.tag === 'prose'} => <prose><p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists — no class soup.</p></prose>}{else-if {e.tag === 'tooltip'} => <!-- placement bottom so the bubble stays inside the tile band -->
                   <tooltip content="Copy URL" placement="bottom">
                     <span style({ paint: fg(muted-foreground).borderBWidth(1).borderB(border).border(dashed).cursor(help), text: fontSize(sm) })>ship.dev/d/ab12</span>
                   </tooltip>}{else-if {e.tag === 'hover-card'} => <column gap="2" align="center">
