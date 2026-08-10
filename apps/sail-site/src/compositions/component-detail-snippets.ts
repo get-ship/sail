@@ -10,9 +10,12 @@ export default controller(() => {
 })
 </controller>
 
-<button variant="solid" tone="primary"
- on:click={save}>
+<button
+  variant="solid"
+  tone="primary"
+  on:click={save}
   style({ animate: press({ scale: 'press' }) })
+>
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 

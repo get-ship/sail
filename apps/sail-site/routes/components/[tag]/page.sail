@@ -27,13 +27,43 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const showViewer = derived(() => known() || knownPack())
 
     const variant = signal('')
+    // Button stage axes (viewer chips drive variant only; size/tone live on stage).
+    const btnSize = signal('md')
+    const btnTone = signal('primary')
+    const btnDisabled = signal(false)
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
       variant.set(entry()?.variants[0] ?? '')
+      if (tag() === 'button') {
+        btnSize.set('md')
+        btnTone.set('primary')
+        btnDisabled.set(false)
+      }
     })
     const pick = (v: string): void => variant.set(v)
     const onVariantChange = (detail: { variant: string }): void =>
       variant.set(detail?.variant ?? '')
+    const pickBtnSize = (s: string): void => btnSize.set(s)
+    const pickBtnTone = (t: string): void => btnTone.set(t)
+    const toggleBtnDisabled = (): void => btnDisabled.set((d) => !d)
+    // Derived chip rows — templates only allow zero-arg reads (no chip(s) calls).
+    const sizeChips = derived(() =>
+      (['xs', 'sm', 'md', 'lg'] as const).map((s) => ({
+        s,
+        variant: btnSize() === s ? 'solid' : 'ghost',
+      })),
+    )
+    const toneChips = derived(() =>
+      (['primary', 'success', 'warning', 'destructive', 'accent', 'muted'] as const).map((t) => ({
+        t,
+        variant: btnTone() === t ? 'solid' : 'ghost',
+      })),
+    )
+    const btnDisabledLabel = derived(() => (btnDisabled() ? 'Enable' : 'Disable'))
+    const btnMeta = derived(() => {
+      const dis = btnDisabled() ? ' · disabled' : ''
+      return `${variant()} · ${btnSize()} · ${btnTone()}${dis} · press ×${presses()}`
+    })
 
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
@@ -111,6 +141,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
       toastItems, pushToast, onToastDismiss,
       sheetSide, people,
+      btnSize, btnTone, btnDisabled, pickBtnSize, pickBtnTone, toggleBtnDisabled,
+      sizeChips, toneChips, btnDisabledLabel, btnMeta,
     }
 })
 </controller>
@@ -140,6 +172,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   style skeletonBox = { box: w(7).h(7) }
   style ctxCard = { box: pad(6).w(full) }
   style toastStage = { box: w(full).maxW(panel-max-w-sm) }
+  style axisLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style exampleCard = { box: w(full).maxW(panel-max-w-md).pad(4), paint: borderWidth(1).border(border-subtle).radius(md).bg(surface-1) }
+  style exampleTitle = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase) }
 </scope>
 
 <column gap="4" style(page)>
@@ -162,11 +197,79 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <column slot="stage" gap="4" align="center" style({ box: w(full).minW(0) })>
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             <if {stage.button()}>
-              <column gap="3" align="center">
-                <button variant={variant()} tone="primary" size="lg" on:click={press} style(pressBtn)>
-                  Save changes
-                </button>
-                <p style(monoXs)>press fired ×{presses()}</p>
+              <column gap="5" align="center" style(fullW)>
+                <!-- Live mount: one specimen; axes below (variant chips live on the viewer). -->
+                <column gap="3" align="center">
+                  <button
+                    variant={variant()}
+                    size={btnSize()}
+                    tone={btnTone()}
+                    disabled={btnDisabled()}
+                    on:click={press}
+                    style(pressBtn)
+                  >
+                    Save changes
+                  </button>
+                  <p style(monoXs)>{btnMeta()}</p>
+                </column>
+
+                <column gap="2" align="center" style(fullW)>
+                  <row gap="2" align="center">
+                    <span style(axisLabel)>size</span>
+                    <for {sizeChips() as c} key={c.s}>
+                      <button size="sm" tone="primary" variant={c.variant} on:click={() => pickBtnSize(c.s)}>{c.s}</button>
+                    </for>
+                  </row>
+                  <row gap="2" align="center">
+                    <span style(axisLabel)>tone</span>
+                    <for {toneChips() as c} key={c.t}>
+                      <button size="sm" tone="primary" variant={c.variant} on:click={() => pickBtnTone(c.t)}>{c.t}</button>
+                    </for>
+                  </row>
+                  <button size="sm" variant="outline" on:click={toggleBtnDisabled}>
+                    {btnDisabledLabel()} specimen
+                  </button>
+                </column>
+
+                <!-- Examples: same L1, compositions for docs/agents (not a second mount tech). -->
+                <column gap="3" style(fullW) align="stretch">
+                  <p style(exampleTitle)>Examples</p>
+                  <column gap="2" style(exampleCard)>
+                    <p style(monoXs)>Form actions</p>
+                    <row gap="2" align="center">
+                      <button variant="solid" tone="primary">Save</button>
+                      <button variant="outline">Cancel</button>
+                      <button variant="ghost" tone="destructive" size="sm">Delete</button>
+                    </row>
+                  </column>
+                  <column gap="2" style(exampleCard)>
+                    <p style(monoXs)>Solid tones</p>
+                    <row gap="2" align="center">
+                      <button variant="solid" tone="primary" size="sm">Primary</button>
+                      <button variant="solid" tone="success" size="sm">Success</button>
+                      <button variant="solid" tone="warning" size="sm">Warning</button>
+                      <button variant="solid" tone="destructive" size="sm">Destructive</button>
+                      <button variant="solid" tone="muted" size="sm">Muted</button>
+                    </row>
+                  </column>
+                  <column gap="2" style(exampleCard)>
+                    <p style(monoXs)>Sizes (solid primary)</p>
+                    <row gap="2" align="center">
+                      <button variant="solid" tone="primary" size="xs">xs</button>
+                      <button variant="solid" tone="primary" size="sm">sm</button>
+                      <button variant="solid" tone="primary" size="md">md</button>
+                      <button variant="solid" tone="primary" size="lg">lg</button>
+                    </row>
+                  </column>
+                  <column gap="2" style(exampleCard)>
+                    <p style(monoXs)>Solid without tone (invert rest)</p>
+                    <row gap="2" align="center">
+                      <button variant="solid">Solid</button>
+                      <button variant="default">Default</button>
+                      <button variant="soft">Soft</button>
+                    </row>
+                  </column>
+                </column>
               </column>
             </if>
             <if {stage.input()}>

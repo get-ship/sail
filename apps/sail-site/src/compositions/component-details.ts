@@ -82,10 +82,10 @@ export const DETAILS: Record<string, DetailEntry> = {
     variantAttr: 'variant',
     props: [
       { name: 'variant', desc: 'how much colour it gets', type: 'default · solid · soft · outline · ghost' },
-      { name: 'tone', desc: 'semantic colour token', type: TONES },
-      { name: 'size', desc: 'control height', type: 'sm · md · lg' },
+      { name: 'tone', desc: 'semantic colour (omit for rest / solid invert)', type: TONES },
+      { name: 'size', desc: 'control height', type: 'xs · sm · md · lg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
-      { name: 'style({ paint: press }) / when({ active })', desc: 'press feedback on Style', type: 'preset' },
+      { name: 'style({ animate: press })', desc: 'press scale feedback', type: 'preset' },
     ],
   }),
   input: lang('input', 'input', {
