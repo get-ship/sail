@@ -223,12 +223,13 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   fieldset: lang('fieldset', 'fieldset', {
     blurb:
-      'The platform fieldset with a themed border and legend. Grouping, disabling a whole set, and form semantics are all native.',
+      'Native form group with a themeable border (component.fieldset.border). Put a legend first, then controls. disabled freezes every control inside (platform) and dims the host; no tone/size/variant axes.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: '<legend>', desc: 'the group title', type: 'children' },
-      { name: 'disabled', desc: 'disables every control inside — platform', type: 'bool' },
+      { name: 'disabled', desc: 'native — freezes controls inside; PE dims opacity', type: 'bool' },
+      { name: '<legend>', desc: 'group caption (compose legend PE)', type: 'children' },
+      { name: 'default', desc: 'controls and copy inside the group', type: 'slot' },
     ],
   }),
   legend: lang('legend', 'legend', {

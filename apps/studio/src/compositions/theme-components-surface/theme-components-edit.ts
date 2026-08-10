@@ -134,6 +134,10 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.ring.default', label: 'Ring (global)' },
     { path: 'radius.md', label: 'Radius md (global)' },
   ],
+  fieldset: [
+    { path: 'color.border.default', label: 'Border (global · rest fieldset.border)' },
+    { path: 'radius.md', label: 'Radius md (global · group chrome)' },
+  ],
 }
 
 const FACE_HINTS: Record<string, string> = {
@@ -157,6 +161,7 @@ const FACE_HINTS: Record<string, string> = {
   icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',
   input: 'Fields (globals + control radius)',
+  fieldset: 'Form group · component.fieldset.border leaf',
 }
 
 type FaceDef = {

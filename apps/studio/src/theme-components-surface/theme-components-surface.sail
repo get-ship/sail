@@ -288,13 +288,28 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.fieldset()}>
-                    <fieldset style(sampleMax)>
-                      <legend>Account</legend>
+                    <column gap="3" style(sampleMax)>
                       <column gap="2">
-                        <input size="sm" placeholder="Name" />
-                        <input size="sm" placeholder="Email" />
+                        <p style(fieldHint)>Rest · component.fieldset.border</p>
+                        <fieldset style(sampleMax)>
+                          <legend>Account</legend>
+                          <column gap="2">
+                            <input size="sm" placeholder="Name" />
+                            <input size="sm" placeholder="Email" />
+                          </column>
+                        </fieldset>
                       </column>
-                    </fieldset>
+                      <column gap="2">
+                        <p style(fieldHint)>Disabled · native freeze + opacity</p>
+                        <fieldset disabled style(sampleMax)>
+                          <legend>Billing (locked)</legend>
+                          <column gap="2">
+                            <input size="sm" placeholder="Card" />
+                            <button type="button" variant="solid" size="sm">Save</button>
+                          </column>
+                        </fieldset>
+                      </column>
+                    </column>
                   </if>
                   <if {components.stage.legend()}>
                     <column gap="3" style(sampleMax)>

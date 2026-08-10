@@ -142,6 +142,12 @@ const VARIANT_META: Partial<
     variantAttr: '',
     blurb: 'Fieldset caption · component.legend.fg; nest in fieldset; no size/variant props.',
   },
+  fieldset: {
+    variants: [],
+    variantAttr: '',
+    blurb:
+      'Form group · component.fieldset.border; disabled freezes controls + dims host; legend as child.',
+  },
   prose: {
     variants: [],
     variantAttr: '',
