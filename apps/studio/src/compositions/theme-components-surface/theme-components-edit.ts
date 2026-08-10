@@ -145,6 +145,12 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'color.border.strong', label: 'Border strong (global · rest border alias)' },
     { path: 'color.primary.default', label: 'Primary (global · checked track default)' },
   ],
+  slider: [
+    { path: 'color.muted.default', label: 'Muted (global · track alias)' },
+    { path: 'color.primary.default', label: 'Primary (global · fill alias)' },
+    { path: 'color.border.default', label: 'Border (global · track-border alias)' },
+    { path: 'color.background', label: 'Background (global · field/thumb face alias)' },
+  ],
   tabs: [
     { path: 'color.primary.default', label: 'Primary (global)' },
     { path: 'color.muted.foreground', label: 'Muted (global)' },
@@ -198,6 +204,7 @@ const FACE_HINTS: Record<string, string> = {
   label: 'Form labels · component.label.fg + required leaves',
   progress: 'Bar · track + fill leaves',
   'scroll-area': 'Overflow · component.scroll-area.thumb; hover border-strong',
+  slider: 'Range · track + fill + track-border leaves · single thumb',
   'error-state': 'Recovery · component.error-state leaves + brand destructive',
   icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',

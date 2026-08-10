@@ -313,9 +313,18 @@ export default controller(() => {
                     </column>
                   </if>
                   <if {components.stage.slider()}>
-                    <column gap="2" style(sampleMax)>
-                      <slider value={components.load()} min="0" max="100" label="Sample slider"></slider>
-                      <p style(fieldHint)>{components.load()}%</p>
+                    <column gap="3" style(sampleMax)>
+                      <column gap="2">
+                        <p style(fieldHint)>Sizes · component.slider.track + fill + track-border</p>
+                        <slider value="40" min="0" max="100" size="sm"></slider>
+                        <slider value={components.load()} min="0" max="100" size={components.variant() || 'md'}></slider>
+                        <slider value="80" min="0" max="100" size="lg"></slider>
+                      </column>
+                      <column gap="2">
+                        <p style(fieldHint)>Disabled · native freeze + opacity</p>
+                        <slider value="55" min="0" max="100" disabled></slider>
+                      </column>
+                      <p style(fieldHint)>Thumb face = field · rim = slider.fill · single thumb only</p>
                     </column>
                   </if>
                   <if {components.stage.toggle() || components.stage.toggleGroup()}>

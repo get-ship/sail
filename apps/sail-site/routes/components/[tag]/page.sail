@@ -43,6 +43,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const SW_SIZES = ['sm', 'md', 'lg'] as const
     // Ticker duration ladder (maps onto use:marquee seconds: fast 16 / normal 24 / slow 32).
     const TICKER_DURATIONS = ['fast', 'normal', 'slow'] as const
+    const SLD_SIZES = ['sm', 'md', 'lg'] as const
     const sizeIdx = signal(2) // md for button; remapped per tag
     const btnTone = signal('primary')
     // Anchor (a): empty tone = rest component.button.*; bare text link is examples-only.
@@ -78,6 +79,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // load is also reused by the slider detail stage (shared 0–100 signal).
     const load = signal(62)
     const progIndeterminate = signal(false)
+    // Slider: single-thumb native range; value/min/max/step + size + disabled + name.
+    // Paint via RANGE_MAP + use:rangeFill (--rng-pct); leaves component.slider.track|fill|track-border.
+    // No tone; no dual-thumb range (product follow-up).
+    const sliderDisabled = signal(false)
     // Error-state: variant × size × code; details slot optional (gates Show details).
     const errCode = signal('ERR_TIMEOUT')
     const errDetails = signal(true)
@@ -157,6 +162,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const tickerDuration = derived(() => {
       const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), TICKER_DURATIONS.length - 1)
       return TICKER_DURATIONS[i] ?? 'normal'
+    })
+    const sliderSize = derived(() => {
+      const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SLD_SIZES.length - 1)
+      return SLD_SIZES[i] ?? 'md'
+    })
     })
     // Scope is reused across detail navigations — re-seed on tag change.
     effect(() => {
@@ -247,6 +257,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
       } else if (tag() === 'scroll-area') {
         variant.set('')
         scrollOrientation.set('vertical')
+      } else if (tag() === 'slider') {
+        variant.set('')
+        sizeIdx.set(1) // md
+        load.set(62)
+        sliderDisabled.set(false)
       } else {
         variant.set(entry()?.variants[0] ?? '')
       }
@@ -424,6 +439,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const scrollMeta = derived(() => {
       return `${scrollOrientation()} · thumb component.scroll-area.thumb · hover border-strong`
     })
+    const sliderMeta = derived(() => {
+      const d = sliderDisabled() ? 'disabled' : 'interactive'
+      return `${sliderSize()} · ${load()} of 0–100 · ${d} · track/fill component.slider.*`
+    })
     const isIconSize = derived(() => {
       const s = btnSize()
       return s === 'icon' || s === 'iconSm' || s === 'iconLg'
@@ -449,7 +468,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       tag() === 'switch' ||
       tag() === 'radio' ||
       tag() === 'ticker' ||
-      tag() === 'scroll-area'
+      tag() === 'scroll-area' ||
+      tag() === 'slider'
     const viewerVariants = () => (stageOwnsKnobs() ? [] : entry()?.variants ?? [])
     const viewerVariantAttr = () => (stageOwnsKnobs() ? '' : entry()?.variantAttr ?? '')
     // Example walkthrough snippets (code + prose below the stage — not a second matrix).
@@ -613,6 +633,14 @@ const kbdExChord = () =>
       `<scroll-area orientation="both" style({ box: maxH(panel-max-h-sm).maxW(panel-max-w-sm).pad(3) })>\n  …tall and wide content…\n</scroll-area>`
     const saExRest = () =>
       `<scroll-area style({ box: maxH(panel-max-h-sm).pad(3) })>\n  …\n</scroll-area>\n<!-- rest thumb → component.scroll-area.thumb; hover → border-strong (SPEC-D1) -->`
+    const sldExBind = () =>
+      `<controller>\nexport default controller(() => ({ volume: signal(48) }))\n</controller>\n\n<column gap="2">\n  <row justify="between"><span>Volume</span><span>{volume()}%</span></row>\n  <slider bind:value={volume} min="0" max="100"></slider>\n</column>`
+    const sldExSizes = () =>
+      `<slider value="50" size="sm"></slider>\n<slider value="50"></slider>\n<slider value="50" size="lg"></slider>`
+    const sldExDisabled = () =>
+      `<slider value="40" disabled></slider>\n<!-- native freeze + opacity; fill still shows value -->`
+    const sldExRest = () =>
+      `<slider value="62" min="0" max="100"></slider>\n<!-- track/fill/border → component.slider.track + fill + track-border; thumb face = field, rim = fill -->`
     // sail-media-image src is a JS identity property, not a reflect attr.
     effect(() => {
       void tag()
@@ -734,6 +762,8 @@ const kbdExChord = () =>
       tickerExBasic, tickerExDuration, tickerExReverse, tickerExPaint,
       scrollOrientation, scrollMeta,
       saExVertical, saExHorizontal, saExBoth, saExRest,
+      sliderSize, sliderDisabled, sliderMeta,
+      sldExBind, sldExSizes, sldExDisabled, sldExRest,
     }
 })
 </controller>
@@ -1201,11 +1231,80 @@ const kbdExChord = () =>
               </row>
             </if>
             <if {stage.slider()}>
-              <column gap="3" style(stageCol)>
-                <slider bind:value={load} min="0" max="100"></slider>
-                <progress value={load()} max="100"></progress>
-                <p style(monoXs)>one signal, two components — {load()}%</p>
-              </column>
+              <row nowrap gap="0" align="stretch" style(stageSplit)>
+                <center style(stageCanvas)>
+                  <column gap="4" align="center" style(stageCol)>
+                    <if {sliderDisabled()}>
+                      <slider
+                        value={load()}
+                        min="0"
+                        max="100"
+                        step="1"
+                        size={sliderSize()}
+                        disabled
+                        style(fullW)
+                      ></slider>
+                    {else =>
+                      <slider
+                        bind:value={load}
+                        min="0"
+                        max="100"
+                        step="1"
+                        size={sliderSize()}
+                        style(fullW)
+                      ></slider>}</if>
+                    <p style(monoXs)>{sliderMeta()}</p>
+                  </column>
+                </center>
+                <column gap="5" style(knobPanel)>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Size</label>
+                      <span style(sizeValue)>{sliderSize()}</span>
+                    </row>
+                    <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+                    <row gap="0" align="center" style(tickRow)>
+                      <span style(tick)>sm</span>
+                      <span style(tick)>md</span>
+                      <span style(tick)>lg</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Scales track height + thumb diameter via <code>--rng-track</code> /
+                      <code>--rng-thumb</code>. Default <code>md</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <row gap="2" align="center" justify="between">
+                      <label style(knobLabel)>Value</label>
+                      <span style(sizeValue)>{load()}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Drag the specimen — <code>bind:value</code> keeps a signal in lockstep.
+                      Stage fixes <code>min=0</code> · <code>max=100</code> · <code>step=1</code>
+                      (all real props; defaults match).
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <label style(knobLabel)>Disabled</label>
+                    <row gap="2" align="center">
+                      <switch bind:checked={sliderDisabled} size="sm" tone="primary"></switch>
+                      <span style(sizeValue)>{sliderDisabled() ? 'not-allowed' : 'interactive'}</span>
+                    </row>
+                    <p style(mutedXs)>
+                      Native <code>disabled</code> freezes drag/keyboard; PE applies
+                      <code>opacity(50)</code> + <code>cursor(not-allowed)</code>.
+                    </p>
+                  </column>
+                  <column gap="2">
+                    <p style(mutedXs)>
+                      Paint from <code>component.slider.track</code> / <code>fill</code> /
+                      <code>track-border</code> (<code>--slider-track</code> etc.). WebKit fill
+                      via <code>use:rangeFill</code> → <code>--rng-pct</code>. Thumb face is
+                      <code>field</code>; rim uses fill. No tone axis. Single thumb only.
+                    </p>
+                  </column>
+                </column>
+              </row>
             </if>
             <if {stage.toggleGroup()}>
               <toggle-group variant={variant()}>
@@ -3777,6 +3876,71 @@ const kbdExChord = () =>
           </column>
         </column>
       </if>
+
+      <if {stage.slider()}>
+        <column gap="5" style(exampleBlock)>
+          <p style(sectionLabel)>Examples</p>
+
+          <column gap="2">
+            <h3 style(exampleH)>bind:value</h3>
+            <p style(exampleLead)>
+              A native <code>type=range</code> control — drag, keyboard, form submission, and
+              <code>role=slider</code> come from the platform. <code>bind:value</code> keeps
+              the thumb and a signal in lockstep. Pair with adjacent copy for the readout.
+            </p>
+            <column gap="2" style(stageCol)>
+              <row justify="between" align="center">
+                <span style(mutedSm)>Volume</span>
+                <span style(monoXs)>{load()}%</span>
+              </row>
+              <slider bind:value={load} min="0" max="100" style(fullW)></slider>
+            </column>
+            <code-block code={sldExBind()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Size ladder</h3>
+            <p style(exampleLead)>
+              <code>sm</code> · <code>md</code> · <code>lg</code> scale track height and thumb
+              diameter (default <code>md</code>). Width follows the parent.
+            </p>
+            <column gap="3" style(stageCol)>
+              <slider value="50" size="sm" style(fullW)></slider>
+              <slider value="50" style(fullW)></slider>
+              <slider value="50" size="lg" style(fullW)></slider>
+            </column>
+            <code-block code={sldExSizes()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Disabled</h3>
+            <p style(exampleLead)>
+              Native <code>disabled</code> freezes interaction. The filled track still shows
+              the current value so the control stays legible.
+            </p>
+            <column gap="2" style(stageCol)>
+              <slider value="40" disabled style(fullW)></slider>
+            </column>
+            <code-block code={sldExDisabled()}></code-block>
+          </column>
+
+          <column gap="2">
+            <h3 style(exampleH)>Rest tokens (themeable)</h3>
+            <p style(exampleLead)>
+              Track from <code>component.slider.track</code>; fill from
+              <code>component.slider.fill</code>; inset rim from
+              <code>component.slider.track-border</code>. Thumb face is <code>field</code>;
+              rim reuses fill. No tone prop — override those leaves in Studio themes.
+              Single thumb only (dual-value range is a deliberate product follow-up).
+            </p>
+            <column gap="2" style(stageCol)>
+              <slider value="62" min="0" max="100" style(fullW)></slider>
+            </column>
+            <code-block code={sldExRest()}></code-block>
+          </column>
+        </column>
+      </if>
+
       <if {stage.radio()}>
         <column gap="5" style(exampleBlock)>
           <p style(sectionLabel)>Examples</p>
