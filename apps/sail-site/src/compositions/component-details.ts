@@ -221,14 +221,18 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   slider: lang('slider', 'slider', {
     blurb:
-      'A native range input, skinned. The platform owns drag, keyboard, role=slider and form submission; the language adds the filled track and the theme.',
+      'Native single-thumb range · type=range + use:rangeFill (--rng-pct). Track/fill/border from component.slider.*; thumb face field, rim = fill. value · min · max · step · size sm|md|lg · disabled · name. No tone; no dual-thumb range.',
     variants: ['sm', 'md', 'lg'],
     variantAttr: 'size',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding', type: 'signal' },
-      { name: 'min / max / step', desc: 'the platform range model', type: 'number' },
-      { name: 'size', desc: 'control scale', type: 'sm · md · lg' },
-      { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
+      { name: 'bind:value', desc: 'two-way signal binding (lockstep with host)', type: 'signal' },
+      { name: 'value', desc: 'current position (default 0)', type: 'number' },
+      { name: 'min', desc: 'range floor (default 0)', type: 'number' },
+      { name: 'max', desc: 'range ceiling (default 100)', type: 'number' },
+      { name: 'step', desc: 'increment (default 1)', type: 'number' },
+      { name: 'size', desc: 'track + thumb scale (default md)', type: 'sm · md · lg' },
+      { name: 'disabled', desc: 'native freeze + PE opacity/cursor', type: 'bool' },
+      { name: 'name', desc: 'form field name', type: 'string' },
     ],
   }),
   'toggle-group': lang('toggle-group', 'toggleGroup', {

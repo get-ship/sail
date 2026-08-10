@@ -117,12 +117,14 @@ export default controller(() => ({ notify: signal(true) }))
 <!-- off → component.switch.track + border; thumb → switch.thumb; tone = checked track only -->`,
 
   slider: `<controller>
-export default controller(() => ({ load: signal(62) }))
+export default controller(() => ({ volume: signal(48) }))
 </controller>
 
-<slider bind:value={load} min="0" max="100"></slider>
-<progress value={load()} max="100"></progress>
-<p>Two components, one signal — drag it: {load()}%</p>`,
+<column gap="2">
+  <row justify="between"><span>Volume</span><span>{volume()}%</span></row>
+  <slider bind:value={volume} min="0" max="100" size="md"></slider>
+</column>
+<!-- track/fill/border → component.slider.*; thumb face field, rim = fill; single thumb -->`,
 
   'toggle-group': `<toggle-group variant="segmented">
     style({ animate: enter({ opacity: 'fade' }) })

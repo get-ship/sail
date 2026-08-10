@@ -58,9 +58,10 @@ const VARIANT_META: Partial<
       'Native checkbox · role=switch · component.switch.track + border + thumb; tone = checked track only; size sm|md|lg.',
   },
   slider: {
-    variants: ['primary', 'success', 'warning', 'destructive'],
-    variantAttr: 'tone',
-    blurb: 'Native range, themed track and thumb.',
+    variants: ['sm', 'md', 'lg'],
+    variantAttr: 'size',
+    blurb:
+      'Native range · component.slider.track + fill + track-border; thumb face field, rim = fill; size sm|md|lg; single thumb.',
   },
   'toggle-group': {
     variants: ['outline', 'ghost', 'segmented'],
