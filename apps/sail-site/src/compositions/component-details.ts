@@ -150,6 +150,21 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
     ],
   }),
+  radio: lang('radio', 'radio', {
+    blurb:
+      'One option — native radio inside a label host. value is this option’s value; disabled is a host attribute radio-group syncs onto the nested input (input when:disabled dims the control). Label ink from component.radio.fg (--radio-foreground); control face uses free foreground/background, checked primary + RADIO_INPUT_MAP inset disc. No size/tone props. Group exclusivity, name, and onChange are radio-group composition (separate L1).',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: 'value', desc: 'this option’s value (group selects by match)', type: 'string' },
+      {
+        name: 'disabled',
+        desc: 'host attr for radio-group → input.disabled + PE dim',
+        type: 'bool',
+      },
+      { name: '(children)', desc: 'option label text', type: 'children' },
+    ],
+  }),
   'radio-group': lang('radio-group', 'radioGroup', {
     blurb:
       'Groups native radios under one accessible name and one value. The platform owns exclusivity and keyboard; the group syncs ARIA and emits one change.',

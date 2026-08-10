@@ -156,6 +156,12 @@ const VARIANT_META: Partial<
     blurb:
       'Form group · component.fieldset.border; disabled freezes controls + dims host; legend as child.',
   },
+  radio: {
+    variants: [],
+    variantAttr: '',
+    blurb:
+      'One option · component.radio.fg label ink; value + disabled only; exclusivity via radio-group.',
+  },
   prose: {
     variants: [],
     variantAttr: '',

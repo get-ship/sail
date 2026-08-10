@@ -246,10 +246,14 @@ export default controller(() => {
                     </combobox>
                   </if>
                   <if {components.stage.radio()}>
-                    <radio value="a">Option A</radio>
+                    <column gap="2" style(sampleMax)>
+                      <radio value="a">Option A</radio>
+                      <radio value="b" disabled>Disabled option</radio>
+                      <p style(fieldHint)>component.radio.fg · value + disabled only</p>
+                    </column>
                   </if>
                   <if {components.stage.radioGroup()}>
-                    <radio-group label="Plan" name="theme-l1-plan" style(sampleMax)>
+                    <radio-group label="Plan" name="theme-l1-plan" value="monthly" style(sampleMax)>
                       <radio value="monthly">Monthly</radio>
                       <radio value="yearly">Yearly</radio>
                     </radio-group>
