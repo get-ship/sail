@@ -184,7 +184,7 @@ export default controller(() => {
             </row>
             <row gap="1" align="center" nowrap font-cats style(catsScroll)>
               <for {assets.fontCategoryOpts() as c} key={c.key}>
-                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={assets.onFontCategory} style(catChip, { box: shrink(0) })>
+                <button type="button" size="xs" variant="outline" tone="muted" font-cat={c.id} selected={c.on ? 'true' : null} on:click={() => assets.onFontCategory(c.id)} style(catChip, { box: shrink(0) })>
                   {c.label}
                 </button>
               </for>

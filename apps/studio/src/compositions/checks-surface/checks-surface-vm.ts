@@ -621,22 +621,10 @@ export function createChecksSurface() {
     sync()
   }
 
-  const onRuleToggle = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.(
-      '[rule-toggle]',
-    ) as HTMLElement | null
-    const rule =
-      btn?.dataset.ruleToggle ||
-      (() => {
-        const gid = btn?.dataset.groupRowId
-        if (!gid) return ''
-        const hit = table.rows().find((r) => r.id === gid && r.getIsGrouped())
-        return hit
-          ? String(hit.getGroupingValue('rule') ?? hit.getValue('rule') ?? '')
-          : ''
-      })()
+  /** Closed-over rule id — no dataset bus (plain attrs are not data-*). */
+  const onRuleToggle = (rule: string, e?: Event) => {
     if (!rule) return
-    e.stopPropagation?.()
+    e?.stopPropagation?.()
     // Explicit map — never bare toggleExpanded under expand-all.
     collapsedRules = toggleCollapsedRule(collapsedRules, rule)
     applyExpandedMap()
@@ -653,13 +641,10 @@ export function createChecksSurface() {
     )
   }
 
-  const onApplyRule = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.(
-      '[apply-rule]',
-    ) as HTMLElement | null
-    if (!btn?.dataset.applyRule) return
-    e.stopPropagation?.()
-    applyRuleFixes(btn.dataset.applyRule)
+  const onApplyRule = (rule: string, e?: Event) => {
+    if (!rule) return
+    e?.stopPropagation?.()
+    applyRuleFixes(rule)
     sync()
   }
 
@@ -671,12 +656,7 @@ export function createChecksSurface() {
     void recheckFindings(resolveCheckPath()).then(() => sync())
   }
 
-  const onAutoFixMode = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.(
-      '[autofix-mode]',
-    ) as HTMLElement | null
-    if (!btn?.dataset.autofixMode) return
-    const mode = btn.dataset.autofixMode as AutoFixMode
+  const onAutoFixMode = (mode: AutoFixMode) => {
     if (mode !== 'off' && mode !== 'suggest' && mode !== 'apply') return
     setAutoFixMode(mode, 'studio checks')
     sync()
@@ -692,12 +672,8 @@ export function createChecksSurface() {
     sync()
   }
 
-  const onReviewToggle = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.(
-      '[review-id]',
-    ) as HTMLElement | null
-    if (!btn?.dataset.reviewId) return
-    const id = btn.dataset.reviewId
+  const onReviewToggle = (id: string) => {
+    if (!id) return
     const item = getChecksState().reviewItems.find((i) => i.findingId === id)
     if (!item) return
     setFixReviewAccepted(id, !item.accepted)

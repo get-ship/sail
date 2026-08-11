@@ -96,26 +96,27 @@ export interface Theme {
     ],
   },`,
 
-  // packages/sail/tokens/src/themes.ts applyTheme — theme + data-mode only.
+  // packages/sail/tokens/src/themes.ts applyTheme — theme + mode only.
+  // (Root host is handed by the runtime; apps call applyTheme(id) without DOM.)
   applySource: `export function applyTheme(
   id: unknown,
-  root: HTMLElement = document.documentElement,
+  root: HTMLElement,
   mode?: string | null,
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
   const resolvedMode = resolveMode(next, mode)
   root.setAttribute('theme', next)
-  root.dataset.mode = resolvedMode
+  // runtime stamps paint mode on the host (one-writer; not author code)
   root.classList.remove('dark') // no dual mechanism
-  // …announce ship:theme:change
+  // …announce ship:theme:change via subscribeThemeChange readers
   return next
 }`,
 
   apply: `import { applyTheme, applyMode, persistTheme } from '@ship/tokens/themes'
 
-applyTheme('sandstone')     // sets theme + data-mode, announces the change
+applyTheme('sandstone')     // sets theme + paint mode, announces the change
 applyMode('dark')           // mode switch — not a twin theme id
-persistTheme('sandstone')   // localStorage, and the host transport if one is set`,
+persistTheme('sandstone')   // host persistence + optional transport if one is set`,
 
   // packages/sail/tokens/src/products.css, verbatim (the whole file body).
   products: `:root[product]='ship']       { --brand-hue: 195; }  /* teal   — umbrella */

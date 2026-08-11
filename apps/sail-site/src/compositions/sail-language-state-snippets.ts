@@ -36,12 +36,13 @@ doubled()      // 20 — recomputed lazily, only when read`,
   effect: `import { signal, effect, debounce } from '@ship/sail-runtime'
 
 const count = signal(0)
+const status = signal('')
 
 // Runs now; re-runs whenever a signal it reads changes.
 // Debounced work is lifecycle-bound — cleared on re-run / dispose.
 const dispose = effect(() => {
   const n = count()
-  const push = debounce(() => { document.title = \`count: \${n}\` }, 200)
+  const push = debounce(() => { status.set(\`count: \${n}\`) }, 200)
   push()
 })
 

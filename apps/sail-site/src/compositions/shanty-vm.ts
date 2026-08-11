@@ -1,7 +1,14 @@
 // SHANTY showcase playback + library graph. Controller wires interval/signals only.
+// Nested frame mode stamping uses a handed host via `use:bindFrame` + the
+// tokens theme-change subscription API (no ambient document lookup).
 
+import type { Action } from '@ship/sail-runtime'
 import { derived, effect, interval, signal } from '@ship/sail-runtime'
-import { applyNestedTheme, resolveNestedPaintMode } from '@ship/tokens/themes'
+import {
+  applyNestedTheme,
+  resolveNestedPaintMode,
+  subscribeThemeChange,
+} from '@ship/tokens/themes'
 
 export interface Track {
   id: number
@@ -112,17 +119,16 @@ export function createShanty() {
 
   // Nested frame: theme + mode (C-TH-NEST-1). Template binds theme=;
   // applyNestedTheme stamps data-mode (data-* banned in app .sail markup).
-  // Inherit document paint when the nested theme supports it; single-mode
-  // themes clamp to their only mode.
+  // Host is handed via use:bindFrame — never ambient getElementById.
+  let frameHost: HTMLElement | null = null
+
   const stampFrameMode = (id: string): boolean => {
-    if (typeof document === 'undefined') return false
-    const host = document.getElementById('shanty-frame')
-    if (!host) return false
-    applyNestedTheme(id, host)
+    if (!frameHost) return false
+    applyNestedTheme(id, frameHost)
     return true
   }
 
-  /** Stamp now, or rAF-retry until #shanty-frame mounts. */
+  /** Stamp now, or rAF-retry until the frame host attaches. */
   const stampFrameModeSoon = (id: string): void => {
     if (stampFrameMode(id)) return
     if (typeof requestAnimationFrame !== 'function') return
@@ -135,10 +141,20 @@ export function createShanty() {
     stampFrameModeSoon(theme())
   })
 
-  // Also re-stamp when the document product mode flips (dual-mode nested).
-  if (typeof document !== 'undefined') {
-    const onDocTheme = (): void => stampFrameModeSoon(theme())
-    document.addEventListener('ship:theme:change', onDocTheme)
+  /**
+   * Action: capture the nested theme host and subscribe to product theme
+   * changes via the tokens runtime API (not ambient document listeners).
+   */
+  const bindFrame: Action<void> = (node) => {
+    frameHost = node as HTMLElement
+    stampFrameMode(theme())
+    const unsub = subscribeThemeChange(() => stampFrameModeSoon(theme()))
+    return {
+      destroy: () => {
+        unsub()
+        if (frameHost === node) frameHost = null
+      },
+    }
   }
 
   const setTheme = (id: string): void => {
@@ -172,6 +188,7 @@ export function createShanty() {
     volume,
     theme,
     setTheme,
+    bindFrame,
     THEMES: SHANTY_THEMES,
     // Expose for tests / debugging without re-importing tokens.
     nestedMode: () => resolveNestedPaintMode(theme()),

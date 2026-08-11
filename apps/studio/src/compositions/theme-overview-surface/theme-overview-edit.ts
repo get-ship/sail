@@ -218,10 +218,9 @@ export function createOverviewEdit(session: ThemeSession) {
     session.sync()
   }
 
-  const onDensityClick = (e: Event) => {
+  /** Closed-over density id — no dataset bus. */
+  const onDensityClick = (d: DensityId) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[density]') as HTMLElement | null
-    const d = el?.dataset.density as DensityId | undefined
     if (!d || !['compact', 'default', 'spacious'].includes(d)) return
     void setDesignDensity(d).then(() => session.sync())
   }

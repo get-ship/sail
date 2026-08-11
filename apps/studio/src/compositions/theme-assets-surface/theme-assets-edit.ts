@@ -201,9 +201,8 @@ export function createAssetsEdit(session: ThemeSession) {
     filterGlyphs(v)
   }
 
-  const onIconSize = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[icon-size]') as HTMLElement | null
-    const size = el?.dataset.iconSize as 'sm' | 'md' | 'lg' | 'xl' | undefined
+  /** Closed-over size — no dataset bus. */
+  const onIconSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
     if (!size) return
     iconPreviewSize.set(size)
     iconSizeSmOn.set(size === 'sm')
@@ -229,10 +228,8 @@ export function createAssetsEdit(session: ThemeSession) {
     void setIconScaleStep('md', n).then(() => session.sync())
   }
 
-  const onIconScaleStep = (e: Event) => {
+  const onIconScaleStep = (key: string) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[icon-scale]') as HTMLElement | null
-    const key = el?.dataset.iconScale
     if (!key) return
     const steps = uiIconScaleSteps()
     const cur = steps.find((s) => s.key === key)
@@ -297,9 +294,7 @@ export function createAssetsEdit(session: ThemeSession) {
     runFontSearch(fontSearchQ())
   }
 
-  const onFontCategory = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[font-cat]') as HTMLElement | null
-    const cat = el?.dataset.fontCat
+  const onFontCategory = (cat: string) => {
     if (!cat) return
     fontCategory.set(cat)
     runFontSearch(fontSearchQ(), cat)

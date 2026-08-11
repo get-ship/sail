@@ -43,6 +43,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     volume: s.volume,
     theme: s.theme,
     setTheme: s.setTheme,
+    bindFrame: s.bindFrame,
     THEMES: s.THEMES,
     stopAndLike,
   }
@@ -157,9 +158,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <!-- Fill remaining viewport under sticky site chrome (`h:fill`).
-     Nested theme root: theme= attr + applyNestedTheme stamps data-mode
-     (C-TH-NEST-1; data-* banned in app .sail markup — mode is runtime). -->
-<column id="shanty-frame" theme={theme()} gap="0" style(root)>
+     Nested theme root: theme= attr + use:bindFrame → applyNestedTheme stamps
+     mode (C-TH-NEST-1; data-* banned in app .sail markup — mode is runtime). -->
+<column id="shanty-frame" use:bindFrame theme={theme()} gap="0" style(root)>
   <row align="center" gap="3" style(chrome)>
     <strong style(brand)>shanty</strong>
     <p style(tagline)>a full app in one .sail file</p>
