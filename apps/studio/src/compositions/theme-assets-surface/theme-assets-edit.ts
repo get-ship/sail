@@ -3,7 +3,7 @@
  * Font discoverer: full Google Fonts catalog via SailTheme/FontSearch (bundled),
  * live CSS preview, assign to display/body/mono, optional FontAdd vendor.
  */
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
 import { addFontFamily, getDesignState, searchFonts, setIconPack, setIconScaleStep, setTypeRole, uiIconScaleSteps } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 

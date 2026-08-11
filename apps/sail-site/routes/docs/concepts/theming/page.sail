@@ -13,7 +13,7 @@
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
-import { type ThemeId, THEMES } from '../../../../../../packages/sail/tokens/src/themes.ts'
+import { type ThemeId, THEMES } from '../../../../src/vendor/tokens-themes'
 import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-language-theming-snippets'
 

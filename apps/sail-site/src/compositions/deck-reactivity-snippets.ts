@@ -5,7 +5,7 @@
 //     its fields are signals (packages/sail/runtime/src/route-signals.ts).
 //   - `query()` is deck's live-data seam, exactly as the conformance
 //     route drives it (crates/docs/app/docs/app-conformance/app/routes/feed/page.sail).
-import { query } from '../../../../packages/sail/runtime/src/index.ts'
+import { query } from '../vendor/runtime'
 export const code = {
   // The URL as a reactive source. Navigating re-runs only the bindings that
   // read `route`, with no document reload and no component re-mount.

@@ -3,10 +3,10 @@
  * Only place facets call openTheme, setDesignMode, requestSaveTheme, addThemeToProject.
  * Facet overflow menu removed — delete/remix on Themes home.
  */
-import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
+import { mountAmbient } from '../../vendor/runtime'
 import { discardThemeEdits, getDesignState, loadThemes, openTheme, refreshBlast, redoThemeEdit, saveThemeForLeave, setDesignMode, subscribeDesign, undoThemeEdit } from '../../design/index.ts'
 import {
-import { signal, navigate } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal, navigate } from '../../vendor/runtime'
   bindPreviewHost,
   scheduleDraftPaint,
   setDraftPaintIdResolver,

@@ -62,8 +62,8 @@
 
 <controller>
 import type { Action, ControllerScope } from '@ship/sail-runtime'
-import { bindHtml } from '../../../../../../packages/sail/runtime/src/internal.ts'
-import { ensureWasm, makeCompile } from '../../../../../../packages/components/sail/viewer/src/wasm-bootstrap.ts'
+import { bindHtml } from '../../../../src/vendor/runtime'
+import { ensureWasm, makeCompile } from '../../../../src/vendor/viewer-wasm'
 import type { Scope } from './page.sail'
 import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../../src/compositions/tutorial-data'
 import {

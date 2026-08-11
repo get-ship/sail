@@ -1,4 +1,4 @@
-import type { StudioOpsMethods } from '@ship/sail-studio-client'
+import type { StudioOpsMethods } from '../vendor/studio-client'
 
 export type DensityId = 'compact' | 'default' | 'spacious'
 

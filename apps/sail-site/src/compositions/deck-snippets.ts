@@ -3,7 +3,7 @@
 // `signal(...)` to infer scope, and example code containing literal braces
 // must not be scope-scanned.
 
-import { signal } from '../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../vendor/runtime'
 export const quickstart = `my-app/
 └─ routes/
    └─ page.sail        <h1>Hello, deck.</h1>

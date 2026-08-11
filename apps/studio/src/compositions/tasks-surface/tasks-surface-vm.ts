@@ -2,12 +2,12 @@
  * Tasks surface VM — thread monitoring + chat-elements detail
  * (sail-message-list · sail-composer · sail-markdown · sail-diff).
  */
-import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
-import { getBatchItems, getSelection, getShellState } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { mountAmbient } from '../../vendor/runtime'
+import { getBatchItems, getSelection, getShellState } from '../../vendor/studio-shell'
 import { acceptLiveNode, assignComposerAttachments, assignMessageListHost, attachLatestCrop, commitIntent, createThread, getTasksState, loadThreads, reanchorToNode, selectThread, sendReply, setActorFilter, setDriftFilter, setOpenFilter, setReplyDraft, subscribeTasks, uiAnchorCard, uiAttachmentChips, uiAttachmentCount, uiAttachmentDiff, uiEmptyCopy, uiHeader as uiTasksHeader, uiMessageListItems, uiThreadMarkdown, uiThreadRows, type ActorFilter, type DriftFilter, type OpenFilter } from '../../tasks/index.ts'
 import { getEditState } from '../../edit/index.ts'
 
-import { signal, debounce } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal, debounce } from '../../vendor/runtime'
 type TaskThreadUi = {
   id: string
   title: string

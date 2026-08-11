@@ -2,8 +2,8 @@
  * Theme paint helpers — mode tables, display names, location id.
  * Pure functions used by createThemeSession (no store side effects).
  */
-import { THEMES } from '../../../../../packages/sail/tokens/src/themes.ts'
-import { themeMeta } from '../../../../../packages/sail/tokens/src/themes.ts'
+import { THEMES } from '../../vendor/tokens-themes'
+import { themeMeta } from '../../vendor/tokens-themes'
 import { appRouteBase } from '../shell/shell-page-vm'
 
 export type ModeInfo = {

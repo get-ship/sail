@@ -1,5 +1,5 @@
 /** Project root resolution + seed paths for Studio explorer. */
-import { hostSailProject } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { hostSailProject } from '../../vendor/studio-shell'
 
 export function projectPaths(proj: string): string[] {
   const root = proj.replace(/\/$/, '')

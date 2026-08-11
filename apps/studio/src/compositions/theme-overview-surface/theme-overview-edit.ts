@@ -2,7 +2,7 @@
  * Overview domain — identity editors (heroes, type, icons, density).
  * Session owns open/mode/save/path; this module owns facet writes + specimen density.
  */
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
 import { densityLabel, getDesignState, getPathValue, setBrandColor, setDesignDensity, setIconPack, setTokenValue, setTypeRole, tryPickerHex, type DensityId } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 import { FACET_DOORS } from '../theme-session/theme-nav'

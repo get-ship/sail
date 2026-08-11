@@ -2,7 +2,7 @@
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // Compile-checked by crates/sail/compiler/tests/site_snippets_compile.rs;
 // the demo snippet is the source of the live demo beside it.
-import { signal } from '../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../vendor/runtime'
 export const code = {
   demo: `<controller>
 export default controller(() => {

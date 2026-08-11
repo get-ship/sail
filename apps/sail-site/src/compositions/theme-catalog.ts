@@ -4,4 +4,4 @@ export {
   THEMES,
   type Theme,
   type ThemeId,
-} from '../../../../packages/sail/tokens/src/themes.ts'
+} from '../vendor/tokens-themes'

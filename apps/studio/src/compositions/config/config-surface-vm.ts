@@ -2,11 +2,11 @@
  * Config surface domain — settings from shell + project only (no invented knobs).
  * Config fields are read-only; danger actions stay disabled.
  */
-import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
-import { getShellState, subscribeShell } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { mountAmbient } from '../../vendor/runtime'
+import { getShellState, subscribeShell } from '../../vendor/studio-shell'
 import { resolveProjectRoot } from '../shell/project'
 
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
 export type ConfigCatId =
   | 'project'
   | 'runtime'

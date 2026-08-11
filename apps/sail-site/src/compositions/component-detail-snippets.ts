@@ -2,7 +2,7 @@
 // on the full L1 surface. Every one is a complete
 // single-file program (controller + markup where state is read) and compiles
 // as written — checked by crates/sail/compiler/tests/site_snippets_compile.rs.
-import { signal, derived } from '../../../../packages/sail/runtime/src/index.ts'
+import { signal, derived } from '../vendor/runtime'
 export const usage: Record<string, string> = {
   button: `<controller>
 export default controller(() => {

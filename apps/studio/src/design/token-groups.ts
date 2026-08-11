@@ -2,7 +2,7 @@
  * Token group inventory from the DTCG registry (~400 leaves).
  * Groups drive Design primary nav; knobs are type-aware editors.
  */
-import registry from '../../../../packages/sail/tokens/src/token-registry.json'
+import registry from '../vendor/token-registry'
 
 export type TokenKind =
   | 'color'

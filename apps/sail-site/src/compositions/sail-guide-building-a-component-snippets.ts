@@ -3,7 +3,7 @@
 // last snippet and the component running at the bottom of the page are the
 // same source. Every SAIL sample here is compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs).
-import { signal, derived } from '../../../../packages/sail/runtime/src/index.ts'
+import { signal, derived } from '../vendor/runtime'
 export const code = {
   // Step 1 — markup only. No props, no controller: a .sail file with nothing
   // but a template is a valid component.

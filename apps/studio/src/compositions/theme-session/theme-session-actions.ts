@@ -3,7 +3,7 @@
  * Keeps createThemeSession under the hard line budget.
  * No facet overflow menu (delete + remix live on Themes home).
  */
-import { navigate } from '../../../../../packages/sail/runtime/src/index.ts'
+import { navigate } from '../../vendor/runtime'
 import { addThemeToProject, getDesignState, loadThemes, previewInApp, requestSaveTheme } from '../../design/index.ts'
 import {
   confirmAddToProject,

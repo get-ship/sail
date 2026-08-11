@@ -2,12 +2,12 @@
  * Explorer VM — project file tree only (filter + open document).
  * Live Table identity is returned for `tree={tree}` on `<sail-tree>`.
  */
-import { createTable } from '../../../../../packages/components/sail/primitives/src/index.ts'
-import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
-import { getShellState } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { createTable } from '../../vendor/primitives'
+import { mountAmbient } from '../../vendor/runtime'
+import { getShellState } from '../../vendor/studio-shell'
 import { fileSailTreeNodes, getEditState, openDocument, setFilter, subscribeEdit, type SailTreeNode } from '../../edit/index.ts'
 
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
 function previewVp() {
   const shell = getShellState()
   return {

@@ -1,7 +1,7 @@
 /**
  * Color domain — curated color.* roles. Session owns open/mode/save/path.
  */
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
 import { getDesignState, getPathValue, setBrandColor, setTokenValue, tryPickerHex } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 

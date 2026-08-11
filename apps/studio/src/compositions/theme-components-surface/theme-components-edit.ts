@@ -5,7 +5,7 @@
  * - Defaults: model/registry aliases → theme color paths (never var(--*) labels).
  * - Overrides write component.* leaves; Clear removes them.
  */
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
 import { L1_CATALOG, allKnobs, clearTokenValue, getDesignState, getPathValue, isParkedComponentStateLeaf, l1Label, setTokenValue, type L1Id, type TokenKnob } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 import {

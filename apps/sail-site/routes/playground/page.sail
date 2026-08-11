@@ -42,7 +42,7 @@
 
 <controller>
 import type { Action, ControllerScope } from '@ship/sail-runtime'
-import { ensureWasm, makeCompile } from '../../../../packages/components/sail/viewer/src/wasm-bootstrap.ts'
+import { ensureWasm, makeCompile } from '../../src/vendor/viewer-wasm'
 import type { Scope } from './page.sail'
 import {
   createDebouncer,

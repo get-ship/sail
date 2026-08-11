@@ -3,7 +3,7 @@
  * Consumes SailInspect / SailRender / SailAuthoring via injected OpsClient (T-I2).
  */
 
-import { type ViewportId, clearSelection, getSelection, getShellState, openTab, selectNode, setModelRev, setSailPath, setTabDirty, subscribeSelection } from '../../../../packages/sail/studio-shell/src/index.ts'
+import { type ViewportId, clearSelection, getSelection, getShellState, openTab, selectNode, setModelRev, setSailPath, setTabDirty, subscribeSelection } from '../vendor/studio-shell'
 import {
   elementRows,
   fileRows as _fileRows,

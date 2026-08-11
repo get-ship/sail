@@ -1,6 +1,6 @@
 // Code snippets for the introduction. The `page` snippet IS the live demo's
 // program; the tour snippets are deliberately tiny. All compiled by the build.
-import { signal, derived, effect, query, filteredList, applyTheme } from '../../../../packages/sail/runtime/src/index.ts'
+import { signal, derived, effect, query, filteredList, applyTheme } from '../vendor/runtime'
 export const code = {
   // Section 2 — the whole demo, six lines. The page renders these same lines live.
   hello: `const playing = signal(true)

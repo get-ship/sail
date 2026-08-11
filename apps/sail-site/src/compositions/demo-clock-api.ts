@@ -3,7 +3,7 @@
 // (sail-controller-import-convention). Mirrors the shape of a host-injected
 // `api.demo.clock()` client without the bare `ship` package call surface.
 
-import { query } from '../../../../packages/sail/runtime/src/index.ts'
+import { query } from '../vendor/runtime'
 export const api = {
   demo: {
     // Promise form is enough for the docs compile gate + query() keying;

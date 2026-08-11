@@ -1,10 +1,10 @@
 /** Studio chrome VM — activity rail (real links) + status bar + ops boot. */
-import { hotkeys, mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
-import { bindBatchToShell, bindSelectionToShell, getBatchItems, getShellState, handleBridgeRegion, isStudioMessage, selectFromBridge, setBadges, setChecksPanelOpen, setSailPath, setThemeMode, subscribeShell, toggleChecksPanel } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { hotkeys, mountAmbient } from '../../vendor/runtime'
+import { bindBatchToShell, bindSelectionToShell, getBatchItems, getShellState, handleBridgeRegion, isStudioMessage, selectFromBridge, setBadges, setChecksPanelOpen, setSailPath, setThemeMode, subscribeShell, toggleChecksPanel } from '../../vendor/studio-shell'
 import { bindEditSelection, createOpsClient, getEditState, openDocument, saveActiveSource, seedFilesFromPaths, setOpsClient, setProjectRoot, subscribeEdit } from '../../edit/index.ts'
 import { getChecksState, loadFindings, setChecksOpsClient, setEditorSetting, setProjectRoot as setChecksProjectRoot, subscribeChecks } from '../../checks/index.ts'
 
-import { signal, effect, navigate } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal, effect, navigate } from '../../vendor/runtime'
 function getChecksStateSafe(): ReturnType<typeof getChecksState> | null {
   try {
     return getChecksState()

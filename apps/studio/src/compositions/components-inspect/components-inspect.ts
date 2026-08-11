@@ -1,10 +1,10 @@
 /** Components inspect domain — surface picker, IR tree, instance panels (SailInspect). */
-import { createTable } from '../../../../../packages/components/sail/primitives/src/index.ts'
-import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
+import { createTable } from '../../vendor/primitives'
+import { mountAmbient } from '../../vendor/runtime'
 import { activeDoc, elementSailTreeNodes, getEditState, getOpsClient, subscribeEdit, type SailTreeNode } from '../../edit/index.ts'
 import { COMPONENTS_CATALOG } from '../../../components.gen'
 import {
-import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal } from '../../vendor/runtime'
   extractTagName,
   isProjectComponentPath,
   projectComponentId,

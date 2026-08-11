@@ -246,6 +246,9 @@ export function setRouterPort(port: RouterPort): void {
  * navigate('/login', { replace: true })
  * ```
  */
+/** Host navigate (scroll restoration). Author ambient inject uses
+ * `packages/sail/runtime` `navigate` — both call `__shipRouterPort` when set
+ * (SSOT). No-port fallback: runtime updates history+signals; deck also scrolls. */
 export function navigate(path: string, opts: { replace?: boolean } = {}): void {
   const port = globalThis.__shipRouterPort
   if (port) {

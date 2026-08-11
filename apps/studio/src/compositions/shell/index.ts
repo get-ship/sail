@@ -1,4 +1,4 @@
-export * from '../../../../../packages/sail/studio-shell/src/index.ts'
+export * from '../../vendor/studio-shell'
 export {
   activityFromPath,
   appRouteBase,

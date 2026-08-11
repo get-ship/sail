@@ -1,5 +1,5 @@
-import type { BatchItem } from '@ship/sail-studio-shell'
-import { clearBatch, getBatchItems, removeBatchItem } from '../../../../packages/sail/studio-shell/src/index.ts'
+import type { BatchItem } from '../vendor/studio-shell'
+import { clearBatch, getBatchItems, removeBatchItem } from '../vendor/studio-shell'
 import {
   createThread,
   getTasksOpsClient,

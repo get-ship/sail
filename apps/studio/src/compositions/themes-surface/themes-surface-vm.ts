@@ -10,12 +10,12 @@
  * Delete + Add to project require confirm. UI never says "fork".
  * No fake enable-off switch; no session-default star theater.
  */
-import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
+import { mountAmbient } from '../../vendor/runtime'
 import { addThemeToProject, deleteTheme, getDesignState, loadThemes, openTheme, subscribeDesign, type ThemeFile } from '../../design/index.ts'
-import { THEMES } from '../../../../../packages/sail/tokens/src/themes.ts'
+import { THEMES } from '../../vendor/tokens-themes'
 import { appRouteBase } from '../shell/shell-page-vm'
 import {
-import { signal, navigate } from '../../../../../packages/sail/runtime/src/index.ts'
+import { signal, navigate } from '../../vendor/runtime'
   confirmAddToProject,
   confirmDeleteTheme,
   confirmNewTheme,

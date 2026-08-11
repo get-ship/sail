@@ -6,10 +6,10 @@ import {
   mountAmbient,
   navigate,
   signal,
-} from '../../../../../packages/sail/runtime/src/index.ts'
+} from '../../vendor/runtime'
 import { getEditState, openDocument, requestSourceScroll } from '../../edit/index.ts'
 import { createThread } from '../../tasks/index.ts'
-import { getShellState } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { getShellState } from '../../vendor/studio-shell'
 import { buildAgentBrief, buildNewComponentBrief } from '../../components/brief'
 import type {
   ComponentMode,

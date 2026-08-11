@@ -2,7 +2,7 @@
 // writer. Imported by <store-counter> AND the chapter page — that's the
 // demonstration: neither knows about the other, both see the same state.
 
-import { defineStore, signal } from '../../../../packages/sail/runtime/src/index.ts'
+import { defineStore, signal } from '../vendor/runtime'
 export const tally = defineStore('docs.tally', () => {
   const clicks = signal(0)
   const add = () => clicks.set((n) => n + 1)

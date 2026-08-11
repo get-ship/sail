@@ -1,6 +1,6 @@
 // Code snippets for the theming page. Every Sail sample is compiled by the
 // build (crates/sail/compiler/tests/site_snippets_compile.rs).
-import { applyTheme, readStoredTheme, persistTheme } from '../../../../packages/sail/runtime/src/index.ts'
+import { applyTheme, readStoredTheme, persistTheme } from '../vendor/runtime'
 export const code = {
   picker: `<!-- the whole theming UI. Trigger, panel, previews, keyboard,
      persistence — one tag. -->

@@ -8,7 +8,7 @@
 // TypeScript) rather than naming it bare in a template expression: a bare
 // `{route.pathname()}` is exactly the compile error this page documents, and it
 // would — correctly — fail the suite.
-import { derived } from '../../../../packages/sail/runtime/src/index.ts'
+import { derived } from '../vendor/runtime'
 export const code = {
   // How this very page reads the capability deck grants it.
   read: `<controller>
