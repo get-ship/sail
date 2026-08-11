@@ -44,15 +44,33 @@ const SETUP_MARKER = './__tutorial__.controller.ts'
  * injects them via wrap_controller_body. We do the same before inlining.
  * Each entry: [authored, exported] — aliased when they differ (mount).
  */
+// Mirrors crates/sail/compiler/src/runtime_ambient.rs (S5.1 + S5.2). Keep in
+// lockstep so lesson controllers that drop package imports still inject.
 const RUNTIME_AMBIENT: Array<[string, string]> = [
+  ['__invalidate', '__invalidate'],
+  ['applyTheme', 'applyTheme'],
   ['batch', 'batch'],
   ['controller', 'controller'],
+  ['debounce', 'debounce'],
+  ['defineStore', 'defineStore'],
   ['derived', 'derived'],
   ['effect', 'effect'],
+  ['filteredList', 'filteredList'],
+  ['form', 'form'],
+  ['interval', 'interval'],
   ['mount', 'mountAmbient'],
+  ['mutation', 'mutation'],
+  ['navigate', 'navigate'],
   ['onCleanup', 'onCleanup'],
+  ['persistTheme', 'persistTheme'],
+  ['provideStore', 'provideStore'],
+  ['query', 'query'],
+  ['readStoredTheme', 'readStoredTheme'],
   ['signal', 'signal'],
+  ['theme', 'theme'],
+  ['timeline', 'timeline'],
   ['untrack', 'untrack'],
+  ['useStore', 'useStore'],
 ]
 const RUNTIME_SPECIFIER = '@ship/sail-runtime/internal'
 
@@ -197,12 +215,14 @@ function buildMountModule(opts: {
     ? wrapControllerBody(tsToEsm(opts.controllerSrc))
     : 'const __tutSetup = { setup: () => ({}) };'
   if (opts.controllerSrc) {
-    // Relative compositions → package export paths the app can resolve.
+    // Lesson mock clients live under app FileKind Composition home
+    // (`@/compositions/*` / project_map SSOT). Rewrite relative or alias forms
+    // onto that specifier so bundler + future importmap wiring share one shape.
     controller = controller.replace(
       /from\s*["'][^"']*compositions\/([^"']+)["']/g,
       (_m, bare: string) => {
         const key = bare.replace(/\.ts$/, '')
-        return `from ${JSON.stringify(`@ship/sail-tutorial/compositions/${key}`)}`
+        return `from ${JSON.stringify(`@/compositions/${key}`)}`
       },
     )
     controller = controller.replace(/\bexport\s+default\s+/g, 'const __tutSetup = ')

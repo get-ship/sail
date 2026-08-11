@@ -6,8 +6,7 @@
 -->
 
 <controller>
-import { query } from '@ship/sail-runtime'
-import { directory } from '../../../compositions/tut-05-directory-client'
+import { directory } from '@/compositions/tut-05-directory-client'
 
 export default controller(() => {
     const breakApi = signal(false)

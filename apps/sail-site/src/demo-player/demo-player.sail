@@ -20,7 +20,6 @@
 
 <controller>
 import type { Scope } from './demo-player.sail'
-import { interval } from '@ship/sail-runtime'
 
 export default controller((ctx: Scope) => {
   const position = signal(23)

@@ -7,8 +7,7 @@
 </scope>
 
 <controller>
-import { navigate } from '@ship/deck/router'
-import { setChecksPanelOpen } from '@ship/sail-studio-shell'
+import { setChecksPanelOpen } from '../../../../packages/sail/studio-shell/src/index.ts'
 import { appRouteBase } from '../../src/compositions/shell/shell-rail'
 
 export default controller(() => {

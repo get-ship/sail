@@ -1,5 +1,6 @@
 // Code snippets for the introduction. The `page` snippet IS the live demo's
 // program; the tour snippets are deliberately tiny. All compiled by the build.
+import { signal, derived, effect, query, filteredList, applyTheme } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   // Section 2 — the whole demo, six lines. The page renders these same lines live.
   hello: `const playing = signal(true)
@@ -28,7 +29,6 @@ export const code = {
 { "sx": true, "raw_containers": true,
   "stylesheets": [], "network": ["self"] }`,
   page: `<controller>
-import { filteredList } from '@ship/sail-runtime'
 export default controller(() => {
   const people = signal([
     { id: 1, name: 'Ada Lovelace', status: 'active' },
@@ -79,6 +79,6 @@ effect(() => console.log(count()))   // re-runs on change`,
   fx: `<card style({ animate: enter({ opacity: 'fade', translate-y: 'spring:gentle' }) })>
     …</card>`,
 
-  theming: `import { applyTheme } from '@ship/tokens/themes'
+  theming: `
 applyTheme('console')   // one attribute; every component follows`,
 }

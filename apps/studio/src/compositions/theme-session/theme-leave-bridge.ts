@@ -2,7 +2,7 @@
  * Bridge: shell activity rail → Themes dirty leave guard.
  * Session registers while a facet is mounted; shell asks before leaving an open theme editor.
  */
-import { getDesignState } from '@ship/studio/design'
+import { getDesignState } from '../../design/index.ts'
 import { pathForActivity } from '../shell/shell-page-vm'
 
 /**

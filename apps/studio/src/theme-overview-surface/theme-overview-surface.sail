@@ -64,7 +64,6 @@
 </partial>
 
 <controller>
-import { effect, mountAmbient, signal } from '@ship/sail-runtime'
 import { createThemeSession } from '../compositions/theme-session/theme-session'
 import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
 import { createOverviewEdit } from '../compositions/theme-overview-surface/theme-overview-edit'
@@ -81,7 +80,7 @@ export default controller(() => {
   const densityPad = signal(overview.densityPad())
   const specimenGap = signal(overview.specimenGap())
   const specimenStackGap = signal(overview.specimenStackGap())
-  mountAmbient(() =>
+  mount(() =>
     effect(() => {
       primaryHex.set(overview.primaryHex())
       secondaryHex.set(overview.secondaryHex())

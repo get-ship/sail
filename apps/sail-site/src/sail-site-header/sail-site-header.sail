@@ -21,7 +21,6 @@
 
 <controller>
 import { siteTokenCss } from '../compositions/site-token-css'
-import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
 void siteTokenCss
 
 function sectionFor(p: string): string {

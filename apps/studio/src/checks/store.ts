@@ -1,5 +1,5 @@
-import { getShellState, selectNode, setBadges } from '@ship/sail-studio-shell'
-import { STUDIO_CHANNEL } from '@ship/sail-studio-bridge'
+import { getShellState, selectNode, setBadges } from '../../../../packages/sail/studio-shell/src/index.ts'
+import { STUDIO_CHANNEL } from '../../../../packages/sail/studio-bridge/src/index.ts'
 import {
   autoFixOnSave, bothViewportsRan, countSeverities, enrichNodeIds,
   filterFindings, fileOptions, nodeMapFromModelDiagnostics,

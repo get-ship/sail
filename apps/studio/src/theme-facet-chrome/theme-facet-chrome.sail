@@ -19,7 +19,6 @@
 </scope>
 
 <controller>
-import { mountAmbient } from '@ship/sail-runtime'
 import type { ThemeSession } from '../compositions/theme-session/theme-session'
 
 export default controller(() => {
@@ -39,7 +38,7 @@ export default controller(() => {
     })
   })
 
-  mountAmbient(() =>
+  mount(() =>
     effect(() => {
       leaveOpen.set(sessionSig()?.leaveOpen() ?? false)
     }),

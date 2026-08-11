@@ -2,8 +2,9 @@
  * Cross-route activity bag for Components (Library ↔ Inspect remounts).
  * Backed by `persisted` (session storage) so remounts keep selection/filter.
  */
-import { persisted } from '@ship/sail-runtime'
+import { persisted } from '../../../../../packages/sail/runtime/src/index.ts'
 
+import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
 export type ComponentsActivityBag = {
   selectedId: string
   filterQuery: string

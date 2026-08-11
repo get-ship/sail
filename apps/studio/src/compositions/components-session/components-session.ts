@@ -2,15 +2,14 @@
  * Components page session — mode, selection, toast, open-edit, thread, brief.
  * Domain modules register via onSync; no hand-rolled listener Sets as product stores.
  */
-import { mountAmbient, signal } from '@ship/sail-runtime'
-import { navigate } from '@ship/deck/router'
 import {
-  getEditState,
-  openDocument,
-  requestSourceScroll,
-} from '@ship/studio/edit'
-import { createThread } from '@ship/studio/tasks'
-import { getShellState } from '@ship/sail-studio-shell'
+  mountAmbient,
+  navigate,
+  signal,
+} from '../../../../../packages/sail/runtime/src/index.ts'
+import { getEditState, openDocument, requestSourceScroll } from '../../edit/index.ts'
+import { createThread } from '../../tasks/index.ts'
+import { getShellState } from '../../../../../packages/sail/studio-shell/src/index.ts'
 import { buildAgentBrief, buildNewComponentBrief } from '../../components/brief'
 import type {
   ComponentMode,

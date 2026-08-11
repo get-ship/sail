@@ -12,8 +12,7 @@
  * Wire:
  *   bindPreviewHost(el) once per specimen; store emit → scheduleDraftPaint.
  */
-import { theme } from '@ship/sail-runtime'
-import { getDesignState } from '@ship/studio/design'
+import { getDesignState } from '../../design/index.ts'
 
 export type DraftPaintOpts = {
   doc: Record<string, unknown> | null

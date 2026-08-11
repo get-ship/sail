@@ -3,16 +3,8 @@
  * Font discoverer: full Google Fonts catalog via SailTheme/FontSearch (bundled),
  * live CSS preview, assign to display/body/mono, optional FontAdd vendor.
  */
-import { signal } from '@ship/sail-runtime'
-import {
-  addFontFamily,
-  getDesignState,
-  searchFonts,
-  setIconPack,
-  setIconScaleStep,
-  setTypeRole,
-  uiIconScaleSteps,
-} from '@ship/studio/design'
+import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { addFontFamily, getDesignState, searchFonts, setIconPack, setIconScaleStep, setTypeRole, uiIconScaleSteps } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 
 const CURATED_GLYPHS = [

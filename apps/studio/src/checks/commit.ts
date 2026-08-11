@@ -2,11 +2,7 @@
  * Push applied fix text into the edit buffer (+ optional disk write).
  * Checks store owns sourceByPath; edit store owns the open document.
  */
-import {
-  getEditState,
-  getOpsClient,
-  setSourceText,
-} from '@ship/studio/edit'
+import { getEditState, getOpsClient, setSourceText } from '../edit/index.ts'
 
 function pathsMatch(a: string, b: string): boolean {
   if (a === b) return true

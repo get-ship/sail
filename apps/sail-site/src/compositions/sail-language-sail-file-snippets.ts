@@ -1,6 +1,7 @@
 // Snippets for /docs/concepts/sail-file — SLICES of one real component
 // (apps/sail-site/src/departures-board/departures-board.sail, the board at the
 // top of the page), walked part by part. Never the whole file at once.
+import { signal, interval } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   // Only the template is required. Scope is optional; a controller is only
   // needed when the component has state or handlers — never an empty one.

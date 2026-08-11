@@ -29,7 +29,6 @@
 </scope>
 
 <controller>
-import { signal } from '@ship/sail-runtime'
 import type { ThemeSession } from '../compositions/theme-session/theme-session'
 import { watchPreviewHost } from '../compositions/theme-session/bind-preview-host'
 

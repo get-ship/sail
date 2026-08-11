@@ -38,7 +38,7 @@
 <controller>
 // Replay clears the hand and re-deals after exits finish.
 
-import { debounce, timeline, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-language-animation-snippets'
 

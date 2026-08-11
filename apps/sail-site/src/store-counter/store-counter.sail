@@ -12,7 +12,6 @@
 </scope>
 
 <controller>
-import { useStore } from '@ship/sail-runtime'
 import { tally } from '../stores/counter-store'
 
 export default controller(() => {

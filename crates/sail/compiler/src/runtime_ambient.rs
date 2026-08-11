@@ -36,15 +36,15 @@ pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
 /// `doc` is one line of prose — the reference generator's source for the
 /// controller-vocabulary section; it plays no role in import injection.
 pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
-    // `__invalidate` is never authored — it's the compiler's lowering
-    // target for `invalidate(ref)` (see `check::query_keys`), so it can
-    // only ever be REFERENCED (by the rewrite pass's own emitted call),
-    // never bound by the author. Ambient injection is exactly the "self-
-    // contained emitted module" property this table already exists for.
     (
         "__invalidate",
         "__invalidate",
         "compiler-only lowering target for `invalidate(ref)`; never authored directly",
+    ),
+    (
+        "applyTheme",
+        "applyTheme",
+        "paint the document theme session (tokens API on runtime ambient)",
     ),
     (
         "batch",
@@ -77,6 +77,16 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "run a side effect on mount and whenever its read signals change",
     ),
     (
+        "filteredList",
+        "filteredList",
+        "derive a filtered/sorted list signal from a source list",
+    ),
+    (
+        "form",
+        "form",
+        "reactive form state helper",
+    ),
+    (
         "interval",
         "interval",
         "run a callback on a fixed period while the controller is mounted",
@@ -92,9 +102,19 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "public write primitive — returns a Mutation handle",
     ),
     (
+        "navigate",
+        "navigate",
+        "navigate to a path via the host router port",
+    ),
+    (
         "onCleanup",
         "onCleanup",
         "register a callback to run when the controller tears down",
+    ),
+    (
+        "persistTheme",
+        "persistTheme",
+        "persist the chosen theme id for next boot",
     ),
     (
         "provideStore",
@@ -107,6 +127,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "public read primitive — compiler derives the cache key",
     ),
     (
+        "readStoredTheme",
+        "readStoredTheme",
+        "read the persisted theme id",
+    ),
+    (
         "signal",
         "signal",
         "a reactive value cell — read by calling it, written by calling it with a value",
@@ -115,6 +140,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "theme",
         "theme",
         "runtime theme surface — current / preview / commit / applyScope",
+    ),
+    (
+        "timeline",
+        "timeline",
+        "compose multi-track motion timelines",
     ),
     (
         "untrack",

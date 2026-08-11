@@ -7,7 +7,7 @@
 -->
 
 <controller>
-import { THEMES, readStoredTheme, type Theme, type ThemeId } from '@ship/tokens/themes'
+import { type Theme, type ThemeId, THEMES } from '@/compositions/theme-catalog'
 
 export default controller(() => {
   const active = signal<ThemeId>(readStoredTheme())
@@ -18,7 +18,7 @@ export default controller(() => {
     // TODO 1: this only updates the label — the page never repaints.
     // applyTheme(id) is the only writer of the theme state (data-theme +
     // data-mode on <html>); persistTheme(id) makes the choice survive a
-    // reload. Import both from '@ship/tokens/themes' and call them here.
+    // reload. Call ambient applyTheme + persistTheme here (no package import).
     pick: (id: ThemeId): void => {
       active.set(id)
     },

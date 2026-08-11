@@ -2,6 +2,7 @@
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
 // inside these strings. The graph snippet IS the page's own controller — the
 // source beside the live demo matches what the demo runs.
+import { defineStore, signal, derived, effect, useStore, interval, debounce } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   graph: `<controller>
 export default controller(() => {
@@ -16,7 +17,7 @@ export default controller(() => {
 })
 </controller>`,
 
-  signal: `import { signal } from '@ship/sail-runtime'
+  signal: `
 
 const count = signal(0)
 
@@ -24,7 +25,7 @@ count()                 // read  → 0
 count.set(5)            // write → 5
 count.set((n) => n + 1) // functional update → 6`,
 
-  derived: `import { signal, derived } from '@ship/sail-runtime'
+  derived: `
 
 const count = signal(2)
 const doubled = derived(() => count() * 2)
@@ -33,7 +34,7 @@ doubled()      // 4
 count.set(10)
 doubled()      // 20 — recomputed lazily, only when read`,
 
-  effect: `import { signal, effect, debounce } from '@ship/sail-runtime'
+  effect: `
 
 const count = signal(0)
 const status = signal('')
@@ -49,7 +50,7 @@ const dispose = effect(() => {
 count.set(1)   // cancels the pending update, schedules a fresh one
 // dispose()   // stop the effect entirely`,
 
-  batch: `import { batch } from '@ship/sail-runtime'
+  batch: `
 
 batch(() => {
   first.set('Grace')
@@ -57,7 +58,7 @@ batch(() => {
 })
 // fullName recomputes once; effects that read it run once`,
 
-  untrack: `import { effect, untrack } from '@ship/sail-runtime'
+  untrack: `
 
 effect(() => {
   const text = draft()                    // tracked — re-runs on edits
@@ -90,7 +91,6 @@ effect(() => {
 
   // Plain modules are NOT ambient — import signal/defineStore as usual.
   storeDef: `// counter-store.ts — outside any component
-import { defineStore, signal } from '@ship/sail-runtime'
 
 export const tally = defineStore('docs.tally', () => {
   const clicks = signal(0)
@@ -99,7 +99,7 @@ export const tally = defineStore('docs.tally', () => {
 })`,
 
   // useStore is not ambient; controller/signal are.
-  storeUse: `import { useStore } from '@ship/sail-runtime'
+  storeUse: `
 import { tally } from '@/stores/counter-store'
 
 export default controller(() => {
@@ -107,7 +107,7 @@ export default controller(() => {
   return { clicks, add }
 })`,
 
-  composition: `import { signal, interval } from '@ship/sail-runtime'
+  composition: `
 
 // A composition: state + the interval that maintains it, as one function.
 export function ticker(ms: number) {

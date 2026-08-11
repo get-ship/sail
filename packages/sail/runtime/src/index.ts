@@ -176,3 +176,18 @@ export type {
   ComponentFactory,
   ComponentSchema,
 } from './component'
+
+// Ambient navigate (S5.2) — host router port; inject via RUNTIME_AMBIENT.
+export { navigate } from './navigate'
+export type { NavigateOpts } from './navigate'
+
+// Theme session writers on runtime ambient (SPEC-AMBIENT-SURFACE-1 §3).
+export {
+  applyTheme,
+  persistTheme,
+  readStoredTheme,
+  applyMode,
+  bootTheme,
+  persistMode,
+  readStoredMode,
+} from './theme-session'

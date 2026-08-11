@@ -5,14 +5,8 @@
  * Radius master + recipes write mock ramp ratios sm/md/lg/xl = 0.5/1/1.5/2 × md
  * (absolute steps; not proportional-from-previous scaleTogether).
  */
-import { signal } from '@ship/sail-runtime'
-import {
-  getDesignState,
-  getPathValue,
-  parseDimensionPx,
-  setRadiusFamily,
-  setTokenValue,
-} from '@ship/studio/design'
+import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
+import { getDesignState, getPathValue, parseDimensionPx, setRadiusFamily, setTokenValue } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 import {
   ELEV_STEPS,

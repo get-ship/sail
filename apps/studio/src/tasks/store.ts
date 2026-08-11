@@ -1,8 +1,4 @@
-import {
-  clearBatch,
-  getBatchItems,
-  removeBatchItem,
-} from '@ship/sail-studio-shell'
+import { clearBatch, getBatchItems, removeBatchItem } from '../../../../packages/sail/studio-shell/src/index.ts'
 import { parseListItem, parseThread } from './parse'
 import { __resetThumbsForTests } from './thumbs'
 import type {

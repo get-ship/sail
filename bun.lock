@@ -27,7 +27,6 @@
         "@ship/sail-mermaid": "workspace:*",
         "@ship/sail-primitives": "workspace:*",
         "@ship/sail-runtime": "workspace:*",
-        "@ship/sail-tutorial": "workspace:*",
         "@ship/sail-viewer": "workspace:*",
         "@ship/tokens": "workspace:*",
       },
@@ -354,17 +353,6 @@
       "name": "@ship/sail-tsconfig",
       "version": "0.1.0",
     },
-    "packages/sail/tutorial": {
-      "name": "@ship/sail-tutorial",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-runtime": "workspace:*",
-        "@ship/tokens": "workspace:*",
-      },
-      "devDependencies": {
-        "typescript": "^5.5.0",
-      },
-    },
   },
   "trustedDependencies": [
     "lightningcss",
@@ -556,8 +544,6 @@
     "@ship/sail-test": ["@ship/sail-test@workspace:packages/sail/sail-test"],
 
     "@ship/sail-tsconfig": ["@ship/sail-tsconfig@workspace:packages/sail/tsconfig"],
-
-    "@ship/sail-tutorial": ["@ship/sail-tutorial@workspace:packages/sail/tutorial"],
 
     "@ship/sail-viewer": ["@ship/sail-viewer@workspace:packages/components/sail/viewer"],
 

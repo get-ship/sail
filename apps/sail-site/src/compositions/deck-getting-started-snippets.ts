@@ -1,6 +1,7 @@
 // Code snippets for the Deck getting-started page. Plain data module — never
 // scope-scanned by the compiler.
 
+import { signal } from '../../../../packages/sail/runtime/src/index.ts'
 export const pageExample = `<!-- routes/page.sail -->
 <main>
   <h1>Hello, deck.</h1>

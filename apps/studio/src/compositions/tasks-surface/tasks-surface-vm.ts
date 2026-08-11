@@ -2,40 +2,12 @@
  * Tasks surface VM — thread monitoring + chat-elements detail
  * (sail-message-list · sail-composer · sail-markdown · sail-diff).
  */
-import { debounce, mountAmbient, signal } from '@ship/sail-runtime'
-import { getBatchItems, getSelection, getShellState } from '@ship/sail-studio-shell'
-import {
-  acceptLiveNode,
-  assignComposerAttachments,
-  assignMessageListHost,
-  attachLatestCrop,
-  commitIntent,
-  createThread,
-  getTasksState,
-  loadThreads,
-  reanchorToNode,
-  selectThread,
-  sendReply,
-  setActorFilter,
-  setDriftFilter,
-  setOpenFilter,
-  setReplyDraft,
-  subscribeTasks,
-  uiAnchorCard,
-  uiAttachmentChips,
-  uiAttachmentCount,
-  uiAttachmentDiff,
-  uiEmptyCopy,
-  uiHeader as uiTasksHeader,
-  uiMessageListItems,
-  uiThreadMarkdown,
-  uiThreadRows,
-  type ActorFilter,
-  type DriftFilter,
-  type OpenFilter,
-} from '@ship/studio/tasks'
-import { getEditState } from '@ship/studio/edit'
+import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
+import { getBatchItems, getSelection, getShellState } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { acceptLiveNode, assignComposerAttachments, assignMessageListHost, attachLatestCrop, commitIntent, createThread, getTasksState, loadThreads, reanchorToNode, selectThread, sendReply, setActorFilter, setDriftFilter, setOpenFilter, setReplyDraft, subscribeTasks, uiAnchorCard, uiAttachmentChips, uiAttachmentCount, uiAttachmentDiff, uiEmptyCopy, uiHeader as uiTasksHeader, uiMessageListItems, uiThreadMarkdown, uiThreadRows, type ActorFilter, type DriftFilter, type OpenFilter } from '../../tasks/index.ts'
+import { getEditState } from '../../edit/index.ts'
 
+import { signal, debounce } from '../../../../../packages/sail/runtime/src/index.ts'
 type TaskThreadUi = {
   id: string
   title: string

@@ -3,13 +3,9 @@
 // tokens theme-change subscription API (no ambient document lookup).
 
 import type { Action } from '@ship/sail-runtime'
-import { derived, effect, interval, signal } from '@ship/sail-runtime'
-import {
-  applyNestedTheme,
-  resolveNestedPaintMode,
-  subscribeThemeChange,
-} from '@ship/tokens/themes'
+import { applyNestedTheme, resolveNestedPaintMode, subscribeThemeChange } from '../../../../packages/sail/tokens/src/themes.ts'
 
+import { signal, derived, effect, interval } from '../../../../packages/sail/runtime/src/index.ts'
 export interface Track {
   id: number
   title: string

@@ -5,6 +5,7 @@
 //     its fields are signals (packages/sail/runtime/src/route-signals.ts).
 //   - `query()` is deck's live-data seam, exactly as the conformance
 //     route drives it (crates/docs/app/docs/app-conformance/app/routes/feed/page.sail).
+import { query } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   // The URL as a reactive source. Navigating re-runs only the bindings that
   // read `route`, with no document reload and no component re-mount.
@@ -21,7 +22,6 @@ export const code = {
   // patches \`t\` as values arrive; only the bindings reading it re-render.
   liveData: `<!-- routes/feed/page.sail — subscribe a route to live server data -->
 <controller>
-import { query } from '@ship/sail-runtime'
 // Imported client under src/compositions — query() derives its cache key
 // from the member path. (Host-injected clients use the same call shape
 // once declared in the app manifest; never \`import { call } from 'ship'\`.)

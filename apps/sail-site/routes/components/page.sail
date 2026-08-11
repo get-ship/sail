@@ -38,7 +38,7 @@
 </scope>
 
 <controller>
-import { filteredList, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry } from '../../src/compositions/component-catalog'
 

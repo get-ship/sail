@@ -3,8 +3,8 @@
  * (variant chips + blurbs) without importing the docs app.
  * Stage keys are camelCase zero-arg gates: stage.button(), stage.menuItem().
  */
-import type { L1Id } from '@ship/studio/design'
-import { L1_CATALOG, l1Label } from '@ship/studio/design'
+import type { L1Id } from '../../design/index.ts'
+import { L1_CATALOG, l1Label } from '../../design/index.ts'
 
 export type ViewerPropRow = { name: string; type: string; desc: string }
 

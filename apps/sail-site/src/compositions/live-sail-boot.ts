@@ -14,4 +14,4 @@ export {
   type CompileFn,
   type PreviewMount,
   type CodeEditorHost,
-} from '@ship/sail-viewer/same-doc-mount'
+} from '../../../../packages/components/sail/viewer/src/same-doc-mount.ts'

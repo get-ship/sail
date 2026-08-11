@@ -18,7 +18,6 @@
 </scope>
 
 <controller>
-import { debounce, interval } from '@ship/sail-runtime'
 
 const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík']
 

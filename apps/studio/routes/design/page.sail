@@ -7,7 +7,6 @@
 </scope>
 
 <controller>
-import { navigate } from '@ship/deck/router'
 import { appRouteBase } from '../../src/compositions/shell/shell-rail'
 
 export default controller(() => {

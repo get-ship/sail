@@ -66,7 +66,7 @@
 
 <controller>
 // Hero word cycler (i → WORDS) and reactivity card counter (ticks).
-import { interval, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
 const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Animation', 'Themes']

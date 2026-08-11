@@ -2,9 +2,9 @@
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // The query() controller + match-on-LiveState template are compile-checked
 // against the in-repo sail-compiler.
+import { signal, query } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   demo: `<controller>
-import { query } from '@ship/sail-runtime'
 import { api } from '../../../../src/compositions/users-demo'
 export default controller(() => {
   const attempt = signal(1)
@@ -28,7 +28,6 @@ export default controller(() => {
 </match>`,
 
   source: `// the <controller> block body (inline in users.sail)
-import { query } from '@ship/sail-runtime'
 // an imported client under src/compositions — query() derives the key from it
 import { api } from '../../../../src/compositions/users-demo'
 

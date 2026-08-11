@@ -17,7 +17,7 @@
 </scope>
 
 <controller>
-import { form, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { profileApi, type Profile } from '../../../../src/compositions/profile-api'
 import { code } from '../../../../src/compositions/sail-guide-forms-snippets'

@@ -2,6 +2,7 @@
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns.
 // Every Sail sample is compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs).
+import { signal } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   attach: `<!-- use: hands the element to a function. Nothing to store. -->
 <textarea use:autosize></textarea>
@@ -9,8 +10,6 @@ export const code = {
 
   author: `// src/actions/autofocus.ts — author hatch under the action floor.
 // No style/class, no signal/store/query, no fetch, host-only.
-import type { Action } from '@ship/sail-runtime'
-
 export const autofocus: Action<void> = (node) => {
   const el = node as HTMLElement
   const id = requestAnimationFrame(() => el.focus())

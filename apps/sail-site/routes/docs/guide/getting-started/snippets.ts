@@ -1,5 +1,6 @@
 // Code snippets for getting-started. Sail samples are compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs).
+import { signal } from '../../../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   toolchain: `# Alpha: today the toolchain builds from source, once.
 # You need Bun and a Rust toolchain — for now.

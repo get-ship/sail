@@ -6,12 +6,7 @@
  * that via registry metadata → path, then read concrete values from the theme doc.
  * Never treat `var(--*)` as product copy.
  */
-import {
-  getKnob,
-  getPathValue,
-  tryPickerHex,
-  type TokenKnob,
-} from '@ship/studio/design'
+import { getKnob, getPathValue, tryPickerHex, type TokenKnob } from '../../design/index.ts'
 
 /**
  * Recover a DTCG alias from a knob base value.

@@ -2,9 +2,9 @@
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // Every snippet here IS the live demo's code (or a focused slice of it);
 // the Sail-shaped ones are compile-checked by site_snippets_compile.rs.
+import { signal, mutation, form } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   demo: `<controller>
-import { form } from '@ship/sail-runtime'
 import { profileApi } from '../../../../src/compositions/profile-api'
 
 export default controller(() => {
@@ -66,7 +66,7 @@ export default controller(() => {
 </form>`,
 
   // form is not ambient; controller is.
-  call: `import { form } from '@ship/sail-runtime'
+  call: `
 
 export default controller(() => {
   const profile = form({

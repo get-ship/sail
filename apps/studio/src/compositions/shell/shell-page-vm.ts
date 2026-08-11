@@ -1,41 +1,10 @@
 /** Studio chrome VM — activity rail (real links) + status bar + ops boot. */
-import { effect, hotkeys, mountAmbient, signal } from '@ship/sail-runtime'
-import { navigate } from '@ship/deck/router'
-import {
-  bindBatchToShell,
-  bindSelectionToShell,
-  getBatchItems,
-  getShellState,
-  handleBridgeRegion,
-  isStudioMessage,
-  selectFromBridge,
-  setBadges,
-  setChecksPanelOpen,
-  setSailPath,
-  setThemeMode,
-  subscribeShell,
-  toggleChecksPanel,
-} from '@ship/sail-studio-shell'
-import {
-  bindEditSelection,
-  createOpsClient,
-  getEditState,
-  openDocument,
-  saveActiveSource,
-  seedFilesFromPaths,
-  setOpsClient,
-  setProjectRoot,
-  subscribeEdit,
-} from '@ship/studio/edit'
-import {
-  getChecksState,
-  loadFindings,
-  setChecksOpsClient,
-  setEditorSetting,
-  setProjectRoot as setChecksProjectRoot,
-  subscribeChecks,
-} from '@ship/studio/checks'
+import { hotkeys, mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
+import { bindBatchToShell, bindSelectionToShell, getBatchItems, getShellState, handleBridgeRegion, isStudioMessage, selectFromBridge, setBadges, setChecksPanelOpen, setSailPath, setThemeMode, subscribeShell, toggleChecksPanel } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { bindEditSelection, createOpsClient, getEditState, openDocument, saveActiveSource, seedFilesFromPaths, setOpsClient, setProjectRoot, subscribeEdit } from '../../edit/index.ts'
+import { getChecksState, loadFindings, setChecksOpsClient, setEditorSetting, setProjectRoot as setChecksProjectRoot, subscribeChecks } from '../../checks/index.ts'
 
+import { signal, effect, navigate } from '../../../../../packages/sail/runtime/src/index.ts'
 function getChecksStateSafe(): ReturnType<typeof getChecksState> | null {
   try {
     return getChecksState()
@@ -43,24 +12,8 @@ function getChecksStateSafe(): ReturnType<typeof getChecksState> | null {
     return null
   }
 }
-import {
-  loadIconGlyphs,
-  loadThemes,
-  setDesignOpsClient,
-  setDesignProjectRoot,
-  setDesignMode,
-} from '@ship/studio/design'
-import {
-  getTasksState,
-  loadThreads,
-  newTaskFromBatch,
-  sendBatchToExisting,
-  setTasksOpsClient,
-  setTasksProjectRoot,
-  subscribeTasks,
-  uiBatchSummary,
-  uiThreadRows,
-} from '@ship/studio/tasks'
+import { loadIconGlyphs, loadThemes, setDesignOpsClient, setDesignProjectRoot, setDesignMode } from '../../design/index.ts'
+import { getTasksState, loadThreads, newTaskFromBatch, sendBatchToExisting, setTasksOpsClient, setTasksProjectRoot, subscribeTasks, uiBatchSummary, uiThreadRows } from '../../tasks/index.ts'
 import { canExitStudio, exitStudio } from './exit'
 import { projectPaths, resolveProjectRoot } from './project'
 export {

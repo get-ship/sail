@@ -2,7 +2,7 @@
   "name": "@ship/sail-site",
   "private": true,
   "type": "module",
-  "description": "The SAIL docs site — a deck app: docs, the 9-lesson tutorial, the component library, and an interactive component playground. SAIL's own red identity, light + dark.",
+  "description": "The SAIL docs site \u2014 a deck app: docs, the 9-lesson tutorial, the component library, and an interactive component playground. SAIL's own red identity, light + dark.",
   "scripts": {
     "wasm": "(cd ../.. && bun run wasm) && cp ../../packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm public/sail_compiler_bg.wasm",
     "gen": "bun run wasm && (cd ../.. && cargo run -q -p sail-compiler -- prop-registry) && (cd ../../packages/sail/grammar && bun run generate) && node scripts/gen-runtime-surface.mjs && (cd ../.. && cargo run -q -p deck-cli -- build-assets) && node scripts/gen-tutorial.mjs",
@@ -24,7 +24,6 @@
     "@ship/sail-chat-elements": "workspace:*",
     "@ship/sail-media": "workspace:*",
     "@ship/sail-mermaid": "workspace:*",
-    "@ship/sail-tutorial": "workspace:*",
     "@ship/sail-code-editor": "workspace:*",
     "@ship/sail-compiler-wasm": "workspace:*",
     "@ship/tokens": "workspace:*",

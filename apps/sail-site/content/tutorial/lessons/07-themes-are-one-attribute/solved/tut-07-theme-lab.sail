@@ -8,14 +8,7 @@
 -->
 
 <controller>
-import {
-  THEMES,
-  applyTheme,
-  persistTheme,
-  readStoredTheme,
-  type Theme,
-  type ThemeId,
-} from '@ship/tokens/themes'
+import { type Theme, type ThemeId, THEMES } from '@/compositions/theme-catalog'
 
 export default controller(() => {
     const active = signal<ThemeId>(readStoredTheme())

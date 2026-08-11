@@ -2,9 +2,10 @@
  * Components library domain — catalog load, filter, groups, selection detail VMs.
  * Single path authority: gen-owned loadCatalog replaces; edit ticks only union.
  */
-import { mountAmbient, signal } from '@ship/sail-runtime'
+import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
 import { COMPONENTS_CATALOG } from '../../../components.gen'
 import {
+import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
   filterRecords,
   mergeComponentRecords,
   mergeProjectPathAuthority,
@@ -19,7 +20,7 @@ import type {
   PropRowUi,
 } from '../../components/types'
 import type { ComponentsSession } from '../components-session/components-session'
-import { getOpsClient, getEditState, subscribeEdit } from '@ship/studio/edit'
+import { getOpsClient, getEditState, subscribeEdit } from '../../edit/index.ts'
 import { resolveProjectRoot, projectPaths } from '../shell/project'
 
 export type ComponentsLibrary = ReturnType<typeof createComponentsLibrary>

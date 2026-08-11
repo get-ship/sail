@@ -1,33 +1,33 @@
 <!--
-  Lesson 09 solved — the screen as an owner would ship it.
+  Lesson 09 starter — it compiles, it runs, it demos well. Ship it?
 
-  Compare with the starter: the title flows from the prop; all three
-  query() states render; the {#for} keys on identity (m.id); rows exit as
-  well as enter; and the empty case is the semantic <empty-state>, not a
-  hand-rolled div.
+  No. Five review flaws are planted in this template, and the compiler
+  accepts every one of them. Read it the way you would read an agent's
+  pull request: what breaks on the second render, the slow network, the
+  reorder, the translation pass — the paths the demo never took.
 -->
 <scope>
   props: {
     title = 'Support inbox'
   }
 
-  style loadingRow = { box: pad(4), paint: bg(surface-1).radius(md) }
-  style muted = { paint: fg(muted-foreground) }
   style messageRow = { box: padX(3).padY(2), paint: bg(surface-1).borderWidth(1).border(border-subtle).radius(md) }
   style unreadDot = { box: display(inline-block).w(1_5).h(1_5), paint: radius(full).bg(primary) }
   style from = { text: fontSize(sm) }
+  style muted = { paint: fg(muted-foreground) }
+  style emptyImprovised = { box: pad(4), paint: fg(muted-foreground), text: fontSize(sm) }
 </scope>
 <controller>
-import { query } from '@ship/sail-runtime'
-import { inboxClient } from '../../../compositions/tut-09-inbox-client'
+import { inboxClient } from '@/compositions/tut-09-inbox-client'
 
+// This controller is sound. Every flaw in this lesson lives in the
+// TEMPLATE, and every one of them compiles — that is the point: the
+// compiler owns correctness of the surface, the reviewer owns intent.
 export default controller(() => {
     const inbox = query(() => inboxClient.messages.list())
     const filter = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])
 
-    // Visible list composes the live value with local state: archive hides
-    // rows client-side so exit animation can play; filter narrows to unread.
     const visible = derived(() => {
       const state = inbox()
       if (state.kind !== 'ok') return []
@@ -48,7 +48,7 @@ export default controller(() => {
 
 <column gap="4">
   <row align="center" justify="between">
-    <h3>{title()}</h3>
+    <h3>Support inbox</h3>
     <row gap="1">
       <button size="sm" tone="primary" variant={filter() === 'all' ? 'solid' : 'ghost'} on:click={() => setFilter('all')}>All</button>
       <button size="sm" tone="primary" variant={filter() === 'unread' ? 'solid' : 'ghost'} on:click={() => setFilter('unread')}>Unread</button>
@@ -56,28 +56,21 @@ export default controller(() => {
   </row>
 
   <match {inbox()}>
-    {loading =>
-      <row gap="2" align="center" style(loadingRow)>
-        <spinner size="sm"></spinner>
-        <small style(muted)>loading messages…</small>
-      </row>
-    }
+    {loading => }
     {error as err =>
       <alert tone="destructive">{err.message}</alert>
     }
     {ok =>
       <column gap="1">
-        <for {visible() as m} key={m.id}>
+        <for {visible() as m} key={m.topic}>
           <row
             gap="3"
             align="center"
             style(messageRow, {
-              animate: enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' }),
+              animate: enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }),
             })
           >
-            <if {!m.read}>
-              <span style(unreadDot)></span>
-            </if>
+            <if {!m.read}><span style(unreadDot)></span></if>
             <column gap="0" style({ box: grow(1) })>
               <strong style(from)>{m.from}</strong>
               <small style(muted)>{m.subject}</small>
@@ -87,10 +80,7 @@ export default controller(() => {
           </row>
         </for>
         <if {visible().length === 0}>
-          <empty-state variant="inline" tone="muted">
-            <span slot="title">Inbox zero</span>
-            Nothing matches this filter.
-          </empty-state>
+          <div style(emptyImprovised)>Nothing matches this filter.</div>
         </if>
       </column>
     }

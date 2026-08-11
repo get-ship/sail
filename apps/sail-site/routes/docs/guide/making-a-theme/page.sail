@@ -17,7 +17,7 @@
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
-import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from '@ship/tokens/themes'
+import { type ThemeId, THEMES } from '../../../../../../packages/sail/tokens/src/themes.ts'
 import type { Scope } from './page.sail'
 import { code } from '../../../../src/compositions/sail-guide-making-a-theme-snippets'
 

@@ -2,8 +2,8 @@
  * L1 `<tabs>` lacks dirty/close/middle-click for dynamic open files →
  * custom strip (absorption vote: studio-tabs / L2 candidate).
  */
-import { closeTab, getShellState, setActiveTab, type DocTab } from '@ship/sail-studio-shell'
-import { openDocument } from '@ship/studio/edit'
+import { type DocTab, closeTab, getShellState, setActiveTab } from '../../../../../packages/sail/studio-shell/src/index.ts'
+import { openDocument } from '../../edit/index.ts'
 
 export type TabRow = DocTab & {
   active: boolean

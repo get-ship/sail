@@ -23,7 +23,6 @@
 </scope>
 
 <controller>
-import { interval } from '@ship/sail-runtime'
 
 const POOL: Array<[string, string]> = [
   ['Reykjavík', 'A2'],

@@ -1,6 +1,7 @@
 // Snippets for /docs/concepts/animation. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled. Every SAIL sample is compiled by the
 // build; each one is the code of the live demo beside it.
+import { signal, timeline } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">
@@ -37,7 +38,6 @@ export const code = {
   tab to me</button>`,
 
   choreography: `<controller>
-import { timeline } from '@ship/sail-runtime'
 export default controller(() => {
   const scrubText = signal('0')
   const p = () => Number(scrubText()) / 100   // slider value → progress 0…1

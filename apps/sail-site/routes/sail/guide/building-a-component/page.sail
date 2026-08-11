@@ -5,7 +5,6 @@
 </scope>
 
 <controller>
-import { navigate } from '@ship/deck/router'
 
 export default controller(() => {
   mount(() => {

@@ -7490,7 +7490,7 @@ export const SCOPE_REFUSALS: ScopeRefusalDoc[] = [
   {
     "syntax": "runtime value import",
     "instead": "import type { … } for types, or import { styleName } from './peer.sail' for Style values — behavior imports belong in <controller>",
-    "example": "<scope>\n  import { signal } from '@ship/sail-runtime'\n  props: { open = false }\n</scope>\n<p>ok</p>"
+    "example": "<scope>\n  \n  props: { open = false }\n</scope>\n<p>ok</p>"
   },
   {
     "syntax": "let / var / non-Style const",

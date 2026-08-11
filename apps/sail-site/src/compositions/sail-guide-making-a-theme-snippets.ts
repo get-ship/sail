@@ -2,6 +2,7 @@
 // packages/sail/tokens — themes.css, themes.ts, tokens.test.ts, products.css.
 // Never invent a token name here: the guide's whole value is that a reader
 // can paste it.
+import { applyTheme, persistTheme } from '../../../../packages/sail/runtime/src/index.ts'
 export const code = {
   // packages/sail/tokens/src/themes.css:56-100, abridged where marked.
   paperBlock: `:root[theme='paper'],
@@ -112,7 +113,7 @@ export interface Theme {
   return next
 }`,
 
-  apply: `import { applyTheme, applyMode, persistTheme } from '@ship/tokens/themes'
+  apply: `
 
 applyTheme('sandstone')     // sets theme + paint mode, announces the change
 applyMode('dark')           // mode switch — not a twin theme id

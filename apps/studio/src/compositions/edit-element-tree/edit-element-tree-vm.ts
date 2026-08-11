@@ -3,20 +3,11 @@
  * Select → shared selection + Source view + span scroll (when editor mounted).
  * Live Table identity returned for `tree={tree}` on `<sail-tree>`.
  */
-import { createTable } from '@ship/sail-primitives'
-import { mountAmbient, signal } from '@ship/sail-runtime'
-import {
-  activeDoc,
-  elementSailTreeNodes,
-  getEditState,
-  querySourceEditor,
-  scrollSourceEditor,
-  selectEditNode,
-  setView,
-  subscribeEdit,
-  type SailTreeNode,
-} from '@ship/studio/edit'
+import { createTable } from '../../../../../packages/components/sail/primitives/src/index.ts'
+import { mountAmbient } from '../../../../../packages/sail/runtime/src/index.ts'
+import { activeDoc, elementSailTreeNodes, getEditState, querySourceEditor, scrollSourceEditor, selectEditNode, setView, subscribeEdit, type SailTreeNode } from '../../edit/index.ts'
 
+import { signal } from '../../../../../packages/sail/runtime/src/index.ts'
 export function createEditElementTree() {
   const hasElements = signal(false)
   const activePathLabel = signal('—')
