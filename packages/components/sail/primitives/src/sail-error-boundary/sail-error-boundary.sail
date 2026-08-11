@@ -11,7 +11,6 @@
 </scope>
 
 <controller>
-import { attachBoundary, detachBoundary } from '@ship/sail-runtime'
 import type { BoundarySource, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-error-boundary.sail'
 

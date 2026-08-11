@@ -555,18 +555,20 @@ pub const SAIL_TSCONFIG_REQUIRED_FLAGS: &[&str] = &[
     "\"skipLibCheck\": true",
 ];
 
-/// Default sail project `compilerOptions` (Framework / full-project typecheck).
+/// Default sail project `compilerOptions` (Pure / product typecheck).
 ///
-/// Mirrors `packages/sail/tsconfig/tsconfig.base.json` (TOOLING-1 WI2).
-/// `lib` comes from [`lib_for_type_env`]([`TypeEnv::Framework`]) so the DOM
-/// entries cannot drift from the per-kind table.
+/// Product FileKinds (Route/Component/Composition/Store) are Pure — ESNext
+/// only, no DOM. Framework packages that need DOM use
+/// [`sail_tsconfig_compiler_options_json_for`]([`TypeEnv::Framework`]) or
+/// `packages/sail/tsconfig/tsconfig.base.json` (TOOLING-1 WI2).
 ///
-/// Per-kind (Pure / Action) options: [`sail_tsconfig_compiler_options_json_for`].
-/// Ambient pack registration is **not** a `compilerOptions.types` package
-/// name: the generated file lives at [`PROJECT_TYPES_REL`] and is wired via
-/// `files` in [`emit_project_tsconfig_json`] so globals resolve under tsc.
+/// Per-kind (Pure / Action / Framework) options:
+/// [`sail_tsconfig_compiler_options_json_for`]. Ambient pack registration is
+/// **not** a `compilerOptions.types` package name: the generated file lives
+/// at [`PROJECT_TYPES_REL`] and is wired via `files` in
+/// [`emit_project_tsconfig_json`] so globals resolve under tsc.
 pub fn sail_tsconfig_compiler_options_json() -> String {
-    sail_tsconfig_compiler_options_json_for(TypeEnv::Framework)
+    sail_tsconfig_compiler_options_json_for(TypeEnv::Pure)
 }
 
 /// `compilerOptions` JSON object body for a specific [`TypeEnv`].
@@ -642,9 +644,11 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 
 /// Build a project-root `tsconfig.json` body that registers the ambient pack.
 ///
-/// Default uses [`TypeEnv::Framework`] (DOM lib) for whole-project typecheck /
-/// scaffold until multi-config projects land. For per-kind emission use
-/// [`emit_project_tsconfig_json_for`].
+/// Default uses [`TypeEnv::Pure`] (ESNext only — no DOM) so product projects
+/// enforce unnameable `document`/`window` (SPEC-PLATFORM-NEUTRALITY-1).
+/// Framework packages that need the DOM lib use
+/// [`emit_project_tsconfig_json_for`]([`TypeEnv::Framework`]) or path-aware
+/// selection via [`type_env_for_path`].
 ///
 /// `include_globs` are relative to the project (e.g. `src/**/*.ts`).
 /// The generated ambient pack ([`PROJECT_TYPES_REL`]) is listed under `files`
@@ -655,7 +659,7 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 /// [`crate::project_map::at_alias_paths`] (SPEC-PROJECT-STRUCTURE-1 §3) so
 /// editors/tsc and deck resolve share one alias map.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
-    emit_project_tsconfig_json_for(TypeEnv::Framework, include_globs)
+    emit_project_tsconfig_json_for(TypeEnv::Pure, include_globs)
 }
 
 /// Project `tsconfig.json` body for a specific [`TypeEnv`].
@@ -1319,6 +1323,21 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20 function detachBoundary(el: Element): void\n\
          \x20 function findNearestBoundary(el: Element): BoundaryHandle | null\n\
          \x20 function runProtected<T>(node: Element, source: BoundarySource, fn: () => T): T\n\
+         \x20 // Virtualizer (RUNTIME_AMBIENT inject; types may stay type-only from /virtual)\n\
+         \x20 function createVirtualizer(options: {\n\
+         \x20\x20  count: () => number\n\
+         \x20\x20  estimateSize: (index: number) => number\n\
+         \x20\x20  getScrollElement: () => Element | null\n\
+         \x20\x20  horizontal?: boolean\n\
+         \x20\x20  overscan?: number\n\
+         \x20\x20  paddingStart?: number\n\
+         \x20\x20  paddingEnd?: number\n\
+         \x20\x20  gap?: number\n\
+         \x20\x20  scrollMargin?: number\n\
+         \x20\x20  getItemKey?: (index: number) => string | number\n\
+         \x20\x20  lanes?: number\n\
+         \x20\x20  onChange?: (v: unknown) => void\n\
+         \x20 }): unknown\n\
          \x20 function component(def: ComponentDef): ComponentFactory\n\
          \x20 function prop<T>(def: PropDef<T>): PropDef<T>\n\
          \x20 function defineComponent(\n\
@@ -1846,13 +1865,17 @@ mod tests {
                 "sail_tsconfig_compiler_options_json missing {flag}:\n{opts}"
             );
         }
-        // Default project emit is Framework — lib comes from lib_for_type_env SSOT.
-        for entry in lib_for_type_env(TypeEnv::Framework) {
+        // Default product emit is Pure — lib comes from lib_for_type_env SSOT.
+        for entry in lib_for_type_env(TypeEnv::Pure) {
             assert!(
                 opts.contains(&format!("\"{entry}\"")),
-                "default opts must include Framework lib entry {entry}:\n{opts}"
+                "default opts must include Pure lib entry {entry}:\n{opts}"
             );
         }
+        assert!(
+            !opts.contains("\"DOM\""),
+            "default product opts must not include DOM:\n{opts}"
+        );
         let body = emit_project_tsconfig_json(&["src/**/*.ts", "routes/**/*.ts"]);
         for flag in SAIL_TSCONFIG_REQUIRED_FLAGS {
             assert!(
@@ -1860,6 +1883,10 @@ mod tests {
                 "emit_project_tsconfig_json missing {flag}:\n{body}"
             );
         }
+        assert!(
+            !body.contains("DOM"),
+            "default emit_project_tsconfig_json must be Pure (no DOM):\n{body}"
+        );
         assert!(
             body.contains(PROJECT_TYPES_REL)
                 && body.contains("\"files\"")

@@ -11,7 +11,10 @@
   }
 </scope>
 <controller>
-import { createTable, type Table } from '@ship/sail-primitives'
+// Pack-local relative import (not `@ship/*`) — S5.3 import law bans value
+// imports from `@ship/*` in pack controllers; createTable is the primitives
+// table engine, resolved via monorepo-relative path.
+import { createTable, type Table } from '../../../primitives/src/sail-table/engine/create-table'
 import type { ViewerSource } from '../engine/types'
 import { CsvParseError, parseCsv, type CsvDelimiter } from '../engine/csv-parse'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'

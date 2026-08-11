@@ -15,7 +15,7 @@
   }
 </scope>
 <controller>
-import { debounce } from '@ship/sail-runtime'
+
 import type { Scope } from './sail-draw.sail'
 import { createCanvas } from '../engine/create-canvas'
 import { createDrawScene, type DrawElement, type DrawTool } from './engine/scene'
