@@ -34,6 +34,18 @@ import { contract as ticker } from './ticker/contract'
 import { contract as table } from './table/contract'
 import { contract as pagination } from './pagination/contract'
 import { contract as toggleGroup } from './toggle-group/contract'
+import { contract as tabs } from './tabs/contract'
+import { contract as navbar } from './navbar/contract'
+import { contract as card } from './card/contract'
+import { contract as avatar } from './avatar/contract'
+import { contract as breadcrumb } from './breadcrumb/contract'
+import { contract as dialog } from './dialog/contract'
+import { contract as popover } from './popover/contract'
+import { contract as tooltip } from './tooltip/contract'
+import { contract as dropdown } from './dropdown/contract'
+import { contract as hoverCard } from './hover-card/contract'
+import { contract as contextMenu } from './context-menu/contract'
+import { contract as toast } from './toast/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -69,6 +81,18 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   table,
   pagination,
   toggleGroup,
+  tabs,
+  navbar,
+  card,
+  avatar,
+  breadcrumb,
+  dialog,
+  popover,
+  tooltip,
+  dropdown,
+  hoverCard,
+  contextMenu,
+  toast,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

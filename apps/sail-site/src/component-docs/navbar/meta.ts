@@ -7,8 +7,9 @@ export const meta = {
   key: 'navbar',
   category: 'navigation',
   kind: 'host',
-  blurb: "One element, three placements — top bar, side rail, bottom bar. Four regions (brand, links, center, actions); bordered and sticky follow the placement.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'One element, three placements — top bar, side rail, bottom bar. sticky · bordered · autohide · offset. Regions: brand, center/links, actions. Paint from component.navbar.*.',
+  heading: 'navbar',
+  host: 'doc-navbar',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

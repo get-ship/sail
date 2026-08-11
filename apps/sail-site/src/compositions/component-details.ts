@@ -494,11 +494,15 @@ export const DETAILS: Record<string, DetailEntry> = {
   toast: lang('toast', 'toast', {
     blurb:
       'A transient announcement. It auto-dismisses after duration ms (0 = sticky), pauses while hovered or focused, and lives in a <toast-region> stack. Dismiss removes the instance — re-push from your controller to show again.',
-    variants: ['success', 'info', 'warning', 'destructive'],
-    variantAttr: 'tone',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'tone', desc: 'semantic colour token', type: TONES },
-      { name: 'duration', desc: 'ms until dismiss — 0 is sticky', type: 'number' },
+      {
+        name: 'tone',
+        desc: 'optional semantic colour; omit for component.toast rest tokens',
+        type: TONES,
+      },
+      { name: 'duration', desc: 'ms until dismiss as string — 0 is sticky', type: 'string' },
       { name: 'onDismiss', desc: 'fires before remove — drop the instance from your list', type: 'callback' },
       { name: 'data-toast-close', desc: 'marks a custom close control (L1 ships one)', type: 'attr' },
       { name: '<toast-region position>', desc: 'the fixed stack it lives in', type: 'top/bottom-start/end' },
@@ -546,26 +550,30 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   card: lang('card', 'card', {
     blurb:
-      'The surface everything else sits on. Padding, tone, an accent bar and the hover lift are attributes — the card never needs a stylesheet.',
-    variants: ['default', 'outline'],
-    variantAttr: 'variant',
+      'The surface everything else sits on. variant default|outline, padding, optional tone, interactive, accent-bar, status-rail, fill — no soft/elevated/ghost invent.',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'tone', desc: 'tint the surface', type: TONES },
-      { name: 'variant', desc: 'filled or transparent', type: 'default · outline' },
+      { name: 'tone', desc: 'optional border tint; omit for rest tokens', type: TONES },
+      { name: 'variant', desc: 'filled or transparent — default · outline only', type: 'default · outline' },
       { name: 'padding', desc: 'inset scale', type: 'none · sm · md · lg' },
-      { name: 'accent-bar', desc: 'a tone-coloured leading bar', type: 'off · hover · static' },
-      { name: 'interactive', desc: 'pointer cursor + CSS hover lift, one attribute', type: 'boolean' },
+      { name: 'interactive', desc: 'pointer cursor + CSS hover lift', type: 'bool' },
+      { name: 'accent-bar', desc: 'tone-coloured top bar', type: 'off · hover · static' },
+      { name: 'status-rail', desc: 'leading status stripe', type: 'bool' },
+      { name: 'fill', desc: 'muted fill override', type: 'bool' },
     ],
   }),
   avatar: lang('avatar', 'avatar', {
     blurb:
       'An identity frame: image, icon slug, or initials — and the broken-image path falls back to initials automatically, via one shared action.',
-    variants: ['sm', 'md', 'lg', 'xl'],
-    variantAttr: 'size',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'src', desc: 'the image — falls back on error', type: 'url' },
-      { name: 'name / initials', desc: 'what the fallback draws', type: 'string' },
-      { name: 'tone', desc: 'frame colour token', type: TONES },
+      { name: 'src', desc: 'the image — falls back on error', type: 'string' },
+      { name: 'icon-slug', desc: 'pack glyph id when no photo', type: 'string' },
+      { name: 'name', desc: 'identity label for fallback initials', type: 'string' },
+      { name: 'initials', desc: 'explicit fallback glyphs', type: 'string' },
+      { name: 'tone', desc: 'optional frame colour; omit for rest gradient', type: TONES },
       { name: 'size', desc: 'frame scale', type: 'xs · sm · md · lg · xl' },
       { name: 'shape', desc: 'circle or rounded square', type: 'round · square' },
     ],
@@ -642,11 +650,11 @@ export const DETAILS: Record<string, DetailEntry> = {
   tooltip: lang('tooltip', 'tooltip', {
     blurb:
       'A label on hover and focus, from the content attribute — the bubble is filled by the action, positioned by placement, and never steals focus.',
-    variants: ['top', 'bottom', 'left', 'right'],
-    variantAttr: 'placement',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'content', desc: 'the tooltip text', type: 'string' },
       { name: 'placement', desc: 'which side it opens on', type: 'top · bottom · left · right' },
+      { name: 'content', desc: 'the tooltip text', type: 'string' },
       { name: '(children)', desc: 'the trigger — whatever you wrap', type: 'children' },
     ],
   }),
@@ -656,9 +664,9 @@ export const DETAILS: Record<string, DetailEntry> = {
     variants: [],
     variantAttr: '',
     props: [
+      { name: 'placement', desc: 'which side it opens on (free string)', type: 'string' },
       { name: 'id + popovertarget', desc: 'the trigger link — no refs', type: 'wiring' },
-      { name: 'placement', desc: 'which side it opens on', type: 'top · bottom · left · right (+-end)' },
-      { name: 'open-delay / close-delay', desc: 'hover intent, in ms', type: 'number' },
+      { name: '(children)', desc: 'the panel content', type: 'children' },
     ],
   }),
   popover: lang('popover', 'popover', {
@@ -667,8 +675,8 @@ export const DETAILS: Record<string, DetailEntry> = {
     variants: [],
     variantAttr: '',
     props: [
+      { name: 'placement', desc: 'which side it opens on (free string)', type: 'string' },
       { name: 'id + popovertarget', desc: 'the trigger link — no refs', type: 'wiring' },
-      { name: 'placement', desc: 'which side it opens on', type: 'top · bottom · left · right (+-end)' },
       { name: '(children)', desc: 'the panel content', type: 'children' },
     ],
   }),
@@ -678,9 +686,10 @@ export const DETAILS: Record<string, DetailEntry> = {
     variants: [],
     variantAttr: '',
     props: [
+      { name: 'placement', desc: 'which side it opens on (free string)', type: 'string' },
+      { name: 'onSelect', desc: 'fires with { value } when a menu-item is chosen', type: 'callback' },
       { name: 'id + popovertarget', desc: 'the trigger link — no refs', type: 'wiring' },
       { name: '<menu-item value>', desc: 'the items — tone for destructive', type: 'children' },
-      { name: 'placement', desc: 'which side it opens on', type: 'top · bottom · left · right (+-end)' },
     ],
   }),
   'context-menu': lang('context-menu', 'contextMenu', {
@@ -689,20 +698,24 @@ export const DETAILS: Record<string, DetailEntry> = {
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'for', desc: 'id of the right-click target', type: 'id' },
+      { name: 'for', desc: 'id of the right-click target', type: 'string' },
+      { name: 'onSelect', desc: 'fires with { value } when a menu-item is chosen', type: 'callback' },
       { name: '<menu-item value>', desc: 'the items', type: 'children' },
     ],
   }),
   dialog: lang('dialog', 'dialog', {
     blurb:
       'The platform dialog — top layer, focus trap, Escape, backdrop — opened and closed by invoker commands. Zero JavaScript; side= docks it to an edge as a sheet.',
-    // Chips label modal vs sheet; page.sail maps sheet → side=end (not a real attr).
-    variants: ['modal', 'sheet'],
-    variantAttr: 'data-dialog-mode',
+    variants: [],
+    variantAttr: '',
     props: [
+      { name: 'size', desc: 'clamp the surface width', type: 'sm · md · lg · full' },
+      { name: 'backdrop', desc: 'scrim treatment', type: 'default · blur · solid' },
+      { name: 'side', desc: 'center or dock as sheet', type: 'center · start · end · top · bottom' },
+      { name: 'dismissible', desc: 'ESC + backdrop can close', type: 'bool' },
+      { name: 'onClose', desc: 'close callback', type: 'callback' },
+      { name: 'onDismiss', desc: 'dismiss callback', type: 'callback' },
       { name: 'command / commandfor', desc: 'invoker buttons open and close it', type: 'show-modal · close' },
-      { name: 'size', desc: 'clamp the surface width', type: 'sm · md · lg' },
-      { name: 'side', desc: 'dock to an edge — the sheet', type: 'start · end' },
       { name: '<header> <section> <footer>', desc: 'title / scrollable body / actions', type: 'children' },
     ],
   }),
@@ -710,27 +723,28 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Navigation ───────────────────────────────────────────────────────
   tabs: lang('tabs', 'tabs', {
     blurb:
-      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Three looks via variant on <tab-list>; size is authored on each <tab>.',
-    variants: ['line', 'pill', 'enclosed'],
-    variantAttr: 'variant',
+      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Host props: active · orientation · onTabChange. Three looks via variant on <tab-list>; size on each <tab>.',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'active', desc: 'initially selected tab', type: 'string' },
-      { name: 'orientation', desc: 'stack the list vertically', type: 'horizontal · vertical' },
+      { name: 'active', desc: 'selected tab name', type: 'string' },
+      { name: 'orientation', desc: 'horizontal or vertical list', type: 'horizontal · vertical' },
+      { name: 'onTabChange', desc: 'fires with { name } when selection changes', type: 'callback' },
       {
         name: '<tab-list variant>',
-        desc: 'the look of the tab strip — line · pill · enclosed (lives on the strip, not <tabs>)',
+        desc: 'strip look — line · pill · enclosed (on the strip, not <tabs>)',
         type: 'line · pill · enclosed',
       },
       {
-        name: '<tab size>',
-        desc: 'each tab — size Style match lives here',
-        type: 'sm · md · lg',
+        name: '<tab name size>',
+        desc: 'each tab — name matches panel; size Style match here',
+        type: 'children',
       },
     ],
   }),
   breadcrumb: lang('breadcrumb', 'breadcrumb', {
     blurb:
-      'A trail of links with the right nav/ARIA and themed separators. Anchors for the path, something inert for where you are.',
+      'A trail of links with the right nav/ARIA and themed separators. No PE props — anchors for the path, inert current (small). Faces component.breadcrumb.fg / current.',
     variants: [],
     variantAttr: '',
     props: [
@@ -751,13 +765,15 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   navbar: lang('navbar', 'navbar', {
     blurb:
-      'One element, three placements — top bar, side rail, bottom bar. Four regions (brand, links, center, actions); bordered and sticky follow the placement.',
+      'One element, three placements — top bar, side rail, bottom bar. sticky · bordered · autohide · offset. Regions brand / center / actions.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'placement', desc: 'a rail is a navbar on its side', type: 'top · rail · bottom' },
+      { name: 'placement', desc: 'top · bottom · rail', type: 'top · bottom · rail' },
       { name: 'sticky', desc: 'pins to the edge it sits on', type: 'bool' },
       { name: 'bordered', desc: 'hairline on the content-facing edge', type: 'bool' },
+      { name: 'autohide', desc: 'tuck on scroll-down when sticky', type: 'bool' },
+      { name: 'offset', desc: 'sticky inset (number)', type: 'number' },
       { name: 'slot="brand" / "center" / "actions"', desc: 'the regions — links go unslotted', type: 'slots' },
     ],
   }),

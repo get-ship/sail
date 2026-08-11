@@ -4,8 +4,10 @@
 
   First-class (do NOT re-add stages here): button, badge, fieldset, chip, alert,
   separator, spinner, skeleton, icon, progress, meter, label, field, radio,
-  radio-group, switch, slider, input, textarea, select. Peel remaining tags into
-  component-docs/<slug>/doc-<slug>.sail over time.
+  radio-group, switch, slider, input, textarea, select, scroll-area, ticker,
+  table, pagination, toggle-group, tabs, navbar, card, avatar, breadcrumb,
+  dialog, popover, tooltip, dropdown, hover-card, context-menu, toast.
+  Peel remaining tags into component-docs/<slug>/doc-<slug>.sail over time.
   checkbox stays alias residual (no CE invent — demos <input type="checkbox">).
 
   Specimens are intentional live demos (hub-quality), not random float.
@@ -65,22 +67,6 @@ export default controller((ctx: Scope) => {
   const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
   const presses = signal(0)
   const press = (): void => presses.set((n) => n + 1)
-  let toastSeq = 0
-  const toastItems = signal<{ key: string }[]>([{ key: 'toast-0' }])
-  const pushToast = (): void => {
-    toastSeq += 1
-    toastItems.set([{ key: `toast-${toastSeq}` }])
-  }
-  const onToastDismiss = (): void => {
-    toastItems.set([])
-  }
-  effect(() => {
-    if (tag() === 'toast') {
-      toastSeq = 0
-      toastItems.set([{ key: 'toast-0' }])
-    }
-  })
-
   // Pack media identity prop.
   effect(() => {
     void tag()
@@ -108,28 +94,17 @@ export default controller((ctx: Scope) => {
   // Per-tag stage flags — keep separate <if> blocks (no mega nested soup).
   const is = (slug: string) => () => tag() === slug
   const stage = {
-    // B5 peeled → first-class doc-* packages (scroll-area/ticker/table/pagination/toggle-group)
-    // B4 peeled → first-class doc-* packages (a/kbd/prose/code-block/empty-state/error-state/error-boundary)
-    // B3 peeled → first-class doc-* packages (input/textarea/select); checkbox alias residual
+    // B6 peeled → tabs/navbar/card/avatar/breadcrumb/dialog/popover/tooltip/dropdown/hover-card/context-menu/toast
+    // B5 peeled → scroll-area/ticker/table/pagination/toggle-group
+    // B4 peeled → a/kbd/prose/code-block/empty-state/error-state/error-boundary
+    // B3 peeled → input/textarea/select; checkbox alias residual
     combobox: is('combobox'),
     checkbox: is('checkbox'),
-    // B2 peeled → first-class doc-* packages (label/field/radio/radio-group/switch/slider)
+    // B2 peeled → label/field/radio/radio-group/switch/slider
     dropzone: is('dropzone'),
     themePicker: is('theme-picker'),
-    // B1 peeled → first-class doc-* packages (alert/chip/separator/spinner/skeleton/icon/progress/meter)
-    toast: is('toast'),
-    card: is('card'),
-    avatar: is('avatar'),
+    // B1 peeled → alert/chip/separator/spinner/skeleton/icon/progress/meter
     accordion: is('accordion'),
-    tooltip: is('tooltip'),
-    hoverCard: is('hover-card'),
-    popover: is('popover'),
-    dropdown: is('dropdown'),
-    contextMenu: is('context-menu'),
-    dialog: is('dialog'),
-    tabs: is('tabs'),
-    breadcrumb: is('breadcrumb'),
-    navbar: is('navbar'),
     layout: is('layout'),
     // packs
     sailAreaChart: is('sail-area-chart'),
@@ -149,8 +124,6 @@ export default controller((ctx: Scope) => {
     sailMermaid: is('sail-mermaid'),
     sailCodeEditor: is('sail-code-editor'),
   }
-
-  const sheetSide = () => (variant() === 'sheet' ? 'end' : null)
 
   return {
     tag,
@@ -180,10 +153,6 @@ export default controller((ctx: Scope) => {
     pickFw,
     presses,
     press,
-    toastItems,
-    pushToast,
-    onToastDismiss,
-    sheetSide,
   }
 })
 </controller>
@@ -252,124 +221,11 @@ export default controller((ctx: Scope) => {
       <if {stage.themePicker()}>
         <theme-picker></theme-picker>
       </if>
-      <if {stage.toast()}>
-        <column gap="3" align="center" style(toastStage)>
-          <button type="button" variant="outline" size="sm" on:click={pushToast}>Show toast</button>
-          <for {toastItems() as t} key={t.key}>
-            <toast tone="primary" duration="0" on-dismiss={onToastDismiss} style(stageCol)>
-              <strong>Saved.</strong> Sticky at duration 0.
-            </toast>
-          </for>
-        </column>
-      </if>
-      <if {stage.card()}>
-        <card style({ box: pad(4).w(full).maxW(panel-max-w-sm) })>
-          <strong>Harbor Signals</strong>
-          <p style(mutedXs)>4 tracks · last played today</p>
-        </card>
-      </if>
-      <if {stage.avatar()}>
-        <row gap="2" align="center">
-          <avatar name="Ada Lovelace"></avatar>
-          <avatar name="Grace Hopper" tone="accent"></avatar>
-          <avatar initials="SK" size="sm"></avatar>
-        </row>
-      </if>
       <if {stage.accordion()}>
         <accordion style(stageColMd)>
           <span slot="trigger">Webhook endpoints</span>
           <p style(mutedSm)>POST /v1/hooks · signed with your workspace secret.</p>
         </accordion>
-      </if>
-      <if {stage.tooltip()}>
-        <tooltip content="Copy URL" placement="top">
-          <span style(mutedSm)>ship.dev/d/ab12</span>
-        </tooltip>
-      </if>
-      <if {stage.hoverCard()}>
-        <column gap="2" align="center">
-          <a href="#" popovertarget="legacy-hc">@ada</a>
-          <hover-card id="legacy-hc">
-            <strong>Ada Lovelace</strong>
-            <p style(mutedXs)>Mathematician · first programmer</p>
-          </hover-card>
-        </column>
-      </if>
-      <if {stage.popover()}>
-        <column gap="2" align="center">
-          <button size="sm" variant="outline" popovertarget="legacy-pop">Filters</button>
-          <popover id="legacy-pop">
-            <column gap="2">
-              <p style(mutedSm)>Status</p>
-              <label style(mutedSm)><input type="checkbox" checked /> Healthy</label>
-            </column>
-          </popover>
-        </column>
-      </if>
-      <if {stage.dropdown()}>
-        <column gap="2" align="center">
-          <button size="sm" variant="outline" popovertarget="legacy-dd">Row actions ▾</button>
-          <dropdown id="legacy-dd">
-            <menu-item value="edit">Edit</menu-item>
-            <menu-item value="duplicate">Duplicate</menu-item>
-            <menu-item value="archive">Archive</menu-item>
-          </dropdown>
-        </column>
-      </if>
-      <if {stage.contextMenu()}>
-        <column gap="2" align="center">
-          <p id="legacy-cm-target" style(centerBox)>Right-click this card</p>
-          <context-menu for="legacy-cm-target" id="legacy-cm">
-            <menu-item value="copy">Copy id</menu-item>
-            <menu-item value="delete">Delete</menu-item>
-          </context-menu>
-        </column>
-      </if>
-      <if {stage.dialog()}>
-        <column gap="2" align="center">
-          <button size="sm" tone="primary" command="show-modal" commandfor="legacy-dlg">Open dialog</button>
-          <dialog id="legacy-dlg" side={sheetSide()}>
-            <header>Invite to workspace</header>
-            <section>
-              <field>
-                <label slot="label">Email</label>
-                <input type="email" placeholder="name@company.com" />
-              </field>
-            </section>
-            <footer>
-              <button command="close" commandfor="legacy-dlg" variant="ghost" size="sm">Cancel</button>
-              <button command="close" commandfor="legacy-dlg" variant="solid" tone="primary" size="sm">Send</button>
-            </footer>
-          </dialog>
-          <p style(note)>variant chips: modal · sheet</p>
-        </column>
-      </if>
-      <if {stage.tabs()}>
-        <tabs style(stageColMd)>
-          <tab-list variant={variant() || 'line'}>
-            <tab value="one">Overview</tab>
-            <tab value="two">Activity</tab>
-            <tab value="three">Settings</tab>
-          </tab-list>
-          <tab-panel value="one"><p style(mutedSm)>Overview panel</p></tab-panel>
-          <tab-panel value="two"><p style(mutedSm)>Activity panel</p></tab-panel>
-          <tab-panel value="three"><p style(mutedSm)>Settings panel</p></tab-panel>
-        </tabs>
-      </if>
-      <if {stage.breadcrumb()}>
-        <breadcrumb>
-          <a href="/components">components</a>
-          <a href="/docs">docs</a>
-          <small>current</small>
-        </breadcrumb>
-      </if>
-      <if {stage.navbar()}>
-        <navbar placement="top" bordered style(fullW)>
-          <strong slot="brand">Ship</strong>
-          <a href="/components">Components</a>
-          <a href="/docs">Docs</a>
-          <button slot="actions" size="sm" variant="outline">Sign in</button>
-        </navbar>
       </if>
       <if {stage.layout()}>
         <column gap="3" style(stageColMd)>

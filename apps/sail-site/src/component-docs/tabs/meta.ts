@@ -7,8 +7,9 @@ export const meta = {
   key: 'tabs',
   category: 'navigation',
   kind: 'host',
-  blurb: "Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Three looks via variant on <tab-list>; size is authored on each <tab>.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Host props: active · orientation · onTabChange. Strip look on <tab-list variant>; size Style on each <tab>.',
+  heading: 'tabs',
+  host: 'doc-tabs',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

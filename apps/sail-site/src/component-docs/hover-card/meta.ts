@@ -7,8 +7,9 @@ export const meta = {
   key: 'hoverCard',
   category: 'overlay',
   kind: 'host',
-  blurb: "A rich panel on hover or focus of its trigger — the button whose popovertarget names it. Native top layer; open/close delays so it never flickers.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Rich panel on hover/focus of the trigger whose popovertarget names it. placement string. Paint component.hover-card.*.',
+  heading: 'hover-card',
+  host: 'doc-hover-card',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

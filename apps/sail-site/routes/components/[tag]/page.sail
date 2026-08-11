@@ -20,7 +20,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B5 peel: scroll-area/ticker/table/pagination/toggle-group. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B6 peel: overlays + product hosts. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -54,6 +54,18 @@ const DOC_CE_SLUGS = new Set([
   'table',
   'pagination',
   'toggle-group',
+  'tabs',
+  'navbar',
+  'card',
+  'avatar',
+  'breadcrumb',
+  'dialog',
+  'popover',
+  'tooltip',
+  'dropdown',
+  'hover-card',
+  'context-menu',
+  'toast',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -104,6 +116,18 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useTable = derived(() => tag() === 'table' && useDocHost())
   const usePagination = derived(() => tag() === 'pagination' && useDocHost())
   const useToggleGroup = derived(() => tag() === 'toggle-group' && useDocHost())
+  const useTabs = derived(() => tag() === 'tabs' && useDocHost())
+  const useNavbar = derived(() => tag() === 'navbar' && useDocHost())
+  const useCard = derived(() => tag() === 'card' && useDocHost())
+  const useAvatar = derived(() => tag() === 'avatar' && useDocHost())
+  const useBreadcrumb = derived(() => tag() === 'breadcrumb' && useDocHost())
+  const useDialog = derived(() => tag() === 'dialog' && useDocHost())
+  const usePopover = derived(() => tag() === 'popover' && useDocHost())
+  const useTooltip = derived(() => tag() === 'tooltip' && useDocHost())
+  const useDropdown = derived(() => tag() === 'dropdown' && useDocHost())
+  const useHoverCard = derived(() => tag() === 'hover-card' && useDocHost())
+  const useContextMenu = derived(() => tag() === 'context-menu' && useDocHost())
+  const useToast = derived(() => tag() === 'toast' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -151,6 +175,18 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useTable,
     usePagination,
     useToggleGroup,
+    useTabs,
+    useNavbar,
+    useCard,
+    useAvatar,
+    useBreadcrumb,
+    useDialog,
+    usePopover,
+    useTooltip,
+    useDropdown,
+    useHoverCard,
+    useContextMenu,
+    useToast,
     useLegacy,
     heading,
     blurb,
@@ -261,6 +297,42 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useToggleGroup()}>
     <doc-toggle-group></doc-toggle-group>
+  </if>
+  <if {useTabs()}>
+    <doc-tabs></doc-tabs>
+  </if>
+  <if {useNavbar()}>
+    <doc-navbar></doc-navbar>
+  </if>
+  <if {useCard()}>
+    <doc-card></doc-card>
+  </if>
+  <if {useAvatar()}>
+    <doc-avatar></doc-avatar>
+  </if>
+  <if {useBreadcrumb()}>
+    <doc-breadcrumb></doc-breadcrumb>
+  </if>
+  <if {useDialog()}>
+    <doc-dialog></doc-dialog>
+  </if>
+  <if {usePopover()}>
+    <doc-popover></doc-popover>
+  </if>
+  <if {useTooltip()}>
+    <doc-tooltip></doc-tooltip>
+  </if>
+  <if {useDropdown()}>
+    <doc-dropdown></doc-dropdown>
+  </if>
+  <if {useHoverCard()}>
+    <doc-hover-card></doc-hover-card>
+  </if>
+  <if {useContextMenu()}>
+    <doc-context-menu></doc-context-menu>
+  </if>
+  <if {useToast()}>
+    <doc-toast></doc-toast>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

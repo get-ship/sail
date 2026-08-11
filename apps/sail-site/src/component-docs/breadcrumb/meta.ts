@@ -7,8 +7,9 @@ export const meta = {
   key: 'breadcrumb',
   category: 'navigation',
   kind: 'host',
-  blurb: "A trail of links with the right nav/ARIA and themed separators. Anchors for the path, something inert for where you are.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Trail host only — no PE props. Compose nested <a> path crumbs and inert current (small). Faces component.breadcrumb.fg / current.',
+  heading: 'breadcrumb',
+  host: 'doc-breadcrumb',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

@@ -7,8 +7,9 @@ export const meta = {
   key: 'dialog',
   category: 'overlay',
   kind: 'host',
-  blurb: "The platform dialog — top layer, focus trap, Escape, backdrop — opened and closed by invoker commands. Zero JavaScript; side= docks it to an edge as a sheet.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Platform dialog — top layer, focus trap, Escape, backdrop. size · backdrop · side · dismissible; onClose / onDismiss. Scaffold shows open anatomy; invoker open/close is native.',
+  heading: 'dialog',
+  host: 'doc-dialog',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

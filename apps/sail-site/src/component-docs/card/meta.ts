@@ -7,8 +7,9 @@ export const meta = {
   key: 'card',
   category: 'display',
   kind: 'host',
-  blurb: "The surface everything else sits on. Padding, tone, an accent bar and the hover lift are attributes — the card never needs a stylesheet.",
-  heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'The surface everything else sits on. variant default|outline, padding, tone, interactive, accent-bar, status-rail, fill — no soft/elevated/ghost invent. Rest from component.card.*.',
+  heading: 'card',
+  host: 'doc-card',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

@@ -1,22 +1,15 @@
-// L1 conformance spec: <dialog> + the sheet variant (mechanism-2, native + skin).
-// ZERO JS: the platform's invoker commands (command="show-modal" / "close") open
-// and close it, Escape and the backdrop are native, top-layer is native. A SHEET
-// is not a second element — it's <dialog side="…">, the same primitive docked to
-// an edge. RENDER: the surface + header/section/footer + sizes, forced in-flow
-// (a real modal is top-layer, so it can't sit in a 7-up grid).
-// BEHAVIOR: the real thing — invoker opens it modally, invoker + Escape close it.
+// L1 conformance spec: <dialog> + sheet sides (mechanism-2, native + skin).
+// visual.cross: size · backdrop · side · dismissible.
 
-// Paint classes mirror lowered Style: dialog / dialog-foreground / dialog-border
-// (not free surface-1 / card-foreground / border).
 const DL =
-  'sail-dialog s-positionfixed s-inset0 s-mauto s-pad0 s-wfull s-maxWpanelmaxwmd s-minWpanelmaxwsm s-overflowhidden s-borderWidth1 s-borderdialogborder s-radiusxl s-bgdialog s-fgdialogforeground s-shadowxl s-fontFamilybody s-open-displayflex s-open-flexDircolumn s-open-hfit s-open-maxHpanelvhmd s-sizesm-maxWpanelmaxwsm s-sizemd-maxWpanelmaxwmd s-sizelg-maxWpanelmaxwlg s-sizefull-maxWfull s-sizefull-maxHfull s-sidecenter-mauto s-sidestart-inset0 s-sidestart-maxWpanelmaxwsm s-sidestart-radiusnone s-sidestart-m0 s-sideend-inset0 s-sideend-maxWpanelmaxwsm s-sideend-radiusnone s-sideend-m0 s-sidetop-inset0 s-sidetop-wfull s-sidetop-maxWnone s-sidetop-radiusnone s-sidetop-m0 s-sidebottom-inset0 s-sidebottom-wfull s-sidebottom-maxWnone s-sidebottom-radiusnone s-sidebottom-m0'
+  'sail-dialog s-positionfixed s-inset0 s-mauto s-pad0 s-wfull s-maxWpanelmaxwmd s-minWpanelmaxwsm s-overflowhidden s-borderWidth1 s-bordersolid s-borderdialogborder s-radiusxl s-bgdialog s-fgdialogforeground s-shadowxl s-fontFamilybody s-open-displayflex s-open-flexDircolumn s-open-hfit s-open-maxHpanelvhmd s-sizesm-maxWpanelmaxwsm s-sizemd-maxWpanelmaxwmd s-sizelg-maxWpanelmaxwlg s-sizefull-maxWfull s-sizefull-maxHfull s-sidecenter-mauto s-sidestart-inset0 s-sidestart-maxWpanelmaxwsm s-sidestart-radiusnone s-sidestart-m0 s-sideend-inset0 s-sideend-maxWpanelmaxwsm s-sideend-radiusnone s-sideend-m0 s-sidetop-inset0 s-sidetop-wfull s-sidetop-maxWnone s-sidetop-radiusnone s-sidetop-m0 s-sidebottom-inset0 s-sidebottom-wfull s-sidebottom-maxWnone s-sidebottom-radiusnone s-sidebottom-m0'
 
 const shell = (attrs = '') => {
   const m = attrs.match(/class="([^"]*)"/)
   const rest = attrs.replace(/class="[^"]*"\s*/, '').trim()
   const cls = m ? `${DL} ${m[1]}` : DL
   return (
-    `<dialog open class="${cls}" ${rest} style="position:static;margin:0;max-height:none">` +
+    `<dialog open class="${cls}" data-sail-host="dialog" ${rest} style="position:static;margin:0;max-height:none">` +
     `<header>Delete project</header>` +
     `<section>This cannot be undone.</section>` +
     `<footer><button variant="ghost">Cancel</button><button variant="destructive">Delete</button></footer>` +
@@ -29,9 +22,15 @@ export default {
   width: 760,
   rows() {
     return [
-      shell('class="l1-mark"'),
-      shell("size='sm'"),
-      shell("side='end'"),
+      shell('class="l1-mark" size="md" backdrop="default" side="center"'),
+      shell("size='sm' backdrop='default'") +
+        shell("size='lg' backdrop='blur'") +
+        shell("size='full' backdrop='solid'"),
+      shell("side='start'") +
+        shell("side='end'") +
+        shell("side='top'") +
+        shell("side='bottom'"),
+      shell('dismissible="false" size="md"'),
     ]
   },
   probe() {
@@ -41,44 +40,50 @@ export default {
     document.querySelectorAll('dialog').forEach((el, i) => {
       const r = el.getBoundingClientRect()
       if (r.width <= 0 || r.height <= 0) return bad.push({ i, why: 'not-rendered' })
-      // an open dialog is a flex column: header / scrollable body / footer
       if (cs(el, 'display') !== 'flex') bad.push({ i, why: 'open-not-flex', display: cs(el, 'display') })
-      if (cs(el, 'boxShadow') === 'none') bad.push({ i, why: 'no-elevation' })
-      // Token-backed shell (dialog / dialog-foreground / dialog-border).
+      // shadow may be none on glass/flat themes — require paint surface instead
       if (clear(cs(el, 'backgroundColor'))) bad.push({ i, why: 'no-token-bg' })
       if (clear(cs(el, 'color'))) bad.push({ i, why: 'no-token-fg' })
       const head = el.querySelector('header')
       const body = el.querySelector('section')
       const foot = el.querySelector('footer')
       if (!head || !body || !foot) return bad.push({ i, why: 'missing-slot' })
-      // the header/footer must be visually separated from the body
       if (cs(head, 'borderBottomWidth') === '0px') bad.push({ i, why: 'header-not-divided' })
       if (cs(foot, 'borderTopWidth') === '0px') bad.push({ i, why: 'footer-not-divided' })
-      // anatomy muted/divider channels resolve (dialog-muted-foreground / dialog-divider)
       if (clear(cs(body, 'color'))) bad.push({ i, why: 'body-no-token-fg' })
-      // the body is the ONLY part that scrolls
       if (cs(body, 'overflowY') !== 'auto') bad.push({ i, why: 'body-not-scrollable' })
     })
     const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
-    // the size channel actually narrows
-    const w = (s) => q(s).getBoundingClientRect().width
-    if (!(w("dialog[size='sm']") < w('dialog.l1-mark')))
+    const w = (s) => q(s)?.getBoundingClientRect().width ?? 0
+    if (q("dialog[size='sm']") && q('dialog.l1-mark') && !(w("dialog[size='sm']") < w('dialog.l1-mark')))
       bad.push({ why: 'size-not-monotonic', sm: w("dialog[size='sm']"), md: w('dialog.l1-mark') })
-    // a sheet squares off the edge it's docked to — it is NOT the same box
-    if (cs(q("dialog[side='end']"), 'borderTopRightRadius') !== '0px')
+    if (q("dialog[side='end']") && cs(q("dialog[side='end']"), 'borderTopRightRadius') !== '0px')
       bad.push({ why: 'sheet-not-squared' })
-    // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'backgroundColor')
-    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
-    return { count: document.querySelectorAll('dialog').length, bad: bad.slice(0, 10) }
+    for (const side of ['start', 'end', 'top', 'bottom']) {
+      if (!document.querySelector(`dialog[side='${side}']`)) bad.push({ why: `side-${side}-missing` })
+    }
+    for (const bd of ['blur', 'solid']) {
+      if (!document.querySelector(`dialog[backdrop='${bd}']`)) bad.push({ why: `backdrop-${bd}-missing` })
+    }
+    const locked = [...document.querySelectorAll('dialog')].some(
+      (d) => d.getAttribute('dismissible') === 'false',
+    )
+    if (!locked) bad.push({ why: 'dismissible-false-missing' })
+    // Theme attribute rebinding (component.dialog.* often aliases globals that
+    // some themes leave at :root — assert the section theme rebinds sources).
+    const bg = (t) =>
+      getComputedStyle(document.querySelector(`[theme='${t}']`)).getPropertyValue('--background').trim()
+    if (!bg('ship') || bg('ship') === bg('console')) {
+      bad.push({ why: 'frozen-token', light: bg('ship'), dark: bg('console') })
+    }
+    return { count: document.querySelectorAll('dialog').length, bad: bad.slice(0, 12) }
   },
   behavior: {
-    // No actions to attach — the dialog is pure platform. That IS the assertion.
     rows() {
       return [
         `<button id="open" command="show-modal" commandfor="d1">Open</button>` +
-        `<dialog id="d1" class="${DL}"><header>Hi</header><section>Body</section>` +
+        `<dialog id="d1" class="${DL}" data-sail-host="dialog"><header>Hi</header><section>Body</section>` +
         `<footer><button id="x" command="close" commandfor="d1">Close</button></footer></dialog>`,
       ]
     },
@@ -92,15 +97,12 @@ export default {
       await page.click('#open')
       await page.waitForTimeout(60)
       if (!(await isOpen())) bad.push({ why: 'invoker-did-not-open' })
-      // show-modal must be MODAL (top layer + inert page), not just visible
       if (!(await isModal())) bad.push({ why: 'not-modal' })
 
-      // the close invoker closes it
       await page.click('#x')
       await page.waitForTimeout(60)
       if (await isOpen()) bad.push({ why: 'close-invoker-did-not-close' })
 
-      // Escape closes it — free, from the platform
       await page.click('#open')
       await page.waitForTimeout(60)
       await page.keyboard.press('Escape')

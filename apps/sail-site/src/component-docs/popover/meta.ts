@@ -7,8 +7,9 @@ export const meta = {
   key: 'popover',
   category: 'overlay',
   kind: 'host',
-  blurb: "The native [popover], positioned. Top layer, Escape and light-dismiss come from the platform; use:anchor adds placement — that is the whole element.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Native [popover] positioned by placement. Escape and light-dismiss from the platform; use:anchor places the panel. Paint from component.popover.*.',
+  heading: 'popover',
+  host: 'doc-popover',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

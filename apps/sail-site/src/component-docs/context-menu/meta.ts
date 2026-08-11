@@ -7,8 +7,9 @@ export const meta = {
   key: 'contextMenu',
   category: 'overlay',
   kind: 'host',
-  blurb: "The dropdown’s right-click sibling: same menu semantics, opened at the pointer on contextmenu of the target that for= names.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    "Dropdown's right-click sibling: menu semantics, opened at the pointer on contextmenu of the target that for= names. onSelect event. Paint component.context-menu.*.",
+  heading: 'context-menu',
+  host: 'doc-context-menu',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

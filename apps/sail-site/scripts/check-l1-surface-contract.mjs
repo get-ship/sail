@@ -124,6 +124,21 @@ const KNOB_LABELS = {
   duration: 'duration',
   // type + orientation already listed above
   segmented: 'segmented',
+  // B6 product / overlay knobs
+  placement: 'placement',
+  sticky: 'sticky',
+  autohide: 'autohide',
+  offset: 'offset',
+  padding: 'padding',
+  interactive: 'interactive',
+  'accent bar': 'accent-bar',
+  'status rail': 'status-rail',
+  fill: 'fill',
+  backdrop: 'backdrop',
+  side: 'side',
+  content: 'content',
+  active: 'active',
+  initials: 'initials',
 }
 
 function extractDocAxes(docSrc) {

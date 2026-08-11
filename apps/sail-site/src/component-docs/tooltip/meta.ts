@@ -7,8 +7,9 @@ export const meta = {
   key: 'tooltip',
   category: 'overlay',
   kind: 'host',
-  blurb: "A label on hover and focus, from the content attribute — the bubble is filled by the action, positioned by placement, and never steals focus.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Label on hover and focus from the content attribute. placement top|bottom|left|right. Bubble paint component.tooltip.bg / fg.',
+  heading: 'tooltip',
+  host: 'doc-tooltip',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

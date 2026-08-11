@@ -7,8 +7,9 @@ export const meta = {
   key: 'toast',
   category: 'feedback',
   kind: 'host',
-  blurb: "A transient announcement. It auto-dismisses after duration ms (0 = sticky), pauses while hovered or focused, and lives in a <toast-region> stack. Dismiss removes the instance — re-push from your controller to show again.",
-  heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Transient announcement. Auto-dismiss after duration ms (0 sticky), pauses while hovered/focused. Optional tone; onDismiss. Lives in a toast-region stack. Faces component.toast.*.',
+  heading: 'toast',
+  host: 'doc-toast',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

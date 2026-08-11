@@ -5,7 +5,7 @@
 
 Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class docs knobs, visual `bun run visual <tag>` green. Operator taste / multi-theme approval still open — **not** `done`.
 
-## Queue (B0 + B1 + B2 + B3 + B4 + B5)
+## Queue (B0 + B1 + B2 + B3 + B4 + B5 + B6)
 
 | Tag | Docs host | Contract | Visual | Notes for pairing |
 |-----|-----------|----------|--------|-------------------|
@@ -41,6 +41,18 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 | **table** | `doc-table` | yes | green | dense · striped · hoverable · bordered |
 | **pagination** | `doc-pagination` | yes | green | value + onPageChange; page cells not hub |
 | **toggle-group** | `doc-toggle-group` | yes | green | segmented host; no standalone toggle package |
+| **tabs** | `doc-tabs` | yes | green | active · orientation; FACE_MERGE tab*/tab-list* |
+| **navbar** | `doc-navbar` | yes | green | placement · sticky · bordered · autohide · offset |
+| **card** | `doc-card` | yes | green | default\|outline only; no soft/elevated/ghost invent |
+| **avatar** | `doc-avatar` | yes | green | size · shape · tone; name/initials |
+| **breadcrumb** | `doc-breadcrumb` | yes | green | zero PE props; trail composition only |
+| **dialog** | `doc-dialog` | yes | green | size · backdrop · side · dismissible; invoker open |
+| **popover** | `doc-popover` | yes | green | placement string; native popover |
+| **tooltip** | `doc-tooltip` | yes | green | placement · content |
+| **dropdown** | `doc-dropdown` | yes | green | placement · onSelect |
+| **hover-card** | `doc-hover-card` | yes | green | placement; open/close dwell |
+| **context-menu** | `doc-context-menu` | yes | green | for= target; onSelect |
+| **toast** | `doc-toast` | yes | green | tone · duration; onDismiss callback |
 
 ## Alias residual (not first-class host)
 
@@ -50,8 +62,9 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 
 ## Explicitly not in queue yet
 
-- B6 peels (overlays / tabs / navbar / card / avatar / breadcrumb / …)
+- Remaining legacy: accordion, combobox, dropzone, theme-picker, layout keywords, pack CEs
 - Product invent work: card ladder, slider range, loading, avatar/breadcrumb variants, motion doctrine
+- Overlay behavior depth (pointer precision, multi-trigger edge cases)
 - Playwright knobs→paint
 
 ## Checker
@@ -59,5 +72,5 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 ```bash
 bun apps/sail-site/scripts/check-l1-surface-contract.mjs
 # or: cd apps/sail-site && bun run check:l1-surface
-# expect 32 contracts after B5 (5 new hosts)
+# expect 44 contracts after B6 (12 new hosts)
 ```

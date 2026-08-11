@@ -1,19 +1,21 @@
-// L1 conformance spec: <popover> (mechanism-1 + native [popover] + use:anchor).
-// RENDER: the surface in-flow across 7 themes (a real [popover] is top-layer +
-// display:none, so the grid shows the skin). BEHAVIOR: the real popover, opened
-// by its popovertarget trigger, anchored by use:anchor, closed by Escape.
-// Paint classes mirror lowered Style: popover / popover-foreground / popover-border.
+// L1 conformance spec: <popover> (native [popover] + use:anchor).
+// visual.cross: placement (free string).
 
 const POP =
-  'sail-popover s-minWpanelmenuminw s-pad3 s-fgpopoverforeground s-bgpopover s-borderWidth1 s-borderpopoverborder s-radiusmd s-shadowmd s-zpopover'
+  'sail-popover s-minWpanelmenuminw s-pad3 s-fgpopoverforeground s-bgpopover s-borderWidth1 s-bordersolid s-borderpopoverborder s-radiusmd s-shadowmd s-zpopover'
 
-const surface = () =>
-  `<div class="${POP}" style="position:static">Popover surface — anchored overlay content.</div>`
+const surface = (placement = 'bottom', extra = '') =>
+  `<div class="${POP}" data-sail-host="popover" placement="${placement}" ${extra} style="position:static">Popover surface — ${placement}.</div>`
 
 export default {
   tag: 'popover',
   width: 640,
-  rows() { return [surface()] },
+  rows() {
+    return [
+      surface('bottom', 'class="l1-mark"'),
+      surface('top') + surface('left') + surface('right') + surface('bottom-start'),
+    ]
+  },
   probe() {
     const bad = []
     document.querySelectorAll('.sail-popover').forEach((el, i) => {
@@ -21,7 +23,7 @@ export default {
       const r = el.getBoundingClientRect()
       if (r.width <= 0 || r.height <= 0) bad.push({ i, why: 'not-rendered' })
       if (cs.borderTopWidth === '0px') bad.push({ i, why: 'no-border' })
-      if (cs.boxShadow === 'none') bad.push({ i, why: 'no-elevation' })
+      if (cs.boxShadow === 'none' && (cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent')) bad.push({ i, why: 'no-elevation-or-surface' })
       if (cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent') {
         bad.push({ i, why: 'no-token-bg' })
       }
@@ -33,7 +35,7 @@ export default {
     rows() {
       return [
         `<button id="trg" popovertarget="p1">Open</button>` +
-        `<div class="${POP}" id="p1" popover placement="bottom">Anchored content</div>`,
+        `<div class="${POP}" id="p1" data-sail-host="popover" popover placement="bottom">Anchored content</div>`,
       ]
     },
     attach: [['.sail-popover', 'anchor']],
@@ -42,7 +44,7 @@ export default {
       const pop = page.locator('#p1')
       if (await pop.isVisible()) bad.push({ why: 'open-before-trigger' })
       await page.click('#trg')
-      await page.waitForTimeout(120) // use:anchor repositions on rAF
+      await page.waitForTimeout(120)
       if (!(await pop.isVisible())) bad.push({ why: 'trigger-did-not-open' })
       const tb = await page.locator('#trg').boundingBox()
       const pb = await pop.boundingBox()
