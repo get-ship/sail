@@ -3,7 +3,8 @@
   doc-<slug> host yet.
 
   First-class (do NOT re-add stages here): button, badge, fieldset, chip, alert,
-  separator, spinner, skeleton, icon, progress, meter. Peel remaining tags into
+  separator, spinner, skeleton, icon, progress, meter, label, field, radio,
+  radio-group, switch, slider. Peel remaining tags into
   component-docs/<slug>/doc-<slug>.sail over time.
 
   Specimens are intentional live demos (hub-quality), not random float.
@@ -115,13 +116,8 @@ export default controller((ctx: Scope) => {
     select: is('select'),
     combobox: is('combobox'),
     checkbox: is('checkbox'),
-    radio: is('radio'),
-    radioGroup: is('radio-group'),
-    switchToggle: is('switch'),
-    slider: is('slider'),
+    // B2 peeled → first-class doc-* packages (label/field/radio/radio-group/switch/slider)
     toggleGroup: is('toggle-group'),
-    field: is('field'),
-    label: is('label'),
     dropzone: is('dropzone'),
     themePicker: is('theme-picker'),
     // B1 peeled → first-class doc-* packages (alert/chip/separator/spinner/skeleton/icon/progress/meter)
@@ -305,32 +301,6 @@ export default controller((ctx: Scope) => {
           <p style(note)>Catalog alias — <code>input type=checkbox</code>, not a separate tag.</p>
         </column>
       </if>
-      <if {stage.radio()}>
-        <column gap="2">
-          <radio value="pro">Pro — team seats</radio>
-          <radio value="free" disabled>Free (disabled)</radio>
-          <p style(note)>Group wiring lives on <code>radio-group</code>.</p>
-        </column>
-      </if>
-      <if {stage.radioGroup()}>
-        <radio-group label="Plan" name="plan" value={plan()}>
-          <radio value="free">Free</radio>
-          <radio value="pro">Pro</radio>
-          <radio value="enterprise">Enterprise</radio>
-        </radio-group>
-      </if>
-      <if {stage.switchToggle()}>
-        <row gap="3" align="center">
-          <switch bind:checked={notify}></switch>
-          <p style(mutedSm)>{notify() ? 'on' : 'off'}</p>
-        </row>
-      </if>
-      <if {stage.slider()}>
-        <column gap="2" style(stageColMd)>
-          <row justify="between"><span style(mutedSm)>Volume</span><span style(monoXs)>{volume()}%</span></row>
-          <slider bind:value={volume} min="0" max="100"></slider>
-        </column>
-      </if>
       <if {stage.toggleGroup()}>
         <toggle-group value="day" label="Range">
           <toggle value="day">Day</toggle>
@@ -338,19 +308,6 @@ export default controller((ctx: Scope) => {
           <toggle value="month">Month</toggle>
         </toggle-group>
         <p style(note)>Segmented control — <code>toggle</code> cells, not a hub tile of their own.</p>
-      </if>
-      <if {stage.field()}>
-        <field style(stageCol)>
-          <label slot="label">Email</label>
-          <input type="email" placeholder="you@ship.dev" bind:value={email} />
-          <span slot="hint" style(mutedXs)>We will never share this.</span>
-        </field>
-      </if>
-      <if {stage.label()}>
-        <column gap="1" style(stageCol)>
-          <label for="legacy-label-input" required>Display name</label>
-          <input id="legacy-label-input" size="sm" placeholder="Ada Lovelace" bind:value={name} />
-        </column>
       </if>
       <if {stage.dropzone()}>
         <card dropzone style({ box: pad(6).w(full).maxW(panel-max-w-sm) })>

@@ -7,8 +7,8 @@ export const meta = {
   key: 'radioGroup',
   category: 'inputs',
   kind: 'host',
-  blurb: "Groups native radios under one accessible name and one value. The platform owns exclusivity and keyboard; the group syncs ARIA and emits one change.",
+  blurb: "Groups native radios under one accessible name and one value. Host is layout + typeface only (no component.radio-group.* leaves — option paint is child radio). The platform owns exclusivity and keyboard; the group syncs ARIA and emits one change.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-radio-group',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

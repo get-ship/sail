@@ -7,8 +7,8 @@ export const meta = {
   key: 'field',
   category: 'inputs',
   kind: 'host',
-  blurb: "The label-plus-control unit. It wires label/for, spaces the pair, and carries the invalid state so the message and the border agree.",
+  blurb: "The label-plus-control unit. It wires label/for, spaces the pair, and carries the invalid state so the message and the border agree. Hint/error paint from component.field.hint / field.error; control chrome is the shared component.field.* surface.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-field',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

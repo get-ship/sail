@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Native <label> — for= focuses the control. size sm|md|lg matches the control type ladder. required shows the * marker from component.label.required; host ink from component.label.fg and weight from typography.label.weight. No tone prop.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-label',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

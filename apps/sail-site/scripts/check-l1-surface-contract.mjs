@@ -102,6 +102,12 @@ const KNOB_LABELS = {
   label: 'label',
   value: 'value',
   indeterminate: 'indeterminate',
+  checked: 'checked',
+  invalid: 'invalid',
+  required: 'required',
+  min: 'min',
+  max: 'max',
+  step: 'step',
 }
 
 function extractDocAxes(docSrc) {

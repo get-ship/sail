@@ -9,6 +9,6 @@ export const meta = {
   kind: 'host',
   blurb: "Native single-thumb range · type=range + use:rangeFill (--rng-pct). Track/fill/border from component.slider.*; thumb face field, rim = fill. value · min · max · step · size sm|md|lg · disabled · name. No tone; no dual-thumb range.",
   heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  host: 'doc-slider',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

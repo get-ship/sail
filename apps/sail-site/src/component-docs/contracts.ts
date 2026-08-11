@@ -6,13 +6,19 @@ import { contract as alert } from './alert/contract'
 import { contract as badge } from './badge/contract'
 import { contract as button } from './button/contract'
 import { contract as chip } from './chip/contract'
+import { contract as field } from './field/contract'
 import { contract as fieldset } from './fieldset/contract'
 import { contract as icon } from './icon/contract'
+import { contract as label } from './label/contract'
 import { contract as meter } from './meter/contract'
 import { contract as progress } from './progress/contract'
+import { contract as radio } from './radio/contract'
+import { contract as radioGroup } from './radio-group/contract'
 import { contract as separator } from './separator/contract'
 import { contract as skeleton } from './skeleton/contract'
+import { contract as slider } from './slider/contract'
 import { contract as spinner } from './spinner/contract'
+import { contract as switchToggle } from './switch/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -27,6 +33,12 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   icon,
   progress,
   meter,
+  label,
+  field,
+  radio,
+  radioGroup,
+  switchToggle,
+  slider,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

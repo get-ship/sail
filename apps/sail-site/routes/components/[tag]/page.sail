@@ -33,6 +33,12 @@ const DOC_CE_SLUGS = new Set([
   'icon',
   'progress',
   'meter',
+  'label',
+  'field',
+  'radio',
+  'radio-group',
+  'switch',
+  'slider',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -62,6 +68,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useIcon = derived(() => tag() === 'icon' && useDocHost())
   const useProgress = derived(() => tag() === 'progress' && useDocHost())
   const useMeter = derived(() => tag() === 'meter' && useDocHost())
+  const useLabel = derived(() => tag() === 'label' && useDocHost())
+  const useField = derived(() => tag() === 'field' && useDocHost())
+  const useRadio = derived(() => tag() === 'radio' && useDocHost())
+  const useRadioGroup = derived(() => tag() === 'radio-group' && useDocHost())
+  const useSwitch = derived(() => tag() === 'switch' && useDocHost())
+  const useSlider = derived(() => tag() === 'slider' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -88,6 +100,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useIcon,
     useProgress,
     useMeter,
+    useLabel,
+    useField,
+    useRadio,
+    useRadioGroup,
+    useSwitch,
+    useSlider,
     useLegacy,
     heading,
     blurb,
@@ -135,6 +153,24 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useMeter()}>
     <doc-meter></doc-meter>
+  </if>
+  <if {useLabel()}>
+    <doc-label></doc-label>
+  </if>
+  <if {useField()}>
+    <doc-field></doc-field>
+  </if>
+  <if {useRadio()}>
+    <doc-radio></doc-radio>
+  </if>
+  <if {useRadioGroup()}>
+    <doc-radio-group></doc-radio-group>
+  </if>
+  <if {useSwitch()}>
+    <doc-switch></doc-switch>
+  </if>
+  <if {useSlider()}>
+    <doc-slider></doc-slider>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>
