@@ -40,6 +40,7 @@ const PINNED_RULE_IDS: &[&str] = &[
     "sail-event-name",
     "sail-font-literal",
     "sail-for-key",
+    "sail-framework-import-teaching",
     "sail-height-chain",
     "sail-layout",
     "sail-layout-primitive",

@@ -1161,6 +1161,19 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     out.push('\n');
 
     // Runtime ambient vocabulary — typed via @ship/sail-runtime imports.
+    // Names that already have full signatures in the author-surface block
+    // below (query/mutation/stores/theme/interval/debounce, …) skip the
+    // generic fallback here so the pack never double-declares.
+    const TYPED_IN_AUTHOR_SURFACE: &[&str] = &[
+        "debounce",
+        "defineStore",
+        "interval",
+        "mutation",
+        "provideStore",
+        "query",
+        "theme",
+        "useStore",
+    ];
     for (authored, _exported, doc) in crate::runtime_ambient::RUNTIME_AMBIENT {
         if *authored == "__invalidate" {
             // Compiler-only; still declare so rewritten output typechecks.
@@ -1168,6 +1181,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
             out.push_str(
                 "  function __invalidate(prefix: QueryKey): void\n",
             );
+            continue;
+        }
+        if TYPED_IN_AUTHOR_SURFACE.contains(authored) {
+            // Declared with product signatures in the blocks below.
             continue;
         }
         out.push_str(&format!("  /** {doc} */\n"));

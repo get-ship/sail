@@ -57,6 +57,16 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "the controller factory — wraps a setup function into a bound scope",
     ),
     (
+        "debounce",
+        "debounce",
+        "coalesce rapid calls to a function until a quiet window elapses",
+    ),
+    (
+        "defineStore",
+        "defineStore",
+        "declare a shared store definition (id + setup)",
+    ),
+    (
         "derived",
         "derived",
         "a read-only signal computed from other signals, recomputed on dependency change",
@@ -67,9 +77,19 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "run a side effect on mount and whenever its read signals change",
     ),
     (
+        "interval",
+        "interval",
+        "run a callback on a fixed period while the controller is mounted",
+    ),
+    (
         "mount",
         "mountAmbient",
         "run a callback once, after the controller's first render",
+    ),
+    (
+        "mutation",
+        "mutation",
+        "public write primitive — returns a Mutation handle",
     ),
     (
         "onCleanup",
@@ -77,14 +97,34 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "register a callback to run when the controller tears down",
     ),
     (
+        "provideStore",
+        "provideStore",
+        "park a scoped store instance on the current controller scope",
+    ),
+    (
+        "query",
+        "query",
+        "public read primitive — compiler derives the cache key",
+    ),
+    (
         "signal",
         "signal",
         "a reactive value cell — read by calling it, written by calling it with a value",
     ),
     (
+        "theme",
+        "theme",
+        "runtime theme surface — current / preview / commit / applyScope",
+    ),
+    (
         "untrack",
         "untrack",
         "read signals inside without subscribing the enclosing effect/derived",
+    ),
+    (
+        "useStore",
+        "useStore",
+        "resolve nearest-or-root store instance for a StoreDef",
     ),
 ];
 
