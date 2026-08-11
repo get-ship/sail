@@ -116,6 +116,14 @@ const KNOB_LABELS = {
   code: 'code',
   message: 'message',
   connecting: 'connecting',
+  dense: 'dense',
+  striped: 'striped',
+  hoverable: 'hoverable',
+  bordered: 'bordered',
+  reverse: 'reverse',
+  duration: 'duration',
+  // type + orientation already listed above
+  segmented: 'segmented',
 }
 
 function extractDocAxes(docSrc) {

@@ -63,9 +63,6 @@ export default controller((ctx: Scope) => {
   const name = signal('')
   const fw = signal('')
   const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
-  const pageNo = signal('2')
-  const goPage = (detail: { page?: string; value?: string }): void =>
-    pageNo.set(detail?.page ?? detail?.value ?? '1')
   const presses = signal(0)
   const press = (): void => presses.set((n) => n + 1)
   let toastSeq = 0
@@ -111,12 +108,12 @@ export default controller((ctx: Scope) => {
   // Per-tag stage flags — keep separate <if> blocks (no mega nested soup).
   const is = (slug: string) => () => tag() === slug
   const stage = {
+    // B5 peeled → first-class doc-* packages (scroll-area/ticker/table/pagination/toggle-group)
     // B4 peeled → first-class doc-* packages (a/kbd/prose/code-block/empty-state/error-state/error-boundary)
     // B3 peeled → first-class doc-* packages (input/textarea/select); checkbox alias residual
     combobox: is('combobox'),
     checkbox: is('checkbox'),
     // B2 peeled → first-class doc-* packages (label/field/radio/radio-group/switch/slider)
-    toggleGroup: is('toggle-group'),
     dropzone: is('dropzone'),
     themePicker: is('theme-picker'),
     // B1 peeled → first-class doc-* packages (alert/chip/separator/spinner/skeleton/icon/progress/meter)
@@ -132,12 +129,8 @@ export default controller((ctx: Scope) => {
     dialog: is('dialog'),
     tabs: is('tabs'),
     breadcrumb: is('breadcrumb'),
-    pagination: is('pagination'),
     navbar: is('navbar'),
-    table: is('table'),
     layout: is('layout'),
-    scrollArea: is('scroll-area'),
-    ticker: is('ticker'),
     // packs
     sailAreaChart: is('sail-area-chart'),
     sailBarChart: is('sail-bar-chart'),
@@ -157,11 +150,6 @@ export default controller((ctx: Scope) => {
     sailCodeEditor: is('sail-code-editor'),
   }
 
-  const people = () => [
-    { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
-    { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
-    { id: 3, name: 'Alan Turing', team: 'Research', status: 'away' },
-  ]
   const sheetSide = () => (variant() === 'sheet' ? 'end' : null)
 
   return {
@@ -190,14 +178,11 @@ export default controller((ctx: Scope) => {
     name,
     fw,
     pickFw,
-    pageNo,
-    goPage,
     presses,
     press,
     toastItems,
     pushToast,
     onToastDismiss,
-    people,
     sheetSide,
   }
 })
@@ -257,14 +242,6 @@ export default controller((ctx: Scope) => {
           </label>
           <p style(note)>Catalog alias — <code>input type=checkbox</code>, not a separate tag.</p>
         </column>
-      </if>
-      <if {stage.toggleGroup()}>
-        <toggle-group value="day" label="Range">
-          <toggle value="day">Day</toggle>
-          <toggle value="week">Week</toggle>
-          <toggle value="month">Month</toggle>
-        </toggle-group>
-        <p style(note)>Segmented control — <code>toggle</code> cells, not a hub tile of their own.</p>
       </if>
       <if {stage.dropzone()}>
         <card dropzone style({ box: pad(6).w(full).maxW(panel-max-w-sm) })>
@@ -386,16 +363,6 @@ export default controller((ctx: Scope) => {
           <small>current</small>
         </breadcrumb>
       </if>
-      <if {stage.pagination()}>
-        <column gap="2" align="center">
-          <pagination value={pageNo()} on-page-change={goPage}>
-            <page value="1">1</page>
-            <page value="2">2</page>
-            <page value="3">3</page>
-          </pagination>
-          <p style(monoXs)>page {pageNo()} · <code>page</code> cells are not a hub tile</p>
-        </column>
-      </if>
       <if {stage.navbar()}>
         <navbar placement="top" bordered style(fullW)>
           <strong slot="brand">Ship</strong>
@@ -403,22 +370,6 @@ export default controller((ctx: Scope) => {
           <a href="/docs">Docs</a>
           <button slot="actions" size="sm" variant="outline">Sign in</button>
         </navbar>
-      </if>
-      <if {stage.table()}>
-        <table style(stageColMd)>
-          <thead>
-            <tr><th>Name</th><th>Team</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            <for {people() as p} key={p.id}>
-              <tr>
-                <td>{p.name}</td>
-                <td>{p.team}</td>
-                <td>{p.status}</td>
-              </tr>
-            </for>
-          </tbody>
-        </table>
       </if>
       <if {stage.layout()}>
         <column gap="3" style(stageColMd)>
@@ -434,24 +385,6 @@ export default controller((ctx: Scope) => {
           <p style(note)>Keywords — not a SOURCES host. row · column · grid · center.</p>
         </column>
       </if>
-      <if {stage.scrollArea()}>
-        <scroll-area orientation="vertical" style(scrollDemo)>
-          <p style(mutedSm)>Line 1 — overflow content</p>
-          <p style(mutedSm)>Line 2</p>
-          <p style(mutedSm)>Line 3</p>
-          <p style(mutedSm)>Line 4</p>
-          <p style(mutedSm)>Line 5</p>
-          <p style(mutedSm)>Line 6</p>
-          <p style(mutedSm)>Line 7</p>
-          <p style(mutedSm)>Line 8</p>
-        </scroll-area>
-      </if>
-      <if {stage.ticker()}>
-        <ticker duration="normal" style(ticker)>
-          <p style(tickerText)>tokens · signals · a11y · hot reload · SSR ·&nbsp;</p>
-        </ticker>
-      </if>
-
       <!-- Pack specimens (when pack tag is known) -->
       <if {stage.sailAreaChart()}>
         <sail-area-chart style(stageColMd)></sail-area-chart>

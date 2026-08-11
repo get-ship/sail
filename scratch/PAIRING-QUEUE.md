@@ -5,7 +5,7 @@
 
 Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class docs knobs, visual `bun run visual <tag>` green. Operator taste / multi-theme approval still open — **not** `done`.
 
-## Queue (B0 + B1 + B2 + B3 + B4)
+## Queue (B0 + B1 + B2 + B3 + B4 + B5)
 
 | Tag | Docs host | Contract | Visual | Notes for pairing |
 |-----|-----------|----------|--------|-------------------|
@@ -36,6 +36,11 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 | **empty-state** | `doc-empty-state` | yes | green | variant × size × optional tone |
 | **error-state** | `doc-error-state` | yes | green | variant × size × code chip |
 | **error-boundary** | `doc-error-boundary` | yes | green | message + catchRender events |
+| **scroll-area** | `doc-scroll-area` | yes | green | orientation only; thumb faces |
+| **ticker** | `doc-ticker` | yes | green | duration × reverse; no component.ticker.* |
+| **table** | `doc-table` | yes | green | dense · striped · hoverable · bordered |
+| **pagination** | `doc-pagination` | yes | green | value + onPageChange; page cells not hub |
+| **toggle-group** | `doc-toggle-group` | yes | green | segmented host; no standalone toggle package |
 
 ## Alias residual (not first-class host)
 
@@ -45,7 +50,7 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 
 ## Explicitly not in queue yet
 
-- B5–B6 peels (layout / data / overlays / …)
+- B6 peels (overlays / tabs / navbar / card / avatar / breadcrumb / …)
 - Product invent work: card ladder, slider range, loading, avatar/breadcrumb variants, motion doctrine
 - Playwright knobs→paint
 
@@ -54,5 +59,5 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 ```bash
 bun apps/sail-site/scripts/check-l1-surface-contract.mjs
 # or: cd apps/sail-site && bun run check:l1-surface
-# expect 27 contracts after B4 (7 new hosts)
+# expect 32 contracts after B5 (5 new hosts)
 ```

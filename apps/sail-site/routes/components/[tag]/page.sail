@@ -20,7 +20,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B4 peel: a/kbd/prose/code-block/empty-state/error-state/error-boundary. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B5 peel: scroll-area/ticker/table/pagination/toggle-group. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -49,6 +49,11 @@ const DOC_CE_SLUGS = new Set([
   'empty-state',
   'error-state',
   'error-boundary',
+  'scroll-area',
+  'ticker',
+  'table',
+  'pagination',
+  'toggle-group',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -94,6 +99,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useEmptyState = derived(() => tag() === 'empty-state' && useDocHost())
   const useErrorState = derived(() => tag() === 'error-state' && useDocHost())
   const useErrorBoundary = derived(() => tag() === 'error-boundary' && useDocHost())
+  const useScrollArea = derived(() => tag() === 'scroll-area' && useDocHost())
+  const useTicker = derived(() => tag() === 'ticker' && useDocHost())
+  const useTable = derived(() => tag() === 'table' && useDocHost())
+  const usePagination = derived(() => tag() === 'pagination' && useDocHost())
+  const useToggleGroup = derived(() => tag() === 'toggle-group' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -136,6 +146,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useEmptyState,
     useErrorState,
     useErrorBoundary,
+    useScrollArea,
+    useTicker,
+    useTable,
+    usePagination,
+    useToggleGroup,
     useLegacy,
     heading,
     blurb,
@@ -231,6 +246,21 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useErrorBoundary()}>
     <doc-error-boundary></doc-error-boundary>
+  </if>
+  <if {useScrollArea()}>
+    <doc-scroll-area></doc-scroll-area>
+  </if>
+  <if {useTicker()}>
+    <doc-ticker></doc-ticker>
+  </if>
+  <if {useTable()}>
+    <doc-table></doc-table>
+  </if>
+  <if {usePagination()}>
+    <doc-pagination></doc-pagination>
+  </if>
+  <if {useToggleGroup()}>
+    <doc-toggle-group></doc-toggle-group>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

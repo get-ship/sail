@@ -29,6 +29,11 @@ import { contract as codeBlock } from './code-block/contract'
 import { contract as emptyState } from './empty-state/contract'
 import { contract as errorState } from './error-state/contract'
 import { contract as errorBoundary } from './error-boundary/contract'
+import { contract as scrollArea } from './scroll-area/contract'
+import { contract as ticker } from './ticker/contract'
+import { contract as table } from './table/contract'
+import { contract as pagination } from './pagination/contract'
+import { contract as toggleGroup } from './toggle-group/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -59,6 +64,11 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   emptyState,
   errorState,
   errorBoundary,
+  scrollArea,
+  ticker,
+  table,
+  pagination,
+  toggleGroup,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

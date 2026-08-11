@@ -765,13 +765,16 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Data ─────────────────────────────────────────────────────────────
   table: lang('table', 'table', {
     blurb:
-      "The platform's table model — thead, tbody, tr — skinned by the theme. No grid component to learn: markup in, a designed table out.",
+      "The platform's table model — thead, tbody, tr — skinned by the theme. dense · striped · hoverable · bordered presence attrs. No grid component to learn: markup in, a designed table out.",
     variants: [],
     variantAttr: '',
     props: [
+      { name: 'dense', desc: 'tighter cell padding', type: 'bool' },
+      { name: 'striped', desc: 'even rows sample component.table.stripe', type: 'bool' },
+      { name: 'hoverable', desc: 'row hover fill from stripe', type: 'bool' },
+      { name: 'bordered', desc: 'box every cell', type: 'bool' },
       { name: '<thead> <tbody> <tr>', desc: 'the platform table model', type: 'children' },
       { name: '{#for}', desc: 'rows render from state and stay live', type: 'block' },
-      { name: 'density', desc: 'row padding comes from theme tokens', type: 'theme' },
     ],
   }),
 

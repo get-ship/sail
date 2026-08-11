@@ -7,7 +7,8 @@ export const meta = {
   key: 'ticker',
   category: 'effects',
   kind: 'host',
-  blurb: "Infinite linear marquee. Host is geometry only (overflow clip); use:marquee dual-copies the slot and loops translate-x. duration · reverse on host. No component.ticker.* — author paint. Reduced motion settles via motion runtime.",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Infinite linear marquee. Host is geometry only (overflow clip); use:marquee dual-copies the slot and loops translate-x. duration · reverse on host. No component.ticker.* — author paint. Reduced motion settles via motion runtime.',
+  host: 'doc-ticker',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

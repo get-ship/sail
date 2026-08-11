@@ -7,8 +7,8 @@ export const meta = {
   key: 'pagination',
   category: 'navigation',
   kind: 'host',
-  blurb: "A nav of <page> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page>.",
-  heading: "row · column · grid · center",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'A nav of <page> controls. value marks the current one with aria-current; clicking emits sail-page-change — your list, your fetch. Size is authored on each <page>.',
+  host: 'doc-pagination',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

@@ -3,17 +3,38 @@
 // single+multiple with pressed state baked in (what use:toggleGroup maintains).
 // Probe asserts the group ARIA, aria-pressed↔value, roving tabindex, and that
 // a pressed cell is visually distinct.
+// visual.cross: type · value · variant · orientation.
 
-const toggle = (val, label, pressed, focusable, dis = '') =>
-  `<button class="sail-toggle" value="${val}" role="button" aria-pressed="${pressed ? 'true' : 'false'}" tabindex="${focusable ? '0' : '-1'}" ${dis}>${label}</button>`
+// Lowered toggle Style stamps — pressed rides primary (not free invert).
+const TOGGLE =
+  'sail-toggle s-positionrelative s-displayinlineflex s-hcontrolhmd s-padX3 s-mspx s-appearancenone s-fgtoggleforeground s-bgtoggle s-cursorpointer s-selectnone s-borderWidth1 s-bordersolid s-bordertoggleborder s-radiusnone s-tapHighlightnone s-transitioncolors s-durationfast s-easeout s-fontFamilybody s-fontWeightmedium s-leadingnone s-whitespacenowrap s-fontSizesm s-hover-bghoverbg s-hover-fgforeground s-pressed-bgprimary s-pressed-fgprimaryforeground s-pressed-borderprimary s-pressed-z1 s-pressedhover-bgprimary s-pressedhover-fgprimaryforeground s-pressedhover-borderprimary s-pressedhover-opacity90 s-disabled-opacity50 s-disabled-cursornotallowed s-focus-outlinesolid s-focus-outline2 s-focus-outlinering s-focus-z2 s-sizemd-hcontrolhmd s-sizemd-padX3 s-sizemd-fontSizesm'
+
+const outlineCls =
+  `${TOGGLE} s-variantoutline-mspx s-variantoutline-radiusnone s-orientationhorizontalvariantoutlinefirst-ms0 s-orientationhorizontalvariantoutlinefirst-radiusLmd s-orientationhorizontalvariantoutlinelast-radiusRmd`
+const ghostCls =
+  `${TOGGLE} s-variantghost-ms0 s-variantghost-me1 s-variantghost-bordertransparent s-variantghost-radiusmd s-variantghostlast-me0`
+const segmentedCls =
+  `${TOGGLE} s-variantsegmented-ms0 s-variantsegmented-me1 s-variantsegmented-bordertransparent s-variantsegmented-radiussm s-variantsegmentedlast-me0`
+
+const toggleCls = (variant) =>
+  variant === 'ghost' ? ghostCls : variant === 'segmented' ? segmentedCls : outlineCls
+
+const GROUP_SEG =
+  'sail-toggle-group sail-row-i sail-g-0 sail-ai-center sail-jc-start sail-nowrap s-pad1 s-bgtogglegroup s-borderWidth1 s-bordertogglegroupborder s-radiusmd'
+const GROUP_PLAIN =
+  'sail-toggle-group sail-row-i sail-g-0 sail-ai-center sail-jc-start sail-nowrap s-bgtransparent'
+
+const toggle = (val, label, pressed, focusable, variant, dis = '') =>
+  `<button class="${toggleCls(variant)}" data-sail-host="toggle" value="${val}" role="button" aria-pressed="${pressed ? 'true' : 'false'}" tabindex="${focusable ? '0' : '-1'}" size="md" variant="${variant}" ${dis}>${label}</button>`
 
 const group = (variant, attrs, value, items) => {
   const active = new Set(value.split(/\s+/).filter(Boolean))
   const enabled = items.filter(([, , d]) => !d)
   const focus = enabled.find(([v]) => active.has(v))?.[0] ?? enabled[0]?.[0]
+  const gCls = variant === 'segmented' ? GROUP_SEG : GROUP_PLAIN
   return (
-    `<div class="sail-toggle-group" variant="${variant}" value="${value}" ${attrs} role="group" aria-orientation="horizontal">` +
-    items.map(([v, l, d]) => toggle(v, l, active.has(v), v === focus, d ? 'disabled' : '')).join('') +
+    `<div class="${gCls}" data-sail-host="toggle-group" variant="${variant}" value="${value}" ${attrs} role="group" aria-orientation="horizontal">` +
+    items.map(([v, l, d]) => toggle(v, l, active.has(v), v === focus, variant, d ? 'disabled' : '')).join('') +
     `</div>`
   )
 }
@@ -24,12 +45,16 @@ export default {
   tag: 'toggle-group',
   width: 720,
   rows() {
+    // visual.cross: type · value · variant · orientation (+ default outline/single/horizontal)
     return [
-      group('outline', 'type="single"', 'list', items),
+      group('outline', 'type="single" class="l1-mark"', 'list', items),
       group('ghost', 'type="single"', 'grid', items),
       group('segmented', 'type="single"', 'board', items),
       group('outline', 'type="multiple"', 'grid board', items),
-      group('outline', 'orientation="vertical"', 'list', items),
+      group('outline', 'type="single" orientation="vertical"', 'list', items),
+      group('outline', 'type="single" orientation="horizontal"', 'grid', items),
+      group('ghost', 'type="multiple"', 'list', items),
+      group('segmented', 'type="single" orientation="vertical"', 'grid', items),
     ]
   },
   probe() {
