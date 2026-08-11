@@ -129,13 +129,7 @@ export default controller((_ctx: Scope) => {
           </column>
           <column gap="2">
             <label style(knobLabel)>Code</label>
-            <input
-              type="text"
-              bind:value={errCode}
-              size="sm"
-              placeholder="ERR_…"
-              style(fullW)
-            />
+            <input type="text" bind:value={errCode} size="sm" placeholder="ERR_…" style(fullW) />
             <p style(mutedXs)>
               Machine-readable chip. Empty hides the code region via
               <code>use:recoverySurface</code>.

@@ -11,9 +11,10 @@ export default controller((_ctx: Scope) => {
   const size = signal('md')
   const backdrop = signal('default')
   const side = signal('center')
-  const dismissible = signal(true)
+  // Not named `dismissible` — clashes with built-in use:dismissible action.
+  const canDismiss = signal(true)
   const dlgMeta = derived(() => {
-    return `${size()} · backdrop ${backdrop()} · side ${side()} · dismissible ${dismissible()} · component.dialog.*`
+    return `${size()} · backdrop ${backdrop()} · side ${side()} · dismissible ${canDismiss()} · component.dialog.*`
   })
   const entry = DETAILS.dialog
   const heading = () => entry.heading
@@ -27,7 +28,7 @@ export default controller((_ctx: Scope) => {
   const dlgExLock = () =>
     `<dialog dismissible={false}>\n  <!-- ESC + backdrop cannot close; user must pick an action -->\n</dialog>`
   return {
-    size, backdrop, side, dismissible, dlgMeta,
+    size, backdrop, side, canDismiss, dlgMeta,
     heading, blurb, props, usageCode, dlgExModal, dlgExSheet, dlgExLock,
   }
 })
@@ -95,7 +96,7 @@ export default controller((_ctx: Scope) => {
               size={size()}
               backdrop={backdrop()}
               side={side()}
-              dismissible={dismissible() ? 'true' : 'false'}
+              dismissible={canDismiss() ? 'true' : 'false'}
             >
               <header>Invite to workspace</header>
               <section>
@@ -142,8 +143,8 @@ export default controller((_ctx: Scope) => {
           <column gap="2">
             <label style(knobLabel)>Dismissible</label>
             <row gap="2" align="center">
-              <switch bind:checked={dismissible} size="sm" tone="primary" label="Dismissible"></switch>
-              <span style(sizeValue)>{dismissible() ? 'ESC + backdrop' : 'locked'}</span>
+              <switch bind:checked={canDismiss} size="sm" tone="primary" label="Dismissible"></switch>
+              <span style(sizeValue)>{canDismiss() ? 'ESC + backdrop' : 'locked'}</span>
             </row>
           </column>
           <column gap="2">
