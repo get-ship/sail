@@ -283,6 +283,11 @@ pub fn check_all_with_tier(
     route_params: Option<&[String]>,
     tier: DiagnosticTier,
 ) -> Vec<Diagnostic> {
+    // SPEC-PROJECT-STRUCTURE-1 §4: block order is grammar — same law as
+    // `compile()`, on the author source before stripping `<controller>`.
+    if let Err(e) = parse::preprocess::check_sfc_block_order(source) {
+        return vec![Diagnostic::from_compile_error(&e, source)];
+    }
     // SFC: strip the inline `<controller>` block (else it parses as a template)
     // and resolve the controller (inline body wins, else paired file) for the
     // scope-aware passes — mirrors `compile()`.
