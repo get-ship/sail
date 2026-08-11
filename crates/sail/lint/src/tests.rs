@@ -352,8 +352,9 @@ fn app_source_path_recognises_apps_src() {
 }
 
 #[test]
-fn app_source_lints_csstext_and_create_element() {
+fn app_source_lints_csstext_floor() {
     // The hole this job closed: plain studio modules were never dispatched.
+    // CSSOM still dual-linted; ambient document.* is TypeEnv Pure (S2.3).
     let path = Path::new("/repo/apps/studio/src/edit/region-overlay.ts");
     let findings = lint_app_source_source(
         path,
@@ -365,8 +366,8 @@ fn app_source_lints_csstext_and_create_element() {
         "cssText / .style must fire floor: {findings:?}"
     );
     assert!(
-        rules.iter().any(|r| *r == "sail-no-ambient-dom"),
-        "createElement must fire ambient-dom: {findings:?}"
+        !rules.iter().any(|r| *r == "sail-no-ambient-dom"),
+        "S2.3: createElement must not dual-fire ambient-dom (TypeEnv owns it): {findings:?}"
     );
 }
 
@@ -376,10 +377,13 @@ fn lint_path_dispatches_app_source_ts() {
     // lint_app_source_source via the same predicate lint_path uses).
     let path = Path::new("/repo/apps/studio/src/foo.ts");
     assert!(is_app_source_ts(path));
-    // lint_path would read disk; exercise source API instead + predicate.
-    let findings = lint_app_source_source(path, "document.querySelector('[data-host]')");
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].rule, "sail-no-ambient-dom");
+    // Ambient DOM dual floor retired (S2.3) — document.querySelector is a
+    // TypeEnv error, not a lint finding. CSSOM still hits the style floor.
+    let findings = lint_app_source_source(path, "el.style.cssText = 'x'");
+    assert!(
+        findings.iter().any(|f| f.rule == "sail-no-imperative-style"),
+        "app-source dispatch must still run imperative-style: {findings:?}"
+    );
     // Silence unused import if lint_path is only referenced for docs.
     let _ = lint_path as fn(&Path) -> Vec<crate::Finding>;
 }

@@ -150,7 +150,7 @@ describe('tombstone scan: scrubbed dead machinery stays gone', () => {
     const noStyle = readText(join(REPO, 'crates/sail/lint/src/rules/no_inline_style.rs')) ?? ''
     const ambient =
       readText(join(REPO, 'crates/sail/lint/src/rules/controller_no_ambient_authority.rs')) ??
-      readText(join(REPO, 'crates/sail/lint/src/rules/no_ambient_dom.rs')) ??
+      readText(join(REPO, 'crates/sail/lint/src/rules/action_host_only.rs')) ??
       ''
 
     expect(noClass.includes('sail-no-class') || floor.includes('sail-no-class')).toBe(true)
