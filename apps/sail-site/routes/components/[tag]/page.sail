@@ -20,7 +20,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B3 peel: input/textarea/select. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -39,6 +39,9 @@ const DOC_CE_SLUGS = new Set([
   'radio-group',
   'switch',
   'slider',
+  'input',
+  'textarea',
+  'select',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -74,6 +77,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useRadioGroup = derived(() => tag() === 'radio-group' && useDocHost())
   const useSwitch = derived(() => tag() === 'switch' && useDocHost())
   const useSlider = derived(() => tag() === 'slider' && useDocHost())
+  const useInput = derived(() => tag() === 'input' && useDocHost())
+  const useTextarea = derived(() => tag() === 'textarea' && useDocHost())
+  const useSelect = derived(() => tag() === 'select' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -106,6 +112,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useRadioGroup,
     useSwitch,
     useSlider,
+    useInput,
+    useTextarea,
+    useSelect,
     useLegacy,
     heading,
     blurb,
@@ -171,6 +180,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useSlider()}>
     <doc-slider></doc-slider>
+  </if>
+  <if {useInput()}>
+    <doc-input></doc-input>
+  </if>
+  <if {useTextarea()}>
+    <doc-textarea></doc-textarea>
+  </if>
+  <if {useSelect()}>
+    <doc-select></doc-select>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

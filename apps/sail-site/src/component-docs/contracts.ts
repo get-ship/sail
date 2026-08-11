@@ -19,6 +19,9 @@ import { contract as skeleton } from './skeleton/contract'
 import { contract as slider } from './slider/contract'
 import { contract as spinner } from './spinner/contract'
 import { contract as switchToggle } from './switch/contract'
+import { contract as input } from './input/contract'
+import { contract as textarea } from './textarea/contract'
+import { contract as select } from './select/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -39,6 +42,9 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   radioGroup,
   switchToggle,
   slider,
+  input,
+  textarea,
+  select,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

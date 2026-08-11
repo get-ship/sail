@@ -108,6 +108,10 @@ const KNOB_LABELS = {
   min: 'min',
   max: 'max',
   step: 'step',
+  type: 'type',
+  placeholder: 'placeholder',
+  rows: 'rows',
+  multiple: 'multiple',
 }
 
 function extractDocAxes(docSrc) {

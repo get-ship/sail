@@ -4,8 +4,9 @@
 
   First-class (do NOT re-add stages here): button, badge, fieldset, chip, alert,
   separator, spinner, skeleton, icon, progress, meter, label, field, radio,
-  radio-group, switch, slider. Peel remaining tags into
+  radio-group, switch, slider, input, textarea, select. Peel remaining tags into
   component-docs/<slug>/doc-<slug>.sail over time.
+  checkbox stays alias residual (no CE invent — demos <input type="checkbox">).
 
   Specimens are intentional live demos (hub-quality), not random float.
   Props/usage come from DETAILS + pack meta. Viewer variant chips drive tags
@@ -111,9 +112,7 @@ export default controller((ctx: Scope) => {
   const is = (slug: string) => () => tag() === slug
   const stage = {
     a: is('a'),
-    input: is('input'),
-    textarea: is('textarea'),
-    select: is('select'),
+    // B3 peeled → first-class doc-* packages (input/textarea/select); checkbox alias residual
     combobox: is('combobox'),
     checkbox: is('checkbox'),
     // B2 peeled → first-class doc-* packages (label/field/radio/radio-group/switch/slider)
@@ -254,32 +253,6 @@ export default controller((ctx: Scope) => {
             <a href="/docs" variant="outline">Read docs</a>
           </row>
           <p style(monoXs)>bare = text link · variant set = button-link</p>
-        </column>
-      </if>
-      <if {stage.input()}>
-        <column gap="3" style(stageCol)>
-          <input type="email" placeholder="you@company.com" bind:value={email} />
-          <row gap="3" align="center">
-            <label style(mutedSm)><input type="checkbox" bind:checked={agreed} /> agree</label>
-            <input type="range" min="0" max="100" bind:value={volume} style(fullW) />
-          </row>
-          <p style(monoXs)>{email()} · check {agreed() ? 'on' : 'off'} · {volume()}</p>
-        </column>
-      </if>
-      <if {stage.textarea()}>
-        <column gap="2" style(stageColMd)>
-          <textarea rows="3" placeholder="Tell us about yourself" bind:value={bio}></textarea>
-          <p style(monoXs)>{bio().length} characters · component.field.*</p>
-        </column>
-      </if>
-      <if {stage.select()}>
-        <column gap="2" style(stageColMd)>
-          <select bind:value={team}>
-            <option>Engineering</option>
-            <option>Design</option>
-            <option>Research</option>
-          </select>
-          <p style(monoXs)>team: {team()}</p>
         </column>
       </if>
       <if {stage.combobox()}>

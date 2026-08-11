@@ -1,16 +1,34 @@
-// L1 conformance spec: <textarea> (mechanism-2, native + skin). Same field
-// contract as <input> — border/elevation, invalid, disabled — plus the one thing
-// that's its own: it grows. `use:autosize` is the L1 behavior that makes it grow
-// to fit its content instead of scrolling, and that's what the behavior block drives.
+// L1 conformance spec: <textarea> (mechanism-2, native + freeform Style stamps).
+// Same field contract as <input> — border/elevation, invalid, disabled, size —
+// plus rows and use:autosize behavior.
 
-const ta = (attrs = '', val = '') => `<textarea ${attrs}>${val}</textarea>`
+const TA =
+  's-displayblock s-minHcontrolhmd s-padY15 s-padX3 s-wfull s-fgfieldforeground s-bgfield s-borderWidth1 s-borderfieldborder s-radiusmd s-shadowxs s-fontSizebase s-hover-borderborderstrong s-disabled-cursornotallowed s-disabled-opacity50 s-sizexs-minHcontrolh2xs s-sizexs-padX2 s-sizexs-fontSizexs s-sizesm-minHcontrolhsm s-sizesm-padX25 s-sizesm-fontSizesm s-sizemd-minHcontrolhmd s-sizemd-padX3 s-sizemd-fontSizebase s-sizelg-minHcontrolhlg s-sizelg-padX4 s-sizelg-fontSizemd s-invalidtrue-borderdestructive'
+
+const ta = (attrs = '', val = '') => {
+  const m = attrs.match(/class="([^"]*)"/)
+  const rest = attrs.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${TA} ${m[1]}` : TA
+  return `<textarea class="${cls}" ${rest}>${val}</textarea>`
+}
 
 export default {
   tag: 'textarea',
-  width: 640,
+  width: 720,
   rows() {
     return [
-      [ta('class="l1-mark"', 'default'), ta('invalid', 'invalid'), ta('disabled', 'disabled')].join(''),
+      // rest-default + invalid + disabled
+      [ta('class="l1-mark"', 'default'), ta('invalid', 'invalid'), ta('disabled', 'disabled')].join(
+        '',
+      ),
+      // size ladder
+      [
+        ta('size="xs" rows="2"', 'xs'),
+        ta('size="sm" rows="2"', 'sm'),
+        ta('size="md" rows="2"', 'md'),
+        ta('size="lg" rows="2"', 'lg'),
+      ].join(''),
+      // rows must size height (border-box)
       ta('rows="4" style="width:100%"', 'four rows'),
     ]
   },
@@ -24,11 +42,7 @@ export default {
       if (r.width <= 0 || r.height <= 0) return bad.push({ i, why: 'not-rendered' })
       if (clear(cs(el, 'borderTopColor')) && cs(el, 'boxShadow') === 'none')
         bad.push({ i, why: 'field-not-visible' })
-      // it takes the DESIGN font — i.e. exactly --font-body, whatever the theme
-      // says that is. (Not "isn't mono": the console theme's body font IS mono,
-      // and a textarea there SHOULD be mono.)
-      // (normalize: computed font-family re-quotes the list differently than the
-      // raw custom-property text — "SFMono-Regular" vs SFMono-Regular.)
+      // design font — normalize quotes/whitespace
       const norm = (v) => v.replace(/["']/g, '').replace(/\s+/g, '').toLowerCase()
       const want = getComputedStyle(el).getPropertyValue('--font-body')
       if (want && norm(cs(el, 'fontFamily')) !== norm(want))
@@ -39,11 +53,18 @@ export default {
     const q = (s) => document.querySelector(scope + s)
     if (cs(q('textarea.l1-mark'), 'borderTopColor') === cs(q('textarea[invalid]'), 'borderTopColor'))
       bad.push({ why: 'invalid-not-distinct' })
-    // rows must actually size it. This is the border-box assertion in disguise:
-    // under content-box the min-height floor is 68px of CONTENT, which swallows
-    // four rows whole and makes `rows` a no-op.
+    // size monotonic
+    const h = (s) => q(s).getBoundingClientRect().height
+    const [xs, sm, md, lg] = [
+      h('textarea[size="xs"]'),
+      h('textarea[size="sm"]'),
+      h('textarea[size="md"]'),
+      h('textarea[size="lg"]'),
+    ]
+    if (!(xs <= sm && sm <= md && md <= lg)) bad.push({ why: 'size-not-monotonic', xs, sm, md, lg })
+    // rows must actually size it
     const base = q('textarea.l1-mark').getBoundingClientRect().height
-    const four = q('textarea[rows]').getBoundingClientRect().height
+    const four = q('textarea[rows="4"]').getBoundingClientRect().height
     if (!(base < four)) bad.push({ why: 'rows-not-honored', base, four })
     if (cs(q('textarea.l1-mark'), 'boxSizing') !== 'border-box')
       bad.push({ why: 'not-border-box' })
@@ -53,13 +74,14 @@ export default {
     return { count: document.querySelectorAll('textarea').length, bad: bad.slice(0, 10) }
   },
   behavior: {
-    rows() { return [`<textarea id="ta" rows="2" style="width:400px"></textarea>`] },
+    rows() {
+      return [`<textarea id="ta" rows="2" style="width:400px"></textarea>`]
+    },
     attach: [['#ta', 'autosize']],
     async run(page) {
       const bad = []
       const h = () => page.evaluate(() => document.getElementById('ta').getBoundingClientRect().height)
       const start = await h()
-      // typing past the visible rows must GROW the box, not scroll it
       await page.click('#ta')
       await page.keyboard.type('one\ntwo\nthree\nfour\nfive\nsix')
       await page.waitForTimeout(80)
@@ -70,7 +92,6 @@ export default {
         return el.scrollHeight - el.clientHeight > 2
       })
       if (scrolls) bad.push({ why: 'autosize-still-scrolls' })
-      // and SHRINK back when the content goes away
       await page.evaluate(() => {
         const el = document.getElementById('ta')
         el.value = ''

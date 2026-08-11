@@ -7,8 +7,9 @@ export const meta = {
   key: 'select',
   category: 'inputs',
   kind: 'host',
-  blurb: "Native closed picker — keyboard, form submission, and mobile sheets come from the platform. Rest surface is component.field (bg · fg · border) shared with input/textarea; size xs|sm|md|lg; invalid → destructive border; disabled dims. SELECT_MAP draws the chevron + option ink. Not a combobox — open listbox chrome is a different L1.",
-  heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Native closed picker — keyboard, form submission, and mobile sheets come from the platform. Rest surface is component.field (bg · fg · border) shared with input/textarea; size xs|sm|md|lg; invalid → destructive border; disabled dims. SELECT_MAP draws the chevron + option ink. Not a combobox — open listbox chrome is a different L1.',
+  heading: 'prose',
+  host: 'doc-select',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta
