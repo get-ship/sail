@@ -2686,6 +2686,7 @@ pub fn check_sfc_block_order(source: &str) -> Result<(), CompileError> {
                 "`<scope>` must come before `<controller>` — block order is grammar. \
                  Put the `<scope>` block first, then `<controller>`, then the template.",
             )
+            .with_category("sail-block-order")
             .with_span(Span::new(
                 controller_pos,
                 controller_pos + "<controller".len(),

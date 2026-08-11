@@ -68,6 +68,15 @@ pub struct DiagSpec {
 /// [`crate::check::layout`] (`rule_id_for_kind` → `Diagnostic.rule`).
 const DIAG_SPECS: &[DiagSpec] = &[
     DiagSpec {
+        id: "sail-block-order",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "`<scope>` must come before `<controller>` — block order is grammar",
+        allowed_list_source: None,
+        fix_text: Some("put the `<scope>` block first, then `<controller>`, then the template"),
+        docs_anchor: Some("SPEC-PROJECT-STRUCTURE-1#block-order"),
+    },
+    DiagSpec {
         id: "sail-clipped-text",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,
