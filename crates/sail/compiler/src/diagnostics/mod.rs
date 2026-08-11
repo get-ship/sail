@@ -3,8 +3,14 @@
 //! Every IR node carries a `Span` pointing back at the user's source.
 //! Errors capture the span, an optional file path, and a one-sentence
 //! message so the CLI can render a useful error report.
+//!
+//! DiagSpec registry skeleton (SPEC-LINTS-1 §4 Phase 1): see [`registry`].
 
 use std::path::PathBuf;
+
+pub mod registry;
+
+pub use registry::{DiagSpec, Jurisdiction, lookup, registry};
 
 /// A byte range into the original source. Inclusive start, exclusive end.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
