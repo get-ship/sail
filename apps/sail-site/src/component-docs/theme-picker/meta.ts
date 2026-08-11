@@ -7,8 +7,9 @@ export const meta = {
   key: 'themePicker',
   category: 'inputs',
   kind: 'host',
-  blurb: "The theme switcher: a trigger that opens a native [popover] panel of theme cards, each previewing the surface it selects with the real stylesheet.",
-  heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Theme switcher: trigger opens a native [popover] of theme cards previewing real stylesheets. Host props: value · inline · modeOnly · onThemeChange. Paint component.theme-picker.* (panel · trigger · option).',
+  heading: 'theme-picker',
+  host: 'doc-theme-picker',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

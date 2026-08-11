@@ -7,8 +7,9 @@ export const meta = {
   key: 'combobox',
   category: 'inputs',
   kind: 'host',
-  blurb: "A text input that filters a list. Type to filter, arrows rove, Enter commits, Escape closes — the ARIA combobox pattern wired for you, themed like everything else.",
-  heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'A text input that filters a list. Type to filter, arrows rove, Enter commits, Escape closes — ARIA combobox wired for you. Host props: placeholder · value · onSelect. Listbox paint component.combobox.bg / fg.',
+  heading: 'combobox',
+  host: 'doc-combobox',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

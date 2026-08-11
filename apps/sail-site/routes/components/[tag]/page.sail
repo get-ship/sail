@@ -20,7 +20,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B6 peel: overlays + product hosts. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. Residual: accordion · combobox · theme-picker. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -66,6 +66,9 @@ const DOC_CE_SLUGS = new Set([
   'hover-card',
   'context-menu',
   'toast',
+  'accordion',
+  'combobox',
+  'theme-picker',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -128,6 +131,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useHoverCard = derived(() => tag() === 'hover-card' && useDocHost())
   const useContextMenu = derived(() => tag() === 'context-menu' && useDocHost())
   const useToast = derived(() => tag() === 'toast' && useDocHost())
+  const useAccordion = derived(() => tag() === 'accordion' && useDocHost())
+  const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
+  const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -187,6 +193,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useHoverCard,
     useContextMenu,
     useToast,
+    useAccordion,
+    useCombobox,
+    useThemePicker,
     useLegacy,
     heading,
     blurb,
@@ -333,6 +342,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useToast()}>
     <doc-toast></doc-toast>
+  </if>
+  <if {useAccordion()}>
+    <doc-accordion></doc-accordion>
+  </if>
+  <if {useCombobox()}>
+    <doc-combobox></doc-combobox>
+  </if>
+  <if {useThemePicker()}>
+    <doc-theme-picker></doc-theme-picker>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

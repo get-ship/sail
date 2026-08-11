@@ -46,6 +46,9 @@ import { contract as dropdown } from './dropdown/contract'
 import { contract as hoverCard } from './hover-card/contract'
 import { contract as contextMenu } from './context-menu/contract'
 import { contract as toast } from './toast/contract'
+import { contract as accordion } from './accordion/contract'
+import { contract as combobox } from './combobox/contract'
+import { contract as themePicker } from './theme-picker/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -93,6 +96,9 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   hoverCard,
   contextMenu,
   toast,
+  accordion,
+  combobox,
+  themePicker,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

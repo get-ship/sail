@@ -139,6 +139,10 @@ const KNOB_LABELS = {
   content: 'content',
   active: 'active',
   initials: 'initials',
+  // Residual hosts
+  open: 'open',
+  inline: 'inline',
+  'mode only': 'modeOnly',
 }
 
 function extractDocAxes(docSrc) {

@@ -6,7 +6,8 @@
   separator, spinner, skeleton, icon, progress, meter, label, field, radio,
   radio-group, switch, slider, input, textarea, select, scroll-area, ticker,
   table, pagination, toggle-group, tabs, navbar, card, avatar, breadcrumb,
-  dialog, popover, tooltip, dropdown, hover-card, context-menu, toast.
+  dialog, popover, tooltip, dropdown, hover-card, context-menu, toast,
+  accordion, combobox, theme-picker.
   Peel remaining tags into component-docs/<slug>/doc-<slug>.sail over time.
   checkbox stays alias residual (no CE invent — demos <input type="checkbox">).
 
@@ -54,17 +55,8 @@ export default controller((ctx: Scope) => {
     variant.set(v)
   }
 
-  // Interactive demo state shared across specimens.
-  const email = signal('ada@ship.dev')
+  // Interactive demo state shared across residual specimens.
   const agreed = signal(true)
-  const notify = signal(true)
-  const volume = signal(60)
-  const team = signal('Design')
-  const plan = signal('pro')
-  const bio = signal('')
-  const name = signal('')
-  const fw = signal('')
-  const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
   const presses = signal(0)
   const press = (): void => presses.set((n) => n + 1)
   // Pack media identity prop.
@@ -94,17 +86,15 @@ export default controller((ctx: Scope) => {
   // Per-tag stage flags — keep separate <if> blocks (no mega nested soup).
   const is = (slug: string) => () => tag() === slug
   const stage = {
+    // Residual peel → accordion/combobox/theme-picker first-class
     // B6 peeled → tabs/navbar/card/avatar/breadcrumb/dialog/popover/tooltip/dropdown/hover-card/context-menu/toast
     // B5 peeled → scroll-area/ticker/table/pagination/toggle-group
     // B4 peeled → a/kbd/prose/code-block/empty-state/error-state/error-boundary
     // B3 peeled → input/textarea/select; checkbox alias residual
-    combobox: is('combobox'),
     checkbox: is('checkbox'),
     // B2 peeled → label/field/radio/radio-group/switch/slider
     dropzone: is('dropzone'),
-    themePicker: is('theme-picker'),
     // B1 peeled → alert/chip/separator/spinner/skeleton/icon/progress/meter
-    accordion: is('accordion'),
     layout: is('layout'),
     // packs
     sailAreaChart: is('sail-area-chart'),
@@ -141,16 +131,7 @@ export default controller((ctx: Scope) => {
     variant,
     onVariantChange,
     stage,
-    email,
     agreed,
-    notify,
-    volume,
-    team,
-    plan,
-    bio,
-    name,
-    fw,
-    pickFw,
     presses,
     press,
   }
@@ -193,17 +174,6 @@ export default controller((ctx: Scope) => {
     on-variant-change={onVariantChange}
   >
     <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <if {stage.combobox()}>
-        <column gap="2" style(stageColMd)>
-          <combobox placeholder="Pick a framework — type to filter" on-select={pickFw}>
-            <option value="sail">Sail</option>
-            <option value="react">React</option>
-            <option value="svelte">Svelte</option>
-            <option value="solid">Solid</option>
-          </combobox>
-          <p style(monoXs)>picked: {fw() || 'nothing yet'}</p>
-        </column>
-      </if>
       <if {stage.checkbox()}>
         <column gap="2" align="start" style(stageCol)>
           <label style(mutedSm)>
@@ -217,15 +187,6 @@ export default controller((ctx: Scope) => {
           Drop a file, or click to browse
         </card>
         <p style(note)>Action / attribute — not an L1 host tag.</p>
-      </if>
-      <if {stage.themePicker()}>
-        <theme-picker></theme-picker>
-      </if>
-      <if {stage.accordion()}>
-        <accordion style(stageColMd)>
-          <span slot="trigger">Webhook endpoints</span>
-          <p style(mutedSm)>POST /v1/hooks · signed with your workspace secret.</p>
-        </accordion>
       </if>
       <if {stage.layout()}>
         <column gap="3" style(stageColMd)>

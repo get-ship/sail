@@ -1,11 +1,11 @@
 # Operator pairing queue — scaffold_ready
 
 **Updated:** 2026-08-11  
-**Branch tip:** `job/release-integrate` (local scaffold batch)
+**Branch tip:** `job/release-integrate` (local scaffold residual)
 
 Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class docs knobs, visual `bun run visual <tag>` green. Operator taste / multi-theme approval still open — **not** `done`.
 
-## Queue (B0 + B1 + B2 + B3 + B4 + B5 + B6)
+## Queue (B0 + B1 + B2 + B3 + B4 + B5 + B6 + residual)
 
 | Tag | Docs host | Contract | Visual | Notes for pairing |
 |-----|-----------|----------|--------|-------------------|
@@ -34,7 +34,7 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 | **prose** | `doc-prose` | yes | green | scope host; component.prose.fg; type brand taste |
 | **code-block** | `doc-code-block` | yes | green | code · lang; syntaxHighlight |
 | **empty-state** | `doc-empty-state` | yes | green | variant × size × optional tone |
-| **error-state** | `doc-error-state` | yes | green | variant × size × code chip |
+| **error-state** | `doc-error-state` | yes | green | variant × size · code chip |
 | **error-boundary** | `doc-error-boundary` | yes | green | message + catchRender events |
 | **scroll-area** | `doc-scroll-area` | yes | green | orientation only; thumb faces |
 | **ticker** | `doc-ticker` | yes | green | duration × reverse; no component.ticker.* |
@@ -53,6 +53,9 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 | **hover-card** | `doc-hover-card` | yes | green | placement; open/close dwell |
 | **context-menu** | `doc-context-menu` | yes | green | for= target; onSelect |
 | **toast** | `doc-toast` | yes | green | tone · duration; onDismiss callback |
+| **accordion** | `doc-accordion` | yes | green | open · disabled · name · multiple · onToggle |
+| **combobox** | `doc-combobox` | yes | green | placeholder · value · onSelect; list faces combobox.* |
+| **theme-picker** | `doc-theme-picker` | yes | green | value · inline · modeOnly; behavior catalog depth operator |
 
 ## Alias residual (not first-class host)
 
@@ -62,9 +65,10 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 
 ## Explicitly not in queue yet
 
-- Remaining legacy: accordion, combobox, dropzone, theme-picker, layout keywords, pack CEs
+- Remaining legacy: dropzone (kind action), layout (kind keywords), pack CEs
 - Product invent work: card ladder, slider range, loading, avatar/breadcrumb variants, motion doctrine
 - Overlay behavior depth (pointer precision, multi-trigger edge cases)
+- theme-picker live catalog/behavior (localStorage + effective ids) — scaffold anatomy only
 - Playwright knobs→paint
 
 ## Checker
@@ -72,5 +76,5 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 ```bash
 bun apps/sail-site/scripts/check-l1-surface-contract.mjs
 # or: cd apps/sail-site && bun run check:l1-surface
-# expect 44 contracts after B6 (12 new hosts)
+# expect 47 contracts after residual peel (3 new hosts)
 ```

@@ -187,14 +187,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   combobox: lang('combobox', 'combobox', {
     blurb:
-      'A text input that filters a list. Type to filter, arrows rove, Enter commits, Escape closes — the ARIA combobox pattern wired for you, themed like everything else.',
+      'A text input that filters a list. Type to filter, arrows rove, Enter commits, Escape closes — ARIA combobox wired for you. Host props: placeholder · value · onSelect. Listbox paint component.combobox.bg / fg; field chrome matches bare input globals.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'placeholder', desc: 'hint text in the empty field', type: 'string' },
       { name: 'value', desc: 'the committed value, reflected', type: 'string' },
+      { name: 'onSelect', desc: 'commit callback — { value, label }', type: 'callback' },
       { name: '<option>', desc: 'the list — plain option children', type: 'children' },
-      { name: 'on-select', desc: 'commit callback, { value, label }', type: 'callback' },
     ],
   }),
   checkbox: lang('checkbox', 'checkbox', {
@@ -337,12 +337,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
-      'The theme switcher: a trigger that opens a native [popover] panel of theme cards, each previewing the surface it selects with the real stylesheet.',
+      'Theme switcher: trigger opens a native [popover] of theme cards previewing real stylesheets. Host props: value · inline · modeOnly · onThemeChange. Paint component.theme-picker.* (panel · trigger · option).',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value', desc: 'the active theme, reflected', type: 'string' },
-      { name: 'ship:theme:change', desc: 'announced on selection', type: 'callback' },
+      { name: 'value', desc: 'the active theme id, reflected', type: 'string' },
+      { name: 'inline', desc: 'panel in document flow (no floating popover chrome)', type: 'bool' },
+      { name: 'modeOnly', desc: 'light / dark / system cycle only — no full catalog', type: 'bool' },
+      { name: 'onThemeChange', desc: 'fires with { theme, mode, preference } on selection', type: 'callback' },
     ],
   }),
 
@@ -605,15 +607,16 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   accordion: lang('accordion', 'accordion', {
     blurb:
-      'ONE disclosure element (replaces collapsible + details). Trigger slot, disabled, onToggle; exclusive multi-item via shared name.',
+      'ONE disclosure element (replaces collapsible + details). open · disabled · name · multiple · onToggle. Shared name = exclusive multi-item (native details name). Paint component.accordion.* (bg · fg · border · hover-bg · chevron).',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'slot="trigger"', desc: 'the always-visible line', type: 'slot' },
-      { name: 'open', desc: 'initial state, reflected', type: 'bool' },
+      { name: 'open', desc: 'expanded state, reflected', type: 'bool' },
       { name: 'disabled', desc: 'locks activation', type: 'bool' },
       { name: 'name', desc: 'exclusive group (native details name)', type: 'string' },
       { name: 'multiple', desc: 'allow several open when not exclusiving via name', type: 'bool' },
+      { name: 'onToggle', desc: 'fires with { open } on expand/collapse', type: 'callback' },
+      { name: 'slot="trigger"', desc: 'the always-visible line', type: 'slot' },
     ],
   }),
   kbd: lang('kbd', 'kbd', {
