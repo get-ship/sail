@@ -10,7 +10,7 @@
 //! This module does **not** change those call sites in S1.1 — pure
 //! library API + unit tests only.
 
-use std::path::{Component, Path};
+use std::path::{Component, Path, PathBuf};
 
 /// Kind of authoring file under the fixed project map.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -183,6 +183,23 @@ pub fn at_alias_paths() -> &'static [AtAliasMapping] {
             target: "./themes/*",
         },
     ]
+}
+
+/// Resolve a project `@/…` import specifier against `project_root` using
+/// [`at_alias_paths`] as the only mapping table (SPEC-PROJECT-STRUCTURE-1 §3).
+///
+/// Returns a path under `project_root` when `specifier` matches an SSOT
+/// pattern (e.g. `@/stores/tally` → `{root}/src/stores/tally`). Does **not**
+/// require the target file to exist — pure alias math for tsconfig/deck parity.
+///
+/// Deck bundler `resolve_id` must call this (or a thin wrapper over the same
+/// table) so emit paths and runtime resolve cannot drift.
+///
+/// S1.3 product fills the body; empty stub keeps gate tests compile-red →
+/// runtime-red.
+pub fn resolve_at_alias(project_root: &Path, specifier: &str) -> Option<PathBuf> {
+    let _ = (project_root, specifier);
+    None
 }
 
 fn home_for(kind: FileKind) -> &'static str {
