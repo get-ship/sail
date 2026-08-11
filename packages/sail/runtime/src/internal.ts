@@ -28,6 +28,12 @@
 // source of truth for the public names.
 export * from './index'
 
+// Virtualizer stays OFF the author root barrel (bundle-weight), but ambient
+// inject (RUNTIME_AMBIENT) and compiler-emitted controllers resolve it via
+// `/internal` so pack authors never value-import `@ship/sail-runtime/virtual`.
+export { createVirtualizer } from './virtual'
+export type { Virtual, VirtualItem, VirtualOptions } from './virtual'
+
 // ── ABI-only: DOM binders ──────────────────────────────────────────────────
 export {
   bindText,

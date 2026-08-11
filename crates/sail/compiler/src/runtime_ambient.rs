@@ -47,6 +47,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "paint the document theme session (tokens API on runtime ambient)",
     ),
     (
+        "attachBoundary",
+        "attachBoundary",
+        "register an error-boundary handle on a host element",
+    ),
+    (
         "batch",
         "batch",
         "coalesce multiple signal writes into one flush",
@@ -55,6 +60,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "controller",
         "controller",
         "the controller factory — wraps a setup function into a bound scope",
+    ),
+    (
+        "createVirtualizer",
+        "createVirtualizer",
+        "windowed list adapter — reactive Virtual surface over the virtual core",
     ),
     (
         "debounce",
@@ -70,6 +80,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "derived",
         "derived",
         "a read-only signal computed from other signals, recomputed on dependency change",
+    ),
+    (
+        "detachBoundary",
+        "detachBoundary",
+        "remove an error-boundary handle from a host element",
     ),
     (
         "effect",

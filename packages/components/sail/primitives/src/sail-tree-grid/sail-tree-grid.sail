@@ -21,7 +21,7 @@
 // createTable navMode:cell + virtualizer; column wire in sail-tree-grid.columns.
 
 import type { Action, ControllerScope } from '@ship/sail-runtime'
-import { createVirtualizer, type Virtual } from '@ship/sail-runtime/virtual'
+import type { Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
 import { parseJsonColumns, parseJsonNodes } from '../sail-tree/decode'

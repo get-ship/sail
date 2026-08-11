@@ -4,14 +4,14 @@
 //! `sail_lint::lint_controller_source`, `sail_lint::lint_app_source_source`).
 //! Implementer must not modify, skip, or weaken these tests.
 //!
-//! Law (operator-ratified):
+//! Law (operator-ratified; S5.3 supersedes the S5.1 L2 pack carve-out):
 //! - `import … from '@ship/<anything>'` in **app** code (`.sail` controller
 //!   regions or `apps/*/src/**` TS) is a **teaching Error** that names the
 //!   ambient model and tells the author to delete the import.
 //! - Teaching shape (SPEC): *"framework functions are ambient — delete this
 //!   import."*
-//! - Pack code under `packages/components/sail/**` is the L2 exception (may
-//!   keep pack-convention `@ship/*` imports).
+//! - Pack code under `packages/components/sail/**` is **not** exempt (S5.3):
+//!   packs are third-party, same import law as apps.
 //! - App-local `@/` imports remain legal and must not fire this teaching.
 //!
 //! Severity: Error (fails `compile` hard-wall + `check_all`). Not a soft Warn.
@@ -223,18 +223,15 @@ fn at_slash_app_local_import_is_not_framework_teaching() {
 }
 
 #[test]
-fn component_pack_ship_import_is_exempt() {
-    // L2: pack conventions may still import from @ship/* — not app code.
+fn component_pack_ship_import_is_teaching_error() {
+    // S5.3 supersedes S5.1 L2 exemption: packs are third-party, not framework.
+    // Operator doctrine — no import-law carve-out for packages/components.
     let path = Path::new("packages/components/sail/button/src/button.controller.ts");
     let src = "import { controller, signal } from '@ship/sail-runtime'\n\
                export default controller(() => ({ n: signal(0) }))\n";
     let findings = lint_controller_source(path, src);
-    let teaching: Vec<_> = findings
-        .iter()
-        .filter(|f| f.severity == Severity::Error && is_framework_import_teaching(&f.message))
-        .collect();
     assert!(
-        teaching.is_empty(),
-        "component-pack @ship/* imports are the L2 exception; must not Error-teach. got: {teaching:?}"
+        has_teaching_error(&findings),
+        "component-pack @ship/* value imports must teaching-Error (S5.3). findings: {findings:?}"
     );
 }

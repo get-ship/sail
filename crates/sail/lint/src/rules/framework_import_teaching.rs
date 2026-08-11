@@ -1,13 +1,12 @@
 //! `sail-framework-import-teaching` — value imports from `@ship/*` in **app**
-//! code are a teaching Error (SPEC-AMBIENT-SURFACE-1 §2).
+//! and **third-party pack** code are a teaching Error (SPEC-AMBIENT-SURFACE-1 §2).
 //!
-//! Law (operator-ratified):
+//! Law (operator-ratified; S5.3 supersedes the S5.1 L2 pack carve-out):
 //! - Framework functions are ambient — authors delete `@ship/*` value imports.
 //! - Fires on app controllers (`.controller.ts` / inline controller under
-//!   `apps/**`) and plain app TypeScript under `apps/*/src/**` (via
-//!   `APP_SOURCE_RULES`).
-//! - L2 exception: component packs under `packages/components/**` may keep
-//!   pack-convention `@ship/*` imports.
+//!   `apps/**`), plain app TypeScript under `apps/*/src/**` (via
+//!   `APP_SOURCE_RULES`), and pack controllers under `packages/components/**`
+//!   (packs are third-party, not framework).
 //! - Type-only imports (`import type`, `import { type X }`) remain free.
 //! - App-local `@/` imports are not `@ship/*` and never fire this rule.
 //! - Compiler-injected ambient imports from `@ship/sail-runtime/internal`
@@ -61,12 +60,12 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     visitor.findings
 }
 
-/// App code only — packs and framework packages are out of scope.
+/// App + third-party pack controllers — framework packages stay out of scope.
 fn is_app_framework_import_scope(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/");
-    // L2: component packs may still import from `@ship/*`.
+    // S5.3: L2 packs are third-party — same import law as apps (no carve-out).
     if p.contains("/packages/components/") || p.starts_with("packages/components/") {
-        return false;
+        return true;
     }
     // Framework / other packages (runtime, tokens sources, deck, …).
     if p.contains("/packages/") || p.starts_with("packages/") {
@@ -252,13 +251,16 @@ mod tests {
     }
 
     #[test]
-    fn pack_controllers_are_exempt() {
+    fn pack_controllers_get_teaching_error() {
+        // S5.3: packs are third-party — no L2 import-law exemption.
         let f = lint_at(
             "packages/components/sail/button/src/button.controller.ts",
             "import { controller, signal } from '@ship/sail-runtime'\n\
              export default controller(() => ({ n: signal(0) }))\n",
         );
-        assert!(f.is_empty(), "pack L2 exception: {f:?}");
+        assert_eq!(f.len(), 1, "pack must teaching-Error @ship/* value import: {f:?}");
+        assert_eq!(f[0].severity, Severity::Error);
+        assert_eq!(f[0].rule, RULE_ID);
     }
 
     #[test]

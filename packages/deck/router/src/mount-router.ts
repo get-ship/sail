@@ -272,11 +272,19 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     // page's offset — you landed halfway down a doc you had never seen.
     // `onNavigate` saves the outgoing offset and marks the entry; `applyScroll`
     // must run AFTER the route renders, or it scrolls the OLD tree.
+    //
+    // Pathname SSOT: history is updated and `__shipSetRouteUpdate` runs
+    // *synchronously* before the async mount — so `route().pathname` consumers
+    // (layout chrome) observe the new path without monkeypatching history.
     const state = onNavigate(navOpts?.replace ?? false)
     if (navOpts?.replace) history.replaceState(state, '', to)
     else history.pushState(state, '', to)
     globalThis.__shipSetRouteUpdate?.()
-    void mountCurrent().then(() => applyScroll())
+    void mountCurrent()
+      .then(() => applyScroll())
+      .catch((err) => {
+        console.error('[deck/route] navigation mount failed:', err)
+      })
   }
 
   function onClick(e: MouseEvent): void {
@@ -302,7 +310,14 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
 
   const onPop = (): void => {
     onPopState()
-    void mountCurrent().then(() => applyScroll())
+    // popstate already changed the URL; refresh route signals sync so chrome
+    // that reads `route().pathname` matches history before mount settles.
+    globalThis.__shipSetRouteUpdate?.()
+    void mountCurrent()
+      .then(() => applyScroll())
+      .catch((err) => {
+        console.error('[deck/route] popstate mount failed:', err)
+      })
   }
 
   installScrollRestoration()
@@ -310,7 +325,9 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   document.addEventListener('click', onClick)
   window.addEventListener('popstate', onPop)
 
-  void mountCurrent()
+  void mountCurrent().catch((err) => {
+    console.error('[deck/route] initial mount failed:', err)
+  })
 
   // ── HMR seam ─────────────────────────────────────────────────────────────
   // Snapshot the current mount's WRITABLE signals (value, not the signal) so a

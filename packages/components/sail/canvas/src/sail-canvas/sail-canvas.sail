@@ -17,7 +17,6 @@
 </scope>
 <controller>
 import type { Action } from '@ship/sail-runtime'
-import { debounce } from '@ship/sail-runtime'
 import type { Scope } from './sail-canvas.sail'
 import { createCanvas } from '../engine/create-canvas'
 import type { Canvas, Transform } from '../engine/types'

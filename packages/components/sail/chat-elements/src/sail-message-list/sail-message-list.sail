@@ -13,11 +13,7 @@
 <controller>
 
 import type { Action, Derived, ControllerScope } from '@ship/sail-runtime'
-import {
-  createVirtualizer,
-  type Virtual,
-  type VirtualItem,
-} from '@ship/sail-runtime/virtual'
+import type { Virtual, VirtualItem } from '@ship/sail-runtime/virtual'
 import type { Scope } from './sail-message-list.sail'
 
 interface MessageItem {
