@@ -31,7 +31,7 @@ clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 [dev-dependencies]
-# Nothing — spike; the only test is the binary's own CLI smoke.
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

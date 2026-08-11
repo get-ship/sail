@@ -45,6 +45,7 @@
 //! - **`if` / `for` / dynamic content.** The static-only path catches most
 //!   real-world layout bugs.
 
+pub mod canary;
 pub mod diagnostics;
 pub mod html;
 pub mod mapping;
