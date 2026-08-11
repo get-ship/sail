@@ -1117,6 +1117,23 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
     out.push_str("// ── Ambient globals (controller / scope / template regions) ──\n");
     out.push_str("declare global {\n");
 
+    // SPEC-AMBIENT-SURFACE-1 §1: public types are free globals (no `import type`
+    // from @ship/* in app code). Module-level `import type` above feeds
+    // signature positions; these aliases re-export them into the global scope.
+    out.push_str(
+        "  // Public types — free global names (declare global re-exports).\n\
+         \x20 type Signal<T> = import('@ship/sail-runtime').Signal<T>\n\
+         \x20 type Derived<T> = import('@ship/sail-runtime').Derived<T>\n\
+         \x20 type StoreDef<Shape> = import('@ship/sail-runtime').StoreDef<Shape>\n\
+         \x20 type Theme = import('@ship/sail-runtime').Theme\n\
+         \x20 type LiveSignal<T> = import('@ship/sail-runtime').LiveSignal<T>\n\
+         \x20 type LiveState<T> = import('@ship/sail-runtime').LiveState<T>\n\
+         \x20 type Mutation<T> = import('@ship/sail-runtime').Mutation<T>\n\
+         \x20 type MutationState<T> = import('@ship/sail-runtime').MutationState<T>\n\
+         \x20 type QueryKey = import('@ship/sail-runtime').QueryKey\n\
+         \x20 type ControllerScope<S> = import('@ship/sail-runtime').ControllerScope<S>\n",
+    );
+
     // Setter / motion / when-key names that also appear as token idents need a
     // callable∩literal hybrid — cannot emit both `const border` and `function border`.
     let setter_names: BTreeSet<&str> = setters().iter().map(|s| s.name).collect();
