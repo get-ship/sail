@@ -215,9 +215,8 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
   const onModeLibrary = () => applyMode('library')
   const onModeInspect = () => applyMode('inspect')
 
-  const onModeToggle = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.('[mode]') as HTMLElement | null
-    const m = btn?.dataset.mode
+  /** Closed-over mode — no dataset bus (plain `mode=` is not data-*). */
+  const onModeToggle = (m: 'library' | 'inspect') => {
     if (m === 'library' || m === 'inspect') applyMode(m)
   }
 

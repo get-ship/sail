@@ -138,9 +138,8 @@ export function createComponentsInspect(session: ComponentsSession) {
     }
   }
 
-  const onSurfacePick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[surface-path]') as HTMLElement | null
-    const path = el?.dataset.surfacePath
+  /** Closed-over surface path — no dataset bus. */
+  const onSurfacePick = (path: string) => {
     if (!path) return
     selectedSurface.set(path)
     hasSurface.set(true)
