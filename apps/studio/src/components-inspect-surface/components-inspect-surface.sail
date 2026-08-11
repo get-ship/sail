@@ -44,18 +44,19 @@ export default controller(() => {
         <row align="center" justify="between" nowrap gap="2">
           <p style(eyebrow)>Components</p>
         </row>
-        <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
-          <button type="button" size="sm" mode="library" variant="ghost" tone="muted">Library</button>
-          <button type="button" size="sm" mode="inspect" variant="solid" tone="primary" pressed="true">Inspect</button>
+        <row mode-toggle gap="1" align="center" nowrap>
+          <button type="button" size="sm" mode="library" variant="ghost" tone="muted" on:click={() => session.onModeToggle('library')}>Library</button>
+          <button type="button" size="sm" mode="inspect" variant="solid" tone="primary" pressed="true" on:click={() => session.onModeToggle('inspect')}>Inspect</button>
         </row>
         <p style(pathMeta)>Surface picker · open files & routes</p>
-        <scroll-area surface-picker surface-list on:click={inspect.onSurfacePick} style(pickerMax)>
+        <scroll-area surface-picker surface-list style(pickerMax)>
           <column gap="1">
             <for {inspect.surfaces() as s} key={s.key}>
               <studio-list-row
                 surface-path={s.value}
                 title={s.label}
                 selected={s.selected}
+                on:click={() => inspect.onSurfacePick(s.value)}
               ></studio-list-row>
             </for>
           </column>

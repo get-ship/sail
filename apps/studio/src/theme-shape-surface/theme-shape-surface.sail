@@ -54,6 +54,7 @@
     hint: string
     on: boolean
     canEdit: boolean
+    onPick: any
   }
 </scope>
 
@@ -66,6 +67,7 @@
     tone={on ? 'primary' : 'muted'}
     pressed={on ? 'true' : 'false'}
     disabled={!canEdit}
+    on:click={onPick}
   >
     <row gap="2" align="center" nowrap>
       <if {elev === 'none'}><stack hidden="true" style(elevMarkNone)></stack></if>
@@ -154,7 +156,7 @@ export default controller(() => {
             <p style(sectionTitle)>Quick patterns</p>
             <p style(pathMeta)>recipes</p>
           </row>
-          <grid cols="3" gap="2" recipe-grid on:click={shape.onRecipeClick}>
+          <grid cols="3" gap="2" recipe-grid>
             <for {shape.recipes() as r} key={r.key}>
               <button
                 type="button"
@@ -163,7 +165,9 @@ export default controller(() => {
                 variant={r.on ? 'solid' : 'outline'}
                 tone={r.on ? 'primary' : 'muted'}
                 pressed={r.on ? 'true' : 'false'}
-                disabled={!session.canEdit()} style(fullBtn)>
+                disabled={!session.canEdit()}
+                on:click={() => shape.onRecipeClick(r.id)}
+                style(fullBtn)>
                 {r.label}
               </button>
             </for>
@@ -176,7 +180,7 @@ export default controller(() => {
             <p style(sectionTitle)>Radius scale</p>
             <p style(pathMeta)>{shape.radiusReadout()}</p>
           </row>
-          <row radius-chips gap="2" align="stretch" nowrap on:click={shape.onRadiusChip} label="Radius steps">
+          <row radius-chips gap="2" align="stretch" nowrap label="Radius steps">
             <button
               type="button"
               size="sm"
@@ -184,7 +188,9 @@ export default controller(() => {
               variant="outline"
               tone={shape.focusStep() === 'sm' ? 'primary' : 'muted'}
               pressed={shape.focusStep() === 'sm' ? 'true' : 'false'}
-              title="radius.sm" style(chipCol)>
+              title="radius.sm"
+              on:click={() => shape.onRadiusChip('sm')}
+              style(chipCol)>
               <column gap="1" align="center">
                 <stack hidden="true" use:liveBox={liveCornerSmBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>sm</p>
@@ -198,7 +204,9 @@ export default controller(() => {
               variant="outline"
               tone={shape.focusStep() === 'md' ? 'primary' : 'muted'}
               pressed={shape.focusStep() === 'md' ? 'true' : 'false'}
-              title="radius.md" style(chipCol)>
+              title="radius.md"
+              on:click={() => shape.onRadiusChip('md')}
+              style(chipCol)>
               <column gap="1" align="center">
                 <stack hidden="true" use:liveBox={liveCornerMdBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>md</p>
@@ -212,7 +220,9 @@ export default controller(() => {
               variant="outline"
               tone={shape.focusStep() === 'lg' ? 'primary' : 'muted'}
               pressed={shape.focusStep() === 'lg' ? 'true' : 'false'}
-              title="radius.lg" style(chipCol)>
+              title="radius.lg"
+              on:click={() => shape.onRadiusChip('lg')}
+              style(chipCol)>
               <column gap="1" align="center">
                 <stack hidden="true" use:liveBox={liveCornerLgBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>lg</p>
@@ -226,7 +236,9 @@ export default controller(() => {
               variant="outline"
               tone={shape.focusStep() === 'xl' ? 'primary' : 'muted'}
               pressed={shape.focusStep() === 'xl' ? 'true' : 'false'}
-              title="radius.xl" style(chipCol)>
+              title="radius.xl"
+              on:click={() => shape.onRadiusChip('xl')}
+              style(chipCol)>
               <column gap="1" align="center">
                 <stack hidden="true" use:liveBox={liveCornerXlBox()} style(cornerChip)></stack>
                 <p style(pathMeta)>xl</p>
@@ -260,7 +272,7 @@ export default controller(() => {
             <p style(sectionTitle)>Shadow steps</p>
             <p style(pathMeta)>elevation · {shape.elevLabel()}</p>
           </row>
-          <grid cols="3" gap="2" elev-chips on:click={shape.onElevClick} label="Elevation steps">
+          <grid cols="3" gap="2" elev-chips label="Elevation steps">
             <for {shape.elevChips() as c} key={c.key}>
               <elev-chip
                 elev={c.elev}
@@ -268,6 +280,7 @@ export default controller(() => {
                 hint={c.hint}
                 on={c.on}
                 canEdit={session.canEdit()}
+                onPick={() => shape.onElevClick(c.elev)}
               ></elev-chip>
             </for>
           </grid>

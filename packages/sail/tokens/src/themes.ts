@@ -424,6 +424,33 @@ export function subscribeSystemPreference(
   return () => mql.removeListener(handler)
 }
 
+/** Detail payload announced with `ship:theme:change` (applyTheme / applyMode). */
+export interface ThemeChangeDetail {
+  id: string
+  dark: boolean
+  mode: string
+}
+
+/**
+ * Subscribe to product theme changes (the `ship:theme:change` bus owned by
+ * this module). App compositions call this instead of ambient
+ * `document.addEventListener` — one-writer / one-reader law.
+ *
+ * Returns an unsubscribe function. No-op when document is unavailable.
+ */
+export function subscribeThemeChange(
+  cb: (detail: ThemeChangeDetail) => void,
+): () => void {
+  if (typeof document === 'undefined') return () => {}
+  const handler = (e: Event): void => {
+    const d = (e as CustomEvent<ThemeChangeDetail>).detail
+    if (!d) return
+    cb(d)
+  }
+  document.addEventListener('ship:theme:change', handler)
+  return () => document.removeEventListener('ship:theme:change', handler)
+}
+
 /**
  * Apply a theme (+ optional mode) to the given root element (or
  * documentElement by default).

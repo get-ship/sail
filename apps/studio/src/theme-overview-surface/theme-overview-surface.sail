@@ -201,7 +201,7 @@ export default controller(() => {
 
           <column panel="density" gap="3" style(panelCard)>
             <p style(sectionTitle)>Density</p>
-            <column density-seg gap="2" on:click={overview.onDensityClick}>
+            <column density-seg gap="2">
               <for {overview.densityOptions() as d} key={d.key}>
                 <button
                   type="button"
@@ -210,7 +210,9 @@ export default controller(() => {
                   variant={d.on ? 'solid' : 'soft'}
                   tone={d.on ? 'primary' : 'muted'}
                   pressed={d.on ? 'true' : 'false'}
-                  disabled={!session.canEdit()} style(fullBtn)>
+                  disabled={!session.canEdit()}
+                  on:click={() => overview.onDensityClick(d.id)}
+                  style(fullBtn)>
                   {d.label}
                 </button>
               </for>

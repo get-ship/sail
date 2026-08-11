@@ -79,14 +79,14 @@ export default controller(() => {
       action: 'open-source' | 'select-in-app' | 'apply-fix',
       e?: Event,
     ) => c.onFindingAction(id, action, e),
-    onRuleToggle: (e: Event) => c.onRuleToggle(e),
-    onApplyRule: (e: Event) => c.onApplyRule(e),
+    onRuleToggle: (rule: string, e?: Event) => c.onRuleToggle(rule, e),
+    onApplyRule: (rule: string, e?: Event) => c.onApplyRule(rule, e),
     onRetryChecks: () => c.onRetryChecks(),
     onRecheck: () => c.onRecheck(),
-    onAutoFixMode: (e: Event) => c.onAutoFixMode(e),
+    onAutoFixMode: (mode: 'off' | 'suggest' | 'apply') => c.onAutoFixMode(mode),
     onOpenReview: () => c.onOpenReview(),
     onCloseReview: () => c.onCloseReview(),
-    onReviewToggle: (e: Event) => c.onReviewToggle(e),
+    onReviewToggle: (id: string) => c.onReviewToggle(id),
     onApplyReview: () => c.onApplyReview(),
   }
 })
@@ -130,7 +130,7 @@ export default controller(() => {
         </for>
       </select>
       <separator orientation="vertical" style(sepH)>      </separator>
-      <row autofix-control align="center" gap="1" nowrap on:click={onAutoFixMode} label={autoFixModeLabel()}>
+      <row autofix-control align="center" gap="1" nowrap label={autoFixModeLabel()}>
         <p style(mutedXs)>Autofix</p>
         <for {autoFixOpts() as m} key={m.key}>
           <button
@@ -140,6 +140,7 @@ export default controller(() => {
             active={m.active ? 'true' : 'false'}
             variant={m.active ? 'soft' : 'ghost'}
             tone={m.active ? 'primary' : 'muted'}
+            on:click={() => onAutoFixMode(m.mode)}
           >
             {m.label}
           </button>
@@ -227,7 +228,7 @@ export default controller(() => {
                 rule-toggle={g.rule}
                 group-row-id={g.groupRowId}
                 expanded={g.open ? 'true' : 'false'}
-                on:click={onRuleToggle}
+                on:click={(e) => onRuleToggle(g.rule, e)}
               >
                 {g.open ? '▾' : '▸'}
               </button>
@@ -257,7 +258,7 @@ export default controller(() => {
                   variant="soft"
                   tone="primary"
                   apply-rule={g.rule}
-                  on:click={onApplyRule}
+                  on:click={(e) => onApplyRule(g.rule, e)}
                 >
                   {g.applyAllLabel}
                 </button>
@@ -407,7 +408,7 @@ export default controller(() => {
             <column review-diff gap="1" style({ box: minW(0) })>
               <sail-diff from={item.before} to={item.after}></sail-diff>
             </column>
-            <row gap="2" on:click={onReviewToggle}>
+            <row gap="2">
               <button
                 type="button"
                 size="sm"
@@ -415,6 +416,7 @@ export default controller(() => {
                 accepted={item.accepted ? 'true' : 'false'}
                 variant={item.accepted ? 'soft' : 'ghost'}
                 tone={item.accepted ? 'primary' : 'muted'}
+                on:click={() => onReviewToggle(item.findingId)}
               >
                 {item.acceptLabel}
               </button>

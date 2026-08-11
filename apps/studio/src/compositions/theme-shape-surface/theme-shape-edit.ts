@@ -411,10 +411,9 @@ export function createShapeEdit(session: ThemeSession) {
       on: elevKey() === s.key,
     }))
 
-  const onRecipeClick = (e: Event) => {
+  /** Closed-over recipe id — no dataset bus. */
+  const onRecipeClick = (id: Exclude<RecipeId, 'custom'>) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[recipe]') as HTMLElement | null
-    const id = el?.dataset.recipe as Exclude<RecipeId, 'custom'> | undefined
     if (!id || !(id in RECIPES)) return
     const r = RECIPES[id]
     applyingRecipe = true
@@ -439,9 +438,7 @@ export function createShapeEdit(session: ThemeSession) {
     })()
   }
 
-  const onRadiusChip = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[radius]') as HTMLElement | null
-    const key = el?.dataset.radius as RadiusKey | undefined
+  const onRadiusChip = (key: RadiusKey) => {
     if (!key || !RADIUS_KEYS.includes(key)) return
     focusStep.set(key)
   }
@@ -455,10 +452,8 @@ export function createShapeEdit(session: ThemeSession) {
     void writeRadiusFamily(n).then(() => session.sync())
   }
 
-  const onElevClick = (e: Event) => {
+  const onElevClick = (key: ElevKey) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[elev]') as HTMLElement | null
-    const key = el?.dataset.elev as ElevKey | undefined
     if (!key || !ELEV_STEPS.some((s) => s.key === key)) return
     markCustom()
     void writeElev(key).then(() => session.sync())

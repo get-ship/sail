@@ -54,11 +54,11 @@ export default controller(() => {
             New…
           </button>
         </row>
-        <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
-          <button type="button" size="sm" mode="library" variant="solid" tone="primary" pressed="true">
+        <row mode-toggle gap="1" align="center" nowrap>
+          <button type="button" size="sm" mode="library" variant="solid" tone="primary" pressed="true" on:click={() => session.onModeToggle('library')}>
             Library
           </button>
-          <button type="button" size="sm" mode="inspect" variant="ghost" tone="muted" pressed="false">
+          <button type="button" size="sm" mode="inspect" variant="ghost" tone="muted" pressed="false" on:click={() => session.onModeToggle('inspect')}>
             Inspect
           </button>
         </row>
