@@ -44,11 +44,9 @@ pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
 pub mod ambient;
-pub mod no_ambient_dom;
-pub mod no_ambient_events;
-pub mod no_ambient_nav;
+// S2.3: dual ambient-DOM floors retired (TypeEnv Pure is the law).
+// IDs forever-pinned via RETIRED_RULE_IDS: sail-no-ambient-{dom,events,storage,nav}.
 pub mod no_ambient_network;
-pub mod no_ambient_storage;
 pub mod no_ambient_timers;
 pub mod no_data_attr;
 pub mod no_free_aria;
@@ -183,18 +181,18 @@ pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
 
 /// Rules that lint plain app TypeScript under `apps/*/src/**/*.ts`.
 ///
-/// Closes the escape hatch where studio (and sibling apps) put CSSOM /
-/// ambient DOM in a side module that was never a `.controller.ts` and
-/// therefore never saw the floor. Floor + ambient-DOM ban — not the full
-/// controller purity suite (those rules assume controller shape).
+/// Closes the escape hatch where studio (and sibling apps) put CSSOM in a
+/// side module that was never a `.controller.ts` and therefore never saw the
+/// floor. Ambient `document`/`window`/`localStorage`/`location` are unnameable
+/// under TypeEnv Pure (S2.1) — dual-floor regex rules for those were retired
+/// in S2.3. Kept: imperative-style, timers, network, prefer-query.
+/// Not the full controller purity suite (those rules assume controller shape).
 pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
-    (no_ambient_dom::RULE_ID, no_ambient_dom::check),
-    // SPEC-DOMDEC-1 ambient family (path-gated inside each rule).
-    (no_ambient_events::RULE_ID, no_ambient_events::check),
+    // SPEC-DOMDEC-1 residual ambient family (path-gated inside each rule).
+    // Timers: type-env alone may not ban top-level timer *calls*.
     (no_ambient_timers::RULE_ID, no_ambient_timers::check),
-    (no_ambient_storage::RULE_ID, no_ambient_storage::check),
-    (no_ambient_nav::RULE_ID, no_ambient_nav::check),
+    // Network: security floor, not dual with DOM lib (SCOUT-S2 §4b).
     (no_ambient_network::RULE_ID, no_ambient_network::check),
     // SPEC-CTX-1 teach-side (warn only).
     (prefer_query::RULE_ID, prefer_query::check),

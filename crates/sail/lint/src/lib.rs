@@ -50,6 +50,12 @@ pub use report::{Category, Finding, Severity};
 pub const RETIRED_RULE_IDS: &[&str] = &[
     // Superseded by language-level layout keywords (`row`/`column`/`grid`/`center`).
     "sail-legacy-layout",
+    // S2.3 / SPEC-PLATFORM-NEUTRALITY-1: dual ambient-DOM floors — TypeEnv Pure
+    // makes document/window/localStorage/location unnameable; lint dual path gone.
+    "sail-no-ambient-dom",
+    "sail-no-ambient-events",
+    "sail-no-ambient-nav",
+    "sail-no-ambient-storage",
 ];
 
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids
@@ -256,9 +262,10 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
 /// Lint a plain app `.ts` module under `apps/*/src/**`. Returns findings
 /// sorted by `(line, col)`. No filesystem access.
 ///
-/// Runs the floor (`sail-no-imperative-style`) plus `sail-no-ambient-dom`
-/// so a side module cannot reintroduce CSSOM / createElement / querySelector
-/// host mutation by living outside `.controller.ts`.
+/// Runs the floor (`sail-no-imperative-style`) plus residual ambient floors
+/// (timers, network) so a side module cannot reintroduce CSSOM host mutation
+/// or ambient network by living outside `.controller.ts`. Ambient DOM
+/// globals are owned by TypeEnv Pure (S2.1) — dual lint floors deleted S2.3.
 pub fn lint_app_source_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (_id, check) in rules::APP_SOURCE_RULES {
