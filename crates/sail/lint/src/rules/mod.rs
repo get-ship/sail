@@ -27,6 +27,7 @@ pub mod controller_no_ambient_authority;
 pub mod controller_no_load_state;
 pub mod controller_purity;
 pub mod controller_redundant_ambient_import;
+pub mod framework_import_teaching;
 pub mod controller_set_value;
 pub mod controller_size;
 pub mod controller_state_cast;
@@ -82,6 +83,10 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (
         controller_redundant_ambient_import::RULE_ID,
         controller_redundant_ambient_import::check,
+    ),
+    (
+        framework_import_teaching::RULE_ID,
+        framework_import_teaching::check,
     ),
     (
         controller_import_convention::RULE_ID,
@@ -194,6 +199,11 @@ pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_ambient_timers::RULE_ID, no_ambient_timers::check),
     // Network: security floor, not dual with DOM lib (SCOUT-S2 §4b).
     (no_ambient_network::RULE_ID, no_ambient_network::check),
+    // SPEC-AMBIENT-SURFACE-1 §2 — framework import teaching (Error).
+    (
+        framework_import_teaching::RULE_ID,
+        framework_import_teaching::check,
+    ),
     // SPEC-CTX-1 teach-side (warn only).
     (prefer_query::RULE_ID, prefer_query::check),
 ];
