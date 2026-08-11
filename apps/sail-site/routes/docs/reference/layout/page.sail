@@ -1,6 +1,15 @@
 <!--
   /docs/reference/layout — layout keyword vocabulary from language-surface.
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style cardMin = { box: minW(0) }
+  style propsLine = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -12,15 +21,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   layoutRows: () => LAYOUT_ROWS,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style cardMin = { box: minW(0) }
-  style propsLine = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

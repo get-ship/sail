@@ -194,11 +194,79 @@ pub fn at_alias_paths() -> &'static [AtAliasMapping] {
 ///
 /// Deck bundler `resolve_id` must call this (or a thin wrapper over the same
 /// table) so emit paths and runtime resolve cannot drift.
-///
-/// S1.3 product fills the body; empty stub keeps gate tests compile-red →
-/// runtime-red.
 pub fn resolve_at_alias(project_root: &Path, specifier: &str) -> Option<PathBuf> {
-    let _ = (project_root, specifier);
+    // Project aliases only — framework packages (`@ship/…`) and relative
+    // paths are not in this table.
+    if !specifier.starts_with("@/") {
+        return None;
+    }
+
+    // Longest pattern prefix wins when multiple entries could match (future
+    // catch-all `@/*` coexists with fixed roots without drifting homes).
+    let mut best: Option<(usize, PathBuf)> = None;
+    for m in at_alias_paths() {
+        let Some(resolved) = apply_alias_mapping(project_root, specifier, m) else {
+            continue;
+        };
+        let score = m.pattern.len();
+        match &best {
+            Some((s, _)) if score <= *s => {}
+            _ => best = Some((score, resolved)),
+        }
+    }
+    best.map(|(_, p)| p)
+}
+
+/// Apply one SSOT mapping row: pattern `@/stores/*` + target `./src/stores/*`
+/// maps `@/stores/tally` → `{root}/src/stores/tally`.
+fn apply_alias_mapping(
+    project_root: &Path,
+    specifier: &str,
+    m: &AtAliasMapping,
+) -> Option<PathBuf> {
+    let pattern = m.pattern;
+    let target = m.target;
+
+    if let Some(pat_prefix) = pattern.strip_suffix("/*") {
+        // `@/stores` matches `@/stores` or `@/stores/…` only (not `@/storesX`).
+        let rest = if specifier == pat_prefix {
+            ""
+        } else {
+            let with_slash = format!("{pat_prefix}/");
+            specifier.strip_prefix(&with_slash)?
+        };
+        let tgt_base = target
+            .strip_suffix("/*")
+            .unwrap_or(target)
+            .trim_start_matches("./");
+        let path = if rest.is_empty() {
+            project_root.join(tgt_base)
+        } else {
+            project_root.join(tgt_base).join(rest)
+        };
+        return Some(path);
+    }
+
+    // Exact pattern forms (no wildcard) — rare; keep for table completeness.
+    if pattern == specifier {
+        let tgt = target.trim_start_matches("./");
+        return Some(project_root.join(tgt));
+    }
+    if pattern == "@/" || pattern == "@/*" {
+        // Catch-all: `@/` + remainder → target base + remainder.
+        let rest = specifier.strip_prefix("@/")?;
+        let tgt_base = target
+            .strip_suffix("/*")
+            .unwrap_or(target)
+            .trim_start_matches("./");
+        let path = if rest.is_empty() {
+            project_root.join(tgt_base)
+        } else {
+            project_root.join(tgt_base).join(rest)
+        };
+        return Some(path);
+    }
+
     None
 }
 

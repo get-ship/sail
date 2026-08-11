@@ -2,6 +2,17 @@
   /docs/reference/template — template directives, on: modifiers/events,
   bind: targets, foreign idioms, block vocabulary. From language-surface.gen.
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style mutedBody = { box: maxW(breakpoint-tablet) }
+  style cardShell = { box: minW(0) }
+  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style muted = { paint: fg(muted-foreground) }
+  style banCode = { paint: fg(destructive) }
+  style directiveCode = { box: minW(40) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -36,17 +47,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   blockRows: () => BLOCK_ROWS,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style mutedBody = { box: maxW(breakpoint-tablet) }
-  style cardShell = { box: minW(0) }
-  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style muted = { paint: fg(muted-foreground) }
-  style banCode = { paint: fg(destructive) }
-  style directiveCode = { box: minW(40) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

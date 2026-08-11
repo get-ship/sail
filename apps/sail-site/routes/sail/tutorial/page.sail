@@ -2,6 +2,16 @@
   /sail/tutorial — table of contents for the nine-lesson track.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style lessonCard = { box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1), when: { hover: { paint: bg(surface-2).borderWidth(1).border(border-strong) } } }
+  style lessonBody = { box: grow(1) }
+  style lessonDesc = { paint: fg(muted-foreground) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -12,16 +22,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   total: (): number => TUTORIAL_LESSONS.length,
 }))
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style lessonCard = { box: pad(4), paint: radius(lg).borderWidth(1).border(border).bg(surface-1), when: { hover: { paint: bg(surface-2).borderWidth(1).border(border-strong) } } }
-  style lessonBody = { box: grow(1) }
-  style lessonDesc = { paint: fg(muted-foreground) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>Tutorial</p>

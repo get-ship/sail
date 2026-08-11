@@ -6,49 +6,6 @@
   filterable library. Frame wears any theme via theme=.
 -->
 
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { createShanty } from '../../src/compositions/shanty-vm'
-
-export default controller((_ctx: ControllerScope<Scope>) => {
-  const s = createShanty()
-  // stopPropagation + like in one controller handler (template bans multi-statement).
-  const stopAndLike = (e: Event, id: number): void => {
-    e.stopPropagation()
-    s.toggleLike(id)
-  }
-  return {
-    query: s.query,
-    filteredPlaylists: s.filteredPlaylists,
-    activePlaylist: s.activePlaylist,
-    playlist: s.playlist,
-    tracks: s.tracks,
-    visibleTracks: s.visibleTracks,
-    trackCount: s.trackCount,
-    currentId: s.currentId,
-    playing: s.playing,
-    position: s.position,
-    current: s.current,
-    advance: s.advance,
-    playTrack: s.playTrack,
-    togglePlay: s.togglePlay,
-    positionLabel: s.positionLabel,
-    totalLabel: s.totalLabel,
-    shuffle: s.shuffle,
-    repeat: s.repeat,
-    liked: s.liked,
-    toggleLike: s.toggleLike,
-    likedTracks: s.likedTracks,
-    volume: s.volume,
-    theme: s.theme,
-    setTheme: s.setTheme,
-    THEMES: s.THEMES,
-    stopAndLike,
-  }
-})
-</controller>
-
 <scope>
   style root = { box: h(fill).minH(0).overflow(hidden), paint: bg(background).fg(foreground) }
   style chrome = { box: shrink(1).pad(3).padX(5), paint: borderBWidth(1).border(border) }
@@ -105,6 +62,49 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     onLike: any
   }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { createShanty } from '../../src/compositions/shanty-vm'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+  const s = createShanty()
+  // stopPropagation + like in one controller handler (template bans multi-statement).
+  const stopAndLike = (e: Event, id: number): void => {
+    e.stopPropagation()
+    s.toggleLike(id)
+  }
+  return {
+    query: s.query,
+    filteredPlaylists: s.filteredPlaylists,
+    activePlaylist: s.activePlaylist,
+    playlist: s.playlist,
+    tracks: s.tracks,
+    visibleTracks: s.visibleTracks,
+    trackCount: s.trackCount,
+    currentId: s.currentId,
+    playing: s.playing,
+    position: s.position,
+    current: s.current,
+    advance: s.advance,
+    playTrack: s.playTrack,
+    togglePlay: s.togglePlay,
+    positionLabel: s.positionLabel,
+    totalLabel: s.totalLabel,
+    shuffle: s.shuffle,
+    repeat: s.repeat,
+    liked: s.liked,
+    toggleLike: s.toggleLike,
+    likedTracks: s.likedTracks,
+    volume: s.volume,
+    theme: s.theme,
+    setTheme: s.setTheme,
+    THEMES: s.THEMES,
+    stopAndLike,
+  }
+})
+</controller>
 
 <partial playlist-row props: PlaylistRowProps>
   <row

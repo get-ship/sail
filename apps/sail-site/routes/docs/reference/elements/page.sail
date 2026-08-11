@@ -1,6 +1,16 @@
 <!--
   /docs/reference/elements — every stdlib L1 element from prop-registry gen.
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style cardMin = { box: minW(0) }
+  style propCount = { paint: fg(muted-foreground) }
+  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -30,16 +40,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   stdlibCount: () => STDLIB_ELEMENTS.length,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style cardMin = { box: minW(0) }
-  style propCount = { paint: fg(muted-foreground) }
-  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

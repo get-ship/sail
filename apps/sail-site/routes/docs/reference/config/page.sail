@@ -1,17 +1,6 @@
 <!--
   /docs/reference/config — every sail.config.json key from lint CONFIG_KEY_DOCS.
 -->
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { CONFIG_KEYS } from '../../../../src/compositions/language-surface'
-
-export default controller((_ctx: ControllerScope<Scope>) => ({
-  keys: () => CONFIG_KEYS,
-  keyCount: () => CONFIG_KEYS.length,
-}))
-</controller>
-
 <scope>
   style root = { box: minW(0) }
   style intro = { box: maxW(breakpoint-tablet) }
@@ -22,6 +11,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   style cardDoc = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground) }
   style defaultVal = { paint: fg(muted-foreground) }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { CONFIG_KEYS } from '../../../../src/compositions/language-surface'
+
+export default controller((_ctx: ControllerScope<Scope>) => ({
+  keys: () => CONFIG_KEYS,
+  keyCount: () => CONFIG_KEYS.length,
+}))
+</controller>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

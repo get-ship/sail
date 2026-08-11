@@ -7,6 +7,34 @@
   HTML attr): animate: reveal({…}) — progress/view timeline with IO fallback.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style pressBtn = { animate: press({ scale: 'press' }) }
+  style tileRow = { box: minH(9) }
+  style tile = { box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style tileDim = { box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
+  style demoPanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style demoPanelTall = { box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style enterCard = { box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
+  style loopTileFast = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
+  style loopTileSlow = { box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
+  style revealCard = { box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
+  style revealSpring = { box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
+  style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style ambientDotDim = { box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
+  style spinTile = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) }
+  style grow1 = { box: grow(1) }
+  style scrub = { box: grow(1).minW(0) }
+  style scrubVal = { box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) }
+  style timelineTile = { box: shrink(0).w(9).h(9), paint: bg(primary).radius(md) }
+  style focusBtn = { animate: focus-visible({ scale: 'spring:snappy' }) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 // Replay clears the hand and re-deals after exits finish.
 
@@ -52,34 +80,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style pressBtn = { animate: press({ scale: 'press' }) }
-  style tileRow = { box: minH(9) }
-  style tile = { box: w(9).h(9), paint: radius(md).bg(primary), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
-  style tileDim = { box: w(9).h(9), paint: radius(md).bg(primary).opacity(75), animate: enter({ translate-y: 'spring:snappy', stagger: '0.07s' }) }
-  style demoPanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style demoPanelTall = { box: pad(6).minH(11), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style enterCard = { box: pad(4), animate: enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' }) }
-  style loopTileFast = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 500 }) }
-  style loopTileSlow = { box: w(8).h(8), paint: radius(md).bg(primary).opacity(75), animate: loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 }) }
-  style revealCard = { box: pad(6), animate: reveal({ opacity: 'fade', translate-y: 'spring:gentle' }) }
-  style revealSpring = { box: pad(6), animate: reveal({ scale: 'spring:bouncy', opacity: 'fade' }) }
-  style ambientDot = { box: w(4).h(4), paint: radius(full).bg(primary), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
-  style ambientDotDim = { box: w(4).h(4), paint: radius(full).bg(primary).opacity(75), animate: loop({ translate-y: 'spring:gentle', stagger: '0.15s' }) }
-  style spinTile = { box: w(8).h(8), paint: radius(md).bg(primary), animate: loop({ rotate: 'spin' }) }
-  style grow1 = { box: grow(1) }
-  style scrub = { box: grow(1).minW(0) }
-  style scrubVal = { box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontFamily(mono).fontSize(sm) }
-  style timelineTile = { box: shrink(0).w(9).h(9), paint: bg(primary).radius(md) }
-  style focusBtn = { animate: focus-visible({ scale: 'spring:snappy' }) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>The language</p>

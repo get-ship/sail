@@ -3,6 +3,43 @@
   + console. Reuses live-sail-boot (wasm compile + mount). No lesson prose,
   stepper, solution toggle, or diff tab.
 -->
+<scope>
+  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
+  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
+  // Full-bleed workbench: single chrome bar, no site navbar tax.
+  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(half), paint: bg(surface-0) }
+  // Desktop: editor | preview+console side by side (not stacked).
+  style split = { box: grow(1).basis(0).minW(0).minH(0) }
+  style card = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style toolbar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
+  style paneCol = { box: grow(1).minH(0).minW(0).overflow(hidden) }
+  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style pgLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
+  style backLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
+  style recipeSelect = { box: minW(48).maxW(64) }
+  style descClamp = { box: minW(0).maxW(64).overflow(hidden), paint: fg(muted-foreground), text: fontSize(sm).whitespace(nowrap) }
+  // Side-by-side pane: fill height of the split; console stays a fixed foot.
+  style previewBand = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
+  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
+  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
+  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
+  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
+  style ts = { paint: fg(muted-foreground).opacity(50) }
+  style logOk = { paint: fg(success) }
+  style logWarn = { paint: fg(warning) }
+  style logErr = { paint: fg(destructive) }
+  style logInfo = { paint: fg(muted-foreground) }
+  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
+  type LogLineProps = {
+    ts: string
+    kind: string
+    msg: string
+  }
+</scope>
+
 <controller>
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import { ensureWasm, makeCompile } from '@ship/sail-viewer/wasm-bootstrap'
@@ -242,43 +279,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-
-<scope>
-  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
-  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
-  // Full-bleed workbench: single chrome bar, no site navbar tax.
-  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(half), paint: bg(surface-0) }
-  // Desktop: editor | preview+console side by side (not stacked).
-  style split = { box: grow(1).basis(0).minW(0).minH(0) }
-  style card = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style toolbar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style paneCol = { box: grow(1).minH(0).minW(0).overflow(hidden) }
-  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style pgLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
-  style backLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
-  style recipeSelect = { box: minW(48).maxW(64) }
-  style descClamp = { box: minW(0).maxW(64).overflow(hidden), paint: fg(muted-foreground), text: fontSize(sm).whitespace(nowrap) }
-  // Side-by-side pane: fill height of the split; console stays a fixed foot.
-  style previewBand = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
-  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
-  style ts = { paint: fg(muted-foreground).opacity(50) }
-  style logOk = { paint: fg(success) }
-  style logWarn = { paint: fg(warning) }
-  style logErr = { paint: fg(destructive) }
-  style logInfo = { paint: fg(muted-foreground) }
-  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
-  type LogLineProps = {
-    ts: string
-    kind: string
-    msg: string
-  }
-</scope>
 
 <partial log-line props: LogLineProps>
   <match {kind}>

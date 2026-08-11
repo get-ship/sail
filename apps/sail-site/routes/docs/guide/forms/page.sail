@@ -4,6 +4,18 @@
   snippet on this page is the demo’s code.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style demoPanel = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style help = { box: mt(2), paint: fg(muted-foreground), text: fontSize(sm) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 import { form, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -37,18 +49,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style demoPanel = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style help = { box: mt(2), paint: fg(muted-foreground), text: fontSize(sm) }
-  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>Guide</p>

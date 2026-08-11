@@ -2,14 +2,6 @@
   /docs/ai/authoring — the agent authoring loop (diagnose → fix → compile → score).
 -->
 
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { loopDiagram } from '../../../../src/compositions/ai-authoring-snippets'
-
-export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
-</controller>
-
 <scope>
   style page = { box: maxW(breakpoint-tablet).mx(auto) }
   style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
@@ -17,6 +9,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
   style diagram = { box: pad(4).padX(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(relaxed).whitespace(pre-wrap).break(words) }
   style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { loopDiagram } from '../../../../src/compositions/ai-authoring-snippets'
+
+export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
+</controller>
 
 <article style(page)>
   <p style(eyebrow)>AI</p>

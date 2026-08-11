@@ -5,6 +5,61 @@
   chrome via sail-docs-rail. Language gaps: no column clamp atom (uses max-w
   panel token); no transform/gradient stepper polish.
 -->
+<scope>
+  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
+  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
+  style lessonPane = { box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border) }
+  style lessonScroll = { box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4) }
+  style tutLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
+  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style stepDone = { box: grow(1).h(1), paint: radius(full).bg(primary) }
+  style stepCurrent = { box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50) }
+  style stepTodo = { box: grow(1).h(1), paint: radius(full).bg(surface-2) }
+  style title = { text: fontSize(2xl).leading(tight) }
+  style titleSm = { text: fontSize(xl).leading(tight) }
+  style desc = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style descSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style proseHost = { box: w(full).minW(0).overflowX(hidden) }
+  style lessonFoot = { box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1) }
+  style allLessons = { box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) } } }
+  style allLessonsSm = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) }
+  style card = { box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style cardBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
+  style paneCol = { box: grow(1).minH(0).overflow(hidden) }
+  style diffBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
+  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
+  style diffShell = { box: grow(1).minH(0).position(relative).overflow(hidden) }
+  style diffAbs = { box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) }
+  style previewBand = { box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
+  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
+  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
+  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
+  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
+  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
+  style ts = { paint: fg(muted-foreground).opacity(50) }
+  style logOk = { paint: fg(success) }
+  style logWarn = { paint: fg(warning) }
+  style logErr = { paint: fg(destructive) }
+  style logInfo = { paint: fg(muted-foreground) }
+  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
+  style mobileHead = { box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1) }
+  style growMin = { box: grow(1).minH(0).overflow(hidden) }
+
+  type LogLineProps = {
+    ts: string
+    kind: string
+    msg: string
+  }
+</scope>
+
+<!--
+  h(fill) not h(full): shell is display:contents up the tree, so % height collapses.
+  Tabs drive a signal; panes are plain grow columns (tab-panel pad ate the editor).
+  tablet+: side-by-side; mobile/SSR else: stacked.
+-->
+
 <controller>
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import { bindHtml } from '@ship/sail-runtime/internal'
@@ -321,61 +376,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     }
 })
 </controller>
-
-<!--
-  h(fill) not h(full): shell is display:contents up the tree, so % height collapses.
-  Tabs drive a signal; panes are plain grow columns (tab-panel pad ate the editor).
-  tablet+: side-by-side; mobile/SSR else: stacked.
--->
-
-<scope>
-  style workbench = { box: w(full).h(fill).minH(0).minW(0).overflow(hidden) }
-  style workbenchMobile = { box: w(full).h(fill).minH(0).overflow(hidden) }
-  style lessonPane = { box: shrink(1).w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0), paint: bg(surface-1).borderRWidth(1).borderR(border) }
-  style lessonScroll = { box: grow(1).minH(0).overflowY(auto).overflowX(hidden).padX(5).padY(4) }
-  style tutLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
-  style countLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style stepDone = { box: grow(1).h(1), paint: radius(full).bg(primary) }
-  style stepCurrent = { box: grow(1).h(1), paint: radius(full).bg(primary).opacity(50) }
-  style stepTodo = { box: grow(1).h(1), paint: radius(full).bg(surface-2) }
-  style title = { text: fontSize(2xl).leading(tight) }
-  style titleSm = { text: fontSize(xl).leading(tight) }
-  style desc = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style descSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style proseHost = { box: w(full).minW(0).overflowX(hidden) }
-  style lessonFoot = { box: shrink(0).padY(2).padX(4), paint: borderTWidth(1).borderT(border).bg(surface-1) }
-  style allLessons = { box: display(inline-flex).padY(1_5).padX(3), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(semibold), when: { hover: { paint: fg(foreground).bg(surface-2) } } }
-  style allLessonsSm = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style playground = { box: grow(1).basis(0).minW(0).minH(0).pad(1), paint: bg(surface-0) }
-  style card = { box: grow(1).basis(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style cardBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style paneCol = { box: grow(1).minH(0).overflow(hidden) }
-  style diffBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style monoXs = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).tracking(wide) }
-  style diffShell = { box: grow(1).minH(0).position(relative).overflow(hidden) }
-  style diffAbs = { box: position(absolute).inset(0).overflowY(auto).overflowX(auto).w(full) }
-  style previewBand = { box: shrink(0).h(56).minH(48).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
-  style previewBar = { box: shrink(0).padY(1).padX(2), paint: borderBWidth(1).borderB(border) }
-  style previewHost = { box: w(full).h(full).minH(0).overflow(auto).pad(4), paint: bg(surface-0) }
-  style console = { box: shrink(0).h(16).minH(16).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style consoleMobile = { box: shrink(0).h(14).minH(14).padY(1).padX(2).overflowY(auto), paint: borderTWidth(1).borderT(border).bg(surface-0) }
-  style monoContents = { box: display(contents), text: fontFamily(mono).fontSize(xs) }
-  style ts = { paint: fg(muted-foreground).opacity(50) }
-  style logOk = { paint: fg(success) }
-  style logWarn = { paint: fg(warning) }
-  style logErr = { paint: fg(destructive) }
-  style logInfo = { paint: fg(muted-foreground) }
-  style logErrRow = { box: pad(1).padX(2), paint: bg(muted).radius(sm) }
-  style mobileHead = { box: shrink(0).padX(4).padY(3).maxH(40).overflowY(auto), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style growMin = { box: grow(1).minH(0).overflow(hidden) }
-
-  type LogLineProps = {
-    ts: string
-    kind: string
-    msg: string
-  }
-</scope>
 
 <partial log-line props: LogLineProps>
   <match {kind}>

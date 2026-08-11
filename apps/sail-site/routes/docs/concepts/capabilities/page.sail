@@ -1,3 +1,15 @@
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style livePanel = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style liveMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style liveValue = { paint: fg(accent), text: fontFamily(mono).fontSize(lg) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 // Live demo: deck grants `route`, so `ctx.route.pathname()` is a real capability.
 
@@ -10,18 +22,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   return { code, here }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style monoLabel = { box: mb(2), paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style livePanel = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style liveMuted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style liveValue = { paint: fg(accent), text: fontFamily(mono).fontSize(lg) }
-  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>Concepts</p>

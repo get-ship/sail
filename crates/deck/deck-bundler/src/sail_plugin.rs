@@ -41,6 +41,26 @@ fn is_singleton_spec(spec: &str) -> bool {
     })
 }
 
+/// Map a pure alias path from [`sail_compiler::project_map::resolve_at_alias`]
+/// onto an on-disk module id (try bare + common TS/JS suffixes + index).
+fn resolve_at_alias_on_disk(resolved: &Path) -> Option<String> {
+    let candidates = [
+        resolved.to_path_buf(),
+        resolved.with_extension("ts"),
+        resolved.with_extension("tsx"),
+        resolved.with_extension("js"),
+        resolved.with_extension("mjs"),
+        resolved.join("index.ts"),
+        resolved.join("index.js"),
+    ];
+    for p in candidates {
+        if p.is_file() {
+            return Some(normalize(&p).to_string_lossy().into_owned());
+        }
+    }
+    None
+}
+
 /// Virtual id for an unresolved `@sail-tag/<tag>` import — a shared empty module
 /// so the import is a harmless no-op. `\0` marks it virtual (Rollup/Rolldown
 /// convention: never read/written on disk).
@@ -187,6 +207,20 @@ impl Plugin for SailPlugin {
         args: &HookResolveIdArgs<'_>,
     ) -> HookResolveIdReturn {
         let spec = args.specifier;
+        // Project `@/…` aliases — same SSOT as tsconfig emit
+        // (`project_map::at_alias_paths` / `resolve_at_alias`). App root wins;
+        // fall back to repo root for monorepo fixtures without a project_dir.
+        if spec.starts_with("@/") {
+            let root = self
+                .project_dir
+                .as_deref()
+                .unwrap_or(self.repo_root.as_path());
+            if let Some(resolved) = sail_compiler::project_map::resolve_at_alias(root, spec) {
+                if let Some(id) = resolve_at_alias_on_disk(&resolved) {
+                    return Ok(Some(HookResolveIdOutput::from_id(id)));
+                }
+            }
+        }
         // Framework singletons stay external (one runtime instance) — bare
         // AND subpaths. See `is_singleton_spec` / STUDIO-BOOT-1.
         if is_singleton_spec(spec) {

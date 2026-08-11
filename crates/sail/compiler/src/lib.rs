@@ -423,6 +423,9 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             meta.name
         )));
     }
+    // SPEC-PROJECT-STRUCTURE-1 §4: `<scope>` before `<controller>` is grammar.
+    // Check on the author source before stripping the controller block.
+    parse::preprocess::check_sfc_block_order(source).map_err(|e| attach_path(e, &opts))?;
     // SFC: strip an inline `<controller>` block before parsing so its body
     // isn't misread as a template expression. This makes SFC first-class in
     // core `compile()` — every caller (bin, deck, tests) handles it uniformly,

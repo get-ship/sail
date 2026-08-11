@@ -2669,6 +2669,32 @@ fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
     None
 }
 
+/// SPEC-PROJECT-STRUCTURE-1 §4 — block order is grammar.
+///
+/// When both `<scope>` and `<controller>` appear in the source, `<scope>` must
+/// precede `<controller>`. Wrong order is a **parse/compile error** (not a
+/// lint): legal order is scope → controller → template.
+///
+/// Tags inside HTML comments are ignored (same scan rule as
+/// [`extract_controller_block`]).
+pub fn check_sfc_block_order(source: &str) -> Result<(), CompileError> {
+    let scope_at = find_outside_comments(source, "<scope");
+    let controller_at = find_outside_comments(source, "<controller");
+    match (scope_at, controller_at) {
+        (Some(scope_pos), Some(controller_pos)) if controller_pos < scope_pos => {
+            Err(CompileError::new(
+                "`<scope>` must come before `<controller>` — block order is grammar. \
+                 Put the `<scope>` block first, then `<controller>`, then the template.",
+            )
+            .with_span(Span::new(
+                controller_pos,
+                controller_pos + "<controller".len(),
+            )))
+        }
+        _ => Ok(()),
+    }
+}
+
 /// Extract an inline `<controller>` block for the single-file-component model.
 /// Returns the template + the block's raw TS body (the one locked-down
 /// `controller({…})` function). `None` if there's no block.
