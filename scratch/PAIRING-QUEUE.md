@@ -5,7 +5,7 @@
 
 Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class docs knobs, visual `bun run visual <tag>` green. Operator taste / multi-theme approval still open — **not** `done`.
 
-## Queue (B0 + B1 + B2 + B3)
+## Queue (B0 + B1 + B2 + B3 + B4)
 
 | Tag | Docs host | Contract | Visual | Notes for pairing |
 |-----|-----------|----------|--------|-------------------|
@@ -29,6 +29,13 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 | **input** | `doc-input` | yes | green | type matrix · size xs–lg · field faces |
 | **textarea** | `doc-textarea` | yes | green | size · rows · shared field faces |
 | **select** | `doc-select` | yes | green | size · multiple · shared field faces |
+| **a** | `doc-a` | yes | green | dual mode bare/button-link; no component.a.* |
+| **kbd** | `doc-kbd` | yes | green | zero axes; faces only; operator keycap taste |
+| **prose** | `doc-prose` | yes | green | scope host; component.prose.fg; type brand taste |
+| **code-block** | `doc-code-block` | yes | green | code · lang; syntaxHighlight |
+| **empty-state** | `doc-empty-state` | yes | green | variant × size × optional tone |
+| **error-state** | `doc-error-state` | yes | green | variant × size × code chip |
+| **error-boundary** | `doc-error-boundary` | yes | green | message + catchRender events |
 
 ## Alias residual (not first-class host)
 
@@ -38,7 +45,7 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 
 ## Explicitly not in queue yet
 
-- B4–B6 peels (display / overlays / …)
+- B5–B6 peels (layout / data / overlays / …)
 - Product invent work: card ladder, slider range, loading, avatar/breadcrumb variants, motion doctrine
 - Playwright knobs→paint
 
@@ -47,5 +54,5 @@ Tags below are **scaffold_ready** / **operator_pending**: contracts, first-class
 ```bash
 bun apps/sail-site/scripts/check-l1-surface-contract.mjs
 # or: cd apps/sail-site && bun run check:l1-surface
-# expect 20 contracts after B3 (3 new hosts)
+# expect 27 contracts after B4 (7 new hosts)
 ```

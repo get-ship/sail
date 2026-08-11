@@ -111,7 +111,7 @@ export default controller((ctx: Scope) => {
   // Per-tag stage flags — keep separate <if> blocks (no mega nested soup).
   const is = (slug: string) => () => tag() === slug
   const stage = {
-    a: is('a'),
+    // B4 peeled → first-class doc-* packages (a/kbd/prose/code-block/empty-state/error-state/error-boundary)
     // B3 peeled → first-class doc-* packages (input/textarea/select); checkbox alias residual
     combobox: is('combobox'),
     checkbox: is('checkbox'),
@@ -120,16 +120,10 @@ export default controller((ctx: Scope) => {
     dropzone: is('dropzone'),
     themePicker: is('theme-picker'),
     // B1 peeled → first-class doc-* packages (alert/chip/separator/spinner/skeleton/icon/progress/meter)
-    emptyState: is('empty-state'),
-    errorState: is('error-state'),
-    errorBoundary: is('error-boundary'),
     toast: is('toast'),
     card: is('card'),
     avatar: is('avatar'),
-    kbd: is('kbd'),
-    codeBlock: is('code-block'),
     accordion: is('accordion'),
-    prose: is('prose'),
     tooltip: is('tooltip'),
     hoverCard: is('hover-card'),
     popover: is('popover'),
@@ -245,16 +239,6 @@ export default controller((ctx: Scope) => {
     on-variant-change={onVariantChange}
   >
     <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <if {stage.a()}>
-        <column gap="3" align="center">
-          <row gap="2" align="center">
-            <a href="/docs">text link</a>
-            <a href="/components" variant={variant() || 'solid'} tone="primary">Open catalog</a>
-            <a href="/docs" variant="outline">Read docs</a>
-          </row>
-          <p style(monoXs)>bare = text link · variant set = button-link</p>
-        </column>
-      </if>
       <if {stage.combobox()}>
         <column gap="2" style(stageColMd)>
           <combobox placeholder="Pick a framework — type to filter" on-select={pickFw}>
@@ -291,26 +275,6 @@ export default controller((ctx: Scope) => {
       <if {stage.themePicker()}>
         <theme-picker></theme-picker>
       </if>
-      <if {stage.emptyState()}>
-        <empty-state style(stageColMd)>
-          <icon slot="icon" name="inbox"></icon>
-          <strong slot="title">No results</strong>
-          Try a different search, or clear a filter.
-          <button slot="action" variant="outline" size="sm">Clear filters</button>
-        </empty-state>
-      </if>
-      <if {stage.errorState()}>
-        <error-state code="ERR_TIMEOUT" style(stageColMd)>
-          <strong slot="title">Could not load your data</strong>
-          The request failed after 3 retries.
-          <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
-        </error-state>
-      </if>
-      <if {stage.errorBoundary()}>
-        <error-boundary>
-          <p style(mutedSm)>Child tree isolated from render faults.</p>
-        </error-boundary>
-      </if>
       <if {stage.toast()}>
         <column gap="3" align="center" style(toastStage)>
           <button type="button" variant="outline" size="sm" on:click={pushToast}>Show toast</button>
@@ -334,31 +298,11 @@ export default controller((ctx: Scope) => {
           <avatar initials="SK" size="sm"></avatar>
         </row>
       </if>
-      <if {stage.kbd()}>
-        <row gap="1" align="center">
-          <kbd>Ctrl</kbd>
-          <span style(mutedXs)>+</span>
-          <kbd>K</kbd>
-        </row>
-      </if>
-      <if {stage.codeBlock()}>
-        <code-block
-          code={'const n = signal(0)\nconst double = derived(() => n() * 2)'}
-          lang="ts"
-          style(stageColMd)
-        ></code-block>
-      </if>
       <if {stage.accordion()}>
         <accordion style(stageColMd)>
           <span slot="trigger">Webhook endpoints</span>
           <p style(mutedSm)>POST /v1/hooks · signed with your workspace secret.</p>
         </accordion>
-      </if>
-      <if {stage.prose()}>
-        <prose style(stageColMd)>
-          <h2>Prose scope</h2>
-          <p>Body type with <strong>emphasis</strong>, <code>inline()</code>, and lists.</p>
-        </prose>
       </if>
       <if {stage.tooltip()}>
         <tooltip content="Copy URL" placement="top">

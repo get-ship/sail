@@ -20,7 +20,7 @@ import {
   packLabelFor,
 } from '../../../src/compositions/component-pack-meta'
 
-/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B3 peel: input/textarea/select. */
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. B4 peel: a/kbd/prose/code-block/empty-state/error-state/error-boundary. */
 const DOC_CE_SLUGS = new Set([
   'button',
   'badge',
@@ -42,6 +42,13 @@ const DOC_CE_SLUGS = new Set([
   'input',
   'textarea',
   'select',
+  'a',
+  'kbd',
+  'prose',
+  'code-block',
+  'empty-state',
+  'error-state',
+  'error-boundary',
 ])
 
 export default controller((ctx: ControllerScope<Scope>) => {
@@ -80,6 +87,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useInput = derived(() => tag() === 'input' && useDocHost())
   const useTextarea = derived(() => tag() === 'textarea' && useDocHost())
   const useSelect = derived(() => tag() === 'select' && useDocHost())
+  const useA = derived(() => tag() === 'a' && useDocHost())
+  const useKbd = derived(() => tag() === 'kbd' && useDocHost())
+  const useProse = derived(() => tag() === 'prose' && useDocHost())
+  const useCodeBlock = derived(() => tag() === 'code-block' && useDocHost())
+  const useEmptyState = derived(() => tag() === 'empty-state' && useDocHost())
+  const useErrorState = derived(() => tag() === 'error-state' && useDocHost())
+  const useErrorBoundary = derived(() => tag() === 'error-boundary' && useDocHost())
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -115,6 +129,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useInput,
     useTextarea,
     useSelect,
+    useA,
+    useKbd,
+    useProse,
+    useCodeBlock,
+    useEmptyState,
+    useErrorState,
+    useErrorBoundary,
     useLegacy,
     heading,
     blurb,
@@ -189,6 +210,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useSelect()}>
     <doc-select></doc-select>
+  </if>
+  <if {useA()}>
+    <doc-a></doc-a>
+  </if>
+  <if {useKbd()}>
+    <doc-kbd></doc-kbd>
+  </if>
+  <if {useProse()}>
+    <doc-prose></doc-prose>
+  </if>
+  <if {useCodeBlock()}>
+    <doc-code-block></doc-code-block>
+  </if>
+  <if {useEmptyState()}>
+    <doc-empty-state></doc-empty-state>
+  </if>
+  <if {useErrorState()}>
+    <doc-error-state></doc-error-state>
+  </if>
+  <if {useErrorBoundary()}>
+    <doc-error-boundary></doc-error-boundary>
   </if>
   <if {missingDocHost()}>
     <breadcrumb>

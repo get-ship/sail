@@ -11,12 +11,16 @@ export default {
   width: 640,
   rows() {
     return [
+      // zero-config rest (code content present; lang default sail)
+      `<div class="sail-code-block s-displayblock" data-sail-host="code-block" lang="sail" code="const n = signal(0)"><pre class="${PRE}"><span class="tok-keyword">const</span> n = <span class="tok-fn">signal</span>(<span class="tok-number">0</span>)</pre></div>`,
       block(
         `<span class="tok-keyword">const</span> n = <span class="tok-fn">signal</span>(<span class="tok-number">0</span>)`,
       ),
       block(
         `<span class="tok-tag">&lt;button</span> <span class="tok-attr">variant</span>=<span class="tok-string">"solid"</span><span class="tok-tag">&gt;</span>Save<span class="tok-tag">&lt;/button&gt;</span>`,
       ),
+      // lang authoring label coverage for visual.cross
+      `<div class="sail-code-block s-displayblock" data-sail-host="code-block" lang="ts" code="type Id = string"><pre class="${PRE}"><span class="tok-keyword">type</span> Id = <span class="tok-keyword">string</span></pre></div>`,
     ]
   },
   probe() {

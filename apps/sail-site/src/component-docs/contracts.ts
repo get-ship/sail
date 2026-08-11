@@ -22,6 +22,13 @@ import { contract as switchToggle } from './switch/contract'
 import { contract as input } from './input/contract'
 import { contract as textarea } from './textarea/contract'
 import { contract as select } from './select/contract'
+import { contract as a } from './a/contract'
+import { contract as kbd } from './kbd/contract'
+import { contract as prose } from './prose/contract'
+import { contract as codeBlock } from './code-block/contract'
+import { contract as emptyState } from './empty-state/contract'
+import { contract as errorState } from './error-state/contract'
+import { contract as errorBoundary } from './error-boundary/contract'
 import type { SurfaceContract } from './contract-types'
 
 export const CONTRACTS: readonly SurfaceContract[] = [
@@ -45,6 +52,13 @@ export const CONTRACTS: readonly SurfaceContract[] = [
   input,
   textarea,
   select,
+  a,
+  kbd,
+  prose,
+  codeBlock,
+  emptyState,
+  errorState,
+  errorBoundary,
 ]
 
 export const CONTRACT_BY_SLUG: Record<string, SurfaceContract> = Object.fromEntries(

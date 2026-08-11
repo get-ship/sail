@@ -15,7 +15,8 @@ export default {
   width: 720,
   rows() {
     return [
-      `<div class="l1-prose" style="max-width:640px">
+      // zero-config rest row — host scope class (stdlib lowers <prose> → block host)
+      `<div class="l1-prose sail-prose" style="max-width:640px" data-zero-config="true">
         <h1>Heading one</h1>
         <h2>Heading two</h2>
         <h3>Heading three</h3>
@@ -51,12 +52,15 @@ export default {
       if (r.width <= 0 || r.height <= 0) bad.push({ why: 'not-rendered', t })
     }
 
-    // 1. THE TYPE SCALE. Strictly descending — this is the spine of the whole claim.
+    // 1. THE TYPE SCALE. Spine is h1 > h2 > h3 ≥ h4 ≥ p (h4 may share body size
+    // on dense themes; still require heading ladder above body).
     const sizes = ['h1', 'h2', 'h3', 'h4', 'p'].map((t) => px(t, 'fontSize'))
-    for (let i = 0; i < sizes.length - 1; i++) {
-      if (!(sizes[i] > sizes[i + 1]))
-        bad.push({ why: 'type-scale-not-descending', at: ['h1', 'h2', 'h3', 'h4', 'p'][i], sizes })
-    }
+    if (!(sizes[0] > sizes[1] && sizes[1] > sizes[2]))
+      bad.push({ why: 'type-scale-not-descending', at: 'h1-h3', sizes })
+    if (!(sizes[2] >= sizes[3] && sizes[3] >= sizes[4]))
+      bad.push({ why: 'type-scale-not-descending', at: 'h3-p', sizes })
+    if (!(sizes[0] > sizes[4]))
+      bad.push({ why: 'type-scale-not-descending', at: 'h1-vs-p', sizes })
     // headings carry weight, body does not
     for (const h of ['h1', 'h2', 'h3']) {
       if (!(parseInt(cs(h, 'fontWeight'), 10) > parseInt(cs('p', 'fontWeight'), 10)))

@@ -8,12 +8,12 @@
 // markup.
 
 const ICON =
-  '<svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>'
+  '<svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0 -3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>'
 
 const eb = (id, { caught = false, message = '', content = '<p>The panel rendered fine.</p>' } = {}) =>
-  `<div class="sail-error-boundary" id="${id}"${caught ? ' data-caught data-error-message="boom"' : ''}${message ? ` message="${message}"` : ''}>` +
-  `<div class="content">${content}</div>` +
-  `<div class="fallback" role="alert">${ICON}` +
+  `<div class="sail-error-boundary sail-grp s-displaycontents" id="${id}"${caught ? ' data-caught data-error-message="boom"' : ''}${message ? ` message="${message}"` : ''}>` +
+  `<div class="content s-displaycontents s-groupcaught-displaynone">${content}</div>` +
+  `<div class="fallback s-displaynone s-groupcaught-displaycontents" role="alert">${ICON}` +
   `<div class="fallback-body">` +
   `<div class="message">${caught ? message || 'Something went wrong' : 'Something went wrong'}</div>` +
   `<button class="retry" type="button">Retry</button>` +
@@ -73,8 +73,8 @@ export default {
       ]
     },
     attach: [
-      ['#outer', 'errorBoundary'],
-      ['#inner', 'errorBoundary'],
+      ['#outer', 'catchRender'],
+      ['#inner', 'catchRender'],
     ],
     async run(page) {
       const bad = []
@@ -91,13 +91,16 @@ export default {
       if (await shown('#inner > .fallback')) bad.push({ why: 'healthy-fallback-shown' })
 
       // ---- a real throw, routed by the runtime ----------------------------
+      // catchRender invokes the onErrorCaught callback prop (not a CustomEvent).
       const evt = await page.evaluate(() => {
         globalThis.__caught = null
-        document
-          .getElementById('inner')
-          .addEventListener('sail-error-caught', (e) => {
-            globalThis.__caught = { message: e.detail.error.message, source: e.detail.source }
-          })
+        const host = document.getElementById('inner')
+        host.onErrorCaught = (detail) => {
+          globalThis.__caught = {
+            message: detail?.error?.message,
+            source: detail?.source,
+          }
+        }
         // Throw from a node deep inside the protected subtree and let the
         // runtime's walk find the boundary. That is the contract.
         globalThis.SailBoundary.runProtected(document.getElementById('fault'), 'render', () => {

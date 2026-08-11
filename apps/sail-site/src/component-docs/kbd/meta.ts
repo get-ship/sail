@@ -7,8 +7,9 @@ export const meta = {
   key: 'kbd',
   category: 'display',
   kind: 'host',
-  blurb: "Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Paint from component.kbd (bg · foreground · border); no size/variant/tone props (theme the leaves, compose chords in markup).",
-  heading: "prose",
-  host: 'legacy',
-  stageOwnsKnobs: false,
+  blurb:
+    'Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Paint from component.kbd (bg · foreground · border); no size/variant/tone props (theme the leaves, compose chords in markup).',
+  heading: 'prose',
+  host: 'doc-kbd',
+  stageOwnsKnobs: true,
 } as const satisfies DocMeta

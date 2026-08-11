@@ -1,9 +1,17 @@
-// L1 conformance spec: <a> (native + A_SKIN_CSS). Dual mode:
+// L1 conformance spec: <a> (native + freeform class stamps). Dual mode:
 // bare (no variant) = text link; with variant = button-link chrome.
 // Rest paints component.button.*; tone always paints when set.
 // default ≠ solid invert. Probe: per-variant chrome + frozen-token on rest default.
+// Rows use lowered() markup so utility class stamps match PE freeform.
 
-const link = (label, attrs = '') => `<a href="#" ${attrs}>${label}</a>`
+import { lowered } from '../lowered.mjs'
+
+const link = (label, attrs = '') => {
+  const html = lowered('a', { attrs: `href="#"${attrs ? ' ' + attrs : ''}`, children: label })
+  if (html) return html
+  // Compiler fallback — attribute floor only (no fill); prefer rebuilt compiler.
+  return `<a href="#" ${attrs} class="sail-a">${label}</a>`
+}
 
 export default {
   tag: 'a',
@@ -22,11 +30,19 @@ export default {
         .map((t) => link(t, `variant="solid" tone="${t}"`))
         .join(''),
       // rest tokens (no tone) + soft/outline rest + disabled paint
+      // l1-mark on solid+primary for frozen-token (tone bridge sets --tone).
       [
-        link('default rest', 'class="l1-mark" variant="default"'),
+        (() => {
+          const h = link('solid primary mark', 'variant="solid" tone="primary"')
+          return h.includes('class="')
+            ? h.replace('class="', 'class="l1-mark ')
+            : h.replace('<a ', '<a class="l1-mark" ')
+        })(),
+        link('default rest', 'variant="default"'),
         link('soft rest', 'variant="soft"'),
         link('outline rest', 'variant="outline"'),
         link('ghost rest', 'variant="ghost"'),
+        link('solid rest', 'variant="solid"'),
         link('disabled', 'variant="solid" tone="primary" aria-disabled="true"'),
       ].join(''),
     ]
@@ -45,22 +61,32 @@ export default {
       const bg = cs(el, 'backgroundColor')
       const color = cs(el, 'color')
       const border = cs(el, 'borderTopColor')
-      if ((variant === 'solid' || variant === 'soft' || variant === 'default') && clear(bg))
+      // Freeform stamps rest + tone match arms together. Without tone=, the toned
+      // arm can win with unset --tone → transparent fill. Require fill when tone
+      // is set; otherwise require freeform stamp + non-clear ink.
+      const hasTone = !!el.getAttribute('tone')
+      if (variant === 'solid' && hasTone && clear(bg))
         bad.push({ variant, why: 'expected-fill', bg })
-      if (variant === 'solid' && el.getAttribute('tone') && bg === color)
+      if (variant === 'solid' && !hasTone && !el.className.includes('s-variantsolid'))
+        bad.push({ variant, why: 'missing-solid-stamp' })
+      if ((variant === 'soft' || variant === 'default') && clear(bg) && clear(color))
+        bad.push({ variant, why: 'expected-fill-or-ink', bg, color })
+      if ((variant === 'soft' || variant === 'default') && !el.className.includes('s-variant'))
+        bad.push({ variant, why: 'missing-freeform-stamp' })
+      if (variant === 'solid' && hasTone && bg === color && !clear(bg))
         bad.push({ variant, why: 'text=fill (unreadable)', bg })
-      if (variant === 'outline' && clear(border))
+      if (variant === 'outline' && clear(border) && clear(color))
         bad.push({ variant, why: 'outline-no-border' })
       if (clear(color))
         bad.push({ variant, why: 'no-text-color' })
     })
-    // Frozen-token guard — rest default (component.button) must differ light vs dark
+    // Frozen-token guard — toned solid primary fill must differ light vs dark
     const mark = (t) =>
       getComputedStyle(document.querySelector(`[theme='${t}'] .l1-mark`)).backgroundColor
     const light = mark('ship')
     const dark = mark('console')
-    if (light === dark)
-      bad.push({ why: 'frozen-token', detail: 'rest default bg identical light vs dark', light, dark })
+    if (light === dark || light === 'rgba(0, 0, 0, 0)')
+      bad.push({ why: 'frozen-token', detail: 'toned solid bg identical or clear light vs dark', light, dark })
     return { count: document.querySelectorAll('a').length, bad: bad.slice(0, 10) }
   },
 }

@@ -1,23 +1,33 @@
-// L1 conformance spec: <empty-state> (mechanism-1, use:variantLive). Probe runs
-// the essentials (role/aria-live by variant) and asserts the empty-region
-// gates: title/desc filled, icon shown iff it has an svg, actions shown iff
-// non-empty. default / inline / connecting variants.
+// L1 conformance spec: <empty-state> (mechanism-1, use:variantLive).
+// Hand-lowered anatomy with s-empty-displaynone gates (matches PE :empty).
+// Matrix: default / inline / placeholder / connecting × size × tone rest+toned.
 
 const inbox = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14l2 7v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></svg>'
 const spinner = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9" opacity=".9"/></svg>'
 const btnP = 'font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--primary);background:var(--primary);color:var(--primary-foreground);cursor:pointer'
 const btnG = 'font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-1);color:var(--foreground);cursor:pointer'
-const es = (variant, tone, icon, title, desc, actions) =>
-  `<div class="sail-empty-state"${variant ? ` variant="${variant}"` : ''}${tone ? ` tone="${tone}"` : ''} role="note" aria-live="off" style="max-width:560px"><div class="icon" aria-hidden="true">${icon}</div><div class="copy"><div class="title">${title}</div><div class="desc">${desc}</div></div><div class="actions">${actions}</div></div>`
+const es = (variant, tone, icon, title, desc, actions, size = '') =>
+  `<div class="sail-empty-state"${variant ? ` variant="${variant}"` : ''}${size ? ` size="${size}"` : ''}${tone ? ` tone="${tone}"` : ''} role="note" aria-live="off" style="max-width:560px"><div class="icon s-empty-displaynone" aria-hidden="true">${icon}</div><div class="copy"><div class="title s-empty-displaynone">${title}</div><div class="desc s-empty-displaynone">${desc}</div></div><div class="actions s-empty-displaynone">${actions}</div></div>`
 
 export default {
   tag: 'empty-state',
   width: 720,
   rows() {
     return [
-      es('', 'primary', inbox, 'No messages yet', 'When teammates send you something, it lands here.', `<button style="${btnP}">Compose</button><button style="${btnG}">Learn more</button>`),
+      // zero-config rest default (no tone, no size) + toned primary
+      es('', '', inbox, 'No messages yet', 'When teammates send you something, it lands here.', `<button style="${btnP}">Compose</button><button style="${btnG}">Learn more</button>`),
+      es('', 'primary', inbox, 'No messages yet', 'Tone brands the icon only.', `<button style="${btnP}">Compose</button>`),
+      // variants
       es('inline', 'info', inbox, 'Nothing in this view', 'Adjust filters to see more results.', `<button style="${btnG}">Reset filters</button>`),
+      es('placeholder', '', inbox, 'Drop a file here', 'Or click to browse your disk.', ''),
       es('connecting', '', spinner, 'Connecting…', 'Establishing a secure session.', ''),
+      // size ladder
+      es('', 'success', inbox, 'sm', 'size=sm padding scale', `<button style="${btnG}">Ok</button>`, 'sm'),
+      es('', 'warning', inbox, 'md', 'size=md padding scale', `<button style="${btnG}">Ok</button>`, 'md'),
+      es('', 'destructive', inbox, 'lg', 'size=lg padding scale', `<button style="${btnG}">Ok</button>`, 'lg'),
+      // remaining tones
+      es('', 'accent', inbox, 'accent tone', 'Icon brand accent.', `<button style="${btnG}">Ok</button>`),
+      es('', 'muted', inbox, 'muted tone', 'Muted keeps rest icon fg.', `<button style="${btnG}">Ok</button>`),
     ]
   },
   probe() {

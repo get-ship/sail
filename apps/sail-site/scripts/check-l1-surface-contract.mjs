@@ -112,6 +112,10 @@ const KNOB_LABELS = {
   placeholder: 'placeholder',
   rows: 'rows',
   multiple: 'multiple',
+  lang: 'lang',
+  code: 'code',
+  message: 'message',
+  connecting: 'connecting',
 }
 
 function extractDocAxes(docSrc) {
@@ -270,7 +274,10 @@ for (const c of CONTRACTS) {
   if (c.kind === 'host' && tag) {
     const reg = PROP_REGISTRY[tag]
     if (!reg) {
-      fail(`${slug}: tag "${tag}" missing from prop-registry`)
+      // Zero-axis hosts with stdlib props:{} are omitted from prop-registry gen (kbd, prose).
+      if (Object.keys(c.axes).length > 0) {
+        fail(`${slug}: tag "${tag}" missing from prop-registry`)
+      }
     } else {
       const regNames = reg.map((p) => p.name)
       for (const axis of Object.keys(c.axes)) {
