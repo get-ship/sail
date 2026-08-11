@@ -3,3 +3,4 @@
 # probes + the CI gate, not binary baselines.
 __screenshots__/
 .layout-fixture/
+.style-match-when-fixture/
