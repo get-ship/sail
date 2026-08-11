@@ -2,6 +2,13 @@
   /docs/app/hmr — route soft-reload with state preserved; component hot-swap; SSE.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -9,13 +16,6 @@ import { devCmd } from '../../../../src/compositions/deck-hmr-snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <article style(page)>
   <p style(eyebrow)>Rendering &amp; build</p>

@@ -2,17 +2,6 @@
   /docs/guide/introduction — Introduction. Signals, Style, query, components, theme.
 -->
 
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { code } from '../../../../src/compositions/sail-overview-snippets'
-
-export default controller((_ctx: ControllerScope<Scope>) => {
-    const playing = signal(true)
-    return { code, playing }
-})
-</controller>
-
 <scope>
   style page = { box: maxW(breakpoint-tablet).mx(auto) }
   style intro = { box: maxW(breakpoint-tablet) }
@@ -24,6 +13,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
   style ctaRow = { box: mt(4).padT(4), paint: borderTWidth(1).borderT(border) }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { code } from '../../../../src/compositions/sail-overview-snippets'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+    const playing = signal(true)
+    return { code, playing }
+})
+</controller>
 
 <column gap="6" style(page)>
   <column gap="3" style(intro)>

@@ -5,6 +5,346 @@
   only zero-arg calls (`entry()`, `stage.button()`).
 -->
 
+<scope>
+  // Desktop width — configurator needs room for specimen + 320px prop rail.
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  // Explicit width (not minW) — `.sail-col > * { min-width: 0 }` zeros any
+  // min-width on children, so minW(panel-*) never lands. width: token wins.
+  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
+  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
+  style meterCol = { box: w(panel-max-w-sm) }
+  style grow1 = { box: grow(1) }
+  style cardPad = { box: pad(4) }
+  style cardPad5 = { box: pad(5) }
+  style mediaStage = { box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) }
+  style fullMedia = { box: w(full).h(full) }
+  style fullW = { box: w(full) }
+  style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
+  style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
+  // Author-paint demo — no component.ticker.* leaves; free brand surface.
+  style tickerPrimaryDemo = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(primary).radius(md) }
+  style tickerBoldDemo = { box: padX(4), paint: fg(primary-foreground), text: fontSize(sm).fontWeight(bold).textCase(uppercase).tracking(wide).whitespace(nowrap) }
+  style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  // Horizontal: cap width so a nowrap band overflows on x.
+  style scrollDemoH = { box: w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  // Both: cap both axes so content can overflow on x and y.
+  style scrollDemoBoth = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).h(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style scrollWide = { box: padY(1), text: whitespace(nowrap) }
+  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style pressBtn = { animate: press({ scale: 'press' }) }
+  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
+  style skeletonBox = { box: w(7).h(7) }
+  // Skeleton stage: bar/block need a definite width (w(full) resolves against this).
+  style skelStageCol = { box: w(full).maxW(panel-max-w-sm) }
+  style skelBlock = { box: w(full).maxW(panel-max-w-sm) }
+  style ctxCard = { box: pad(6).w(full) }
+  style toastStage = { box: w(full).maxW(panel-max-w-sm) }
+  // Mantine-style configurator: tall specimen canvas | fixed prop rail.
+  style stageSplit = { box: w(full).minW(0).minH(64) }
+  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
+  style knobPanel = {
+    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
+    paint: borderLWidth(1).borderL(border-subtle),
+  }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style swatchRow = { box: w(full) }
+  style tickRow = { box: w(full).padT(1) }
+  style tick = {
+    box: grow(1).basis(0).minW(0),
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontFamily(mono).textAlign(center),
+  }
+  // Color swatches (token paint). selected ring via Style when:{selected}.
+  style swatch = {
+    box: w(7).h(7).shrink(0),
+    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
+    when: {
+      selected: { paint: border(foreground).shadow(sm) },
+      hover: { paint: opacity(90) },
+    },
+  }
+  style swatchPrimary = { paint: bg(primary) }
+  style swatchSuccess = { paint: bg(success) }
+  style swatchWarning = { paint: bg(warning) }
+  style swatchDestructive = { paint: bg(destructive) }
+  style swatchAccent = { paint: bg(accent) }
+  style swatchMuted = { paint: bg(muted).border(border) }
+  style swatchInfo = { paint: bg(info) }
+  // Rest / clear-tone marker (component.badge / separator.line paint the specimen, not this chip).
+  style swatchRest = { paint: bg(background).border(border) }
+  style exampleBlock = { box: w(full).padY(2) }
+  style exampleH = { text: fontSize(md).fontWeight(semibold) }
+  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  // Vertical separator needs a definite row height so h(full)/self(stretch) resolve.
+  style sepVRow = { box: h(10) }
+  style sepStageCol = { box: w(full).maxW(panel-max-w-sm) }
+</scope>
+\n\n<select bind:value={team}>\n  <option>Engineering</option>\n  <option>Design</option>\n  <option>Research</option>\n</select>\n<p>team: {team()}</p>`
+    const selExSizes = () =>
+      `<select size="xs">…</select>\n<select size="sm">…</select>\n<select size="md">…</select>\n<select size="lg">…</select>\n<!-- padE(8) on base keeps chevron room at every size -->`
+    const selExInvalid = () =>
+      `<select invalid>\n  <option>Pick a team</option>\n  <option>Engineering</option>\n</select>\n<!-- invalid → destructive border (same compound as input) -->`
+    const selExRest = () =>
+      `<select>\n  <option>Engineering</option>\n  <option>Design</option>\n</select>\n<!-- rest → component.field bg/fg/border; hover free border-strong; chevron SELECT_MAP -->`
+    const selExNotCombobox = () =>
+      `<!-- <select> is the native closed picker only.\n     Filterable listbox with custom rows is <combobox> — separate L1. -->\n<select>\n  <optgroup label="Team">\n    <option>Ada</option>\n    <option>Grace</option>\n  </optgroup>\n  <option>Alan</option>\n</select>`
+    const spnExCentered = () =>
+      `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
+    const iconExNamed = () =>
+      `<icon name="check" size="sm"></icon>\n<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
+    const iconExSizes = () =>
+      `<icon name="sparkles" size="xs"></icon>\n<icon name="sparkles" size="sm"></icon>\n<icon name="sparkles"></icon>\n<icon name="sparkles" size="lg"></icon>\n<icon name="sparkles" size="xl"></icon>`
+    const iconExSpin = () =>
+      `<icon name="refresh-cw" spin label="Refreshing"></icon>\n<!-- use:icon owns spin motion; label → role=img -->`
+    const iconExColor = () =>
+      `<span style({ paint: fg(primary) })>\n  <icon name="heart"></icon>\n</span>\n<!-- no tone prop — ink is currentColor -->`
+    const skelExLines = () =>
+      `<column gap="2">\n  <skeleton shape="text" size="md"></skeleton>\n  <skeleton shape="text" size="sm"></skeleton>\n  <skeleton shape="line" size="sm"></skeleton>\n</column>`
+    const skelExAvatar = () =>
+      `<row gap="3" align="center">\n  <skeleton shape="circle" size="md"></skeleton>\n  <column gap="2" style({ box: grow(1) })>\n    <skeleton shape="text" size="sm"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
+    const skelExRest = () =>
+      `<skeleton shape="block"></skeleton>\n<!-- sheen → component.skeleton.bg / highlight (themeable) -->`
+    const esExDefault = () =>
+      `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">No results</strong>\n  Try a different search, or clear a filter.\n  <button slot="action" variant="outline" size="sm">Clear filters</button>\n</empty-state>`
+    const esExInline = () =>
+      `<empty-state variant="inline" size="sm">\n  <strong slot="title">Nothing in this view</strong>\n  Adjust filters to see more results.\n  <button slot="action" variant="ghost" size="sm">Reset</button>\n</empty-state>`
+    const esExConnecting = () =>
+      `<empty-state variant="connecting">\n  <spinner slot="icon" size="sm"></spinner>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>\n<!-- connecting → role=status · aria-live=polite -->`
+    const esExRest = () =>
+      `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">Empty inbox</strong>\n  Messages you receive land here.\n</empty-state>\n<!-- no tone → component.empty-state.* (themeable) -->`
+    const mtrExMeasure = () =>
+      `<column gap="2">\n  <p>Disk free — 72%</p>\n  <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>\n</column>`
+    const mtrExSizes = () =>
+      `<meter value="0.55" size="sm"></meter>\n<meter value="0.55"></meter>\n<meter value="0.55" size="lg"></meter>`
+    const mtrExBands = () =>
+      `<meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- even-less-good → component.meter.sub-suboptimum -->\n<meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- suboptimum → component.meter.suboptimum -->\n<meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- optimum → component.meter.optimum -->`
+    const mtrExRest = () =>
+      `<meter value="0.55"></meter>\n<!-- track → component.meter.track; bands → optimum / suboptimum / sub-suboptimum -->`
+    const prgExDeterminate = () =>
+      `<progress value={done()} max="100"></progress>\n<p>{done()}% uploaded</p>`
+    const prgExSizes = () =>
+      `<progress value="50" max="100" size="sm"></progress>\n<progress value="50" max="100"></progress>\n<progress value="50" max="100" size="lg"></progress>`
+    const prgExIndeterminate = () =>
+      `<progress max="100"></progress>\n<!-- omit value → native indeterminate + PROGRESS_MAP shimmer -->`
+    const prgExRest = () =>
+      `<progress value="64" max="100"></progress>\n<!-- track/fill → component.progress.track + fill (themeable) -->`
+    const lblExFor = () =>
+      `<column gap="1">\n  <label for="email" required>Email</label>\n  <input id="email" placeholder="ada@lovelace.dev" />\n</column>`
+    const lblExSizes = () =>
+      `<label for="a" size="sm">sm</label>\n<label for="b">md</label>\n<label for="c" size="lg">lg</label>`
+    const lblExRequired = () =>
+      `<label for="email" required>Email</label>\n<!-- * → component.label.required; omit required for optional -->`
+    const lblExRest = () =>
+      `<label for="name">Display name</label>\n<!-- ink → component.label.fg; weight → typography.label.weight -->`
+    const swExBind = () =>
+      `<controller>\nexport default controller(() => ({ notify: signal(true) }))\n</controller>\n\n<row gap="3" align="center">\n  <switch bind:checked={notify}></switch>\n  <p>{notify() ? 'on' : 'off'}</p>\n</row>`
+    const swExSizes = () =>
+      `<switch size="sm" checked></switch>\n<switch checked></switch>\n<switch size="lg" checked></switch>`
+    const swExTones = () =>
+      `<switch tone="success" checked></switch>\n<switch tone="warning" checked></switch>\n<switch tone="destructive" checked></switch>\n<!-- tone paints checked track only; thumb stays switch.thumb -->`
+    const swExRest = () =>
+      `<switch></switch>\n<switch checked></switch>\n<!-- off → component.switch.track + border; checked (no tone) → primary; thumb → switch.thumb -->`
+    const tickerExBasic = () =>
+      `<ticker duration="normal" style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })>\n  <p style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>\n    tokens · signals · a11y · hot reload ·&nbsp;\n  </p>\n</ticker>`
+    const tickerExDuration = () =>
+      `<ticker duration="fast">…</ticker>\n<ticker duration="normal">…</ticker>\n<ticker duration="slow">…</ticker>\n<!-- use:marquee: fast 16s · normal 24s · slow 32s per full loop -->`
+    const tickerExReverse = () =>
+      `<ticker duration="slow" reverse style({ box: w(full).overflow(hidden).padY(2), paint: bg(surface-2) })>\n  <p style({ box: padX(3), paint: fg(muted-foreground), text: whitespace(nowrap) })>…</p>\n</ticker>`
+    const tickerExPaint = () =>
+      `<ticker style({ box: w(full).overflow(hidden).padY(3), paint: bg(primary) })>\n  <p style({ paint: fg(primary-foreground), text: fontWeight(bold).whitespace(nowrap) })>\n    AUTHOR PAINT · NO component.ticker.* ·&nbsp;\n  </p>\n</ticker>\n<!-- host is geometry only; band chrome is free style on host + slot -->`
+    const saExVertical = () =>
+      `<scroll-area orientation="vertical" style({ box: maxH(panel-max-h-sm).pad(3) })>\n  <p>Line 1</p>\n  <p>Line 2</p>\n  …\n</scroll-area>`
+    const saExHorizontal = () =>
+      `<scroll-area orientation="horizontal" style({ box: maxW(panel-max-w-sm).pad(3) })>\n  <p style({ text: whitespace(nowrap) })>Wide content that overflows →</p>\n</scroll-area>`
+    const saExBoth = () =>
+      `<scroll-area orientation="both" style({ box: maxH(panel-max-h-sm).maxW(panel-max-w-sm).pad(3) })>\n  …tall and wide content…\n</scroll-area>`
+    const saExRest = () =>
+      `<scroll-area style({ box: maxH(panel-max-h-sm).pad(3) })>\n  …\n</scroll-area>\n<!-- rest thumb → component.scroll-area.thumb; hover → border-strong (SPEC-D1) -->`
+    const sldExBind = () =>
+      `<controller>\nexport default controller(() => ({ volume: signal(48) }))\n</controller>\n\n<column gap="2">\n  <row justify="between"><span>Volume</span><span>{volume()}%</span></row>\n  <slider bind:value={volume} min="0" max="100"></slider>\n</column>`
+    const sldExSizes = () =>
+      `<slider value="50" size="sm"></slider>\n<slider value="50"></slider>\n<slider value="50" size="lg"></slider>`
+    const sldExDisabled = () =>
+      `<slider value="40" disabled></slider>\n<!-- native freeze + opacity; fill still shows value -->`
+    const sldExRest = () =>
+      `<slider value="62" min="0" max="100"></slider>\n<!-- track/fill/border → component.slider.track + fill + track-border; thumb face = field, rim = fill -->`
+    const taExBind = () =>
+      `<controller>\nexport default controller(() => ({ bio: signal('') }))\n</controller>\n\n<textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>\n<p>{bio().length} characters</p>`
+    const taExSizes = () =>
+      `<textarea size="xs" rows="2" placeholder="xs"></textarea>\n<textarea size="sm" rows="2" placeholder="sm"></textarea>\n<textarea rows="2" placeholder="md"></textarea>\n<textarea size="lg" rows="2" placeholder="lg"></textarea>`
+    const taExInvalid = () =>
+      `<textarea invalid rows="3" placeholder="Needs a real description"></textarea>\n<!-- invalid → border(destructive); rest border → component.field.border -->`
+    const taExRest = () =>
+      `<textarea rows="3" placeholder="Notes"></textarea>\n<!-- bg/fg/border → component.field.*; hover border-strong (D1 free global); use:autosize grows height -->`
+    const inpExField = () =>
+      `<input type="email" placeholder="ada@lovelace.dev" bind:value={email} />\n<!-- text-like types share fieldSized + component.field.* -->`
+    const inpExSizes = () =>
+      `<input size="xs" placeholder="xs" />\n<input size="sm" placeholder="sm" />\n<input placeholder="md" />\n<input size="lg" placeholder="lg" />`
+    const inpExInvalid = () =>
+      `<input type="email" value="not-an-email" invalid />\n<!-- compound invalid → border(destructive) -->`
+    const inpExCheck = () =>
+      `<label><input type="checkbox" bind:checked={agreed} /> I agree</label>\n<!-- checkbox is type= on <input>, not a separate tag; checkSized + primary checked -->`
+    const inpExRange = () =>
+      `<input type="range" min="0" max="100" bind:value={volume} />\n<!-- range skin; slider L1 is a richer PE on the same host model -->`
+    const inpExRest = () =>
+      `<input placeholder="Theme me" />\n<!-- rest field → component.field.bg / fg / border (shared with select · textarea) -->`
+    // sail-media-image src is a JS identity property, not a reflect attr.
+    effect(() => {
+      void tag()
+      requestAnimationFrame(() => {
+        document.querySelectorAll('sail-media-image').forEach((el) => {
+          const host = el as HTMLElement & { src?: string }
+          if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
+        })
+      })
+    })
+
+    const variants = () => entry()?.variants ?? []
+    const hasVariants = derived(() => (entry()?.variants.length ?? 0) > 0)
+    const variantAttr = () => entry()?.variantAttr ?? ''
+    const blurb = () => entry()?.blurb ?? ''
+    const props = () => entry()?.props ?? []
+    const usageCode = () => entry()?.usage ?? ''
+    const slotCopy = () => (knownPack() ? packSlotCopy(tag()) : '')
+    const heading = () => entry()?.heading ?? tag()
+    const packBlurb = () => packBlurbFor(tag())
+    const packProps = () => PACK_PROPS[tag()] ?? []
+    const packLabel = () => packLabelFor(tag())
+
+    const stage = Object.fromEntries([
+      ...Object.values(DETAILS).map((e) => [e.key, () => entry()?.key === e.key]),
+      ...[...PACK_TAGS].map((k) => [k.replace(/-([a-z])/g, (_, c) => c.toUpperCase()), () => tag() === k]),
+    ]) as Record<string, () => boolean>
+
+    const presses = signal(0)
+    const press = (): void => presses.set((n) => n + 1)
+    const notify = signal(true)
+    // Switch stage re-seeds checked on tag entry (notify is declared late).
+    effect(() => {
+      if (tag() === 'switch') notify.set(true)
+    })
+    const agreed = signal(false)
+    const name = signal('')
+    // Input stage re-seeds bind targets declared late.
+    effect(() => {
+      if (tag() === 'input') {
+        name.set('')
+        agreed.set(false)
+      }
+    })
+    const bio = signal('')
+    // Textarea stage re-seeds bind value on tag entry (bio is declared late).
+    effect(() => {
+      if (tag() === 'textarea') bio.set('')
+    })
+    const team = signal('Design')
+    // Select stage re-seeds value on tag entry (team is declared late).
+    effect(() => {
+      if (tag() === 'select') team.set('Design')
+    })
+    const fw = signal('')
+    const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
+    const pageNo = signal('2')
+    const goPage = (detail: { page?: string; value?: string }): void => pageNo.set(detail?.page ?? detail?.value ?? '1')
+    // Toast stage owns instances (push → dismiss → re-push). L1 remove() is
+    // correct; the stage must remount via signal, not treat one node as forever.
+    let toastSeq = 0
+    const toastItems = signal<{ key: string }[]>([{ key: 'toast-0' }])
+    const pushToast = (): void => {
+      toastSeq += 1
+      toastItems.set([{ key: `toast-${toastSeq}` }])
+    }
+    const onToastDismiss = (): void => {
+      toastItems.set([])
+    }
+    // Re-seed when navigating onto the toast detail (scope is reused).
+    effect(() => {
+      if (tag() === 'toast') {
+        toastSeq = 0
+        toastItems.set([{ key: 'toast-0' }])
+      }
+    })
+    const sheetSide = () => (variant() === 'sheet' ? 'end' : null)
+    const people = () => [
+      { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
+      { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
+      { id: 3, name: 'Alan Turing', team: 'Research', status: 'away' },
+    ]
+
+    return {
+      tag, entry, known, knownPack, showViewer, heading,
+      variant, pick, onVariantChange, variants, hasVariants, variantAttr,
+      viewerVariants, viewerVariantAttr,
+      blurb, props, packBlurb, packProps, packLabel, usageCode, stage, slotCopy,
+      presses, press, notify, agreed, load, name, bio, team,
+      fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
+      toastItems, pushToast, onToastDismiss,
+      sheetSide, people,
+      sizeIdx, btnSize, btnTone, btnMeta, isIconSize, pickTone,
+      btnExWithIcon, btnExIconOnly, btnExSizes,
+      aTone, aDisabled, aMeta, pickATone, clearATone,
+      aExBare, aExButton, aExRest,
+      badgeTone, badgeSize, badgePill, badgeMeta, pickBadgeTone, clearBadgeTone,
+      bdgExStatus, bdgExPill, bdgExRest,
+      sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
+      sepExBoth, sepExVariant, sepExRest,
+      alertTone, alertDismissible, alertVisible, alertMeta, alertTitle, alertBody,
+      pickAlertTone, clearAlertTone, onAlertDismiss, restoreAlert,
+      alrtExTones, alrtExDismiss, alrtExRest,
+      chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
+      chipExFilter, chipExRemove, chipExRest,
+      kbdExChord, kbdExModifiers, kbdExRest,
+      legendExGroup, legendExDisabled, legendExRest,
+      proseExScale, proseExBlocks, proseExRest,
+      spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
+      spnExInline, spnExSizes, spnExRest, spnExCentered,
+      iconSize, iconSpin, iconName, iconLabeled, iconMeta, iconLabelAttr,
+      iconExNamed, iconExSizes, iconExSpin, iconExColor,
+      skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
+      emptyTone, emptySize, emptyMeta, emptyTitle, emptyBody, emptyIsConnecting,
+      pickEmptyTone, clearEmptyTone,
+      esExDefault, esExInline, esExConnecting, esExRest,
+      meterVal, meterSize, meterMeta, meterBand,
+      mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
+      progSize, progIndeterminate, progMeta,
+      prgExDeterminate, prgExSizes, prgExIndeterminate, prgExRest,
+      errSize, errCode, errDetails, errMeta,
+      errExDefault, errExInline, errExDetails, errExRest,
+      fieldsetDisabled, fieldsetMeta,
+      fsExGroup, fsExDisabled, fsExRest,
+      labelSize, labelRequired, labelMeta,
+      lblExFor, lblExSizes, lblExRequired, lblExRest,
+      codeLang, codeSample, codeMeta,
+      codeExBasic, codeExSail, codeExRest,
+      switchSize, switchTone, switchDisabled, switchMeta, pickSwitchTone, clearSwitchTone,
+      swExBind, swExSizes, swExTones, swExRest,
+      radioDisabled, radioValue, radioMeta,
+      radioExOption, radioExDisabled, radioExRest, radioExGroup,
+      tickerDuration, tickerReverse, tickerMeta,
+      tickerExBasic, tickerExDuration, tickerExReverse, tickerExPaint,
+      scrollOrientation, scrollMeta,
+      saExVertical, saExHorizontal, saExBoth, saExRest,
+      sliderSize, sliderDisabled, sliderMeta,
+      sldExBind, sldExSizes, sldExDisabled, sldExRest,
+      textareaSize, textareaInvalid, textareaDisabled, textareaRows, textareaMeta,
+      taExBind, taExSizes, taExInvalid, taExRest,
+      selectSize, selectInvalid, selectDisabled, selectMultiple, selectMeta,
+      selExBind, selExSizes, selExInvalid, selExRest, selExNotCombobox,
+      inputType, inputSize, inputInvalid, inputDisabled, inputPlaceholder,
+      inputSkin, inputMeta,
+      inpExField, inpExSizes, inpExInvalid, inpExCheck, inpExRange, inpExRest,
+    }
+})
+</controller>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -648,346 +988,7 @@ const kbdExChord = () =>
     const radioExGroup = () =>
       `<radio-group label="Plan" name="plan" value="monthly">\n  <radio value="monthly">Monthly</radio>\n  <radio value="yearly">Yearly</radio>\n</radio-group>\n<!-- exclusivity / name / onChange — radio-group (separate L1) -->`
     const selExBind = () =>
-      `<controller>\nexport default controller(() => ({ team: signal('Design') }))\n</controller>\n\n<select bind:value={team}>\n  <option>Engineering</option>\n  <option>Design</option>\n  <option>Research</option>\n</select>\n<p>team: {team()}</p>`
-    const selExSizes = () =>
-      `<select size="xs">…</select>\n<select size="sm">…</select>\n<select size="md">…</select>\n<select size="lg">…</select>\n<!-- padE(8) on base keeps chevron room at every size -->`
-    const selExInvalid = () =>
-      `<select invalid>\n  <option>Pick a team</option>\n  <option>Engineering</option>\n</select>\n<!-- invalid → destructive border (same compound as input) -->`
-    const selExRest = () =>
-      `<select>\n  <option>Engineering</option>\n  <option>Design</option>\n</select>\n<!-- rest → component.field bg/fg/border; hover free border-strong; chevron SELECT_MAP -->`
-    const selExNotCombobox = () =>
-      `<!-- <select> is the native closed picker only.\n     Filterable listbox with custom rows is <combobox> — separate L1. -->\n<select>\n  <optgroup label="Team">\n    <option>Ada</option>\n    <option>Grace</option>\n  </optgroup>\n  <option>Alan</option>\n</select>`
-    const spnExCentered = () =>
-      `<spinner centered tone="primary"></spinner>\n<!-- block + mx(auto) in the parent -->`
-    const iconExNamed = () =>
-      `<icon name="check" size="sm"></icon>\n<button variant="solid" tone="primary">\n  <icon name="check" size="sm"></icon>\n  Save\n</button>`
-    const iconExSizes = () =>
-      `<icon name="sparkles" size="xs"></icon>\n<icon name="sparkles" size="sm"></icon>\n<icon name="sparkles"></icon>\n<icon name="sparkles" size="lg"></icon>\n<icon name="sparkles" size="xl"></icon>`
-    const iconExSpin = () =>
-      `<icon name="refresh-cw" spin label="Refreshing"></icon>\n<!-- use:icon owns spin motion; label → role=img -->`
-    const iconExColor = () =>
-      `<span style({ paint: fg(primary) })>\n  <icon name="heart"></icon>\n</span>\n<!-- no tone prop — ink is currentColor -->`
-    const skelExLines = () =>
-      `<column gap="2">\n  <skeleton shape="text" size="md"></skeleton>\n  <skeleton shape="text" size="sm"></skeleton>\n  <skeleton shape="line" size="sm"></skeleton>\n</column>`
-    const skelExAvatar = () =>
-      `<row gap="3" align="center">\n  <skeleton shape="circle" size="md"></skeleton>\n  <column gap="2" style({ box: grow(1) })>\n    <skeleton shape="text" size="sm"></skeleton>\n    <skeleton shape="text" size="sm"></skeleton>\n  </column>\n</row>`
-    const skelExRest = () =>
-      `<skeleton shape="block"></skeleton>\n<!-- sheen → component.skeleton.bg / highlight (themeable) -->`
-    const esExDefault = () =>
-      `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">No results</strong>\n  Try a different search, or clear a filter.\n  <button slot="action" variant="outline" size="sm">Clear filters</button>\n</empty-state>`
-    const esExInline = () =>
-      `<empty-state variant="inline" size="sm">\n  <strong slot="title">Nothing in this view</strong>\n  Adjust filters to see more results.\n  <button slot="action" variant="ghost" size="sm">Reset</button>\n</empty-state>`
-    const esExConnecting = () =>
-      `<empty-state variant="connecting">\n  <spinner slot="icon" size="sm"></spinner>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>\n<!-- connecting → role=status · aria-live=polite -->`
-    const esExRest = () =>
-      `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">Empty inbox</strong>\n  Messages you receive land here.\n</empty-state>\n<!-- no tone → component.empty-state.* (themeable) -->`
-    const mtrExMeasure = () =>
-      `<column gap="2">\n  <p>Disk free — 72%</p>\n  <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>\n</column>`
-    const mtrExSizes = () =>
-      `<meter value="0.55" size="sm"></meter>\n<meter value="0.55"></meter>\n<meter value="0.55" size="lg"></meter>`
-    const mtrExBands = () =>
-      `<meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- even-less-good → component.meter.sub-suboptimum -->\n<meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- suboptimum → component.meter.suboptimum -->\n<meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<!-- optimum → component.meter.optimum -->`
-    const mtrExRest = () =>
-      `<meter value="0.55"></meter>\n<!-- track → component.meter.track; bands → optimum / suboptimum / sub-suboptimum -->`
-    const prgExDeterminate = () =>
-      `<progress value={done()} max="100"></progress>\n<p>{done()}% uploaded</p>`
-    const prgExSizes = () =>
-      `<progress value="50" max="100" size="sm"></progress>\n<progress value="50" max="100"></progress>\n<progress value="50" max="100" size="lg"></progress>`
-    const prgExIndeterminate = () =>
-      `<progress max="100"></progress>\n<!-- omit value → native indeterminate + PROGRESS_MAP shimmer -->`
-    const prgExRest = () =>
-      `<progress value="64" max="100"></progress>\n<!-- track/fill → component.progress.track + fill (themeable) -->`
-    const lblExFor = () =>
-      `<column gap="1">\n  <label for="email" required>Email</label>\n  <input id="email" placeholder="ada@lovelace.dev" />\n</column>`
-    const lblExSizes = () =>
-      `<label for="a" size="sm">sm</label>\n<label for="b">md</label>\n<label for="c" size="lg">lg</label>`
-    const lblExRequired = () =>
-      `<label for="email" required>Email</label>\n<!-- * → component.label.required; omit required for optional -->`
-    const lblExRest = () =>
-      `<label for="name">Display name</label>\n<!-- ink → component.label.fg; weight → typography.label.weight -->`
-    const swExBind = () =>
-      `<controller>\nexport default controller(() => ({ notify: signal(true) }))\n</controller>\n\n<row gap="3" align="center">\n  <switch bind:checked={notify}></switch>\n  <p>{notify() ? 'on' : 'off'}</p>\n</row>`
-    const swExSizes = () =>
-      `<switch size="sm" checked></switch>\n<switch checked></switch>\n<switch size="lg" checked></switch>`
-    const swExTones = () =>
-      `<switch tone="success" checked></switch>\n<switch tone="warning" checked></switch>\n<switch tone="destructive" checked></switch>\n<!-- tone paints checked track only; thumb stays switch.thumb -->`
-    const swExRest = () =>
-      `<switch></switch>\n<switch checked></switch>\n<!-- off → component.switch.track + border; checked (no tone) → primary; thumb → switch.thumb -->`
-    const tickerExBasic = () =>
-      `<ticker duration="normal" style({ box: w(full).overflow(hidden).padY(2), paint: bg(muted).radius(md) })>\n  <p style({ box: padX(3), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) })>\n    tokens · signals · a11y · hot reload ·&nbsp;\n  </p>\n</ticker>`
-    const tickerExDuration = () =>
-      `<ticker duration="fast">…</ticker>\n<ticker duration="normal">…</ticker>\n<ticker duration="slow">…</ticker>\n<!-- use:marquee: fast 16s · normal 24s · slow 32s per full loop -->`
-    const tickerExReverse = () =>
-      `<ticker duration="slow" reverse style({ box: w(full).overflow(hidden).padY(2), paint: bg(surface-2) })>\n  <p style({ box: padX(3), paint: fg(muted-foreground), text: whitespace(nowrap) })>…</p>\n</ticker>`
-    const tickerExPaint = () =>
-      `<ticker style({ box: w(full).overflow(hidden).padY(3), paint: bg(primary) })>\n  <p style({ paint: fg(primary-foreground), text: fontWeight(bold).whitespace(nowrap) })>\n    AUTHOR PAINT · NO component.ticker.* ·&nbsp;\n  </p>\n</ticker>\n<!-- host is geometry only; band chrome is free style on host + slot -->`
-    const saExVertical = () =>
-      `<scroll-area orientation="vertical" style({ box: maxH(panel-max-h-sm).pad(3) })>\n  <p>Line 1</p>\n  <p>Line 2</p>\n  …\n</scroll-area>`
-    const saExHorizontal = () =>
-      `<scroll-area orientation="horizontal" style({ box: maxW(panel-max-w-sm).pad(3) })>\n  <p style({ text: whitespace(nowrap) })>Wide content that overflows →</p>\n</scroll-area>`
-    const saExBoth = () =>
-      `<scroll-area orientation="both" style({ box: maxH(panel-max-h-sm).maxW(panel-max-w-sm).pad(3) })>\n  …tall and wide content…\n</scroll-area>`
-    const saExRest = () =>
-      `<scroll-area style({ box: maxH(panel-max-h-sm).pad(3) })>\n  …\n</scroll-area>\n<!-- rest thumb → component.scroll-area.thumb; hover → border-strong (SPEC-D1) -->`
-    const sldExBind = () =>
-      `<controller>\nexport default controller(() => ({ volume: signal(48) }))\n</controller>\n\n<column gap="2">\n  <row justify="between"><span>Volume</span><span>{volume()}%</span></row>\n  <slider bind:value={volume} min="0" max="100"></slider>\n</column>`
-    const sldExSizes = () =>
-      `<slider value="50" size="sm"></slider>\n<slider value="50"></slider>\n<slider value="50" size="lg"></slider>`
-    const sldExDisabled = () =>
-      `<slider value="40" disabled></slider>\n<!-- native freeze + opacity; fill still shows value -->`
-    const sldExRest = () =>
-      `<slider value="62" min="0" max="100"></slider>\n<!-- track/fill/border → component.slider.track + fill + track-border; thumb face = field, rim = fill -->`
-    const taExBind = () =>
-      `<controller>\nexport default controller(() => ({ bio: signal('') }))\n</controller>\n\n<textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>\n<p>{bio().length} characters</p>`
-    const taExSizes = () =>
-      `<textarea size="xs" rows="2" placeholder="xs"></textarea>\n<textarea size="sm" rows="2" placeholder="sm"></textarea>\n<textarea rows="2" placeholder="md"></textarea>\n<textarea size="lg" rows="2" placeholder="lg"></textarea>`
-    const taExInvalid = () =>
-      `<textarea invalid rows="3" placeholder="Needs a real description"></textarea>\n<!-- invalid → border(destructive); rest border → component.field.border -->`
-    const taExRest = () =>
-      `<textarea rows="3" placeholder="Notes"></textarea>\n<!-- bg/fg/border → component.field.*; hover border-strong (D1 free global); use:autosize grows height -->`
-    const inpExField = () =>
-      `<input type="email" placeholder="ada@lovelace.dev" bind:value={email} />\n<!-- text-like types share fieldSized + component.field.* -->`
-    const inpExSizes = () =>
-      `<input size="xs" placeholder="xs" />\n<input size="sm" placeholder="sm" />\n<input placeholder="md" />\n<input size="lg" placeholder="lg" />`
-    const inpExInvalid = () =>
-      `<input type="email" value="not-an-email" invalid />\n<!-- compound invalid → border(destructive) -->`
-    const inpExCheck = () =>
-      `<label><input type="checkbox" bind:checked={agreed} /> I agree</label>\n<!-- checkbox is type= on <input>, not a separate tag; checkSized + primary checked -->`
-    const inpExRange = () =>
-      `<input type="range" min="0" max="100" bind:value={volume} />\n<!-- range skin; slider L1 is a richer PE on the same host model -->`
-    const inpExRest = () =>
-      `<input placeholder="Theme me" />\n<!-- rest field → component.field.bg / fg / border (shared with select · textarea) -->`
-    // sail-media-image src is a JS identity property, not a reflect attr.
-    effect(() => {
-      void tag()
-      requestAnimationFrame(() => {
-        document.querySelectorAll('sail-media-image').forEach((el) => {
-          const host = el as HTMLElement & { src?: string }
-          if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
-        })
-      })
-    })
-
-    const variants = () => entry()?.variants ?? []
-    const hasVariants = derived(() => (entry()?.variants.length ?? 0) > 0)
-    const variantAttr = () => entry()?.variantAttr ?? ''
-    const blurb = () => entry()?.blurb ?? ''
-    const props = () => entry()?.props ?? []
-    const usageCode = () => entry()?.usage ?? ''
-    const slotCopy = () => (knownPack() ? packSlotCopy(tag()) : '')
-    const heading = () => entry()?.heading ?? tag()
-    const packBlurb = () => packBlurbFor(tag())
-    const packProps = () => PACK_PROPS[tag()] ?? []
-    const packLabel = () => packLabelFor(tag())
-
-    const stage = Object.fromEntries([
-      ...Object.values(DETAILS).map((e) => [e.key, () => entry()?.key === e.key]),
-      ...[...PACK_TAGS].map((k) => [k.replace(/-([a-z])/g, (_, c) => c.toUpperCase()), () => tag() === k]),
-    ]) as Record<string, () => boolean>
-
-    const presses = signal(0)
-    const press = (): void => presses.set((n) => n + 1)
-    const notify = signal(true)
-    // Switch stage re-seeds checked on tag entry (notify is declared late).
-    effect(() => {
-      if (tag() === 'switch') notify.set(true)
-    })
-    const agreed = signal(false)
-    const name = signal('')
-    // Input stage re-seeds bind targets declared late.
-    effect(() => {
-      if (tag() === 'input') {
-        name.set('')
-        agreed.set(false)
-      }
-    })
-    const bio = signal('')
-    // Textarea stage re-seeds bind value on tag entry (bio is declared late).
-    effect(() => {
-      if (tag() === 'textarea') bio.set('')
-    })
-    const team = signal('Design')
-    // Select stage re-seeds value on tag entry (team is declared late).
-    effect(() => {
-      if (tag() === 'select') team.set('Design')
-    })
-    const fw = signal('')
-    const pickFw = (detail: { value: string }): void => fw.set(detail?.value ?? '')
-    const pageNo = signal('2')
-    const goPage = (detail: { page?: string; value?: string }): void => pageNo.set(detail?.page ?? detail?.value ?? '1')
-    // Toast stage owns instances (push → dismiss → re-push). L1 remove() is
-    // correct; the stage must remount via signal, not treat one node as forever.
-    let toastSeq = 0
-    const toastItems = signal<{ key: string }[]>([{ key: 'toast-0' }])
-    const pushToast = (): void => {
-      toastSeq += 1
-      toastItems.set([{ key: `toast-${toastSeq}` }])
-    }
-    const onToastDismiss = (): void => {
-      toastItems.set([])
-    }
-    // Re-seed when navigating onto the toast detail (scope is reused).
-    effect(() => {
-      if (tag() === 'toast') {
-        toastSeq = 0
-        toastItems.set([{ key: 'toast-0' }])
-      }
-    })
-    const sheetSide = () => (variant() === 'sheet' ? 'end' : null)
-    const people = () => [
-      { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },
-      { id: 2, name: 'Grace Hopper', team: 'Compilers', status: 'active' },
-      { id: 3, name: 'Alan Turing', team: 'Research', status: 'away' },
-    ]
-
-    return {
-      tag, entry, known, knownPack, showViewer, heading,
-      variant, pick, onVariantChange, variants, hasVariants, variantAttr,
-      viewerVariants, viewerVariantAttr,
-      blurb, props, packBlurb, packProps, packLabel, usageCode, stage, slotCopy,
-      presses, press, notify, agreed, load, name, bio, team,
-      fw, pickFw, pageNo, goPage, kept, dropChip, restoreChip,
-      toastItems, pushToast, onToastDismiss,
-      sheetSide, people,
-      sizeIdx, btnSize, btnTone, btnMeta, isIconSize, pickTone,
-      btnExWithIcon, btnExIconOnly, btnExSizes,
-      aTone, aDisabled, aMeta, pickATone, clearATone,
-      aExBare, aExButton, aExRest,
-      badgeTone, badgeSize, badgePill, badgeMeta, pickBadgeTone, clearBadgeTone,
-      bdgExStatus, bdgExPill, bdgExRest,
-      sepOrientation, sepTone, sepMeta, pickSepTone, clearSepTone,
-      sepExBoth, sepExVariant, sepExRest,
-      alertTone, alertDismissible, alertVisible, alertMeta, alertTitle, alertBody,
-      pickAlertTone, clearAlertTone, onAlertDismiss, restoreAlert,
-      alrtExTones, alrtExDismiss, alrtExRest,
-      chipTone, chipSize, chipSelected, chipRemovable, chipMeta, pickChipTone, clearChipTone,
-      chipExFilter, chipExRemove, chipExRest,
-      kbdExChord, kbdExModifiers, kbdExRest,
-      legendExGroup, legendExDisabled, legendExRest,
-      proseExScale, proseExBlocks, proseExRest,
-      spinnerTone, spinnerSize, spinnerCentered, spinnerMeta, pickSpinnerTone, clearSpinnerTone,
-      spnExInline, spnExSizes, spnExRest, spnExCentered,
-      iconSize, iconSpin, iconName, iconLabeled, iconMeta, iconLabelAttr,
-      iconExNamed, iconExSizes, iconExSpin, iconExColor,
-      skelSize, skelMeta, skelExLines, skelExAvatar, skelExRest,
-      emptyTone, emptySize, emptyMeta, emptyTitle, emptyBody, emptyIsConnecting,
-      pickEmptyTone, clearEmptyTone,
-      esExDefault, esExInline, esExConnecting, esExRest,
-      meterVal, meterSize, meterMeta, meterBand,
-      mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
-      progSize, progIndeterminate, progMeta,
-      prgExDeterminate, prgExSizes, prgExIndeterminate, prgExRest,
-      errSize, errCode, errDetails, errMeta,
-      errExDefault, errExInline, errExDetails, errExRest,
-      fieldsetDisabled, fieldsetMeta,
-      fsExGroup, fsExDisabled, fsExRest,
-      labelSize, labelRequired, labelMeta,
-      lblExFor, lblExSizes, lblExRequired, lblExRest,
-      codeLang, codeSample, codeMeta,
-      codeExBasic, codeExSail, codeExRest,
-      switchSize, switchTone, switchDisabled, switchMeta, pickSwitchTone, clearSwitchTone,
-      swExBind, swExSizes, swExTones, swExRest,
-      radioDisabled, radioValue, radioMeta,
-      radioExOption, radioExDisabled, radioExRest, radioExGroup,
-      tickerDuration, tickerReverse, tickerMeta,
-      tickerExBasic, tickerExDuration, tickerExReverse, tickerExPaint,
-      scrollOrientation, scrollMeta,
-      saExVertical, saExHorizontal, saExBoth, saExRest,
-      sliderSize, sliderDisabled, sliderMeta,
-      sldExBind, sldExSizes, sldExDisabled, sldExRest,
-      textareaSize, textareaInvalid, textareaDisabled, textareaRows, textareaMeta,
-      taExBind, taExSizes, taExInvalid, taExRest,
-      selectSize, selectInvalid, selectDisabled, selectMultiple, selectMeta,
-      selExBind, selExSizes, selExInvalid, selExRest, selExNotCombobox,
-      inputType, inputSize, inputInvalid, inputDisabled, inputPlaceholder,
-      inputSkin, inputMeta,
-      inpExField, inpExSizes, inpExInvalid, inpExCheck, inpExRange, inpExRest,
-    }
-})
-</controller>
-
-<scope>
-  // Desktop width — configurator needs room for specimen + 320px prop rail.
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  // Explicit width (not minW) — `.sail-col > * { min-width: 0 }` zeros any
-  // min-width on children, so minW(panel-*) never lands. width: token wins.
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
-  style meterCol = { box: w(panel-max-w-sm) }
-  style grow1 = { box: grow(1) }
-  style cardPad = { box: pad(4) }
-  style cardPad5 = { box: pad(5) }
-  style mediaStage = { box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) }
-  style fullMedia = { box: w(full).h(full) }
-  style fullW = { box: w(full) }
-  style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
-  style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
-  // Author-paint demo — no component.ticker.* leaves; free brand surface.
-  style tickerPrimaryDemo = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(primary).radius(md) }
-  style tickerBoldDemo = { box: padX(4), paint: fg(primary-foreground), text: fontSize(sm).fontWeight(bold).textCase(uppercase).tracking(wide).whitespace(nowrap) }
-  style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
-  // Horizontal: cap width so a nowrap band overflows on x.
-  style scrollDemoH = { box: w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
-  // Both: cap both axes so content can overflow on x and y.
-  style scrollDemoBoth = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).h(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style scrollWide = { box: padY(1), text: whitespace(nowrap) }
-  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style pressBtn = { animate: press({ scale: 'press' }) }
-  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
-  style skeletonBox = { box: w(7).h(7) }
-  // Skeleton stage: bar/block need a definite width (w(full) resolves against this).
-  style skelStageCol = { box: w(full).maxW(panel-max-w-sm) }
-  style skelBlock = { box: w(full).maxW(panel-max-w-sm) }
-  style ctxCard = { box: pad(6).w(full) }
-  style toastStage = { box: w(full).maxW(panel-max-w-sm) }
-  // Mantine-style configurator: tall specimen canvas | fixed prop rail.
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style swatchRow = { box: w(full) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
-  }
-  // Color swatches (token paint). selected ring via Style when:{selected}.
-  style swatch = {
-    box: w(7).h(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style swatchInfo = { paint: bg(info) }
-  // Rest / clear-tone marker (component.badge / separator.line paint the specimen, not this chip).
-  style swatchRest = { paint: bg(background).border(border) }
-  style exampleBlock = { box: w(full).padY(2) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  // Vertical separator needs a definite row height so h(full)/self(stretch) resolve.
-  style sepVRow = { box: h(10) }
-  style sepStageCol = { box: w(full).maxW(panel-max-w-sm) }
-</scope>
+      `<controller>\nexport default controller(() => ({ team: signal('Design') }))\n</controller>
 
 <column gap="4" style(page)>
   <if {showViewer()}>

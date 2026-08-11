@@ -5,16 +5,6 @@
   sources; the snippets ARE the demo code.
 -->
 
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { code } from '../../../../src/compositions/sail-elements-snippets'
-
-export default controller((_ctx: ControllerScope<Scope>) => {
-  return { code }
-})
-</controller>
-
 <scope>
   style page = { box: maxW(breakpoint-tablet).mx(auto) }
   style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
@@ -30,6 +20,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     label: string
   }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { code } from '../../../../src/compositions/sail-elements-snippets'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+  return { code }
+})
+</controller>
 
 <partial cat-label props: CatLabelProps>
   <badge variant="outline" tone="muted">{label}</badge>

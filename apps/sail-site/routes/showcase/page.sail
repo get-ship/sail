@@ -6,50 +6,6 @@
   filterable library. Frame wears any theme via theme=.
 -->
 
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { createShanty } from '../../src/compositions/shanty-vm'
-
-export default controller((_ctx: ControllerScope<Scope>) => {
-  const s = createShanty()
-  // stopPropagation + like in one controller handler (template bans multi-statement).
-  const stopAndLike = (e: Event, id: number): void => {
-    e.stopPropagation()
-    s.toggleLike(id)
-  }
-  return {
-    query: s.query,
-    filteredPlaylists: s.filteredPlaylists,
-    activePlaylist: s.activePlaylist,
-    playlist: s.playlist,
-    tracks: s.tracks,
-    visibleTracks: s.visibleTracks,
-    trackCount: s.trackCount,
-    currentId: s.currentId,
-    playing: s.playing,
-    position: s.position,
-    current: s.current,
-    advance: s.advance,
-    playTrack: s.playTrack,
-    togglePlay: s.togglePlay,
-    positionLabel: s.positionLabel,
-    totalLabel: s.totalLabel,
-    shuffle: s.shuffle,
-    repeat: s.repeat,
-    liked: s.liked,
-    toggleLike: s.toggleLike,
-    likedTracks: s.likedTracks,
-    volume: s.volume,
-    theme: s.theme,
-    setTheme: s.setTheme,
-    bindFrame: s.bindFrame,
-    THEMES: s.THEMES,
-    stopAndLike,
-  }
-})
-</controller>
-
 <scope>
   style root = { box: h(fill).minH(0).overflow(hidden), paint: bg(background).fg(foreground) }
   style chrome = { box: shrink(1).pad(3).padX(5), paint: borderBWidth(1).border(border) }
@@ -107,6 +63,49 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 </scope>
 
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { createShanty } from '../../src/compositions/shanty-vm'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+  const s = createShanty()
+  // stopPropagation + like in one controller handler (template bans multi-statement).
+  const stopAndLike = (e: Event, id: number): void => {
+    e.stopPropagation()
+    s.toggleLike(id)
+  }
+  return {
+    query: s.query,
+    filteredPlaylists: s.filteredPlaylists,
+    activePlaylist: s.activePlaylist,
+    playlist: s.playlist,
+    tracks: s.tracks,
+    visibleTracks: s.visibleTracks,
+    trackCount: s.trackCount,
+    currentId: s.currentId,
+    playing: s.playing,
+    position: s.position,
+    current: s.current,
+    advance: s.advance,
+    playTrack: s.playTrack,
+    togglePlay: s.togglePlay,
+    positionLabel: s.positionLabel,
+    totalLabel: s.totalLabel,
+    shuffle: s.shuffle,
+    repeat: s.repeat,
+    liked: s.liked,
+    toggleLike: s.toggleLike,
+    likedTracks: s.likedTracks,
+    volume: s.volume,
+    theme: s.theme,
+    setTheme: s.setTheme,
+    THEMES: s.THEMES,
+    stopAndLike,
+  }
+})
+</controller>
+
 <partial playlist-row props: PlaylistRowProps>
   <row
     on:click={onPick}
@@ -158,9 +157,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <!-- Fill remaining viewport under sticky site chrome (`h:fill`).
-     Nested theme root: theme= attr + use:bindFrame → applyNestedTheme stamps
-     mode (C-TH-NEST-1; data-* banned in app .sail markup — mode is runtime). -->
-<column id="shanty-frame" use:bindFrame theme={theme()} gap="0" style(root)>
+     Nested theme root: theme= attr + applyNestedTheme stamps data-mode
+     (C-TH-NEST-1; data-* banned in app .sail markup — mode is runtime). -->
+<column id="shanty-frame" theme={theme()} gap="0" style(root)>
   <row align="center" gap="3" style(chrome)>
     <strong style(brand)>shanty</strong>
     <p style(tagline)>a full app in one .sail file</p>

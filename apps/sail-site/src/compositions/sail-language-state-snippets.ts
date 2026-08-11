@@ -100,7 +100,7 @@ export const tally = defineStore('docs.tally', () => {
 
   // useStore is not ambient; controller/signal are.
   storeUse: `import { useStore } from '@ship/sail-runtime'
-import { tally } from './counter-store'
+import { tally } from '@/stores/counter-store'
 
 export default controller(() => {
   const { clicks, add } = useStore(tally)

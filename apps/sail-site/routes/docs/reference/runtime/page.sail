@@ -1,6 +1,22 @@
 <!--
   Author runtime (tier B) — exports from author-surface.json via runtime-surface composition.
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style sectionLead = { box: maxW(breakpoint-tablet) }
+  style sectionSummary = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground) }
+  style cardMin = { box: minW(0) }
+  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style exportRow = { box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) }
+  style exportName = { box: minW(32) }
+  style exportSig = { paint: fg(muted-foreground), text: fontFamily(mono) }
+  style exportDoc = { paint: fg(muted-foreground) }
+  style exportBody = { box: minW(0) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -43,22 +59,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   controllerRows: () => CONTROLLER_ROWS,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style eyebrow = { paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style sectionLead = { box: maxW(breakpoint-tablet) }
-  style sectionSummary = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground) }
-  style cardMin = { box: minW(0) }
-  style cardDoc = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style exportRow = { box: padX(3).padY(2), paint: radius(md).borderWidth(1).border(border) }
-  style exportName = { box: minW(32) }
-  style exportSig = { paint: fg(muted-foreground), text: fontFamily(mono) }
-  style exportDoc = { paint: fg(muted-foreground) }
-  style exportBody = { box: minW(0) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

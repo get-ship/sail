@@ -2,6 +2,18 @@
   /docs/reference/semantics — semantic a11y props, compiler host anatomy,
   authoring bans. From language-surface.gen (sail-compiler prop-registry).
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style mutedSm = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) }
+  style cardShell = { box: minW(0) }
+  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style muted = { paint: fg(muted-foreground) }
+  style banCode = { paint: fg(destructive) }
+  style bodySm = { text: fontSize(sm) }
+  style bodyMutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -39,18 +51,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   banCount: () => AUTHORING_BANS.length,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style mutedSm = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) }
-  style cardShell = { box: minW(0) }
-  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style muted = { paint: fg(muted-foreground) }
-  style banCode = { paint: fg(destructive) }
-  style bodySm = { text: fontSize(sm) }
-  style bodyMutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

@@ -17,6 +17,31 @@
   display(none) is not overridden by .sail-col { display:flex }.
 -->
 
+<scope>
+  // Fill the site-header <main> budget. Independent rail + main scrollports.
+  style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
+  // Plain div rail: fixed width, never grows into the content pane.
+  // Mobile base = display(none); tablet+ restores flex column.
+  // NOT <column> — .sail-col { display:flex } beats .s-displaynone.
+  // 14rem rail (space-56 ≡ --panel-rail-w).
+  style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
+  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  // Current must paint over the base muted ink — filled pill for active page.
+  style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
+  style mainDocs = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
+  // Mobile-only chrome — plain div so display:none wins at tablet+.
+  style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
+  style contentCol = { box: minH(0).minW(0) }
+  style mobileLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style drawerTitle = { text: fontSize(sm) }
+  style fullW = { box: w(full) }
+
+  type DocsNavProps = {
+    path: any
+    onNav: any
+  }
+</scope>
+
 <controller>
 /**
  * Live pathname for aria-current. Layout chrome stays mounted across leaf
@@ -81,31 +106,6 @@ export default controller((ctx) => {
   return { path, navOpen, openNav, closeNav, noopNav }
 })
 </controller>
-
-<scope>
-  // Fill the site-header <main> budget. Independent rail + main scrollports.
-  style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
-  // Plain div rail: fixed width, never grows into the content pane.
-  // Mobile base = display(none); tablet+ restores flex column.
-  // NOT <column> — .sail-col { display:flex } beats .s-displaynone.
-  // 14rem rail (space-56 ≡ --panel-rail-w).
-  style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
-  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  // Current must paint over the base muted ink — filled pill for active page.
-  style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
-  style mainDocs = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
-  // Mobile-only chrome — plain div so display:none wins at tablet+.
-  style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
-  style contentCol = { box: minH(0).minW(0) }
-  style mobileLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
-  style drawerTitle = { text: fontSize(sm) }
-  style fullW = { box: w(full) }
-
-  type DocsNavProps = {
-    path: any
-    onNav: any
-  }
-</scope>
 
 <!-- Same link tree for side rail and mobile drawer; onNav closes drawer (noop on rail). -->
 <partial docs-nav props: DocsNavProps>

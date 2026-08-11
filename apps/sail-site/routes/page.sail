@@ -4,27 +4,6 @@
   sections, closing SHIP wordmark. Tokens + L1 + motion only.
 -->
 
-<controller>
-// Hero word cycler (i → WORDS) and reactivity card counter (ticks).
-import { interval, type ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-
-const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Animation', 'Themes']
-
-export default controller((_ctx: ControllerScope<Scope>) => {
-    const i = signal(0)
-    interval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
-
-    const ticks = signal(0)
-    interval(() => ticks.set((n) => n + 1), 1000)
-
-    return {
-      word: () => [WORDS[i()]],
-      ticks,
-    }
-})
-</controller>
-
 <scope>
   // minW(0) + overflowX clip — diagonal tickers use negative inset; clip stops sideways growth.
   // Do NOT pair overflowX(hidden) with height-capped flex parent and leave Y visible:
@@ -84,6 +63,27 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     ticks: number
   }
 </scope>
+
+<controller>
+// Hero word cycler (i → WORDS) and reactivity card counter (ticks).
+import { interval, type ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+
+const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Animation', 'Themes']
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+    const i = signal(0)
+    interval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
+
+    const ticks = signal(0)
+    interval(() => ticks.set((n) => n + 1), 1000)
+
+    return {
+      word: () => [WORDS[i()]],
+      ticks,
+    }
+})
+</controller>
 
 <!-- Motion foot reused by the animation bento card. -->
 <partial motion-bars props: MotionBarsProps>

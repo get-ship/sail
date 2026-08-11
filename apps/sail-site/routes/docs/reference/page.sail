@@ -2,6 +2,13 @@
   /docs/reference — language surface index by API tier.
   Tier A: compiler tables. Tier B: author-surface.json → runtime-surface.gen.
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style cardShell = { box: minW(0).h(full) }
+  style muted = { paint: fg(muted-foreground) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -116,13 +123,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   authorRuntimeCount: () => AUTHOR_RUNTIME_COUNT,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style cardShell = { box: minW(0).h(full) }
-  style muted = { paint: fg(muted-foreground) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

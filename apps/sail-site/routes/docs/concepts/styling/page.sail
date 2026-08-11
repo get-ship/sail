@@ -3,19 +3,6 @@
   compound, bind. Live demos paint with Style; samples match.
 -->
 
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { code } from '../../../../src/compositions/sail-language-styling-snippets'
-
-export default controller((_ctx: ControllerScope<Scope>) => {
-  // Range bind:value is string; number derived feeds translateX(bind) as px.
-  const shift = signal('0')
-  const shiftPx = derived((): number => Number(shift()) || 0)
-  return { code, shift, shiftPx }
-})
-</controller>
-
 <scope>
   style page = { box: maxW(breakpoint-tablet).mx(auto) }
   style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
@@ -30,6 +17,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
   style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { code } from '../../../../src/compositions/sail-language-styling-snippets'
+
+export default controller((_ctx: ControllerScope<Scope>) => {
+  // Range bind:value is string; number derived feeds translateX(bind) as px.
+  const shift = signal('0')
+  const shiftPx = derived((): number => Number(shift()) || 0)
+  return { code, shift, shiftPx }
+})
+</controller>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>The language</p>

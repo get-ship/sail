@@ -13,7 +13,7 @@
 
 <controller>
 import { useStore } from '@ship/sail-runtime'
-import { tally } from '../compositions/counter-store'
+import { tally } from '../stores/counter-store'
 
 export default controller(() => {
   const { clicks, add } = useStore(tally)

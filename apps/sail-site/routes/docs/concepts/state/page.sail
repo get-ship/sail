@@ -7,6 +7,22 @@
   demonstrate with two different components sharing one store, live.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style monoLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style monoLabelSm = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style liveCol = { box: grow(1).basis(breakpoint-mobile).minW(0) }
+  style livePanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style livePanelSm = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
+  style value = { text: fontSize(lg) }
+  style monoLine = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
+  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
+  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -23,22 +39,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   return { code, count, doubled, log }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style monoLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style monoLabelSm = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style liveCol = { box: grow(1).basis(breakpoint-mobile).minW(0) }
-  style livePanel = { box: pad(6).minH(8), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style livePanelSm = { box: pad(6), paint: borderWidth(1).border(border).radius(lg).bg(surface-1) }
-  style value = { text: fontSize(lg) }
-  style monoLine = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
-  style callout = { box: pad(3).padX(4), paint: borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).fg(muted-foreground), text: fontSize(sm) }
-  style footNote = { box: mt(4), paint: fg(muted-foreground), text: fontSize(sm) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>The language</p>

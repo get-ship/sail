@@ -7,6 +7,36 @@
   wall and no "Open for full live demo" placeholders.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } }
+  // Tooltips/hover-cards escape the tile; media stages clip themselves.
+  style tile = { box: overflow(visible) }
+  style tileCol = { box: h(full).overflow(visible) }
+  // <row> preview: grid max-content tracks zero out w-full progress/meter.
+  style preview = { box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
+  style tileMeta = { box: padX(3).padY(2) }
+  style tileName = { text: fontSize(sm).fontWeight(semibold).fontFamily(mono) }
+  style cat = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedSm = { box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sectionTitle = { box: mt(2), text: fontSize(sm).fontWeight(semibold) }
+  // Pack chip strip (row flex + overflowX); avoid column base that zeros the grid.
+  style packStack = { box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) }
+  style packBtn = { box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } }
+  style packLabel = { text: fontSize(sm) }
+  style packCount = { paint: fg(primary), text: fontSize(xs).fontFamily(mono) }
+  style railNote = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
+  style search = { box: w(full).maxW(panel-max-w-sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style count = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
+  style dormant = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) }
+  style fieldLabel = { text: fontSize(sm).fontWeight(medium) }
+  // Definite box: CE host is display:contents — without height the img collapses.
+  style mediaFrame = { box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) }
+  style mediaStage = { box: w(full).h(full).minH(40) }
+  style catRow = { box: overflowX(auto).maxW(full) }
+</scope>
+
 <controller>
 import { filteredList, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -130,36 +160,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).padX(4).padY(4).w(full), when: { tablet: { box: padX(6).padY(5) } } }
-  // Tooltips/hover-cards escape the tile; media stages clip themselves.
-  style tile = { box: overflow(visible) }
-  style tileCol = { box: h(full).overflow(visible) }
-  // <row> preview: grid max-content tracks zero out w-full progress/meter.
-  style preview = { box: pad(4).minH(11), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
-  style tileMeta = { box: padX(3).padY(2) }
-  style tileName = { text: fontSize(sm).fontWeight(semibold).fontFamily(mono) }
-  style cat = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { box: maxW(panel-max-w-lg), paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style sectionTitle = { box: mt(2), text: fontSize(sm).fontWeight(semibold) }
-  // Pack chip strip (row flex + overflowX); avoid column base that zeros the grid.
-  style packStack = { box: display(flex).flexDir(row).gap(2).overflowX(auto).padB(1).maxW(full) }
-  style packBtn = { box: pad(0).overflow(hidden), paint: radius(md).cursor(pointer).borderWidth(1).border(solid).border(border).bg(transparent), text: textAlign(start).whitespace(nowrap), when: { hover: { paint: bg(hover-bg) }, pressed: { paint: bg(muted).border(primary).shadow(sm) } } }
-  style packLabel = { text: fontSize(sm) }
-  style packCount = { paint: fg(primary), text: fontSize(xs).fontFamily(mono) }
-  style railNote = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
-  style search = { box: w(full).maxW(panel-max-w-sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style count = { paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono) }
-  style dormant = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono).textAlign(center) }
-  style fieldLabel = { text: fontSize(sm).fontWeight(medium) }
-  // Definite box: CE host is display:contents — without height the img collapses.
-  style mediaFrame = { box: w(full).h(40).minH(40).overflow(hidden), paint: radius(md).bg(muted).borderWidth(1).border(border) }
-  style mediaStage = { box: w(full).h(full).minH(40) }
-  style catRow = { box: overflowX(auto).maxW(full) }
-</scope>
 
 <column gap="5" style(page, { box: w(full).minW(0) })>
   <column gap="1">

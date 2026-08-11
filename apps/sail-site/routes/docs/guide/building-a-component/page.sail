@@ -3,6 +3,15 @@
   steps. Snippets are slices of the real file; the finished tag runs below.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-tablet).mx(auto) }
+  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
+  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -12,15 +21,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   return { code }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-tablet).mx(auto) }
-  style eyebrow = { box: mb(2), paint: fg(accent), text: fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide) }
-  style lead = { paint: fg(muted-foreground), text: fontSize(lg).leading(relaxed) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style footNav = { box: mt(8).padT(4), paint: borderTWidth(1).borderT(border) }
-</scope>
 
 <column gap="5" style(page)>
   <p style(eyebrow)>Guide</p>

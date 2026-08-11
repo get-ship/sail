@@ -1,17 +1,6 @@
 <!--
   /docs/reference/scope — every &lt;scope&gt; grammar construct with a compiling example.
 -->
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { SCOPE_GRAMMAR, SCOPE_REFUSALS } from '../../../../src/compositions/language-surface'
-
-export default controller((_ctx: ControllerScope<Scope>) => ({
-  grammar: () => SCOPE_GRAMMAR,
-  refusals: () => SCOPE_REFUSALS,
-}))
-</controller>
-
 <scope>
   style root = { box: minW(0) }
   style intro = { box: maxW(breakpoint-tablet) }
@@ -22,6 +11,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   style refuseSyntax = { paint: fg(destructive) }
   style refuseAlt = { paint: fg(muted-foreground) }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { SCOPE_GRAMMAR, SCOPE_REFUSALS } from '../../../../src/compositions/language-surface'
+
+export default controller((_ctx: ControllerScope<Scope>) => ({
+  grammar: () => SCOPE_GRAMMAR,
+  refusals: () => SCOPE_REFUSALS,
+}))
+</controller>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

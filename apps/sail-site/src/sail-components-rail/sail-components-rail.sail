@@ -3,6 +3,28 @@
   List is text-only (no previews). Catalog tiles stay on /components hub.
 -->
 
+<scope>
+  style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
+  // Same rail geometry as sail-docs-rail (14rem / space-56).
+  style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
+  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
+  style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontFamily(mono), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
+  style railHub = { box: display(block).padY(1).padX(2).mb(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
+  style mainPane = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
+  style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
+  style contentCol = { box: minH(0).minW(0) }
+  style mobileLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
+  style drawerTitle = { text: fontSize(sm) }
+  style fullW = { box: w(full) }
+
+  type ComponentsNavProps = {
+    path: any
+    currentSlug: any
+    sections: any
+    onNav: any
+  }
+</scope>
+
 <controller>
 import { CATALOG, type CatalogEntry } from '../compositions/component-catalog'
 
@@ -100,28 +122,6 @@ export default controller((ctx) => {
   return { path, navOpen, openNav, closeNav, noopNav, currentSlug, sections }
 })
 </controller>
-
-<scope>
-  style shell = { box: minH(0).h(full).minW(0).overflow(hidden) }
-  // Same rail geometry as sail-docs-rail (14rem / space-56).
-  style rail = { box: display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).overflowY(auto).overflowX(hidden), paint: borderEWidth(1).border(border).bg(background).fg(foreground), when: { tablet: { box: display(flex) } } }
-  style railLabel = { box: mt(4).mb(1), paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style railLink = { box: display(block).padY(1).padX(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontFamily(mono), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
-  style railHub = { box: display(block).padY(1).padX(2).mb(2), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: fg(primary).bg(muted), text: fontWeight(semibold) } } }
-  style mainPane = { box: pad(4).basis(0).minH(0).overflowX(hidden).overflowY(auto), when: { tablet: { box: pad(6) } } }
-  style mobileBar = { box: display(flex).gap(2).padX(3).padY(2), paint: borderBWidth(1).borderB(border).bg(background), when: { tablet: { box: display(none) } } }
-  style contentCol = { box: minH(0).minW(0) }
-  style mobileLabel = { paint: fg(muted-foreground), text: fontFamily(mono).fontSize(xs) }
-  style drawerTitle = { text: fontSize(sm) }
-  style fullW = { box: w(full) }
-
-  type ComponentsNavProps = {
-    path: any
-    currentSlug: any
-    sections: any
-    onNav: any
-  }
-</scope>
 
 <partial components-nav props: ComponentsNavProps>
   <a

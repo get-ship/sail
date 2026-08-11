@@ -3,6 +3,19 @@
   Product: style({ box, paint, text, animate }) + style name = / bind /
   match: / compound: / when:. Setter scales, when keys, refusals.
 -->
+<scope>
+  style root = { box: minW(0) }
+  style intro = { box: maxW(breakpoint-tablet) }
+  style mutedSm = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedBody = { box: maxW(breakpoint-tablet) }
+  style cardShell = { box: minW(0) }
+  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
+  style banCode = { paint: fg(destructive) }
+  style prefixRow = { box: padX(3).padY(1), paint: radius(md) }
+  style prefixCode = { box: minW(9) }
+  style mediaLine = { box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -38,19 +51,6 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   refusalCount: () => SX_REFUSALS.length,
 }))
 </controller>
-
-<scope>
-  style root = { box: minW(0) }
-  style intro = { box: maxW(breakpoint-tablet) }
-  style mutedSm = { box: maxW(breakpoint-tablet), paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedBody = { box: maxW(breakpoint-tablet) }
-  style cardShell = { box: minW(0) }
-  style valueText = { box: maxW(panel-max-w-sm), paint: fg(muted-foreground) }
-  style banCode = { paint: fg(destructive) }
-  style prefixRow = { box: padX(3).padY(1), paint: radius(md) }
-  style prefixCode = { box: minW(9) }
-  style mediaLine = { box: maxW(ch-24), paint: fg(muted-foreground), text: fontFamily(mono) }
-</scope>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>

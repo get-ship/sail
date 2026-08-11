@@ -7,6 +7,18 @@
   persistent bar.
 -->
 
+<scope>
+  style brand = { text: fontSize(lg).tracking(tight).whitespace(nowrap) }
+  style brandMark = { paint: fg(primary) }
+  style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
+  style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
+  style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }
+  style shell = { box: minH(screen).h(screen) }
+  style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
+  style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
+  style githubLink = { box: display(inline-flex).pad(1), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
+</scope>
+
 <controller>
 import { siteTokenCss } from '../compositions/site-token-css'
 import { applyTheme, readStoredTheme } from '@ship/tokens/themes'
@@ -59,18 +71,6 @@ export default controller((ctx) => {
     return { path, section, workbench, autohide, landing }
 })
 </controller>
-
-<scope>
-  style brand = { text: fontSize(lg).tracking(tight).whitespace(nowrap) }
-  style brandMark = { paint: fg(primary) }
-  style productSwitch = { box: pad(half).maxW(full).minW(0).overflowX(auto), paint: bg(muted).borderWidth(1).border(solid).border(border).radius(full) }
-  style productLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(full).fg(muted-foreground), text: fontSize(xs).fontWeight(medium).leading(none).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) }, current: { paint: bg(primary).fg(primary-foreground) }, tablet: { box: padX(2_5), text: fontSize(sm) } } }
-  style brandWord = { box: display(none), text: whitespace(nowrap), when: { tablet: { box: display(inline) } } }
-  style shell = { box: minH(screen).h(screen) }
-  style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
-  style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
-  style githubLink = { box: display(inline-flex).pad(1), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
-</scope>
 
 <column gap="0" style(shell, { box: w(full) })>
   <if {!workbench()}>

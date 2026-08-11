@@ -1,20 +1,6 @@
 <!--
   /docs/reference/motion — Style animate channel: triggers, properties, presets, value grammar.
 -->
-<controller>
-import type { ControllerScope } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-import { MOTION, MOTION_VALUE_FORMS } from '../../../../src/compositions/language-surface'
-
-export default controller((_ctx: ControllerScope<Scope>) => ({
-  motionTriggers: () => MOTION.triggers.join(' · '),
-  motionProperties: () => MOTION.properties.join(' · '),
-  motionStagger: () => MOTION.staggerKey,
-  motionPresets: () => MOTION.presets,
-  valueForms: () => MOTION_VALUE_FORMS,
-}))
-</controller>
-
 <scope>
   style root = { box: minW(0) }
   style intro = { box: maxW(breakpoint-tablet) }
@@ -28,6 +14,20 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   style muted = { paint: fg(muted-foreground) }
   style sectionLead = { box: maxW(breakpoint-tablet) }
 </scope>
+
+<controller>
+import type { ControllerScope } from '@ship/sail-runtime'
+import type { Scope } from './page.sail'
+import { MOTION, MOTION_VALUE_FORMS } from '../../../../src/compositions/language-surface'
+
+export default controller((_ctx: ControllerScope<Scope>) => ({
+  motionTriggers: () => MOTION.triggers.join(' · '),
+  motionProperties: () => MOTION.properties.join(' · '),
+  motionStagger: () => MOTION.staggerKey,
+  motionPresets: () => MOTION.presets,
+  valueForms: () => MOTION_VALUE_FORMS,
+}))
+</controller>
 
 <column gap="6" style(root)>
   <column gap="5" style(intro)>
