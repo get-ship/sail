@@ -22,6 +22,10 @@
 //! **project-resolution parity** so missing modules hard-fail (no mask):
 //! 1. **Faithful-enough ambient** — generic runtime HOF stubs, typed
 //!    `@ship/*` module shapes (`Action`, `ControllerScope`, …), inject ABI.
+//!    Non-precise packages get per-import open-any `declare module "exact"`
+//!    (requested names); package roots prefer real `node_modules/@ship` types.
+//!    TS2305/TS2614 are **not** suppressed (pattern ambient always reports
+//!    `Module '"@ship/*"'` for both roots and subpaths).
 //! 2. **Sibling tree** — relative imports resolve against the author file's
 //!    real directory (open-any stubs when present; missing → TS2307).
 //! 3. **`@/` paths** — `at_alias_paths()` + per-import stubs; missing → TS2307.
@@ -738,6 +742,16 @@ fn typecheck_region_harness(
     for f in at_files {
         files.push(format!("\"{f}\""));
     }
+    // Non-precise `@ship/*` open-any: specific `declare module "exact-spec"` so
+    // requested names work. Prefer real `node_modules/@ship` types for package
+    // roots when present (named-export fidelity); open-any covers subpaths and
+    // roots without install.
+    let ship_nm = find_ship_node_modules(project_root.as_deref().or(source_path));
+    let open_ship = emit_open_ship_package_ambient(&import_scan_body, ship_nm.is_some());
+    if !open_ship.is_empty() {
+        std::fs::write(out_dir.join("ship-open-stubs.d.ts"), open_ship)?;
+        files.push("\"./ship-open-stubs.d.ts\"".to_string());
+    }
     if env == TypeEnv::Action {
         std::fs::write(
             out_dir.join("action-observation.d.ts"),
@@ -753,11 +767,16 @@ fn typecheck_region_harness(
         .collect::<Vec<_>>()
         .join(", ");
 
-    let paths_block = if at_paths_block.is_empty() {
+    let base_paths = if at_paths_block.is_empty() {
         region_harness_paths_block(project_root.as_deref(), &out_dir)
     } else {
         at_paths_block
     };
+    let ship_paths = ship_nm
+        .as_ref()
+        .and_then(|nm| ship_packages_paths_entry(nm, &out_dir))
+        .unwrap_or_default();
+    let paths_block = merge_paths_blocks(&[base_paths, ship_paths]);
 
     // noImplicitAny true (product pure law). Open-any sibling stubs still make
     // callback params `any` (TS7006) — those are filtered in `map_region_diag`,
@@ -1419,6 +1438,174 @@ fn write_open_any_stub(dest: &Path, stub: &RelativeStub) -> std::io::Result<()> 
     std::fs::write(dest, src)
 }
 
+/// Precise framework modules keep faithful ambients in `runtime_ambient_dts`.
+fn is_precise_ship_module(spec: &str) -> bool {
+    matches!(
+        spec.trim(),
+        "@ship/sail-runtime"
+            | "@ship/sail-runtime/internal"
+            | "@ship/sail-dom"
+            | "@ship/sail-test"
+    )
+}
+
+/// `@ship/<pkg>` (one segment) — not a component deep import.
+fn is_ship_package_root(spec: &str) -> bool {
+    let s = spec.trim();
+    if !s.starts_with("@ship/") {
+        return false;
+    }
+    !s["@ship/".len()..].contains('/')
+}
+
+/// Walk upward for `node_modules/@ship` (app or monorepo root).
+fn find_ship_node_modules(start: Option<&Path>) -> Option<PathBuf> {
+    let start = start?;
+    let mut dir = if start.is_file() {
+        start.parent().map(|p| p.to_path_buf())?
+    } else {
+        start.to_path_buf()
+    };
+    loop {
+        let candidate = dir.join("node_modules").join("@ship");
+        if candidate.is_dir() {
+            return Some(candidate);
+        }
+        if !dir.pop() {
+            return None;
+        }
+    }
+}
+
+/// `paths` entry mapping `@ship/*` → installed packages (real `.d.ts` fidelity).
+fn ship_packages_paths_entry(ship_nm: &Path, out_dir: &Path) -> Option<String> {
+    let out_canon = out_dir
+        .canonicalize()
+        .unwrap_or_else(|_| out_dir.to_path_buf());
+    let nm_canon = ship_nm
+        .canonicalize()
+        .unwrap_or_else(|_| ship_nm.to_path_buf());
+    let rel = pathdiff_relative(&out_canon, &nm_canon).unwrap_or_else(|| {
+        nm_canon.to_string_lossy().replace('\\', "/")
+    });
+    let rel = rel.replace('\\', "/");
+    Some(format!("      \"@ship/*\": [\"{rel}/*\"]"))
+}
+
+fn merge_paths_blocks(blocks: &[String]) -> String {
+    blocks
+        .iter()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join(",\n")
+}
+
+/// Whether this non-precise `@ship/…` import should get an open-any ambient.
+/// Subpaths always (component packs lack types on deep exports). Package roots
+/// skip when real `node_modules/@ship` types are available.
+fn should_emit_open_ship_stub(spec: &str, has_ship_nm: bool) -> bool {
+    let s = spec.trim();
+    if !s.starts_with("@ship/") || is_precise_ship_module(s) {
+        return false;
+    }
+    if is_ship_package_root(s) && has_ship_nm {
+        return false;
+    }
+    true
+}
+
+/// Collect non-precise `@ship/*` imports and their requested binding shapes.
+fn collect_ship_package_import_stubs(body: &str) -> HashMap<String, RelativeStub> {
+    let mut map: HashMap<String, RelativeStub> = HashMap::new();
+    let bytes = body.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'/' && i + 1 < bytes.len() {
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                while i < bytes.len() && bytes[i] != b'\n' {
+                    i += 1;
+                }
+                continue;
+            }
+            if bytes[i + 1] == b'*' {
+                i += 2;
+                while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                    i += 1;
+                }
+                i = (i + 2).min(bytes.len());
+                continue;
+            }
+        }
+        if rest_starts_with_kw(bytes, i, b"import") {
+            let after_kw = i + 6;
+            let j = skip_ws_bytes(bytes, after_kw);
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                if let Some((spec, next)) = parse_string_lit(bytes, j) {
+                    if spec.starts_with("@ship/") && !is_precise_ship_module(&spec) {
+                        map.entry(spec).or_default();
+                    }
+                    i = next;
+                    continue;
+                }
+            }
+        }
+        if rest_starts_with_kw(bytes, i, b"from") {
+            let after_kw = i + 4;
+            let j = skip_ws_bytes(bytes, after_kw);
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                if let Some((spec, next)) = parse_string_lit(bytes, j) {
+                    if spec.starts_with("@ship/") && !is_precise_ship_module(&spec) {
+                        let clause = clause_before_from(body, i);
+                        let entry = map.entry(spec).or_default();
+                        fill_stub_from_clause(clause, entry);
+                    }
+                    i = next;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    map
+}
+
+/// Emit specific `declare module "exact-spec"` open-any ambients for non-precise
+/// `@ship/*` imports (requested names only). More specific than `declare module
+/// "@ship/*"`, so TS resolves these instead of the pattern ambient.
+fn emit_open_ship_package_ambient(body: &str, has_ship_nm: bool) -> String {
+    let stubs = collect_ship_package_import_stubs(body);
+    let mut specs: Vec<_> = stubs.into_iter().collect();
+    specs.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut out = String::new();
+    for (spec, stub) in specs {
+        if !should_emit_open_ship_stub(&spec, has_ship_nm) {
+            continue;
+        }
+        if out.is_empty() {
+            out.push_str(
+                "// GENERATED type-gate open-any for non-precise @ship packages \
+                 (requested import names).\n",
+            );
+        }
+        out.push_str(&format!("declare module \"{spec}\" {{\n"));
+        for name in &stub.named {
+            if is_ts_ident(name) {
+                out.push_str(&format!(
+                    "  export type {name}<T = any, U = any, V = any> = any;\n\
+                      export const {name}: any;\n"
+                ));
+            }
+        }
+        if stub.has_default || stub.has_namespace || stub.named.is_empty() {
+            out.push_str("  const __default: any;\n  export default __default;\n");
+        }
+        out.push_str("}\n");
+    }
+    out
+}
+
 fn resolve_relative_module(author_dir: &Path, spec: &str) -> Option<PathBuf> {
     let base = if spec.starts_with("./") || spec.starts_with("../") {
         author_dir.join(spec)
@@ -1891,6 +2078,19 @@ fn typecheck_project_env(
     )?;
     file_list.push("\"./sail-runtime-ambient.d.ts\"".into());
 
+    // Open-any for non-precise `@ship/*` (subpaths; roots when no node_modules).
+    let mut scan_body = String::new();
+    for (_, src) in files {
+        scan_body.push_str(src);
+        scan_body.push('\n');
+    }
+    let ship_nm = find_ship_node_modules(Some(project_root));
+    let open_ship = emit_open_ship_package_ambient(&scan_body, ship_nm.is_some());
+    if !open_ship.is_empty() {
+        std::fs::write(out_dir.join("ship-open-stubs.d.ts"), open_ship)?;
+        file_list.push("\"./ship-open-stubs.d.ts\"".into());
+    }
+
     if env == TypeEnv::Action {
         std::fs::write(
             out_dir.join("action-observation.d.ts"),
@@ -1916,7 +2116,12 @@ fn typecheck_project_env(
             format!("      \"{}\": [\"../../{target}\"]", m.pattern)
         })
         .collect();
-    let paths_block = path_entries.join(",\n");
+    let at_paths = path_entries.join(",\n");
+    let ship_paths = ship_nm
+        .as_ref()
+        .and_then(|nm| ship_packages_paths_entry(nm, &out_dir))
+        .unwrap_or_default();
+    let paths_block = merge_paths_blocks(&[at_paths, ship_paths]);
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -1947,6 +2152,7 @@ fn typecheck_project_env(
     for d in text.lines().filter_map(parse_line) {
         // Skip ambient pack diagnostics — only product mirror files.
         if d.file.contains("sail-runtime-ambient")
+            || d.file.contains("ship-open-stubs")
             || d.file.contains("action-observation")
             || d.file.ends_with("tsconfig.json")
         {
@@ -2045,16 +2251,11 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
             }
         }
     }
-    // Component package *subpaths* hit the open `@ship/*` ambient (runtime-shaped
-    // names only). Missing named members there are harness incompleteness, not
-    // product errors. Package roots + precise modules keep TS2305/TS2614.
-    if d.code == "TS2305" || d.code == "TS2614" {
-        if let Some(spec) = extract_no_exported_member_module(&d.message) {
-            if is_open_ship_package_stub(&spec) {
-                return None;
-            }
-        }
-    }
+    // Do **not** suppress TS2305/TS2614 for `@ship/*`. Pattern ambient diagnostics
+    // always name `Module '"@ship/*"'` for both roots and subpaths, so specifier
+    // heuristics cannot distinguish them. Non-precise packages instead get
+    // per-import open-any `declare module "exact-spec"` (requested names only)
+    // and package roots prefer real `node_modules/@ship` types when installed.
     // Open-any sibling stubs force callback params to `any`. Keep noImplicitAny
     // on for author body, but do not promote harness TS7006 noise.
     if d.code == "TS7006" {
@@ -2103,46 +2304,6 @@ fn is_ambient_module_stub_spec(spec: &str) -> bool {
     }
     // bare `mermaid` or scoped `@codemirror/state`
     !s.starts_with('.') && !s.starts_with('/')
-}
-
-/// True open `@ship/*` component-subpath wildcards only.
-/// Package roots (`@ship/sail-studio-shell`, `@ship/tokens`, …) keep TS2305
-/// fidelity against the ambient surface; precise runtime modules always do.
-fn is_open_ship_package_stub(spec: &str) -> bool {
-    let s = spec.trim();
-    if s == "@ship/*" {
-        return true;
-    }
-    if !s.starts_with("@ship/") {
-        return false;
-    }
-    // Precise modules — never suppress named-export errors.
-    if matches!(
-        s,
-        "@ship/sail-runtime" | "@ship/sail-runtime/internal" | "@ship/sail-dom" | "@ship/sail-test"
-    ) {
-        return false;
-    }
-    // Only `@ship/<pkg>/<subpath…>` (component deep imports), not package roots.
-    s["@ship/".len()..].contains('/')
-}
-
-/// `Module '"X"' has no exported member 'Y'.` (TS2305 / TS2614)
-/// TypeScript quotes the module name as `'"X"'` — strip the inner quotes.
-fn extract_no_exported_member_module(message: &str) -> Option<String> {
-    const PFX: &str = "Module '";
-    let rest = message.find(PFX).map(|i| &message[i + PFX.len()..])?;
-    let end = rest.find('\'').unwrap_or(rest.len());
-    let spec = rest[..end]
-        .trim()
-        .trim_matches('"')
-        .trim_matches('\'')
-        .trim();
-    if spec.is_empty() {
-        None
-    } else {
-        Some(spec.to_string())
-    }
 }
 
 fn extract_not_found_name(message: &str) -> Option<String> {
@@ -3068,6 +3229,7 @@ export default controller(() => {
         }
         // Bare / scoped package names are not Pure ambient law (bundler resolve);
         // must not fail the gate as TS2307 harness noise.
+        // Component *subpaths* get open-any of requested names (no TS2305 suppress).
         let src = r#"
 <controller>
 import { sailCalendar } from '@ship/sail-primitives/sail-calendar'
@@ -3085,6 +3247,81 @@ export default controller(() => {
         assert!(
             errs.is_empty(),
             "npm component package import must not type-gate fail: {errs:?}"
+        );
+    }
+
+    /// Package-root named-import fidelity: wrong export must fail the type-gate
+    /// when real `node_modules/@ship` types are available (not silent green via
+    /// pattern-ambient TS2305 suppression).
+    #[test]
+    fn harness_ship_package_root_missing_export_fails() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        assert!(
+            root.join("node_modules/@ship/sail-studio-shell").is_dir(),
+            "fixture requires monorepo node_modules/@ship/sail-studio-shell"
+        );
+        let src = r#"
+<controller>
+import { noSuchThing } from '@ship/sail-studio-shell'
+
+export default controller(() => {
+  const n = signal(0)
+  return { n, noSuchThing }
+})
+</controller>
+<div />
+"#;
+        // Path under workspace so find_ship_node_modules walks to monorepo root.
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.iter().any(|d| {
+                d.message.contains("TS2305")
+                    || d.message.contains("TS2614")
+                    || d.message.contains("no exported member")
+                    || d.message.contains("noSuchThing")
+            }),
+            "package-root missing named export must type-gate fail, got: {errs:?}"
+        );
+    }
+
+    /// Package-root *real* export stays green via node_modules types (not open-any).
+    #[test]
+    fn harness_ship_package_root_real_export_green() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        if !root.join("node_modules/@ship/sail-studio-shell").is_dir() {
+            return;
+        }
+        let src = r#"
+<controller>
+import { postStudioMessage } from '@ship/sail-studio-shell'
+
+export default controller(() => {
+  const n = signal(0)
+  return { n, postStudioMessage }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "package-root real export must type-gate green: {errs:?}"
         );
     }
 
