@@ -1,5 +1,5 @@
-import type { ClientOptions } from '../vendor/studio-client'
-import { sailAuthoringEdit, sailAuthoringCheck, sailAuthoringLayoutCheck, sailInspectModel, sailInspectState, sailInspectTree, sailInspectTokenUsage, sailRenderScreenshot, sailTaskList, sailTaskGet, sailTaskCreate, sailTaskComment, sailTaskAddArtifact, sailTaskAgentNote, sailTaskThreadCreate, sailTaskThreadReply, sailTaskThreadList, sailTaskReanchor, sailTaskCommitIntent, sailThemeFork, sailThemeList, sailThemeRead, sailThemeWrite, sailThemeDelete, sailThemeGenerate, sailThemeGraph, sailThemeEffectiveIds, sailThemeFontAdd, sailThemeFontSearch } from '../vendor/studio-client'
+import type { ClientOptions } from '@ship/sail-studio-client'
+import { sailAuthoringEdit, sailAuthoringCheck, sailAuthoringLayoutCheck, sailInspectModel, sailInspectState, sailInspectTree, sailInspectTokenUsage, sailRenderScreenshot, sailTaskList, sailTaskGet, sailTaskCreate, sailTaskComment, sailTaskAddArtifact, sailTaskAgentNote, sailTaskThreadCreate, sailTaskThreadReply, sailTaskThreadList, sailTaskReanchor, sailTaskCommitIntent, sailThemeFork, sailThemeList, sailThemeRead, sailThemeWrite, sailThemeDelete, sailThemeGenerate, sailThemeGraph, sailThemeEffectiveIds, sailThemeFontAdd, sailThemeFontSearch } from '@ship/sail-studio-client'
 import type { OpsClient } from './types'
 
 async function writeSourceHttp(

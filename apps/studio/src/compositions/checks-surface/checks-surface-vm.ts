@@ -1,18 +1,18 @@
 import { selectValue, type UiEvent } from '../ui-event'
-import { openExternalUrl } from '../../vendor/studio-shell'
+import { openExternalUrl } from '@ship/sail-studio-shell'
 /**
  * Checks surface VM — createTable owns the findings inbox (grouping/sort/
  * filter/selection/expand). Host gets table identity via assignTableHost.
  * Detail chrome (why, sail-diff, exits) sits on selected leaf rows.
  */
-import { type Table, createTable } from '../../vendor/primitives'
-import { mountAmbient } from '../../vendor/runtime'
+import { type Table, createTable } from '@ship/sail-primitives'
+import { mountAmbient } from '@ship/sail-runtime'
 import { APPLY_FIX_READY, applyFix, applyFixReview, applyFixToSource, applyRuleFixes, assignTableHost, buildExpandedMap, closeFixReview, findingIsMachineFixable, getChecksState, groupMetaFromRows, loadFindings, openFixReview, openSourceUrlFor, recheckFindings, selectFinding, selectInApp, setAutoFixMode, setFileFilter, setFixReviewAccepted, setRuleFilter, snippetForFinding, subscribeChecks, toggleCollapsedRule, toFindingRows, uiEmptyCheckedSummary, uiFileOptions, uiFixableCount, uiReviewAcceptedCount, uiRuleOptions, uiTableFindings, type AutoFixMode, type Finding } from '../../checks/index.ts'
 import { getEditState, openDocument, requestSourceScroll } from '../../edit/index.ts'
-import { getShellState } from '../../vendor/studio-shell'
+import { getShellState } from '@ship/sail-studio-shell'
 import { hrefForActivity } from '../shell/shell-page-vm'
 
-import { signal, navigate } from '../../vendor/runtime'
+import { signal, navigate } from '@ship/sail-runtime'
 type SnippetLineUi = { n: number; text: string; highlight: boolean; key: string }
 type OptUi = { value: string; label: string; key: string }
 

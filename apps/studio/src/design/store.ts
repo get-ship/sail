@@ -1,4 +1,4 @@
-import type { SailHost } from '../vendor/runtime'
+import type { SailHost } from '@ship/sail-runtime'
 /**
  * Theme domain store — product UI is Themes only.
  * (Legacy path name `design`; writers shared by theme-session facets.)

@@ -1,6 +1,6 @@
 /** Pure rail + path helpers for Studio chrome (no mount / ops). */
-import type { ActivityId } from '../../vendor/studio-shell'
-import { hostDeckAppRoute, hotkeyModLabel } from '../../vendor/studio-shell'
+import type { ActivityId } from '@ship/sail-studio-shell'
+import { hostDeckAppRoute, hotkeyModLabel } from '@ship/sail-studio-shell'
 
 /** Digit → activity; Ctrl/Cmd+digit navigates. Checks is a panel, not digit-5. */
 export const ACTIVITY_BY_DIGIT: Record<string, ActivityId> = {

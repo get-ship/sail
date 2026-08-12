@@ -3,11 +3,11 @@ import { closestAttr, type UiEvent } from '../ui-event'
  * Config surface domain — settings from shell + project only (no invented knobs).
  * Config fields are read-only; danger actions stay disabled.
  */
-import { mountAmbient } from '../../vendor/runtime'
-import { getShellState, subscribeShell } from '../../vendor/studio-shell'
+import { mountAmbient } from '@ship/sail-runtime'
+import { getShellState, subscribeShell } from '@ship/sail-studio-shell'
 import { resolveProjectRoot } from '../shell/project'
 
-import { signal } from '../../vendor/runtime'
+import { signal } from '@ship/sail-runtime'
 export type ConfigCatId =
   | 'project'
   | 'runtime'

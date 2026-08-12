@@ -1,4 +1,4 @@
-import { getBatchItems } from '../vendor/studio-shell'
+import { getBatchItems } from '@ship/sail-studio-shell'
 import { getTasksState } from './store'
 import { artifactThumbSrc } from './thumbs'
 

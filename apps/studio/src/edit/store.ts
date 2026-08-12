@@ -1,10 +1,10 @@
-import type { SailHost } from '../vendor/runtime'
+import type { SailHost } from '@ship/sail-runtime'
 /**
  * Edit surface store — explorer + documents + view switcher + selection sync.
  * Consumes SailInspect / SailRender / SailAuthoring via injected OpsClient (T-I2).
  */
 
-import { type ViewportId, clearSelection, getSelection, getShellState, openTab, selectNode, setModelRev, setSailPath, setTabDirty, subscribeSelection } from '../vendor/studio-shell'
+import { type ViewportId, clearSelection, getSelection, getShellState, openTab, selectNode, setModelRev, setSailPath, setTabDirty, subscribeSelection } from '@ship/sail-studio-shell'
 import {
   elementRows,
   fileRows as _fileRows,

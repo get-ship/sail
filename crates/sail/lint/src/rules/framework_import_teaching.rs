@@ -1,28 +1,27 @@
 //! `sail-framework-import-teaching` — import law for app + third-party components package
-//! code (SPEC-AMBIENT-SURFACE-1 §2; S5.3 completion / JOB-E3).
+//! code (SPEC-AMBIENT-SURFACE-1 §2; S5.3 completion / JOB-E3; G2b L2 npm cutover).
 //!
-//! Law (operator-ratified; S5.3 supersedes the S5.1 L2 components package carve-out):
-//! - Framework functions are ambient — authors delete `@ship/*` value imports.
-//! - Fires on app controllers (`.controller.ts` / inline controller under
-//!   `apps/**`), plain app TypeScript under `apps/*/src/**` (via
-//!   `APP_SOURCE_RULES`), and components-package controllers under `packages/components/**`
-//!   (components packages are third-party, not framework).
+//! Law (operator-ratified; G2b supersedes the S5.2 vendor-facade packaging seam):
+//! - Framework functions are ambient in **controllers** — authors delete `@ship/*`
+//!   value imports from controller bodies (inline `<controller>` / `.controller.ts`).
 //! - Type-only imports (`import type`, `import { type X }`) remain free for
 //!   `@ship/*` (types are not the ambient value surface).
 //! - App-local `@/` imports are not `@ship/*` and never fire this rule.
 //! - Compiler-injected ambient imports from `@ship/sail-runtime/internal`
 //!   are exempt — `extract_controller_block` prepends them before the purity
 //!   hard-wall lints the body; flagging them would Error every ambient use.
-//! - **Deep `packages/**` dual paths (S5.3 / E3):** app product sources must
-//!   not import monorepo packages by relative/`packages/` path. Wrap the lib
-//!   in an app-local vendor facade under `src/vendor/` (or `@/vendor/…`).
-//!   `apps/*/src/vendor/**` is the legal packaging seam and is exempt.
+//! - **Plain app modules** (`apps/*/src/**` compositions, stores, glue) consume
+//!   monorepo surface as `@ship/*` packages (L2 npm model / G2b). Value imports
+//!   of package exports are legal there — ambient inject only owns controllers.
+//! - Component packages (export sail custom elements) remain legal value imports
+//!   from apps (package.json metadata, not a hardcoded list).
+//! - **Deep `packages/**` paths (E3 / G2b):** app product sources must not import
+//!   monorepo packages by relative/`packages/` path. Use `@ship/<name>` package
+//!   exports. Vendor facades are dead — no exemption.
 //!
 //! Components-package conventions (documented for authors):
 //! - Controllers: ambient names only — no `@ship/*` value imports.
 //! - Composition / engine modules stay package-local (relative within the package).
-//! - Cross-package composition prefers package-relative paths, not app-style
-//!   `@ship/*` value imports (same teaching when the rule sees a controller).
 //!
 //! Severity: Error (fails `compile` hard-wall + `check_all`).
 
@@ -47,15 +46,13 @@ const SUGGEST: &str = "Drop the `@ship/*` value import. Ambient names (signal, c
      (relative within the package), not app-style `@ship/*` value imports.";
 
 /// Deep monorepo path dual-path teaching (app product sources only).
-const FACADE_MESSAGE: &str =
-    "deep `packages/**` imports are forbidden in app code — wrap the lib in \
-     an app-local vendor facade under `src/vendor/`, then import that facade";
+/// what / allowed / instead — external audience (G2b).
+const DEEP_PACKAGE_MESSAGE: &str = "deep `packages/**` imports are forbidden in app code — import the package \
+     as `@ship/<name>` via package exports";
 
-const FACADE_SUGGEST: &str =
-    "Add `src/vendor/<name>.ts` that re-exports the package, then import that \
-     facade (relative path, or `@/vendor/<name>` once mapped). Vendor facades \
-     under `apps/*/src/vendor/**` are the only legal hop into `packages/**` \
-     from an app.";
+const DEEP_PACKAGE_SUGGEST: &str = "Replace the path into `packages/**` with the package name from its \
+     `package.json` (`@ship/…`). Apps consume monorepo packages through \
+     node_modules resolution / package exports, not relative source hops.";
 
 /// Compiler ambient inject specifier (`runtime_ambient::RUNTIME_SPECIFIER`).
 /// Post-inject controller bodies always carry this line; never treat it as
@@ -76,8 +73,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut visitor = FrameworkImportVisitor {
         source,
         file: path.to_path_buf(),
-        // Deep packages dual-path: apps only; vendor facades are the legal seam.
-        check_deep_packages: is_app_product_path(path) && !is_vendor_facade_path(path),
+        // Deep packages dual-path: apps only. No vendor exemption (G2b).
+        check_deep_packages: is_app_product_path(path),
+        // Ambient `@ship/*` value teaching: controllers only (G2b — plain app
+        // modules import packages as packages).
+        check_ship_ambient: is_ship_ambient_scope(path),
         findings: Vec::new(),
     };
     visitor.visit_program(&ret.program);
@@ -102,7 +102,7 @@ fn is_app_framework_import_scope(path: &Path) -> bool {
     p.contains("/apps/") || p.starts_with("apps/")
 }
 
-/// App product path (not packs). Used to scope the deep-`packages/**` facade law.
+/// App product path (not packs). Used to scope the deep-`packages/**` law.
 fn is_app_product_path(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/");
     if p.contains("/packages/") || p.starts_with("packages/") {
@@ -114,12 +114,16 @@ fn is_app_product_path(path: &Path) -> bool {
     p.contains("/apps/") || p.starts_with("apps/")
 }
 
-/// `apps/*/src/vendor/**` — legal packaging seam (S5.2 REVISE / S5.3 E3).
-/// Only this documented path is exempt; nested dirs named `vendor` elsewhere
-/// (e.g. `src/compositions/vendor/`) are not.
-fn is_vendor_facade_path(path: &Path) -> bool {
-    let p = path.to_string_lossy().replace('\\', "/");
-    p.contains("/src/vendor/")
+/// Controllers own the ambient inject surface. Inline `<controller>` bodies are
+/// linted under the owning `.sail` path during compile; paired controllers use
+/// `.controller.ts`. Plain app modules are out of ambient teaching (G2b).
+fn is_ship_ambient_scope(path: &Path) -> bool {
+    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    if name.ends_with(".controller.ts") || name.ends_with(".controller.tsx") {
+        return true;
+    }
+    // Inline controller region linted under the template path.
+    path.extension().and_then(|e| e.to_str()) == Some("sail")
 }
 
 fn is_ship_package_specifier(module: &str, from_file: &Path) -> bool {
@@ -283,6 +287,7 @@ struct FrameworkImportVisitor<'src> {
     source: &'src str,
     file: PathBuf,
     check_deep_packages: bool,
+    check_ship_ambient: bool,
     findings: Vec<Finding>,
 }
 
@@ -300,7 +305,7 @@ impl FrameworkImportVisitor<'_> {
         });
     }
 
-    fn report_facade(&mut self, span: Span, module: &str) {
+    fn report_deep_package(&mut self, span: Span, module: &str) {
         let (line, col) = byte_offset_to_line_col(self.source, span.start as usize);
         self.findings.push(Finding {
             file: self.file.clone(),
@@ -308,8 +313,8 @@ impl FrameworkImportVisitor<'_> {
             col,
             rule: RULE_ID,
             severity: Severity::Error,
-            message: format!("{FACADE_MESSAGE} (got `{module}`)"),
-            suggest: Some(FACADE_SUGGEST.to_string()),
+            message: format!("{DEEP_PACKAGE_MESSAGE} (got `{module}`)"),
+            suggest: Some(DEEP_PACKAGE_SUGGEST.to_string()),
         });
     }
 }
@@ -320,7 +325,11 @@ impl<'a> Visit<'a> for FrameworkImportVisitor<'_> {
 
         // Deep packages dual path — packaging boundary (type-only still dual path).
         if self.check_deep_packages && is_deep_packages_specifier(module) {
-            self.report_facade(decl.span, module);
+            self.report_deep_package(decl.span, module);
+            return;
+        }
+
+        if !self.check_ship_ambient {
             return;
         }
 
@@ -362,20 +371,20 @@ impl<'a> Visit<'a> for FrameworkImportVisitor<'_> {
     }
 
     fn visit_export_named_declaration(&mut self, decl: &ExportNamedDeclaration<'a>) {
-        // Re-export from deep packages/** is still a dual path outside vendor.
+        // Re-export from deep packages/** is still a dual path.
         let Some(source) = &decl.source else {
             return;
         };
         let module = source.value.as_str();
         if self.check_deep_packages && is_deep_packages_specifier(module) {
-            self.report_facade(decl.span, module);
+            self.report_deep_package(decl.span, module);
         }
     }
 
     fn visit_export_all_declaration(&mut self, decl: &ExportAllDeclaration<'a>) {
         let module = decl.source.value.as_str();
         if self.check_deep_packages && is_deep_packages_specifier(module) {
-            self.report_facade(decl.span, module);
+            self.report_deep_package(decl.span, module);
         }
     }
 }
@@ -407,11 +416,11 @@ mod tests {
         check(Path::new(path), src)
     }
 
-    fn is_facade_teaching(msg: &str) -> bool {
+    fn is_deep_package_teaching(msg: &str) -> bool {
         let lower = msg.to_ascii_lowercase();
         lower.contains("packages")
-            && (lower.contains("facade") || lower.contains("vendor"))
             && lower.contains("import")
+            && (lower.contains("@ship") || lower.contains("package export"))
     }
 
     #[test]
@@ -445,14 +454,17 @@ mod tests {
     }
 
     #[test]
-    fn errors_on_app_src_define_store() {
+    fn allows_ship_package_import_in_plain_app_src() {
+        // G2b: plain app modules consume `@ship/*` as packages.
         let f = lint_at(
             "apps/demo/src/stores/tally.ts",
             "import { defineStore } from '@ship/sail-runtime'\n\
              export const tally = defineStore('tally', () => ({}))\n",
         );
-        assert_eq!(f.len(), 1, "{f:?}");
-        assert_eq!(f[0].severity, Severity::Error);
+        assert!(
+            f.is_empty(),
+            "plain app src may import @ship/* packages (G2b L2): {f:?}"
+        );
     }
 
     #[test]
@@ -532,12 +544,12 @@ mod tests {
             "import { signal } from '../../../../packages/sail/runtime/src/index.ts'\n\
              export const n = signal(0)\n",
         );
-        assert_eq!(f.len(), 1, "deep packages path must facade-teach: {f:?}");
+        assert_eq!(f.len(), 1, "deep packages path must Error: {f:?}");
         assert_eq!(f[0].severity, Severity::Error);
         assert_eq!(f[0].rule, RULE_ID);
         assert!(
-            is_facade_teaching(&f[0].message),
-            "expected facade teaching message; got: {:?}",
+            is_deep_package_teaching(&f[0].message),
+            "expected deep-package teaching message; got: {:?}",
             f[0].message
         );
         assert!(f[0].message.contains("packages/sail/runtime"), "{f:?}");
@@ -551,7 +563,7 @@ mod tests {
              export default controller(() => ({}))\n",
         );
         assert_eq!(f.len(), 1, "{f:?}");
-        assert!(is_facade_teaching(&f[0].message), "{f:?}");
+        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
     }
 
     #[test]
@@ -563,60 +575,48 @@ mod tests {
              export type T = Signal<number>\n",
         );
         assert_eq!(f.len(), 1, "type-only deep packages still dual path: {f:?}");
-        assert!(is_facade_teaching(&f[0].message), "{f:?}");
+        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
     }
 
     #[test]
-    fn allows_vendor_facade_deep_packages_reexport() {
+    fn vendor_facade_deep_packages_reexport_errors() {
+        // G2b: vendor dies — no packaging-seam exemption.
         let f = lint_at(
             "apps/demo/src/vendor/runtime.ts",
             "export * from '../../../../packages/sail/runtime/src/index.ts'\n",
         );
-        assert!(
-            f.is_empty(),
-            "src/vendor/** is the legal packaging seam: {f:?}"
+        assert_eq!(
+            f.len(),
+            1,
+            "src/vendor/** is not exempt (G2b facade death): {f:?}"
         );
+        assert_eq!(f[0].severity, Severity::Error);
+        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
     }
 
     #[test]
-    fn nested_non_seam_vendor_still_facade_errors() {
-        // Only apps/*/src/vendor/** is exempt — a nested dir named vendor is not.
+    fn nested_non_seam_vendor_still_errors() {
         let f = lint_at(
             "apps/demo/src/compositions/vendor/helper.ts",
             "export * from '../../../../../packages/sail/runtime/src/index.ts'\n",
         );
-        assert_eq!(
-            f.len(),
-            1,
-            "nested non-seam vendor path must still facade-Error: {f:?}"
-        );
+        assert_eq!(f.len(), 1, "deep packages path must Error: {f:?}");
         assert_eq!(f[0].severity, Severity::Error);
         assert_eq!(f[0].rule, RULE_ID);
-        assert!(is_facade_teaching(&f[0].message), "{f:?}");
+        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
     }
 
     #[test]
-    fn app_root_vendor_not_seam() {
-        let f = lint_at(
-            "apps/demo/vendor/runtime.ts",
-            "export * from '../../../packages/sail/runtime/src/index.ts'\n",
-        );
-        assert_eq!(
-            f.len(),
-            1,
-            "apps/*/vendor (no src/) is not the legal seam: {f:?}"
-        );
-        assert!(is_facade_teaching(&f[0].message), "{f:?}");
-    }
-
-    #[test]
-    fn allows_relative_vendor_import_from_app() {
+    fn allows_ship_package_import_from_app() {
         let f = lint_at(
             "apps/demo/src/compositions/boot.ts",
-            "import { signal } from '../vendor/runtime'\n\
+            "import { signal } from '@ship/sail-runtime'\n\
              export const n = signal(0)\n",
         );
-        assert!(f.is_empty(), "import via vendor facade must be free: {f:?}");
+        assert!(
+            f.is_empty(),
+            "import via @ship/* package must be free in plain app src: {f:?}"
+        );
     }
 
     #[test]
@@ -631,12 +631,12 @@ mod tests {
             "export {{ x }} from deep packages must Error: {f:?}"
         );
         assert_eq!(f[0].rule, RULE_ID);
-        assert!(is_facade_teaching(&f[0].message), "{f:?}");
+        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
     }
 
     #[test]
-    fn pack_deep_packages_not_facade_scoped() {
-        // Facade law is app-only; components-package monorepo relatives are a separate residual.
+    fn pack_deep_packages_not_app_scoped() {
+        // Deep-package law is app-only; components-package monorepo relatives are a separate residual.
         let f = lint_at(
             "packages/components/sail/media/src/sail-media-csv/sail-media-csv.controller.ts",
             "import { createTable } from '../../../../packages/components/sail/primitives/src/index.ts'\n\
@@ -644,7 +644,26 @@ mod tests {
         );
         assert!(
             f.is_empty(),
-            "components-package deep packages path is not the app facade law: {f:?}"
+            "components-package deep packages path is not the app deep-package law: {f:?}"
+        );
+    }
+
+    #[test]
+    fn ambient_teaching_on_inline_sail_controller_path() {
+        // Compile lints inline controller bodies under the owning .sail path.
+        let f = lint_at(
+            "apps/demo/src/import-bad/import-bad.sail",
+            "import { controller, signal } from '@ship/sail-runtime'\n\
+             export default controller(() => ({ n: signal(0) }))\n",
+        );
+        assert_eq!(
+            f.len(),
+            1,
+            "inline .sail controller path must ambient-Error: {f:?}"
+        );
+        assert!(
+            f[0].message.to_ascii_lowercase().contains("ambient"),
+            "{f:?}"
         );
     }
 }

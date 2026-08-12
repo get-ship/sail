@@ -1,4 +1,4 @@
-import { postStudioMessage } from '../vendor/studio-shell'
+import { postStudioMessage } from '@ship/sail-studio-shell'
 /**
  * Design edit actions — density, scale families, type, icons, path writes.
  */

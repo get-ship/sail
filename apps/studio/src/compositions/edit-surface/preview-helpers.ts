@@ -1,5 +1,5 @@
 /** Preview fetch single-flight + region paint glue for edit-surface VM. */
-import { getShellState } from '../../vendor/studio-shell'
+import { getShellState } from '@ship/sail-studio-shell'
 import { activeDoc, getEditState, refreshPreview } from '../../edit/index.ts'
 import {
   paintRegionOverlay,

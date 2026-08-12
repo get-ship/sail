@@ -1,9 +1,9 @@
 /** Edit surface VM — doc tabs + source editor (VS Code baseline). */
-import { type SailHost, mountAmbient } from '../../vendor/runtime'
-import { getShellState, pushSourceEditorDiagnostics } from '../../vendor/studio-shell'
+import { type SailHost, mountAmbient } from '@ship/sail-runtime'
+import { getShellState, pushSourceEditorDiagnostics } from '@ship/sail-studio-shell'
 import { activeDoc, getEditState, pathToLiveRoute, querySourceEditor, saveActiveSource, scrollSourceEditor, setSourceEditorHost, setSourceTextFromEditor, setView, subscribeEdit, uiCheckDiags } from '../../edit/index.ts'
 import { loadFindings, sourceForSave } from '../../checks/index.ts'
-import { signal, effect } from '../../vendor/runtime'
+import { signal, effect } from '@ship/sail-runtime'
 import type { UiEvent } from '../ui-event'
 import {
   closeDocTab,

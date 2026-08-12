@@ -169,7 +169,10 @@ fn _linecol_helper(path: &Path, offset: usize) -> (usize, usize) {
 mod tests {
     use super::*;
 
-    fn write_components_package_fixture(files: &[(&str, &str)], config: Option<&str>) -> tempfile::TempDir {
+    fn write_components_package_fixture(
+        files: &[(&str, &str)],
+        config: Option<&str>,
+    ) -> tempfile::TempDir {
         let tmp = tempfile::tempdir().expect("tmpdir");
         for (rel, body) in files {
             let p = tmp.path().join(rel);
@@ -221,7 +224,8 @@ mod tests {
 
     #[test]
     fn no_config_at_all_reports_every_css() {
-        let tmp = write_components_package_fixture(&[("src/widget.css", ".x { color: red; }")], None);
+        let tmp =
+            write_components_package_fixture(&[("src/widget.css", ".x { color: red; }")], None);
         let findings = check_dir(tmp.path());
         assert_eq!(
             findings.len(),

@@ -3,7 +3,7 @@
 // so the compiler's scope scan isn't fooled by the template patterns inside
 // the string — and kept in hand-lockstep with the real demo in page.sail:
 // the same Team program, printed on the left and running on the right.
-import { signal, filteredList } from '../src/vendor/runtime'
+import { signal, filteredList } from '@ship/sail-runtime'
 export const code = {
   team: `<controller>
   const people = signal([ada, grace, alan])

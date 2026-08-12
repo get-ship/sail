@@ -3,7 +3,7 @@ import type { UiEvent } from './ui-event'
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // Every snippet here IS the live demo's code (or a focused slice of it);
 // the Sail-shaped ones are compile-checked by site_snippets_compile.rs.
-import { signal, mutation, form } from '../vendor/runtime'
+import { signal, mutation, form } from '@ship/sail-runtime'
 export const code = {
   demo: `<controller>
 import { profileApi } from '../../../../src/compositions/profile-api'

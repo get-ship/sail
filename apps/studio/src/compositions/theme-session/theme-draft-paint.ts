@@ -20,8 +20,8 @@ import {
   hostRemoveAttribute,
   hostSetAttribute,
   scheduleFrame,
-} from '../../vendor/studio-shell'
-import type { SailHost } from '../../vendor/runtime'
+} from '@ship/sail-studio-shell'
+import type { SailHost } from '@ship/sail-runtime'
 // `theme` is the Pure ambient global (runtime Theme API).
 
 export type DraftPaintOpts = {

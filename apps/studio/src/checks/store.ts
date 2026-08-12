@@ -1,4 +1,4 @@
-import { postStudioMessage, getShellState, selectNode, setBadges } from '../vendor/studio-shell'
+import { postStudioMessage, getShellState, selectNode, setBadges } from '@ship/sail-studio-shell'
 import {
   autoFixOnSave, bothViewportsRan, countSeverities, enrichNodeIds,
   filterFindings, fileOptions, nodeMapFromModelDiagnostics,

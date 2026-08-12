@@ -1,17 +1,18 @@
-//! Gate tests for SPEC-AMBIENT-SURFACE-1 §2 — the import law.
+//! Gate tests for SPEC-AMBIENT-SURFACE-1 §2 — the import law (G2b-adjusted).
 //!
-//! Spike S5.1 red gate. Calls product surfaces only (`compile`,
-//! `sail_lint::lint_controller_source`, `sail_lint::lint_app_source_source`).
-//! Implementer must not modify, skip, or weaken these tests.
+//! Calls product surfaces only (`compile`, `sail_lint::lint_controller_source`,
+//! `sail_lint::lint_app_source_source`).
 //!
-//! Law (operator-ratified; S5.3 supersedes the S5.1 L2 pack carve-out):
-//! - `import … from '@ship/<anything>'` in **app** code (`.sail` controller
-//!   regions or `apps/*/src/**` TS) is a **teaching Error** that names the
-//!   ambient model and tells the author to delete the import.
+//! Law (operator-ratified; G2b supersedes S5.2 vendor facades):
+//! - `import … from '@ship/<anything>'` in **controller** bodies (`.sail`
+//!   controller regions or `.controller.ts`) is a **teaching Error** that
+//!   names the ambient model and tells the author to delete the import.
+//! - Plain app modules (`apps/*/src/**` compositions, stores) consume monorepo
+//!   surface as `@ship/*` packages (L2 npm model) — value imports are legal.
 //! - Teaching shape (SPEC): *"framework functions are ambient — delete this
 //!   import."*
 //! - Pack code under `packages/components/sail/**` is **not** exempt (S5.3):
-//!   packs are third-party, same import law as apps.
+//!   pack controllers are third-party, same ambient law as app controllers.
 //! - App-local `@/` imports remain legal and must not fire this teaching.
 //!
 //! Severity: Error (fails `compile` hard-wall + `check_all`). Not a soft Warn.
@@ -195,14 +196,16 @@ fn tokens_import_fails_compile_with_teaching_error() {
 // ── 2. Plain app TypeScript under apps/*/src ────────────────────────────────
 
 #[test]
-fn app_src_ship_import_is_teaching_error() {
+fn app_src_ship_import_is_legal_l2_package_consumption() {
+    // G2b: plain app modules consume monorepo surface as `@ship/*` packages.
+    // Ambient teaching stays controller-scoped; compositions/stores import packages.
     let path = Path::new("apps/demo/src/stores/tally.ts");
     let src = "import { defineStore } from '@ship/sail-runtime'\n\
                export const tally = defineStore('tally', () => ({ n: signal(0) }))\n";
     let findings = lint_app_source_source(path, src);
     assert!(
-        has_teaching_error(&findings),
-        "apps/*/src/** value-import from @ship/* must be teaching Error. findings: {findings:?}"
+        !has_teaching_error(&findings),
+        "apps/*/src/** value-import from @ship/* is legal L2 package consumption (G2b). findings: {findings:?}"
     );
 }
 

@@ -1,2 +1,2 @@
 /** App composition facade for studio-shell (import convention). */
-export * from '../vendor/studio-shell'
+export * from '@ship/sail-studio-shell'

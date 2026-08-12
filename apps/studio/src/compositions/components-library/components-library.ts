@@ -2,9 +2,9 @@
  * Components library domain — catalog load, filter, groups, selection detail VMs.
  * Single path authority: gen-owned loadCatalog replaces; edit ticks only union.
  */
-import { mountAmbient } from '../../vendor/runtime'
+import { mountAmbient } from '@ship/sail-runtime'
 import { COMPONENTS_CATALOG } from '../../../components.gen'
-import { signal } from '../../vendor/runtime'
+import { signal } from '@ship/sail-runtime'
 import {
   filterRecords,
   mergeComponentRecords,

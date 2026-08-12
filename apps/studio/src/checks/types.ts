@@ -1,4 +1,4 @@
-import type { StudioLocalOps, StudioOpsMethods } from '../vendor/studio-client'
+import type { StudioLocalOps, StudioOpsMethods } from '@ship/sail-studio-client'
 
 export type AutoFixMode = 'off' | 'suggest' | 'apply'
 

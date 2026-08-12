@@ -1,12 +1,12 @@
-import type { SailHost } from '../vendor/runtime'
+import type { SailHost } from '@ship/sail-runtime'
 // SHANTY showcase playback + library graph. Controller wires interval/signals only.
 // Nested frame mode stamping uses a handed host via `use:bindFrame` + the
 // tokens theme-change subscription API (no ambient document lookup).
 
 import type { Action } from '@ship/sail-runtime'
-import { applyNestedTheme, resolveNestedPaintMode, subscribeThemeChange } from '../vendor/tokens-themes'
+import { applyNestedTheme, resolveNestedPaintMode, subscribeThemeChange } from '@ship/tokens/themes'
 
-import { signal, derived, effect, interval, scheduleFrame, asSailHost } from '../vendor/runtime'
+import { signal, derived, effect, interval, scheduleFrame, asSailHost } from '@ship/sail-runtime'
 export interface Track {
   id: number
   title: string

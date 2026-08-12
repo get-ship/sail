@@ -3,7 +3,7 @@
  * Prefer host bridge postMessage; ambient location/history removed (DOMDEC).
  * Full-page leave without iframe needs navigate inject (gap) — bridge hosts close via message.
  */
-import { closeStudioOverlay, hostDeckAppRoute } from '../../vendor/studio-shell'
+import { closeStudioOverlay, hostDeckAppRoute } from '@ship/sail-studio-shell'
 
 function deckAppRouteBase(): string {
   return hostDeckAppRoute()

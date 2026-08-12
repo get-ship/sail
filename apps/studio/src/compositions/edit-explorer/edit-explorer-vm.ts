@@ -3,12 +3,12 @@ import { inputValue, type UiEvent } from '../ui-event'
  * Explorer VM — project file tree only (filter + open document).
  * Live Table identity is returned for `tree={tree}` on `<sail-tree>`.
  */
-import { createTable } from '../../vendor/primitives'
-import { mountAmbient } from '../../vendor/runtime'
-import { getShellState } from '../../vendor/studio-shell'
+import { createTable } from '@ship/sail-primitives'
+import { mountAmbient } from '@ship/sail-runtime'
+import { getShellState } from '@ship/sail-studio-shell'
 import { fileSailTreeNodes, getEditState, openDocument, setFilter, subscribeEdit, type SailTreeNode } from '../../edit/index.ts'
 
-import { signal } from '../../vendor/runtime'
+import { signal } from '@ship/sail-runtime'
 function previewVp() {
   const shell = getShellState()
   return {

@@ -6,7 +6,7 @@ import { closestAttr, inputValue, type UiEvent } from '../ui-event'
  * - Defaults: model/registry aliases → theme color paths (never var(--*) labels).
  * - Overrides write component.* leaves; Clear removes them.
  */
-import { signal } from '../../vendor/runtime'
+import { signal } from '@ship/sail-runtime'
 import { L1_CATALOG, allKnobs, clearTokenValue, getDesignState, getPathValue, isParkedComponentStateLeaf, l1Label, setTokenValue, type L1Id, type TokenKnob } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 import {

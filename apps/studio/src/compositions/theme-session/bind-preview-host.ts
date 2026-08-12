@@ -5,8 +5,8 @@
  * Host discovery uses studio-shell Framework helpers (query + MutationObserver).
  * Pure product code never names document/querySelector/HTMLElement.
  */
-import type { SailHost } from '../../vendor/runtime'
-import { hostQuerySelector, observeSubtree } from '../../vendor/studio-shell'
+import type { SailHost } from '@ship/sail-runtime'
+import { hostQuerySelector, observeSubtree } from '@ship/sail-studio-shell'
 import { bindPreviewHost, unbindPreviewHost } from './theme-draft-paint'
 
 const SELECTOR =

@@ -4,7 +4,7 @@ import { closestAttr, type UiEvent } from '../ui-event'
  * Keeps createThemeSession under the hard line budget.
  * No facet overflow menu (delete + remix live on Themes home).
  */
-import { navigate } from '../../vendor/runtime'
+import { navigate } from '@ship/sail-runtime'
 import { addThemeToProject, getDesignState, loadThemes, previewInApp, requestSaveTheme } from '../../design/index.ts'
 import {
   confirmAddToProject,

@@ -2,7 +2,7 @@
  * Confirm hooks for destructive / ambiguous theme actions.
  * Default: platform confirm via studio-shell (Framework). Tests inject via setThemeConfirm.
  */
-import { platformConfirm, setPlatformConfirm } from '../../vendor/studio-shell'
+import { platformConfirm, setPlatformConfirm } from '@ship/sail-studio-shell'
 
 export type ThemeConfirmFn = (message: string) => boolean
 

@@ -1,4 +1,4 @@
-import type { StudioOpsMethods } from '../vendor/studio-client'
+import type { StudioOpsMethods } from '@ship/sail-studio-client'
 
 export type ActorKind = 'human' | 'agent'
 

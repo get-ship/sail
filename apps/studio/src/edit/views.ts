@@ -446,7 +446,7 @@ export function parseCheckDiagnostics(raw: unknown[]): import('./types').CheckDi
 export {
   applySourceEditorScroll,
   type SourceEditorHost,
-} from '../vendor/studio-shell'
+} from '@ship/sail-studio-shell'
 
 /** @deprecated Use applySourceEditorScroll — kept for tests that call caret path. */
 export function applySourceScroll(

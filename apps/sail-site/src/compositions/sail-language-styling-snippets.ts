@@ -1,7 +1,7 @@
 // Snippets for /docs/concepts/styling. Sail samples are compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs); the two diagnostic
 // samples are real compiler output, captured verbatim.
-import { signal, derived } from '../vendor/runtime'
+import { signal, derived } from '@ship/sail-runtime'
 export const code = {
   sx: `<card style({ box: pad(5), paint: bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm) })>
   <p style({ paint: fg(muted-foreground), text: fontSize(sm) })>

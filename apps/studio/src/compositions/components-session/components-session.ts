@@ -7,10 +7,10 @@ import {
   mountAmbient,
   navigate,
   signal,
-} from '../../vendor/runtime'
+} from '@ship/sail-runtime'
 import { getEditState, openDocument, requestSourceScroll } from '../../edit/index.ts'
 import { createThread } from '../../tasks/index.ts'
-import { getShellState, writeClipboardText } from '../../vendor/studio-shell'
+import { getShellState, writeClipboardText } from '@ship/sail-studio-shell'
 import { buildAgentBrief, buildNewComponentBrief } from '../../components/brief'
 import type {
   ComponentMode,

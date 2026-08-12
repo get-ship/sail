@@ -1,4 +1,4 @@
-import { clearBatch, getBatchItems, removeBatchItem } from '../vendor/studio-shell'
+import { clearBatch, getBatchItems, removeBatchItem } from '@ship/sail-studio-shell'
 import { parseListItem, parseThread } from './parse'
 import { __resetThumbsForTests } from './thumbs'
 import type {

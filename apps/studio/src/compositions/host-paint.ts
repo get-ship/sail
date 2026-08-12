@@ -2,4 +2,4 @@
 export {
   hostSetAttribute,
   hostRemoveAttribute,
-} from '../vendor/studio-shell'
+} from '@ship/sail-studio-shell'

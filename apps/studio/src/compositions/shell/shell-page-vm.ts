@@ -1,5 +1,5 @@
 /** Studio chrome VM — activity rail (real links) + status bar + ops boot. */
-import { hotkeys, mountAmbient } from '../../vendor/runtime'
+import { hotkeys, mountAmbient } from '@ship/sail-runtime'
 import {
   attachShellHotkeys,
   bindBatchToShell,
@@ -17,11 +17,11 @@ import {
   subscribeShell,
   subscribeWindowMessages,
   toggleChecksPanel,
-} from '../../vendor/studio-shell'
+} from '@ship/sail-studio-shell'
 import { bindEditSelection, createOpsClient, getEditState, openDocument, saveActiveSource, seedFilesFromPaths, setOpsClient, setProjectRoot, subscribeEdit } from '../../edit/index.ts'
 import { getChecksState, loadFindings, setChecksOpsClient, setEditorSetting, setProjectRoot as setChecksProjectRoot, subscribeChecks } from '../../checks/index.ts'
 
-import { signal, effect, navigate } from '../../vendor/runtime'
+import { signal, effect, navigate } from '@ship/sail-runtime'
 function getChecksStateSafe(): ReturnType<typeof getChecksState> | null {
   try {
     return getChecksState()

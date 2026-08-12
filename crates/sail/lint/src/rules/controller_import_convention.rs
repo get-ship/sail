@@ -279,7 +279,10 @@ fn components_package_context_for(path: &Path) -> Option<ComponentsPackageContex
     None
 }
 
-fn load_components_package_context(root: &Path, pkg_path: &Path) -> Option<ComponentsPackageContext> {
+fn load_components_package_context(
+    root: &Path,
+    pkg_path: &Path,
+) -> Option<ComponentsPackageContext> {
     let text = std::fs::read_to_string(pkg_path).ok()?;
     let value: serde_json::Value = serde_json::from_str(&text).ok()?;
     // `customElements` is the components-package identity CEM generation already requires.
@@ -334,7 +337,10 @@ mod tests {
 
     /// Lay out a minimal components package: `package.json` (with `customElements` + deps),
     /// optional co-located module, and a controller path under `src/`.
-    fn write_components_package_fixture(deps: &str, controller_rel: &str) -> (tempfile::TempDir, PathBuf) {
+    fn write_components_package_fixture(
+        deps: &str,
+        controller_rel: &str,
+    ) -> (tempfile::TempDir, PathBuf) {
         let tmp = tempfile::tempdir().expect("tmpdir");
         let root = tmp.path();
         fs::write(

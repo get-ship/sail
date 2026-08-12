@@ -2,7 +2,7 @@
  * Token group inventory from the DTCG registry (~400 leaves).
  * Groups drive Design primary nav; knobs are type-aware editors.
  */
-import registry from '../vendor/token-registry'
+import registry from '@ship/tokens/token-registry.json'
 
 export type TokenKind =
   | 'color'

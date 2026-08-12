@@ -11,4 +11,4 @@ export {
   persistTheme,
   readStoredMode,
   persistMode,
-} from '../vendor/tokens-themes'
+} from '@ship/tokens/themes'

@@ -1,4 +1,4 @@
-export * from '../../vendor/studio-shell'
+export * from '@ship/sail-studio-shell'
 export {
   activityFromPath,
   appRouteBase,

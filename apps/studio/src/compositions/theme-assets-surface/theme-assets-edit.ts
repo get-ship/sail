@@ -4,7 +4,7 @@ import { closestAttr, inputValue, selectValue, type UiEvent } from '../ui-event'
  * Font discoverer: full Google Fonts catalog via SailTheme/FontSearch (bundled),
  * live CSS preview, assign to display/body/mono, optional FontAdd vendor.
  */
-import { signal } from '../../vendor/runtime'
+import { signal } from '@ship/sail-runtime'
 import { addFontFamily, getDesignState, searchFonts, setIconPack, setIconScaleStep, setTypeRole, uiIconScaleSteps } from '../../design/index.ts'
 import type { ThemeSession } from '../theme-session/theme-session'
 

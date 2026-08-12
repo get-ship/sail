@@ -4,7 +4,7 @@ export { isMiddleButton }
  * L1 `<tabs>` lacks dirty/close/middle-click for dynamic open files →
  * custom strip (absorption vote: studio-tabs / L2 candidate).
  */
-import { type DocTab, closeTab, getShellState, setActiveTab } from '../../vendor/studio-shell'
+import { type DocTab, closeTab, getShellState, setActiveTab } from '@ship/sail-studio-shell'
 import { openDocument } from '../../edit/index.ts'
 
 export type TabRow = DocTab & {

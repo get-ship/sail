@@ -2,7 +2,7 @@
 // packages/sail/tokens — themes.css, themes.ts, tokens.test.ts, products.css.
 // Never invent a token name here: the guide's whole value is that a reader
 // can paste it.
-import { applyTheme, persistTheme } from '../vendor/runtime'
+import { applyTheme, persistTheme } from '@ship/sail-runtime'
 export const code = {
   // packages/sail/tokens/src/themes.css:56-100, abridged where marked.
   paperBlock: `:root[theme='paper'],

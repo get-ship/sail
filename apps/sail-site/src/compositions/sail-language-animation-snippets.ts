@@ -1,7 +1,7 @@
 // Snippets for /docs/concepts/animation. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled. Every SAIL sample is compiled by the
 // build; each one is the code of the live demo beside it.
-import { signal, timeline } from '../vendor/runtime'
+import { signal, timeline } from '@ship/sail-runtime'
 export const code = {
   stagger: `<if {dealt()}>
   <row gap="3">

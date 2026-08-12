@@ -2,7 +2,7 @@
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // The query() controller + match-on-LiveState template are compile-checked
 // against the in-repo sail-compiler.
-import { signal, query } from '../vendor/runtime'
+import { signal, query } from '@ship/sail-runtime'
 export const code = {
   demo: `<controller>
 import { api } from '../../../../src/compositions/users-demo'

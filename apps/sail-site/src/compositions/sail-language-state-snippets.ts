@@ -2,7 +2,7 @@
 // compiler's scope scan isn't fooled by `return {…}` / `signal(…)` patterns
 // inside these strings. The graph snippet IS the page's own controller — the
 // source beside the live demo matches what the demo runs.
-import { defineStore, signal, derived, effect, useStore, interval, debounce } from '../vendor/runtime'
+import { defineStore, signal, derived, effect, useStore, interval, debounce } from '@ship/sail-runtime'
 export const code = {
   graph: `<controller>
 export default controller(() => {

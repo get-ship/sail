@@ -4,4 +4,4 @@ export {
   THEMES,
   type Theme,
   type ThemeId,
-} from '../vendor/tokens-themes'
+} from '@ship/tokens/themes'

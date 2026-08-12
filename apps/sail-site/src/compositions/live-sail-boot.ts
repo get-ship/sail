@@ -13,8 +13,8 @@ export {
   type CompileResult,
   type PreviewMount,
   type CodeEditorHost,
-} from '../vendor/viewer-mount'
+} from '@ship/sail-viewer/same-doc-mount'
 
 // CompileFn + wasm seam share one type (wasm-bootstrap) so routes never need
 // `as unknown as` when storing makeCompile() in a signal.
-export { ensureWasm, makeCompile, type CompileFn } from '../vendor/viewer-wasm'
+export { ensureWasm, makeCompile, type CompileFn } from '@ship/sail-viewer/wasm-bootstrap'
