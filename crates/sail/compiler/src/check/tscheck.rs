@@ -2059,6 +2059,33 @@ fn typecheck_project_env_via_kind_config(
         return Ok(false);
     }
 
+    // Kind `files` siblings must exist. tsgo "file not found" lands under
+    // `node_modules/.sail/` and is filtered as ambient noise below — a missing
+    // required pack would silent-green product CSS/timer checks.
+    if let Some(sail_dir) = kind_abs.parent() {
+        let mut required = vec!["types.d.ts", "css-modules.d.ts"];
+        if env == TypeEnv::Action {
+            required.push("action-observation.d.ts");
+        }
+        for name in required {
+            let path = sail_dir.join(name);
+            if !path.is_file() {
+                diags.push(Diagnostic {
+                    line: 1,
+                    col: 1,
+                    end_line: 1,
+                    end_col: 1,
+                    severity: DiagSeverity::Error,
+                    message: format!(
+                        "kind tsconfig lists `./{name}` but {} is missing",
+                        path.display()
+                    ),
+                    rule: Some(RULE_TYPE_GATE.to_string()),
+                });
+            }
+        }
+    }
+
     // Product file set for attribution + filtering (same homes the batch walked).
     let product: BTreeSet<String> = files
         .iter()
@@ -4109,6 +4136,39 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
         assert!(
             type_errs.is_empty(),
             ".ts relative + @/ alias must gate-clean (no TS2307/TS5102): {type_errs:?} all={diags:?}"
+        );
+    }
+
+    #[test]
+    fn missing_css_modules_sibling_is_type_gate_error() {
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/compositions")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/css-sibling-missing"}"#,
+        )
+        .unwrap();
+        let src = project.join("src/compositions/tokens.ts");
+        std::fs::write(
+            &src,
+            "import '@ship/tokens/tokens.css'\nexport const ok = 1\n",
+        )
+        .unwrap();
+        crate::ambients::write_project_type_configs(project).expect("write kind configs");
+        std::fs::remove_file(project.join(crate::ambients::PROJECT_CSS_MODULES_REL))
+            .expect("drop script sibling");
+        let diags = collect_project_type_gate(
+            project,
+            &[(src.clone(), std::fs::read_to_string(&src).unwrap())],
+        );
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE)
+                    && d.message.contains("css-modules.d.ts")
+                    && d.message.contains("missing")
+            }),
+            "missing kind `files` sibling must be a hard type-gate error, not filtered noise: {diags:?}"
         );
     }
 

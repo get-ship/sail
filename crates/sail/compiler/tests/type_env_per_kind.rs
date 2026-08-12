@@ -22,9 +22,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use sail_compiler::ambients::{
-    TypeEnv, emit_action_observation_dts, emit_framework_platform_script_dts, lib_for_type_env,
-    type_env_for_kind, type_env_for_path,
+    PROJECT_CSS_MODULES_REL, TypeEnv, emit_action_observation_dts, emit_css_side_effect_module,
+    lib_for_type_env, type_env_for_kind, type_env_for_path, write_project_type_configs,
 };
+use sail_compiler::check::tscheck::resolve_tsgo;
 use sail_compiler::project_map::{FileKind, classify};
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -491,8 +492,44 @@ export function inject(styleText: string): void {
     assert!(ok, "Framework env must allow document:\n{out}");
 }
 
-fn platform_dts() -> [(&'static str, String); 1] {
-    [("platform.d.ts", emit_framework_platform_script_dts())]
+/// Product type-gate layout: `write_project_type_configs` then `tsgo -p`
+/// `node_modules/.sail/tsconfig.pure.json` (module pack + script CSS sibling).
+fn tsgo_kind_pure(source: &str) -> Option<(bool, String)> {
+    let repo = repo_root();
+    let tool = resolve_tsgo(Some(&repo))?;
+
+    let work = tempfile::tempdir().expect("tempdir for kind-tsgo");
+    let project = work.path();
+    fs::create_dir_all(project.join("src/compositions")).unwrap();
+    fs::write(
+        project.join("package.json"),
+        r#"{"name":"kind-tsgo-fixture"}"#,
+    )
+    .unwrap();
+    fs::write(project.join("src/compositions/snippet.ts"), source).unwrap();
+    write_project_type_configs(project).expect("write kind configs");
+
+    let mut cmd = Command::new(&tool.program);
+    if let Some(js) = &tool.js_entry {
+        cmd.arg(js);
+    }
+    let out = cmd
+        .args(["-p", "node_modules/.sail/tsconfig.pure.json", "--noEmit"])
+        .current_dir(project)
+        .output()
+        .expect("run tsgo kind pure");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    // Product snippet errors only — pack resolution noise is not this fixture.
+    let product_red = combined.lines().any(|l| {
+        let l = l.replace('\\', "/");
+        (l.contains("snippet.ts") || l.contains("compositions/snippet.ts"))
+            && (l.contains("error TS") || l.contains(": error"))
+    });
+    Some((out.status.success() && !product_red, combined))
 }
 
 #[test]
@@ -505,18 +542,64 @@ import '@ship/tokens/element-skins.css'
 import '@ship/tokens/products.css'
 export const loaded = true
 "#;
-    let Some((ok, out)) = tsc_snippet_with_extra(TypeEnv::Pure, src, &platform_dts()) else {
-        eprintln!("SKIP pure_css_side_effect_import_typechecks: tsc not found");
-        let dts = emit_framework_platform_script_dts();
+    let Some((ok, out)) = tsgo_kind_pure(src) else {
+        eprintln!("SKIP pure_css_side_effect_import_typechecks: tsgo not found");
+        let dts = emit_css_side_effect_module();
         assert!(
             dts.contains("declare module '*.css'"),
-            "platform ambient must declare CSS modules when tsc absent:\n{dts}"
+            "platform ambient must declare CSS modules when tsgo absent:\n{dts}"
         );
         return;
     };
     assert!(
         ok,
-        "Pure env must accept legal @ship/tokens/*.css side-effect imports:\n{out}"
+        "Pure kind tsgo must accept legal @ship/tokens/*.css side-effect imports:\n{out}"
+    );
+}
+
+#[test]
+fn css_side_effect_import_fails_without_script_sibling() {
+    let repo = repo_root();
+    let Some(tool) = resolve_tsgo(Some(&repo)) else {
+        eprintln!("SKIP css_side_effect_import_fails_without_script_sibling: tsgo not found");
+        return;
+    };
+    let work = tempfile::tempdir().expect("tempdir");
+    let project = work.path();
+    fs::create_dir_all(project.join("src/compositions")).unwrap();
+    fs::write(
+        project.join("package.json"),
+        r#"{"name":"kind-tsgo-css-neg"}"#,
+    )
+    .unwrap();
+    fs::write(
+        project.join("src/compositions/snippet.ts"),
+        "import '@ship/tokens/tokens.css'\nexport const loaded = true\n",
+    )
+    .unwrap();
+    write_project_type_configs(project).expect("write kind configs");
+    // Keep the `files` entry on disk so tsgo typechecks; empty the script
+    // so only the module-pack wildcard remains (the tsgo TS2882 hole).
+    fs::write(project.join(PROJECT_CSS_MODULES_REL), "// emptied\n").unwrap();
+
+    let mut cmd = Command::new(&tool.program);
+    if let Some(js) = &tool.js_entry {
+        cmd.arg(js);
+    }
+    let out = cmd
+        .args(["-p", "node_modules/.sail/tsconfig.pure.json", "--noEmit"])
+        .current_dir(project)
+        .output()
+        .expect("tsgo");
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let product_ts2882 = combined.contains("TS2882") && combined.contains("tokens.css");
+    assert!(
+        !out.status.success() && product_ts2882,
+        "pack wildcard alone must not satisfy tsgo TS2882; script sibling is required:\n{combined}"
     );
 }
 
@@ -528,18 +611,13 @@ export function later(fn: () => void): () => void {
   return () => clearTimeout(id)
 }
 "#;
-    let Some((ok, out)) = tsc_snippet_with_extra(TypeEnv::Pure, src, &platform_dts()) else {
-        eprintln!("SKIP pure_settimeout_and_cleartimeout_typecheck: tsc not found");
-        let dts = emit_framework_platform_script_dts();
-        assert!(
-            dts.contains("function setTimeout") && dts.contains("function clearTimeout"),
-            "platform ambient must declare timers when tsc absent:\n{dts}"
-        );
+    let Some((ok, out)) = tsgo_kind_pure(src) else {
+        eprintln!("SKIP pure_settimeout_and_cleartimeout_typecheck: tsgo not found");
         return;
     };
     assert!(
         ok,
-        "Pure env must name setTimeout/clearTimeout via framework ambient:\n{out}"
+        "Pure kind tsgo must name setTimeout/clearTimeout via framework ambient:\n{out}"
     );
 }
 
@@ -550,8 +628,8 @@ export function retitle(n: number): void {
   document.title = `count: ${n}`
 }
 "#;
-    let Some((ok, out)) = tsc_snippet_with_extra(TypeEnv::Pure, src, &platform_dts()) else {
-        eprintln!("SKIP pure_document_still_fails_with_platform_ambient: tsc not found");
+    let Some((ok, out)) = tsgo_kind_pure(src) else {
+        eprintln!("SKIP pure_document_still_fails_with_platform_ambient: tsgo not found");
         let lib = lib_for_type_env(TypeEnv::Pure);
         assert!(!has_dom_lib(lib), "Pure lib must exclude DOM, got {lib:?}");
         return;
@@ -559,5 +637,43 @@ export function retitle(n: number): void {
     assert!(
         !ok,
         "framework platform ambient must not grant document:\n{out}"
+    );
+}
+
+#[test]
+fn pure_css_value_import_fails() {
+    // Empty `declare module '*.css' {}` has no named exports. A class-map /
+    // CSSStyleSheet default must not appear — named `className` is the edge.
+    let src = r#"
+import { className } from '@ship/tokens/tokens.css'
+export const used = className
+"#;
+    let Some((ok, out)) = tsgo_kind_pure(src) else {
+        eprintln!("SKIP pure_css_value_import_fails: tsgo not found");
+        let dts = emit_css_side_effect_module();
+        assert!(
+            !dts.contains("export"),
+            "CSS ambient must stay side-effect-only when tsgo absent:\n{dts}"
+        );
+        return;
+    };
+    assert!(!ok, "CSS value import must stay untyped under Pure:\n{out}");
+}
+
+#[test]
+fn pure_fetch_stays_unnameable() {
+    let src = r#"
+export function go(url: string): void {
+  void fetch(url)
+  void globalThis.fetch
+}
+"#;
+    let Some((ok, out)) = tsgo_kind_pure(src) else {
+        eprintln!("SKIP pure_fetch_stays_unnameable: tsgo not found");
+        return;
+    };
+    assert!(
+        !ok,
+        "fetch / globalThis.fetch must stay unnameable under Pure:\n{out}"
     );
 }
