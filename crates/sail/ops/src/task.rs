@@ -1743,10 +1743,7 @@ mod tests {
         let file = "routes/page.sail";
         let rev1 = node("routes/page.sail#0.1#hash1", file, "card", "hero", 42, 58);
         let anchor = ElementIdentity::from_tree_node(&rev1);
-        assert_eq!(
-            resolve_identity(&anchor, &[rev1]).status,
-            ResolveStatus::Ok
-        );
+        assert_eq!(resolve_identity(&anchor, &[rev1]).status, ResolveStatus::Ok);
 
         // Edit moves element (new ordinal + span); path label preserved → moved
         let rev2 = node("routes/page.sail#0.3#hash1", file, "card", "hero", 200, 240);

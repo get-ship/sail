@@ -22,16 +22,16 @@ pub mod typed;
 pub mod watch;
 
 pub use authoring::{CheckDiag, SurfaceTopic, surface_markdown};
-pub use inspect::InspectTopic;
 pub use contracts::METHOD_CONTRACTS;
 pub use ctx::Ctx;
 pub use error::OpError;
+pub use http::{connect_router, connect_router_with_ctx};
 pub use identity::{
     Anchor, ElementIdentity, ResolveStatus, ResolvedIdentity, SemanticLocator, SourceSpan,
     content_hash_from_node_id, element_path_from_node, parse_identity, resolve_identity,
     schema_example as identity_schema_example,
 };
-pub use http::{connect_router, connect_router_with_ctx};
+pub use inspect::InspectTopic;
 pub use module::{
     ERR_API_UNSUPPORTED, ERR_CAPABILITY, ERR_UNSIGNED, LoadedModule, MODULE_API_VERSION,
     ModuleCallCtx, ModuleLoadError, ModuleManifest, ModuleMode, activity_surface_html,

@@ -153,7 +153,12 @@ mod tests {
                 Some(c.description)
             );
             let input = t.get("inputSchema").expect("inputSchema");
-            assert_eq!(input, &(c.input_schema)(), "inputSchema drift for {}", c.mcp_tool);
+            assert_eq!(
+                input,
+                &(c.input_schema)(),
+                "inputSchema drift for {}",
+                c.mcp_tool
+            );
         }
         // Adding a contract without hand-editing MCP is proven: descriptors are
         // solely `mcp_descriptors_from(METHOD_CONTRACTS)`.

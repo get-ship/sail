@@ -520,9 +520,8 @@ pub fn generate(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         resolve_path_under(&workspace, m)?
     } else {
         // Baked catalog when monorepo model tree is absent (external apps).
-        sail_compiler::tokens_generate::resolve_model_dir(Some(&workspace), None).map_err(|e| {
-            OpError::Internal(format!("resolve tokens model: {e}"))
-        })?
+        sail_compiler::tokens_generate::resolve_model_dir(Some(&workspace), None)
+            .map_err(|e| OpError::Internal(format!("resolve tokens model: {e}")))?
     };
 
     // Project merge when `project` is set in args, else if ctx.project_root

@@ -533,14 +533,17 @@ mod tests {
             super::super::Node::Element(e) => {
                 assert_eq!(e.tag, "p");
                 assert!(
-                    e.children.iter().any(|n| matches!(n, super::super::Node::Text(t) if t.data.contains("Couldn"))),
+                    e.children.iter().any(
+                        |n| matches!(n, super::super::Node::Text(t) if t.data.contains("Couldn"))
+                    ),
                     "expected prose text, got {:?}",
                     e.children
                 );
             }
             _ => panic!("expected p element"),
         }
-        let nodes = parse_fragment(r#"<strong slot="title">Couldn't load preview</strong>"#).expect("parse strong");
+        let nodes = parse_fragment(r#"<strong slot="title">Couldn't load preview</strong>"#)
+            .expect("parse strong");
         match &nodes[0] {
             super::super::Node::Element(e) => assert_eq!(e.tag, "strong"),
             _ => panic!("expected strong"),

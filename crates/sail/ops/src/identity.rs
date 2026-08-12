@@ -307,14 +307,8 @@ pub fn parse_identity(v: &Value) -> Result<ElementIdentity, OpError> {
                 .and_then(|t| t.as_str())
                 .unwrap_or("?")
                 .to_string(),
-            role: loc
-                .get("role")
-                .and_then(|r| r.as_str())
-                .map(str::to_string),
-            name: loc
-                .get("name")
-                .and_then(|n| n.as_str())
-                .map(str::to_string),
+            role: loc.get("role").and_then(|r| r.as_str()).map(str::to_string),
+            name: loc.get("name").and_then(|n| n.as_str()).map(str::to_string),
         })
     } else {
         // Derive a best-effort locator from elementPath when not provided.
@@ -489,8 +483,14 @@ pub fn rewrite_ops_node_id(ops: &mut [Value], from_id: &str, to_id: &str) {
         let Some(obj) = op.as_object_mut() else {
             continue;
         };
-        for key in ["nodeId", "node_id", "parentNodeId", "parent_node_id", "newParentId", "new_parent_id"]
-        {
+        for key in [
+            "nodeId",
+            "node_id",
+            "parentNodeId",
+            "parent_node_id",
+            "newParentId",
+            "new_parent_id",
+        ] {
             if obj.get(key).and_then(|v| v.as_str()) == Some(from_id) {
                 obj.insert(key.into(), json!(to_id));
             }

@@ -494,7 +494,11 @@ pub struct ThemeFontSearchRet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub count: Option<usize>,
     /// Full catalog size before limit/filter (discoverer honesty).
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "catalogSize")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "catalogSize"
+    )]
     pub catalog_size: Option<usize>,
     /// Provenance label e.g. `bundled-google-fonts`.
     #[serde(default, skip_serializing_if = "Option::is_none")]

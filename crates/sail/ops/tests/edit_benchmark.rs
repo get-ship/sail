@@ -86,7 +86,11 @@ fn tasks() -> Vec<Task> {
                 })]
             },
             text_rewrite: |src| {
-                src.replacen("<div>body</div>", r#"<div style={style.pad(2)}>body</div>"#, 1)
+                src.replacen(
+                    "<div>body</div>",
+                    r#"<div style={style.pad(2)}>body</div>"#,
+                    1,
+                )
             },
         },
         Task {

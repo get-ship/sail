@@ -646,8 +646,8 @@ fn build_assets(no_stamp: bool) -> Result<()> {
     // components-package lint failure is real and must still fail the overall
     // command, but it must never block the framework bundles `build.rs`
     // needs from being staged and stamped first.
-    let n =
-        deck_bundler::cem::write_all_component_cems(&repo_root).context("component package CEM generation")?;
+    let n = deck_bundler::cem::write_all_component_cems(&repo_root)
+        .context("component package CEM generation")?;
     println!("  cem: {n} components-package manifest(s) written");
 
     // Consumer guard: the discovered consumer bundles (per-package
@@ -1700,9 +1700,8 @@ fn path_suggests_new_theme_watch(path: &Path, project_dir: &Path) -> bool {
     }
     // Theme tree roots only — not themes/<id>.json leaves.
     let norm = format!("/{}", path.to_string_lossy().replace('\\', "/"));
-    let is_theme_root = norm.ends_with("/tokens")
-        || norm.ends_with("/tokens/themes")
-        || norm.ends_with("/themes");
+    let is_theme_root =
+        norm.ends_with("/tokens") || norm.ends_with("/tokens/themes") || norm.ends_with("/themes");
     if !is_theme_root {
         return false;
     }

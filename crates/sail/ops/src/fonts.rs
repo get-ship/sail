@@ -433,8 +433,8 @@ fn resolve_project_arg(args: &Value, ctx: &Ctx) -> Result<PathBuf, OpError> {
 
 fn resolve_project(ctx: &Ctx) -> Result<PathBuf, OpError> {
     let p = &ctx.project_root;
-    let same_as_workspace = p.canonicalize().ok().as_ref()
-        == ctx.workspace_root.canonicalize().ok().as_ref();
+    let same_as_workspace =
+        p.canonicalize().ok().as_ref() == ctx.workspace_root.canonicalize().ok().as_ref();
 
     // Strong signal: routes/ means this is an app (external or monorepo).
     if p.join("routes").is_dir() {

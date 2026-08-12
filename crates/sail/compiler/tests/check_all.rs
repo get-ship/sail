@@ -111,7 +111,10 @@ fn diagnostics_are_sorted_by_position() {
 /// source is a renderable component (`<p>{name}</p>`) so the structural
 /// passes produce nothing and the only diagnostic the compiler can emit is
 /// the stylesheet-permit one.
-fn write_fixture(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, std::path::PathBuf) {
+fn write_fixture(
+    css_files: &[(&str, &str)],
+    config: &str,
+) -> (tempfile::TempDir, std::path::PathBuf) {
     let tmp = tempfile::tempdir().expect("tmpdir");
     std::fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");

@@ -275,7 +275,10 @@ async fn module_discovery_surfaces_and_connect_paths_match_modules_json() {
             .iter()
             .filter_map(|v| v.as_str().map(str::to_string))
             .collect();
-        let acts = catalog["activities"].as_array().cloned().unwrap_or_default();
+        let acts = catalog["activities"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         assert!(
             acts.iter().any(|a| a["id"] == "discover"),
             "activity missing from modules JSON: {catalog}"
@@ -332,22 +335,17 @@ async fn module_discovery_surfaces_and_connect_paths_match_modules_json() {
                     && surface_html.contains("data-module-surface=\"discover\""),
                 surface_html,
             ),
-            (connect_status == StatusCode::OK && connect_json["ok"] == true, connect_json),
+            (
+                connect_status == StatusCode::OK && connect_json["ok"] == true,
+                connect_json,
+            ),
             methods,
             paths,
         )
     };
 
-    assert!(
-        surface_ok.0,
-        "surface HTML mismatch: {}",
-        surface_ok.1
-    );
-    assert!(
-        connect_ok.0,
-        "Connect unary failed: {:?}",
-        connect_ok.1
-    );
+    assert!(surface_ok.0, "surface HTML mismatch: {}", surface_ok.1);
+    assert!(connect_ok.0, "Connect unary failed: {:?}", connect_ok.1);
     // Every modules JSON method has a matching Connect path and vice versa.
     for m in &listed_methods {
         let (svc, method) = m.split_once('/').expect("Service/Method");

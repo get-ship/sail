@@ -2870,7 +2870,11 @@ fn find_controller_close(source: &str, body_start: usize) -> Option<usize> {
             i += 1;
             continue;
         }
-        if c == b'<' && source.get(i..).is_some_and(|s| s.starts_with("</controller>")) {
+        if c == b'<'
+            && source
+                .get(i..)
+                .is_some_and(|s| s.starts_with("</controller>"))
+        {
             return Some(i);
         }
         // UTF-8 safe advance when not on an ASCII-only match path.
@@ -3164,7 +3168,6 @@ fn expand_self_close(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
 
     /// Usage-example template strings may embed a fake `</controller>`; that
     /// must not terminate the real SFC block (docs corpus / configurator pages).

@@ -1396,7 +1396,9 @@ pub fn inspect(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
             .map(|t| t.as_str())
             .collect::<Vec<_>>()
             .join(" | ");
-        OpError::InvalidArgument(format!("unknown topic `{topic_s}`; expected one of: {list}"))
+        OpError::InvalidArgument(format!(
+            "unknown topic `{topic_s}`; expected one of: {list}"
+        ))
     })?;
 
     let mut body = match topic {
@@ -1553,7 +1555,9 @@ fn resolve_cascade_chain(token: &str, graph: &Value) -> Vec<Value> {
             }
             // Also index last segment (primary from color.primary.default).
             if let Some(tail) = p.rsplit('.').next() {
-                by_css.entry(tail.to_string()).or_insert_with(|| p.to_string());
+                by_css
+                    .entry(tail.to_string())
+                    .or_insert_with(|| p.to_string());
             }
         }
     }
@@ -1660,7 +1664,15 @@ fn topic_states(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         .map_err(|e| OpError::InvalidArgument(format!("parse: {e}")))?;
 
     let mut matches = Vec::new();
-    collect_match_matrices(&source, &rel, &program.template, &meta, "", &mut 0, &mut matches);
+    collect_match_matrices(
+        &source,
+        &rel,
+        &program.template,
+        &meta,
+        "",
+        &mut 0,
+        &mut matches,
+    );
 
     // Scope-level style match unions (const paint = match(variant, …)) when present.
     let scope_matches = extract_scope_match_hints(&source);
@@ -1783,9 +1795,7 @@ fn collect_match_matrices(
             }
             Instr::Element(el) => {
                 let mut o = 0;
-                collect_match_matrices(
-                    source, file, &el.children, meta, &path, &mut o, out,
-                );
+                collect_match_matrices(source, file, &el.children, meta, &path, &mut o, out);
             }
             Instr::If(i) => {
                 for (bi, br) in i.branches.iter().enumerate() {
@@ -1803,7 +1813,13 @@ fn collect_match_matrices(
                 if let Some(e) = &i.else_body {
                     let mut o = 0;
                     collect_match_matrices(
-                        source, file, e, meta, &format!("{path}.else"), &mut o, out,
+                        source,
+                        file,
+                        e,
+                        meta,
+                        &format!("{path}.else"),
+                        &mut o,
+                        out,
                     );
                 }
             }
@@ -1817,7 +1833,13 @@ fn collect_match_matrices(
                 if let Some(e) = &w.else_body {
                     let mut o = 0;
                     collect_match_matrices(
-                        source, file, e, meta, &format!("{path}.else"), &mut o, out,
+                        source,
+                        file,
+                        e,
+                        meta,
+                        &format!("{path}.else"),
+                        &mut o,
+                        out,
                     );
                 }
             }
@@ -1908,7 +1930,10 @@ fn topic_a11y(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let mut tree_out = Vec::new();
     for root in &meta.root_ids {
         if let Some(n) = by_id.get(root) {
-            if filter.as_ref().is_none_or(|f| node_or_descendant(n, f, &by_id)) {
+            if filter
+                .as_ref()
+                .is_none_or(|f| node_or_descendant(n, f, &by_id))
+            {
                 tree_out.push(a11y_node_json(n, &by_id, filter.as_deref()));
             }
         }
@@ -1929,11 +1954,7 @@ fn topic_a11y(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     }))
 }
 
-fn node_or_descendant(
-    n: &TreeNode,
-    target: &str,
-    by_id: &BTreeMap<String, &TreeNode>,
-) -> bool {
+fn node_or_descendant(n: &TreeNode, target: &str, by_id: &BTreeMap<String, &TreeNode>) -> bool {
     if n.id == target {
         return true;
     }
@@ -1981,7 +2002,8 @@ fn a11y_record(n: &TreeNode) -> Value {
     // Host anatomy fixed stamps (compiler would inject these).
     if let Some(a) = anatomy {
         if let Some(role) = a.role {
-            aria.entry("role".into()).or_insert_with(|| role.to_string());
+            aria.entry("role".into())
+                .or_insert_with(|| role.to_string());
         }
         if let Some(live) = a.live {
             aria.entry("aria-live".into())
@@ -2123,8 +2145,7 @@ fn keys_related(a: &str, b: &str) -> bool {
     // Prefix match on dotted keys: crm.deals ↔ crm.deals.list
     let (short, long) = if a.len() <= b.len() { (a, b) } else { (b, a) };
     long.starts_with(short)
-        && (long.len() == short.len()
-            || long.as_bytes().get(short.len()) == Some(&b'.'))
+        && (long.len() == short.len() || long.as_bytes().get(short.len()) == Some(&b'.'))
 }
 
 fn topic_uses(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
@@ -2171,7 +2192,12 @@ fn collect_use_actions(instrs: &[sail_compiler::ir::Instr], out: &mut Vec<Value>
         match instr {
             Instr::Element(el) => {
                 for a in &el.attrs {
-                    if let AttrInstr::Use { action, param, span } = a {
+                    if let AttrInstr::Use {
+                        action,
+                        param,
+                        span,
+                    } = a
+                    {
                         out.push(json!({
                             "action": action,
                             "param": param.as_ref().map(|p| p.source.clone()),
@@ -2431,9 +2457,8 @@ fn topic_themes(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         .map(str::trim)
         .filter(|s| !s.is_empty());
 
-    let ids = crate::theme::effective_ids(&json!({}), ctx).unwrap_or_else(|_| {
-        json!({"ok": false, "project": [], "catalog": [], "all": []})
-    });
+    let ids = crate::theme::effective_ids(&json!({}), ctx)
+        .unwrap_or_else(|_| json!({"ok": false, "project": [], "catalog": [], "all": []}));
 
     let all_ids: Vec<String> = ids
         .get("all")
@@ -2699,9 +2724,7 @@ mod tests {
             assert!(n.get("span").is_some());
             assert!(n.get("file").and_then(|v| v.as_str()).is_some());
             // WI7: every tree node carries the shared identity scheme.
-            let idt = n
-                .get("identity")
-                .expect("identity on inspect tree node");
+            let idt = n.get("identity").expect("identity on inspect tree node");
             assert_eq!(
                 idt["nodeId"].as_str(),
                 n["id"].as_str(),
@@ -3099,11 +3122,11 @@ export default controller((_ctx: ControllerScope<any>) => {
         assert!(m0["discriminant"].as_str().unwrap().contains("tone"));
         let arms = m0["arms"].as_array().unwrap();
         assert!(arms.len() >= 3, "arms={arms:?}");
-        let tests: Vec<&str> = arms
-            .iter()
-            .filter_map(|a| a["test"].as_str())
-            .collect();
-        assert!(tests.iter().any(|t| *t == "info" || t.contains("info")), "{tests:?}");
+        let tests: Vec<&str> = arms.iter().filter_map(|a| a["test"].as_str()).collect();
+        assert!(
+            tests.iter().any(|t| *t == "info" || t.contains("info")),
+            "{tests:?}"
+        );
         assert!(tests.iter().any(|t| *t == "else"), "{tests:?}");
         // Match host should carry WI7 identity when joined.
         assert!(m0.get("identity").is_some() || m0.get("id").is_some());

@@ -333,9 +333,8 @@ mod tests {
             .unwrap();
         let status = res.status();
         let bytes = res.into_body().collect().await.unwrap().to_bytes();
-        let via_http: Value = serde_json::from_slice(&bytes).unwrap_or_else(|_| {
-            json!({ "parse_error": String::from_utf8_lossy(&bytes) })
-        });
+        let via_http: Value = serde_json::from_slice(&bytes)
+            .unwrap_or_else(|_| json!({ "parse_error": String::from_utf8_lossy(&bytes) }));
 
         if via_rpc.get("code").is_some() {
             // Error path: both sides report the same Connect code (status may be 4xx).
@@ -347,10 +346,7 @@ mod tests {
             );
         } else {
             assert_eq!(status, StatusCode::OK, "{service}/{method} HTTP status");
-            assert_eq!(
-                via_http, via_rpc,
-                "{service}/{method} HTTP/RPC body drift"
-            );
+            assert_eq!(via_http, via_rpc, "{service}/{method} HTTP/RPC body drift");
         }
     }
 

@@ -55,13 +55,8 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
     // one ambient surface. Also mirror into out_dir for the ephemeral project.
     let ambient = sail_compiler::ambients::write_project_types(project)?;
     let ambient_copy = out_dir.join("sail-types.d.ts");
-    std::fs::copy(&ambient, &ambient_copy).with_context(|| {
-        format!(
-            "copy {} → {}",
-            ambient.display(),
-            ambient_copy.display()
-        )
-    })?;
+    std::fs::copy(&ambient, &ambient_copy)
+        .with_context(|| format!("copy {} → {}", ambient.display(), ambient_copy.display()))?;
 
     let proj = project.display().to_string().replace('\\', "/");
     let out = out_dir.display().to_string().replace('\\', "/");
@@ -133,6 +128,9 @@ pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
         eprint!("{output}");
         bail!("deck build --typecheck: tsc reported type errors");
     }
-    println!("  typecheck  ok (tsc --noEmit; ambients {})", sail_compiler::ambients::PROJECT_TYPES_REL);
+    println!(
+        "  typecheck  ok (tsc --noEmit; ambients {})",
+        sail_compiler::ambients::PROJECT_TYPES_REL
+    );
     Ok(())
 }

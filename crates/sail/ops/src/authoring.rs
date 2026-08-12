@@ -235,11 +235,7 @@ Controllers never `.style` / `createElement`.\n\
                     sail_compiler::SemanticKind::Number => "number".to_string(),
                     sail_compiler::SemanticKind::Union(vs) => vs.join(" | "),
                 };
-                let _ = writeln!(
-                    md,
-                    "- `{}` → `{}` ({ty}) — {}",
-                    p.name, p.aria, p.summary
-                );
+                let _ = writeln!(md, "- `{}` → `{}` ({ty}) — {}", p.name, p.aria, p.summary);
             }
             let _ = writeln!(
                 md,
@@ -278,11 +274,7 @@ Controllers never `.style` / `createElement`.\n\
             }
             let _ = writeln!(md, "\n### Authoring bans\n");
             for b in sail_compiler::AUTHORING_BANS {
-                let _ = writeln!(
-                    md,
-                    "- `{}` (`{}`) — {}",
-                    b.syntax, b.rule, b.instead
-                );
+                let _ = writeln!(md, "- `{}` (`{}`) — {}", b.syntax, b.rule, b.instead);
             }
             let _ = writeln!(md, "\n### Stdlib\n");
             for e in &stdlib {
@@ -717,9 +709,8 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         let nodes = if let Some(s) = args.get("source").and_then(|v| v.as_str()) {
             crate::inspect::tree_nodes_from_source(s, file_key)?
         } else if target.is_file() {
-            let disk = std::fs::read_to_string(&target).map_err(|e| {
-                OpError::NotFound(format!("read {}: {e}", target.display()))
-            })?;
+            let disk = std::fs::read_to_string(&target)
+                .map_err(|e| OpError::NotFound(format!("read {}: {e}", target.display())))?;
             crate::inspect::tree_nodes_from_source(&disk, file_key)?
         } else {
             // Fall back to workspace-relative inspect path.
@@ -753,8 +744,7 @@ pub fn edit(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         }
     }
 
-    let ops =
-        sail_compiler::edit::parse_ops(&ops_json).map_err(|e| OpError::InvalidArgument(e))?;
+    let ops = sail_compiler::edit::parse_ops(&ops_json).map_err(|e| OpError::InvalidArgument(e))?;
 
     // WI3 full-content check-guarded write (studio freeform Source save):
     // empty ops + full `source` body + writeSource. check_all before disk so
@@ -953,10 +943,7 @@ pub fn layout_check(args: &Value) -> Result<Value, OpError> {
 
 /// Compiler policy registry — `mode=list|get`, same payload as CLI / axum.
 pub fn policy(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
-    let mode = args
-        .get("mode")
-        .and_then(|v| v.as_str())
-        .unwrap_or("list");
+    let mode = args.get("mode").and_then(|v| v.as_str()).unwrap_or("list");
     let project = args
         .get("project")
         .and_then(|v| v.as_str())
@@ -1281,16 +1268,14 @@ export default controller((ctx) => ({ count: signal(0) }))
             return;
         }
         std::thread::sleep(std::time::Duration::from_millis(250));
-        let hover_text = |v: &serde_json::Value| -> String {
-            v["contents"].as_str().unwrap_or("").to_string()
-        };
+        let hover_text =
+            |v: &serde_json::Value| -> String { v["contents"].as_str().unwrap_or("").to_string() };
         let is_typed = |t: &str| {
             let lower = t.to_ascii_lowercase();
             lower.contains("signal") || lower.contains("function")
         };
-        let mut contents = hover_text(
-            &call_rpc("SailAuthoring", "Hover", &args, &ctx).expect("Hover rpc"),
-        );
+        let mut contents =
+            hover_text(&call_rpc("SailAuthoring", "Hover", &args, &ctx).expect("Hover rpc"));
         // One retry after settle: first hover can race project graph warm-up.
         if !is_typed(&contents) {
             std::thread::sleep(std::time::Duration::from_millis(300));
@@ -1369,7 +1354,10 @@ export default controller((ctx) => ({ count: signal(0) }))
         .unwrap();
         assert_eq!(v["applied"], true, "{v}");
         let after = std::fs::read_to_string(&full).unwrap();
-        assert!(after.contains("gap=\"4\"") || after.contains("gap='4'"), "{after}");
+        assert!(
+            after.contains("gap=\"4\"") || after.contains("gap='4'"),
+            "{after}"
+        );
 
         // Off-vocab setSx leaves file untouched (check-guard refuse).
         let before = after.clone();
@@ -1551,7 +1539,10 @@ export default controller((ctx) => ({ count: signal(0) }))
             .filter_map(|t| t.get("name").and_then(|n| n.as_str()))
             .collect();
         assert!(names.contains(&"sail_edit"), "{names:?}");
-        assert!(!names.contains(&"sail_apply"), "sail_apply must stay retired");
+        assert!(
+            !names.contains(&"sail_apply"),
+            "sail_apply must stay retired"
+        );
     }
 
     /// WI7: annotation identity → in-file move (span shift) → edit still hits
@@ -1586,7 +1577,10 @@ export default controller((ctx) => ({ count: signal(0) }))
             .find(|n| n["tag"] == "button")
             .expect("button node");
         let identity = ElementIdentity::from_tree_node(button);
-        assert_eq!(identity.locator.as_ref().unwrap().name.as_deref(), Some("Save"));
+        assert_eq!(
+            identity.locator.as_ref().unwrap().name.as_deref(),
+            Some("Save")
+        );
         let stored_node_id = identity.node_id.clone();
 
         // In-file move: prepend a sibling so ordinal path + span shift.
@@ -1635,10 +1629,7 @@ export default controller((ctx) => ({ count: signal(0) }))
             Some(live_id),
             "response returns live identity"
         );
-        assert_eq!(
-            v["identity"]["locator"]["name"].as_str(),
-            Some("Save")
-        );
+        assert_eq!(v["identity"]["locator"]["name"].as_str(), Some("Save"));
     }
 
     #[test]
