@@ -1,0 +1,3 @@
+.sail-radio input { background-color:var(--background);background-image:none; }
+.sail-radio input:checked, .sail-radio input[aria-checked='true'] { background-color:var(--background);border-color:var(--primary);background-image:radial-gradient(circle at center, var(--primary) 0 38%, transparent 40%);background-repeat:no-repeat;background-position:center;background-size:100% 100%;box-shadow:none; }
+.sail-radio input[invalid], .sail-radio input[aria-invalid='true'] { border-color:var(--destructive); }

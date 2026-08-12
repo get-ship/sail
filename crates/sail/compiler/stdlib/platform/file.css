@@ -1,0 +1,3 @@
+.sail-file[variant='drop'] input[type='file'] { display:none; }
+.sail-file[variant='drop'] [data-dz-files] { display:block; }
+.sail-file[variant='picker'] [data-dz-files], .sail-file:not([variant]) [data-dz-files] { display:none; }

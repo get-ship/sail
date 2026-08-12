@@ -1,0 +1,1 @@
+.sail-skeleton { background:linear-gradient(90deg, var(--skeleton) 0%, var(--skeleton-highlight) 50%, var(--skeleton) 100%);background-size:200% 100%;animation:var(--animate-shimmer); }

@@ -1,6 +1,6 @@
 <!--
   <checkbox> — boolean check product. Impl: native input type=checkbox.
-  Zero JS for toggle; checkmark via CHECKBOX_MAP. Face tokens align with <radio>.
+  Zero JS for toggle; check mark is platform/checkbox.css. Face tokens align with <radio>.
   size · invalid · disabled · name · required · value. bind:checked for state.
 
   Face chrome aims at native weight: 1px soft border, no drop shadow, border-box.
@@ -18,7 +18,7 @@
   }
 
   // Explicit border(solid): appearance:none leaves border-style:none in some UAs.
-  // Fill is CHECKBOX_MAP (host-specific) — not Style bg() atomics (unlayered
+  // Fill is platform/checkbox.css — not Style bg() atomics (unlayered
   // component scopes re-emit .s-bgbackground and clobber checked primary).
   // Border ink is --border (field hairline), not --foreground — FG at 1–2px
   // looks twice as thick as a real checkbox. No shadow(xs): the soft outer
