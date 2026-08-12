@@ -95,13 +95,35 @@ pub fn resolve_package_root(start: &Path, name: &str) -> Option<PathBuf> {
         }
         cur = dir.parent();
     }
-    // 2. workspace member of `start` (the monorepo bake path).
-    if let Ok(pkgs) = discover_workspace_packages(start) {
-        if let Some(pkg) = pkgs.into_iter().find(|p| p.name == name) {
-            return Some(pkg.root);
+    // 2. Monorepo bake fallback ONLY when `start` declares `workspaces`.
+    // External consumers / tarball installs resolve exclusively via node_modules
+    // (SPEC-L2-PACKAGE-1: no monorepo path assumptions for npm-shaped apps).
+    if package_declares_workspaces(start) {
+        if let Ok(pkgs) = discover_workspace_packages(start) {
+            if let Some(pkg) = pkgs.into_iter().find(|p| p.name == name) {
+                return Some(pkg.root);
+            }
         }
     }
     None
+}
+
+fn package_declares_workspaces(start: &Path) -> bool {
+    let mut cur = Some(start);
+    while let Some(dir) = cur {
+        let pkg = dir.join("package.json");
+        if pkg.is_file() {
+            if let Ok(raw) = std::fs::read_to_string(&pkg) {
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(&raw) {
+                    if v.get("workspaces").is_some() {
+                        return true;
+                    }
+                }
+            }
+        }
+        cur = dir.parent();
+    }
+    false
 }
 
 /// Read `<root>/package.json` and resolve the entry path (relative to `root`)

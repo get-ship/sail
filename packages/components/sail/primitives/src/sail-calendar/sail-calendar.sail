@@ -138,8 +138,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
     mount((host) => {
 
-      Object.defineProperty(host, 'calendar', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'calendar', {
         get: () => engine(),
         set: (c: Calendar | null) => {
           engine.set(c)
@@ -149,7 +148,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
       const stopView = effect(() => {
         const v = view()
-        if (host.getAttribute('view') !== v) host.setAttribute('view', v)
+        if (hostGetAttr(host, 'view') !== v) hostSetAttr(host, 'view', v)
       })
 
       const active = (): Calendar => cal()

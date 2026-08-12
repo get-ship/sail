@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-mermaid",
   "version": "0.3.0",
-  "description": "SAIL mermaid pack \u2014 <sail-mermaid>, renders mermaid source text to a themed SVG with an error tile. Mermaid is heavy, so this pack is its own deck bundle, framework-external, lazy-loaded.",
+  "description": "SAIL mermaid components package — <sail-mermaid>, renders mermaid source text to a themed SVG with an error tile. Mermaid is heavy, so this components package is its own deck bundle, framework-external, lazy-loaded.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",

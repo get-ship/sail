@@ -56,13 +56,13 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
         // Skip label-only attrs (invalid names crash setAttribute).
         if (!attr || !val || !/^[A-Za-z_:][\w:.-]*$/.test(attr)) return
         for (const el of host.querySelectorAll('[slot="stage"]')) {
-          if (el.getAttribute(attr) !== val) el.setAttribute(attr, val)
+          if (hostGetAttr(el as HostBag, attr) !== val) hostSetAttr(el as HostBag, attr, val)
         }
       }
       const onClick = (e: DomEv): void => {
         const btn = (e.target as HostBag | null)?.closest?.('[data-variant]') as HostBag | null | undefined
         if (!btn) return
-        const v = (btn as HostBag).getAttribute('data-variant') ?? ''
+        const v = hostGetAttr(btn as HostBag, 'data-variant') ?? ''
         active.set(v)
         apply()
         ;(host).onVariantChange?.({ variant: v })

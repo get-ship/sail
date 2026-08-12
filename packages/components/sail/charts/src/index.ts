@@ -3,7 +3,7 @@
 // Side-effect imports for the chart components. Each `<tag>.compiled.js`
 // calls `customElements.define()` on import, so a single
 // `import '@ship/sail-charts'` at the consumer registers every tag in this
-// pack globally.
+// package globally.
 
 import './sail-area-chart/sail-area-chart.compiled.js'
 import './sail-bar-chart/sail-bar-chart.compiled.js'

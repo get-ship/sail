@@ -43,7 +43,7 @@ const OVERFLOW_SRC: &str = r#"
 </column>
 "#;
 
-fn write_pack(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
+fn write_fixture(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
@@ -159,7 +159,7 @@ fn at_least_one_emission_path_rule_is_registered() {
     // sail-unintended-overflow (or another layout rule id). That emitted
     // rule id must be present in the DiagSpec registry — proof that the
     // product path and the table meet for at least one rule.
-    let (_tmp, sail) = write_pack(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_SRC);
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
     let emitted_rules: Vec<&str> = diags.iter().filter_map(|d| d.rule.as_deref()).collect();
     assert!(

@@ -1,4 +1,4 @@
-// @ship/sail-media — SAIL media-renderer pack (the PURE leaf content renderers
+// @ship/sail-media — SAIL media-renderer package (the PURE leaf content renderers
 // plus the pure detection/parse engine).
 //
 // Each <tag>.compiled.js calls customElements.define() on import, so a single
@@ -13,7 +13,7 @@
 // via `import '@ship/sail-primitives'`.
 //
 // The kind→TAG dispatch table (which renderer a kind routes to) is NOT here —
-// that decision lives in the @ship/viewer router. This pack exports only the
+// that decision lives in the @ship/viewer router. This package exports only the
 // PURE resolution engine (createMimeRegistry, MIME detect, CSV parse) and the
 // ViewerRenderer event-contract helpers, which the router composes.
 import './sail-media-image/sail-media-image.compiled.js'

@@ -39,7 +39,7 @@ const WARN_SRC: &str = r#"<button type="button" aria-label="Go">x</button>"#;
 /// Source that is a pure compiler error (parse) — never a severity-configurable lint.
 const PARSE_ERR_SRC: &str = r#"<button type="button">unterminated"#;
 
-fn write_pack(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) {
+fn write_fixture(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
     // Ambient app path: `…/src/*.sail` so path-gated lints (no-free-aria) fire.
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
@@ -115,7 +115,7 @@ fn top_level_lint_object_is_a_recognized_config_key() {
 fn strict_and_lint_config_do_not_fail_closed_as_unknown_keys() {
     // Unlike a typo (`polcy`), recognized SPEC keys must resolve cleanly —
     // not Rejected(unknown key).
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{ "preset": "full", "strict": true, "lint": { "severity": "error" } }"#,
         WARN_SRC,
     );
@@ -201,7 +201,7 @@ fn apply_config_resolves_strict_and_floor_and_lint_rules() {
 fn default_without_strict_keeps_warn_lint_non_blocking() {
     // Document fixture: full preset (capabilities granted) + no strict/floor.
     // sail-no-free-aria remains natural Warn → compile succeeds.
-    let (_tmp, sail) = write_pack(r#"{ "preset": "full" }"#, WARN_SRC);
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full" }"#, WARN_SRC);
     let diags = warn_rule_diags(&sail, WARN_SRC);
     assert_eq!(
         diags.len(),
@@ -221,7 +221,7 @@ fn default_without_strict_keeps_warn_lint_non_blocking() {
 
 #[test]
 fn strict_true_promotes_warn_lint_to_error_at_gate() {
-    let (_tmp, sail) = write_pack(r#"{ "preset": "full", "strict": true }"#, WARN_SRC);
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full", "strict": true }"#, WARN_SRC);
     let diags = warn_rule_diags(&sail, WARN_SRC);
     assert_eq!(
         diags.len(),
@@ -245,7 +245,7 @@ fn strict_true_promotes_warn_lint_to_error_at_gate() {
 #[test]
 fn lint_severity_error_floor_promotes_warn_lint_to_error() {
     // Global floor alone (no strict flag) is enough when set to error.
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{ "preset": "full", "lint": { "severity": "error" } }"#,
         WARN_SRC,
     );
@@ -266,7 +266,7 @@ fn lint_severity_error_floor_promotes_warn_lint_to_error() {
 fn per_rule_off_still_silences_under_strict() {
     // SPEC-faithful kill switch: strict promotes warn→error, but explicit
     // `off` still drops the finding (operator escape hatch).
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{
             "preset": "full",
             "strict": true,
@@ -290,7 +290,7 @@ fn per_rule_off_still_silences_under_strict() {
 fn policy_lint_severity_off_still_silences_under_strict() {
     // Dual-read: existing `policy.lint.severity.*` remains a valid kill switch
     // under top-level strict (no forced migration break).
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{
             "preset": "full",
             "strict": true,
@@ -315,7 +315,7 @@ fn policy_lint_severity_off_still_silences_under_strict() {
 fn compiler_errors_never_downgraded_by_lint_config() {
     // Parse / language errors are non-configurable (jurisdiction law).
     // lint severity off / strict:false must not open a downgrade path.
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{
             "preset": "full",
             "strict": false,
@@ -350,7 +350,7 @@ fn compiler_errors_never_downgraded_by_lint_config() {
 #[test]
 fn unknown_config_key_still_refused_loudly() {
     // config-loud-strict culture survives the new keys: typos still Reject.
-    let (_tmp, sail) = write_pack(r#"{ "polcy": "strict" }"#, "<p>hi</p>");
+    let (_tmp, sail) = write_fixture(r#"{ "polcy": "strict" }"#, "<p>hi</p>");
     let (config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     let ResolutionKind::Rejected(reason) = &resolution.kind else {

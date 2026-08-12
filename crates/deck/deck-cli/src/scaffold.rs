@@ -197,7 +197,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
 /// Validate a package name — lowercase ASCII + digits + hyphens, starts with a
 /// letter. Becomes both the directory name and the npm package suffix
 /// (`@ship/<name>`).
-fn validate_pack_name(name: &str) -> Result<()> {
+fn validate_components_package_name(name: &str) -> Result<()> {
     if name.is_empty() {
         bail!("package name is required");
     }
@@ -213,8 +213,8 @@ fn validate_pack_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn run_pack(name: String) -> Result<()> {
-    validate_pack_name(&name)?;
+pub fn run_components_package(name: String) -> Result<()> {
+    validate_components_package_name(&name)?;
     let repo_root = find_repo_root(&std::env::current_dir().context("cwd")?)?;
     let base = repo_root.join("packages/components").join(&name);
     if base.exists() {
@@ -250,8 +250,8 @@ pub fn run_pack(name: String) -> Result<()> {
     fs::write(base.join("package.json"), pkg_json)?;
 
     // Align with packages/sail/tsconfig/tsconfig.base.json (TOOLING-1 WI2)
-    // plus pack emit flags (declaration/outDir). Inline so a freshly
-    // scaffolded pack typechecks without an extra workspace dep.
+    // plus package emit flags (declaration/outDir). Inline so a freshly
+    // scaffolded components package typechecks without an extra workspace dep.
     let tsconfig = "{\n  \
          \"compilerOptions\": {\n    \
          \"target\": \"ESNext\",\n    \
@@ -291,7 +291,7 @@ pub fn run_pack(name: String) -> Result<()> {
 
     let example_sail = format!(
         "<!--\n  \
-         {name}-example — placeholder primitive for the @ship/{name} pack.\n\n  \
+         {name}-example — placeholder primitive for the @ship/{name} components package.\n\n  \
          Replace or delete this when you author the package's first real tag.\n\
          -->\n\n\
          <scope>\n  props: {{ label = 'hello' }}\n</scope>\n\n\

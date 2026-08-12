@@ -52,7 +52,7 @@ const TRUNCATE_SRC: &str = r#"
 <p style({ box: w(16), text: truncate() })>Supercalifragilisticexpialidocious</p>
 "#;
 
-fn write_pack(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
+fn write_fixture(config: &str, body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
@@ -133,7 +133,7 @@ fn default_collect_does_not_emit_experimental_layout_rules() {
 
 #[test]
 fn package_without_strict_does_not_emit_experimental_layout_rules() {
-    let (_tmp, sail) = write_pack(r#"{ "preset": "full" }"#, OVERFLOW_SRC);
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full" }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
     assert!(
         !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
@@ -145,7 +145,7 @@ fn package_without_strict_does_not_emit_experimental_layout_rules() {
 
 #[test]
 fn strict_true_emits_unintended_overflow_with_stable_rule_id() {
-    let (_tmp, sail) = write_pack(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_SRC);
+    let (_tmp, sail) = write_fixture(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
     let hit = diags
         .iter()
@@ -168,7 +168,7 @@ fn strict_true_emits_unintended_overflow_with_stable_rule_id() {
 
 #[test]
 fn layout_experimental_config_emits_unintended_overflow_without_full_strict() {
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{ "preset": "full", "layoutExperimental": true }"#,
         OVERFLOW_SRC,
     );
@@ -184,7 +184,7 @@ fn layout_experimental_config_emits_unintended_overflow_without_full_strict() {
 
 #[test]
 fn strict_does_not_fire_unintended_overflow_when_overflow_y_auto() {
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{ "preset": "full", "strict": true }"#,
         OVERFLOW_OPTIN_SRC,
     );
@@ -199,7 +199,7 @@ fn strict_does_not_fire_unintended_overflow_when_overflow_y_auto() {
 
 #[test]
 fn strict_emits_clipped_text_without_truncate() {
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{ "preset": "full", "strict": true, "layoutTextMetrics": true }"#,
         CLIPPED_TEXT_SRC,
     );
@@ -212,7 +212,7 @@ fn strict_emits_clipped_text_without_truncate() {
 
 #[test]
 fn layout_experimental_and_text_metrics_emit_clipped_text() {
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{
             "preset": "full",
             "layoutExperimental": true,
@@ -229,7 +229,7 @@ fn layout_experimental_and_text_metrics_emit_clipped_text() {
 
 #[test]
 fn truncate_suppresses_clipped_text_under_strict() {
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{ "preset": "full", "strict": true, "layoutTextMetrics": true }"#,
         TRUNCATE_SRC,
     );

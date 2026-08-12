@@ -62,6 +62,11 @@ import {
   offsetToLineCol,
   type OpsAuthoringClient,
 } from './sail-code-editor.ops'
+import {
+  loadLspModules,
+  type LspDiagnoseFn,
+  type LspHoverFn,
+} from './sail-code-editor.lsp'
 import type { Scope } from './sail-code-editor.sail'
 
 export interface SailDiagnostic {
@@ -362,7 +367,7 @@ export default controller((ctx: Scope) => {
     }
     el.focus = () => { view?.focus() }
 
-    Object.defineProperty(host, 'value', {
+    defineHostProperty(asSailHost(host) as HostBag, 'value', {
       get: () => view?.state.doc.toString() ?? valSig(),
       // Apply directly: sync the signal AND push the document to the
       // EditorView in the same tick. The reactive effect below is the
@@ -385,8 +390,6 @@ export default controller((ctx: Scope) => {
         }
         valSig.set(next)
       },
-      configurable: true,
-      enumerable: false,
     })
 
     const disposers: Array<() => void> = []
@@ -417,34 +420,20 @@ export default controller((ctx: Scope) => {
     // ── Browser LSP integration ───────────────────────────────────
     // Diagnostics from sail-lsp-browser merge with host checks + ops (not replace).
     // Hover prefers ops SailAuthoring/Hover; structure hover is degrade only.
-    type LspDiagnoseFn = (text: string, wasmUrl?: string) => Promise<SailDiagnostic[]>
-    type LspAllSourcesFn = () => SailCompletionSource[]
-    type LspHoverFn = (source: string, offset: number) => { contents: string } | null
+    // Dynamic import lives in sail-code-editor.lsp.ts (package-local) so the
+    // controller stays confined (no unconfined opt-out).
     let lspDiagnose: LspDiagnoseFn | null = null
     let lspDebounce: ReturnType<typeof setTimeout> | null = null
     let lspInit: Promise<void> | null = null
     async function ensureLsp(): Promise<void> {
       if (lspDiagnose || lspInit) { await lspInit; return }
       lspInit = (async () => {
-        try {
-          const [diag, comp] = await Promise.all([
-            import('@ship/sail-lsp-browser/diagnostics') as Promise<{ diagnose: LspDiagnoseFn }>,
-            import('@ship/sail-lsp-browser/completions') as Promise<{ allSources: LspAllSourcesFn }>,
-          ])
-          lspDiagnose = diag.diagnose
-          try { el.setCompletions?.(comp.allSources()) } catch { /* best-effort */ }
-        } catch (err) {
-          console.warn('[sail-code-editor] LSP init failed; diagnostics unavailable', err)
+        const mod = await loadLspModules()
+        lspDiagnose = mod.diagnose
+        if (mod.allSources) {
+          try { el.setCompletions?.(mod.allSources()) } catch { /* best-effort */ }
         }
-        // Hover is optional — importmap may not list it yet.
-        try {
-          const hoverMod = await import(
-            /* @vite-ignore */ '@ship/sail-lsp-browser/hover'
-          ) as { hoverAt: LspHoverFn }
-          if (typeof hoverMod.hoverAt === 'function') hoverAtFn = hoverMod.hoverAt
-        } catch {
-          hoverAtFn = staticSailHover
-        }
+        hoverAtFn = mod.hoverAt ?? staticSailHover
         if (!hoverAtFn) hoverAtFn = staticSailHover
       })()
       await lspInit

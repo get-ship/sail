@@ -593,7 +593,7 @@ mod tests {
             &root.join("package.json"),
             r#"{ "workspaces": ["packages/*", "apps/*"] }"#,
         );
-        // An eager marketing pack (apps/site) + a lazy component pack.
+        // An eager marketing pack (apps/site) + a lazy components package.
         write(
             &root.join("apps/site/package.json"),
             r#"{ "name": "@ship/site", "deck": { "bundles": [

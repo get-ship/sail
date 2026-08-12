@@ -1,4 +1,4 @@
-//! Peer subcommands for the unified `sail` CLI surface (C-pack).
+//! Peer subcommands for the unified `sail` CLI surface (C-package).
 //!
 //! Wraps existing crates — does not invent second protocols:
 //! - `compile` / `tokens` / `check` → `sail-compiler` library

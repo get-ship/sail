@@ -1,6 +1,6 @@
 //! SPIKE S5.3 — third-party components (packages/components) get no import-law exemption.
 //!
-//! Operator doctrine: L2 packs are third-party code we happen to author. Not framework.
+//! Operator doctrine: L2 components packages are third-party code we happen to author. Not framework.
 //! Value `import … from '@ship/sail-runtime'` in a pack controller must teaching-Error
 //! the same way app code does (SPEC-AMBIENT-SURFACE-1 §2 ambient law).
 //!

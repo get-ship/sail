@@ -86,8 +86,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       // Capture pre-connect `tree={table}` identity (bindDynamic may fire first).
       const preTree = (host as { tree?: Table<AnyTreeNode> | null }).tree
       if (preTree != null) treeSig.set(preTree)
-      Object.defineProperty(host, 'tree', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'tree', {
         get: () => tree(),
         set: (t: Table<AnyTreeNode> | null) => {
           treeSig.set(t)
@@ -96,12 +95,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       // SSR fallback: build an engine from `nodes` + `columns` JSON attributes.
       if (treeSig() == null) {
-        const rawNodes = (host as { nodes?: string }).nodes ?? host.getAttribute('nodes') ?? ''
-        const rawCols = (host as { columns?: string }).columns ?? host.getAttribute('columns') ?? ''
+        const rawNodes = (host as { nodes?: string }).nodes ?? hostGetAttr(host, 'nodes') ?? ''
+        const rawCols = (host as { columns?: string }).columns ?? hostGetAttr(host, 'columns') ?? ''
         const parsedNodes = parseJsonNodes(rawNodes)
         const parsedCols = parseJsonColumns(rawCols)
         if (parsedNodes.length > 0 && parsedCols.length > 0) {
-          const selAttr = host.getAttribute('selectable') ?? 'none'
+          const selAttr = hostGetAttr(host, 'selectable') ?? 'none'
           treeSig.set(
             createTable<AnyTreeNode>(
               treeTableOptions<AnyTreeNode>({
@@ -117,9 +116,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
 
       const stop = wireTreeInteractions(host, () => tree(), {
-        expandOnSelect: () => host.hasAttribute('expand-on-select'),
-        selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
-        multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
+        expandOnSelect: () => hostHasAttr(host, 'expand-on-select'),
+        selectable: () => (hostGetAttr(host, 'selectable') ?? 'none') !== 'none',
+        multi: () => (hostGetAttr(host, 'selectable') ?? 'none') === 'multi',
         navRoleSelector: '[role="treegrid"]',
         getWindow: () => windowItems(),
       })

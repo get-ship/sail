@@ -6,7 +6,7 @@
 //! - Fires on app controllers (`.controller.ts` / inline controller under
 //!   `apps/**`), plain app TypeScript under `apps/*/src/**` (via
 //!   `APP_SOURCE_RULES`), and components-package controllers under `packages/components/**`
-//!   (packs are third-party, not framework).
+//!   (components packages are third-party, not framework).
 //! - Type-only imports (`import type`, `import { type X }`) remain free for
 //!   `@ship/*` (types are not the ambient value surface).
 //! - App-local `@/` imports are not `@ship/*` and never fire this rule.
@@ -18,10 +18,10 @@
 //!   in an app-local vendor facade under `src/vendor/` (or `@/vendor/…`).
 //!   `apps/*/src/vendor/**` is the legal packaging seam and is exempt.
 //!
-//! Pack conventions (documented for authors):
+//! Components-package conventions (documented for authors):
 //! - Controllers: ambient names only — no `@ship/*` value imports.
 //! - Composition / engine modules stay package-local (relative within the package).
-//! - Cross-pack composition prefers pack-relative paths, not app-style
+//! - Cross-package composition prefers package-relative paths, not app-style
 //!   `@ship/*` value imports (same teaching when the rule sees a controller).
 //!
 //! Severity: Error (fails `compile` hard-wall + `check_all`).
@@ -122,7 +122,7 @@ fn is_vendor_facade_path(path: &Path) -> bool {
     p.contains("/src/vendor/")
 }
 
-fn is_ship_package_specifier(module: &str) -> bool {
+fn is_ship_package_specifier(module: &str, from_file: &Path) -> bool {
     let m = module.trim();
     if !m.starts_with("@ship/") {
         return false;
@@ -132,38 +132,139 @@ fn is_ship_package_specifier(module: &str) -> bool {
         return false;
     }
     // Component packages (export sail custom elements) — legal to import from
-    // apps. Distinguished by package export metadata when available; the
-    // published components package name is the known SSOT for L2.
-    if is_component_package_specifier(m) {
+    // apps. Distinguished by package.json export metadata, not a hardcoded list.
+    if is_component_package_specifier(m, from_file) {
         return false;
     }
     true
 }
 
-/// Component package specs are legal value imports (not ambient runtime).
-/// Prefer package.json `customElements` / exports metadata; fall back to the
-/// published L2 components packageage name `@ship/sail-components`.
-fn is_component_package_specifier(module: &str) -> bool {
+/// Extract npm package name from a bare/specifier (`@scope/name/sub` → `@scope/name`).
+fn package_name_of_module(module: &str) -> Option<&str> {
     let m = module.trim();
-    // L2 components package + subpaths
-    if m == "@ship/sail-components" || m.starts_with("@ship/sail-components/") {
+    if m.is_empty() || m.starts_with('.') || m.starts_with('/') {
+        return None;
+    }
+    if m.starts_with('@') {
+        let mut parts = m.split('/');
+        let scope = parts.next()?;
+        let name = parts.next()?;
+        if name.is_empty() {
+            return None;
+        }
+        let end = scope.len() + 1 + name.len();
+        Some(&m[..end])
+    } else {
+        Some(m.split('/').next().unwrap_or(m))
+    }
+}
+
+/// Resolve `package.json` for `pkg_name` by walking ancestors of `from` for
+/// `node_modules/<pkg_name>/package.json`, then (monorepo bake) scanning
+/// nearby `packages/components/**/package.json` name fields.
+fn resolve_package_json(from: &Path, pkg_name: &str) -> Option<PathBuf> {
+    let mut cur = from.parent();
+    while let Some(dir) = cur {
+        let candidate = dir.join("node_modules").join(pkg_name).join("package.json");
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+        cur = dir.parent();
+    }
+    let mut cur = from.parent();
+    while let Some(dir) = cur {
+        let components = dir.join("packages/components");
+        if components.is_dir() {
+            if let Some(found) = find_named_package_json(&components, pkg_name) {
+                return Some(found);
+            }
+        }
+        cur = dir.parent();
+    }
+    None
+}
+
+fn find_named_package_json(root: &Path, pkg_name: &str) -> Option<PathBuf> {
+    fn walk(dir: &Path, pkg_name: &str, depth: usize) -> Option<PathBuf> {
+        if depth > 6 {
+            return None;
+        }
+        let pkg = dir.join("package.json");
+        if pkg.is_file() {
+            if let Ok(text) = std::fs::read_to_string(&pkg) {
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
+                    if v.get("name").and_then(|n| n.as_str()) == Some(pkg_name) {
+                        return Some(pkg);
+                    }
+                }
+            }
+        }
+        let entries = std::fs::read_dir(dir).ok()?;
+        for e in entries.flatten() {
+            let p = e.path();
+            if !p.is_dir() {
+                continue;
+            }
+            let name = e.file_name();
+            let n = name.to_string_lossy();
+            if n == "node_modules" || n == "dist" || n == "target" || n.starts_with('.') {
+                continue;
+            }
+            if let Some(found) = walk(&p, pkg_name, depth + 1) {
+                return Some(found);
+            }
+        }
+        None
+    }
+    walk(root, pkg_name, 0)
+}
+
+/// True when package.json marks a sail components package:
+/// - `customElements` string field (CEM path), or
+/// - `sailComponents: true`, or
+/// - any `exports` target ending in `.compiled.js`.
+fn package_json_exports_components(pkg_path: &Path) -> bool {
+    let Ok(text) = std::fs::read_to_string(pkg_path) else {
+        return false;
+    };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return false;
+    };
+    if v.get("customElements").and_then(|x| x.as_str()).is_some() {
         return true;
     }
-    // Legacy per-domain names still used in monorepo shims (private)
-    const LEGACY: &[&str] = &[
-        "@ship/sail-primitives",
-        "@ship/sail-charts",
-        "@ship/sail-media",
-        "@ship/sail-canvas",
-        "@ship/sail-mermaid",
-        "@ship/sail-viewer",
-        "@ship/sail-code-editor",
-        "@ship/sail-chat-elements",
-    ];
-    for name in LEGACY {
-        if m == *name || m.starts_with(&format!("{name}/")) {
+    if v.get("sailComponents").and_then(|x| x.as_bool()) == Some(true) {
+        return true;
+    }
+    fn exports_look_like_components(val: &serde_json::Value) -> bool {
+        match val {
+            serde_json::Value::String(s) => {
+                s.ends_with(".compiled.js")
+                    || s.ends_with(".custom-elements.json")
+                    || s.contains("custom-elements")
+            }
+            serde_json::Value::Object(map) => map.values().any(exports_look_like_components),
+            serde_json::Value::Array(arr) => arr.iter().any(exports_look_like_components),
+            _ => false,
+        }
+    }
+    if let Some(exports) = v.get("exports") {
+        if exports_look_like_components(exports) {
             return true;
         }
+    }
+    false
+}
+
+/// Component package specs are legal value imports (not ambient runtime).
+/// Detection reads package.json metadata at resolve time (SPEC-L2-PACKAGE-1).
+fn is_component_package_specifier(module: &str, from_file: &Path) -> bool {
+    let m = module.trim();
+    let Some(pkg_name) = package_name_of_module(m) else {
+        return false;
+    };
+    if let Some(pkg_json) = resolve_package_json(from_file, pkg_name) {
+        return package_json_exports_components(&pkg_json);
     }
     false
 }
@@ -227,7 +328,7 @@ impl<'a> Visit<'a> for FrameworkImportVisitor<'_> {
         if decl.import_kind.is_type() {
             return;
         }
-        if !is_ship_package_specifier(module) {
+        if !is_ship_package_specifier(module, &self.file) {
             return;
         }
 
@@ -386,7 +487,7 @@ mod tests {
 
     #[test]
     fn pack_controllers_get_teaching_error() {
-        // S5.3: packs are third-party — no L2 import-law exemption.
+        // S5.3: components packages are third-party — no L2 import-law exemption.
         let f = lint_at(
             "packages/components/sail/button/src/button.controller.ts",
             "import { controller, signal } from '@ship/sail-runtime'\n\
@@ -395,7 +496,7 @@ mod tests {
         assert_eq!(
             f.len(),
             1,
-            "pack must teaching-Error @ship/* value import: {f:?}"
+            "components package must teaching-Error @ship/* value import: {f:?}"
         );
         assert_eq!(f[0].severity, Severity::Error);
         assert_eq!(f[0].rule, RULE_ID);
@@ -535,7 +636,7 @@ mod tests {
 
     #[test]
     fn pack_deep_packages_not_facade_scoped() {
-        // Facade law is app-only; pack monorepo relatives are a separate residual.
+        // Facade law is app-only; components-package monorepo relatives are a separate residual.
         let f = lint_at(
             "packages/components/sail/media/src/sail-media-csv/sail-media-csv.controller.ts",
             "import { createTable } from '../../../../packages/components/sail/primitives/src/index.ts'\n\
@@ -543,7 +644,7 @@ mod tests {
         );
         assert!(
             f.is_empty(),
-            "pack deep packages path is not the app facade law: {f:?}"
+            "components-package deep packages path is not the app facade law: {f:?}"
         );
     }
 }

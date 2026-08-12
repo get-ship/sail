@@ -70,8 +70,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         const s = sig as AnySig
         const existing = (host as Record<string, unknown>)[name]
         if (existing !== undefined) s.set(() => existing)
-        Object.defineProperty(host, name, {
-          configurable: true,
+        defineHostProperty(asSailHost(host) as HostBag, name, {
           get: () => s(),
           set: (v: unknown) => s.set(() => v),
         })

@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-charts",
   "version": "0.3.0",
-  "description": "Ship Charts pack \u2014 `<sail-*-chart>` + sparkline / donut / gauge / heatmap custom elements.",
+  "description": "Ship Charts components package — `<sail-*-chart>` + sparkline / donut / gauge / heatmap custom elements.",
   "type": "module",
   "license": "MIT",
   "files": [

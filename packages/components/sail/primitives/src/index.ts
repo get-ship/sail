@@ -3,7 +3,7 @@
 // Side-effect imports for every generic `<sail-*>` UI primitive. Each
 // `<tag>.compiled.js` calls `customElements.define()` on import, so a
 // single `import '@ship/sail-primitives'` at the consumer registers every
-// tag in this pack globally before any view template instantiates it.
+// tag in this package globally before any view template instantiates it.
 //
 // Companion families (sail-tab + sail-tab-panel + sail-tabs;
 // sail-accordion + sail-accordion-item; etc.) are co-located under the
@@ -57,7 +57,7 @@ export type Tone =
 // at present, future `chart-table` / `sheet-table` siblings) can use
 // the engine via the public package entry instead of reaching into
 // `primitives/src/sail-table/engine/*` (a path that breaks `rootDir`
-// isolation and the sail ⊥ sail pack boundary).
+// isolation and the sail ⊥ sail package boundary).
 export { createTable, type Table, type TableOptions } from './sail-table/engine/create-table'
 // Re-export the public type catalog from `types.ts` so consumers can
 // name `ColumnDef`, `Row`, `Cell`, `SortState`, etc. without reaching

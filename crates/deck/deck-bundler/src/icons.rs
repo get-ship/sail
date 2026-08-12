@@ -1,6 +1,6 @@
 //! Compile-collected lucide icons → static app assets under `_deck/icons/`.
 //!
-//! Walks project routes **and** resolved component package sources (app
+//! Walks project routes **and** resolved components package sources (app
 //! dependency packs with `.sail` files) for static `<icon name="…">` usage,
 //! then writes only those glyphs as standalone SVGs so runtime
 //! `fetch('/_deck/icons/{name}.svg')` works offline / without the daemon.
@@ -99,7 +99,7 @@ fn walk_dep_roots(
             if package_has_sail(root) {
                 out.push(root.clone());
             }
-            // Recurse into workspace deps so transitive component packs count.
+            // Recurse into workspace deps so transitive components packages count.
             let dep_pkg_path = root.join("package.json");
             if let Ok(raw) = std::fs::read_to_string(&dep_pkg_path) {
                 if let Ok(dep_pkg) = serde_json::from_str::<serde_json::Value>(&raw) {
@@ -198,7 +198,7 @@ pub fn emit_icon_assets(out_dir: &Path, names: &BTreeSet<String>) -> Result<BTre
     Ok(written)
 }
 
-/// Collect from project routes + app component package sources, emit into stage.
+/// Collect from project routes + app components package sources, emit into stage.
 pub fn collect_and_emit_project_icons(
     project: &Path,
     out_dir: &Path,
@@ -306,11 +306,11 @@ mod tests {
         assert!(written.contains("search"), "{written:?}");
         assert!(
             written.contains("chevron-right"),
-            "component pack icon missing: {written:?}"
+            "components package icon missing: {written:?}"
         );
         assert!(
             written.contains("alert-triangle"),
-            "component pack icon missing: {written:?}"
+            "components package icon missing: {written:?}"
         );
         assert_eq!(written.len(), 3, "{written:?}");
     }

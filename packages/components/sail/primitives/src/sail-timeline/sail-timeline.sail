@@ -7,7 +7,7 @@
 
 export default controller(() => {
   mount((host) => {
-    if (!host.hasAttribute('role')) host.setAttribute('role', 'list')
+    if (!hostHasAttr(host, 'role')) hostSetAttr(host, 'role', 'list')
   })
   return {}
 })

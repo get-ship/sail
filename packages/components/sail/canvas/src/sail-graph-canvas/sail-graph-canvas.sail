@@ -91,7 +91,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
       if (h) emit(h, name, { id, kind })
     }
     const select = (n: NodeView): void => {
-      hostEl()?.setAttribute?.('selected-id', n.id)
+      hostSetAttr(hostEl(), 'selected-id', n.id)
       emitNode('sail-node-select', n.id, n.kind)
     }
     const activate = (n: NodeView, e: DomEv): void => {

@@ -66,8 +66,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     mount((host) => {
       const init = (host as { items?: MessageItem[] }).items
       if (init != null) items.set(init)
-      Object.defineProperty(host, 'items', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'items', {
         get: () => items(),
         set: (v: MessageItem[]) => { items.set(v) },
       })

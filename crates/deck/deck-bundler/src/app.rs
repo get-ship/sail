@@ -966,7 +966,7 @@ pub async fn bundle_app_with_base(
 
     // 1b. Component catalog for this app: aggregate CEM modules from component
     // pack deps and emit `components.gen.ts`. No-op when the project has no
-    // `package.json` dependencies on component packs.
+    // `package.json` dependencies on components packages.
     crate::cem::generate_components_gen(project, repo_root)
         .context("generate components.gen.ts")?;
 
@@ -1155,7 +1155,7 @@ pub async fn bundle_app_with_base(
     }
     // Compile-collected icons → static `_deck/icons/{name}.svg` so named
     // glyphs work offline / with the daemon stopped (TOOL-10). Collects from
-    // routes + app component package sources (not routes-only).
+    // routes + app components package sources (not routes-only).
     let emitted_icons = crate::icons::collect_and_emit_project_icons(project, out_dir, repo_root)
         .context("emit used icon assets")?;
     if !emitted_icons.is_empty() {

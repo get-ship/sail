@@ -1,4 +1,4 @@
-// @ship/sail-code-editor — SAIL pack, framework-pure.
+// @ship/sail-code-editor — SAIL package, framework-pure.
 //
 // One element: <sail-code-editor>. The compiled `.compiled.js` calls
 // `customElements.define()` on import, so a single `import '@ship/sail-code-editor'`

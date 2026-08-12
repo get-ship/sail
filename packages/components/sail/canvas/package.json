@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-canvas",
   "version": "0.3.0",
-  "description": "Ship Spatial pack \u2014 <sail-canvas> is the bare pan/zoom/infinite-surface substrate (backbone #3) built on @ship/sail-runtime signals. Pure framework: imports @ship/sail-runtime + @ship/sail-dom ONLY (no React, no Excalidraw, no SDK). The shared createCanvas() engine is the coordinate substrate the sibling faces (sail-board, sail-draw) build on. Per-tag tree-shake \u2014 consumers only pay for the tag they mount.",
+  "description": "Ship Spatial components package — <sail-canvas> is the bare pan/zoom/infinite-surface substrate (backbone #3) built on @ship/sail-runtime signals. Pure framework: imports @ship/sail-runtime + @ship/sail-dom ONLY (no React, no Excalidraw, no SDK). The shared createCanvas() engine is the coordinate substrate the sibling faces (sail-board, sail-draw) build on. Per-tag tree-shake — consumers only pay for the tag they mount.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",

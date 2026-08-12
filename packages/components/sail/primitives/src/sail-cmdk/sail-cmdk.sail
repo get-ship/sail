@@ -165,8 +165,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       hostEl = host as HostBag & { open: boolean }
       const h = hostEl
       // items identity (live CmdkItem[]) — not a declared prop.
-      Object.defineProperty(host, 'items', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'items', {
         get: () => itemsSig(),
         set: (v: CmdkItem[] | null) => {
           itemsSig.set(Array.isArray(v) ? v : [])
@@ -174,7 +173,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         },
       })
       if (itemsSig().length === 0) {
-        const raw = host.getAttribute('items') ?? ''
+        const raw = hostGetAttr(host, 'items') ?? ''
         const parsed = parseJsonItems(raw)
         if (parsed.length > 0) itemsSig.set(parsed)
       }
@@ -269,7 +268,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       const list = listEl() as HostBag | null
       const onListMousedown = (e: DomEv) => {
         const li = (e.target as HostBag | null)?.closest?.('li[data-id]') as HostBag | null
-        if (!li || li.getAttribute('aria-disabled') === 'true') return
+        if (!li || hostGetAttr(li as HostBag, 'aria-disabled') === 'true') return
         e.preventDefault()
         const id = li.dataset.id ?? ''
         const match = (visible() as VisibleItem[]).find((v) => v.id === id)

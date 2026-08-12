@@ -10,7 +10,7 @@
 //! primitives.
 //!
 //! Scope and exemptions:
-//! - **Primitives pack is exempt.** Components under
+//! - **Primitives package is exempt.** Components under
 //!   `packages/components/sail/primitives/**` are the layout primitives (and
 //!   their peers); they legitimately implement flex/grid internally — there is
 //!   no lower-level primitive to compose. Warning there would be circular.
@@ -35,7 +35,7 @@ const MESSAGE: &str =
     "ad-hoc layout — prefer the layout keywords <grid>/<column>/<row> (see the sail skill)";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // The primitives pack IS the layout substrate — flex/grid is legitimate
+    // The primitives package IS the layout substrate — flex/grid is legitimate
     // there. Exempt it wholesale so we don't warn on the very components the
     // message tells everyone else to compose.
     if is_primitives_pack(path) {
@@ -290,7 +290,7 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    /// A consumer component path (NOT under the primitives pack).
+    /// A consumer component path (NOT under the primitives package).
     fn consumer() -> PathBuf {
         PathBuf::from("packages/components/sail/charts/src/sail-gauge/sail-gauge.sail")
     }
@@ -324,12 +324,12 @@ mod tests {
         assert_eq!(f[0].severity, Severity::Warn);
     }
 
-    // (b) The SAME source under the primitives pack does NOT warn.
+    // (b) The SAME source under the primitives package does NOT warn.
     #[test]
     fn primitives_pack_is_exempt() {
         let src = "<style>.wrap { display: grid; gap: var(--space-3); }</style><div class=\"wrap\"></div>";
         let f = check(&primitive(), src);
-        assert!(f.is_empty(), "primitives pack must be exempt: {f:?}");
+        assert!(f.is_empty(), "primitives package must be exempt: {f:?}");
     }
 
     // (b′) Exemption holds for an absolute path form too.

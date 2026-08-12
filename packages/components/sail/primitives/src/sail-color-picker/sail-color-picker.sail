@@ -72,7 +72,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       const emit = (hex: string) => {
         ;(host).onChange?.({
           value: hex,
-          token: host.getAttribute('token') ?? host.getAttribute('token-path') ?? undefined,
+          token: hostGetAttr(host, 'token') ?? hostGetAttr(host, 'token-path') ?? undefined,
         })
       }
 

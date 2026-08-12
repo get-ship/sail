@@ -1,6 +1,6 @@
 //! Behavior smoke tests for the `sail` CLI (`deck-cli` package).
 //!
-//! Behavior coverage for `emit`, `scaffold {route,component,pack}`, and
+//! Behavior coverage for `emit`, `scaffold {route,component,components-package}`, and
 //! `build-assets`. Each subcommand runs against a temp dir via
 //! `Command::new(env!("CARGO_BIN_EXE_sail"))` and asserts on the PRODUCED
 //! ARTIFACTS (not internal logs).
@@ -334,41 +334,41 @@ fn scaffold_component_rejects_non_sail_tag() {
     );
 }
 
-// ── scaffold pack ───────────────────────────────────────────────────────────
+// ── scaffold components-package ───────────────────────────────────────────────────────────
 
-/// `deck scaffold pack <name>` writes `package.json`, `tsconfig.json`,
+/// `deck scaffold components-package <name>` writes `package.json`, `tsconfig.json`,
 /// and the `src/` tree under `packages/components/<name>/`. The
 /// package.json's `name` field is `@ship/<name>`.
 #[test]
-fn scaffold_pack_writes_package_json_tsconfig_and_src() {
+fn scaffold_components_package_writes_package_json_tsconfig_and_src() {
     let mut guard = ScaffoldGuard::new();
     let name = unique_stem("testpack");
     let base = repo_root().join("packages/components").join(&name);
     let example_dir = base.join("src").join(format!("{name}-example"));
     guard.track(base.clone());
 
-    let status = run_sail(&["scaffold", "pack", &name]).status;
+    let status = run_sail(&["scaffold", "components-package", &name]).status;
     assert!(
         status.success(),
-        "deck scaffold pack {name} exited {status:?}"
+        "deck scaffold components-package {name} exited {status:?}"
     );
 
     for rel in ["package.json", "tsconfig.json", "src/index.ts"] {
         let p = base.join(rel);
-        assert!(p.exists(), "missing {} after scaffold pack", p.display());
+        assert!(p.exists(), "missing {} after scaffold components-package", p.display());
         let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold pack", p.display());
+        assert!(len > 0, "empty {} after scaffold components-package", p.display());
     }
     // Placeholder example primitive under src/<name>-example/.
     let p = example_dir.join(format!("{name}-example.sail"));
-    assert!(p.exists(), "missing {} after scaffold pack", p.display());
+    assert!(p.exists(), "missing {} after scaffold components-package", p.display());
     let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-    assert!(len > 0, "empty {} after scaffold pack", p.display());
+    assert!(len > 0, "empty {} after scaffold components-package", p.display());
     assert!(
         !example_dir
             .join(format!("{name}-example.controller.ts"))
             .exists(),
-        "retired sibling controller written by scaffold pack"
+        "retired sibling controller written by scaffold components-package"
     );
 
     // package.json `name` field must be `@ship/<name>`.

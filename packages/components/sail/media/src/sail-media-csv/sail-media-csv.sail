@@ -66,8 +66,7 @@ export default controller((_ctx: Scope) => {
     })
 
     mount((host) => {
-      Object.defineProperty(host, 'src', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'src', {
         get: () => srcSig(),
         set: (s: ViewerSource | string | null) => {
           srcSig.set(s)
@@ -75,8 +74,8 @@ export default controller((_ctx: Scope) => {
       })
 
       const readDelimiter = (): CsvDelimiter =>
-        (host.getAttribute('delimiter') as CsvDelimiter | null) ?? 'auto'
-      const readHeader = (): boolean => host.getAttribute('header') !== 'false'
+        (hostGetAttr(host, 'delimiter') as CsvDelimiter | null) ?? 'auto'
+      const readHeader = (): boolean => hostGetAttr(host, 'header') !== 'false'
 
       const stop = effect(() => {
         const fromSrc = textOf(srcSig())

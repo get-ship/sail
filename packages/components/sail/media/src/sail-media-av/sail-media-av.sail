@@ -44,9 +44,9 @@ export default controller((_ctx: Scope) => {
 
     let hostEl: HostBag | null = null
 
-    const wantsControls = (): boolean => hostEl?.getAttribute('controls') !== 'false'
+    const wantsControls = (): boolean => hostGetAttr(hostEl, 'controls') !== 'false'
     const wantsAutoplay = (): boolean =>
-      hostEl?.hasAttribute('autoplay') === true && hostEl.getAttribute('autoplay') !== 'false'
+      hostHasAttr(hostEl, 'autoplay') === true && hostGetAttr(hostEl, 'autoplay') !== 'false'
 
     let created: string[] = []
     const revokeCreated = (): void => {
@@ -71,15 +71,15 @@ export default controller((_ctx: Scope) => {
       el.addEventListener('error', onError)
 
       const stop = effect(() => {
-        if (wantsControls()) el.setAttribute('controls', '')
-        else el.removeAttribute('controls')
-        if (wantsAutoplay()) el.setAttribute('autoplay', '')
+        if (wantsControls()) hostSetAttr(el as HostBag, 'controls', '')
+        else hostSetAttr(el as HostBag, 'controls', null)
+        if (wantsAutoplay()) hostSetAttr(el as HostBag, 'autoplay', '')
 
         const { url, created: didCreate } = mediaUrlOf(srcSig())
         if (didCreate && url !== lastUrl) created.push(url)
         lastUrl = url
-        if (url) el.setAttribute('src', url)
-        else el.removeAttribute('src')
+        if (url) hostSetAttr(el as HostBag, 'src', url)
+        else hostSetAttr(el as HostBag, 'src', null)
       })
 
       return {
@@ -108,16 +108,15 @@ export default controller((_ctx: Scope) => {
 
     mount((host) => {
       hostEl = host
-      kindOverride.set(host.getAttribute('kind') ?? 'auto')
+      kindOverride.set(hostGetAttr(host, 'kind') ?? 'auto')
 
       const waveformOn =
-        host.hasAttribute('waveform') && host.getAttribute('waveform') !== 'false'
+        hostHasAttr(host, 'waveform') && hostGetAttr(host, 'waveform') !== 'false'
       const stopWaveformGate = effect(() => {
         showWaveform.set(waveformOn && !isVideo())
       })
 
-      Object.defineProperty(host, 'src', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'src', {
         get: () => srcSig(),
         set: (s: MediaSrc) => {
           srcSig.set(s)

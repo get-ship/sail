@@ -1,22 +1,22 @@
-//! `sail-no-undeclared-stylesheet` — every `.css` file a pack ships is
+//! `sail-no-undeclared-stylesheet` — every `.css` file a components package ships is
 //! declared in `sail.config.json`.
 //!
-//! Why this matters: a `.css` file under a pack's `src/` is invisible to the
+//! Why this matters: a `.css` file under a components package's `src/` is invisible to the
 //! compiler — the framework sheet is keyed on `:host`, and orphan CSS
 //! files that the loader never adopts live outside that contract. They
 //! either re-define rules the compiler is already emitting (silent
 //! duplication), or they smuggle in styles that authors cannot lint
 //! (the css-token rule never sees them). Either way, the seam is the
-//! `sail.config.json` declaration: every `.css` the pack owns is named
+//! `sail.config.json` declaration: every `.css` the components package owns is named
 //! there, and the lint refuses anything else.
 //!
-//! Detection: walks a pack's `src/` directory, finds every `*.css` file,
+//! Detection: walks a components package's `src/` directory, finds every `*.css` file,
 //! reads the nearest `sail.config.json` walking up, and reports any file
 //! not present in the config's `stylesheets` array. Tests pin both
 //! legs of the contract — declared files pass, undeclared ones fail.
 //!
-//! Exempt: pack files outside `src/` (test fixtures, vitest setup), the
-//! framework runtime, and pack-resident `<stem>.sail` host CSS (those
+//! Exempt: components-package files outside `src/` (test fixtures, vitest setup), the
+//! framework runtime, and components-package-resident `<stem>.sail` host CSS (those
 //! ARE compiler-known — they're typed through `element-skin.css`).
 
 use std::path::{Path, PathBuf};
@@ -25,7 +25,7 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-no-undeclared-stylesheet";
 
-/// Walk a pack's src directory for `.css` files.
+/// Walk a components package's src directory for `.css` files.
 fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let Ok(rd) = std::fs::read_dir(src_dir) else {
@@ -101,7 +101,7 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
                 rule: RULE_ID,
                 severity: Severity::Error,
                 message:
-                    "no `sail.config.json` enumerates this `.css` file — every stylesheet a pack ships must be declared".to_string(),
+                    "no `sail.config.json` enumerates this `.css` file — every stylesheet a components package ships must be declared".to_string(),
                 suggest: Some(
                     "add `sail.config.json` with `{ \"stylesheets\": [\"name.css\"] }` next to src/, OR move the CSS into the component's `<style>` block so the compiler knows about it".to_string()
                 ),
@@ -169,7 +169,7 @@ fn _linecol_helper(path: &Path, offset: usize) -> (usize, usize) {
 mod tests {
     use super::*;
 
-    fn write_pack(files: &[(&str, &str)], config: Option<&str>) -> tempfile::TempDir {
+    fn write_components_package_fixture(files: &[(&str, &str)], config: Option<&str>) -> tempfile::TempDir {
         let tmp = tempfile::tempdir().expect("tmpdir");
         for (rel, body) in files {
             let p = tmp.path().join(rel);
@@ -192,7 +192,7 @@ mod tests {
     // like enforcement).
     #[test]
     fn declared_stylesheet_passes() {
-        let tmp = write_pack(
+        let tmp = write_components_package_fixture(
             &[("src/widget.css", ".x { color: red; }")],
             Some(r#"{"stylesheets": ["src/widget.css"]}"#),
         );
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn undeclared_stylesheet_reports() {
-        let tmp = write_pack(
+        let tmp = write_components_package_fixture(
             &[("src/orphan.css", ".x { color: red; }")],
             Some(r#"{"stylesheets": ["src/other.css"]}"#),
         );
@@ -221,7 +221,7 @@ mod tests {
 
     #[test]
     fn no_config_at_all_reports_every_css() {
-        let tmp = write_pack(&[("src/widget.css", ".x { color: red; }")], None);
+        let tmp = write_components_package_fixture(&[("src/widget.css", ".x { color: red; }")], None);
         let findings = check_dir(tmp.path());
         assert_eq!(
             findings.len(),
@@ -232,7 +232,7 @@ mod tests {
 
     #[test]
     fn nested_dir_css_also_walks() {
-        let tmp = write_pack(
+        let tmp = write_components_package_fixture(
             &[
                 ("src/widget.css", ".x { color: red; }"),
                 ("src/inner/extra.css", ".y { color: blue; }"),
@@ -246,14 +246,14 @@ mod tests {
         );
     }
 
-    // The two ends of the contract on canvas's real layout: a pack with
+    // The two ends of the contract on canvas's real layout: a components package with
     // both declared sheets in src/ nested dirs still passes; an undeclared
     // sheet next to a declared one fails. This is the test that was always
     // going to catch the off-by-one-strip bug — it just needed to be
-    // written with pack-relative declarations and a pack-root src_dir.
+    // written with package-relative declarations and a components package-root src_dir.
     #[test]
     fn both_declared_sheets_pass() {
-        let tmp = write_pack(
+        let tmp = write_components_package_fixture(
             &[
                 ("src/sail-board/sail-board.css", ".x { color: red; }"),
                 ("src/sail-draw/sail-draw.css", ".y { color: blue; }"),
@@ -274,7 +274,7 @@ mod tests {
 
     #[test]
     fn undeclared_sheet_among_declared_fails() {
-        let tmp = write_pack(
+        let tmp = write_components_package_fixture(
             &[
                 ("src/sail-board/sail-board.css", ".x { color: red; }"),
                 ("src/sail-draw/sail-draw.css", ".y { color: blue; }"),
@@ -301,8 +301,8 @@ mod tests {
     fn bare_name_declaration_still_recognised() {
         // The historical shorthand: declaring just `name.css` accepts the
         // sheet under any nested directory. Still supported after the
-        // pack-relative rel switch.
-        let tmp = write_pack(
+        // package-relative rel switch.
+        let tmp = write_components_package_fixture(
             &[("src/sail-board/sail-board.css", ".x { color: red; }")],
             Some(r#"{"stylesheets": ["sail-board.css"]}"#),
         );

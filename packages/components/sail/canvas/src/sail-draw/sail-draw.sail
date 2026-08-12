@@ -161,7 +161,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
       const t = TOOL_KEYS[e.key.toLowerCase()]
       if (t && !e.metaKey && !e.ctrlKey) {
         scene.setTool(t)
-        host.setAttribute('tool', t)
+        hostSetAttr(host, 'tool', t)
       }
     }
     host.addEventListener('pointermove', onMove)
@@ -171,7 +171,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
     // Reflect the host `tool` attribute (set declaratively or via a toolbar)
     // onto the scene tool slice.
     const syncTool = (): void => {
-      const t = (host.getAttribute('tool') ?? 'select') as DrawTool
+      const t = (hostGetAttr(host, 'tool') ?? 'select') as DrawTool
       if (t !== scene.tool()) scene.setTool(t)
     }
     syncTool()

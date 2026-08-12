@@ -160,7 +160,7 @@ fn non_floor_rules_remain_softenable() {
 // (a `sail.config.json` + a companion `.css`). Prove it, too, is non-softenable.
 // ---------------------------------------------------------------------------
 
-fn write_pack(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf) {
+fn write_fixture(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
@@ -175,7 +175,7 @@ fn write_pack(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf
 
 #[test]
 fn undeclared_stylesheet_cannot_be_softened() {
-    let (_tmp, sail) = write_pack(r#"{"stylesheets": []}"#, &[("orphan.css", ".x{color:red}")]);
+    let (_tmp, sail) = write_fixture(r#"{"stylesheets": []}"#, &[("orphan.css", ".x{color:red}")]);
     let src = fs::read_to_string(&sail).unwrap();
     let off = [LintOverride {
         rule: "sail-no-undeclared-stylesheet".to_string(),

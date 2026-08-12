@@ -248,8 +248,7 @@ export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
       // first user gesture can fire.
       hostEl.set(host)
 
-      defineHostProperty(asSailHost(host) as HostBag, 'staged', {configurable: true,
-        get: () => staged(),})
+      defineHostProperty(asSailHost(host) as HostBag, 'staged', {get: () => staged(),})
 
       type LayerHost = HostBag & {
         send: () => Promise<void>

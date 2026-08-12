@@ -88,7 +88,7 @@ export default controller((_ctx: Scope) => {
     const revokeCreated = (): void => {
       for (const u of created.splice(0)) revokeObjectUrl(u)
     }
-    const zoomable = (): boolean => hostEl?.getAttribute('zoomable') !== 'false'
+    const zoomable = (): boolean => hostGetAttr(hostEl, 'zoomable') !== 'false'
 
     let lastImgUrl = ''
     const rasterImg: Action<void> = (node) => {
@@ -105,8 +105,8 @@ export default controller((_ctx: Scope) => {
         const { url, created: didCreate } = rasterUrlOf(firstSource(srcSig()))
         if (didCreate && url !== lastImgUrl) created.push(url)
         lastImgUrl = url
-        if (url) img.setAttribute('src', url)
-        else img.removeAttribute('src')
+        if (url) hostSetAttr(img as HostBag, 'src', url)
+        else hostSetAttr(img as HostBag, 'src', null)
       })
 
       return {
@@ -160,7 +160,7 @@ export default controller((_ctx: Scope) => {
 
     mount((host) => {
       hostEl = host
-      if (!host.hasAttribute('zoomable')) host.setAttribute('zoomable', '')
+      if (!hostHasAttr(host, 'zoomable')) hostSetAttr(host, 'zoomable', '')
 
       // Identity prop — live reference for ViewerSource / arrays; string URLs
       // also work via the host `src` attribute (default PE — no author glue).
@@ -175,7 +175,7 @@ export default controller((_ctx: Scope) => {
       // `<sail-media-image src="https://…" />` without querySelector glue.
       // Identity setter still accepts ViewerSource / arrays for programmatic hosts.
       const applyAttrSrc = (): void => {
-        const attrSrc = host.getAttribute('src')
+        const attrSrc = hostGetAttr(host, 'src')
         if (attrSrc == null) return
         const cur = srcSig()
         if (cur == null || typeof cur === 'string') {

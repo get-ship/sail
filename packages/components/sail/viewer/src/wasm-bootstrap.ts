@@ -10,10 +10,10 @@
 // PURITY SEAM (the whole reason this is a separate module):
 //   - `wasmUrl` is a PARAMETER. This module never hardcodes a path and never
 //     names a daemon / `/api` / `/_deck` URL. The host SPA shell resolves the
-//     URL (deck `?url` asset or `FRAMEWORK_ASSETS` — see the pack build-spec,
+//     URL (deck `?url` asset or `FRAMEWORK_ASSETS` — see the package build-spec,
 //     §WASM-in-browser path) and hands it in.
 //   - The single `fetch` below is the ONLY `fetch` permitted in the entire
-//     pack, and it fetches exactly the injected `wasmUrl`, nothing else.
+//     package, and it fetches exactly the injected `wasmUrl`, nothing else.
 //   - The bound `compile` is handed DOWN to the primitives via
 //     `prop:compile={fn}` (identity) so `sail-render` / `sail-component-viewer`
 //     never import the wasm or know a URL — Cardinal 4 keeps primitives
@@ -81,7 +81,7 @@ export async function ensureWasm(wasmUrl: string): Promise<void> {
       await init(wasmUrl)
     } catch {
       // (B) explicit fetch + sync init — the harness call shape, over the wire.
-      // This is the ONLY `fetch` in the pack; the URL is the injected param.
+      // This is the ONLY `fetch` in the package; the URL is the injected param.
       const bytes = await fetch(wasmUrl).then((r) => r.arrayBuffer())
       initSync({ module: bytes })
     }

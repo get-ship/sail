@@ -122,7 +122,7 @@ impl<'src> StyleVisitor<'src> {
 impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
         // `el.style.setProperty('--x', …)` is NOT exempt here. This rule only
-        // ever runs on controller / pack sources (the framework runtime, where
+        // ever runs on controller / components-package sources (the framework runtime, where
         // `use:` actions live, is exempt at the dispatch level); inside those,
         // a custom-property write is still `.style` from JavaScript. The
         // `.style` member access below catches it — no special-case needed.
@@ -332,7 +332,7 @@ mod tests {
     #[test]
     fn setproperty_of_a_custom_property_is_now_closed_in_a_controller() {
         // The 2026-07-18 ruling: `.setProperty('--x')` is `.style` from
-        // JavaScript like any other, and is CLOSED in controller/pack source.
+        // JavaScript like any other, and is CLOSED in controller/components-package source.
         // (It was legal here before; this is the red/green gate for the closure.)
         assert_eq!(run("el.style.setProperty('--row-y', y)").len(), 1);
         assert_eq!(

@@ -118,7 +118,7 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
 /// Rules that lint a `*.sail` template source. The dispatcher in
 /// `lib.rs::lint_sail_template_source` walks this slice in order.
 pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
-    // Also on the TEMPLATE path, not just when a pack happens to have a .ts file
+    // Also on the TEMPLATE path, not just when a components package happens to have a .ts file
     // linted. Enforcement that depends on the incidental presence of another file
     // is not enforcement — an undeclared stylesheet must fail the compile of any
     // source in the package that owns it.
@@ -167,7 +167,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_free_aria::RULE_ID, no_free_aria::check),
 ];
 
-/// Rules that lint a pack's `.ts` source files (composition modules,
+/// Rules that lint a components package's `.ts` source files (composition modules,
 /// glue code, helpers). Dispatches only on paths under
 /// `packages/components/sail/**/src/**` — the framework layer
 /// (`packages/sail/runtime/src/**`) is exempt, and `<stem>.controller.ts`

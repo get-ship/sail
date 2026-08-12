@@ -406,8 +406,8 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
     map
 }
 
-/// npm name → daemon pack-id. `@ship/charts` → `charts`; `widgets` → `widgets`.
-pub fn pack_id_for_name(npm_name: &str) -> String {
+/// npm name → components-package id. `@ship/charts` → `charts`; `widgets` → `widgets`.
+pub fn components_package_id_for_name(npm_name: &str) -> String {
     if let Some(rest) = npm_name.strip_prefix('@') {
         if let Some(slash) = rest.find('/') {
             return rest[slash + 1..].to_string();

@@ -331,7 +331,7 @@ impl SailConfig {
         }
     }
 
-    /// The declared `"stylesheets"` set — the CSS files the pack is allowed to
+    /// The declared `"stylesheets"` set — the CSS files the components package is allowed to
     /// ship. Absent/wrong-typed → empty.
     pub fn declared_stylesheets(&self) -> HashSet<String> {
         self.raw

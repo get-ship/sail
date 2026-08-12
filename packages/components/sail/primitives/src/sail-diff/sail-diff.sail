@@ -74,8 +74,8 @@ export default controller(({ from, to, value }: Scope) => {
     const lines = derived(() => buildDiffLines(from(), to(), value()))
 
     mount((host) => {
-      if (!host.hasAttribute('role')) host.setAttribute('role', 'region')
-      if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'diff')
+      if (!hostHasAttr(host, 'role')) hostSetAttr(host, 'role', 'region')
+      if (!hostHasAttr(host, 'aria-label')) hostSetAttr(host, 'aria-label', 'diff')
     })
 
     return { lines }

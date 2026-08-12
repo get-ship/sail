@@ -111,7 +111,7 @@ fn diagnostics_are_sorted_by_position() {
 /// source is a renderable component (`<p>{name}</p>`) so the structural
 /// passes produce nothing and the only diagnostic the compiler can emit is
 /// the stylesheet-permit one.
-fn write_pack(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, std::path::PathBuf) {
+fn write_fixture(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, std::path::PathBuf) {
     let tmp = tempfile::tempdir().expect("tmpdir");
     std::fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
@@ -134,7 +134,7 @@ fn undeclared_stylesheet_fails_real_compile_path() {
     // that isn't in the manifest. The dispatch path the CLI uses
     // (`Policy::overrides_for` → floor + capabilities, then
     // `check_all` → `lint_sail_template_source`) MUST surface an Error.
-    let (_tmp, sail_path) = write_pack(
+    let (_tmp, sail_path) = write_fixture(
         &[
             ("declared.css", ".x { color: red; }"),
             ("undeclared.css", ".y { color: blue; }"),
@@ -167,7 +167,7 @@ fn undeclared_stylesheet_fails_real_compile_path() {
 fn declared_stylesheet_passes_real_compile_path() {
     // A pack that declares its ONLY sheet. No stylesheet-permit Error.
     // (Other diagnostics may exist; we filter to the rule.)
-    let (_tmp, sail_path) = write_pack(
+    let (_tmp, sail_path) = write_fixture(
         &[("only.css", ".x { color: red; }")],
         r#"{"stylesheets": ["src/only.css"]}"#,
     );
@@ -193,7 +193,7 @@ fn empty_stylesheet_array_still_permits_zero() {
     // of "no companion sheets". An undeclared sheet still fails; the
     // empty array is not a back door. Pins both ends: declared-empty
     // passes, an undeclared sheet with declared-empty fails.
-    let (_tmp, sail_path) = write_pack(
+    let (_tmp, sail_path) = write_fixture(
         &[("undeclared.css", ".y { color: blue; }")],
         r#"{"stylesheets": []}"#,
     );
@@ -227,7 +227,7 @@ fn no_class_fails_real_compile_path() {
     // MUST surface an Error here, and the diagnostic's rule id MUST be
     // `sail-no-class`. The path is real (a tempdir laid out like a
     // pack) — no isolation.
-    let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
+    let (_tmp, sail_path) = write_fixture(&[], r#"{"stylesheets": []}"#);
     // Replace the default widget.sail with one that has a class=.
     let src = r#"<p class="sneaky-hook">{name}</p>"#;
     std::fs::write(&sail_path, src).unwrap();
@@ -254,7 +254,7 @@ fn sx_only_source_passes_real_compile_path() {
     // The negative direction: a pack source that styles with `sx=`
     // instead of `class=` is clean. The full floor surface is
     // available: sx=, role, aria-*, on:event, data-*.
-    let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
+    let (_tmp, sail_path) = write_fixture(&[], r#"{"stylesheets": []}"#);
     let src = r#"<p role="listbox" aria-label="x" on:click={noop} style({ box: pad(4), paint: bg(surface-2) })> {name}</p>"#;
     std::fs::write(&sail_path, src).unwrap();
     let overrides = Policy::overrides_for(&sail_path);
@@ -275,7 +275,7 @@ fn class_directive_fails_real_compile_path() {
     // (same shape as `style:`). Floor lint still matches `class:` for
     // defense in depth; either path must surface an Error naming the
     // retirement — never emit a class toggle binding.
-    let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
+    let (_tmp, sail_path) = write_fixture(&[], r#"{"stylesheets": []}"#);
     let src = r#"<a class:active={flag()} href="/x">x</a>"#;
     std::fs::write(&sail_path, src).unwrap();
     let overrides = Policy::overrides_for(&sail_path);

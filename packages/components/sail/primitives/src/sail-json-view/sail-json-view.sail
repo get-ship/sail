@@ -44,8 +44,8 @@ export default controller(({ data, expanded, depth }: Scope) => {
     }
 
     mount((host) => {
-      if (!host.hasAttribute('role')) host.setAttribute('role', 'tree')
-      if (!host.hasAttribute('aria-label')) host.setAttribute('aria-label', 'JSON tree')
+      if (!hostHasAttr(host, 'role')) hostSetAttr(host, 'role', 'tree')
+      if (!hostHasAttr(host, 'aria-label')) hostSetAttr(host, 'aria-label', 'JSON tree')
     })
 
     return { rows, parseError, toggle }

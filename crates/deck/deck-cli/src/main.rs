@@ -68,8 +68,8 @@ enum Command {
         name: PathBuf,
     },
 
-    /// Generate boilerplate for a new route, component, pack, or theme.
-    /// Aliases: `new`, `init` (C-pack scaffold surface).
+    /// Generate boilerplate for a new route, component, components-package, or theme.
+    /// Aliases: `new`, `init` (C-package scaffold surface).
     #[command(subcommand, visible_alias = "new", visible_alias = "init")]
     Scaffold(Scaffold),
 
@@ -337,11 +337,12 @@ enum Scaffold {
         controller: bool,
     },
 
-    /// New first-party SAIL component pack under `packages/components/<name>/`.
+    /// New first-party SAIL components package under `packages/components/<name>/`.
     /// Generates package.json, tsconfig.json, the umbrella `src/index.ts`,
     /// and a starter `<name>-example` component.
-    Pack {
-        /// Pack name (lowercase + hyphens). Becomes `@ship/<name>`.
+    #[command(name = "components-package", alias = "pack")]
+    ComponentsPackage {
+        /// Package name (lowercase + hyphens). Becomes `@ship/<name>`.
         name: String,
     },
 
@@ -422,7 +423,9 @@ fn run() -> Result<()> {
             typecheck,
             base,
         } => build(project, out, bundle_framework, !no_minify, typecheck, base),
-        Command::Scaffold(Scaffold::Pack { name }) => scaffold::run_pack(name),
+        Command::Scaffold(Scaffold::ComponentsPackage { name }) => {
+            scaffold::run_components_package(name)
+        }
         Command::Scaffold(Scaffold::Theme { project, id }) => scaffold::run_theme(project, id),
         Command::Emit { targets, out } => emit(targets, out),
         Command::BuildAssets { no_stamp } => build_assets(no_stamp),
@@ -526,15 +529,15 @@ fn build_assets(no_stamp: bool) -> Result<()> {
     rt.block_on(bundler.build_all())
         .map_err(|e| anyhow::anyhow!("build_all failed: {e}"))?;
 
-    // Build the layout once — used for the framework verify+stamp, the pack
+    // Build the layout once — used for the framework verify+stamp, the components package
     // CEM step, and the consumer guard below. assets_dir_for("sail-runtime")
     // is now .deck/framework/ (the canonical bake target per Recommendation
     // B1).
     let layout = deck_bundler::targets::BundleLayout::with_config(repo_root.clone(), None, cfg);
 
-    // Verify + stamp the framework singletons BEFORE the pack CEM step
+    // Verify + stamp the framework singletons BEFORE the components package CEM step
     // (deck-deploy-gap): `deck-core/build.rs` needs these 4 files to build at
-    // all (an `include_str!` bake), but pack CEM generation can legitimately
+    // all (an `include_str!` bake), but components-package CEM generation can legitimately
     // fail on an UNRELATED component's lint violations — that must not take
     // down the framework bake `build.rs` depends on. Verify every framework
     // singleton that RESOLVED for this repo is non-empty.
@@ -631,20 +634,20 @@ fn build_assets(no_stamp: bool) -> Result<()> {
         }
     }
 
-    // Materialize each component pack's standard `dist/custom-elements.json`
+    // Materialize each components package's standard `dist/custom-elements.json`
     // (CEM) from its source. Run once here (the framework build), so per-app
     // builds aggregate the pre-written manifests into `<app>/components.gen.ts`
-    // (`generate_components_gen`). Also the file every pack declares for
+    // (`generate_components_gen`). Also the file every package declares for
     // external tooling (Storybook / VS Code / lit-analyzer).
-    // A pack that fails to compile fails the build. Printing and continuing is
-    // how un-migrated packs stayed invisible behind an exit-0 asset bake.
+    // A package that fails to compile fails the build. Printing and continuing is
+    // how un-migrated packages stayed invisible behind an exit-0 asset bake.
     // Runs AFTER the framework verify+stamp above (deck-deploy-gap): a
-    // component pack's lint failure is real and must still fail the overall
+    // components-package lint failure is real and must still fail the overall
     // command, but it must never block the framework bundles `build.rs`
     // needs from being staged and stamped first.
     let n =
         deck_bundler::cem::write_all_component_cems(&repo_root).context("component package CEM generation")?;
-    println!("  cem: {n} component pack manifest(s) written");
+    println!("  cem: {n} components-package manifest(s) written");
 
     // Consumer guard: the discovered consumer bundles (per-package
     // `deck.bundles`) have no build.rs guard — verify each is non-empty as
@@ -803,7 +806,7 @@ fn ensure_framework_fresh(repo_root: &Path, project: &Path, addr: &str) -> Resul
 /// NOTE: for a pure-JS bun/npm workspace built from an app subdir
 /// (`apps/demo`), `start` is the app dir, NOT the workspace root —
 /// framework + node_modules resolution must key off the app dir (its per-app
-/// `node_modules`), but `@ship/<pkg>` SIBLING-pack discovery must reach the
+/// `node_modules`), but `@ship/<pkg>` sibling-package discovery must reach the
 /// enclosing workspace. That broadening lives in
 /// `catalog::component_package_roots` (it unions the enclosing JS workspace via
 /// [`deck_bundler::paths::topmost_workspace_root`]), NOT here — so this root
@@ -1163,7 +1166,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // ── HMR (foundational, full-document) ────────────────────────────────
         // The bundler's own watcher rebuilds TARGETS (views, framework). The
         // SPA is the one-shot `bundle_app` ENTRY — not a target — so `routes/` +
-        // `src/` + workspace pack edits emit nothing through it. sail dev owns
+        // `src/` + workspace components package edits emit nothing through it. sail dev owns
         // this loop: a notify watcher on authored source re-runs `bundle_app`
         // and emits a `module-changed` (target `app`) on the bundler's firehose,
         // which `serve_bundle_hmr` streams to the live-reload client → full-
@@ -1174,9 +1177,9 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         //   `tokens/`) — never project root / `.deck/` (regenerated
         //   `routes.gen.ts` / out dir must not self-trigger). Project theme
         //   SSOT is `themes/**` (legacy dual-read: `tokens/themes/**`).
-        // - workspace component pack `src/` trees (and package root if no `src/`)
+        // - workspace components package `src/` trees (and package root if no `src/`)
         //   so edits under `packages/components/...` HMR like local rails —
-        //   previously only the app tree was watched and pack edits needed a
+        //   previously only the app tree was watched and components-package edits needed a
         //   full `sail dev` restart.
         // - monorepo catalog themes: `packages/sail/tokens/model/**` (DTCG SSOT;
         //   generated `src/tokens.css` / `themes.css` are NOT watched — those

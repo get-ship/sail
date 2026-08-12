@@ -1,4 +1,4 @@
-// @ship/sail-canvas — the spatial substrate pack.
+// @ship/sail-canvas — the spatial substrate package.
 //
 // <sail-canvas> is the bare pan/zoom/infinite-surface primitive (backbone #3),
 // built on @ship/sail-runtime signals — no React, no Excalidraw, no SDK. A

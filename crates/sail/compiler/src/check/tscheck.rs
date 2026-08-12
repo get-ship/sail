@@ -843,14 +843,6 @@ fn runtime_ambient_dts() -> String {
 \
          type HostBag = SailHost & {
 \
-           getAttribute(n: string): string | null;
-\
-           hasAttribute(n: string): boolean;
-\
-           setAttribute(n: string, v: string): void;
-\
-           removeAttribute(n: string): void;
-\
            addEventListener(t: string, h: (...a: any[]) => void, o?: any): void;
 \
            removeEventListener(t: string, h: (...a: any[]) => void, o?: any): void;
@@ -897,8 +889,6 @@ fn runtime_ambient_dts() -> String {
 \
            textContent?: string | null;
 \
-           innerHTML?: string;
-\
            isConnected?: boolean;
 \
            clientWidth: number;
@@ -921,19 +911,41 @@ fn runtime_ambient_dts() -> String {
 \
            tagName?: string;
 \
+           isContentEditable?: boolean;
+\
            parentElement?: HostBag | null;
 \
            firstElementChild?: HostBag | null;
 \
-           onOpen: (...a: any[]) => any;
+           scrollTo?(opts: { top?: number; left?: number; behavior?: string } | number, y?: number): void;
 \
-           onChange: (...a: any[]) => any;
+           emit?(name: string, detail?: unknown): void;
 \
-           onSelect: (...a: any[]) => any;
+           onOpen?: (...a: any[]) => any;
 \
-           onClick: (...a: any[]) => any;
+           onChange?: (...a: any[]) => any;
 \
-           [k: string]: any;
+           onSelect?: (...a: any[]) => any;
+\
+           onClick?: (...a: any[]) => any;
+\
+           onVariantChange?: (...a: any[]) => any;
+\
+           showModal(...a: any[]): any;
+\
+           close(...a: any[]): any;
+\
+           open: boolean;
+\
+           onSubmit?: (...a: any[]) => any;
+\
+           setPointerCapture(...a: any[]): any;
+\
+           disabled?: any;
+\
+           onErrorCaught?: (...a: any[]) => any;
+\
+           scrollIntoView(...a: any[]): any;
 \
          };
 \

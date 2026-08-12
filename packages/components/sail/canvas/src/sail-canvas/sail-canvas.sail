@@ -69,8 +69,8 @@ export default controller(({ value }: Scope) => {
       },
     })
 
-    const minScale = host.getAttribute('min-scale')
-    const maxScale = host.getAttribute('max-scale')
+    const minScale = hostGetAttr(host, 'min-scale')
+    const maxScale = hostGetAttr(host, 'max-scale')
     canvas().setOptions({
       ...(minScale != null ? { minScale: Number(minScale) } : {}),
       ...(maxScale != null ? { maxScale: Number(maxScale) } : {}),

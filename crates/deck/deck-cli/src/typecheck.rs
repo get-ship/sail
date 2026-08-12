@@ -65,7 +65,7 @@ fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
 
     let proj = project.display().to_string().replace('\\', "/");
     let out = out_dir.display().to_string().replace('\\', "/");
-    // Prefer the out_dir copy so `exclude: node_modules` cannot drop the pack
+    // Prefer the out_dir copy so `exclude: node_modules` cannot drop the components package
     // (project pack lives under `node_modules/.sail/`).
     let ambient_for_tsc = ambient_copy
         .canonicalize()

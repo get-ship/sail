@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-viewer",
   "version": "0.3.0",
-  "description": "Ship Viewer pack \u2014 the browser compile seam (`ensureWasm`/`makeCompile`) and `<sail-render>`, the mount stage every surface composes for a live preview of a SAIL component.",
+  "description": "Ship Viewer components package — the browser compile seam (`ensureWasm`/`makeCompile`) and `<sail-render>`, the mount stage every surface composes for a live preview of a SAIL component.",
   "type": "module",
   "license": "MIT",
   "files": [

@@ -59,8 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
         if (Array.isArray(v)) staged.set(v as AnnotationEvent[])
       }
       // Parent layer assigns `list.staged = [...]` — route through the signal.
-      Object.defineProperty(host, 'staged', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'staged', {
         get: () => staged(),
         set: (v: AnnotationEvent[]) => { staged.set(Array.isArray(v) ? v : []) },
       })

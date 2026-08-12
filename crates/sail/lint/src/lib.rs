@@ -1,7 +1,7 @@
 //! SAIL authoring lint engine.
 //!
 //! Lints `*.controller.ts` (paired SAIL controllers), `*.sail` templates,
-//! the `.ts` composition modules under a component pack's `src/`, plain app
+//! the `.ts` composition modules under a components package's `src/`, plain app
 //! TypeScript under `apps/*/src/**`, and **author** `use:` Action bodies under
 //! app `src/actions/**` (ACTIONS-1 regime). Rule IDs are prefixed
 //! `sail-<descriptor>`.
@@ -95,15 +95,15 @@ pub fn is_sail_template_path(path: &std::path::Path) -> bool {
     path.extension().and_then(|e| e.to_str()) == Some("sail")
 }
 
-/// True iff `path` is a pack source `.ts` (a composition module a component ships).
+/// True iff `path` is a components-package source `.ts` (a composition module a component ships).
 ///
-/// The set is "any `.ts` file a component pack ships, not under the framework
+/// The set is "any `.ts` file a components package ships, not under the framework
 /// runtime". Author action modules are a separate category
 /// (`is_action_source_path`) with the ACTIONS-1 floor. Controllers stay on
 /// `lint_controller_source`.
 ///
 /// Detection walks the path's segments: a path under `packages/components/sail/**/src/`
-/// (or the repo-local equivalent) is a pack source. The `*.controller.ts`
+/// (or the repo-local equivalent) is a components-package source. The `*.controller.ts`
 /// files are matched by `is_controller_path` first, so this never overlaps.
 pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
@@ -111,7 +111,7 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     }
     // Controllers go through first in lint_path; the
     // caller that bypasses the dispatch and asks this directly won't see a
-    // controller file as a pack source.
+    // controller file as a components-package source.
     if is_controller_path(path) {
         return false;
     }
@@ -139,7 +139,7 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
 ///
 /// This is the gate that closed the studio escape hatch: a side module under
 /// `apps/studio/src/edit/region-overlay.ts` used to skip every style floor
-/// because it was neither a controller nor a pack source.
+/// because it was neither a controller nor a components-package source.
 pub fn is_app_source_ts(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
         return false;
@@ -240,7 +240,7 @@ pub fn lint_controller_source(path: &std::path::Path, source: &str) -> Vec<Findi
     findings
 }
 
-/// Lint a pack source `.ts` file from its source. Returns findings
+/// Lint a components-package source `.ts` file from its source. Returns findings
 /// sorted by `(line, col)`. No filesystem access.
 ///
 /// The composition modules a component ships — helpers, glue code, the

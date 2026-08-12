@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use sail_compiler::check::policy::{Policy, ResolutionKind};
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
-fn write_pack(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) {
+fn write_fixture(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
@@ -50,7 +50,7 @@ fn opts_for(path: &Path) -> CompileOpts {
 
 #[test]
 fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
-    let (_tmp, sail) = write_pack(r#"{"polcy":"strict"}"#, "<p>hi</p>");
+    let (_tmp, sail) = write_fixture(r#"{"polcy":"strict"}"#, "<p>hi</p>");
     let (config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(
         resolution.tier,
@@ -82,7 +82,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
     // `sail-no-sx` gates the Style *attribute host* `style=` (capability key
     // still named "sx"); the block Style statement is the product form and
     // is not this capability's refusal surface.
-    let (_tmp2, sail_sx) = write_pack(
+    let (_tmp2, sail_sx) = write_fixture(
         r#"{"polcy":"strict"}"#,
         r#"<sail-card style="p-4">x</sail-card>"#,
     );
@@ -93,7 +93,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
 
 #[test]
 fn unparseable_config_fails_closed_and_refuses_loudly() {
-    let (_tmp, sail) = write_pack("{ not valid json", "<p>hi</p>");
+    let (_tmp, sail) = write_fixture("{ not valid json", "<p>hi</p>");
     let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     assert!(
@@ -108,7 +108,7 @@ fn unrecognized_preset_value_is_rejected_not_silently_none() {
     // `{"preset":"strictest"}` names a RECOGNIZED key (`preset`) with a value
     // the parser doesn't know — same fail-closed-and-loud bucket as a typo'd
     // key, not the softer "no signal" bucket.
-    let (_tmp, sail) = write_pack(r#"{"preset":"strictest"}"#, "<p>hi</p>");
+    let (_tmp, sail) = write_fixture(r#"{"preset":"strictest"}"#, "<p>hi</p>");
     let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     assert!(
@@ -129,7 +129,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // with ZERO signal. It must now resolve to strict via the `NoSignal`
     // bucket (an announcement, not a "your config is broken" refusal) and
     // name what recognized key WAS present.
-    let (_tmp, sail) = write_pack(r#"{"stylesheets": []}"#, "<p>hi</p>");
+    let (_tmp, sail) = write_fixture(r#"{"stylesheets": []}"#, "<p>hi</p>");
     let (config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::STRICT);
     let ResolutionKind::NoSignal(hint) = &resolution.kind else {
@@ -145,7 +145,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // only `stylesheets` declared, and an s-using component. The compile
     // must refuse and the refusal must point at the missing grant, not
     // silently drop the sx. Gate surface is `style=` (see sail-no-sx).
-    let (_tmp2, sail_sx) = write_pack(
+    let (_tmp2, sail_sx) = write_fixture(
         r#"{"stylesheets": []}"#,
         r#"<sail-card style="p-4">hi</sail-card>"#,
     );
@@ -166,7 +166,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
 
 #[test]
 fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
-    let (_tmp, sail) = write_pack(
+    let (_tmp, sail) = write_fixture(
         r#"{"preset":"full"}"#,
         r#"<sail-card style({ box: pad(4) })> hi</sail-card>"#,
     );

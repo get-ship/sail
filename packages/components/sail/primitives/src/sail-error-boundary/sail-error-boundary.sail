@@ -26,7 +26,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
     const reset = (): void => {
       caughtError.set(null)
       const h = hostEl()
-      if (h) h.removeAttribute('data-error-message')
+      if (h) hostSetAttr(h, 'data-error-message', null)
     }
     mount((host) => {
       hostEl.set(host as HostBag)
@@ -45,7 +45,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
         catch(err, source) {
           if (caughtError() !== null) return
           const error = err instanceof Error ? err : new Error(String(err))
-          host.setAttribute('data-error-message', error.message)
+          hostSetAttr(host, 'data-error-message', error.message)
           caughtError.set(error)
           ;(host as HostBag).onErrorCaught?.({
             error,

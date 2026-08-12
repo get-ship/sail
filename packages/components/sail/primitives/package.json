@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-primitives",
   "version": "0.3.0",
-  "description": "Ship Primitives pack \u2014 generic `<sail-*>` UI elements (diff, tree, calendar, \u2026).",
+  "description": "Ship Primitives components package — generic `<sail-*>` UI elements (diff, tree, calendar, …).",
   "type": "module",
   "license": "MIT",
   "files": [

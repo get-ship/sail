@@ -20,7 +20,7 @@
 //! presence" was the SAME disease as the dead stylesheet permit: a check
 //! that returned `Vec::new()` because a config file existed somewhere
 //! above the source. With the permit fixed and the floor in place, every
-//! pack's `sail.config.json` declares `stylesheets: []` and ships zero
+//! components package's `sail.config.json` declares `stylesheets: []` and ships zero
 //! `.css` files — the "declared stylesheet" the early-return justified
 //! itself with was invented. `class=` is now `Error` on every path,
 //! pack, route, and app; no config relaxes it.
@@ -39,7 +39,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     // FLOOR — refuses everywhere. The historical "opt-in via `sail.config.json`
     // presence" was removed: it walked up to the filesystem root, found a
     // config anywhere, and returned `Vec::new()` — the same dead layer as
-    // the stylesheet permit. The pack's `sail.config.json` declares
+    // the stylesheet permit. The components package's `sail.config.json` declares
     // `stylesheets: []` and ships zero `.css` files; there is no
     // declared sheet for a class to "pair with".
     let bytes = source.as_bytes();

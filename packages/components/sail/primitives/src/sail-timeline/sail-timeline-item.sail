@@ -35,18 +35,18 @@ export default controller((ctx) => {
     const last = signal(false)
 
     mount((host) => {
-      if (!host.hasAttribute('role')) host.setAttribute('role', 'listitem')
+      if (!hostHasAttr(host, 'role')) hostSetAttr(host, 'role', 'listitem')
       // Static lists: first/last of type at mount.
       first.set(host.matches(':first-of-type'))
       last.set(host.matches(':last-of-type'))
 
       const stopRole = effect(() => {
         if (ctx.interactive()) {
-          host.setAttribute('role', 'button')
-          if (!host.hasAttribute('tabindex')) host.setAttribute('tabindex', '0')
+          hostSetAttr(host, 'role', 'button')
+          if (!hostHasAttr(host, 'tabindex')) hostSetAttr(host, 'tabindex', '0')
         } else {
-          host.setAttribute('role', 'listitem')
-          host.removeAttribute('tabindex')
+          hostSetAttr(host, 'role', 'listitem')
+          hostSetAttr(host, 'tabindex', null)
         }
       })
 

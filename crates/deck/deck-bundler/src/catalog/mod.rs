@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 pub use workspace::{
     BundleDecl, WorkspacePackage, component_package_roots, composed_component_index,
     discover_bundle_declarations, discover_dependency_packages, discover_workspace_packages,
-    discover_workspace_packages_scoped, pack_id_for_name,
+    discover_workspace_packages_scoped, components_package_id_for_name,
 };
 use workspace::{read_json, source_tags_for_package};
 
@@ -174,11 +174,11 @@ pub fn tag_source_index_scoped(
     out
 }
 
-/// Global map: every workspace component tag → its owning pack's `package.json`
-/// `name`. First pack to provide a tag wins (discovery is name-sorted, stable).
-/// Source-scan only — the authoritative component convention — so a tag's pack
+/// Global map: every workspace component tag → its owning package's `package.json`
+/// `name`. First package to provide a tag wins (discovery is name-sorted, stable).
+/// Source-scan only — the authoritative component convention — so a tag's package
 /// attribution matches exactly what a declared scope filters on.
-pub fn tag_pack_index(repo_root: &Path) -> std::collections::HashMap<String, String> {
+pub fn tag_package_index(repo_root: &Path) -> std::collections::HashMap<String, String> {
     let mut out = std::collections::HashMap::new();
     if let Ok(packages) = discover_workspace_packages(repo_root) {
         for pkg in &packages {
@@ -190,12 +190,12 @@ pub fn tag_pack_index(repo_root: &Path) -> std::collections::HashMap<String, Str
     out
 }
 
-/// Tags a declared-`packs` scope EXCLUDES → `tag → owning-pack name`.
+/// Tags a declared-`packs` scope EXCLUDES → `tag → owning-package name`.
 ///
-/// Every workspace component tag whose owning pack is not in the resolved scope.
+/// Every workspace component tag whose owning package is not in the resolved scope.
 /// Empty when `packs` is empty (global scope excludes nothing). This powers the
 /// author diagnostic the bundler emits when a built route references a scoped-out
-/// tag: "`<tag>` is provided by `<pack>`, which you didn't declare."
+/// tag: "`<tag>` is provided by `<package>`, which you didn't declare."
 pub fn shadowed_tags(
     repo_root: &Path,
     packs: &[String],
@@ -204,7 +204,7 @@ pub fn shadowed_tags(
         return std::collections::HashMap::new();
     }
     let scoped = tag_source_index_scoped(repo_root, Some(packs));
-    tag_pack_index(repo_root)
+    tag_package_index(repo_root)
         .into_iter()
         .filter(|(tag, _)| !scoped.contains_key(tag))
         .collect()
@@ -314,7 +314,7 @@ fn entries_from_sail_out(repo_root: &Path, packages: &[WorkspacePackage]) -> Vec
         let owning = find_owning_package(&source_path, &packaged_roots);
         // Owning pack with a resolvable aggregated manifest → served from there;
         // skip. When the manifest path is declared in `package.json` but the
-        // file is absent (the pack hasn't been built), fall through to the
+        // file is absent (the components package hasn't been built), fall through to the
         // emit-mirror path — that's what we just compiled.
         if let Some((_, p)) = owning {
             if let Some(ce) = &p.custom_elements {
@@ -714,7 +714,7 @@ mod tests {
     }
 
     /// Per-project component access control: a project that declares only the
-    /// primitives pack and its own components (NOT `@ship/agents`) gets:
+    /// primitives package and its own components (NOT `@ship/agents`) gets:
     ///   (a) declared-pack + own tags still resolve;
     ///   (b) the undeclared-pack tag does NOT resolve → the resolver no-ops it;
     ///   (c) global (no scope) resolves all three — before/after evidence.
@@ -723,7 +723,7 @@ mod tests {
         let tmp = three_pack_fixture();
         let root = tmp.path();
 
-        // (c) BEFORE — global resolution: every workspace pack's tags resolve.
+        // (c) BEFORE — global resolution: every workspace components package's tags resolve.
         let global = tag_source_index(root);
         let mut global_tags: Vec<&str> = global.keys().map(String::as_str).collect();
         global_tags.sort_unstable();
@@ -779,7 +779,7 @@ mod tests {
         );
     }
 
-    /// The author diagnostic's data: a scoped-out tag is attributed to the pack
+    /// The author diagnostic's data: a scoped-out tag is attributed to the components package
     /// that provides it, so the bundler can say "`<tag>` is from `<pack>`".
     #[test]
     fn shadowed_tags_attributes_excluded_tag_to_its_pack() {
@@ -788,7 +788,7 @@ mod tests {
         let declared: Vec<String> = vec!["@ship/sail-primitives".into(), "deck-demo-app".into()];
 
         let shadowed = shadowed_tags(root, &declared);
-        // Only the undeclared pack's tag is shadowed — named with its pack.
+        // Only the undeclared components package's tag is shadowed — named with its pack.
         assert_eq!(
             shadowed.get("ship-agent-card").map(String::as_str),
             Some("@ship/agents"),
@@ -851,7 +851,7 @@ mod tests {
         assert!(composed_component_index(tmp.path()).is_empty());
     }
 
-    /// Declaring a pack that doesn't exist in the workspace contributes no tags
+    /// Declaring a components package that doesn't exist in the workspace contributes no tags
     /// (silently absent at the discovery layer). A route that then references a
     /// real tag from an *undeclared* pack is what surfaces the author diagnostic.
     #[test]
@@ -870,7 +870,7 @@ mod tests {
     /// pack only through `node_modules` (the post-`bun add` layout). Workspace
     /// globs contribute nothing; dependency resolution is the sole source.
     #[test]
-    fn external_pack_via_node_modules_without_workspace_map() {
+    fn external_components_package_via_node_modules_without_workspace_map() {
         let tmp = tempdir().unwrap();
         let app = tmp.path();
         // No workspaces — pure external consumer.
@@ -888,7 +888,7 @@ mod tests {
             "<div>sail-bar-chart-marker</div>\n",
         );
 
-        // Discovery sees the pack without any workspace map.
+        // Discovery sees the components package without any workspace map.
         let pkgs = discover_workspace_packages(app).expect("discover");
         assert_eq!(pkgs.len(), 1, "only the node_modules pack");
         assert_eq!(pkgs[0].name, "@ship/sail-charts");
@@ -913,7 +913,7 @@ mod tests {
     /// EXT-1 E3: hoisted install — pack lives at parent `node_modules`, not
     /// the app dir's own. Ancestor walk must find it (bun/npm hoist).
     #[test]
-    fn external_pack_via_hoisted_node_modules_ancestor() {
+    fn external_components_package_via_hoisted_node_modules_ancestor() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         let app = root.join("apps/hello");

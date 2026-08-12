@@ -6,8 +6,8 @@
 //! - relative `.sail`
 //! - relative paths under `src/actions/`, `src/compositions/`, `src/serverfns/`
 //!
-//! Allowed (component packs, structural — pack root has `customElements` in
-//! package.json): pack-relative modules + pack `dependencies` /
+//! Allowed (components packages, structural — components-package root has `customElements` in
+//! package.json): package-relative modules + pack `dependencies` /
 //! `peerDependencies`.
 //!
 //! Type-only imports are free. Severity: Error.
@@ -41,11 +41,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         return Vec::new();
     }
 
-    let pack = pack_context_for(path);
+    let components_package = components_package_context_for(path);
     let mut visitor = ImportVisitor {
         source,
         file: path.to_path_buf(),
-        pack,
+        components_package,
         findings: Vec::new(),
     };
     visitor.visit_program(&ret.program);
@@ -55,7 +55,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 struct ImportVisitor<'src> {
     source: &'src str,
     file: PathBuf,
-    pack: Option<PackContext>,
+    components_package: Option<ComponentsPackageContext>,
     findings: Vec<Finding>,
 }
 
@@ -115,16 +115,16 @@ impl<'a> Visit<'a> for ImportVisitor<'_> {
             return;
         }
 
-        if is_allowed_value_module(module, &self.file, self.pack.as_ref()) {
+        if is_allowed_value_module(module, &self.file, self.components_package.as_ref()) {
             return;
         }
         self.report(decl.span, module);
     }
 }
 
-/// Resolved pack envelope for one controller path (if any).
+/// Resolved components-package envelope for one controller path (if any).
 #[derive(Debug, Clone)]
-struct PackContext {
+struct ComponentsPackageContext {
     root: PathBuf,
     /// Package names from `dependencies` + `peerDependencies`.
     declared_deps: HashSet<String>,
@@ -133,14 +133,14 @@ struct PackContext {
 fn is_allowed_value_module(
     module: &str,
     controller_path: &Path,
-    pack: Option<&PackContext>,
+    components_package: Option<&ComponentsPackageContext>,
 ) -> bool {
     let m = module.trim();
     if m.is_empty() {
         return false;
     }
 
-    // Workspace / product packages — always legal (apps and packs).
+    // Workspace / product packages — always legal ((apps and components packages)).
     if m.starts_with("@ship/") {
         return true;
     }
@@ -171,19 +171,19 @@ fn is_allowed_value_module(
             return true;
         }
 
-        // Pack envelope: any relative module that stays under the pack root.
-        if let Some(pack) = pack {
-            if path_is_under(&resolved, &pack.root) {
+        // Components-package envelope: any relative module that stays under the components-package root.
+        if let Some(components_package) = components_package {
+            if path_is_under(&resolved, &components_package.root) {
                 return true;
             }
         }
         return false;
     }
 
-    // Bare package names: L3 refuses; packs allow declared deps only.
-    if let Some(pack) = pack {
+    // Bare package names: L3 refuses; components packages allow declared deps only.
+    if let Some(components_package) = components_package {
         if let Some(name) = package_name_of_specifier(m) {
-            if pack.declared_deps.contains(name) {
+            if components_package.declared_deps.contains(name) {
                 return true;
             }
         }
@@ -264,25 +264,25 @@ fn package_name_of_specifier(module: &str) -> Option<&str> {
     }
 }
 
-/// Structural pack root: first ancestor `package.json` that declares
-/// `customElements` (CEM marker). First non-pack `package.json` stops the
-/// walk (npm package boundary) so apps never inherit a parent workspace pack.
-fn pack_context_for(path: &Path) -> Option<PackContext> {
+/// Structural components-package root: first ancestor `package.json` that declares
+/// `customElements` (CEM marker). First non-components-package `package.json` stops the
+/// walk (npm package boundary) so apps never inherit a parent workspace components package.
+fn components_package_context_for(path: &Path) -> Option<ComponentsPackageContext> {
     let mut cur = path.parent();
     while let Some(dir) = cur {
         let pkg_path = dir.join("package.json");
         if pkg_path.is_file() {
-            return load_pack_context(dir, &pkg_path);
+            return load_components_package_context(dir, &pkg_path);
         }
         cur = dir.parent();
     }
     None
 }
 
-fn load_pack_context(root: &Path, pkg_path: &Path) -> Option<PackContext> {
+fn load_components_package_context(root: &Path, pkg_path: &Path) -> Option<ComponentsPackageContext> {
     let text = std::fs::read_to_string(pkg_path).ok()?;
     let value: serde_json::Value = serde_json::from_str(&text).ok()?;
-    // `customElements` is the pack identity CEM generation already requires.
+    // `customElements` is the components-package identity CEM generation already requires.
     if value
         .get("customElements")
         .and_then(|v| v.as_str())
@@ -298,7 +298,7 @@ fn load_pack_context(root: &Path, pkg_path: &Path) -> Option<PackContext> {
             }
         }
     }
-    Some(PackContext {
+    Some(ComponentsPackageContext {
         root: root.to_path_buf(),
         declared_deps,
     })
@@ -332,16 +332,16 @@ mod tests {
         check(Path::new(path), src)
     }
 
-    /// Lay out a minimal pack: `package.json` (with `customElements` + deps),
+    /// Lay out a minimal components package: `package.json` (with `customElements` + deps),
     /// optional co-located module, and a controller path under `src/`.
-    fn write_pack(deps: &str, controller_rel: &str) -> (tempfile::TempDir, PathBuf) {
+    fn write_components_package_fixture(deps: &str, controller_rel: &str) -> (tempfile::TempDir, PathBuf) {
         let tmp = tempfile::tempdir().expect("tmpdir");
         let root = tmp.path();
         fs::write(
             root.join("package.json"),
             format!(
                 r#"{{
-                  "name": "@ship/test-pack",
+                  "name": "@ship/test-components-package",
                   "customElements": "dist/custom-elements.json",
                   "dependencies": {{ {deps} }}
                 }}"#
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     fn pack_allows_relative_internal_module() {
-        let (_tmp, ctrl) = write_pack(
+        let (_tmp, ctrl) = write_components_package_fixture(
             r#""@ship/sail-runtime": "workspace:*""#,
             "src/sail-widget/sail-widget.controller.ts",
         );
@@ -464,13 +464,13 @@ mod tests {
         let f = check(&ctrl, src);
         assert!(
             f.is_empty(),
-            "pack-internal relative must be allowed, got {f:?}"
+            "package-internal relative must be allowed, got {f:?}"
         );
     }
 
     #[test]
     fn pack_allows_relative_engine_module() {
-        let (_tmp, ctrl) = write_pack(
+        let (_tmp, ctrl) = write_components_package_fixture(
             r#""@ship/sail-runtime": "workspace:*""#,
             "src/sail-widget/sail-widget.controller.ts",
         );
@@ -479,13 +479,13 @@ mod tests {
         let f = check(&ctrl, src);
         assert!(
             f.is_empty(),
-            "pack-relative engine module must be allowed, got {f:?}"
+            "package-relative engine module must be allowed, got {f:?}"
         );
     }
 
     #[test]
     fn pack_allows_declared_vendor() {
-        let (_tmp, ctrl) = write_pack(
+        let (_tmp, ctrl) = write_components_package_fixture(
             r#""@codemirror/state": "^6.0.0", "mermaid": "^11.0.0""#,
             "src/sail-code/sail-code.controller.ts",
         );
@@ -495,13 +495,13 @@ mod tests {
         let f = check(&ctrl, src);
         assert!(
             f.is_empty(),
-            "declared pack vendor deps must be allowed, got {f:?}"
+            "declared package vendor deps must be allowed, got {f:?}"
         );
     }
 
     #[test]
     fn pack_refuses_undeclared_vendor() {
-        let (_tmp, ctrl) = write_pack(
+        let (_tmp, ctrl) = write_components_package_fixture(
             r#""@ship/sail-runtime": "workspace:*""#,
             "src/sail-code/sail-code.controller.ts",
         );
@@ -526,25 +526,25 @@ mod tests {
 
     #[test]
     fn pack_refuses_relative_escape_outside_root() {
-        let (_tmp, ctrl) = write_pack(
+        let (_tmp, ctrl) = write_components_package_fixture(
             r#""@ship/sail-runtime": "workspace:*""#,
             "src/sail-widget/sail-widget.controller.ts",
         );
-        // ../../.. leaves the pack root.
+        // ../../.. leaves the components-package root.
         let src = "import { secrets } from '../../../outside/secrets'\n\
                    export default controller(() => ({}))\n";
         let f = check(&ctrl, src);
         assert_eq!(
             f.len(),
             1,
-            "relative escape outside pack root must hard-error, got {f:?}"
+            "relative escape outside components-package root must hard-error, got {f:?}"
         );
         assert!(f[0].message.contains("secrets"), "{}", f[0].message);
     }
 
     #[test]
     fn non_pack_project_refuses_codemirror_vendor() {
-        // App path with no pack package.json — hard error, plain wording.
+        // App path with no components package package.json — hard error, plain wording.
         let f = lint_at(
             "apps/demo/src/page.controller.ts",
             "import { EditorState } from '@codemirror/state'\n\
@@ -602,7 +602,7 @@ mod tests {
         assert_eq!(
             f.len(),
             1,
-            "app package.json without customElements must not get pack envelope: {f:?}"
+            "app package.json without customElements must not get components-package envelope: {f:?}"
         );
     }
 }

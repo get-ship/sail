@@ -54,8 +54,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       hostEl = host
       const init = (host as { attachments?: unknown[] }).attachments
       if (init != null) attachments.set(init)
-      Object.defineProperty(host, 'attachments', {
-        configurable: true,
+      defineHostProperty(asSailHost(host) as HostBag, 'attachments', {
         get: () => attachments(),
         set: (v: unknown[]) => { attachments.set(v) },
       })
