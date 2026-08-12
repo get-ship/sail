@@ -33,4 +33,4 @@
     match: { size: { xs: sizeXs, sm: sizeSm, md: sizeMd, lg: sizeLg } },
     compound: [{ invalid: true, paint: border(destructive) }],
   })
-></textarea>
+>

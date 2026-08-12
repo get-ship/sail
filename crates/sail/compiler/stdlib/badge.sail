@@ -44,12 +44,16 @@
         sm: sizeSm,
         lg: sizeLg,
       },
+      pill: {
+        true: { paint: radius(full) },
+        false: { paint: radius(sm) },
+      },
     },
     compound: [
       { tone: muted, variant: solid, paint: bg(muted).fg(muted-foreground).border(border) },
       { tone: muted, variant: soft, paint: bg(muted).fg(muted-foreground).border(border) },
       { tone: muted, variant: outline, paint: fg(muted-foreground).border(border) },
-      { pill: true, paint: radius(full) },
+      { pill: true, box: padX(2_5), paint: radius(full) },
     ],
   })
 >

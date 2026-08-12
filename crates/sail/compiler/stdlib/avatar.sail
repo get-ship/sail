@@ -1,8 +1,7 @@
 <!--
   <avatar> — L1 language element. Style value language only.
   avatarMedia child pack: cover for photo src; contain+pad when icon-slug.
-  Rest paint = primary-accent gradient when tone is omitted.
-  Semantic paint = bound tone only when tone is present (no empty --tone stomp).
+  Default = avatar surface tokens (muted disc). Tone is opt-in brand fill.
 -->
 
 <scope>
@@ -16,7 +15,7 @@
     shape: 'round' | 'square' = 'round'
   }
 
-  style base = { box: position(relative).overflow(hidden).size(7), paint: fg(avatar.foreground).select(none).align(middle).radius(full).shadow(inset-ring).bgImage(primary-accent).avatarMedia(true), text: fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fontSize(base) }
+  style base = { box: position(relative).overflow(hidden).size(7), paint: fg(avatar.foreground).bg(avatar).select(none).align(middle).radius(full).shadow(inset-ring).avatarMedia(true), text: fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fontSize(base) }
   style sizeMd = { box: size(7), text: fontSize(base) }
   style sizeXs = { box: size(5), text: fontSize(xs) }
   style sizeSm = { box: size(control-h-sm), text: fontSize(xs) }
@@ -46,9 +45,8 @@
       },
     },
     compound: [
-      // Tone present → solid fill; rest keeps primary-accent gradient.
-      { tone: *, paint: bgImage(none).bg(tone).fg(tone.foreground) },
-      { tone: muted, paint: bgImage(none).bg(avatar).fg(avatar.foreground) },
+      { tone: *, paint: bg(tone).fg(tone.foreground) },
+      { tone: muted, paint: bg(avatar).fg(avatar.foreground) },
     ],
   })
 ></row>

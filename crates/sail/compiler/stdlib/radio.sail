@@ -20,8 +20,7 @@
     paint: fg(radio.foreground).cursor(pointer).select(none),
     text: fontFamily(body).fontSize(sm).fontWeight(normal).textCase(normal).tracking(normal),
   }
-  // Fill + centered inset via RADIO_INPUT_MAP (host-specific).
-  // Match checkbox face: soft 1px border, no shadow, border-box outer size.
+  // Checked disc via RADIO_INPUT_MAP (empty face + primary dot — native, no SVG).
   style input = {
     box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-md).h(icon-size-md).shrink(0),
     paint: appearance(none).align(middle).borderWidth(1).border(solid).border(border).radius(full).cursor(pointer).boxSizing(border),

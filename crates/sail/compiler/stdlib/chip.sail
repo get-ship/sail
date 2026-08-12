@@ -131,14 +131,19 @@
     tabindex="-1"
     style(remove, {
       box: shrink(0),
+      match: {
+        removable: {
+          true: { box: display(inline-flex) },
+          false: { box: display(none) },
+        },
+      },
       when: {
-        group-removable: { box: display(inline-flex) },
         hover: { paint: bg(chip).fg(chip.foreground) },
         focus: { paint: outline(solid).outline(2).outline(ring).outlineOffset(2) },
       },
     })
   >
-    <svg viewBox="0 0 10 10" hidden="true" stroke-width="1.75" stroke-linecap="round" style(xmark)>
+    <svg viewBox="0 0 10 10" stroke-width="1.75" stroke-linecap="round" style(xmark)>
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

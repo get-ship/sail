@@ -40,7 +40,6 @@
 
 <div
   style(base, {
-    paint: border(tone),
     match: {
       variant: {
         default: { paint: bg(card) },
@@ -54,6 +53,7 @@
       },
     },
     compound: [
+      { tone: *, paint: border(tone) },
       {
         interactive: true,
         paint: cursor(pointer).tapHighlight(none),

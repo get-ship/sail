@@ -12,6 +12,8 @@
     disabled = false
     size: 'sm' | 'md' | 'lg' = 'md'
     name = ''
+    /** Comma-separated labels under thumb-centers. Owned by the slider — not a docs pad hack. */
+    ticks = ''
   }
 
   style base = {
