@@ -112,6 +112,7 @@ pub fn when_keys() -> Vec<&'static str> {
         "groupStateOpen",
         "groupCaught",
         "groupInline",
+        "groupDrop",
     ];
     for (name, _) in CONDITION_PREFIXES {
         // Prefer camelCase product spellings for multi-word media keys.

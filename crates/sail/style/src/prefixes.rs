@@ -36,10 +36,19 @@ pub const SX_EXTRA_FORMS: &[(&str, &str)] = &[
 /// `current` keys off aria-current (the author stamps it for assistive tech
 /// anyway; the style reads the same source of truth).
 pub const STATE_PREFIXES: &[(&str, &str)] = &[
-    ("hover", ":hover"),
-    ("focus", ":focus-visible"),
+    (
+        "hover",
+        ":hover:not(:disabled):not([aria-disabled='true'])",
+    ),
+    (
+        "focus",
+        ":focus-visible:not(:disabled):not([aria-disabled='true'])",
+    ),
     ("focus-within", ":focus-within"),
-    ("active", ":active"),
+    (
+        "active",
+        ":active:not(:disabled):not([aria-disabled='true'])",
+    ),
     ("disabled", ":is(:disabled,[aria-disabled='true'])"),
     ("current", "[aria-current]:not([aria-current='false'])"),
     // ARIA states — styling keys on the SAME attribute assistive tech reads,

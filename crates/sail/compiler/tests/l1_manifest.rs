@@ -41,9 +41,9 @@ fn stdlib_tags_match_manifest() {
 #[test]
 fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
-    assert_eq!(stdlib.len(), 55, "stdlib L1 count");
+    assert_eq!(stdlib.len(), 60, "stdlib L1 count");
     assert_eq!(reskins.len(), 0, "reskins empty");
-    assert_eq!(l1_entries().len(), 55);
+    assert_eq!(l1_entries().len(), 60);
 }
 
 #[test]

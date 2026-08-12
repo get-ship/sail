@@ -1,13 +1,11 @@
-// dropzone — turn a container (a `<div dropzone>`) wrapping a native
-// `<input type=file>` into a drag-and-drop upload surface. `use:dropzone` on
-// the container. The native input stays the source of truth (form
-// participation + the file picker); the action adds what the platform doesn't:
-// click-to-browse, drag events, an active-state hook for the skin, and a
-// reflected file summary.
+// dropzone — turn a container (a `<div dropzone>` / `<card dropzone>`) wrapping
+// a native `<input type=file>` into a drag-and-drop upload surface.
+// `use:dropzone` on the container. The native input stays the source of truth
+// (form participation + the file picker); the action adds what the platform
+// doesn't: click-to-browse, drag events, an active-state hook for the skin,
+// and a reflected file summary.
 //
-// A `<div>` rather than a `<label>` on purpose: the compiler emits a form-label
-// skin for every `<label>` (display/weight), which would fight the drop-zone
-// skin. The div carries no such skin, so the surface stays clean.
+// Skin is sail-base `[dropzone]` / `[data-over]` — not a <file> variant.
 
 import type { Action } from '../action'
 
@@ -16,10 +14,8 @@ import type { Action } from '../action'
  * `<input type="file">`.
  *
  * Clicking the surface opens the picker; dragging a file over it sets
- * `[data-drag]` (the skin highlights on that); dropping assigns the files to
- * the input and fires `change` so bindings/validation react exactly as for a
- * click-selected file; the selection is reflected into a `[data-dz-files]`
- * element if one is present.
+ * `[data-over]` (the sail-base skin highlights on that); dropping assigns
+ * the files to the input and fires `change`.
  */
 export const dropzone: Action<undefined> = (node) => {
   const el = node as HTMLElement
@@ -39,6 +35,17 @@ export const dropzone: Action<undefined> = (node) => {
       n === 0 ? summaryDefault : n === 1 ? (input.files?.[0]?.name ?? '1 file') : `${n} files selected`
   }
 
+  const markOver = (): void => {
+    el.setAttribute('data-over', '')
+    el.setAttribute('data-state', 'over')
+    el.setAttribute('data-drag', '')
+  }
+  const clearOver = (): void => {
+    el.removeAttribute('data-over')
+    el.removeAttribute('data-state')
+    el.removeAttribute('data-drag')
+  }
+
   const onClick = (e: MouseEvent) => {
     // The synthetic click from input.click() re-bubbles here — ignore it.
     const input = getInput()
@@ -48,15 +55,15 @@ export const dropzone: Action<undefined> = (node) => {
   }
   const onOver = (e: DragEvent) => {
     e.preventDefault()
-    el.setAttribute('data-drag', '')
+    markOver()
   }
   const onLeave = (e: DragEvent) => {
     // Ignore leaves into descendants — only clear when the pointer truly exits.
-    if (!el.contains(e.relatedTarget as Node | null)) el.removeAttribute('data-drag')
+    if (!el.contains(e.relatedTarget as Node | null)) clearOver()
   }
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
-    el.removeAttribute('data-drag')
+    clearOver()
     const input = getInput()
     if (input && e.dataTransfer?.files?.length) {
       input.files = e.dataTransfer.files
@@ -68,8 +75,6 @@ export const dropzone: Action<undefined> = (node) => {
   el.addEventListener('dragover', onOver)
   el.addEventListener('dragleave', onLeave)
   el.addEventListener('drop', onDrop)
-  // `change` bubbles, so catch the input's change on the container — no need to
-  // hold an input ref that doesn't exist yet at init.
   el.addEventListener('change', reflect)
 
   return {

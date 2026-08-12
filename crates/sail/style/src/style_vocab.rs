@@ -600,7 +600,7 @@ mod tests {
 
     #[test]
     fn animate_spin_bare_not_killed_by_refused_animate_head() {
-        // `animate` is refused (use Style motion) but `animate-spin` is a bare CSS PE atom.
+        // `animate` is refused (use Style motion) but `animate-spin` is a bare CSS host Style atom.
         let d = decls("animate-spin");
         assert!(
             d.iter()

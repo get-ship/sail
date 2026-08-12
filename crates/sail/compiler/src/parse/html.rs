@@ -22,7 +22,7 @@ pub use parser::PRIMARY_BRACE_ATTR;
 
 pub(super) const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr",
+    "wbr", "textarea",
 ];
 
 /// Tags whose body is treated as raw text (no nested elements,

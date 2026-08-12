@@ -1174,7 +1174,7 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["container-type"],
         },
-        // Host marker for group-* descendant PE — class `sail-grp`, no CSS decls.
+        // Host marker for group-* descendant host Style — class `sail-grp`, no CSS decls.
         SetterSpec {
             name: "group",
             vocab: "group",
@@ -1832,10 +1832,18 @@ fn when_key_kebab(key: &str) -> String {
 /// plus ARIA keys (`busy`, `sortable`) and camelCase product spellings.
 pub fn when_target(key: &str) -> Option<WhenTarget> {
     match key {
-        "hover" => Some(pseudo_static(":hover")),
-        "focus" => Some(pseudo_static(":focus-visible")),
+        // Hover/active/focus never fire while disabled — otherwise disabled
+        // buttons still lift, wash, and press-scale on mouseover.
+        "hover" => Some(pseudo_static(
+            ":hover:not(:disabled):not([aria-disabled='true'])",
+        )),
+        "focus" => Some(pseudo_static(
+            ":focus-visible:not(:disabled):not([aria-disabled='true'])",
+        )),
         "focusWithin" | "focus-within" => Some(pseudo_static(":focus-within")),
-        "active" => Some(pseudo_static(":active")),
+        "active" => Some(pseudo_static(
+            ":active:not(:disabled):not([aria-disabled='true'])",
+        )),
         "disabled" => Some(pseudo_static(":is(:disabled,[aria-disabled='true'])")),
         "empty" => Some(pseudo_static(":empty")),
         "before" => Some(pseudo_static("::before")),
@@ -1880,6 +1888,8 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         "group-caught" | "groupCaught" => Some(ancestor_static(".sail-grp[data-caught] ")),
         // theme-picker `inline` presence attr on the group host.
         "group-inline" | "groupInline" => Some(ancestor_static(".sail-grp[inline] ")),
+        // <file variant="drop"> — hide the native picker, show the hint.
+        "group-drop" | "groupDrop" => Some(ancestor_static(".sail-grp[variant='drop'] ")),
         other => {
             let kebab = when_key_kebab(other);
             if let Some(m) = super::conditions::condition_media(other)
@@ -2558,7 +2568,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 return Ok(vec![("width".into(), "var(--panel-toast-region-width)".into())]);
             }
             // Closed product keyframe catalog (packages/sail/runtime
-            // keyframes-catalog.ts). Style.animate(name) → CSS PE var;
+            // keyframes-catalog.ts). Style.animate(name) → CSS host Style var;
             // ambient @keyframes live in the generated contracts sheet,
             // not free CSS and not fx:loop. Keywords on the animate
             // SetterSpec must stay in lockstep with styleAnimate:true rows.

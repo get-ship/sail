@@ -18,11 +18,11 @@ use std::process;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 
 use sail_compiler::out_layout::resolve_out_dir;
-use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, Policy, compile};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta, Policy};
 
 /// Hard caps on virtual memory and wall-clock time. A bug in the
 /// compiler (or a pathological input) must never be able to OOM the
@@ -428,8 +428,9 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
     };
     let banner = "/* GENERATED from the sail-compiler stdlib registry — do not hand-edit.\n \
                   * Regenerate: cargo run -p sail-compiler -- framework-css\n \
-                  * L1 element skins: lowered host sx + CVA-in-props attr rules.\n \
-                  * sail-base (platform document floor) rides in sail-base.css. */\n";
+                  * L1 element skins: lowered host Style + CVA-in-props attr rules.\n \
+                  * Platform adaptor CSS (stdlib/platform/*.css) is spliced in under\n \
+                  * @provenance headers. sail-base is the document floor. */\n";
     // Same `sail` cascade layer as route/page style install. Page atomics
     // must not ship unlayered — they share class names with skins and would
     // crush compound fills (e.g. solid bg loses to .s-bgtransparent).
@@ -466,9 +467,13 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         // SPEC-D1: dotted surface members (`fg(spinner.foreground)`) are legal
         // only under that L1 host unit. Prop-registry re-parses stdlib sources
         // outside `compile_element`, so install the same host surface context.
-        let program =
-            sail_lint::style::with_host_surface(Some(tag), || sail_compiler::parse::parse(source))
-                .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
+        // Element sources use parse_element_source (no stdlib expand) — structure
+        // may contain private native types (type=checkbox inside <checkbox> host)
+        // that freeform author markup may not use.
+        let program = sail_lint::style::with_host_surface(Some(tag), || {
+            sail_compiler::parse::parse_element_source(source)
+        })
+        .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
         let mut props = std::collections::BTreeMap::new();
         let mut ts_props: Vec<serde_json::Value> = Vec::new();
         for p in &program.props {
@@ -1488,7 +1493,7 @@ fn gen_duplicates_report(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<(
 }
 
 fn synthesize(input: PathBuf, manifest_path: PathBuf, out_dir: PathBuf) -> Result<()> {
-    use sail_compiler::emit::synthetic::{AppManifest, AuthoredController, emit_synthetic};
+    use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
     use sail_compiler::parse;
 
     let source = fs::read_to_string(&input).with_context(|| format!("read {}", input.display()))?;
@@ -1512,7 +1517,11 @@ fn synthesize(input: PathBuf, manifest_path: PathBuf, out_dir: PathBuf) -> Resul
 
     let stem = {
         let s = raw_stem.replace(['/', '\\'], "_");
-        if s.is_empty() { "view".to_string() } else { s }
+        if s.is_empty() {
+            "view".to_string()
+        } else {
+            s
+        }
     };
     // Compose the controller. SFC: an inline `<controller>` block is
     // materialized to `<stem>.controller.ts` (wrapped into the canonical

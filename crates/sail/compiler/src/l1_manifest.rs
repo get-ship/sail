@@ -235,11 +235,11 @@ pub fn l1_by_kind() -> (Vec<L1Entry>, Vec<L1Entry>) {
     (l1_entries(), Vec::new())
 }
 
-/// HTML void elements — tags that the parser must treat as self-closing
-/// open tags with no closing tag. This is the grammar's source of truth
-/// for void-tag parsing; it is emitted to the grammar generator so the
-/// tree-sitter grammar cannot drift from the compiler's element surface.
+/// Sail void / childless tags — parser treats these as self-closing.
+/// Includes HTML5 void plus `<textarea>` (value is a prop; it does not take
+/// children). HTML emit still writes `</textarea>` because the platform
+/// element is not void. Grammar SSOT — do not fork this list.
 pub const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr",
+    "wbr", "textarea",
 ];
