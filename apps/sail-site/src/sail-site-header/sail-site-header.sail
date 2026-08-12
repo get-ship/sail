@@ -32,37 +32,20 @@ function sectionFor(p: string): string {
   return 'docs'
 }
 
-function productAttr(section: string): string {
-  switch (section) {
-    case 'home':
-      return 'ship'
-    case 'components':
-      return 'components'
-    case 'playground':
-      return 'sail'
-    default:
-      return 'sail'
-  }
-}
-
 function livePath(ctx: { route?: { pathname?: () => string } }): string {
-  const r = ctx.route
-  if (r?.pathname) void r.pathname()
-  if (typeof location !== 'undefined' && location.pathname) return location.pathname
-  return r?.pathname?.() ?? '/'
+  // Route signal only — no location/document. Product brand-hue used to be a
+  // data-product shadow on :root; that died. Nested theme=/applyScope cannot
+  // express the product hue axis today (theme-system gap — see RESULT-JOB-E2b).
+  return ctx.route?.pathname?.() ?? '/'
 }
 
 export default controller((ctx) => {
-    const root = document.documentElement
     const path = derived(() => livePath(ctx as { route?: { pathname?: () => string } }))
     const section = derived(() => sectionFor(path()))
     // Workbench owns its chrome — hide the site bar so editor gets the pixels.
     const workbench = derived(() => section() === 'playground')
     const autohide = derived(() => section() === 'home')
     const landing = derived(() => path() === '/')
-    effect(() => {
-      root.setAttribute('data-product', productAttr(section()))
-    })
     effect(() => {
       applyTheme(readStoredTheme())
     })

@@ -1,3 +1,4 @@
+import type { SailHost } from '../vendor/runtime'
 /**
  * Theme domain store — product UI is Themes only.
  * (Legacy path name `design`; writers shared by theme-session facets.)
@@ -70,7 +71,7 @@ let client: DesignOpsClient | null = null
 let state: DesignSurfaceState = bootState()
 let savedDoc: Record<string, unknown> | null = null
 const listeners = new Set<Listener>()
-let previewRoot: HTMLElement | null = null
+let previewRoot: SailHost | null = null
 /** Monotonic gen for usage refresh — stale async settles must not overwrite. */
 let blastGen = 0
 
@@ -382,7 +383,7 @@ export function setIconScaleTogether(on: boolean): void {
 }
 
 /** Register the specimen panel root element (no CSSOM paint). */
-export function setSpecimenPreviewRoot(el: HTMLElement | null): void {
+export function setSpecimenPreviewRoot(el: SailHost | null): void {
   previewRoot = el
 }
 

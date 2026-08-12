@@ -1,3 +1,4 @@
+import { closestAttr, inputValue, type UiEvent } from '../ui-event'
 /**
  * Themes → Components facet — component-scoped DTCG overrides for this theme.
  * - List faces with component.* tokens (or explicit global hooks).
@@ -153,13 +154,18 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
     { path: 'radius.md', label: 'Radius md (global · text fields)' },
   ],
   textarea: [
+    { path: 'color.background', label: 'Background (global · field.bg alias)' },
+    { path: 'color.foreground', label: 'Foreground (global · field.fg alias)' },
+    { path: 'color.border.default', label: 'Border (global · field.border alias)' },
+    { path: 'color.destructive.default', label: 'Destructive (global · invalid border)' },
+    { path: 'radius.md', label: 'Radius md (global · text fields)' },
+  ],
   select: [
     { path: 'color.background', label: 'Background (global · rest field.bg)' },
     { path: 'color.foreground', label: 'Foreground (global · rest field.fg)' },
     { path: 'color.border.default', label: 'Border (global · rest field.border)' },
     { path: 'color.border.strong', label: 'Border strong (global · hover)' },
     { path: 'color.destructive.default', label: 'Danger (global · invalid border)' },
-    { path: 'radius.md', label: 'Radius md (global · field radius)' },
     { path: 'radius.md', label: 'Radius md (global · control)' },
   ],
   fieldset: [
@@ -192,7 +198,6 @@ const FACE_HINTS: Record<string, string> = {
   'radio-group': 'Radio set',
   switch: 'Binary toggles · component.switch.track + border + thumb',
   radio: 'Radio option · component.radio.fg leaf',
-  switch: 'Binary toggles',
   ticker: 'Marquee host · duration/reverse · author paint (no component leaves)',
   chip: 'Filters and tags',
   kbd: 'Keycaps · component.kbd.* faces',
@@ -209,11 +214,10 @@ const FACE_HINTS: Record<string, string> = {
   'error-state': 'Recovery · component.error-state leaves + brand destructive',
   icon: 'Glyph host · icon scale sizes · currentColor ink',
   avatar: 'Face / initials',
-  input: 'Fields (globals + control radius)',
+  input: 'Native input · type-gated skins · component.field.* (shared select/textarea)',
   textarea: 'Multiline · component.field.* shared with input/select',
   select:
     'Native closed picker · component.field surface (shared) · size + invalid + disabled + multiple',
-  input: 'Native input · type-gated skins · component.field.* (shared select/textarea)',
   fieldset: 'Form group · component.fieldset.border leaf',
 }
 
@@ -485,14 +489,13 @@ export function createComponentsEdit(session: ThemeSession) {
     })
   }
 
-  const onFilterInput = (e: Event) => {
-    filter.set((e.target as HTMLInputElement).value)
+  const onFilterInput = (e: UiEvent) => {
+    filter.set(inputValue(e))
   }
 
-  const onSelect = (e: Event) => {
+  const onSelect = (e: UiEvent) => {
     // Rail rows author `l1=` (data-* banned). dataset.l1 never sees plain attrs.
-    const el = (e.target as Element | null)?.closest?.('[l1]') as HTMLElement | null
-    const id = el?.getAttribute('l1') ?? ''
+    const id = closestAttr(e, '[l1]', 'l1')
     if (!id || !FACES.some((f) => f.id === id)) return
     selectedId.set(id)
     seedVariant(id)
@@ -526,9 +529,9 @@ export function createComponentsEdit(session: ThemeSession) {
     })
   }
 
-  const onClearComponent = (e: Event) => {
+  const onClearComponent = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const path = pathFromEvent(e)
+    const path = closestAttr(e, '[token-path]', 'token-path')
     if (!path) return
     void clearTokenValue(path).then(() => {
       session.setNote(`Cleared override ${path}`, 'success')
@@ -536,21 +539,18 @@ export function createComponentsEdit(session: ThemeSession) {
     })
   }
 
-  const onVariantPick = (e: Event) => {
+  const onVariantPick = (e: UiEvent) => {
     // Plain `variant=` attr (not data-variant) — same as rail l1 / facet doors.
-    const el = (e.target as Element | null)?.closest?.('[variant]') as HTMLElement | null
-    const v = el?.getAttribute('variant')
-    if (v != null) variant.set(v)
+    const v = closestAttr(e, '[variant]', 'variant')
+    if (v) variant.set(v)
   }
-  const onSizePick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[size]') as HTMLElement | null
-    const v = el?.getAttribute('size')
-    if (v != null) size.set(v)
+  const onSizePick = (e: UiEvent) => {
+    const v = closestAttr(e, '[size]', 'size')
+    if (v) size.set(v)
   }
-  const onTonePick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[tone]') as HTMLElement | null
-    const v = el?.getAttribute('tone')
-    if (v != null) tone.set(v)
+  const onTonePick = (e: UiEvent) => {
+    const v = closestAttr(e, '[tone]', 'tone')
+    if (v) tone.set(v)
   }
 
   const stageTag = (): L1Id => {
@@ -575,8 +575,8 @@ export function createComponentsEdit(session: ThemeSession) {
 
   const viewerBlurb = () => meta().blurb
   const sampleText = signal('Sample')
-  const onSampleInput = (e: Event) => {
-    sampleText.set((e.target as HTMLInputElement).value)
+  const onSampleInput = (e: UiEvent) => {
+    sampleText.set(inputValue(e))
   }
   const notify = signal(true)
   const load = signal(40)

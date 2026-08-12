@@ -11,8 +11,18 @@
  *
  * Wire:
  *   bindPreviewHost(el) once per specimen; store emit → scheduleDraftPaint.
+ *
+ * Host handle type is SailHost (Pure-safe). Attr writes go through studio-shell
+ * Framework helpers so this composition never names DOM methods.
  */
 import { getDesignState } from '../../design/index.ts'
+import {
+  hostRemoveAttribute,
+  hostSetAttribute,
+  scheduleFrame,
+} from '../../vendor/studio-shell'
+import type { SailHost } from '../../vendor/runtime'
+// `theme` is the Pure ambient global (runtime Theme API).
 
 export type DraftPaintOpts = {
   doc: Record<string, unknown> | null
@@ -27,12 +37,12 @@ export type DraftPaintOpts = {
  * Default: theme.applyScope(host, { doc, mode }).
  */
 export type DraftPaintApplier = (
-  host: HTMLElement,
+  host: SailHost,
   opts: DraftPaintOpts,
 ) => void | (() => void)
 
-const hosts = new Set<HTMLElement>()
-const teardowns = new Map<HTMLElement, () => void>()
+const hosts = new Set<SailHost>()
+const teardowns = new Map<SailHost, () => void>()
 
 /** null = use default applyScope; function = inject; false sentinel not used */
 let applier: DraftPaintApplier | null | undefined = undefined
@@ -42,7 +52,7 @@ let paintIdResolver: ((themeId: string, forkedFrom: string | null) => string) | 
 let raf = 0
 let lastPaintKey = ''
 
-function defaultApplyScope(host: HTMLElement, opts: DraftPaintOpts): () => void {
+function defaultApplyScope(host: SailHost, opts: DraftPaintOpts): () => void {
   if (!opts.doc) {
     // Cold path — attrs only (no draft tokens).
     applyRegisteredAttrs(host, opts)
@@ -70,13 +80,13 @@ export function setDraftPaintIdResolver(
   paintIdResolver = fn
 }
 
-export function bindPreviewHost(host: HTMLElement | null | undefined): void {
+export function bindPreviewHost(host: SailHost | null | undefined): void {
   if (!host) return
   hosts.add(host)
   scheduleDraftPaint()
 }
 
-export function unbindPreviewHost(host: HTMLElement | null | undefined): void {
+export function unbindPreviewHost(host: SailHost | null | undefined): void {
   if (!host) return
   hosts.delete(host)
   const td = teardowns.get(host)
@@ -88,7 +98,7 @@ export function unbindPreviewHost(host: HTMLElement | null | undefined): void {
     }
     teardowns.delete(host)
   }
-  host.removeAttribute('draft-paint')
+  hostRemoveAttribute(host, 'draft-paint')
 }
 
 export function teardownDraftPaint(): void {
@@ -96,20 +106,14 @@ export function teardownDraftPaint(): void {
   hosts.clear()
   teardowns.clear()
   lastPaintKey = ''
-  if (raf) {
-    cancelAnimationFrame(raf)
-    raf = 0
-  }
+  raf = 0
 }
 
 /** Re-apply after draft mutations (batched to rAF for continuous inputs). */
 export function scheduleDraftPaint(): void {
-  if (typeof requestAnimationFrame === 'undefined') {
-    flushDraftPaint()
-    return
-  }
   if (raf) return
-  raf = requestAnimationFrame(() => {
+  raf = 1
+  scheduleFrame(() => {
     raf = 0
     flushDraftPaint()
   })
@@ -137,7 +141,7 @@ export function flushDraftPaint(override?: Partial<DraftPaintOpts>): void {
   }
 }
 
-function applyOne(host: HTMLElement, opts: DraftPaintOpts): void {
+function applyOne(host: SailHost, opts: DraftPaintOpts): void {
   const prev = teardowns.get(host)
   if (prev) {
     try {
@@ -150,31 +154,30 @@ function applyOne(host: HTMLElement, opts: DraftPaintOpts): void {
 
   const fn = getDraftPaintApplier()
   if (fn) {
-    host.setAttribute('draft-paint', opts.doc ? 'apply' : 'registered')
+    hostSetAttribute(host, 'draft-paint', opts.doc ? 'apply' : 'registered')
     try {
       const td = fn(host, opts)
       if (typeof td === 'function') teardowns.set(host, td)
     } catch (e) {
-      host.setAttribute('draft-paint', 'error')
+      hostSetAttribute(host, 'draft-paint', 'error')
       console.warn('[theme-draft-paint] applier failed', e)
     }
     return
   }
 
   // Explicit null applier (tests): registered attrs only.
-  host.setAttribute('draft-paint', 'registered')
+  hostSetAttribute(host, 'draft-paint', 'registered')
   applyRegisteredAttrs(host, opts)
 }
 
-function applyRegisteredAttrs(host: HTMLElement, opts: DraftPaintOpts): void {
+function applyRegisteredAttrs(host: SailHost, opts: DraftPaintOpts): void {
   const id = opts.paintId || opts.themeId || 'studio'
   // Author IR `theme` + data-mode — paint authority for registered tables
   // (`[theme=id][data-mode=…]` in themes.css). Never data-theme / data-theme-preview.
-  // DOMDEC bare rename must NOT touch data-mode: it is the cascade bit, not a host tag.
-  host.setAttribute('theme', id)
-  host.removeAttribute('data-theme')
-  host.removeAttribute('data-theme-preview')
-  host.setAttribute('data-mode', opts.mode)
+  hostSetAttribute(host, 'theme', id)
+  hostRemoveAttribute(host, 'data-theme')
+  hostRemoveAttribute(host, 'data-theme-preview')
+  hostSetAttribute(host, 'data-mode', opts.mode)
 }
 
 /** Test helper — bound host count. */

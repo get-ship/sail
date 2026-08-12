@@ -101,14 +101,14 @@ export interface Theme {
   // (Root host is handed by the runtime; apps call applyTheme(id) without DOM.)
   applySource: `export function applyTheme(
   id: unknown,
-  root: HTMLElement,
+  root: /* host */ unknown,
   mode?: string | null,
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
   const resolvedMode = resolveMode(next, mode)
-  root.setAttribute('theme', next)
+  /* runtime stamps theme on host */
   // runtime stamps paint mode on the host (one-writer; not author code)
-  root.classList.remove('dark') // no dual mechanism
+  /* no dual dark class mechanism */
   // …announce ship:theme:change via subscribeThemeChange readers
   return next
 }`,

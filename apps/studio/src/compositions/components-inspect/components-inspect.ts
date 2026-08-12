@@ -1,10 +1,11 @@
+import { inputValue, selectValue, type UiEvent } from '../ui-event'
 /** Components inspect domain — surface picker, IR tree, instance panels (SailInspect). */
 import { createTable } from '../../vendor/primitives'
 import { mountAmbient } from '../../vendor/runtime'
 import { activeDoc, elementSailTreeNodes, getEditState, getOpsClient, subscribeEdit, type SailTreeNode } from '../../edit/index.ts'
 import { COMPONENTS_CATALOG } from '../../../components.gen'
-import {
 import { signal } from '../../vendor/runtime'
+import {
   extractTagName,
   isProjectComponentPath,
   projectComponentId,
@@ -361,8 +362,8 @@ export function createComponentsInspect(session: ComponentsSession) {
     }
   }
 
-  const onSurfaceChange = (e: Event) => {
-    const v = (e.target as HTMLSelectElement).value
+  const onSurfaceChange = (e: UiEvent) => {
+    const v = selectValue(e)
     void loadTree(v)
   }
 
@@ -380,8 +381,8 @@ export function createComponentsInspect(session: ComponentsSession) {
       return
     }
     void session.openInEdit(path, {
-      line: nodeLine() || undefined,
-      col: nodeCol() || undefined,
+      ...(nodeLine() ? { line: nodeLine() } : {}),
+      ...(nodeCol() ? { col: nodeCol() } : {}),
     })
   }
 
@@ -398,8 +399,8 @@ export function createComponentsInspect(session: ComponentsSession) {
     session.applyMode('library')
   }
 
-  const onTreeFilterInput = (e: Event) => {
-    const q = (e.target as HTMLInputElement).value ?? ''
+  const onTreeFilterInput = (e: UiEvent) => {
+    const q = inputValue(e)
     treeFilter.set(q)
     tree.setGlobalFilter(q)
   }

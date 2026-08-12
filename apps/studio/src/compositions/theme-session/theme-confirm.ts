@@ -1,30 +1,17 @@
 /**
  * Confirm hooks for destructive / ambiguous theme actions.
- * Default: window.confirm (platform dialog). Tests inject via setThemeConfirm.
+ * Default: platform confirm via studio-shell (Framework). Tests inject via setThemeConfirm.
  */
+import { platformConfirm, setPlatformConfirm } from '../../vendor/studio-shell'
+
 export type ThemeConfirmFn = (message: string) => boolean
 
-let confirmFn: ThemeConfirmFn = (message) => {
-  if (typeof window === 'undefined' || typeof window.confirm !== 'function') {
-    // Headless tests without DOM — allow (callers that need deny inject).
-    return true
-  }
-  return window.confirm(message)
-}
-
 export function setThemeConfirm(fn: ThemeConfirmFn | null): void {
-  confirmFn =
-    fn ??
-    ((message) => {
-      if (typeof window === 'undefined' || typeof window.confirm !== 'function') {
-        return true
-      }
-      return window.confirm(message)
-    })
+  setPlatformConfirm(fn)
 }
 
 export function themeConfirm(message: string): boolean {
-  return confirmFn(message)
+  return platformConfirm(message)
 }
 
 export function confirmDeleteTheme(name: string): boolean {

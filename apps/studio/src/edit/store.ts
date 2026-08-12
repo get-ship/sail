@@ -1,3 +1,4 @@
+import type { SailHost } from '../vendor/runtime'
 /**
  * Edit surface store — explorer + documents + view switcher + selection sync.
  * Consumes SailInspect / SailRender / SailAuthoring via injected OpsClient (T-I2).
@@ -203,7 +204,7 @@ export function writeSignalValue(name: string, value: string): void {
   // is scoped when the preview frame origin is known; fall back to '*'.
   let targetOrigin = '*'
   try {
-    const o = win.location?.origin
+    const o = (win as { location?: { origin?: string } }).location?.origin
     if (o && o !== 'null') targetOrigin = o
   } catch {
     targetOrigin = '*'
@@ -216,8 +217,8 @@ export function writeSignalValue(name: string, value: string): void {
 }
 
 /** Register the live-preview contentWindow (template/controller owns the host). */
-let livePreviewWindow: Window | null = null
-export function setLivePreviewWindow(w: Window | null): void {
+let livePreviewWindow: { postMessage(msg: unknown, origin: string): void; location?: { origin?: string } } | null = null
+export function setLivePreviewWindow(w: { postMessage(msg: unknown, origin: string): void; location?: { origin?: string } } | null): void {
   livePreviewWindow = w
 }
 
@@ -721,7 +722,7 @@ export function clearHoverTip(): void {
  * Scroll source editor (sail-code-editor or textarea) to the selection span.
  * Returns true when the host was present and scroll applied.
  */
-export function scrollSourceEditor(host: HTMLElement | null): boolean {
+export function scrollSourceEditor(host: SailHost | null): boolean {
   if (!host || state.sourceScrollLine == null) return false
   return applySourceEditorScroll(
     host,
@@ -734,11 +735,11 @@ export function scrollSourceEditor(host: HTMLElement | null): boolean {
  * Resolve the active source editor host (CodeMirror CE or textarea).
  * Returns the host registered via setSourceEditorHost only (no ambient lookup).
  */
-let sourceEditorHost: HTMLElement | null = null
-export function setSourceEditorHost(el: HTMLElement | null): void {
+let sourceEditorHost: SailHost | null = null
+export function setSourceEditorHost(el: SailHost | null): void {
   sourceEditorHost = el
 }
-export function querySourceEditor(): HTMLElement | null {
+export function querySourceEditor(): SailHost | null {
   return sourceEditorHost
 }
 

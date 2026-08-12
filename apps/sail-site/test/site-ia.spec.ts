@@ -62,6 +62,9 @@ test.describe('workbench shell', () => {
   })
 })
 
+const COMPONENTS_RAIL =
+  'nav[label="Components"], nav[testid="components-rail"], [testid="components-rail"]'
+
 test.describe('SPA layout integrity', () => {
   test('rail stays across docs nav; gone on playground; returns on docs', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
@@ -101,6 +104,49 @@ test.describe('SPA layout integrity', () => {
     }
     await expect(page).toHaveURL(/\/docs/)
     await expect(page.locator(DOCS_RAIL).first()).toBeVisible({ timeout: 15_000 })
+  })
+
+  // E2a Gate 4 — components rail: pathname SSOT drives aria-current without remount.
+  test('components rail aria-current follows client nav (chrome reuse)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/components', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator(COMPONENTS_RAIL).first()).toBeVisible({ timeout: 30_000 })
+
+    // Hub current, then client-nav to a leaf — rail stays, aria-current moves.
+    await expect(
+      page.locator('nav a[href="/components"][aria-current="page"]').first(),
+    ).toBeVisible()
+
+    // Chain under the rail: comma-list CSS would only attach `a[…]` to the last group,
+    // so `.first()` can match the <nav> itself (href null) instead of a leaf link.
+    const rail = page.locator(COMPONENTS_RAIL).first()
+    const leaf = rail.locator('a[href^="/components/"]:not([href="/components"])').first()
+    await expect(leaf).toBeVisible()
+    const href = await leaf.getAttribute('href')
+    expect(href).toMatch(/^\/components\/[^/]+$/)
+    await leaf.click()
+    await expect(page).toHaveURL(new RegExp(`${href?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`))
+    await expect(page.locator(COMPONENTS_RAIL).first()).toBeVisible()
+    await expect(
+      page.locator(`nav a[href="${href}"][aria-current="page"]`).first(),
+    ).toBeVisible()
+
+    // Second leaf under the same layout chrome
+    const other = rail
+      .locator(`a[href^="/components/"]:not([href="/components"]):not([href="${href}"])`)
+      .first()
+    if ((await other.count()) > 0) {
+      const href2 = await other.getAttribute('href')
+      await other.click()
+      await expect(page).toHaveURL(
+        new RegExp(`${href2?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+      )
+      await expect(page.locator(COMPONENTS_RAIL).first()).toBeVisible()
+      await expect(
+        page.locator(`nav a[href="${href2}"][aria-current="page"]`).first(),
+      ).toBeVisible()
+      await expect(page.locator(`nav a[href="${href}"][aria-current="page"]`)).toHaveCount(0)
+    }
   })
 })
 

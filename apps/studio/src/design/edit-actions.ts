@@ -1,3 +1,4 @@
+import { postStudioMessage } from '../vendor/studio-shell'
 /**
  * Design edit actions — density, scale families, type, icons, path writes.
  */
@@ -450,18 +451,12 @@ export function previewInAppOn(ctx: EditCtx): {
   const themeId = state.themeId
 
   // Broadcast declared token patch for live theme preview (no raw CSSOM).
-  if (typeof window !== 'undefined') {
-    window.postMessage(
-      {
-        channel: 'sail-studio',
-        type: 'theme-preview',
-        themeId,
-        density,
-        patch,
-      },
-      '*',
-    )
-  }
+  postStudioMessage({
+    type: 'theme-preview',
+    themeId,
+    density,
+    patch,
+  })
 
   const message = `preview ${themeId} · density ${density} · ${Object.keys(patch).length} tokens`
   ctx.setState({ ...ctx.getState(), statusNote: message })

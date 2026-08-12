@@ -1,3 +1,5 @@
+import { selectValue, type UiEvent } from '../ui-event'
+import { openExternalUrl } from '../../vendor/studio-shell'
 /**
  * Checks surface VM — createTable owns the findings inbox (grouping/sort/
  * filter/selection/expand). Host gets table identity via assignTableHost.
@@ -497,18 +499,18 @@ export function createChecksSurface() {
     return () => unsub()
   })
 
-  const onRuleFilter = (e: Event) => {
-    setRuleFilter((e.target as HTMLSelectElement).value || null)
+  const onRuleFilter = (e: UiEvent) => {
+    setRuleFilter(selectValue(e) || null)
     sync()
   }
 
-  const onFileFilter = (e: Event) => {
-    setFileFilter((e.target as HTMLSelectElement).value || null)
+  const onFileFilter = (e: UiEvent) => {
+    setFileFilter(selectValue(e) || null)
     sync()
   }
 
-  const onSeverityFilter = (e: Event) => {
-    const v = (e.target as HTMLSelectElement).value || ''
+  const onSeverityFilter = (e: UiEvent) => {
+    const v = selectValue(e) || ''
     severityFilterVal.set(v)
     if (v) table.setColumnFilter('severity', v)
     else table.setColumnFilter('severity', undefined)
@@ -551,7 +553,7 @@ export function createChecksSurface() {
   const onFindingAction = (
     id: string,
     action: 'open-source' | 'select-in-app' | 'apply-fix',
-    e?: Event,
+    e?: UiEvent,
   ) => {
     if (!id || !action) return
     e?.stopPropagation?.()
@@ -571,13 +573,7 @@ export function createChecksSurface() {
       } else {
         // Fallback: external editor deep link when path is unavailable.
         const url = openSourceUrlFor()
-        if (url && typeof window !== 'undefined') {
-          try {
-            window.open(url, '_blank')
-          } catch {
-            /* */
-          }
-        }
+        if (url) openExternalUrl(url)
       }
     } else if (action === 'select-in-app') {
       selectInApp()
@@ -588,7 +584,7 @@ export function createChecksSurface() {
   }
 
   /** Closed-over rule id — no dataset bus (plain attrs are not data-*). */
-  const onRuleToggle = (rule: string, e?: Event) => {
+  const onRuleToggle = (rule: string, e?: UiEvent) => {
     if (!rule) return
     e?.stopPropagation?.()
     // Explicit map — never bare toggleExpanded under expand-all.
@@ -607,7 +603,7 @@ export function createChecksSurface() {
     )
   }
 
-  const onApplyRule = (rule: string, e?: Event) => {
+  const onApplyRule = (rule: string, e?: UiEvent) => {
     if (!rule) return
     e?.stopPropagation?.()
     applyRuleFixes(rule)

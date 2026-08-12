@@ -1,5 +1,6 @@
 /** Pure rail + path helpers for Studio chrome (no mount / ops). */
 import type { ActivityId } from '../../vendor/studio-shell'
+import { hostDeckAppRoute, hotkeyModLabel } from '../../vendor/studio-shell'
 
 /** Digit → activity; Ctrl/Cmd+digit navigates. Checks is a panel, not digit-5. */
 export const ACTIVITY_BY_DIGIT: Record<string, ActivityId> = {
@@ -31,12 +32,7 @@ export type RailRow = {
 
 /** Platform mod glyph for tooltips — ⌘ on Apple, Ctrl+ elsewhere. */
 export function hotkeyMod(): string {
-  if (typeof navigator === 'undefined') return 'Ctrl+'
-  const p =
-    (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform ||
-    navigator.platform ||
-    ''
-  return /mac|iphone|ipad|ipod/i.test(p) ? '⌘' : 'Ctrl+'
+  return hotkeyModLabel()
 }
 
 export function railLabel(id: string, mod = hotkeyMod()): string {
@@ -47,13 +43,7 @@ export function railLabel(id: string, mod = hotkeyMod()): string {
 
 /** Multi-app mount base (e.g. `/_studio`) so rail links stay in-app. */
 export function appRouteBase(): string {
-  if (typeof document === 'undefined') return ''
-  const raw = document
-    .querySelector('meta[name="deck-app-route"]')
-    ?.getAttribute('content')
-    ?.trim()
-  if (!raw || raw === '/') return ''
-  return raw.replace(/\/$/, '')
+  return hostDeckAppRoute()
 }
 
 /** Pathname relative to app base for rail active state. */

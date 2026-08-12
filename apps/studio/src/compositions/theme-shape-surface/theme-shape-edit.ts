@@ -1,3 +1,4 @@
+import { inputValue, type UiEvent } from '../ui-event'
 /**
  * Shape domain — radius / elev / border / glass. Session owns open/mode/save/path.
  * Live specimen via freeform px/shadow/fill bind (not product CSS-var state).
@@ -378,9 +379,9 @@ export function createShapeEdit(session: ThemeSession) {
     recipeLabel.set(rid)
     const glassOn =
       rid === 'glass' || (rid === 'custom' && (surfaceBlur() > 0 || surfaceOp() < 0.999))
-    showGlass.set(glassOn || rid === 'glass')
+    showGlass.set(glassOn)
     if (rid === 'custom') statRecipe.set('custom · free dials')
-    else if (rid !== 'custom') statRecipe.set(`${rid} · scaled family`)
+    else statRecipe.set(`${rid} · scaled family`)
 
     pushLiveShape()
   }
@@ -437,9 +438,9 @@ export function createShapeEdit(session: ThemeSession) {
     focusStep.set(key)
   }
 
-  const onMasterInput = (e: Event) => {
+  const onMasterInput = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const n = Number((e.target as HTMLInputElement).value)
+    const n = Number(inputValue(e))
     if (!Number.isFinite(n)) return
     markCustom()
     // Absolute mock ramp — local + store stay aligned (no optimistic flash/snap).
@@ -453,17 +454,17 @@ export function createShapeEdit(session: ThemeSession) {
     void writeElev(key).then(() => session.sync())
   }
 
-  const onBorderWidth = (e: Event) => {
+  const onBorderWidth = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const n = Number((e.target as HTMLInputElement).value)
+    const n = Number(inputValue(e))
     if (!Number.isFinite(n)) return
     markCustom()
     void writeBorderW(n).then(() => session.sync())
   }
 
-  const onSurfaceOp = (e: Event) => {
+  const onSurfaceOp = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const pct = Number((e.target as HTMLInputElement).value)
+    const pct = Number(inputValue(e))
     if (!Number.isFinite(pct)) return
     markCustom()
     void writeGlass(pct / 100, surfaceBlur()).then(() => {
@@ -472,9 +473,9 @@ export function createShapeEdit(session: ThemeSession) {
     })
   }
 
-  const onSurfaceBlur = (e: Event) => {
+  const onSurfaceBlur = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const n = Number((e.target as HTMLInputElement).value)
+    const n = Number(inputValue(e))
     if (!Number.isFinite(n)) return
     markCustom()
     void writeGlass(surfaceOp(), n).then(() => {

@@ -1,3 +1,4 @@
+import { detailField, inputValue, selectValue, type UiEvent } from '../ui-event'
 /**
  * Components page session — mode, selection, toast, open-edit, thread, brief.
  * Domain modules register via onSync; no hand-rolled listener Sets as product stores.
@@ -9,7 +10,7 @@ import {
 } from '../../vendor/runtime'
 import { getEditState, openDocument, requestSourceScroll } from '../../edit/index.ts'
 import { createThread } from '../../tasks/index.ts'
-import { getShellState } from '../../vendor/studio-shell'
+import { getShellState, writeClipboardText } from '../../vendor/studio-shell'
 import { buildAgentBrief, buildNewComponentBrief } from '../../components/brief'
 import type {
   ComponentMode,
@@ -37,25 +38,6 @@ export type ComponentsSession = ReturnType<typeof createComponentsSession>
 export type ComponentsSessionOpts = {
   /** Surface-fixed mode when library/inspect are separate route mounts. */
   mode?: ComponentMode
-}
-
-/**
- * Programmatic clipboard write for session actions (copy brief).
- * Prefer `use:clipboard` on click hosts; this path is for non-click handlers.
- * Returns false when the Clipboard API is unavailable.
- */
-async function writeClipboard(text: string): Promise<boolean> {
-  try {
-    // Clipboard API is the platform primitive behind use:clipboard.
-    const clip = globalThis.navigator?.clipboard
-    if (clip?.writeText) {
-      await clip.writeText(text)
-      return true
-    }
-  } catch {
-    /* offline / denied */
-  }
-  return false
 }
 
 export function createComponentsSession(opts?: ComponentsSessionOpts) {
@@ -199,13 +181,13 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
       return false
     }
     const text = buildAgentBrief({ record })
-    const ok = await writeClipboard(text)
+    const ok = await writeClipboardText(text)
     setNote(ok ? 'Brief copied' : 'Could not copy brief', ok ? 'success' : 'warning')
     return ok
   }
 
-  const onFilterInput = (e: Event) => {
-    const q = (e.target as HTMLInputElement).value ?? ''
+  const onFilterInput = (e: UiEvent) => {
+    const q = inputValue(e)
     filterQuery.set(q)
     writeComponentsActivity({ filterQuery: q })
     notifyDomain()
@@ -223,11 +205,13 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
     detailTab.set(tab)
   }
 
-  const onDetailTab = (e: Event) => {
-    const name = (e as CustomEvent<{ value?: string; name?: string }>).detail?.value
-      ?? (e as CustomEvent<{ name?: string }>).detail?.name
-      ?? (e.target as HTMLElement | null)?.getAttribute?.('value')
-      ?? (e.target as HTMLElement | null)?.getAttribute?.('name')
+  const onDetailTab = (e: UiEvent) => {
+    const name =
+      detailField(e, 'value') ||
+      detailField(e, 'name') ||
+      e.target?.getAttribute?.('value') ||
+      e.target?.getAttribute?.('name') ||
+      ''
     if (name === 'overview' || name === 'contract' || name === 'health' || name === 'theme') {
       detailTab.set(name)
     }
@@ -239,14 +223,14 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
     notifyDomain()
   }
 
-  const onNewNameInput = (e: Event) => {
-    newName.set((e.target as HTMLInputElement).value ?? '')
+  const onNewNameInput = (e: UiEvent) => {
+    newName.set(inputValue(e))
   }
-  const onNewIntentInput = (e: Event) => {
-    newIntent.set((e.target as HTMLTextAreaElement).value ?? '')
+  const onNewIntentInput = (e: UiEvent) => {
+    newIntent.set(inputValue(e))
   }
-  const onNewLayerChange = (e: Event) => {
-    newLayer.set((e.target as HTMLSelectElement).value ?? 'app')
+  const onNewLayerChange = (e: UiEvent) => {
+    newLayer.set(selectValue(e) ?? 'app')
   }
 
   const onCreateBrief = async () => {
@@ -255,7 +239,7 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
       intent: newIntent(),
       layer: newLayer(),
     })
-    const ok = await writeClipboard(text)
+    const ok = await writeClipboardText(text)
     setNote(
       ok ? 'Draft brief copied — scaffold is not written to disk yet.' : 'Could not copy brief',
       ok ? 'success' : 'warning',

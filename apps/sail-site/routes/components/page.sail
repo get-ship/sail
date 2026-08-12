@@ -40,7 +40,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry } from '../../src/compositions/component-catalog'
+import { CATALOG, PACKS, CATEGORIES, packCount, type CatalogEntry, type Pack } from '../../src/compositions/component-catalog'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const { query, filtered } = filteredList(
@@ -102,8 +102,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       return out
     })
 
-    const packs = () => PACKS.map((p) => ({ ...p, count: packCount(p.id) }))
-    const cats = () => CATEGORIES.map((c) => c as string)
+    const packs = () => PACKS.map((p: Pack) => ({ ...p, count: packCount(p.id) }))
+    const cats = () => CATEGORIES.map((c: string) => c)
     const countLabel = derived(() => {
       const n = visibleList().length
       return n > 0 ? `${n} components` : ''
@@ -133,23 +133,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       "const greet = (name) => {\n  return `hello, ${name}`\n}\n\ngreet('sail')\n"
     const toolArgs = () => '{ "env": "prod", "limit": 5 }'
     const toolResult = () => '[{ "id": "d-1842", "status": "healthy" }]'
-    // sail-media-image src is JS identity (not reflect); needs CSP img-src https:.
+    // Demo raster URL — PE owns src wiring via the host attribute (CSP img-src https:).
     const DEMO_PHOTO =
       'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&h=400&fit=crop&auto=format&q=80'
-    effect(() => {
-      void packSel()
-      void visibleList()
-      requestAnimationFrame(() => {
-        document
-          .querySelectorAll(
-            'sail-media-image, [tile="sail-media-image"] sail-media-image, [data-tile="sail-media-image"] sail-media-image',
-          )
-          .forEach((el) => {
-            const host = el as HTMLElement & { src?: string }
-            if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
-          })
-      })
-    })
 
     return {
       query, packSel, catSel, pickPack, pickCat,
@@ -157,6 +143,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       email, agreed, notify, volume, team, plan, kept, dropChip,
       catalogToastItems, pushCatalogToast, onCatalogToastDismiss,
       editorSample, toolArgs, toolResult,
+      DEMO_PHOTO,
     }
 })
 </controller>
@@ -450,7 +437,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                       <p style(mutedXs)>Build 1837 · shipped · Mon</p>
                     </column>
                   </scroll-area>}{else-if {e.tag === 'sail-sparkline'} => <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>}{else-if {e.tag === 'sail-area-chart'} => <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>}{else-if {e.tag === 'sail-bar-chart'} => <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>}{else-if {e.tag === 'sail-donut'} => <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>}{else-if {e.tag === 'sail-gauge'} => <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>}{else-if {e.tag === 'sail-heatmap'} => <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" cell-size="18" gap="3" tone="primary"></sail-heatmap>}{else-if {e.tag === 'sail-line-chart'} => <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>}{else-if {e.tag === 'sail-media-image'} => <div style(mediaFrame)>
-                    <sail-media-image alt="Mountain lake at dusk" fit="cover" zoomable={false} style(mediaStage)></sail-media-image>
+                    <sail-media-image src={DEMO_PHOTO} alt="Mountain lake at dusk" fit="cover" zoomable={false} style(mediaStage)></sail-media-image>
                   </div>}{else-if {e.tag === 'sail-media-av'} => <sail-media-av></sail-media-av>}{else-if {e.tag === 'sail-code-editor'} => <sail-code-editor value={editorSample()} language="javascript" line-numbers></sail-code-editor>}{else-if {e.tag === 'sail-mermaid'} => <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>}{else-if {e.tag === 'sail-message'} => <column gap="2" style({ box: w(full) })>
                     <sail-message from="user" status="sent">Can you summarize yesterday’s deploy?</sail-message>
                     <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>

@@ -1,3 +1,4 @@
+import { closestAttr, type UiEvent } from '../ui-event'
 /**
  * Theme session shell actions — save / peek / add-to-project / path.
  * Keeps createThemeSession under the hard line budget.
@@ -122,10 +123,9 @@ export function makeSessionShellActions(ctx: SessionActionCtx) {
     ctx.setNote(`Unknown section “${item?.label ?? v}”.`, 'muted')
   }
 
-  const onFacet = (e: Event) => {
+  const onFacet = (e: UiEvent) => {
     // Authored attr is `facet=` (data-* banned). dataset.facet only works for data-facet.
-    const el = (e.target as Element | null)?.closest?.('[facet]') as HTMLElement | null
-    const f = el?.getAttribute('facet') ?? ''
+    const f = closestAttr(e, '[facet]', 'facet')
     if (!f) return
     if (isFacet(f)) {
       ctx.navigateFacet(f)

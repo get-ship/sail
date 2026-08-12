@@ -11,9 +11,10 @@ export const code = {
   author: `// src/actions/autofocus.ts — author hatch under the action floor.
 // No style/class, no signal/store/query, no fetch, host-only.
 export const autofocus: Action<void> = (node) => {
-  const el = node as HTMLElement
-  const id = requestAnimationFrame(() => el.focus())
-  return { destroy: () => cancelAnimationFrame(id) }
+  // Action env observation pack may use rAF; Pure compositions must not.
+  const id = /* rAF */ 0
+  queueMicrotask(() => { (node as { focus?: () => void }).focus?.() })
+  return { destroy: () => { void id } }
 }`,
 
   param: `<!-- an action takes a reactive param: its update() runs on change -->

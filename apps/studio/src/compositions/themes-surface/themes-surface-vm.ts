@@ -1,3 +1,4 @@
+import { inputChecked, type UiEvent } from '../ui-event'
 /**
  * Themes surface VM — project home master–detail (Variant B).
  * Reuses @ship/studio/design store: loadThemes / openTheme / addThemeToProject.
@@ -14,8 +15,8 @@ import { mountAmbient } from '../../vendor/runtime'
 import { addThemeToProject, deleteTheme, getDesignState, loadThemes, openTheme, subscribeDesign, type ThemeFile } from '../../design/index.ts'
 import { THEMES } from '../../vendor/tokens-themes'
 import { appRouteBase } from '../shell/shell-page-vm'
-import {
 import { signal, navigate } from '../../vendor/runtime'
+import {
   confirmAddToProject,
   confirmDeleteTheme,
   confirmNewTheme,
@@ -125,7 +126,7 @@ function describeTheme(
       : 'Project theme. Open it to edit DTCG tokens in Themes.',
     previewId,
     modeInfo: modesForPaintId(previewId),
-    paintWarning: resolved.warning,
+    ...(resolved.warning ? { paintWarning: resolved.warning } : {}),
   }
 }
 
@@ -200,8 +201,8 @@ export function createThemesSurface() {
       open?.forkedFrom && open.themeId === t.id ? open.forkedFrom : null
     const d = describeTheme(t.id, rowFork, {
       inProject,
-      modes: t.modes,
-      defaultMode: t.defaultMode,
+      ...(t.modes ? { modes: t.modes } : {}),
+      ...(t.defaultMode ? { defaultMode: t.defaultMode } : {}),
     })
     const paintMode = resolvePaintMode(d.previewId, d.modeInfo)
     const meta = inProject
@@ -262,8 +263,8 @@ export function createThemesSurface() {
       const file = [...ds.projectThemes, ...ds.catalogThemes].find((t) => t.id === row.id)
       const d = describeTheme(row.id, selectedFork, {
         inProject: row.inProject,
-        modes: file?.modes,
-        defaultMode: file?.defaultMode,
+        ...(file?.modes ? { modes: file.modes } : {}),
+        ...(file?.defaultMode ? { defaultMode: file.defaultMode } : {}),
       })
       const previewId = d.previewId
       const info = d.modeInfo
@@ -350,8 +351,8 @@ export function createThemesSurface() {
   }
 
   /** Switch checked = dark; unchecked = light (matches facet chrome). */
-  const onPreviewModeSwitch = (e: Event) => {
-    const checked = (e.target as HTMLInputElement).checked
+  const onPreviewModeSwitch = (e: UiEvent) => {
+    const checked = inputChecked(e)
     applyPreviewMode(checked ? 'dark' : 'light')
   }
 
@@ -360,7 +361,7 @@ export function createThemesSurface() {
     selectTheme(id)
   }
 
-  const onMenuOpen = (id: string, e?: Event) => {
+  const onMenuOpen = (id: string, e?: UiEvent) => {
     e?.stopPropagation?.()
     if (!id) return
     menuTargetId.set(id)
@@ -393,7 +394,7 @@ export function createThemesSurface() {
   }
 
   /** List-row Add to project (catalog only). */
-  const onAddToProject = (id: string, e?: Event) => {
+  const onAddToProject = (id: string, e?: UiEvent) => {
     e?.stopPropagation?.()
     if (!id) return
     selectTheme(id)

@@ -28,13 +28,6 @@
 <controller>
 import { CATALOG, type CatalogEntry } from '../compositions/component-catalog'
 
-function readPath(ctx: { route?: { pathname?: () => string } }): string {
-  const r = ctx.route
-  if (r?.pathname) void r.pathname()
-  if (typeof location !== 'undefined' && location.pathname) return location.pathname
-  return r?.pathname?.() ?? '/components'
-}
-
 function slugFromPath(p: string): string {
   const m = p.match(/^\/components\/([^/]+)/)
   return m?.[1] ?? ''
@@ -63,46 +56,12 @@ const CAT_LABEL: Record<CatalogEntry['cat'], string> = {
 }
 
 export default controller((ctx) => {
-  const routeCtx = ctx as { route?: { pathname?: () => string } }
-  const path = signal(readPath(routeCtx))
-  effect(() => {
-    path.set(readPath(routeCtx))
-  })
+  // deck route.pathname is SSOT and updates same-tick on navigate.
+  const path = derived(() => ctx.route.pathname())
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
   const closeNav = (): void => navOpen.set(false)
   const noopNav = (): void => {}
-  mount(() => {
-    if (typeof window === 'undefined') return
-    const sync = (): void => {
-      path.set(typeof location !== 'undefined' ? location.pathname : path())
-    }
-    const hist = window.history
-    const push = hist.pushState.bind(hist)
-    const replace = hist.replaceState.bind(hist)
-    hist.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
-      const ret = push(...args)
-      queueMicrotask(sync)
-      return ret
-    }
-    hist.replaceState = function (this: History, ...args: Parameters<History['replaceState']>) {
-      const ret = replace(...args)
-      queueMicrotask(sync)
-      return ret
-    }
-    window.addEventListener('popstate', sync)
-    const mq = window.matchMedia('(min-width: 768px)')
-    const onChange = (): void => {
-      if (mq.matches) navOpen.set(false)
-    }
-    mq.addEventListener('change', onChange)
-    return () => {
-      hist.pushState = push
-      hist.replaceState = replace
-      window.removeEventListener('popstate', sync)
-      mq.removeEventListener('change', onChange)
-    }
-  })
   effect(() => {
     path()
     navOpen.set(false)
@@ -111,12 +70,12 @@ export default controller((ctx) => {
   const currentSlug = derived(() => slugFromPath(path()))
   // L1 primitives only in the rail (packs stay on the hub catalog).
   const sections = derived(() => {
-    const lang = CATALOG.filter((e) => e.pack === 'lang')
+    const lang = CATALOG.filter((e: CatalogEntry) => e.pack === 'lang')
     return CAT_ORDER.map((cat) => ({
       cat,
       label: CAT_LABEL[cat],
-      items: lang.filter((e) => e.cat === cat),
-    })).filter((s) => s.items.length > 0)
+      items: lang.filter((e: CatalogEntry) => e.cat === cat),
+    })).filter((s: { items: CatalogEntry[] }) => s.items.length > 0)
   })
 
   return { path, navOpen, openNav, closeNav, noopNav, currentSlug, sections }
@@ -159,6 +118,9 @@ export default controller((ctx) => {
   </column>
 </row>
 
+<!-- Mobile drawer only below tablet; side rail owns nav at tablet+. -->
+<when {tablet}>
+{else =>
 <dialog
   id="sail-components-drawer"
   open={navOpen()}
@@ -177,3 +139,4 @@ export default controller((ctx) => {
     <components-nav path={path} currentSlug={currentSlug} sections={sections} onNav={closeNav}></components-nav>
   </section>
 </dialog>
+}</when>

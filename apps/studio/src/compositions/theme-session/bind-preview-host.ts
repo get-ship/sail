@@ -1,20 +1,25 @@
 /**
  * Bind the first preview specimen host under a surface root for draft paint.
  * Surfaces call this from mountAmbient / mount.
+ *
+ * Host discovery uses studio-shell Framework helpers (query + MutationObserver).
+ * Pure product code never names document/querySelector/HTMLElement.
  */
+import type { SailHost } from '../../vendor/runtime'
+import { hostQuerySelector, observeSubtree } from '../../vendor/studio-shell'
 import { bindPreviewHost, unbindPreviewHost } from './theme-draft-paint'
 
 const SELECTOR =
   '[preview-specimen], [color-specimen], [shape-specimen], [overview-specimen], [assets-specimen], [components-specimen]'
 
 export function watchPreviewHost(
-  root: ParentNode,
-  onBind?: (el: HTMLElement) => void,
+  root: unknown,
+  onBind?: (el: SailHost) => void,
 ): () => void {
-  let paintHost: HTMLElement | null = null
+  let paintHost: SailHost | null = null
 
   const tryBind = () => {
-    const el = root.querySelector(SELECTOR) as HTMLElement | null
+    const el = hostQuerySelector(root, SELECTOR)
     if (!el || el === paintHost) return
     if (paintHost) unbindPreviewHost(paintHost)
     paintHost = el
@@ -24,16 +29,10 @@ export function watchPreviewHost(
 
   tryBind()
   queueMicrotask(tryBind)
-  const mo =
-    typeof MutationObserver !== 'undefined'
-      ? new MutationObserver(() => tryBind())
-      : null
-  if (mo && root instanceof Node) {
-    mo.observe(root, { childList: true, subtree: true })
-  }
+  const stopObserve = observeSubtree(root, tryBind)
 
   return () => {
-    mo?.disconnect()
+    stopObserve()
     if (paintHost) unbindPreviewHost(paintHost)
     paintHost = null
   }

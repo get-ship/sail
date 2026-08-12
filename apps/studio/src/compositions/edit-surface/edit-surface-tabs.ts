@@ -1,3 +1,5 @@
+import { closestAttr, isMiddleButton, type UiEvent } from '../ui-event'
+export { isMiddleButton }
 /** Tab open/close helpers for edit-surface doc strip.
  * L1 `<tabs>` lacks dirty/close/middle-click for dynamic open files →
  * custom strip (absorption vote: studio-tabs / L2 candidate).
@@ -80,14 +82,11 @@ export function resolveDocTabs(
   ]
 }
 
-export function tabIdFromEvent(e: Event): string | null {
-  const el = (e.target as Element | null)?.closest?.('[tab-id]') as HTMLElement | null
-  return el?.getAttribute('tab-id') ?? null
+export function tabIdFromEvent(e: UiEvent): string | null {
+  const id = closestAttr(e, '[tab-id]', 'tab-id')
+  return id || null
 }
 
-export function isMiddleButton(e: Event): boolean {
-  return (e as MouseEvent).button === 1
-}
 
 export function closeDocTab(closedId: string): string | null {
   const wasActive = getShellState().activeTabId === closedId

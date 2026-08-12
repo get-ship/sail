@@ -196,17 +196,6 @@
       `<input type="range" min="0" max="100" bind:value={volume} />\n<!-- range skin; slider L1 is a richer PE on the same host model -->`
     const inpExRest = () =>
       `<input placeholder="Theme me" />\n<!-- rest field → component.field.bg / fg / border (shared with select · textarea) -->`
-    // sail-media-image src is a JS identity property, not a reflect attr.
-    effect(() => {
-      void tag()
-      requestAnimationFrame(() => {
-        document.querySelectorAll('sail-media-image').forEach((el) => {
-          const host = el as HTMLElement & { src?: string }
-          if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
-        })
-      })
-    })
-
     const variants = () => entry()?.variants ?? []
     const hasVariants = derived(() => (entry()?.variants.length ?? 0) > 0)
     const variantAttr = () => entry()?.variantAttr ?? ''
@@ -350,7 +339,6 @@ import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { DETAILS, type DetailEntry } from '../../../src/compositions/component-details'
 import {
-  DEMO_PHOTO,
   PACK_PROPS,
   PACK_TAGS,
   packBlurbFor,
@@ -3129,7 +3117,7 @@ const kbdExChord = () =>
             </if>
             <if {stage.sailMediaImage()}>
               <column gap="3" align="center" tile-stage="sail-pack-media-image" style(mediaStage)>
-                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} style(fullMedia)></sail-media-image>
+                <sail-media-image src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&h=640&fit=crop&auto=format&q=80" alt="Harbor at dusk" fit="cover" zoomable={false} style(fullMedia)></sail-media-image>
               </column>
             </if>
             <if {stage.sailMediaAv()}>

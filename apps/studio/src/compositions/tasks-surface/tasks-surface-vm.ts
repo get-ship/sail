@@ -1,3 +1,4 @@
+import { selectValue, type UiEvent } from '../ui-event'
 /**
  * Tasks surface VM — thread monitoring + chat-elements detail
  * (sail-message-list · sail-composer · sail-markdown · sail-diff).
@@ -168,18 +169,18 @@ export function createTasksSurface() {
     void selectThread(id).then(() => sync())
   }
 
-  const onTaskOpenFilter = (e: Event) => {
-    setOpenFilter((e.target as HTMLSelectElement).value as OpenFilter)
+  const onTaskOpenFilter = (e: UiEvent) => {
+    setOpenFilter(selectValue(e) as OpenFilter)
     sync()
   }
 
-  const onTaskActorFilter = (e: Event) => {
-    setActorFilter((e.target as HTMLSelectElement).value as ActorFilter)
+  const onTaskActorFilter = (e: UiEvent) => {
+    setActorFilter(selectValue(e) as ActorFilter)
     sync()
   }
 
-  const onTaskDriftFilter = (e: Event) => {
-    setDriftFilter((e.target as HTMLSelectElement).value as DriftFilter)
+  const onTaskDriftFilter = (e: UiEvent) => {
+    setDriftFilter(selectValue(e) as DriftFilter)
     sync()
   }
 
@@ -270,7 +271,7 @@ export function createTasksSurface() {
     void reanchorToNode({
       nodeId,
       elementPath: path ? `${path.split('/').pop()} › ${nodeId}` : nodeId,
-      file: path.endsWith('.sail') ? path : undefined,
+      ...(path.endsWith('.sail') ? { file: path } : {}),
     }).then(() => sync())
   }
 

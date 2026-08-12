@@ -1,6 +1,23 @@
 /** Studio chrome VM — activity rail (real links) + status bar + ops boot. */
 import { hotkeys, mountAmbient } from '../../vendor/runtime'
-import { bindBatchToShell, bindSelectionToShell, getBatchItems, getShellState, handleBridgeRegion, isStudioMessage, selectFromBridge, setBadges, setChecksPanelOpen, setSailPath, setThemeMode, subscribeShell, toggleChecksPanel } from '../../vendor/studio-shell'
+import {
+  attachShellHotkeys,
+  bindBatchToShell,
+  bindSelectionToShell,
+  getBatchItems,
+  getShellState,
+  handleBridgeRegion,
+  isStudioMessage,
+  selectFromBridge,
+  setBadges,
+  setChecksPanelOpen,
+  setSailPath,
+  setThemeMode,
+  subscribeSailThemeChange,
+  subscribeShell,
+  subscribeWindowMessages,
+  toggleChecksPanel,
+} from '../../vendor/studio-shell'
 import { bindEditSelection, createOpsClient, getEditState, openDocument, saveActiveSource, seedFilesFromPaths, setOpsClient, setProjectRoot, subscribeEdit } from '../../edit/index.ts'
 import { getChecksState, loadFindings, setChecksOpsClient, setEditorSetting, setProjectRoot as setChecksProjectRoot, subscribeChecks } from '../../checks/index.ts'
 
@@ -83,7 +100,7 @@ export function createShellPage(opts?: ShellPageOpts) {
         id: it.id,
         label:
           it.kind === 'screenshot'
-            ? `Shot · ${Math.round(it.rect.w)}px`
+            ? `Shot · ${Math.round(it.rect.width)}px`
             : it.nodes[0]?.label ?? `Pick · ${it.id.slice(0, 6)}`,
         key: it.id,
       })),
@@ -213,45 +230,45 @@ export function createShellPage(opts?: ShellPageOpts) {
     })
     void loadThreads().then(() => sync())
     sync()
-    const onMsg = (e: MessageEvent) => {
-      if (!isStudioMessage(e.data)) return
-      const d = e.data
+    const onBridgeData = (data: unknown) => {
+      if (!isStudioMessage(data)) return
+      const d = data
       if (d.type === 'select') selectFromBridge(d.nodeId ?? null, d.selector ?? null)
       if (d.type === 'annotate' && d.rect) void handleBridgeRegion('annotate', d.rect)
       if (d.type === 'screenshot' && d.rect) void handleBridgeRegion('screenshot', d.rect)
     }
-    // Declarative shell hotkeys — no ambient keydown.
+    // Declarative shell hotkeys — framework owns document root target.
     const digitMap: Record<string, () => void> = {}
     for (const d of Object.keys(ACTIVITY_BY_DIGIT)) {
       digitMap[`mod+${d}`] = () => go(hrefForActivity(ACTIVITY_BY_DIGIT[d]!))
     }
-    // Root target for catalog hotkeys (shell has no host element ref yet).
-    // sail-allow sail-no-ambient-dom
-    const hk = hotkeys(document.documentElement, {
-      'mod+s': () => {
-        if (getEditState().activePath) void saveActiveSource().then(() => sync())
-      },
-      'mod+shift+k': () => {
-        toggleChecksPanel()
-        sync()
-      },
-      ...digitMap,
-      Escape: () => {
-        if (getShellState().checksPanelOpen) {
-          setChecksPanelOpen(false)
+    const stopHotkeys = attachShellHotkeys(
+      {
+        'mod+s': () => {
+          if (getEditState().activePath) void saveActiveSource().then(() => sync())
+        },
+        'mod+shift+k': () => {
+          toggleChecksPanel()
           sync()
-          return
-        }
-        if (canExitStudio()) exitStudio()
+        },
+        ...digitMap,
+        Escape: () => {
+          if (getShellState().checksPanelOpen) {
+            setChecksPanelOpen(false)
+            sync()
+            return
+          }
+          if (canExitStudio()) exitStudio()
+        },
       },
+      hotkeys,
+    )
+    const stopMessages = subscribeWindowMessages(onBridgeData)
+    const stopThemeBus = subscribeSailThemeChange((d) => {
+      setThemeMode(d.theme || 'studio', d.mode || 'dark')
+      setDesignMode((d.mode as 'light' | 'dark') || 'dark')
+      sync()
     })
-    // Shell chrome: message / theme bus still ambient (no platform primitive yet).
-    if (typeof window !== 'undefined') {
-      // sail-allow sail-no-ambient-events
-      window.addEventListener('message', onMsg)
-      // sail-allow sail-no-ambient-events
-      window.addEventListener('sail-theme-change', onThemeChange)
-    }
     return () => {
       stopRoute()
       unsubShell()
@@ -261,20 +278,15 @@ export function createShellPage(opts?: ShellPageOpts) {
       unsubEdit()
       unsubTasks()
       unsubChecks()
-      hk?.destroy?.()
-      if (typeof window !== 'undefined') {
-        // sail-allow sail-no-ambient-events
-        window.removeEventListener('message', onMsg)
-        // sail-allow sail-no-ambient-events
-        window.removeEventListener('sail-theme-change', onThemeChange)
-      }
+      stopHotkeys()
+      stopMessages()
+      stopThemeBus()
     }
   })
 
-  const onThemeChange = (e: Event) => {
-    const d = (e as CustomEvent).detail as { theme?: string; mode?: string } | undefined
-    setThemeMode(d?.theme || 'studio', d?.mode || 'dark')
-    setDesignMode((d?.mode as 'light' | 'dark') || 'dark')
+  const onThemeChange = (detail?: { theme?: string; mode?: string }) => {
+    setThemeMode(detail?.theme || 'studio', detail?.mode || 'dark')
+    setDesignMode((detail?.mode as 'light' | 'dark') || 'dark')
     sync()
   }
 
@@ -317,11 +329,18 @@ export function createShellPage(opts?: ShellPageOpts) {
       const id = getTasksState().selectedId
       if (id) void sendBatchToExisting(id).then(() => sync())
     },
-    onRailClick: (e: Event) => {
-      const me = e as MouseEvent
-      if (me.button !== 0 || me.metaKey || me.ctrlKey || me.shiftKey || me.altKey) return
-      const a = (e.target as Element | null)?.closest?.('a[activity]') as HTMLAnchorElement | null
-      const href = a?.getAttribute('href')
+    onRailClick: (e: {
+      preventDefault(): void
+      button?: number
+      metaKey?: boolean
+      ctrlKey?: boolean
+      shiftKey?: boolean
+      altKey?: boolean
+      target: { closest?: (s: string) => { getAttribute?: (n: string) => string | null; href?: string } | null } | null
+    }) => {
+      if ((e.button ?? 0) !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      const a = e.target?.closest?.('a[activity]')
+      const href = a?.getAttribute?.('href') ?? a?.href
       if (!href) return
       e.preventDefault()
       // Themes dirty leave guard (session registers while a facet is open).

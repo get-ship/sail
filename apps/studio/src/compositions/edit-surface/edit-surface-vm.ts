@@ -1,10 +1,11 @@
 /** Edit surface VM — doc tabs + source editor (VS Code baseline). */
-import { mountAmbient } from '../../vendor/runtime'
-import { getShellState } from '../../vendor/studio-shell'
+import { type SailHost, mountAmbient } from '../../vendor/runtime'
+import { getShellState, pushSourceEditorDiagnostics } from '../../vendor/studio-shell'
 import { activeDoc, getEditState, pathToLiveRoute, querySourceEditor, saveActiveSource, scrollSourceEditor, setSourceEditorHost, setSourceTextFromEditor, setView, subscribeEdit, uiCheckDiags } from '../../edit/index.ts'
 import { loadFindings, sourceForSave } from '../../checks/index.ts'
-import {
 import { signal, effect } from '../../vendor/runtime'
+import type { UiEvent } from '../ui-event'
+import {
   closeDocTab,
   isMiddleButton,
   mapDocTabs,
@@ -38,7 +39,7 @@ export function createEditSurface() {
   const hasOpenDoc = signal(false)
   const activePathLabel = signal('')
   /** Host ref via `use:captureEditor` — no ambient document.querySelector. */
-  const editorEl = signal<HTMLElement | null>(null)
+  const editorEl = signal<SailHost | null>(null)
   /** Same base as createOpsClient() — relative same-origin SailAuthoring. */
   const opsUrl = signal(STUDIO_OPS_URL)
   /** Active document path for Hover/Complete/diagnostics. */
@@ -50,21 +51,13 @@ export function createEditSurface() {
     getEditState().sourceScrollLine == null ? false : scrollSourceEditor(querySourceEditor())
 
   const pushSourceDiagnostics = () => {
-    if (typeof document === 'undefined') return
-    const host = querySourceEditor() as
-      | (HTMLElement & {
-          setDiagnostics?: (
-            d: { line: number; severity: 'error' | 'warning' | 'info'; message: string }[],
-          ) => void
-        })
-      | null
-    if (!host || typeof host.setDiagnostics !== 'function') return
-    host.setDiagnostics(
+    pushSourceEditorDiagnostics(
+      querySourceEditor(),
       uiCheckDiags().map((c) => ({
         line: c.line,
-        column: c.column,
-        endLine: c.endLine,
-        endColumn: c.endColumn,
+        ...(c.column != null ? { column: c.column } : {}),
+        ...(c.endLine != null ? { endLine: c.endLine } : {}),
+        ...(c.endColumn != null ? { endColumn: c.endColumn } : {}),
         severity:
           c.severity === 'warning' || c.severity === 'info'
             ? (c.severity as 'warning' | 'info')
@@ -164,11 +157,9 @@ export function createEditSurface() {
     else sync()
   }
 
-  const onTabClick = (e: Event) => {
-    const closeEl = (e.target as Element | null)?.closest?.(
-      '[tab-close]',
-    ) as HTMLElement | null
-    if (closeEl) {
+  const onTabClick = (e: UiEvent) => {
+    // Tab-close control — structural closest only (not a SailHost mount).
+    if (e.target?.closest?.('[tab-close]')) {
       const id = tabIdFromEvent(e)
       if (!id) return
       e.preventDefault()
@@ -181,7 +172,7 @@ export function createEditSurface() {
     void openShellTabDocument(id).then(() => sync())
   }
 
-  const onTabMiddle = (e: Event) => {
+  const onTabMiddle = (e: UiEvent) => {
     if (!isMiddleButton(e)) return
     const id = tabIdFromEvent(e)
     if (!id) return

@@ -1,3 +1,4 @@
+import { inputValue, type UiEvent } from '../ui-event'
 /**
  * Explorer VM — project file tree only (filter + open document).
  * Live Table identity is returned for `tree={tree}` on `<sail-tree>`.
@@ -99,8 +100,8 @@ export function createEditExplorer() {
     }).then(() => sync())
   }
 
-  const onFilterInput = (e: Event) => {
-    setFilter((e.target as HTMLInputElement).value)
+  const onFilterInput = (e: UiEvent) => {
+    setFilter(inputValue(e))
     sync()
   }
 

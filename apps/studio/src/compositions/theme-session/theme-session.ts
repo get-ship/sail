@@ -3,10 +3,12 @@
  * Only place facets call openTheme, setDesignMode, requestSaveTheme, addThemeToProject.
  * Facet overflow menu removed — delete/remix on Themes home.
  */
-import { mountAmbient } from '../../vendor/runtime'
+import { type SailHost, mountAmbient } from '../../vendor/runtime'
+import { onBeforeUnloadGuard } from '../../vendor/studio-shell'
 import { discardThemeEdits, getDesignState, loadThemes, openTheme, refreshBlast, redoThemeEdit, saveThemeForLeave, setDesignMode, subscribeDesign, undoThemeEdit } from '../../design/index.ts'
-import {
 import { signal, navigate } from '../../vendor/runtime'
+import { inputValue, inputChecked, type UiEvent } from '../ui-event'
+import {
   bindPreviewHost,
   scheduleDraftPaint,
   setDraftPaintIdResolver,
@@ -393,12 +395,12 @@ export function createThemeSession(opts: ThemeSessionOpts) {
     navigate(facetHref(f))
   }
 
-  const onNameInput = (e: Event) => {
-    nameEdit.set((e.target as HTMLInputElement).value)
+  const onNameInput = (e: UiEvent) => {
+    nameEdit.set(inputValue(e))
   }
 
-  const onNameChange = (e: Event) => {
-    const v = (e.target as HTMLInputElement).value.trim()
+  const onNameChange = (e: UiEvent) => {
+    const v = inputValue(e).trim()
     nameEdit.set(v || themeName())
     if (!renameNoteShown) {
       renameNoteShown = true
@@ -420,9 +422,8 @@ export function createThemeSession(opts: ThemeSessionOpts) {
   }
 
   /** Switch checked = dark mode; unchecked = light. */
-  const onModeSwitch = (e: Event) => {
-    const checked = (e.target as HTMLInputElement).checked
-    applyMode(checked ? 'dark' : 'light')
+  const onModeSwitch = (e: UiEvent) => {
+    applyMode(inputChecked(e) ? 'dark' : 'light')
   }
 
   const onAddMode = () => {
@@ -439,7 +440,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
   }
 
   /** Surfaces call this from specimen mount to register the preview host. */
-  const attachPreviewHost = (el: HTMLElement | null | undefined) => {
+  const attachPreviewHost = (el: SailHost | null | undefined) => {
     bindPreviewHost(el ?? null)
   }
 
@@ -481,24 +482,15 @@ export function createThemeSession(opts: ThemeSessionOpts) {
       }
     }
     boot()
-    // Dirty tab close / reload.
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!getDesignState().dirty) return
-      e.preventDefault()
-      e.returnValue = ''
-    }
-    if (typeof window !== 'undefined') {
-      // sail-allow sail-no-ambient-events
-      window.addEventListener('beforeunload', onBeforeUnload)
-    }
+    // Dirty tab close / reload — framework owns beforeunload.
+    const stopUnload = onBeforeUnloadGuard(() =>
+      (getDesignState().dirty ? 'You have unsaved theme changes.' : undefined),
+    )
     return () => {
       unsub()
       leaveGuard.reset()
       setThemeLeaveNavigate(null)
-      if (typeof window !== 'undefined') {
-        // sail-allow sail-no-ambient-events
-        window.removeEventListener('beforeunload', onBeforeUnload)
-      }
+      stopUnload()
     }
   })
 

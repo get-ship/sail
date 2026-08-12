@@ -439,14 +439,23 @@ export function parseCheckDiagnostics(raw: unknown[]): import('./types').CheckDi
   })
 }
 
-/** Apply scroll/caret on a textarea to 1-based line/col. */
+/**
+ * Source-editor scroll helpers live in `@ship/sail-studio-shell` (Framework).
+ * Re-exported here so existing `edit/views` imports keep working under Pure.
+ */
+export {
+  applySourceEditorScroll,
+  type SourceEditorHost,
+} from '../vendor/studio-shell'
+
+/** @deprecated Use applySourceEditorScroll — kept for tests that call caret path. */
 export function applySourceScroll(
-  ta: HTMLTextAreaElement,
+  ta: { value?: string; focus?: () => void; setSelectionRange?: (a: number, b: number) => void; scrollTop: number; scrollHeight: number; clientHeight: number },
   line: number,
   col = 1,
 ): void {
   if (!ta || line < 1) return
-  const text = ta.value
+  const text = String(ta.value ?? '')
   const lines = text.split('\n')
   const target = Math.min(line, lines.length)
   let pos = 0
@@ -455,51 +464,11 @@ export function applySourceScroll(
   const colOff = Math.max(0, Math.min(lineLen, Math.max(0, col - 1)))
   const caret = pos + colOff
   try {
-    ta.focus()
-    ta.setSelectionRange(caret, caret)
+    ta.focus?.()
+    ta.setSelectionRange?.(caret, caret)
   } catch {
     /* happy-dom / readonly */
   }
-  // Approximate scroll: fraction of lines
   const ratio = (target - 1) / Math.max(1, lines.length)
   ta.scrollTop = ratio * Math.max(0, ta.scrollHeight - ta.clientHeight)
-}
-
-type SourceEditorHost = HTMLElement & {
-  setCursor?: (line: number, col?: number) => void
-  focus?: () => void
-  value?: string
-}
-
-/**
- * Scroll source host to 1-based line/col.
- * Prefers sail-code-editor `setCursor`; falls back to textarea API.
- * Returns true when a host was found and scroll was applied.
- */
-export function applySourceEditorScroll(
-  host: HTMLElement | null,
-  line: number,
-  col = 1,
-): boolean {
-  if (!host || line < 1) return false
-  const el = host as SourceEditorHost
-  if (typeof el.setCursor === 'function') {
-    el.setCursor(line, col)
-    return true
-  }
-  if (host instanceof HTMLTextAreaElement || host.tagName === 'TEXTAREA') {
-    applySourceScroll(host as HTMLTextAreaElement, line, col)
-    return true
-  }
-  // Last resort: scroll .cm-scroller by line fraction (no caret).
-  const scroller = host.querySelector?.('.cm-scroller') as HTMLElement | null
-  if (!scroller) return false
-  const text =
-    typeof el.value === 'string'
-      ? el.value
-      : (host.querySelector?.('.cm-content')?.textContent ?? '')
-  const n = Math.max(1, text.split('\n').length)
-  const ratio = (Math.min(line, n) - 1) / n
-  scroller.scrollTop = ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight)
-  return true
 }

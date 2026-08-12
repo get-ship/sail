@@ -1,3 +1,4 @@
+import { closestAttr, inputValue, selectValue, type UiEvent } from '../ui-event'
 /**
  * Assets domain — deep type roles + icon pack / size / curated glyphs.
  * Font discoverer: full Google Fonts catalog via SailTheme/FontSearch (bundled),
@@ -165,18 +166,18 @@ export function createAssetsEdit(session: ThemeSession) {
   session.onSync(sync)
   sync()
 
-  const onTypeSelect = (e: Event) => {
+  const onTypeSelect = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const t = e.target as HTMLSelectElement
-    const role = t.getAttribute('type-token') as 'display' | 'body' | 'mono' | null
-    if (!role) return
-    rememberFamily(t.value)
-    void setTypeRole(role, t.value).then(() => session.sync())
+    const role = closestAttr(e, '[type-token]', 'type-token') as 'display' | 'body' | 'mono' | ''
+    if (role !== 'display' && role !== 'body' && role !== 'mono') return
+    const v = selectValue(e)
+    rememberFamily(v)
+    void setTypeRole(role, v).then(() => session.sync())
   }
 
-  const onIconPack = (e: Event) => {
+  const onIconPack = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const v = (e.target as HTMLSelectElement).value
+    const v = selectValue(e)
     setIconPack(v)
     if (v !== 'lucide') {
       session.setNote(
@@ -187,8 +188,8 @@ export function createAssetsEdit(session: ThemeSession) {
     session.sync()
   }
 
-  const onIconQuery = (e: Event) => {
-    const v = (e.target as HTMLInputElement).value
+  const onIconQuery = (e: UiEvent) => {
+    const v = inputValue(e)
     iconQuery.set(v)
     filterGlyphs(v)
   }
@@ -212,9 +213,9 @@ export function createAssetsEdit(session: ThemeSession) {
       valuePx: s.valuePx,
     }))
 
-  const onIconScaleMaster = (e: Event) => {
+  const onIconScaleMaster = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const n = Number((e.target as HTMLInputElement).value)
+    const n = Number(inputValue(e))
     if (!Number.isFinite(n)) return
     iconScaleMasterPx.set(n)
     void setIconScaleStep('md', n).then(() => session.sync())
@@ -237,8 +238,10 @@ export function createAssetsEdit(session: ThemeSession) {
     const query = q.trim()
     const gen = ++fontSearchGen
     fontSearching.set(true)
-    const catArg = category && category !== 'all' ? category : undefined
-    void searchFonts(query, { category: catArg, limit: 36 }).then((result) => {
+    void searchFonts(query, {
+      ...(category && category !== 'all' ? { category } : {}),
+      limit: 36,
+    }).then((result) => {
       if (gen !== fontSearchGen) return
       fontSearching.set(false)
       // Preview via `face=` + Sail style tokens only — never authored CSS font-family strings.
@@ -269,8 +272,8 @@ export function createAssetsEdit(session: ThemeSession) {
   // Seed popular fonts on first open (empty query = popularity ranking).
   runFontSearch('', 'all')
 
-  const onFontSearchInput = (e: Event) => {
-    const v = (e.target as HTMLInputElement).value
+  const onFontSearchInput = (e: UiEvent) => {
+    const v = inputValue(e)
     fontSearchQ.set(v)
     // Typing a query searches the full catalog (category chips stay for browse).
     // If the user is filtering mono and types "Poppins", clear the chip so results appear.
@@ -311,22 +314,23 @@ export function createAssetsEdit(session: ThemeSession) {
     session.sync()
   }
 
-  const onFontUseRole = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[font-family][font-token]') as
-      | HTMLElement
-      | null
-    const family = el?.getAttribute('font-family') ?? undefined
-    const role = el?.getAttribute('font-token') as 'display' | 'body' | 'mono' | null
-    if (!family || !role) return
+  const onFontUseRole = (e: UiEvent) => {
+    const family = closestAttr(e, '[font-family][font-token]', 'font-family')
+    const role = closestAttr(e, '[font-family][font-token]', 'font-token') as
+      | 'display'
+      | 'body'
+      | 'mono'
+      | ''
+    if (!family || (role !== 'display' && role !== 'body' && role !== 'mono')) return
     void applyRole(family, role)
   }
 
-  const onFontInstall = (e: Event) => {
+  const onFontInstall = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[font-family]') as HTMLElement | null
-    const family = el?.getAttribute('font-family') ?? undefined
+    const family = closestAttr(e, '[font-family]', 'font-family')
+    const roleRaw = closestAttr(e, '[font-family]', 'font-token')
     const role =
-      (el?.getAttribute('font-token') as 'display' | 'body' | 'mono' | null) || 'body'
+      roleRaw === 'display' || roleRaw === 'body' || roleRaw === 'mono' ? roleRaw : 'body'
     if (!family) return
     fontBusyFamily.set(family)
     void addFontFamily(family, role).then((r) => {

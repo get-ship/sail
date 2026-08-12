@@ -1,3 +1,4 @@
+import { closestAttr, selectValue, type UiEvent } from '../ui-event'
 /**
  * Overview domain — identity editors (heroes, type, icons, density).
  * Session owns open/mode/save/path; this module owns facet writes + specimen density.
@@ -183,17 +184,16 @@ export function createOverviewEdit(session: ThemeSession) {
             : densityDefault(),
     }))
 
-  const onTypeSelect = (e: Event) => {
+  const onTypeSelect = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const t = e.target as HTMLSelectElement
-    const role = t.getAttribute('type-token') as 'display' | 'body' | 'mono' | null
-    if (!role) return
-    void setTypeRole(role, t.value).then(() => session.sync())
+    const role = closestAttr(e, '[type-token]', 'type-token') as 'display' | 'body' | 'mono' | ''
+    if (role !== 'display' && role !== 'body' && role !== 'mono') return
+    void setTypeRole(role, selectValue(e)).then(() => session.sync())
   }
 
-  const onIconPack = (e: Event) => {
+  const onIconPack = (e: UiEvent) => {
     if (!session.guardEdit()) return
-    const v = (e.target as HTMLSelectElement).value
+    const v = selectValue(e)
     setIconPack(v)
     // A2: pack is memory-only until DTCG persistence exists (same honesty as Assets).
     if (v !== 'lucide') {

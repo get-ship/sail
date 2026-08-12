@@ -61,7 +61,7 @@
 -->
 
 <controller>
-import type { Action, ControllerScope } from '@ship/sail-runtime'
+import type { Action, ControllerScope, SailHost } from '@ship/sail-runtime'
 import { bindHtml } from '../../../../src/vendor/runtime'
 import { ensureWasm, makeCompile } from '../../../../src/vendor/viewer-wasm'
 import type { Scope } from './page.sail'
@@ -110,14 +110,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const nextSlug = derived(() => lesson()?.next ?? '')
 
         const editorEl = signal<CodeEditorHost | null>(null)
-    const hostEl = signal<HTMLElement | null>(null)
+    // Opaque mount handle — capability firewall (no DOM surface in Pure).
+    const hostEl = signal<SailHost | null>(null)
     let previewMount: PreviewMount | null = null
     const captureEditor: Action<void> = (node) => {
       editorEl.set(node as CodeEditorHost)
       return { destroy: () => editorEl.set(null) }
     }
     const captureHost: Action<void> = (node) => {
-      hostEl.set(node as HTMLElement)
+      hostEl.set(asSailHost(node))
       return {
         destroy: () => {
           try {
@@ -301,7 +302,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const push = (): void => {
         if (editorEl() !== ed) return
         if (typeof ed.setDiagnostics !== 'function') {
-          requestAnimationFrame(push)
+          scheduleFrame(push)
           return
         }
         ed.value = source

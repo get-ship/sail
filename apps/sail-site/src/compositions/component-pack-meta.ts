@@ -208,6 +208,6 @@ export function packSlotCopy(tag: string): string {
   return ''
 }
 
-/** Unsplash demo for sail-media-image (src is JS identity, not a reflect attr). */
+/** Unsplash demo for sail-media-image (string URL via host `src` attr / identity). */
 export const DEMO_PHOTO =
   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&h=640&fit=crop&auto=format&q=80'

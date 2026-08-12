@@ -1,3 +1,4 @@
+import type { SailHost } from '../vendor/runtime'
 // SHANTY showcase playback + library graph. Controller wires interval/signals only.
 // Nested frame mode stamping uses a handed host via `use:bindFrame` + the
 // tokens theme-change subscription API (no ambient document lookup).
@@ -5,7 +6,7 @@
 import type { Action } from '@ship/sail-runtime'
 import { applyNestedTheme, resolveNestedPaintMode, subscribeThemeChange } from '../vendor/tokens-themes'
 
-import { signal, derived, effect, interval } from '../vendor/runtime'
+import { signal, derived, effect, interval, scheduleFrame, asSailHost } from '../vendor/runtime'
 export interface Track {
   id: number
   title: string
@@ -116,7 +117,7 @@ export function createShanty() {
   // Nested frame: theme + mode (C-TH-NEST-1). Template binds theme=;
   // applyNestedTheme stamps data-mode (data-* banned in app .sail markup).
   // Host is handed via use:bindFrame — never ambient getElementById.
-  let frameHost: HTMLElement | null = null
+  let frameHost: SailHost | null = null
 
   const stampFrameMode = (id: string): boolean => {
     if (!frameHost) return false
@@ -127,9 +128,8 @@ export function createShanty() {
   /** Stamp now, or rAF-retry until the frame host attaches. */
   const stampFrameModeSoon = (id: string): void => {
     if (stampFrameMode(id)) return
-    if (typeof requestAnimationFrame !== 'function') return
-    requestAnimationFrame(() => {
-      if (!stampFrameMode(id)) requestAnimationFrame(() => stampFrameMode(id))
+    scheduleFrame(() => {
+      if (!stampFrameMode(id)) scheduleFrame(() => stampFrameMode(id))
     })
   }
 
@@ -142,7 +142,7 @@ export function createShanty() {
    * changes via the tokens runtime API (not ambient document listeners).
    */
   const bindFrame: Action<void> = (node) => {
-    frameHost = node as HTMLElement
+    frameHost = asSailHost(node)
     stampFrameMode(theme())
     const unsub = subscribeThemeChange(() => stampFrameModeSoon(theme()))
     return {

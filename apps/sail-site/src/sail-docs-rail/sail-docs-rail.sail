@@ -4,11 +4,11 @@
   never a path-if branch inside this rail.
 
   Geometry (viewport-locked site-header <main> is the parent):
-  - shell h(full) + overflow hidden — fill the budget, no page-level window scroll
+  - shell h(full) + overflow hidden — fill the budget, no page-level scroll
   - rail: independent overflowY(auto), fixed width, stretches to shell height
   - mainDocs: independent overflowY(auto) — content scrolls; rail does not leave
 
-  Responsive — CSS media queries, NOT matchMedia unmount:
+  Responsive — style when:{ tablet } + structural <when {tablet}> for drawer:
   - tablet+ (768px): fixed-width side rail
   - below tablet: rail display:none (on a plain div — .sail-col beats
     s-displaynone); Menu opens a fixed drawer
@@ -45,60 +45,16 @@
 <controller>
 /**
  * Live pathname for aria-current. Layout chrome stays mounted across leaf
- * navigations under /docs/* — route.pathname + location + history hooks so
- * rail current moves without remounting the shell.
+ * navigations under /docs/* — deck route.pathname updates synchronously on
+ * navigate (pathname SSOT), so the rail tracks the leaf without browser API wraps.
  */
-function readPath(ctx: { route?: { pathname?: () => string } }): string {
-  const r = ctx.route
-  if (r?.pathname) void r.pathname()
-  if (typeof location !== 'undefined' && location.pathname) return location.pathname
-  return r?.pathname?.() ?? '/'
-}
-
 export default controller((ctx) => {
-  const routeCtx = ctx as { route?: { pathname?: () => string } }
-  const path = signal(readPath(routeCtx))
-  // Keep path() current while this layout stays mounted across leaf SPA nav.
-  effect(() => {
-    path.set(readPath(routeCtx))
-  })
+  const path = derived(() => ctx.route.pathname())
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
   const closeNav = (): void => navOpen.set(false)
   const noopNav = (): void => {}
-  mount(() => {
-    if (typeof window === 'undefined') return
-    const sync = (): void => {
-      path.set(typeof location !== 'undefined' ? location.pathname : path())
-    }
-    // pushState/replaceState do not fire popstate — wrap history so rail updates
-    // on same-layout SPA navigations when route signals lag a frame.
-    const hist = window.history
-    const push = hist.pushState.bind(hist)
-    const replace = hist.replaceState.bind(hist)
-    hist.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
-      const ret = push(...args)
-      queueMicrotask(sync)
-      return ret
-    }
-    hist.replaceState = function (this: History, ...args: Parameters<History['replaceState']>) {
-      const ret = replace(...args)
-      queueMicrotask(sync)
-      return ret
-    }
-    window.addEventListener('popstate', sync)
-    const mq = window.matchMedia('(min-width: 768px)')
-    const onChange = (): void => {
-      if (mq.matches) navOpen.set(false)
-    }
-    mq.addEventListener('change', onChange)
-    return () => {
-      hist.pushState = push
-      hist.replaceState = replace
-      window.removeEventListener('popstate', sync)
-      mq.removeEventListener('change', onChange)
-    }
-  })
+  // Close the mobile drawer on every leaf nav (chrome stays mounted).
   effect(() => {
     path()
     navOpen.set(false)
@@ -174,6 +130,9 @@ export default controller((ctx) => {
   </column>
 </row>
 
+<!-- Mobile drawer only below tablet; side rail owns nav at tablet+. -->
+<when {tablet}>
+{else =>
 <dialog
   id="sail-docs-drawer"
   open={navOpen()}
@@ -192,3 +151,4 @@ export default controller((ctx) => {
     <docs-nav path={path} onNav={closeNav}></docs-nav>
   </section>
 </dialog>
+}</when>

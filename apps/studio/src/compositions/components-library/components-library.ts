@@ -4,8 +4,8 @@
  */
 import { mountAmbient } from '../../vendor/runtime'
 import { COMPONENTS_CATALOG } from '../../../components.gen'
-import {
 import { signal } from '../../vendor/runtime'
+import {
   filterRecords,
   mergeComponentRecords,
   mergeProjectPathAuthority,

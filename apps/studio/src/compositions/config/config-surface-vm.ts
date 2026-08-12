@@ -1,3 +1,4 @@
+import { closestAttr, type UiEvent } from '../ui-event'
 /**
  * Config surface domain — settings from shell + project only (no invented knobs).
  * Config fields are read-only; danger actions stay disabled.
@@ -214,9 +215,8 @@ export function createConfigSurfaceCore() {
 
   publish('project')
 
-  const onCatClick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[config-cat]') as HTMLElement | null
-    const id = el?.getAttribute('config-cat') as ConfigCatId | null
+  const onCatClick = (e: UiEvent) => {
+    const id = closestAttr(e, '[config-cat]', 'config-cat') as ConfigCatId | ''
     if (!id || !CONFIG_CATS.some((c) => c.id === id)) return
     publish(id)
   }

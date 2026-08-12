@@ -1,5 +1,4 @@
-import { getShellState, selectNode, setBadges } from '../vendor/studio-shell'
-import { STUDIO_CHANNEL } from '../vendor/studio-bridge'
+import { postStudioMessage, getShellState, selectNode, setBadges } from '../vendor/studio-shell'
 import {
   autoFixOnSave, bothViewportsRan, countSeverities, enrichNodeIds,
   filterFindings, fileOptions, nodeMapFromModelDiagnostics,
@@ -349,19 +348,13 @@ export function selectInApp(finding?: Finding | null): void {
   const f = finding ?? uiSelectedFinding()
   if (!f) return
   if (f.nodeId) selectNode(f.nodeId, 'surface')
-  if (typeof window !== 'undefined') {
-    window.postMessage(
-      {
-        channel: STUDIO_CHANNEL,
-        type: 'select',
-        nodeId: f.nodeId ?? null,
-        path: f.path,
-        line: f.line,
-        col: f.col,
-      },
-      '*',
-    )
-  }
+  postStudioMessage({
+    type: 'select',
+    nodeId: f.nodeId ?? null,
+    path: f.path,
+    line: f.line,
+    col: f.col,
+  })
   patch({ selectedId: f.id })
 }
 
