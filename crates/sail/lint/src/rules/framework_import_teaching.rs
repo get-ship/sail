@@ -1,11 +1,11 @@
-//! `sail-framework-import-teaching` — import law for app + third-party pack
+//! `sail-framework-import-teaching` — import law for app + third-party components package
 //! code (SPEC-AMBIENT-SURFACE-1 §2; S5.3 completion / JOB-E3).
 //!
-//! Law (operator-ratified; S5.3 supersedes the S5.1 L2 pack carve-out):
+//! Law (operator-ratified; S5.3 supersedes the S5.1 L2 components package carve-out):
 //! - Framework functions are ambient — authors delete `@ship/*` value imports.
 //! - Fires on app controllers (`.controller.ts` / inline controller under
 //!   `apps/**`), plain app TypeScript under `apps/*/src/**` (via
-//!   `APP_SOURCE_RULES`), and pack controllers under `packages/components/**`
+//!   `APP_SOURCE_RULES`), and components-package controllers under `packages/components/**`
 //!   (packs are third-party, not framework).
 //! - Type-only imports (`import type`, `import { type X }`) remain free for
 //!   `@ship/*` (types are not the ambient value surface).
@@ -20,7 +20,7 @@
 //!
 //! Pack conventions (documented for authors):
 //! - Controllers: ambient names only — no `@ship/*` value imports.
-//! - Composition / engine modules stay pack-local (relative within the pack).
+//! - Composition / engine modules stay package-local (relative within the package).
 //! - Cross-pack composition prefers pack-relative paths, not app-style
 //!   `@ship/*` value imports (same teaching when the rule sees a controller).
 //!
@@ -43,8 +43,8 @@ const MESSAGE: &str = "framework functions are ambient — delete this import fr
 
 const SUGGEST: &str = "Drop the `@ship/*` value import. Ambient names (signal, controller, \
      query, store ops, theme, …) need no import; app-local modules use `@/`. \
-     Pack controllers: same law — ambient only; composition stays pack-local \
-     (relative within the pack), not app-style `@ship/*` value imports.";
+     Component-package controllers: same law — ambient only; composition stays package-local \
+     (relative within the package), not app-style `@ship/*` value imports.";
 
 /// Deep monorepo path dual-path teaching (app product sources only).
 const FACADE_MESSAGE: &str =
@@ -84,10 +84,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     visitor.findings
 }
 
-/// App + third-party pack controllers — framework packages stay out of scope.
+/// App + third-party components package controllers — framework packages stay out of scope.
 fn is_app_framework_import_scope(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/");
-    // S5.3: L2 packs are third-party — same import law as apps (no carve-out).
+    // S5.3: L2 components packages are third-party — same import law as apps (no carve-out).
     if p.contains("/packages/components/") || p.starts_with("packages/components/") {
         return true;
     }
@@ -131,7 +131,41 @@ fn is_ship_package_specifier(module: &str) -> bool {
     if m == COMPILER_INJECT_SPECIFIER {
         return false;
     }
+    // Component packages (export sail custom elements) — legal to import from
+    // apps. Distinguished by package export metadata when available; the
+    // published components package name is the known SSOT for L2.
+    if is_component_package_specifier(m) {
+        return false;
+    }
     true
+}
+
+/// Component package specs are legal value imports (not ambient runtime).
+/// Prefer package.json `customElements` / exports metadata; fall back to the
+/// published L2 components packageage name `@ship/sail-components`.
+fn is_component_package_specifier(module: &str) -> bool {
+    let m = module.trim();
+    // L2 components package + subpaths
+    if m == "@ship/sail-components" || m.starts_with("@ship/sail-components/") {
+        return true;
+    }
+    // Legacy per-domain names still used in monorepo shims (private)
+    const LEGACY: &[&str] = &[
+        "@ship/sail-primitives",
+        "@ship/sail-charts",
+        "@ship/sail-media",
+        "@ship/sail-canvas",
+        "@ship/sail-mermaid",
+        "@ship/sail-viewer",
+        "@ship/sail-code-editor",
+        "@ship/sail-chat-elements",
+    ];
+    for name in LEGACY {
+        if m == *name || m.starts_with(&format!("{name}/")) {
+            return true;
+        }
+    }
+    false
 }
 
 /// Relative or bare path that hops into the monorepo `packages/` tree.

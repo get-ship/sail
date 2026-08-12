@@ -1,10 +1,10 @@
 //! CEM catalog integration for deck-bundler.
 //!
-//! B1: `write_pack_cem` — compile all component `.sail` files in a component
+//! B1: `write_component_package_cem` — compile all component `.sail` files in a component
 //!     pack in-process and write the merged `dist/custom-elements.json`
 //!     declared in `package.json`.
 //! B2: `generate_components_gen` — emit `<project>/components.gen.ts` for an
-//!     app from the component package module graph. Called by `bundle_app`
+//!     app from the component packageage module graph. Called by `bundle_app`
 //!     before the Rolldown step so the generated catalog is current when the
 //!     bundler reads the app graph.
 
@@ -16,23 +16,23 @@ use serde_json::Value;
 
 use crate::catalog::discover_workspace_packages;
 
-/// Compile all component `.sail` files in a component pack and write the merged
+/// Compile all component `.sail` files in a component package and write the merged
 /// `dist/custom-elements.json` declared in its `package.json`.
 ///
-/// - Reads `<pack_root>/package.json` for `customElements` field; returns
+/// - Reads `<package_root>/package.json` for `customElements` field; returns
 ///   `Ok(None)` if absent.
 /// - Walks `src/` for `<stem>/<stem>.sail` files (component convention).
 /// - Compiles each in-process via `sail_compiler::compile` with
 ///   `CompileMode::Component` and extracts the CEM from `CompileOutput::cem`.
 /// - Calls `sail_compiler::emit::cem::merge_cem` to produce the standard
 ///   manifest.
-/// - Writes to `<pack_root>/<customElements_field_value>` (creates `dist/` if
+/// - Writes to `<package_root>/<customElements_field_value>` (creates `dist/` if
 ///   needed).
 /// - Returns the path written, or `None` when the pack has no `customElements`
 ///   field.
-pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
+pub fn write_component_package_cem(package_root: &Path) -> Result<Option<PathBuf>> {
     // 1. Read package.json and get the customElements field.
-    let pkg_path = pack_root.join("package.json");
+    let pkg_path = package_root.join("package.json");
     let pkg_raw = std::fs::read_to_string(&pkg_path)
         .with_context(|| format!("read {}", pkg_path.display()))?;
     let pkg: Value = serde_json::from_str(&pkg_raw).context("parse package.json")?;
@@ -43,7 +43,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
     let ce_field = ce_field.to_string();
 
     // 2. Walk src/ for component .sail files (stem == parent dir name).
-    let src_dir = pack_root.join("src");
+    let src_dir = package_root.join("src");
     let mut sail_files: Vec<PathBuf> = Vec::new();
     if src_dir.exists() {
         walk_component_sail_files(&src_dir, &mut sail_files);
@@ -85,8 +85,8 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
     // 4. Merge into one standard manifest via the sail-compiler library.
     let merged = sail_compiler::emit::cem::merge_cem(&cems);
 
-    // 5. Write to pack_root/<customElements_field>, creating dist/ if needed.
-    let out_path = pack_root.join(&ce_field);
+    // 5. Write to package_root/<customElements_field>, creating dist/ if needed.
+    let out_path = package_root.join(&ce_field);
     if let Some(parent) = out_path.parent() {
         std::fs::create_dir_all(parent)
             .with_context(|| format!("create dir {}", parent.display()))?;
@@ -98,7 +98,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
 }
 
 /// Materialize the standard `dist/custom-elements.json` for EVERY workspace
-/// component pack that declares a `customElements` field. Run ONCE during the
+/// component package that declares a `customElements` field. Run ONCE during the
 /// framework build (`deck build-assets`), so apps then aggregate the
 /// pre-written manifests via `generate_components_gen` (B2 stays a pure read).
 /// Returns the count written. A pack that fails to compile is skipped (logged),
@@ -107,7 +107,7 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
 /// components silently had no manifest, and every consumer saw an empty catalog
 /// instead of an error. Every failure is collected (so one run names them all)
 /// and the build stops.
-pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
+pub fn write_all_component_cems(repo_root: &Path) -> Result<usize> {
     let packages = discover_workspace_packages(repo_root)
         .map_err(|e| anyhow::anyhow!("discover workspace packages: {e}"))?;
     let mut written = 0usize;
@@ -116,7 +116,7 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
         if pkg.custom_elements.is_none() {
             continue;
         }
-        match write_pack_cem(&pkg.root) {
+        match write_component_package_cem(&pkg.root) {
             Ok(Some(_)) => written += 1,
             Ok(None) => {}
             Err(e) => failures.push(format!("{}:\n  {e:#}", pkg.root.display())),
@@ -164,7 +164,7 @@ fn walk_component_sail_files(dir: &Path, out: &mut Vec<PathBuf>) {
 
 /// Emit `<project>/components.gen.ts` for an app.
 ///
-/// Discovers component packs the app depends on via:
+/// Discovers component packages the app depends on via:
 /// 1. workspace package map at `repo_root` (monorepo members + that root's deps)
 /// 2. the app's own `package.json` deps resolved through `node_modules` / `file:`
 ///    (external apps; monorepo apps whose packs hang off the app dir)
@@ -172,7 +172,7 @@ fn walk_component_sail_files(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Filters to packs listed in the app's `dependencies` / `devDependencies`,
 /// reads each pack's CEM, annotates every module with a `package` field (npm
 /// name), merges modules (path-sorted, deterministic), and writes
-/// `components.gen.ts`. Returns count of component packages included.
+/// `components.gen.ts`. Returns count of component packageages included.
 ///
 /// No-op (returns `Ok(0)`) when the app has no `package.json`.
 pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize> {
@@ -258,7 +258,7 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
 
     let body = format!(
         "// @generated by `deck build` (deck-bundler) — DO NOT EDIT.\n\
-         // Component catalog for this app, aggregated from its component package deps.\n\
+         // Component catalog for this app, aggregated from its component packageage deps.\n\
          // Regenerate with `deck build`. The `package` field on each module names its\n\
          // source package — use it to group or filter. CEM extension, not standard.\n\
          \n\
@@ -322,7 +322,7 @@ mod tests {
         let mut failures = Vec::new();
         for name in packs {
             let root = repo.join(format!("packages/components/sail/{name}"));
-            match write_pack_cem(&root) {
+            match write_component_package_cem(&root) {
                 Ok(Some(path)) => {
                     assert!(
                         path.exists(),
@@ -336,28 +336,28 @@ mod tests {
         }
         assert!(
             failures.is_empty(),
-            "pack CEM generation failed under pack import envelope:\n{}",
+            "package CEM generation failed under pack import envelope:\n{}",
             failures.join("\n")
         );
     }
 
     /// Compile a component .sail in-process and verify the merged CEM is written.
     #[test]
-    fn write_pack_cem_writes_standard_manifest() {
+    fn write_component_package_cem_writes_standard_manifest() {
         let tmp = tempdir().unwrap();
-        let pack_root = tmp.path();
+        let package_root = tmp.path();
 
         write(
-            &pack_root.join("package.json"),
+            &package_root.join("package.json"),
             r#"{"name":"@ship/fixture-pack","customElements":"dist/custom-elements.json"}"#,
         );
         // Minimal component file — no props, tag comes from ComponentMeta.
         write(
-            &pack_root.join("src/sail-foo/sail-foo.sail"),
+            &package_root.join("src/sail-foo/sail-foo.sail"),
             "<div>hello</div>\n",
         );
 
-        let result = write_pack_cem(pack_root).expect("write_pack_cem");
+        let result = write_component_package_cem(package_root).expect("write_component_package_cem");
         let out_path = result.expect("expected Some(path)");
 
         assert!(out_path.exists(), "dist/custom-elements.json written");
@@ -417,7 +417,7 @@ mod tests {
 
         let count = generate_components_gen(&project, repo_root).expect("generate_components_gen");
 
-        assert_eq!(count, 1, "one component package included");
+        assert_eq!(count, 1, "one component packageage included");
 
         let out = std::fs::read_to_string(project.join("components.gen.ts")).unwrap();
 
@@ -462,7 +462,7 @@ mod tests {
             &cem_fixture("sail-bar-chart"),
         );
 
-        // components.gen aggregates the pack CEM without a workspace map.
+        // components.gen aggregates the package CEM without a workspace map.
         let count =
             generate_components_gen(app, app).expect("generate_components_gen external");
         assert_eq!(count, 1, "node_modules pack must be included");

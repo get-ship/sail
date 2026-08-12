@@ -21,6 +21,7 @@
         "@ship/sail-chat-elements": "workspace:*",
         "@ship/sail-code-editor": "workspace:*",
         "@ship/sail-compiler-wasm": "workspace:*",
+        "@ship/sail-components": "workspace:*",
         "@ship/sail-dom": "workspace:*",
         "@ship/sail-lsp-browser": "workspace:*",
         "@ship/sail-media": "workspace:*",
@@ -39,6 +40,7 @@
       "dependencies": {
         "@ship/sail-chat-elements": "workspace:*",
         "@ship/sail-code-editor": "workspace:*",
+        "@ship/sail-components": "workspace:*",
         "@ship/sail-dom": "workspace:*",
         "@ship/sail-primitives": "workspace:*",
         "@ship/sail-runtime": "workspace:*",
@@ -50,6 +52,43 @@
       },
       "devDependencies": {
         "happy-dom": "^20.9.0",
+        "vitest": "^4.1.5",
+      },
+    },
+    "packages/components/sail": {
+      "name": "@ship/sail-components",
+      "version": "0.3.0",
+      "dependencies": {
+        "@codemirror/autocomplete": "^6",
+        "@codemirror/commands": "^6",
+        "@codemirror/lang-css": "^6",
+        "@codemirror/lang-html": "^6",
+        "@codemirror/lang-javascript": "^6",
+        "@codemirror/lang-json": "^6",
+        "@codemirror/lang-markdown": "^6",
+        "@codemirror/lang-python": "^6",
+        "@codemirror/lang-rust": "^6",
+        "@codemirror/lang-yaml": "^6",
+        "@codemirror/language": "^6",
+        "@codemirror/lint": "^6",
+        "@codemirror/search": "^6",
+        "@codemirror/state": "^6",
+        "@codemirror/view": "^6",
+        "@lezer/highlight": "^1",
+        "@ship/sail-dom": "workspace:*",
+        "@ship/sail-lsp-browser": "workspace:*",
+        "@ship/sail-runtime": "workspace:*",
+        "@ship/tokens": "workspace:*",
+        "mermaid": "^11.4.0",
+      },
+      "devDependencies": {
+        "@dagrejs/dagre": "^3.0.0",
+        "@ship/test-setup": "workspace:*",
+        "@types/node": "24.12.4",
+        "fast-formula-parser": "1.0.19",
+        "happy-dom": "^20.9.0",
+        "perfect-freehand": "^1.2.3",
+        "roughjs": "^4.6.6",
         "vitest": "^4.1.5",
       },
     },
@@ -521,6 +560,8 @@
     "@ship/sail-code-editor": ["@ship/sail-code-editor@workspace:packages/components/sail/code-editor"],
 
     "@ship/sail-compiler-wasm": ["@ship/sail-compiler-wasm@workspace:packages/sail/compiler-wasm"],
+
+    "@ship/sail-components": ["@ship/sail-components@workspace:packages/components/sail"],
 
     "@ship/sail-dom": ["@ship/sail-dom@workspace:packages/sail/dom"],
 
@@ -1026,7 +1067,7 @@
 
     "whatwg-encoding": ["whatwg-encoding@3.1.1", "", { "dependencies": { "iconv-lite": "0.6.3" } }, "sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ=="],
 
-    "whatwg-mimetype": ["whatwg-mimetype@4.0.0", "", {}, "sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg=="],
+    "whatwg-mimetype": ["whatwg-mimetype@3.0.0", "", {}, "sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q=="],
 
     "whatwg-url": ["whatwg-url@14.2.0", "", { "dependencies": { "tr46": "^5.1.0", "webidl-conversions": "^7.0.0" } }, "sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw=="],
 
@@ -1037,6 +1078,8 @@
     "xml-name-validator": ["xml-name-validator@5.0.0", "", {}, "sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg=="],
 
     "xmlchars": ["xmlchars@2.2.0", "", {}, "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="],
+
+    "@ship/sail-components/@types/node": ["@types/node@24.12.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA=="],
 
     "@ship/sail-primitives/@types/node": ["@types/node@24.12.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA=="],
 
@@ -1050,11 +1093,15 @@
 
     "d3-sankey/d3-shape": ["d3-shape@1.3.7", "", { "dependencies": { "d3-path": "1" } }, "sha512-EUkvKjqPFUAZyOlhY5gzCxCeI0Aep04LwIRpsZ/mLFelJiUfnK56jo5JMDSE7yyP2kLSb6LtF+S5chMk7uqPqw=="],
 
-    "happy-dom/whatwg-mimetype": ["whatwg-mimetype@3.0.0", "", {}, "sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q=="],
+    "data-urls/whatwg-mimetype": ["whatwg-mimetype@4.0.0", "", {}, "sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg=="],
+
+    "jsdom/whatwg-mimetype": ["whatwg-mimetype@4.0.0", "", {}, "sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg=="],
 
     "parse5/entities": ["entities@6.0.1", "", {}, "sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g=="],
 
     "vite/fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
+
+    "@ship/sail-components/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 
     "@ship/sail-primitives/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 

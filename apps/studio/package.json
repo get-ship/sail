@@ -2,7 +2,7 @@
   "name": "@ship/studio",
   "private": true,
   "type": "module",
-  "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Components · Themes · Tasks · Config. Checks is a shell panel.",
+  "description": "Sail Studio \u2014 activity rail and editor workspace. Surfaces: Edit \u00b7 Components \u00b7 Themes \u00b7 Tasks \u00b7 Config. Checks is a shell panel.",
   "exports": {
     ".": "./src/compositions/shell/index.ts",
     "./shell": "./src/compositions/shell/index.ts",
@@ -28,7 +28,8 @@
     "@ship/sail-chat-elements": "workspace:*",
     "@ship/sail-primitives": "workspace:*",
     "@ship/sail-viewer": "workspace:*",
-    "@ship/tokens": "workspace:*"
+    "@ship/tokens": "workspace:*",
+    "@ship/sail-components": "workspace:*"
   },
   "devDependencies": {
     "happy-dom": "^20.9.0",

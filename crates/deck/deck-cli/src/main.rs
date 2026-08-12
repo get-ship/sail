@@ -643,7 +643,7 @@ fn build_assets(no_stamp: bool) -> Result<()> {
     // command, but it must never block the framework bundles `build.rs`
     // needs from being staged and stamped first.
     let n =
-        deck_bundler::cem::write_all_pack_cems(&repo_root).context("pack manifest generation")?;
+        deck_bundler::cem::write_all_component_cems(&repo_root).context("component package CEM generation")?;
     println!("  cem: {n} component pack manifest(s) written");
 
     // Consumer guard: the discovered consumer bundles (per-package

@@ -82,8 +82,13 @@ impl<'a> Visit<'a> for ImportVisitor<'_> {
         }
         let module = decl.source.value.as_str();
 
-        // Side-effect import with no bindings — refuse (no type-only escape).
+        // Side-effect import with no bindings — refuse (no type-only escape),
+        // except `@ship/*` component-package registration (e.g.
+        // `import '@ship/sail-components/charts'`).
         let Some(specifiers) = &decl.specifiers else {
+            if module.trim().starts_with("@ship/") {
+                return;
+            }
             self.report(decl.span, module);
             return;
         };

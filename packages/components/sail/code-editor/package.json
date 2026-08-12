@@ -51,5 +51,6 @@
         "lazy": true
       }
     ]
-  }
+  },
+  "private": true
 }

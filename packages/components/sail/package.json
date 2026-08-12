@@ -1,0 +1,132 @@
+{
+  "name": "@ship/sail-components",
+  "version": "0.3.0",
+  "description": "Ship SAIL components \u2014 single tree-shaken npm package (primitives, charts, media, chat, canvas, code, viewers). Same authoring law as third-party packages.",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "src",
+    "**/src/**",
+    "package.json",
+    "canvas/src",
+    "charts/src",
+    "chat-elements/src",
+    "code-editor/src",
+    "media/src",
+    "mermaid/src",
+    "primitives/src",
+    "viewer/src"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json",
+    "./primitives": "./primitives/src/index.ts",
+    "./sail-calendar": "./primitives/src/sail-calendar/sail-calendar.compiled.js",
+    "./primitives/sail-calendar": "./primitives/src/sail-calendar/sail-calendar.compiled.js",
+    "./sail-cmdk": "./primitives/src/sail-cmdk/sail-cmdk.compiled.js",
+    "./primitives/sail-cmdk": "./primitives/src/sail-cmdk/sail-cmdk.compiled.js",
+    "./sail-color-picker": "./primitives/src/sail-color-picker/sail-color-picker.compiled.js",
+    "./primitives/sail-color-picker": "./primitives/src/sail-color-picker/sail-color-picker.compiled.js",
+    "./sail-date-picker": "./primitives/src/sail-date-picker/sail-date-picker.compiled.js",
+    "./primitives/sail-date-picker": "./primitives/src/sail-date-picker/sail-date-picker.compiled.js",
+    "./sail-diff": "./primitives/src/sail-diff/sail-diff.compiled.js",
+    "./primitives/sail-diff": "./primitives/src/sail-diff/sail-diff.compiled.js",
+    "./sail-error-boundary": "./primitives/src/sail-error-boundary/sail-error-boundary.compiled.js",
+    "./primitives/sail-error-boundary": "./primitives/src/sail-error-boundary/sail-error-boundary.compiled.js",
+    "./sail-file-upload": "./primitives/src/sail-file-upload/sail-file-upload.compiled.js",
+    "./primitives/sail-file-upload": "./primitives/src/sail-file-upload/sail-file-upload.compiled.js",
+    "./sail-json-view": "./primitives/src/sail-json-view/sail-json-view.compiled.js",
+    "./primitives/sail-json-view": "./primitives/src/sail-json-view/sail-json-view.compiled.js",
+    "./sail-markdown": "./primitives/src/sail-markdown/sail-markdown.compiled.js",
+    "./primitives/sail-markdown": "./primitives/src/sail-markdown/sail-markdown.compiled.js",
+    "./sail-timeline": "./primitives/src/sail-timeline/sail-timeline.compiled.js",
+    "./primitives/sail-timeline": "./primitives/src/sail-timeline/sail-timeline.compiled.js",
+    "./sail-timeline-item": "./primitives/src/sail-timeline/sail-timeline-item.compiled.js",
+    "./primitives/sail-timeline-item": "./primitives/src/sail-timeline/sail-timeline-item.compiled.js",
+    "./sail-tree": "./primitives/src/sail-tree/sail-tree.compiled.js",
+    "./primitives/sail-tree": "./primitives/src/sail-tree/sail-tree.compiled.js",
+    "./sail-tree-grid": "./primitives/src/sail-tree-grid/sail-tree-grid.compiled.js",
+    "./primitives/sail-tree-grid": "./primitives/src/sail-tree-grid/sail-tree-grid.compiled.js",
+    "./charts": "./charts/src/index.ts",
+    "./sail-area-chart": "./charts/src/sail-area-chart/sail-area-chart.compiled.js",
+    "./charts/sail-area-chart": "./charts/src/sail-area-chart/sail-area-chart.compiled.js",
+    "./sail-bar-chart": "./charts/src/sail-bar-chart/sail-bar-chart.compiled.js",
+    "./charts/sail-bar-chart": "./charts/src/sail-bar-chart/sail-bar-chart.compiled.js",
+    "./sail-line-chart": "./charts/src/sail-line-chart/sail-line-chart.compiled.js",
+    "./charts/sail-line-chart": "./charts/src/sail-line-chart/sail-line-chart.compiled.js",
+    "./sail-sparkline": "./charts/src/sail-sparkline/sail-sparkline.compiled.js",
+    "./charts/sail-sparkline": "./charts/src/sail-sparkline/sail-sparkline.compiled.js",
+    "./sail-donut": "./charts/src/sail-donut/sail-donut.compiled.js",
+    "./charts/sail-donut": "./charts/src/sail-donut/sail-donut.compiled.js",
+    "./sail-gauge": "./charts/src/sail-gauge/sail-gauge.compiled.js",
+    "./charts/sail-gauge": "./charts/src/sail-gauge/sail-gauge.compiled.js",
+    "./sail-heatmap": "./charts/src/sail-heatmap/sail-heatmap.compiled.js",
+    "./charts/sail-heatmap": "./charts/src/sail-heatmap/sail-heatmap.compiled.js",
+    "./code": "./code-editor/src/index.ts",
+    "./viewers": "./mermaid/src/index.ts",
+    "./wasm-bootstrap": "./viewer/src/wasm-bootstrap.ts",
+    "./viewers/wasm-bootstrap": "./viewer/src/wasm-bootstrap.ts",
+    "./same-doc-mount": "./viewer/src/same-doc-mount.ts",
+    "./viewers/same-doc-mount": "./viewer/src/same-doc-mount.ts",
+    "./media": "./media/src/index.ts",
+    "./engine": "./media/src/engine/index.ts",
+    "./media/engine": "./media/src/engine/index.ts",
+    "./chat": "./chat-elements/src/index.ts",
+    "./canvas": "./canvas/src/index.ts"
+  },
+  "sideEffects": [
+    "**/*.compiled.js",
+    "**/index.ts"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6",
+    "@codemirror/commands": "^6",
+    "@codemirror/lang-css": "^6",
+    "@codemirror/lang-html": "^6",
+    "@codemirror/lang-javascript": "^6",
+    "@codemirror/lang-json": "^6",
+    "@codemirror/lang-markdown": "^6",
+    "@codemirror/lang-python": "^6",
+    "@codemirror/lang-rust": "^6",
+    "@codemirror/lang-yaml": "^6",
+    "@codemirror/language": "^6",
+    "@codemirror/lint": "^6",
+    "@codemirror/search": "^6",
+    "@codemirror/state": "^6",
+    "@codemirror/view": "^6",
+    "@lezer/highlight": "^1",
+    "mermaid": "^11.4.0"
+  },
+  "devDependencies": {
+    "@ship/test-setup": "workspace:*",
+    "@types/node": "24.12.4",
+    "fast-formula-parser": "1.0.19",
+    "vitest": "^4.1.5",
+    "happy-dom": "^20.9.0",
+    "@dagrejs/dagre": "^3.0.0",
+    "perfect-freehand": "^1.2.3",
+    "roughjs": "^4.6.6"
+  },
+  "peerDependencies": {
+    "@ship/sail-runtime": ">=0.3.0",
+    "@ship/sail-dom": ">=0.3.0",
+    "@ship/tokens": ">=0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@ship/sail-runtime": {
+      "optional": false
+    },
+    "@ship/sail-dom": {
+      "optional": false
+    },
+    "@ship/tokens": {
+      "optional": false
+    }
+  }
+}

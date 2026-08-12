@@ -27,5 +27,6 @@
   "devDependencies": {
     "@ship/test-setup": "workspace:*",
     "vitest": "^4.1.5"
-  }
+  },
+  "private": true
 }

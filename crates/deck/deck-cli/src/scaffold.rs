@@ -194,21 +194,21 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     Ok(())
 }
 
-/// Validate a pack name — lowercase ASCII + digits + hyphens, starts with a
+/// Validate a package name — lowercase ASCII + digits + hyphens, starts with a
 /// letter. Becomes both the directory name and the npm package suffix
 /// (`@ship/<name>`).
 fn validate_pack_name(name: &str) -> Result<()> {
     if name.is_empty() {
-        bail!("pack name is required");
+        bail!("package name is required");
     }
     if !name.starts_with(|c: char| c.is_ascii_lowercase()) {
-        bail!("pack name must start with a lowercase letter — got {name:?}");
+        bail!("package name must start with a lowercase letter — got {name:?}");
     }
     if !name
         .chars()
         .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
-        bail!("pack name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
+        bail!("package name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
     }
     Ok(())
 }
@@ -226,7 +226,7 @@ pub fn run_pack(name: String) -> Result<()> {
         "{{\n  \
          \"name\": \"@ship/{name}\",\n  \
          \"version\": \"0.1.0\",\n  \
-         \"description\": \"Ship {name} pack — SAIL components registry. \
+         \"description\": \"Ship {name} components package — SAIL components registry. \
          Author tags under src/<tag>/<tag>.sail; the umbrella in src/index.ts side-effect-imports each compiled.js so a single `import \\\"@ship/{name}\\\"` registers them all.\",\n  \
          \"type\": \"module\",\n  \
          \"main\": \"src/index.ts\",\n  \
@@ -280,10 +280,10 @@ pub fn run_pack(name: String) -> Result<()> {
     let index_ts = format!(
         "// @ship/{name} — SAIL component registry.\n\
          //\n\
-         // Side-effect imports for every tag in the pack. Each\n\
+         // Side-effect imports for every tag in the package. Each\n\
          // `<tag>.compiled.js` calls `customElements.define()` on import,\n\
          // so a single `import '@ship/{name}'` at the consumer registers\n\
-         // every tag in this pack globally. Add new tags below as you\n\
+         // every tag in this package globally. Add new tags below as you\n\
          // scaffold them.\n\n\
          import './{name}-example/{name}-example.compiled.js'\n"
     );
@@ -292,7 +292,7 @@ pub fn run_pack(name: String) -> Result<()> {
     let example_sail = format!(
         "<!--\n  \
          {name}-example — placeholder primitive for the @ship/{name} pack.\n\n  \
-         Replace or delete this when you author the pack's first real tag.\n\
+         Replace or delete this when you author the package's first real tag.\n\
          -->\n\n\
          <scope>\n  props: {{ label = 'hello' }}\n</scope>\n\n\
          <row align=\"center\" sx=\"px-3 py-2 border border-border rounded-md\">{{label()}}</row>\n"
@@ -307,7 +307,7 @@ pub fn run_pack(name: String) -> Result<()> {
     println!("[scaffold]   src/index.ts  src/{name}-example/{name}-example.sail");
     println!("[scaffold] next steps:");
     println!("  1. bun install — wires the new workspace package.");
-    println!("  2. Replace the {name}-example placeholder with the pack's first tag.");
+    println!("  2. Replace the {name}-example placeholder with the package's first tag.");
     println!("  3. (When ready to consume) Add `@ship/{name}: workspace:*` to the");
     println!("     consuming app + `import '@ship/{name}'` where the tags are used —");
     println!("     deck traces the tags into that entry's chunk (no separate build).");
@@ -316,7 +316,7 @@ pub fn run_pack(name: String) -> Result<()> {
 
 /// Validate an external app directory basename (`my-app`).
 ///
-/// Same shape as route/pack names: `/^[a-z][a-z0-9-]*$/`. Becomes the npm
+/// Same shape as route/package names: `/^[a-z][a-z0-9-]*$/`. Becomes the npm
 /// `package.json` `name` field (unscoped) and the on-disk directory name.
 fn validate_app_name(name: &str) -> Result<()> {
     if name.is_empty() {

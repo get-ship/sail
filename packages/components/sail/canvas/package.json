@@ -24,5 +24,6 @@
     "perfect-freehand": "^1.2.3",
     "roughjs": "^4.6.6",
     "vitest": "^4.1.5"
-  }
+  },
+  "private": true
 }

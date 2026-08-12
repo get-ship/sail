@@ -31,5 +31,6 @@
     "@ship/test-setup": "workspace:*",
     "happy-dom": "^20.9.0",
     "vitest": "^4.1.5"
-  }
+  },
+  "private": true
 }
