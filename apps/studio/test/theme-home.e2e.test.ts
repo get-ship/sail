@@ -15,7 +15,7 @@ import path from 'node:path'
 const STUDIO = process.env.STUDIO_URL || 'http://127.0.0.1:7893'
 const SCREENSHOT =
   process.env.THEME_HOME_SHOT ||
-  '/home/madvib/dev/Ship/helm/data/missions/m-sail-studio/scratch/pw-theme-home-product-tree.png'
+  path.join(import.meta.dirname, '../../../.artifacts/pw-theme-home.png')
 
 async function studioUp(): Promise<boolean> {
   return new Promise((resolve) => {

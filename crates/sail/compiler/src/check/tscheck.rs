@@ -1177,26 +1177,8 @@ fn runtime_ambient_dts() -> String {
          declare function observeHostAttrs(node: unknown, attrs: string[], cb: () => void): () => void;
 ",
     );
-    // Names commonly free in controllers that live in DOM lib in stock tsc
-    // (not ESNext) but are NOT the Pure-region ban surface. Stub so they do
-    // not flood the gate with non-product ambient gaps.
-    for name in [
-        "console",
-        "queueMicrotask",
-        "structuredClone",
-        "URL",
-        "URLSearchParams",
-        "TextEncoder",
-        "TextDecoder",
-        "AbortController",
-        "AbortSignal",
-        "setTimeout",
-        "clearTimeout",
-        "setInterval",
-        "clearInterval",
-    ] {
-        out.push_str(&format!("declare const {name}: any;\n"));
-    }
+    // Same framework-owned platform names + CSS module as the generated pack.
+    out.push_str(&crate::ambients::emit_framework_platform_script_dts());
     // Keep this file a **script** (no top-level import/export) so the
     // `declare function` runtime names stay global.
     //

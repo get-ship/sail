@@ -4,6 +4,23 @@
   Specimen: active · orientation; onTabChange live.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
+  style fullW = { box: w(full) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+</scope>
+
 <controller>
 import type { Scope } from './doc-tabs.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -51,23 +68,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
-  style fullW = { box: w(full) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

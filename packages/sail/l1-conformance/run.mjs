@@ -1,5 +1,5 @@
 // L1 conformance runner. CI gate + dev loop, one entry.
-//   node run.mjs            → render every spec, assert, write tracked shots (CI)
+//   node run.mjs            → render every spec, assert, write shots under __screenshots__/
 //   node run.mjs chip       → just <chip> (dev loop while iterating one element)
 // Exit 1 if any spec's probe reports issues.
 

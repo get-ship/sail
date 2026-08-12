@@ -2,7 +2,6 @@
  * Type role edit changes preview face (host CSS var / computed font).
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893) from product tree.
- * Screenshot: mission scratch pw-type-face-product-tree.png
  *
  *   cd apps/studio && bunx vitest run test/theme-type-face.e2e.test.ts
  *
@@ -16,9 +15,7 @@ import path from 'node:path'
 const STUDIO = process.env.STUDIO_URL || 'http://127.0.0.1:7893'
 const SCREENSHOT =
   process.env.TYPE_FACE_SHOT ||
-  '/home/madvib/dev/Ship/helm/data/missions/m-sail-studio/scratch/pw-type-face-product-tree.png'
-const SCRATCH_SHOT =
-  '/home/madvib/dev/Ship/helm/data/missions/m-sail-studio/scratch/pw-type-face-product-tree.png'
+  path.join(import.meta.dirname, '../../../.artifacts/pw-type-face.png')
 
 /** Families available on overview Display select (see theme-overview-edit.ts). */
 const DISTINCTIVE = [
@@ -245,15 +242,8 @@ describe('type face e2e (live studio product tree)', () => {
 
       const face = await after.jsonValue()
 
+      fs.mkdirSync(path.dirname(SCREENSHOT), { recursive: true })
       await page.screenshot({ path: SCREENSHOT, fullPage: false })
-      try {
-        fs.mkdirSync(path.dirname(SCRATCH_SHOT), { recursive: true })
-        if (SCREENSHOT !== SCRATCH_SHOT) {
-          fs.copyFileSync(SCREENSHOT, SCRATCH_SHOT)
-        }
-      } catch {
-        // scratch copy best-effort
-      }
 
       const re = new RegExp(faceToken(chosen), 'i')
       const hostStack = face.hostDisplay || face.hostInline || face.hostComputed

@@ -22,7 +22,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use sail_compiler::ambients::{
-    TypeEnv, emit_action_observation_dts, lib_for_type_env, type_env_for_kind, type_env_for_path,
+    TypeEnv, emit_action_observation_dts, emit_framework_platform_script_dts, lib_for_type_env,
+    type_env_for_kind, type_env_for_path,
 };
 use sail_compiler::project_map::{FileKind, classify};
 
@@ -58,6 +59,15 @@ fn tsc_path(repo: &Path) -> Option<PathBuf> {
 /// Write a minimal tsc project for `env` and typecheck `source` as `snippet.ts`.
 /// Returns (success, combined stdout+stderr).
 fn tsc_snippet(env: TypeEnv, source: &str) -> Option<(bool, String)> {
+    tsc_snippet_with_extra(env, source, &[])
+}
+
+/// Like [`tsc_snippet`], plus extra `.d.ts` files listed under `files`.
+fn tsc_snippet_with_extra(
+    env: TypeEnv,
+    source: &str,
+    extra_dts: &[(&str, String)],
+) -> Option<(bool, String)> {
     let repo = repo_root();
     let tsc = tsc_path(&repo)?;
 
@@ -73,6 +83,10 @@ fn tsc_snippet(env: TypeEnv, source: &str) -> Option<(bool, String)> {
         let obs = emit_action_observation_dts();
         fs::write(root.join("action-observation.d.ts"), obs).unwrap();
         files_include.push("\"./action-observation.d.ts\"".to_string());
+    }
+    for (name, body) in extra_dts {
+        fs::write(root.join(name), body).unwrap();
+        files_include.push(format!("\"./{name}\""));
     }
 
     let cfg = format!(
@@ -475,4 +489,75 @@ export function inject(styleText: string): void {
         return;
     };
     assert!(ok, "Framework env must allow document:\n{out}");
+}
+
+fn platform_dts() -> [(&'static str, String); 1] {
+    [("platform.d.ts", emit_framework_platform_script_dts())]
+}
+
+#[test]
+fn pure_css_side_effect_import_typechecks() {
+    let src = r#"
+import '@ship/tokens/tokens.css'
+import '@ship/tokens/themes.css'
+import '@ship/tokens/sail-base.css'
+import '@ship/tokens/element-skins.css'
+import '@ship/tokens/products.css'
+export const loaded = true
+"#;
+    let Some((ok, out)) = tsc_snippet_with_extra(TypeEnv::Pure, src, &platform_dts()) else {
+        eprintln!("SKIP pure_css_side_effect_import_typechecks: tsc not found");
+        let dts = emit_framework_platform_script_dts();
+        assert!(
+            dts.contains("declare module '*.css'"),
+            "platform ambient must declare CSS modules when tsc absent:\n{dts}"
+        );
+        return;
+    };
+    assert!(
+        ok,
+        "Pure env must accept legal @ship/tokens/*.css side-effect imports:\n{out}"
+    );
+}
+
+#[test]
+fn pure_settimeout_and_cleartimeout_typecheck() {
+    let src = r#"
+export function later(fn: () => void): () => void {
+  const id = setTimeout(fn, 20)
+  return () => clearTimeout(id)
+}
+"#;
+    let Some((ok, out)) = tsc_snippet_with_extra(TypeEnv::Pure, src, &platform_dts()) else {
+        eprintln!("SKIP pure_settimeout_and_cleartimeout_typecheck: tsc not found");
+        let dts = emit_framework_platform_script_dts();
+        assert!(
+            dts.contains("function setTimeout") && dts.contains("function clearTimeout"),
+            "platform ambient must declare timers when tsc absent:\n{dts}"
+        );
+        return;
+    };
+    assert!(
+        ok,
+        "Pure env must name setTimeout/clearTimeout via framework ambient:\n{out}"
+    );
+}
+
+#[test]
+fn pure_document_still_fails_with_platform_ambient() {
+    let src = r#"
+export function retitle(n: number): void {
+  document.title = `count: ${n}`
+}
+"#;
+    let Some((ok, out)) = tsc_snippet_with_extra(TypeEnv::Pure, src, &platform_dts()) else {
+        eprintln!("SKIP pure_document_still_fails_with_platform_ambient: tsc not found");
+        let lib = lib_for_type_env(TypeEnv::Pure);
+        assert!(!has_dom_lib(lib), "Pure lib must exclude DOM, got {lib:?}");
+        return;
+    };
+    assert!(
+        !ok,
+        "framework platform ambient must not grant document:\n{out}"
+    );
 }

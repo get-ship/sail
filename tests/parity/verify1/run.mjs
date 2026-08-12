@@ -769,9 +769,7 @@ async function measureBrowserStylesMulti(serveDir, caseIds, viewport = PAINT_VIE
   if (!CHROME) return { skipped: true, reason: 'no chrome', map: new Map() }
   let chromium
   try {
-    const mod = await import(
-      '/home/madvib/dev/Ship/worktrees/d-lang-g6/node_modules/playwright/index.js'
-    )
+    const mod = await import('playwright')
     chromium = mod.chromium
   } catch (e) {
     return { skipped: true, reason: e.message, map: new Map() }

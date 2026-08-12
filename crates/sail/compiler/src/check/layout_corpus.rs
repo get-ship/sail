@@ -296,13 +296,7 @@ pub fn default_out_path(workspace: &Path) -> PathBuf {
     if let Ok(p) = std::env::var("LAYOUT_CANARY_OUT") {
         return PathBuf::from(p);
     }
-    let helm = workspace
-        .join("../../helm/data/missions/m-sail-tooling/scratch/layout-1-canary-findings.json");
-    if helm.parent().is_some_and(|d| d.is_dir()) {
-        helm
-    } else {
-        workspace.join("target/layout-1-canary-findings.json")
-    }
+    workspace.join("target/layout-1-canary-findings.json")
 }
 
 struct Discovered {

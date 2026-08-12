@@ -41,6 +41,11 @@ pub const PROJECT_TYPES_REL: &str = "node_modules/.sail/types.d.ts";
 /// Pair with [`TypeEnv::Action`] + [`lib_for_type_env`] (ESNext only — no DOM lib).
 pub const PROJECT_ACTION_OBSERVATION_REL: &str = "node_modules/.sail/action-observation.d.ts";
 
+/// Script-form CSS side-effect ambient. tsgo TS2882 ignores `declare module '*.css'`
+/// inside a module (the types pack has `import`/`export`); a sibling script `.d.ts`
+/// is what makes `import '@ship/tokens/*.css'` legal under Pure.
+pub const PROJECT_CSS_MODULES_REL: &str = "node_modules/.sail/css-modules.d.ts";
+
 /// Regenerated header — agents/humans must not hand-edit the pack.
 const HEADER: &str = "\
 // GENERATED FILE — do not edit by hand.
@@ -263,6 +268,7 @@ pub fn emit_types_dts() -> String {
     let bare_tokens = emit_token_unions(&mut out);
     emit_style_types(&mut out);
     emit_globals(&mut out, &bare_tokens);
+    out.push_str(&emit_css_side_effect_module());
 
     // Ensure this file is a module (global augmentation needs export {}).
     out.push_str("export {}\n");
@@ -282,6 +288,18 @@ pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     // Always materialize the observation pack so Action-kind typechecks can
     // reference it without a separate generate step (SPEC-PLATFORM-NEUTRALITY-1).
     let _ = write_project_action_observation(project)?;
+    let _ = write_project_css_modules(project)?;
+    Ok(path)
+}
+
+/// Write [`PROJECT_CSS_MODULES_REL`] — script-form `declare module '*.css'`.
+pub fn write_project_css_modules(project: &Path) -> Result<PathBuf> {
+    let path = project.join(PROJECT_CSS_MODULES_REL);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
+    }
+    fs::write(&path, emit_css_side_effect_module())
+        .with_context(|| format!("write {}", path.display()))?;
     Ok(path)
 }
 
@@ -381,6 +399,118 @@ pub fn lib_for_type_env(env: TypeEnv) -> &'static [&'static str] {
         TypeEnv::Pure | TypeEnv::Action => &["ESNext"],
         TypeEnv::Framework => &["ESNext", "DOM", "DOM.Iterable"],
     }
+}
+
+/// Framework-owned platform values that stock tsc pulls from the DOM lib.
+/// Pure/Action stay ESNext-only — these names are declared here, never via
+/// `lib: ["DOM"]`. Isolated harness and the generated pack share this list.
+pub const FRAMEWORK_PLATFORM_VALUE_NAMES: &[&str] = &[
+    "AbortController",
+    "AbortSignal",
+    "TextDecoder",
+    "TextEncoder",
+    "URL",
+    "URLSearchParams",
+    "atob",
+    "btoa",
+    "clearInterval",
+    "clearTimeout",
+    "console",
+    "queueMicrotask",
+    "setInterval",
+    "setTimeout",
+    "structuredClone",
+];
+
+/// Side-effect-only CSS module so `import '@ship/tokens/*.css'` typechecks.
+pub fn emit_css_side_effect_module() -> String {
+    "declare module '*.css' {}\n".to_string()
+}
+
+/// Typed framework platform names for the generated pack (`declare global`).
+pub fn emit_framework_platform_global_body() -> String {
+    emit_framework_platform(true)
+}
+
+/// Script-form platform + CSS ambient (isolated harness / Pure tsc fixtures).
+pub fn emit_framework_platform_script_dts() -> String {
+    let mut out = emit_css_side_effect_module();
+    out.push_str(&emit_framework_platform(false));
+    out
+}
+
+fn emit_framework_platform(in_global: bool) -> String {
+    let indent = if in_global { "  " } else { "" };
+    let decl = if in_global { "" } else { "declare " };
+    let mut out = String::new();
+    out.push_str(indent);
+    out.push_str("// Framework-owned platform names (ESNext lib omits these).\n");
+    // Interfaces first so value-side constructors can name them.
+    out.push_str(&format!(
+        "{indent}interface URLSearchParams {{\n\
+         {indent}  append(name: string, value: string): void\n\
+         {indent}  delete(name: string): void\n\
+         {indent}  get(name: string): string | null\n\
+         {indent}  getAll(name: string): string[]\n\
+         {indent}  has(name: string): boolean\n\
+         {indent}  set(name: string, value: string): void\n\
+         {indent}  toString(): string\n\
+         {indent}}}\n\
+         {indent}interface URL {{\n\
+         {indent}  hash: string\n\
+         {indent}  host: string\n\
+         {indent}  hostname: string\n\
+         {indent}  href: string\n\
+         {indent}  origin: string\n\
+         {indent}  password: string\n\
+         {indent}  pathname: string\n\
+         {indent}  port: string\n\
+         {indent}  protocol: string\n\
+         {indent}  search: string\n\
+         {indent}  searchParams: URLSearchParams\n\
+         {indent}  username: string\n\
+         {indent}  toJSON(): string\n\
+         {indent}  toString(): string\n\
+         {indent}}}\n\
+         {indent}interface TextEncoder {{\n\
+         {indent}  encode(input?: string): Uint8Array\n\
+         {indent}}}\n\
+         {indent}interface TextDecoder {{\n\
+         {indent}  decode(input?: ArrayBuffer | ArrayBufferView | null): string\n\
+         {indent}}}\n\
+         {indent}interface AbortSignal {{\n\
+         {indent}  readonly aborted: boolean\n\
+         {indent}  readonly reason: unknown\n\
+         {indent}}}\n\
+         {indent}interface AbortController {{\n\
+         {indent}  readonly signal: AbortSignal\n\
+         {indent}  abort(reason?: unknown): void\n\
+         {indent}}}\n\
+         {indent}{decl}const URL: {{ new (url: string | URL, base?: string | URL): URL }}\n\
+         {indent}{decl}const URLSearchParams: {{\n\
+         {indent}  new (init?: string | string[][] | Record<string, string>): URLSearchParams\n\
+         {indent}}}\n\
+         {indent}{decl}const TextEncoder: {{ new (): TextEncoder }}\n\
+         {indent}{decl}const TextDecoder: {{ new (label?: string): TextDecoder }}\n\
+         {indent}{decl}const AbortController: {{ new (): AbortController }}\n\
+         {indent}{decl}const AbortSignal: {{ abort(reason?: unknown): AbortSignal }}\n\
+         {indent}{decl}const console: {{\n\
+         {indent}  log(...data: unknown[]): void\n\
+         {indent}  info(...data: unknown[]): void\n\
+         {indent}  warn(...data: unknown[]): void\n\
+         {indent}  error(...data: unknown[]): void\n\
+         {indent}  debug(...data: unknown[]): void\n\
+         {indent}}}\n\
+         {indent}{decl}function setTimeout(handler: (...args: never[]) => unknown, ms?: number): number\n\
+         {indent}{decl}function clearTimeout(id?: number): void\n\
+         {indent}{decl}function setInterval(handler: (...args: never[]) => unknown, ms?: number): number\n\
+         {indent}{decl}function clearInterval(id?: number): void\n\
+         {indent}{decl}function queueMicrotask(callback: () => void): void\n\
+         {indent}{decl}function structuredClone<T>(value: T): T\n\
+         {indent}{decl}function atob(data: string): string\n\
+         {indent}{decl}function btoa(data: string): string\n"
+    ));
+    out
 }
 
 /// Ambient `.d.ts` body for the action observation port.
@@ -706,7 +836,11 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         .collect();
     let paths_block = path_entries.join(",\n");
     // Packs sit beside this config — same-dir paths, not project-root paths.
-    let mut files = vec!["\"./types.d.ts\"".to_string()];
+    // css-modules.d.ts is a script (no import/export) so tsgo honors TS2882.
+    let mut files = vec![
+        "\"./types.d.ts\"".to_string(),
+        "\"./css-modules.d.ts\"".to_string(),
+    ];
     if env == TypeEnv::Action {
         files.push("\"./action-observation.d.ts\"".to_string());
     }
@@ -821,6 +955,7 @@ fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
         "tsconfig.action.json",
         "types.d.ts",
         "action-observation.d.ts",
+        "css-modules.d.ts",
     ];
     for entry in entries.flatten() {
         let name = entry.file_name();
@@ -1663,6 +1798,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         out.push_str("  function scroll(config: SailStyleMotionConfig): SailStyleChain\n");
     }
 
+    out.push_str(&emit_framework_platform_global_body());
     out.push_str("}\n\n");
 }
 
@@ -2052,6 +2188,31 @@ mod tests {
     }
 
     #[test]
+    fn pack_declares_css_side_effect_module() {
+        let dts = emit_types_dts();
+        assert!(
+            dts.contains("declare module '*.css'"),
+            "generated pack must declare side-effect CSS modules:\n{}",
+            dts.lines().take(20).collect::<Vec<_>>().join("\n")
+        );
+    }
+
+    #[test]
+    fn pack_declares_framework_platform_names() {
+        let dts = emit_types_dts();
+        for name in FRAMEWORK_PLATFORM_VALUE_NAMES {
+            assert!(
+                dts.contains(name),
+                "generated pack must declare framework platform `{name}`"
+            );
+        }
+        assert!(
+            dts.contains("function setTimeout") && dts.contains("function clearTimeout"),
+            "timers must be typed functions, not a DOM lib pull"
+        );
+    }
+
+    #[test]
     fn project_tsconfig_carries_tooling_wi2_flags_and_ambient_include() {
         let opts = sail_tsconfig_compiler_options_json();
         for flag in SAIL_TSCONFIG_REQUIRED_FLAGS {
@@ -2086,6 +2247,10 @@ mod tests {
             body.contains("\"files\"")
                 && (body.contains("\"./types.d.ts\"") || body.contains("types.d.ts")),
             "kind tsconfig must list ambient pack under files (same-dir under .sail/):\n{body}"
+        );
+        assert!(
+            body.contains("css-modules.d.ts"),
+            "kind tsconfig must list script-form CSS ambient (tsgo TS2882):\n{body}"
         );
         assert!(
             body.contains("src/**/*.ts") && body.contains("routes/**/*.ts"),
@@ -2226,11 +2391,19 @@ mod tests {
             action_body.contains("action-observation.d.ts"),
             "Action tsconfig must list observation ambient:\n{action_body}"
         );
+        assert!(
+            action_body.contains("css-modules.d.ts"),
+            "Action tsconfig must list CSS script ambient:\n{action_body}"
+        );
         let pure_body =
             emit_project_tsconfig_json_for(TypeEnv::Pure, &["src/compositions/**/*.ts"]);
         assert!(
             !pure_body.contains("action-observation.d.ts"),
             "Pure tsconfig must not list action observation pack:\n{pure_body}"
+        );
+        assert!(
+            pure_body.contains("css-modules.d.ts"),
+            "Pure tsconfig must list CSS script ambient:\n{pure_body}"
         );
     }
 

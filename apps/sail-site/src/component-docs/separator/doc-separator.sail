@@ -3,6 +3,32 @@
   Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style fullW = { box: w(full) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style swatch = {
+    box: size(7).shrink(0),
+    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
+    when: {
+      selected: { paint: border(foreground).shadow(sm) },
+      hover: { paint: opacity(90) },
+    },
+  }
+  style swatchPrimary = { paint: bg(primary) }
+  style swatchDestructive = { paint: bg(destructive) }
+  style swatchMuted = { paint: bg(muted).border(border) }
+  style swatchRest = { paint: bg(background).border(border) }
+  style exampleBlock = { box: w(full).padT(2).padB(4) }
+  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sepVRow = { box: h(10) }
+  style sepStageCol = { box: w(full).maxW(panel-max-w-sm) }
+</scope>
+
 <controller>
 import type { Scope } from './doc-separator.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -52,32 +78,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style fullW = { box: w(full) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style swatch = {
-    box: size(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style swatchRest = { paint: bg(background).border(border) }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style sepVRow = { box: h(10) }
-  style sepStageCol = { box: w(full).maxW(panel-max-w-sm) }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

@@ -4,6 +4,35 @@
   Specimen is the bare control only — no absolute adornment hacks.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  /** Shared demo width + ring clearance. */
+  style fieldShell = { box: w(full).maxW(64).pad(2).overflow(visible) }
+  style fullW = { box: w(full).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleSection = { box: w(full).padY(4).overflow(visible) }
+  style exampleH = { text: fontSize(md).fontWeight(semibold) }
+  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+  style typeCard = {
+    box: w(full).maxW(64).pad(4).overflow(visible),
+    paint: radius(md).borderWidth(1).border(border-subtle),
+  }
+  style mapRow = { box: w(full).padY(1) }
+</scope>
+
 <controller>
 import type { Scope } from './doc-input.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -26,8 +55,12 @@ export default controller((_ctx: Scope) => {
   const inputType = signal('email')
   const inputInvalid = signal(false)
   const inputDisabled = signal(false)
-  const placeholder = signal(TYPE_DEFAULTS.email.placeholder)
-  const textVal = signal(TYPE_DEFAULTS.email.value)
+  const emailDefaults = TYPE_DEFAULTS.email ?? TYPE_DEFAULTS.text ?? {
+    placeholder: 'you@ship.dev',
+    value: '',
+  }
+  const placeholder = signal(emailDefaults.placeholder)
+  const textVal = signal(emailDefaults.value)
 
   const inputSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), INPUT_SIZES.length - 1)
@@ -42,7 +75,7 @@ export default controller((_ctx: Scope) => {
 
   effect(() => {
     const t = inputType()
-    const d = TYPE_DEFAULTS[t] ?? TYPE_DEFAULTS.text
+    const d = TYPE_DEFAULTS[t] ?? emailDefaults
     placeholder.set(d.placeholder)
     textVal.set(d.value)
   })
@@ -114,35 +147,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  /** Shared demo width + ring clearance. */
-  style fieldShell = { box: w(full).maxW(64).pad(2).overflow(visible) }
-  style fullW = { box: w(full).overflow(visible) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-  style typeCard = {
-    box: w(full).maxW(64).pad(4).overflow(visible),
-    paint: radius(md).borderWidth(1).border(border-subtle),
-  }
-  style mapRow = { box: w(full).padY(1) }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

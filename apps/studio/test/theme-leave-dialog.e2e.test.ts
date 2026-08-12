@@ -2,7 +2,6 @@
  * Dirty leave dialog is modal isolation, not density bleed.
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893) from product tree.
- * Screenshot: mission scratch pw-leave-dialog-product-tree.png
  *
  *   cd apps/studio && bunx vitest run test/theme-leave-dialog.e2e.test.ts
  *
@@ -16,9 +15,7 @@ import path from 'node:path'
 const STUDIO = process.env.STUDIO_URL || 'http://127.0.0.1:7893'
 const SCREENSHOT =
   process.env.LEAVE_DIALOG_SHOT ||
-  '/home/madvib/dev/Ship/helm/data/missions/m-sail-studio/scratch/pw-leave-dialog-product-tree.png'
-const SCRATCH_SHOT =
-  '/home/madvib/dev/Ship/helm/data/missions/m-sail-studio/scratch/pw-leave-dialog-product-tree.png'
+  path.join(import.meta.dirname, '../../../.artifacts/pw-leave-dialog.png')
 
 async function studioUp(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -278,21 +275,12 @@ describe('theme leave dialog e2e (live studio)', () => {
 
       fs.mkdirSync(path.dirname(SCREENSHOT), { recursive: true })
       await page.screenshot({ path: SCREENSHOT, fullPage: false })
-      if (SCRATCH_SHOT !== SCREENSHOT) {
-        try {
-          fs.mkdirSync(path.dirname(SCRATCH_SHOT), { recursive: true })
-          fs.copyFileSync(SCREENSHOT, SCRATCH_SHOT)
-        } catch {
-          // scratch copy best-effort
-        }
-      }
 
       console.log(
         JSON.stringify(
           {
             ok: true,
             screenshot: SCREENSHOT,
-            scratch: SCRATCH_SHOT,
             modal: {
               isModal: modalState!.isModal,
               topIsDialog: modalState!.topIsDialog,

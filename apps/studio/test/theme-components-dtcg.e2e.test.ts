@@ -2,7 +2,6 @@
  * Components facet DTCG UI (live studio Playwright).
  *
  * Requires sail dev on STUDIO_URL (default http://127.0.0.1:7893).
- * Screenshot: mission scratch pw-components-dtcg-product-tree.png
  *
  *   cd apps/studio && bunx vitest run test/theme-components-dtcg.e2e.test.ts
  *
@@ -14,9 +13,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const STUDIO = process.env.STUDIO_URL || 'http://127.0.0.1:7893'
-const SCRATCH_SHOT =
-  '/home/madvib/dev/Ship/helm/data/missions/m-sail-studio/scratch/pw-components-dtcg-product-tree.png'
-const SCREENSHOT = process.env.COMPONENTS_DTCG_SHOT || SCRATCH_SHOT
+const SCREENSHOT =
+  process.env.COMPONENTS_DTCG_SHOT ||
+  path.join(import.meta.dirname, '../../../.artifacts/pw-components-dtcg.png')
 
 async function studioUp(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -433,13 +432,8 @@ describe('components DTCG e2e (live studio)', () => {
       expect(finalText, 'final UI must not show var(--').not.toMatch(/var\s*\(\s*--/i)
       expect(finalText, 'final UI must not show L1 jargon').not.toMatch(/\bL1\b/)
 
+      fs.mkdirSync(path.dirname(SCREENSHOT), { recursive: true })
       await page.screenshot({ path: SCREENSHOT, fullPage: false })
-      try {
-        fs.mkdirSync(path.dirname(SCRATCH_SHOT), { recursive: true })
-        fs.copyFileSync(SCREENSHOT, SCRATCH_SHOT)
-      } catch {
-        // scratch copy best-effort
-      }
 
       const report = {
         url: page.url(),

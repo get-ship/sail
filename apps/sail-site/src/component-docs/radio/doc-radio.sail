@@ -2,6 +2,20 @@
   <doc-radio> — /components/radio
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(56).maxW(full).pad(2).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+</scope>
+
 <controller>
 import type { Scope } from './doc-radio.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -40,20 +54,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(56).maxW(full).pad(2).overflow(visible) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

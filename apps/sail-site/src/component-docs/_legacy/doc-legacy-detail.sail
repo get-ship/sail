@@ -16,6 +16,30 @@
   that still expose a variantAttr in DETAILS.
 -->
 
+<scope>
+  props: {
+    docTag = ''
+  }
+
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
+  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
+  style fullW = { box: w(full) }
+  style mediaStage = { box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) }
+  style fullMedia = { box: w(full).h(full) }
+  style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
+  style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
+  style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style pressBtn = { animate: press({ scale: 'press' }) }
+  style toastStage = { box: w(full).maxW(panel-max-w-sm) }
+  style sepVRow = { box: h(10) }
+  style note = { paint: fg(muted-foreground), text: fontSize(xs) }
+</scope>
+
 <controller>
 import type { Scope } from './doc-legacy-detail.sail'
 import { DETAILS, type DetailEntry } from '../../compositions/component-details'
@@ -33,10 +57,6 @@ export default controller((ctx: Scope) => {
   const tag = derived(() => {
     const fromProp = ctx.docTag?.() ?? ''
     if (fromProp) return String(fromProp)
-    if (typeof location !== 'undefined') {
-      const m = location.pathname.match(/^\/components\/([^/]+)/)
-      if (m?.[1]) return decodeURIComponent(m[1])
-    }
     return ''
   })
 
@@ -138,30 +158,6 @@ export default controller((ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  props: {
-    docTag = ''
-  }
-
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
-  style fullW = { box: w(full) }
-  style mediaStage = { box: w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden), paint: radius(md) }
-  style fullMedia = { box: w(full).h(full) }
-  style ticker = { box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3), paint: bg(muted).radius(md) }
-  style tickerText = { box: padX(4), paint: fg(muted-foreground), text: fontSize(sm).fontFamily(mono).whitespace(nowrap) }
-  style scrollDemo = { box: maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style pressBtn = { animate: press({ scale: 'press' }) }
-  style toastStage = { box: w(full).maxW(panel-max-w-sm) }
-  style sepVRow = { box: h(10) }
-  style note = { paint: fg(muted-foreground), text: fontSize(xs) }
-</scope>
 
 <column gap="4" style(page)>
   <sail-component-viewer

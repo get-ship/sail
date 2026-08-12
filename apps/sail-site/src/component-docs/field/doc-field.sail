@@ -3,6 +3,23 @@
   Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
+  style controlW = { box: w(64).maxW(full) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+</scope>
+
 <controller>
 import type { Scope } from './doc-field.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -40,23 +57,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
-  style controlW = { box: w(64).maxW(full) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

@@ -4,6 +4,18 @@
   No size / variant / tone host props — wrap plain tags.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style specimen = { box: w(panel-max-w-md).maxW(full) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style exampleBlock = { box: w(full).padT(2).padB(4) }
+  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+</scope>
+
 <controller>
 import type { Scope } from './doc-prose.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -48,18 +60,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style specimen = { box: w(panel-max-w-md).maxW(full) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

@@ -4,6 +4,23 @@
   Specimen: for= target + onSelect live.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style specimen = { box: pad(2).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+</scope>
+
 <controller>
 import type { Scope } from './doc-context-menu.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -42,23 +59,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style specimen = { box: pad(2).overflow(visible) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style centerBox = { box: pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

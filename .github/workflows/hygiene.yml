@@ -1,0 +1,58 @@
+# Hygiene + type-gate + app corpus builds.
+# Parity (taffy/takumi vs browser) stays in parity.yml — do not merge the two.
+
+name: hygiene
+
+on:
+  push:
+    branches: [main, feat/next, 'job/**']
+  pull_request:
+    branches: [main, feat/next, 'job/**']
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUSTC_WRAPPER: ''
+
+jobs:
+  hygiene-type-gate:
+    name: hygiene + type-gate + corpus
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.95.0
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: hygiene-sail-compiler
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install JS deps
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Hygiene suite
+        run: bun test tests/hygiene
+
+      - name: Type-gate suites
+        run: |
+          cargo test -p sail-compiler --test type_gate_e1 --test type_env_per_kind \
+            --test ambient_table_complete --test ambient_app_tsc --test ambient_corpus_s5_2
+          cargo test -p sail-compiler --lib pack_declares
+          cargo test -p sail-compiler --lib rejects_settimeout
+
+      - name: Corpus builds (studio + sail-site)
+        run: |
+          cargo build -p sail-compiler
+          ./target/debug/sail-compiler build apps/studio/src
+          ./target/debug/sail-compiler build apps/sail-site/src

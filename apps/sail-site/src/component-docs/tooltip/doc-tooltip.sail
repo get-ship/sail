@@ -4,6 +4,22 @@
   Specimen: hover/focus trigger with placement · content knobs.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style specimen = { box: pad(2).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+  style demoRow = { box: w(full).padY(2) }
+</scope>
+
 <controller>
 import type { Scope } from './doc-tooltip.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -45,22 +61,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style specimen = { box: pad(2).overflow(visible) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-  style demoRow = { box: w(full).padY(2) }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

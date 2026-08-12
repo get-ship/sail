@@ -36,6 +36,23 @@ export default controller((ctx) => {
 }
 
 #[test]
+fn rejects_settimeout() {
+    let src = r#"
+export default controller((ctx) => {
+  const later = derived(() => setTimeout(() => 1, 0))
+  return { later }
+})
+"#;
+    let err = check(&parse_src(src)).expect_err("setTimeout() in derived should fail");
+    assert!(err.message.contains("setTimeout"));
+    assert!(
+        err.message.contains("Move to mount() or use()"),
+        "derived timer must keep teaching: {}",
+        err.message
+    );
+}
+
+#[test]
 fn rejects_math_random() {
     let src = r#"
 export default controller((ctx) => {

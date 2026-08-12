@@ -3,6 +3,31 @@
   Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+  style ticker = {
+    box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3),
+    paint: bg(muted).radius(md),
+  }
+  style tickerText = {
+    box: padX(4),
+    paint: fg(muted-foreground),
+    text: fontSize(sm).fontFamily(mono).whitespace(nowrap),
+  }
+</scope>
+
 <controller>
 import type { Scope } from './doc-ticker.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -52,31 +77,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
-  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style sectionLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).textCase(uppercase).tracking(wide),
-  }
-  style ticker = {
-    box: w(full).maxW(panel-max-w-md).overflow(hidden).padY(3),
-    paint: bg(muted).radius(md),
-  }
-  style tickerText = {
-    box: padX(4),
-    paint: fg(muted-foreground),
-    text: fontSize(sm).fontFamily(mono).whitespace(nowrap),
-  }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

@@ -30,5 +30,5 @@ export const hatchExample = `// sniffEscapeHatches() comes from the sail-eval pa
 const hatches = sniffEscapeHatches(result.output)
 // → [
 //     { kind: 'raw-script', line: 14, msg: '<script> in template' },
-//     { kind: 'ts-ignore', line: 22, msg: '@ts-ignore in controller' },
+//     { kind: 'ts-ignore', line: 22, msg: 'ts-ignore directive in controller' },
 //   ]`

@@ -3,6 +3,36 @@
   Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style swatch = {
+    box: size(7).shrink(0),
+    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
+    when: {
+      selected: { paint: border(foreground).shadow(sm) },
+      hover: { paint: opacity(90) },
+    },
+  }
+  style swatchPrimary = { paint: bg(primary) }
+  style swatchSuccess = { paint: bg(success) }
+  style swatchWarning = { paint: bg(warning) }
+  style swatchDestructive = { paint: bg(destructive) }
+  style swatchAccent = { paint: bg(accent) }
+  style swatchMuted = { paint: bg(muted).border(border) }
+  style swatchInfo = { paint: bg(info) }
+  style swatchRest = { paint: bg(background).border(border) }
+  style exampleBlock = { box: w(full).padT(2).padB(4) }
+  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style demoRow = { box: w(full).padY(2) }
+</scope>
+
 <controller>
 import type { Scope } from './doc-chip.sail'
 import { DETAILS } from '../../compositions/component-details'
@@ -70,36 +100,6 @@ export default controller((_ctx: Scope) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style knobLabel = {
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
-  }
-  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1).padX(1_5) }
-  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style swatch = {
-    box: size(7).shrink(0),
-    paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
-    when: {
-      selected: { paint: border(foreground).shadow(sm) },
-      hover: { paint: opacity(90) },
-    },
-  }
-  style swatchPrimary = { paint: bg(primary) }
-  style swatchSuccess = { paint: bg(success) }
-  style swatchWarning = { paint: bg(warning) }
-  style swatchDestructive = { paint: bg(destructive) }
-  style swatchAccent = { paint: bg(accent) }
-  style swatchMuted = { paint: bg(muted).border(border) }
-  style swatchInfo = { paint: bg(info) }
-  style swatchRest = { paint: bg(background).border(border) }
-  style exampleBlock = { box: w(full).padT(2).padB(4) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-  style demoRow = { box: w(full).padY(2) }
-</scope>
 
 <column gap="6" style(page)>
   <sail-component-viewer

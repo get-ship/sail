@@ -38,7 +38,8 @@ const POOL: Array<[string, string]> = [
 export default controller((ctx) => {
   let seq = 0
   const boardRow = (i: number, status: Flight['status']): Flight => {
-    const [city, gate] = POOL[i % POOL.length]
+    const pair = POOL[i % POOL.length] ?? POOL[0] ?? ['—', '—']
+    const [city, gate] = pair
     return { id: `${city}-${seq++}`, city, gate, status }
   }
 

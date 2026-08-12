@@ -290,19 +290,12 @@ async function freePort() {
 }
 
 async function importPlaywright() {
-  // Prefer worktree / monorepo node_modules
-  const candidates = [
-    join(repoRoot, 'node_modules/playwright'),
-    '/home/madvib/dev/Ship/worktrees/d-lang-g6/node_modules/playwright',
-    '/home/madvib/dev/Ship/sail/node_modules/playwright',
-  ]
-  for (const p of candidates) {
-    if (existsSync(p)) {
-      try {
-        return await import(join(p, 'index.js'))
-      } catch {
-        /* try next */
-      }
+  const local = join(repoRoot, 'node_modules/playwright')
+  if (existsSync(local)) {
+    try {
+      return await import(join(local, 'index.js'))
+    } catch {
+      /* fall through to package specifier */
     }
   }
   return import('playwright')
