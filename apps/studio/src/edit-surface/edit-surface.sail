@@ -31,12 +31,13 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import type { Action } from '@ship/sail-runtime'
 import { createEditSurface } from '../compositions/edit-surface/edit-surface-vm'
 export default controller(() => {
   const vm = createEditSurface()
   const captureEditor: Action<void> = (node) => {
-    vm.editorEl.set(node as HTMLElement)
+    vm.editorEl.set(asSailHost(node))
     return { destroy: () => vm.editorEl.set(null) }
   }
   return {
@@ -57,8 +58,8 @@ export default controller(() => {
     opsPath: vm.opsPath,
     onSourceSailChange: (detail: { value?: string }) => vm.onSourceSailChange(detail),
     onSaveSource: () => vm.onSaveSource(),
-    onTabClick: (e: Event) => vm.onTabClick(e),
-    onTabMiddle: (e: Event) => vm.onTabMiddle(e),
+    onTabClick: (e: UiEvent) => vm.onTabClick(e),
+    onTabMiddle: (e: UiEvent) => vm.onTabMiddle(e),
   }
 })
 </controller>

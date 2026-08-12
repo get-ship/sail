@@ -17,6 +17,7 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../../../../src/compositions/ui-event'
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { profileApi, type Profile } from '../../../../src/compositions/profile-api'
@@ -43,7 +44,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   return {
     code, profile, tried, saved,
-    onSubmit: (e: Event) => { tried.set(true); void profile.submit(e) },
+    onSubmit: (e: UiEvent) => { tried.set(true); void profile.submit(e) },
     onReset: () => { tried.set(false); saved.set(null); profile.reset() },
     breakIt: () => sabotage.set(true),
   }

@@ -163,21 +163,23 @@
 </partial>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import type { Action } from '@ship/sail-runtime'
+import { hostSetAttribute, hostRemoveAttribute } from '../compositions/host-paint'
 import { createThemesSurface } from '../compositions/themes-surface/themes-surface-vm'
 export default controller(() => {
   const vm = createThemesSurface()
   // Mode stamp for themed preview subtrees (action writes host attribute).
   const paintMode: Action<string | null | undefined> = (node, initial) => {
-    const el = node as HTMLElement
+    const host = asSailHost(node)
     const apply = (m: string | null | undefined): void => {
-      if (m === 'light' || m === 'dark') el.setAttribute('data-mode', m)
-      else el.removeAttribute('data-mode')
+      if (m === 'light' || m === 'dark') hostSetAttribute(host, 'data-mode', m)
+      else hostRemoveAttribute(host, 'data-mode')
     }
     apply(initial)
     return {
       update: (next) => apply(next),
-      destroy: () => el.removeAttribute('data-mode'),
+      destroy: () => hostRemoveAttribute(host, 'data-mode'),
     }
   }
   return {
@@ -213,11 +215,11 @@ export default controller(() => {
     catalogCountLabel: vm.catalogCountLabel,
     paintMode,
     onListClick: (id: string) => vm.onListClick(id),
-    onMenuOpen: (id: string, e?: Event) => vm.onMenuOpen(id, e),
-    onAddToProject: (id: string, e?: Event) => vm.onAddToProject(id, e),
+    onMenuOpen: (id: string, e?: UiEvent) => vm.onMenuOpen(id, e),
+    onAddToProject: (id: string, e?: UiEvent) => vm.onAddToProject(id, e),
     onPreviewOpen: () => vm.onPreviewOpen(),
     onPreviewAddToProject: () => vm.onPreviewAddToProject(),
-    onPreviewModeSwitch: (e: Event) => vm.onPreviewModeSwitch(e),
+    onPreviewModeSwitch: (e: UiEvent) => vm.onPreviewModeSwitch(e),
     onNewTheme: () => vm.onNewTheme(),
     onRowMenu: (detail: { value?: string }) => vm.onRowMenu(detail),
     onRetryThemes: () => vm.onRetryThemes(),

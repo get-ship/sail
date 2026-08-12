@@ -177,11 +177,20 @@ export default controller((_ctx: Scope) => {
       // Default PE: seed string URL from host attribute so authors write
       // `<sail-media-image src="https://…" />` without querySelector glue.
       // Identity setter still accepts ViewerSource / arrays for programmatic hosts.
-      const attrSrc = host.getAttribute('src')
-      if (attrSrc) {
-        srcSig.set(attrSrc)
-        activeIndex.set(0)
+      const applyAttrSrc = (): void => {
+        const attrSrc = host.getAttribute('src')
+        if (attrSrc == null) return
+        const cur = srcSig()
+        if (cur == null || typeof cur === 'string') {
+          if (cur !== attrSrc) {
+            srcSig.set(attrSrc)
+            activeIndex.set(0)
+          }
+        }
       }
+      applyAttrSrc()
+      const mo = new MutationObserver(applyAttrSrc)
+      mo.observe(host, { attributes: true, attributeFilter: ['src'] })
 
       let lastInlined: unknown = null
       const stopSvgEmit = effect(() => {
@@ -194,6 +203,7 @@ export default controller((_ctx: Scope) => {
       })
 
       return () => {
+        mo.disconnect()
         stopSvgEmit()
         revokeCreated()
       }

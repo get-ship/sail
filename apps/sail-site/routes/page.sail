@@ -73,10 +73,10 @@ const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Animation', 'Them
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const i = signal(0)
-    interval(() => i.set((n) => (n + 1) % WORDS.length), 2600)
+    interval(() => i.set((n: number) => (n + 1) % WORDS.length), 2600)
 
     const ticks = signal(0)
-    interval(() => ticks.set((n) => n + 1), 1000)
+    interval(() => ticks.set((n: number) => n + 1), 1000)
 
     return {
       word: () => [WORDS[i()]],

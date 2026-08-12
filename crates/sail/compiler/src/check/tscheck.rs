@@ -14,17 +14,13 @@
 //! line-padding: the harness preserves absolute 1-based line numbers from the
 //! `.sail` author source so tsgo `(L,C)` maps straight back.
 //!
-//! The isolated `region.ts` is **not** a full project checkout. To keep
-//! doctrine honest without false-failing legal controllers on module noise:
+//! The isolated `region.ts` is **not** a full project checkout, but has
+//! **project-resolution parity** so missing modules hard-fail (no mask):
 //! 1. **Faithful-enough ambient** — generic runtime HOF stubs, typed
-//!    `@ship/*` module shapes (`Action`, `ControllerScope`, …), inject ABI
-//!    (`@ship/sail-runtime/internal`).
-//! 2. **Relative import stubs** — materialize open `any` modules for
-//!    `./…` / `../…` imports found in the controller body.
-//! 3. **Scoped promotion interim** — residual `TS2307` for unresolved
-//!    relative / `@ship/…` / `@/…` (project alias) specs is **not**
-//!    hard-failed until full project resolution exists. Real type errors
-//!    (TS2322, TS2345, …) and DOM teaching still promote.
+//!    `@ship/*` module shapes (`Action`, `ControllerScope`, …), inject ABI.
+//! 2. **Sibling tree** — relative imports resolve against the author file's
+//!    real directory (open-any stubs when present; missing → TS2307).
+//! 3. **`@/` paths** — `at_alias_paths()` + per-import stubs; missing → TS2307.
 //!
 //! We deliberately do **not** reuse `emit/synthetic` output here — that path
 //! owns the template↔controller *scope contract* (`check_synthetic_controller`)
@@ -81,6 +77,7 @@ pub struct TsgoTool {
 pub const RULE_PURE_REGION: &str = "sail-pure-region";
 pub const RULE_ACTION_SURFACE: &str = "sail-action-surface";
 pub const RULE_NO_TS_IGNORE: &str = "sail-no-ts-ignore";
+pub const RULE_NO_TYPE_ERASE: &str = "sail-no-type-erase";
 pub const RULE_TYPE_GATE: &str = "sail-type-gate";
 
 /// Loud install fix when tsgo cannot be resolved.
@@ -295,6 +292,8 @@ fn collect_sail_type_gate_native(
 
     // E1c: @ts-ignore / @ts-nocheck / @ts-expect-error inside .sail TS regions.
     diags.extend(scan_ts_ignore(author_source));
+    // E4a R1: type erasure ban in Pure.
+    diags.extend(scan_type_erase(author_source, source_path));
 
     let Some(region) = extract_controller_region(author_source) else {
         // No controller region — nothing for the type env gate to check.
@@ -405,13 +404,18 @@ fn collect_project_type_gate_native(
         return diags;
     };
 
-    // E1c: @ts-ignore in any project .ts under product envs.
+    // E1c + E4a R1: @ts-ignore and type-erase in product envs.
     for (path, src) in ts_files {
         let env = type_env_for_path(path, Some(src));
         if env == TypeEnv::Framework {
             continue;
         }
         for d in scan_ts_ignore(src) {
+            let mut d = d;
+            d.message = format!("{} ({})", d.message, path.display());
+            diags.push(d);
+        }
+        for d in scan_type_erase(src, Some(path.as_path())) {
             let mut d = d;
             d.message = format!("{} ({})", d.message, path.display());
             diags.push(d);
@@ -571,23 +575,40 @@ fn typecheck_region_harness(
     if !harness.ends_with('\n') {
         harness.push('\n');
     }
-    let region_path = out_dir.join("region.ts");
-    std::fs::write(&region_path, &harness)?;
 
-    // Ambient stubs for runtime vocabulary so only real type/DOM law surfaces.
+    // Sibling-tree parity (E4b R2): mirror author dir so `./` / `../` resolve.
+    // Present siblings → open-any stubs (existence proven). Missing → TS2307.
+    let project_root = source_path.and_then(find_project_root);
+    let mirror_rel = mirror_region_rel(source_path, project_root.as_deref());
+    let region_path = out_dir.join("mirror").join(&mirror_rel).join("region.ts");
+    if let Some(parent) = region_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&region_path, &harness)?;
+    let region_rel = if mirror_rel.is_empty() {
+        "./mirror/region.ts".to_string()
+    } else {
+        format!("./mirror/{}/region.ts", mirror_rel.replace('\\', "/"))
+    };
+
     std::fs::write(
         out_dir.join("sail-runtime-ambient.d.ts"),
         runtime_ambient_dts(),
     )?;
 
     let mut files = vec![
-        "\"./region.ts\"".to_string(),
+        format!("\"{region_rel}\""),
         "\"./sail-runtime-ambient.d.ts\"".to_string(),
     ];
-    // Materialize relative-import stubs so `./local-mod` / `./x.sail` do not
-    // emit TS2307 harness noise (isolated region has no sibling tree).
-    for stub_rel in materialize_relative_import_stubs(&region.body, &out_dir)? {
+    for stub_rel in
+        materialize_relative_import_siblings(&region.body, &out_dir, source_path, &mirror_rel)?
+    {
         files.push(format!("\"{stub_rel}\""));
+    }
+    let (at_files, at_paths_block) =
+        materialize_at_alias_stubs(&region.body, &out_dir, project_root.as_deref())?;
+    for f in at_files {
+        files.push(format!("\"{f}\""));
     }
     if env == TypeEnv::Action {
         std::fs::write(
@@ -603,6 +624,15 @@ fn typecheck_region_harness(
         .map(|e| format!("\"{e}\""))
         .collect::<Vec<_>>()
         .join(", ");
+
+    let paths_block = if at_paths_block.is_empty() {
+        region_harness_paths_block(project_root.as_deref(), &out_dir)
+    } else {
+        at_paths_block
+    };
+
+    // noImplicitAny false: open-any sibling stubs make callback params `any`
+    // (TS7006) — not product law. Real type errors still hard-fail.
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -611,10 +641,14 @@ fn typecheck_region_harness(
     "moduleResolution": "Bundler",
     "lib": [{lib_arr}],
     "strict": true,
+    "noImplicitAny": false,
     "noEmit": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {{
+{paths_block}
+    }}
   }},
   "files": [{files}]
 }}
@@ -633,9 +667,113 @@ fn typecheck_region_harness(
         }
         Err(e) => Err(e),
     };
-    // Clean temp harness — long-lived LSP/deck processes must not pile up dirs.
     let _ = std::fs::remove_dir_all(&out_dir);
     result
+}
+
+fn find_project_root(start: &Path) -> Option<PathBuf> {
+    let start = if start.is_file() {
+        start.parent()?.to_path_buf()
+    } else {
+        start.to_path_buf()
+    };
+    let mut dir = Some(start.as_path());
+    while let Some(d) = dir {
+        if d.join("sail.config.jsonc").is_file()
+            || d.join("sail.config.json").is_file()
+            || (d.join("package.json").is_file()
+                && (d.join("routes").is_dir() || d.join("src").is_dir()))
+        {
+            return Some(d.to_path_buf());
+        }
+        dir = d.parent();
+    }
+    None
+}
+
+fn mirror_region_rel(source_path: Option<&Path>, project_root: Option<&Path>) -> String {
+    let Some(src) = source_path else {
+        return "__region".to_string();
+    };
+    let parent = if src.is_file() {
+        src.parent().unwrap_or(src)
+    } else {
+        src
+    };
+    if let Some(root) = project_root {
+        let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+        let parent = parent
+            .canonicalize()
+            .unwrap_or_else(|_| parent.to_path_buf());
+        if let Ok(rel) = parent.strip_prefix(&root) {
+            return rel.to_string_lossy().replace('\\', "/");
+        }
+    }
+    src.file_stem()
+        .and_then(|s| s.to_str())
+        .map(|s| format!("__region/{s}"))
+        .unwrap_or_else(|| "__region".to_string())
+}
+
+fn region_harness_paths_block(project_root: Option<&Path>, out_dir: &Path) -> String {
+    let Some(root) = project_root else {
+        return crate::project_map::at_alias_paths()
+            .iter()
+            .map(|m| format!("      \"{}\": [\"./__missing__/*\"]", m.pattern))
+            .collect::<Vec<_>>()
+            .join(",\n");
+    };
+    let root_canon = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    let out_canon = out_dir
+        .canonicalize()
+        .unwrap_or_else(|_| out_dir.to_path_buf());
+    crate::project_map::at_alias_paths()
+        .iter()
+        .map(|m| {
+            let target = m.target.trim_start_matches("./");
+            let target_path = root_canon.join(target.trim_end_matches("/*"));
+            let rel = pathdiff_relative(&out_canon, &target_path)
+                .unwrap_or_else(|| target_path.to_string_lossy().into_owned());
+            let rel = rel.replace('\\', "/");
+            if m.pattern.ends_with("/*") {
+                format!("      \"{}\": [\"{rel}/*\"]", m.pattern)
+            } else {
+                format!("      \"{}\": [\"{rel}\"]", m.pattern)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(",\n")
+}
+
+fn pathdiff_relative(from: &Path, to: &Path) -> Option<String> {
+    let from_c = from.canonicalize().ok()?;
+    let to_c = to.canonicalize().ok().unwrap_or_else(|| to.to_path_buf());
+    let from_comps: Vec<_> = from_c.components().collect();
+    let to_comps: Vec<_> = to_c.components().collect();
+    let mut i = 0;
+    while i < from_comps.len() && i < to_comps.len() && from_comps[i] == to_comps[i] {
+        i += 1;
+    }
+    let mut out = String::new();
+    for _ in i..from_comps.len() {
+        if !out.is_empty() {
+            out.push('/');
+        }
+        out.push_str("..");
+    }
+    for c in &to_comps[i..] {
+        if let std::path::Component::Normal(s) = c {
+            if !out.is_empty() {
+                out.push('/');
+            }
+            out.push_str(&s.to_string_lossy());
+        }
+    }
+    if out.is_empty() {
+        Some(".".to_string())
+    } else {
+        Some(out)
+    }
 }
 
 fn runtime_ambient_dts() -> String {
@@ -649,10 +787,14 @@ fn runtime_ambient_dts() -> String {
         // - `(ctx) =>` callbacks avoid TS7006 under strict
         // - `signal<T>(…)` / `controller<T>(…)` avoid TS2558 arity gaps
         match *authored {
-            "controller" | "defineStore" | "form" => {
+            "controller" | "defineStore" => {
                 out.push_str(&format!(
                     "declare function {authored}<Ctx = any, SC = any>(fn: (ctx: Ctx) => SC, ...rest: any[]): any;\n"
                 ));
+            }
+            "form" => {
+                // form({ initial, validate, submit }) — options bag, not a HOF.
+                out.push_str("declare function form<T = any>(opts: any, ...rest: any[]): any;\n");
             }
             "signal" | "derived" | "query" | "mutation" | "filteredList" | "createVirtualizer"
             | "timeline" | "debounce" | "interval" => {
@@ -819,40 +961,191 @@ struct RelativeStub {
     has_namespace: bool,
 }
 
-/// Materialize stub `.ts` modules for relative imports in `body`.
-/// Returns tsconfig `"files"` entries (e.g. `"./markdown-render.ts"`).
-fn materialize_relative_import_stubs(body: &str, out_dir: &Path) -> std::io::Result<Vec<String>> {
+/// Materialize relative imports from the **real sibling tree** (E4b R2).
+/// Present on disk → open-any stub at mirrored path. Missing → no stub (TS2307).
+fn materialize_relative_import_siblings(
+    body: &str,
+    out_dir: &Path,
+    source_path: Option<&Path>,
+    mirror_rel: &str,
+) -> std::io::Result<Vec<String>> {
     let stubs = collect_relative_import_stubs(body);
+    let author_dir = source_path.and_then(|p| {
+        if p.is_file() {
+            p.parent().map(|d| d.to_path_buf())
+        } else {
+            Some(p.to_path_buf())
+        }
+    });
+    let mirror_region_dir = out_dir.join("mirror").join(mirror_rel);
     let mut files = Vec::new();
     for (spec, stub) in stubs {
-        let Some(rel_file) = relative_stub_file_name(&spec) else {
+        let real = author_dir
+            .as_ref()
+            .and_then(|dir| resolve_relative_module(dir, &spec));
+        let Some(real_path) = real else {
             continue;
         };
-        let dest = out_dir.join(&rel_file);
+        let dest = mirror_join(&mirror_region_dir, &spec);
+        let Some(dest) = dest else {
+            continue;
+        };
+        let dest = ensure_ts_dest(dest, &real_path);
         if let Some(parent) = dest.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        let mut src =
-            String::from("// GENERATED type-gate relative-import stub — open any exports.\n");
-        for name in &stub.named {
-            if is_ts_ident(name) {
-                src.push_str(&format!(
-                    "export type {name} = any;\nexport const {name}: any = undefined as any;\n"
-                ));
-            }
+        write_open_any_stub(&dest, &stub)?;
+        if let Ok(rel) = dest.strip_prefix(out_dir) {
+            let rel_s = rel.to_string_lossy().replace('\\', "/");
+            files.push(format!("./{rel_s}"));
         }
-        if stub.has_default || stub.has_namespace || stub.named.is_empty() {
-            src.push_str("const __default: any = undefined as any;\nexport default __default;\n");
-        }
-        if src.lines().count() <= 1 {
-            src.push_str("export {};\n");
-        }
-        std::fs::write(&dest, src)?;
-        // tsconfig path uses forward slashes, rooted at out_dir.
-        let rel_s = rel_file.replace('\\', "/");
-        files.push(format!("./{rel_s}"));
     }
     Ok(files)
+}
+
+fn write_open_any_stub(dest: &Path, stub: &RelativeStub) -> std::io::Result<()> {
+    let mut src =
+        String::from("// GENERATED type-gate sibling stub — open any (existence proven).\n");
+    for name in &stub.named {
+        if is_ts_ident(name) {
+            src.push_str(&format!(
+                "export type {name} = any;\nexport const {name}: any = undefined as any;\n"
+            ));
+        }
+    }
+    if stub.has_default || stub.has_namespace || stub.named.is_empty() {
+        src.push_str("const __default: any = undefined as any;\nexport default __default;\n");
+    }
+    if src.lines().count() <= 1 {
+        src.push_str("export {};\n");
+    }
+    std::fs::write(dest, src)
+}
+
+fn resolve_relative_module(author_dir: &Path, spec: &str) -> Option<PathBuf> {
+    let base = if spec.starts_with("./") || spec.starts_with("../") {
+        author_dir.join(spec)
+    } else {
+        return None;
+    };
+    let candidates = [
+        base.clone(),
+        base.with_extension("ts"),
+        base.with_extension("tsx"),
+        base.with_extension("sail"),
+        base.join("index.ts"),
+        base.join("index.tsx"),
+        PathBuf::from(format!("{}.sail", base.display())),
+    ];
+    for c in candidates {
+        if c.is_file() {
+            return Some(c);
+        }
+    }
+    None
+}
+
+fn mirror_join(base: &Path, spec: &str) -> Option<PathBuf> {
+    if !(spec.starts_with("./") || spec.starts_with("../")) {
+        return None;
+    }
+    let mut out = base.to_path_buf();
+    for part in spec.split(['/', '\\']) {
+        if part.is_empty() || part == "." {
+            continue;
+        }
+        if part == ".." {
+            if !out.pop() {
+                return None;
+            }
+        } else {
+            out.push(part);
+        }
+    }
+    Some(out)
+}
+
+fn ensure_ts_dest(dest: PathBuf, real: &Path) -> PathBuf {
+    if dest.extension().is_some() {
+        if real.extension().and_then(|e| e.to_str()) == Some("sail") {
+            return PathBuf::from(format!("{}.ts", dest.display()));
+        }
+        return dest;
+    }
+    dest.with_extension("ts")
+}
+
+fn collect_at_alias_specs(body: &str) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for line in body.lines() {
+        let l = line.trim();
+        if !(l.starts_with("import ") || l.starts_with("export ")) {
+            continue;
+        }
+        for quote in ['\'', '"'] {
+            let needle = format!("from {quote}@/");
+            if let Some(i) = l.find(&needle) {
+                let rest = &l[i + needle.len() - 2..];
+                if let Some(end) = rest[1..].find(quote) {
+                    let spec = &rest[..=end];
+                    if spec.starts_with("@/") {
+                        out.insert(spec.to_string());
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+fn materialize_at_alias_stubs(
+    body: &str,
+    out_dir: &Path,
+    project_root: Option<&Path>,
+) -> std::io::Result<(Vec<String>, String)> {
+    let specs = collect_at_alias_specs(body);
+    if specs.is_empty() {
+        return Ok((Vec::new(), String::new()));
+    }
+    let Some(root) = project_root else {
+        let paths: Vec<String> = specs
+            .iter()
+            .map(|s| format!("      \"{s}\": [\"./__missing_at_alias__\"]"))
+            .collect();
+        return Ok((Vec::new(), paths.join(",\n")));
+    };
+    let mut files = Vec::new();
+    let mut path_entries = Vec::new();
+    let mut i = 0usize;
+    for spec in specs {
+        let resolved = crate::project_map::resolve_at_alias(root, &spec);
+        let exists = resolved.as_ref().is_some_and(|p| {
+            p.is_file()
+                || p.with_extension("ts").is_file()
+                || p.with_extension("tsx").is_file()
+                || p.join("index.ts").is_file()
+        });
+        if !exists {
+            path_entries.push(format!("      \"{spec}\": [\"./__missing_at__/{i}\"]"));
+            i += 1;
+            continue;
+        }
+        let stub_name = format!("at_stub_{i}.ts");
+        i += 1;
+        let dest = out_dir.join("at").join(&stub_name);
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let stub = RelativeStub {
+            named: BTreeSet::new(),
+            has_default: true,
+            has_namespace: true,
+        };
+        write_open_any_stub(&dest, &stub)?;
+        files.push(format!("./at/{stub_name}"));
+        path_entries.push(format!("      \"{spec}\": [\"./at/{stub_name}\"]"));
+    }
+    Ok((files, path_entries.join(",\n")))
 }
 
 fn is_ts_ident(name: &str) -> bool {
@@ -866,6 +1159,7 @@ fn is_ts_ident(name: &str) -> bool {
 
 /// Map `./markdown-render` → `markdown-render.ts`, `./x.sail` → `x.sail.ts`.
 /// Rejects path escape (`..` climbing above harness root).
+#[allow(dead_code)]
 fn relative_stub_file_name(spec: &str) -> Option<String> {
     let stripped = spec
         .strip_prefix("./")
@@ -1326,13 +1620,11 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
         }
     }
 
-    // Interim: isolated region harness cannot resolve the author tree.
-    // Ambient packs + relative stubs cover the common cases; any residual
-    // TS2307 for relative / inject-ABI / `@/` project-alias modules is
-    // harness noise, not product law (project batch already emits `@/` paths).
+    // E4b R2: only ambient `@ship/*` / `*.sail` stubs may suppress TS2307.
+    // Relative / `@/` hard-fail when unresolved (no silent mask).
     if d.code == "TS2307" {
         if let Some(spec) = extract_cannot_find_module(&d.message) {
-            if is_harness_unresolved_module_noise(&spec) {
+            if is_ambient_module_stub_spec(&spec) {
                 return None;
             }
         }
@@ -1364,17 +1656,8 @@ fn extract_cannot_find_module(message: &str) -> Option<String> {
     }
 }
 
-/// Relative specs, `@ship/…` inject/runtime paths, and `@/…` project aliases
-/// are expected gaps in the isolated harness (no project `paths` / sibling
-/// tree). Project batch already maps `@/` via `at_alias_paths`; region
-/// harness suppresses residual TS2307 until that fidelity lands here.
-/// Not product law yet — third-party bare modules still promote.
-fn is_harness_unresolved_module_noise(spec: &str) -> bool {
-    is_relative_spec(spec)
-        || spec.starts_with("@ship/")
-        || spec.starts_with("@/")
-        || spec.ends_with(".sail")
-        || spec.contains(".sail")
+fn is_ambient_module_stub_spec(spec: &str) -> bool {
+    spec.starts_with("@ship/") || spec.ends_with(".sail")
 }
 
 fn extract_not_found_name(message: &str) -> Option<String> {
@@ -1581,6 +1864,209 @@ fn scan_ts_ignore(source: &str) -> Vec<Diagnostic> {
         }
     }
     diags
+}
+
+// ── type-erase scan (E4a R1) ───────────────────────────────────────────────
+
+fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
+    let mut diags = Vec::new();
+    if let Some(p) = source_path {
+        if type_env_for_path(p, Some(source)) == TypeEnv::Framework {
+            return diags;
+        }
+    }
+    let region = if source.contains("<controller") {
+        let Some(r) = extract_controller_region(source) else {
+            return diags;
+        };
+        Some(r)
+    } else {
+        None
+    };
+    let (line_lo, line_hi) = match &region {
+        Some(r) => {
+            let body_lines = r.body.lines().count().max(1);
+            (r.body_start_line, r.body_start_line + body_lines)
+        }
+        None => (1, usize::MAX),
+    };
+
+    for (line_idx, line) in source.lines().enumerate() {
+        let line_no = line_idx + 1;
+        if line_no < line_lo || line_no >= line_hi {
+            continue;
+        }
+        let code = strip_line_comment(line);
+        if code.trim().is_empty() {
+            continue;
+        }
+        if let Some(col0) = find_as_any(code) {
+            diags.push(type_erase_diag(
+                line_no,
+                col0,
+                "as any",
+                "`as any` erases the type the gate enforces. Use a sanctioned ambient \
+                 (`SailHost` / action `node`) or move DOM work to a `use:` action.",
+            ));
+        }
+        if let Some(col0) = code.find("as unknown as") {
+            diags.push(type_erase_diag(
+                line_no,
+                col0,
+                "as unknown as",
+                "`as unknown as` is double type erasure. Name a real type or move the \
+                 code to Action / Framework where the surface is legal.",
+            ));
+        }
+        if let Some(col0) = find_satisfies_any(code) {
+            diags.push(type_erase_diag(
+                line_no,
+                col0,
+                "satisfies any",
+                "`satisfies any` erases type information. Satisfy a real type or use \
+                 the sanctioned Pure ambient surface.",
+            ));
+        }
+        if let Some(col0) = find_function_ctor(code) {
+            diags.push(type_erase_diag(
+                line_no,
+                col0,
+                "Function()",
+                "`Function(...)` constructs code without types. Use a typed function \
+                 or a sanctioned action.",
+            ));
+        }
+        if let Some(col0) = find_globalthis_string_index(code) {
+            diags.push(type_erase_diag(
+                line_no,
+                col0,
+                "globalThis[…]",
+                "String-reflective global access bypasses Pure ambient law. Use a \
+                 `use:` action, or name `SailHost` / sanctioned helpers — never \
+                 `globalThis['window']` / `globalThis['document']`.",
+            ));
+        }
+    }
+    diags
+}
+
+fn type_erase_diag(line: usize, col0: usize, needle: &str, message: &str) -> Diagnostic {
+    Diagnostic {
+        line,
+        col: col0 + 1,
+        end_line: line,
+        end_col: col0 + 1 + needle.len().max(1),
+        severity: DiagSeverity::Error,
+        message: message.to_string(),
+        rule: Some(RULE_NO_TYPE_ERASE.to_string()),
+    }
+}
+
+fn strip_line_comment(line: &str) -> &str {
+    let mut in_single = false;
+    let mut in_double = false;
+    let mut in_template = false;
+    let bytes = line.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if !in_double && !in_template && c == b'\'' {
+            in_single = !in_single;
+        } else if !in_single && !in_template && c == b'"' {
+            in_double = !in_double;
+        } else if !in_single && !in_double && c == b'`' {
+            in_template = !in_template;
+        } else if !in_single
+            && !in_double
+            && !in_template
+            && c == b'/'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'/'
+        {
+            return &line[..i];
+        }
+        i += 1;
+    }
+    line
+}
+
+fn find_as_any(code: &str) -> Option<usize> {
+    let mut start = 0;
+    while let Some(rel) = code[start..].find("as any") {
+        let col0 = start + rel;
+        let after = col0 + "as any".len();
+        let ok_after = code
+            .as_bytes()
+            .get(after)
+            .map(|b| !b.is_ascii_alphanumeric() && *b != b'_')
+            .unwrap_or(true);
+        let ok_before = if col0 == 0 {
+            true
+        } else {
+            let b = code.as_bytes()[col0 - 1];
+            !b.is_ascii_alphanumeric() && b != b'_'
+        };
+        if ok_before && ok_after {
+            return Some(col0);
+        }
+        start = col0 + 1;
+    }
+    None
+}
+
+fn find_satisfies_any(code: &str) -> Option<usize> {
+    let mut start = 0;
+    while let Some(rel) = code[start..].find("satisfies any") {
+        let col0 = start + rel;
+        let after = col0 + "satisfies any".len();
+        let ok_after = code
+            .as_bytes()
+            .get(after)
+            .map(|b| !b.is_ascii_alphanumeric() && *b != b'_')
+            .unwrap_or(true);
+        if ok_after {
+            return Some(col0);
+        }
+        start = col0 + 1;
+    }
+    None
+}
+
+fn find_function_ctor(code: &str) -> Option<usize> {
+    if let Some(col0) = code.find("new Function") {
+        let rest = &code[col0 + "new Function".len()..];
+        if rest.trim_start().starts_with('(') {
+            return Some(col0);
+        }
+    }
+    let mut start = 0;
+    while let Some(rel) = code[start..].find("Function") {
+        let col0 = start + rel;
+        let ok_before = if col0 == 0 {
+            true
+        } else {
+            let b = code.as_bytes()[col0 - 1];
+            !b.is_ascii_alphanumeric() && b != b'_' && b != b'.'
+        };
+        if ok_before {
+            let after = col0 + "Function".len();
+            let rest = &code[after..];
+            if rest.trim_start().starts_with('(') {
+                return Some(col0);
+            }
+        }
+        start = col0 + 1;
+    }
+    None
+}
+
+fn find_globalthis_string_index(code: &str) -> Option<usize> {
+    for n in ["globalThis['", "globalThis[\"", "globalThis[`"] {
+        if let Some(col0) = code.find(n) {
+            return Some(col0);
+        }
+    }
+    None
 }
 
 // ── legacy bridge (props/variants + synthetic controller) ──────────────────
@@ -1981,10 +2467,7 @@ export default controller((ctx) => {
     }
 
     #[test]
-    fn relative_and_internal_imports_are_not_type_gate_noise() {
-        // Isolated harness must not false-fail legal controllers solely on
-        // TS2307 for `./local-mod` / `@ship/sail-runtime/internal` (no DOM,
-        // no intrinsic type mismatch).
+    fn ambient_ship_imports_are_not_type_gate_noise() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
             .nth(3)
@@ -1996,15 +2479,13 @@ export default controller((ctx) => {
 <controller>
 import { bindHtml } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
-import type { Scope } from './local-widget.sail'
-import { helper } from './local-mod'
 
-export default controller((ctx: Scope) => {
+export default controller((ctx) => {
   const paint: Action<void> = (node) => {
-    const stop = bindHtml(node as any, () => helper(ctx))
+    const stop = bindHtml(node, () => 0)
     return { destroy: stop }
   }
-  return { paint, helper }
+  return { paint }
 })
 </controller>
 <div />
@@ -2016,21 +2497,23 @@ export default controller((ctx: Scope) => {
             .filter(|d| {
                 matches!(
                     d.rule.as_deref(),
-                    Some(RULE_PURE_REGION | RULE_ACTION_SURFACE | RULE_TYPE_GATE)
+                    Some(
+                        RULE_PURE_REGION
+                            | RULE_ACTION_SURFACE
+                            | RULE_TYPE_GATE
+                            | RULE_NO_TYPE_ERASE
+                    )
                 )
             })
             .collect();
         assert!(
             type_errs.is_empty(),
-            "relative/internal imports without DOM/type errors must not sail-type-gate: {type_errs:?}"
+            "@ship ambient imports without DOM/type errors must not sail-type-gate: {type_errs:?}"
         );
     }
 
     #[test]
-    fn at_alias_imports_are_not_type_gate_noise() {
-        // Isolated region harness has no project `paths` for `@/…` (project
-        // batch does via `at_alias_paths`). Controllers that only import
-        // app-local compositions/stores must not sole-fail as sail-type-gate.
+    fn missing_relative_module_hard_fails_ts2307() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .ancestors()
             .nth(3)
@@ -2040,30 +2523,79 @@ export default controller((ctx: Scope) => {
         }
         let src = r#"
 <controller>
-import { directory } from '@/compositions/foo'
-import { tally } from '@/stores/counter-store'
+import { helper } from './definitely-missing-mod-xyz'
 
 export default controller((ctx) => {
-  const n = signal(0)
-  return { n, directory, tally }
+  return { helper }
 })
 </controller>
 <div />
 "#;
         let path = root.join("apps/fake/src/widget/widget.sail");
         let diags = collect_sail_type_gate(src, Some(&path));
-        let type_errs: Vec<_> = diags
-            .iter()
-            .filter(|d| {
-                matches!(
-                    d.rule.as_deref(),
-                    Some(RULE_PURE_REGION | RULE_ACTION_SURFACE | RULE_TYPE_GATE)
-                )
-            })
-            .collect();
         assert!(
-            type_errs.is_empty(),
-            "@/ compositions/stores without DOM/type errors must not sail-type-gate: {type_errs:?}"
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE) && d.message.contains("TS2307")
+            }),
+            "missing relative module must hard-fail TS2307, got {diags:?}"
+        );
+    }
+
+    #[test]
+    fn missing_at_alias_module_hard_fails_ts2307() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+import { directory } from '@/compositions/definitely-missing-foo-xyz'
+
+export default controller((ctx) => {
+  const n = signal(0)
+  return { n, directory }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/sail-site/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE) && d.message.contains("TS2307")
+            }),
+            "missing @/ module must hard-fail TS2307, got {diags:?}"
+        );
+    }
+
+    #[test]
+    fn type_erase_as_any_globalthis_document_fails() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const doc = (globalThis as any).document
+  return { doc }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(RULE_NO_TYPE_ERASE)),
+            "expected sail-no-type-erase on (globalThis as any).document, got {diags:?}"
         );
     }
 

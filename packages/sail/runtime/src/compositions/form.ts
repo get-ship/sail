@@ -43,7 +43,7 @@ export function form<T extends Record<string, unknown>>(
   pending: () => boolean
   lastError: () => Error | null
   reset: () => void
-  submit: (e?: Event) => Promise<void>
+  submit: (e?: { preventDefault(): void }) => Promise<void>
 } {
   const read = (): T => (typeof opts.initial === 'function' ? (opts.initial as () => T)() : opts.initial)
 
@@ -88,7 +88,7 @@ export function form<T extends Record<string, unknown>>(
     })
   }
 
-  const submit = async (e?: Event): Promise<void> => {
+  const submit = async (e?: { preventDefault(): void }): Promise<void> => {
     // The handler is meant to sit on `on:submit`, so it owns the preventDefault —
     // forgetting it is a full page reload, and that is not the author's problem.
     e?.preventDefault()

@@ -42,7 +42,7 @@
 
 <controller>
 import type { Action, ControllerScope, SailHost } from '@ship/sail-runtime'
-import { ensureWasm, makeCompile } from '../../src/vendor/viewer-wasm'
+import { ensureWasm, makeCompile } from '../../src/compositions/live-sail-boot'
 import type { Scope } from './page.sail'
 import {
   createDebouncer,
@@ -100,7 +100,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   // signal.set treats a bare function as an updater — wrap so the CompileFn
   // itself is stored as the value, not invoked as the updater.
   ensureWasm('/sail_compiler_bg.wasm')
-    .then(() => compile.set(() => makeCompile() as unknown as CompileFn))
+    .then(() => compile.set(() => makeCompile()))
     .catch((err) => console.error('[sail-site] wasm compile seam failed:', err))
 
   const bootedAt = Date.now()

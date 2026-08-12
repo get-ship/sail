@@ -50,9 +50,9 @@ export function bothViewportsRan(layoutCheck: {
 export function parseRawDiagnostic(
   raw: unknown,
   opts: {
-    defaultPath?: string
-    bothViewports?: boolean
-    nodeId?: string | null
+    defaultPath?: string | undefined
+    bothViewports?: boolean | undefined
+    nodeId?: string | null | undefined
   } = {},
 ): Finding | null {
   if (!raw || typeof raw !== 'object') return null
@@ -104,10 +104,10 @@ export function parseRawDiagnostic(
 export function parseCheckFindings(
   diagnostics: unknown[],
   opts: {
-    defaultPath?: string
-    bothViewports?: boolean
+    defaultPath?: string | undefined
+    bothViewports?: boolean | undefined
     /** Optional node ids keyed by "rule|line|message-prefix" or Model diags. */
-    nodeByKey?: Map<string, string>
+    nodeByKey?: Map<string, string> | undefined
   } = {},
 ): Finding[] {
   if (!Array.isArray(diagnostics)) return []

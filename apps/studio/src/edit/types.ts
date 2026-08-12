@@ -281,13 +281,17 @@ export type OpsClient = Pick<
   | 'sailInspectTree'
   | 'sailInspectState'
   | 'sailRenderScreenshot'
+  | 'sailAuthoringCheck'
+  | 'sailThemeList'
+  | 'sailThemeRead'
+  | 'sailThemeWrite'
+  | 'sailThemeFork'
 > &
   Partial<
     Pick<
       StudioOpsMethods,
       | 'sailAuthoringEdit'
       | 'sailAuthoringListFiles'
-      | 'sailAuthoringCheck'
       | 'sailAuthoringLayoutCheck'
       | 'sailTaskList'
       | 'sailTaskGet'
@@ -301,10 +305,6 @@ export type OpsClient = Pick<
       | 'sailTaskReanchor'
       | 'sailTaskCommitIntent'
       | 'sailInspectTokenUsage'
-      | 'sailThemeList'
-      | 'sailThemeRead'
-      | 'sailThemeWrite'
-      | 'sailThemeFork'
       | 'sailThemeDelete'
       | 'sailThemeGenerate'
       | 'sailThemeGraph'

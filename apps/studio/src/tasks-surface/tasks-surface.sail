@@ -32,6 +32,7 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import { createTasksSurface } from '../compositions/tasks-surface/tasks-surface-vm'
 export default controller(() => {
   const c = createTasksSurface()
@@ -62,8 +63,8 @@ export default controller(() => {
     composerDisabled: c.composerDisabled,
     canAttachCrop: c.canAttachCrop,
     onTaskThreadClick: (id: string) => c.onTaskThreadClick(id),
-    onTaskOpenFilter: (e: Event) => c.onTaskOpenFilter(e),
-    onTaskActorFilter: (e: Event) => c.onTaskActorFilter(e),
+    onTaskOpenFilter: (e: UiEvent) => c.onTaskOpenFilter(e),
+    onTaskActorFilter: (e: UiEvent) => c.onTaskActorFilter(e),
     onComposerSubmit: (detail: { text?: string; attachments?: unknown[] }) => c.onComposerSubmit(detail),
     onCloseDetail: () => c.onCloseDetail(),
     onNewTaskQuick: () => c.onNewTaskQuick(),

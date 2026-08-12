@@ -27,6 +27,7 @@ export {
   THEME_MODE_GROUP_KEYS,
   THEME_OVERRIDE_ORDER,
   modeCapability,
+  themeMeta,
 } from './generated/themes-meta'
 export {
   validateThemeDoc,

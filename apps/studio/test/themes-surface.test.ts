@@ -227,7 +227,7 @@ describe('themes home — UI contracts (source)', () => {
     expect(sail).toMatch(/use:paintMode=\{previewModeId\(\)\}/)
     expect(sail).toMatch(/use:paintMode=\{paintMode\}|use:paintMode=\{row\.paintMode\}/)
     expect(sail).toMatch(/const paintMode:\s*Action/)
-    expect(sail).toMatch(/setAttribute\(['"]data-mode['"]/)
+    expect(sail).toMatch(/hostSetAttribute\([^,]+,\s*['"]data-mode['"]/)
   })
 
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {

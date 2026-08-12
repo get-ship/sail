@@ -22,13 +22,14 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import { createShellPage } from '../compositions/shell/shell-page-vm'
 export default controller((ctx) => {
   // Pathname from deck layout injection — chrome is reused across leaf navigations.
   const routePath = () => {
     const r = (ctx as { route?: { pathname?: () => string } }).route
     if (r?.pathname) return r.pathname()
-    return typeof location !== 'undefined' ? location.pathname : '/edit'
+    return '/edit'
   }
   const vm = createShellPage({ pathname: routePath })
   return {
@@ -58,7 +59,7 @@ export default controller((ctx) => {
     onBatchSendExisting: () => vm.onBatchSendExisting(),
     onToggleChecksPanel: () => vm.onToggleChecksPanel(),
     onCloseChecksPanel: () => vm.onCloseChecksPanel(),
-    onRailClick: (e: Event) => vm.onRailClick(e),
+    onRailClick: (e: UiEvent) => vm.onRailClick(e),
   }
 })
 </controller>

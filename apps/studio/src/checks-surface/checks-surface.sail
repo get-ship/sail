@@ -39,6 +39,7 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import { createChecksSurface } from '../compositions/checks-surface/checks-surface-vm'
 export default controller(() => {
   const c = createChecksSurface()
@@ -70,17 +71,17 @@ export default controller(() => {
     lastRunLabel: c.lastRunLabel,
     recheckLabel: c.recheckLabel,
     showSuggestDiff: c.showSuggestDiff,
-    onRuleFilter: (e: Event) => c.onRuleFilter(e),
-    onFileFilter: (e: Event) => c.onFileFilter(e),
-    onSeverityFilter: (e: Event) => c.onSeverityFilter(e),
+    onRuleFilter: (e: UiEvent) => c.onRuleFilter(e),
+    onFileFilter: (e: UiEvent) => c.onFileFilter(e),
+    onSeverityFilter: (e: UiEvent) => c.onSeverityFilter(e),
     onFindingClick: (id: string) => c.onFindingClick(id),
     onFindingAction: (
       id: string,
       action: 'open-source' | 'select-in-app' | 'apply-fix',
-      e?: Event,
+      e?: UiEvent,
     ) => c.onFindingAction(id, action, e),
-    onRuleToggle: (rule: string, e?: Event) => c.onRuleToggle(rule, e),
-    onApplyRule: (rule: string, e?: Event) => c.onApplyRule(rule, e),
+    onRuleToggle: (rule: string, e?: UiEvent) => c.onRuleToggle(rule, e),
+    onApplyRule: (rule: string, e?: UiEvent) => c.onApplyRule(rule, e),
     onRetryChecks: () => c.onRetryChecks(),
     onRecheck: () => c.onRecheck(),
     onAutoFixMode: (mode: 'off' | 'suggest' | 'apply') => c.onAutoFixMode(mode),

@@ -7,7 +7,7 @@
 </scope>
 
 <controller>
-import { setChecksPanelOpen } from '../../src/vendor/studio-shell'
+import { setChecksPanelOpen } from '../../src/compositions/studio-shell'
 import { appRouteBase } from '../../src/compositions/shell/shell-rail'
 
 export default controller(() => {

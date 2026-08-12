@@ -110,6 +110,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: Some("docs#sail-layout-primitive"),
     },
     DiagSpec {
+        id: "sail-no-type-erase",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "type erasure is not allowed in Pure regions",
+        allowed_list_source: None,
+        fix_text: Some(
+            "drop `as any` / `as unknown as` / `satisfies any` / `Function()` / string-indexed globals; use SailHost, a use: action, or a real type",
+        ),
+        docs_anchor: Some("JOB-E4-ENFORCEMENT-RESIDUALS#R1"),
+    },
+    DiagSpec {
         id: "sail-unintended-overflow",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,

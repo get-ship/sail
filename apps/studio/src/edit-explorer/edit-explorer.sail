@@ -11,6 +11,7 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import { createEditExplorer } from '../compositions/edit-explorer/edit-explorer-vm'
 export default controller(() => {
   const c = createEditExplorer()
@@ -20,7 +21,7 @@ export default controller(() => {
     hasTree: c.hasTree,
     dirtyCountLabel: c.dirtyCountLabel,
     fileCountLabel: c.fileCountLabel,
-    onFilterInput: (e: Event) => c.onFilterInput(e),
+    onFilterInput: (e: UiEvent) => c.onFilterInput(e),
     onTreeSelect: (detail: { id?: string }) => c.onTreeSelect(detail),
   }
 })

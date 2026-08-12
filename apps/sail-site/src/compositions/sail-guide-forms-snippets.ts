@@ -1,3 +1,4 @@
+import type { UiEvent } from './ui-event'
 // Code snippets for the Forms guide. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // Every snippet here IS the live demo's code (or a focused slice of it);
@@ -28,7 +29,7 @@ export default controller(() => {
 
   return {
     profile, tried, saved,
-    onSubmit: (e: Event) => { tried.set(true); void profile.submit(e) },
+    onSubmit: (e: UiEvent) => { tried.set(true); void profile.submit(e) },
     onReset: () => { tried.set(false); saved.set(null); profile.reset() },
     breakIt: () => sabotage.set(true),
   }

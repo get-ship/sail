@@ -66,12 +66,13 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
+import type { UiEvent } from '../../src/compositions/ui-event'
 import { createShanty } from '../../src/compositions/shanty-vm'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
   const s = createShanty()
   // stopPropagation + like in one controller handler (template bans multi-statement).
-  const stopAndLike = (e: Event, id: number): void => {
+  const stopAndLike = (e: UiEvent, id: number): void => {
     e.stopPropagation()
     s.toggleLike(id)
   }

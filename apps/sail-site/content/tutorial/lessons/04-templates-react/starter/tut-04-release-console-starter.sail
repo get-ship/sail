@@ -39,7 +39,7 @@ export default controller(() => {
       // handler WRITES the signal; the {#match} in the template reads it.
       deploy: (): void => {},
       reset: (): void => phase.set('idle'),
-      search: (e: Event): void => query.set((e.target as HTMLInputElement).value),
+      search: (e: { target?: { value?: string } | null }): void => query.set(e.target?.value ?? ''),
       // TODO 2: clear() — empty the query. The template fires it via
       // on:keydown|key:Escape.
       clear: (): void => {},

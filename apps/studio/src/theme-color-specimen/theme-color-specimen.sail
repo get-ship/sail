@@ -35,7 +35,7 @@ import { watchPreviewHost } from '../compositions/theme-session/bind-preview-hos
 export default controller(() => {
   const sessionSig = signal<ThemeSession | null>(null)
   mount((host) => {
-    const pre = (host as unknown as { session?: ThemeSession | null }).session
+    const pre = (host as { session?: ThemeSession | null }).session
     if (pre != null) sessionSig.set(pre)
     Object.defineProperty(host, 'session', {
       configurable: true,

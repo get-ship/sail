@@ -44,7 +44,7 @@ export default controller(() => {
         setTimeout(() => phase.set(Math.random() < 0.75 ? 'live' : 'failed'), 900)
       },
       reset: (): void => phase.set('idle'),
-      search: (e: Event): void => query.set((e.target as HTMLInputElement).value),
+      search: (e: { target?: { value?: string } | null }): void => query.set(e.target?.value ?? ''),
       clear: (): void => query.set(''),
       // Move the env to the front. The keyed {#for} sees the same ids in a
       // new order, so the reconciler MOVES existing rows — DOM identity

@@ -19,6 +19,7 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import type { ThemeSession } from '../compositions/theme-session/theme-session'
 
 export default controller(() => {
@@ -27,7 +28,7 @@ export default controller(() => {
   const leaveOpen = signal(false)
 
   mount((host) => {
-    const pre = (host as unknown as { session?: ThemeSession | null }).session
+    const pre = (host as { session?: ThemeSession | null }).session
     if (pre != null) sessionSig.set(pre)
     Object.defineProperty(host, 'session', {
       configurable: true,
@@ -67,9 +68,9 @@ export default controller(() => {
   const saveButtonLabel = () => s()?.saveButtonLabel() ?? 'Save'
 
   const goBack = () => s()?.goBack()
-  const onNameInput = (e: Event) => s()?.onNameInput(e)
-  const onNameChange = (e: Event) => s()?.onNameChange(e)
-  const onModeSwitch = (e: Event) => s()?.onModeSwitch(e)
+  const onNameInput = (e: UiEvent) => s()?.onNameInput(e)
+  const onNameChange = (e: UiEvent) => s()?.onNameChange(e)
+  const onModeSwitch = (e: UiEvent) => s()?.onModeSwitch(e)
   const onAddMode = () => s()?.onAddMode()
   const onSave = () => s()?.onSave()
   const onUndo = () => s()?.onUndo?.()

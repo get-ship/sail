@@ -28,6 +28,7 @@
 </scope>
 
 <controller>
+import type { UiEvent } from '../compositions/ui-event'
 import { createConfigSurface } from '../compositions/config/config-surface-vm'
 export default controller(() => {
   const c = createConfigSurface()
@@ -36,7 +37,7 @@ export default controller(() => {
     sections: c.sections,
     sectionTitle: c.sectionTitle,
     sectionLead: c.sectionLead,
-    onCatClick: (e: Event) => c.onCatClick(e),
+    onCatClick: (e: UiEvent) => c.onCatClick(e),
   }
 })
 </controller>
