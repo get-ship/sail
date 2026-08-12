@@ -195,6 +195,12 @@ const isModeOnlyHost = (root: HTMLElement): boolean => {
   return v !== 'false' && v !== '0'
 }
 
+const isInlineHost = (root: HTMLElement): boolean => {
+  if (!root.hasAttribute('inline')) return false
+  const v = root.getAttribute('inline')
+  return v !== 'false' && v !== '0'
+}
+
 const isModePreference = (raw: string): raw is ModePreference =>
   raw === 'light' || raw === 'dark' || raw === 'system'
 
@@ -220,7 +226,8 @@ export const themeSelect: Action<void> = (node) => {
   // Closed multi-part anatomy: stamp listbox on the panel (not free author role=).
   if (panel && !panel.hasAttribute('role')) panel.setAttribute('role', 'listbox')
 
-  const modeOnly = isModeOnlyHost(root)
+  let modeOnly = isModeOnlyHost(root)
+  let inline = isInlineHost(root)
 
   const themeGrid = root.querySelector<HTMLElement>('[data-theme-grid]')
   const modeBar = root.querySelector<HTMLElement>('[data-mode-bar]')
@@ -295,7 +302,8 @@ export const themeSelect: Action<void> = (node) => {
   /** Detached option skeleton so empty→non-empty grid rebuilds work. */
   let optionTemplate: HTMLElement | null = null
 
-  let trigger: HTMLButtonElement | null
+  let trigger: HTMLButtonElement | null = null
+  const applyModeChrome = (): void => {
   if (modeOnly) {
     if (modeTrigger && fullTrigger && modeTrigger !== fullTrigger) {
       fullTrigger.setAttribute('hidden', '')
@@ -350,6 +358,41 @@ export const themeSelect: Action<void> = (node) => {
     trigger = fullTrigger ?? legacyTrigger
     root.removeAttribute('data-mode-only')
   }
+  }
+
+  const applyInlineChrome = (): void => {
+    if (modeOnly) {
+      root.removeAttribute('data-inline')
+      return
+    }
+    if (inline) {
+      fullTrigger?.setAttribute('hidden', '')
+      if (fullTrigger) {
+        fullTrigger.style.display = 'none'
+        fullTrigger.setAttribute('aria-hidden', 'true')
+      }
+      if (panel) {
+        panel.removeAttribute('popover')
+        panel.hidden = false
+        panel.removeAttribute('inert')
+      }
+      root.setAttribute('data-inline', '1')
+    } else {
+      fullTrigger?.removeAttribute('hidden')
+      fullTrigger?.removeAttribute('aria-hidden')
+      fullTrigger?.style.removeProperty('display')
+      if (panel && !panel.hasAttribute('popover')) {
+        panel.setAttribute('popover', '')
+        const id = panel.id || `sail-theme-panel-${++uid}`
+        panel.id = id
+        ;(fullTrigger ?? legacyTrigger)?.setAttribute('popovertarget', id)
+      }
+      root.removeAttribute('data-inline')
+    }
+  }
+
+  applyModeChrome()
+  applyInlineChrome()
 
   const currentPreference = (): ModePreference => readModePreference()
 
@@ -851,9 +894,31 @@ export const themeSelect: Action<void> = (node) => {
 
   sync()
 
+  const hostObs = new MutationObserver(() => {
+    const nextMode = isModeOnlyHost(root)
+    const nextInline = isInlineHost(root)
+    const chromeChanged = nextMode !== modeOnly || nextInline !== inline
+    modeOnly = nextMode
+    inline = nextInline
+    if (chromeChanged) {
+      applyModeChrome()
+      applyInlineChrome()
+    }
+    const v = root.getAttribute('value')
+    if (v && isValidTheme(v) && !studioPreviewActive()) {
+      applyTheme(v, document.documentElement, modeIntentForSelect(v, catalogFilter))
+    }
+    sync()
+  })
+  hostObs.observe(root, {
+    attributes: true,
+    attributeFilter: ['value', 'inline', 'mode-only', 'modeOnly', 'modeonly'],
+  })
+
   return {
     destroy: () => {
       cancelled = true
+      hostObs.disconnect()
       root.removeEventListener('click', onClick)
       root.removeEventListener('keydown', onKeydown)
       panel?.removeEventListener('toggle', onToggle)

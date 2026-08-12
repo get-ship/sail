@@ -159,13 +159,20 @@ const injectScopedStyles = (tag: string, css: string): void => {
   if (document.getElementById(id)) return
   const style = document.createElement('style')
   style.id = id
-  // The @scope DONUT: rules apply from this component's element down, and
-  // STOP at any nested component boundary — style containment by
-  // construction (Sail is light DOM). The compiler rewrites legacy
-  // authoring idioms (:host → :scope / .sail-root, ::slotted → slot >)
-  // for exactly this wrapper.
-  style.textContent =
-    `@scope ([data-component="${tag}"]) to ([data-component]) { ${css} }`
+  // Scope from this component host down through the light-DOM tree.
+  //
+  // Do NOT use a `to ([data-component])` lower boundary (the old "donut").
+  // Light-DOM composition projects host-authored children into nested
+  // components via <slot> (specimen | knobs | stage on sail-component-viewer).
+  // Those nodes remain descendants of the nested host in the DOM, but they
+  // are authored and styled by the PARENT .sail file — a lower boundary
+  // made every host Style utility (s-w7 swatches, knob widths, …) a no-op
+  // inside the viewer, collapsing tone dots to 0×0.
+  //
+  // Nested components still inject their own scoped sheets; same-specificity
+  // atomic utilities match, and later sheets win when both apply. The
+  // compiler rewrites :host → :scope / .sail-root for this wrapper.
+  style.textContent = `@scope ([data-component="${tag}"]) { ${css} }`
   document.head.appendChild(style)
 }
 

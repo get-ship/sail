@@ -4,7 +4,7 @@
 // lowers to `animation: var(--animate-{name})`; L1 skins (skeleton map,
 // progress) reference the same vars. Not Style motion interaction catalog
 // (crates/sail/lint/animation-presets.json) — infinite spinners / shimmers
-// stay on CSS PE, not style.loop.
+// stay on CSS host Style, not style.loop.
 //
 // Closed ambient loops; materialised in sail-base.css.
 
@@ -19,7 +19,7 @@ export type KeyframeCatalogEntry = {
   animation: string
   /** Optional reduced-motion override of the animation shorthand. */
   reducedMotion?: string
-  /** When true, Style.animate(name) is a legal PE. */
+  /** When true, Style.animate(name) is a legal host Style animate. */
   styleAnimate: boolean
   doc: string
 }
@@ -65,7 +65,7 @@ export const STYLE_ANIMATE_NAMES: readonly string[] = KEYFRAME_CATALOG.filter(
 /**
  * Emit the ambient keyframes sheet: every catalog `@keyframes` + `:root`
  * `--animate-*` vars (with optional reduced-motion overrides). Always-on
- * for contracts; skins and Style PE reference the vars, never re-declare
+ * for contracts; skins and host Style reference the vars, never re-declare
  * keyframes.
  */
 export function emitKeyframeCatalogCss(
