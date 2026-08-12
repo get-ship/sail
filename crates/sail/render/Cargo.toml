@@ -20,6 +20,7 @@ thiserror = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 takumi = { workspace = true }
+takumi-raster = { workspace = true }
 png = "0.17"
 
 [dev-dependencies]
