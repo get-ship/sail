@@ -207,7 +207,7 @@ export default controller(() => {
                   <input type="text" size="sm" placeholder="my-widget" value={session.newName()} on:input={session.onNewNameInput} />
                 </field>
                 <field label="Intent">
-                  <textarea size="sm" rows="3" placeholder="What should this component do?" value={session.newIntent()} on:input={session.onNewIntentInput}></textarea>
+                  <textarea size="sm" rows="3" placeholder="What should this component do?" value={session.newIntent()} on:input={session.onNewIntentInput} />
                 </field>
                 <field label="Layer">
                   <select size="sm" value={session.newLayer()} on:change={session.onNewLayerChange}>

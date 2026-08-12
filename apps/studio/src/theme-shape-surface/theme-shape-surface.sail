@@ -251,17 +251,17 @@ export default controller(() => {
               <p style(fieldHint)>Master · family</p>
               <p style(monoMeta)>{shape.masterLabel()}</p>
             </row>
-            <input
-              type="range"
-              min="0"
-              max="24"
-              step="1"
-              value={shape.masterPx()}
-              disabled={!session.canEdit()}
-              radius-master
-              label="Radius master"
-              on:input={shape.onMasterInput}
-            />
+            <slider
+       
+       min="0"
+       max="24"
+       step="1"
+       value={shape.masterPx()}
+       disabled={!session.canEdit()}
+       radius-master
+       label="Radius master"
+       on:input={shape.onMasterInput}
+      />
           </column>
           <p style(fieldHint)>Outline corner chips. Master sets mock ramp sm/md/lg/xl = 0.5/1/1.5/2 × md.</p>
         </column>
@@ -298,17 +298,17 @@ export default controller(() => {
               <p style(fieldHint)>Width</p>
               <p style(monoMeta)>{shape.borderWLabel()}</p>
             </row>
-            <input
-              type="range"
-              min="0"
-              max="3"
-              step="0.5"
-              value={shape.borderW()}
-              disabled={!session.canEdit()}
-              border-width
-              label="Border width"
-              on:input={shape.onBorderWidth}
-            />
+            <slider
+       
+       min="0"
+       max="3"
+       step="0.5"
+       value={shape.borderW()}
+       disabled={!session.canEdit()}
+       border-width
+       label="Border width"
+       on:input={shape.onBorderWidth}
+      />
           </column>
           <p style(fieldHint)>Sets border thickness for cards and controls.</p>
         </column>
@@ -325,34 +325,34 @@ export default controller(() => {
                 <p style(fieldHint)>Surface opacity</p>
                 <p style(monoMeta)>{shape.surfaceOpLabel()}</p>
               </row>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={shape.surfaceOpPct()}
-                disabled={!session.canEdit()}
-                surface-opacity
-                label="Surface opacity"
-                on:input={shape.onSurfaceOp}
-              />
+              <slider
+        
+        min="10"
+        max="100"
+        step="5"
+        value={shape.surfaceOpPct()}
+        disabled={!session.canEdit()}
+        surface-opacity
+        label="Surface opacity"
+        on:input={shape.onSurfaceOp}
+       />
             </column>
             <column gap="1" style(sliderRow)>
               <row align="center" justify="between" gap="2" nowrap>
                 <p style(fieldHint)>Backdrop blur</p>
                 <p style(monoMeta)>{shape.surfaceBlurLabel()}</p>
               </row>
-              <input
-                type="range"
-                min="0"
-                max="28"
-                step="1"
-                value={shape.surfaceBlur()}
-                disabled={!session.canEdit()}
-                surface-blur
-                label="Backdrop blur"
-                on:input={shape.onSurfaceBlur}
-              />
+              <slider
+        
+        min="0"
+        max="28"
+        step="1"
+        value={shape.surfaceBlur()}
+        disabled={!session.canEdit()}
+        surface-blur
+        label="Backdrop blur"
+        on:input={shape.onSurfaceBlur}
+       />
             </column>
             <p style(fieldHint)>Writes component.card.bg α + backdrop-filter. Frost fill previews freeform; blur is theme paint after Save.</p>
           </column>

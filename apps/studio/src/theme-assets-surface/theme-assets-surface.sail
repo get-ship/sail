@@ -258,17 +258,17 @@ export default controller(() => {
                 <p style(fieldHint)>Master</p>
                 <p style(pathMeta)>{assets.iconScaleMasterPx()}px</p>
               </row>
-              <input
-                type="range"
-                min="10"
-                max="32"
-                step="1"
-                value={assets.iconScaleMasterPx()}
-                disabled={!session.canEdit()}
-                icon-scale-master
-                label="Icon scale master"
-                on:input={assets.onIconScaleMaster}
-              />
+              <slider
+        
+        min="10"
+        max="32"
+        step="1"
+        value={assets.iconScaleMasterPx()}
+        disabled={!session.canEdit()}
+        icon-scale-master
+        label="Icon scale master"
+        on:input={assets.onIconScaleMaster}
+       />
             </column>
           </column>
         </column>

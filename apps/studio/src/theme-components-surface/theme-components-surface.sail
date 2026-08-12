@@ -263,12 +263,12 @@ export default controller(() => {
                       <column gap="2">
                         <p style(fieldHint)>Checkbox type (not a separate tag) · range</p>
                         <row gap="3" align="center">
-                          <input type="checkbox" checked />
-                          <input type="checkbox" />
-                          <input type="checkbox" disabled />
-                          <input type="checkbox" size="lg" checked />
+                          <checkbox checked />
+                          <checkbox />
+                          <checkbox disabled />
+                          <checkbox size="lg" checked />
                         </row>
-                        <input type="range" min="0" max="100" value="40" />
+                        <slider min="0" max="100" value="40" />
                       </column>
                     </column>
                   </if>
@@ -276,15 +276,15 @@ export default controller(() => {
                     <column gap="3" style(sampleMax)>
                       <column gap="2">
                         <p style(fieldHint)>Sizes · component.field.* surface</p>
-                        <textarea size="xs" rows="2" placeholder="xs"></textarea>
-                        <textarea size="sm" rows="2" placeholder="sm"></textarea>
-                        <textarea size={components.variant() || 'md'} rows="3" placeholder="md (chip or default)"></textarea>
-                        <textarea size="lg" rows="2" placeholder="lg"></textarea>
+                        <textarea size="xs" rows="2" placeholder="xs" />
+                        <textarea size="sm" rows="2" placeholder="sm" />
+                        <textarea size={components.variant() || 'md'} rows="3" placeholder="md (chip or default)" />
+                        <textarea size="lg" rows="2" placeholder="lg" />
                       </column>
                       <column gap="2">
                         <p style(fieldHint)>Invalid · disabled</p>
-                        <textarea invalid rows="2" placeholder="invalid → destructive border"></textarea>
-                        <textarea disabled rows="2" placeholder="disabled"></textarea>
+                        <textarea invalid rows="2" placeholder="invalid → destructive border" />
+                        <textarea disabled rows="2" placeholder="disabled" />
                       </column>
                     </column>
                   </if>
@@ -614,7 +614,7 @@ export default controller(() => {
                       <column gap="2">
                         <p style(fieldHint)>Rest · component.error-state bg/fg/border</p>
                         <error-state code="ERR_THEME" size="sm">
-                          <strong slot="title">Couldn't load preview</strong>
+                          <strong slot="title">Could not load preview</strong>
                           Rest chrome — override component.error-state leaves.
                           <button slot="action" type="button" variant="outline" size="sm">Retry</button>
                         </error-state>
