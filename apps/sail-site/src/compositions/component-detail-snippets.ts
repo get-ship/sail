@@ -215,7 +215,7 @@ export default controller(() => ({ done: signal(64) }))
 </controller>
 
 <progress value={done()} max="100" size="md"></progress>
-<p>{done()}% uploaded — native value/max; paint from component.progress.*</p>
+<p>{done()}% uploaded — native value/max; track and fill from the theme</p>
 <!-- omit value for indeterminate shimmer -->`,
 
   meter: `<column gap="2">
@@ -523,7 +523,7 @@ export default controller(() => ({
   style({ box: maxH(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
   <p>Constrain height/width with Style — overflow scrolls behind thin themed thumbs.</p>
   <p>orientation picks the axis (vertical · horizontal · both).</p>
-  <p>Rest thumb → component.scroll-area.thumb; hover → border-strong.</p>
+  <p>Thumb from the theme; hover uses the stronger border colour.</p>
 </scroll-area>`,
 
   // Action snippets (spotlight / targetCursor) moved to the action

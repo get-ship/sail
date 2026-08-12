@@ -376,14 +376,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Feedback ─────────────────────────────────────────────────────────
   alert: lang('alert', 'alert', {
     blurb:
-      'Inline status banner. Omit tone for component.alert tokens (themeable rest); set tone and the left stripe + icon brand paint. warning/destructive flip liveRegion to assertive role=alert; dismissible shows the close control (onDismiss then remove).',
+      'Inline status banner. Omit tone for the default look from the theme; set tone to colour the left stripe and icon. warning/destructive announce assertively (role=alert); dismissible shows the close control (onDismiss then remove).',
     // No variant axis — stage owns tone/dismiss knobs (viewer chips hidden).
     variants: [],
     variantAttr: '',
     props: [
       {
         name: 'tone',
-        desc: 'stripe + icon brand when set; omit for component.alert rest tokens',
+        desc: 'stripe + icon colour when set; omit for theme default colors',
         type: 'muted · info · success · warning · destructive',
       },
       { name: 'dismissible', desc: 'shows the close control ([data-dismiss])', type: 'bool' },
@@ -395,13 +395,13 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   progress: lang('progress', 'progressBar', {
     blurb:
-      'Native progress bar, themed. value/max are the platform model; omit value for the indeterminate sweep (no separate prop). size is sm|md|lg track height. Paint always from component.progress.track + fill — no tone axis.',
+      'Native progress bar, themed. value/max are the platform model; omit value for the indeterminate sweep (no separate prop). size is sm|md|lg track height. Track and fill always come from the theme — no tone axis.',
     variants: [],
     variantAttr: '',
     props: [
       {
         name: 'value',
-        desc: 'current amount; omit attribute entirely for native indeterminate + PROGRESS_MAP shimmer',
+        desc: 'current amount; omit the attribute for native indeterminate shimmer',
         type: 'number',
       },
       { name: 'max', desc: 'upper bound of the range (default 1 on the host)', type: 'number' },
@@ -414,14 +414,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   meter: lang('meter', 'meter', {
     blurb:
-      'Native <meter> gauge — a measurement in range, not task progress. value/min/max set the reading; low/high/optimum drive platform fill bands painted from component.meter.track / optimum / suboptimum / sub-suboptimum. size scales bar height. No tone prop.',
+      'Native <meter> gauge — a measurement in range, not task progress. value/min/max set the reading; low/high/optimum drive platform fill bands (optimum · suboptimum · even less good) from the theme. size scales bar height. No tone prop.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'value / min / max', desc: 'the measurement (platform meter model)', type: 'number' },
       {
         name: 'low / high / optimum',
-        desc: 'thresholds → optimum · suboptimum · even-less-good band tokens',
+        desc: 'thresholds that pick optimum · suboptimum · even-less-good fill bands',
         type: 'number',
       },
       { name: 'size', desc: 'bar height', type: 'sm · md · lg' },
@@ -429,14 +429,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   spinner: lang('spinner', 'spinner', {
     blurb:
-      'Indeterminate wait ring. Size scales the host; omit tone for themeable spinner.foreground / spinner.track; centered parks it in the middle of its container.',
+      'Indeterminate wait ring. Size scales the host; omit tone for the theme default arc and track colours; centered parks it in the middle of its container.',
     variants: [],
     variantAttr: '',
     props: [
       { name: 'size', desc: 'ring scale (icon-size ladder)', type: 'xs · sm · md · lg' },
       {
         name: 'tone',
-        desc: 'active arc colour (fg). Omit → component.spinner.fg rest; track always spinner.track',
+        desc: 'active arc colour. Omit for the theme default; track always uses the theme track colour',
         type: 'primary · info · success · warning · destructive · accent',
       },
       { name: 'centered', desc: 'block + auto horizontal margin in the parent', type: 'bool' },
@@ -444,7 +444,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   skeleton: lang('skeleton', 'skeleton', {
     blurb:
-      'Loading placeholder sheen. Shape + size draw the geometry; paint is always the shimmer from component.skeleton.bg / highlight (themeable). No tone axis — compose width with layout Style.',
+      'Loading placeholder sheen. Shape + size draw the geometry; the shimmer always comes from the theme. No tone axis — compose width with layout Style.',
     variants: ['text', 'line', 'block', 'circle'],
     variantAttr: 'shape',
     props: [
@@ -462,7 +462,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'empty-state': lang('empty-state', 'emptyState', {
     blurb:
-      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). Omit tone for component.empty-state.* (themeable rest); set tone to brand the icon only. connecting upgrades to role=status / aria-live=polite via use:variantLive.',
+      'Nothing-here surface: icon + title + body + action slots. Chrome via variant (bordered default, dashed inline, bare placeholder/connecting). Omit tone for theme default colors; set tone to brand the icon only. connecting upgrades to role=status / aria-live=polite.',
     // Stage owns variant/size/tone knobs — hide generic viewer chips.
     variants: [],
     variantAttr: '',
@@ -475,7 +475,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'size', desc: 'padding scale (sm · md · lg)', type: 'sm · md · lg' },
       {
         name: 'tone',
-        desc: 'icon brand when set; omit for component.empty-state rest; muted keeps rest icon fg',
+        desc: 'icon colour when set; omit for the default look; muted keeps the default icon colour',
         type: TONES,
       },
       { name: 'slot="icon"', desc: 'optional leading glyph (hidden when empty)', type: 'slot' },
@@ -486,13 +486,13 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'error-state': lang('error-state', 'errorState', {
     blurb:
-      'Recovery surface for failed loads and partial failures. Rest chrome paints component.error-state (bg · fg · border); icon + inline border keep brand destructive. code fills a mono chip; details slot gates Show details; action slot holds Retry. use:recoverySurface stamps role=alert, syncs code, and focuses the first action.',
+      'Recovery surface for failed loads and partial failures. Default chrome uses theme colors; icon + inline border stay destructive. code fills a mono chip; details slot gates Show details; action slot holds Retry. Marks role=alert, syncs code, and focuses the first action.',
     variants: ['default', 'inline'],
     variantAttr: 'variant',
     props: [
       {
         name: 'variant',
-        desc: 'default = centered card on component leaves; inline = start-aligned row with destructive border + muted fill',
+        desc: 'default = centered card with theme colors; inline = start-aligned row with destructive border + muted fill',
         type: 'default · inline',
       },
       { name: 'size', desc: 'padding scale (default md)', type: 'sm · md · lg' },
@@ -526,7 +526,7 @@ export const DETAILS: Record<string, DetailEntry> = {
     props: [
       {
         name: 'tone',
-        desc: 'optional semantic colour; omit for component.toast rest tokens',
+        desc: 'optional semantic colour; omit for theme default colors',
         type: TONES,
       },
       { name: 'duration', desc: 'ms until dismiss as string — 0 is sticky', type: 'string' },
@@ -539,14 +539,14 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Display ──────────────────────────────────────────────────────────
   badge: lang('badge', 'badge', {
     blurb:
-      'A small statement of state. Soft by default; solid or outline when it must shout or whisper. Omit tone to use component.badge tokens (themeable rest); set tone and the semantic colour always paints.',
+      'A small statement of state. Soft by default; solid or outline when it must shout or whisper. Omit tone for theme default colors; set tone and the semantic colour always paints.',
     variants: ['soft', 'solid', 'outline'],
     variantAttr: 'variant',
     props: [
       { name: 'variant', desc: 'fill strength — soft default', type: 'soft · solid · outline' },
       {
         name: 'tone',
-        desc: 'semantic colour when set; omit for component.badge rest tokens',
+        desc: 'semantic colour when set; omit for the default look',
         type: TONES,
       },
       { name: 'size', desc: 'badge scale for table cells and chrome', type: 'sm · md · lg' },
@@ -556,20 +556,20 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   chip: lang('chip', 'chip', {
     blurb:
-      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). Omit tone for component.chip rest tokens; set tone and the semantic colour always paints. removable adds the ×; Backspace/Delete fires on-remove.',
+      'An interactive filter pill — the host is the control (role, keyboard, aria-pressed). Omit tone for theme default colors; set tone and the semantic colour always paints. removable adds the ×; Backspace/Delete fires on-remove.',
     variants: ['solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
       { name: 'variant', desc: 'fill strength — solid default', type: 'solid · soft · outline · ghost' },
       {
         name: 'tone',
-        desc: 'semantic colour when set; omit for component.chip rest tokens',
+        desc: 'semantic colour when set; omit for the default look',
         type: TONES,
       },
       { name: 'size', desc: 'chip scale for filters and dense chrome', type: 'sm · md · lg' },
       { name: 'selected', desc: 'pressed state, ARIA-synced', type: 'bool' },
       { name: 'removable', desc: 'the × button + Backspace/Delete', type: 'bool' },
-      { name: 'disabled', desc: 'non-interactive; muted rest paint', type: 'bool' },
+      { name: 'disabled', desc: 'non-interactive; muted default colours', type: 'bool' },
       { name: 'on-remove', desc: 'remove callback (× and keyboard)', type: 'callback' },
       { name: 'leading', desc: 'optional leading icon/slot', type: 'slot' },
       { name: 'children', desc: 'label text (keep short)', type: 'slot' },
@@ -581,7 +581,7 @@ export const DETAILS: Record<string, DetailEntry> = {
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'tone', desc: 'optional border tint; omit for rest tokens', type: TONES },
+      { name: 'tone', desc: 'optional border tint; omit for the default look', type: TONES },
       { name: 'variant', desc: 'filled or transparent — default · outline only', type: 'default · outline' },
       { name: 'padding', desc: 'inset scale', type: 'none · sm · md · lg' },
       { name: 'interactive', desc: 'pointer cursor + CSS hover lift', type: 'bool' },
@@ -600,7 +600,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'icon-slug', desc: 'pack glyph id when no photo', type: 'string' },
       { name: 'name', desc: 'identity label for fallback initials', type: 'string' },
       { name: 'initials', desc: 'explicit fallback glyphs', type: 'string' },
-      { name: 'tone', desc: 'optional frame colour; omit for rest gradient', type: TONES },
+      { name: 'tone', desc: 'optional frame colour; omit for the default gradient', type: TONES },
       { name: 'size', desc: 'frame scale', type: 'xs · sm · md · lg · xl' },
       { name: 'shape', desc: 'circle or rounded square', type: 'round · square' },
     ],
@@ -621,18 +621,18 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   separator: lang('separator', 'separator', {
     blurb:
-      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for themeable component.separator.line; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.',
+      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; solid or dashed. Omit tone for the theme default line colour; set muted · primary · destructive only when the line must speak. No separate `hr` catalog entry.',
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
     props: [
       { name: 'orientation', desc: 'which axis it divides', type: 'horizontal · vertical' },
-      { name: 'tone', desc: 'optional line colour — omit for rest separator.line tokens', type: 'muted · primary · destructive' },
+      { name: 'tone', desc: 'optional line colour — omit for the theme default', type: 'muted · primary · destructive' },
       { name: 'variant', desc: 'line style', type: 'solid · dashed' },
     ],
   }),
   accordion: lang('accordion', 'accordion', {
     blurb:
-      'ONE disclosure element (replaces collapsible + details). open · disabled · name · multiple · onToggle. Shared name = exclusive multi-item (native details name). Paint component.accordion.* (bg · fg · border · hover-bg · chevron).',
+      'ONE disclosure element (replaces collapsible + details). open · disabled · name · multiple · onToggle. Shared name = exclusive multi-item (native details name). Background, text, border, hover, and chevron come from the theme.',
     variants: [],
     variantAttr: '',
     props: [
@@ -646,7 +646,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   kbd: lang('kbd', 'kbd', {
     blurb:
-      'Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Paint from component.kbd (bg · foreground · border); no size/variant/tone props (theme the leaves, compose chords in markup).',
+      'Native <kbd> keycap — mono type, muted surface, doubled bottom edge. Colours come from the theme; no size/variant/tone props (compose chords in markup).',
     variants: [],
     variantAttr: '',
     props: [
@@ -655,7 +655,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'code-block': lang('code-block', 'codeBlock', {
     blurb:
-      'Syntax-highlighted source block. Host is a div with use:syntaxHighlight; paint on the inner pre from component.code-block (bg · foreground) plus global border/radius. Pass code as a string prop (not children). lang defaults to sail and is an authoring attr — the highlighter classifies by content shape (markup vs code), not by inventing line numbers or a copy chrome.',
+      'Syntax-highlighted source block. Host is a div with use:syntaxHighlight; the inner pre uses theme colours plus global border/radius. Pass code as a string prop (not children). lang defaults to sail and is an authoring attr — the highlighter classifies by content shape (markup vs code), not by inventing line numbers or a copy chrome.',
     variants: [],
     variantAttr: '',
     props: [
@@ -666,7 +666,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   prose: lang('prose', 'prose', {
     heading: 'prose',
     blurb:
-      'Typography scope for rendered content — wrap markdown blobs and long copy in <prose>. Host ink is component.prose.fg; nested h1…p, lists, blockquote, and code pick up the framework type map. No size/variant/tone props (theme the leaf + type roles, not a Title API).',
+      'Typography scope for rendered content — wrap markdown blobs and long copy in <prose>. Host text colour comes from the theme; nested h1…p, lists, blockquote, and code pick up the framework type map. No size/variant/tone props (theme type roles, not a Title API).',
     variants: [],
     variantAttr: '',
     props: [
@@ -772,7 +772,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   breadcrumb: lang('breadcrumb', 'breadcrumb', {
     blurb:
-      'A trail of links with the right nav/ARIA and themed separators. No host props — anchors for the path, inert current (small). Faces component.breadcrumb.fg / current.',
+      'A trail of links with the right nav/ARIA and themed separators. No host props — anchors for the path, inert current (small). Link and current colours come from the theme.',
     variants: [],
     variantAttr: '',
     props: [
@@ -814,8 +814,8 @@ export const DETAILS: Record<string, DetailEntry> = {
     variantAttr: '',
     props: [
       { name: 'dense', desc: 'tighter cell padding', type: 'bool' },
-      { name: 'striped', desc: 'even rows sample component.table.stripe', type: 'bool' },
-      { name: 'hoverable', desc: 'row hover fill from stripe', type: 'bool' },
+      { name: 'striped', desc: 'even rows get a light stripe from the theme', type: 'bool' },
+      { name: 'hoverable', desc: 'row hover fill from the stripe colour', type: 'bool' },
       { name: 'bordered', desc: 'box every cell', type: 'bool' },
       { name: '<thead> <tbody> <tr>', desc: 'the platform table model', type: 'children' },
       { name: '{#for}', desc: 'rows render from state and stay live', type: 'block' },
@@ -838,7 +838,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'scroll-area': lang('scroll-area', 'scrollArea', {
     blurb:
-      'Overflow box with thin, themed scrollbars. Only orientation is a host prop (vertical · horizontal · both; default vertical). Constrain height/width with Style box so content overflows. Rest thumb from component.scroll-area.thumb; hover uses free border-strong (SPEC-D1 — thumb-hover leaf is parked unread). Standard scrollbar-width/color only (no WebKit pseudo setters yet).',
+      'Overflow box with thin, themed scrollbars. Only orientation is a host prop (vertical · horizontal · both; default vertical). Constrain height/width with Style box so content overflows. Thumb colour comes from the theme; hover uses the stronger border colour. Standard scrollbar-width/color only (no WebKit pseudo setters yet).',
     variants: [],
     variantAttr: '',
     props: [
@@ -858,7 +858,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Effects ──────────────────────────────────────────────────────────
   ticker: lang('ticker', 'ticker', {
     blurb:
-      'Infinite linear marquee. Host is geometry only (overflow clip); use:marquee dual-copies the slot and loops translate-x. duration · reverse on host. No component.ticker.* — author paint. Reduced motion settles via motion runtime.',
+      'Infinite linear marquee. Host is geometry only (overflow clip); content is dual-copied and loops horizontally. duration · reverse on host. Colours are yours to style — no built-in palette. Reduced motion settles automatically.',
     variants: [],
     variantAttr: '',
     props: [
