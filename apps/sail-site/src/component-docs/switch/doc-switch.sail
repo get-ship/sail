@@ -82,9 +82,6 @@ export default controller((_ctx: Scope) => {
   style swatchMuted = { paint: bg(muted).border(border) }
   style swatchInfo = { paint: bg(info) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -155,26 +152,28 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
-        <p style(exampleLead)>Default is <code>md</code>.</p>
+      <doc-example
+        title="Sizes"
+        lead="Default is md."
+        code={exSizes()}
+      >
         <row gap="4" align="center" style(demoRow)>
           <switch size="sm" checked></switch>
           <switch checked></switch>
           <switch size="lg" checked></switch>
         </row>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Tone</h3>
-        <p style(exampleLead)>Tone paints the on track. Off always uses the switch surface.</p>
+      </doc-example>
+      <doc-example
+        title="Tone"
+        lead="Tone paints the on track. Off always uses the switch surface."
+        code={exTones()}
+      >
         <row gap="3" align="center" style(demoRow)>
           <switch tone="success" checked></switch>
           <switch tone="warning" checked></switch>
           <switch tone="destructive" checked></switch>
         </row>
-        <doc-code code={exTones()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

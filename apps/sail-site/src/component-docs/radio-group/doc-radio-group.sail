@@ -59,9 +59,6 @@ export default controller((_ctx: Scope) => {
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -115,16 +112,17 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Basic</h3>
-        <p style(exampleLead)>One shared value and accessible name for the set.</p>
+      <doc-example
+        title="Basic"
+        lead="One shared value and accessible name for the set."
+        code={exBasic()}
+      >
         <radio-group label="Plan" name="ex-rg-docs" value="pro">
           <radio value="free">Free</radio>
           <radio value="pro">Pro</radio>
           <radio value="enterprise">Enterprise</radio>
         </radio-group>
-        <doc-code code={exBasic()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

@@ -51,8 +51,6 @@ export default controller((_ctx: Scope) => {
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
@@ -109,32 +107,30 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Label · control · hint</h3>
-        <p style(exampleLead)>
-          Slot the label, control, and optional hint. The field spaces the stack.
-        </p>
+      <doc-example
+        title="Label · control · hint"
+        lead="Slot the label, control, and optional hint. The field spaces the stack."
+        code={exSlots()}
+      >
         <field style(controlW)>
           <label slot="label">Email</label>
           <input type="email" placeholder="you@ship.dev" />
           <span slot="hint">We will never share this.</span>
           <span slot="error">Enter a valid email.</span>
         </field>
-        <doc-code code={exSlots()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Invalid</h3>
-        <p style(exampleLead)>
-          Host <code>invalid</code> hides the hint and reveals the error.
-        </p>
+      </doc-example>
+      <doc-example
+        title="Invalid"
+        lead="Set invalid to hide the hint and reveal the error."
+        code={exInvalid()}
+      >
         <field invalid style(controlW)>
           <label slot="label">Email</label>
           <input type="email" value="not-an-email" invalid />
           <span slot="hint">We will never share this.</span>
           <span slot="error">Enter a valid email.</span>
         </field>
-        <doc-code code={exInvalid()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

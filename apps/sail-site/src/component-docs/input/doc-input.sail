@@ -291,56 +291,51 @@ export default controller((_ctx: Scope) => {
         </column>
       </column>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Email</h3>
-        <p style(exampleLead)>
-          <code>type="email"</code> — mobile keyboards and basic validation come free.
-        </p>
+      <doc-example
+        title="Email"
+        lead='type="email" — mobile keyboards and basic validation come free.'
+        code={exEmail()}
+      >
         <column style(fieldShell)>
           <input type="email" placeholder="you@ship.dev" style(fullW) />
         </column>
-        <doc-code code={exEmail()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Password</h3>
-        <p style(exampleLead)>
-          Masked input with a reveal control by default. Pass <code>reveal={false}</code> to hide it.
-        </p>
+      <doc-example
+        title="Password"
+        lead="Masked input with a reveal control by default. Pass reveal={false} to hide it."
+        code={exPassword()}
+      >
         <column style(fieldShell)>
           <input type="password" placeholder="Password" style(fullW) />
         </column>
-        <doc-code code={exPassword()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Search</h3>
-        <p style(exampleLead)>
-          Semantic search field. Some browsers add a clear control.
-        </p>
+      <doc-example
+        title="Search"
+        lead="Semantic search field. Some browsers add a clear control."
+        code={exSearch()}
+      >
         <column style(fieldShell)>
           <input type="search" placeholder="Search…" style(fullW) />
         </column>
-        <doc-code code={exSearch()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Number</h3>
-        <p style(exampleLead)>
-          Set <code>min</code>, <code>max</code>, and <code>step</code> as needed.
-        </p>
+      <doc-example
+        title="Number"
+        lead="Set min, max, and step as needed."
+        code={exNumber()}
+      >
         <column style(fieldShell)>
           <input type="number" min="0" max="100" step="1" placeholder="0" value="12" style(fullW) />
         </column>
-        <doc-code code={exNumber()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Related controls</h3>
-        <p style(exampleLead)>
-          Dates, files, and colours are their own components — not extra
-          <code>type</code> values on input.
-        </p>
+      <doc-example
+        title="Related controls"
+        lead="Dates, files, and colours are their own components — not extra type values on input."
+        code={exDates()}
+      >
         <column gap="3">
           <column gap="2" style(typeCard)>
             <span style(monoXs)>&lt;date&gt;</span>
@@ -355,32 +350,30 @@ export default controller((_ctx: Scope) => {
             <color value="#c8f542" />
           </column>
         </column>
-        <doc-code code={exDates()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Invalid</h3>
-        <p style(exampleLead)>
-          Set <code>invalid</code> when validation fails. Pair with
-          <a href="/components/field">field</a> for a message under the control.
-        </p>
+      <doc-example
+        title="Invalid"
+        lead="Set invalid when validation fails. Pair with field for a message under the control."
+        code={exInvalid()}
+      >
         <column style(fieldShell)>
           <input type="email" value="not-an-email" style(fullW) invalid />
         </column>
-        <doc-code code={exInvalid()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
-        <p style(exampleLead)>Height from <code>xs</code> to <code>lg</code>. Default is <code>md</code>.</p>
+      <doc-example
+        title="Sizes"
+        lead="Height from xs to lg. Default is md."
+        code={exSizes()}
+      >
         <column gap="2" style(fieldShell)>
           <input size="xs" placeholder="xs" style(fullW) />
           <input size="sm" placeholder="sm" style(fullW) />
           <input placeholder="md" style(fullW) />
           <input size="lg" placeholder="lg" style(fullW) />
         </column>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

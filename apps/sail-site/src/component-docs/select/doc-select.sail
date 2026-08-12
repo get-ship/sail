@@ -76,9 +76,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -154,36 +151,39 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>bind:value</h3>
-        <p style(exampleLead)>Options are plain <code>&lt;option&gt;</code> children.</p>
+      <doc-example
+        title="bind:value"
+        lead="Options are plain option children."
+        code={exBind()}
+      >
         <select bind:value={team} style(controlW)>
           <option value="design">Design</option>
           <option value="eng">Engineering</option>
           <option value="research">Research</option>
         </select>
-        <doc-code code={exBind()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
-        <p style(exampleLead)>Default is <code>md</code>.</p>
+      </doc-example>
+      <doc-example
+        title="Sizes"
+        lead="Default is md."
+        code={exSizes()}
+      >
         <column gap="2">
           <select size="xs" style(controlW)><option>Ada</option><option>Grace</option></select>
           <select size="sm" style(controlW)><option>Ada</option><option>Grace</option></select>
           <select style(controlW)><option>Ada</option><option>Grace</option></select>
           <select size="lg" style(controlW)><option>Ada</option><option>Grace</option></select>
         </column>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Invalid</h3>
-        <p style(exampleLead)>Mark validation failures with <code>invalid</code>.</p>
+      </doc-example>
+      <doc-example
+        title="Invalid"
+        lead="Mark validation failures with invalid."
+        code={exInvalid()}
+      >
         <select invalid style(controlW)>
           <option value="">Pick one</option>
           <option value="a">A</option>
         </select>
-        <doc-code code={exInvalid()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

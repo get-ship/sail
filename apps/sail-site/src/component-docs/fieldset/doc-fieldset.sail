@@ -45,8 +45,6 @@ export default controller((_ctx: Scope) => {
   style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
   style controlW = { box: w(64).maxW(full) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
@@ -107,12 +105,11 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Group with legend</h3>
-        <p style(exampleLead)>
-          Put a <code>legend</code> first, then related controls. Legend is documented
-          here — there is no separate hub page for it.
-        </p>
+      <doc-example
+        title="Group with legend"
+        lead="Put a legend first, then related controls. Legend is documented here — there is no separate hub page for it."
+        code={exGroup()}
+      >
         <fieldset style(controlW)>
           <legend>Account details</legend>
           <column gap="2">
@@ -120,13 +117,12 @@ export default controller((_ctx: Scope) => {
             <input placeholder="Email" />
           </column>
         </fieldset>
-        <doc-code code={exGroup()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Disabled set</h3>
-        <p style(exampleLead)>
-          <code>disabled</code> freezes every control inside; the legend still names the group.
-        </p>
+      </doc-example>
+      <doc-example
+        title="Disabled set"
+        lead="disabled freezes every control inside; the legend still names the group."
+        code={exDisabled()}
+      >
         <fieldset disabled style(controlW)>
           <legend>Billing (locked)</legend>
           <column gap="2">
@@ -134,8 +130,7 @@ export default controller((_ctx: Scope) => {
             <button type="button" variant="solid" size="sm">Save</button>
           </column>
         </fieldset>
-        <doc-code code={exDisabled()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

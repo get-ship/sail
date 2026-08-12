@@ -64,9 +64,6 @@ export default controller((_ctx: Scope) => {
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -149,38 +146,39 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Single selection</h3>
-        <p style(exampleLead)>One value at a time. Arrow keys move focus across the group.</p>
+      <doc-example
+        title="Single selection"
+        lead="One value at a time. Arrow keys move focus across the group."
+        code={exSingle()}
+      >
         <toggle-group type="single" value="day" variant="outline" on-toggle-change={onToggleChange}>
           <toggle value="day">Day</toggle>
           <toggle value="week">Week</toggle>
           <toggle value="month">Month</toggle>
         </toggle-group>
-        <doc-code code={exSingle()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Segmented rail</h3>
-        <p style(exampleLead)><code>variant="segmented"</code> — the connected control look.</p>
+      </doc-example>
+      <doc-example
+        title="Segmented rail"
+        lead='variant="segmented" — the connected control look.'
+        code={exSegmented()}
+      >
         <toggle-group variant="segmented" value="list" on-toggle-change={onToggleChange}>
           <toggle value="grid">Grid</toggle>
           <toggle value="list">List</toggle>
           <toggle value="board">Board</toggle>
         </toggle-group>
-        <doc-code code={exSegmented()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Multiple</h3>
-        <p style(exampleLead)>
-          <code>type="multiple"</code> accumulates a space-joined value set.
-        </p>
+      </doc-example>
+      <doc-example
+        title="Multiple"
+        lead='type="multiple" accumulates a space-joined value set.'
+        code={exMulti()}
+      >
         <toggle-group type="multiple" value="grid board" on-toggle-change={onToggleChange}>
           <toggle value="grid">Grid</toggle>
           <toggle value="list">List</toggle>
           <toggle value="board">Board</toggle>
         </toggle-group>
-        <doc-code code={exMulti()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

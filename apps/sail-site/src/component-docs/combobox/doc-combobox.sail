@@ -69,9 +69,6 @@ export default controller((_ctx: Scope) => {
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -132,9 +129,11 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Type to filter</h3>
-        <p style(exampleLead)>Arrows move, Enter commits, Escape closes.</p>
+      <doc-example
+        title="Type to filter"
+        lead="Arrows move, Enter commits, Escape closes."
+        code={exBasic()}
+      >
         <column style(controlCol)>
           <combobox placeholder="Pick a fruit" on-select={onSelect}>
             <option value="apple">Apple</option>
@@ -143,8 +142,7 @@ export default controller((_ctx: Scope) => {
             <option value="grape">Grape</option>
           </combobox>
         </column>
-        <doc-code code={exBasic()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

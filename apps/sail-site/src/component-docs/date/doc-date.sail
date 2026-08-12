@@ -66,9 +66,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -134,19 +131,17 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Precision</h3>
-        <p style(exampleLead)>
-          Pick the shape with <code>type</code>. Use <code>step</code> when increments matter
-          (for example, 15-minute times).
-        </p>
+      <doc-example
+        title="Precision"
+        lead="Pick the shape with type. Use step when increments matter (for example, 15-minute times)."
+        code={exTypes()}
+      >
         <column gap="2" style(fieldShell)>
           <date type="date" style(fullW) />
           <date type="time" step="900" style(fullW) />
           <date type="datetime-local" style(fullW) />
         </column>
-        <doc-code code={exTypes()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

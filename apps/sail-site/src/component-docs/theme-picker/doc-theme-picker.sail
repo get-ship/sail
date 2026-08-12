@@ -73,9 +73,6 @@ export default controller((_ctx: Scope) => {
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -128,29 +125,34 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Default popover</h3>
-        <p style(exampleLead)>Trigger opens a panel of live theme specimens.</p>
+      <doc-example
+        title="Default popover"
+        lead="Trigger opens a panel of live theme specimens."
+        code={exDefault()}
+      >
         <theme-picker></theme-picker>
-        <doc-code code={exDefault()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Bound value</h3>
-        <p style(exampleLead)><code>value</code> + <code>onThemeChange</code> for controlled selection.</p>
-        <doc-code code={exValue()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Mode only</h3>
-        <p style(exampleLead)>Light / dark / system cycle — no full catalog.</p>
+      </doc-example>
+      <doc-example
+        title="Bound value"
+        lead="value + on-theme-change for controlled selection."
+        code={exValue()}
+      >
+        <theme-picker value="console" on-theme-change={onThemeChange}></theme-picker>
+      </doc-example>
+      <doc-example
+        title="Mode only"
+        lead="Light / dark / system cycle — no full catalog."
+        code={exMode()}
+      >
         <theme-picker mode-only></theme-picker>
-        <doc-code code={exMode()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Inline</h3>
-        <p style(exampleLead)>Panel in document flow (no floating chrome).</p>
+      </doc-example>
+      <doc-example
+        title="Inline"
+        lead="Panel in document flow (no floating chrome)."
+        code={exInline()}
+      >
         <theme-picker inline></theme-picker>
-        <doc-code code={exInline()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

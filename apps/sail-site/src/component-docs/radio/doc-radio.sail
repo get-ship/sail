@@ -49,9 +49,6 @@ export default controller((_ctx: Scope) => {
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -100,25 +97,25 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Options</h3>
-        <p style(exampleLead)>
-          Prefer <a href="/components/radio-group">radio-group</a> for exclusive choice.
-        </p>
+      <doc-example
+        title="Options"
+        lead="Prefer radio-group for exclusive choice."
+        code={exOptions()}
+      >
         <column gap="2">
           <radio value="monthly">Monthly</radio>
           <radio value="yearly">Yearly</radio>
         </column>
-        <doc-code code={exOptions()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>In a group</h3>
+      </doc-example>
+      <doc-example
+        title="In a group"
+        code={exGroup()}
+      >
         <radio-group label="Plan" name="ex-rg-docs" value="monthly">
           <radio value="monthly">Monthly</radio>
           <radio value="yearly">Yearly</radio>
         </radio-group>
-        <doc-code code={exGroup()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

@@ -63,9 +63,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -126,24 +123,26 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>bind:value</h3>
-        <p style(exampleLead)>Single thumb. Set min, max, and step as needed.</p>
+      <doc-example
+        title="bind:value"
+        lead="Single thumb. Set min, max, and step as needed."
+        code={exBind()}
+      >
         <column gap="2" style(specimen)>
           <row justify="between"><span style(sizeValue)>Volume</span><span style(sizeValue)>{load()}%</span></row>
           <slider bind:value={load} min="0" max="100" style(controlW)></slider>
         </column>
-        <doc-code code={exBind()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
+      </doc-example>
+      <doc-example
+        title="Sizes"
+        code={exSizes()}
+      >
         <column gap="3" style(specimen)>
           <slider value="50" size="sm" style(controlW)></slider>
           <slider value="50" style(controlW)></slider>
           <slider value="50" size="lg" style(controlW)></slider>
         </column>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

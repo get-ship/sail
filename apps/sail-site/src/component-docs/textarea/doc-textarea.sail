@@ -76,9 +76,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -145,23 +142,25 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>bind:value</h3>
-        <p style(exampleLead)>Two-way binding keeps the field and your signal in lockstep.</p>
+      <doc-example
+        title="bind:value"
+        lead="Two-way binding keeps the field and your signal in lockstep."
+        code={exBind()}
+      >
         <textarea rows="3" placeholder="Notes" bind:value={bio} style(specimen)></textarea>
-        <doc-code code={exBind()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
-        <p style(exampleLead)>Default is <code>md</code>.</p>
+      </doc-example>
+      <doc-example
+        title="Sizes"
+        lead="Default is md."
+        code={exSizes()}
+      >
         <column gap="2" style(specimen)>
           <textarea size="xs" rows="2" placeholder="xs"></textarea>
           <textarea size="sm" rows="2" placeholder="sm"></textarea>
           <textarea rows="2" placeholder="md"></textarea>
           <textarea size="lg" rows="2" placeholder="lg"></textarea>
         </column>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

@@ -67,8 +67,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
@@ -132,26 +130,28 @@ export default controller((_ctx: Scope) => {
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
-        <p style(exampleLead)>Default is <code>md</code>.</p>
+      <doc-example
+        title="Sizes"
+        lead="Default is md."
+        code={exSizes()}
+      >
         <row gap="4" align="center" style(demoRow)>
           <label><checkbox size="xs" checked /> xs</label>
           <label><checkbox size="sm" checked /> sm</label>
           <label><checkbox checked /> md</label>
           <label><checkbox size="lg" checked /> lg</label>
         </row>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
 
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Invalid</h3>
-        <p style(exampleLead)>Mark validation failures with <code>invalid</code>.</p>
+      <doc-example
+        title="Invalid"
+        lead="Mark validation failures with invalid."
+        code={exInvalid()}
+      >
         <row gap="3" align="center" style(demoRow)>
           <label><checkbox invalid /> Required</label>
         </row>
-        <doc-code code={exInvalid()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

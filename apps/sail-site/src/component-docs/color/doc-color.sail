@@ -48,9 +48,6 @@ export default controller((_ctx: Scope) => {
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -90,18 +87,17 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>System swatch</h3>
-        <p style(exampleLead)>
-          One field for a hex colour. For full HSL channels, use the colour-picker package.
-        </p>
+      <doc-example
+        title="System swatch"
+        lead="One field for a hex colour. For full HSL channels, use the colour-picker package."
+        code={exBasic()}
+      >
         <row gap="3" align="center" style(demoRow)>
           <color value="#c8f542" />
           <color value="#3b82f6" />
           <color value="#ef4444" />
         </row>
-        <doc-code code={exBasic()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

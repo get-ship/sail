@@ -63,9 +63,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -123,18 +120,16 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Filters</h3>
-        <p style(exampleLead)>
-          <code>accept</code> limits the system picker. For drag-and-drop, pair with
-          <a href="/components/dropzone">dropzone</a>.
-        </p>
+      <doc-example
+        title="Filters"
+        lead="accept limits the system picker. For drag-and-drop, pair with dropzone."
+        code={exAccept()}
+      >
         <column gap="2" style(fieldShell)>
           <file accept="image/*" style(fullW) />
           <file accept=".pdf,application/pdf" multiple style(fullW) />
         </column>
-        <doc-code code={exAccept()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

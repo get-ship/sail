@@ -63,9 +63,6 @@ export default controller((_ctx: Scope) => {
   style tickRow = { box: w(full).padT(1).padX(1_5) }
   style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
-  style exampleSection = { box: w(full).padY(4).overflow(visible) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
   style sectionLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).textCase(uppercase).tracking(wide),
@@ -116,20 +113,21 @@ export default controller((_ctx: Scope) => {
 
     <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>for= association</h3>
-        <p style(exampleLead)>
-          Pair <code>for</code> with the control <code>id</code> so click focuses the input.
-        </p>
+      <doc-example
+        title="for= association"
+        lead="Pair for with the control id so click focuses the input."
+        code={exFor()}
+      >
         <column gap="1" style(controlW)>
           <label for="ex-label-email" required>Email</label>
           <input id="ex-label-email" placeholder="ada@lovelace.dev" />
         </column>
-        <doc-code code={exFor()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Sizes</h3>
-        <p style(exampleLead)>Match the control size ladder. Default is <code>md</code>.</p>
+      </doc-example>
+      <doc-example
+        title="Sizes"
+        lead="Match the control size ladder. Default is md."
+        code={exSizes()}
+      >
         <column gap="3" style(controlW)>
           <column gap="1">
             <label for="ex-label-sm" size="sm">Small</label>
@@ -144,11 +142,12 @@ export default controller((_ctx: Scope) => {
             <input id="ex-label-lg" size="lg" placeholder="lg" />
           </column>
         </column>
-        <doc-code code={exSizes()} lang="sail"></doc-code>
-      </column>
-      <column gap="3" style(exampleSection)>
-        <h3 style(exampleH)>Required marker</h3>
-        <p style(exampleLead)><code>required</code> shows a <code>*</code> next to the label.</p>
+      </doc-example>
+      <doc-example
+        title="Required marker"
+        lead="required shows a * next to the label."
+        code={exRequired()}
+      >
         <column gap="3" style(controlW)>
           <column gap="1">
             <label for="ex-label-req" required>Required field</label>
@@ -159,8 +158,7 @@ export default controller((_ctx: Scope) => {
             <input id="ex-label-opt" placeholder="can skip" />
           </column>
         </column>
-        <doc-code code={exRequired()} lang="sail"></doc-code>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 
