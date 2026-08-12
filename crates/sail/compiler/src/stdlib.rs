@@ -29,6 +29,10 @@ const SOURCES: &[(&str, &str)] = &[
     ("skeleton", include_str!("../stdlib/skeleton.sail")),
     ("button", include_str!("../stdlib/button.sail")),
     ("input", include_str!("../stdlib/input.sail")),
+    ("checkbox", include_str!("../stdlib/checkbox.sail")),
+    ("date", include_str!("../stdlib/date.sail")),
+    ("file", include_str!("../stdlib/file.sail")),
+    ("color", include_str!("../stdlib/color.sail")),
     ("textarea", include_str!("../stdlib/textarea.sail")),
     ("select", include_str!("../stdlib/select.sail")),
     ("dialog", include_str!("../stdlib/dialog.sail")),
@@ -166,11 +170,12 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
         "progress" => Some(PROGRESS_MAP),
         "meter" => Some(METER_MAP),
         "chip" => Some(CHIP_MAP),
-        "input" => Some(INPUT_MAP),
+        "checkbox" => Some(CHECKBOX_MAP),
+        "color" => Some(COLOR_MAP),
         "select" => Some(SELECT_MAP),
         "slider" => Some(RANGE_MAP),
         "radio" => Some(RADIO_INPUT_MAP),
-        // Shimmer composite (gradient + bg-size + animation) is not Style PE.
+        // Shimmer composite (gradient + bg-size + animation) is not host Style.
         "skeleton" => Some(SKELETON_MAP),
         _ => None,
     }
@@ -199,10 +204,19 @@ const SUMMARY_CHEVRON_MASK: &str = "url(\"data:image/svg+xml,%3Csvg xmlns='http:
 const INDET_GRADIENT: &str =
     "linear-gradient(90deg, transparent 0%, var(--progress-fill) 50%, transparent 100%)";
 
-const INPUT_MAP: &[DescRule] = &[
+/// Checkbox face + marks. Fills live here (host-specific selectors), not Style
+/// `bg()` atomics — unlayered component-scoped re-emits of `.s-bgbackground`
+/// beat `@layer sail` checked utilities and blank the selected state.
+const CHECKBOX_MAP: &[DescRule] = &[
     DescRule {
-        sel: "[type='checkbox']:checked",
+        sel: "",
+        paint: DescPaint(&[("background-color", "var(--background)")]),
+    },
+    DescRule {
+        sel: ":checked",
         paint: DescPaint(&[
+            ("background-color", "var(--primary)"),
+            ("border-color", "var(--primary)"),
             ("background-image", CHECK_MARK),
             ("background-position", "center"),
             ("background-size", "0.9em"),
@@ -210,7 +224,7 @@ const INPUT_MAP: &[DescRule] = &[
         ]),
     },
     DescRule {
-        sel: "[type='checkbox']:indeterminate",
+        sel: ":indeterminate",
         paint: DescPaint(&[
             ("background-color", "var(--primary)"),
             ("border-color", "var(--primary)"),
@@ -220,94 +234,34 @@ const INPUT_MAP: &[DescRule] = &[
             ("background-repeat", "no-repeat"),
         ]),
     },
+];
+
+/// System color swatch — kill UA double-rim (vendor pseudos; not Style vocab).
+const COLOR_MAP: &[DescRule] = &[
     DescRule {
-        sel: "[type='radio']:checked",
-        paint: DescPaint(&[("box-shadow", "inset 0 0 0 0.22em var(--field)")]),
-    },
-    // Range: vendor track/thumb (Style cannot express these pseudos).
-    DescRule {
-        sel: "[type='range']",
+        sel: "::-webkit-color-swatch-wrapper",
         paint: DescPaint(&[
-            ("--rng-track", "var(--space-1_5)"),
-            ("--rng-thumb", "var(--space-4)"),
+            ("padding", "0"),
+            ("border", "none"),
+            ("width", "100%"),
+            ("height", "100%"),
         ]),
     },
     DescRule {
-        sel: "[type='range'][size='sm']",
+        sel: "::-webkit-color-swatch",
         paint: DescPaint(&[
-            ("--rng-track", "var(--space-1)"),
-            ("--rng-thumb", "var(--space-3)"),
+            ("border", "none"),
+            ("border-radius", "var(--radius-sm)"),
+            ("width", "100%"),
+            ("height", "100%"),
         ]),
     },
     DescRule {
-        sel: "[type='range'][size='lg']",
+        sel: "::-moz-color-swatch",
         paint: DescPaint(&[
-            ("--rng-track", "var(--space-2)"),
-            ("--rng-thumb", "var(--space-5)"),
+            ("border", "none"),
+            ("border-radius", "var(--radius-sm)"),
         ]),
-    },
-    DescRule {
-        sel: "[type='range']::-webkit-slider-runnable-track",
-        paint: DescPaint(&[
-            ("height", "var(--rng-track)"),
-            ("border-radius", "var(--shape-pill)"),
-            (
-                "background",
-                "linear-gradient(to right, var(--slider-fill) 0 var(--rng-pct, 0%), var(--slider-track) var(--rng-pct, 0%) 100%)",
-            ),
-            ("box-shadow", "inset 0 0 0 1px var(--slider-track-border)"),
-        ]),
-    },
-    DescRule {
-        sel: "[type='range']::-moz-range-track",
-        paint: DescPaint(&[
-            ("height", "var(--rng-track)"),
-            ("border-radius", "var(--shape-pill)"),
-            ("background", "var(--slider-track)"),
-            ("box-shadow", "inset 0 0 0 1px var(--slider-track-border)"),
-        ]),
-    },
-    DescRule {
-        sel: "[type='range']::-moz-range-progress",
-        paint: DescPaint(&[
-            ("height", "var(--rng-track)"),
-            ("border-radius", "var(--shape-pill)"),
-            ("background", "var(--slider-fill)"),
-        ]),
-    },
-    DescRule {
-        sel: "[type='range']::-webkit-slider-thumb",
-        paint: DescPaint(&[
-            ("appearance", "none"),
-            ("-webkit-appearance", "none"),
-            ("box-sizing", "border-box"),
-            ("width", "var(--rng-thumb)"),
-            ("height", "var(--rng-thumb)"),
-            (
-                "margin-top",
-                "calc((var(--rng-track) - var(--rng-thumb)) / 2)",
-            ),
-            ("border-radius", "50%"),
-            ("background", "var(--field)"),
-            ("border", "2px solid var(--slider-fill)"),
-            ("box-shadow", "var(--shadow-sm)"),
-        ]),
-    },
-    DescRule {
-        sel: "[type='range']::-moz-range-thumb",
-        paint: DescPaint(&[
-            ("box-sizing", "border-box"),
-            ("width", "var(--rng-thumb)"),
-            ("height", "var(--rng-thumb)"),
-            ("border-radius", "50%"),
-            ("background", "var(--field)"),
-            ("border", "2px solid var(--slider-fill)"),
-            ("box-shadow", "var(--shadow-sm)"),
-        ]),
-    },
-    DescRule {
-        sel: "[type='checkbox'][invalid], [type='radio'][invalid], [type='checkbox'][aria-invalid='true'], [type='radio'][aria-invalid='true']",
-        paint: DescPaint(&[("border-color", "var(--destructive)")]),
     },
 ];
 
@@ -333,10 +287,31 @@ const SELECT_MAP: &[DescRule] = &[
 ];
 
 /// Nested control paint for `<radio>` label hosts (`.sail-radio > input`).
+/// Host-specific fill (atomic bg() loses to unlayered component scopes).
+/// Checked center uses a fixed-px radial hole — em inset drifted with font metrics.
 const RADIO_INPUT_MAP: &[DescRule] = &[
     DescRule {
+        sel: "input",
+        paint: DescPaint(&[
+            ("background-color", "var(--background)"),
+            ("background-image", "none"),
+        ]),
+    },
+    DescRule {
         sel: "input:checked, input[aria-checked='true']",
-        paint: DescPaint(&[("box-shadow", "inset 0 0 0 0.22em var(--field)")]),
+        paint: DescPaint(&[
+            ("background-color", "var(--primary)"),
+            ("border-color", "var(--primary)"),
+            // Circle hole centered in the face (not em-based inset shadow).
+            (
+                "background-image",
+                "radial-gradient(circle at center, var(--field) 0 35%, transparent 36%)",
+            ),
+            ("background-repeat", "no-repeat"),
+            ("background-position", "center"),
+            ("background-size", "100% 100%"),
+            ("box-shadow", "none"),
+        ]),
     },
     DescRule {
         sel: "input[invalid], input[aria-invalid='true']",

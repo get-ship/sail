@@ -21,22 +21,11 @@ const FIELD_TYPES = [
   'search',
   'tel',
   'url',
-  'date',
-  'time',
-  'datetime-local',
-  'month',
-  'week',
-  'file',
-  'color',
-  'submit',
+  'hidden',
 ]
 
 const ALL_TYPES = [
   ...FIELD_TYPES,
-  'checkbox',
-  'radio',
-  'range',
-  'hidden',
 ]
 
 const fieldInp = (attrs = '', val = '') => {
@@ -50,12 +39,6 @@ const fieldInp = (attrs = '', val = '') => {
 const typeCell = (type) => {
   if (type === 'hidden') {
     return `<input type="hidden" value="token" data-type-cov="hidden">`
-  }
-  if (type === 'checkbox' || type === 'radio') {
-    return `<input type="${type}" class="${CHECK}" ${type === 'checkbox' ? 'checked' : ''}>`
-  }
-  if (type === 'range') {
-    return `<input type="range" class="${RANGE}" value="40" min="0" max="100" style="width:120px">`
   }
   return fieldInp(`type="${type}"`, type === 'email' ? 'you@example.com' : type)
 }
@@ -93,17 +76,6 @@ export default {
       'search',
       'tel',
       'url',
-      'date',
-      'time',
-      'datetime-local',
-      'month',
-      'week',
-      'file',
-      'color',
-      'submit',
-      'checkbox',
-      'radio',
-      'range',
       'hidden',
     ]
     const bad = []

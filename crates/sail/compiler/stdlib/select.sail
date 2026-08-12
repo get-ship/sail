@@ -1,13 +1,13 @@
 <!--
-  <select> — native closed picker only (Style PE). Not a combobox/listbox.
+  <select> — native closed picker only (host Style). Not a combobox/listbox.
   Rest surface shares component.field.* with input/textarea
   (fg · bg · border → --field-foreground / --field / --field-border).
   Hover spends free border-strong (SPEC-D1 rest-only; field-border-hover is
-  storage residual, not a PE rest leaf). invalid → destructive border.
+  storage residual, not a host Style rest leaf). invalid → destructive border.
   Chevron + option popup ink: SELECT_MAP (data-URI glyph / option field colors).
   padS on the size ladder + padE(8) on base leave chevron room; size must
   not use padX (that shorthand overwrites end pad and collides with the glyph).
-  multiple = native multi-select attr (no PE chrome change). Styled listbox
+  multiple = native multi-select attr (no host chrome change). Styled listbox
   with arbitrary item content is <combobox> — a different L1.
 -->
 

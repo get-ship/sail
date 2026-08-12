@@ -19,7 +19,17 @@
   // border(solid) kills UA button outset so freeform demos use design-system chrome.
   // No base bg(transparent): unlayered product .s-bgtransparent beats layered solid
   // skins and empties primary fills. Variants own background; ghost is the transparent fill.
-  style base = { box: display(inline-flex).position(relative).gap(2), paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().controlFrame().select(none).cursor(pointer), text: fontWeight(medium).leading(none).whitespace(nowrap), when: { hover: { paint: controlLift() }, active: { paint: press() }, disabled: { paint: cursor(not-allowed).opacity(50) } } }
+  // Cursor is NOT on base: base cursor(pointer) + when-disabled cursor(not-allowed) both
+  // stamp classes and pointer was winning in the cascade. Match on the disabled prop so
+  // only one cursor utility is active.
+  style base = {
+    box: display(inline-flex).position(relative).gap(2),
+    paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().controlFrame().select(none),
+    text: fontWeight(medium).leading(none).whitespace(nowrap),
+    when: { hover: { paint: controlLift() }, active: { paint: press() } },
+  }
+  style cursorOn = { paint: cursor(pointer) }
+  style cursorOff = { paint: cursor(not-allowed).opacity(50) }
 
   style sizeXs = { box: minH(control-h-2xs).padX(2), text: fontSize(xs) }
   style sizeSm = { box: minH(control-h-sm).padX(2_5), text: fontSize(sm) }
@@ -44,6 +54,10 @@
 <button
   style(base, {
     match: {
+      disabled: {
+        true: cursorOff,
+        false: cursorOn,
+      },
       variant: {
         // default ≡ solid — one fill model, tone always applies when set.
         default: style(vSolid, vSolidTone),
