@@ -330,7 +330,7 @@ export async function openDocument(
       const doc: EditDocument = {
         path,
         label,
-        modelVersion: prior?.modelVersion ?? 'text',
+        modelVersion: prior?.modelVersion ?? 0,
         tree: { roots: [], nodes: [] },
         layout: { boxes: [] },
         state: { bindings: [] },
@@ -347,7 +347,7 @@ export async function openDocument(
 
     const model = await client.sailInspectModel({
       path,
-      viewport: opts?.viewport,
+      ...(opts?.viewport !== undefined ? { viewport: opts.viewport } : {}),
     })
     if (gen !== previewGen) return null
 
@@ -408,10 +408,11 @@ export async function openDocument(
     let threads: ThreadRow[] = []
     if (client.sailTaskList) {
       try {
-        const tl = await client.sailTaskList({
-          project:
-            path.split('/').slice(0, 2).join('/') || state.projectRoot || undefined,
-        })
+        const proj =
+          path.split('/').slice(0, 2).join('/') || state.projectRoot || ''
+        const tl = await client.sailTaskList(
+          proj ? { project: proj } : {},
+        )
         threads = parseThreads(tl.tasks ?? [], path)
       } catch {
         threads = []
@@ -446,9 +447,9 @@ export async function openDocument(
 
     if (opts?.loadPreview !== false) {
       await refreshPreview({
-        theme: opts?.theme,
-        mode: opts?.mode,
-        viewport: opts?.viewport,
+        ...(opts?.theme !== undefined ? { theme: opts.theme } : {}),
+        ...(opts?.mode !== undefined ? { mode: opts.mode } : {}),
+        ...(opts?.viewport !== undefined ? { viewport: opts.viewport } : {}),
       })
       // refreshPreview bumps gen; judge ownership by path, not open gen.
       if (state.activePath !== path) return null
@@ -556,8 +557,8 @@ async function loadPreview(
         const o = d as Record<string, unknown>
         return {
           nodeId: String(o.nodeId ?? o.id ?? ''),
-          reason: o.reason != null ? String(o.reason) : undefined,
-          tag: o.tag != null ? String(o.tag) : undefined,
+          ...(o.reason != null ? { reason: String(o.reason) } : {}),
+          ...(o.tag != null ? { tag: String(o.tag) } : {}),
         }
       }),
       loading: false,

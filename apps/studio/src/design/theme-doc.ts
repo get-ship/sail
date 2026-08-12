@@ -351,6 +351,7 @@ export function setPathValue(
   let cur: Record<string, unknown> = next
   for (let i = 0; i < parts.length - 1; i++) {
     const p = parts[i]
+    if (p == null) continue
     const child = cur[p]
     if (!child || typeof child !== 'object' || Array.isArray(child)) {
       cur[p] = {}
@@ -358,6 +359,7 @@ export function setPathValue(
     cur = cur[p] as Record<string, unknown>
   }
   const leaf = parts[parts.length - 1]
+  if (leaf == null) return next
   const prev = (cur[leaf] as Record<string, unknown> | undefined) ?? {}
   // Preserve non-cssName extensions if present; never stamp cssName.
   const prevExt =
@@ -410,11 +412,13 @@ export function deletePath(
   let cur: Record<string, unknown> = next
   for (let i = 0; i < parts.length - 1; i++) {
     const p = parts[i]
+    if (p == null) return next
     const child = cur[p]
     if (!child || typeof child !== 'object') return next
     cur = child as Record<string, unknown>
   }
-  delete cur[parts[parts.length - 1]]
+  const delLeaf = parts[parts.length - 1]
+  if (delLeaf != null) delete cur[delLeaf]
   return next
 }
 
@@ -499,7 +503,7 @@ function familyName(raw: string | null): string {
   // Reject aliases + generated cascade — never treat CSS as a font face label.
   if (!t || t.startsWith('{') || t.includes('var(') || t.startsWith('--')) return ''
   const m = t.match(/"([^"]+)"/)
-  if (m) return m[1].replace(/\s+Variable$/, '')
+  if (m?.[1]) return m[1].replace(/\s+Variable$/, '')
   const first = t.split(',')[0]?.replace(/"/g, '').trim() ?? ''
   if (!first || first.includes('var(') || first.startsWith('--')) return ''
   return first

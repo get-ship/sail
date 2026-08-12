@@ -39,7 +39,7 @@ async function generateAppThemes(
   try {
     await client.sailThemeGenerate({
       mode: 'app',
-      project: state.projectRoot || undefined,
+      ...(state.projectRoot ? { project: state.projectRoot } : {}),
     })
   } catch (e) {
     if (noteOnFail) {
@@ -282,7 +282,7 @@ export async function forkThemeOn(
       source_path,
       dest_path,
       new_id: id,
-      content,
+      ...(content !== undefined ? { content } : {}),
     })
     ctx.setState({
       ...ctx.getState(),

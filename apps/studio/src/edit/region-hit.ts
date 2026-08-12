@@ -19,8 +19,8 @@ export function parseRegions(raw: unknown[]): RenderRegion[] {
       y: Number(o.y ?? 0),
       w: Number(o.w ?? o.width ?? 0),
       h: Number(o.h ?? o.height ?? 0),
-      tag: o.tag != null ? String(o.tag) : undefined,
-      label: o.label != null ? String(o.label) : undefined,
+      ...(o.tag != null ? { tag: String(o.tag) } : {}),
+      ...(o.label != null ? { label: String(o.label) } : {}),
     })
   }
   return out

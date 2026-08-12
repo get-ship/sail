@@ -76,7 +76,7 @@ export function parseBindings(raw: unknown[]): StateBinding[] {
           end_col: Number(s.end_col ?? 0),
         },
         kind: String(x.kind ?? ''),
-        expr: x.expr != null ? String(x.expr) : undefined,
+        ...(x.expr != null ? { expr: String(x.expr) } : {}),
       }
     }
     return {
@@ -429,12 +429,12 @@ export function parseCheckDiagnostics(raw: unknown[]): import('./types').CheckDi
     const endLine = o.endLine ?? o.end_line
     return {
       line: Number(o.line ?? o.startLine ?? 1),
-      column: col != null ? Number(col) : undefined,
-      endLine: endLine != null ? Number(endLine) : undefined,
-      endColumn: endCol != null ? Number(endCol) : undefined,
+      ...(col != null ? { column: Number(col) } : {}),
+      ...(endLine != null ? { endLine: Number(endLine) } : {}),
+      ...(endCol != null ? { endColumn: Number(endCol) } : {}),
       severity: String(o.severity ?? 'error'),
       message: String(o.message ?? ''),
-      rule: o.rule != null ? String(o.rule) : undefined,
+      ...(o.rule != null ? { rule: String(o.rule) } : {}),
     }
   })
 }

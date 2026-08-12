@@ -159,6 +159,12 @@ export function packBlurbFor(tag: string): string {
   }
 }
 
+export function packPropsFor(
+  tag: string,
+): { name: string; type: string; desc: string }[] {
+  return PACK_PROPS[tag] ?? []
+}
+
 export function packLabelFor(tag: string): string {
   if (
     tag.startsWith('sail-area-chart') ||

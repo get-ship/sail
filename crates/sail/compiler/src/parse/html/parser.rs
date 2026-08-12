@@ -78,7 +78,11 @@ impl<'a> Parser<'a> {
                     self.i += 1;
                     continue;
                 }
-                if c == b'"' || c == b'\'' || c == b'`' {
+                // Quote-awareness only applies inside `{…}` expression arms so
+                // JS string literals can hide tags. Outside braces, apostrophes
+                // in prose (`Couldn't`, `it's`) are ordinary text — treating
+                // them as string delimiters swallows the closing tag.
+                if brace_depth > 0 && (c == b'"' || c == b'\'' || c == b'`') {
                     str_quote = Some(c);
                     self.i += 1;
                     continue;
@@ -519,6 +523,28 @@ mod tests {
         let _ = parse_fragment(r#"<div use:clickOutside={h}></div>"#);
         // A non-ASCII char immediately after a valid `use:` prefix.
         let _ = parse_fragment("<div use:—>x</div>");
+    }
+
+    #[test]
+    fn prose_apostrophe_does_not_swallow_closing_tag() {
+        // Outside `{…}`, English apostrophes must not enter string mode.
+        let nodes = parse_fragment("<p>Couldn't load preview</p>").expect("parse");
+        match &nodes[0] {
+            super::super::Node::Element(e) => {
+                assert_eq!(e.tag, "p");
+                assert!(
+                    e.children.iter().any(|n| matches!(n, super::super::Node::Text(t) if t.data.contains("Couldn"))),
+                    "expected prose text, got {:?}",
+                    e.children
+                );
+            }
+            _ => panic!("expected p element"),
+        }
+        let nodes = parse_fragment(r#"<strong slot="title">Couldn't load preview</strong>"#).expect("parse strong");
+        match &nodes[0] {
+            super::super::Node::Element(e) => assert_eq!(e.tag, "strong"),
+            _ => panic!("expected strong"),
+        }
     }
 
     #[test]

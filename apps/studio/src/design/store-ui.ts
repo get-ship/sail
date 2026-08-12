@@ -99,7 +99,7 @@ export function makeStoreUi(access: StoreUiAccess) {
     try {
       const r = await client.sailThemeFontSearch({
         query,
-        category: opts?.category,
+        ...(opts?.category !== undefined ? { category: opts.category } : {}),
         limit: opts?.limit ?? 40,
       })
       const families = (r.families ?? []).filter(Boolean)

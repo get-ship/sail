@@ -120,8 +120,8 @@ function dimBounds(
 export function humanLabel(path: string): string {
   const parts = path.split('.').filter((p) => p && p !== 'default')
   if (parts.length === 0) return path
-  const tail = parts[parts.length - 1]
-  const prev = parts.length > 1 ? parts[parts.length - 2] : ''
+  const tail = parts[parts.length - 1] ?? path
+  const prev = parts.length > 1 ? (parts[parts.length - 2] ?? '') : ''
   if (/^\d+$/.test(tail)) return prev ? `${titleCase(prev)} ${tail}` : tail
   if (tail === 'sm' || tail === 'md' || tail === 'lg' || tail === 'xl') {
     const size =

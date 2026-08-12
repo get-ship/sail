@@ -2806,10 +2806,11 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
         return (source.to_string(), None);
     };
     let body_start = start + open_rel + 1;
-    let Some(rel) = source[body_start..].find("</controller>") else {
+    // Close tag must ignore `</controller>` that appears inside usage-example
+    // template strings / JS string literals (common in docs corpus helpers).
+    let Some(body_end) = find_controller_close(source, body_start) else {
         return (source.to_string(), None);
     };
-    let body_end = body_start + rel;
     let body = wrap_controller_body(source[body_start..body_end].trim());
     let block_end = body_end + "</controller>".len();
     let mut stripped = String::with_capacity(source.len());
@@ -2821,6 +2822,65 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
     }
     stripped.push_str(&source[block_end..]);
     (stripped, Some(body))
+}
+
+/// First `</controller>` at/after `body_start` that is outside JS/TS string and
+/// template literals (and line / block comments). Usage snippets like
+/// `` const x = () => `<controller>…</controller>…` `` must not terminate the
+/// real SFC block.
+fn find_controller_close(source: &str, body_start: usize) -> Option<usize> {
+    let bytes = source.as_bytes();
+    if body_start > bytes.len() {
+        return None;
+    }
+    let mut i = body_start;
+    let mut str_quote: Option<u8> = None;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = str_quote {
+            if c == b'\\' {
+                i = (i + 2).min(bytes.len());
+                continue;
+            }
+            if c == q {
+                str_quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        // Line comment — stay out of quote mode for prose like `// don't`.
+        if c == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+            i += 2;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            continue;
+        }
+        // Block comment.
+        if c == b'/' && i + 1 < bytes.len() && bytes[i + 1] == b'*' {
+            i += 2;
+            while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                i += 1;
+            }
+            i = (i + 2).min(bytes.len());
+            continue;
+        }
+        if c == b'"' || c == b'\'' || c == b'`' {
+            str_quote = Some(c);
+            i += 1;
+            continue;
+        }
+        if c == b'<' && source.get(i..).is_some_and(|s| s.starts_with("</controller>")) {
+            return Some(i);
+        }
+        // UTF-8 safe advance when not on an ASCII-only match path.
+        i += source[i..]
+            .chars()
+            .next()
+            .map(|ch| ch.len_utf8())
+            .unwrap_or(1);
+    }
+    None
 }
 
 /// Derive the framework-owned host display from the component's root template
@@ -3104,6 +3164,41 @@ fn expand_self_close(source: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+
+    /// Usage-example template strings may embed a fake `</controller>`; that
+    /// must not terminate the real SFC block (docs corpus / configurator pages).
+    #[test]
+    fn controller_close_inside_template_string_is_ignored() {
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const ex = () =>
+    `<controller>\nexport default controller(() => ({ n: signal(0) }))\n</controller>\n\n<button>{n()}</button>`
+  return { ex }
+})
+</controller>
+<button type="button">ok</button>
+"#;
+        let (stripped, body) = extract_controller_block(src);
+        let body = body.expect("real controller body");
+        assert!(
+            body.contains("const ex"),
+            "body must include code after the embedded fake close: {body}"
+        );
+        assert!(
+            body.contains("return { ex }"),
+            "body must reach the real end of the controller: {body}"
+        );
+        assert!(
+            stripped.contains("<button type=\"button\">ok</button>"),
+            "template after the real close must remain: {stripped}"
+        );
+        assert!(
+            !stripped.contains("export default controller"),
+            "controller body must be blanked from the template stream"
+        );
+    }
 
     /// A comment may name `<controller>` above the block it describes.
     #[test]

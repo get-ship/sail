@@ -34,8 +34,8 @@ export type TreeNode = {
   span: ModelSpan
   tag: string
   layer: string
-  attrs?: Record<string, string>
-  control_flow?: { kind: string; expr?: string }
+  attrs?: Record<string, string> | undefined
+  control_flow?: { kind: string; expr?: string | undefined } | undefined
   children: string[]
 }
 
@@ -51,7 +51,7 @@ export type LayoutBox = {
   collapsed: boolean
   overflow: boolean
   tag: string
-  unknown_join?: boolean
+  unknown_join?: boolean | undefined
 }
 
 export type StateBinding = {
@@ -71,7 +71,7 @@ export type StateEdge = {
   file: string
   span: ModelSpan
   kind: string
-  expr?: string
+  expr?: string | undefined
 }
 
 export type DataKey = {
@@ -89,8 +89,8 @@ export type RenderRegion = {
   y: number
   w: number
   h: number
-  tag?: string
-  label?: string
+  tag?: string | undefined
+  label?: string | undefined
 }
 
 export type FileEntry = {
@@ -113,7 +113,7 @@ export type ElementRow = {
   label: string
   selected: boolean
   spanLine: number
-  controlFlow?: string
+  controlFlow?: string | undefined
 }
 
 export type FileRow = {
@@ -198,18 +198,18 @@ export type HoverTip = {
 export type CheckDiag = {
   line: number
   /** 1-based column when the checker provides a span. */
-  column?: number
-  endLine?: number
-  endColumn?: number
+  column?: number | undefined
+  endLine?: number | undefined
+  endColumn?: number | undefined
   severity: string
   message: string
-  rule?: string
+  rule?: string | undefined
 }
 
 export type PreviewState = {
   imagePng: string | null
   regions: RenderRegion[]
-  dynamics: { nodeId: string; reason?: string; tag?: string }[]
+  dynamics: { nodeId: string; reason?: string | undefined; tag?: string | undefined }[]
   provenance: string
   loading: boolean
   error: string | null
@@ -281,6 +281,8 @@ export type OpsClient = Pick<
   | 'sailInspectTree'
   | 'sailInspectState'
   | 'sailRenderScreenshot'
+  // Required so one createOpsClient() satisfies Checks + Design surfaces
+  // under exactOptionalPropertyTypes (shell-page-vm injection).
   | 'sailAuthoringCheck'
   | 'sailThemeList'
   | 'sailThemeRead'

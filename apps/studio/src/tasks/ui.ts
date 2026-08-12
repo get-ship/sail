@@ -131,12 +131,15 @@ export function uiConversation(): EventUi[] {
           : 'attachment'
       const kind = e.meta?.kind ? String(e.meta.kind) : 'file'
       if (out.length) {
-        out[out.length - 1].artifacts.push({
-          id: e.id,
-          label,
-          kind,
-          key: e.id,
-        })
+        const last = out[out.length - 1]
+        if (last) {
+          last.artifacts.push({
+            id: e.id,
+            label,
+            kind,
+            key: e.id,
+          })
+        }
         continue
       }
     }

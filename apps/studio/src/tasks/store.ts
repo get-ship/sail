@@ -83,6 +83,14 @@ function projectArg(): string | undefined {
   return projectRootArg()
 }
 
+/** exactOptional-safe: omit project when unset. */
+function withProject<T extends Record<string, unknown>>(
+  base: T,
+): T & { project?: string } {
+  const p = projectArg()
+  return p !== undefined ? { ...base, project: p } : { ...base }
+}
+
 function humanActor() {
   return { kind: 'human', name: 'user' }
 }
@@ -97,19 +105,16 @@ export async function loadThreads(): Promise<void> {
   state = { ...state, loading: true, error: null }
   emit()
   try {
-    const args: {
-      project?: string
-      actor?: string
-      drift?: string
-      open?: boolean
-    } = { project: projectArg() }
+    const args: Record<string, string | boolean> = {}
+    const proj = projectArg()
+    if (proj !== undefined) args.project = proj
     if (state.actorFilter !== 'all') args.actor = state.actorFilter
     if (state.driftFilter !== 'all') args.drift = state.driftFilter
     if (state.openFilter === 'open') args.open = true
 
     const listFn = client.sailTaskThreadList ?? client.sailTaskList
     if (!listFn) throw new Error('Could not load tasks — try again.')
-    const ret = await listFn(args)
+    const ret = await listFn(args as never)
     const threads = (ret.tasks ?? [])
       .map(parseListItem)
       .filter((t): t is NonNullable<typeof t> => t != null)
@@ -145,7 +150,7 @@ export async function selectThread(id: string | null): Promise<void> {
   try {
     const getFn = client!.sailTaskGet
     if (!getFn) throw new Error('Could not open that thread — try again.')
-    const ret = await getFn({ project: projectArg(), id })
+    const ret = await getFn(withProject({ id }))
     const selected = parseThread(ret.task)
     state = { ...state, selected, loading: false }
     emit()
@@ -194,12 +199,11 @@ export async function sendReply(): Promise<void> {
   const replyFn = client.sailTaskThreadReply ?? client.sailTaskComment
   if (!replyFn) return
   try {
-    await replyFn({
-      project: projectArg(),
+    await replyFn(withProject({
       id,
       body,
       actor: humanActor(),
-    })
+    }))
     state = { ...state, replyDraft: '' }
     emit()
     await selectThread(id)
@@ -219,12 +223,11 @@ export async function sendAgentNote(body: string): Promise<void> {
   const text = body.trim()
   if (!id || !text || !client?.sailTaskAgentNote) return
   try {
-    await client.sailTaskAgentNote({
-      project: projectArg(),
+    await client.sailTaskAgentNote(withProject({
       id,
       body: text,
       actor: { kind: 'agent', name: 'agent' },
-    })
+    }))
     await selectThread(id)
     await loadThreads()
   } catch (e) {
@@ -245,13 +248,12 @@ export async function createThread(opts: {
   const createFn = client.sailTaskThreadCreate ?? client.sailTaskCreate
   if (!createFn) return null
   try {
-    const ret = await createFn({
-      project: projectArg(),
+    const ret = await createFn(withProject({
       title: opts.title,
-      body: opts.body,
-      anchor: opts.anchor,
+      ...(opts.body !== undefined ? { body: opts.body } : {}),
+      ...(opts.anchor != null ? { anchor: opts.anchor as never } : {}),
       actor: humanActor(),
-    })
+    }) as never)
     const task = parseThread(ret.task)
     const id = task?.id ?? null
     await loadThreads()
@@ -272,11 +274,10 @@ export async function commitIntent(): Promise<string | null> {
   const id = state.selectedId
   if (!id || !client?.sailTaskCommitIntent) return null
   try {
-    const ret = await client.sailTaskCommitIntent({
-      project: projectArg(),
+    const ret = await client.sailTaskCommitIntent(withProject({
       id,
       actor: humanActor(),
-    })
+    }))
     const path = ret.path ? String(ret.path) : null
     state = { ...state, commitPath: path }
     emit()
@@ -296,12 +297,11 @@ export async function reanchorSelected(anchor: Record<string, unknown>): Promise
   const id = state.selectedId
   if (!id || !client?.sailTaskReanchor) return
   try {
-    await client.sailTaskReanchor({
-      project: projectArg(),
+    await client.sailTaskReanchor(withProject({
       id,
-      anchor,
+      anchor: anchor as never,
       actor: humanActor(),
-    })
+    }))
     await selectThread(id)
     await loadThreads()
   } catch (e) {

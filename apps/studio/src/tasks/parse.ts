@@ -29,8 +29,8 @@ export function parseAnchor(raw: unknown): TaskAnchor | null {
     nodeId,
     elementPath: String(o.elementPath ?? o.element_path ?? ''),
     contentHash: String(o.contentHash ?? o.content_hash ?? ''),
-    file: o.file != null ? String(o.file) : undefined,
-    span: o.span as TaskAnchor['span'],
+    ...(o.file != null ? { file: String(o.file) } : {}),
+    ...(o.span != null ? { span: o.span as TaskAnchor['span'] } : {}),
   }
 }
 
@@ -48,18 +48,20 @@ export function parseListItem(raw: unknown): ThreadListItem | null {
   const o = raw as Record<string, unknown>
   const id = String(o.id ?? '')
   if (!id) return null
+  const created = parseActor(o.created_by)
+  const artCount = typeof o.artifact_count === 'number' ? o.artifact_count : undefined
   return {
     id,
     title: String(o.title ?? id),
     status: String(o.status ?? 'todo'),
     updated_at: String(o.updated_at ?? ''),
     labels: Array.isArray(o.labels) ? o.labels.map(String) : [],
-    created_by: parseActor(o.created_by) ?? undefined,
+    ...(created ? { created_by: created } : {}),
     assignee: parseActor(o.assignee),
     last_actor: parseActor(o.last_actor) ?? parseActor(o.lastActor),
     route: o.route != null ? String(o.route) : null,
     anchor: parseAnchor(o.anchor),
-    artifact_count: typeof o.artifact_count === 'number' ? o.artifact_count : undefined,
+    ...(artCount !== undefined ? { artifact_count: artCount } : {}),
     drift: parseDrift(o.drift),
   }
 }

@@ -32,8 +32,8 @@ export type SailTreeNode = {
    * Row meta for sail-tree `node-trailing` (e.g. dirty `●`).
    * Keep labels short — never fold meta into `label`.
    */
-  trailing?: string
-  children?: SailTreeNode[]
+  trailing?: string | undefined
+  children?: SailTreeNode[] | undefined
 }
 
 const GROUP_ORDER = ['routes', 'src', 'packs', 'other'] as const

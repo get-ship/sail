@@ -97,6 +97,39 @@ describe('<sail-media-image> — registration + raster', () => {
     expect(imgEl(v.el)!.getAttribute('src')).toBe(PNG_URL)
   })
 
+  it('rebinds string src when the host attribute changes after mount (MutationObserver)', async () => {
+    const urlB = 'blob:http://localhost/raster-fixture-b'
+    const v = renderComponent(SOURCE, 'sail-media-image', {
+      controller: imageRenderer,
+      sourcePath: SOURCE_PATH,
+      attrs: { src: PNG_URL, alt: 'from-attr' },
+    })
+    live.push(v)
+    await v.flush()
+    expect(imgEl(v.el)!.getAttribute('src')).toBe(PNG_URL)
+
+    v.el.setAttribute('src', urlB)
+    await v.flush()
+    expect(imgEl(v.el)!.getAttribute('src')).toBe(urlB)
+
+    v.el.setAttribute('src', '')
+    await v.flush()
+    expect(v.el.getAttribute('src')).toBe('')
+  })
+
+  it('does not clobber identity object src when host attr churns', async () => {
+    const identity: ViewerSource = { contentType: 'image/png', url: PNG_URL }
+    const v = mountImage(identity)
+    live.push(v)
+    await v.flush()
+    expect(imgEl(v.el)!.getAttribute('src')).toBe(PNG_URL)
+
+    v.el.setAttribute('src', 'blob:http://localhost/should-not-win')
+    await v.flush()
+    expect((v.el as unknown as { src: ViewerSource }).src).toBe(identity)
+    expect(imgEl(v.el)!.getAttribute('src')).toBe(PNG_URL)
+  })
+
   it('mounts the <img> inside a focusable zoom/pan stage (keyboard-operable)', async () => {
     const v = mountImage({ contentType: 'image/png', url: PNG_URL })
     live.push(v)

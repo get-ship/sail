@@ -631,8 +631,9 @@ fn typecheck_region_harness(
         at_paths_block
     };
 
-    // noImplicitAny false: open-any sibling stubs make callback params `any`
-    // (TS7006) — not product law. Real type errors still hard-fail.
+    // noImplicitAny true (product pure law). Open-any sibling stubs still make
+    // callback params `any` (TS7006) — those are filtered in `map_region_diag`,
+    // not by weakening the harness. Real type errors still hard-fail.
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -641,7 +642,7 @@ fn typecheck_region_harness(
     "moduleResolution": "Bundler",
     "lib": [{lib_arr}],
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "noEmit": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
@@ -814,6 +815,172 @@ fn runtime_ambient_dts() -> String {
             }
         }
     }
+    // Opaque host brand + host bag — free types so controllers need no DOM import.
+    // SailHost is the capability firewall; HostBag is a structural bag for host
+    // identity props / callbacks that components install (not DOM lib names).
+    out.push_str(
+        "type SailHost = { readonly __sailHostBrand?: unique symbol };
+\
+         type SailFile = { name: string; size: number; type: string };
+\
+         type HostBag = SailHost & {
+\
+           getAttribute(n: string): string | null;
+\
+           hasAttribute(n: string): boolean;
+\
+           setAttribute(n: string, v: string): void;
+\
+           removeAttribute(n: string): void;
+\
+           addEventListener(t: string, h: (...a: any[]) => void, o?: any): void;
+\
+           removeEventListener(t: string, h: (...a: any[]) => void, o?: any): void;
+\
+           closest(s: string): HostBag | null;
+\
+           querySelector(s: string): HostBag | null;
+\
+           querySelectorAll(s: string): ArrayLike<HostBag>;
+\
+           click(): void;
+\
+           focus(): void;
+\
+           blur(): void;
+\
+           appendChild?(c: unknown): unknown;
+\
+           removeChild?(c: unknown): unknown;
+\
+           replaceChildren?(...c: unknown[]): void;
+\
+           insertBefore?(n: unknown, ref: unknown): unknown;
+\
+           contains?(n: unknown): boolean;
+\
+           getBoundingClientRect?(): { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number };
+\
+           getRootNode?(): unknown;
+\
+           matches?(s: string): boolean;
+\
+           dataset: Record<string, string | undefined>;
+\
+           style: Record<string, string | number | undefined>;
+\
+           classList: { add(...c: string[]): void; remove(...c: string[]): void; toggle(c: string, f?: boolean): boolean; contains(c: string): boolean };
+\
+           value: string;
+\
+           checked?: boolean;
+\
+           files: ArrayLike<SailFile>;
+\
+           textContent?: string | null;
+\
+           innerHTML?: string;
+\
+           isConnected?: boolean;
+\
+           clientWidth: number;
+\
+           clientHeight: number;
+\
+           offsetWidth?: number;
+\
+           offsetHeight?: number;
+\
+           scrollTop: number;
+\
+           scrollLeft?: number;
+\
+           scrollWidth?: number;
+\
+           scrollHeight: number;
+\
+           id?: string;
+\
+           tagName?: string;
+\
+           parentElement?: HostBag | null;
+\
+           firstElementChild?: HostBag | null;
+\
+           onOpen: (...a: any[]) => any;
+\
+           onChange: (...a: any[]) => any;
+\
+           onSelect: (...a: any[]) => any;
+\
+           onClick: (...a: any[]) => any;
+\
+           [k: string]: any;
+\
+         };
+\
+         type DomEv = {
+\
+           key: string; button: number; clientX: number; clientY: number;
+\
+           preventDefault(): void; stopPropagation(): void;
+\
+           target?: HostBag | null; currentTarget?: HostBag | null; detail?: any;
+\
+           dataTransfer?: { files: ArrayLike<SailFile> };
+\
+           deltaY?: number; metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean;
+\
+           [k: string]: any;
+\
+         };
+\
+         declare function asSailHost(node: unknown): SailHost;
+\
+         declare function objectUrlFromBytes(data: ArrayBuffer | ArrayBufferView, type?: string): string;
+\
+         declare function revokeObjectUrl(url: string): void;
+\
+         declare function defineHostProperty(
+\
+           host: SailHost | HostBag,
+\
+           name: string,
+\
+           desc: { get: () => unknown; set?: (v: unknown) => void },
+\
+         ): () => void;
+\
+         declare function hostGetAttr(host: SailHost | HostBag | null | undefined, name: string): string | null;
+\
+         declare function hostHasAttr(host: SailHost | HostBag | null | undefined, name: string): boolean;
+\
+         declare function hostSetAttr(
+\
+           host: SailHost | HostBag | null | undefined,
+\
+           name: string,
+\
+           value: string | boolean | null | undefined,
+\
+         ): void;
+\
+         declare function observeContentBox(
+\
+           node: unknown,
+\
+           onBox: (width: number, height: number) => void,
+\
+         ): () => void;\
+         declare function hostIsDarkMode(): boolean;\
+         declare function hostCssVar(name: string): string;\
+         declare function hostFindById(id: string): HostBag | null;\
+         declare function hostCreateElement(tag: string): HostBag;\
+         declare function hostObserveRootAttrs(attrs: string[], cb: () => void): () => void;\
+         declare function hostListenDocument(event: string, handler: () => void): () => void;\
+         declare function observeHostAttrs(node: unknown, attrs: string[], cb: () => void): () => void;
+",
+    );
     // Names commonly free in controllers that live in DOM lib in stock tsc
     // (not ESNext) but are NOT the Pure-region ban surface. Stub so they do
     // not flood the gate with non-product ambient gaps.
@@ -827,6 +994,10 @@ fn runtime_ambient_dts() -> String {
         "TextDecoder",
         "AbortController",
         "AbortSignal",
+        "setTimeout",
+        "clearTimeout",
+        "setInterval",
+        "clearInterval",
     ] {
         out.push_str(&format!("declare const {name}: any;\n"));
     }
@@ -856,6 +1027,24 @@ declare module "@ship/*" {
   export type BoundarySource = any;
   export const scheduleFrame: (fn: () => void) => void;
   export const asSailHost: (node: unknown) => SailHost;
+  export const objectUrlFromBytes: (data: ArrayBuffer | ArrayBufferView, type?: string) => string;
+  export const revokeObjectUrl: (url: string) => void;
+  export const defineHostProperty: (
+    host: SailHost,
+    name: string,
+    desc: { get: () => unknown; set?: (v: unknown) => void },
+  ) => () => void;
+  export const hostGetAttr: (host: SailHost | null | undefined, name: string) => string | null;
+  export const hostHasAttr: (host: SailHost | null | undefined, name: string) => boolean;
+  export const hostSetAttr: (
+    host: SailHost | null | undefined,
+    name: string,
+    value: string | boolean | null | undefined,
+  ) => void;
+  export const observeContentBox: (
+    node: unknown,
+    onBox: (width: number, height: number) => void,
+  ) => () => void;
   export type Virtual = any;
   export type VirtualItem = any;
   export type ViewMount = any;
@@ -898,6 +1087,24 @@ declare module "@ship/sail-runtime" {
   export type BoundarySource = any;
   export const scheduleFrame: (fn: () => void) => void;
   export const asSailHost: (node: unknown) => SailHost;
+  export const objectUrlFromBytes: (data: ArrayBuffer | ArrayBufferView, type?: string) => string;
+  export const revokeObjectUrl: (url: string) => void;
+  export const defineHostProperty: (
+    host: SailHost,
+    name: string,
+    desc: { get: () => unknown; set?: (v: unknown) => void },
+  ) => () => void;
+  export const hostGetAttr: (host: SailHost | null | undefined, name: string) => string | null;
+  export const hostHasAttr: (host: SailHost | null | undefined, name: string) => boolean;
+  export const hostSetAttr: (
+    host: SailHost | null | undefined,
+    name: string,
+    value: string | boolean | null | undefined,
+  ) => void;
+  export const observeContentBox: (
+    node: unknown,
+    onBox: (width: number, height: number) => void,
+  ) => () => void;
   export const controller: any;
   export const signal: any;
   export const derived: any;
@@ -942,11 +1149,10 @@ declare module "@ship/sail-test" {
   const __default: any;
   export default __default;
 }
-declare module "*.sail" {
-  export type Scope = any;
-  const __default: any;
-  export default __default;
-}
+// NOTE: no blanket `declare module "*.sail"`. Relative `.sail` imports are
+// proven by sibling-tree materialization (present → open-any stub; missing →
+// TS2307). A wildcard ambient would mask missing modules of the primary
+// product relative form (`./foo.sail`).
 "#,
     );
     out
@@ -1008,8 +1214,12 @@ fn write_open_any_stub(dest: &Path, stub: &RelativeStub) -> std::io::Result<()> 
         String::from("// GENERATED type-gate sibling stub — open any (existence proven).\n");
     for name in &stub.named {
         if is_ts_ident(name) {
+            // Generic type params so `Table<T>` / `Foo<A, B>` don't TS2315.
+            // `const x: any = function…` is both callable (createTable<T>()) and
+            // indexable (EDGE_STROKE[kind]) — pure `function` decls reject index.
             src.push_str(&format!(
-                "export type {name} = any;\nexport const {name}: any = undefined as any;\n"
+                "export type {name}<T = any, U = any, V = any> = any;\n\
+                 export const {name}: any = function {name}(..._args: any[]): any {{ return undefined as any }};\n"
             ));
         }
     }
@@ -1028,14 +1238,16 @@ fn resolve_relative_module(author_dir: &Path, spec: &str) -> Option<PathBuf> {
     } else {
         return None;
     };
+    // Append extensions — do NOT use `with_extension` which clobbers multi-dot
+    // stems (`sail-annotation.internals` → `.internals` gone).
+    let base_s = base.to_string_lossy();
     let candidates = [
         base.clone(),
-        base.with_extension("ts"),
-        base.with_extension("tsx"),
-        base.with_extension("sail"),
+        PathBuf::from(format!("{base_s}.ts")),
+        PathBuf::from(format!("{base_s}.tsx")),
+        PathBuf::from(format!("{base_s}.sail")),
         base.join("index.ts"),
         base.join("index.tsx"),
-        PathBuf::from(format!("{}.sail", base.display())),
     ];
     for c in candidates {
         if c.is_file() {
@@ -1539,15 +1751,16 @@ fn typecheck_project_env(
             continue;
         }
         // Resolve mirrored relative path → real path for teaching message.
-        let real = path_map
-            .iter()
-            .find(|(n, _)| {
-                let n_slash = n.replace('\\', "/");
-                let f = d.file.replace('\\', "/");
-                f.ends_with(&n_slash) || f.contains(&format!("/{n_slash}"))
-            })
-            .map(|(_, p)| p.display().to_string())
-            .unwrap_or_else(|| d.file.clone());
+        // Only product mirror files are in path_map; dependency noise from
+        // node_modules / Framework packages (resolved under Pure lib) is dropped.
+        let Some(real) = path_map.iter().find(|(n, _)| {
+            let n_slash = n.replace('\\', "/");
+            let f = d.file.replace('\\', "/");
+            f.ends_with(&n_slash) || f.contains(&format!("/{n_slash}"))
+        }) else {
+            continue;
+        };
+        let real = real.1.display().to_string();
         if let Some(mut mapped) = map_region_diag(&d, env) {
             // Bracketed real path — CLI `project_ts_type_gate` prints it as the
             // diagnostic file path (`path:line:col`).
@@ -1620,14 +1833,20 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
         }
     }
 
-    // E4b R2: only ambient `@ship/*` / `*.sail` stubs may suppress TS2307.
-    // Relative / `@/` hard-fail when unresolved (no silent mask).
+    // E4b R2: only ambient `@ship/*` stubs may suppress TS2307.
+    // Relative / `@/` / `*.sail` hard-fail when unresolved (no silent mask).
+    // Sibling materialization proves present `.sail` modules; missing → TS2307.
     if d.code == "TS2307" {
         if let Some(spec) = extract_cannot_find_module(&d.message) {
             if is_ambient_module_stub_spec(&spec) {
                 return None;
             }
         }
+    }
+    // Open-any sibling stubs force callback params to `any`. Keep noImplicitAny
+    // on for author body, but do not promote harness TS7006 noise.
+    if d.code == "TS7006" {
+        return None;
     }
 
     // Intrinsic type errors and remaining name gaps: hard sail-type-gate fail.
@@ -1657,7 +1876,21 @@ fn extract_cannot_find_module(message: &str) -> Option<String> {
 }
 
 fn is_ambient_module_stub_spec(spec: &str) -> bool {
-    spec.starts_with("@ship/") || spec.ends_with(".sail")
+    // Package ambients (`@ship/*`) are harness-stubbed.
+    // Bare npm / scoped package names (no leading `.`/`/`) are suppressed:
+    // the region harness has no node_modules — install/resolution is a bundler
+    // concern, not Pure ambient law. Relative + `@/` stay hard-fail.
+    // Relative `.sail` is resolved via sibling mirror — never suppress TS2307
+    // for a missing `./foo.sail`.
+    let s = spec.trim();
+    if s.starts_with("@ship/") {
+        return true;
+    }
+    if s.is_empty() || s.starts_with('.') || s.starts_with('/') || s.starts_with("@/") {
+        return false;
+    }
+    // bare `mermaid` or scoped `@codemirror/state`
+    !s.starts_with('.') && !s.starts_with('/')
 }
 
 fn extract_not_found_name(message: &str) -> Option<String> {
@@ -1900,7 +2133,10 @@ fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
         if code.trim().is_empty() {
             continue;
         }
-        if let Some(col0) = find_as_any(code) {
+        // Mask string / template literal bodies so doc messages containing
+        // `as any` / `Function(` do not false-positive (columns stay aligned).
+        let code = mask_string_literals(code);
+        if let Some(col0) = find_as_any(&code) {
             diags.push(type_erase_diag(
                 line_no,
                 col0,
@@ -1918,7 +2154,7 @@ fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
                  code to Action / Framework where the surface is legal.",
             ));
         }
-        if let Some(col0) = find_satisfies_any(code) {
+        if let Some(col0) = find_satisfies_any(&code) {
             diags.push(type_erase_diag(
                 line_no,
                 col0,
@@ -1927,7 +2163,7 @@ fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
                  the sanctioned Pure ambient surface.",
             ));
         }
-        if let Some(col0) = find_function_ctor(code) {
+        if let Some(col0) = find_function_ctor(&code) {
             diags.push(type_erase_diag(
                 line_no,
                 col0,
@@ -1936,7 +2172,7 @@ fn scan_type_erase(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
                  or a sanctioned action.",
             ));
         }
-        if let Some(col0) = find_globalthis_string_index(code) {
+        if let Some(col0) = find_globalthis_string_index(&code) {
             diags.push(type_erase_diag(
                 line_no,
                 col0,
@@ -1988,6 +2224,48 @@ fn strip_line_comment(line: &str) -> &str {
         i += 1;
     }
     line
+}
+
+
+/// Replace interiors of string/template literals with spaces so needle search
+/// does not match inside them. Delimiter quotes stay so outside columns align.
+fn mask_string_literals(line: &str) -> String {
+    let bytes = line.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    let mut quote: Option<u8> = None;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = quote {
+            if c == b'\\' {
+                out.push(b' ');
+                if i + 1 < bytes.len() {
+                    out.push(b' ');
+                    i += 2;
+                    continue;
+                }
+                i += 1;
+                continue;
+            }
+            if c == q {
+                out.push(c);
+                quote = None;
+            } else {
+                out.push(b' ');
+            }
+            i += 1;
+            continue;
+        }
+        if c == b'\'' || c == b'"' || c == b'`' {
+            quote = Some(c);
+            out.push(c);
+            i += 1;
+            continue;
+        }
+        out.push(c);
+        i += 1;
+    }
+    String::from_utf8(out).unwrap_or_else(|_| line.to_string())
 }
 
 fn find_as_any(code: &str) -> Option<usize> {
@@ -2598,6 +2876,104 @@ export default controller((ctx) => {
             "expected sail-no-type-erase on (globalThis as any).document, got {diags:?}"
         );
     }
+
+    #[test]
+    fn type_erase_ban_arms_each_fail() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let cases = [
+            ("const x = v as unknown as string", "as unknown as"),
+            ("const x = v satisfies any", "satisfies any"),
+            ("const f = Function('return 1')", "Function"),
+            ("const f = new Function('return 1')", "new Function"),
+            ("const d = globalThis['document']", "globalThis"),
+        ];
+        for (stmt, label) in cases {
+            let src = format!(
+                r#"
+<controller>
+export default controller((ctx) => {{
+  {stmt}
+  return {{}}
+}})
+</controller>
+<div />
+"#
+            );
+            let path = root.join("apps/fake/src/widget/widget.sail");
+            let diags = collect_sail_type_gate(&src, Some(&path));
+            assert!(
+                diags
+                    .iter()
+                    .any(|d| d.rule.as_deref() == Some(RULE_NO_TYPE_ERASE)),
+                "expected sail-no-type-erase for {label}, got {diags:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn type_erase_does_not_match_inside_string_literals() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const msg = "never write as any or Function('x') here"
+  const tip = `avoid as unknown as and satisfies any`
+  return { msg, tip }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(RULE_NO_TYPE_ERASE)),
+            "string/template contents must not emit sail-no-type-erase: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn missing_relative_sail_module_hard_fails_ts2307() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+import type { Scope } from './missing-sibling.sail'
+
+export default controller((ctx) => {
+  return {}
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE) && d.message.contains("TS2307")
+            }),
+            "missing ./missing-sibling.sail must hard-fail TS2307 (no *.sail ambient mask), got {diags:?}"
+        );
+    }
+
 
     #[test]
     fn signal_generic_arity_is_not_type_gate_noise() {

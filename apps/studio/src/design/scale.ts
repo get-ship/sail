@@ -68,11 +68,14 @@ export function defaultRadiusFamily(scaleTogether = true): ScaleFamily {
     path: 'radius',
     ordered,
     scaleTogether,
-    steps: ordered.map((key) => ({
-      key,
-      valuePx: defaults[key],
-      raw: formatPx(defaults[key]),
-    })),
+    steps: ordered.map((key) => {
+      const valuePx = defaults[key] ?? 0
+      return {
+        key,
+        valuePx,
+        raw: formatPx(valuePx),
+      }
+    }),
   }
 }
 
@@ -94,7 +97,7 @@ export function setScaleStep(
   let steps: ScaleStep[]
   let clampNote: string | null = null
   if (family.scaleTogether) {
-    const prev = family.steps[idx].valuePx
+    const prev = family.steps[idx]!.valuePx
     const factor = prev > 0 ? px / prev : 1
     steps = family.steps.map((s, i) => {
       if (i === idx) {
@@ -304,11 +307,14 @@ export function defaultIconFamily(scaleTogether = true): ScaleFamily {
     path: 'icon',
     ordered,
     scaleTogether,
-    steps: ordered.map((key) => ({
-      key,
-      valuePx: defaults[key],
-      raw: formatPx(defaults[key]),
-    })),
+    steps: ordered.map((key) => {
+      const valuePx = defaults[key] ?? 0
+      return {
+        key,
+        valuePx,
+        raw: formatPx(valuePx),
+      }
+    }),
   }
 }
 

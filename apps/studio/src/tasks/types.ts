@@ -25,8 +25,8 @@ export type TaskAnchor = {
   nodeId: string
   elementPath: string
   contentHash: string
-  file?: string
-  span?: AnchorSpan
+  file?: string | undefined
+  span?: AnchorSpan | undefined
 }
 
 export type DriftInfo = {
@@ -68,7 +68,7 @@ export type TaskThread = {
   created_by: Actor
   assignee?: Actor | null
   route?: string | null
-  anchor?: TaskAnchor | null
+  anchor?: TaskAnchor | null | undefined
   artifacts: TaskArtifact[]
   events: TaskEvent[]
   drift?: DriftInfo | null
@@ -80,13 +80,13 @@ export type ThreadListItem = {
   status: string
   updated_at: string
   labels: string[]
-  created_by?: Actor
+  created_by?: Actor | undefined
   assignee?: Actor | null
   /** Last comment|created|agent_note actor — matches ThreadList actor filter. */
   last_actor?: Actor | null
   route?: string | null
-  anchor?: TaskAnchor | null
-  artifact_count?: number
+  anchor?: TaskAnchor | null | undefined
+  artifact_count?: number | undefined
   drift?: DriftInfo | null
 }
 

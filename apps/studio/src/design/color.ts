@@ -3,7 +3,7 @@
  * Tokens stay OKLCH; hex is picker-only.
  */
 
-export type Oklch = { L: number; C: number; H: number; a?: number }
+export type Oklch = { L: number; C: number; H: number; a?: number | undefined }
 
 export function parseOklch(s: string): Oklch | null {
   const m = /^oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+%?))?\s*\)/i.exec(

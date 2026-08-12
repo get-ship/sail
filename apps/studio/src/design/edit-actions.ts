@@ -566,7 +566,7 @@ export async function refreshBlastAggregateOn(
       for (const id of r.componentIds ?? []) componentIds.add(id)
       for (const s of r.sites ?? []) {
         const o = s as { file?: string; span?: { line?: number; col?: number } }
-        sites.push({ file: o.file ?? '', span: o.span })
+        sites.push({ file: o.file ?? '', ...(o.span !== undefined ? { span: o.span } : {}) })
       }
     }
     const uniqueComponents = componentIds.size || components
