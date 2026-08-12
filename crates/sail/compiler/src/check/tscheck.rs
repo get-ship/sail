@@ -493,9 +493,7 @@ fn extract_controller_region(source: &str) -> Option<ControllerRegion> {
     let start = find_outside_comments(source, "<controller")?;
     let open_rel = source[start..].find('>')?;
     let body_start = start + open_rel + 1;
-    // Same close scan as `extract_controller_block` — a naive
-    // `find("</controller>")` cuts at a usage-example string and then
-    // line-padding maps expression errors to EOF+1.
+    // Must use the same close scan as `extract_controller_block` so string/regex/template contents cannot end the region.
     let body_end = crate::parse::preprocess::find_controller_close(source, body_start)?;
     let raw = &source[body_start..body_end];
     // Skip leading blank lines only — do **not** strip indentation on the first

@@ -14,25 +14,22 @@
 //!   live scan of `crates/sail/compiler/src/**/*.rs` for
 //!   `CompileError::new(` / message-bearing `Diagnostic {` sites.
 //! - [`anonymous_baseline`](sail_compiler::diag_ratchet::anonymous_baseline) —
-//!   deliberate pin from a real tip remeasure (`<=` allows free debt drop).
+//!   product pin; must stay `0`. Do not raise `ANONYMOUS_BASELINE`.
 //!
 //! # How to fix a failure
 //!
-//! 1. **New anonymous site** — attach a stable id at the throw site:
-//!    - `.with_category("sail-<area>-<symptom>")`, or
-//!    - `rule: Some("sail-…".into())` / `rule: Some(RULE_ID)` with
-//!      `const RULE_ID: &str = "sail-…"` in the same file.
-//! 2. **Growth only** fails CI. Reducing anonymous debt is free under
-//!    `count <= baseline`; no pin bump required for drops.
-//! 3. **Baseline bump** only with operator approval after a real remeasure —
-//!    never raise the pin just to silence growth.
+//! Attach a stable id at the throw site:
+//! - `.with_category("sail-<area>-<symptom>")`, or
+//! - `rule: Some("sail-…".into())` / `rule: Some(RULE_ID)` with
+//!   `const RULE_ID: &str = "sail-…"` in the same file.
+//! Then add a `DiagSpec` row. Anonymous sites must stay exactly 0.
 //!
 //! # Verify the ratchet bites (manual)
 //!
 //! 1. Temporarily insert `CompileError::new("ratchet-probe")` in `src/check/mod.rs`
 //!    without a `sail-*` category.
 //! 2. `cargo test -p sail-compiler --test anonymous_diag_ratchet`
-//! 3. Expect `anonymous_count_does_not_grow` to fail.
+//! 3. Expect `anonymous_count_is_zero` to fail.
 //! 4. Revert the probe.
 
 use sail_compiler::diag_ratchet::{

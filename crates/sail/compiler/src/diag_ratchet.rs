@@ -1,7 +1,7 @@
 //! Anonymous diagnostic ratchet (SPEC-LINTS-1 Phase 0).
 //!
-//! Prevents **growth** of anonymous compiler diagnostic throw sites.
-//! Existing debt may remain until migration waves; new anonymous sites fail CI.
+//! Every compiler throw site must carry a stable `sail-*` id. Anonymous
+//! sites must stay exactly 0; new unregistered diagnostics fail CI.
 //!
 //! # API
 //!
@@ -10,7 +10,8 @@
 //! | [`is_stable_rule_id`] | `true` iff `id` matches `^sail-[a-z0-9-]+$` |
 //! | [`classify_snippet`] | Classify a throw-site source window as id'd or anonymous |
 //! | [`count_anonymous_sites`] | Scan live `crates/sail/compiler/src/**/*.rs` throw sites |
-//! | [`anonymous_baseline`] | Deliberate pin from a real tip remeasure (not a guess) |
+//! | [`idd_rule_ids`] | Unique `sail-*` ids attached at live Idd sites |
+//! | [`anonymous_baseline`] | Product pin (`0`); do not raise |
 //!
 //! A construction site is **id'd** iff its emitted rule/category resolves to a
 //! stable id matching `^sail-[a-z0-9-]+$` via `.with_category("sail-…")`,
@@ -25,9 +26,8 @@
 //!
 //! # Baseline policy
 //!
-//! Assert `count_anonymous_sites() <= anonymous_baseline()`. Drops pass without
-//! pin update (debt reduction is free); only growth fails. Implementer must
-//! remeasure tip and set the pin — do not hardcode inventory 181 without scan.
+//! Assert `count_anonymous_sites() == 0`. Do not raise [`ANONYMOUS_BASELINE`].
+//! Attach a `sail-*` id and a DiagSpec row to every new throw site.
 
 use std::collections::HashMap;
 use std::fs;
@@ -42,10 +42,7 @@ pub enum SiteClass {
     Anonymous,
 }
 
-/// Pinned anonymous baseline from tip remeasure (see `count_anonymous_sites`).
-///
-/// Gate: `count_anonymous_sites() <= ANONYMOUS_BASELINE`. Prefer `<=` so debt
-/// reduction does not require a pin update in the same PR.
+/// Product pin: anonymous sites must stay exactly 0. Do not raise this.
 const ANONYMOUS_BASELINE: usize = 0;
 
 /// Return `true` when `id` is a stable sail rule id (`^sail-[a-z0-9-]+$`).
@@ -110,10 +107,7 @@ pub fn anonymous_site_locations() -> Vec<(String, usize)> {
         .collect()
 }
 
-/// Pinned anonymous baseline. Set from a real tip remeasure.
-///
-/// Gate: `count_anonymous_sites() <= anonymous_baseline()`. Prefer `<=` so
-/// debt reduction does not require a pin update in the same PR.
+/// Product pin. Must stay 0 — do not raise [`ANONYMOUS_BASELINE`].
 pub fn anonymous_baseline() -> usize {
     ANONYMOUS_BASELINE
 }
@@ -882,6 +876,23 @@ mod tests {
         assert_eq!(sites.len(), 2);
         assert_eq!(sites[0].class, SiteClass::Anonymous);
         assert_eq!(sites[1].class, SiteClass::Idd);
+    }
+
+    /// `sail_layout::Diagnostic` is a foreign type, not a compiler throw site.
+    #[test]
+    fn foreign_layout_diagnostic_is_not_a_compiler_site() {
+        let src = r#"
+            let d = sail_layout::Diagnostic {
+                message: "layout".into(),
+                rule: None,
+            };
+        "#;
+        let mut sites = Vec::new();
+        scan_file(Path::new("fixture.rs"), src, &mut sites);
+        assert!(
+            sites.is_empty(),
+            "sail_layout::Diagnostic must not count as a compiler throw site, got {sites:?}"
+        );
     }
 
     #[test]
