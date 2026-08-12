@@ -62,7 +62,11 @@ pub const RETIRED_RULE_IDS: &[&str] = &[
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids
 /// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
 /// by template lint modules — still registered for the diagnostic ratchet.
-pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &["sail-clipped-text", "sail-unintended-overflow"];
+pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &[
+    "sail-clipped-text",
+    "sail-sub-min-tap-target",
+    "sail-unintended-overflow",
+];
 
 /// All rule IDs defined by this crate (live rules + layout diag ids + retired forever-ids).
 pub fn all_rule_ids() -> Vec<&'static str> {

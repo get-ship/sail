@@ -18,7 +18,7 @@ const PROMOTE_KINDS: &[&str] = &["child-overflows-parent", "zero-main-axis"];
 
 /// Experimental layout kinds (SPEC-LAYOUT-DIAG-1 / S4.1). Under top-level
 /// `strict: true` these promote to Error at the gate.
-const EXPERIMENTAL_KINDS: &[&str] = &["unintended-overflow", "clipped-text"];
+const EXPERIMENTAL_KINDS: &[&str] = &["unintended-overflow", "clipped-text", "sub-min-tap-target"];
 
 /// Viewports used by [`collect`]: mobile reference + source/desktop default.
 /// Dedups when the source already pins a mobile-sized viewport.
@@ -162,6 +162,7 @@ fn rule_id_for_kind(kind: &str) -> &'static str {
     match kind {
         "unintended-overflow" => "sail-unintended-overflow",
         "clipped-text" => "sail-clipped-text",
+        "sub-min-tap-target" => "sail-sub-min-tap-target",
         _ => "sail-layout",
     }
 }

@@ -94,6 +94,7 @@ fn known_compiler_ids_are_registered() {
         "sail-type-gate",
         "sail-unintended-overflow",
         "sail-clipped-text",
+        "sail-sub-min-tap-target",
     ];
     for id in known {
         assert!(lookup(id).is_some(), "missing {id}");

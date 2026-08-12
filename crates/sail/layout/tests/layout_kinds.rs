@@ -18,7 +18,7 @@
 //! Implementer: do not weaken these assertions to green-wash a partial land.
 //! Adversarial "must not fire" cases are part of the promotion law.
 
-use sail_layout::{check_preprocessed, check_preprocessed_with, CheckOptions, Diagnostic};
+use sail_layout::{CheckOptions, Diagnostic, check_preprocessed, check_preprocessed_with};
 
 const VP: (f32, f32) = (400.0, 300.0);
 
@@ -592,5 +592,54 @@ fn unintended_overflow_fires_when_tablet_at_desktop_viewport() {
         has_kind(&desktop.diagnostics, KIND_UNINTENDED_OVERFLOW),
         "<when {{tablet}}> at 1440 is on-screen; no-opt-in overflow must stay red: {:?}",
         desktop.diagnostics
+    );
+}
+
+const KIND_TAP: &str = "sub-min-tap-target";
+
+const TAP_AT_FLOOR: &str = r#"<button style:w="24px" style:h="24px">ok</button>"#;
+const TAP_UNDER_WIDTH: &str = r#"<button style:w="23px" style:h="40px">x</button>"#;
+const TAP_UNDER_HEIGHT: &str = r#"<button style:w="40px" style:h="23px">x</button>"#;
+const TAP_TEXT_ONLY: &str = r#"<div style:w="16px" style:h="16px">not a control</div>"#;
+
+#[test]
+fn tap_target_at_floor_does_not_fire() {
+    let result = check_preprocessed_with(TAP_AT_FLOOR, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "24px floor must not fire: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_under_floor_fires() {
+    for (label, src) in [("width", TAP_UNDER_WIDTH), ("height", TAP_UNDER_HEIGHT)] {
+        let result = check_preprocessed_with(src, VP, experimental()).expect("layout");
+        assert!(
+            has_kind(&result.diagnostics, KIND_TAP),
+            "{label} under 24px must fire: {:?}",
+            result.diagnostics
+        );
+    }
+}
+
+#[test]
+fn tap_target_ignores_non_interactive() {
+    let result = check_preprocessed_with(TAP_TEXT_ONLY, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "plain text box is not a tap target: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_experimental_off() {
+    let result = check_preprocessed(TAP_UNDER_WIDTH, VP).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "tap target stays experimental: {:?}",
+        result.diagnostics
     );
 }

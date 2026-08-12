@@ -830,6 +830,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-sub-min-tap-target",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "interactive host is below the control-h-2xs (24px) tap floor",
+        allowed_list_source: None,
+        fix_text: Some(
+            "grow the control so both axes are at least 24px, or use a `control-h-*` size token",
+        ),
+        docs_anchor: Some("SPEC-LAYOUT-DIAG-1#sub-min-tap-target"),
+    },
+    DiagSpec {
         id: "sail-surface-not-card",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,

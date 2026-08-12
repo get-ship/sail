@@ -89,6 +89,7 @@ pub struct Counts {
     pub files_preprocess_error: usize,
     pub files_layout_error: usize,
     pub unintended_overflow: usize,
+    pub clipped_text: usize,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
@@ -98,6 +99,7 @@ pub struct TreeStats {
     pub files_preprocess_error: usize,
     pub files_layout_error: usize,
     pub unintended_overflow: usize,
+    pub clipped_text: usize,
     pub layout_ms: u64,
 }
 
@@ -150,6 +152,11 @@ pub struct CorpusReport {
 /// Findings are information. This function does not fail because overflow
 /// exists, and it does not stop on the first preprocess/layout error.
 pub fn scan(workspace: &Path) -> anyhow::Result<CorpusReport> {
+    scan_kind(workspace, KIND)
+}
+
+/// Same corpus walk as [`scan`], filtered to one experimental kind.
+pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusReport> {
     let wall = Instant::now();
     let files = discover_files(workspace)?;
     let opts = CheckOptions::experimental();
@@ -201,7 +208,7 @@ pub fn scan(workspace: &Path) -> anyhow::Result<CorpusReport> {
         preprocess_ms += pre_t.elapsed().as_millis() as u64;
 
         let viewports = layout::layout_viewports(&preprocessed);
-        let scan = canary::scan_preprocessed(&preprocessed, &viewports, KIND, opts);
+        let scan = canary::scan_preprocessed(&preprocessed, &viewports, kind, opts);
         layout_ms += scan.layout_ms;
         tree.layout_ms += scan.layout_ms;
         if file.tree == "sail-site" {
@@ -231,8 +238,17 @@ pub fn scan(workspace: &Path) -> anyhow::Result<CorpusReport> {
 
         for hit in scan.findings {
             let mapped = map_finding(&source, &preprocessed, &file.rel, file.tree, hit);
-            tree.unintended_overflow += 1;
-            counts.unintended_overflow += 1;
+            match kind {
+                "unintended-overflow" => {
+                    tree.unintended_overflow += 1;
+                    counts.unintended_overflow += 1;
+                }
+                "clipped-text" => {
+                    tree.clipped_text += 1;
+                    counts.clipped_text += 1;
+                }
+                _ => {}
+            }
             findings.push(mapped);
         }
     }
@@ -255,7 +271,7 @@ pub fn scan(workspace: &Path) -> anyhow::Result<CorpusReport> {
     });
 
     Ok(CorpusReport {
-        kind_filter: KIND,
+        kind_filter: kind,
         experimental: true,
         stdlib_expand,
         stdlib_error,
@@ -297,6 +313,13 @@ pub fn default_out_path(workspace: &Path) -> PathBuf {
         return PathBuf::from(p);
     }
     workspace.join("target/layout-1-canary-findings.json")
+}
+
+pub fn default_clipped_out_path(workspace: &Path) -> PathBuf {
+    if let Ok(p) = std::env::var("LAYOUT_CLIPPED_CANARY_OUT") {
+        return PathBuf::from(p);
+    }
+    workspace.join("target/layout-2-clipped-text-findings.json")
 }
 
 struct Discovered {
