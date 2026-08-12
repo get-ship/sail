@@ -77,10 +77,25 @@ pub fn classify_snippet(source: &str) -> SiteClass {
 
 /// Count anonymous throw sites under live `crates/sail/compiler/src/**/*.rs`.
 pub fn count_anonymous_sites() -> usize {
+    anonymous_site_locations().len()
+}
+
+/// File + line of each anonymous throw site (for ratchet diagnosis).
+pub fn anonymous_site_locations() -> Vec<(String, usize)> {
     scan_compiler_src()
         .into_iter()
         .filter(|s| s.class == SiteClass::Anonymous)
-        .count()
+        .map(|s| {
+            (
+                s.path
+                    .strip_prefix(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"))
+                    .unwrap_or(&s.path)
+                    .display()
+                    .to_string(),
+                s.line,
+            )
+        })
+        .collect()
 }
 
 /// Pinned anonymous baseline. Set from a real tip remeasure.
@@ -363,6 +378,11 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
                 i = next_char_boundary(src, i + 1);
                 continue;
             }
+            // Foreign types (`sail_layout::Diagnostic`) are not compiler throw sites.
+            if i >= 2 && bytes[i - 1] == b':' && bytes[i - 2] == b':' {
+                i = next_char_boundary(src, i + 1);
+                continue;
+            }
             let j = skip_ws(bytes, after_name);
             if j < bytes.len() && bytes[j] == b'{' {
                 let line_start = src[..i].rfind('\n').map(|p| p + 1).unwrap_or(0);
@@ -466,6 +486,10 @@ fn first_site_window(source: &str) -> Option<&str> {
         if source[i..].starts_with("Diagnostic") {
             let after_name = i + "Diagnostic".len();
             if after_name < bytes.len() && is_ident_byte(bytes[after_name]) {
+                i = next_char_boundary(source, i + 1);
+                continue;
+            }
+            if i >= 2 && bytes[i - 1] == b':' && bytes[i - 2] == b':' {
                 i = next_char_boundary(source, i + 1);
                 continue;
             }

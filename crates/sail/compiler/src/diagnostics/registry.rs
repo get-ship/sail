@@ -1,27 +1,10 @@
-//! DiagSpec registry skeleton (SPEC-LINTS-1 §4 Phase 1 / S3.3).
+//! DiagSpec registry (SPEC-LINTS-1 §4 Phase 2 / LINTS-1-REGISTRY).
 //!
-//! Governs **new** diagnostics: id, severity, message template, allowed-list
-//! source, fix text, docs anchor (+ jurisdiction for the compiler-error vs
-//! lint law). Existing anonymous debt is **not** migrated here — that is
-//! Phase 2 waves. The anonymous ratchet (S3.1) still blocks growth.
+//! SSOT for every already-id'd `sail-*` product rule (lint crate + compiler
+//! id'd categories + layout kinds). Anonymous compiler sites are not given
+//! new ids here. The anonymous ratchet still blocks growth.
 //!
-//! # Intended full API
-//!
-//! | Symbol | Contract |
-//! |--------|----------|
-//! | [`DiagSpec`] | Static row: id + severity + message template + optional fix/docs/allowed-list |
-//! | [`Jurisdiction`] | [`Jurisdiction::CompilerError`] vs [`Jurisdiction::Lint`] (SPEC-LINTS-1 §1) |
-//! | [`registry`] | Full table slice (`&'static [DiagSpec]`) |
-//! | [`lookup`] | `lookup(id) -> Option<&'static DiagSpec>` by stable `sail-*` id |
-//!
-//! # Phase 1 acceptance (gates)
-//!
-//! - Table may start small; **must** include known id'd product rules used as
-//!   samples (`sail-layout`, `sail-unintended-overflow` at minimum).
-//! - **New** diagnostics live in the table and emit with that `id`.
-//! - At least one live emission path stamps a rule id present in the table
-//!   (behavioral: emitted `Diagnostic.rule` is `lookup`-able).
-//! - No mass migration of anonymous sites; no text goldens of full catalogs.
+//! New diagnostics must add a row and emit with that stable `id`.
 
 use super::DiagSeverity;
 
@@ -35,11 +18,7 @@ pub enum Jurisdiction {
     Lint,
 }
 
-/// One governed diagnostic specification (SPEC-LINTS-1 §4 Phase 1).
-///
-/// Fields match the Phase 1 skeleton: id, severity, message template,
-/// allowed-list source, fix text, docs anchor — plus [`Jurisdiction`] from
-/// the jurisdiction law (SCOUT-S3).
+/// One governed diagnostic specification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DiagSpec {
     /// Stable rule id (`sail-…`). Forever once shipped.
@@ -50,23 +29,96 @@ pub struct DiagSpec {
     pub default_severity: DiagSeverity,
     /// Message template (placeholders allowed; not a text-golden pin).
     pub message_template: &'static str,
-    /// Where the allowed vocabulary / list for this rule comes from, if any
-    /// (e.g. a live vocabulary module path). `None` when not list-gated.
+    /// Live vocabulary source for list-gated rules, if any.
     pub allowed_list_source: Option<&'static str>,
-    /// Short fix guidance for authors/agents. `None` when no single fix.
+    /// Short fix guidance. `None` when no single fix.
     pub fix_text: Option<&'static str>,
-    /// Docs / freeze-text anchor (path or fragment). `None` until linked.
+    /// Docs / freeze-text anchor. `None` until linked.
     pub docs_anchor: Option<&'static str>,
 }
 
-/// Phase 1 sample / known product rows.
-///
-/// Sorted by `id` for stable lookup and human scan. Phase 2 waves expand
-/// this table; mass anonymous migration is out of scope here.
-///
-/// Live emission for layout kinds is already wired in
-/// [`crate::check::layout`] (`rule_id_for_kind` → `Diagnostic.rule`).
 const DIAG_SPECS: &[DiagSpec] = &[
+    DiagSpec {
+        id: "sail-action-host-only",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "action host only",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-action-no-network",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "action no network",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-action-no-state",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "action no state",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-action-no-style",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "action no style",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-action-signature",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "action signature",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-action-surface",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "action surface",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-animate-token-only",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "animate token only",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-attr-bool-prop",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "attr bool prop",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-attr-presence",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "attr presence",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
     DiagSpec {
         id: "sail-block-order",
         jurisdiction: Jurisdiction::CompilerError,
@@ -86,6 +138,249 @@ const DIAG_SPECS: &[DiagSpec] = &[
             "add `text: truncate()` if clipping is intentional, or widen the box / wrap the text",
         ),
         docs_anchor: Some("SPEC-LAYOUT-DIAG-1#clipped-text"),
+    },
+    DiagSpec {
+        id: "sail-compose-align",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "compose align",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-compose-contrast",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "compose contrast",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-compose-rhythm",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "compose rhythm",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-compose-spacing",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "compose spacing",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-context",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller context",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-empty",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "controller empty",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-import-convention",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller import convention",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-matchmedia-layout",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller matchmedia layout",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-navigation",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller navigation",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-no-ambient-authority",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller no ambient authority",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-no-load-state",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller no load state",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-purity",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller purity",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-redundant-ambient-import",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "controller redundant ambient import",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-set-value",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller set value",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-size",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "controller size",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-controller-state-cast",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "controller state cast",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-css-content-text",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "css content text",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-css-literal",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "css literal",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-css-literals",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "css literals",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-css-token",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "css token",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-dimension-literal",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "dimension literal",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-display-on-layout",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "display on layout",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-event-name",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "event name",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-font-literal",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "font literal",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-for-key",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "for key",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-framework-import-teaching",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "framework import teaching",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-height-chain",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "height chain",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
     },
     DiagSpec {
         id: "sail-layout",
@@ -110,6 +405,168 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: Some("docs#sail-layout-primitive"),
     },
     DiagSpec {
+        id: "sail-light-shadow-root",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "light shadow root",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-match-exhaustive",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "match exhaustive",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-mount-ambient-shadow",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "mount ambient shadow",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-neighbor-id",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "neighbor id",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-ambient-network",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no ambient network",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-ambient-timers",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no ambient timers",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-class",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no class",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-data-attr",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no data attr",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-free-aria",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no free aria",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-imperative-style",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no imperative style",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-inline-style",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no inline style",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-node",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no node",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-node-import",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no node import",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-raw-container",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no raw container",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-script",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no script",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-style-block",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no style block",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-sx",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no sx",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-ts-ignore",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no ts ignore",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
         id: "sail-no-type-erase",
         jurisdiction: Jurisdiction::CompilerError,
         default_severity: DiagSeverity::Error,
@@ -119,6 +576,276 @@ const DIAG_SPECS: &[DiagSpec] = &[
             "drop `as any` / `as unknown as` / `satisfies any` / `Function()` / string-indexed globals; use SailHost, a use: action, or a real type",
         ),
         docs_anchor: Some("JOB-E4-ENFORCEMENT-RESIDUALS#R1"),
+    },
+    DiagSpec {
+        id: "sail-no-undeclared-stylesheet",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no undeclared stylesheet",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-no-variants",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "no variants",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-paired-controller",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "paired controller",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-cycle",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial cycle",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-duplicate",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial duplicate",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-excess-attr",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial excess attr",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-header",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial header",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-leaked-ident",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial leaked ident",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-missing-attr",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial missing attr",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-nested-decl",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial nested decl",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-slot",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial slot",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-style-on-invocation",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial style on invocation",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-partial-tag-collision",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "partial tag collision",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-participation-style",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "participation style",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-prefer-primitive",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "prefer primitive",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-prefer-query",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "prefer query",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-primary-for-status",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "primary for status",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-prop-value",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "prop value",
+        allowed_list_source: Some("sail_lint::prop_registry"),
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-pure-region",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "pure region",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-query-key",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "query key",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-route-inline-style",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "route inline style",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-signal-not-called",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "signal not called",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-space-literal",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "space literal",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-state-set-call",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "state set call",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-style",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "style",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-style-bind",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "style bind",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-style-match-exhaustive",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "style match exhaustive",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-style-value-enumeration",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "style value enumeration",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-surface-not-card",
+        jurisdiction: Jurisdiction::Lint,
+        default_severity: DiagSeverity::Warning,
+        message_template: "surface not card",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
+    DiagSpec {
+        id: "sail-type-gate",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "type gate",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
     },
     DiagSpec {
         id: "sail-unintended-overflow",
@@ -131,11 +858,18 @@ const DIAG_SPECS: &[DiagSpec] = &[
         ),
         docs_anchor: Some("SPEC-LAYOUT-DIAG-1#unintended-overflow"),
     },
+    DiagSpec {
+        id: "sail-virtualizer",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "virtualizer",
+        allowed_list_source: None,
+        fix_text: None,
+        docs_anchor: None,
+    },
 ];
 
 /// Full DiagSpec table.
-///
-/// New diagnostics **must** add a row here and emit with that stable `id`.
 pub fn registry() -> &'static [DiagSpec] {
     DIAG_SPECS
 }
@@ -165,5 +899,20 @@ mod tests {
         ids.sort_unstable();
         ids.dedup();
         assert_eq!(ids.len(), before, "DiagSpec ids must be unique");
+    }
+
+    #[test]
+    fn registry_ids_are_stable_sail_ids() {
+        for spec in registry() {
+            assert!(
+                spec.id.starts_with("sail-")
+                    && spec.id[5..]
+                        .bytes()
+                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-'),
+                "bad id {}",
+                spec.id
+            );
+            assert!(!spec.message_template.is_empty(), "{}", spec.id);
+        }
     }
 }
