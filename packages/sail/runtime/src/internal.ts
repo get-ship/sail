@@ -110,6 +110,8 @@ export type { RoutePayload, MountOptions, MountHandle, SailLoader } from './moun
 export { setHostContext, hostContext } from './host-context'
 export type { HostContext } from './host-context'
 export type { Host } from './host'
+// Framework-only SailHost unwrap (not tier B author root; DOM lib types).
+export { unwrapSailHost } from './sail-host-dom'
 export {
   editModeForRoute,
   toggleEditMode,

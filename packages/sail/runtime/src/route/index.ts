@@ -49,28 +49,36 @@ export function routeWithUpdate(opts: { url?: URL } = {}): RouteHandle {
 }
 
 function buildRoute(url: URL | undefined): RouteHandle {
-  const resolved = url ?? defaultUrl()
-  const pathname = signal<string>(resolved.pathname)
-  const hash = signal<string>(resolved.hash)
+  // Explicit `opts.url` freezes the handle (test harness). Default seeds from
+  // the live location and re-reads on `update()` so hosts that call
+  // `__shipSetRouteUpdate` after navigate/popstate see pathname same-tick.
+  const pinned = url !== undefined
+  let current = url ?? defaultUrl()
+  const pathname = signal<string>(current.pathname)
+  const hash = signal<string>(current.hash)
   const paramCache = new Map<string, Signal<string | undefined>>()
   const queryCache = new Map<string, Signal<string | undefined>>()
 
   const params = lazyProxy(paramCache, () => undefined)
-  const query = lazyProxy(queryCache, (key) => resolved.searchParams.get(key) ?? undefined)
+  const query = lazyProxy(queryCache, (key) => current.searchParams.get(key) ?? undefined)
 
-  return {
+  const handle: RouteHandle = {
     params,
     query,
     pathname,
     hash,
-    url: resolved,
+    get url() {
+      return current
+    },
     update(): void {
-      pathname.set(resolved.pathname)
-      hash.set(resolved.hash)
-      for (const [k, s] of queryCache) s.set(resolved.searchParams.get(k) ?? undefined)
+      if (!pinned) current = defaultUrl()
+      pathname.set(current.pathname)
+      hash.set(current.hash)
+      for (const [k, s] of queryCache) s.set(current.searchParams.get(k) ?? undefined)
       // params stay `undefined` — no route table at the runtime boundary.
     },
   }
+  return handle
 }
 
 function defaultUrl(): URL {

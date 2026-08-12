@@ -21,6 +21,8 @@
 //   theme.clearScope(host)   — teardown applyScope writes
 
 import { publicName } from '@ship/tokens'
+import type { SailHost } from './sail-host'
+import { unwrapSailHost } from './sail-host-dom'
 
 /** A patch maps token names (`--foo`) to CSS values. TokenName is validated at
  *  write time against the registered `@property` tokens (or a declared `:root`
@@ -305,7 +307,7 @@ interface AppliedScope {
   mode: string
 }
 
-const appliedScopes = new WeakMap<HTMLElement, AppliedScope>()
+const appliedScopes = new WeakMap<object, AppliedScope>()
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return v != null && typeof v === 'object' && !Array.isArray(v)
@@ -561,20 +563,22 @@ function clearHostProp(host: HTMLElement, name: string): void {
  * Returns a disposer equivalent to {@link clearThemeScope}.
  *
  * Does **not** touch `:root` session preview/commit state.
+ * Author surface: pass a {@link SailHost} (opaque); framework unwraps to DOM.
  */
 function applyScope(
-  host: HTMLElement,
+  host: SailHost,
   options: ThemeApplyScopeOptions,
 ): () => void {
-  if (host == null || typeof host.style?.setProperty !== 'function') {
-    throw new TypeError('theme.applyScope: host must be an HTMLElement')
+  const el = host == null ? null : unwrapSailHost(host)
+  if (el == null || typeof el.style?.setProperty !== 'function') {
+    throw new TypeError('theme.applyScope: host must be a SailHost (web: HTMLElement)')
   }
   if (options == null || !isPlainObject(options.doc)) {
     throw new TypeError('theme.applyScope: options.doc must be a theme document object')
   }
 
   const lowered = lowerThemeDoc(options.doc, options.mode)
-  const prev = appliedScopes.get(host)
+  const prev = appliedScopes.get(el)
   const nextNames = Object.keys(lowered.patch)
 
   // Drop props from a prior apply that are absent in this patch (mode switch /
@@ -582,27 +586,27 @@ function applyScope(
   if (prev) {
     const nextSet = new Set(nextNames)
     for (const name of prev.names) {
-      if (!nextSet.has(name)) clearHostProp(host, name)
+      if (!nextSet.has(name)) clearHostProp(el, name)
     }
   }
 
   for (const name of nextNames) {
-    writeHostProp(host, name, lowered.patch[name]!)
+    writeHostProp(el, name, lowered.patch[name]!)
   }
 
   // Framework-owned theme IR on the host; mode is a cascade bit (D10/D11).
   // Paint authority attr is `theme` only (matches tokens_generate `[theme=id]`).
   if (lowered.themeId) {
-    host.setAttribute('theme', lowered.themeId)
+    el.setAttribute('theme', lowered.themeId)
   } else if (prev?.themeId) {
-    host.removeAttribute('theme')
+    el.removeAttribute('theme')
   }
-  host.setAttribute('data-mode', lowered.mode)
+  el.setAttribute('data-mode', lowered.mode)
   // Hard cutover: never dual-write data-theme / data-theme-preview.
-  if (host.hasAttribute('data-theme')) host.removeAttribute('data-theme')
-  if (host.hasAttribute('data-theme-preview')) host.removeAttribute('data-theme-preview')
+  if (el.hasAttribute('data-theme')) el.removeAttribute('data-theme')
+  if (el.hasAttribute('data-theme-preview')) el.removeAttribute('data-theme-preview')
 
-  appliedScopes.set(host, {
+  appliedScopes.set(el, {
     names: nextNames,
     themeId: lowered.themeId,
     mode: lowered.mode,
@@ -614,18 +618,21 @@ function applyScope(
 /**
  * Teardown a prior {@link theme.applyScope} on `host` — removes written custom
  * properties and the theme/mode attrs this API set. Safe if never applied.
+ * Author surface: pass a {@link SailHost} (opaque); framework unwraps to DOM.
  */
-export function clearThemeScope(host: HTMLElement): void {
-  const prev = appliedScopes.get(host)
+export function clearThemeScope(host: SailHost): void {
+  if (host == null) return
+  const el = unwrapSailHost(host)
+  const prev = appliedScopes.get(el)
   if (!prev) return
   for (const name of prev.names) {
-    clearHostProp(host, name)
+    clearHostProp(el, name)
   }
   if (prev.themeId) {
-    if (host.getAttribute('theme') === prev.themeId) host.removeAttribute('theme')
+    if (el.getAttribute('theme') === prev.themeId) el.removeAttribute('theme')
   }
-  if (host.getAttribute('data-mode') === prev.mode) host.removeAttribute('data-mode')
-  appliedScopes.delete(host)
+  if (el.getAttribute('data-mode') === prev.mode) el.removeAttribute('data-mode')
+  appliedScopes.delete(el)
 }
 
 /**

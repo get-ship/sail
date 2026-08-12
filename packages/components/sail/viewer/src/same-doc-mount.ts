@@ -16,7 +16,8 @@
 // module URLs. Inline `<script type="module">` (allowed by 'unsafe-inline')
 // plus the page importmap is the mount path that works under that policy.
 
-import { debounce } from '@ship/sail-runtime'
+import { debounce, type SailHost } from '@ship/sail-runtime'
+import { unwrapSailHost } from '@ship/sail-runtime/internal'
 
 /** The wasm compile result the engine returns. */
 export type CompileResult =
@@ -329,10 +330,12 @@ let activeScript: HTMLScriptElement | null = null
  */
 export function runInHost(
   compile: CompileFn,
-  host: HTMLElement,
+  host: SailHost,
   opts: { tag: string; source: string },
   prev?: PreviewMount | null,
 ): { result: CompileResult; mount: PreviewMount | null; ready?: Promise<PreviewMount | null> } {
+  // Framework unwrap: SailHost is the opaque author surface; web port is HTMLElement.
+  const hostEl = unwrapSailHost(host)
   const result = compile(opts.source, {
     setupUrl: SETUP_MARKER,
     setupMarker: SETUP_MARKER,
@@ -354,8 +357,8 @@ export function runInHost(
 
   // Register host by runId — mount module looks it up via takeTutMount.
   const hosts = ensureHosts()
-  hosts[runId] = host
-  host.setAttribute('data-tut-host', runId)
+  hosts[runId] = hostEl
+  hostEl.setAttribute('data-tut-host', runId)
 
   const ctrlBody = extractController(opts.source)
   const moduleSrc = buildMountModule({
@@ -370,7 +373,7 @@ export function runInHost(
     waiters[runId] = { resolve, reject }
   })
 
-  const doc = host.ownerDocument
+  const doc = hostEl.ownerDocument
   const script = doc.createElement('script')
   script.type = 'module'
   script.setAttribute('data-tut-mount', runId)
@@ -386,9 +389,9 @@ export function runInHost(
     })
 
   const clearHostReg = (): void => {
-    if (hosts[runId] === host) delete hosts[runId]
-    if (host.getAttribute('data-tut-host') === runId) {
-      host.removeAttribute('data-tut-host')
+    if (hosts[runId] === hostEl) delete hosts[runId]
+    if (hostEl.getAttribute('data-tut-host') === runId) {
+      hostEl.removeAttribute('data-tut-host')
     }
     delete waiters[runId]
   }

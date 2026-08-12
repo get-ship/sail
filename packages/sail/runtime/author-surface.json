@@ -153,6 +153,9 @@
     "ComponentSchema": "components",
 
     "Host": "host",
+    "SailHost": "host",
+    "asSailHost": "host",
+    "scheduleFrame": "host",
     "RouteSignals": "host"
   }
 }

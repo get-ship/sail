@@ -550,10 +550,13 @@ export function resolveNestedPaintMode(
  * Apply theme + paint mode on a **nested** host (not the document product root).
  * Sets `theme` + `data-mode` only — no persistence, no `ship:theme:change`.
  * Use for demos / previews / framed apps (e.g. shanty on `/showcase`).
+ *
+ * `host` is the mount host (web: HTMLElement / SailHost identity). DOM ops stay
+ * inside this Framework module — Pure callers pass SailHost without naming HTMLElement.
  */
 export function applyNestedTheme(
   themeId: unknown,
-  host: HTMLElement,
+  host: unknown,
   preferredMode?: string | null,
 ): { theme: string; mode: PaintMode } {
   const next: string = isValidTheme(themeId)
@@ -562,11 +565,12 @@ export function applyNestedTheme(
       ? themeId
       : DEFAULT_THEME
   const mode = resolveNestedPaintMode(next, preferredMode)
-  host.setAttribute('theme', next)
-  host.dataset.mode = mode
-  host.removeAttribute('data-theme')
-  host.removeAttribute('data-theme-preview')
-  host.classList.remove('dark')
+  const el = host as HTMLElement
+  el.setAttribute('theme', next)
+  el.dataset.mode = mode
+  el.removeAttribute('data-theme')
+  el.removeAttribute('data-theme-preview')
+  el.classList.remove('dark')
   return { theme: next, mode }
 }
 

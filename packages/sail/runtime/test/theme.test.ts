@@ -20,6 +20,7 @@ import {
   clearThemeScope,
   lowerThemeDoc,
 } from '../src/theme'
+import { asSailHost } from '../src/sail-host'
 
 const root = () => document.documentElement
 
@@ -243,13 +244,13 @@ describe('theme.applyScope — host only + teardown', () => {
   })
 
   afterEach(() => {
-    clearThemeScope(host)
+    clearThemeScope(asSailHost(host))
     host.remove()
     sibling.remove()
   })
 
   it('writes lowered tokens on host only (not :root, not sibling)', () => {
-    theme.applyScope(host, { doc: sampleDoc(), mode: 'light' })
+    theme.applyScope(asSailHost(host), { doc: sampleDoc(), mode: 'light' })
     expect(host.style.getPropertyValue('--primary')).toBe('oklch(0.5 0.1 40)')
     expect(host.style.getPropertyValue('--background')).toBe('oklch(0.98 0 0)')
     expect(host.style.getPropertyValue('--body-font')).toBe('var(--font-body)')
@@ -259,7 +260,7 @@ describe('theme.applyScope — host only + teardown', () => {
   })
 
   it('sets framework theme + data-mode only (never data-theme / data-theme-preview)', () => {
-    theme.applyScope(host, { doc: sampleDoc({ themeId: 'paper' }), mode: 'dark' })
+    theme.applyScope(asSailHost(host), { doc: sampleDoc({ themeId: 'paper' }), mode: 'dark' })
     expect(host.getAttribute('theme')).toBe('paper')
     expect(host.getAttribute('data-mode')).toBe('dark')
     expect(host.hasAttribute('data-theme')).toBe(false)
@@ -267,7 +268,7 @@ describe('theme.applyScope — host only + teardown', () => {
   })
 
   it('teardown via disposer clears props and attrs', () => {
-    const dispose = theme.applyScope(host, { doc: sampleDoc(), mode: 'light' })
+    const dispose = theme.applyScope(asSailHost(host), { doc: sampleDoc(), mode: 'light' })
     expect(host.style.getPropertyValue('--primary')).toBe('oklch(0.5 0.1 40)')
     dispose()
     expect(host.style.getPropertyValue('--primary')).toBe('')
@@ -278,17 +279,21 @@ describe('theme.applyScope — host only + teardown', () => {
   })
 
   it('clearScope / clearThemeScope is idempotent', () => {
-    theme.applyScope(host, { doc: sampleDoc(), mode: 'light' })
-    clearThemeScope(host)
-    expect(() => clearThemeScope(host)).not.toThrow()
-    expect(() => theme.clearScope(host)).not.toThrow()
+    const h = asSailHost(host)
+    theme.applyScope(h, { doc: sampleDoc(), mode: 'light' })
+    clearThemeScope(h)
+    expect(() => clearThemeScope(h)).not.toThrow()
+    expect(() => theme.clearScope(h)).not.toThrow()
   })
 
   it('re-apply replaces prior props (no sticky tokens across mode switch)', () => {
     // First apply a doc that sets --primary; second mode differs in value.
-    theme.applyScope(host, { doc: sampleDoc({ lightPrimary: 'oklch(0.4 0 0)' }), mode: 'light' })
+    theme.applyScope(asSailHost(host), {
+      doc: sampleDoc({ lightPrimary: 'oklch(0.4 0 0)' }),
+      mode: 'light',
+    })
     expect(host.style.getPropertyValue('--primary')).toBe('oklch(0.4 0 0)')
-    theme.applyScope(host, {
+    theme.applyScope(asSailHost(host), {
       doc: sampleDoc({ darkPrimary: 'oklch(0.9 0.1 200)' }),
       mode: 'dark',
     })
@@ -298,7 +303,7 @@ describe('theme.applyScope — host only + teardown', () => {
 
   it('does not use :root session maps (applyScope ≠ preview)', () => {
     register('--primary')
-    theme.applyScope(host, { doc: sampleDoc(), mode: 'light' })
+    theme.applyScope(asSailHost(host), { doc: sampleDoc(), mode: 'light' })
     // Session hatch still empty on :root
     expect(root().style.getPropertyValue('--primary')).toBe('')
     theme.reset() // would clear session previews — host scope untouched
@@ -307,7 +312,7 @@ describe('theme.applyScope — host only + teardown', () => {
 
   it('refuses a non-element host', () => {
     expect(() =>
-      theme.applyScope(null as unknown as HTMLElement, { doc: sampleDoc() }),
-    ).toThrow(/host must be an HTMLElement/)
+      theme.applyScope(asSailHost(null), { doc: sampleDoc() }),
+    ).toThrow(/host must be a SailHost/)
   })
 })

@@ -58,7 +58,10 @@ export type {
 } from './controller'
 
 // Host capability types — generated Scope .d.ts + /sail/language/capabilities.
+// SailHost is opaque (branded); unwrapSailHost is framework-only on /internal.
 export type { Host } from './host'
+export type { SailHost } from './sail-host'
+export { scheduleFrame, asSailHost } from './sail-host'
 export type { RouteSignals } from './route-signals'
 
 // ── Stores ─────────────────────────────────────────────────────────────────

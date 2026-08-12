@@ -122,4 +122,13 @@ describe('bindOpen', () => {
     el.dispatchEvent(cancel)
     expect(cancel.defaultPrevented).toBe(false)
   })
+
+  it('disposer clears sticky open signal (when-branch unmount / remount)', () => {
+    const el = makeDialog()
+    const open = signal(true)
+    const dispose = bindOpen(el, open)
+    expect(open()).toBe(true)
+    dispose()
+    expect(open()).toBe(false)
+  })
 })

@@ -1,7 +1,8 @@
 <!--
   <sail-media-image> — raster + SVG viewer (source-in, never fetch).
-  `src` is a host identity property (ViewerSource | ViewerSource[] | string), not a
-  reflectable attr. Zoom/pan via engine/zoom-pan; gallery strip when src is an array.
+  `src` is a host identity property (ViewerSource | ViewerSource[] | string) AND a
+  string URL attribute (default PE — authors write src="https://…"). Zoom/pan via
+  engine/zoom-pan; gallery strip when src is an array.
 -->
 
 <scope>
@@ -162,7 +163,8 @@ export default controller((_ctx: Scope) => {
       hostEl = host
       if (!host.hasAttribute('zoomable')) host.setAttribute('zoomable', '')
 
-      // Identity prop — live reference, not a stringified attribute.
+      // Identity prop — live reference for ViewerSource / arrays; string URLs
+      // also work via the host `src` attribute (default PE — no author glue).
       Object.defineProperty(host, 'src', {
         configurable: true,
         get: () => srcSig(),
@@ -171,6 +173,15 @@ export default controller((_ctx: Scope) => {
           activeIndex.set(0)
         },
       })
+
+      // Default PE: seed string URL from host attribute so authors write
+      // `<sail-media-image src="https://…" />` without querySelector glue.
+      // Identity setter still accepts ViewerSource / arrays for programmatic hosts.
+      const attrSrc = host.getAttribute('src')
+      if (attrSrc) {
+        srcSig.set(attrSrc)
+        activeIndex.set(0)
+      }
 
       let lastInlined: unknown = null
       const stopSvgEmit = effect(() => {

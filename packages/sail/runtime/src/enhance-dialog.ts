@@ -137,5 +137,9 @@ export function bindOpen(
     el.removeEventListener('close', onClose)
     el.removeEventListener('cancel', onCancel)
     el.removeEventListener('click', onClick)
+    // Structural unmount (e.g. `<when {tablet}>` branch swap) must not leave
+    // the open signal sticky — remounting the same dialog with open=true would
+    // re-show the drawer without a user gesture (mobile ↔ tablet resize).
+    if (sig()) onClose()
   }
 }

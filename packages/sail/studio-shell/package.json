@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ship/sail-runtime": "workspace:*",
     "@ship/sail-studio-client": "workspace:*"
   },
   "devDependencies": {

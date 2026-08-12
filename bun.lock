@@ -320,6 +320,7 @@
       "name": "@ship/sail-studio-shell",
       "version": "0.1.0",
       "dependencies": {
+        "@ship/sail-runtime": "workspace:*",
         "@ship/sail-studio-client": "workspace:*",
       },
       "devDependencies": {
