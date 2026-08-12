@@ -5,25 +5,36 @@ export const LS_FAB = 'sail-studio.fab'
 
 export type BridgeRect = { left: number; top: number; width: number; height: number }
 
-export type StudioIncoming =
-  | { channel: typeof STUDIO_CHANNEL; type: 'ready' }
-  | { channel: typeof STUDIO_CHANNEL; type: 'open'; open: boolean }
-  | { channel: typeof STUDIO_CHANNEL; type: 'mode'; mode: string }
+/**
+ * Discriminated studio channel ops (typed payloads).
+ * Bodies for {@link postStudioMessage} — `channel` is applied by the poster.
+ * Only ops that real senders/receivers use (bridge, shell, studio app).
+ */
+export type StudioOp =
   | {
-      channel: typeof STUDIO_CHANNEL
       type: 'select'
       nodeId?: string | null
       selector?: string
+      path?: string
+      line?: number
+      col?: number
     }
-  | { channel: typeof STUDIO_CHANNEL; type: 'annotate'; rect: BridgeRect }
+  | { type: 'annotate'; rect: BridgeRect }
+  | { type: 'screenshot'; kind?: string; rect?: BridgeRect }
+  | { type: 'settings'; fabVisible?: boolean; open?: boolean }
+  | { type: 'close' }
   | {
-      channel: typeof STUDIO_CHANNEL
-      type: 'screenshot'
-      kind?: string
-      rect?: BridgeRect
+      type: 'theme-preview'
+      themeId: string
+      density: string
+      patch: Record<string, string>
     }
-  | { channel: typeof STUDIO_CHANNEL; type: 'hotkey'; key: string }
-  | { channel: typeof STUDIO_CHANNEL; type: 'settings'; fabVisible?: boolean }
+
+/** Full wire message on the studio channel. */
+export type StudioMessage = { channel: typeof STUDIO_CHANNEL } & StudioOp
+
+/** Incoming wire messages (same union as posted ops + channel). */
+export type StudioIncoming = StudioMessage
 
 export function isStudioMessage(data: unknown): data is StudioIncoming {
   return (
@@ -41,10 +52,12 @@ export function publishFabVisible(visible: boolean): void {
     /* */
   }
   if (typeof window !== 'undefined') {
-    window.postMessage(
-      { channel: STUDIO_CHANNEL, type: 'settings', fabVisible: visible },
-      '*',
-    )
+    const msg: StudioMessage = {
+      channel: STUDIO_CHANNEL,
+      type: 'settings',
+      fabVisible: visible,
+    }
+    window.postMessage(msg, '*')
   }
 }
 

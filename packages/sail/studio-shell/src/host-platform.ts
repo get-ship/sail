@@ -6,16 +6,17 @@
  * these live under `packages/sail/**` (Framework env), not as Pure freebies.
  */
 import { scheduleFrame, asSailHost, type SailHost } from '@ship/sail-runtime'
-import { STUDIO_CHANNEL } from './channel'
+import { STUDIO_CHANNEL, type StudioMessage, type StudioOp } from './channel'
 
 /** Single rAF helper — re-export runtime (no drift vs sail-site / draft paint). */
 export { scheduleFrame }
 
 /** postMessage on the studio channel (same-window bus). */
-export function postStudioMessage(body: Record<string, unknown>): void {
+export function postStudioMessage(body: StudioOp): void {
   if (typeof window === 'undefined') return
   try {
-    window.postMessage({ channel: STUDIO_CHANNEL, ...body }, '*')
+    const msg: StudioMessage = { channel: STUDIO_CHANNEL, ...body }
+    window.postMessage(msg, '*')
   } catch {
     /* */
   }
@@ -25,7 +26,8 @@ export function postStudioMessage(body: Record<string, unknown>): void {
 export function closeStudioOverlay(): void {
   try {
     if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
-      window.parent.postMessage({ channel: STUDIO_CHANNEL, type: 'close' }, '*')
+      const msg: StudioMessage = { channel: STUDIO_CHANNEL, type: 'close' }
+      window.parent.postMessage(msg, '*')
     }
   } catch {
     /* cross-origin */
