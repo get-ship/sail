@@ -80,16 +80,6 @@ export default controller((ctx: Scope) => {
   const agreed = signal(true)
   const presses = signal(0)
   const press = (): void => presses.set((n) => n + 1)
-  // Pack media identity prop.
-  effect(() => {
-    void tag()
-    requestAnimationFrame(() => {
-      document.querySelectorAll('sail-media-image').forEach((el) => {
-        const host = el as HTMLElement & { src?: string }
-        if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
-      })
-    })
-  })
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
@@ -155,6 +145,7 @@ export default controller((ctx: Scope) => {
     agreed,
     presses,
     press,
+    DEMO_PHOTO,
   }
 })
 </controller>
@@ -223,7 +214,7 @@ export default controller((ctx: Scope) => {
       </if>
       <if {stage.sailMediaImage()}>
         <div style(mediaStage)>
-          <sail-media-image style(fullMedia)></sail-media-image>
+          <sail-media-image src={DEMO_PHOTO} alt="Mountain lake at dusk" style(fullMedia)></sail-media-image>
         </div>
       </if>
       <if {stage.sailMediaAv()}>
