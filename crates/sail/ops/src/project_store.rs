@@ -58,7 +58,8 @@ const SAIL_README: &str = r#"# Sail local store (gitignored)
 
 - `tasks/` — ephemeral agent/human threads for this machine
 - Build output is `.deck/`, not here
-- Ambient types are `node_modules/.sail/types.d.ts` (regenerate: `sail types`)
+- Ambient types + pure/action tsconfigs live under `node_modules/.sail/` (regenerate: `sail types` / build / dev)
+- Root `tsconfig.json` is a generated solution that references those kind configs
 "#;
 
 /// Result of [`ensure_sail_gitignore`].
@@ -201,7 +202,11 @@ mod tests {
         // Themes / config must never be in the default ignore set
         // (modern themes/ + legacy tokens/themes).
         assert!(!body.contains("tokens/themes"));
-        assert!(!body.lines().any(|l| l.trim() == "themes/" || l.trim() == "themes"));
+        assert!(
+            !body
+                .lines()
+                .any(|l| l.trim() == "themes/" || l.trim() == "themes")
+        );
         assert!(!body.contains("sail.config"));
     }
 

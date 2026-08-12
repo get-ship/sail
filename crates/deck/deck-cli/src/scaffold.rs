@@ -351,7 +351,7 @@ fn validate_app_name(name: &str) -> Result<()> {
 ///   .gitignore           # includes .deck/ (build output — never commit)
 /// ```
 ///
-/// Also seeds `node_modules/.sail/types.d.ts`, strict `tsconfig.json`
+/// Also seeds `node_modules/.sail/types.d.ts`, solution `tsconfig.json`
 /// (TOOLING-1 WI2), and `.oxlintrc.json` so typecheck + oxlint work out of the
 /// box with zero hand edits. Does **not** publish to a registry (operator).
 pub fn run_create(name: PathBuf) -> Result<()> {
@@ -391,7 +391,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
          \"dev\": \"sail dev\",\n    \
          \"build\": \"sail build\",\n    \
          \"check\": \"sail check .\",\n    \
-         \"typecheck\": \"tsc --noEmit -p tsconfig.json\",\n    \
+         \"typecheck\": \"tsc --noEmit -p node_modules/.sail/tsconfig.pure.json && tsc --noEmit -p node_modules/.sail/tsconfig.action.json\",\n    \
          \"lint\": \"oxlint .\"\n  \
          }},\n  \
          \"dependencies\": {{\n    \
@@ -438,16 +438,10 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     sail_ops::ensure_project_store(&app_dir)
         .map_err(|e| anyhow!("ensure project store (.gitignore / .sail): {e}"))?;
 
-    // Ambient pack + strict tsconfig + oxlint so `tsc` / `oxlint` work with
-    // zero hand edits (TOOLING-1 WI2). Pack lives under `node_modules/.sail/`
-    // (SPEC-OUTPUT-1 §4); regenerate with `sail types` after install.
-    let _ = sail_compiler::ambients::write_project_types(&app_dir)?;
-    let tsconfig = sail_compiler::ambients::emit_project_tsconfig_json(&[
-        "src/**/*.ts",
-        "routes/**/*.ts",
-    ]);
-    fs::write(app_dir.join("tsconfig.json"), tsconfig)
-        .with_context(|| format!("write {}/tsconfig.json", app_dir.display()))?;
+    // Ambient pack + pure/action kind tsconfigs under node_modules/.sail/ +
+    // solution root tsconfig.json + oxlint (G2c / TOOLING-1 WI2). Zero hand
+    // edits; regenerate with `sail types` / build / dev after install.
+    let _ = sail_compiler::ambients::write_project_type_configs(&app_dir)?;
     let _ = sail_compiler::ambients::write_project_oxlintrc(&app_dir)?;
 
     let rel = app_dir
@@ -467,7 +461,9 @@ pub fn run_create(name: PathBuf) -> Result<()> {
             .display()
     );
     println!("[create]   .gitignore  (includes .deck/)");
-    println!("[create]   tsconfig.json  node_modules/.sail/types.d.ts  .oxlintrc.json");
+    println!(
+        "[create]   tsconfig.json (solution)  node_modules/.sail/{{types.d.ts,tsconfig.*.json}}  .oxlintrc.json"
+    );
     println!("[create] next steps:");
     println!("  1. cd {rel}");
     println!("  2. bun install   # after @ship packages are published");

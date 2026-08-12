@@ -355,15 +355,31 @@ fn scaffold_components_package_writes_package_json_tsconfig_and_src() {
 
     for rel in ["package.json", "tsconfig.json", "src/index.ts"] {
         let p = base.join(rel);
-        assert!(p.exists(), "missing {} after scaffold components-package", p.display());
+        assert!(
+            p.exists(),
+            "missing {} after scaffold components-package",
+            p.display()
+        );
         let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold components-package", p.display());
+        assert!(
+            len > 0,
+            "empty {} after scaffold components-package",
+            p.display()
+        );
     }
     // Placeholder example primitive under src/<name>-example/.
     let p = example_dir.join(format!("{name}-example.sail"));
-    assert!(p.exists(), "missing {} after scaffold components-package", p.display());
+    assert!(
+        p.exists(),
+        "missing {} after scaffold components-package",
+        p.display()
+    );
     let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-    assert!(len > 0, "empty {} after scaffold components-package", p.display());
+    assert!(
+        len > 0,
+        "empty {} after scaffold components-package",
+        p.display()
+    );
     assert!(
         !example_dir
             .join(format!("{name}-example.controller.ts"))
@@ -579,7 +595,11 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "themes/ship.json",
     ] {
         let p = app.join(rel);
-        assert!(p.exists(), "missing {rel} after sail create: {}", p.display());
+        assert!(
+            p.exists(),
+            "missing {rel} after sail create: {}",
+            p.display()
+        );
         let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
         assert!(len > 0, "empty {rel} after sail create");
     }
@@ -614,8 +634,21 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "create package.json missing typescript/oxlint devDeps:\n{pkg}"
     );
 
-    // TOOLING-1 WI2: strict tsconfig + ambient pack + oxlint config
+    // G2c / TOOLING-1 WI2: solution root + kind configs under node_modules/.sail/
+    // + ambient pack + oxlint. Root is references-only; flags live on pure/action.
     let tsconfig = std::fs::read_to_string(app.join("tsconfig.json")).expect("tsconfig.json");
+    assert!(
+        tsconfig.contains("references")
+            && tsconfig.contains("node_modules/.sail/tsconfig.pure.json")
+            && tsconfig.contains("node_modules/.sail/tsconfig.action.json"),
+        "create root tsconfig must be a solution referencing pure+action under .sail/:\n{tsconfig}"
+    );
+    assert!(
+        !app.join("tsconfig.pure.json").exists() && !app.join("tsconfig.action.json").exists(),
+        "create must not emit root-level tsconfig.pure/action.json (G2c)"
+    );
+    let pure = std::fs::read_to_string(app.join("node_modules/.sail/tsconfig.pure.json"))
+        .expect("node_modules/.sail/tsconfig.pure.json");
     for flag in [
         "\"strict\": true",
         "\"noUncheckedIndexedAccess\": true",
@@ -627,16 +660,21 @@ fn create_writes_four_entry_tree_and_check_is_green() {
         "\"moduleResolution\": \"Bundler\"",
         "\"target\": \"ESNext\"",
         "\"skipLibCheck\": true",
-        "node_modules/.sail/types.d.ts",
+        "types.d.ts",
     ] {
         assert!(
-            tsconfig.contains(flag),
-            "create tsconfig missing WI2 flag/pack {flag}:\n{tsconfig}"
+            pure.contains(flag),
+            "create pure kind tsconfig missing WI2 flag/pack {flag}:\n{pure}"
         );
     }
     assert!(
         app.join("node_modules/.sail/types.d.ts").is_file(),
         "create must emit ambient pack node_modules/.sail/types.d.ts"
+    );
+    assert!(
+        app.join("node_modules/.sail/tsconfig.action.json")
+            .is_file(),
+        "create must emit action kind tsconfig under node_modules/.sail/"
     );
     let oxlint = std::fs::read_to_string(app.join(".oxlintrc.json")).expect(".oxlintrc.json");
     assert!(

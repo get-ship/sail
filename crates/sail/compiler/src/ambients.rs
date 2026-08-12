@@ -641,7 +641,17 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
     Ok(path)
 }
 
-/// Build a project-root `tsconfig.json` body that registers the ambient pack.
+/// Directory for generated type machinery (ambient pack + pure/action
+/// tsconfigs). Lives under `node_modules/.sail/` so `rm -rf node_modules`
+/// clears it; users never author these files (G2c).
+pub const PROJECT_SAIL_DIR_REL: &str = "node_modules/.sail";
+
+/// Relative path from [`PROJECT_SAIL_DIR_REL`] up to the project root.
+/// Pure/action configs live under `.sail/`; include/exclude/baseUrl use this
+/// prefix so globs still cover the project tree.
+const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
+
+/// Build a Pure-env child tsconfig body (written under [`PROJECT_SAIL_DIR_REL`]).
 ///
 /// Default uses [`TypeEnv::Pure`] (ESNext only — no DOM) so product projects
 /// enforce unnameable `document`/`window` (SPEC-PLATFORM-NEUTRALITY-1).
@@ -649,25 +659,34 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 /// [`emit_project_tsconfig_json_for`]([`TypeEnv::Framework`]) or path-aware
 /// selection via [`type_env_for_path`].
 ///
-/// `include_globs` are relative to the project (e.g. `src/**/*.ts`).
-/// The generated ambient pack ([`PROJECT_TYPES_REL`]) is listed under `files`
-/// (not `include`) so tsc still loads it when `exclude` contains `node_modules`
-/// — pack lives under `node_modules/.sail/` (SPEC-OUTPUT-1 §4 Option B).
+/// `include_globs` are **project-root relative** (e.g. `src/**/*.ts`); emit
+/// rewrites them for the config's nest under [`PROJECT_SAIL_DIR_REL`].
+/// The ambient pack is listed under `files` as a same-dir path (`./types.d.ts`)
+/// so `exclude: ../../node_modules` does not drop it (SPEC-OUTPUT-1 §4 Option B).
 ///
 /// `compilerOptions.baseUrl` + `paths` come from
 /// [`crate::project_map::at_alias_paths`] (SPEC-PROJECT-STRUCTURE-1 §3) so
-/// editors/tsc and deck resolve share one alias map.
+/// editors/tsc and deck resolve share one alias map. `baseUrl` points at the
+/// project root (`../..` from `.sail/`).
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
     emit_project_tsconfig_json_for(TypeEnv::Pure, include_globs)
 }
 
-/// Project `tsconfig.json` body for a specific [`TypeEnv`].
+/// Pure/action child tsconfig body for a specific [`TypeEnv`].
+///
+/// Emitted under [`PROJECT_SAIL_DIR_REL`] (see path rewriting notes on
+/// [`emit_project_tsconfig_json`]).
 ///
 /// - `lib` from [`lib_for_type_env`]
-/// - [`TypeEnv::Action`] also lists [`PROJECT_ACTION_OBSERVATION_REL`] under
-///   `files` so the observation set is nameable without the DOM lib
+/// - [`TypeEnv::Action`] also lists `./action-observation.d.ts` under `files`
+///   so the observation set is nameable without the DOM lib
 pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> String {
-    let includes: Vec<String> = include_globs.iter().map(|g| format!("\"{g}\"")).collect();
+    // Globs are project-root relative; config lives under node_modules/.sail/.
+    let root = SAIL_DIR_TO_PROJECT_ROOT;
+    let includes: Vec<String> = include_globs
+        .iter()
+        .map(|g| format!("\"{root}/{g}\""))
+        .collect();
     let opts = sail_tsconfig_compiler_options_json_for(env);
     // Drop outer braces so we can inject baseUrl + paths from the SSOT.
     let opts_inner = opts
@@ -675,14 +694,16 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         .trim_start_matches('{')
         .trim_end_matches('}')
         .trim();
+    // paths targets stay project-root relative; baseUrl is the project root.
     let path_entries: Vec<String> = crate::project_map::at_alias_paths()
         .iter()
         .map(|m| format!("      \"{}\": [\"{}\"]", m.pattern, m.target))
         .collect();
     let paths_block = path_entries.join(",\n");
-    let mut files = vec![format!("\"{PROJECT_TYPES_REL}\"")];
+    // Packs sit beside this config — same-dir paths, not project-root paths.
+    let mut files = vec!["\"./types.d.ts\"".to_string()];
     if env == TypeEnv::Action {
-        files.push(format!("\"{PROJECT_ACTION_OBSERVATION_REL}\""));
+        files.push("\"./action-observation.d.ts\"".to_string());
     }
     let env_note = match env {
         TypeEnv::Pure => "TypeEnv::Pure — ESNext only; document unnameable.",
@@ -694,36 +715,63 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
     // Pure product config must not typecheck actions under the Pure env
     // (no observation pack). Action files live solely under tsconfig.action.json.
     let exclude = match env {
-        TypeEnv::Pure => {
-            "\"node_modules\", \"dist\", \".deck\", \"src/actions\", \"src/actions/**\""
-        }
-        _ => "\"node_modules\", \"dist\", \".deck\"",
+        TypeEnv::Pure => format!(
+            "\"{root}/node_modules\", \"{root}/dist\", \"{root}/.deck\", \
+             \"{root}/src/actions\", \"{root}/src/actions/**\""
+        ),
+        _ => format!("\"{root}/node_modules\", \"{root}/dist\", \"{root}/.deck\""),
     };
     format!(
         "{{\n  \
-         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. {env_note} Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
-         \"compilerOptions\": {{\n    {opts_inner},\n    \"baseUrl\": \".\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
+         \"$comment\": \"Sail kind tsconfig under {sail_dir}/ (G2c / TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. {env_note} Lives beside types.d.ts; root tsconfig.json is a solution that references this file. Gate never reads it.\",\n  \
+         \"compilerOptions\": {{\n    {opts_inner},\n    \"baseUrl\": \"{root}\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
          \"files\": [{files}],\n  \
          \"include\": [{inc}],\n  \
          \"exclude\": [{exclude}]\n\
          }}\n",
-        pack = PROJECT_TYPES_REL,
+        sail_dir = PROJECT_SAIL_DIR_REL,
         paths = paths_block,
         files = files.join(", "),
         inc = includes.join(", "),
     )
 }
 
-/// Relative path of the generated Pure-env project tsconfig (E1b/E1c).
-pub const PROJECT_TSCONFIG_PURE_REL: &str = "tsconfig.pure.json";
-/// Relative path of the generated Action-env project tsconfig (E1b/E1c).
-pub const PROJECT_TSCONFIG_ACTION_REL: &str = "tsconfig.action.json";
+/// Root project `tsconfig.json` — solution entry only (G2c).
+///
+/// IDEs open this file and resolve pure + action children under
+/// [`PROJECT_SAIL_DIR_REL`] via `references`. No compilerOptions here; the
+/// type gate never loads this file.
+pub fn emit_project_solution_tsconfig_json() -> String {
+    format!(
+        "{{\n  \
+         \"$comment\": \"Sail project solution tsconfig (G2c / TOOLING-1). GENERATED — hand edits are overwritten on build/dev. IDE entry only: references pure + action configs under {sail_dir}/. Users never edit this file. The type gate never reads it.\",\n  \
+         \"files\": [],\n  \
+         \"references\": [\n    \
+         {{ \"path\": \"./{pure}\" }},\n    \
+         {{ \"path\": \"./{action}\" }}\n  \
+         ]\n\
+         }}\n",
+        sail_dir = PROJECT_SAIL_DIR_REL,
+        pure = PROJECT_TSCONFIG_PURE_REL,
+        action = PROJECT_TSCONFIG_ACTION_REL,
+    )
+}
+
+/// Relative path of the generated Pure-env project tsconfig (G2c — under `.sail/`).
+pub const PROJECT_TSCONFIG_PURE_REL: &str = "node_modules/.sail/tsconfig.pure.json";
+/// Relative path of the generated Action-env project tsconfig (G2c — under `.sail/`).
+pub const PROJECT_TSCONFIG_ACTION_REL: &str = "node_modules/.sail/tsconfig.action.json";
+
+/// Legacy root-level kind configs (pre-G2c). Removed on regenerate when marked GENERATED.
+const LEGACY_ROOT_TSCONFIG_PURE: &str = "tsconfig.pure.json";
+const LEGACY_ROOT_TSCONFIG_ACTION: &str = "tsconfig.action.json";
 
 /// Default include globs for Pure product typecheck (controllers synthesized
 /// at the gate, compositions, stores, and general `src/**/*.ts`).
 /// Actions are **excluded** via `exclude` in [`emit_project_tsconfig_json_for`]
-/// so IDE/`tsgo -p tsconfig.pure.json` never typechecks `src/actions/**`
-/// under Pure (no observation pack). Actions ride [`PROJECT_TSCONFIG_ACTION_REL`].
+/// so IDE/`tsgo -p node_modules/.sail/tsconfig.pure.json` never typechecks
+/// `src/actions/**` under Pure (no observation pack). Actions ride
+/// [`PROJECT_TSCONFIG_ACTION_REL`].
 pub const PROJECT_PURE_INCLUDE: &[&str] = &[
     "src/**/*.ts",
     "routes/**/*.ts",
@@ -734,16 +782,43 @@ pub const PROJECT_PURE_INCLUDE: &[&str] = &[
 /// Default include globs for Action typecheck.
 pub const PROJECT_ACTION_INCLUDE: &[&str] = &["src/actions/**/*.ts"];
 
-/// Write ambient packs + per-kind project tsconfigs under `project`.
+/// Whether a root `tsconfig.json` body is sail-owned (safe to overwrite).
+fn is_sail_owned_tsconfig(body: &str) -> bool {
+    body.contains("GENERATED")
+        || body.contains("Sail project tsconfig")
+        || body.contains("Sail project solution")
+        || body.contains("Sail kind tsconfig")
+        || body.contains("TOOLING-1")
+}
+
+/// Drop pre-G2c root-level pure/action mirrors when they were compiler-owned.
+fn remove_legacy_root_kind_tsconfigs(project: &Path) {
+    for name in [LEGACY_ROOT_TSCONFIG_PURE, LEGACY_ROOT_TSCONFIG_ACTION] {
+        let path = project.join(name);
+        match fs::read_to_string(&path) {
+            Ok(body) if is_sail_owned_tsconfig(&body) => {
+                let _ = fs::remove_file(&path);
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Write ambient packs + pure/action kind tsconfigs under
+/// [`PROJECT_SAIL_DIR_REL`], plus a solution-style root `tsconfig.json`.
 ///
-/// **Regeneration is the law** (E1c): every build / `sail types` call
+/// **Regeneration is the law** (E1c/G2c): every build / `sail types` call
 /// overwrites these files. Hand-edited `lib` entries (e.g. sneaking DOM back
-/// in) are wiped. Returns paths written: types pack, pure tsconfig, action
-/// tsconfig.
+/// in) are wiped. Root pure/action filenames die — only the solution entry
+/// remains user-visible at the project root. Returns paths written: types pack,
+/// pure tsconfig, action tsconfig.
 pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, PathBuf)> {
     let types = write_project_types(project)?;
     let pure_path = project.join(PROJECT_TSCONFIG_PURE_REL);
     let action_path = project.join(PROJECT_TSCONFIG_ACTION_REL);
+    if let Some(parent) = pure_path.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
+    }
     fs::write(
         &pure_path,
         emit_project_tsconfig_json_for(TypeEnv::Pure, PROJECT_PURE_INCLUDE),
@@ -754,26 +829,21 @@ pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, P
         emit_project_tsconfig_json_for(TypeEnv::Action, PROJECT_ACTION_INCLUDE),
     )
     .with_context(|| format!("write {}", action_path.display()))?;
-    // Default project tsconfig.json also regenerated to Pure (product default).
+    // Root tsconfig.json is a solution that references pure + action children.
     let default_path = project.join("tsconfig.json");
     // Only overwrite when the file carries our GENERATED marker or is absent —
     // never clobber a hand-authored root that is not sail-owned. Presence of
     // the marker (or the older TOOLING-1 header) means compiler owns it.
     let should_write_default = match fs::read_to_string(&default_path) {
-        Ok(body) => {
-            body.contains("GENERATED")
-                || body.contains("Sail project tsconfig")
-                || body.contains("TOOLING-1")
-        }
+        Ok(body) => is_sail_owned_tsconfig(&body),
         Err(_) => true,
     };
     if should_write_default {
-        fs::write(
-            &default_path,
-            emit_project_tsconfig_json(PROJECT_PURE_INCLUDE),
-        )
-        .with_context(|| format!("write {}", default_path.display()))?;
+        fs::write(&default_path, emit_project_solution_tsconfig_json())
+            .with_context(|| format!("write {}", default_path.display()))?;
     }
+    // Pre-G2c root kind files are dead; drop when sail-owned.
+    remove_legacy_root_kind_tsconfigs(project);
     Ok((types, pure_path, action_path))
 }
 
@@ -1973,13 +2043,12 @@ mod tests {
             "default emit_project_tsconfig_json must be Pure (no DOM):\n{body}"
         );
         assert!(
-            body.contains(PROJECT_TYPES_REL)
-                && body.contains("\"files\"")
-                && body.contains(format!("\"{PROJECT_TYPES_REL}\"").as_str()),
-            "project tsconfig must list ambient pack under files:\n{body}"
+            body.contains("\"files\"")
+                && (body.contains("\"./types.d.ts\"") || body.contains("types.d.ts")),
+            "kind tsconfig must list ambient pack under files (same-dir under .sail/):\n{body}"
         );
         assert!(
-            body.contains("\"src/**/*.ts\"") && body.contains("\"routes/**/*.ts\""),
+            body.contains("src/**/*.ts") && body.contains("routes/**/*.ts"),
             "project tsconfig must include authored globs:\n{body}"
         );
         // Pure default must exclude actions so IDE pure check matches compiler env.
@@ -1987,6 +2056,88 @@ mod tests {
             body.contains("src/actions"),
             "Pure project tsconfig must exclude src/actions:\n{body}"
         );
+        // Nested under node_modules/.sail/ — baseUrl points at project root.
+        assert!(
+            body.contains(&format!("\"baseUrl\": \"{SAIL_DIR_TO_PROJECT_ROOT}\"")),
+            "kind tsconfig baseUrl must be project root from .sail/:\n{body}"
+        );
+    }
+
+    #[test]
+    fn solution_tsconfig_references_pure_and_action_under_sail_dir() {
+        let body = emit_project_solution_tsconfig_json();
+        assert!(
+            body.contains("GENERATED") && body.contains("references"),
+            "solution must be GENERATED with references:\n{body}"
+        );
+        assert!(
+            body.contains(PROJECT_TSCONFIG_PURE_REL) && body.contains(PROJECT_TSCONFIG_ACTION_REL),
+            "solution must reference pure + action under .sail/:\n{body}"
+        );
+        assert!(
+            !body.contains("\"compilerOptions\""),
+            "solution must not carry compilerOptions (children own env):\n{body}"
+        );
+        assert!(
+            PROJECT_TSCONFIG_PURE_REL.starts_with(PROJECT_SAIL_DIR_REL)
+                && PROJECT_TSCONFIG_ACTION_REL.starts_with(PROJECT_SAIL_DIR_REL),
+            "kind configs must live under {PROJECT_SAIL_DIR_REL}"
+        );
+    }
+
+    #[test]
+    fn write_project_type_configs_emits_sail_dir_kinds_and_solution_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let project = dir.path();
+        // Pre-G2c legacy root kind files — must be removed when sail-owned.
+        fs::write(
+            project.join(LEGACY_ROOT_TSCONFIG_PURE),
+            r#"{ "$comment": "GENERATED legacy pure" }"#,
+        )
+        .unwrap();
+        fs::write(
+            project.join(LEGACY_ROOT_TSCONFIG_ACTION),
+            r#"{ "$comment": "GENERATED legacy action" }"#,
+        )
+        .unwrap();
+
+        let (types, pure, action) = write_project_type_configs(project).unwrap();
+        assert!(types.ends_with(std::path::Path::new(PROJECT_TYPES_REL)) || types.exists());
+        assert!(pure.exists() && pure.ends_with("tsconfig.pure.json"));
+        assert!(action.exists() && action.ends_with("tsconfig.action.json"));
+        let pure_s = pure.to_string_lossy();
+        assert!(
+            pure_s.contains("node_modules") && pure_s.contains(".sail"),
+            "pure must live under .sail/: {}",
+            pure.display()
+        );
+
+        let solution = fs::read_to_string(project.join("tsconfig.json")).unwrap();
+        assert!(
+            solution.contains("references") && solution.contains(PROJECT_TSCONFIG_PURE_REL),
+            "root must be solution:\n{solution}"
+        );
+        assert!(
+            !project.join(LEGACY_ROOT_TSCONFIG_PURE).exists()
+                && !project.join(LEGACY_ROOT_TSCONFIG_ACTION).exists(),
+            "legacy root kind tsconfigs must be deleted"
+        );
+
+        // Hand-authored root is preserved.
+        let hand = dir.path().join("hand");
+        fs::create_dir_all(&hand).unwrap();
+        fs::write(
+            hand.join("tsconfig.json"),
+            r#"{ "compilerOptions": { "strict": true } }"#,
+        )
+        .unwrap();
+        let _ = write_project_type_configs(&hand).unwrap();
+        let kept = fs::read_to_string(hand.join("tsconfig.json")).unwrap();
+        assert!(
+            kept.contains("\"strict\": true") && !kept.contains("references"),
+            "hand-authored root must not be clobbered:\n{kept}"
+        );
+        assert!(hand.join(PROJECT_TSCONFIG_PURE_REL).exists());
     }
 
     #[test]
@@ -2004,13 +2155,13 @@ mod tests {
         }
         let action_body = emit_project_tsconfig_json_for(TypeEnv::Action, &["src/actions/**/*.ts"]);
         assert!(
-            action_body.contains(PROJECT_ACTION_OBSERVATION_REL),
+            action_body.contains("action-observation.d.ts"),
             "Action tsconfig must list observation ambient:\n{action_body}"
         );
         let pure_body =
             emit_project_tsconfig_json_for(TypeEnv::Pure, &["src/compositions/**/*.ts"]);
         assert!(
-            !pure_body.contains(PROJECT_ACTION_OBSERVATION_REL),
+            !pure_body.contains("action-observation.d.ts"),
             "Pure tsconfig must not list action observation pack:\n{pure_body}"
         );
     }

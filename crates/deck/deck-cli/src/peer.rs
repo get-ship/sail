@@ -98,16 +98,25 @@ pub fn types(
             }
             let text = sail_compiler::ambients::emit_types_dts();
             std::fs::write(&p, &text).with_context(|| format!("write {}", p.display()))?;
+            // Still regenerate solution + kind configs next to the project (G2c).
+            let _ = sail_compiler::ambients::write_project_type_configs(&project_dir)?;
             p
         }
-        None => sail_compiler::ambients::write_project_types(&project_dir)?,
+        None => {
+            let (types, pure, action) =
+                sail_compiler::ambients::write_project_type_configs(&project_dir)?;
+            println!("sail types: tsconfig.pure → {}", pure.display());
+            println!("sail types: tsconfig.action → {}", action.display());
+            types
+        }
     };
     println!("sail types: {}", path.display());
     if let Some(ts_out) = tsconfig_out {
-        let body = sail_compiler::ambients::emit_project_tsconfig_json(&[
-            "src/**/*.ts",
-            "routes/**/*.ts",
-        ]);
+        // Explicit dump path: pure kind body (IDE child under .sail/), not the
+        // solution root — solution is always written as project/tsconfig.json.
+        let body = sail_compiler::ambients::emit_project_tsconfig_json(
+            sail_compiler::ambients::PROJECT_PURE_INCLUDE,
+        );
         if ts_out.as_os_str() == "-" {
             print!("{body}");
         } else {
@@ -117,8 +126,7 @@ pub fn types(
                         .with_context(|| format!("mkdir {}", parent.display()))?;
                 }
             }
-            std::fs::write(&ts_out, body)
-                .with_context(|| format!("write {}", ts_out.display()))?;
+            std::fs::write(&ts_out, body).with_context(|| format!("write {}", ts_out.display()))?;
             println!("sail types: tsconfig → {}", ts_out.display());
         }
     }
@@ -315,11 +323,7 @@ pub fn fmt(input: PathBuf, check: bool) -> Result<()> {
         }
         println!("sail fmt --check: {} file(s) ok", files.len());
     } else {
-        println!(
-            "sail fmt: {} file(s), {} rewritten",
-            files.len(),
-            changed
-        );
+        println!("sail fmt: {} file(s), {} rewritten", files.len(), changed);
     }
     Ok(())
 }
@@ -328,8 +332,7 @@ pub fn fmt(input: PathBuf, check: bool) -> Result<()> {
 fn fmt_one(path: &Path, check: bool, oxfmt_warned: &mut bool) -> Result<bool> {
     let original =
         std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
-    let result = sail_compiler::format_source(&original)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let result = sail_compiler::format_source(&original).map_err(|e| anyhow::anyhow!("{e}"))?;
     if result.oxfmt_missing && !*oxfmt_warned {
         eprintln!(
             "sail fmt: warning: oxfmt not found (node_modules/.bin or PATH) — \
@@ -344,8 +347,7 @@ fn fmt_one(path: &Path, check: bool, oxfmt_warned: &mut bool) -> Result<bool> {
         println!("would reformat {}", path.display());
         return Ok(true);
     }
-    std::fs::write(path, &result.source)
-        .with_context(|| format!("write {}", path.display()))?;
+    std::fs::write(path, &result.source).with_context(|| format!("write {}", path.display()))?;
     println!("formatted {}", path.display());
     Ok(true)
 }
@@ -430,8 +432,8 @@ fn find_project_root_for_hygiene(start: &Path) -> Option<PathBuf> {
     for _ in 0..16 {
         let has_pkg = cur.join("package.json").is_file();
         let has_routes = cur.join("routes").is_dir();
-        let has_cfg = cur.join("sail.config.jsonc").is_file()
-            || cur.join("sail.config.json").is_file();
+        let has_cfg =
+            cur.join("sail.config.jsonc").is_file() || cur.join("sail.config.json").is_file();
         if has_pkg && (has_routes || has_cfg) {
             return Some(cur.to_path_buf());
         }
