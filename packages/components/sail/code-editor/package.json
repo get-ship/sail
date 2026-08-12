@@ -5,11 +5,11 @@
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",
-  "types": "dist/index.d.ts",
+  "types": "types/index.d.ts",
   "customElements": "dist/custom-elements.json",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./types/index.d.ts",
       "default": "./src/index.ts"
     }
   },

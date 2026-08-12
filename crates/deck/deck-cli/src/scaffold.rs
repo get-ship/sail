@@ -380,18 +380,20 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     // monorepo package versions; operator npm publish is out of band (E8).
     // typescript + oxlint as devDeps so a fresh app type-checks / lints with
     // zero hand edits after install (TOOLING-1 WI2).
+    // typecheck runs `sail types` first so pure/action configs + (monorepo)
+    // package dts exist; bare tsc alone is wrong after clone or dist wipe.
     let pkg_json = format!(
         "{{\n  \
          \"name\": \"{basen}\",\n  \
          \"private\": true,\n  \
          \"version\": \"0.1.0\",\n  \
          \"type\": \"module\",\n  \
-         \"description\": \"Sail app scaffolded by `sail create`.\",\n  \
+         \"description\": \"Sail app scaffolded by `sail create`. Run `bun run typecheck` (chains `sail types`); re-run after install or package-type changes.\",\n  \
          \"scripts\": {{\n    \
          \"dev\": \"sail dev\",\n    \
          \"build\": \"sail build\",\n    \
          \"check\": \"sail check .\",\n    \
-         \"typecheck\": \"tsc --noEmit -p node_modules/.sail/tsconfig.pure.json && tsc --noEmit -p node_modules/.sail/tsconfig.action.json\",\n    \
+         \"typecheck\": \"sail types && tsc --noEmit -p node_modules/.sail/tsconfig.pure.json && tsc --noEmit -p node_modules/.sail/tsconfig.action.json\",\n    \
          \"lint\": \"oxlint .\"\n  \
          }},\n  \
          \"dependencies\": {{\n    \
@@ -467,7 +469,7 @@ pub fn run_create(name: PathBuf) -> Result<()> {
     println!("[create] next steps:");
     println!("  1. cd {rel}");
     println!("  2. bun install   # after @ship packages are published");
-    println!("  3. bun run typecheck && bun run lint");
+    println!("  3. bun run typecheck && bun run lint  # typecheck runs sail types first");
     println!("  4. sail dev");
     println!("  5. sail check .");
     Ok(())

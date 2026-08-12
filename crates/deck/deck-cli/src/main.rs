@@ -151,12 +151,13 @@ enum Command {
     },
 
     /// Emit the sail ambient TypeScript pack (`node_modules/.sail/types.d.ts`)
-    /// for tsc/tsgo.
+    /// for tsc/tsgo, plus monorepo package `dist/*.d.ts` when present.
     ///
     /// Regenerated from compiler manifests (runtime ambients + Style setters +
     /// token scales). Pair with `@ship/sail-tsconfig/base` or
     /// `deck build --typecheck`. tsc owns controller/logic types; sail-compiler
-    /// owns template/layout/vocabulary.
+    /// owns template/layout/vocabulary. In-workspace also runs
+    /// `scripts/emit-package-dts.mjs` so Pure does not fall back to Framework src.
     Types {
         /// Project directory that receives `node_modules/.sail/types.d.ts`.
         /// Default: cwd.

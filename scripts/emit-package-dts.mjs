@@ -8,7 +8,12 @@
  * must point at emitted declarations, not `src/*.ts`.
  *
  * Usage: `node scripts/emit-package-dts.mjs`
- * Wire: root `emit:package-dts` / before studio pure typecheck.
+ * Wire: root `prepare` / `emit:package-dts` / `sail types` (monorepo) /
+ *        before pure typecheck scripts.
+ *
+ * Exits non-zero if a listed package does not produce the expected
+ * `dist/index.d.ts` (or package-specific allowlisted entry). Packages that use
+ * checked-in public types (not dual `types→dist`) are not listed here.
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
@@ -18,7 +23,6 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const TSC = join(ROOT, 'node_modules/.bin/tsc')
 
-/** Packages Pure apps resolve into (studio listFiles / @ship imports). */
 /** Shared Framework declaration emit options (DOM allowed — these packages are Framework). */
 const FRAMEWORK_EMIT = {
   target: 'ES2022',
@@ -37,6 +41,15 @@ const FRAMEWORK_EMIT = {
   resolveJsonModule: true,
 }
 
+/**
+ * Packages Pure apps resolve into (studio listFiles / @ship imports).
+ * Dual `exports.types → dist/*.d.ts`. Missing dist → TypeScript falls back to
+ * Framework `src/` (pure regression) — emit must run before pure/IDE typecheck.
+ *
+ * Not listed (checked-in types, not dual dist):
+ *   packages/components/sail/code-editor → types/index.d.ts
+ *   (generated `.controller.ts` is gitignored; public surface is hand-maintained)
+ */
 const PACKAGES = [
   {
     dir: 'packages/sail/runtime',
@@ -69,6 +82,7 @@ const PACKAGES = [
   },
   {
     dir: 'packages/sail/tokens',
+    // tokens also exports themes.d.ts; require index.d.ts for pure consumers.
     tempConfig: {
       compilerOptions: { ...FRAMEWORK_EMIT },
       include: ['src/**/*.ts'],
@@ -82,30 +96,6 @@ const PACKAGES = [
       include: ['src/**/*.ts'],
       exclude: ['dist', '**/test/**', '**/*.test.ts'],
     },
-  },
-  {
-    dir: 'packages/components/sail/code-editor',
-    // Missing generated .controller.ts — stub public types for Pure consumers.
-    stubIndex: `/** Side-effect registration + ops surface (G2d Pure types). */
-export type SailDiagnostic = {
-  from: number
-  to: number
-  message: string
-  severity?: 'error' | 'warning' | 'info' | 'hint'
-}
-export type SailCompletionSource = unknown
-export type SailCodeEditorApi = {
-  setDiagnostics?: (diags: SailDiagnostic[]) => void
-}
-export declare function createOpsAuthoringClient(...args: never[]): unknown
-export declare function normalizeOpsBase(...args: never[]): string
-export declare function offsetToLineCol(...args: never[]): { line: number; column: number }
-export declare function parseOpsDiagnostics(...args: never[]): SailDiagnostic[]
-export type OpsAuthoringClient = unknown
-export type OpsCompletionItem = unknown
-export type OpsDiagnostic = unknown
-export type OpsHoverResult = unknown
-`,
   },
   {
     dir: 'packages/components/sail/viewer',
@@ -125,20 +115,15 @@ export type OpsHoverResult = unknown
   },
 ]
 
+/** @returns {'ok' | 'fail' | 'skip'} */
 function emitOne(pkg) {
   const cwd = join(ROOT, pkg.dir)
   if (!existsSync(cwd)) {
-    console.warn(`[emit-package-dts] skip missing ${pkg.dir}`)
-    return
+    console.error(`[emit-package-dts] FAIL: missing package dir ${pkg.dir}`)
+    return 'fail'
   }
   const dist = join(cwd, 'dist')
   mkdirSync(dist, { recursive: true })
-
-  if (pkg.stubIndex) {
-    writeFileSync(join(dist, 'index.d.ts'), pkg.stubIndex)
-    console.log(`[emit-package-dts] stub ${pkg.dir}`)
-    return
-  }
 
   if (pkg.tempConfig) {
     const cfgPath = join(cwd, 'tsconfig.emit-dts.json')
@@ -150,9 +135,17 @@ function emitOne(pkg) {
         encoding: 'utf8',
       })
     } catch (e) {
-      // tsc still emits with local errors; surface stdout/stderr but continue.
+      // tsc often still emits usable .d.ts with local errors; log and require
+      // dist entry below. Missing entry → hard fail.
       const out = `${e.stdout ?? ''}${e.stderr ?? ''}`
-      if (out.trim()) console.warn(`[emit-package-dts] ${pkg.dir}:\n${out.split('\n').slice(0, 12).join('\n')}`)
+      if (out.trim()) {
+        console.warn(
+          `[emit-package-dts] ${pkg.dir} (tsc non-zero, checking dist):\n${out
+            .split('\n')
+            .slice(0, 12)
+            .join('\n')}`,
+        )
+      }
     } finally {
       try {
         rmSync(cfgPath)
@@ -162,13 +155,13 @@ function emitOne(pkg) {
     }
   }
 
-  if (!existsSync(join(dist, 'index.d.ts')) && !existsSync(join(dist, 'themes.d.ts'))) {
-    if (existsSync(join(cwd, 'src/index.ts'))) {
-      console.warn(`[emit-package-dts] WARN: no dist/index.d.ts for ${pkg.dir}`)
-    }
-  } else {
-    console.log(`[emit-package-dts] ok ${pkg.dir}`)
+  const indexDts = join(dist, 'index.d.ts')
+  if (!existsSync(indexDts)) {
+    console.error(`[emit-package-dts] FAIL: no dist/index.d.ts for ${pkg.dir}`)
+    return 'fail'
   }
+  console.log(`[emit-package-dts] ok ${pkg.dir}`)
+  return 'ok'
 }
 
 if (!existsSync(TSC)) {
@@ -176,5 +169,12 @@ if (!existsSync(TSC)) {
   process.exit(1)
 }
 
-for (const pkg of PACKAGES) emitOne(pkg)
+let failed = 0
+for (const pkg of PACKAGES) {
+  if (emitOne(pkg) === 'fail') failed++
+}
+if (failed > 0) {
+  console.error(`[emit-package-dts] failed for ${failed} package(s)`)
+  process.exit(1)
+}
 console.log('[emit-package-dts] done')

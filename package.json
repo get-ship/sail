@@ -31,6 +31,7 @@
   "scripts": {
     "wasm": "wasm-pack build crates/sail/compiler --target web --out-dir ../../../packages/sail/compiler-wasm/pkg --out-name sail_compiler -- --features wasm",
     "build:bundles": "cargo run -p deck-cli -- build-assets",
+    "prepare": "node scripts/emit-package-dts.mjs",
     "typecheck": "node scripts/typecheck-components.mjs",
     "typecheck:tsgo": "tsgo --noEmit -p packages/sail/runtime/tsconfig.json && tsgo --noEmit -p packages/sail/dom/tsconfig.json",
     "emit:package-dts": "node scripts/emit-package-dts.mjs",

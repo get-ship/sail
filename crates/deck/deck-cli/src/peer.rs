@@ -8,6 +8,7 @@
 //! - `doctor` / `version` → local diagnostics
 
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use anyhow::{Context, Result, bail};
 use sail_compiler::out_layout::resolve_out_dir;
@@ -77,6 +78,10 @@ fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
 }
 
 /// `sail types` — ambient pack for tsc/tsgo.
+///
+/// In the monorepo workspace, also runs `scripts/emit-package-dts.mjs` so dual
+/// `exports.types → dist/*.d.ts` packages resolve for Pure/IDE (no silent
+/// fallback to Framework `src/`).
 pub fn types(
     project: Option<PathBuf>,
     out: Option<PathBuf>,
@@ -130,6 +135,49 @@ pub fn types(
             println!("sail types: tsconfig → {}", ts_out.display());
         }
     }
+    // Dual-types packages: emit dist/*.d.ts when this is the monorepo (script present).
+    emit_monorepo_package_dts(&project_dir)?;
+    Ok(())
+}
+
+/// Run package declaration emit when `scripts/emit-package-dts.mjs` exists above
+/// the project (monorepo). Standalone apps skip — published packages ship dist.
+fn emit_monorepo_package_dts(project_dir: &Path) -> Result<()> {
+    let Some(root) = topmost_cargo_root(project_dir) else {
+        return Ok(());
+    };
+    let script = root.join("scripts/emit-package-dts.mjs");
+    if !script.is_file() {
+        return Ok(());
+    }
+    // Prefer workspace node; fall back to PATH.
+    let node = ["node", "nodejs"]
+        .into_iter()
+        .find(|bin| {
+            Command::new(bin)
+                .arg("-e")
+                .arg("process.exit(0)")
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false)
+        })
+        .unwrap_or("node");
+    let status = Command::new(node)
+        .arg(&script)
+        .current_dir(&root)
+        .status()
+        .with_context(|| format!("run {} (package dts emit)", script.display()))?;
+    if !status.success() {
+        bail!(
+            "sail types: package dts emit failed (exit {:?}). \
+             Pure typecheck requires dist/*.d.ts for dual-export @ship/* packages; \
+             fix emit errors or run `bun run emit:package-dts`.",
+            status.code()
+        );
+    }
+    println!("sail types: package dts emit ok");
     Ok(())
 }
 
