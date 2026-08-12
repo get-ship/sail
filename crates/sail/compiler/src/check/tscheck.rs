@@ -675,9 +675,8 @@ fn typecheck_region_harness(
     let out_dir = gate_temp_dir(source_path);
     std::fs::create_dir_all(&out_dir)?;
 
-    // Scope type aliases / type imports — product threads these into the
-    // controller module (`Program.scope_types`). Append so aliases hoist and
-    // controller body line numbers stay absolute (JOB-G2a harness fidelity).
+    // Scope type aliases / type imports — append so aliases hoist and
+    // controller body line numbers stay absolute.
     let scope_types = extract_scope_types_text(author_source);
 
     // Line-padding harness: full controller module begins at its absolute
@@ -691,7 +690,7 @@ fn typecheck_region_harness(
         harness.push('\n');
     }
     if !scope_types.is_empty() {
-        harness.push_str("\n// <scope> types (appended; aliases hoist)\n");
+        harness.push_str("\n// <scope> types\n");
         harness.push_str(&scope_types);
         if !harness.ends_with('\n') {
             harness.push('\n');
@@ -2046,10 +2045,9 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
             }
         }
     }
-    // Open `@ship/*` ambient lists runtime-shaped names only. Component package
-    // subpaths (`@ship/sail-primitives/…`) are real npm packages — missing
-    // named members on the wildcard stub are harness incompleteness, not
-    // product type errors. Precisely-typed modules keep TS2305/TS2614.
+    // Component package *subpaths* hit the open `@ship/*` ambient (runtime-shaped
+    // names only). Missing named members there are harness incompleteness, not
+    // product errors. Package roots + precise modules keep TS2305/TS2614.
     if d.code == "TS2305" || d.code == "TS2614" {
         if let Some(spec) = extract_no_exported_member_module(&d.message) {
             if is_open_ship_package_stub(&spec) {
@@ -2107,7 +2105,9 @@ fn is_ambient_module_stub_spec(spec: &str) -> bool {
     !s.starts_with('.') && !s.starts_with('/')
 }
 
-/// `@ship/*` wildcard ambient (not the precisely typed runtime modules).
+/// True open `@ship/*` component-subpath wildcards only.
+/// Package roots (`@ship/sail-studio-shell`, `@ship/tokens`, …) keep TS2305
+/// fidelity against the ambient surface; precise runtime modules always do.
 fn is_open_ship_package_stub(spec: &str) -> bool {
     let s = spec.trim();
     if s == "@ship/*" {
@@ -2116,10 +2116,15 @@ fn is_open_ship_package_stub(spec: &str) -> bool {
     if !s.starts_with("@ship/") {
         return false;
     }
-    !matches!(
+    // Precise modules — never suppress named-export errors.
+    if matches!(
         s,
         "@ship/sail-runtime" | "@ship/sail-runtime/internal" | "@ship/sail-dom" | "@ship/sail-test"
-    )
+    ) {
+        return false;
+    }
+    // Only `@ship/<pkg>/<subpath…>` (component deep imports), not package roots.
+    s["@ship/".len()..].contains('/')
 }
 
 /// `Module '"X"' has no exported member 'Y'.` (TS2305 / TS2614)

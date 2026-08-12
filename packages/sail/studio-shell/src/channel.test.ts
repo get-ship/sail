@@ -63,4 +63,37 @@ describe('studio channel message typing', () => {
     expect(isStudioMessage({ type: 'close' })).toBe(false)
     expect(isStudioMessage({ channel: 'other', type: 'close' })).toBe(false)
   })
+
+  it('isStudioMessage rejects unknown ops and incomplete required fields', () => {
+    expect(
+      isStudioMessage({ channel: STUDIO_CHANNEL, type: 'not-a-real-op' }),
+    ).toBe(false)
+    expect(isStudioMessage({ channel: STUDIO_CHANNEL, type: 'annotate' })).toBe(
+      false,
+    )
+    expect(
+      isStudioMessage({
+        channel: STUDIO_CHANNEL,
+        type: 'theme-preview',
+        themeId: 'ship',
+        density: 'default',
+      }),
+    ).toBe(false)
+    expect(
+      isStudioMessage({
+        channel: STUDIO_CHANNEL,
+        type: 'annotate',
+        rect: { left: 0, top: 0, width: 1, height: 1 },
+      }),
+    ).toBe(true)
+    expect(
+      isStudioMessage({
+        channel: STUDIO_CHANNEL,
+        type: 'theme-preview',
+        themeId: 'ship',
+        density: 'default',
+        patch: {},
+      }),
+    ).toBe(true)
+  })
 })
