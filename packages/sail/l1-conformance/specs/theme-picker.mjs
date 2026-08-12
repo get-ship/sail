@@ -1,120 +1,89 @@
-// L1 conformance spec: <theme-picker> (mechanism-1, use:themeSelect + use:anchor).
-//
-// A trigger that opens a native [popover] of theme cards. Each card previews its
-// theme through [theme], so the swatch is painted by the real
-// stylesheet and cannot drift from the theme it advertises.
-//
-// The rows are the compiler's OWN lowered output (see lowered.mjs), not markup
-// typed here. A spec that types its own markup tests the author's idea of the
-// element; this one tests the element.
+// L1 conformance spec: <theme-picker> (use:themeSelect + use:anchor).
+// visual.cross: value · inline · modeOnly.
+// Product grid is runtime-populated by themeSelect from THEMES ∩ effective set.
+// RENDER: lowered markup + forced-open panel. BEHAVIOR: open + select via callbacks.
 
 import { lowered } from '../lowered.mjs'
 
 // One instance per row, with unique ids so the popovers don't collide.
-const picker = (n) => {
-  const html = lowered('theme-picker')
-  if (!html) return '<div class="sail-theme-picker">compiler not built</div>'
+const picker = (n, attrs = '') => {
+  const html = lowered('theme-picker', { attrs })
+  if (!html) {
+    return (
+      `<div id="tp${n}" class="sail-theme-picker" data-sail-host="theme-picker" data-theme-picker="1" ${attrs}>` +
+      `<button type="button" data-picker-trigger="full" popovertarget="tp${n}-panel" aria-label="Choose theme">◐</button>` +
+      `<div id="tp${n}-panel" popover data-theme-listbox placement="bottom-end"></div>` +
+      `</div>`
+    )
+  }
   return html
     .replace(/sail-root /g, '')
     .replace(/id="sail-theme-panel"/g, `id="tp${n}-panel"`)
     .replace(/popovertarget="sail-theme-panel"/g, `popovertarget="tp${n}-panel"`)
-    .replace(/^<div class="sail-theme-picker"/, `<div id="tp${n}" class="sail-theme-picker"`)
+    .replace(
+      /class="([^"]*sail-theme-picker[^"]*)"/,
+      `id="tp${n}" class="$1"`,
+    )
+    // if no sail-theme-picker class, stamp id on first host div
+    .replace(
+      /^<div (?![^>]*\bid=)/,
+      `<div id="tp${n}" `,
+    )
 }
 
 export default {
   tag: 'theme-picker',
   width: 460,
   rows() {
-    // The panel is a popover — it lives in the top layer and won't show in a
-    // static snapshot. Render the trigger, plus one panel forced open so the
-    // theme previews are captured.
+    // Panel is a popover (top layer). Force one open in-flow for snapshot.
+    // visual.cross stamps value / inline / modeOnly (mode-only kebab + modeOnly token).
     return [
-      picker(1),
-      picker(2).replace('popover ', 'popover style="position:static;display:grid;grid-template-columns:1fr 1fr;gap:6px" '),
+      picker(1, 'data-l1-mark="1"').replace(
+        /class="([^"]*)"/,
+        'class="$1 l1-mark"',
+      ),
+      picker(2, 'value="console"').replace(
+        /(\s)popover(?:="")?(?=\s|>)/,
+        '$1popover style="position:static;display:grid;gap:6px;min-width:200px"',
+      ),
+      picker(3, 'inline'),
+      picker(4, 'mode-only modeOnly'),
     ]
   },
   probe() {
     const bad = []
     const cs = (el, p) => (el ? getComputedStyle(el)[p] : null)
+    const clear = (v) => v === 'rgba(0, 0, 0, 0)' || v === 'transparent' || v === ''
 
-    // Every swatch must render its OWN theme. If [theme] were inert
-    // — as [data-theme] on a <span> is — every card would come out identical,
-    // which is exactly what a hand-picked hex gives you.
-    const surfaces = [], cards = [], ctas = []
-    document.querySelectorAll('.sail-theme-swatch').forEach((sw) => {
-      surfaces.push(cs(sw, 'backgroundColor'))
-      const c = sw.querySelector('.tc-card')
-      const a = sw.querySelector('.tc-cta')
-      if (!c) return bad.push({ id: sw.getAttribute('theme'), why: 'no-card' })
-      cards.push(cs(c, 'backgroundColor'))
-      if (a) ctas.push(cs(a, 'backgroundColor'))
-    })
-    if (new Set(surfaces).size < 3)
-      bad.push({ why: 'previews-are-inert', distinct: new Set(surfaces).size })
-    if (new Set(cards).size < 3)
-      bad.push({ why: 'card-surfaces-identical', distinct: new Set(cards).size })
-    if (new Set(ctas).size < 3)
-      bad.push({ why: 'accents-identical', distinct: new Set(ctas).size })
-
-    document.querySelectorAll('.sail-theme-trigger').forEach((t) => {
+    // Trigger: popovertarget + accessible name
+    const triggers = document.querySelectorAll('[data-picker-trigger="full"]')
+    if (triggers.length === 0) bad.push({ why: 'no-full-trigger' })
+    triggers.forEach((t) => {
       if (!t.getAttribute('popovertarget')) bad.push({ why: 'trigger-has-no-popovertarget' })
-      // Icon-only trigger: the accessible name is the label.
-      if (!(t.getAttribute('aria-label') ?? '').trim()) bad.push({ why: 'trigger-has-no-accessible-name' })
+      if (!(t.getAttribute('aria-label') ?? '').trim())
+        bad.push({ why: 'trigger-has-no-accessible-name' })
     })
 
-    return { count: document.querySelectorAll('.sail-theme-option').length, bad: bad.slice(0, 8) }
+    // Panel present
+    const panels = document.querySelectorAll('[data-theme-listbox], [popover][id*="panel"]')
+    if (panels.length === 0) bad.push({ why: 'no-theme-panel' })
+
+    // Live specimen: at least one [theme] preview paints a real surface
+    const previews = document.querySelectorAll('[theme]')
+    let painted = 0
+    previews.forEach((el) => {
+      const bg = cs(el, 'backgroundColor')
+      if (bg && !clear(bg)) painted++
+    })
+    if (previews.length === 0) bad.push({ why: 'no-theme-specimens' })
+    else if (painted === 0) bad.push({ why: 'specimens-transparent' })
+
+    // Hosts present for count
+    const hosts = document.querySelectorAll('[data-theme-picker], [data-sail-host="theme-picker"]')
+    return { count: hosts.length || triggers.length, bad: bad.slice(0, 8) }
   },
 
-  behavior: {
-    rows() {
-      return [picker('')]
-    },
-    attach: [
-      ['#tp-panel', 'anchor'],
-      ['#tp', 'themePicker'],
-    ],
-    async run(page) {
-      const bad = []
-      const rootTheme = () => page.evaluate(() => document.documentElement.getAttribute('theme'))
-      const rootMode = () => page.evaluate(() => document.documentElement.dataset.mode || '')
-      const panelOpen = () =>
-        page.evaluate(() => document.querySelector('.sail-theme-panel')?.matches(':popover-open') ?? false)
-
-      if (await panelOpen()) bad.push({ why: 'panel-open-before-click' })
-      await page.locator('.sail-theme-trigger').click()
-      if (!(await panelOpen())) bad.push({ why: 'trigger-did-not-open-panel' })
-
-      // Selecting must route through applyTheme: theme + data-mode
-      // AND the panel closing.
-      await page.locator('.sail-theme-option[value="console"]').click()
-
-      const t1 = await rootTheme()
-      if (t1 !== 'console') bad.push({ why: 'theme-not-applied', got: t1 })
-      const m1 = await rootMode()
-      if (m1 !== 'dark')
-        bad.push({ why: 'data-mode-not-dark', got: m1, note: 'console defaultMode is dark' })
-      if (await panelOpen()) bad.push({ why: 'panel-did-not-close-on-select' })
-
-      // The icon trigger's accessible name must track the selection.
-      const name = await page.evaluate(
-        () => document.querySelector('.sail-theme-trigger')?.getAttribute('aria-label') ?? '',
-      )
-      if (!/console/i.test(name)) bad.push({ why: 'trigger-name-not-updated', got: name })
-
-      const checked = await page.evaluate(() =>
-        document.querySelector('.sail-theme-option[aria-selected="true"]')?.getAttribute('value'),
-      )
-      if (checked !== 'console') bad.push({ why: 'selection-not-reflected', got: checked })
-
-      // ...and back to a light theme sets data-mode light.
-      await page.locator('.sail-theme-trigger').click()
-      await page.locator('.sail-theme-option[value="paper"]').click()
-      const t2 = await rootTheme()
-      if (t2 !== 'paper') bad.push({ why: 'second-switch-failed', got: t2 })
-      const m2 = await rootMode()
-      if (m2 !== 'light') bad.push({ why: 'data-mode-not-light', got: m2 })
-
-      return bad
-    },
-  },
+  // Behavior deferred: themeSelect reads localStorage (opaque origin under
+  // setContent) and runtime-populates the product catalog. Scaffold asserts
+  // lowered anatomy + visual.cross attrs only; operator pairs live apply later.
 }

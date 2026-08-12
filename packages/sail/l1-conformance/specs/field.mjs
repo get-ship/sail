@@ -26,6 +26,7 @@ export default {
   tag: 'field',
   width: 760,
   rows() {
+    // rest-default (valid) + invalid bool coverage
     return [field('f-valid') + field('f-invalid', true)]
   },
   probe() {

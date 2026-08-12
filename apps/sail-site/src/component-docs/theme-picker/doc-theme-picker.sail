@@ -1,0 +1,163 @@
+<!--
+  <doc-theme-picker> — /components/theme-picker
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
+-->
+
+<controller>
+import type { Scope } from './doc-theme-picker.sail'
+import { DETAILS } from '../../compositions/component-details'
+
+export default controller((_ctx: Scope) => {
+  const value = signal('')
+  const inline = signal(false)
+  const modeOnly = signal(false)
+  const last = signal('')
+  const onThemeChange = (detail: {
+    theme?: string
+    mode?: string
+    preference?: string
+  }): void => {
+    const t = detail?.theme ?? ''
+    if (t) value.set(t)
+    last.set(
+      [detail?.theme, detail?.mode, detail?.preference].filter(Boolean).join(' · ') || '',
+    )
+  }
+
+  const entry = DETAILS['theme-picker']
+  const heading = () => entry.heading
+  const blurb = () => entry.blurb
+  const props = () => entry.props
+  const usageCode = () => entry.usage
+
+  const specimenCode = derived(() => {
+    const a: string[] = []
+    if (value()) a.push(`value="${value()}"`)
+    if (inline()) a.push('inline')
+    if (modeOnly()) a.push('mode-only')
+    a.push('on-theme-change={onThemeChange}')
+    return a.length ? `<theme-picker ${a.join(' ')}></theme-picker>` : `<theme-picker></theme-picker>`
+  })
+
+  const exDefault = () => `<theme-picker></theme-picker>`
+  const exValue = () =>
+    `<theme-picker value="console" on-theme-change={onThemeChange}></theme-picker>`
+  const exMode = () => `<theme-picker mode-only></theme-picker>`
+  const exInline = () => `<theme-picker inline></theme-picker>`
+
+  return {
+    value,
+    inline,
+    modeOnly,
+    last,
+    onThemeChange,
+    heading,
+    blurb,
+    props,
+    usageCode,
+    specimenCode,
+    exDefault,
+    exValue,
+    exMode,
+    exInline,
+  }
+})
+</controller>
+
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(full).maxW(full).pad(2).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+</scope>
+
+<column gap="6" style(page)>
+  <sail-component-viewer
+    name={heading()}
+    blurb={blurb()}
+    pack="Component primitives"
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
+    usage={usageCode()}
+    rows={props()}
+  >
+    <column slot="specimen" gap="3" align="center" style(specimen)>
+      <theme-picker
+        value={value() || null}
+        inline={inline() ? 'true' : null}
+        mode-only={modeOnly() ? 'true' : null}
+        on-theme-change={onThemeChange}
+      ></theme-picker>
+      <if {last()}>
+        <span style(sizeValue)>{last()}</span>
+      </if>
+    </column>
+
+    <column slot="knobs" gap="4" align="stretch">
+      <column gap="2">
+        <label style(knobLabel)>Value</label>
+        <select size="sm" bind:value={value} label="Value">
+          <option value="">(site default)</option>
+          <option value="ship">ship</option>
+          <option value="sail">sail</option>
+          <option value="console">console</option>
+          <option value="paper">paper</option>
+        </select>
+      </column>
+      <row gap="4" align="center">
+        <label><checkbox bind:checked={inline} size="sm" /> Inline</label>
+        <label><checkbox bind:checked={modeOnly} size="sm" /> Mode only</label>
+      </row>
+    </column>
+
+    <column slot="usage-preview" gap="3" align="start" style(specimen)>
+      <theme-picker></theme-picker>
+    </column>
+
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <doc-example
+        title="Default popover"
+        lead="Trigger opens a panel of live theme specimens."
+        code={exDefault()}
+      >
+        <theme-picker></theme-picker>
+      </doc-example>
+      <doc-example
+        title="Bound value"
+        lead="value + on-theme-change for controlled selection."
+        code={exValue()}
+      >
+        <theme-picker value="console" on-theme-change={onThemeChange}></theme-picker>
+      </doc-example>
+      <doc-example
+        title="Mode only"
+        lead="Light / dark / system cycle — no full catalog."
+        code={exMode()}
+      >
+        <theme-picker mode-only></theme-picker>
+      </doc-example>
+      <doc-example
+        title="Inline"
+        lead="Panel in document flow (no floating chrome)."
+        code={exInline()}
+      >
+        <theme-picker inline></theme-picker>
+      </doc-example>
+    </column>
+  </sail-component-viewer>
+
+  <row gap="2">
+    <a variant="default" href="/components">← All components</a>
+    <a variant="solid" tone="primary" href="/components">All components</a>
+  </row>
+</column>

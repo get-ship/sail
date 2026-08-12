@@ -11,12 +11,7 @@ export default controller(() => {
 })
 </controller>
 
-<button
-  variant="solid"
-  tone="primary"
-  on:click={save}
-  style({ animate: press({ scale: 'press' }) })
->
+<button variant="solid" tone="primary" on:click={save}>
   {saved() ? 'Saved ✓' : 'Save changes'}
 </button>`,
 
@@ -24,7 +19,7 @@ export default controller(() => {
   Read the <a href="/docs">docs</a>, or open the
   <a href="/components" variant="solid" tone="primary">component catalog</a>.
 </p>
-<!-- bare <a> = text link · variant set = button-link (component.button.* rest) -->`,
+<!-- bare <a> = text link · variant set = button-style link -->`,
 
   // Example programs for the detail walkthrough (not the primary usage block).
   'button.with-icon': `<button variant="solid" tone="primary">
@@ -32,7 +27,7 @@ export default controller(() => {
   Save
 </button>
 
-<button variant="outline">
+<button variant="outline" tone="primary">
   Export
   <icon name="download" size="sm"></icon>
 </button>`,
@@ -50,13 +45,18 @@ export default controller(() => {
 <button variant="solid" tone="primary" size="lg">lg</button>`,
 
   input: `<controller>
-export default controller(() => ({ name: signal(''), agreed: signal(false) }))
+export default controller(() => ({
+  email: signal(''),
+  agreed: signal(false),
+}))
 </controller>
 
-<input type="email" placeholder="Ada Lovelace" bind:value={name} size="md" />
+<input type="email" placeholder="you@ship.dev" bind:value={email} />
 <input type="email" value="not-an-email" invalid />
-<label><input type="checkbox" bind:checked={agreed} /> I agree</label>
-<!-- type gates skins; field → component.field.*; no filled/unstyled variant -->`,
+<label>
+  <checkbox bind:checked={agreed} />
+  I agree
+</label>`,
 
   textarea: `<controller>
 export default controller(() => ({ bio: signal('') }))
@@ -68,14 +68,12 @@ export default controller(() => ({ bio: signal('') }))
   rows="3"
   bind:value={bio}
 ></textarea>
-<p>{bio().length} characters</p>
-<!-- rest → component.field.*; invalid → destructive border; use:autosize optional -->`,
+<p>{bio().length} characters</p>`,
 
   select: `<controller>
 export default controller(() => ({ team: signal('Design') }))
 </controller>
 
-<!-- size xs|sm|md|lg · invalid · disabled · multiple — rest → component.field.* -->
 <select bind:value={team} size="md">
   <option>Engineering</option>
   <option>Design</option>
@@ -86,32 +84,39 @@ export default controller(() => ({ team: signal('Design') }))
 
   combobox: `<controller>
 export default controller(() => {
-  const fw = signal('')
-  return { fw, pick: (e) => fw.set(e.value) }
+  const fruit = signal('')
+  return {
+    fruit,
+    onSelect: (e) => fruit.set(e?.label ?? e?.value ?? ''),
+  }
 })
 </controller>
 
-<combobox placeholder="Pick a framework"
-          on-select={(e) => pick(e)}>
-  <option value="sail">Sail</option>
-  <option value="react">React</option>
-  <option value="svelte">Svelte</option>
-  <option value="solid">Solid</option>
+<combobox placeholder="Pick a fruit" on-select={onSelect}>
+  <option value="apple">Apple</option>
+  <option value="banana">Banana</option>
+  <option value="cherry">Cherry</option>
+  <option value="grape">Grape</option>
 </combobox>
-
-<p>picked: {fw() || 'nothing yet'}</p>`,
+<p>Picked: {fruit() || 'nothing yet'}</p>`,
 
   checkbox: `<controller>
 export default controller(() => ({ agreed: signal(false) }))
 </controller>
 
-<!-- no <checkbox> tag — input type only -->
-<label><input type="checkbox" bind:checked={agreed} size="md" /> I agree to the terms</label>
-<p>{agreed() ? 'thank you' : 'use input type=checkbox'}</p>`,
+<label><checkbox bind:checked={agreed} size="md" /> I agree to the terms</label>
+<p>{agreed() ? 'thank you' : 'please accept'}</p>`,
+
+  date: `<date type="date" />
+<date type="time" step="900" />
+<date type="datetime-local" />`,
+
+  file: `<file accept="image/*" multiple />`,
+
+  color: `<color value="#c8f542" />`,
 
   radio: `<radio value="monthly">Monthly</radio>
-<radio value="yearly" disabled>Yearly (locked)</radio>
-<!-- ink → component.radio.fg; exclusivity via <radio-group> -->`,
+<radio value="yearly" disabled>Yearly (locked)</radio>`,
 
   'radio-group': `<radio-group label="Billing period" name="plan" value="monthly">
   <radio value="monthly">Monthly</radio>
@@ -125,8 +130,7 @@ export default controller(() => ({ notify: signal(true) }))
 <row gap="3" align="center">
   <switch bind:checked={notify} size="md" tone="primary"></switch>
   <p>{notify() ? 'Notifications on' : 'Muted'}</p>
-</row>
-<!-- off → component.switch.track + border; thumb → switch.thumb; tone = checked track only -->`,
+</row>`,
 
   slider: `<controller>
 export default controller(() => ({ volume: signal(48) }))
@@ -135,8 +139,7 @@ export default controller(() => ({ volume: signal(48) }))
 <column gap="2">
   <row justify="between"><span>Volume</span><span>{volume()}%</span></row>
   <slider bind:value={volume} min="0" max="100" size="md"></slider>
-</column>
-<!-- track/fill/border → component.slider.*; thumb face field, rim = fill; single thumb -->`,
+</column>`,
 
   'toggle-group': `<toggle-group variant="segmented">
     style({ animate: enter({ opacity: 'fade' }) })
@@ -213,7 +216,7 @@ export default controller(() => ({ done: signal(64) }))
 </controller>
 
 <progress value={done()} max="100" size="md"></progress>
-<p>{done()}% uploaded — native value/max; paint from component.progress.*</p>
+<p>{done()}% uploaded — native value/max; track and fill from the theme</p>
 <!-- omit value for indeterminate shimmer -->`,
 
   meter: `<column gap="2">
@@ -521,7 +524,7 @@ export default controller(() => ({
   style({ box: maxH(panel-max-h-sm).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) })>
   <p>Constrain height/width with Style — overflow scrolls behind thin themed thumbs.</p>
   <p>orientation picks the axis (vertical · horizontal · both).</p>
-  <p>Rest thumb → component.scroll-area.thumb; hover → border-strong.</p>
+  <p>Thumb from the theme; hover uses the stronger border colour.</p>
 </scroll-area>`,
 
   // Action snippets (spotlight / targetCursor) moved to the action

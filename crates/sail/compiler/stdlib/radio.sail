@@ -1,10 +1,9 @@
 <!--
   <radio> — label + native radio. Root stays <label> for native semantics.
-  Host label ink from component.radio.fg (--radio-foreground). Control face uses
-  free foreground/background (checked → primary); inset disc on checked is
-  RADIO_INPUT_MAP (box-shadow, not Style vocab). value + disabled are host props;
-  radio-group composition wires shared name, checked, and input.disabled (out of
-  this PE's closed action surface).
+  Host label ink from component.radio.fg (--radio-foreground). Control face
+  aligns with <checkbox> (foreground/background ring, primary when checked).
+  JS-free for toggle; radio-group supplies shared name/value/onChange.
+  value + disabled are host props.
 -->
 
 <scope>
@@ -16,18 +15,17 @@
   // Host when:disabled does not paint — :disabled/:aria-disabled only match form
   // controls; label hosts carry [disabled] for radio-group to read. Input when:
   // disabled paints after group (or native) sets input.disabled.
+  // textCase(normal) → CSS none: host is a <label>; label-transform must not scream.
   style host = {
     paint: fg(radio.foreground).cursor(pointer).select(none),
-    text: fontFamily(body).fontSize(sm),
+    text: fontFamily(body).fontSize(sm).fontWeight(normal).textCase(normal).tracking(normal),
   }
-  // Control face: free foreground/background ring + primary when checked
-  // (not field.* — D1c; pack owns radio-foreground label ink only).
+  // Fill + centered inset via RADIO_INPUT_MAP (host-specific).
+  // Match checkbox face: soft 1px border, no shadow, border-box outer size.
   style input = {
-    box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm),
-    paint: appearance(none).align(middle).borderWidth(2).border(solid).border(foreground).bg(background).shadow(xs).radius(full).cursor(pointer),
-    text: fontSize(base),
+    box: display(inline-block).m(0).pad(0).minH(0).w(icon-size-md).h(icon-size-md).shrink(0),
+    paint: appearance(none).align(middle).borderWidth(1).border(solid).border(border).radius(full).cursor(pointer).boxSizing(border),
     when: {
-      checked: { paint: bg(primary).border(primary) },
       disabled: { paint: cursor(not-allowed).opacity(50) },
     },
   }

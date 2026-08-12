@@ -13,7 +13,13 @@ export default {
   rows() {
     return [
       sep(),
-      sep('tone="primary"') + ' ' + sep('variant="dashed"'),
+      sep('tone="muted"') +
+        ' ' +
+        sep('tone="primary"') +
+        ' ' +
+        sep('variant="dashed"') +
+        ' ' +
+        sep('tone="destructive"'),
       `<div style="display:flex;height:40px;align-items:center;gap:16px">A${sep('orientation="vertical"')}B${sep('orientation="vertical" tone="destructive"')}C</div>`,
     ]
   },

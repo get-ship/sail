@@ -2,14 +2,19 @@
 // use:pagination). Renders the lowered nav of .sail-page controls with the
 // current page marked (what use:pagination maintains). Probe asserts a single
 // aria-current matching value, rendered controls, and a distinct current page.
+// visual.cross: value (string).
+
+// Lowered page Style stamps (component.page tokens).
+const PAGE =
+  'sail-page s-padX2 s-fgpageforeground s-bgtransparent s-radiusmd s-cursorpointer s-selectnone s-borderWidth1 s-bordertransparent s-transitioncolors s-durationfast s-easeout s-fontFamilybody s-fontWeightmedium s-hover-bghoverbg s-current-bgpagecurrentbg s-current-fgpagecurrentforeground s-current-borderpagecurrentbg s-disabled-opacity50 s-disabled-cursornotallowed s-focus-outlinesolid s-focus-outline2 s-focus-outlinering s-sizemd-minWcontrolhmd s-sizemd-hcontrolhmd s-sizemd-fontSizesm'
 
 const page = (v, label, current, extra = '') =>
-  `<button class="sail-page" value="${v}" type="button" ${current ? 'aria-current="page"' : ''} ${extra}>${label}</button>`
+  `<button class="${PAGE}" data-sail-host="page" value="${v}" type="button" size="md" ${current ? 'aria-current="page"' : ''} ${extra}>${label}</button>`
 
 const pager = (value, attrs = '') => {
   const n = Number(value)
   return (
-    `<nav class="sail-pagination" value="${value}" ${attrs} aria-label="Pagination">` +
+    `<nav class="sail-pagination sail-row-i sail-g-1 sail-ai-center sail-jc-start sail-nowrap" data-sail-host="pagination" value="${value}" ${attrs} aria-label="Pagination">` +
     page(String(Math.max(1, n - 1)), '‹', false, n <= 1 ? 'disabled' : '') +
     [1, 2, 3, 4, 5].map((p) => page(String(p), String(p), String(p) === value)).join('') +
     page(String(Math.min(5, n + 1)), '›', false, n >= 5 ? 'disabled' : '') +
@@ -21,7 +26,8 @@ export default {
   tag: 'pagination',
   width: 640,
   rows() {
-    return [pager('3'), pager('1'), pager('5')]
+    // visual.cross: value — default/rest + edge pages
+    return [pager('3', 'class="l1-mark"'), pager('1'), pager('2'), pager('5')]
   },
   probe() {
     const bad = []

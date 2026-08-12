@@ -21,14 +21,34 @@ export type ClipboardParam =
   | undefined
 
 function resolveText(node: Element, param: ClipboardParam): string {
-  if (param == null || param === '') {
-    return (node.textContent ?? '').trim()
+  if (param != null && param !== '') {
+    if (typeof param === 'string') return param
+    if (typeof param === 'function') return param()
+    const t = param.text
+    if (t != null) return typeof t === 'function' ? t() : t
   }
-  if (typeof param === 'string') return param
-  if (typeof param === 'function') return param()
-  const t = param.text
-  if (t == null) return (node.textContent ?? '').trim()
-  return typeof t === 'function' ? t() : t
+  // Param-less paths (stdlib element mode forbids reactive action params):
+  // 1) explicit data-clipboard-text
+  // 2) nearest <code-block> host `code` attr / prop (live specimen)
+  // 3) highlighted <pre> text inside that host
+  // 4) host textContent fallback
+  const explicit = node.getAttribute('data-clipboard-text')
+  if (explicit != null && explicit !== '') return explicit
+
+  const codeHost =
+    node.closest('[data-sail-host="code-block"], .sail-code-block') ??
+    node.closest('[code]')
+  if (codeHost) {
+    const attr = codeHost.getAttribute('code')
+    if (attr != null && attr !== '') return attr
+    const prop = (codeHost as HTMLElement & { code?: string }).code
+    if (typeof prop === 'string' && prop !== '') return prop
+    const pre = codeHost.querySelector('pre')
+    const fromPre = (pre?.textContent ?? '').trim()
+    if (fromPre) return fromPre
+  }
+
+  return (node.textContent ?? '').trim()
 }
 
 function resolveOnCopy(param: ClipboardParam): (() => void) | undefined {

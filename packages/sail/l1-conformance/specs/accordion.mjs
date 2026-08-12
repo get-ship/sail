@@ -1,19 +1,34 @@
-// L1 conformance spec: <accordion> (mechanism-1, native <details>). Probe
-// asserts the native open/closed contract: open → content laid out; closed →
-// content removed (height 0). Rendered closed + open side by side.
+// L1 conformance spec: <accordion> (mechanism-1, native <details>).
+// visual.cross: open · disabled · name · multiple.
+// Probe asserts open/closed content height contract.
 
-const chev = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
-const trig = 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;font-weight:600;font-size:14px;color:var(--foreground)'
-const body = 'padding:0 14px 14px;font-size:14px;color:var(--muted-foreground);line-height:1.5'
-const box = 'border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;width:340px'
-const coll = (open) =>
-  `<details class="sail-accordion"${open ? ' open' : ''} style="${box}"><summary class="trigger-wrap" style="${trig}"><span>What is SAIL?</span>${chev}</summary><div class="content-wrap"><div class="content-inner" style="${body}">A trustworthy compiler and a beautiful component language — L1 primitives that compile away to static DOM with zero runtime.</div></div></details>`
+const chev =
+  '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+const trig =
+  'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;font-weight:600;font-size:14px;color:var(--accordion-foreground,var(--foreground));background:var(--accordion,var(--card))'
+const body =
+  'padding:0 14px 14px;font-size:14px;color:var(--muted-foreground);line-height:1.5'
+const box =
+  'border:1px solid var(--accordion-border,var(--border));border-radius:10px;background:var(--accordion,var(--card));overflow:hidden;width:340px'
+
+const coll = (attrs = '', open = false, extraClass = '') =>
+  `<details class="sail-accordion${extraClass ? ` ${extraClass}` : ''}" data-sail-host="accordion" ${attrs}${open ? ' open' : ''} style="${box}">` +
+  `<summary class="trigger-wrap" style="${trig}"><span>What is SAIL?</span>${chev}</summary>` +
+  `<div class="content-wrap"><div class="content-inner" style="${body}">A trustworthy compiler and a beautiful component language — L1 primitives that compile away to static DOM with zero runtime.</div></div>` +
+  `</details>`
 
 export default {
   tag: 'accordion',
   width: 780,
   rows() {
-    return [coll(false) + coll(true)]
+    return [
+      // default/rest (closed) + open
+      coll('', false, 'l1-mark') + coll('', true),
+      // disabled
+      coll('disabled', false),
+      // name + multiple group
+      coll('name="faq"', false) + coll('name="faq" multiple', true),
+    ]
   },
   probe() {
     const bad = []
@@ -25,7 +40,16 @@ export default {
       const detailsH = el.getBoundingClientRect().height
       const summaryH = el.querySelector('summary').getBoundingClientRect().height
       const contentContributes = detailsH > summaryH + 2
-      if (contentContributes !== open) bad.push({ open, detailsH: Math.round(detailsH), summaryH: Math.round(summaryH) })
+      if (contentContributes !== open)
+        bad.push({ open, detailsH: Math.round(detailsH), summaryH: Math.round(summaryH) })
+      // Shell paints via accordion tokens (or fallbacks)
+      const cs = getComputedStyle(el)
+      if (
+        cs.backgroundColor === 'rgba(0, 0, 0, 0)' ||
+        cs.backgroundColor === 'transparent'
+      ) {
+        bad.push({ why: 'shell-transparent' })
+      }
     })
     return { count: document.querySelectorAll('.sail-accordion').length, bad }
   },

@@ -1,8 +1,7 @@
 <!--
   <code-block> — syntax-highlighted source.
-  pre Style (leading-code + tab-2); .tok-* via compiler descendant map → skins.
-  Paint from component.code-block tokens. use:syntaxHighlight on host; code/lang
-  attrs land on the CE host for the action to read.
+  pre: pad, mono, pre-wrap so long lines wrap (docs never force horizontal scroll).
+  Copy chrome lives on docs wrappers (<doc-code>, sail-component-viewer).
 -->
 <scope>
   props: {
@@ -10,8 +9,12 @@
     lang = 'sail'
   }
 
-  style host = { box: display(block) }
-  style pre = { box: m(0).padY(4).padX(5).overflowX(auto), paint: bg(code-block).fg(code-block.foreground).borderWidth(1).border(border).radius(lg), text: fontFamily(mono).fontSize(sm).leading(code).tab(2).whitespace(pre) }
+  style host = { box: display(block).position(relative) }
+  style pre = {
+    box: m(0).padY(4).padS(5).padE(12).overflowX(hidden).overflowY(auto),
+    paint: bg(code-block).fg(code-block.foreground).borderWidth(1).border(border).radius(lg),
+    text: fontFamily(mono).fontSize(sm).leading(code).tab(2).whitespace(pre-wrap).break(words),
+  }
 </scope>
 <div use:syntaxHighlight style(host)>
   <pre style(pre)></pre>

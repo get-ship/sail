@@ -21,7 +21,8 @@
 
 <div use:combobox style(host)>
   <input type="text" style(input)>
-  <div popover use:anchor placement="bottom-start" style(listbox)>
+  <!-- manual: auto light-dismiss races pointerdown-open (flash). use:combobox dismisses. -->
+  <div popover="manual" use:anchor placement="bottom-start" style(listbox)>
     <slot></slot>
   </div>
 </div>

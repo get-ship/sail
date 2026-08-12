@@ -1,422 +1,410 @@
 <!--
-  /components/[tag] — detail route. Live stage + prop rail via sail-component-viewer.
-  L1 from component-details; pack tags from component-pack-meta.
-  Full Mantine-style configurator corpus (4.8k lines) is staged separately — the
-  prior megapage is parse/type-gate pathological in this worktree (compiler hang
-  after policy resolve). This page keeps the product surface: specimens, props,
-  usage, pack metadata — gate-green under sail-compiler.
+  /components/[tag] — thin detail shell.
+  Docs SSOT: apps/sail-site/src/component-docs/<slug>/meta.ts
+  Mounts exactly one docs host:
+    - first-class package CE (doc-button, doc-badge, …) when meta.host is doc-*
+    - or <doc-legacy-detail> only when meta.host is legacy / unmigrated
+    - explicit missing-host empty state if first-class meta but no CE wired
+    - empty state when no package / pack meta
 -->
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).pad(4) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
-  style fullW = { box: w(full) }
-  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
-  style pressBtn = { animate: press({ scale: 'press' }) }
-</scope>
 
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
+import { docMeta, FIRST_CLASS_HOSTS } from '../../../src/compositions/component-docs-registry'
 import { DETAILS, type DetailEntry } from '../../../src/compositions/component-details'
 import {
+  PACK_PROPS,
+  PACK_TAGS,
   packBlurbFor,
   packLabelFor,
-  packPropsFor,
 } from '../../../src/compositions/component-pack-meta'
+
+/** Slugs with a compiled doc-<slug> CE mounted below. Keep in sync when peeling. Residual: accordion · combobox · theme-picker. */
+const DOC_CE_SLUGS = new Set([
+  'button',
+  'badge',
+  'fieldset',
+  'chip',
+  'alert',
+  'separator',
+  'spinner',
+  'skeleton',
+  'icon',
+  'progress',
+  'meter',
+  'label',
+  'field',
+  'radio',
+  'radio-group',
+  'switch',
+  'slider',
+  'input',
+  'checkbox',
+  'date',
+  'file',
+  'color',
+  'textarea',
+  'select',
+  'a',
+  'kbd',
+  'prose',
+  'code-block',
+  'empty-state',
+  'error-state',
+  'error-boundary',
+  'scroll-area',
+  'ticker',
+  'table',
+  'pagination',
+  'toggle-group',
+  'tabs',
+  'navbar',
+  'card',
+  'avatar',
+  'breadcrumb',
+  'dialog',
+  'popover',
+  'tooltip',
+  'dropdown',
+  'hover-card',
+  'context-menu',
+  'toast',
+  'accordion',
+  'combobox',
+  'theme-picker',
+])
 
 export default controller((ctx: ControllerScope<Scope>) => {
   const tag = derived(() => ctx.route.params.tag?.() ?? '')
-  const entry = derived(() => {
-    const t = tag()
-    const list = Object.values(DETAILS) as Array<
-      DetailEntry & { key: string }
-    >
-    return list.find((e) => e.key === t) ?? null
-  })
-  const known = derived(() => entry() !== null)
-  // Prefer packLabelFor over PACK_TAGS.has — region harness open-any stubs
-  // erase Set methods; packLabelFor is a plain function that still works.
-  const packLabel = derived(() => packLabelFor(tag()))
-  const knownPack = derived(() => packLabel().length > 0)
-  const showViewer = derived(() => known() || knownPack())
-  const heading = derived(() => entry()?.heading ?? tag())
-  const blurb = derived(() => entry()?.blurb ?? '')
-  const props = derived(() => entry()?.props ?? [])
-  const usageCode = derived(() => entry()?.usage ?? '')
-  const packBlurb = derived(() => packBlurbFor(tag()))
-  const packProps = derived(() => packPropsFor(tag()))
-  const variants = derived(() => entry()?.variants ?? [])
-  const variantAttr = derived(() => entry()?.variantAttr ?? '')
-  const variant = signal('')
-  const onVariantChange = (d: { variant?: string }) => {
-    if (d.variant != null) variant.set(d.variant)
-  }
+  const meta = derived(() => docMeta(tag()))
+  const entry = derived<DetailEntry | null>(() => DETAILS[tag()] ?? null)
+  const knownDoc = derived(() => meta() !== null)
+  const knownPack = derived(() => PACK_TAGS.has(tag()))
+  const showViewer = derived(() => knownDoc() || knownPack())
 
-  // Specimen state for live stages (zero-arg template reads).
-  const presses = signal(0)
-  const press = () => presses.set(presses() + 1)
-  const name = signal('Ada Lovelace')
-  const bio = signal('')
-  const team = signal('Design')
-  const notify = signal(true)
-  const agreed = signal(false)
-  const load = signal(62)
-  const pageNo = signal(2)
-  const goPage = (n: number) => pageNo.set(n)
+  // FIRST_CLASS_HOSTS is SSOT from meta.host !== 'legacy'. Never route first-class → legacy.
+  const firstClass = derived(() => FIRST_CLASS_HOSTS.has(tag()))
+  const hasDocCe = derived(() => DOC_CE_SLUGS.has(tag()))
+  const useDocHost = derived(() => firstClass() && hasDocCe())
+  const missingDocHost = derived(() => firstClass() && !hasDocCe())
+  // Legacy residual only when NOT first-class.
+  const useLegacy = derived(() => showViewer() && !firstClass())
 
-  const stage = {
-    button: () => tag() === 'button',
-    a: () => tag() === 'a',
-    input: () => tag() === 'input',
-    textarea: () => tag() === 'textarea',
-    select: () => tag() === 'select',
-    switchToggle: () => tag() === 'switch',
-    checkbox: () => tag() === 'checkbox',
-    badge: () => tag() === 'badge',
-    alert: () => tag() === 'alert',
-    spinner: () => tag() === 'spinner',
-    progressBar: () => tag() === 'progress',
-    meter: () => tag() === 'meter',
-    skeleton: () => tag() === 'skeleton',
-    emptyState: () => tag() === 'empty-state',
-    errorState: () => tag() === 'error-state',
-    card: () => tag() === 'card',
-    icon: () => tag() === 'icon',
-    kbd: () => tag() === 'kbd',
-    prose: () => tag() === 'prose',
-    codeBlock: () => tag() === 'code-block',
-    tabs: () => tag() === 'tabs',
-    breadcrumb: () => tag() === 'breadcrumb',
-    pagination: () => tag() === 'pagination',
-    separator: () => tag() === 'separator',
-    field: () => tag() === 'field',
-    label: () => tag() === 'label',
-    fieldset: () => tag() === 'fieldset',
-    slider: () => tag() === 'slider',
-    radio: () => tag() === 'radio',
-    generic: () =>
-      known() &&
-      ![
-        'button',
-        'a',
-        'input',
-        'textarea',
-        'select',
-        'switch',
-        'checkbox',
-        'badge',
-        'alert',
-        'spinner',
-        'progress',
-        'meter',
-        'skeleton',
-        'empty-state',
-        'error-state',
-        'card',
-        'icon',
-        'kbd',
-        'prose',
-        'code-block',
-        'tabs',
-        'breadcrumb',
-        'pagination',
-        'separator',
-        'field',
-        'label',
-        'fieldset',
-        'slider',
-        'radio',
-      ].includes(tag()),
-  }
+  const useButton = derived(() => tag() === 'button' && useDocHost())
+  const useBadge = derived(() => tag() === 'badge' && useDocHost())
+  const useFieldset = derived(() => tag() === 'fieldset' && useDocHost())
+  const useChip = derived(() => tag() === 'chip' && useDocHost())
+  const useAlert = derived(() => tag() === 'alert' && useDocHost())
+  const useSeparator = derived(() => tag() === 'separator' && useDocHost())
+  const useSpinner = derived(() => tag() === 'spinner' && useDocHost())
+  const useSkeleton = derived(() => tag() === 'skeleton' && useDocHost())
+  const useIcon = derived(() => tag() === 'icon' && useDocHost())
+  const useProgress = derived(() => tag() === 'progress' && useDocHost())
+  const useMeter = derived(() => tag() === 'meter' && useDocHost())
+  const useLabel = derived(() => tag() === 'label' && useDocHost())
+  const useField = derived(() => tag() === 'field' && useDocHost())
+  const useRadio = derived(() => tag() === 'radio' && useDocHost())
+  const useRadioGroup = derived(() => tag() === 'radio-group' && useDocHost())
+  const useSwitch = derived(() => tag() === 'switch' && useDocHost())
+  const useSlider = derived(() => tag() === 'slider' && useDocHost())
+  const useInput = derived(() => tag() === 'input' && useDocHost())
+  const useCheckbox = derived(() => tag() === 'checkbox' && useDocHost())
+  const useDate = derived(() => tag() === 'date' && useDocHost())
+  const useFile = derived(() => tag() === 'file' && useDocHost())
+  const useColor = derived(() => tag() === 'color' && useDocHost())
+  const useTextarea = derived(() => tag() === 'textarea' && useDocHost())
+  const useSelect = derived(() => tag() === 'select' && useDocHost())
+  const useA = derived(() => tag() === 'a' && useDocHost())
+  const useKbd = derived(() => tag() === 'kbd' && useDocHost())
+  const useProse = derived(() => tag() === 'prose' && useDocHost())
+  const useCodeBlock = derived(() => tag() === 'code-block' && useDocHost())
+  const useEmptyState = derived(() => tag() === 'empty-state' && useDocHost())
+  const useErrorState = derived(() => tag() === 'error-state' && useDocHost())
+  const useErrorBoundary = derived(() => tag() === 'error-boundary' && useDocHost())
+  const useScrollArea = derived(() => tag() === 'scroll-area' && useDocHost())
+  const useTicker = derived(() => tag() === 'ticker' && useDocHost())
+  const useTable = derived(() => tag() === 'table' && useDocHost())
+  const usePagination = derived(() => tag() === 'pagination' && useDocHost())
+  const useToggleGroup = derived(() => tag() === 'toggle-group' && useDocHost())
+  const useTabs = derived(() => tag() === 'tabs' && useDocHost())
+  const useNavbar = derived(() => tag() === 'navbar' && useDocHost())
+  const useCard = derived(() => tag() === 'card' && useDocHost())
+  const useAvatar = derived(() => tag() === 'avatar' && useDocHost())
+  const useBreadcrumb = derived(() => tag() === 'breadcrumb' && useDocHost())
+  const useDialog = derived(() => tag() === 'dialog' && useDocHost())
+  const usePopover = derived(() => tag() === 'popover' && useDocHost())
+  const useTooltip = derived(() => tag() === 'tooltip' && useDocHost())
+  const useDropdown = derived(() => tag() === 'dropdown' && useDocHost())
+  const useHoverCard = derived(() => tag() === 'hover-card' && useDocHost())
+  const useContextMenu = derived(() => tag() === 'context-menu' && useDocHost())
+  const useToast = derived(() => tag() === 'toast' && useDocHost())
+  const useAccordion = derived(() => tag() === 'accordion' && useDocHost())
+  const useCombobox = derived(() => tag() === 'combobox' && useDocHost())
+  const useThemePicker = derived(() => tag() === 'theme-picker' && useDocHost())
+
+  const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
+  const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
+  const packLabel = () => (knownPack() ? packLabelFor(tag()) : 'Component primitives')
+  const packProps = () => PACK_PROPS[tag()] ?? []
 
   return {
     tag,
+    meta,
     entry,
-    known,
+    knownDoc,
     knownPack,
     showViewer,
+    firstClass,
+    missingDocHost,
+    useButton,
+    useBadge,
+    useFieldset,
+    useChip,
+    useAlert,
+    useSeparator,
+    useSpinner,
+    useSkeleton,
+    useIcon,
+    useProgress,
+    useMeter,
+    useLabel,
+    useField,
+    useRadio,
+    useRadioGroup,
+    useSwitch,
+    useSlider,
+    useInput,
+    useCheckbox,
+    useDate,
+    useFile,
+    useColor,
+    useTextarea,
+    useSelect,
+    useA,
+    useKbd,
+    useProse,
+    useCodeBlock,
+    useEmptyState,
+    useErrorState,
+    useErrorBoundary,
+    useScrollArea,
+    useTicker,
+    useTable,
+    usePagination,
+    useToggleGroup,
+    useTabs,
+    useNavbar,
+    useCard,
+    useAvatar,
+    useBreadcrumb,
+    useDialog,
+    usePopover,
+    useTooltip,
+    useDropdown,
+    useHoverCard,
+    useContextMenu,
+    useToast,
+    useAccordion,
+    useCombobox,
+    useThemePicker,
+    useLegacy,
     heading,
     blurb,
-    props,
-    usageCode,
-    packBlurb,
     packLabel,
     packProps,
-    variants,
-    variantAttr,
-    variant,
-    onVariantChange,
-    presses,
-    press,
-    name,
-    bio,
-    team,
-    notify,
-    agreed,
-    load,
-    pageNo,
-    goPage,
-    stage,
   }
 })
 </controller>
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
+</scope>
+
 <column gap="4" style(page)>
-  <if {showViewer()}>
-    <sail-component-viewer
-      name={heading()}
-      blurb={knownPack() ? packBlurb() : blurb()}
-      pack={knownPack() ? packLabel() : 'Component primitives'}
-      variant-attr={variantAttr()}
-      usage={usageCode()}
-      variants={variants()}
-      rows={knownPack() ? packProps() : props()}
-      on-variant-change={onVariantChange}
-    >
-      <column slot="stage" gap="4" align="stretch" style(fullW)>
-        <if {stage.button()}>
-          <column gap="3" align="center" style(stageCol)>
-            <button variant={variant() || 'solid'} tone="primary" style(pressBtn) on:click={press}>
-              Save
-            </button>
-            <p style(monoXs)>pressed {presses()} · variant {variant() || 'solid'}</p>
-          </column>
-        </if>
-        <if {stage.a()}>
-          <row gap="3" align="center" style(stageCol)>
-            <a href="#">Text link</a>
-            <a href="#" variant="solid" tone="primary" size="sm">Button link</a>
-          </row>
-        </if>
-        <if {stage.input()}>
-          <column gap="2" style(stageCol)>
-            <label for="demo-name" required>Display name</label>
-            <input id="demo-name" placeholder="Ada Lovelace" bind:value={name} style(fullW) />
-            <p style(monoXs)>value: {name() || '∅'}</p>
-          </column>
-        </if>
-        <if {stage.textarea()}>
-          <column gap="2" style(stageCol)>
-            <textarea placeholder="Tell us about yourself" bind:value={bio} rows="3" style(fullW)></textarea>
-            <p style(monoXs)>{bio().length} characters</p>
-          </column>
-        </if>
-        <if {stage.select()}>
-          <column gap="2" style(stageCol)>
-            <select bind:value={team}>
-              <option>Engineering</option>
-              <option>Design</option>
-              <option>Research</option>
-            </select>
-            <p style(monoXs)>team: {team()}</p>
-          </column>
-        </if>
-        <if {stage.switchToggle()}>
-          <row gap="3" align="center">
-            <switch bind:checked={notify}></switch>
-            <p style(mutedSm)>{notify() ? 'Notifications on' : 'Muted'}</p>
-          </row>
-        </if>
-        <if {stage.checkbox()}>
-          <label>
-            <input type="checkbox" bind:checked={agreed} />
-            I agree to the terms
-          </label>
-        </if>
-        <if {stage.badge()}>
-          <row gap="2" align="center">
-            <badge tone="primary">Primary</badge>
-            <badge tone="success" pill>Success</badge>
-            <badge tone="warning">Warning</badge>
-            <badge tone="destructive">Destructive</badge>
-          </row>
-        </if>
-        <if {stage.alert()}>
-          <alert tone="info" style(stageColMd)>
-            <strong slot="title">Heads up</strong>
-            A new version is available. Refresh when you get a chance.
-          </alert>
-        </if>
-        <if {stage.spinner()}>
-          <row gap="3" align="center">
-            <spinner size="sm"></spinner>
-            <spinner tone="primary"></spinner>
-            <spinner size="lg" centered tone="primary"></spinner>
-          </row>
-        </if>
-        <if {stage.progressBar()}>
-          <column gap="2" style(stageCol)>
-            <progress value={load()} max="100"></progress>
-            <p style(monoXs)>{load()}% of 100</p>
-          </column>
-        </if>
-        <if {stage.meter()}>
-          <column gap="2" style(stageCol)>
-            <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>
-            <p style(monoXs)>Disk free — 72%</p>
-          </column>
-        </if>
-        <if {stage.skeleton()}>
-          <column gap="2" style(stageCol)>
-            <skeleton shape="text" size="md"></skeleton>
-            <skeleton shape="text" size="sm"></skeleton>
-            <row gap="3" align="center">
-              <skeleton shape="circle" size="md"></skeleton>
-              <column gap="2" style({ box: grow(1) })>
-                <skeleton shape="text" size="sm"></skeleton>
-                <skeleton shape="text" size="sm"></skeleton>
-              </column>
-            </row>
-          </column>
-        </if>
-        <if {stage.emptyState()}>
-          <empty-state style(stageCol)>
-            <icon slot="icon" name="inbox"></icon>
-            <strong slot="title">Empty inbox</strong>
-            Messages you receive land here.
-            <button slot="action" variant="outline" size="sm">Compose</button>
-          </empty-state>
-        </if>
-        <if {stage.errorState()}>
-          <error-state code="ERR_THEME" size="sm" style(stageCol)>
-            <strong slot="title">Couldn't load preview</strong>
-            Rest chrome — override component.error-state leaves.
-            <button slot="action" type="button" variant="outline" size="sm">Retry</button>
-          </error-state>
-        </if>
-        <if {stage.card()}>
-          <card style(stageCol)>
-            <strong slot="title">Project card</strong>
-            <p style(mutedSm)>Body copy sits in the card surface.</p>
-          </card>
-        </if>
-        <if {stage.icon()}>
-          <row gap="3" align="center">
-            <icon name="check" size="sm"></icon>
-            <icon name="sparkles"></icon>
-            <icon name="refresh-cw" spin label="Refreshing"></icon>
-          </row>
-        </if>
-        <if {stage.kbd()}>
-          <row gap="2" align="center">
-            <kbd>⌘</kbd>
-            <kbd>K</kbd>
-            <span style(mutedSm)>Open command palette</span>
-          </row>
-        </if>
-        <if {stage.prose()}>
-          <prose style(stageColMd)>
-            <h2>Typography scope</h2>
-            <p>
-              Body copy with <strong>strong</strong>, <em>emphasis</em>,
-              <code>inline()</code>, and <mark>mark</mark>.
-            </p>
-          </prose>
-        </if>
-        <if {stage.codeBlock()}>
-          <code-block
-            code={'const n = signal(0)\nconst double = derived(() => n() * 2)'}
-            lang="ts"
-          ></code-block>
-        </if>
-        <if {stage.tabs()}>
-          <tabs style(fullW)>
-            <tab-list>
-              <tab>Overview</tab>
-              <tab>Activity</tab>
-              <tab>Settings</tab>
-            </tab-list>
-            <tab-panel>Overview panel</tab-panel>
-            <tab-panel>Activity panel</tab-panel>
-            <tab-panel>Settings panel</tab-panel>
-          </tabs>
-        </if>
-        <if {stage.breadcrumb()}>
-          <breadcrumb>
-            <a href="/components">components</a>
-            <small>{tag()}</small>
-          </breadcrumb>
-        </if>
-        <if {stage.pagination()}>
-          <pagination page={pageNo()} count="5" on-change={goPage}></pagination>
-        </if>
-        <if {stage.separator()}>
-          <column gap="3" style(stageCol)>
-            <p style(mutedSm)>Above</p>
-            <separator></separator>
-            <p style(mutedSm)>Below</p>
-          </column>
-        </if>
-        <if {stage.field()}>
-          <field style(stageCol)>
-            <label slot="label" for="f-email">Email</label>
-            <input id="f-email" type="email" placeholder="ada@lovelace.dev" />
-          </field>
-        </if>
-        <if {stage.label()}>
-          <column gap="1" style(stageCol)>
-            <label for="lbl-demo" required>Email</label>
-            <input id="lbl-demo" placeholder="ada@lovelace.dev" />
-          </column>
-        </if>
-        <if {stage.fieldset()}>
-          <fieldset style(stageCol)>
-            <legend>Account details</legend>
-            <column gap="2">
-              <input placeholder="Name" />
-              <input placeholder="Email" />
-            </column>
-          </fieldset>
-        </if>
-        <if {stage.slider()}>
-          <column gap="2" style(stageCol)>
-            <row justify="between"><span>Volume</span><span style(monoXs)>{load()}%</span></row>
-            <slider bind:value={load} min="0" max="100"></slider>
-          </column>
-        </if>
-        <if {stage.radio()}>
-          <radio-group label="Plan" name="plan" value="monthly">
-            <radio value="monthly">Monthly</radio>
-            <radio value="yearly">Yearly</radio>
-          </radio-group>
-        </if>
-        <if {stage.generic()}>
-          <column gap="2" style(stageCol)>
-            <p style(mutedSm)>
-              {heading()} — live specimen. Props, variants, and usage are in the rail.
-            </p>
-            <p style(monoXs)>tag: {tag()}</p>
-          </column>
-        </if>
-        <if {knownPack()}>
-          <column gap="2" style(stageCol)>
-            <p style(mutedSm)>{packLabel()} pack · {heading()}</p>
-            <p style(monoXs)>{packBlurb()}</p>
-          </column>
-        </if>
-      </column>
-    </sail-component-viewer>
+  <if {useButton()}>
+    <doc-button></doc-button>
+  </if>
+  <if {useBadge()}>
+    <doc-badge></doc-badge>
+  </if>
+  <if {useFieldset()}>
+    <doc-fieldset></doc-fieldset>
+  </if>
+  <if {useChip()}>
+    <doc-chip></doc-chip>
+  </if>
+  <if {useAlert()}>
+    <doc-alert></doc-alert>
+  </if>
+  <if {useSeparator()}>
+    <doc-separator></doc-separator>
+  </if>
+  <if {useSpinner()}>
+    <doc-spinner></doc-spinner>
+  </if>
+  <if {useSkeleton()}>
+    <doc-skeleton></doc-skeleton>
+  </if>
+  <if {useIcon()}>
+    <doc-icon></doc-icon>
+  </if>
+  <if {useProgress()}>
+    <doc-progress></doc-progress>
+  </if>
+  <if {useMeter()}>
+    <doc-meter></doc-meter>
+  </if>
+  <if {useLabel()}>
+    <doc-label></doc-label>
+  </if>
+  <if {useField()}>
+    <doc-field></doc-field>
+  </if>
+  <if {useRadio()}>
+    <doc-radio></doc-radio>
+  </if>
+  <if {useRadioGroup()}>
+    <doc-radio-group></doc-radio-group>
+  </if>
+  <if {useSwitch()}>
+    <doc-switch></doc-switch>
+  </if>
+  <if {useSlider()}>
+    <doc-slider></doc-slider>
+  </if>
+  <if {useInput()}>
+    <doc-input></doc-input>
+  </if>
+  <if {useCheckbox()}>
+    <doc-checkbox></doc-checkbox>
+  </if>
+  <if {useDate()}>
+    <doc-date></doc-date>
+  </if>
+  <if {useFile()}>
+    <doc-file></doc-file>
+  </if>
+  <if {useColor()}>
+    <doc-color></doc-color>
+  </if>
+  <if {useTextarea()}>
+    <doc-textarea></doc-textarea>
+  </if>
+  <if {useSelect()}>
+    <doc-select></doc-select>
+  </if>
+  <if {useA()}>
+    <doc-a></doc-a>
+  </if>
+  <if {useKbd()}>
+    <doc-kbd></doc-kbd>
+  </if>
+  <if {useProse()}>
+    <doc-prose></doc-prose>
+  </if>
+  <if {useCodeBlock()}>
+    <doc-code-block></doc-code-block>
+  </if>
+  <if {useEmptyState()}>
+    <doc-empty-state></doc-empty-state>
+  </if>
+  <if {useErrorState()}>
+    <doc-error-state></doc-error-state>
+  </if>
+  <if {useErrorBoundary()}>
+    <doc-error-boundary></doc-error-boundary>
+  </if>
+  <if {useScrollArea()}>
+    <doc-scroll-area></doc-scroll-area>
+  </if>
+  <if {useTicker()}>
+    <doc-ticker></doc-ticker>
+  </if>
+  <if {useTable()}>
+    <doc-table></doc-table>
+  </if>
+  <if {usePagination()}>
+    <doc-pagination></doc-pagination>
+  </if>
+  <if {useToggleGroup()}>
+    <doc-toggle-group></doc-toggle-group>
+  </if>
+  <if {useTabs()}>
+    <doc-tabs></doc-tabs>
+  </if>
+  <if {useNavbar()}>
+    <doc-navbar></doc-navbar>
+  </if>
+  <if {useCard()}>
+    <doc-card></doc-card>
+  </if>
+  <if {useAvatar()}>
+    <doc-avatar></doc-avatar>
+  </if>
+  <if {useBreadcrumb()}>
+    <doc-breadcrumb></doc-breadcrumb>
+  </if>
+  <if {useDialog()}>
+    <doc-dialog></doc-dialog>
+  </if>
+  <if {usePopover()}>
+    <doc-popover></doc-popover>
+  </if>
+  <if {useTooltip()}>
+    <doc-tooltip></doc-tooltip>
+  </if>
+  <if {useDropdown()}>
+    <doc-dropdown></doc-dropdown>
+  </if>
+  <if {useHoverCard()}>
+    <doc-hover-card></doc-hover-card>
+  </if>
+  <if {useContextMenu()}>
+    <doc-context-menu></doc-context-menu>
+  </if>
+  <if {useToast()}>
+    <doc-toast></doc-toast>
+  </if>
+  <if {useAccordion()}>
+    <doc-accordion></doc-accordion>
+  </if>
+  <if {useCombobox()}>
+    <doc-combobox></doc-combobox>
+  </if>
+  <if {useThemePicker()}>
+    <doc-theme-picker></doc-theme-picker>
+  </if>
+  <if {missingDocHost()}>
+    <breadcrumb>
+      <a href="/components">components</a>
+      <small>{tag()}</small>
+    </breadcrumb>
+    <empty-state style(emptyEnter)>
+      <strong slot="title">Docs host not wired for “{tag()}”</strong>
+      Package meta is first-class (<code>doc-{tag()}</code>) but this shell has no
+      mount for that CE yet. Do not fall back to legacy residual after peel.
+    </empty-state>
     <row gap="2">
-      <a variant="default" href="/components">← All components</a>
-      <a variant="solid" tone="primary" href="/docs/reference">API reference</a>
+      <a variant="solid" tone="primary" href="/components">← All components</a>
     </row>
-  {else =>
-    <column gap="4">
-      <breadcrumb>
-        <a href="/components">components</a>
-        <small>{tag()}</small>
-      </breadcrumb>
-      <empty-state style(emptyEnter)>
-        <strong slot="title">Nothing named “{tag()}” here</strong>
-        <p style(mutedSm)>Every element on the L1 surface has a detail page.</p>
-      </empty-state>
-      <row gap="2">
-        <a variant="solid" tone="primary" href="/components">← All components</a>
-      </row>
-    </column>
-  }</if>
+  </if>
+  <if {useLegacy()}>
+    <doc-legacy-detail doc-tag={tag()}></doc-legacy-detail>
+  </if>
+  <if {!showViewer()}>
+    <breadcrumb>
+      <a href="/components">components</a>
+      <small>{tag()}</small>
+    </breadcrumb>
+    <empty-state style(emptyEnter)>
+      <strong slot="title">Nothing named “{tag()}” here</strong>
+      Every element with a docs package has a detail page. Pack components
+      from the catalog render here too — this looks like a typo.
+    </empty-state>
+    <row gap="2">
+      <a variant="solid" tone="primary" href="/components">← All components</a>
+    </row>
+  </if>
 </column>

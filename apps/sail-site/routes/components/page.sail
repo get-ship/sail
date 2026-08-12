@@ -211,9 +211,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </row>}{else-if {e.tag === 'input'} => <column gap="2" style({ box: w(full) })>
                     <input type="email" size="sm" placeholder="you@company.com" bind:value={email} />
                     <row gap="2" align="center">
-                      <input type="checkbox" checked />
-                      <input type="checkbox" />
-                      <input type="checkbox" disabled />
+                      <checkbox checked />
+                      <checkbox />
+                      <checkbox disabled />
                     </row>
                   </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Release notes</label>
@@ -234,10 +234,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     </combobox>
                   </column>}{else-if {e.tag === 'checkbox'} => <column gap="2">
                     <label style({ text: fontSize(sm) })>
-                      <input type="checkbox" bind:checked={agreed} /> Email me product updates
+                      <checkbox bind:checked={agreed} /> Email me product updates
                     </label>
                     <label style({ paint: fg(muted-foreground), text: fontSize(sm) })>
-                      <input type="checkbox" disabled /> Admin-only (disabled)
+                      <checkbox disabled /> Admin-only (disabled)
                     </label>
                     <p style(mutedXs)>input type=checkbox — not a separate tag</p>
                   </column>}{else-if {e.tag === 'radio'} => <column gap="2">
@@ -270,12 +270,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </column>}{else-if {e.tag === 'fieldset'} => <fieldset>
                     <legend>Billing options</legend>
                     <column gap="1">
-                      <label style({ text: fontSize(sm) })><input type="checkbox" checked /> Include trials</label>
-                      <label style({ text: fontSize(sm) })><input type="checkbox" /> Annual discount</label>
+                      <label style({ text: fontSize(sm) })><checkbox checked /> Include trials</label>
+                      <label style({ text: fontSize(sm) })><checkbox /> Annual discount</label>
                     </column>
-                  </fieldset>}{else-if {e.tag === 'legend'} => <fieldset>
-                    <legend>Account details</legend>
-                    <p style(mutedXs)>Caption for the group · component.legend.fg</p>
                   </fieldset>}{else-if {e.tag === 'dropzone'} => <div dropzone style({  box: w(full).minH(14).pad(3)  })>
                     <p style({ text: fontSize(sm).fontWeight(medium) })>Drop manifests here</p>
                     <p style(mutedXs)>or click to browse · .json, .yaml</p>
@@ -362,8 +359,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <popover id="grid-pop">
                       <column gap="2">
                         <p style({ text: fontSize(sm).fontWeight(medium) })>Status</p>
-                        <label style({ text: fontSize(sm) })><input type="checkbox" checked /> Healthy</label>
-                        <label style({ text: fontSize(sm) })><input type="checkbox" /> Failed</label>
+                        <label style({ text: fontSize(sm) })><checkbox checked /> Healthy</label>
+                        <label style({ text: fontSize(sm) })><checkbox /> Failed</label>
                       </column>
                     </popover>
                   </column>}{else-if {e.tag === 'dropdown'} => <column gap="2" align="center">

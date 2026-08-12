@@ -48,7 +48,7 @@ export const code = {
 
   behavior: `<!-- the behavior is already wired: this combobox filters as you
      type and commits on Enter — you wrote only the options. -->
-<combobox placeholder="Pick a framework">
+<combobox placeholder="Pick a fruit">
   <option value="sail">Sail</option>
   <option value="svelte">Svelte</option>
   <option value="solid">Solid</option>

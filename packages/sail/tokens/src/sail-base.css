@@ -44,13 +44,50 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { font-family: var(--font-body); color: var(--foreground); background: var(--background); }
 body { margin: 0; min-height: 100vh; font-size: var(--text-base); font-weight: var(--body-weight); line-height: var(--leading-normal, 1.5); }
-label:has(> input[type="checkbox"], > input[type="radio"]), .sail-label:has(> input[type="checkbox"], > input[type="radio"]) { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); color: var(--foreground); text-transform: var(--label-transform); }
-label:has(> input[type="checkbox"], > input[type="radio"]) > input, .sail-label:has(> input[type="checkbox"], > input[type="radio"]) > input { margin: 0; flex-shrink: 0; }
-/* appearance:none kills UA border-style; dual-gate width/color alone paint nothing. */
+/*
+ * Field captions (label for=…) keep --label-transform (often uppercase).
+ * Checkbox/radio *captions* are sentence-case — never scream "I AGREE".
+ * .sail-radio is itself a <label> host, so it must opt out explicitly.
+ */
+label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--body-weight, 400);
+  color: var(--foreground);
+  text-transform: none;
+  letter-spacing: normal;
+}
+label:has(> input[type="checkbox"], > input[type="radio"]) > input,
+.sail-label:has(> input[type="checkbox"], > input[type="radio"]) > input,
+.sail-radio > input {
+  margin: 0;
+  flex-shrink: 0;
+}
+/* appearance:none kills UA border-style; dual-gate width/color alone paint nothing.
+ * Host classes are .sail-checkbox / .sail-radio (> input), not only .sail-input. */
 :where(input[type="checkbox"], input[type="radio"]).sail-input,
-:where(.sail-input[type="checkbox"], .sail-input[type="radio"]) { border-style: solid; box-sizing: border-box; }
+:where(.sail-input[type="checkbox"], .sail-input[type="radio"]),
+:where(input.sail-checkbox, .sail-checkbox),
+:where(.sail-radio > input) {
+  border-style: solid;
+  box-sizing: border-box;
+}
 h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); text-transform: var(--heading-transform); }
 label, .sail-label { text-transform: var(--label-transform); }
+/* Re-assert after the general label rule (cascade: same specificity, later wins for shared props). */
+label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-label:has(> input[type="checkbox"], > input[type="radio"]),
+.sail-radio {
+  text-transform: none;
+  font-weight: var(--body-weight, 400);
+  letter-spacing: normal;
+}
 h1 { font-size: var(--text-4xl); }
 h2 { font-size: var(--text-2xl); }
 h3 { font-size: var(--text-xl); }

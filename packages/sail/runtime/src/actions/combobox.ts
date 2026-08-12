@@ -13,9 +13,10 @@ import { invokeCallback } from '../callback'
  * tag and some options and nothing else: id generation, the `popovertarget`
  * wiring, aria-expanded / aria-controls / aria-activedescendant, filtering as you
  * type, Up/Down/Home/End roving, Enter to commit, Escape to close, click to
- * commit, and `sail-combobox-select` on commit. Open/close, light-dismiss and the
- * top layer come from the native popover; position comes from `use:anchor` — the
- * same two mechanisms the whole overlay family already runs on.
+ * commit, and `sail-combobox-select` on commit. Open/close and the top layer come
+ * from the native popover; light-dismiss is owned here because `popover=auto`
+ * races pointerdown-open (flash open then close on mouseup). Position comes from
+ * `use:anchor` — the same mechanism the overlay family already runs on.
  *
  * Options are plain `<option>`s in the light DOM. The author's markup stays the
  * thing they'd write anyway.
@@ -24,6 +25,10 @@ import { invokeCallback } from '../callback'
  * list; typing filters by label **or** value; empty query shows everything.
  * Note: `popovertarget` on a text `<input>` is not a platform invoker — open is
  * always programmatic via `showPopover`.
+ *
+ * Element mode lowers to STATIC structure, so placeholder/value ride the host
+ * as attributes. We mirror them into the inner input on mount and whenever the
+ * host attributes change (docs knobs, reactive props).
  */
 
 let uid = 0
@@ -36,14 +41,30 @@ export const combobox: Action<void> = (node) => {
   )
   if (!input || !list) return
 
-  // Element mode lowers to STATIC structure, so the author's attributes ride on
-  // the root, not on the inner input. Forward the ones that belong to the field —
-  // same contract as use:anchor reading `placement` off its own element.
-  const ph = root.getAttribute('placeholder')
-  if (ph) input.placeholder = ph
-  const val = root.getAttribute('value')
-  if (val) {
-    const match = [...root.querySelectorAll('option')].find((o) => o.getAttribute('value') === val)
+  // manual: auto light-dismiss closes on the same click that opened via
+  // pointerdown (flash). We dismiss ourselves on outside pointerdown + Escape.
+  if (list.getAttribute('popover') !== 'manual') {
+    list.setAttribute('popover', 'manual')
+  }
+
+  /** Push host attrs → field. value maps option value → visible label. */
+  const applyHostAttrs = (): void => {
+    const ph = root.getAttribute('placeholder')
+    input.placeholder = ph ?? ''
+    const val = root.getAttribute('value')
+    if (val == null || val === '') {
+      // Controlled clear from outside (docs value knob → none). Leave free text
+      // alone when the user is mid-type without a committed value.
+      if (root.hasAttribute('value') && val === '') {
+        // Explicit empty value attr — clear committed display.
+        const committed = options().some(
+          (o) => (o.textContent?.trim() ?? '') === input.value.trim(),
+        )
+        if (committed || input.value === '') input.value = ''
+      }
+      return
+    }
+    const match = options().find((o) => o.getAttribute('value') === val)
     if (match) input.value = match.textContent?.trim() ?? ''
   }
 
@@ -70,10 +91,14 @@ export const combobox: Action<void> = (node) => {
     o.setAttribute('aria-selected', 'false')
   })
 
+  applyHostAttrs()
+
   let active: HTMLElement | null = null
   // `:popover-open` throws without support; mirror from toggle so isOpen works
   // under jsdom / older engines the same way use:anchor / use:menu do.
   let openMirror = false
+  // Suppress outside-dismiss for the open gesture that just called showPopover.
+  let ignoreOutsideUntil = 0
 
   const setActive = (o: HTMLElement | null): void => {
     if (active) {
@@ -106,6 +131,7 @@ export const combobox: Action<void> = (node) => {
     try {
       list.showPopover?.()
       openMirror = true
+      ignoreOutsideUntil = performance.now() + 50
     } catch {
       /* no popover support */
     }
@@ -263,15 +289,23 @@ export const combobox: Action<void> = (node) => {
 
   const onPointerdown = (e: PointerEvent): void => {
     const o = (e.target as Element | null)?.closest('option') as HTMLElement | null
-    // pointerdown, not click: the input must not lose focus to the option first,
-    // and the native popover's light-dismiss must not race us.
+    // pointerdown, not click: the input must not lose focus to the option first.
     if (o && !o.hasAttribute('disabled')) {
       e.preventDefault()
       commit(o)
     }
   }
 
-  // The popover owns open/close (Escape, light-dismiss, showPopover) — we only
+  // Manual dismiss: outside pointerdown (not the open gesture) closes the list.
+  const onDocPointerDown = (e: PointerEvent): void => {
+    if (!isOpen()) return
+    if (performance.now() < ignoreOutsideUntil) return
+    const t = e.target as Node | null
+    if (t && (root.contains(t) || list.contains(t))) return
+    close()
+  }
+
+  // The popover owns open/close state (show/hide + toggle) — we only
   // mirror its state into ARIA + openMirror.
   const onToggle = (e: Event): void => {
     const open_ = (e as ToggleEvent).newState === 'open'
@@ -286,21 +320,30 @@ export const combobox: Action<void> = (node) => {
     setActive(cur && !cur.hidden ? cur : (shown()[0] ?? null))
   }
 
+  const attrObs =
+    typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(() => applyHostAttrs())
+      : null
+  attrObs?.observe(root, { attributes: true, attributeFilter: ['placeholder', 'value'] })
+
   input.addEventListener('input', onInput)
   input.addEventListener('focus', onFocus)
   input.addEventListener('pointerdown', onFieldPointerDown)
   input.addEventListener('keydown', onKeydown)
   list.addEventListener('pointerdown', onPointerdown as EventListener)
   list.addEventListener('toggle', onToggle)
+  document.addEventListener('pointerdown', onDocPointerDown, true)
 
   return {
     destroy: () => {
+      attrObs?.disconnect()
       input.removeEventListener('input', onInput)
       input.removeEventListener('focus', onFocus)
       input.removeEventListener('pointerdown', onFieldPointerDown)
       input.removeEventListener('keydown', onKeydown)
       list.removeEventListener('pointerdown', onPointerdown as EventListener)
       list.removeEventListener('toggle', onToggle)
+      document.removeEventListener('pointerdown', onDocPointerDown, true)
     },
   }
 }

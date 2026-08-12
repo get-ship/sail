@@ -4,28 +4,42 @@
 // [hoverable] [bordered], plus <thead sticky> and [numeric] columns (right-aligned,
 // tabular figures). Probe: header is divided from the body, rows are separated,
 // every variant channel actually does something, and the tokens aren't frozen.
+// visual.cross: dense · striped · hoverable · bordered (+ default rest).
+
+const HOST =
+  'sail-table s-wfull s-fgtableforeground s-fontFamilybody s-fontSizesm s-leadingnormal s-textAlignstart'
 
 const rows = (n = 3) =>
   Array.from({ length: n }, (_, i) =>
     `<tr><td>Row ${i + 1}</td><td>user${i + 1}@ship.dev</td><td numeric>${(i + 1) * 1250}</td></tr>`,
   ).join('')
 
-const table = (attrs = '') =>
-  `<table ${attrs}><thead><tr><th>Name</th><th>Email</th><th numeric>Amount</th></tr></thead>` +
+const table = (attrs = '', extraClass = '') =>
+  `<table class="${HOST}${extraClass ? ` ${extraClass}` : ''}" style="border-collapse:collapse" ${attrs}>` +
+  `<thead><tr><th>Name</th><th>Email</th><th numeric>Amount</th></tr></thead>` +
   `<tbody>${rows()}</tbody></table>`
 
 export default {
   tag: 'table',
   width: 760,
   rows() {
-    return [table('class="l1-mark"'), table('striped'), table('dense bordered')]
+    return [
+      // rest / default (l1-mark) + each bool axis + combos for visual.cross
+      table('', 'l1-mark') +
+        table('striped') +
+        table('dense') +
+        table('hoverable') +
+        table('bordered') +
+        table('dense bordered') +
+        table('striped hoverable'),
+    ]
   },
   probe() {
     const bad = []
     const cs = (el, p) => getComputedStyle(el)[p]
     const clear = (v) => v === 'rgba(0, 0, 0, 0)' || v === 'transparent' || v === ''
 
-    document.querySelectorAll('table').forEach((el, i) => {
+    document.querySelectorAll('table.sail-table').forEach((el, i) => {
       if (el.getBoundingClientRect().height <= 0) return bad.push({ i, why: 'not-rendered' })
       if (cs(el, 'borderCollapse') !== 'collapse') bad.push({ i, why: 'not-collapsed' })
       // the header must read as a header: divided from the body + de-emphasized
@@ -58,10 +72,18 @@ export default {
       bad.push({ why: 'dense-not-tighter', dense: h('table[dense] td'), base: h('table.l1-mark td') })
     // [bordered] boxes every cell
     if (cs(q('table[bordered] td'), 'borderLeftWidth') === '0px') bad.push({ why: 'bordered-no-box' })
-    // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark th`), 'color')
-    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
+    // [hoverable] present in matrix (paint is :hover — presence is the axis)
+    if (!document.querySelector('table[hoverable]')) bad.push({ why: 'hoverable-missing-row' })
+    // frozen-token guard on the theme section vars (component.table.* aliases
+    // globals on :root — computed alias freezes; themes still rebind the sources).
+    const muted = (t) =>
+      getComputedStyle(document.querySelector(`[theme='${t}']`))
+        .getPropertyValue('--muted-foreground')
+        .trim()
+    if (!muted('ship') || muted('ship') === muted('console')) {
+      bad.push({ why: 'frozen-token', light: muted('ship'), dark: muted('console') })
+    }
 
-    return { count: document.querySelectorAll('table').length, bad: bad.slice(0, 10) }
+    return { count: document.querySelectorAll('table.sail-table').length, bad: bad.slice(0, 10) }
   },
 }
