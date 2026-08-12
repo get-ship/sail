@@ -106,7 +106,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       use:fieldKeys
       use:autosize
       style(fieldMulti)
-    ></textarea>
+    />
     <row nowrap gap="1" align="center" justify="end" style(actions)>
       <slot name="trailing"></slot>
       <button

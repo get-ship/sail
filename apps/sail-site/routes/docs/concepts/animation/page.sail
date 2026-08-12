@@ -214,7 +214,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <column gap="4" style(demoPanelTall)>
     <row align="center" gap="3">
-      <input type="range" min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub" style(scrub)>
+      <slider min="0" max="100" step="1" bind:value={scrubText} testid="timeline-scrub" style(scrub) />
       <span style(scrubVal)>{scrubText()}</span>
     </row>
     <row align="center" style(tileRow)>

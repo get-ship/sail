@@ -6,13 +6,13 @@
  * `sail-compiler`'s `check::sx_vars` / `emit::styles::register_properties_install_js`).
  *
  * Deliberately NOT routed through a component's scoped `styles:` string:
- * that CSS gets wrapped in an `@scope (...) to (...) { ... }` donut at
- * install time (`injectScopedStyles`, in `component-factory.ts`), and
- * `@property` is a top-level-only at-rule — nested inside another at-rule
- * or block, a browser silently drops it. `@property` registrations are also
- * inherently global (the CSSOM only allows one registration per custom-
- * property name, spec-wide), so an unscoped, content-addressed `<style>` in
- * `<head>` is the correct home, not a per-component donut.
+ * that CSS is wrapped in `@scope ([data-component="…"]) { … }` at install
+ * time (`injectScopedStyles`, in `component-factory.ts`), and `@property`
+ * is a top-level-only at-rule — nested inside another at-rule or block, a
+ * browser silently drops it. `@property` registrations are also inherently
+ * global (the CSSOM only allows one registration per custom-property name,
+ * spec-wide), so an unscoped, content-addressed `<style>` in `<head>` is
+ * the correct home, not a per-component scope sheet.
  *
  * `id` is content-addressed (an FNV-1a hash of `css`, computed by the
  * compiler) so re-mounting the same component no-ops after the first install.

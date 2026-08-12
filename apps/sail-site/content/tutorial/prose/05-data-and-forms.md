@@ -60,7 +60,7 @@ a template both reads and writes:
 ```
 <input bind:value={name} />
 <select bind:value={role}>…</select>
-<input type="checkbox" bind:checked={breakApi} />
+<checkbox bind:checked={breakApi} />
 ```
 
 ## Try it

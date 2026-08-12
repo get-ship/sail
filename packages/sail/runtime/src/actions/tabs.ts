@@ -46,7 +46,7 @@ export const tabs: Action<void> = (node) => {
 
   // MutationObserver below watches `active` / `orientation` under subtree while
   // sync writes those same attributes. Skip no-op writes and disconnect during
-  // apply so a PE/skin rebuild cannot re-enter sync forever (tutorial freeze).
+  // apply so a host Style/skin rebuild cannot re-enter sync forever (tutorial freeze).
   const sync = (): void => {
     mo.disconnect()
     try {

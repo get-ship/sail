@@ -39,7 +39,7 @@ export const toggleGroup: Action<void> = (node) => {
 
   // MutationObserver watches value/type/orientation under subtree while sync
   // stamps orientation onto cells. Disconnect during apply + no-op setAttr so
-  // a PE/skin rebuild cannot re-enter sync forever (components catalog freeze
+  // a host Style/skin rebuild cannot re-enter sync forever (components catalog freeze
   // when demos use real <toggle> cells).
   const sync = (): void => {
     mo.disconnect()

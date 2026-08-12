@@ -24,7 +24,7 @@ export default controller(() => ({ enabled: signal(false) }))
   </column>
 
   <label>
-    <input type="checkbox" data-test="toggle" bind:checked={enabled} />
+    <checkbox data-test="toggle" bind:checked={enabled} />
     Show secret panel
   </label>
 

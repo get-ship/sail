@@ -58,7 +58,7 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
 }
 
 /// The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `<if>`.
-/// Lives on structure sx via group-caught: (element-skins), not contracts PE.
+/// Lives on structure sx via group-caught: (element-skins), not contracts host CSS.
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     let el = compile_element(
@@ -90,7 +90,7 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
         !contracts.contains(".sail-error-boundary > .content")
             && !contracts.contains(".sail-error-boundary > .fallback")
             && !contracts.contains("[data-caught] > .content"),
-        "error-boundary swap PE must be gone from contracts"
+        "error-boundary swap host CSS must be gone from contracts"
     );
 }
 

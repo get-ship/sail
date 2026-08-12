@@ -306,7 +306,7 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
         "/* hover-card */",
         &["border", "foreground", "surface-1", "background"],
     ),
-    // Tooltip rest is inverted PE via tooltip / tooltip-foreground — not free fg/bg.
+    // Tooltip rest is inverted host Style via tooltip / tooltip-foreground — not free fg/bg.
     ("/* tooltip */", &["foreground", "background"]),
     ("/* badge */", &["muted", "muted-foreground", "border"]),
     // L1-POLISH-E — chip soft/outline/ghost + disabled/remove rest from pack

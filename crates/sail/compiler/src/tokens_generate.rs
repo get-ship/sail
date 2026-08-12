@@ -2735,7 +2735,7 @@ fn emit_compat_aliases(selector: &str, aliases: &BTreeMap<String, String>) -> St
     }
     let mut lines = vec![
         format!("{selector} {{"),
-        "  /* Legacy aliases (PE compat) */".into(),
+        "  /* Legacy aliases (host Style compat) */".into(),
     ];
     // BTreeMap iterates sorted — matches localeCompare for ASCII names.
     for (old_name, new_name) in aliases {

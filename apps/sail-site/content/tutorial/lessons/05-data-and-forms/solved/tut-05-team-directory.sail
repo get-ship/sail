@@ -57,7 +57,7 @@ export default controller(() => {
     <h3>Team</h3>
     <row gap="3" align="center">
       <label style(muteLabel)>
-        <input type="checkbox" bind:checked={breakApi} /> break the API
+        <checkbox bind:checked={breakApi} /> break the API
       </label>
       <button size="sm" variant="outline" on:click={() => reload()}>Reload</button>
     </row>

@@ -6,7 +6,7 @@
  * Regenerate: cargo run -p sail-compiler -- tokens
  */
 
-/* ─── theme:ship (themes/ship.json#mode=light) ─── */
+/* ─── theme:ship (project-themes/ship.json#mode=light) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
 :root[theme='ship'][data-mode='light'],
 :root[theme='ship']:not([data-mode]),
@@ -49,8 +49,8 @@
   --surface-overlay-opacity: 1;
   --warning: oklch(0.72 0.15 75);
   --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: var(--font-display);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -74,7 +74,7 @@
   --selected-strength: 14%;
 }
 
-/* ─── theme:ship (themes/ship.json#mode=dark) ─── */
+/* ─── theme:ship (project-themes/ship.json#mode=dark) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
 :root[theme='ship'][data-mode='dark'],
 [theme='ship'][data-mode='dark'] {
@@ -115,8 +115,8 @@
   --surface-overlay-opacity: 1;
   --warning: oklch(0.78 0.15 75);
   --body-font: var(--font-body);
-  --font-body: var(--font-body-app);
-  --heading-font: var(--font-display);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);

@@ -198,15 +198,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <span>Drag &amp; drop or <span style({ paint: fg(primary) })>browse</span></span>
   </span>
 </center>
-<input
-  type="file"
+<file
   accept={accept()}
   multiple={multiple()}
   aria-hidden="true"
   tabindex="-1"
   use:captureInput
   style({ box: display(none) })
->
+/>
 <if {errorMsg()}>
   <div role="alert" style({ paint: fg(destructive) })>
     <span style({ box: display(contents), text: fontSize(sm) })>

@@ -186,13 +186,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <if {selectable() === 'multi'}>
           <span>
-            <input
-              type="checkbox"
-              size="sm"
-              aria-label={`Select ${w.label}`}
-              checked={w.checked}
-              indeterminate={w.someSelected}
-            />
+            <checkbox
+       
+       size="sm"
+       aria-label={`Select ${w.label}`}
+       checked={w.checked}
+       indeterminate={w.someSelected}
+      />
           </span>
         </if>
         <if {w.icon !== ''}>

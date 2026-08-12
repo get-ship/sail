@@ -38,7 +38,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     grows to fit — the action measures the content and sets the height, and
     when the element leaves the page, the action’s cleanup runs with it:
   </p>
-  <textarea use:autosize placeholder="Type a few lines here…" style(demoField)></textarea>
+  <textarea use:autosize placeholder="Type a few lines here…" style(demoField) />
 
   <h2>Why there is no ref</h2>
   <p>

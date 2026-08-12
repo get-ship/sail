@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     setter is px. Drag:
   </p>
   <column gap="3" style(demoPanel)>
-    <input type="range" min="0" max="200" step="1" bind:value={shift} style(rangeTrack)>
+    <slider min="0" max="200" step="1" bind:value={shift} style(rangeTrack) />
     <card style(shiftTile)></card>
   </column>
   <code-block code={code.dynamic}></code-block>

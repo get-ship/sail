@@ -469,17 +469,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <column gap="2">
               <row align="center" gap="2">
                 <label for={hueId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>H</label>
-                <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) })>
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) }) />
                 <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{hue()}°</span>
               </row>
               <row align="center" gap="2">
                 <label for={satId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>S</label>
-                <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) })>
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) }) />
                 <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{sat()}%</span>
               </row>
               <row align="center" gap="2">
                 <label for={lightId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>L</label>
-                <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) })>
+                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) }) />
                 <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{light()}%</span>
               </row>
             </column>
@@ -592,17 +592,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <column gap="2">
               <row align="center" gap="2">
                 <label for={hueId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>H</label>
-                <input id={hueId()} type="range" min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) })>
+                <slider id={hueId()} min="0" max="360" step="1" bind:value={hueText} data-axis="h" use:rangeFill aria-label="Hue" style({ box: grow(1).minW(0) }) />
                 <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{hue()}°</span>
               </row>
               <row align="center" gap="2">
                 <label for={satId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>S</label>
-                <input id={satId()} type="range" min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) })>
+                <slider id={satId()} min="0" max="100" step="1" bind:value={satText} data-axis="s" use:rangeFill aria-label="Saturation" style({ box: grow(1).minW(0) }) />
                 <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{sat()}%</span>
               </row>
               <row align="center" gap="2">
                 <label for={lightId()} style({ box: w(4), paint: fg(muted-foreground), text: fontSize(xs) })>L</label>
-                <input id={lightId()} type="range" min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) })>
+                <slider id={lightId()} min="0" max="100" step="1" bind:value={lightText} data-axis="l" use:rangeFill aria-label="Lightness" style({ box: grow(1).minW(0) }) />
                 <span style({ box: w(8), paint: fg(muted-foreground), text: textAlign(end).fontSize(xs).fontFamily(mono) })>{light()}%</span>
               </row>
             </column>

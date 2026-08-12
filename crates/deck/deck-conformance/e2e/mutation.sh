@@ -4,7 +4,7 @@
 # Boots the ship-free deck-conformance server, loads /_deck/view/todos in a browser,
 # fills in the "New todo…" input, submits the form, follows the 303 redirect,
 # and asserts the new item appears in the rendered list.
-# Proves the full loop: SSR -> hydrate -> form submit -> PE mutation -> 303
+# Proves the full loop: SSR -> hydrate -> form submit -> progressive-enhancement mutation -> 303
 # -> live SSE update -> DOM shows new item.
 #
 # Requirements: `cargo build -p deck-conformance` + `playwright-cli` in PATH.

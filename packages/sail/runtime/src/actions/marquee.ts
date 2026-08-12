@@ -3,7 +3,7 @@
 // Stamps a style.loop translate-x animation on the attached node (the
 // track). Reads `duration` / `reverse` from the nearest ticker host
 // (`data-sail-host="ticker"`) so prop axes stay attribute-driven. Duration
-// map matches the retired PE (fast 16s / normal 24s / slow 32s). Reduced
+// map matches the retired host Style (fast 16s / normal 24s / slow 32s). Reduced
 // motion settles the track at rest via the motion runtime (no scroll).
 //
 // Seamless seam: the track must be TWO identical segments so -50% translate

@@ -13,7 +13,7 @@ use super::util::{
 
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
-    "wbr",
+    "wbr", "textarea",
 ];
 const RAW_TS_TAGS: &[&str] = &["scope", "controller"];
 const RAW_TEXT_TAGS: &[&str] = &["script", "style", "scope", "controller"];
