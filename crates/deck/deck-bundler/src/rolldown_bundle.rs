@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow, bail};
-use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
+use rolldown::{BundlerBuilder, BundlerOptions, CodeSplittingMode, InputItem, OutputFormat};
 use rolldown_common::{ManualCodeSplittingOptions, PreserveEntrySignatures};
 
 use super::proto::BundleManifest;
@@ -74,12 +74,12 @@ pub async fn bundle_target(
         // would do. Each duplicate chunk's `customElements.define()` adds a no-op
         // "called twice" warning at runtime; cumulative heap retention is the
         // 1.5 GB Firefox OOM. See .artifacts/2026-06-06-spaces-isolation.md.
-        manual_code_splitting: Some(ManualCodeSplittingOptions {
+        code_splitting: Some(CodeSplittingMode::Advanced(ManualCodeSplittingOptions {
             min_share_count: Some(1),
             min_size: Some(0.0),
             min_module_size: Some(0.0),
             ..Default::default()
-        }),
+        })),
         // Framework singletons (sail-runtime/sail-dom/sail-sdk-client) are libraries
         // consumed by name via the host importmap — preserve their full public
         // export surface. The default `ExportsOnly` tree-shook a re-exported const

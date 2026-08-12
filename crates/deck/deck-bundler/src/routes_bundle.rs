@@ -13,7 +13,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
-use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
+use rolldown::{BundlerBuilder, BundlerOptions, CodeSplittingMode, InputItem, OutputFormat};
 use rolldown_common::ManualCodeSplittingOptions;
 
 use crate::sail_plugin::{SailPlugin, component_index};
@@ -86,12 +86,12 @@ pub async fn bundle_routes(
         // regardless of how many routes use it. See
         // .artifacts/2026-06-06-spaces-isolation.md for the duplication
         // evidence (35 sail-pagination-*.js chunks pre-fix).
-        manual_code_splitting: Some(ManualCodeSplittingOptions {
+        code_splitting: Some(CodeSplittingMode::Advanced(ManualCodeSplittingOptions {
             min_share_count: Some(1),
             min_size: Some(0.0),
             min_module_size: Some(0.0),
             ..Default::default()
-        }),
+        })),
         ..Default::default()
     };
 
