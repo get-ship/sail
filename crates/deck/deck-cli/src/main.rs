@@ -117,7 +117,7 @@ enum Command {
 
     /// Bake all framework + consumer bundles via the in-process Rolldown bundler.
     BuildAssets {
-        /// Skip writing the `.deck/framework-stamp` file (tests).
+        /// Skip touching `crates/deck/deck-core/framework-stamp` (tests).
         #[arg(long = "no-stamp")]
         no_stamp: bool,
     },
@@ -623,10 +623,10 @@ fn build_assets(no_stamp: bool) -> Result<()> {
         // can run `deck build-assets` without re-triggering this build script
         // while downstream doctests are queued.
         if !no_stamp {
-            let stamp_path = deck_config::deck_out_path(&repo_root).join("framework-stamp");
+            let stamp_path = deck_config::framework_stamp_path(&repo_root);
             deck_bundler::atomic::write(
                 &stamp_path,
-                // Empty content keeps the committed stamp unmodified in git;
+                // Empty content keeps the tracked crate stamp unmodified in git;
                 // Cargo's rerun-if-changed tracks mtime, not content.
                 b"",
             )
@@ -707,7 +707,7 @@ fn build_assets(no_stamp: bool) -> Result<()> {
 ///   - stale AND regeneration is possible (a real Cargo workspace + `cargo`
 ///     on PATH, and we haven't already tried once this restart cycle): log
 ///     loud, run `build_assets()` in-process to re-stage `.deck/framework/`
-///     with a fresh stamp and update `.deck/framework-stamp`, then
+///     with a fresh stamp and update `crates/deck/deck-core/framework-stamp`, then
 ///     `cargo run -p deck-cli -- dev …` — cargo picks up the changed stamp
 ///     via `build.rs`'s `cargo:rerun-if-changed`, rebuilds `deck-core`
 ///     (re-baking the fresh, now-stamped bundle) and `deck-cli`, and launches
