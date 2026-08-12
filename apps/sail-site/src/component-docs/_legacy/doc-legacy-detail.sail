@@ -9,7 +9,7 @@
   dialog, popover, tooltip, dropdown, hover-card, context-menu, toast,
   accordion, combobox, theme-picker.
   Peel remaining tags into component-docs/<slug>/doc-<slug>.sail over time.
-  checkbox stays alias residual (no CE invent — demos <input type="checkbox">).
+  checkbox stays alias residual (no CE invent — demos <checkbox >).
 
   Specimens are intentional live demos (hub-quality), not random float.
   Props/usage come from DETAILS + pack meta. Viewer variant chips drive tags
@@ -50,8 +50,9 @@ export default controller((ctx: Scope) => {
     const v = e?.variants?.[0] ?? ''
     variant.set(v)
   })
-  const onVariantChange = (detail: { value?: string } | string): void => {
-    const v = typeof detail === 'string' ? detail : (detail?.value ?? '')
+  const onVariantChange = (detail: { variant?: string; value?: string } | string): void => {
+    const v =
+      typeof detail === 'string' ? detail : (detail?.variant ?? detail?.value ?? '')
     variant.set(v)
   }
 
@@ -177,7 +178,7 @@ export default controller((ctx: Scope) => {
       <if {stage.checkbox()}>
         <column gap="2" align="start" style(stageCol)>
           <label style(mutedSm)>
-            <input type="checkbox" bind:checked={agreed} /> Email me product updates
+            <checkbox bind:checked={agreed} /> Email me product updates
           </label>
           <p style(note)>Catalog alias — <code>input type=checkbox</code>, not a separate tag.</p>
         </column>

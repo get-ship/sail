@@ -119,7 +119,7 @@ export default controller((_ctx: Scope) => {
               <switch bind:checked={progIndeterminate} size="sm" tone="primary"></switch>
               <span style(sizeValue)>{progIndeterminate() ? 'no value attr' : 'determinate'}</span>
             </row>
-            <p style(mutedXs)>Omit <code>value</code> for the native indeterminate sweep. No separate PE prop.</p>
+            <p style(mutedXs)>Omit <code>value</code> for the native indeterminate sweep. No separate host prop.</p>
           </column>
         </column>
       </row>

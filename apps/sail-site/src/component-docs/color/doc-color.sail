@@ -1,0 +1,112 @@
+<!--
+  <doc-color> — /components/color
+-->
+
+<controller>
+import type { Scope } from './doc-color.sail'
+import { DETAILS } from '../../compositions/component-details'
+
+export default controller((_ctx: Scope) => {
+  const value = signal('#c8f542')
+  const invalid = signal(false)
+  const disabled = signal(false)
+
+  const entry = DETAILS.color
+  const heading = () => entry?.heading ?? '<color>'
+  const blurb = () => entry?.blurb ?? ''
+  const props = () => entry?.props ?? []
+  const usageCode = () => entry?.usage ?? ''
+
+  const specimenCode = derived(() => {
+    const a: string[] = [`value="${value()}"`]
+    if (invalid()) a.push('invalid')
+    if (disabled()) a.push('disabled')
+    return `<color ${a.join(' ')} />`
+  })
+
+  const exBasic = () => `<color value="#c8f542" />\n<color bind:value={hex} />`
+
+  return {
+    value,
+    invalid,
+    disabled,
+    heading,
+    blurb,
+    props,
+    usageCode,
+    specimenCode,
+    exBasic,
+  }
+})
+</controller>
+
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style fieldShell = { box: w(full).maxW(64).pad(2).overflow(visible) }
+  style knobLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
+  }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleSection = { box: w(full).padY(4).overflow(visible) }
+  style exampleH = { text: fontSize(md).fontWeight(semibold) }
+  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+  style demoRow = { box: w(full).padY(2) }
+</scope>
+
+<column gap="6" style(page)>
+  <sail-component-viewer
+    name={heading()}
+    blurb={blurb()}
+    pack="Component primitives"
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
+    usage={usageCode()}
+    rows={props()}
+  >
+    <column slot="specimen" gap="3" align="start" style(fieldShell)>
+      <color bind:value={value} invalid={invalid()} disabled={disabled()} />
+    </column>
+
+    <column slot="knobs" gap="4" align="stretch">
+      <column gap="2">
+        <label style(knobLabel)>Value</label>
+        <input type="text" size="sm" bind:value={value} placeholder="#rrggbb" />
+      </column>
+      <row gap="4" align="center">
+        <label><checkbox bind:checked={invalid} size="sm" /> Invalid</label>
+        <label><checkbox bind:checked={disabled} size="sm" /> Disabled</label>
+      </row>
+    </column>
+
+    <column slot="usage-preview" gap="3" align="start" style(fieldShell)>
+      <color value="#c8f542" />
+    </column>
+
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>System swatch</h3>
+        <p style(exampleLead)>
+          One field for a hex colour. For full HSL channels, use the colour-picker package.
+        </p>
+        <row gap="3" align="center" style(demoRow)>
+          <color value="#c8f542" />
+          <color value="#3b82f6" />
+          <color value="#ef4444" />
+        </row>
+        <doc-code code={exBasic()} lang="sail"></doc-code>
+      </column>
+    </column>
+  </sail-component-viewer>
+
+  <row gap="2">
+    <a variant="default" href="/components">← All components</a>
+    <a variant="solid" tone="primary" href="/components/input">Input</a>
+  </row>
+</column>

@@ -1,6 +1,6 @@
 <!--
   <doc-breadcrumb> — first-class docs host for /components/breadcrumb.
-  Trail host only — no PE props; compose nested a / small.
+  Trail host only — no host props; compose nested a / small.
 -->
 
 <controller>
@@ -93,7 +93,7 @@ export default controller((_ctx: Scope) => {
           <column gap="2">
             <label style(knobLabel)>Props</label>
             <p style(mutedXs)>
-              No PE props on the trail host. Compose nested <code>a</code> crumbs and an inert
+              No host props on the trail host. Compose nested <code>a</code> crumbs and an inert
               current (commonly <code>small</code>).
             </p>
           </column>

@@ -1,6 +1,6 @@
 <!--
-  <doc-field> — first-class docs host for /components/field.
-  Specimen left, knobs right (Mantine-style configurator) + examples walkthrough.
+  <doc-field> — /components/field
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
 <controller>
@@ -10,158 +10,136 @@ import { DETAILS } from '../../compositions/component-details'
 export default controller((_ctx: Scope) => {
   const fieldInvalid = signal(false)
   const email = signal('ada@ship.dev')
-  const fieldMeta = derived(() => {
-    return `invalid ${fieldInvalid() ? 'on' : 'off'} · hint/error component.field.* · describedControl`
-  })
+
   const entry = DETAILS.field
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
-  const fldExSlots = () =>
+
+  const specimenCode = derived(() => {
+    const inv = fieldInvalid() ? ' invalid' : ''
+    return `<field${inv}>\n  <label slot="label">Email</label>\n  <input type="email" placeholder="you@ship.dev" />\n  <span slot="hint">We will never share this.</span>\n  <span slot="error">Enter a valid email.</span>\n</field>`
+  })
+
+  const exSlots = () =>
     `<field>\n  <label slot="label">Email</label>\n  <input type="email" placeholder="you@ship.dev" />\n  <span slot="hint">We will never share this.</span>\n  <span slot="error">Enter a valid email.</span>\n</field>`
-  const fldExInvalid = () =>
-    `<field invalid>\n  <label slot="label">Email</label>\n  <input type="email" value="not-an-email" invalid />\n  <span slot="hint">We will never share this.</span>\n  <span slot="error">Enter a valid email.</span>\n</field>\n<!-- invalid hides hint, shows error + aria-invalid -->`
-  const fldExRest = () =>
-    `<field>\n  <label slot="label">Name</label>\n  <input placeholder="Ada Lovelace" />\n  <span slot="hint">Shown when valid.</span>\n</field>\n<!-- hint → component.field.hint; control surface component.field.* -->`
+  const exInvalid = () =>
+    `<field invalid>\n  <label slot="label">Email</label>\n  <input type="email" value="not-an-email" invalid />\n  <span slot="hint">We will never share this.</span>\n  <span slot="error">Enter a valid email.</span>\n</field>`
+
   return {
-    fieldInvalid, email, fieldMeta,
-    heading, blurb, props, usageCode,
-    fldExSlots, fldExInvalid, fldExRest,
+    fieldInvalid,
+    email,
+    heading,
+    blurb,
+    props,
+    usageCode,
+    specimenCode,
+    exSlots,
+    exInvalid,
   }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
+  style controlW = { box: w(64).maxW(full) }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style exampleBlock = { box: w(full).padY(2) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleSection = { box: w(full).padY(4).overflow(visible) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="4" align="center" style(stageCol)>
-            <if {fieldInvalid()}>
-              <field invalid style(stageCol)>
-                <label slot="label">Email</label>
-                <input type="email" placeholder="you@ship.dev" bind:value={email} invalid />
-                <span slot="hint">We will never share this.</span>
-                <span slot="error">Enter a valid email address.</span>
-              </field>
-            {else =>
-              <field style(stageCol)>
-                <label slot="label">Email</label>
-                <input type="email" placeholder="you@ship.dev" bind:value={email} />
-                <span slot="hint">We will never share this.</span>
-                <span slot="error">Enter a valid email address.</span>
-              </field>}</if>
-            <p style(monoXs)>{fieldMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <label style(knobLabel)>Invalid</label>
-            <row gap="2" align="center">
-              <switch bind:checked={fieldInvalid} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{fieldInvalid() ? 'error shown' : 'hint shown'}</span>
-            </row>
-            <p style(mutedXs)>
-              Host <code>invalid</code> swaps hint → error via
-              <code>group-invalid</code>. <code>use:describedControl</code> stamps
-              <code>aria-describedby</code> / <code>aria-invalid</code> on the control.
-              Put <code>invalid</code> on the input too for the destructive border.
-            </p>
-          </column>
-          <column gap="2">
-            <p style(mutedXs)>
-              Hint ink <code>component.field.hint</code>; error
-              <code>component.field.error</code>. Control chrome is the shared
-              <code>component.field.*</code> surface (bg / border / fg).
-            </p>
-          </column>
-        </column>
-      </row>
+    <column slot="specimen" gap="3" align="center" style(specimen)>
+      <if {fieldInvalid()}>
+        <field invalid style(controlW)>
+          <label slot="label">Email</label>
+          <input type="email" placeholder="you@ship.dev" bind:value={email} invalid />
+          <span slot="hint">We will never share this.</span>
+          <span slot="error">Enter a valid email address.</span>
+        </field>
+      {else =>
+        <field style(controlW)>
+          <label slot="label">Email</label>
+          <input type="email" placeholder="you@ship.dev" bind:value={email} />
+          <span slot="hint">We will never share this.</span>
+          <span slot="error">Enter a valid email address.</span>
+        </field>}</if>
     </column>
 
-    <column gap="5" style(exampleBlock)>
-      <p style(sectionLabel)>Examples</p>
+    <column slot="knobs" gap="4" align="stretch">
+      <row gap="4" align="center">
+        <label><checkbox bind:checked={fieldInvalid} size="sm" /> Invalid</label>
+      </row>
+      <p style(exampleLead)>
+        When invalid, the hint hides and the error shows. Put <code>invalid</code> on the
+        control too for the destructive border.
+      </p>
+    </column>
 
-      <column gap="2">
+    <column slot="usage-preview" gap="3" align="start" style(specimen)>
+      <field style(controlW)>
+        <label slot="label">Email</label>
+        <input type="email" placeholder="you@ship.dev" />
+        <span slot="hint">We will never share this.</span>
+        <span slot="error">Enter a valid email.</span>
+      </field>
+    </column>
+
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <column gap="3" style(exampleSection)>
         <h3 style(exampleH)>Label · control · hint</h3>
         <p style(exampleLead)>
-          Slot the label, control, and optional hint. The field spaces the stack and
-          wires describedby when both regions exist.
+          Slot the label, control, and optional hint. The field spaces the stack.
         </p>
-        <field style(stageCol)>
+        <field style(controlW)>
           <label slot="label">Email</label>
           <input type="email" placeholder="you@ship.dev" />
           <span slot="hint">We will never share this.</span>
           <span slot="error">Enter a valid email.</span>
         </field>
-        <code-block code={fldExSlots()}></code-block>
+        <doc-code code={exSlots()} lang="sail"></doc-code>
       </column>
-
-      <column gap="2">
+      <column gap="3" style(exampleSection)>
         <h3 style(exampleH)>Invalid</h3>
         <p style(exampleLead)>
-          Host <code>invalid</code> hides the hint and reveals the error alert.
-          Mirror <code>invalid</code> on the control for the border.
+          Host <code>invalid</code> hides the hint and reveals the error.
         </p>
-        <field invalid style(stageCol)>
+        <field invalid style(controlW)>
           <label slot="label">Email</label>
           <input type="email" value="not-an-email" invalid />
           <span slot="hint">We will never share this.</span>
           <span slot="error">Enter a valid email.</span>
         </field>
-        <code-block code={fldExInvalid()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>
-          Hint/error leaves and the shared control surface are themeable —
-          no filled/unstyled host invent.
-        </p>
-        <field style(stageCol)>
-          <label slot="label">Name</label>
-          <input placeholder="Ada Lovelace" />
-          <span slot="hint">Shown when valid.</span>
-          <span slot="error">Required.</span>
-        </field>
-        <code-block code={fldExRest()}></code-block>
+        <doc-code code={exInvalid()} lang="sail"></doc-code>
       </column>
     </column>
   </sail-component-viewer>
 
   <row gap="2">
     <a variant="default" href="/components">← All components</a>
-    <a variant="solid" tone="primary" href="/docs/reference">API reference</a>
+    <a variant="solid" tone="primary" href="/components/label">Label</a>
   </row>
 </column>

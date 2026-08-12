@@ -76,198 +76,232 @@ const lang = (
 export const DETAILS: Record<string, DetailEntry> = {
   // ── Inputs ───────────────────────────────────────────────────────────
   button: lang('button', 'button', {
-    blurb:
-      'The platform button. tone paints the colour; variant is how much of it you get (solid fill, soft, outline, ghost). default is an alias of solid.',
+    blurb: 'Buttons for what people do next — save, cancel, confirm, open.',
     variants: ['solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
       {
         name: 'variant',
-        desc: 'fill model — default ≡ solid; soft / outline / ghost take less paint',
-        type: 'default · solid · soft · outline · ghost',
+        desc: 'How loud the fill is',
+        type: 'solid · soft · outline · ghost',
       },
-      { name: 'tone', desc: 'semantic colour — always applied when set', type: TONES },
-      { name: 'size', desc: 'text control height, or square icon hit target', type: 'xs · sm · md · lg · icon · iconSm · iconLg' },
-      { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
-      { name: 'children', desc: 'label and optional <icon> siblings (gap is built-in)', type: 'slot' },
-      { name: 'style({ animate: press })', desc: 'press scale feedback', type: 'preset' },
+      {
+        name: 'tone',
+        desc: 'Colour (default primary)',
+        type: TONES,
+      },
+      {
+        name: 'size',
+        desc: 'Height, or square for icon-only',
+        type: 'xs · sm · md · lg · icon · iconSm · iconLg',
+      },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
     ],
   }),
   a: lang('a', 'a', {
     blurb:
-      'Native <a>. Bare (no variant attr) stays a text link — freeform never stamps variant/tone. With variant set it becomes a button-link: default rest uses component.button.*; solid / soft / outline / ghost match the button family (default ≠ solid). tone always paints when set. No size axis — use <button> for sized CTAs. disabled paint needs aria-disabled on anchors.',
+      'Links. Bare stays a text link. With variant set it looks like a button. Use button for sized CTAs.',
     variants: ['default', 'solid', 'soft', 'outline', 'ghost'],
     variantAttr: 'variant',
     props: [
       {
         name: 'variant',
-        desc: 'omit for text link; set for button-link chrome — default rest = component.button.* (not solid invert)',
+        desc: 'Omit for text link; set for button-style link',
         type: 'default · solid · soft · outline · ghost',
       },
       {
         name: 'tone',
-        desc: 'semantic colour when button-link — always applied when set; omit for rest button tokens',
+        desc: 'Colour when variant is set (default primary)',
         type: TONES,
       },
       {
         name: 'disabled',
-        desc: 'dim + not-allowed cursor when aria-disabled (native disabled is not a real <a> state)',
+        desc: 'Non-interactive (use aria-disabled on anchors)',
         type: 'bool',
       },
-      { name: 'href', desc: 'native navigation target', type: 'string' },
-      { name: 'children', desc: 'link label (and optional <icon> siblings in button-link mode)', type: 'slot' },
+      { name: 'href', desc: 'Navigation target', type: 'string' },
+      { name: 'children', desc: 'Link label', type: 'slot' },
     ],
   }),
   input: lang('input', 'input', {
     blurb:
-      'Native <input> with type-gated Style skins — text-like fields share component.field.* with select/textarea; checkbox/radio get checkSized/radioSized (no separate <checkbox> tag); range/color/file/hidden have dedicated arms. size xs|sm|md|lg; invalid → destructive border; disabled native + PE dim. No tone, no filled/unstyled variant. bind:value / bind:checked are language directives.',
+      'Single-line text fields — text, email, password, search, number, tel, url, and hidden. Passwords show a reveal control by default.',
     variants: [],
     variantAttr: '',
     props: [
       {
         name: 'type',
-        desc: 'gates the skin: text-like → fieldSized; checkbox/radio → boxes; range/color/file/hidden/submit special-cased',
-        type: 'text · email · password · number · search · tel · url · date · time · datetime-local · month · week · file · color · checkbox · radio · range · submit · hidden',
+        desc: 'Text field mode',
+        type: 'text · email · password · number · search · tel · url · hidden',
       },
       {
         name: 'size',
-        desc: 'control-h ladder on fields/file; icon-size on checkbox/radio (xs≡sm); n/a height for range/color/hidden',
+        desc: 'Control height (default md)',
         type: 'xs · sm · md · lg',
       },
       {
         name: 'invalid',
-        desc: 'compound destructive border (field chrome); not a separate error surface',
+        desc: 'Validation failed',
         type: 'bool',
       },
-      { name: 'disabled', desc: 'native disabled + PE opacity / not-allowed', type: 'bool' },
-      { name: 'placeholder', desc: 'hint text for empty text-like fields', type: 'string' },
-      { name: 'bind:value', desc: 'two-way signal binding for value-bearing types', type: 'signal' },
-      { name: 'bind:checked', desc: 'two-way signal binding for checkbox/radio types', type: 'signal' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
+      { name: 'placeholder', desc: 'Hint when empty', type: 'string' },
+      { name: 'reveal', desc: 'Password show/hide (default true)', type: 'bool' },
+      { name: 'name · required · readonly · value', desc: 'Form participation', type: 'string · bool' },
+      { name: 'min · max · step', desc: 'Number bounds', type: 'string' },
+      { name: 'autocomplete · pattern · maxlength · inputmode', desc: 'Text constraints', type: 'string' },
+      { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
     ],
   }),
   textarea: lang('textarea', 'textarea', {
-    blurb:
-      'Native multi-line field on the shared component.field surface (bg · fg · border with input/select). bind:value locks the host to a signal. size xs|sm|md|lg scales min-height + type; rows sets initial height (default 3). invalid paints border(destructive); disabled is native freeze + PE opacity. No tone prop — theme component.field.*; use:autosize grows height with content.',
+    blurb: 'Multi-line text. Same field surface as input and select.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding (lockstep with host)', type: 'signal' },
-      { name: 'size', desc: 'control height + type scale (default md)', type: 'xs · sm · md · lg' },
-      { name: 'rows', desc: 'initial height in lines (default 3)', type: 'number' },
-      { name: 'placeholder', desc: 'hint text in the empty field', type: 'string' },
-      { name: 'invalid', desc: 'destructive border for validation chrome', type: 'bool' },
-      { name: 'disabled', desc: 'native freeze; PE opacity + not-allowed', type: 'bool' },
+      { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
+      { name: 'size', desc: 'Control scale (default md)', type: 'xs · sm · md · lg' },
+      { name: 'rows', desc: 'Initial height in lines (default 3)', type: 'number' },
+      { name: 'placeholder', desc: 'Hint when empty', type: 'string' },
+      { name: 'invalid', desc: 'Validation failed', type: 'bool' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
     ],
   }),
   select: lang('select', 'select', {
-    blurb:
-      'Native closed picker — keyboard, form submission, and mobile sheets come from the platform. Rest surface is component.field (bg · fg · border) shared with input/textarea; size xs|sm|md|lg; invalid → destructive border; disabled dims. SELECT_MAP draws the chevron + option ink. Not a combobox — open listbox chrome is a different L1.',
+    blurb: 'Closed list picker. Keyboard, form submit, and mobile sheets come from the platform.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding (single-select)', type: 'signal' },
+      { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
       {
         name: 'size',
-        desc: 'control height + type scale (default md); padE reserved for chevron',
+        desc: 'Control height (default md)',
         type: 'xs · sm · md · lg',
       },
       {
         name: 'invalid',
-        desc: 'PE attr — paints destructive border (compound), like input',
+        desc: 'Validation failed',
         type: 'bool',
       },
-      { name: 'disabled', desc: 'native freeze; PE opacity + not-allowed cursor', type: 'bool' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
       {
         name: 'multiple',
-        desc: 'native multi-select attr — no PE chrome change; open list stays the OS picker',
+        desc: 'Allow multiple selections',
         type: 'bool',
       },
-      { name: '<option> / <optgroup>', desc: 'platform option model (children)', type: 'children' },
+      { name: '<option> / <optgroup>', desc: 'Options', type: 'children' },
     ],
   }),
   combobox: lang('combobox', 'combobox', {
-    blurb:
-      'A text input that filters a list. Type to filter, arrows rove, Enter commits, Escape closes — ARIA combobox wired for you. Host props: placeholder · value · onSelect. Listbox paint component.combobox.bg / fg; field chrome matches bare input globals.',
+    blurb: 'Type to filter a list. Arrow keys move, Enter commits, Escape closes.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'placeholder', desc: 'hint text in the empty field', type: 'string' },
-      { name: 'value', desc: 'the committed value, reflected', type: 'string' },
-      { name: 'onSelect', desc: 'commit callback — { value, label }', type: 'callback' },
-      { name: '<option>', desc: 'the list — plain option children', type: 'children' },
+      { name: 'placeholder', desc: 'Hint when empty', type: 'string' },
+      { name: 'value', desc: 'Committed value', type: 'string' },
+      { name: 'onSelect', desc: 'Commit callback — { value, label }', type: 'callback' },
+      { name: '<option>', desc: 'List options', type: 'children' },
     ],
   }),
   checkbox: lang('checkbox', 'checkbox', {
-    blurb:
-      'Catalog alias only — there is no <checkbox> L1 tag. Use <input type="checkbox"> (checkSized skin on input). size, invalid, disabled, and bind:checked are input props. Open the input detail for type knobs.',
+    blurb: 'A boolean check. Pair with a label. Use switch for on/off settings.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'type="checkbox"', desc: 'required — this is an input type, not a separate PE', type: 'fixed' },
-      { name: 'bind:checked', desc: 'two-way signal binding (language directive)', type: 'signal' },
-      { name: 'size', desc: 'icon-size ladder via input size prop (xs≡sm · md · lg)', type: 'xs · sm · md · lg' },
-      { name: 'invalid', desc: 'input compound — destructive border when set', type: 'bool' },
-      { name: 'disabled', desc: 'native disabled + PE dim', type: 'bool' },
+      { name: 'bind:checked', desc: 'Two-way binding', type: 'signal' },
+      { name: 'size', desc: 'Control size (default md)', type: 'xs · sm · md · lg' },
+      { name: 'invalid', desc: 'Validation failed', type: 'bool' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
+      { name: 'name · required · value', desc: 'Form participation', type: 'string · bool' },
+    ],
+  }),
+  date: lang('date', 'date', {
+    blurb: 'Date and time fields. type picks precision; the platform supplies the calendar or clock UI.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      {
+        name: 'type',
+        desc: 'Precision (default date)',
+        type: 'date · time · datetime-local · month · week',
+      },
+      { name: 'min · max · step', desc: 'Bounds', type: 'string' },
+      { name: 'size', desc: 'Control height (default md)', type: 'xs · sm · md · lg' },
+      { name: 'invalid · disabled · name · required · readonly · value', desc: 'State + form', type: 'mixed' },
+      { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
+    ],
+  }),
+  file: lang('file', 'file', {
+    blurb: 'Opens the system file picker. Use dropzone when you need drag-and-drop.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: 'accept', desc: 'MIME / extension filter', type: 'string' },
+      { name: 'multiple', desc: 'Allow multiple files', type: 'bool' },
+      { name: 'size', desc: 'Control height (default md)', type: 'xs · sm · md · lg' },
+      { name: 'invalid · disabled · name · required', desc: 'State + form', type: 'mixed' },
+    ],
+  }),
+  color: lang('color', 'color', {
+    blurb: 'A system colour swatch for a single hex value.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: 'value', desc: 'Hex color', type: 'string' },
+      { name: 'name', desc: 'Form name', type: 'string' },
+      { name: 'invalid · disabled', desc: 'State', type: 'bool' },
+      { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
     ],
   }),
   radio: lang('radio', 'radio', {
-    blurb:
-      'One option — native radio inside a label host. value is this option’s value; disabled is a host attribute radio-group syncs onto the nested input (input when:disabled dims the control). Label ink from component.radio.fg (--radio-foreground); control face uses free foreground/background, checked primary + RADIO_INPUT_MAP inset disc. No size/tone props. Group exclusivity, name, and onChange are radio-group composition (separate L1).',
+    blurb: 'One option in a group. Place radios inside radio-group.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value', desc: 'this option’s value (group selects by match)', type: 'string' },
-      {
-        name: 'disabled',
-        desc: 'host attr for radio-group → input.disabled + PE dim',
-        type: 'bool',
-      },
-      { name: '(children)', desc: 'option label text', type: 'children' },
+      { name: 'value', desc: 'This option’s value', type: 'string' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
+      { name: '(children)', desc: 'Option label', type: 'children' },
     ],
   }),
   'radio-group': lang('radio-group', 'radioGroup', {
-    blurb:
-      'Groups native radios under one accessible name and one value. The platform owns exclusivity and keyboard; the group syncs ARIA and emits one change.',
+    blurb: 'A set of radios with one shared value and accessible name.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value', desc: 'the selected value, reflected', type: 'string' },
-      { name: 'label', desc: 'accessible group name', type: 'string' },
-      { name: 'name', desc: 'the native radio name', type: 'string' },
-      { name: 'disabled / required', desc: 'platform states, styled', type: 'bool' },
+      { name: 'value', desc: 'Selected value', type: 'string' },
+      { name: 'label', desc: 'Group name', type: 'string' },
+      { name: 'name', desc: 'Form name for the radios', type: 'string' },
+      { name: 'disabled / required', desc: 'Group state', type: 'bool' },
     ],
   }),
   switch: lang('switch', 'switchToggle', {
-    blurb:
-      'Native checkbox restyled as a sliding toggle (role=switch). bind:checked locks the host to a signal. size sm|md|lg scales track + thumb. tone paints the checked track only; omit tone and checked uses primary. Off track/border from component.switch.track + border; thumb always component.switch.thumb (never tone.foreground).',
+    blurb: 'On / off toggle for settings. Use checkbox for multi-select lists.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'bind:checked', desc: 'two-way signal binding (lockstep with host)', type: 'signal' },
-      { name: 'checked', desc: 'on/off state (also reflectable)', type: 'bool' },
+      { name: 'bind:checked', desc: 'Two-way binding', type: 'signal' },
+      { name: 'checked', desc: 'On/off state', type: 'bool' },
       {
         name: 'tone',
-        desc: 'checked track (+ focus) only; omit → primary when on',
+        desc: 'Colour when on (default primary)',
         type: TONES,
       },
-      { name: 'size', desc: 'track + thumb scale (default md)', type: 'sm · md · lg' },
-      { name: 'disabled', desc: 'native freeze; PE keeps off-track tokens + lighter thumb shadow', type: 'bool' },
+      { name: 'size', desc: 'Track size (default md)', type: 'sm · md · lg' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
     ],
   }),
   slider: lang('slider', 'slider', {
-    blurb:
-      'Native single-thumb range · type=range + use:rangeFill (--rng-pct). Track/fill/border from component.slider.*; thumb face field, rim = fill. value · min · max · step · size sm|md|lg · disabled · name. No tone; no dual-thumb range.',
-    variants: ['sm', 'md', 'lg'],
-    variantAttr: 'size',
+    blurb: 'A single-thumb range control. Set min, max, and step as needed.',
+    variants: [],
+    variantAttr: '',
     props: [
-      { name: 'bind:value', desc: 'two-way signal binding (lockstep with host)', type: 'signal' },
-      { name: 'value', desc: 'current position (default 0)', type: 'number' },
-      { name: 'min', desc: 'range floor (default 0)', type: 'number' },
-      { name: 'max', desc: 'range ceiling (default 100)', type: 'number' },
-      { name: 'step', desc: 'increment (default 1)', type: 'number' },
-      { name: 'size', desc: 'track + thumb scale (default md)', type: 'sm · md · lg' },
-      { name: 'disabled', desc: 'native freeze + PE opacity/cursor', type: 'bool' },
-      { name: 'name', desc: 'form field name', type: 'string' },
+      { name: 'bind:value', desc: 'Two-way binding', type: 'signal' },
+      { name: 'value', desc: 'Current position (default 0)', type: 'number' },
+      { name: 'min', desc: 'Minimum (default 0)', type: 'number' },
+      { name: 'max', desc: 'Maximum (default 100)', type: 'number' },
+      { name: 'step', desc: 'Increment (default 1)', type: 'number' },
+      { name: 'size', desc: 'Track size (default md)', type: 'sm · md · lg' },
+      { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
+      { name: 'name', desc: 'Form name', type: 'string' },
     ],
   }),
   'toggle-group': lang('toggle-group', 'toggleGroup', {
@@ -285,66 +319,57 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   field: lang('field', 'field', {
     blurb:
-      'The label-plus-control unit. It wires label/for, spaces the pair, and carries the invalid state so the message and the border agree.',
+      'Label, control, and hint or error in one unit. invalid swaps the hint for the error message.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'invalid', desc: 'error state for the whole unit', type: 'bool' },
-      { name: '<label> <input>', desc: 'the pair — for/id wiring is yours', type: 'children' },
+      { name: 'invalid', desc: 'Show error instead of hint', type: 'bool' },
+      { name: 'slots', desc: 'label · default control · hint · error', type: 'slots' },
     ],
   }),
   label: lang('label', 'label', {
-    blurb:
-      'Native <label> — for= focuses the control. size sm|md|lg matches the control type ladder. required shows the * marker from component.label.required; host ink from component.label.fg and weight from typography.label.weight. No tone prop.',
+    blurb: 'Labels a control. for= focuses the matching field. required shows a marker.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'for', desc: 'native association — click focuses the control', type: 'id' },
-      { name: 'size', desc: 'type scale matching control size', type: 'sm · md · lg' },
-      {
-        name: 'required',
-        desc: 'shows * marker (component.label.required via group-required)',
-        type: 'bool',
-      },
-      { name: '(children)', desc: 'label text', type: 'children' },
+      { name: 'for', desc: 'Click focuses the control', type: 'id' },
+      { name: 'size', desc: 'Type scale matching the control (default md)', type: 'sm · md · lg' },
+      { name: 'required', desc: 'Shows a * marker', type: 'bool' },
+      { name: '(children)', desc: 'Label text', type: 'children' },
     ],
   }),
   fieldset: lang('fieldset', 'fieldset', {
     blurb:
-      'Native form group with a themeable border (component.fieldset.border). Put a <legend> first (caption ink from component.legend.fg — not a separate hub tile), then controls. disabled freezes every control inside (platform) and dims the host; no tone/size/variant axes.',
+      'Groups related controls under a legend. disabled freezes every control inside and dims the group.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'disabled', desc: 'native — freezes controls inside; PE dims opacity', type: 'bool' },
-      {
-        name: '<legend>',
-        desc: 'group caption — native legend PE (component.legend.fg); document only here, not as a top-level catalog entry',
-        type: 'children',
-      },
-      { name: 'default', desc: 'controls and copy inside the group', type: 'slot' },
+      { name: 'disabled', desc: 'Freezes controls inside and dims the group', type: 'bool' },
+      { name: '<legend>', desc: 'Group caption (first child)', type: 'children' },
+      { name: 'default', desc: 'Controls and copy inside the group', type: 'slot' },
     ],
   }),
   // legend is NOT a top-level DETAILS/catalog topic — documented inside fieldset.
   dropzone: lang('dropzone', 'dropzone', {
     blurb:
-      'An attribute, not a component: put dropzone on a surface and use:dropzone wires dragover states, click-to-browse and the file input.',
+      'An attribute, not a component: put dropzone on a surface to wire drag-over states, click-to-browse, and the file input.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'dropzone', desc: 'the attribute that makes any surface one', type: 'attr' },
-      { name: 'tone', desc: 'border and highlight colour', type: TONES },
+      { name: 'dropzone', desc: 'Attribute that makes any surface a drop target', type: 'attr' },
+      { name: 'tone', desc: 'Border and highlight colour', type: TONES },
     ],
   }),
   'theme-picker': lang('theme-picker', 'themePicker', {
     blurb:
-      'Theme switcher: trigger opens a native [popover] of theme cards previewing real stylesheets. Host props: value · inline · modeOnly · onThemeChange. Paint component.theme-picker.* (panel · trigger · option).',
+      'Theme switcher. Opens a panel of live theme cards, or cycles light / dark / system when mode-only.',
     variants: [],
     variantAttr: '',
     props: [
-      { name: 'value', desc: 'the active theme id, reflected', type: 'string' },
-      { name: 'inline', desc: 'panel in document flow (no floating popover chrome)', type: 'bool' },
-      { name: 'modeOnly', desc: 'light / dark / system cycle only — no full catalog', type: 'bool' },
-      { name: 'onThemeChange', desc: 'fires with { theme, mode, preference } on selection', type: 'callback' },
+      { name: 'value', desc: 'Active theme id', type: 'string' },
+      { name: 'inline', desc: 'Panel in document flow (no floating chrome)', type: 'bool' },
+      { name: 'modeOnly', desc: 'Light / dark / system only — no full catalog', type: 'bool' },
+      { name: 'onThemeChange', desc: 'Fires with { theme, mode, preference }', type: 'callback' },
     ],
   }),
 
@@ -379,7 +404,7 @@ export const DETAILS: Record<string, DetailEntry> = {
         desc: 'current amount; omit attribute entirely for native indeterminate + PROGRESS_MAP shimmer',
         type: 'number',
       },
-      { name: 'max', desc: 'upper bound of the range (default 1 on the PE host)', type: 'number' },
+      { name: 'max', desc: 'upper bound of the range (default 1 on the host)', type: 'number' },
       {
         name: 'size',
         desc: 'track height ladder (default md)',
@@ -747,7 +772,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   breadcrumb: lang('breadcrumb', 'breadcrumb', {
     blurb:
-      'A trail of links with the right nav/ARIA and themed separators. No PE props — anchors for the path, inert current (small). Faces component.breadcrumb.fg / current.',
+      'A trail of links with the right nav/ARIA and themed separators. No host props — anchors for the path, inert current (small). Faces component.breadcrumb.fg / current.',
     variants: [],
     variantAttr: '',
     props: [
@@ -813,7 +838,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   'scroll-area': lang('scroll-area', 'scrollArea', {
     blurb:
-      'Overflow box with thin, themed scrollbars. Only orientation is a PE prop (vertical · horizontal · both; default vertical). Constrain height/width with Style box so content overflows. Rest thumb from component.scroll-area.thumb; hover uses free border-strong (SPEC-D1 — thumb-hover leaf is parked unread). Standard scrollbar-width/color only (no WebKit pseudo setters yet).',
+      'Overflow box with thin, themed scrollbars. Only orientation is a host prop (vertical · horizontal · both; default vertical). Constrain height/width with Style box so content overflows. Rest thumb from component.scroll-area.thumb; hover uses free border-strong (SPEC-D1 — thumb-hover leaf is parked unread). Standard scrollbar-width/color only (no WebKit pseudo setters yet).',
     variants: [],
     variantAttr: '',
     props: [

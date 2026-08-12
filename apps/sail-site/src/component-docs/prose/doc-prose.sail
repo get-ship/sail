@@ -1,6 +1,6 @@
 <!--
   <doc-prose> — first-class docs host for /components/prose.
-  Zero PE axes — specimen + face copy; optional demo content switch (demoOnly).
+  Zero host Style axes — specimen + face copy; optional demo content switch (demoOnly).
 -->
 
 <controller>
@@ -8,7 +8,7 @@ import type { Scope } from './doc-prose.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  // demoOnly content switch — not a PE prop
+  // demoOnly content switch — not a host prop
   const sample = signal('article')
   const entry = DETAILS.prose
   const heading = () => entry.heading
@@ -109,7 +109,7 @@ export default controller((_ctx: Scope) => {
               <option value="list">list</option>
             </select>
             <p style(mutedXs)>
-              Docs-only content demo — not a PE prop. No size / variant / tone axis.
+              Docs-only content demo — not a host prop. No size / variant / tone axis.
             </p>
           </column>
           <column gap="2">
@@ -118,7 +118,7 @@ export default controller((_ctx: Scope) => {
               <p style(mutedXs)><code>component.prose.fg</code> — host ink</p>
             </column>
             <p style(mutedXs)>
-              Nested h1…p, lists, blockquote, and code use element skins — not PE props.
+              Nested h1…p, lists, blockquote, and code use element skins — not host props.
             </p>
           </column>
         </column>

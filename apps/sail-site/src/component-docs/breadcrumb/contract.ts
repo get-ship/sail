@@ -1,7 +1,7 @@
 import type { SurfaceContract } from '../contract-types'
 
 /**
- * Surface contract for breadcrumb — trail host only, no PE props in stdlib.
+ * Surface contract for breadcrumb — trail host only, no host props in stdlib.
  * Faces: component.breadcrumb.current, fg. Compose with nested a / small.
  */
 export const contract = {

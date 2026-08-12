@@ -1,7 +1,7 @@
 <!--
-  <doc-select> — first-class docs host for /components/select.
-  Specimen left, knobs right + examples. Shared surface: component.field.*.
-  Native closed picker only — not combobox.
+  <doc-select> — /components/select
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
+  Specimen is content-width — not full-bleed.
 -->
 
 <controller>
@@ -9,288 +9,186 @@ import type { Scope } from './doc-select.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  const SEL_SIZES = ['xs', 'sm', 'md', 'lg'] as const
+  const SIZES = ['xs', 'sm', 'md', 'lg'] as const
   const sizeIdx = signal(2)
-  const selInvalid = signal(false)
-  const selDisabled = signal(false)
-  const selMultiple = signal(false)
+  const invalid = signal(false)
+  const disabled = signal(false)
+  const multiple = signal(false)
   const team = signal('design')
-  const selSize = derived(() => {
-    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SEL_SIZES.length - 1)
-    return SEL_SIZES[i] ?? 'md'
+
+  const size = derived(() => {
+    const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), SIZES.length - 1)
+    return SIZES[i] ?? 'md'
   })
-  const selMeta = derived(() => {
-    const inv = selInvalid() ? 'invalid' : 'valid'
-    const d = selDisabled() ? 'disabled' : 'enabled'
-    const m = selMultiple() ? 'multiple' : 'single'
-    return `${selSize()} · ${m} · ${inv} · ${d} · component.field.*`
-  })
+
   const entry = DETAILS.select
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
-  const selExBind = () =>
-    `// team = signal('design')\n<select bind:value={team}>\n  <option value="design">Design</option>\n  <option value="eng">Engineering</option>\n</select>`
-  const selExSizes = () =>
+
+  const specimenCode = derived(() => {
+    const a: string[] = []
+    if (size() !== 'md') a.push(`size="${size()}"`)
+    if (multiple()) a.push('multiple')
+    if (invalid()) a.push('invalid')
+    if (disabled()) a.push('disabled')
+    if (!multiple()) a.push('bind:value={team}')
+    const open = a.length ? `<select ${a.join(' ')}>` : `<select>`
+    return `${open}\n  <option value="design">Design</option>\n  <option value="eng">Engineering</option>\n  <option value="research">Research</option>\n</select>`
+  })
+
+  const exBind = () =>
+    `<select bind:value={team}>\n  <option value="design">Design</option>\n  <option value="eng">Engineering</option>\n</select>`
+  const exSizes = () =>
     `<select size="xs">…</select>\n<select size="sm">…</select>\n<select>…</select>\n<select size="lg">…</select>`
-  const selExInvalid = () =>
-    `<select invalid>\n  <option value="">Pick one</option>\n  <option value="a">A</option>\n</select>\n<!-- invalid → border(destructive) -->`
-  const selExMultiple = () =>
-    `<select multiple>\n  <option>Ada</option>\n  <option>Grace</option>\n</select>\n<!-- native multi-select; open list stays the OS picker -->`
-  const selExRest = () =>
-    `<select>\n  <option>Alan</option>\n</select>\n<!-- rest → component.field.*; chevron via SELECT_MAP padE -->`
+  const exInvalid = () =>
+    `<select invalid>\n  <option value="">Pick one</option>\n  <option value="a">A</option>\n</select>`
+
   return {
     sizeIdx,
-    selInvalid,
-    selDisabled,
-    selMultiple,
+    size,
+    invalid,
+    disabled,
+    multiple,
     team,
-    selSize,
-    selMeta,
     heading,
     blurb,
     props,
     usageCode,
-    selExBind,
-    selExSizes,
-    selExInvalid,
-    selExMultiple,
-    selExRest,
+    specimenCode,
+    exBind,
+    exSizes,
+    exInvalid,
   }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageColMd = { box: w(panel-max-w-md).maxW(full) }
-  style fullW = { box: w(full) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(56).maxW(full).pad(2).overflow(visible) }
+  style controlW = { box: w(56).maxW(full) }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
-  }
-  style exampleBlock = { box: w(full).padY(2) }
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleSection = { box: w(full).padY(4).overflow(visible) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="4" align="center" style(stageColMd)>
-            <if {selMultiple()}>
-              <if {selDisabled()}>
-                <if {selInvalid()}>
-                  <select size={selSize()} multiple invalid disabled style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>
-                {else =>
-                  <select size={selSize()} multiple disabled style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>}</if>
-              {else =>
-                <if {selInvalid()}>
-                  <select size={selSize()} multiple invalid style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>
-                {else =>
-                  <select size={selSize()} multiple style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>}</if>}</if>
-            {else =>
-              <if {selDisabled()}>
-                <if {selInvalid()}>
-                  <select size={selSize()} value={team()} invalid disabled style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>
-                {else =>
-                  <select size={selSize()} value={team()} disabled style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>}</if>
-              {else =>
-                <if {selInvalid()}>
-                  <select size={selSize()} bind:value={team} invalid style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>
-                {else =>
-                  <select size={selSize()} bind:value={team} style(fullW)>
-                    <option value="design">Design</option>
-                    <option value="eng">Engineering</option>
-                    <option value="research">Research</option>
-                  </select>}</if>}</if>}</if>
-            <p style(monoXs)>{selMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Size</label>
-              <span style(sizeValue)>{selSize()}</span>
-            </row>
-            <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
-            <row gap="0" align="center" style(tickRow)>
-              <span style(tick)>xs</span>
-              <span style(tick)>sm</span>
-              <span style(tick)>md</span>
-              <span style(tick)>lg</span>
-            </row>
-            <p style(mutedXs)>
-              Control height + type scale. <code>padE</code> reserved for the chevron glyph.
-            </p>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Invalid</label>
-            <row gap="2" align="center">
-              <switch bind:checked={selInvalid} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{selInvalid() ? 'destructive border' : 'rest border'}</span>
-            </row>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Disabled</label>
-            <row gap="2" align="center">
-              <switch bind:checked={selDisabled} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{selDisabled() ? 'not-allowed' : 'interactive'}</span>
-            </row>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Multiple</label>
-            <row gap="2" align="center">
-              <switch bind:checked={selMultiple} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{selMultiple() ? 'multi' : 'single'}</span>
-            </row>
-            <p style(mutedXs)>
-              Native multi-select attr — no PE chrome change. Open list stays the OS picker,
-              not a styled listbox (<code>combobox</code>).
-            </p>
-          </column>
-          <column gap="2">
-            <p style(mutedXs)>
-              Rest from <code>component.field.*</code> shared with input/textarea.
-            </p>
-          </column>
-        </column>
-      </row>
-    </column>
-
-    <column gap="5" style(exampleBlock)>
-      <p style(sectionLabel)>Examples</p>
-
-      <column gap="2">
-        <h3 style(exampleH)>bind:value</h3>
-        <p style(exampleLead)>
-          Platform keyboard, typeahead, and mobile sheets. Pair with
-          <code>&lt;option&gt;</code> / <code>&lt;optgroup&gt;</code> children.
-        </p>
-        <select bind:value={team} style(fullW)>
+    <column slot="specimen" gap="3" align="center" style(specimen)>
+      <if {multiple()}>
+        <select
+          size={size()}
+          multiple
+          invalid={invalid()}
+          disabled={disabled()}
+          style(controlW)
+        >
           <option value="design">Design</option>
           <option value="eng">Engineering</option>
           <option value="research">Research</option>
         </select>
-        <code-block code={selExBind()}></code-block>
-      </column>
+      {else =>
+        <select
+          size={size()}
+          bind:value={team}
+          invalid={invalid()}
+          disabled={disabled()}
+          style(controlW)
+        >
+          <option value="design">Design</option>
+          <option value="eng">Engineering</option>
+          <option value="research">Research</option>
+        </select>}</if>
+    </column>
 
+    <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <h3 style(exampleH)>Size ladder</h3>
-        <p style(exampleLead)>
-          <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> — same channel as input.
-        </p>
-        <column gap="2" style(stageColMd)>
-          <select size="xs" style(fullW)>
-            <option>Ada</option><option>Grace</option>
-          </select>
-          <select size="sm" style(fullW)>
-            <option>Ada</option><option>Grace</option>
-          </select>
-          <select style(fullW)>
-            <option>Ada</option><option>Grace</option>
-          </select>
-          <select size="lg" style(fullW)>
-            <option>Ada</option><option>Grace</option>
-          </select>
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{size()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
+        <row gap="0" align="center" justify="between" style(tickRow)>
+          <span style(tick)>xs</span>
+          <span style(tick)>sm</span>
+          <span style(tick)>md</span>
+          <span style(tick)>lg</span>
+        </row>
+      </column>
+      <row gap="4" align="center">
+        <label><checkbox bind:checked={invalid} size="sm" /> Invalid</label>
+        <label><checkbox bind:checked={disabled} size="sm" /> Disabled</label>
+        <label><checkbox bind:checked={multiple} size="sm" /> Multiple</label>
+      </row>
+    </column>
+
+    <column slot="usage-preview" gap="3" align="start" style(specimen)>
+      <select bind:value={team} style(controlW)>
+        <option value="design">Design</option>
+        <option value="eng">Engineering</option>
+        <option value="research">Research</option>
+      </select>
+    </column>
+
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>bind:value</h3>
+        <p style(exampleLead)>Options are plain <code>&lt;option&gt;</code> children.</p>
+        <select bind:value={team} style(controlW)>
+          <option value="design">Design</option>
+          <option value="eng">Engineering</option>
+          <option value="research">Research</option>
+        </select>
+        <doc-code code={exBind()} lang="sail"></doc-code>
+      </column>
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Sizes</h3>
+        <p style(exampleLead)>Default is <code>md</code>.</p>
+        <column gap="2">
+          <select size="xs" style(controlW)><option>Ada</option><option>Grace</option></select>
+          <select size="sm" style(controlW)><option>Ada</option><option>Grace</option></select>
+          <select style(controlW)><option>Ada</option><option>Grace</option></select>
+          <select size="lg" style(controlW)><option>Ada</option><option>Grace</option></select>
         </column>
-        <code-block code={selExSizes()}></code-block>
+        <doc-code code={exSizes()} lang="sail"></doc-code>
       </column>
-
-      <column gap="2">
+      <column gap="3" style(exampleSection)>
         <h3 style(exampleH)>Invalid</h3>
-        <p style(exampleLead)>PE attr — paints destructive border like input/textarea.</p>
-        <select invalid style(fullW)>
+        <p style(exampleLead)>Mark validation failures with <code>invalid</code>.</p>
+        <select invalid style(controlW)>
           <option value="">Pick one</option>
           <option value="a">A</option>
         </select>
-        <code-block code={selExInvalid()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Multiple</h3>
-        <p style(exampleLead)>
-          Native multi-select. Still not a combobox — arbitrary item chrome is a different L1.
-        </p>
-        <select multiple style(fullW)>
-          <option>Ada</option>
-          <option>Grace</option>
-          <option>Alan</option>
-        </select>
-        <code-block code={selExMultiple()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>
-          <code>component.field.*</code> surface; chevron room via <code>padE(8)</code>.
-        </p>
-        <select style(fullW)>
-          <option>Alan</option>
-          <option>Grace</option>
-        </select>
-        <code-block code={selExRest()}></code-block>
+        <doc-code code={exInvalid()} lang="sail"></doc-code>
       </column>
     </column>
   </sail-component-viewer>
 
   <row gap="2">
     <a variant="default" href="/components">← All components</a>
-    <a variant="solid" tone="primary" href="/docs/reference">API reference</a>
+    <a variant="solid" tone="primary" href="/components/combobox">Combobox</a>
   </row>
 </column>

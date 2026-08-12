@@ -165,7 +165,7 @@ export default controller((_ctx: Scope) => {
               <span style(sizeValue)>{aDisabled() ? 'aria-disabled' : 'interactive'}</span>
             </row>
             <p style(mutedXs)>
-              Anchors have no native disabled — PE dim uses <code>aria-disabled</code>
+              Anchors have no native disabled — host Style dim uses <code>aria-disabled</code>
               (or the <code>disabled</code> attr when stamped).
             </p>
           </column>

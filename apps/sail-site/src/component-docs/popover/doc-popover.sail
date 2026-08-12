@@ -90,7 +90,7 @@ export default controller((_ctx: Scope) => {
               <option value="bottom-start">bottom-start</option>
               <option value="top-end">top-end</option>
             </select>
-            <p style(mutedXs)>Free string on PE — common anchors listed for knobs.</p>
+            <p style(mutedXs)>Free string on the host — common anchors listed for knobs.</p>
           </column>
           <column gap="2">
             <label style(knobLabel)>Faces</label>

@@ -1,6 +1,6 @@
 <!--
   <doc-kbd> — first-class docs host for /components/kbd.
-  Zero PE axes — specimen + face copy; optional demo chord switch (demoOnly).
+  Zero host Style axes — specimen + face copy; optional demo chord switch (demoOnly).
 -->
 
 <controller>
@@ -8,7 +8,7 @@ import type { Scope } from './doc-kbd.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-  // demoOnly content switch — not a PE prop
+  // demoOnly content switch — not a host prop
   const chord = signal('search')
   const entry = DETAILS.kbd
   const heading = () => entry.heading
@@ -28,7 +28,7 @@ export default controller((_ctx: Scope) => {
   const kbdExChord = () =>
     `Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the command palette.`
   const kbdExMod = () =>
-    `<kbd>⌘</kbd><kbd>S</kbd>\n<!-- compose chords in markup — no size/variant/tone PE -->`
+    `<kbd>⌘</kbd><kbd>S</kbd>\n<!-- compose chords in markup — no size/variant/tone host props -->`
   const kbdExRest = () =>
     `<kbd>Esc</kbd>\n<!-- paint → component.kbd.bg · border · fg -->`
   return {
@@ -108,7 +108,7 @@ export default controller((_ctx: Scope) => {
               <option value="escape">Esc</option>
             </select>
             <p style(mutedXs)>
-              Docs-only content demo — not a PE prop. Compose keycaps in markup.
+              Docs-only content demo — not a host prop. Compose keycaps in markup.
             </p>
           </column>
           <column gap="2">
@@ -118,7 +118,7 @@ export default controller((_ctx: Scope) => {
               <p style(mutedXs)><code>component.kbd.border</code> — edge (+ doubled bottom)</p>
               <p style(mutedXs)><code>component.kbd.fg</code> — mono ink</p>
             </column>
-            <p style(mutedXs)>No size / variant / tone PE. Theme the leaves; aesthetics beyond contrast are operator taste.</p>
+            <p style(mutedXs)>No size / variant / tone host props. Theme the leaves; aesthetics beyond contrast are operator taste.</p>
           </column>
         </column>
       </row>

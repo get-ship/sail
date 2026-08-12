@@ -7,13 +7,13 @@ export const contract = {
   kind: 'host',
   axes: {
     variant: {
-      values: ['default', 'solid', 'soft', 'outline', 'ghost'] as const,
-      default: 'default',
+      values: ['solid', 'soft', 'outline', 'ghost'] as const,
+      default: 'solid',
       control: 'select',
     },
     tone: {
       values: ['primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted'] as const,
-      optional: true,
+      default: 'primary',
       control: 'swatches',
     },
     size: {
@@ -21,8 +21,7 @@ export const contract = {
       default: 'md',
       control: 'slider',
     },
-    // Pilot stage emphasizes variant/tone/size; disabled is PE-complete but docsSkip until pairing expands knobs.
-    disabled: { default: false, control: 'switch', docsSkip: true },
+    disabled: { default: false, control: 'switch' },
   },
   faces: [
     { path: 'component.button.bg', label: 'Fill' },

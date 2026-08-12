@@ -80,7 +80,7 @@ export default controller((_ctx: Scope) => {
     text: fontSize(xs).fontFamily(mono).textAlign(center),
   }
   style swatch = {
-    box: w(7).h(7).shrink(0),
+    box: size(7).shrink(0),
     paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
     when: {
       selected: { paint: border(foreground).shadow(sm) },

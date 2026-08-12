@@ -2,7 +2,7 @@ import type { SurfaceContract } from '../contract-types'
 
 /**
  * Surface contract for progress.
- * Indeterminate = omit value (no separate PE prop) — listed under demoOnly.
+ * Indeterminate = omit value (no separate host prop) — listed under demoOnly.
  */
 export const contract = {
   slug: 'progress',

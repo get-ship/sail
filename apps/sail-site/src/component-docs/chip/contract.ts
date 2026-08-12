@@ -23,7 +23,7 @@ export const contract = {
     },
     selected: { default: false, control: 'switch' },
     removable: { default: false, control: 'switch' },
-    // PE complete; visual row exercises disabled. Docs knob deferred (docsSkip).
+    // host props complete; visual row exercises disabled. Docs knob deferred (docsSkip).
     disabled: { default: false, control: 'switch', docsSkip: true },
     onRemove: { control: 'none', event: true },
   },

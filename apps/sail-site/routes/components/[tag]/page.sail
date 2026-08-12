@@ -40,6 +40,10 @@ const DOC_CE_SLUGS = new Set([
   'switch',
   'slider',
   'input',
+  'checkbox',
+  'date',
+  'file',
+  'color',
   'textarea',
   'select',
   'a',
@@ -105,6 +109,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
   const useSwitch = derived(() => tag() === 'switch' && useDocHost())
   const useSlider = derived(() => tag() === 'slider' && useDocHost())
   const useInput = derived(() => tag() === 'input' && useDocHost())
+  const useCheckbox = derived(() => tag() === 'checkbox' && useDocHost())
+  const useDate = derived(() => tag() === 'date' && useDocHost())
+  const useFile = derived(() => tag() === 'file' && useDocHost())
+  const useColor = derived(() => tag() === 'color' && useDocHost())
   const useTextarea = derived(() => tag() === 'textarea' && useDocHost())
   const useSelect = derived(() => tag() === 'select' && useDocHost())
   const useA = derived(() => tag() === 'a' && useDocHost())
@@ -167,6 +175,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     useSwitch,
     useSlider,
     useInput,
+    useCheckbox,
+    useDate,
+    useFile,
+    useColor,
     useTextarea,
     useSelect,
     useA,
@@ -264,6 +276,18 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </if>
   <if {useInput()}>
     <doc-input></doc-input>
+  </if>
+  <if {useCheckbox()}>
+    <doc-checkbox></doc-checkbox>
+  </if>
+  <if {useDate()}>
+    <doc-date></doc-date>
+  </if>
+  <if {useFile()}>
+    <doc-file></doc-file>
+  </if>
+  <if {useColor()}>
+    <doc-color></doc-color>
   </if>
   <if {useTextarea()}>
     <doc-textarea></doc-textarea>

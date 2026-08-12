@@ -165,7 +165,7 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <h3 style(exampleH)>Default table</h3>
         <p style(exampleLead)>
-          Platform thead / tbody / tr — header divided, rows separated, no PE flags.
+          Platform thead / tbody / tr — header divided, rows separated, no host flags.
         </p>
         <table style(stageCol)>
           <thead>
@@ -200,7 +200,7 @@ export default controller((_ctx: Scope) => {
       <column gap="2">
         <h3 style(exampleH)>Dense + bordered</h3>
         <p style(exampleLead)>
-          Tighter cell pad and a full cell box — structural PE only, not a data grid.
+          Tighter cell pad and a full cell box — structural host Style only, not a data grid.
         </p>
         <table dense bordered style(stageCol)>
           <thead>

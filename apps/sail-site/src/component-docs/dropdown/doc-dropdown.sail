@@ -126,7 +126,7 @@ export default controller((_ctx: Scope) => {
       </column>
       <column gap="2">
         <h3 style(exampleH)>Placement string</h3>
-        <p style(exampleLead)>Free PE string — common anchors in knobs.</p>
+        <p style(exampleLead)>Free host string — common anchors in knobs.</p>
         <code-block code={ddExPlace()}></code-block>
       </column>
     </column>

@@ -1,6 +1,6 @@
 <!--
-  <doc-label> — first-class docs host for /components/label.
-  Specimen left, knobs right (Mantine-style configurator) + examples walkthrough.
+  <doc-label> — /components/label
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
 <controller>
@@ -15,139 +15,122 @@ export default controller((_ctx: Scope) => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), LABEL_SIZES.length - 1)
     return LABEL_SIZES[i] ?? 'md'
   })
-  const labelMeta = derived(() => {
-    return `${labelSize()} · required ${labelRequired() ? 'on' : 'off'} · component.label.fg + required`
-  })
+
   const entry = DETAILS.label
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
-  const lblExFor = () =>
+
+  const specimenCode = derived(() => {
+    const a: string[] = ['for="email"']
+    if (labelSize() !== 'md') a.push(`size="${labelSize()}"`)
+    if (labelRequired()) a.push('required')
+    return `<label ${a.join(' ')}>Email</label>`
+  })
+
+  const exFor = () =>
     `<column gap="1">\n  <label for="email" required>Email</label>\n  <input id="email" placeholder="ada@lovelace.dev" />\n</column>`
-  const lblExSizes = () =>
+  const exSizes = () =>
     `<label for="a" size="sm">sm</label>\n<label for="b">md</label>\n<label for="c" size="lg">lg</label>`
-  const lblExRequired = () =>
-    `<label for="email" required>Email</label>\n<!-- * → component.label.required; omit required for optional -->`
-  const lblExRest = () =>
-    `<label for="name">Display name</label>\n<!-- ink → component.label.fg; weight → typography.label.weight -->`
+  const exRequired = () => `<label for="email" required>Email</label>`
+
   return {
-    sizeIdx, labelRequired, labelSize, labelMeta,
-    heading, blurb, props, usageCode,
-    lblExFor, lblExSizes, lblExRequired, lblExRest,
+    sizeIdx,
+    labelRequired,
+    labelSize,
+    heading,
+    blurb,
+    props,
+    usageCode,
+    specimenCode,
+    exFor,
+    exSizes,
+    exRequired,
   }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
+  style controlW = { box: w(64).maxW(full) }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
-  }
-  style exampleBlock = { box: w(full).padY(2) }
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleSection = { box: w(full).padY(4).overflow(visible) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="4" align="center" style(stageCol)>
-            <column gap="1" style(stageCol)>
-              <if {labelRequired()}>
-                <label for="doc-label-email" required size={labelSize()}>Email</label>
-              {else =>
-                <label for="doc-label-email" size={labelSize()}>Email</label>}</if>
-              <input id="doc-label-email" size={labelSize()} placeholder="ada@lovelace.dev" />
-            </column>
-            <p style(monoXs)>{labelMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Size</label>
-              <span style(sizeValue)>{labelSize()}</span>
-            </row>
-            <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
-            <row gap="0" align="center" style(tickRow)>
-              <span style(tick)>sm</span><span style(tick)>md</span><span style(tick)>lg</span>
-            </row>
-            <p style(mutedXs)>
-              Match the control size ladder. Default <code>md</code>.
-            </p>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Required</label>
-            <row gap="2" align="center">
-              <switch bind:checked={labelRequired} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{labelRequired() ? 'marker on' : 'optional'}</span>
-            </row>
-            <p style(mutedXs)>
-              <code>required</code> shows the <code>*</code> via
-              <code>group-required</code> · colour from
-              <code>component.label.required</code>.
-            </p>
-          </column>
-          <column gap="2">
-            <p style(mutedXs)>
-              Host ink from <code>component.label.fg</code>; weight from
-              <code>typography.label.weight</code>. No tone prop.
-            </p>
-          </column>
-        </column>
+    <column slot="specimen" gap="1" align="start" style(specimen)>
+      <if {labelRequired()}>
+        <label for="doc-label-email" required size={labelSize()}>Email</label>
+      {else =>
+        <label for="doc-label-email" size={labelSize()}>Email</label>}</if>
+      <input id="doc-label-email" size={labelSize()} placeholder="ada@lovelace.dev" style(controlW) />
+    </column>
+
+    <column slot="knobs" gap="4" align="stretch">
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{labelSize()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+        <row gap="0" align="center" justify="between" style(tickRow)>
+          <span style(tick)>sm</span>
+          <span style(tick)>md</span>
+          <span style(tick)>lg</span>
+        </row>
+      </column>
+      <row gap="4" align="center">
+        <label><checkbox bind:checked={labelRequired} size="sm" /> Required</label>
       </row>
     </column>
 
-    <column gap="5" style(exampleBlock)>
-      <p style(sectionLabel)>Examples</p>
+    <column slot="usage-preview" gap="1" align="start" style(specimen)>
+      <label for="usage-label-email" required>Email</label>
+      <input id="usage-label-email" placeholder="ada@lovelace.dev" style(controlW) />
+    </column>
 
-      <column gap="2">
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <column gap="3" style(exampleSection)>
         <h3 style(exampleH)>for= association</h3>
         <p style(exampleLead)>
           Pair <code>for</code> with the control <code>id</code> so click focuses the input.
         </p>
-        <column gap="1" style(stageCol)>
+        <column gap="1" style(controlW)>
           <label for="ex-label-email" required>Email</label>
           <input id="ex-label-email" placeholder="ada@lovelace.dev" />
         </column>
-        <code-block code={lblExFor()}></code-block>
+        <doc-code code={exFor()} lang="sail"></doc-code>
       </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Size ladder</h3>
-        <p style(exampleLead)>
-          <code>sm</code> · <code>md</code> · <code>lg</code> match the control type ladder.
-        </p>
-        <column gap="3" style(stageCol)>
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Sizes</h3>
+        <p style(exampleLead)>Match the control size ladder. Default is <code>md</code>.</p>
+        <column gap="3" style(controlW)>
           <column gap="1">
             <label for="ex-label-sm" size="sm">Small</label>
             <input id="ex-label-sm" size="sm" placeholder="sm" />
@@ -161,16 +144,12 @@ export default controller((_ctx: Scope) => {
             <input id="ex-label-lg" size="lg" placeholder="lg" />
           </column>
         </column>
-        <code-block code={lblExSizes()}></code-block>
+        <doc-code code={exSizes()} lang="sail"></doc-code>
       </column>
-
-      <column gap="2">
+      <column gap="3" style(exampleSection)>
         <h3 style(exampleH)>Required marker</h3>
-        <p style(exampleLead)>
-          <code>required</code> reveals the <code>*</code> (aria-hidden) via
-          <code>group-required</code>. Colour from <code>component.label.required</code>.
-        </p>
-        <column gap="3" style(stageCol)>
+        <p style(exampleLead)><code>required</code> shows a <code>*</code> next to the label.</p>
+        <column gap="3" style(controlW)>
           <column gap="1">
             <label for="ex-label-req" required>Required field</label>
             <input id="ex-label-req" placeholder="must fill" />
@@ -180,26 +159,13 @@ export default controller((_ctx: Scope) => {
             <input id="ex-label-opt" placeholder="can skip" />
           </column>
         </column>
-        <code-block code={lblExRequired()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>
-          Host ink from <code>component.label.fg</code>
-          (<code>--label-foreground</code>). No tone prop — override the leaf in Studio.
-        </p>
-        <column gap="1" style(stageCol)>
-          <label for="ex-label-rest">Display name</label>
-          <input id="ex-label-rest" placeholder="Ada Lovelace" />
-        </column>
-        <code-block code={lblExRest()}></code-block>
+        <doc-code code={exRequired()} lang="sail"></doc-code>
       </column>
     </column>
   </sail-component-viewer>
 
   <row gap="2">
     <a variant="default" href="/components">← All components</a>
-    <a variant="solid" tone="primary" href="/docs/reference">API reference</a>
+    <a variant="solid" tone="primary" href="/components/field">Field</a>
   </row>
 </column>

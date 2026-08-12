@@ -1,53 +1,91 @@
 <!--
-  <doc-input> — first-class docs host for /components/input.
-  Specimen left, knobs right (Mantine-style configurator) + examples walkthrough.
-  Shared surface: component.field.* (no component.input.* invent).
+  <doc-input> — /components/input detail host.
+  Viewer owns split layout, snippet + copy, usage Code/Live/Split.
+  Specimen is the bare control only — no absolute adornment hacks.
 -->
 
 <controller>
 import type { Scope } from './doc-input.sail'
 import { DETAILS } from '../../compositions/component-details'
 
+/** Empty text values so specimen, placeholder knob, and snippet stay aligned. */
+const TYPE_DEFAULTS: Record<string, { placeholder: string; value: string }> = {
+  text: { placeholder: 'Display name', value: '' },
+  email: { placeholder: 'you@ship.dev', value: '' },
+  password: { placeholder: 'Password', value: '' },
+  number: { placeholder: '0', value: '' },
+  search: { placeholder: 'Search…', value: '' },
+  tel: { placeholder: '+1 (555) 010-0100', value: '' },
+  url: { placeholder: 'https://ship.dev', value: '' },
+  hidden: { placeholder: '', value: 'token' },
+}
+
 export default controller((_ctx: Scope) => {
   const INPUT_SIZES = ['xs', 'sm', 'md', 'lg'] as const
   const sizeIdx = signal(2)
-  const inputType = signal('text')
+  const inputType = signal('email')
   const inputInvalid = signal(false)
   const inputDisabled = signal(false)
-  const placeholder = signal('you@ship.dev')
-  const textVal = signal('ada@ship.dev')
-  const checkedVal = signal(true)
-  const rangeVal = signal(40)
+  const placeholder = signal(TYPE_DEFAULTS.email.placeholder)
+  const textVal = signal(TYPE_DEFAULTS.email.value)
+
   const inputSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), INPUT_SIZES.length - 1)
     return INPUT_SIZES[i] ?? 'md'
   })
-  const isCheckLike = derived(() => {
-    const t = inputType()
-    return t === 'checkbox' || t === 'radio'
-  })
-  const isRange = derived(() => inputType() === 'range')
   const isHidden = derived(() => inputType() === 'hidden')
-  const inputMeta = derived(() => {
-    const inv = inputInvalid() ? 'invalid' : 'valid'
-    const d = inputDisabled() ? 'disabled' : 'enabled'
-    return `${inputType()} · ${inputSize()} · ${inv} · ${d} · component.field.*`
+  const usesPlaceholder = derived(() => {
+    const t = inputType()
+    return t !== 'hidden'
   })
+  const isTextField = derived(() => !isHidden())
+
+  effect(() => {
+    const t = inputType()
+    const d = TYPE_DEFAULTS[t] ?? TYPE_DEFAULTS.text
+    placeholder.set(d.placeholder)
+    textVal.set(d.value)
+  })
+
+  const specimenCode = derived(() => {
+    const t = inputType()
+    const size = inputSize()
+    const attrs: string[] = [`type="${t}"`]
+    if (size !== 'md') attrs.push(`size="${size}"`)
+    if (usesPlaceholder() && placeholder()) {
+      attrs.push(`placeholder="${placeholder()}"`)
+    }
+    if (inputInvalid()) attrs.push('invalid')
+    if (inputDisabled()) attrs.push('disabled')
+    if (t === 'password') attrs.push('reveal')
+    if (t === 'hidden') return `<input ${attrs.join(' ')} value="token" />`
+    attrs.push('bind:value={value}')
+    return `<input ${attrs.join(' ')} />`
+  })
+
   const entry = DETAILS.input
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
-  const inExBind = () =>
-    `// email = signal('')\n<input type="email" placeholder="you@ship.dev" bind:value={email} />`
-  const inExSizes = () =>
+
+  const exEmail = () =>
+    `<input type="email" placeholder="you@ship.dev" bind:value={email} />`
+  const exPassword = () =>
+    `<input type="password" placeholder="Password" bind:value={secret} />`
+  const exSearch = () =>
+    `<input type="search" placeholder="Search…" bind:value={q} />`
+  const exNumber = () =>
+    `<input type="number" min="0" max="100" step="1" bind:value={qty} />`
+  const exDates = () =>
+    `<date type="date" />\n<date type="time" step="900" />\n<date type="datetime-local" />`
+  const exFile = () => `<file />`
+  const exColor = () => `<color value="#c8f542" />`
+  const exInvalid = () =>
+    `<input type="email" value="not-an-email" invalid />`
+  const exSizes = () =>
     `<input size="xs" placeholder="xs" />\n<input size="sm" placeholder="sm" />\n<input placeholder="md" />\n<input size="lg" placeholder="lg" />`
-  const inExInvalid = () =>
-    `<input type="email" value="not-an-email" invalid />\n<!-- invalid → border(destructive); mirror on <field invalid> for hint/error -->`
-  const inExCheck = () =>
-    `// agreed = signal(true)\n<label>\n  <input type="checkbox" bind:checked={agreed} /> Email me updates\n</label>\n<!-- no <checkbox> tag — checkSized skin on input -->`
-  const inExRest = () =>
-    `<input placeholder="Display name" />\n<!-- rest → component.field.bg / border / fg; no filled/unstyled invent -->`
+
   return {
     sizeIdx,
     inputType,
@@ -55,242 +93,293 @@ export default controller((_ctx: Scope) => {
     inputDisabled,
     placeholder,
     textVal,
-    checkedVal,
-    rangeVal,
     inputSize,
-    isCheckLike,
-    isRange,
     isHidden,
-    inputMeta,
+    isTextField,
+    usesPlaceholder,
+    specimenCode,
     heading,
     blurb,
     props,
     usageCode,
-    inExBind,
-    inExSizes,
-    inExInvalid,
-    inExCheck,
-    inExRest,
+    exEmail,
+    exPassword,
+    exSearch,
+    exNumber,
+    exDates,
+    exFile,
+    exColor,
+    exInvalid,
+    exSizes,
   }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
   style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageCol = { box: w(panel-max-w-sm).maxW(full) }
-  style fullW = { box: w(full) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
+  /** Shared demo width + ring clearance. */
+  style fieldShell = { box: w(full).maxW(64).pad(2).overflow(visible) }
+  style fullW = { box: w(full).overflow(visible) }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
-  }
-  style exampleBlock = { box: w(full).padY(2) }
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style exampleSection = { box: w(full).padY(4).overflow(visible) }
   style exampleH = { text: fontSize(md).fontWeight(semibold) }
   style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
+  style typeCard = {
+    box: w(full).maxW(64).pad(4).overflow(visible),
+    paint: radius(md).borderWidth(1).border(border-subtle),
+  }
+  style mapRow = { box: w(full).padY(1) }
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="4" align="center" style(stageCol)>
-            <if {isHidden()}>
-              <p style(mutedSm)>
-                type=<code>hidden</code> — no paint (display none). PE still accepts size/invalid/disabled.
-              </p>
-              <input type="hidden" value="token" size={inputSize()} />
-            {else =>
-              <if {isCheckLike()}>
-                <row gap="3" align="center">
-                  <if {inputDisabled()}>
-                    <if {inputInvalid()}>
-                      <input type={inputType()} bind:checked={checkedVal} size={inputSize()} invalid disabled />
-                    {else =>
-                      <input type={inputType()} bind:checked={checkedVal} size={inputSize()} disabled />}</if>
-                  {else =>
-                    <if {inputInvalid()}>
-                      <input type={inputType()} bind:checked={checkedVal} size={inputSize()} invalid />
-                    {else =>
-                      <input type={inputType()} bind:checked={checkedVal} size={inputSize()} />}</if>}</if>
-                  <p style(monoXs)>{checkedVal() ? 'checked' : 'unchecked'}</p>
-                </row>
-              {else =>
-                <if {isRange()}>
-                  <if {inputDisabled()}>
-                    <input type="range" value={rangeVal()} min="0" max="100" size={inputSize()} style(fullW) disabled />
-                  {else =>
-                    <input type="range" bind:value={rangeVal} min="0" max="100" size={inputSize()} style(fullW) />}</if>
-                {else =>
-                  <if {inputDisabled()}>
-                    <if {inputInvalid()}>
-                      <input type={inputType()} value={textVal()} placeholder={placeholder()} size={inputSize()} style(fullW) invalid disabled />
-                    {else =>
-                      <input type={inputType()} value={textVal()} placeholder={placeholder()} size={inputSize()} style(fullW) disabled />}</if>
-                  {else =>
-                    <if {inputInvalid()}>
-                      <input type={inputType()} bind:value={textVal} placeholder={placeholder()} size={inputSize()} style(fullW) invalid />
-                    {else =>
-                      <input type={inputType()} bind:value={textVal} placeholder={placeholder()} size={inputSize()} style(fullW) />}</if>}</if>}</if>}</if>}</if>
-            <p style(monoXs)>{inputMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <label style(knobLabel)>Type</label>
-            <select size="sm" bind:value={inputType} label="Type">
-              <option value="text">text</option>
-              <option value="email">email</option>
-              <option value="password">password</option>
-              <option value="number">number</option>
-              <option value="search">search</option>
-              <option value="tel">tel</option>
-              <option value="url">url</option>
-              <option value="date">date</option>
-              <option value="time">time</option>
-              <option value="datetime-local">datetime-local</option>
-              <option value="month">month</option>
-              <option value="week">week</option>
-              <option value="file">file</option>
-              <option value="color">color</option>
-              <option value="checkbox">checkbox</option>
-              <option value="radio">radio</option>
-              <option value="range">range</option>
-              <option value="submit">submit</option>
-              <option value="hidden">hidden</option>
-            </select>
-            <p style(mutedXs)>
-              Type gates the skin. Text-like → <code>component.field.*</code>;
-              checkbox/radio → checkSized/radioSized (no separate tags).
-            </p>
-          </column>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Size</label>
-              <span style(sizeValue)>{inputSize()}</span>
-            </row>
-            <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
-            <row gap="0" align="center" style(tickRow)>
-              <span style(tick)>xs</span>
-              <span style(tick)>sm</span>
-              <span style(tick)>md</span>
-              <span style(tick)>lg</span>
-            </row>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Placeholder</label>
-            <input
-              type="text"
-              bind:value={placeholder}
-              size="sm"
-              placeholder="hint text"
-            />
-            <p style(mutedXs)>Hint text for empty text-like fields (ignored on checkbox/radio/range/hidden).</p>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Invalid</label>
-            <row gap="2" align="center">
-              <switch bind:checked={inputInvalid} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{inputInvalid() ? 'destructive border' : 'rest border'}</span>
-            </row>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Disabled</label>
-            <row gap="2" align="center">
-              <switch bind:checked={inputDisabled} size="sm" tone="primary"></switch>
-              <span style(sizeValue)>{inputDisabled() ? 'not-allowed' : 'interactive'}</span>
-            </row>
-            <p style(mutedXs)>
-              Native <code>disabled</code> + PE opacity. Rest paint from
-              <code>component.field.*</code> — no <code>component.input.*</code> leaves.
-            </p>
-          </column>
+    <column slot="specimen" gap="3" align="center" style(fieldShell)>
+      <if {isHidden()}>
+        <p style(mutedSm)>Hidden fields take no space. They still submit with the form.</p>
+      </if>
+      <if {isTextField()}>
+        <input
+          type={inputType()}
+          bind:value={textVal}
+          placeholder={placeholder()}
+          size={inputSize()}
+          invalid={inputInvalid()}
+          disabled={inputDisabled()}
+          style(fullW)
+        />
+      </if>
+    </column>
+
+    <column slot="knobs" gap="5" align="stretch">
+      <column gap="2">
+        <label style(knobLabel)>Type</label>
+        <select size="sm" bind:value={inputType} label="Type">
+          <option value="text">text</option>
+          <option value="email">email</option>
+          <option value="password">password</option>
+          <option value="number">number</option>
+          <option value="search">search</option>
+          <option value="tel">tel</option>
+          <option value="url">url</option>
+          <option value="hidden">hidden</option>
+        </select>
+      </column>
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{inputSize()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
+        <row gap="0" align="center" justify="between" style(tickRow)>
+          <span style(tick)>xs</span>
+          <span style(tick)>sm</span>
+          <span style(tick)>md</span>
+          <span style(tick)>lg</span>
+        </row>
+      </column>
+      <if {usesPlaceholder()}>
+        <column gap="2">
+          <label style(knobLabel)>Placeholder</label>
+          <input type="text" bind:value={placeholder} size="sm" placeholder="Hint text" />
+        </column>
+      </if>
+      <row gap="5" align="start">
+        <column gap="2" style({ box: grow(1).minW(0) })>
+          <label style(knobLabel)>Invalid</label>
+          <switch bind:checked={inputInvalid} size="sm" label="Invalid"></switch>
+        </column>
+        <column gap="2" style({ box: grow(1).minW(0) })>
+          <label style(knobLabel)>Disabled</label>
+          <switch bind:checked={inputDisabled} size="sm" label="Disabled"></switch>
         </column>
       </row>
     </column>
 
-    <column gap="5" style(exampleBlock)>
-      <p style(sectionLabel)>Examples</p>
+    <column slot="usage-preview" gap="3" style(fieldShell)>
+      <input type="email" placeholder="you@ship.dev" size="md" style(fullW) />
+      <input type="email" value="not-an-email" style(fullW) invalid />
+    </column>
 
-      <column gap="2">
-        <h3 style(exampleH)>bind:value</h3>
-        <p style(exampleLead)>
-          Two-way signal lock for value-bearing types. Pair with <code>type</code> for the skin.
-        </p>
-        <input type="email" placeholder="you@ship.dev" bind:value={textVal}  style(fullW) />
-        <code-block code={inExBind()}></code-block>
-      </column>
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Guide</p>
 
-      <column gap="2">
-        <h3 style(exampleH)>Size ladder</h3>
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Which control</h3>
         <p style(exampleLead)>
-          <code>xs</code> · <code>sm</code> · <code>md</code> · <code>lg</code> scale control height
-          (default <code>md</code>).
+          Use this page for field values. Other shapes have their own elements — not more
+          <code>type</code> values on <code>&lt;input&gt;</code>.
         </p>
-        <column gap="2" style(stageCol)>
-          <input size="xs" placeholder="xs"  style(fullW) />
-          <input size="sm" placeholder="sm"  style(fullW) />
-          <input placeholder="md"  style(fullW) />
-          <input size="lg" placeholder="lg"  style(fullW) />
+        <column gap="2">
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;input&gt;</code>
+            <span style(mutedSm)>Text, email, password, search, number, tel, url, hidden</span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;checkbox&gt;</code>
+            <span style(mutedSm)>
+              Boolean check —
+              <a href="/components/checkbox">checkbox</a>
+            </span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;date&gt; · &lt;file&gt; · &lt;color&gt;</code>
+            <span style(mutedSm)>
+              Elevated pickers —
+              <a href="/components/date">date</a> ·
+              <a href="/components/file">file</a> ·
+              <a href="/components/color">color</a>
+            </span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;radio&gt;</code>
+            <span style(mutedSm)>
+              One option in a group — not bare <code>type="radio"</code>.
+              <a href="/components/radio">radio</a> ·
+              <a href="/components/radio-group">radio-group</a>
+            </span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;slider&gt;</code>
+            <span style(mutedSm)>Continuous value — <a href="/components/slider">slider</a></span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;switch&gt;</code>
+            <span style(mutedSm)>On / off — <a href="/components/switch">switch</a></span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;select&gt; · &lt;combobox&gt;</code>
+            <span style(mutedSm)>
+              Lists —
+              <a href="/components/select">select</a> ·
+              <a href="/components/combobox">combobox</a>
+            </span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;textarea&gt;</code>
+            <span style(mutedSm)>Multi-line — <a href="/components/textarea">textarea</a></span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;button&gt;</code>
+            <span style(mutedSm)>Actions and form submit — <a href="/components/button">button</a></span>
+          </row>
+          <row gap="3" align="baseline" style(mapRow)>
+            <code style({ box: minW(28) })>&lt;field&gt;</code>
+            <span style(mutedSm)>Label, hint, and error around a control — <a href="/components/field">field</a></span>
+          </row>
         </column>
-        <code-block code={inExSizes()}></code-block>
       </column>
 
-      <column gap="2">
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Email</h3>
+        <p style(exampleLead)>
+          <code>type="email"</code> — mobile keyboards and basic validation come free.
+        </p>
+        <column style(fieldShell)>
+          <input type="email" placeholder="you@ship.dev" style(fullW) />
+        </column>
+        <doc-code code={exEmail()} lang="sail"></doc-code>
+      </column>
+
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Password</h3>
+        <p style(exampleLead)>
+          Masked input with a reveal control by default. Pass <code>reveal={false}</code> to hide it.
+        </p>
+        <column style(fieldShell)>
+          <input type="password" placeholder="Password" style(fullW) />
+        </column>
+        <doc-code code={exPassword()} lang="sail"></doc-code>
+      </column>
+
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Search</h3>
+        <p style(exampleLead)>
+          Semantic search field. Some browsers add a clear control.
+        </p>
+        <column style(fieldShell)>
+          <input type="search" placeholder="Search…" style(fullW) />
+        </column>
+        <doc-code code={exSearch()} lang="sail"></doc-code>
+      </column>
+
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Number</h3>
+        <p style(exampleLead)>
+          Set <code>min</code>, <code>max</code>, and <code>step</code> as needed.
+        </p>
+        <column style(fieldShell)>
+          <input type="number" min="0" max="100" step="1" placeholder="0" value="12" style(fullW) />
+        </column>
+        <doc-code code={exNumber()} lang="sail"></doc-code>
+      </column>
+
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Related controls</h3>
+        <p style(exampleLead)>
+          Dates, files, and colours are their own components — not extra
+          <code>type</code> values on input.
+        </p>
+        <column gap="3">
+          <column gap="2" style(typeCard)>
+            <span style(monoXs)>&lt;date&gt;</span>
+            <date type="date" style(fullW) />
+          </column>
+          <column gap="2" style(typeCard)>
+            <span style(monoXs)>&lt;file&gt;</span>
+            <file style(fullW) />
+          </column>
+          <column gap="2" style(typeCard)>
+            <span style(monoXs)>&lt;color&gt;</span>
+            <color value="#c8f542" />
+          </column>
+        </column>
+        <doc-code code={exDates()} lang="sail"></doc-code>
+      </column>
+
+      <column gap="3" style(exampleSection)>
         <h3 style(exampleH)>Invalid</h3>
         <p style(exampleLead)>
-          Compound <code>invalid</code> paints a destructive border. Mirror the same attr on
-          the field host when using hint/error slots.
+          Set <code>invalid</code> when validation fails. Pair with
+          <a href="/components/field">field</a> for a message under the control.
         </p>
-        <input type="email" value="not-an-email" style(fullW) invalid />
-        <code-block code={inExInvalid()}></code-block>
+        <column style(fieldShell)>
+          <input type="email" value="not-an-email" style(fullW) invalid />
+        </column>
+        <doc-code code={exInvalid()} lang="sail"></doc-code>
       </column>
 
-      <column gap="2">
-        <h3 style(exampleH)>Checkbox type (no checkbox tag)</h3>
-        <p style(exampleLead)>
-          Catalog alias only — real control is input with type=checkbox and checkSized skin.
-          See also the <a href="/components/checkbox">checkbox hub tile</a>.
-        </p>
-        <row gap="2" align="center">
-          <input type="checkbox" bind:checked={checkedVal} />
-          <span style(mutedSm)>Email me product updates</span>
-        </row>
-        <code-block code={inExCheck()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>
-          Text-like fields share <code>component.field.bg</code> / <code>border</code> /
-          <code>fg</code> with select and textarea. No filled/unstyled host invent.
-        </p>
-        <input placeholder="Display name"  style(fullW) />
-        <code-block code={inExRest()}></code-block>
+      <column gap="3" style(exampleSection)>
+        <h3 style(exampleH)>Sizes</h3>
+        <p style(exampleLead)>Height from <code>xs</code> to <code>lg</code>. Default is <code>md</code>.</p>
+        <column gap="2" style(fieldShell)>
+          <input size="xs" placeholder="xs" style(fullW) />
+          <input size="sm" placeholder="sm" style(fullW) />
+          <input placeholder="md" style(fullW) />
+          <input size="lg" placeholder="lg" style(fullW) />
+        </column>
+        <doc-code code={exSizes()} lang="sail"></doc-code>
       </column>
     </column>
   </sail-component-viewer>

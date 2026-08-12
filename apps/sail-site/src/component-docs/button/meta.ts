@@ -7,7 +7,7 @@ export const meta = {
   key: 'button',
   category: 'inputs',
   kind: 'host',
-  blurb: "The platform button. tone paints the colour; variant is how much of it you get (solid fill, soft, outline, ghost). default is an alias of solid.",
+  blurb: 'Buttons for what people do next — save, cancel, confirm, open.',
   heading: "prose",
   host: 'doc-button',
   stageOwnsKnobs: true,

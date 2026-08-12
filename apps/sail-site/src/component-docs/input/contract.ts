@@ -1,8 +1,8 @@
 import type { SurfaceContract } from '../contract-types'
 
 /**
- * Surface contract for input — axes from prop-registry only.
- * No filled/unstyled invent. Shared paint: component.field.* (not component.input.*).
+ * Surface contract for input — text field product only.
+ * Shared paint: component.field.* (not component.input.*).
  */
 export const contract = {
   slug: 'input',
@@ -18,17 +18,6 @@ export const contract = {
         'search',
         'tel',
         'url',
-        'date',
-        'time',
-        'datetime-local',
-        'month',
-        'week',
-        'file',
-        'color',
-        'checkbox',
-        'radio',
-        'range',
-        'submit',
         'hidden',
       ] as const,
       default: 'text',
@@ -42,6 +31,7 @@ export const contract = {
     invalid: { default: false, control: 'switch' },
     disabled: { default: false, control: 'switch' },
     placeholder: { default: '', control: 'text' },
+    reveal: { default: true, control: 'switch' },
   },
   faces: [
     { path: 'component.field.bg', label: 'Fill' },

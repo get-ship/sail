@@ -7,6 +7,9 @@ import { meta as textareaMeta } from './textarea/meta'
 import { meta as selectMeta } from './select/meta'
 import { meta as comboboxMeta } from './combobox/meta'
 import { meta as checkboxMeta } from './checkbox/meta'
+import { meta as dateMeta } from './date/meta'
+import { meta as fileMeta } from './file/meta'
+import { meta as colorMeta } from './color/meta'
 import { meta as radioMeta } from './radio/meta'
 import { meta as radioGroupMeta } from './radio-group/meta'
 import { meta as switchToggleMeta } from './switch/meta'
@@ -60,6 +63,9 @@ export const DOC_PACKAGES: readonly DocMeta[] = [
   selectMeta,
   comboboxMeta,
   checkboxMeta,
+  dateMeta,
+  fileMeta,
+  colorMeta,
   radioMeta,
   radioGroupMeta,
   switchToggleMeta,

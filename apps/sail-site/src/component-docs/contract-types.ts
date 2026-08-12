@@ -45,7 +45,7 @@ export interface SurfaceContract {
   kind: 'host' | 'alias' | 'action' | 'keywords'
   axes: Record<string, AxisDef>
   /**
-   * Docs-only demo knobs that are not PE props (e.g. progress indeterminate =
+   * Docs-only demo knobs that are not host props (e.g. progress indeterminate =
    * omit value). Checker allowlists these for reverse fantasy checks.
    */
   demoOnly?: readonly string[]
