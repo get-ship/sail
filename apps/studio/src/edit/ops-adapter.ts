@@ -2,14 +2,27 @@ import type { ClientOptions } from '@ship/sail-studio-client'
 import { sailAuthoringEdit, sailAuthoringCheck, sailAuthoringLayoutCheck, sailInspectModel, sailInspectState, sailInspectTree, sailInspectTokenUsage, sailRenderScreenshot, sailTaskList, sailTaskGet, sailTaskCreate, sailTaskComment, sailTaskAddArtifact, sailTaskAgentNote, sailTaskThreadCreate, sailTaskThreadReply, sailTaskThreadList, sailTaskReanchor, sailTaskCommitIntent, sailThemeFork, sailThemeList, sailThemeRead, sailThemeWrite, sailThemeDelete, sailThemeGenerate, sailThemeGraph, sailThemeEffectiveIds, sailThemeFontAdd, sailThemeFontSearch } from '@ship/sail-studio-client'
 import type { OpsClient } from './types'
 
+/** Injected or host fetch — `ClientOptions.fetch` is the sanctioned type. */
+type StudioFetch = NonNullable<ClientOptions['fetch']>
+
+interface StudioHost {
+  fetch: StudioFetch
+}
+
+function resolveFetch(opts?: ClientOptions): StudioFetch {
+  if (opts?.fetch) return opts.fetch
+  // Typed host view — Pure cannot name bare `fetch` / index `globalThis`.
+  const host = globalThis as StudioHost
+  return host.fetch.bind(host)
+}
+
 async function writeSourceHttp(
   path: string,
   content: string,
   opts?: ClientOptions,
 ): Promise<void> {
   const base = opts?.baseUrl ?? ''
-  // Prefer injected fetch; fall back to host global (not bare ambient `fetch` id).
-  const fetchFn = opts?.fetch ?? globalThis.fetch.bind(globalThis)
+  const fetchFn = resolveFetch(opts)
   const res = await fetchFn(`${base}/sail.ops.v1.SailAuthoring/Edit`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -44,7 +57,7 @@ async function listFilesHttp(
   opts?: ClientOptions,
 ): Promise<{ ok: boolean; project: string; files: string[] }> {
   const base = opts?.baseUrl ?? ''
-  const fetchFn = opts?.fetch ?? globalThis.fetch.bind(globalThis)
+  const fetchFn = resolveFetch(opts)
   const res = await fetchFn(`${base}/sail.ops.v1.SailAuthoring/ListFiles`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

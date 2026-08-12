@@ -493,8 +493,10 @@ fn extract_controller_region(source: &str) -> Option<ControllerRegion> {
     let start = find_outside_comments(source, "<controller")?;
     let open_rel = source[start..].find('>')?;
     let body_start = start + open_rel + 1;
-    let rel = source[body_start..].find("</controller>")?;
-    let body_end = body_start + rel;
+    // Same close scan as `extract_controller_block` — a naive
+    // `find("</controller>")` cuts at a usage-example string and then
+    // line-padding maps expression errors to EOF+1.
+    let body_end = crate::parse::preprocess::find_controller_close(source, body_start)?;
     let raw = &source[body_start..body_end];
     // Skip leading blank lines only — do **not** strip indentation on the first
     // content line (that would shift diagnostic columns left).
@@ -3816,6 +3818,75 @@ export default controller((ctx) => {
                 .any(|d| d.rule.as_deref() == Some(RULE_NO_TYPE_ERASE)),
             "string/template contents must not emit sail-no-type-erase: {diags:?}"
         );
+    }
+
+    #[test]
+    fn controller_region_ignores_close_inside_sample_literals() {
+        let src = r#"
+<controller>
+export default controller(() => {
+  const heading = () => 'ok'
+  const escaped = ''.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  const fenced = "```sail\n</controller>\n```"
+  const quotedAttr = 'code="</controller>"'
+  const exprTmpl = `<x code={'</controller>'}>${'</controller>'}</x>`
+  return { heading, escaped, fenced, quotedAttr, exprTmpl }
+})
+</controller>
+<view name={heading()}></view>
+"#;
+        let r = extract_controller_region(src).expect("region");
+        assert!(
+            r.body.contains("return { heading"),
+            "region must include code after sample-literal fake closes: {}",
+            r.body
+        );
+        assert!(
+            r.body.contains("exprTmpl"),
+            "region must reach the real end of the controller: {}",
+            r.body
+        );
+        assert_eq!(r.body_start_line, 3, "body starts on first content line");
+    }
+
+    #[test]
+    fn template_expression_error_maps_to_author_line_not_eof() {
+        let src = r#"
+<controller>
+export default controller(() => {
+  const heading = () => 'ok'
+  const escaped = ''.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  const fenced = "```sail\n</controller>\n```"
+  const quotedAttr = 'code="</controller>"'
+  const exprTmpl = `<x code={'</controller>'}>${'</controller>'}</x>`
+  return { heading, escaped, fenced, quotedAttr, exprTmpl }
+})
+</controller>
+<view name={heading()} missing={nope()}></view>
+"#;
+        let author_line = src
+            .lines()
+            .position(|l| l.contains("nope()"))
+            .expect("nope() line")
+            + 1;
+        let eof_plus_one = src.lines().count() + 1;
+        let path = Path::new("apps/fake/src/widget/widget.sail");
+        let diags = crate::check_all(src, Some(path), &[], None);
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.message.contains("Identifier 'heading' is not declared")),
+            "heading must stay in scope: {diags:?}"
+        );
+        let hit = diags
+            .iter()
+            .find(|d| d.message.contains("Identifier 'nope' is not declared"))
+            .unwrap_or_else(|| panic!("expected undeclared `nope`, got {diags:?}"));
+        assert_eq!(
+            hit.line, author_line,
+            "expression error must land on the author line, not EOF+1 ({eof_plus_one}): {hit:?}"
+        );
+        assert_ne!(hit.line, eof_plus_one);
     }
 
     #[test]
