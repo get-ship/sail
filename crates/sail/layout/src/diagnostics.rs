@@ -18,9 +18,9 @@
 //!
 //! Each span is into the **preprocessed** source.
 
-use crate::CheckOptions;
 use crate::metrics::{self, table as metrics_table};
 use crate::taffy_tree::Layout;
+use crate::CheckOptions;
 use serde::Serialize;
 use taffy::style::Overflow;
 
@@ -98,6 +98,13 @@ pub struct ScanInput {
 }
 
 const EPSILON: f32 = 0.5;
+/// Sub-2px / 1px rounding is measurement noise for this kind (39>37, 98>97).
+const UNINTENDED_OVERFLOW_EPSILON: f32 = 2.0;
+
+/// Theme `<when {token}>` floors — keep in lockstep with `sail_style::conditions`.
+const WHEN_TABLET_MIN_WIDTH: f32 = 768.0;
+const WHEN_DESKTOP_MIN_WIDTH: f32 = 1280.0;
+const WHEN_MOBILE_MIN_WIDTH: f32 = 390.0;
 
 fn extents_of(computed: &taffy::Layout) -> BoxExtents {
     BoxExtents {
@@ -281,7 +288,10 @@ pub fn scan_with(
 
             // Case 4 (experimental): same geometry, no author opt-in for
             // overflow/scroll/truncate → unintended-overflow.
-            if options.experimental && !has_overflow_opt_in(elem, &layout.styles[i]) {
+            if options.experimental
+                && child_main > main_size + UNINTENDED_OVERFLOW_EPSILON
+                && should_emit_unintended_overflow(layout, i, cidx, main_axis_is_height, viewport)
+            {
                 out.push(Diagnostic {
                     kind: "unintended-overflow",
                     severity: Severity::Warning,
@@ -369,9 +379,73 @@ pub fn scan_with(
     })
 }
 
+fn should_emit_unintended_overflow(
+    layout: &Layout,
+    parent_index: usize,
+    child_index: usize,
+    main_axis_is_height: bool,
+    viewport: (f32, f32),
+) -> bool {
+    if has_overflow_opt_in(&layout.elements[parent_index], &layout.styles[parent_index])
+        || ancestor_is_intended_scroller(layout, parent_index)
+    {
+        return false;
+    }
+    if is_control_flow_tag(layout.elements[parent_index].tag.as_str())
+        || is_control_flow_tag(layout.elements[child_index].tag.as_str())
+    {
+        return false;
+    }
+    if main_axis_is_height && !parent_has_definite_clipped_or_fixed_height(layout, parent_index) {
+        return false;
+    }
+    if box_or_ancestor_is_unshown(layout, parent_index, viewport)
+        || box_or_ancestor_is_unshown(layout, child_index, viewport)
+        || descendant_is_out_of_flow(layout, child_index)
+    {
+        return false;
+    }
+    true
+}
+
+/// Ancestor is a scroller / ticker / truncate the child is overflowing into.
+/// `overflow:hidden` clip shells (studio panes) are not scrollers — those
+/// would hide a real leftover overflow.
+fn ancestor_is_intended_scroller(layout: &Layout, mut index: usize) -> bool {
+    loop {
+        match layout.elements[index].parent {
+            Some(parent) if parent != 0 => index = parent,
+            _ => return false,
+        }
+        if is_intended_scroller(&layout.elements[index], &layout.styles[index]) {
+            return true;
+        }
+    }
+}
+
+fn is_intended_scroller(elem: &crate::html::Element, style: &crate::style::ResolvedStyle) -> bool {
+    if is_scroll_area_tag(&elem.tag)
+        || class_has_scroll_area(&elem.class)
+        || is_ticker_host(&elem.tag, &elem.class)
+    {
+        return true;
+    }
+    if class_has_truncate(&elem.class) {
+        return true;
+    }
+    if class_has_scroll_overflow(&elem.class) {
+        return true;
+    }
+    let o = style.style.overflow;
+    matches!(o.x, Overflow::Scroll) || matches!(o.y, Overflow::Scroll)
+}
+
 /// True when the author opted into overflow/clip/scroll via vocabulary.
 fn has_overflow_opt_in(elem: &crate::html::Element, style: &crate::style::ResolvedStyle) -> bool {
-    if is_scroll_area_tag(&elem.tag) {
+    if is_scroll_area_tag(&elem.tag)
+        || class_has_scroll_area(&elem.class)
+        || is_ticker_host(&elem.tag, &elem.class)
+    {
         return true;
     }
     if class_has_overflow_or_truncate_opt_in(&elem.class) {
@@ -385,12 +459,170 @@ fn is_scroll_area_tag(tag: &str) -> bool {
     tag == "scroll-area" || tag.ends_with("-scroll-area") || tag == "scrollarea"
 }
 
+fn class_has_scroll_area(class: &str) -> bool {
+    class
+        .split_whitespace()
+        .any(|c| c == "sail-scroll-area" || c.ends_with("-scroll-area"))
+}
+
+fn is_ticker_host(tag: &str, class: &str) -> bool {
+    tag == "ticker"
+        || tag.ends_with("-ticker")
+        || class
+            .split_whitespace()
+            .any(|c| c == "sail-ticker" || c.ends_with("-ticker"))
+}
+
+fn class_has_scroll_overflow(class: &str) -> bool {
+    class.split_whitespace().any(|c| {
+        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
+        overflow_token_is_scroll(&s)
+    })
+}
+
+fn overflow_token_is_scroll(s: &str) -> bool {
+    let Some(idx) = s.find("overflow") else {
+        return false;
+    };
+    let rest = &s[idx + "overflow".len()..];
+    rest.contains("auto") || rest.contains("scroll")
+}
+
 fn class_has_overflow_or_truncate_opt_in(class: &str) -> bool {
     class.split_whitespace().any(|c| {
         // Product Style emit keeps camelCase (`s-overflowXhidden`); fold case.
+        // Stdlib splice also mints `s-orientationvertical-overflowYauto` —
+        // overflow is a segment, not the token prefix.
         let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
-        s == "truncate" || s.starts_with("overflow")
+        s == "truncate"
+            || s.ends_with("-truncate")
+            || s.starts_with("overflow")
+            || s.contains("-overflow")
     })
+}
+
+fn parent_has_definite_clipped_or_fixed_height(layout: &Layout, parent_index: usize) -> bool {
+    let style = &layout.styles[parent_index].style;
+    let clips = matches!(
+        style.overflow.y,
+        Overflow::Hidden | Overflow::Clip | Overflow::Scroll
+    );
+    clips || !style.size.height.is_auto() || !style.max_size.height.is_auto()
+}
+
+fn box_or_ancestor_is_unshown(layout: &Layout, mut index: usize, viewport: (f32, f32)) -> bool {
+    loop {
+        if box_is_unshown(&layout.elements[index], &layout.styles[index], viewport) {
+            return true;
+        }
+        match layout.elements[index].parent {
+            Some(parent) if parent != 0 => index = parent,
+            _ => return false,
+        }
+    }
+}
+
+fn descendant_is_out_of_flow(layout: &Layout, index: usize) -> bool {
+    let mut stack = layout.elements[index].children.clone();
+    while let Some(i) = stack.pop() {
+        if box_is_unshown(&layout.elements[i], &layout.styles[i], (0.0, 0.0))
+            && (layout.styles[i].style.position == taffy::style::Position::Absolute
+                || class_is_out_of_flow(&layout.elements[i].class))
+        {
+            return true;
+        }
+        stack.extend(layout.elements[i].children.iter().copied());
+    }
+    false
+}
+
+fn class_is_out_of_flow(class: &str) -> bool {
+    class.split_whitespace().any(|c| {
+        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
+        matches!(
+            s.as_str(),
+            "absolute" | "fixed" | "positionabsolute" | "positionfixed"
+        ) || s.contains("positionabsolute")
+            || s.contains("positionfixed")
+    })
+}
+
+fn box_is_unshown(
+    elem: &crate::html::Element,
+    style: &crate::style::ResolvedStyle,
+    viewport: (f32, f32),
+) -> bool {
+    if style.style.display == taffy::style::Display::None {
+        return true;
+    }
+    if style.style.position == taffy::style::Position::Absolute {
+        return true;
+    }
+    if class_is_out_of_flow_or_ungated(&elem.class) {
+        return true;
+    }
+    if attr_is_hidden(&elem.attrs) {
+        return true;
+    }
+    if elem.tag == "when" && when_inactive_at_viewport(elem, viewport.0) {
+        return true;
+    }
+    false
+}
+
+fn class_is_out_of_flow_or_ungated(class: &str) -> bool {
+    class.split_whitespace().any(|c| {
+        let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
+        matches!(
+            s.as_str(),
+            "absolute"
+                | "fixed"
+                | "positionabsolute"
+                | "positionfixed"
+                | "hidden"
+                | "displaynone"
+                | "displaycontents"
+                | "contents"
+        ) || s.contains("positionabsolute")
+            || s.contains("positionfixed")
+            || s.contains("displaynone")
+            || s.contains("displaycontents")
+    })
+}
+
+fn attr_is_hidden(attrs: &std::collections::HashMap<String, String>) -> bool {
+    match attrs.get("hidden") {
+        None => false,
+        Some(v) => {
+            let v = v.trim();
+            v.is_empty() || v == "true" || v == "hidden" || v == "1"
+        }
+    }
+}
+
+fn when_inactive_at_viewport(elem: &crate::html::Element, viewport_w: f32) -> bool {
+    let token = when_breakpoint_token(elem);
+    match token.as_deref() {
+        Some("tablet") => viewport_w + EPSILON < WHEN_TABLET_MIN_WIDTH,
+        Some("desktop") => viewport_w + EPSILON < WHEN_DESKTOP_MIN_WIDTH,
+        Some("mobile") => viewport_w + EPSILON < WHEN_MOBILE_MIN_WIDTH,
+        _ => false,
+    }
+}
+
+fn when_breakpoint_token(elem: &crate::html::Element) -> Option<String> {
+    for key in elem.attrs.keys() {
+        let raw = key
+            .trim()
+            .trim_matches('{')
+            .trim_matches('}')
+            .trim()
+            .to_ascii_lowercase();
+        if matches!(raw.as_str(), "tablet" | "desktop" | "mobile") {
+            return Some(raw);
+        }
+    }
+    None
 }
 
 fn class_has_truncate(class: &str) -> bool {
@@ -466,6 +698,11 @@ fn class_clips_x(class: &str) -> bool {
             "overflowhidden" | "overflowclip" | "overflowxhidden" | "overflowxclip" | "truncate"
         )
     })
+}
+
+#[allow(dead_code)]
+fn _viewport_unused(v: (f32, f32)) -> (f32, f32) {
+    v
 }
 
 #[cfg(test)]
@@ -606,6 +843,111 @@ mod tests {
     }
 
     #[test]
+    fn overflow_opt_in_matches_orientation_prefixed_class() {
+        assert!(class_has_overflow_or_truncate_opt_in(
+            "s-orientationvertical-overflowYauto"
+        ));
+        assert!(class_has_overflow_or_truncate_opt_in(
+            "s-orientationhorizontal-overflowXauto"
+        ));
+        assert!(class_has_overflow_or_truncate_opt_in("s-overflowYauto"));
+        assert!(!class_has_overflow_or_truncate_opt_in(
+            "s-overscrollcontain s-scrollbarThin"
+        ));
+        assert!(!class_has_overflow_or_truncate_opt_in("s-h20 s-wfull"));
+        assert!(class_has_scroll_overflow(
+            "s-orientationvertical-overflowYauto"
+        ));
+        assert!(!class_has_scroll_overflow("s-overflowhidden"));
+        assert!(!class_has_scroll_overflow(
+            "s-orientationvertical-overflowXhidden"
+        ));
+        assert!(is_ticker_host("ticker", ""));
+        assert!(is_ticker_host("div", "sail-ticker s-overflowhidden"));
+        assert!(!is_ticker_host("div", "sail-col s-overflowhidden"));
+    }
+
+    #[test]
+    fn auto_height_parent_is_not_a_definite_clip() {
+        let elements = vec![
+            Element::default(),
+            Element {
+                tag: "div".to_string(),
+                class: "sail-col s-wfull".to_string(),
+                children: vec![2],
+                parent: Some(0),
+                ..Default::default()
+            },
+            Element {
+                tag: "span".to_string(),
+                class: "s-fontSizexs".to_string(),
+                children: vec![],
+                parent: Some(1),
+                text: "No results".to_string(),
+                ..Default::default()
+            },
+        ];
+        let tree = build(elements, (400.0, 300.0)).unwrap();
+        assert!(
+            !parent_has_definite_clipped_or_fixed_height(&tree, 1),
+            "auto-height column must not count as a clipped/fixed main axis"
+        );
+    }
+
+    #[test]
+    fn fixed_height_parent_is_a_definite_clip() {
+        let elements = vec![
+            Element::default(),
+            Element {
+                tag: "div".to_string(),
+                class: "sail-col s-h20 s-wfull".to_string(),
+                children: vec![2],
+                parent: Some(0),
+                ..Default::default()
+            },
+            Element {
+                tag: "div".to_string(),
+                class: "s-h40 s-shrink0".to_string(),
+                children: vec![],
+                parent: Some(1),
+                text: "x".to_string(),
+                ..Default::default()
+            },
+        ];
+        let tree = build(elements, (400.0, 300.0)).unwrap();
+        assert!(
+            parent_has_definite_clipped_or_fixed_height(&tree, 1),
+            "s-h20 is a definite height — the no-opt-in vehicle must stay eligible"
+        );
+    }
+
+    #[test]
+    fn hidden_false_is_not_unshown() {
+        let mut attrs = std::collections::HashMap::new();
+        attrs.insert("hidden".into(), "false".into());
+        assert!(!attr_is_hidden(&attrs));
+        attrs.insert("hidden".into(), "true".into());
+        assert!(attr_is_hidden(&attrs));
+        attrs.insert("hidden".into(), String::new());
+        assert!(attr_is_hidden(&attrs));
+    }
+
+    #[test]
+    fn when_tablet_inactive_only_below_breakpoint() {
+        let mut elem = crate::html::Element {
+            tag: "when".into(),
+            ..Default::default()
+        };
+        elem.attrs.insert("{tablet}".into(), String::new());
+        assert!(when_inactive_at_viewport(&elem, 390.0));
+        assert!(!when_inactive_at_viewport(&elem, 1440.0));
+        elem.attrs.clear();
+        elem.attrs.insert("{desktop}".into(), String::new());
+        assert!(when_inactive_at_viewport(&elem, 800.0));
+        assert!(!when_inactive_at_viewport(&elem, 1440.0));
+    }
+
+    #[test]
     fn zero_main_axis_suppressed_for_unknown_child() {
         let elements = vec![
             Element::default(),
@@ -635,9 +977,4 @@ mod tests {
             result.diagnostics
         );
     }
-}
-
-#[allow(dead_code)]
-fn _viewport_unused(v: (f32, f32)) -> (f32, f32) {
-    v
 }
