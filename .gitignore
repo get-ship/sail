@@ -66,6 +66,9 @@ apps/**/routes/tsconfig.json
 # Task artifacts (CLAUDE.md: artifacts → .artifacts/)
 .artifacts/
 
+# Per-package bake trees (same product as root `.deck/`, not source).
+packages/**/.deck/
+
 # Product build output is `.deck/` (above). Residual local dirs only:
 .sail-out/
 # Ops session (tasks/scratch) — not types (types: node_modules/.sail/).
