@@ -18,6 +18,8 @@ pub mod handler_complexity;
 pub(crate) mod js_scan;
 pub mod key_identity;
 pub mod layout;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod layout_corpus;
 pub mod light_shadow_root;
 pub mod lint_overrides;
 pub mod match_exhaustiveness;

@@ -1,15 +1,15 @@
-//! SPEC-LAYOUT-DIAG-1 / S4.2 — layout kinds corpus canary harness surface.
+//! Layout kinds canary harness.
 //!
-//! Rollout protocol §3: run experimental kinds (`unintended-overflow`,
-//! `clipped-text`) against a fixture corpus, record counts + sample findings
-//! + FP/TP judgments, and **do not promote** to default severity.
+//! Fixture `run` records experimental kinds against labeled HTML. Additive
+//! [`scan_preprocessed`] accepts already-lowered sources at caller viewports
+//! so a compiler-side driver can scan `.sail` without a layout→compiler edge.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::{check_preprocessed_with, CheckOptions};
+use crate::{CheckOptions, check_preprocessed_with};
 
 /// Default viewport for canary scans (matches gate vehicles).
 const DEFAULT_VIEWPORT: (f32, f32) = (400.0, 300.0);
@@ -275,10 +275,7 @@ fn walk_dir(dir: &Path, out: &mut Vec<PathBuf>) -> anyhow::Result<()> {
         if path.is_dir() {
             // Skip common build/vendor noise.
             if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
-                if matches!(
-                    name,
-                    "target" | "node_modules" | ".git" | "dist" | "build"
-                ) {
+                if matches!(name, "target" | "node_modules" | ".git" | "dist" | "build") {
                     continue;
                 }
             }
@@ -299,4 +296,197 @@ fn is_html(path: &Path) -> bool {
 /// Serialize a canary report to machine-readable JSON for RESULT-SPIKE-S4-2.
 pub fn report_to_json(report: &CanaryReport) -> anyhow::Result<String> {
     Ok(serde_json::to_string_pretty(report)?)
+}
+
+/// One experimental finding from an already-preprocessed source, with
+/// structured geometry (not a message-text pin).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KindFinding {
+    pub kind: String,
+    pub span: (usize, usize),
+    pub viewport: [u32; 2],
+    pub element_tag: String,
+    pub element_class: String,
+    pub element_index: usize,
+    pub geometry: Option<crate::OverflowGeometry>,
+}
+
+/// Multi-viewport scan of one preprocessed source, filtered to a single kind.
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct PreprocessedScan {
+    pub findings: Vec<KindFinding>,
+    pub viewport_errors: Vec<String>,
+    pub layout_ms: u64,
+    pub viewports_ok: usize,
+}
+
+/// Scan already-preprocessed HTML at `viewports`, keeping only `kind`.
+///
+/// Callers that own `.sail` preprocess (compiler) feed the lowered source
+/// here so this crate never depends on `sail-compiler`.
+pub fn scan_preprocessed(
+    preprocessed: &str,
+    viewports: &[(f32, f32)],
+    kind: &str,
+    opts: CheckOptions,
+) -> PreprocessedScan {
+    let started = std::time::Instant::now();
+    let mut findings = Vec::new();
+    let mut viewport_errors = Vec::new();
+    let mut viewports_ok = 0usize;
+
+    for &viewport in viewports {
+        match check_preprocessed_with(preprocessed, viewport, opts) {
+            Ok(result) => {
+                viewports_ok += 1;
+                for d in result.diagnostics {
+                    if d.kind != kind {
+                        continue;
+                    }
+                    findings.push(KindFinding {
+                        kind: d.kind.to_string(),
+                        span: d.span,
+                        viewport: [viewport.0.round() as u32, viewport.1.round() as u32],
+                        element_tag: d.element_tag,
+                        element_class: d.element_class,
+                        element_index: d.element_index,
+                        geometry: d.geometry.map(snap_geometry),
+                    });
+                }
+            }
+            Err(err) => {
+                viewport_errors.push(format!(
+                    "{}x{}: {err}",
+                    viewport.0.round() as u32,
+                    viewport.1.round() as u32
+                ));
+            }
+        }
+    }
+
+    findings.sort_by(|a, b| {
+        (
+            a.span,
+            a.viewport,
+            a.element_index,
+            a.element_tag.as_str(),
+            a.element_class.as_str(),
+        )
+            .cmp(&(
+                b.span,
+                b.viewport,
+                b.element_index,
+                b.element_tag.as_str(),
+                b.element_class.as_str(),
+            ))
+    });
+
+    PreprocessedScan {
+        findings,
+        viewport_errors,
+        layout_ms: started.elapsed().as_millis() as u64,
+        viewports_ok,
+    }
+}
+
+fn snap_geometry(g: crate::OverflowGeometry) -> crate::OverflowGeometry {
+    crate::OverflowGeometry {
+        axis: g.axis,
+        child_main: snap_px(g.child_main),
+        parent_main: snap_px(g.parent_main),
+        child_index: g.child_index,
+        parent_index: g.parent_index,
+        child: crate::BoxExtents {
+            x: snap_px(g.child.x),
+            y: snap_px(g.child.y),
+            width: snap_px(g.child.width),
+            height: snap_px(g.child.height),
+        },
+        parent: crate::BoxExtents {
+            x: snap_px(g.parent.x),
+            y: snap_px(g.parent.y),
+            width: snap_px(g.parent.width),
+            height: snap_px(g.parent.height),
+        },
+    }
+}
+
+fn snap_px(v: f32) -> f32 {
+    if !v.is_finite() {
+        return 0.0;
+    }
+    let snapped = (v * 100.0).round() / 100.0;
+    if snapped.abs() < 0.005 { 0.0 } else { snapped }
+}
+
+#[cfg(test)]
+mod scan_preprocessed_tests {
+    use super::*;
+    use crate::CheckOptions;
+
+    const OVERFLOW_NO_OPTIN: &str = r#"
+<div class="sail-col s-h20 s-wfull">
+  <div class="s-h40 s-shrink0">x</div>
+</div>
+"#;
+
+    const CLIPPED_TEXT_NO_TRUNCATE: &str = r#"
+<div class="s-w16 s-overflowxhidden">Supercalifragilisticexpialidocious</div>
+"#;
+
+    #[test]
+    fn scan_preprocessed_filters_to_requested_kind_and_carries_geometry() {
+        let scan = scan_preprocessed(
+            OVERFLOW_NO_OPTIN,
+            &[(400.0, 300.0), (1440.0, 900.0)],
+            KIND_UNINTENDED_OVERFLOW,
+            CheckOptions::experimental(),
+        );
+        assert!(
+            scan.viewport_errors.is_empty(),
+            "vehicle must layout: {:?}",
+            scan.viewport_errors
+        );
+        assert!(
+            !scan.findings.is_empty(),
+            "overflow vehicle must emit `{KIND_UNINTENDED_OVERFLOW}`"
+        );
+        for f in &scan.findings {
+            assert_eq!(f.kind, KIND_UNINTENDED_OVERFLOW);
+            let g = f.geometry.as_ref().expect("geometry required");
+            assert!(g.child_main > g.parent_main);
+        }
+    }
+
+    #[test]
+    fn scan_preprocessed_kind_filter_drops_clipped_text() {
+        let scan = scan_preprocessed(
+            CLIPPED_TEXT_NO_TRUNCATE,
+            &[(400.0, 300.0)],
+            KIND_UNINTENDED_OVERFLOW,
+            CheckOptions::experimental(),
+        );
+        assert!(
+            scan.findings.is_empty(),
+            "clipped-text vehicle must not appear under overflow filter: {:?}",
+            scan.findings
+        );
+    }
+
+    #[test]
+    fn scan_preprocessed_is_deterministic() {
+        let a = scan_preprocessed(
+            OVERFLOW_NO_OPTIN,
+            &[(390.0, 844.0), (1440.0, 900.0)],
+            KIND_UNINTENDED_OVERFLOW,
+            CheckOptions::experimental(),
+        );
+        let b = scan_preprocessed(
+            OVERFLOW_NO_OPTIN,
+            &[(390.0, 844.0), (1440.0, 900.0)],
+            KIND_UNINTENDED_OVERFLOW,
+            CheckOptions::experimental(),
+        );
+        assert_eq!(a.findings, b.findings);
+    }
 }

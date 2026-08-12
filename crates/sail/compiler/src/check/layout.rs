@@ -140,6 +140,20 @@ fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::C
     )
 }
 
+/// Map a layout diagnostic's preprocessed span back to original `.sail` bytes.
+/// Falls back to a clamped preprocessed span when the fingerprint walk misses.
+pub fn original_byte_span(
+    original: &str,
+    preprocessed: &str,
+    diag: &sail_layout::Diagnostic,
+) -> (usize, usize) {
+    find_original_span(original, preprocessed, diag).unwrap_or_else(|| {
+        let start = diag.span.0.min(original.len());
+        let end = diag.span.1.min(original.len());
+        (start, end)
+    })
+}
+
 /// Stable rule id for a taffy finding kind. Experimental kinds get dedicated
 /// `sail-*` ids for the diagnostic ratchet; landed kinds stay under
 /// `sail-layout`.

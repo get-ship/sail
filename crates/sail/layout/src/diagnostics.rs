@@ -18,9 +18,9 @@
 //!
 //! Each span is into the **preprocessed** source.
 
+use crate::CheckOptions;
 use crate::metrics::{self, table as metrics_table};
 use crate::taffy_tree::Layout;
-use crate::CheckOptions;
 use serde::Serialize;
 use taffy::style::Overflow;
 
@@ -28,6 +28,35 @@ use taffy::style::Overflow;
 pub enum Severity {
     Error,
     Warning,
+}
+
+/// Main axis used for an overflow comparison.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MainAxis {
+    Width,
+    Height,
+}
+
+/// Solved box in viewport space (taffy location + size).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]
+pub struct BoxExtents {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+/// Child vs parent main-axis extents for overflow findings.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub struct OverflowGeometry {
+    pub axis: MainAxis,
+    pub child_main: f32,
+    pub parent_main: f32,
+    pub child_index: usize,
+    pub parent_index: usize,
+    pub child: BoxExtents,
+    pub parent: BoxExtents,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -39,6 +68,8 @@ pub struct Diagnostic {
     pub element_class: String,
     pub message: String,
     pub span: (usize, usize),
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub geometry: Option<OverflowGeometry>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -68,18 +99,21 @@ pub struct ScanInput {
 
 const EPSILON: f32 = 0.5;
 
+fn extents_of(computed: &taffy::Layout) -> BoxExtents {
+    BoxExtents {
+        x: computed.location.x,
+        y: computed.location.y,
+        width: computed.size.width,
+        height: computed.size.height,
+    }
+}
+
 /// Template control-flow tags — structural, not layout boxes. Zero-main-axis
 /// on these is analyzer noise (false branch, empty list, unexpanded match).
 fn is_control_flow_tag(tag: &str) -> bool {
     matches!(
         tag,
-        "if" | "else"
-            | "else-if"
-            | "for"
-            | "match"
-            | "when"
-            | "case"
-            | "default"
+        "if" | "else" | "else-if" | "for" | "match" | "when" | "case" | "default"
     )
 }
 
@@ -142,6 +176,7 @@ pub fn scan_with(
 
         let mut child_main_total: f32 = 0.0;
         let mut biggest_child_main: (usize, f32) = (0, 0.0);
+        let mut biggest_child_box = BoxExtents::default();
         for &ci in children {
             let child_node = layout.nodes[ci].expect("child has a node");
             let child_layout = layout.taffy.layout(child_node).cloned()?;
@@ -153,6 +188,7 @@ pub fn scan_with(
             child_main_total += c_main;
             if c_main > biggest_child_main.1 {
                 biggest_child_main = (ci, c_main);
+                biggest_child_box = extents_of(&child_layout);
             }
         }
 
@@ -200,6 +236,7 @@ pub fn scan_with(
                     layout.elements[cidx].tag, child_main,
                 ),
                 span: layout.elements[cidx].span,
+                geometry: None,
             });
             continue;
         }
@@ -239,6 +276,7 @@ pub fn scan_with(
                 element_class: layout.elements[cidx].class.clone(),
                 message: msg,
                 span: layout.elements[cidx].span,
+                geometry: None,
             });
 
             // Case 4 (experimental): same geometry, no author opt-in for
@@ -257,6 +295,19 @@ pub fn scan_with(
                         layout.elements[cidx].tag, child_main, elem.tag, main_size,
                     ),
                     span: layout.elements[cidx].span,
+                    geometry: Some(OverflowGeometry {
+                        axis: if main_axis_is_height {
+                            MainAxis::Height
+                        } else {
+                            MainAxis::Width
+                        },
+                        child_main,
+                        parent_main: main_size,
+                        child_index: cidx,
+                        parent_index: i,
+                        child: biggest_child_box,
+                        parent: extents_of(&computed),
+                    }),
                 });
             }
             continue;
@@ -300,6 +351,7 @@ pub fn scan_with(
                     child_main_total
                 ),
                 span: elem.span,
+                geometry: None,
             });
         }
     }
@@ -372,8 +424,8 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
         // Only report when the box actually clips on the inline axis —
         // visible overflow is not "clipped text".
         let overflow_x = layout.styles[i].style.overflow.x;
-        let clips_x = matches!(overflow_x, Overflow::Hidden | Overflow::Clip)
-            || class_clips_x(&elem.class);
+        let clips_x =
+            matches!(overflow_x, Overflow::Hidden | Overflow::Clip) || class_clips_x(&elem.class);
         if !clips_x {
             continue;
         }
@@ -397,6 +449,7 @@ fn scan_clipped_text(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Resu
                     elem.tag, text_w, box_w,
                 ),
                 span: elem.span,
+                geometry: None,
             });
         }
     }
@@ -410,11 +463,7 @@ fn class_clips_x(class: &str) -> bool {
         let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
         matches!(
             s.as_str(),
-            "overflowhidden"
-                | "overflowclip"
-                | "overflowxhidden"
-                | "overflowxclip"
-                | "truncate"
+            "overflowhidden" | "overflowclip" | "overflowxhidden" | "overflowxclip" | "truncate"
         )
     })
 }
@@ -516,6 +565,44 @@ mod tests {
             "control-flow tags must not emit zero-main-axis: {:?}",
             result.diagnostics
         );
+    }
+
+    #[test]
+    fn unintended_overflow_carries_child_parent_extents() {
+        let elements = vec![
+            Element::default(),
+            Element {
+                tag: "div".to_string(),
+                class: "sail-col s-h20 s-wfull".to_string(),
+                children: vec![2],
+                parent: Some(0),
+                ..Default::default()
+            },
+            Element {
+                tag: "div".to_string(),
+                class: "s-h40 s-shrink0".to_string(),
+                children: vec![],
+                parent: Some(1),
+                text: "x".to_string(),
+                ..Default::default()
+            },
+        ];
+        let tree = build(elements, (400.0, 300.0)).unwrap();
+        let result = scan_with(&tree, (400.0, 300.0), CheckOptions::experimental()).unwrap();
+        let hit = result
+            .diagnostics
+            .iter()
+            .find(|d| d.kind == "unintended-overflow")
+            .expect("experimental overflow vehicle");
+        let g = hit.geometry.expect("overflow finding must carry extents");
+        assert_eq!(g.axis, MainAxis::Height);
+        assert!(
+            g.child_main > g.parent_main + EPSILON,
+            "child_main={} parent_main={}",
+            g.child_main,
+            g.parent_main
+        );
+        assert!(g.child.height > g.parent.height);
     }
 
     #[test]

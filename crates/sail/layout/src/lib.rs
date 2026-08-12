@@ -54,7 +54,9 @@ pub mod style;
 mod style_scale;
 pub mod taffy_tree;
 
-pub use diagnostics::{BoxReport, Diagnostic, ScanInput, ScanResult, Severity};
+pub use diagnostics::{
+    BoxExtents, BoxReport, Diagnostic, MainAxis, OverflowGeometry, ScanInput, ScanResult, Severity,
+};
 pub use html::{Element, parse_source, source_viewport};
 pub use metrics::{Family, Size as TextSize, table as metrics_table};
 pub use style::ResolvedStyle;
