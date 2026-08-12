@@ -469,6 +469,12 @@ fn io_fail_diag(e: &std::io::Error) -> Diagnostic {
 
 // ── region harness ─────────────────────────────────────────────────────────
 
+/// Kind-parity resolution options for region + project-mirror fallbacks.
+/// `types: []` blocks monorepo `@types/node` auto-include false-greens when
+/// kind configs are missing.
+const HARNESS_RESOLUTION_OPTS: &str =
+    "    \"allowImportingTsExtensions\": true,\n    \"types\": []";
+
 struct ControllerRegion {
     /// Body text between `<controller…>` and `</controller>`.
     /// Leading **blank** lines are dropped for line-padding; indentation on the
@@ -783,8 +789,9 @@ fn typecheck_region_harness(
     // noImplicitAny true (product pure law). Open-any sibling stubs still make
     // callback params `any` (TS7006) — those are filtered in `map_region_diag`,
     // not by weakening the harness. Real type errors still hard-fail.
-    // allowImportingTsExtensions matches kind tsconfig / product tsc -p so
-    // legal `.ts`-suffixed relatives do not false-TS2307 under Bundler.
+    // Resolution options match kind tsconfig (`allowImportingTsExtensions`,
+    // `types: []`) so legal `.ts` relatives work and monorepo `@types/node`
+    // cannot false-green Pure.
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -798,7 +805,7 @@ fn typecheck_region_harness(
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
-    "allowImportingTsExtensions": true,
+{resolution_opts},
     "paths": {{
 {paths_block}
     }}
@@ -806,6 +813,7 @@ fn typecheck_region_harness(
   "files": [{files}]
 }}
 "#,
+        resolution_opts = HARNESS_RESOLUTION_OPTS,
         files = files.join(", "),
     );
     let tsconfig_path = out_dir.join("tsconfig.json");
@@ -2225,8 +2233,9 @@ fn typecheck_project_env_mirror(
         .and_then(|nm| ship_packages_paths_entry(nm, &out_dir))
         .unwrap_or_default();
     let paths_block = merge_paths_blocks(&[at_paths, ship_paths]);
-    // Mirror must share options that affect resolution with kind tsconfig /
-    // product tsc -p (allowImportingTsExtensions + Bundler).
+    // Mirror must share resolution options with kind tsconfig / product tsc -p
+    // (allowImportingTsExtensions, types:[], Bundler) so kind-missing fallbacks
+    // cannot false-green via monorepo `@types/node` auto-include.
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -2239,7 +2248,7 @@ fn typecheck_project_env_mirror(
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
-    "allowImportingTsExtensions": true,
+{resolution_opts},
     "paths": {{
 {paths_block}
     }}
@@ -2247,6 +2256,7 @@ fn typecheck_project_env_mirror(
   "files": [{files}]
 }}
 "#,
+        resolution_opts = HARNESS_RESOLUTION_OPTS,
         files = file_list.join(", "),
     );
     std::fs::write(out_dir.join("tsconfig.json"), tsconfig)?;
@@ -4048,7 +4058,7 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
     }
 
     /// Two-file project: `.ts`-suffixed relative + `@/` alias must gate-clean
-    /// under kind config (resolution fidelity / GATE-3).
+    /// under kind config.
     #[test]
     fn project_gate_accepts_ts_extension_and_at_alias() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -4142,6 +4152,19 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
         assert!(
             body.contains("../../src/stores/*") || body.contains("\"../../src/stores/*\""),
             "paths must be relative to node_modules/.sail/:\n{body}"
+        );
+    }
+
+    #[test]
+    fn fallback_harness_resolution_opts_match_kind() {
+        // Region + project mirror share this fragment; kind emit also sets types:[].
+        assert!(
+            HARNESS_RESOLUTION_OPTS.contains("\"allowImportingTsExtensions\": true"),
+            "{HARNESS_RESOLUTION_OPTS}"
+        );
+        assert!(
+            HARNESS_RESOLUTION_OPTS.contains("\"types\": []"),
+            "fallback harnesses must set types:[] like kind configs:\n{HARNESS_RESOLUTION_OPTS}"
         );
     }
 

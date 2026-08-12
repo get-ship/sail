@@ -7,6 +7,7 @@
 //!
 //! Severity: Error. Path-gated to product surfaces (not test/).
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
@@ -14,6 +15,7 @@ use oxc_ast::ast::*;
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
+use oxc_syntax::scope::{ScopeFlags, ScopeId};
 
 use crate::report::{Finding, Severity};
 
@@ -40,6 +42,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         source,
         file: path.to_path_buf(),
         findings: Vec::new(),
+        // `visit_program` enters the module scope via enter_scope.
+        scopes: Vec::new(),
     };
     visitor.visit_program(&ret.program);
     visitor.findings
@@ -73,6 +77,8 @@ struct NodeImportVisitor<'src> {
     source: &'src str,
     file: PathBuf,
     findings: Vec<Finding>,
+    /// Nested scopes of local bindings; free `process` only fires when unbound.
+    scopes: Vec<HashSet<String>>,
 }
 
 impl NodeImportVisitor<'_> {
@@ -88,9 +94,27 @@ impl NodeImportVisitor<'_> {
             suggest: Some(SUGGEST.to_string()),
         });
     }
+
+    fn bind(&mut self, name: &str) {
+        if let Some(scope) = self.scopes.last_mut() {
+            scope.insert(name.to_string());
+        }
+    }
+
+    fn is_bound(&self, name: &str) -> bool {
+        self.scopes.iter().rev().any(|s| s.contains(name))
+    }
 }
 
 impl<'a> Visit<'a> for NodeImportVisitor<'_> {
+    fn enter_scope(&mut self, _flags: ScopeFlags, _scope_id: &std::cell::Cell<Option<ScopeId>>) {
+        self.scopes.push(HashSet::new());
+    }
+
+    fn leave_scope(&mut self) {
+        self.scopes.pop();
+    }
+
     fn visit_import_declaration(&mut self, decl: &ImportDeclaration<'a>) {
         let module = decl.source.value.as_str();
         if is_node_or_bun_spec(module) {
@@ -147,9 +171,13 @@ impl<'a> Visit<'a> for NodeImportVisitor<'_> {
         walk::walk_call_expression(self, expr);
     }
 
+    fn visit_binding_identifier(&mut self, ident: &BindingIdentifier<'a>) {
+        self.bind(ident.name.as_str());
+    }
+
     fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
-        // Free `process` ambient (e.g. process.env) — same product ban.
-        if ident.name.as_str() == "process" {
+        // Free `process` ambient only — local bindings (const/param/import) are fine.
+        if ident.name.as_str() == "process" && !self.is_bound("process") {
             self.report(ident.span, "process");
         }
     }
@@ -238,6 +266,22 @@ mod tests {
             assert!(
                 f.iter().any(|x| x.message.contains("process")),
                 "free process must fire for {src:?}: {f:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn allows_local_process_binding() {
+        // Shadowed / local `process` is not the Node ambient.
+        for src in [
+            "const process = { env: {} }\nexport const e = process.env\n",
+            "function f(process: { env: Record<string, string> }) { return process.env }\nexport const e = f({ env: {} })\n",
+            "export function g(process: { x: number }) { return process.x }\n",
+        ] {
+            let f = lint_at("apps/demo/src/compositions/env.ts", src);
+            assert!(
+                f.is_empty(),
+                "local process binding must not fire free-ambient: {src:?} → {f:?}"
             );
         }
     }

@@ -27,6 +27,21 @@ import '@ship/sail-components/canvas'
 import '@ship/sail-components/mermaid'
 ```
 
+**Types conditions:** only domains that `emit-package-dts` emits for Pure apps
+carry dual `{ types, default }` (declaration `dist/*.d.ts` + Framework source
+`default`):
+
+| Export | Dual `types` | Why |
+|--------|--------------|-----|
+| `./primitives`, `./chat`, `./viewers` | yes (`*/dist/*.d.ts`) | Pure typecheck must not follow Framework `src/` |
+| `./viewers/wasm-bootstrap`, `./viewers/same-doc-mount` | yes | Same dual rule for utility subpaths |
+| `./charts`, `./code`, `./media`, `./canvas`, `./mermaid` | no (bare source) | Side-effect registration only; no Pure-followed public API surface yet |
+| Domain-prefixed tags (`./charts/sail-bar-chart`, …) | per-tag `.sail.d.ts` | Compiled CE + ambient props |
+
+Adding dual types to a source-only domain means: emit `dist/index.d.ts` via
+`scripts/emit-package-dts.mjs`, point `exports[domain].types` at it, and include
+the domain `dist/**` in package `files`.
+
 ### Per-component (tree-shake / non-sail)
 
 ```ts
