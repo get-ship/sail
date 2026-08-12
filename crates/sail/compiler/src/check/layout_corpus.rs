@@ -90,6 +90,7 @@ pub struct Counts {
     pub files_layout_error: usize,
     pub unintended_overflow: usize,
     pub clipped_text: usize,
+    pub sub_min_tap_target: usize,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
@@ -100,6 +101,7 @@ pub struct TreeStats {
     pub files_layout_error: usize,
     pub unintended_overflow: usize,
     pub clipped_text: usize,
+    pub sub_min_tap_target: usize,
     pub layout_ms: u64,
 }
 
@@ -247,6 +249,10 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
                     tree.clipped_text += 1;
                     counts.clipped_text += 1;
                 }
+                "sub-min-tap-target" => {
+                    tree.sub_min_tap_target += 1;
+                    counts.sub_min_tap_target += 1;
+                }
                 _ => {}
             }
             findings.push(mapped);
@@ -320,6 +326,13 @@ pub fn default_clipped_out_path(workspace: &Path) -> PathBuf {
         return PathBuf::from(p);
     }
     workspace.join("target/layout-2-clipped-text-findings.json")
+}
+
+pub fn default_tap_out_path(workspace: &Path) -> PathBuf {
+    if let Ok(p) = std::env::var("LAYOUT_TAP_CANARY_OUT") {
+        return PathBuf::from(p);
+    }
+    workspace.join("target/layout-4-tap-target-findings.json")
 }
 
 struct Discovered {

@@ -12,6 +12,7 @@
   style navHead = { box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) }
   style detailPane = { box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) }
   style detailHead = { box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
+  style detailHeadMain = { box: minW(0).overflowX(auto) }
   style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
   style listPad = { box: pad(3) }
   style loadRow = { box: shrink(0).padX(4).padY(2) }
@@ -144,7 +145,7 @@ export default controller(() => {
 
     <column components-detail gap="0" style(detailPane)>
       <column components-detail-head gap="3" style(detailHead)>
-        <row align="start" justify="between" gap="3" nowrap>
+        <row align="start" justify="between" gap="3" nowrap style(detailHeadMain)>
           <column gap="1" style(growMin)>
             <p detail-title style(detailTitle)>
               {library.detailTitle()}

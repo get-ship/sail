@@ -1,7 +1,8 @@
 //! Experimental `sub-min-tap-target` (SPEC-LAYOUT-DIAG-1 §2).
 //!
-//! Interactive hosts whose solved shorter axis is below the control-h scale
-//! floor (`control-h-2xs` = 24px).
+//! Interactive hosts whose solved shorter axis is below the kind floor
+//! (`FLOOR_PX` = 24). Token `--control-h-2xs` is 22px; this kind does not
+//! follow that token.
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::taffy_tree::Layout;
@@ -27,6 +28,11 @@ pub fn scan(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
         if w <= EPSILON || h <= EPSILON {
             continue;
         }
+        // Only the unknown host itself is a measurement lie. A known control
+        // with an unknown descendant still has an honest solved box.
+        if elem.is_unknown() {
+            continue;
+        }
         let short = w.min(h);
         if short + EPSILON >= FLOOR_PX {
             continue;
@@ -45,7 +51,29 @@ pub fn scan(layout: &Layout, out: &mut Vec<Diagnostic>) -> anyhow::Result<()> {
                 long = w.max(h),
             ),
             span: elem.span,
-            geometry: None,
+            geometry: Some(crate::OverflowGeometry {
+                axis: if w <= h {
+                    crate::MainAxis::Width
+                } else {
+                    crate::MainAxis::Height
+                },
+                child_main: short,
+                parent_main: FLOOR_PX,
+                child_index: i,
+                parent_index: i,
+                child: crate::BoxExtents {
+                    x: computed.location.x,
+                    y: computed.location.y,
+                    width: w,
+                    height: h,
+                },
+                parent: crate::BoxExtents {
+                    x: 0.0,
+                    y: 0.0,
+                    width: FLOOR_PX,
+                    height: FLOOR_PX,
+                },
+            }),
         });
     }
     Ok(())
