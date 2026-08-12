@@ -24,7 +24,8 @@ const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík'
 export default controller(() => {
   let seq = 0
   const mk = (): Row => {
-    const city = CITIES[seq % CITIES.length]
+    // CITIES is non-empty; `!` closes noUncheckedIndexedAccess under the gate.
+    const city = CITIES[seq % CITIES.length]!
     return { id: `${city}-${seq++}`, city }
   }
 

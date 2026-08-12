@@ -9,10 +9,14 @@
 //! ## Design (synthesize-vs-harness)
 //!
 //! **Harness** (extends the existing props/variants bridge). Whole-region
-//! checking writes the authored `<controller>` body into a temp module under
-//! a Pure (or Action) tsconfig and runs `tsgo --noEmit` once. Span mapping is
-//! line-padding: the harness preserves absolute 1-based line numbers from the
-//! `.sail` author source so tsgo `(L,C)` maps straight back.
+//! checking writes the **full** authored `<controller>` body (module-level
+//! `type` / `const` / helpers + `export default`, not a wrapped fragment)
+//! into a temp module under a Pure (or Action) tsconfig and runs
+//! `tsgo --noEmit` once. `<scope>` type aliases / type imports are
+//! **appended** to that module (product IR: aliases hoist, so appending
+//! preserves absolute controller spans). Span mapping is line-padding: the
+//! harness preserves absolute 1-based line numbers from the `.sail` author
+//! source so tsgo `(L,C)` maps straight back for controller body lines.
 //!
 //! The isolated `region.ts` is **not** a full project checkout, but has
 //! **project-resolution parity** so missing modules hard-fail (no mask):
@@ -321,7 +325,7 @@ fn collect_sail_type_gate_native(
         return diags;
     };
 
-    match typecheck_region_harness(&region, env, source_path, &tool) {
+    match typecheck_region_harness(&region, env, source_path, &tool, author_source) {
         Ok(ts_diags) => {
             for d in ts_diags {
                 // Only product harness file — ignore ambient .d.ts noise.
@@ -519,6 +523,110 @@ fn extract_controller_region(source: &str) -> Option<ControllerRegion> {
     })
 }
 
+/// Harvest `<scope>` type aliases / type imports for the controller harness.
+/// Product threads these into the controller module (`Program.scope_types`);
+/// the type gate must too so `type Row` in scope is visible to the controller.
+fn extract_scope_types_text(source: &str) -> String {
+    let mut out = String::new();
+    let mut cursor = 0usize;
+    while cursor < source.len() {
+        let Some(rel) = find_outside_comments(&source[cursor..], "<scope") else {
+            break;
+        };
+        let start = cursor + rel;
+        let Some(open_rel) = source[start..].find('>') else {
+            break;
+        };
+        let body_start = start + open_rel + 1;
+        let Some(close_rel) = source[body_start..].find("</scope>") else {
+            break;
+        };
+        let body_end = body_start + close_rel;
+        let body = &source[body_start..body_end];
+        match crate::parse::scope_block::parse_scope_block(
+            body,
+            crate::diagnostics::Span::point(start),
+        ) {
+            Ok(block) => {
+                if !block.types.is_empty() {
+                    out.push_str(block.types.trim_end());
+                    out.push('\n');
+                }
+            }
+            Err(_) => {
+                // Incomplete / mid-edit scope: still surface bare type/import
+                // lines so local aliases aren't dropped as harness noise.
+                let harvested = harvest_typeish_lines(body);
+                if !harvested.is_empty() {
+                    out.push_str(&harvested);
+                    if !out.ends_with('\n') {
+                        out.push('\n');
+                    }
+                }
+            }
+        }
+        cursor = body_end + "</scope>".len();
+    }
+    out
+}
+
+/// Best-effort type/import lines when full scope parse fails mid-edit.
+fn harvest_typeish_lines(body: &str) -> String {
+    let mut out = String::new();
+    let mut i = 0usize;
+    let bytes = body.as_bytes();
+    while i < bytes.len() {
+        // Skip trivia.
+        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i >= bytes.len() {
+            break;
+        }
+        let rest = &body[i..];
+        let is_type = rest.starts_with("type ")
+            || rest.starts_with("export type ")
+            || rest.starts_with("import type ")
+            || rest.starts_with("import { type ")
+            || (rest.starts_with("import ") && rest.contains(" type "));
+        if !is_type {
+            // Advance to next statement-ish boundary.
+            if let Some(nl) = rest.find('\n') {
+                i += nl + 1;
+            } else {
+                break;
+            }
+            continue;
+        }
+        // Consume until semicolon or double newline after balanced braces.
+        let start = i;
+        let mut depth = 0i32;
+        let mut j = i;
+        while j < bytes.len() {
+            let c = bytes[j];
+            match c {
+                b'{' | b'<' => depth += 1,
+                b'}' | b'>' => depth = depth.saturating_sub(1),
+                b';' if depth == 0 => {
+                    j += 1;
+                    break;
+                }
+                b'\n' if depth == 0 => {
+                    // Type alias without trailing `;` — take the line.
+                    j += 1;
+                    break;
+                }
+                _ => {}
+            }
+            j += 1;
+        }
+        out.push_str(body[start..j].trim());
+        out.push('\n');
+        i = j;
+    }
+    out
+}
+
 /// Comment-aware search — mirrors `parse::preprocess` for `<controller`.
 /// Walks by **bytes** but only compares the needle at ASCII-safe starts so
 /// multi-byte UTF-8 in comments never panics on a mid-char slice.
@@ -562,11 +670,18 @@ fn typecheck_region_harness(
     env: TypeEnv,
     source_path: Option<&Path>,
     tool: &TsgoTool,
+    author_source: &str,
 ) -> std::io::Result<Vec<TsDiag>> {
     let out_dir = gate_temp_dir(source_path);
     std::fs::create_dir_all(&out_dir)?;
 
-    // Line-padding harness: body begins at its absolute .sail line number.
+    // Scope type aliases / type imports — product threads these into the
+    // controller module (`Program.scope_types`). Append so aliases hoist and
+    // controller body line numbers stay absolute (JOB-G2a harness fidelity).
+    let scope_types = extract_scope_types_text(author_source);
+
+    // Line-padding harness: full controller module begins at its absolute
+    // .sail line (types/consts/helpers + export default — never a fragment).
     let mut harness = String::new();
     for _ in 1..region.body_start_line {
         harness.push('\n');
@@ -575,6 +690,20 @@ fn typecheck_region_harness(
     if !harness.ends_with('\n') {
         harness.push('\n');
     }
+    if !scope_types.is_empty() {
+        harness.push_str("\n// <scope> types (appended; aliases hoist)\n");
+        harness.push_str(&scope_types);
+        if !harness.ends_with('\n') {
+            harness.push('\n');
+        }
+    }
+
+    // Import resolution scans controller + scope types (scope may import type).
+    let import_scan_body = if scope_types.is_empty() {
+        region.body.clone()
+    } else {
+        format!("{}\n{}", region.body, scope_types)
+    };
 
     // Sibling-tree parity (E4b R2): mirror author dir so `./` / `../` resolve.
     // Present siblings → open-any stubs (existence proven). Missing → TS2307.
@@ -601,12 +730,12 @@ fn typecheck_region_harness(
         "\"./sail-runtime-ambient.d.ts\"".to_string(),
     ];
     for stub_rel in
-        materialize_relative_import_siblings(&region.body, &out_dir, source_path, &mirror_rel)?
+        materialize_relative_import_siblings(&import_scan_body, &out_dir, source_path, &mirror_rel)?
     {
         files.push(format!("\"{stub_rel}\""));
     }
     let (at_files, at_paths_block) =
-        materialize_at_alias_stubs(&region.body, &out_dir, project_root.as_deref())?;
+        materialize_at_alias_stubs(&import_scan_body, &out_dir, project_root.as_deref())?;
     for f in at_files {
         files.push(format!("\"{f}\""));
     }
@@ -673,23 +802,29 @@ fn typecheck_region_harness(
 }
 
 fn find_project_root(start: &Path) -> Option<PathBuf> {
+    // Prefer the app package root (`package.json` + `routes`/`src`) over a
+    // nested `sail.config.json` (e.g. `src/sail.config.json` is lint preset
+    // only). `@/` alias targets are app-root-relative (`./src/stores/*`).
     let start = if start.is_file() {
         start.parent()?.to_path_buf()
     } else {
         start.to_path_buf()
     };
     let mut dir = Some(start.as_path());
+    let mut nested_config: Option<PathBuf> = None;
     while let Some(d) = dir {
-        if d.join("sail.config.jsonc").is_file()
-            || d.join("sail.config.json").is_file()
-            || (d.join("package.json").is_file()
-                && (d.join("routes").is_dir() || d.join("src").is_dir()))
+        if d.join("package.json").is_file() && (d.join("routes").is_dir() || d.join("src").is_dir())
         {
             return Some(d.to_path_buf());
         }
+        if nested_config.is_none()
+            && (d.join("sail.config.jsonc").is_file() || d.join("sail.config.json").is_file())
+        {
+            nested_config = Some(d.to_path_buf());
+        }
         dir = d.parent();
     }
-    None
+    nested_config
 }
 
 fn mirror_region_rel(source_path: Option<&Path>, project_root: Option<&Path>) -> String {
@@ -1150,6 +1285,14 @@ declare module "@ship/sail-runtime" {
   export function batch<T = any>(...args: any[]): any;
   export function untrack<T = any>(...args: any[]): any;
   export function isSignal(v: unknown): boolean;
+  // Real package surface used by app .ts modules (not free ambient only).
+  export function mount(...args: any[]): any;
+  export function mountAmbient(...args: any[]): any;
+  export function navigate(...args: any[]): any;
+  export function debounce(...args: any[]): any;
+  export function interval(...args: any[]): any;
+  export function persisted(...args: any[]): any;
+  export const hotkeys: any;
   export const bindHtml: any;
   export const emit: any;
   const __default: any;
@@ -1332,27 +1475,47 @@ fn ensure_ts_dest(dest: PathBuf, real: &Path) -> PathBuf {
     dest.with_extension("ts")
 }
 
-fn collect_at_alias_specs(body: &str) -> BTreeSet<String> {
-    let mut out = BTreeSet::new();
-    for line in body.lines() {
-        let l = line.trim();
-        if !(l.starts_with("import ") || l.starts_with("export ")) {
-            continue;
+/// `@/` imports with open-any named/default/namespace shape (same as relative).
+fn collect_at_alias_import_stubs(body: &str) -> HashMap<String, RelativeStub> {
+    let mut map: HashMap<String, RelativeStub> = HashMap::new();
+    let bytes = body.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'/' && i + 1 < bytes.len() {
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                while i < bytes.len() && bytes[i] != b'\n' {
+                    i += 1;
+                }
+                continue;
+            }
+            if bytes[i + 1] == b'*' {
+                i += 2;
+                while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                    i += 1;
+                }
+                i = (i + 2).min(bytes.len());
+                continue;
+            }
         }
-        for quote in ['\'', '"'] {
-            let needle = format!("from {quote}@/");
-            if let Some(i) = l.find(&needle) {
-                let rest = &l[i + needle.len() - 2..];
-                if let Some(end) = rest[1..].find(quote) {
-                    let spec = &rest[..=end];
+        if rest_starts_with_kw(bytes, i, b"from") {
+            let after_kw = i + 4;
+            let j = skip_ws_bytes(bytes, after_kw);
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                if let Some((spec, next)) = parse_string_lit(bytes, j) {
                     if spec.starts_with("@/") {
-                        out.insert(spec.to_string());
+                        let clause = clause_before_from(body, i);
+                        let entry = map.entry(spec).or_default();
+                        fill_stub_from_clause(clause, entry);
                     }
+                    i = next;
+                    continue;
                 }
             }
         }
+        i += 1;
     }
-    out
+    map
 }
 
 fn materialize_at_alias_stubs(
@@ -1360,13 +1523,13 @@ fn materialize_at_alias_stubs(
     out_dir: &Path,
     project_root: Option<&Path>,
 ) -> std::io::Result<(Vec<String>, String)> {
-    let specs = collect_at_alias_specs(body);
-    if specs.is_empty() {
+    let stubs = collect_at_alias_import_stubs(body);
+    if stubs.is_empty() {
         return Ok((Vec::new(), String::new()));
     }
     let Some(root) = project_root else {
-        let paths: Vec<String> = specs
-            .iter()
+        let paths: Vec<String> = stubs
+            .keys()
             .map(|s| format!("      \"{s}\": [\"./__missing_at_alias__\"]"))
             .collect();
         return Ok((Vec::new(), paths.join(",\n")));
@@ -1374,7 +1537,7 @@ fn materialize_at_alias_stubs(
     let mut files = Vec::new();
     let mut path_entries = Vec::new();
     let mut i = 0usize;
-    for spec in specs {
+    for (spec, stub) in stubs {
         let resolved = crate::project_map::resolve_at_alias(root, &spec);
         let exists = resolved.as_ref().is_some_and(|p| {
             p.is_file()
@@ -1393,11 +1556,6 @@ fn materialize_at_alias_stubs(
         if let Some(parent) = dest.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        let stub = RelativeStub {
-            named: BTreeSet::new(),
-            has_default: true,
-            has_namespace: true,
-        };
         write_open_any_stub(&dest, &stub)?;
         files.push(format!("./at/{stub_name}"));
         path_entries.push(format!("      \"{spec}\": [\"./at/{stub_name}\"]"));
@@ -1888,6 +2046,17 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
             }
         }
     }
+    // Open `@ship/*` ambient lists runtime-shaped names only. Component package
+    // subpaths (`@ship/sail-primitives/…`) are real npm packages — missing
+    // named members on the wildcard stub are harness incompleteness, not
+    // product type errors. Precisely-typed modules keep TS2305/TS2614.
+    if d.code == "TS2305" || d.code == "TS2614" {
+        if let Some(spec) = extract_no_exported_member_module(&d.message) {
+            if is_open_ship_package_stub(&spec) {
+                return None;
+            }
+        }
+    }
     // Open-any sibling stubs force callback params to `any`. Keep noImplicitAny
     // on for author body, but do not promote harness TS7006 noise.
     if d.code == "TS7006" {
@@ -1936,6 +2105,39 @@ fn is_ambient_module_stub_spec(spec: &str) -> bool {
     }
     // bare `mermaid` or scoped `@codemirror/state`
     !s.starts_with('.') && !s.starts_with('/')
+}
+
+/// `@ship/*` wildcard ambient (not the precisely typed runtime modules).
+fn is_open_ship_package_stub(spec: &str) -> bool {
+    let s = spec.trim();
+    if s == "@ship/*" {
+        return true;
+    }
+    if !s.starts_with("@ship/") {
+        return false;
+    }
+    !matches!(
+        s,
+        "@ship/sail-runtime" | "@ship/sail-runtime/internal" | "@ship/sail-dom" | "@ship/sail-test"
+    )
+}
+
+/// `Module '"X"' has no exported member 'Y'.` (TS2305 / TS2614)
+/// TypeScript quotes the module name as `'"X"'` — strip the inner quotes.
+fn extract_no_exported_member_module(message: &str) -> Option<String> {
+    const PFX: &str = "Module '";
+    let rest = message.find(PFX).map(|i| &message[i + PFX.len()..])?;
+    let end = rest.find('\'').unwrap_or(rest.len());
+    let spec = rest[..end]
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .trim();
+    if spec.is_empty() {
+        None
+    } else {
+        Some(spec.to_string())
+    }
 }
 
 fn extract_not_found_name(message: &str) -> Option<String> {
@@ -2677,6 +2879,207 @@ export default controller((ctx) => {
         assert!(
             type_errs.is_empty(),
             "clean Pure controller must not type-gate fail: {type_errs:?}"
+        );
+    }
+
+    fn type_gate_errs(diags: &[Diagnostic]) -> Vec<&Diagnostic> {
+        diags
+            .iter()
+            .filter(|d| {
+                d.severity == DiagSeverity::Error
+                    && matches!(
+                        d.rule.as_deref(),
+                        Some(
+                            RULE_PURE_REGION
+                                | RULE_ACTION_SURFACE
+                                | RULE_TYPE_GATE
+                                | RULE_NO_TS_IGNORE
+                                | RULE_NO_TYPE_ERASE
+                        )
+                    )
+            })
+            .collect()
+    }
+
+    /// G2a: controller-local `type` used later in the same block must not
+    /// TS2304 — whole module is harnessed, not a wrapped fragment.
+    #[test]
+    fn harness_controller_local_type_is_visible() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+type Row = { id: string; city: string }
+const CITIES = ['Osaka', 'Nairobi'] as const
+function cityAt(i: number): string {
+  return CITIES[i % CITIES.length]!
+}
+export default controller(() => {
+  const mk = (): Row => ({ id: '1', city: cityAt(0) })
+  const rows = signal<Row[]>([mk()])
+  return { rows }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "controller-local type/const/helper must type-gate green: {errs:?}"
+        );
+    }
+
+    /// G2a: module-level const/helper referenced from the default export
+    /// (and thus available to the template via return) must stay green.
+    #[test]
+    fn harness_controller_local_const_helper_green() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+const LABEL = 'board'
+const double = (n: number) => n * 2
+export default controller(() => {
+  const n = signal(double(1))
+  return { n, label: LABEL }
+})
+</controller>
+<span>{label}{n()}</span>
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "module-level const/helper must type-gate green: {errs:?}"
+        );
+    }
+
+    /// G2a / flow-trace: `type Row` in `<scope>` is visible to the controller.
+    #[test]
+    fn harness_scope_type_referenced_from_controller() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<scope>
+  type Row = { id: string; city: string }
+  style board = { box: pad(4) }
+</scope>
+<controller>
+export default controller(() => {
+  const mk = (): Row => ({ id: '1', city: 'Osaka' })
+  const rows = signal<Row[]>([mk()])
+  return { rows }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "scope type Row must be visible in controller (no TS2304): {errs:?}"
+        );
+    }
+
+    /// Live flow-trace fixture: was the verified G2a false positive (TS2304 Row).
+    #[test]
+    fn flow_trace_type_gate_green() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let path = root.join("apps/sail-site/src/flow-trace/flow-trace.sail");
+        let src = std::fs::read_to_string(&path).expect("flow-trace.sail");
+        let diags = collect_sail_type_gate(&src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "flow-trace.sail must type-gate green after G2a: {errs:?}"
+        );
+    }
+
+    /// G2a: existing `@/` alias import must not false-positive when the target exists.
+    #[test]
+    fn harness_at_alias_import_green() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+import { tally } from '@/stores/counter-store'
+
+export default controller(() => {
+  const n = signal(0)
+  return { n, tally }
+})
+</controller>
+<div />
+"#;
+        // Path under sail-site so project root + @/stores/* resolve.
+        let path = root.join("apps/sail-site/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "@/ alias import must type-gate green when target exists: {errs:?}"
+        );
+    }
+
+    /// G2a: npm package import (built / node_modules) is not a type-gate false positive.
+    #[test]
+    fn harness_npm_component_package_import_green() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        // Bare / scoped package names are not Pure ambient law (bundler resolve);
+        // must not fail the gate as TS2307 harness noise.
+        let src = r#"
+<controller>
+import { sailCalendar } from '@ship/sail-primitives/sail-calendar'
+
+export default controller(() => {
+  const n = signal(0)
+  return { n, sailCalendar }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let errs = type_gate_errs(&diags);
+        assert!(
+            errs.is_empty(),
+            "npm component package import must not type-gate fail: {errs:?}"
         );
     }
 
