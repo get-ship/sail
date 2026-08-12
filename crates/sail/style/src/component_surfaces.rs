@@ -24,7 +24,7 @@ const TRACK_AS_PRIMARY: &[&str] = &["meter", "progress", "switch"];
 fn host_pack_alias(host: &str) -> &str {
     match host {
         "a" | "anchor" => "button",
-        "input" | "textarea" | "select" => "field",
+        "input" | "textarea" | "select" | "date" | "file" | "color" => "field",
         "pagination" => "page",
         other => other,
     }
@@ -91,12 +91,15 @@ fn build_index() -> SurfaceIndex {
         let author_s = leak_str(author);
         let leaf_s = leak_str(leaf);
         rest_public_names.insert(css_s);
-        pack_slots.entry(pack.to_string()).or_default().push(SurfaceSlot {
-            author_member: author_s,
-            storage_leaf: leaf_s,
-            storage_path: path_s,
-            public_name: css_s,
-        });
+        pack_slots
+            .entry(pack.to_string())
+            .or_default()
+            .push(SurfaceSlot {
+                author_member: author_s,
+                storage_leaf: leaf_s,
+                storage_path: path_s,
+                public_name: css_s,
+            });
     }
 
     let mut by_pack: BTreeMap<&'static str, &'static [SurfaceSlot]> = BTreeMap::new();
@@ -321,6 +324,37 @@ mod tests {
     }
 
     #[test]
+    fn field_alias_for_date_file_color() {
+        for host in ["date", "file", "color"] {
+            with_host_surface(Some(host), || {
+                assert_eq!(current_surface_pack(), Some("field"), "host={host}");
+                assert_eq!(
+                    resolve_surface_author("field", &["foreground".into()]).unwrap(),
+                    "field-foreground",
+                    "host={host}"
+                );
+                assert_eq!(
+                    resolve_surface_author("field", &["border".into()]).unwrap(),
+                    "field-border",
+                    "host={host}"
+                );
+            });
+        }
+    }
+
+    #[test]
+    fn unaliased_host_rejects_field_surface() {
+        with_host_surface(Some("chip"), || {
+            assert_eq!(current_surface_pack(), Some("chip"));
+            let err = resolve_surface_author("field", &["foreground".into()]).unwrap_err();
+            assert!(
+                err.contains("not in scope") || err.contains("field"),
+                "{err}"
+            );
+        });
+    }
+
+    #[test]
     fn component_public_names_indexed() {
         assert!(is_component_public_name("chip"));
         assert!(is_component_public_name("chip-foreground"));
@@ -357,7 +391,8 @@ mod emit_integration {
         with_host_surface(Some("chip"), || {
             assert_eq!(current_surface_pack(), Some("chip"));
             assert_eq!(resolve_surface_author("chip", &[]).unwrap(), "chip");
-            let (style, diags) = parse("style({ paint: bg(chip).fg(chip.foreground).border(chip.border) })");
+            let (style, diags) =
+                parse("style({ paint: bg(chip).fg(chip.foreground).border(chip.border) })");
             assert!(
                 diags.is_empty(),
                 "{:?}",

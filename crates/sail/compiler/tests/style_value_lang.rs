@@ -514,3 +514,63 @@ fn batch_e_residuals_compile_on_style_path() {
         let _ = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
     }
 }
+
+#[test]
+fn date_file_color_compile_on_field_surface() {
+    for (tag, src, wants_fg) in [
+        ("date", include_str!("../stdlib/date.sail"), true),
+        ("file", include_str!("../stdlib/file.sail"), true),
+        ("color", include_str!("../stdlib/color.sail"), false),
+    ] {
+        if wants_fg {
+            assert!(
+                src.contains("field.foreground"),
+                "{tag} must paint field.foreground"
+            );
+        } else {
+            assert!(
+                src.contains("field.border") || src.contains("bg(field)"),
+                "{tag} must paint field surfaces"
+            );
+        }
+        let out = compile_element(src, tag)
+            .unwrap_or_else(|e| panic!("{tag} must accept field surfaces: {e}"));
+        let paint = format!("{}{}", out.structure_html, out.skin_css);
+        if wants_fg {
+            assert!(
+                paint.contains("field-foreground") || paint.contains("fgfieldforeground"),
+                "{tag} must emit field.foreground:\nstruct={}\nskin={}",
+                out.structure_html,
+                out.skin_css
+            );
+        } else {
+            assert!(
+                paint.contains("field-border")
+                    || paint.contains("var(--field)")
+                    || paint.contains("bgfield"),
+                "{tag} must emit field surface paint:\nstruct={}\nskin={}",
+                out.structure_html,
+                out.skin_css
+            );
+        }
+    }
+}
+
+#[test]
+fn unaliased_host_rejects_field_foreground() {
+    let src = r#"
+<scope>
+  style base = { paint: fg(field.foreground) }
+</scope>
+<span style(base)>x</span>
+"#;
+    let err = compile_element(src, "chip").expect_err("chip must reject field.foreground");
+    let msg = format!("{err:?}");
+    assert!(
+        msg.contains("field.foreground")
+            || msg.contains("not a token")
+            || msg.contains("not in scope")
+            || msg.contains("scale"),
+        "chip rejection must name the field surface: {msg}"
+    );
+}
