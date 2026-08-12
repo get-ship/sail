@@ -57,7 +57,7 @@ const CAT_LABEL: Record<CatalogEntry['cat'], string> = {
 
 export default controller((ctx) => {
   // deck route.pathname is SSOT and updates same-tick on navigate.
-  const path = derived(() => ctx.route.pathname())
+  const path = derived(() => ctx.route?.pathname?.() ?? '')
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
   const closeNav = (): void => navOpen.set(false)

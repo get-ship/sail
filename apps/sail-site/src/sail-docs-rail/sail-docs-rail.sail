@@ -49,7 +49,7 @@
  * navigate (pathname SSOT), so the rail tracks the leaf without browser API wraps.
  */
 export default controller((ctx) => {
-  const path = derived(() => ctx.route.pathname())
+  const path = derived(() => ctx.route?.pathname?.() ?? '')
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
   const closeNav = (): void => navOpen.set(false)
