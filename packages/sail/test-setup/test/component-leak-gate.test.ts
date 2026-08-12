@@ -29,7 +29,7 @@ import { measureMountLeakAsync, gcAvailable, type RetentionCycle } from '../src/
 // landing on the package by NAME — NOT by counting `../` from this test file
 // (the brittle traversal that broke the moment test-setup moved one dir).
 //
-// Why not `require.resolve('@ship/sail-primitives')`: it is not a declared
+// Why not `require.resolve('@ship/sail-components/primitives')`: it is not a declared
 // dependency of @ship/test-setup, and bun's per-package node_modules layout
 // leaves it unresolvable from here (verified: MODULE_NOT_FOUND) — declaring it
 // would mean editing the lockfile. So we use the repo's OTHER sanctioned
@@ -57,18 +57,31 @@ function workspaceRoot(): string {
 }
 
 function primitivesSrc(): string {
-  const pkgDir = resolve(workspaceRoot(), 'packages/components/sail/primitives')
-  const pkgJson = resolve(pkgDir, 'package.json')
-  const name = existsSync(pkgJson)
-    ? (JSON.parse(readFileSync(pkgJson, 'utf8')) as { name?: string }).name
+  // Domain trees live under the umbrella `@ship/sail-components` package
+  // (no per-domain package.json). Resolve by umbrella export metadata.
+  const umbrella = resolve(workspaceRoot(), 'packages/components/sail')
+  const pkgJson = resolve(umbrella, 'package.json')
+  const manifest = existsSync(pkgJson)
+    ? (JSON.parse(readFileSync(pkgJson, 'utf8')) as {
+        name?: string
+        exports?: Record<string, unknown>
+      })
     : undefined
-  if (name !== '@ship/sail-primitives') {
+  if (manifest?.name !== '@ship/sail-components') {
     throw new Error(
-      `[component-leak-gate] expected @ship/sail-primitives at ${pkgDir} but found ${name ?? '(missing)'} — ` +
-        `update this resolver if the primitives package moved.`,
+      `[component-leak-gate] expected @ship/sail-components at ${umbrella} but found ${manifest?.name ?? '(missing)'}`,
     )
   }
-  return resolve(pkgDir, 'src')
+  if (!manifest.exports || !('./primitives' in manifest.exports)) {
+    throw new Error(
+      `[component-leak-gate] @ship/sail-components missing "./primitives" export — update resolver if domains moved.`,
+    )
+  }
+  const primDir = resolve(umbrella, 'primitives/src')
+  if (!existsSync(primDir)) {
+    throw new Error(`[component-leak-gate] primitives source missing at ${primDir}`)
+  }
+  return primDir
 }
 
 const PRIM_ROOT = primitivesSrc()

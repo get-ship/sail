@@ -8,7 +8,7 @@ Internal registry cut for the style-synthesis authoring freeze.
 
 - `@ship/tokens@0.3.0`
 - `@ship/sail-compiler-wasm`, `sail-runtime`, `sail-dom`, `sail-lsp-browser`, `sail-tutorial`
-- `@ship/sail-primitives`, `sail-canvas`, `sail-charts`, `sail-mermaid`, `sail-chat-elements`, `sail-media`, `sail-code-editor`, `sail-viewer`
+- `@ship/sail-components/primitives`, `sail-canvas`, `sail-charts`, `sail-mermaid`, `sail-chat-elements`, `sail-media`, `sail-code-editor`, `sail-viewer`
 - `@ship/deck-router@0.3.0`, `@ship/deck-host@0.3.0`
 
 **Not republished:** legacy `@ship/sail-*` (marketing/helm/ship-apps stay on sail until explicit cutover — visual safety).
@@ -72,7 +72,7 @@ mount(el, payload, { ops, api, route, navigate })
 |--------|--------|
 | `@ship/sail-runtime` | `@ship/sail-runtime` |
 | `@ship/sail-dom` | `@ship/sail-dom` |
-| `@ship/sail-primitives` etc. | `@ship/sail-primitives` etc. |
+| `@ship/sail-components/primitives` etc. | `@ship/sail-components/primitives` etc. |
 | `.sail` sources | `.sail` |
 | `SUI_REPO` → deck | this monorepo tip (`orch` / `sail` worktree) |
 

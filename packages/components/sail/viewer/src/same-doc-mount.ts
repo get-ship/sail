@@ -203,7 +203,7 @@ function ensureHosts(): Record<string, any> {
  * Relative lesson mock clients are rewritten onto package exports so the page
  * importmap / bundler graph can resolve them (no blob: URLs — CSP forbids them).
  *
- * The mount module imports `@ship/sail-viewer/same-doc-mount` for the registry
+ * The mount module imports `@ship/sail-components/viewers/same-doc-mount` for the registry
  * so it does not touch window/document for host lookup.
  */
 function buildMountModule(opts: {
@@ -243,7 +243,7 @@ function buildMountModule(opts: {
   const runIdLit = JSON.stringify(opts.runId)
 
   // Injected module uses the runtime registry API (no ambient god-globals).
-  return `import { takeTutMount } from ${JSON.stringify('@ship/sail-viewer/same-doc-mount')};
+  return `import { takeTutMount } from ${JSON.stringify('@ship/sail-components/viewers/same-doc-mount')};
 ${controller}
 
 ${template}

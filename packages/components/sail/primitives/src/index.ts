@@ -1,8 +1,8 @@
-// @ship/sail-primitives — SAIL primitive registry.
+// @ship/sail-components/primitives — SAIL primitive registry.
 //
 // Side-effect imports for every generic `<sail-*>` UI primitive. Each
 // `<tag>.compiled.js` calls `customElements.define()` on import, so a
-// single `import '@ship/sail-primitives'` at the consumer registers every
+// single `import '@ship/sail-components/primitives'` at the consumer registers every
 // tag in this package globally before any view template instantiates it.
 //
 // Companion families (sail-tab + sail-tab-panel + sail-tabs;

@@ -14,7 +14,6 @@
       "packages/sail/studio-client",
       "packages/sail/tsconfig",
       "packages/components/sail",
-      "packages/components/sail/*",
       "packages/deck/*",
       "apps/*"
     ]

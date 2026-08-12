@@ -42,11 +42,31 @@ pub fn write_component_package_cem(package_root: &Path) -> Result<Option<PathBuf
     };
     let ce_field = ce_field.to_string();
 
-    // 2. Walk src/ for component .sail files (stem == parent dir name).
-    let src_dir = package_root.join("src");
+    // 2. Walk component .sail files: classic `src/`, plus domain `*/src/` for
+    // umbrella packages (`sailComponents: true` / multi-domain layout).
     let mut sail_files: Vec<PathBuf> = Vec::new();
+    let src_dir = package_root.join("src");
     if src_dir.exists() {
         walk_component_sail_files(&src_dir, &mut sail_files);
+    }
+    let is_umbrella = pkg.get("sailComponents").and_then(|v| v.as_bool()) == Some(true);
+    if is_umbrella {
+        if let Ok(entries) = std::fs::read_dir(package_root) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if !path.is_dir() {
+                    continue;
+                }
+                let name = entry.file_name();
+                if name == "src" || name == "node_modules" || name == "dist" {
+                    continue;
+                }
+                let domain_src = path.join("src");
+                if domain_src.is_dir() {
+                    walk_component_sail_files(&domain_src, &mut sail_files);
+                }
+            }
+        }
     }
     sail_files.sort();
 
@@ -298,47 +318,27 @@ mod tests {
         .to_string()
     }
 
-    /// PACK-IMPORTS-1: the seven first-party L2 packs that FREEZE-HONESTY-1
-    /// L-2 wrongly refused must compile under the components package import envelope so CEM
-    /// generation (and `sail dev`) can proceed.
+    /// PACK-IMPORTS-1 / L2-2: the umbrella `@ship/sail-components` package
+    /// compiles under the components-package import envelope so CEM generation
+    /// (and `sail dev`) can proceed. Domain trees are folders, not packages.
     #[test]
     fn first_party_packs_compile_under_pack_import_envelope() {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../..")
             .canonicalize()
             .expect("repo root");
-        // The seven packs named in SPEC-PACK-IMPORTS-1 (relative imports +
-        // declared vendors). chat-elements is also a components package and should compile,
-        // but the acceptance gate is these seven.
-        let packs = [
-            "canvas",
-            "charts",
-            "code-editor",
-            "media",
-            "mermaid",
-            "primitives",
-            "viewer",
-        ];
-        let mut failures = Vec::new();
-        for name in packs {
-            let root = repo.join(format!("packages/components/sail/{name}"));
-            match write_component_package_cem(&root) {
-                Ok(Some(path)) => {
-                    assert!(
-                        path.exists(),
-                        "{name}: CEM path missing after write: {}",
-                        path.display()
-                    );
-                }
-                Ok(None) => failures.push(format!("{name}: no customElements field")),
-                Err(e) => failures.push(format!("{name}: {e:#}")),
+        let root = repo.join("packages/components/sail");
+        match write_component_package_cem(&root) {
+            Ok(Some(path)) => {
+                assert!(
+                    path.exists(),
+                    "umbrella CEM path missing after write: {}",
+                    path.display()
+                );
             }
+            Ok(None) => panic!("@ship/sail-components missing customElements field"),
+            Err(e) => panic!("umbrella CEM generation failed: {e:#}"),
         }
-        assert!(
-            failures.is_empty(),
-            "package CEM generation failed under pack import envelope:\n{}",
-            failures.join("\n")
-        );
     }
 
     /// Compile a component .sail in-process and verify the merged CEM is written.
@@ -434,7 +434,7 @@ mod tests {
     }
 
     /// EXT-1 E3: external app — no `workspaces` map — depends on a components package only
-    /// via `node_modules` (the `bun add @ship/sail-charts` shape). Tag must
+    /// via `node_modules` (the `bun add @ship/sail-components` shape). Tag must
     /// resolve and `components.gen.ts` must include it.
     #[test]
     fn external_components_package_via_node_modules_without_workspace_map() {
@@ -444,14 +444,14 @@ mod tests {
         // Pure external app: package.json deps only — no workspaces field.
         write(
             &app.join("package.json"),
-            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"^0.3.0"}}"#,
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-components":"^0.3.0"}}"#,
         );
 
         // Installed components package under node_modules (registry / bun add layout).
-        let pack = app.join("node_modules/@ship/sail-charts");
+        let pack = app.join("node_modules/@ship/sail-components");
         write(
             &pack.join("package.json"),
-            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+            r#"{"name":"@ship/sail-components","customElements":"dist/custom-elements.json"}"#,
         );
         write(
             &pack.join("src/sail-bar-chart/sail-bar-chart.sail"),
@@ -472,7 +472,7 @@ mod tests {
             "components.gen must list sail-bar-chart; got:\n{catalog}"
         );
         assert!(
-            catalog.contains("@ship/sail-charts"),
+            catalog.contains("@ship/sail-components"),
             "components.gen must stamp package name; got:\n{catalog}"
         );
 
@@ -483,7 +483,7 @@ mod tests {
             .expect("sail-bar-chart must resolve from node_modules components package");
         assert!(src.is_file());
         assert!(
-            src.ends_with("node_modules/@ship/sail-charts/src/sail-bar-chart/sail-bar-chart.sail"),
+            src.ends_with("node_modules/@ship/sail-components/src/sail-bar-chart/sail-bar-chart.sail"),
             "resolved path must be under node_modules; got: {src:?}"
         );
     }
@@ -498,7 +498,7 @@ mod tests {
 
         write(
             &vendor.join("package.json"),
-            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+            r#"{"name":"@ship/sail-components","customElements":"dist/custom-elements.json"}"#,
         );
         write(
             &vendor.join("src/sail-bar-chart/sail-bar-chart.sail"),
@@ -510,14 +510,14 @@ mod tests {
         );
         write(
             &app.join("package.json"),
-            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"file:./vendor/sail-charts"}}"#,
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-components":"file:./vendor/sail-charts"}}"#,
         );
 
         let count = generate_components_gen(app, app).expect("generate_components_gen file:");
         assert_eq!(count, 1);
         let catalog = std::fs::read_to_string(app.join("components.gen.ts")).unwrap();
         assert!(catalog.contains("sail-bar-chart"));
-        assert!(catalog.contains("@ship/sail-charts"));
+        assert!(catalog.contains("@ship/sail-components"));
 
         let idx = crate::catalog::tag_source_index(app);
         assert!(

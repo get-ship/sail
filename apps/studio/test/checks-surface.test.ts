@@ -874,9 +874,9 @@ describe('rule groups + autofix + re-check + empty', () => {
       groupMetaFromRows,
       toggleCollapsedRule,
     } = await import('../src/checks/expand')
-    // Import engine directly — full @ship/sail-primitives side-effects fail in vitest.
+    // Import engine directly — full @ship/sail-components/primitives side-effects fail in vitest.
     const { createTable } = await import(
-      /* engine-only path avoids @ship/sail-primitives side-effect CE imports */
+      /* engine-only path avoids @ship/sail-components/primitives side-effect CE imports */
       join(
         REPO,
         'packages/components/sail/primitives/src/sail-table/engine/create-table.ts',

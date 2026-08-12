@@ -48,14 +48,14 @@ export const PACKS: Pack[] = [
   // L1 surface — bare language tags that compile in (button, input, …).
   // Product name: "Component primitives" (was "In the language" / stdlib).
   { id: 'lang', label: 'Component primitives', sub: 'no import — it compiles in' },
-  { id: 'charts', label: 'Charts', sub: '@ship/sail-charts' },
-  { id: 'media', label: 'Media', sub: '@ship/sail-media' },
+  { id: 'charts', label: 'Charts', sub: '@ship/sail-components/charts' },
+  { id: 'media', label: 'Media', sub: '@ship/sail-components/media' },
   // Canvas is deliberately absent from the rail: its pack has zero
   // cataloged components until their demo tiles land (see the CATALOG
   // note) — a rail entry whose filter shows an empty grid is a lie.
-  { id: 'chat', label: 'Chat elements', sub: '@ship/sail-chat-elements' },
-  { id: 'mermaid', label: 'Mermaid', sub: '@ship/sail-mermaid' },
-  { id: 'code-editor', label: 'Code editor', sub: '@ship/sail-code-editor' },
+  { id: 'chat', label: 'Chat elements', sub: '@ship/sail-components/chat' },
+  { id: 'mermaid', label: 'Mermaid', sub: '@ship/sail-components/mermaid' },
+  { id: 'code-editor', label: 'Code editor', sub: '@ship/sail-components/code' },
   // The fx pack is gone: the actions it shipped (`spotlight`,
   // `targetCursor`) are component-primitive actions in the action table;
   // they are not in this catalog because actions are not elements.
@@ -144,7 +144,7 @@ export const CATALOG: CatalogEntry[] = [
   // the action table. They are not elements; this catalog is
   // elements only.
 
-  // ── @ship/sail-charts — 7 SVG-rendered data viz primitives ───────────
+  // ── @ship/sail-components/charts — 7 SVG-rendered data viz primitives ───────────
   P('charts', 'sail-area-chart', 'sailAreaChart', 'data'),
   P('charts', 'sail-bar-chart', 'sailBarChart', 'data'),
   P('charts', 'sail-donut', 'sailDonut', 'data'),
@@ -153,7 +153,7 @@ export const CATALOG: CatalogEntry[] = [
   P('charts', 'sail-line-chart', 'sailLineChart', 'data'),
   P('charts', 'sail-sparkline', 'sailSparkline', 'data'),
 
-  // ── @ship/sail-media — content renderers (image / audio-video) ────────
+  // ── @ship/sail-components/media — content renderers (image / audio-video) ────────
   // sail-media-csv exists in the pack but has NO live tile in page.sail yet —
   // a catalog entry REQUIRES a live tile (`show.<key>()` gate), or the
   // rail's counts lie and its filter shows an empty grid. Add the entry
@@ -161,13 +161,13 @@ export const CATALOG: CatalogEntry[] = [
   P('media', 'sail-media-image', 'sailMediaImage', 'data'),
   P('media', 'sail-media-av', 'sailMediaAv', 'data'),
 
-  // ── @ship/sail-canvas — NOT CATALOGED YET ─────────────────────────────
+  // ── @ship/sail-components/canvas — NOT CATALOGED YET ─────────────────────────────
   // The pack ships drawing/annotation surfaces (sail-canvas, sail-board,
   // sail-draw, sail-graph-canvas, sail-annotation-*), floor-migrated and
   // CEM-green — but none has a live demo tile in page.sail, so listing them
   // would make the Canvas filter empty. Enter the catalog only with a tile.
 
-  // ── @ship/sail-chat-elements — chat-message UI primitives ─────────────
+  // ── @ship/sail-components/chat — chat-message UI primitives ─────────────
   // sail-message-list: pack component without a live tile — same rule as
   // sail-media-csv above; enters with its demo.
   P('chat', 'sail-message', 'sailMessage', 'display'),
@@ -176,10 +176,10 @@ export const CATALOG: CatalogEntry[] = [
   P('chat', 'sail-thinking-dots', 'sailThinkingDots', 'feedback'),
   P('chat', 'sail-tool-call', 'sailToolCall', 'display'),
 
-  // ── @ship/sail-mermaid — 1 diagram renderer (themed SVG) ──────────────
+  // ── @ship/sail-components/mermaid — 1 diagram renderer (themed SVG) ──────────────
   P('mermaid', 'sail-mermaid', 'sailMermaid', 'data'),
 
-  // ── @ship/sail-code-editor — 1 CodeMirror-wrapped editor ──────────────
+  // ── @ship/sail-components/code — 1 CodeMirror-wrapped editor ──────────────
   P('code-editor', 'sail-code-editor', 'sailCodeEditor', 'inputs'),
 ]
 

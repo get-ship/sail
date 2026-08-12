@@ -1,8 +1,8 @@
-// @ship/sail-charts — SAIL chart primitives registry.
+// @ship/sail-components/charts — SAIL chart primitives registry.
 //
 // Side-effect imports for the chart components. Each `<tag>.compiled.js`
 // calls `customElements.define()` on import, so a single
-// `import '@ship/sail-charts'` at the consumer registers every tag in this
+// `import '@ship/sail-components/charts'` at the consumer registers every tag in this
 // package globally.
 
 import './sail-area-chart/sail-area-chart.compiled.js'

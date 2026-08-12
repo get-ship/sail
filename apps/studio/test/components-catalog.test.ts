@@ -33,7 +33,7 @@ const FIXTURE_CATALOG: ComponentsCatalog = {
     {
       kind: 'javascript-module',
       path: 'sail-widget.sail',
-      package: '@ship/sail-primitives',
+      package: '@ship/sail-components',
       declarations: [
         {
           kind: 'class',
@@ -80,7 +80,7 @@ describe('components catalog map', () => {
     const r = records[0]!
     expect(r.id).toBe('sail-widget')
     expect(r.origin).toBe('pack')
-    expect(r.package).toBe('@ship/sail-primitives')
+    expect(r.package).toBe('@ship/sail-components')
     expect(r.path).toContain('sail-widget.sail')
     expect(r.canOpenInEdit).toBe(false)
     expect(r.props.map((p) => p.name)).toEqual(['size', 'label'])
@@ -135,7 +135,7 @@ describe('components catalog map', () => {
   it('filterRecords matches name pack path', () => {
     const records = recordsFromCatalog(FIXTURE_CATALOG)
     expect(filterRecords(records, 'widget')).toHaveLength(1)
-    expect(filterRecords(records, 'primitives')).toHaveLength(1)
+    expect(filterRecords(records, 'sail-components')).toHaveLength(1)
     expect(filterRecords(records, 'zzz-none')).toHaveLength(0)
   })
 })
@@ -146,8 +146,8 @@ describe('agent brief', () => {
       id: 'sail-widget',
       displayName: 'Sail Widget',
       origin: 'pack',
-      package: '@ship/sail-primitives',
-      path: '@ship/sail-primitives/sail-widget.sail',
+      package: '@ship/sail-components',
+      path: '@ship/sail-components/primitives/sail-widget.sail',
       layer: 'L2',
       description: 'Demo',
       props: [
@@ -167,8 +167,8 @@ describe('agent brief', () => {
       issuesSummary: '2 warnings',
     })
     expect(text).toContain('Component: sail-widget (pack)')
-    expect(text).toContain('Path: @ship/sail-primitives/sail-widget.sail')
-    expect(text).toContain('Pack: @ship/sail-primitives')
+    expect(text).toContain('Path: @ship/sail-components/primitives/sail-widget.sail')
+    expect(text).toContain('Pack: @ship/sail-components')
     expect(text).toContain('Props: size, label!')
     expect(text).toContain('Issues: 2 (2 warnings)')
     expect(text).toContain('Composition: row, button')

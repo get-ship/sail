@@ -1,7 +1,7 @@
-// @ship/sail-mermaid — SAIL package, framework-pure.
+// @ship/sail-components/mermaid — SAIL package, framework-pure.
 //
 // One element: <sail-mermaid>. The compiled `.compiled.js` calls
-// `customElements.define()` on import, so a single `import '@ship/sail-mermaid'`
+// `customElements.define()` on import, so a single `import '@ship/sail-components/mermaid'`
 // registers the tag globally before any view template instantiates it.
 //
 // Mermaid is heavy; this package is its own deck bundle (lazy: true) and the

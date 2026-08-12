@@ -546,7 +546,7 @@ fn slice1_warm_ssr_latency() {
     eprintln!("\nwrote {}", out_path.display());
 }
 
-/// The hub `/` launch closure is built from `@ship/sail-primitives` chrome
+/// The hub `/` launch closure is built from `@ship/sail-components/primitives` chrome
 /// components — and they are PROPFUL, which the synthetic emit rejects today
 /// (gap G1: props flow in at mount; the standalone synthetic controller can't
 /// model them). This catalogs that concretely on the ACTUAL closure, so the
@@ -567,7 +567,7 @@ fn slice1_hub_closure_component_catalog() {
     ];
     let mut rows = vec![
         "# Slice 1 — hub `/` component closure (synthetic emit)\n".to_string(),
-        "The launch chrome is propful `@ship/sail-primitives`; the synthetic emit rejects \
+        "The launch chrome is propful `@ship/sail-components/primitives`; the synthetic emit rejects \
          propful components today (gap G1). Honest count:\n"
             .to_string(),
         "| component | props | synthesizes | reason |".to_string(),
@@ -577,7 +577,7 @@ fn slice1_hub_closure_component_catalog() {
     let mut dissolved = 0;
     for rel in &closure {
         // The hub-closure chrome was dissolved to L1 (bare elements + sx +
-        // framework primitives) — the @ship/sail-primitives pack no longer
+        // framework primitives) — the @ship/sail-components/primitives pack no longer
         // ships its own .sail files. The catalog records this honestly:
         // ABSENT means the component has been dissolved, NOT that the test
         // found a synthetic-emit gap to assert on.

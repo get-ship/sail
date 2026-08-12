@@ -16,19 +16,11 @@
     "apps/sail-site": {
       "name": "@ship/sail-site",
       "dependencies": {
-        "@ship/sail-canvas": "workspace:*",
-        "@ship/sail-charts": "workspace:*",
-        "@ship/sail-chat-elements": "workspace:*",
-        "@ship/sail-code-editor": "workspace:*",
         "@ship/sail-compiler-wasm": "workspace:*",
         "@ship/sail-components": "workspace:*",
         "@ship/sail-dom": "workspace:*",
         "@ship/sail-lsp-browser": "workspace:*",
-        "@ship/sail-media": "workspace:*",
-        "@ship/sail-mermaid": "workspace:*",
-        "@ship/sail-primitives": "workspace:*",
         "@ship/sail-runtime": "workspace:*",
-        "@ship/sail-viewer": "workspace:*",
         "@ship/tokens": "workspace:*",
       },
       "devDependencies": {
@@ -38,16 +30,12 @@
     "apps/studio": {
       "name": "@ship/studio",
       "dependencies": {
-        "@ship/sail-chat-elements": "workspace:*",
-        "@ship/sail-code-editor": "workspace:*",
         "@ship/sail-components": "workspace:*",
         "@ship/sail-dom": "workspace:*",
-        "@ship/sail-primitives": "workspace:*",
         "@ship/sail-runtime": "workspace:*",
         "@ship/sail-studio-bridge": "workspace:*",
         "@ship/sail-studio-client": "workspace:*",
         "@ship/sail-studio-shell": "workspace:*",
-        "@ship/sail-viewer": "workspace:*",
         "@ship/tokens": "workspace:*",
       },
       "devDependencies": {
@@ -75,10 +63,6 @@
         "@codemirror/state": "^6",
         "@codemirror/view": "^6",
         "@lezer/highlight": "^1",
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-lsp-browser": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-        "@ship/tokens": "workspace:*",
         "mermaid": "^11.4.0",
       },
       "devDependencies": {
@@ -91,133 +75,17 @@
         "roughjs": "^4.6.6",
         "vitest": "^4.1.5",
       },
-    },
-    "packages/components/sail/canvas": {
-      "name": "@ship/sail-canvas",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
+      "peerDependencies": {
+        "@ship/sail-compiler-wasm": ">=0.3.0",
+        "@ship/sail-dom": ">=0.3.0",
+        "@ship/sail-lsp-browser": ">=0.3.0",
+        "@ship/sail-runtime": ">=0.3.0",
+        "@ship/tokens": ">=0.3.0",
       },
-      "devDependencies": {
-        "@dagrejs/dagre": "^3.0.0",
-        "@ship/test-setup": "workspace:*",
-        "perfect-freehand": "^1.2.3",
-        "roughjs": "^4.6.6",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/charts": {
-      "name": "@ship/sail-charts",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/chat-elements": {
-      "name": "@ship/sail-chat-elements",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-primitives": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/code-editor": {
-      "name": "@ship/sail-code-editor",
-      "version": "0.3.0",
-      "dependencies": {
-        "@codemirror/autocomplete": "^6",
-        "@codemirror/commands": "^6",
-        "@codemirror/lang-css": "^6",
-        "@codemirror/lang-html": "^6",
-        "@codemirror/lang-javascript": "^6",
-        "@codemirror/lang-json": "^6",
-        "@codemirror/lang-markdown": "^6",
-        "@codemirror/lang-python": "^6",
-        "@codemirror/lang-rust": "^6",
-        "@codemirror/lang-yaml": "^6",
-        "@codemirror/language": "^6",
-        "@codemirror/lint": "^6",
-        "@codemirror/search": "^6",
-        "@codemirror/state": "^6",
-        "@codemirror/view": "^6",
-        "@lezer/highlight": "^1",
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-lsp-browser": "workspace:*",
-        "@ship/sail-primitives": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/media": {
-      "name": "@ship/sail-media",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-primitives": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "happy-dom": "^20.9.0",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/mermaid": {
-      "name": "@ship/sail-mermaid",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-        "mermaid": "^11.4.0",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/primitives": {
-      "name": "@ship/sail-primitives",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-        "@ship/tokens": "workspace:*",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "@types/node": "24.12.4",
-        "fast-formula-parser": "1.0.19",
-        "vitest": "^4.1.5",
-      },
-    },
-    "packages/components/sail/viewer": {
-      "name": "@ship/sail-viewer",
-      "version": "0.3.0",
-      "dependencies": {
-        "@ship/sail-compiler-wasm": "workspace:*",
-        "@ship/sail-dom": "workspace:*",
-        "@ship/sail-primitives": "workspace:*",
-        "@ship/sail-runtime": "workspace:*",
-      },
-      "devDependencies": {
-        "@ship/test-setup": "workspace:*",
-        "happy-dom": "^20.9.0",
-        "vitest": "^4.1.5",
-      },
+      "optionalPeers": [
+        "@ship/sail-compiler-wasm",
+        "@ship/sail-lsp-browser",
+      ],
     },
     "packages/deck/docs": {
       "name": "@ship/deck-docs",
@@ -551,14 +419,6 @@
 
     "@ship/deck-test-harness": ["@ship/deck-test-harness@workspace:packages/deck/test-harness"],
 
-    "@ship/sail-canvas": ["@ship/sail-canvas@workspace:packages/components/sail/canvas"],
-
-    "@ship/sail-charts": ["@ship/sail-charts@workspace:packages/components/sail/charts"],
-
-    "@ship/sail-chat-elements": ["@ship/sail-chat-elements@workspace:packages/components/sail/chat-elements"],
-
-    "@ship/sail-code-editor": ["@ship/sail-code-editor@workspace:packages/components/sail/code-editor"],
-
     "@ship/sail-compiler-wasm": ["@ship/sail-compiler-wasm@workspace:packages/sail/compiler-wasm"],
 
     "@ship/sail-components": ["@ship/sail-components@workspace:packages/components/sail"],
@@ -566,12 +426,6 @@
     "@ship/sail-dom": ["@ship/sail-dom@workspace:packages/sail/dom"],
 
     "@ship/sail-lsp-browser": ["@ship/sail-lsp-browser@workspace:packages/deck/lsp-browser"],
-
-    "@ship/sail-media": ["@ship/sail-media@workspace:packages/components/sail/media"],
-
-    "@ship/sail-mermaid": ["@ship/sail-mermaid@workspace:packages/components/sail/mermaid"],
-
-    "@ship/sail-primitives": ["@ship/sail-primitives@workspace:packages/components/sail/primitives"],
 
     "@ship/sail-runtime": ["@ship/sail-runtime@workspace:packages/sail/runtime"],
 
@@ -586,8 +440,6 @@
     "@ship/sail-test": ["@ship/sail-test@workspace:packages/sail/sail-test"],
 
     "@ship/sail-tsconfig": ["@ship/sail-tsconfig@workspace:packages/sail/tsconfig"],
-
-    "@ship/sail-viewer": ["@ship/sail-viewer@workspace:packages/components/sail/viewer"],
 
     "@ship/studio": ["@ship/studio@workspace:apps/studio"],
 
@@ -1081,8 +933,6 @@
 
     "@ship/sail-components/@types/node": ["@types/node@24.12.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA=="],
 
-    "@ship/sail-primitives/@types/node": ["@types/node@24.12.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-GUUEShf+PBCGW2KaXwcIt3Yk+e3pkKwWKb9GSyM9WQVE+ep2jzmHdGsHzu4wgcZy5fN9FBdVzjpBQsYlpfpgLA=="],
-
     "cssstyle/rrweb-cssom": ["rrweb-cssom@0.8.0", "", {}, "sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw=="],
 
     "cytoscape-fcose/cose-base": ["cose-base@2.2.0", "", { "dependencies": { "layout-base": "^2.0.0" } }, "sha512-AzlgcsCbUMymkADOJtQm3wO9S3ltPfYOFD5033keQn9NJzIbtnZj+UdBJe7DYml/8TdbtHJW3j58SOnKhWY/5g=="],
@@ -1102,8 +952,6 @@
     "vite/fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
 
     "@ship/sail-components/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
-
-    "@ship/sail-primitives/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 
     "cytoscape-fcose/cose-base/layout-base": ["layout-base@2.0.1", "", {}, "sha512-dp3s92+uNI1hWIpPGH3jK2kxE2lMjdXdr+DH8ynZHpd6PUlH6x6cbuXnoMmiNumznqaNO31xu9e79F0uuZ0JFg=="],
 

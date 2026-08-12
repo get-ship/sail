@@ -1,5 +1,5 @@
-// Vitest setup for `@ship/sail-viewer`. The viewing components compose
-// `@ship/sail-primitives` (toggle-group, tabs, switch, dialog-backed surfaces,
+// Vitest setup for `@ship/sail-components/viewers`. The viewing components compose
+// `@ship/sail-components/primitives` (toggle-group, tabs, switch, dialog-backed surfaces,
 // pointer-driven controls), so the shared Web-API shims from `@ship/test-setup`
 // (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) must
 // be installed before any specimen mounts. The viewer pack carries no icon

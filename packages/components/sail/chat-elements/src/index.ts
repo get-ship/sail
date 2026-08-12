@@ -1,4 +1,4 @@
-// @ship/sail-chat-elements — unbound multi-modal chat-shape primitives.
+// @ship/sail-components/chat — unbound multi-modal chat-shape primitives.
 //
 // Portable (`@ship/sail-*`, tags `sail-*`): runs anywhere — no `ship` Proxy,
 // no `setShipClient`, no SDK reads. Ship-coupled product packs are `@ship/*`
@@ -6,7 +6,7 @@
 // side chats, the activity stream) bind these to their own data.
 //
 // Each <tag>.compiled.js calls customElements.define() on import, so a
-// single `import '@ship/sail-chat-elements'` registers every tag globally.
+// single `import '@ship/sail-components/chat'` registers every tag globally.
 import './sail-message/sail-message.compiled.js'
 import './sail-message-list/sail-message-list.compiled.js'
 import './sail-composer/sail-composer.compiled.js'

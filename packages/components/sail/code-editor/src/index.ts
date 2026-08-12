@@ -1,7 +1,7 @@
-// @ship/sail-code-editor — SAIL package, framework-pure.
+// @ship/sail-components/code — SAIL package, framework-pure.
 //
 // One element: <sail-code-editor>. The compiled `.compiled.js` calls
-// `customElements.define()` on import, so a single `import '@ship/sail-code-editor'`
+// `customElements.define()` on import, so a single `import '@ship/sail-components/code'`
 // registers the tag globally before any view template instantiates it.
 //
 // Pure presentational: no SDK reads, no ship-platform coupling. The host

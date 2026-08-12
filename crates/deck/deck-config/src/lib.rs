@@ -313,7 +313,7 @@ pub struct DeckConfig {
     /// When present and non-empty, component resolution is SCOPED to ONLY these
     /// packs: the per-route resolver's tag index is filtered down to tags a
     /// declared pack provides (matched by `package.json` `name`, e.g.
-    /// `"@ship/sail-primitives"`). A tag from an undeclared pack resolves to a
+    /// `"@ship/sail-components"`). A tag from an undeclared pack resolves to a
     /// no-op (it never bundles) and the build emits an author diagnostic naming
     /// the tag and the pack that provides it. When absent or empty, resolution
     /// is GLOBAL — every workspace pack's tags are resolvable (zero behavior
@@ -424,9 +424,9 @@ mod tests {
     /// A declared `packs` array parses into the scoped set.
     #[test]
     fn packs_present_parses_declared_set() {
-        let json = r#"{ "packs": ["@ship/sail-primitives", "deck-demo-app"] }"#;
+        let json = r#"{ "packs": ["@ship/sail-components", "deck-demo-app"] }"#;
         let cfg: DeckConfig = serde_json::from_str(&strip_jsonc_comments(json)).unwrap();
-        assert_eq!(cfg.packs, vec!["@ship/sail-primitives", "deck-demo-app"]);
+        assert_eq!(cfg.packs, vec!["@ship/sail-components", "deck-demo-app"]);
     }
 
     /// A PARTIAL deck.jsonc (deck-conformance's shape: scaffolds only) must keep the

@@ -710,7 +710,7 @@ export default controller(() => {
         );
         write(
             &root.join("packages/primitives/package.json"),
-            r#"{"name":"@ship/sail-primitives"}"#,
+            r#"{"name":"@ship/sail-components"}"#,
         );
         write(
             &root.join("packages/primitives/src/sail-button/sail-button.sail"),
@@ -734,7 +734,7 @@ export default controller(() => {
     fn component_index_scoped_carries_index_and_shadowed() {
         let tmp = two_pack_fixture();
         let root = tmp.path();
-        let declared: Vec<String> = vec!["@ship/sail-primitives".into()];
+        let declared: Vec<String> = vec!["@ship/sail-components".into()];
 
         let scoped = component_index(root, &declared);
         assert!(

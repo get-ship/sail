@@ -1,6 +1,6 @@
 import { inputValue, selectValue, type UiEvent } from '../ui-event'
 /** Components inspect domain — surface picker, IR tree, instance panels (SailInspect). */
-import { createTable } from '@ship/sail-primitives'
+import { createTable } from '@ship/sail-components/primitives'
 import { mountAmbient } from '@ship/sail-runtime'
 import { activeDoc, elementSailTreeNodes, getEditState, getOpsClient, subscribeEdit, type SailTreeNode } from '../../edit/index.ts'
 import { COMPONENTS_CATALOG } from '../../../components.gen'

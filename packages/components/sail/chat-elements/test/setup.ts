@@ -1,4 +1,4 @@
-// Vitest setup for `@ship/sail-chat-elements` — JSDOM polyfills only.
+// Vitest setup for `@ship/sail-components/chat` — JSDOM polyfills only.
 //
 // These are pure framework-tier primitives: no icon registry to prime,
 // no SDK client to stub. The shared polyfills (ResizeObserver,

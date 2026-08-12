@@ -29,7 +29,7 @@ import { compileSail } from '@ship/sail-dom/test-utils'
 import renderController from '../src/sail-render/sail-render.sail.controller.ts'
 
 // RED: these two modules are the Slice-1 deliverable; they do not exist yet.
-import '@ship/sail-primitives' // register the composed sail-error-boundary / sail-alert / sail-code
+import '@ship/sail-components/primitives' // register the composed sail-error-boundary / sail-alert / sail-code
 
 const SRC = readFileSync(resolve(__dirname, '../src/sail-render/sail-render.sail'), 'utf8')
 const TAG = 'sail-render'

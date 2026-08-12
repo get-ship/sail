@@ -783,6 +783,8 @@ fn typecheck_region_harness(
     // noImplicitAny true (product pure law). Open-any sibling stubs still make
     // callback params `any` (TS7006) — those are filtered in `map_region_diag`,
     // not by weakening the harness. Real type errors still hard-fail.
+    // allowImportingTsExtensions matches kind tsconfig / product tsc -p so
+    // legal `.ts`-suffixed relatives do not false-TS2307 under Bundler.
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -796,6 +798,7 @@ fn typecheck_region_harness(
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     "paths": {{
 {paths_block}
     }}
@@ -2222,6 +2225,8 @@ fn typecheck_project_env_mirror(
         .and_then(|nm| ship_packages_paths_entry(nm, &out_dir))
         .unwrap_or_default();
     let paths_block = merge_paths_blocks(&[at_paths, ship_paths]);
+    // Mirror must share options that affect resolution with kind tsconfig /
+    // product tsc -p (allowImportingTsExtensions + Bundler).
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -2234,6 +2239,7 @@ fn typecheck_project_env_mirror(
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     "paths": {{
 {paths_block}
     }}
@@ -2426,8 +2432,8 @@ fn node_product_diag(d: &TsDiag, name: &str) -> Diagnostic {
         end_col: d.col + name.len().max(1),
         severity: DiagSeverity::Error,
         message: format!(
-            "`{name}` is Node/Bun — not nameable in product source. \
-             Node lives in test/ and tooling only; keep app and package src browser-only. \
+            "`{name}` is Node/Bun — build toolchain, never a runtime dep. \
+             Belongs in test/ or tooling; keep product src browser-only. \
              Do not install `@types/node` to silence this."
         ),
         rule: Some(RULE_NO_NODE.to_string()),
@@ -3391,7 +3397,7 @@ export default controller(() => {
         // Component *subpaths* get open-any of requested names (no TS2305 suppress).
         let src = r#"
 <controller>
-import { sailCalendar } from '@ship/sail-primitives/sail-calendar'
+import { sailCalendar } from '@ship/sail-components/primitives/sail-calendar'
 
 export default controller(() => {
   const n = signal(0)
@@ -4038,6 +4044,130 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             hit.message.contains("Did you mean 'size'"),
             "expected the 'did you mean size' suggestion, got: {}",
             hit.message
+        );
+    }
+
+    /// Two-file project: `.ts`-suffixed relative + `@/` alias must gate-clean
+    /// under kind config (resolution fidelity / GATE-3).
+    #[test]
+    fn project_gate_accepts_ts_extension_and_at_alias() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let tmp = tempfile::tempdir().expect("tmpdir");
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/stores")).unwrap();
+        std::fs::create_dir_all(project.join("routes")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/gate-fidelity-fixture"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            project.join("src/stores/counter.ts"),
+            "export const total = 0\n",
+        )
+        .unwrap();
+        std::fs::write(project.join("src/sibling.ts"), "export const x = 1\n").unwrap();
+        let main = project.join("src/main.ts");
+        std::fs::write(
+            &main,
+            "import { x } from './sibling.ts'\n\
+             import { total } from '@/stores/counter'\n\
+             export const y = x + total\n",
+        )
+        .unwrap();
+        // Emit kind configs (no baseUrl; paths relative to .sail/).
+        crate::ambients::write_project_type_configs(project).expect("write kind configs");
+        let body = std::fs::read_to_string(project.join("node_modules/.sail/tsconfig.pure.json"))
+            .expect("pure kind");
+        assert!(
+            !body.contains("\"baseUrl\""),
+            "kind config must not emit baseUrl:\n{body}"
+        );
+        assert!(
+            body.contains("allowImportingTsExtensions"),
+            "kind config must allow .ts extensions:\n{body}"
+        );
+
+        let files = vec![
+            (main.clone(), std::fs::read_to_string(&main).unwrap()),
+            (
+                project.join("src/sibling.ts"),
+                std::fs::read_to_string(project.join("src/sibling.ts")).unwrap(),
+            ),
+            (
+                project.join("src/stores/counter.ts"),
+                std::fs::read_to_string(project.join("src/stores/counter.ts")).unwrap(),
+            ),
+        ];
+        let diags = collect_project_type_gate(project, &files);
+        let type_errs: Vec<_> = diags
+            .iter()
+            .filter(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE)
+                    || d.message.contains("TS2307")
+                    || d.message.contains("TS5102")
+            })
+            .collect();
+        assert!(
+            type_errs.is_empty(),
+            ".ts relative + @/ alias must gate-clean (no TS2307/TS5102): {type_errs:?} all={diags:?}"
+        );
+    }
+
+    #[test]
+    fn kind_tsconfig_emit_has_no_base_url_and_rewritten_paths() {
+        let body = crate::ambients::emit_project_tsconfig_json(&["src/**/*.ts"]);
+        assert!(
+            !body.contains("\"baseUrl\""),
+            "must not emit baseUrl (tsgo TS5102):\n{body}"
+        );
+        assert!(
+            body.contains("\"allowImportingTsExtensions\": true"),
+            "must allowImportingTsExtensions:\n{body}"
+        );
+        assert!(
+            body.contains("\"moduleResolution\": \"Bundler\""),
+            "must use Bundler resolution:\n{body}"
+        );
+        assert!(
+            body.contains("../../src/stores/*") || body.contains("\"../../src/stores/*\""),
+            "paths must be relative to node_modules/.sail/:\n{body}"
+        );
+    }
+
+    #[test]
+    fn node_surface_diag_never_suggests_types_node() {
+        let d = TsDiag {
+            file: "src/x.ts".into(),
+            line: 1,
+            col: 1,
+            code: "TS2591".into(),
+            message: "Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`."
+                .into(),
+        };
+        let mapped = map_node_surface_diag(&d).expect("must rewrite TS2591");
+        assert_eq!(mapped.rule.as_deref(), Some(RULE_NO_NODE));
+        assert!(
+            !mapped.message.contains("@types/node")
+                || mapped.message.contains("Do not install `@types/node`"),
+            "must teach against @types/node install: {}",
+            mapped.message
+        );
+        assert!(
+            !mapped.message.contains("npm i"),
+            "must never suggest npm i: {}",
+            mapped.message
+        );
+        assert!(
+            mapped.message.contains("test/") || mapped.message.contains("tooling"),
+            "must name test/ or tooling: {}",
+            mapped.message
         );
     }
 }

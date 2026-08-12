@@ -672,7 +672,7 @@ mod tests {
     }
 
     /// Three-pack fixture mirroring a real project shape:
-    ///   - `@ship/sail-primitives` exports `sail-button`
+    ///   - `@ship/sail-components` exports `sail-button`
     ///   - `deck-demo-app` exports `demo-chip` (the project's own component)
     ///   - `@ship/agents` exports `ship-agent-card`
     fn three_pack_fixture() -> tempfile::TempDir {
@@ -685,7 +685,7 @@ mod tests {
 
         write(
             &root.join("packages/primitives/package.json"),
-            r#"{"name":"@ship/sail-primitives","private":false}"#,
+            r#"{"name":"@ship/sail-components","private":false}"#,
         );
         write(
             &root.join("packages/primitives/src/sail-button/sail-button.sail"),
@@ -733,7 +733,7 @@ mod tests {
         );
 
         // The project declares a PARTIAL pack set (deck.jsonc `packs`).
-        let declared: Vec<String> = vec!["@ship/sail-primitives".into(), "deck-demo-app".into()];
+        let declared: Vec<String> = vec!["@ship/sail-components".into(), "deck-demo-app".into()];
         let scoped = tag_source_index_scoped(root, Some(&declared));
 
         // (a) declared-pack tag resolves to a real .sail source; own tag resolves.
@@ -785,7 +785,7 @@ mod tests {
     fn shadowed_tags_attributes_excluded_tag_to_its_pack() {
         let tmp = three_pack_fixture();
         let root = tmp.path();
-        let declared: Vec<String> = vec!["@ship/sail-primitives".into(), "deck-demo-app".into()];
+        let declared: Vec<String> = vec!["@ship/sail-components".into(), "deck-demo-app".into()];
 
         let shadowed = shadowed_tags(root, &declared);
         // Only the undeclared components package's tag is shadowed — named with its pack.
@@ -876,12 +876,12 @@ mod tests {
         // No workspaces — pure external consumer.
         write(
             &app.join("package.json"),
-            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"^0.3.0"}}"#,
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-components":"^0.3.0"}}"#,
         );
-        let pack = app.join("node_modules/@ship/sail-charts");
+        let pack = app.join("node_modules/@ship/sail-components");
         write(
             &pack.join("package.json"),
-            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+            r#"{"name":"@ship/sail-components","customElements":"dist/custom-elements.json"}"#,
         );
         write(
             &pack.join("src/sail-bar-chart/sail-bar-chart.sail"),
@@ -891,9 +891,9 @@ mod tests {
         // Discovery sees the components package without any workspace map.
         let pkgs = discover_workspace_packages(app).expect("discover");
         assert_eq!(pkgs.len(), 1, "only the node_modules pack");
-        assert_eq!(pkgs[0].name, "@ship/sail-charts");
+        assert_eq!(pkgs[0].name, "@ship/sail-components");
         assert!(
-            pkgs[0].root.ends_with("node_modules/@ship/sail-charts"),
+            pkgs[0].root.ends_with("node_modules/@ship/sail-components"),
             "root must be under node_modules; got: {:?}",
             pkgs[0].root
         );
@@ -905,7 +905,7 @@ mod tests {
             .expect("tag must resolve from node_modules pack");
         assert!(src.is_file());
         assert!(
-            src.ends_with("node_modules/@ship/sail-charts/src/sail-bar-chart/sail-bar-chart.sail"),
+            src.ends_with("node_modules/@ship/sail-components/src/sail-bar-chart/sail-bar-chart.sail"),
             "got: {src:?}"
         );
     }
@@ -919,14 +919,14 @@ mod tests {
         let app = root.join("apps/hello");
         write(
             &app.join("package.json"),
-            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"^0.3.0"}}"#,
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-components":"^0.3.0"}}"#,
         );
         // Hoisted to the enclosing tree (no workspaces on either package.json).
         write(&root.join("package.json"), r#"{"name":"consumer-root"}"#);
-        let pack = root.join("node_modules/@ship/sail-charts");
+        let pack = root.join("node_modules/@ship/sail-components");
         write(
             &pack.join("package.json"),
-            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+            r#"{"name":"@ship/sail-components","customElements":"dist/custom-elements.json"}"#,
         );
         write(
             &pack.join("src/sail-bar-chart/sail-bar-chart.sail"),
@@ -935,12 +935,12 @@ mod tests {
 
         let pkgs = discover_dependency_packages(&app);
         assert_eq!(pkgs.len(), 1, "ancestor node_modules must resolve");
-        assert_eq!(pkgs[0].name, "@ship/sail-charts");
+        assert_eq!(pkgs[0].name, "@ship/sail-components");
 
         // discover_workspace_packages on the app dir must also union the dep.
         let ws = discover_workspace_packages(&app).expect("discover");
         assert!(
-            ws.iter().any(|p| p.name == "@ship/sail-charts"),
+            ws.iter().any(|p| p.name == "@ship/sail-components"),
             "workspace discovery must include hoisted dep pack"
         );
     }

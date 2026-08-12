@@ -1,8 +1,8 @@
-// @ship/sail-canvas — the spatial substrate package.
+// @ship/sail-components/canvas — the spatial substrate package.
 //
 // <sail-canvas> is the bare pan/zoom/infinite-surface primitive (backbone #3),
 // built on @ship/sail-runtime signals — no React, no Excalidraw, no SDK. A
-// single `import '@ship/sail-canvas'` registers the tag globally; the compiled
+// single `import '@ship/sail-components/canvas'` registers the tag globally; the compiled
 // tag calls customElements.define() on import.
 //
 // The shared engine is exported for the sibling faces (sail-board, sail-draw)

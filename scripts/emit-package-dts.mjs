@@ -185,8 +185,15 @@ function collectDistTypesEntries(pkgJson) {
  */
 function missingDistTypesEntries(pkgDir, cwd) {
   const pkgJsonPath = join(cwd, 'package.json')
+  // Domain trees under the umbrella package have no package.json — they are
+  // emit targets only. Require dist/index.d.ts (and known subpath d.ts).
   if (!existsSync(pkgJsonPath)) {
-    return ['package.json']
+    const required = ['dist/index.d.ts']
+    // Viewer domain also dual-exports wasm-bootstrap + same-doc-mount.
+    if (pkgDir.endsWith('/viewer') || pkgDir.endsWith('\\viewer')) {
+      required.push('dist/wasm-bootstrap.d.ts', 'dist/same-doc-mount.d.ts')
+    }
+    return required.filter((rel) => !existsSync(join(cwd, rel)))
   }
   /** @type {Record<string, unknown>} */
   let pkgJson

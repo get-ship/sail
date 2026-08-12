@@ -454,17 +454,44 @@ fn scan_sail_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
 }
 
 /// Return all `(tag, abs_path)` component pairs discovered by source scan of
-/// `pkg_root/src/`. Only `.sail` files whose stem contains a hyphen and is not
-/// "page" or "index" are returned; routes and other files are excluded by the
-/// guard.
+/// `pkg_root`.
+///
+/// Scan roots:
+/// - `pkg_root/src/` (classic single-domain package)
+/// - `pkg_root/*/src/` when the package declares `sailComponents: true`
+///   (umbrella multi-domain layout used by `@ship/sail-components`)
+///
+/// Only `.sail` files whose stem contains a hyphen and is not "page" or
+/// "index" are returned; routes and other files are excluded by the guard.
 pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
-    let src = pkg_root.join("src");
-    if !src.is_dir() {
-        return vec![];
-    }
     let mut out = Vec::new();
-    scan_sail_components(&src, &mut out);
+    let src = pkg_root.join("src");
+    if src.is_dir() {
+        scan_sail_components(&src, &mut out);
+    }
+    if package_is_sail_components(pkg_root) {
+        if let Ok(entries) = std::fs::read_dir(pkg_root) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if !path.is_dir() {
+                    continue;
+                }
+                let domain_src = path.join("src");
+                if domain_src.is_dir() {
+                    scan_sail_components(&domain_src, &mut out);
+                }
+            }
+        }
+    }
     out
+}
+
+/// Umbrella components packages declare `sailComponents: true`.
+fn package_is_sail_components(pkg_root: &Path) -> bool {
+    let Some(manifest) = read_json(&pkg_root.join("package.json")) else {
+        return false;
+    };
+    manifest.get("sailComponents").and_then(|v| v.as_bool()) == Some(true)
 }
 
 /// Build a `<tag>` → source `.sail` index from a registry-composed root's

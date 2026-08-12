@@ -1,5 +1,5 @@
-// Vitest setup for `@ship/sail-media`. The renderers compose
-// `@ship/sail-primitives` (sail-table, sail-empty-state, sail-pagination,
+// Vitest setup for `@ship/sail-components/media`. The renderers compose
+// `@ship/sail-components/primitives` (sail-table, sail-empty-state, sail-pagination,
 // sail-icon), so the shared Web-API shims from `@ship/test-setup`
 // (ResizeObserver, matchMedia, Popover, Dialog, ToggleEvent, PointerEvent) must
 // be installed before any renderer mounts. This pack carries no icon registry of

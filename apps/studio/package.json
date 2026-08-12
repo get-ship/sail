@@ -24,10 +24,6 @@
     "@ship/sail-studio-client": "workspace:*",
     "@ship/sail-studio-bridge": "workspace:*",
     "@ship/sail-studio-shell": "workspace:*",
-    "@ship/sail-code-editor": "workspace:*",
-    "@ship/sail-chat-elements": "workspace:*",
-    "@ship/sail-primitives": "workspace:*",
-    "@ship/sail-viewer": "workspace:*",
     "@ship/tokens": "workspace:*",
     "@ship/sail-components": "workspace:*"
   },

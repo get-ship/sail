@@ -1,5 +1,5 @@
 /**
- * Public types for `@ship/sail-code-editor`.
+ * Public types for `@ship/sail-components/code`.
  *
  * Checked in (not tsc-emit): the side-effect entry imports a generated
  * `.controller.ts` companion that is gitignored, so declaration emit cannot
@@ -7,7 +7,7 @@
  * - `src/sail-code-editor/sail-code-editor.sail` (`SailDiagnostic` / API)
  * - `src/sail-code-editor/sail-code-editor.ops.ts`
  *
- * Side-effect: `import '@ship/sail-code-editor'` registers `<sail-code-editor>`.
+ * Side-effect: `import '@ship/sail-components/code'` registers `<sail-code-editor>`.
  */
 
 export interface SailDiagnostic {
