@@ -19,10 +19,20 @@
 <controller>
 import type { Scope } from './doc-code-block.sail'
 import { DETAILS } from '../../compositions/component-details'
+import {
+  CB_MARKUP,
+  CB_PLAIN,
+  CB_SIGNAL,
+  cbExBasic,
+  cbExMarkup,
+  cbExPlain,
+  codeBlockSnippet,
+  sampleForLang,
+} from '../../compositions/code-block-snippets'
 
 export default controller((_ctx: Scope) => {
   const lang = signal('sail')
-  const code = signal('const n = signal(0)\nconst double = derived(() => n() * 2)')
+  const code = signal(CB_SIGNAL)
 
   const entry = DETAILS['code-block']
   const heading = () => entry.heading
@@ -30,31 +40,11 @@ export default controller((_ctx: Scope) => {
   const props = () => entry.props
   const usageCode = () => entry.usage
 
-  const specimenCode = derived(() => {
-    const escaped = code().replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-    const a: string[] = [`code={'${escaped}'}`]
-    if (lang() !== 'sail') a.push(`lang="${lang()}"`)
-    else a.push('lang="sail"')
-    return `<code-block\n  ${a.join('\n  ')}\n></code-block>`
-  })
-
+  const specimenCode = derived(() => codeBlockSnippet(code(), lang()))
   const setLang = (l: string): void => {
     lang.set(l)
-    if (l === 'ts') {
-      code.set('const n = signal(0)\nconst double = derived(() => n() * 2)')
-    } else if (l === 'css') {
-      code.set('.chip {\n  border-radius: var(--radius-full);\n}')
-    } else {
-      code.set('<button variant="solid" tone="primary">Save</button>')
-    }
+    code.set(sampleForLang(l))
   }
-
-  const cbExBasic = () =>
-    `<code-block\n  code={'const n = signal(0)'}\n  lang="sail"\n></code-block>`
-  const cbExMarkup = () =>
-    `<code-block\n  code={'<button variant="solid">Save</button>'}\n  lang="sail"\n></code-block>`
-  const cbExPlain = () =>
-    `<code-block code={'// your source here'}></code-block>`
 
   return {
     lang,
@@ -68,6 +58,9 @@ export default controller((_ctx: Scope) => {
     cbExBasic,
     cbExMarkup,
     cbExPlain,
+    CB_SIGNAL,
+    CB_MARKUP,
+    CB_PLAIN,
   }
 })
 </controller>
@@ -141,7 +134,7 @@ export default controller((_ctx: Scope) => {
         code={cbExMarkup()}
       >
         <code-block
-          code={'<button variant="solid" tone="primary">Save</button>'}
+          code={CB_MARKUP}
           lang="sail"
           style(specimen)
         ></code-block>

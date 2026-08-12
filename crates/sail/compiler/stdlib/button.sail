@@ -17,14 +17,15 @@
   }
 
   // border(solid) kills UA button outset so freeform demos use design-system chrome.
-  // No base bg(transparent): unlayered product .s-bgtransparent beats layered solid
-  // skins and empties primary fills. Variants own background; ghost is the transparent fill.
+  // No base bg(transparent) or border(transparent): unlayered product atomics
+  // (.s-bgtransparent / .s-bordertransparent) beat layered variant fills and
+  // outline strokes. Variants own fill + border color; ghost is the transparent pair.
   // Cursor is NOT on base: base cursor(pointer) + when-disabled cursor(not-allowed) both
   // stamp classes and pointer was winning in the cascade. Match on the disabled prop so
   // only one cursor utility is active.
   style base = {
     box: display(inline-flex).position(relative).gap(2),
-    paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().controlFrame().select(none),
+    paint: appearance(none).radius(md).borderWidth(control-stroke).border(solid).borderImage(corner-image).isolate().controlFrame().select(none),
     text: fontWeight(medium).leading(none).whitespace(nowrap),
     when: { hover: { paint: controlLift() }, active: { paint: press() } },
   }
@@ -47,8 +48,8 @@
   style vSoftTone = { paint: colorMix(tone, 15).border(tone).fg(tone), when: { hover: { paint: colorMix(tone, 25) } } }
   style vOutline = { paint: bg(transparent).border(button.foreground).fg(button.foreground), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
   style vOutlineTone = { paint: bg(transparent).border(tone).fg(tone), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
-  style vGhost = { paint: bg(transparent).fg(button.foreground), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
-  style vGhostTone = { paint: bg(transparent).fg(tone), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
+  style vGhost = { paint: bg(transparent).border(transparent).fg(button.foreground), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
+  style vGhostTone = { paint: bg(transparent).border(transparent).fg(tone), when: { hover: { paint: bg(hover-bg) }, disabled: { paint: bg(transparent) } } }
 </scope>
 
 <button

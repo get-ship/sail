@@ -8,6 +8,11 @@
     - empty state when no package / pack meta
 -->
 
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
+  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
+</scope>
+
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -219,11 +224,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-
-<scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style emptyEnter = { animate: enter({ opacity: 'fade', translate-y: 'spring:snappy' }) }
-</scope>
 
 <column gap="4" style(page)>
   <if {useButton()}>

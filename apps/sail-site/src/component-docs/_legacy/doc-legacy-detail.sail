@@ -44,7 +44,6 @@
 import type { Scope } from './doc-legacy-detail.sail'
 import { DETAILS, type DetailEntry } from '../../compositions/component-details'
 import {
-  DEMO_PHOTO,
   PACK_PROPS,
   PACK_TAGS,
   packBlurbFor,
@@ -80,16 +79,9 @@ export default controller((ctx: Scope) => {
   const agreed = signal(true)
   const presses = signal(0)
   const press = (): void => presses.set((n) => n + 1)
-  // Pack media identity prop.
-  effect(() => {
-    void tag()
-    requestAnimationFrame(() => {
-      document.querySelectorAll('sail-media-image').forEach((el) => {
-        const host = el as HTMLElement & { src?: string }
-        if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
-      })
-    })
-  })
+  // Pack media src used to be set here via requestAnimationFrame + document.
+  // That is DOM work — Pure forbids it. Residual media tiles stay without
+  // the injected DEMO_PHOTO until a use: action owns this.
 
   const heading = () => meta()?.heading ?? entry()?.heading ?? tag()
   const blurb = () => meta()?.blurb ?? entry()?.blurb ?? packBlurbFor(tag())
