@@ -11,12 +11,13 @@
  * Wire: root `prepare` / `emit:package-dts` / `sail types` (monorepo) /
  *        before pure typecheck scripts.
  *
- * Exits non-zero if a listed package does not produce the expected
- * `dist/index.d.ts` (or package-specific allowlisted entry). Packages that use
- * checked-in public types (not dual `types→dist`) are not listed here.
+ * Exits non-zero if any declared dual `types` path under `dist/` is missing
+ * after emit (root `types` + every `exports.*.types` / nested condition that
+ * points at `./dist/...`). Packages that use checked-in public types (not dual
+ * `types→dist`) are not listed here.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -45,6 +46,11 @@ const FRAMEWORK_EMIT = {
  * Packages Pure apps resolve into (studio listFiles / @ship imports).
  * Dual `exports.types → dist/*.d.ts`. Missing dist → TypeScript falls back to
  * Framework `src/` (pure regression) — emit must run before pure/IDE typecheck.
+ *
+ * Hard-fail requires **all** package.json `types` / `exports.*.types` paths under
+ * `dist/` (not only `dist/index.d.ts`), so multi-entry dual packages
+ * (tokens themes/unions, runtime internal/virtual, viewer wasm-bootstrap, …)
+ * cannot silently leave a subpath resolving to Framework src.
  *
  * Not listed (checked-in types, not dual dist):
  *   packages/components/sail/code-editor → types/index.d.ts
@@ -82,7 +88,6 @@ const PACKAGES = [
   },
   {
     dir: 'packages/sail/tokens',
-    // tokens also exports themes.d.ts; require index.d.ts for pure consumers.
     tempConfig: {
       compilerOptions: { ...FRAMEWORK_EMIT },
       include: ['src/**/*.ts'],
@@ -115,6 +120,92 @@ const PACKAGES = [
   },
 ]
 
+/**
+ * Normalize a package-relative types path to a path under the package root.
+ * Accepts `./dist/foo.d.ts`, `dist/foo.d.ts`. Returns null if not under dist/.
+ * @param {unknown} typesPath
+ * @returns {string | null}
+ */
+function distTypesRel(typesPath) {
+  if (typeof typesPath !== 'string') return null
+  const rel = typesPath.replace(/^\.\//, '')
+  if (!rel.startsWith('dist/') && rel !== 'dist') return null
+  return rel
+}
+
+/**
+ * Collect every dual-export types path under dist/ from package.json.
+ * Walks top-level `types` and `exports` (string | { types } | nested conditions).
+ * @param {Record<string, unknown>} pkgJson
+ * @returns {string[]} package-relative paths like `dist/themes.d.ts`
+ */
+function collectDistTypesEntries(pkgJson) {
+  /** @type {Set<string>} */
+  const out = new Set()
+
+  const top = distTypesRel(pkgJson.types)
+  if (top) out.add(top)
+
+  /**
+   * @param {unknown} node
+   */
+  function walkExports(node) {
+    if (node == null) return
+    if (typeof node === 'string') {
+      // Bare string export targets (e.g. "./themes.css") are not types paths.
+      return
+    }
+    if (Array.isArray(node)) {
+      for (const item of node) walkExports(item)
+      return
+    }
+    if (typeof node !== 'object') return
+    /** @type {Record<string, unknown>} */
+    const obj = node
+    if ('types' in obj) {
+      const t = distTypesRel(obj.types)
+      if (t) out.add(t)
+    }
+    for (const [key, val] of Object.entries(obj)) {
+      if (key === 'types') continue
+      // Subpath keys (".", "./themes") or conditions (default, import, …)
+      walkExports(val)
+    }
+  }
+
+  walkExports(pkgJson.exports)
+  return [...out].sort()
+}
+
+/**
+ * After emit, require every package.json dual types path under dist/ to exist.
+ * @param {string} pkgDir package dir relative to ROOT
+ * @param {string} cwd absolute package dir
+ * @returns {string[]} missing package-relative paths
+ */
+function missingDistTypesEntries(pkgDir, cwd) {
+  const pkgJsonPath = join(cwd, 'package.json')
+  if (!existsSync(pkgJsonPath)) {
+    return ['package.json']
+  }
+  /** @type {Record<string, unknown>} */
+  let pkgJson
+  try {
+    pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8'))
+  } catch {
+    return ['package.json (unreadable)']
+  }
+
+  const required = collectDistTypesEntries(pkgJson)
+  // Dual packages always need at least index; if package.json has no dist types
+  // entries at all, still require dist/index.d.ts so misconfigured packages fail.
+  if (required.length === 0) {
+    required.push('dist/index.d.ts')
+  }
+
+  return required.filter((rel) => !existsSync(join(cwd, rel)))
+}
+
 /** @returns {'ok' | 'fail' | 'skip'} */
 function emitOne(pkg) {
   const cwd = join(ROOT, pkg.dir)
@@ -136,7 +227,7 @@ function emitOne(pkg) {
       })
     } catch (e) {
       // tsc often still emits usable .d.ts with local errors; log and require
-      // dist entry below. Missing entry → hard fail.
+      // all dual dist types entries below. Missing entry → hard fail.
       const out = `${e.stdout ?? ''}${e.stderr ?? ''}`
       if (out.trim()) {
         console.warn(
@@ -155,9 +246,13 @@ function emitOne(pkg) {
     }
   }
 
-  const indexDts = join(dist, 'index.d.ts')
-  if (!existsSync(indexDts)) {
-    console.error(`[emit-package-dts] FAIL: no dist/index.d.ts for ${pkg.dir}`)
+  const missing = missingDistTypesEntries(pkg.dir, cwd)
+  if (missing.length > 0) {
+    console.error(
+      `[emit-package-dts] FAIL: missing dual types for ${pkg.dir}:\n${missing
+        .map((m) => `  - ${m}`)
+        .join('\n')}`,
+    )
     return 'fail'
   }
   console.log(`[emit-package-dts] ok ${pkg.dir}`)
