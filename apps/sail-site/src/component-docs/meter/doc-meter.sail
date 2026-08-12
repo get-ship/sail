@@ -1,6 +1,6 @@
 <!--
-  <doc-meter> — first-class docs host for /components/meter.
-  Specimen left, knobs right (Mantine-style configurator) + examples walkthrough.
+  <doc-meter> — /components/meter
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
 <controller>
@@ -8,10 +8,10 @@ import type { Scope } from './doc-meter.sail'
 import { DETAILS } from '../../compositions/component-details'
 
 export default controller((_ctx: Scope) => {
-
   const METER_SIZES = ['sm', 'md', 'lg'] as const
   const sizeIdx = signal(1)
   const meterVal = signal(55)
+
   const meterSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), METER_SIZES.length - 1)
     return METER_SIZES[i] ?? 'md'
@@ -22,148 +22,204 @@ export default controller((_ctx: Scope) => {
     if (v >= 33) return 'suboptimum'
     return 'even-less-good'
   })
-  const meterMeta = derived(() => {
-    return `${meterSize()} · value ${meterVal()} · ${meterBand()} · component.meter.*`
-  })
+
   const entry = DETAILS.meter
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
+
+  const specimenCode = derived(() => {
+    const a: string[] = [
+      `value="${meterVal()}"`,
+      'min="0"',
+      'max="100"',
+      'low="33"',
+      'high="66"',
+      'optimum="100"',
+    ]
+    if (meterSize() !== 'md') a.push(`size="${meterSize()}"`)
+    return `<meter ${a.join(' ')}></meter>`
+  })
+
   const mtrExMeasure = () =>
     `<column gap="2">\n  <p>Disk free — 72%</p>\n  <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>\n</column>`
   const mtrExSizes = () =>
     `<meter value="0.55" size="sm"></meter>\n<meter value="0.55"></meter>\n<meter value="0.55" size="lg"></meter>`
   const mtrExBands = () =>
     `<meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>\n<meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>`
-  const mtrExRest = () =>
-    `<meter value="0.55"></meter>\n<!-- track → component.meter.track -->`
-  return {
-    sizeIdx, meterVal, meterSize, meterBand, meterMeta,
-    heading, blurb, props, usageCode, mtrExMeasure, mtrExSizes, mtrExBands, mtrExRest,
-  }
 
+  return {
+    sizeIdx,
+    meterVal,
+    meterSize,
+    meterBand,
+    heading,
+    blurb,
+    props,
+    usageCode,
+    specimenCode,
+    mtrExMeasure,
+    mtrExSizes,
+    mtrExBands,
+  }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(64).maxW(full).pad(2).overflow(visible) }
+  style controlW = { box: w(full) }
   style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style meterCol = { box: w(panel-max-w-sm) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
+  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
     paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
   }
-  style exampleBlock = { box: w(full).padY(2) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
-
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="4" align="center" style(meterCol)>
-            <meter value={meterVal()} min="0" max="100" low="33" high="66" optimum="100" size={meterSize()}></meter>
-            <p style(monoXs)>{meterMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Value</label>
-              <span style(sizeValue)>{meterVal()} · {meterBand()}</span>
-            </row>
-            <slider bind:value={meterVal} min="0" max="100" size="sm" label="Value"></slider>
-            <p style(mutedXs)>Fixed thresholds low=33 · high=66 · optimum=100.</p>
-          </column>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Size</label>
-              <span style(sizeValue)>{meterSize()}</span>
-            </row>
-            <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
-            <row gap="0" align="center" style(tickRow)>
-              <span style(tick)>sm</span><span style(tick)>md</span><span style(tick)>lg</span>
-            </row>
-          </column>
-        </column>
+    <column slot="specimen" gap="3" align="stretch" style(specimen)>
+      <meter
+        value={meterVal()}
+        min="0"
+        max="100"
+        low="33"
+        high="66"
+        optimum="100"
+        size={meterSize()}
+        style(controlW)
+      ></meter>
+      <row justify="between" align="center">
+        <span style(sizeValue)>{meterVal()}</span>
+        <span style(sizeValue)>{meterBand()}</span>
       </row>
     </column>
-    <column gap="5" style(exampleBlock)>
+
+    <column slot="knobs" gap="4" align="stretch">
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Value</label>
+          <span style(sizeValue)>{meterVal()} · {meterBand()}</span>
+        </row>
+        <slider bind:value={meterVal} min="0" max="100" size="sm" label="Value"></slider>
+      </column>
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{meterSize()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+        <row gap="0" align="center" justify="between" style(tickRow)>
+          <span style(tick)>sm</span>
+          <span style(tick)>md</span>
+          <span style(tick)>lg</span>
+        </row>
+      </column>
+    </column>
+
+    <column slot="usage-preview" gap="3" style(specimen)>
+      <p style(mutedSm)>Disk free — 72%</p>
+      <meter
+        value="72"
+        min="0"
+        max="100"
+        low="33"
+        high="66"
+        optimum="100"
+        style(controlW)
+      ></meter>
+    </column>
+
+    <column gap="2" style(exampleBlock)>
       <p style(sectionLabel)>Examples</p>
-      <column gap="2">
-        <h3 style(exampleH)>Labeled measurement</h3>
-        <p style(exampleLead)>A gauge for a quantity in range — not task completion.</p>
-        <column gap="2" style(meterCol)>
+      <doc-example
+        title="Labeled measurement"
+        lead="A gauge for a quantity in range — not task completion."
+        code={mtrExMeasure()}
+      >
+        <column gap="2" style(specimen)>
           <p style(mutedSm)>Disk free — 72%</p>
-          <meter value="72" min="0" max="100" low="33" high="66" optimum="100"></meter>
+          <meter
+            value="72"
+            min="0"
+            max="100"
+            low="33"
+            high="66"
+            optimum="100"
+            style(controlW)
+          ></meter>
         </column>
-        <code-block code={mtrExMeasure()}></code-block>
-      </column>
-      <column gap="2">
-        <h3 style(exampleH)>Size ladder</h3>
-        <p style(exampleLead)><code>sm</code> · <code>md</code> · <code>lg</code> scale bar height.</p>
-        <column gap="3" style(meterCol)>
-          <meter value="0.55" size="sm"></meter>
-          <meter value="0.55"></meter>
-          <meter value="0.55" size="lg"></meter>
+      </doc-example>
+      <doc-example title="Sizes" lead="Default is md." code={mtrExSizes()}>
+        <column gap="3" style(specimen)>
+          <meter value="0.55" size="sm" style(controlW)></meter>
+          <meter value="0.55" style(controlW)></meter>
+          <meter value="0.55" size="lg" style(controlW)></meter>
         </column>
-        <code-block code={mtrExSizes()}></code-block>
-      </column>
-      <column gap="2">
-        <h3 style(exampleH)>Optimum bands</h3>
-        <p style(exampleLead)>low/high/optimum drive the three fill regions.</p>
-        <column gap="3" style(meterCol)>
+      </doc-example>
+      <doc-example
+        title="Optimum bands"
+        lead="low, high, and optimum drive the three fill regions."
+        code={mtrExBands()}
+      >
+        <column gap="3" style(specimen)>
           <column gap="1">
             <p style(monoXs)>value 20 · even-less-good</p>
-            <meter value="20" min="0" max="100" low="33" high="66" optimum="100"></meter>
+            <meter
+              value="20"
+              min="0"
+              max="100"
+              low="33"
+              high="66"
+              optimum="100"
+              style(controlW)
+            ></meter>
           </column>
           <column gap="1">
             <p style(monoXs)>value 50 · suboptimum</p>
-            <meter value="50" min="0" max="100" low="33" high="66" optimum="100"></meter>
+            <meter
+              value="50"
+              min="0"
+              max="100"
+              low="33"
+              high="66"
+              optimum="100"
+              style(controlW)
+            ></meter>
           </column>
           <column gap="1">
             <p style(monoXs)>value 85 · optimum</p>
-            <meter value="85" min="0" max="100" low="33" high="66" optimum="100"></meter>
+            <meter
+              value="85"
+              min="0"
+              max="100"
+              low="33"
+              high="66"
+              optimum="100"
+              style(controlW)
+            ></meter>
           </column>
         </column>
-        <code-block code={mtrExBands()}></code-block>
-      </column>
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>Track from <code>component.meter.track</code>; bands from optimum leaves.</p>
-        <column gap="2" style(meterCol)>
-          <meter value="0.55"></meter>
-        </column>
-        <code-block code={mtrExRest()}></code-block>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

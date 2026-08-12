@@ -1,6 +1,6 @@
 <!--
-  <doc-empty-state> — first-class docs host for /components/empty-state.
-  Specimen left, knobs right — variant × size × optional tone.
+  <doc-empty-state> — /components/empty-state
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
 <controller>
@@ -12,16 +12,13 @@ export default controller((_ctx: Scope) => {
   const sizeIdx = signal(1)
   const variant = signal('default')
   const esTone = signal('')
+
   const pickEsTone = (t: string): void => esTone.set(t)
   const clearEsTone = (): void => esTone.set('')
+
   const esSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ES_SIZES.length - 1)
     return ES_SIZES[i] ?? 'md'
-  })
-  const esMeta = derived(() => {
-    const t = esTone()
-    const live = variant() === 'connecting' ? 'status/polite' : 'note'
-    return `${variant()} · ${esSize()} · ${t || 'rest icon'} · ${live} · component.empty-state.*`
   })
   const esTitle = derived(() => {
     switch (variant()) {
@@ -48,17 +45,34 @@ export default controller((_ctx: Scope) => {
     }
   })
   const esIcon = derived(() => (variant() === 'connecting' ? 'refresh-cw' : 'inbox'))
+
   const entry = DETAILS['empty-state']
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
+
+  const specimenCode = derived(() => {
+    const a: string[] = []
+    if (variant() !== 'default') a.push(`variant="${variant()}"`)
+    if (esSize() !== 'md') a.push(`size="${esSize()}"`)
+    if (esTone()) a.push(`tone="${esTone()}"`)
+    const open = a.length ? `<empty-state ${a.join(' ')}>` : `<empty-state>`
+    const iconSpin = variant() === 'connecting' ? ' spin' : ''
+    const action =
+      variant() === 'connecting'
+        ? ''
+        : `\n  <button slot="action" variant="outline" size="sm">Clear filters</button>`
+    return `${open}\n  <icon slot="icon" name="${esIcon()}"${iconSpin}></icon>\n  <strong slot="title">${esTitle()}</strong>\n  ${esBody()}${action}\n</empty-state>`
+  })
+
   const esExDefault = () =>
     `<empty-state>\n  <icon slot="icon" name="inbox"></icon>\n  <strong slot="title">No results</strong>\n  Try a different search.\n  <button slot="action" variant="outline" size="sm">Clear filters</button>\n</empty-state>`
   const esExConnecting = () =>
     `<empty-state variant="connecting">\n  <icon slot="icon" name="refresh-cw" spin></icon>\n  <strong slot="title">Connecting…</strong>\n  Establishing a secure session.\n</empty-state>`
-  const esExRest = () =>
-    `<empty-state>\n  <strong slot="title">Empty</strong>\n  Omit tone → component.empty-state.* icon rest.\n</empty-state>`
+  const esExDefaultColors = () =>
+    `<empty-state>\n  <strong slot="title">Empty</strong>\n  Omit tone for default icon colors.\n</empty-state>`
+
   return {
     sizeIdx,
     variant,
@@ -66,7 +80,6 @@ export default controller((_ctx: Scope) => {
     pickEsTone,
     clearEsTone,
     esSize,
-    esMeta,
     esTitle,
     esBody,
     esIcon,
@@ -74,40 +87,27 @@ export default controller((_ctx: Scope) => {
     blurb,
     props,
     usageCode,
+    specimenCode,
     esExDefault,
     esExConnecting,
-    esExRest,
+    esExDefaultColors,
   }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style stageCol = { box: w(panel-max-w-md).maxW(full) }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
   style fullW = { box: w(full) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
-    paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
-  }
-  style swatchRow = { box: w(full) }
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
   style swatch = {
-    box: w(7).h(7).shrink(0),
+    box: size(7).shrink(0),
     paint: radius(full).cursor(pointer).borderWidth(2).border(transparent).shadow(xs),
     when: {
       selected: { paint: border(foreground).shadow(sm) },
@@ -122,150 +122,174 @@ export default controller((_ctx: Scope) => {
   style swatchMuted = { paint: bg(muted).border(border) }
   style swatchInfo = { paint: bg(info) }
   style swatchRest = { paint: bg(background).border(border) }
-  style exampleBlock = { box: w(full).padY(2) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
+    paint: fg(muted-foreground),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
+  }
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="3" align="stretch" style(stageCol)>
-            <if {esTone()}>
-              <empty-state variant={variant()} size={esSize()} tone={esTone()} style(fullW)>
-                <icon slot="icon" name={esIcon()} spin={variant() === 'connecting' ? 'true' : null}></icon>
-                <strong slot="title">{esTitle()}</strong>
-                {esBody()}
-                <if {variant() !== 'connecting'}>
-                  <button slot="action" variant="outline" size="sm">Clear filters</button>
-                </if>
-              </empty-state>
-            {else =>
-              <empty-state variant={variant()} size={esSize()} style(fullW)>
-                <icon slot="icon" name={esIcon()} spin={variant() === 'connecting' ? 'true' : null}></icon>
-                <strong slot="title">{esTitle()}</strong>
-                {esBody()}
-                <if {variant() !== 'connecting'}>
-                  <button slot="action" variant="outline" size="sm">Clear filters</button>
-                </if>
-              </empty-state>}</if>
-            <p style(monoXs)>{esMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <label style(knobLabel)>Variant</label>
-            <select size="sm" bind:value={variant} label="Variant">
-              <option value="default">default</option>
-              <option value="inline">inline</option>
-              <option value="placeholder">placeholder</option>
-              <option value="connecting">connecting</option>
-            </select>
-            <p style(mutedXs)>
-              default bordered · inline dashed · placeholder/connecting bare.
-              <code>connecting</code> → role=status / aria-live=polite.
-            </p>
-          </column>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Size</label>
-              <span style(sizeValue)>{esSize()}</span>
-            </row>
-            <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
-            <row gap="0" align="center" style(tickRow)>
-              <span style(tick)>sm</span>
-              <span style(tick)>md</span>
-              <span style(tick)>lg</span>
-            </row>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Tone</label>
-            <row gap="2" align="center" style(swatchRow)>
-              <tooltip content="rest — component.empty-state icon" placement="top">
-                <div label="rest" on:click={clearEsTone} selected={!esTone() ? 'true' : null} style(swatch, swatchRest)></div>
-              </tooltip>
-              <tooltip content="primary" placement="top">
-                <div label="primary" on:click={() => pickEsTone('primary')} selected={esTone() === 'primary' ? 'true' : null} style(swatch, swatchPrimary)></div>
-              </tooltip>
-              <tooltip content="success" placement="top">
-                <div label="success" on:click={() => pickEsTone('success')} selected={esTone() === 'success' ? 'true' : null} style(swatch, swatchSuccess)></div>
-              </tooltip>
-              <tooltip content="warning" placement="top">
-                <div label="warning" on:click={() => pickEsTone('warning')} selected={esTone() === 'warning' ? 'true' : null} style(swatch, swatchWarning)></div>
-              </tooltip>
-              <tooltip content="destructive" placement="top">
-                <div label="destructive" on:click={() => pickEsTone('destructive')} selected={esTone() === 'destructive' ? 'true' : null} style(swatch, swatchDestructive)></div>
-              </tooltip>
-              <tooltip content="accent" placement="top">
-                <div label="accent" on:click={() => pickEsTone('accent')} selected={esTone() === 'accent' ? 'true' : null} style(swatch, swatchAccent)></div>
-              </tooltip>
-              <tooltip content="muted" placement="top">
-                <div label="muted" on:click={() => pickEsTone('muted')} selected={esTone() === 'muted' ? 'true' : null} style(swatch, swatchMuted)></div>
-              </tooltip>
-              <tooltip content="info" placement="top">
-                <div label="info" on:click={() => pickEsTone('info')} selected={esTone() === 'info' ? 'true' : null} style(swatch, swatchInfo)></div>
-              </tooltip>
-            </row>
-            <p style(mutedXs)>Tone brands the icon only. Omit for themeable rest chrome.</p>
-          </column>
-        </column>
-      </row>
+    <column slot="specimen" gap="3" align="stretch" style(specimen)>
+      <if {esTone()}>
+        <empty-state variant={variant()} size={esSize()} tone={esTone()} style(fullW)>
+          <icon
+            slot="icon"
+            name={esIcon()}
+            spin={variant() === 'connecting' ? 'true' : null}
+          ></icon>
+          <strong slot="title">{esTitle()}</strong>
+          {esBody()}
+          <if {variant() !== 'connecting'}>
+            <button slot="action" variant="outline" size="sm">Clear filters</button>
+          </if>
+        </empty-state>
+      {else =>
+        <empty-state variant={variant()} size={esSize()} style(fullW)>
+          <icon
+            slot="icon"
+            name={esIcon()}
+            spin={variant() === 'connecting' ? 'true' : null}
+          ></icon>
+          <strong slot="title">{esTitle()}</strong>
+          {esBody()}
+          <if {variant() !== 'connecting'}>
+            <button slot="action" variant="outline" size="sm">Clear filters</button>
+          </if>
+        </empty-state>}</if>
     </column>
 
-    <column gap="5" style(exampleBlock)>
-      <p style(sectionLabel)>Examples</p>
-
+    <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <h3 style(exampleH)>Default card</h3>
-        <p style(exampleLead)>
-          Icon + title + body + action slots. Empty slots collapse.
-        </p>
-        <empty-state style(stageCol)>
+        <label style(knobLabel)>Variant</label>
+        <select size="sm" bind:value={variant} label="Variant">
+          <option value="default">default</option>
+          <option value="inline">inline</option>
+          <option value="placeholder">placeholder</option>
+          <option value="connecting">connecting</option>
+        </select>
+      </column>
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{esSize()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+        <row gap="0" align="center" justify="between" style(tickRow)>
+          <span style(tick)>sm</span>
+          <span style(tick)>md</span>
+          <span style(tick)>lg</span>
+        </row>
+      </column>
+      <column gap="2">
+        <label style(knobLabel)>Tone</label>
+        <row gap="2" align="center">
+          <div
+            title="default"
+            selected={!esTone() ? 'true' : null}
+            on:click={clearEsTone}
+            style(swatch, swatchRest)
+          ></div>
+          <div
+            title="primary"
+            selected={esTone() === 'primary' ? 'true' : null}
+            on:click={() => pickEsTone('primary')}
+            style(swatch, swatchPrimary)
+          ></div>
+          <div
+            title="success"
+            selected={esTone() === 'success' ? 'true' : null}
+            on:click={() => pickEsTone('success')}
+            style(swatch, swatchSuccess)
+          ></div>
+          <div
+            title="warning"
+            selected={esTone() === 'warning' ? 'true' : null}
+            on:click={() => pickEsTone('warning')}
+            style(swatch, swatchWarning)
+          ></div>
+          <div
+            title="destructive"
+            selected={esTone() === 'destructive' ? 'true' : null}
+            on:click={() => pickEsTone('destructive')}
+            style(swatch, swatchDestructive)
+          ></div>
+          <div
+            title="accent"
+            selected={esTone() === 'accent' ? 'true' : null}
+            on:click={() => pickEsTone('accent')}
+            style(swatch, swatchAccent)
+          ></div>
+          <div
+            title="muted"
+            selected={esTone() === 'muted' ? 'true' : null}
+            on:click={() => pickEsTone('muted')}
+            style(swatch, swatchMuted)
+          ></div>
+          <div
+            title="info"
+            selected={esTone() === 'info' ? 'true' : null}
+            on:click={() => pickEsTone('info')}
+            style(swatch, swatchInfo)
+          ></div>
+        </row>
+      </column>
+    </column>
+
+    <column slot="usage-preview" gap="3" align="stretch" style(specimen)>
+      <empty-state style(fullW)>
+        <icon slot="icon" name="inbox"></icon>
+        <strong slot="title">No results</strong>
+        Try a different search, or clear a filter.
+        <button slot="action" variant="outline" size="sm">Clear filters</button>
+      </empty-state>
+    </column>
+
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <doc-example
+        title="Default card"
+        lead="Icon + title + body + action slots. Empty slots collapse."
+        code={esExDefault()}
+      >
+        <empty-state style(specimen)>
           <icon slot="icon" name="inbox"></icon>
           <strong slot="title">No results</strong>
           Try a different search, or clear a filter.
           <button slot="action" variant="outline" size="sm">Clear filters</button>
         </empty-state>
-        <code-block code={esExDefault()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Connecting (live status)</h3>
-        <p style(exampleLead)>
-          <code>variant="connecting"</code> upgrades to role=status / aria-live=polite
-          via <code>use:variantLive</code>.
-        </p>
-        <empty-state variant="connecting" style(stageCol)>
+      </doc-example>
+      <doc-example
+        title="Connecting"
+        lead='variant="connecting" is a polite live status while a session starts.'
+        code={esExConnecting()}
+      >
+        <empty-state variant="connecting" style(specimen)>
           <icon slot="icon" name="refresh-cw" spin></icon>
           <strong slot="title">Connecting…</strong>
           Establishing a secure session.
         </empty-state>
-        <code-block code={esExConnecting()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>
-          Omit tone → <code>component.empty-state.bg</code> · <code>border</code> ·
-          <code>fg</code> · <code>title</code>.
-        </p>
-        <empty-state style(stageCol)>
+      </doc-example>
+      <doc-example
+        title="Default theme colors"
+        lead="Omit tone for default icon colors."
+        code={esExDefaultColors()}
+      >
+        <empty-state style(specimen)>
           <strong slot="title">Empty</strong>
-          Theme the leaves for every rest empty-state.
+          Omit tone for default icon colors.
         </empty-state>
-        <code-block code={esExRest()}></code-block>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 

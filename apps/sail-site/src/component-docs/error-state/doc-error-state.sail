@@ -1,6 +1,6 @@
 <!--
-  <doc-error-state> — first-class docs host for /components/error-state.
-  Specimen left, knobs right — variant × size × code chip.
+  <doc-error-state> — /components/error-state
+  Shared chrome: split + snippet copy + usage Code|Live|Split.
 -->
 
 <controller>
@@ -12,175 +12,165 @@ export default controller((_ctx: Scope) => {
   const sizeIdx = signal(1)
   const variant = signal('default')
   const errCode = signal('ERR_TIMEOUT')
+
   const erSize = derived(() => {
     const i = Math.min(Math.max(0, Math.round(Number(sizeIdx()) || 0)), ER_SIZES.length - 1)
     return ER_SIZES[i] ?? 'md'
   })
-  const erMeta = derived(() => {
-    const c = errCode()
-    return `${variant()} · ${erSize()} · code ${c || '(hidden)'} · component.error-state.*`
-  })
+
   const entry = DETAILS['error-state']
   const heading = () => entry.heading
   const blurb = () => entry.blurb
   const props = () => entry.props
   const usageCode = () => entry.usage
+
+  const specimenCode = derived(() => {
+    const a: string[] = []
+    if (errCode()) a.push(`code="${errCode()}"`)
+    if (variant() !== 'default') a.push(`variant="${variant()}"`)
+    if (erSize() !== 'md') a.push(`size="${erSize()}"`)
+    const open = a.length ? `<error-state ${a.join(' ')}>` : `<error-state>`
+    return `${open}\n  <strong slot="title">Could not load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
+  })
+
   const erExDefault = () =>
     `<error-state code="ERR_TIMEOUT">\n  <strong slot="title">Could not load your data</strong>\n  The request failed after 3 retries.\n  <button slot="action" variant="solid" tone="destructive" size="sm">Retry</button>\n</error-state>`
   const erExInline = () =>
     `<error-state variant="inline">\n  <strong slot="title">Partial failure</strong>\n  One pane could not refresh.\n  <button slot="action" variant="outline" size="sm">Retry</button>\n</error-state>`
-  const erExRest = () =>
-    `<error-state>\n  <strong slot="title">Something went wrong</strong>\n  Rest chrome → component.error-state.*\n</error-state>`
+  const erExDefaultColors = () =>
+    `<error-state>\n  <strong slot="title">Something went wrong</strong>\n  Default theme colors for the card chrome.\n</error-state>`
+
   return {
     sizeIdx,
     variant,
     errCode,
     erSize,
-    erMeta,
     heading,
     blurb,
     props,
     usageCode,
+    specimenCode,
     erExDefault,
     erExInline,
-    erExRest,
+    erExDefaultColors,
   }
 })
 </controller>
 
 <scope>
-  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full) }
-  style monoXs = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style mutedXs = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style stageSplit = { box: w(full).minW(0).minH(64) }
-  style stageCanvas = { box: grow(1).basis(0).minW(0).minH(64).pad(8) }
-  style stageCol = { box: w(panel-max-w-md).maxW(full) }
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+  style specimen = { box: w(full).maxW(panel-max-w-md).pad(2).overflow(visible) }
   style fullW = { box: w(full) }
-  style knobPanel = {
-    box: w(panel-max-w-sm).shrink(0).pad(5).minH(64),
-    paint: borderLWidth(1).borderL(border-subtle),
-  }
   style knobLabel = {
     paint: fg(muted-foreground),
     text: fontSize(xs).fontWeight(medium).tracking(wide).textCase(uppercase),
   }
   style sizeValue = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style tickRow = { box: w(full).padT(1) }
-  style tick = {
-    box: grow(1).basis(0).minW(0),
+  style tickRow = { box: w(full).padT(1).padX(1_5) }
+  style tick = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
+  style exampleBlock = { box: w(full).padT(2).padB(4).overflow(visible) }
+  style sectionLabel = {
     paint: fg(muted-foreground),
-    text: fontSize(xs).fontFamily(mono).textAlign(center),
+    text: fontSize(xs).textCase(uppercase).tracking(wide),
   }
-  style exampleBlock = { box: w(full).padY(2) }
-  style exampleH = { text: fontSize(md).fontWeight(semibold) }
-  style exampleLead = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style sectionLabel = { paint: fg(muted-foreground), text: fontSize(xs).textCase(uppercase).tracking(wide) }
 </scope>
 
-<column gap="4" style(page)>
+<column gap="6" style(page)>
   <sail-component-viewer
     name={heading()}
     blurb={blurb()}
     pack="Component primitives"
-    variant-attr=""
+    layout="split"
+    snippet={specimenCode()}
+    usage-live
     usage={usageCode()}
-    variants={[]}
     rows={props()}
   >
-    <column slot="stage" gap="4" align="stretch" style({ box: w(full).minW(0) })>
-      <row nowrap gap="0" align="stretch" style(stageSplit)>
-        <center style(stageCanvas)>
-          <column gap="3" align="stretch" style(stageCol)>
-            <error-state code={errCode()} variant={variant()} size={erSize()} style(fullW)>
-              <strong slot="title">Could not load your data</strong>
-              The request failed after 3 retries. Check your connection and try again.
-              <span slot="details">at fetchData (api.ts:42)
+    <column slot="specimen" gap="3" align="stretch" style(specimen)>
+      <error-state code={errCode()} variant={variant()} size={erSize()} style(fullW)>
+        <strong slot="title">Could not load your data</strong>
+        The request failed after 3 retries. Check your connection and try again.
+        <span slot="details">at fetchData (api.ts:42)
   at load (dashboard.ts:19)
   Error: gateway timeout</span>
-              <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
-            </error-state>
-            <p style(monoXs)>{erMeta()}</p>
-          </column>
-        </center>
-        <column gap="5" style(knobPanel)>
-          <column gap="2">
-            <label style(knobLabel)>Variant</label>
-            <select size="sm" bind:value={variant} label="Variant">
-              <option value="default">default</option>
-              <option value="inline">inline</option>
-            </select>
-            <p style(mutedXs)>
-              default = centered card on component leaves; inline = start-aligned with
-              destructive border + muted fill.
-            </p>
-          </column>
-          <column gap="2">
-            <row gap="2" align="center" justify="between">
-              <label style(knobLabel)>Size</label>
-              <span style(sizeValue)>{erSize()}</span>
-            </row>
-            <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
-            <row gap="0" align="center" style(tickRow)>
-              <span style(tick)>sm</span>
-              <span style(tick)>md</span>
-              <span style(tick)>lg</span>
-            </row>
-          </column>
-          <column gap="2">
-            <label style(knobLabel)>Code</label>
-            <input type="text" bind:value={errCode} size="sm" placeholder="ERR_…" style(fullW) />
-            <p style(mutedXs)>
-              Machine-readable chip. Empty hides the code region via
-              <code>use:recoverySurface</code>.
-            </p>
-          </column>
-        </column>
-      </row>
+        <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+          Retry
+        </button>
+      </error-state>
     </column>
 
-    <column gap="5" style(exampleBlock)>
-      <p style(sectionLabel)>Examples</p>
-
+    <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <h3 style(exampleH)>Default recovery</h3>
-        <p style(exampleLead)>
-          role=alert · code chip · details gate · action focus via
-          <code>use:recoverySurface</code>.
-        </p>
-        <error-state code="ERR_TIMEOUT" style(stageCol)>
+        <label style(knobLabel)>Variant</label>
+        <select size="sm" bind:value={variant} label="Variant">
+          <option value="default">default</option>
+          <option value="inline">inline</option>
+        </select>
+      </column>
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <label style(knobLabel)>Size</label>
+          <span style(sizeValue)>{erSize()}</span>
+        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
+        <row gap="0" align="center" justify="between" style(tickRow)>
+          <span style(tick)>sm</span>
+          <span style(tick)>md</span>
+          <span style(tick)>lg</span>
+        </row>
+      </column>
+      <column gap="2">
+        <label style(knobLabel)>Code</label>
+        <input type="text" bind:value={errCode} size="sm" placeholder="ERR_…" style(fullW) />
+      </column>
+    </column>
+
+    <column slot="usage-preview" gap="3" align="stretch" style(specimen)>
+      <error-state code="ERR_TIMEOUT" style(fullW)>
+        <strong slot="title">Could not load your data</strong>
+        The request failed after 3 retries.
+        <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+          Retry
+        </button>
+      </error-state>
+    </column>
+
+    <column gap="2" style(exampleBlock)>
+      <p style(sectionLabel)>Examples</p>
+      <doc-example
+        title="Default recovery"
+        lead="Alert role, optional code chip, details gate, and a focused action."
+        code={erExDefault()}
+      >
+        <error-state code="ERR_TIMEOUT" style(specimen)>
           <strong slot="title">Could not load your data</strong>
           The request failed after 3 retries.
-          <button slot="action" type="button" variant="solid" tone="destructive" size="sm">Retry</button>
+          <button slot="action" type="button" variant="solid" tone="destructive" size="sm">
+            Retry
+          </button>
         </error-state>
-        <code-block code={erExDefault()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Inline</h3>
-        <p style(exampleLead)>
-          Start-aligned row with brand-destructive border for partial failures.
-        </p>
-        <error-state variant="inline" style(stageCol)>
+      </doc-example>
+      <doc-example
+        title="Inline"
+        lead="Start-aligned layout for partial failures inside a pane."
+        code={erExInline()}
+      >
+        <error-state variant="inline" style(specimen)>
           <strong slot="title">Partial failure</strong>
           One pane could not refresh.
           <button slot="action" type="button" variant="outline" size="sm">Retry</button>
         </error-state>
-        <code-block code={erExInline()}></code-block>
-      </column>
-
-      <column gap="2">
-        <h3 style(exampleH)>Rest tokens (themeable)</h3>
-        <p style(exampleLead)>
-          <code>component.error-state.bg</code> · <code>border</code> · <code>fg</code>.
-          Icon keeps brand destructive.
-        </p>
-        <error-state style(stageCol)>
+      </doc-example>
+      <doc-example
+        title="Default theme colors"
+        lead="Omit custom chrome — default theme colors for the card surface."
+        code={erExDefaultColors()}
+      >
+        <error-state style(specimen)>
           <strong slot="title">Something went wrong</strong>
-          Rest chrome from component leaves.
+          Default theme colors for the card chrome.
         </error-state>
-        <code-block code={erExRest()}></code-block>
-      </column>
+      </doc-example>
     </column>
   </sail-component-viewer>
 
