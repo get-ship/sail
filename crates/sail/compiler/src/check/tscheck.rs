@@ -795,7 +795,25 @@ fn runtime_ambient_dts() -> String {
             }
             "form" => {
                 // form({ initial, validate, submit }) — options bag, not a HOF.
-                out.push_str("declare function form<T = any>(opts: any, ...rest: any[]): any;\n");
+                // Infer T from `initial` so validate/submit destructured params are
+                // typed (TS7031 under noImplicitAny). Mirrors product FormOptions.
+                out.push_str(
+                    "declare function form<T extends Record<string, unknown>>(opts: {\n\
+                     \x20 initial: T | (() => T);\n\
+                     \x20 validate?: (values: T) => Partial<Record<keyof T, string | null>>;\n\
+                     \x20 submit?: (values: T) => unknown | Promise<unknown>;\n\
+                     }, ...rest: any[]): {\n\
+                     \x20 fields: { [K in keyof T]: any };\n\
+                     \x20 values: () => T;\n\
+                     \x20 errors: () => Partial<Record<keyof T, string | null>>;\n\
+                     \x20 valid: () => boolean;\n\
+                     \x20 dirty: () => boolean;\n\
+                     \x20 pending: () => boolean;\n\
+                     \x20 lastError: () => Error | null;\n\
+                     \x20 reset: () => void;\n\
+                     \x20 submit: (e?: { preventDefault(): void }) => Promise<void>;\n\
+                     };\n",
+                );
             }
             "signal" | "derived" | "query" | "mutation" | "filteredList" | "createVirtualizer"
             | "timeline" | "debounce" | "interval" => {
@@ -1060,7 +1078,11 @@ declare module "@ship/*" {
   export function onCleanup(...args: any[]): any;
   export function untrack<T = any>(...args: any[]): any;
   export function batch<T = any>(...args: any[]): any;
-  export function form<T = any>(...args: any[]): any;
+  export function form<T extends Record<string, unknown>>(opts: {
+    initial: T | (() => T);
+    validate?: (values: T) => Partial<Record<keyof T, string | null>>;
+    submit?: (values: T) => unknown | Promise<unknown>;
+  }, ...rest: any[]): any;
   export function defineStore<T = any>(...args: any[]): any;
   export function query<T = any>(...args: any[]): any;
   export function mutation<T = any>(...args: any[]): any;
@@ -1132,7 +1154,11 @@ declare module "@ship/sail-runtime/internal" {
   export function onCleanup(...args: any[]): any;
   export function untrack(...args: any[]): any;
   export function batch(...args: any[]): any;
-  export function form(...args: any[]): any;
+  export function form<T extends Record<string, unknown>>(opts: {
+    initial: T | (() => T);
+    validate?: (values: T) => Partial<Record<keyof T, string | null>>;
+    submit?: (values: T) => unknown | Promise<unknown>;
+  }, ...rest: any[]): any;
   export function defineStore(...args: any[]): any;
   export function query(...args: any[]): any;
   export function mutation(...args: any[]): any;
@@ -3008,6 +3034,48 @@ export default controller((ctx) => {
         assert!(
             type_errs.is_empty(),
             "signal<T> must not emit TS2558 harness noise: {type_errs:?}"
+        );
+    }
+
+    #[test]
+    fn form_validate_destructure_infers_from_initial() {
+        // Ambient form must infer T from `initial` so destructured validate
+        // params are not TS7031 under noImplicitAny (docs/guide/forms shape).
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const profile = form({
+    initial: { name: '', email: '' },
+    validate: ({ name, email }) => ({
+      name: name.trim() === '' ? 'required' : null,
+      email: email.includes('@') ? null : 'must include @',
+    }),
+    submit: async (values) => {
+      void values.name
+      void values.email
+    },
+  })
+  return { profile }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let type_errs: Vec<_> = diags
+            .iter()
+            .filter(|d| d.rule.as_deref() == Some(RULE_TYPE_GATE))
+            .collect();
+        assert!(
+            type_errs.is_empty(),
+            "form validate destructure must infer from initial (no TS7031): {type_errs:?}"
         );
     }
 
