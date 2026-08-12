@@ -661,19 +661,37 @@ export const used = className
 }
 
 #[test]
-fn pure_fetch_stays_unnameable() {
+fn pure_free_fetch_is_cannot_find_name() {
     let src = r#"
 export function go(url: string): void {
   void fetch(url)
+}
+"#;
+    let Some((ok, out)) = tsgo_kind_pure(src) else {
+        eprintln!("SKIP pure_free_fetch_is_cannot_find_name: tsgo not found");
+        return;
+    };
+    let names_fetch =
+        out.contains("Cannot find name 'fetch'") || out.contains("TS2304") && out.contains("fetch");
+    assert!(
+        !ok && names_fetch,
+        "free `fetch` must stay a cannot-find-name under Pure (not only TS7017):\n{out}"
+    );
+}
+
+#[test]
+fn pure_globalthis_fetch_is_ts7017() {
+    let src = r#"
+export function go(): void {
   void globalThis.fetch
 }
 "#;
     let Some((ok, out)) = tsgo_kind_pure(src) else {
-        eprintln!("SKIP pure_fetch_stays_unnameable: tsgo not found");
+        eprintln!("SKIP pure_globalthis_fetch_is_ts7017: tsgo not found");
         return;
     };
     assert!(
-        !ok,
-        "fetch / globalThis.fetch must stay unnameable under Pure:\n{out}"
+        !ok && out.contains("TS7017"),
+        "globalThis.fetch must stay TS7017 under Pure:\n{out}"
     );
 }
