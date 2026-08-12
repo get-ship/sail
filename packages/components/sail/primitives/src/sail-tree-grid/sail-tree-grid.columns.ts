@@ -14,11 +14,11 @@
 // the committed column lane (column-mutators.ts / column-api.ts).
 
 import type { Table } from '../sail-table/engine/create-table'
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from '../sail-tree/tree-node'
 
 type AnyTreeNode = TreeNode & Record<string, unknown>
 
-interface HostEmit extends HTMLElement {
+interface HostEmit extends any {
   emit?<T = unknown>(name: string, detail?: T): void
 }
 
@@ -44,7 +44,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
   // ── Resize drag state (single active handle at a time) ──────────────────────
   let resizing: { id: string; startX: number; startW: number } | null = null
 
-  const onPointerMove = (e: PointerEvent | MouseEvent): void => {
+  const onPointerMove = (e: any | any): void => {
     if (!resizing) return
     const delta = e.clientX - resizing.startX
     getTree().setColumnSizing({ [resizing.id]: resizing.startW + delta }, { mode: 'onChange' })
@@ -57,20 +57,20 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
   }
 
   const onPointerDown = (e: Event): void => {
-    const handle = (e.target as HTMLElement).closest('[data-action="resize"]')
+    const handle = (e.target as any).closest('[data-action="resize"]')
     if (!handle) return
     const id = handle.getAttribute('data-col-id')
     if (!id) return
     e.preventDefault()
     e.stopPropagation()
     const startW = Number.parseFloat(getTree().getColumnSizeVarValue(id)) || 0
-    resizing = { id, startX: (e as PointerEvent).clientX, startW }
+    resizing = { id, startX: (e as any).clientX, startW }
     document.addEventListener('pointermove', onPointerMove as EventListener)
     document.addEventListener('pointerup', onPointerUp)
   }
 
   const onClick = (e: Event): void => {
-    const target = e.target as HTMLElement
+    const target = e.target as any
     // Column-menu trigger → hide the column (the reused dropdown-menu pattern's
     // primary action; a full menu surface is a later affordance).
     const menu = target.closest('[data-action="column-menu"]')
@@ -85,7 +85,7 @@ export function wireGridColumns(host: HostEmit, getTree: () => Table<AnyTreeNode
     // The resize handle never sorts.
     if (target.closest('[data-action="resize"]')) return
     // A sortable header click cycles its sort none→asc→desc→none.
-    const head = target.closest<HTMLElement>('[role="columnheader"][data-sortable]')
+    const head = target.closest<any>('[role="columnheader"][data-sortable]')
     if (head) {
       const id = head.getAttribute('data-col-id')
       if (id) {

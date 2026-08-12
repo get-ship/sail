@@ -39,7 +39,7 @@ export function newUlid(now: number = Date.now()): string {
   }
   const rand = new Array<string>(16)
   const cryptoObj = typeof globalThis !== 'undefined'
-    ? (globalThis as { crypto?: Crypto }).crypto
+    ? (globalThis as { crypto?: any }).crypto
     : undefined
   if (cryptoObj?.getRandomValues) {
     const buf = new Uint8Array(16)
@@ -70,7 +70,7 @@ export function buildAnnotationEvent(input: BuildAnnotationInput): AnnotationEve
 
 // ─── CSS selector ──────────────────────────────────────────────────────────
 
-export function getCSSSelector(el: Element): string {
+export function getCSSSelector(el: any): string {
   if (el.id) return `#${el.id}`
   const tag = el.tagName.toLowerCase()
   if (el.className && typeof el.className === 'string') {

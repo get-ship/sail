@@ -41,7 +41,7 @@ export interface TagMountOpts {
 }
 
 export interface TagMount {
-  el: HTMLElement
+  el: any
   /** The tag actually defined+instantiated (base on first mount; versioned on
    *  a source-change swap). */
   tag: string
@@ -82,7 +82,7 @@ function ensureDefined(compile: CompileFn, baseTag: string, source: string, vers
  *  `Range.createContextualFragment` (the legitimate render-engine DOM seam —
  *  an engine `*.ts` module, NOT a `.controller.ts`; outside the
  *  `sail-controller-purity` rule's scope). */
-function injectSlots(el: HTMLElement, html: string | null): void {
+function injectSlots(el: any, html: string | null): void {
   // Remove engine-injected slot content from a prior set (marked nodes only).
   for (const prev of Array.from(el.querySelectorAll(':scope > [data-sail-render-slot]'))) {
     prev.remove()
@@ -103,14 +103,14 @@ function injectSlots(el: HTMLElement, html: string | null): void {
  * PLACE (no remount) and disposes the node.
  */
 export function mountByTag(
-  stage: HTMLElement | ShadowRoot,
+  stage: any | ShadowRoot,
   compile: CompileFn,
   opts: TagMountOpts,
 ): TagMount {
   const tag = ensureDefined(compile, opts.tag, opts.source, opts.versioned ?? false)
   const el = document.createElement(tag)
   applyProps(el, opts.props)
-  ;(stage as HTMLElement).appendChild(el)
+  ;(stage as any).appendChild(el)
   injectSlots(el, opts.slots ?? null)
 
   return {

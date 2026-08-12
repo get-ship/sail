@@ -51,12 +51,12 @@ export default controller((ctx) => {
       })
 
       const emit = () => {
-        ;(host as any).onSelect?.({})
+        ;(host).onSelect?.({})
       }
 
       const onClick = () => { if (ctx.interactive()) emit() }
 
-      const onKeydown = (e: KeyboardEvent) => {
+      const onKeydown = (e: DomEv) => {
         if (!ctx.interactive()) return
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()

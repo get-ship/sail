@@ -70,7 +70,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 
   // Press on empty surface: begin a draft for the active tool (pen/shape),
   // or clear selection in select mode.
-  const surfaceDown = (e: PointerEvent): void => {
+  const surfaceDown = (e: DomEv): void => {
     if (readonly()) return
     if (e.button !== 0) return
     const tool = scene.tool()
@@ -86,10 +86,10 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
     }
   }
   // Press on an element (select mode): select + begin a move drag.
-  const elementDown = (e: PointerEvent): void => {
+  const elementDown = (e: DomEv): void => {
     if (readonly()) return
     if (scene.tool() !== 'select') return
-    const el = e.currentTarget as SVGElement
+    const el = e.currentTarget as HostBag
     const id = el.dataset.elId
     if (!id) return
     if (e.shiftKey) scene.toggleSelection(id)
@@ -100,7 +100,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   }
 
   mount((host) => {
-    const onMove = (e: PointerEvent): void => {
+    const onMove = (e: DomEv): void => {
       if (drawing()) {
         const world = canvas.screenToWorld({ x: e.clientX, y: e.clientY })
         if (scene.tool() === 'pen') scene.extendStroke({ x: world.x, y: world.y, pressure: 0.5 })
@@ -131,9 +131,9 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         version.set(version() + 1)
       }
     }
-    const onKey = (e: KeyboardEvent): void => {
+    const onKey = (e: DomEv): void => {
       // Never hijack keys while typing into a field.
-      const tgt = e.target as HTMLElement | null
+      const tgt = e.target as HostBag | null
       if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) return
       if (e.key === 'Escape') {
         scene.clearSelection()
@@ -164,9 +164,9 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         host.setAttribute('tool', t)
       }
     }
-    host.addEventListener('pointermove', onMove as EventListener)
-    host.addEventListener('pointerup', onUp as EventListener)
-    host.addEventListener('keydown', onKey as EventListener)
+    host.addEventListener('pointermove', onMove)
+    host.addEventListener('pointerup', onUp)
+    host.addEventListener('keydown', onKey)
 
     // Reflect the host `tool` attribute (set declaratively or via a toolbar)
     // onto the scene tool slice.
@@ -175,8 +175,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
       if (t !== scene.tool()) scene.setTool(t)
     }
     syncTool()
-    const toolObserver = new MutationObserver(syncTool)
-    toolObserver.observe(host, { attributes: true, attributeFilter: ['tool'] })
+    const stop_toolObserver = observeHostAttrs(host, ['tool'], syncTool)
 
     // Debounced scene-change event (the KEEP'd contract: value + version).
     const stopChange = effect(() => {
@@ -186,10 +185,10 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
     })
 
     return () => {
-      host.removeEventListener('pointermove', onMove as EventListener)
-      host.removeEventListener('pointerup', onUp as EventListener)
-      host.removeEventListener('keydown', onKey as EventListener)
-      toolObserver.disconnect()
+      host.removeEventListener('pointermove', onMove)
+      host.removeEventListener('pointerup', onUp)
+      host.removeEventListener('keydown', onKey)
+      stop_toolObserver()
       stopChange()
       canvas.dispose()
     }

@@ -28,7 +28,7 @@ import { toneColor } from '../chart-util'
 import type { Scope } from './sail-sparkline.sail'
 
 // `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
-interface SparkHost extends Element {
+interface SparkHost {
   error?: unknown
 }
 

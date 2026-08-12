@@ -42,18 +42,18 @@ import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-list.sail'
 import type { AnnotationEvent } from './sail-annotation.internals'
 
-export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
+export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
     const staged = signal<AnnotationEvent[]>([])
     // Host is published in mount (scope factory has no host after convergence).
-    const hostEl = signal<HTMLElement | null>(null)
+    const hostEl = signal<HostBag | null>(null)
 
     const emitRemove = (id: string): void => {
-      ;(hostEl() as any)?.onRemove?.({ id })
+      ;(hostEl() as HostBag)?.onRemove?.({ id })
     }
 
     mount((host) => {
-      hostEl.set(host as HTMLElement)
-      const untypedHost = host as unknown as { staged?: unknown }
+      hostEl.set(host)
+      const untypedHost = host as { staged?: unknown }
       if ('staged' in untypedHost) {
         const v = untypedHost.staged
         if (Array.isArray(v)) staged.set(v as AnnotationEvent[])

@@ -59,13 +59,13 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
           if (el.getAttribute(attr) !== val) el.setAttribute(attr, val)
         }
       }
-      const onClick = (e: Event): void => {
-        const btn = (e.target as HTMLElement).closest('[data-variant]')
+      const onClick = (e: DomEv): void => {
+        const btn = (e.target as HostBag | null)?.closest?.('[data-variant]') as HostBag | null | undefined
         if (!btn) return
-        const v = btn.getAttribute('data-variant') ?? ''
+        const v = (btn as HostBag).getAttribute('data-variant') ?? ''
         active.set(v)
         apply()
-        ;(host as any).onVariantChange?.({ variant: v })
+        ;(host).onVariantChange?.({ variant: v })
       }
       host.addEventListener('click', onClick)
       const stop = effect(apply)

@@ -32,7 +32,7 @@ export function isScalar(value: unknown): boolean {
 
 /** Apply a single scalar value as a reflected attribute with presence
  *  semantics. */
-function applyScalarAttr(el: HTMLElement, name: string, value: unknown): void {
+function applyScalarAttr(el: any, name: string, value: unknown): void {
   if (typeof value === 'boolean') {
     if (value) el.setAttribute(name, '')
     else el.removeAttribute(name)
@@ -46,7 +46,7 @@ function applyScalarAttr(el: HTMLElement, name: string, value: unknown): void {
 }
 
 /** Apply ONE prop to the createElement host, dispatching on value shape. */
-export function applyProp(el: HTMLElement, name: string, value: unknown): void {
+export function applyProp(el: any, name: string, value: unknown): void {
   if (isScalar(value)) {
     applyScalarAttr(el, name, value)
     return
@@ -78,7 +78,7 @@ export function applyProp(el: HTMLElement, name: string, value: unknown): void {
  * every prop-change delta (the engine holds the node; this patches in place,
  * no remount). Keys are applied in insertion order.
  */
-export function applyProps(el: HTMLElement, props: Record<string, unknown> | null | undefined): void {
+export function applyProps(el: any, props: Record<string, unknown> | null | undefined): void {
   if (!props) return
   for (const [name, value] of Object.entries(props)) {
     applyProp(el, name, value)

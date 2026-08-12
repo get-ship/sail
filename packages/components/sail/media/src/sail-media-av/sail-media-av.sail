@@ -42,7 +42,7 @@ export default controller((_ctx: Scope) => {
 
     const showWaveform = signal<boolean>(false)
 
-    let hostEl: HTMLElement | null = null
+    let hostEl: HostBag | null = null
 
     const wantsControls = (): boolean => hostEl?.getAttribute('controls') !== 'false'
     const wantsAutoplay = (): boolean =>
@@ -50,13 +50,13 @@ export default controller((_ctx: Scope) => {
 
     let created: string[] = []
     const revokeCreated = (): void => {
-      for (const u of created.splice(0)) URL.revokeObjectURL(u)
+      for (const u of created.splice(0)) revokeObjectUrl(u)
     }
     let lastUrl = ''
 
     // Action lifecycle replaces dual-ref + identity rebind when video/audio swaps.
     const mediaWire: Action<void> = (node) => {
-      const el = node as HTMLMediaElement
+      const el = node as HostBag
       const onLoadedMeta = (): void => { if (hostEl) emitViewerLoad(hostEl) }
       const onPlay = (): void => { if (hostEl) emit(hostEl, 'sail-viewer-play') }
       const onPause = (): void => { if (hostEl) emit(hostEl, 'sail-viewer-pause') }
@@ -95,7 +95,7 @@ export default controller((_ctx: Scope) => {
     }
 
     const waveform: Action<void> = (node) => {
-      const canvas = node as HTMLCanvasElement
+      const canvas = node as HostBag
       const stop = effect(() => {
         if (!showWaveform()) return
         const bytes = bytesOf(srcSig())

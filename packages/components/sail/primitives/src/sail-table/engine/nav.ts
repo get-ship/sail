@@ -59,7 +59,7 @@ export interface NavApi {
   activate: () => void
   selectAtActive: (opts?: { range?: boolean; additive?: boolean }) => void
   typeahead: (ch: string) => void
-  onKeydown: (e: KeyboardEvent) => boolean
+  onKeydown: (e: any) => boolean
 }
 
 export interface NavInputs<T> {
@@ -215,7 +215,7 @@ export function buildNav<T>(inputs: NavInputs<T>): NavApi {
     focusRowId,
   })
 
-  function onKeydown(e: KeyboardEvent): boolean {
+  function onKeydown(e: any): boolean {
     // Suspended during edit — the input owns the keys (Escape still cancels).
     if (isEditingActive()) {
       if (e.key === 'Escape') {

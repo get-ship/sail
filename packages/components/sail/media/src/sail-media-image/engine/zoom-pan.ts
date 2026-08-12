@@ -25,7 +25,7 @@ export interface ZoomPanState {
 
 export interface ZoomPanOptions {
   /** The zoom/pan surface (`part="stage"`). */
-  stage: HTMLElement
+  stage: any
   /** Read whether zoom/pan is currently enabled (the `zoomable` prop). */
   enabled: () => boolean
   /** Called after any scale/pan change with the new transform state. */
@@ -57,7 +57,7 @@ export function attachZoomPan(opts: ZoomPanOptions): () => void {
     onChange({ ...state })
   }
 
-  const onWheel = (e: WheelEvent): void => {
+  const onWheel = (e: any): void => {
     if (!enabled()) return
     e.preventDefault()
     // Wheel up (deltaY < 0) zooms in.
@@ -65,7 +65,7 @@ export function attachZoomPan(opts: ZoomPanOptions): () => void {
     applyScale(state.scale + dir * STEP)
   }
 
-  const onKeyDown = (e: KeyboardEvent): void => {
+  const onKeyDown = (e: any): void => {
     if (!enabled()) return
     switch (e.key) {
       case '+':

@@ -46,7 +46,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const satText = signal('0')
     const lightText = signal('0')
     const hexDraft = signal('')
-    const inputEl = signal<HTMLElement | null>(null)
+    const inputEl = signal<HostBag | null>(null)
     const id = ++idSeq
     const hueId = signal(`sail-color-picker-h-${id}`)
     const satId = signal(`sail-color-picker-s-${id}`)
@@ -58,7 +58,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     mount((host) => {
       let suppress = false
       // Prop accessor keeps external `el.value = …` and local commits in sync.
-      const hostEl = host as HTMLElement & { value: string }
+      const hostEl = host as HostBag & { value: string }
 
       swatches.set(deriveSwatches(host))
 
@@ -70,7 +70,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       let userEdited = false
 
       const emit = (hex: string) => {
-        ;(host as any).onChange?.({
+        ;(host).onChange?.({
           value: hex,
           token: host.getAttribute('token') ?? host.getAttribute('token-path') ?? undefined,
         })
@@ -157,17 +157,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         emitIfChanged(hex)
       }
 
-      const rootNode = () => (host.shadowRoot ?? host) as ParentNode
+      const rootNode = () => (host.shadowRoot ?? host) as HostBag
       const getTrigger = () =>
-        (inputEl() as HTMLElement | null) ||
-        (rootNode().querySelector('[data-color-trigger-btn]') as HTMLElement | null)
+        (inputEl() as HostBag | null) ||
+        (rootNode().querySelector('[data-color-trigger-btn]') as HostBag | null)
       const getHexInput = () =>
         rootNode().querySelector(
           'input[type="text"][aria-label="Hex color"]',
-        ) as HTMLInputElement | null
+        ) as HostBag | null
 
       const showPanelPopover = (): boolean => {
-        const panel = rootNode().querySelector('[data-color-panel]') as HTMLElement & {
+        const panel = rootNode().querySelector('[data-color-panel]') as HostBag & {
           showPopover?: () => void
         } | null
         if (!panel) return false
@@ -177,8 +177,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           /* ignore */
         }
         // showPopover can race if-render mount — one retry after style read.
-        const st = getComputedStyle(panel)
-        if (st.display === 'none' || !(panel as HTMLElement & { matches: (s: string) => boolean }).matches?.(':popover-open')) {
+        const st = ({ getPropertyValue: (n: string) => hostCssVar(n), display: '' })
+        if (st.display === 'none' || !(panel as HostBag & { matches: (s: string) => boolean }).matches?.(':popover-open')) {
           try {
             panel.showPopover?.()
           } catch {
@@ -192,7 +192,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       const ensurePanelShown = (attempts = 16) => {
         if (showPanelPopover()) return
         if (attempts <= 0) return
-        requestAnimationFrame(() => ensurePanelShown(attempts - 1))
+        scheduleFrame(() => ensurePanelShown(attempts - 1))
       }
 
       const openPanel = () => {
@@ -209,7 +209,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         open.set(false)
         userEdited = false
         openHex = ''
-        const panel = rootNode().querySelector('[data-color-panel]') as HTMLElement & {
+        const panel = rootNode().querySelector('[data-color-panel]') as HostBag & {
           hidePopover?: () => void
         } | null
         try {
@@ -226,7 +226,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         closePanel()
       }
 
-      const onTriggerClick = (e: Event) => {
+      const onTriggerClick = (e: DomEv) => {
         e.preventDefault()
         e.stopPropagation()
         openPanel()
@@ -240,7 +240,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           hexInput.value = _ctx.value() as string
         }
       }
-      const onInputKeydown = (e: KeyboardEvent) => {
+      const onInputKeydown = (e: DomEv) => {
         if (e.key === 'Escape' && open()) {
           e.preventDefault()
           dismissPanel()
@@ -251,8 +251,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
 
       // captureInput may lag mount — rAF until trigger is present.
-      let attached: HTMLElement | null = null
-      let hexAttached: HTMLInputElement | null = null
+      let attached: HostBag | null = null
+      let hexAttached: HostBag | null = null
       const attachTrigger = () => {
         const triggerEl = getTrigger()
         if (!triggerEl || triggerEl === attached) return !!triggerEl
@@ -279,34 +279,34 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         let tries = 20
         const tick = () => {
           if (attachTrigger() || tries-- <= 0) return
-          requestAnimationFrame(tick)
+          scheduleFrame(tick)
         }
-        requestAnimationFrame(tick)
+        scheduleFrame(tick)
       }
 
-      const onShadowClick = (e: Event) => {
-        const t = e.target as HTMLElement | null
+      const onShadowClick = (e: DomEv) => {
+        const t = e.target as HostBag | null
         if (!t) return
-        const trigger = t.closest?.('[data-color-trigger-btn], [data-color-trigger]') as HTMLElement | null
+        const trigger = t.closest?.('[data-color-trigger-btn], [data-color-trigger]') as HostBag | null
         if (trigger && !t.closest?.('[data-color-panel]')) {
-          if (!(t instanceof HTMLInputElement)) {
+          if (!(t instanceof Object)) {
             onTriggerClick(e)
             return
           }
         }
-        const sw = t.closest?.('button[data-hex]') as HTMLElement | null
+        const sw = t.closest?.('button[data-hex]') as HostBag | null
         if (sw) {
           const hex = (sw.dataset.hex ?? '').toLowerCase()
           if (isHex(hex)) commitHex(hex)
         }
       }
-      const onHexInputChange = (e: Event) => {
-        const t = e.target as HTMLInputElement | null
-        if (!t || !t.matches('input[type="text"]')) return
-        if (!commitHex(t.value)) t.value = _ctx.value() as string
+      const onHexInputChange = (e: DomEv) => {
+        const t = e.target as HostBag | null
+        if (!t || t.matches?.('input[type="text"]') !== true) return
+        if (!commitHex(t.value ?? '')) (t as HostBag).value = _ctx.value() as string
       }
 
-      const onDocPointer = (e: Event) => {
+      const onDocPointer = (e: DomEv) => {
         if (!open()) return
         const path = e.composedPath()
         if (path.includes(host)) return
@@ -315,23 +315,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       const rootEl = host.shadowRoot ?? host
 
-      const onRangePointerDown = (e: Event) => {
-        const t = e.target as HTMLElement | null
+      const onRangePointerDown = (e: DomEv) => {
+        const t = e.target as HostBag | null
         if (t?.matches?.('input[type="range"]')) {
           gesture = true
           userEdited = true
         }
       }
-      const onRangePointerUp = (e: Event) => {
-        const t = e.target as HTMLElement | null
+      const onRangePointerUp = (e: DomEv) => {
+        const t = e.target as HostBag | null
         if (!t?.matches?.('input[type="range"]') && !gesture) return
         if (gesture) {
           gesture = false
           commitFromSliders()
         }
       }
-      const onRangeChange = (e: Event) => {
-        const t = e.target as HTMLElement | null
+      const onRangeChange = (e: DomEv) => {
+        const t = e.target as HostBag | null
         if (!t?.matches?.('input[type="range"]')) return
         gesture = false
         userEdited = true
@@ -343,10 +343,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       rootEl.addEventListener('pointerdown', onRangePointerDown)
       rootEl.addEventListener('pointerup', onRangePointerUp)
       rootEl.addEventListener('change', onRangeChange)
-      document.addEventListener('pointerdown', onDocPointer)
-      document.addEventListener('pointerup', onRangePointerUp)
+      onCleanup(hostListenDocument('pointerdown', onDocPointer as () => void))
+      onCleanup(hostListenDocument('pointerup', onRangePointerUp as () => void))
 
-      host.expose!({
+      host.expose?.({
         focus: () => (getHexInput() ?? getTrigger())?.focus?.(),
         blur: () => (getHexInput() ?? getTrigger())?.blur?.(),
         open: openPanel,
@@ -370,8 +370,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         rootEl.removeEventListener('pointerdown', onRangePointerDown)
         rootEl.removeEventListener('pointerup', onRangePointerUp)
         rootEl.removeEventListener('change', onRangeChange)
-        document.removeEventListener('pointerdown', onDocPointer)
-        document.removeEventListener('pointerup', onRangePointerUp)
+        onCleanup(hostListenDocument('pointerdown', onDocPointer as () => void))
+        onCleanup(hostListenDocument('pointerup', onRangePointerUp as () => void))
       }
     })
 
@@ -386,7 +386,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 
     const captureInput: Action<void> = (node) => {
-      inputEl.set(node as HTMLElement)
+      inputEl.set(node)
       return { destroy: () => inputEl.set(null) }
     }
     return {

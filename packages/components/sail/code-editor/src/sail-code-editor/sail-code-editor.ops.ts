@@ -43,13 +43,13 @@ export interface OpsPosArgs {
   path?: string
   line: number
   column: number
-  signal?: AbortSignal
+  signal?: any
 }
 
 export interface OpsDiagArgs {
   source?: string
   path?: string
-  signal?: AbortSignal
+  signal?: any
 }
 
 export interface OpsAuthoringClient {
@@ -222,10 +222,11 @@ function parseCompleteItems(json: unknown): OpsCompletionItem[] {
 
 export function createOpsAuthoringClient(opts: {
   baseUrl: string
-  fetch?: typeof fetch
+  fetch?: (...a: any[]) => Promise<any>
 }): OpsAuthoringClient {
   const base = normalizeOpsBase(opts.baseUrl) ?? ''
-  const fetchFn = opts.fetch ?? globalThis.fetch.bind(globalThis)
+  const g = globalThis as { fetch?: (...a: any[]) => Promise<any> }
+  const fetchFn = opts.fetch ?? (g.fetch ? g.fetch.bind(g) : (() => { throw new Error("fetch unavailable") }))
 
   // null = unknown, true = works, false = unavailable
   let hoverOk: boolean | null = null
@@ -236,9 +237,9 @@ export function createOpsAuthoringClient(opts: {
   async function post(
     method: MethodKey,
     body: object,
-    signal?: AbortSignal,
+    signal?: any,
   ): Promise<{ ok: true; json: unknown } | { ok: false; unavailable: boolean; status: number }> {
-    let res: Response
+    let res: any
     try {
       res = await fetchFn(methodPath(base, method), {
         method: 'POST',

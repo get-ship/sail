@@ -18,13 +18,13 @@ import type { SortState } from '../engine/types'
 type SortDir = 'ascending' | 'descending' | 'none'
 type Emit = <T>(name: string, detail?: T) => void
 
-interface DataHost extends HTMLElement {
+interface DataHost extends any {
   emit?: Emit
   shadowRoot: ShadowRoot | null
 }
 
 /** Toggle a reflected boolean attribute. */
-function toggleAttr(el: Element, name: string, on: boolean): void {
+function toggleAttr(el: any, name: string, on: boolean): void {
   if (on) el.setAttribute(name, '')
   else el.removeAttribute(name)
 }
@@ -56,8 +56,8 @@ export function wireDataVariant(
   const onClick = (ev: Event): void => {
     const tab = getTable()
     if (!tab) return
-    const e = ev as MouseEvent
-    const target = e.target as HTMLElement
+    const e = ev as any
+    const target = e.target as any
     if (target.closest('[data-action="clear-filters"]')) {
       tab.resetFilters()
       return
@@ -94,15 +94,15 @@ export function wireDataVariant(
   const onKey = (ev: Event): void => {
     const tab = getTable()
     if (!tab) return
-    const e = ev as KeyboardEvent
-    if (!(e.target as HTMLElement).closest('[role="grid"],[role="treegrid"]')) return
+    const e = ev as any
+    if (!(e.target as any).closest('[role="grid"],[role="treegrid"]')) return
     if (tab.nav.onKeydown(e)) e.preventDefault()
   }
 
   const onInput = (e: Event): void => {
     const tab = getTable()
     if (!tab) return
-    const el = e.target as HTMLElement
+    const el = e.target as any
     const col = el.closest('[data-filter-col]')?.getAttribute('data-filter-col')
     if (!col) return
     tab.setColumnFilter(col, (el as unknown as { value?: string }).value ?? '')
@@ -143,7 +143,7 @@ export function wireDataVariant(
     if (!tab || !shadow) return
     const selected = new Set(tab.selectedRowIds())
     const focus = tab.nav.active().rowId ?? tab.centerRows()[0]?.id ?? null
-    shadow.querySelectorAll<HTMLElement>('[data-row-id]').forEach((rowEl) => {
+    shadow.querySelectorAll<any>('[data-row-id]').forEach((rowEl) => {
       const id = rowEl.getAttribute('data-row-id') ?? ''
       const isSel = selected.has(id)
       toggleAttr(rowEl, 'data-selected', isSel)

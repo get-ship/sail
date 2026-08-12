@@ -95,7 +95,7 @@ export function createCanvas(options: CanvasOptions): Canvas {
   const worldToScreen = (p: Vec2): Vec2 => w2s(transform(), p)
 
   // --- Viewport geometry helpers. ---
-  function viewportRect(): DOMRect | { left: number; top: number } {
+  function viewportRect(): any | { left: number; top: number } {
     const el = opts.getViewportElement()
     return el ? el.getBoundingClientRect() : { left: 0, top: 0 }
   }
@@ -109,13 +109,13 @@ export function createCanvas(options: CanvasOptions): Canvas {
   }
 
   // --- Pointer gesture pump. ---
-  function onPointerDown(e: PointerEvent): void {
+  function onPointerDown(e: any): void {
     const panButton = opts.gestures?.panButton ?? 1
     if (e.button === panButton) {
       pointer.set({ kind: 'panning', start: toLocal(e.clientX, e.clientY), origin: untrack(transform) })
     }
   }
-  function onPointerMove(e: PointerEvent): void {
+  function onPointerMove(e: any): void {
     const local = toLocal(e.clientX, e.clientY)
     pointerScreen.set(local)
     opts.onPointerWorld?.(s2w(untrack(transform), local), e)
@@ -128,10 +128,10 @@ export function createCanvas(options: CanvasOptions): Canvas {
       })
     }
   }
-  function onPointerUp(_e: PointerEvent): void {
+  function onPointerUp(_e: any): void {
     pointer.set({ kind: 'idle' })
   }
-  function onWheel(e: WheelEvent): void {
+  function onWheel(e: any): void {
     const wheelZoom = opts.gestures?.wheelZoom ?? true
     const wheelPan = opts.gestures?.wheelPan ?? true
     const sens = opts.zoomSensitivity ?? DEFAULT_ZOOM_SENSITIVITY
@@ -143,9 +143,9 @@ export function createCanvas(options: CanvasOptions): Canvas {
     }
   }
 
-  // --- ResizeObserver wiring (best-effort; null until mount). ---
-  let ro: ResizeObserver | null = null
-  let observed: HTMLElement | null = null
+  // --- /*RO*/any wiring (best-effort; null until mount). ---
+  let ro: /*RO*/any | null = null
+  let observed: any | null = null
   function syncViewport(): void {
     const el = opts.getViewportElement()
     if (el === observed) return
@@ -154,8 +154,9 @@ export function createCanvas(options: CanvasOptions): Canvas {
     if (!el) return
     const r = el.getBoundingClientRect()
     viewportSize.set({ w: r.width, h: r.height })
-    if (typeof ResizeObserver !== 'undefined') {
-      ro ??= new ResizeObserver((entries) => {
+    const RO = (globalThis as { ResizeObserver?: new (cb: (entries: any[]) => void) => { observe(e: any): void; unobserve(e: any): void; disconnect(): void } }).ResizeObserver
+    if (typeof RO === 'function') {
+      ro ??= new RO((entries) => {
         for (const entry of entries) {
           const cr = entry.contentRect
           viewportSize.set({ w: cr.width, h: cr.height })

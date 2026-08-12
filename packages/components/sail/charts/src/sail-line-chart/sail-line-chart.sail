@@ -29,7 +29,7 @@ import { gridGeometry } from '../engine/geometry-grid'
 import type { Scope } from './sail-line-chart.sail'
 
 // `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
-interface LineHost extends Element {
+interface LineHost {
   error?: unknown
 }
 

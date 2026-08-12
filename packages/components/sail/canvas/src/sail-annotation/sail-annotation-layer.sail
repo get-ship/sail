@@ -36,7 +36,7 @@ interface Drag {
 
 const DEFAULT_ENDPOINT = '/api/feedback'
 
-export default controller((props: ControllerScope<Scope>, _host?: Element) => {
+export default controller((props: ControllerScope<Scope>, _host?: HostBag) => {
     const viewIdProp = props.viewId
     const endpointProp = props.endpoint
     const stagingProp = props.staging
@@ -50,7 +50,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
     // runtime hands over the real element. The `sendOne` / `confirmNote`
     // closures below emit `sail-annotation-{staged,sent,error}` on the host,
     // so they must read the host from this signal, not the dead scope arg.
-    const hostEl = signal<HTMLElement | null>(null)
+    const hostEl = signal<HostBag | null>(null)
 
     const _positions: Record<string, { x: number; y: number }> = {}
 
@@ -105,13 +105,13 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
           body: JSON.stringify(ev),
         })
         if (!resp.ok) {
-          ;(hostEl() as any)?.onError?.({ code: `http_${resp.status}`, id: ev.id })
+          ;(hostEl() as HostBag)?.onError?.({ code: `http_${resp.status}`, id: ev.id })
           return
         }
         staged.set(staged().filter((s) => s.id !== ev.id))
-        ;(hostEl() as any)?.onSent?.({ id: ev.id, status: resp.status })
+        ;(hostEl() as HostBag)?.onSent?.({ id: ev.id, status: resp.status })
       } catch (e) {
-        ;(hostEl() as any)?.onError?.({
+        ;(hostEl() as HostBag)?.onError?.({
           code: 'network_error',
           message: String(e),
           id: ev.id,
@@ -137,7 +137,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       })
       _positions[ev.id] = { x: p.x, y: p.y }
       staged.set([...staged(), ev])
-      ;(hostEl() as any)?.onStaged?.(ev)
+      ;(hostEl() as HostBag)?.onStaged?.(ev)
       pending.set(null)
       noteText.set('')
       if (!stagingProp()) void sendOne(ev)
@@ -152,11 +152,11 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       noteText.set('')
     }
 
-    const onNoteKeydown = (e: KeyboardEvent): void => {
+    const onNoteKeydown = (e: DomEv): void => {
       if (e.key === 'Escape') {
         cancelPending()
       } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        const ta = e.currentTarget as HTMLTextAreaElement
+        const ta = e.currentTarget as HostBag
         confirmNote(ta.value)
       }
     }
@@ -165,15 +165,15 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       let _drag: Drag | null = null
       let _raf: number | null = null
 
-      const overlayPos = (e: PointerEvent): { x: number; y: number } => {
+      const overlayPos = (e: DomEv): { x: number; y: number } => {
         const r = node.getBoundingClientRect()
         return { x: e.clientX - r.left, y: e.clientY - r.top }
       }
 
-      const onPointerDown = (e: PointerEvent): void => {
+      const onPointerDown = (e: DomEv): void => {
         const m = props.mode() as Mode
         if (m === 'off') return
-        const t = e.target as HTMLElement
+        const t = e.target as HostBag
         if (t.closest('[data-annotation-popover]') || t.closest('sail-annotation-marker')) return
         if (pending()) {
           pending.set(null)
@@ -184,21 +184,21 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         const p = overlayPos(e)
         _drag = { startX: p.x, startY: p.y, curX: p.x, curY: p.y }
         drag.set(_drag)
-        ;(e.target as Element).setPointerCapture?.(e.pointerId)
+        ;(e.target).setPointerCapture?.(e.pointerId)
       }
 
-      const onPointerMove = (e: PointerEvent): void => {
+      const onPointerMove = (e: DomEv): void => {
         if (!_drag) return
         const p = overlayPos(e)
         _drag = { ..._drag, curX: p.x, curY: p.y }
         if (_raf !== null) return
-        _raf = requestAnimationFrame(() => {
+        _raf = scheduleFrame(() => {
           _raf = null
           if (_drag) drag.set({ ..._drag })
         })
       }
 
-      const onPointerUp = (e: PointerEvent): void => {
+      const onPointerUp = (e: DomEv): void => {
         if (!_drag) return
         const p = overlayPos(e)
         const dx = Math.abs(p.x - _drag.startX)
@@ -246,14 +246,12 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       // and `confirmNote` closures read through `hostEl` (the dead-`host`
       // workaround) — publish the element now that it exists, before the
       // first user gesture can fire.
-      hostEl.set(host as HTMLElement)
+      hostEl.set(host)
 
-      Object.defineProperty(host, 'staged', {
-        configurable: true,
-        get: () => staged(),
-      })
+      defineHostProperty(asSailHost(host) as HostBag, 'staged', {configurable: true,
+        get: () => staged(),})
 
-      type LayerHost = HTMLElement & {
+      type LayerHost = HostBag & {
         send: () => Promise<void>
         clear: () => void
       }

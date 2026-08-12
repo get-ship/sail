@@ -57,22 +57,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const listId = signal(`sail-cmdk-list-${seq}`)
 
     // listEl read from input keydown handlers (scrollActiveIntoView).
-    const inputEl = signal<HTMLInputElement | null>(null)
-    const listEl = signal<HTMLUListElement | null>(null)
+    const inputEl = signal<HostBag | null>(null)
+    const listEl = signal<HostBag | null>(null)
     const captureInput: Action<void> = (node) => {
-      inputEl.set(node as HTMLInputElement)
+      inputEl.set(node)
       return { destroy: () => inputEl.set(null) }
     }
     const captureList: Action<void> = (node) => {
-      listEl.set(node as HTMLUListElement)
+      listEl.set(node)
       return { destroy: () => listEl.set(null) }
     }
 
-    let hostEl: (HTMLElement & { open: boolean }) | null = null
+    let hostEl: (HostBag & { open: boolean }) | null = null
 
     // open prop ⇄ dialog showModal/close.
     const dialogBridge: Action<void> = (node) => {
-      const el = node as HTMLDialogElement
+      const el = node as HostBag
       const stop = effect(() => {
         const want = _ctx.open() === true
         if (want && !el.open) el.showModal()
@@ -162,7 +162,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     })
 
     mount((host) => {
-      hostEl = host as HTMLElement & { open: boolean }
+      hostEl = host as HostBag & { open: boolean }
       const h = hostEl
       // items identity (live CmdkItem[]) — not a declared prop.
       Object.defineProperty(host, 'items', {
@@ -180,14 +180,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
 
       const scrollActiveIntoView = () => {
-        const list = listEl() as HTMLUListElement | null
+        const list = listEl() as HostBag | null
         const id = activeId() as string
         if (!list || !id) return
         // Scan by id (CSS.escape missing under jsdom).
-        let target: HTMLElement | null = null
+        let target: HostBag | null = null
         for (const li of Array.from(list.querySelectorAll('li.item'))) {
-          if ((li as HTMLElement).id === id) {
-            target = li as HTMLElement
+          if ((li).id === id) {
+            target = li as HostBag
             break
           }
         }
@@ -216,7 +216,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       // trap, ESC and focus-return; the component owns this element, so it
       // calls showModal()/close() directly and mirrors a native close (ESC,
       // backdrop, form method=dialog) back into `open`.
-      const input = inputEl() as HTMLInputElement | null
+      const input = inputEl() as HostBag | null
 
       const selectByItem = (item: VisibleItem | undefined) => {
         if (!item || item.disabled) return
@@ -238,7 +238,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         queueMicrotask(scrollActiveIntoView)
       }
 
-      const onKeydown = (e: KeyboardEvent) => {
+      const onKeydown = (e: DomEv) => {
         const list = navigable() as VisibleItem[]
         if (e.key === 'ArrowDown') {
           e.preventDefault()
@@ -266,9 +266,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       input?.addEventListener('keydown', onKeydown)
 
       // Pointer commit. mousedown (before any blur/focus shuffle) selects the row.
-      const list = listEl() as HTMLUListElement | null
-      const onListMousedown = (e: MouseEvent) => {
-        const li = (e.target as HTMLElement | null)?.closest?.('li[data-id]') as HTMLElement | null
+      const list = listEl() as HostBag | null
+      const onListMousedown = (e: DomEv) => {
+        const li = (e.target as HostBag | null)?.closest?.('li[data-id]') as HostBag | null
         if (!li || li.getAttribute('aria-disabled') === 'true') return
         e.preventDefault()
         const id = li.dataset.id ?? ''

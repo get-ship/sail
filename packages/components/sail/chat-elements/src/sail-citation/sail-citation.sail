@@ -37,7 +37,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     // Click target is the pill button; onOpen is the host moment callback.
     const openOnClick: Action<void> = (node) => {
       const onClick = () => {
-        ;(node as any).onOpen?.({ source: _ctx.source(), index: _ctx.index() })
+        ;(node).onOpen?.({ source: _ctx.source(), index: _ctx.index() })
       }
       node.addEventListener('click', onClick)
       return { destroy: () => node.removeEventListener('click', onClick) }

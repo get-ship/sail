@@ -77,6 +77,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "coalesce rapid calls to a function until a quiet window elapses",
     ),
     (
+        "defineHostProperty",
+        "defineHostProperty",
+        "install an identity property on a SailHost (get/set) without Object.defineProperty",
+    ),
+    (
         "defineStore",
         "defineStore",
         "declare a shared store definition (id + setup)",
@@ -103,6 +108,51 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
     ),
     ("form", "form", "reactive form state helper"),
     (
+        "hostCreateElement",
+        "hostCreateElement",
+        "create an element without naming document",
+    ),
+    (
+        "hostCssVar",
+        "hostCssVar",
+        "read a CSS custom property from the document element",
+    ),
+    (
+        "hostFindById",
+        "hostFindById",
+        "document.getElementById without naming document",
+    ),
+    (
+        "hostGetAttr",
+        "hostGetAttr",
+        "read a host attribute via SailHost (Pure-safe)",
+    ),
+    (
+        "hostHasAttr",
+        "hostHasAttr",
+        "test host attribute presence via SailHost (Pure-safe)",
+    ),
+    (
+        "hostIsDarkMode",
+        "hostIsDarkMode",
+        "true when html data-mode is dark",
+    ),
+    (
+        "hostListenDocument",
+        "hostListenDocument",
+        "add a document event listener; returns disposer",
+    ),
+    (
+        "hostObserveRootAttrs",
+        "hostObserveRootAttrs",
+        "MutationObserver on documentElement attributes; returns disposer",
+    ),
+    (
+        "hostSetAttr",
+        "hostSetAttr",
+        "write or remove a host attribute via SailHost (Pure-safe)",
+    ),
+    (
         "interval",
         "interval",
         "run a callback on a fixed period while the controller is mounted",
@@ -121,6 +171,21 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "navigate",
         "navigate",
         "navigate to a path via the host router port",
+    ),
+    (
+        "objectUrlFromBytes",
+        "objectUrlFromBytes",
+        "mint a blob object URL from bytes (Pure-safe Blob/createObjectURL stand-in)",
+    ),
+    (
+        "observeContentBox",
+        "observeContentBox",
+        "observe an element content-box size (Pure-safe ResizeObserver stand-in)",
+    ),
+    (
+        "observeHostAttrs",
+        "observeHostAttrs",
+        "observe attribute mutations on a host node; returns disposer",
     ),
     (
         "onCleanup",
@@ -146,6 +211,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "readStoredTheme",
         "readStoredTheme",
         "read the persisted theme id",
+    ),
+    (
+        "revokeObjectUrl",
+        "revokeObjectUrl",
+        "revoke a URL from objectUrlFromBytes",
     ),
     (
         "scheduleFrame",

@@ -11,7 +11,7 @@
 // Authority: build-spec §"Prop wiring (LAYER 2 — JSON-string fallback)", §Props,
 // Slice 1.
 
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from './tree-node'
 import type { ColumnDef } from '../sail-table/engine/types'
 
 export type DecodedTreeNode = TreeNode & Record<string, unknown>

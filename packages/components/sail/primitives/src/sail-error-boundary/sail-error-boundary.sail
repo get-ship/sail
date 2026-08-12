@@ -14,29 +14,30 @@
 import type { BoundarySource, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-error-boundary.sail'
 
-interface HostWithReset extends HTMLElement {
+interface HostWithReset extends HostBag {
   reset?: () => void
 }
 
-export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
+export default controller((_ctx: ControllerScope<Scope>, _host?: HostBag) => {
     const caughtError = signal<Error | null>(null)
     const hasFallbackSlot = signal<boolean>(false)
     // Host not in scope factory — publish via signal set in mount.
-    const hostEl = signal<HTMLElement | null>(null)
+    const hostEl = signal<HostBag | null>(null)
     const reset = (): void => {
       caughtError.set(null)
       const h = hostEl()
       if (h) h.removeAttribute('data-error-message')
     }
     mount((host) => {
-      hostEl.set(host as HTMLElement)
+      hostEl.set(host as HostBag)
       // Clone inert <template slot="fallback"> into a live slotted wrapper.
       const templates = host.querySelectorAll(':scope > template[slot="fallback"]')
-      for (const tpl of Array.from(templates)) {
-        const wrap = document.createElement('div')
-        wrap.setAttribute('slot', 'fallback')
-        wrap.appendChild((tpl as HTMLTemplateElement).content.cloneNode(true))
-        tpl.replaceWith(wrap)
+      for (const tpl of Array.from(templates as ArrayLike<HostBag>)) {
+        const wrap = hostCreateElement('div') as HostBag
+        hostSetAttr(wrap, 'slot', 'fallback')
+        const content = (tpl as HostBag & { content?: { cloneNode(d?: boolean): unknown }; replaceWith?(n: unknown): void }).content
+        if (content) (wrap as HostBag).appendChild?.(content.cloneNode(true))
+        ;(tpl as HostBag & { replaceWith?(n: unknown): void }).replaceWith?.(wrap)
       }
       hasFallbackSlot.set(!!host.querySelector(':scope > [slot="fallback"]'))
 
@@ -46,7 +47,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
           const error = err instanceof Error ? err : new Error(String(err))
           host.setAttribute('data-error-message', error.message)
           caughtError.set(error)
-          ;(host as any).onErrorCaught?.({
+          ;(host as HostBag).onErrorCaught?.({
             error,
             source: source as BoundarySource,
           })

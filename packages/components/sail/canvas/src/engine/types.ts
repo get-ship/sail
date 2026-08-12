@@ -49,7 +49,7 @@ export interface GestureOptions {
 export interface CanvasOptions {
   /** Viewport element thunk — null until mount (mirrors
    *  `createVirtualizer`'s `getScrollElement`). */
-  getViewportElement: () => HTMLElement | null
+  getViewportElement: () => any | null
   /** Uncontrolled seed; the engine owns the transform thereafter. */
   initialTransform?: Partial<Transform>
   /** Zoom clamp (default 0.1 … 8). */
@@ -60,7 +60,7 @@ export interface CanvasOptions {
   gestures?: GestureOptions
   /** Callbacks — the only path the substrate "talks out". */
   onTransformChange?: (t: Transform) => void
-  onPointerWorld?: (p: Vec2, e: PointerEvent) => void
+  onPointerWorld?: (p: Vec2, e: any) => void
 }
 
 /** Each state slice is a `Signal<…>`. */
@@ -95,10 +95,10 @@ export interface Canvas {
   fitToRect(r: Rect, opts?: { padding?: number; maxScale?: number }): void
   resetView(): void
   // POINTER PUMP — the view forwards raw DOM events.
-  onPointerDown(e: PointerEvent): void
-  onPointerMove(e: PointerEvent): void
-  onPointerUp(e: PointerEvent): void
-  onWheel(e: WheelEvent): void
+  onPointerDown(e: any): void
+  onPointerMove(e: any): void
+  onPointerUp(e: any): void
+  onWheel(e: any): void
   setOptions(patch: Partial<CanvasOptions>): void
   dispose(): void
 }

@@ -2,7 +2,7 @@
 //
 // One typed series shape in (`normalizeSeries`), reactive scales/extent/
 // geometry out (`createChartData` + the geometry helpers), responsive box from
-// one `ResizeObserver` (`createChartViewport`). No DOM, no ship.*, no fetch.
+// one `any` (`createChartViewport`). No DOM, no ship.*, no fetch.
 
 export type {
   ChartTone,

@@ -184,13 +184,13 @@ type TutWaiter = {
  * ambient window slots so product apps never name god-globals.
  */
 const tutWaiters: Record<string, TutWaiter> = {}
-const tutHosts: Record<string, HTMLElement> = {}
+const tutHosts: Record<string, any> = {}
 
 function ensureWaiters(): Record<string, TutWaiter> {
   return tutWaiters
 }
 
-function ensureHosts(): Record<string, HTMLElement> {
+function ensureHosts(): Record<string, any> {
   return tutHosts
 }
 
@@ -304,7 +304,7 @@ ${template}
  * mount module). Removes entries so re-runs do not leak.
  */
 export function takeTutMount(runId: string): {
-  host: HTMLElement | undefined
+  host: any | undefined
   waiter: TutWaiter | undefined
 } {
   const host = tutHosts[runId]
@@ -334,7 +334,7 @@ export function runInHost(
   opts: { tag: string; source: string },
   prev?: PreviewMount | null,
 ): { result: CompileResult; mount: PreviewMount | null; ready?: Promise<PreviewMount | null> } {
-  // Framework unwrap: SailHost is the opaque author surface; web port is HTMLElement.
+  // Framework unwrap: SailHost is the opaque author surface; web port is any.
   const hostEl = unwrapSailHost(host)
   const result = compile(opts.source, {
     setupUrl: SETUP_MARKER,
@@ -472,7 +472,7 @@ export function installConsoleCapture(
 }
 
 /** Imperative surface of an upgraded <sail-code-editor> (its published API). */
-export interface CodeEditorHost extends HTMLElement {
+export interface CodeEditorHost extends any {
   value: string
   setDiagnostics?: (
     diags: Array<{

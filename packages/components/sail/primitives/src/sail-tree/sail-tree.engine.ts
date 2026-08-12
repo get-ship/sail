@@ -11,7 +11,7 @@
 // Authority: build-spec §"Backbone #1 — createTable() with hierarchy turned on",
 // §"Controller shape", Slice 1 + Slice 3.
 
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from './tree-node'
 import type { ColumnDef, ExpandedState } from '../sail-table/engine/types'
 import type { TableOptions } from '../sail-table/engine/create-table'
 

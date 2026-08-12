@@ -214,7 +214,7 @@ const dedupe = (swatches: Swatch[]): Swatch[] => {
 // first, then the theme-free base ramp. Tone tokens that fail to resolve
 // (jsdom / unloaded theme) are simply dropped, so the palette degrades to the
 // base ramp rather than emitting an invalid swatch.
-export const deriveSwatches = (host: HTMLElement): Swatch[] => {
+export const deriveSwatches = (host: any): Swatch[] => {
   const cs = getComputedStyle(host)
   const toned: Swatch[] = []
   for (const { token, label } of TONE_TOKENS) {

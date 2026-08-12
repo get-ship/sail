@@ -53,7 +53,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
     const focused = signal(todayIso())
     const viewYear = signal(new Date().getFullYear())
     const viewMonth = signal(new Date().getMonth())
-    const inputEl = signal<HTMLInputElement | null>(null)
+    const inputEl = signal<HostBag | null>(null)
 
     const monthLabel = derived<string>(() =>
       `${MONTHS[viewMonth()]} ${viewYear()}`,
@@ -100,7 +100,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
 
     mount((host) => {
       // Writes go through the prop accessor so external `el.value = …` stays in sync.
-      const hostEl = host as HTMLElement & { value: string }
+      const hostEl = host as HostBag & { value: string }
 
       const moveView = (delta: number) => {
         let y = viewYear()
@@ -128,7 +128,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
         hostEl.value = iso
         focused.set(iso)
         open.set(false)
-        ;(host as any).onChange?.({ value: iso })
+        ;(host).onChange?.({ value: iso })
       }
 
       const openPanel = () => {
@@ -153,13 +153,13 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
         const v = inputElement.value.trim()
         if (v === '') {
           hostEl.value = ''
-          ;(host as any).onChange?.({ value: '' })
+          ;(host).onChange?.({ value: '' })
           return
         }
         const parts = parseIso(v)
         if (parts) commit(v)
       }
-      const onInputKeydown = (e: KeyboardEvent) => {
+      const onInputKeydown = (e: DomEv) => {
         if (e.key === 'Escape' && open()) {
           e.preventDefault()
           closePanel()
@@ -173,7 +173,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       inputElement.addEventListener('change', onInputChange)
       inputElement.addEventListener('keydown', onInputKeydown)
 
-      const onPanelKeydown = (e: KeyboardEvent) => {
+      const onPanelKeydown = (e: DomEv) => {
         const cur = (focused() as string) || (value() as string) || todayIso()
         let next: string | null = null
         if (e.key === 'ArrowLeft') next = addDays(cur, -1)
@@ -196,27 +196,27 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
         }
       }
 
-      const onShadowClick = (e: Event) => {
-        const t = e.target as HTMLElement | null
+      const onShadowClick = (e: DomEv) => {
+        const t = e.target as HostBag | null
         if (!t) return
-        const navBtn = t.closest?.('button[data-act]') as HTMLElement | null
+        const navBtn = t.closest?.('button[data-act]') as HostBag | null
         if (navBtn) {
           const act = navBtn.dataset.act
           if (act === 'prev') moveView(-1)
           else if (act === 'next') moveView(1)
           return
         }
-        const day = t.closest?.('button[data-iso]') as HTMLButtonElement | null
+        const day = t.closest?.('button[data-iso]') as HostBag | null
         if (day && !day.disabled) commit(day.dataset.iso ?? '')
       }
 
-      const onShadowKeydown = (e: KeyboardEvent) => {
+      const onShadowKeydown = (e: DomEv) => {
         if (!open()) return
-        const inPanel = (e.target as HTMLElement | null)?.closest?.('[role="dialog"]')
+        const inPanel = (e.target as HostBag | null)?.closest?.('[role="dialog"]')
         if (inPanel) onPanelKeydown(e)
       }
 
-      const onDocPointer = (e: Event) => {
+      const onDocPointer = (e: DomEv) => {
         if (!open()) return
         const path = e.composedPath()
         if (path.includes(host)) return
@@ -224,8 +224,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       }
 
       ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
-      ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKeydown as EventListener)
-      document.addEventListener('pointerdown', onDocPointer)
+      ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKeydown)
+      onCleanup(hostListenDocument('pointerdown', onDocPointer as () => void))
 
       host.expose!({
         focus: () => inputElement.focus(),
@@ -240,13 +240,13 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
         inputElement.removeEventListener('change', onInputChange)
         inputElement.removeEventListener('keydown', onInputKeydown)
         ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
-        ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKeydown as EventListener)
-        document.removeEventListener('pointerdown', onDocPointer)
+        ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKeydown)
+        onCleanup(hostListenDocument('pointerdown', onDocPointer as () => void))
       }
     })
 
     const captureInput: Action<void> = (node) => {
-      inputEl.set(node as HTMLInputElement)
+      inputEl.set(node)
       return { destroy: () => inputEl.set(null) }
     }
     return { open, today, focused, viewYear, viewMonth, captureInput, monthLabel, dayHeaders, monthCells }

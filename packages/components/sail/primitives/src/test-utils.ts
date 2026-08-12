@@ -11,14 +11,14 @@
  * `afterEach(() => cleanup())` removes all of them between tests. */
 export interface TestContainerRegistry {
   /** Make a fresh container, append to body, register for cleanup. */
-  mk(): HTMLElement
+  mk(): any
   /** Remove every registered container from the DOM. */
   cleanup(): void
 }
 
 /** Create a registry. Call `cleanup()` in `afterEach`. */
 export function createContainerRegistry(): TestContainerRegistry {
-  const containers: HTMLElement[] = []
+  const containers: any[] = []
   return {
     mk() {
       const c = document.createElement('div')
@@ -53,7 +53,7 @@ export function mount(
   tag: string,
   attrs: Record<string, string | boolean> = {},
   innerHTML: string = '',
-): { el: HTMLElement; shadow: ShadowRoot | null; container: HTMLElement } {
+): { el: any; shadow: ShadowRoot | null; container: any } {
   const container = reg.mk()
   const attrsHtml = Object.entries(attrs)
     .map(([k, v]) =>
@@ -62,7 +62,7 @@ export function mount(
     .filter((s) => s.length > 0)
     .join(' ')
   container.innerHTML = `<${tag}${attrsHtml ? ' ' + attrsHtml : ''}>${innerHTML}</${tag}>`
-  const el = container.querySelector(tag) as HTMLElement
+  const el = container.querySelector(tag) as any
   return { el, shadow: el.shadowRoot ?? el, container }
 }
 

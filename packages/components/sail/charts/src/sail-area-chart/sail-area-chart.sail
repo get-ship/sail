@@ -26,7 +26,7 @@ import { areaGeometry } from '../engine/geometry-cartesian'
 import { gridGeometry } from '../engine/geometry-grid'
 import type { Scope } from './sail-area-chart.sail'
 
-interface AreaHost extends Element {
+interface AreaHost {
   error?: unknown
 }
 

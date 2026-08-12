@@ -48,11 +48,11 @@ import type { Scope } from './sail-composer.sail'
 export default controller((_ctx: ControllerScope<Scope>) => {
     const text = signal('')
     const attachments = signal<unknown[]>([])
-    let hostEl: Element | null = null
+    let hostEl: HostBag | null = null
 
     mount((host) => {
       hostEl = host
-      const init = (host as unknown as { attachments?: unknown[] }).attachments
+      const init = (host as { attachments?: unknown[] }).attachments
       if (init != null) attachments.set(init)
       Object.defineProperty(host, 'attachments', {
         configurable: true,
@@ -65,11 +65,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       if (_ctx.disabled()) return
       const trimmed = text().trim()
       if (trimmed.length === 0) return
-      ;(hostEl as any)?.onSubmit?.({ text: trimmed, attachments: [...attachments()] })
+      ;(hostEl)?.onSubmit?.({ text: trimmed, attachments: [...attachments()] })
       text.set('')
     }
 
-    const onKeydown = (e: KeyboardEvent) => {
+    const onKeydown = (e: DomEv) => {
       if (e.key !== 'Enter') return
       if (_ctx.multiline() && e.shiftKey) return
       e.preventDefault()
@@ -77,13 +77,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 
     const fieldKeys: Action<void> = (node) => {
-      node.addEventListener('keydown', onKeydown as EventListener)
-      return { destroy: () => node.removeEventListener('keydown', onKeydown as EventListener) }
+      node.add('keydown', onKeydown)
+      return { destroy: () => node.remove('keydown', onKeydown) }
     }
 
     const sendClick: Action<void> = (node) => {
-      node.addEventListener('click', submit)
-      return { destroy: () => node.removeEventListener('click', submit) }
+      node.add('click', submit)
+      return { destroy: () => node.remove('click', submit) }
     }
 
     return { text, attachments, fieldKeys, sendClick }

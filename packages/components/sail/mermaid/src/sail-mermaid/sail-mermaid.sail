@@ -12,6 +12,7 @@
     value = ''
   }
 </scope>
+
 <controller>
 import { bindHtml } from "@ship/sail-runtime/internal";
 import type { Action } from "@ship/sail-runtime";
@@ -21,31 +22,18 @@ type RenderResult =
   | { ok: true; svg: string }
   | { ok: false; error: string };
 
-/** Module-scope init: one mermaid.initialize for the pack lifetime; theme
- *  flips reconfigure only when dark/light actually changes — not on every
- *  value effect (avoids global-state races that left orphan bomb SVGs). */
 let mermaidReady = false;
 let mermaidTheme: "dark" | "default" | null = null;
-
-/** Dark surface via data-mode on <html>. */
-function isDark(): boolean {
-  return document.documentElement.dataset.mode === "dark";
-}
-
-function cssVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 function ensureMermaid(theme: "dark" | "default"): void {
   if (mermaidReady && mermaidTheme === theme) return;
   mermaid.initialize({
     startOnLoad: false,
     securityLevel: "strict",
-    // Throw on parse/render failure instead of drawing the stock bomb SVG.
     suppressErrorRendering: true,
     theme,
     themeVariables: {
-      fontFamily: cssVar("--font-body") || "inherit",
+      fontFamily: hostCssVar("--font-body") || "inherit",
       background: "transparent",
     },
     flowchart: { useMaxWidth: true },
@@ -54,17 +42,12 @@ function ensureMermaid(theme: "dark" | "default"): void {
   mermaidTheme = theme;
 }
 
-/** Mermaid parks temp nodes as `#id`, `#d{id}`, `#i{id}` on document.body.
- *  Success path removes them; some error paths historically did not — always
- *  scrub after every attempt so bomb chrome cannot bleed outside our host. */
 function cleanMermaidTemp(id: string): void {
   for (const eid of [id, `d${id}`, `i${id}`]) {
-    document.getElementById(eid)?.remove();
+    hostFindById(eid)?.remove?.()
   }
 }
 
-/** Belt-and-suspenders: if an old mermaid build still returns error art,
- *  treat it as failure so bindHtml never paints the bomb. */
 function isStockErrorSvg(svg: string): boolean {
   return /Syntax error in text/i.test(svg);
 }
@@ -76,10 +59,7 @@ async function renderMermaid(src: string, dark: boolean): Promise<RenderResult> 
     ensureMermaid(theme);
     const { svg } = await mermaid.render(id, src);
     if (!svg || isStockErrorSvg(svg)) {
-      return {
-        ok: false,
-        error: !svg ? "Empty diagram SVG" : "Mermaid stock error diagram suppressed",
-      };
+      return { ok: false, error: !svg ? "Empty diagram SVG" : "Mermaid stock error diagram suppressed" };
     }
     return { ok: true, svg };
   } catch (e) {
@@ -92,65 +72,38 @@ async function renderMermaid(src: string, dark: boolean): Promise<RenderResult> 
 export default controller((ctx) => {
     const error = signal<string>("");
     const html = signal<string>("");
-    const dark = signal<boolean>(isDark());
+    const dark = signal<boolean>(hostIsDarkMode());
     const hasError = derived(() => error() !== "");
 
     const paintDiagram: Action<void> = (node) => {
-      const stop = bindHtml(node as HTMLElement, () => html());
+      const stop = bindHtml(node, () => html());
       return { destroy: stop };
     };
 
-    mount((host: HTMLElement) => {
-      // Monotonic seq: last started async render wins.
+    mount((host) => {
       let seq = 0;
-
-      const syncTheme = (): void => {
-        dark.set(isDark());
-      };
-      const obs = new MutationObserver(syncTheme);
-      obs.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["theme", "data-mode"],
-      });
-      document.addEventListener("sail-theme-change", syncTheme);
-
+      const syncTheme = (): void => { dark.set(hostIsDarkMode()); };
+      const stopObs = hostObserveRootAttrs(["theme", "data-mode"], syncTheme);
+      const stopListen = hostListenDocument("sail-theme-change", syncTheme);
       const stopRender = effect(() => {
         const src = (ctx.value() ?? "").trim();
         const dk = dark();
-        if (!src) {
-          html.set("");
-          error.set("");
-          return;
-        }
+        if (!src) { html.set(""); error.set(""); return; }
         const mine = ++seq;
         void renderMermaid(src, dk).then((res) => {
           if (mine !== seq) return;
-          if (!res.ok) {
-            ;(host as any).onError?.({ message: res.error, source: src });
-          }
-          // Only success SVG ever reaches bindHtml — never Mermaid error art.
+          if (!res.ok) (host).onError?.({ message: res.error, source: src });
           html.set(res.ok ? res.svg : "");
           error.set(res.ok ? "" : res.error);
         });
       });
-
-      return () => {
-        stopRender();
-        obs.disconnect();
-        document.removeEventListener("sail-theme-change", syncTheme);
-      };
+      return () => { stopRender(); stopObs(); stopListen(); };
     });
 
-    return {
-      paintDiagram,
-      html,
-      dark,
-      error,
-      hasError,
-    }
+    return { paintDiagram, html, dark, error, hasError }
   });
-
 </controller>
+
 <center use:paintDiagram hidden={hasError()} style({ box: w(full).minH(8) })></center>
 
 <if {error()}>

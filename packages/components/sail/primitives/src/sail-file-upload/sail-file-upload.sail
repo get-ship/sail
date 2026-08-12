@@ -18,7 +18,7 @@ import type { Scope } from './sail-file-upload.sail'
 import { fmtSize, matchesAccept } from './file-math'
 
 interface DisplayFile {
-  file: File
+  file: SailFile
   idx: number
   key: string
   name: string
@@ -26,13 +26,13 @@ interface DisplayFile {
 }
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-    const files = signal<File[]>([])
+    const files = signal<SailFile[]>([])
     const over = signal(false)
     const errorMsg = signal('')
     // Cross-element ref: openPicker clicks this input from the dropzone handlers.
-    const inputEl = signal<HTMLInputElement | null>(null)
+    const inputEl = signal<HostBag | null>(null)
     const captureInput: Action<void> = (node) => {
-      inputEl.set(node as HTMLInputElement)
+      inputEl.set(node)
       return { destroy: () => inputEl.set(null) }
     }
     const displayFiles = derived<DisplayFile[]>(() =>
@@ -45,15 +45,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       })),
     )
 
-    let hostEl: HTMLElement | null = null
+    let hostEl: HostBag | null = null
 
-    const emitChange = (list: File[]) => {
-      ;(hostEl as any)?.onChange?.({ files: [...list] })
+    const emitChange = (list: SailFile[]) => {
+      ;(hostEl)?.onChange?.({ files: [...list] })
     }
 
-    const addFiles = (incoming: File[]) => {
+    const addFiles = (incoming: SailFile[]) => {
       errorMsg.set('')
-      const valid: File[] = []
+      const valid: SailFile[] = []
       for (const f of incoming) {
         if (f.size > (_ctx.maxSize() as number)) {
           errorMsg.set(`\"${f.name}\" exceeds max size (${fmtSize(_ctx.maxSize() as number)}).`)
@@ -74,7 +74,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const removeAt = (idx: number) => {
       const cur = files()
       if (idx < 0 || idx >= cur.length) return
-      const next = cur.filter((_: File, i: number) => i !== idx)
+      const next = cur.filter((_: SailFile, i: number) => i !== idx)
       files.set(next)
       errorMsg.set('')
       emitChange(next)
@@ -82,32 +82,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     const openPicker = () => {
       if (_ctx.disabled()) return
-      ;(inputEl() as HTMLInputElement | null)?.click()
+      ;(inputEl() as HostBag | null)?.click()
     }
 
     const onClick = () => openPicker()
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: DomEv) => {
       if (_ctx.disabled()) return
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
         openPicker()
       }
     }
-    const onDragOver = (e: DragEvent) => {
+    const onDragOver = (e: DomEv) => {
       if (_ctx.disabled()) return
       e.preventDefault()
       over.set(true)
     }
     const onDragLeave = () => { over.set(false) }
-    const onDrop = (e: DragEvent) => {
+    const onDrop = (e: DomEv) => {
       if (_ctx.disabled()) return
       e.preventDefault()
       over.set(false)
       const list = e.dataTransfer?.files
       if (list && list.length) addFiles(Array.from(list))
     }
-    const onInputChange = (e: Event) => {
-      const inp = e.target as HTMLInputElement
+    const onInputChange = (e: DomEv) => {
+      const inp = e.target as HostBag
       if (inp.files && inp.files.length) addFiles(Array.from(inp.files))
       inp.value = ''
     }
@@ -115,29 +115,29 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     // Named dropTarget (not dropzone) — dropzone is a built-in action name.
     const dropTarget: Action<void> = (node) => {
       node.addEventListener('click', onClick)
-      node.addEventListener('keydown', onKey as EventListener)
-      node.addEventListener('dragover', onDragOver as EventListener)
+      node.addEventListener('keydown', onKey)
+      node.addEventListener('dragover', onDragOver)
       node.addEventListener('dragleave', onDragLeave)
-      node.addEventListener('drop', onDrop as EventListener)
+      node.addEventListener('drop', onDrop)
       return {
         destroy: () => {
           node.removeEventListener('click', onClick)
-          node.removeEventListener('keydown', onKey as EventListener)
-          node.removeEventListener('dragover', onDragOver as EventListener)
+          node.removeEventListener('keydown', onKey)
+          node.removeEventListener('dragover', onDragOver)
           node.removeEventListener('dragleave', onDragLeave)
-          node.removeEventListener('drop', onDrop as EventListener)
+          node.removeEventListener('drop', onDrop)
         },
       }
     }
 
     mount((host) => {
       hostEl = host
-      const inputElNode = inputEl() as HTMLInputElement | null
+      const inputElNode = inputEl() as HostBag | null
       inputElNode?.addEventListener('change', onInputChange)
 
-      const onShadowClick = (e: Event) => {
-        const target = e.target as HTMLElement | null
-        const btn = target?.closest?.('button[data-idx]') as HTMLElement | null
+      const onShadowClick = (e: DomEv) => {
+        const target = e.target as HostBag | null
+        const btn = target?.closest?.('button[data-idx]') as HostBag | null
         if (!btn || !(host.shadowRoot ?? host).contains(btn)) return
         const idx = Number(btn.dataset.idx)
         if (Number.isInteger(idx)) removeAt(idx)

@@ -10,10 +10,10 @@ export function mediaUrlOf(src: MediaSrc): { url: string; created: boolean } {
   if (typeof src === 'string') return { url: src, created: false }
   if (src.url) return { url: src.url, created: false }
   if (src.bytes) {
-    const blob = new Blob([src.bytes as BlobPart], {
-      ...(src.contentType ? { type: src.contentType } : {}),
-    })
-    return { url: URL.createObjectURL(blob), created: true }
+    return {
+      url: objectUrlFromBytes(src.bytes, src.contentType),
+      created: true,
+    }
   }
   return { url: '', created: false }
 }

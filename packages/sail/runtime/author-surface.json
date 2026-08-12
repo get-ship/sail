@@ -1,5 +1,5 @@
 {
-  "$comment": "Tier B — author runtime. Intentional @ship/sail-runtime imports humans may type. Gen (apps/sail-site/scripts/gen-runtime-surface.mjs) walks only the root barrel and emits names listed here. Tier A = compiler tables + ambient (skill/site language pages). Tier C = /internal emit ABI + host-only subpaths (server, framework, dev, …) — never on language reference.",
+  "$comment": "Tier B \u2014 author runtime. Intentional @ship/sail-runtime imports humans may type. Gen (apps/sail-site/scripts/gen-runtime-surface.mjs) walks only the root barrel and emits names listed here. Tier A = compiler tables + ambient (skill/site language pages). Tier C = /internal emit ABI + host-only subpaths (server, framework, dev, \u2026) \u2014 never on language reference.",
   "specifier": "@ship/sail-runtime",
   "entry": ".",
   "categories": {
@@ -36,7 +36,6 @@
     "EffectScope": "reactivity",
     "ContextKey": "reactivity",
     "SailMountOutsideSetupError": "reactivity",
-
     "controller": "controller",
     "ControllerScope": "controller",
     "ControllerDef": "controller",
@@ -45,7 +44,6 @@
     "ReadonlyState": "controller",
     "ReadonlyView": "controller",
     "MutableState": "controller",
-
     "defineStore": "store",
     "useStore": "store",
     "provideStore": "store",
@@ -53,13 +51,11 @@
     "snapshotStore": "store",
     "StoreDef": "store",
     "StoreInstance": "store",
-
     "form": "compositions",
     "selection": "compositions",
     "filteredList": "compositions",
     "FormOptions": "compositions",
     "ListSource": "compositions",
-
     "query": "data",
     "queryKeyed": "data",
     "mutation": "data",
@@ -75,7 +71,6 @@
     "LiveSource": "data",
     "LiveValueOf": "data",
     "OptimisticHandle": "data",
-
     "theme": "theme",
     "setThemePersist": "theme",
     "hydrateTheme": "theme",
@@ -92,7 +87,6 @@
     "ThemeScopePatch": "theme",
     "LoweredThemeToken": "theme",
     "LowerThemeResult": "theme",
-
     "timeline": "motion",
     "SailTimelineError": "motion",
     "TimelineValue": "motion",
@@ -111,7 +105,6 @@
     "ClockSignal": "motion",
     "ScrollProgressOptions": "motion",
     "SpringOptions": "motion",
-
     "Action": "actions",
     "ActionResult": "actions",
     "Disposer": "actions",
@@ -135,14 +128,12 @@
     "HotkeyHandler": "actions",
     "HotkeysMap": "actions",
     "InViewHandler": "actions",
-
     "attachBoundary": "errors",
     "detachBoundary": "errors",
     "findNearestBoundary": "errors",
     "runProtected": "errors",
     "BoundaryHandle": "errors",
     "BoundarySource": "errors",
-
     "component": "components",
     "prop": "components",
     "PropDef": "components",
@@ -151,11 +142,25 @@
     "defineComponent": "components",
     "ComponentFactory": "components",
     "ComponentSchema": "components",
-
     "Host": "host",
     "SailHost": "host",
     "asSailHost": "host",
     "scheduleFrame": "host",
-    "RouteSignals": "host"
+    "RouteSignals": "host",
+    "objectUrlFromBytes": "host",
+    "revokeObjectUrl": "host",
+    "defineHostProperty": "host",
+    "hostGetAttr": "host",
+    "hostHasAttr": "host",
+    "hostSetAttr": "host",
+    "observeContentBox": "host",
+    "HostPropertyDesc": "host",
+    "hostIsDarkMode": "host",
+    "hostCssVar": "host",
+    "hostFindById": "host",
+    "hostCreateElement": "host",
+    "hostObserveRootAttrs": "host",
+    "hostListenDocument": "host",
+    "observeHostAttrs": "host"
   }
 }

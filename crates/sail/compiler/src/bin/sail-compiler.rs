@@ -1691,19 +1691,32 @@ fn build(
             .with_context(|| format!("create out dir {}", out_dir.display()))?;
     }
 
-    // E1c: regenerate ambient pack + per-kind tsconfigs for the nearest
-    // project root before compiling. Hand-edited lib entries are overwritten.
-    if let Some(project) = nearest_project_root(&targets[0]) {
-        let _ = sail_compiler::ambients::write_project_type_configs(&project);
-        // E1b: project-scoped type gate over authored .ts — only when the build
-        // input is a directory (whole project). Single-file builds still gate
-        // .sail controller regions inside compile() (E1a); compositions/actions
-        // ride the directory build / `sail types` + tsconfig.pure/action path.
-        if input.is_dir() {
-            if let Err(e) = project_ts_type_gate(&project) {
-                return Err(e);
+    // E1c: regenerate ambient pack + per-kind tsconfigs. Hand-edited lib
+    // entries are overwritten.
+    //
+    // Project type gate (E1b) runs for app-shaped projects (`routes/`).
+    // Component packages (L2 npm corpus under packages/components, or any
+    // package without routes/) are gated by per-file `.sail` controller
+    // regions (E1a Pure+strict) — their `src/**/*.ts` engines are not the
+    // app product surface.
+    if input.is_dir() {
+        let mut projects = collect_project_roots(&input)?;
+        if projects.is_empty() {
+            if let Some(p) = nearest_project_root(&targets[0]) {
+                projects.push(p);
             }
         }
+        for project in &projects {
+            let _ = sail_compiler::ambients::write_project_type_configs(project);
+            let is_app = project.join("routes").is_dir();
+            if is_app {
+                if let Err(e) = project_ts_type_gate(project) {
+                    return Err(e);
+                }
+            }
+        }
+    } else if let Some(project) = nearest_project_root(&targets[0]) {
+        let _ = sail_compiler::ambients::write_project_type_configs(&project);
     }
 
     // Component mode: tag name comes from --component-name when supplied,
@@ -1712,14 +1725,15 @@ fn build(
     //
     // Guardrail (#176): when an input matches the `<tag>/<tag>.sail` component
     // convention AND no explicit mode/component-name was given, refuse rather
-    // than emit component JS with no tag. Without a tag the output never calls
-    // `customElements.define` — the bundle succeeds, the browser loads it, and
-    // nothing registers. Surface the ambiguity at compile time instead of
-    // debugging it at runtime.
+    // than emit component JS with no tag — except directory builds of a
+    // component tree, which auto-infer the tag from the path (L2 package gate).
     let count = targets.len();
+    let dir_auto_component = input.is_dir();
     for path in targets {
+        let path_tag = looks_like_component_path(&path);
         let explicit = mode.is_some() || component_name.is_some();
-        if !explicit && let Some(tag) = looks_like_component_path(&path) {
+        if !explicit && path_tag.is_some() && !dir_auto_component {
+            let tag = path_tag.as_deref().unwrap_or("?");
             return Err(anyhow!(
                 "refusing to compile {} without a component tag\n\
                  \n\
@@ -1761,9 +1775,14 @@ fn build(
         }
         let component_meta = match (mode.clone(), component_name.clone()) {
             (Some(ModeArg::Component), name) => Some(ComponentMeta {
-                name: name.unwrap_or_else(|| stem_of(&path)),
+                name: name.unwrap_or_else(|| path_tag.clone().unwrap_or_else(|| stem_of(&path))),
             }),
             (_, Some(name)) => Some(ComponentMeta { name }),
+            // Directory auto: prefer `<tag>/<tag>.sail`, else filename stem
+            // (covers co-located siblings like sail-timeline/sail-timeline-item.sail).
+            _ if dir_auto_component => Some(ComponentMeta {
+                name: path_tag.unwrap_or_else(|| stem_of(&path)),
+            }),
             _ => None,
         };
         compile_one(
@@ -1905,7 +1924,16 @@ fn split_bracketed_path(message: &str) -> Option<(String, &str)> {
 }
 
 fn collect_ts_sources(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String)>) -> Result<()> {
-    let skip = ["node_modules", "dist", ".deck", "target", ".git"];
+    let skip = [
+        "node_modules",
+        "dist",
+        ".deck",
+        "target",
+        ".git",
+        "test",
+        "tests",
+        "__tests__",
+    ];
     let entries = match fs::read_dir(dir) {
         Ok(e) => e,
         Err(_) => return Ok(()),
@@ -1921,9 +1949,18 @@ fn collect_ts_sources(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String
             }
             collect_ts_sources(project, &p, out)?;
         } else if name.ends_with(".ts") && !name.ends_with(".d.ts") {
-            // Only product homes — compositions / stores / actions / routes.
-            // Framework packages under packages/sail are TypeEnv::Framework and
-            // would be skipped by the gate, but we still avoid scanning them.
+            // Tests / harness helpers are not product law under the type gate.
+            if name.ends_with(".test.ts")
+                || name.ends_with(".spec.ts")
+                || name == "test-utils.ts"
+                || name == "setup.ts"
+                || name == "index.ts"
+            {
+                // index.ts is side-effect re-exports of compiled components —
+                // not product Pure law under the type gate.
+                continue;
+            }
+            // Only product homes — compositions / stores / actions / routes / src.
             let rel = p.strip_prefix(project).unwrap_or(&p);
             let rel_s = rel.to_string_lossy();
             let product = rel_s.contains("src/actions/")
@@ -1938,6 +1975,46 @@ fn collect_ts_sources(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String
                 out.push((p, src));
             }
         }
+    }
+    Ok(())
+}
+
+/// Package roots under `dir` that look like sail projects (`package.json` +
+/// `src/` or `routes/`). Multi-domain component trees gate each package.
+fn collect_project_roots(dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut out = Vec::new();
+    collect_project_roots_rec(dir, &mut out, 0)?;
+    out.sort();
+    out.dedup();
+    Ok(out)
+}
+
+fn collect_project_roots_rec(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) -> Result<()> {
+    if depth > 6 {
+        return Ok(());
+    }
+    let skip = ["node_modules", "dist", ".deck", "target", ".git"];
+    let entries = match fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return Ok(()),
+    };
+    for entry in entries {
+        let entry = entry?;
+        let p = entry.path();
+        if !p.is_dir() {
+            continue;
+        }
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if skip.iter().any(|s| *s == name) {
+            continue;
+        }
+        if p.join("package.json").is_file() && (p.join("src").is_dir() || p.join("routes").is_dir())
+        {
+            out.push(p.clone());
+            continue;
+        }
+        collect_project_roots_rec(&p, out, depth + 1)?;
     }
     Ok(())
 }

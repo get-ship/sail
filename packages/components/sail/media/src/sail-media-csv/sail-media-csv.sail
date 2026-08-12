@@ -14,7 +14,7 @@
 // Pack-local relative import (not `@ship/*`) — S5.3 import law bans value
 // imports from `@ship/*` in pack controllers; createTable is the primitives
 // table engine, resolved via monorepo-relative path.
-import { createTable, type Table } from '../../../primitives/src/sail-table/engine/create-table'
+import { createTable, type Table } from '../compositions/create-table'
 import type { ViewerSource } from '../engine/types'
 import { CsvParseError, parseCsv, type CsvDelimiter } from '../engine/csv-parse'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'
@@ -91,7 +91,7 @@ export default controller((_ctx: Scope) => {
             header: readHeader(),
             delimiter: readDelimiter(),
           })
-          const engine = createTable<CsvRecord>({
+          const engine = createTable({
             data: rows,
             columns: columns.map((c) => ({
               id: c.field,
@@ -104,8 +104,8 @@ export default controller((_ctx: Scope) => {
           tableEngine.set(engine)
           errorMsg.set('')
           emitViewerLoad(host)
-        } catch (e) {
-          const message = e instanceof CsvParseError ? e.message : (e as Error).message
+        } catch (e: unknown) {
+          const message = e instanceof CsvParseError ? (e as { message?: string }).message ?? String(e) : (e as Error).message
           tableEngine.set(null)
           errorMsg.set(message)
           emitViewerError(host, message)

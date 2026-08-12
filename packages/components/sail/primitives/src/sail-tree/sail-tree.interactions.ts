@@ -16,11 +16,11 @@ import { effect } from '@ship/sail-runtime'
 import { invokeCallback } from '@ship/sail-runtime/internal'
 import type { Table } from '../sail-table/engine/create-table'
 import type { ExpandedState } from '../sail-table/engine/types'
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from './tree-node'
 
 type AnyTreeNode = TreeNode & Record<string, unknown>
 
-interface HostEmit extends HTMLElement {
+interface HostEmit extends any {
   emit?<T = unknown>(name: string, detail?: T): void
 }
 
@@ -37,7 +37,7 @@ export interface TreeInteractionOpts {
   onExpanded?: () => void
 }
 
-function toggleAttr(el: Element, name: string, on: boolean): void {
+function toggleAttr(el: any, name: string, on: boolean): void {
   if (on) el.setAttribute(name, '')
   else el.removeAttribute(name)
 }
@@ -102,7 +102,7 @@ export function wireTreeInteractions(
   }
 
   const onClick = (e: Event): void => {
-    const target = e.target as HTMLElement
+    const target = e.target as any
     // Checkbox is its own control — don't treat as row activation.
     if (target.closest('input[type="checkbox"]')) return
 
@@ -111,7 +111,7 @@ export function wireTreeInteractions(
     const id = rowEl.getAttribute('data-node-id')
     if (!id) return
 
-    const me = e as MouseEvent
+    const me = e as any
     const tree = getTree()
     const row = tree.getRow(id)
     // Engine capability OR consumer lazy flag (children not loaded yet).
@@ -132,8 +132,8 @@ export function wireTreeInteractions(
   }
 
   const onKeydown = (e: Event): void => {
-    const ke = e as KeyboardEvent
-    if (!(ke.target as HTMLElement).closest(opts.navRoleSelector)) return
+    const ke = e as any
+    if (!(ke.target as any).closest(opts.navRoleSelector)) return
     const tree = getTree()
     if (tree.nav.active().rowId == null) {
       const first = tree.rows()[0]
@@ -156,7 +156,7 @@ export function wireTreeInteractions(
     if (!shadow) return
     const selected = new Set(tree.selectedRowIds())
     const focus = tree.nav.active().rowId ?? tree.rows()[0]?.id ?? null
-    shadow.querySelectorAll<HTMLElement>('[data-node-id]').forEach((rowEl) => {
+    shadow.querySelectorAll<any>('[data-node-id]').forEach((rowEl) => {
       const id = rowEl.getAttribute('data-node-id') ?? ''
       const row = tree.getRow(id)
       if (!row) return

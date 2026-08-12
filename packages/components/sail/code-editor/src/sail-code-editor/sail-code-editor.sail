@@ -124,14 +124,14 @@ export default controller((ctx: Scope) => {
     let opsHoverAbort: AbortController | null = null
     let opsDiagDebounce: ReturnType<typeof setTimeout> | null = null
 
-    const valSig = ctx.value as unknown as Signal<string>
-    const langSig = ctx.language as unknown as Signal<string>
-    const roSig = ctx.readonly as unknown as Signal<boolean>
-    const lnSig = ctx.lineNumbers as unknown as Signal<boolean>
-    const phSig = ctx.placeholder as unknown as Signal<string>
-    const wasmUrlSig = ctx.wasmUrl as unknown as Signal<string>
-    const opsUrlSig = ctx.opsUrl as unknown as Signal<string>
-    const opsPathSig = ctx.opsPath as unknown as Signal<string>
+    const valSig = ctx.value as Signal<string>
+    const langSig = ctx.language as Signal<string>
+    const roSig = ctx.readonly as Signal<boolean>
+    const lnSig = ctx.lineNumbers as Signal<boolean>
+    const phSig = ctx.placeholder as Signal<string>
+    const wasmUrlSig = ctx.wasmUrl as Signal<string>
+    const opsUrlSig = ctx.opsUrl as Signal<string>
+    const opsPathSig = ctx.opsPath as Signal<string>
 
     function buildCompletionExt(): Extension {
       const sources = completions.map(makeCompletionSource)
@@ -217,10 +217,10 @@ export default controller((ctx: Scope) => {
         suppressUpdate = true
         valSig.set(newValue)
         suppressUpdate = false
-        node.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
+        node.dispatchEvent(new DomEv('input', { bubbles: true, composed: true }))
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
-          ;(node as any).onChange?.({ value: newValue })
+          ;(node).onChange?.({ value: newValue })
         }, DEBOUNCE_MS)
       }
 
@@ -244,14 +244,14 @@ export default controller((ctx: Scope) => {
             key: 'Mod-s',
             preventDefault: true,
             run: () => {
-              ;(node as any).onSave?.({ value: view?.state.doc.toString() ?? '' })
+              ;(node).onSave?.({ value: view?.state.doc.toString() ?? '' })
               return true
             },
           },
           {
             key: 'Escape',
             run: () => {
-              ;(node as any).onCancel?.()
+              ;(node).onCancel?.()
               return false
             },
           },
@@ -332,7 +332,7 @@ export default controller((ctx: Scope) => {
     }
 
   mount((host) => {
-    const el = host as HTMLElement & {
+    const el = host as HostBag & {
       setDiagnostics?: ((d: SailDiagnostic[]) => void) | undefined
       setCompletions?: ((src: SailCompletionSource[]) => void) | undefined
       /** 1-based line/col caret + scrollIntoView (studio selection → source). */
@@ -428,8 +428,8 @@ export default controller((ctx: Scope) => {
       lspInit = (async () => {
         try {
           const [diag, comp] = await Promise.all([
-            import('@ship/sail-lsp-browser/diagnostics') as unknown as Promise<{ diagnose: LspDiagnoseFn }>,
-            import('@ship/sail-lsp-browser/completions') as unknown as Promise<{ allSources: LspAllSourcesFn }>,
+            import('@ship/sail-lsp-browser/diagnostics') as Promise<{ diagnose: LspDiagnoseFn }>,
+            import('@ship/sail-lsp-browser/completions') as Promise<{ allSources: LspAllSourcesFn }>,
           ])
           lspDiagnose = diag.diagnose
           try { el.setCompletions?.(comp.allSources()) } catch { /* best-effort */ }
@@ -440,7 +440,7 @@ export default controller((ctx: Scope) => {
         try {
           const hoverMod = await import(
             /* @vite-ignore */ '@ship/sail-lsp-browser/hover'
-          ) as unknown as { hoverAt: LspHoverFn }
+          ) as { hoverAt: LspHoverFn }
           if (typeof hoverMod.hoverAt === 'function') hoverAtFn = hoverMod.hoverAt
         } catch {
           hoverAtFn = staticSailHover
@@ -483,11 +483,11 @@ export default controller((ctx: Scope) => {
         }
         return
       }
-      const prevKey = (opsClient as unknown as { __base?: string } | null)?.__base
+      const prevKey = (opsClient as { __base?: string } | null)?.__base
       if (!opsClient || prevKey !== base) {
         // Pass "/" when base is '' so normalizeOpsBase inside client is stable.
         const client = createOpsAuthoringClient({ baseUrl: base || '/' })
-        ;(client as unknown as { __base?: string }).__base = base
+        ;(client as { __base?: string }).__base = base
         opsClient = client
         reconfigureCompletions()
       }
@@ -562,11 +562,11 @@ export default controller((ctx: Scope) => {
       el.setDiagnostics = undefined
       el.setCompletions = undefined
       el.setCursor = undefined
-      // Leave el.focus — shadows native HTMLElement.focus; nulling breaks it.
+      // Leave el.focus — shadows native HostBag.focus; nulling breaks it.
       try {
-        delete (host as unknown as Record<string, unknown>).value
+        delete (host as Record<string, unknown>).value
       } catch {
-        (host as unknown as Record<string, unknown>).value = undefined
+        (host as Record<string, unknown>).value = undefined
       }
     }
   })
@@ -578,7 +578,7 @@ function makeHoverTooltip(pos: number, contents: string): Tooltip {
     pos,
     above: true,
     create() {
-      const dom = document.createElement('div')
+      const dom = hostCreateElement('div')
       // Styles live in sail-code-editor.theme.ts (.cm-tooltip-sail-hover).
       dom.className = 'cm-tooltip-sail-hover'
       dom.textContent = contents

@@ -19,7 +19,7 @@ import { derived, type Derived } from '@ship/sail-runtime'
 import type { VirtualItem } from '@ship/sail-runtime/virtual'
 import type { Table } from '../sail-table/engine/create-table'
 import type { CellValue, ColumnApi, Row } from '../sail-table/engine/types'
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from './tree-node'
 
 /** A rendered cell in a tree-grid row (the disclosure lives in the FIRST one). */
 export interface TreeCellView {

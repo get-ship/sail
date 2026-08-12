@@ -63,6 +63,23 @@ export type { Host } from './host'
 export type { SailHost } from './sail-host'
 export { scheduleFrame, asSailHost } from './sail-host'
 export type { RouteSignals } from './route-signals'
+// Pure-safe host / media surface growth (SPEC-L2-PACKAGE-1 P1).
+export { objectUrlFromBytes, revokeObjectUrl } from './object-url'
+export {
+  defineHostProperty,
+  hostGetAttr,
+  hostHasAttr,
+  hostSetAttr,
+  observeContentBox,
+  hostIsDarkMode,
+  hostCssVar,
+  hostFindById,
+  hostCreateElement,
+  hostObserveRootAttrs,
+  hostListenDocument,
+  observeHostAttrs,
+} from './host-property'
+export type { HostPropertyDesc } from './host-property'
 
 // ── Stores ─────────────────────────────────────────────────────────────────
 export {

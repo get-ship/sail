@@ -30,7 +30,7 @@ import { parseLabels } from '../chart-util'
 import type { Scope } from './sail-bar-chart.sail'
 
 // `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
-interface BarHost extends Element {
+interface BarHost {
   error?: unknown
 }
 

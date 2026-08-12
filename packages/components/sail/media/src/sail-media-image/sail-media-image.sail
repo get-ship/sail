@@ -53,8 +53,7 @@ function rasterUrlOf(src: ViewerSource | string | null): { url: string; created:
   if (typeof src === 'string') return { url: src, created: false }
   if (src.url) return { url: src.url, created: false }
   if (src.bytes) {
-    const blob = new Blob([src.bytes as BlobPart])
-    return { url: URL.createObjectURL(blob), created: true }
+    return { url: objectUrlFromBytes(src.bytes), created: true }
   }
   return { url: '', created: false }
 }
@@ -83,17 +82,17 @@ export default controller((_ctx: Scope) => {
 
     const zoomPanSig = signal<ZoomPanState>({ x: 0, y: 0, scale: 1 })
 
-    let hostEl: HTMLElement | null = null
+    let hostEl: HostBag | null = null
 
     let created: string[] = []
     const revokeCreated = (): void => {
-      for (const u of created.splice(0)) URL.revokeObjectURL(u)
+      for (const u of created.splice(0)) revokeObjectUrl(u)
     }
     const zoomable = (): boolean => hostEl?.getAttribute('zoomable') !== 'false'
 
     let lastImgUrl = ''
     const rasterImg: Action<void> = (node) => {
-      const img = node as HTMLImageElement
+      const img = node as HostBag
       const onImgLoad = (): void => { if (hostEl) emitViewerLoad(hostEl) }
       const onImgError = (): void => {
         if (hostEl) emitViewerError(hostEl, 'Failed to decode image')
@@ -121,7 +120,7 @@ export default controller((_ctx: Scope) => {
 
     const svgMarkup = (): string => svgTextOf(firstSource(srcSig())) ?? ''
     const svgInline: Action<void> = (node) => {
-      const stop = bindHtml(node as HTMLElement, svgMarkup)
+      const stop = bindHtml(node, svgMarkup)
       return { destroy: stop }
     }
 
@@ -132,7 +131,7 @@ export default controller((_ctx: Scope) => {
     }
     const zoomStage: Action<void> = (node) => {
       const detach = attachZoomPan({
-        stage: node as HTMLElement,
+        stage: node,
         enabled: zoomable,
         onChange: applyTransform,
         onZoom,
@@ -140,7 +139,7 @@ export default controller((_ctx: Scope) => {
       return { destroy: () => detach?.() }
     }
 
-    const onStripKey = (e: KeyboardEvent): void => {
+    const onStripKey = (e: DomEv): void => {
       const count = sources().length
       if (count === 0) return
       let next = activeIndex()
@@ -153,9 +152,9 @@ export default controller((_ctx: Scope) => {
       if (hostEl) emit(hostEl, 'sail-viewer-index-change', { index: next })
     }
     const galleryStrip: Action<void> = (node) => {
-      node.addEventListener('keydown', onStripKey as EventListener)
+      node.addEventListener('keydown', onStripKey)
       return {
-        destroy: () => node.removeEventListener('keydown', onStripKey as EventListener),
+        destroy: () => node.removeEventListener('keydown', onStripKey),
       }
     }
 
@@ -165,9 +164,7 @@ export default controller((_ctx: Scope) => {
 
       // Identity prop — live reference for ViewerSource / arrays; string URLs
       // also work via the host `src` attribute (default PE — no author glue).
-      Object.defineProperty(host, 'src', {
-        configurable: true,
-        get: () => srcSig(),
+      defineHostProperty(asSailHost(host) as HostBag, 'src', {get: () => srcSig(),
         set: (s: ImageSrc) => {
           srcSig.set(s)
           activeIndex.set(0)
@@ -189,8 +186,7 @@ export default controller((_ctx: Scope) => {
         }
       }
       applyAttrSrc()
-      const mo = new MutationObserver(applyAttrSrc)
-      mo.observe(host, { attributes: true, attributeFilter: ['src'] })
+      const stop_mo = observeHostAttrs(host, ['src'], applyAttrSrc)
 
       let lastInlined: unknown = null
       const stopSvgEmit = effect(() => {
@@ -203,7 +199,7 @@ export default controller((_ctx: Scope) => {
       })
 
       return () => {
-        mo.disconnect()
+        stop_mo && stop_mo()
         stopSvgEmit()
         revokeCreated()
       }

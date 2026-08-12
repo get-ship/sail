@@ -57,8 +57,8 @@ export default controller(({ value, layout }: Scope) => {
     return `M ${a.x} ${a.y} L ${b.x} ${b.y}`
   })
 
-  const nodePointerDown = (e: PointerEvent): void => {
-    const el = e.currentTarget as HTMLElement
+  const nodePointerDown = (e: DomEv): void => {
+    const el = e.currentTarget as HostBag
     const id = el.dataset.nodeId
     if (!id) return
     // additive select with shift; otherwise replace selection.
@@ -69,13 +69,13 @@ export default controller(({ value, layout }: Scope) => {
     // Capture on the host — the same element the pointermove/up listeners are
     // bound to (B3). Capturing on the node while listening on the host meant a
     // slotted child's stopPropagation could wedge the drag.
-    ;(el.getRootNode() as ShadowRoot).host?.setPointerCapture?.(e.pointerId)
+    ;(el).setPointerCapture?.(e.pointerId)
     e.stopPropagation()
   }
-  const portPointerDown = (e: PointerEvent): void => {
-    const el = e.currentTarget as HTMLElement
+  const portPointerDown = (e: DomEv): void => {
+    const el = e.currentTarget as HostBag
     const portId = el.dataset.portId
-    const nodeEl = el.closest('[data-node-id]') as HTMLElement | null
+    const nodeEl = el.closest('[data-node-id]') as HostBag | null
     const nodeId = nodeEl?.dataset.nodeId
     if (!portId || !nodeId) return
     board.beginEdge({ node: nodeId, port: portId })
@@ -85,7 +85,7 @@ export default controller(({ value, layout }: Scope) => {
   mount((host) => {
     // Node-drag pump: move the dragged (or whole-selection) node by the
     // world-space delta. Listens on the host so capture survives.
-    const onMove = (e: PointerEvent): void => {
+    const onMove = (e: DomEv): void => {
       const id = draggingNode()
       const last = lastPointer()
       if (id && last) {
@@ -102,15 +102,15 @@ export default controller(({ value, layout }: Scope) => {
         board.updatePendingEnd(canvas.screenToWorld({ x: e.clientX, y: e.clientY }))
       }
     }
-    const onUp = (e: PointerEvent): void => {
+    const onUp = (e: DomEv): void => {
       if (draggingNode()) {
         draggingNode.set(null)
         lastPointer.set(null)
       }
       const pe = board.pendingEdge()
       if (pe) {
-        const tEl = (e.target as HTMLElement)?.closest?.('[data-port-id]') as HTMLElement | null
-        const nodeEl = tEl?.closest('[data-node-id]') as HTMLElement | null
+        const tEl = (e.target)?.closest?.('[data-port-id]') as HostBag | null
+        const nodeEl = tEl?.closest('[data-node-id]') as HostBag | null
         const target: PortRef | null =
           tEl && nodeEl ? { node: nodeEl.dataset.nodeId!, port: tEl.dataset.portId! } : null
         const edge = target ? board.commitEdge(target) : (board.cancelEdge(), null)
@@ -126,8 +126,8 @@ export default controller(({ value, layout }: Scope) => {
     // one) in world space, Enter/Space select it, Escape clears selection. The
     // pure resolver lives in engine/board-keys; all mutations route through the
     // board model so the selection effect stays the single emit path (B2).
-    const onKey = (e: KeyboardEvent): void => {
-      const el = (e.target as HTMLElement | null)?.closest?.('[data-node-id]') as HTMLElement | null
+    const onKey = (e: DomEv): void => {
+      const el = (e.target as HostBag | null)?.closest?.('[data-node-id]') as HostBag | null
       const focusedId = el?.dataset.nodeId ?? null
       const before = board.serialize()
       const acted = applyBoardKey(board, e, focusedId, canvas.transform().scale)
@@ -135,9 +135,9 @@ export default controller(({ value, layout }: Scope) => {
       if (board.serialize() !== before) version.set(version() + 1)
       e.preventDefault()
     }
-    host.addEventListener('pointermove', onMove as EventListener)
-    host.addEventListener('pointerup', onUp as EventListener)
-    host.addEventListener('keydown', onKey as EventListener)
+    host.addEventListener('pointermove', onMove)
+    host.addEventListener('pointerup', onUp)
+    host.addEventListener('keydown', onKey)
 
     // Debounced board-change event (the KEEP'd contract: value + version).
     const stopChange = effect(() => {
@@ -176,9 +176,9 @@ export default controller(({ value, layout }: Scope) => {
     })
 
     return () => {
-      host.removeEventListener('pointermove', onMove as EventListener)
-      host.removeEventListener('pointerup', onUp as EventListener)
-      host.removeEventListener('keydown', onKey as EventListener)
+      host.removeEventListener('pointermove', onMove)
+      host.removeEventListener('pointerup', onUp)
+      host.removeEventListener('keydown', onKey)
       stopChange()
       stopSel()
       stopLayout()

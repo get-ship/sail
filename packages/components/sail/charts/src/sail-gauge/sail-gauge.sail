@@ -28,7 +28,7 @@ import type { ChartSeries } from '../engine/types'
 import type { Scope } from './sail-gauge.sail'
 
 // `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
-interface GaugeHost extends Element {
+interface GaugeHost {
   error?: unknown
 }
 

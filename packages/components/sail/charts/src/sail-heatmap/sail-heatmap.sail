@@ -26,7 +26,7 @@ import { parseAxis, toGrid } from './heatmap-grid'
 import type { ChartSeries } from '../engine/types'
 import type { Scope } from './sail-heatmap.sail'
 
-interface HeatmapHost extends Element {
+interface HeatmapHost {
   error?: unknown
 }
 

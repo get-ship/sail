@@ -1,9 +1,4 @@
-<!--
-  <sail-graph-canvas> — positioned graph: SVG bezier edges + HTML node cards.
-  width/height are the coordinate space (SVG viewBox). Events: sail-node-select/hover.
-  Optional per-kind body via <template slot="node" data-kind="…">.
--->
-
+<!-- sail-graph-canvas Pure controller -->
 <scope>
   props: {
     nodes = ''
@@ -16,188 +11,46 @@
 </scope>
 
 <controller>
-
-import { bindHtml } from '@ship/sail-runtime/internal'
+import { bindHtml, emit } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
 import type { Scope } from './sail-graph-canvas.sail'
+import {
+  coerce, computePositions, bezierPath, nodeBodyHtml,
+  EDGE_STROKE, EDGE_DEFAULT,
+  type GraphNode, type GraphEdge,
+} from './graph-helpers'
 
-export interface GraphNode {
-  id: string
-  kind: string
-  title?: string
-  sub?: string
-  x?: number
-  y?: number
-  w?: number
-  data?: Record<string, unknown>
-}
-
-export interface GraphEdge {
-  from: string
-  to: string
-  kind?: string
-  dashed?: boolean
-}
-
-/** One node card, resolved to what the template paints. */
 interface NodeView {
-  id: string
-  kind: string
-  title: string
-  sub: string
-  label: string
-  left: string
-  top: string
-  /** null = the card keeps its default width (the skin's --panel-min-w-sm). */
-  width: string | null
-  selected: boolean
-  /** Consumer-authored body HTML from a per-kind <template>; '' = default chrome. */
-  body: string
+  id: string; kind: string; title: string; sub: string; label: string
+  left: string; top: string; width: string | null; selected: boolean; body: string
 }
-
 interface EdgeView {
-  key: string
-  d: string
-  kind: string
-  stroke: string
-  dash: string | null
+  key: string; d: string; kind: string; stroke: string; dash: string | null
 }
 
-function esc(s: string): string {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function coerce<T>(v: unknown, fallback: T[]): T[] {
-  if (Array.isArray(v)) return v as T[]
-  if (typeof v === 'string' && v.trim()) {
-    try {
-      const parsed = JSON.parse(v)
-      return Array.isArray(parsed) ? (parsed as T[]) : fallback
-    } catch {
-      return fallback
-    }
-  }
-  return fallback
-}
-
-function computePositions(
-  nodes: GraphNode[],
-  width: number,
-  height: number,
-  layout: string,
-): Map<string, { x: number; y: number }> {
-  const map = new Map<string, { x: number; y: number }>()
-  const missing = nodes.some((n) => typeof n.x !== 'number' || typeof n.y !== 'number')
-  if (layout === 'positioned' && !missing) {
-    for (const n of nodes) map.set(n.id, { x: n.x as number, y: n.y as number })
-    return map
-  }
-  const cx = width * 0.22
-  const cy = height * 0.5
-  const centers = nodes.filter((n) => n.kind === 'agent')
-  const satellites = nodes.filter((n) => n.kind !== 'agent')
-  centers.forEach((n, i) => {
-    const span = Math.max(1, centers.length)
-    const y = cy + (i - (span - 1) / 2) * 80
-    map.set(n.id, { x: cx, y })
-  })
-  const byKind = new Map<string, GraphNode[]>()
-  for (const n of satellites) {
-    const list = byKind.get(n.kind) ?? []
-    list.push(n)
-    byKind.set(n.kind, list)
-  }
-  const kinds = Array.from(byKind.keys())
-  kinds.forEach((kind, bandIdx) => {
-    const list = byKind.get(kind)!
-    const bandX = width * (0.5 + ((bandIdx + 1) / (kinds.length + 1)) * 0.45)
-    list.forEach((n, i) => {
-      const y = (height * (i + 1)) / (list.length + 1)
-      map.set(n.id, { x: bandX, y })
-    })
-  })
-  return map
-}
-
-function bezierPath(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-): string {
-  const dx = Math.max(40, Math.abs(b.x - a.x) * 0.4)
-  return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`
-}
-
-// The per-kind edge palette. Each kind reads its host knob first, so a consumer
-// can restyle one relation type without touching the rest.
-const EDGE_STROKE: Record<string, string> = {
-  agent: 'var(--edge-agent, var(--primary))',
-  skill: 'var(--edge-skill, var(--success))',
-  mcp: 'var(--edge-mcp, var(--info))',
-  rule: 'var(--edge-rule, var(--warning))',
-  perm: 'var(--edge-perm, var(--destructive))',
-  harness: 'var(--edge-harness, var(--accent))',
-}
-const EDGE_DEFAULT = 'var(--edge-default, var(--border))'
-
-function kindTemplateFor(host: HTMLElement, kind: string): HTMLTemplateElement | null {
-  const tpls = host.querySelectorAll('template[slot="node"]')
-  for (const t of Array.from(tpls)) {
-    if ((t as HTMLElement).dataset.kind === kind) return t as HTMLTemplateElement
-  }
-  return null
-}
-
-/** A per-kind <template> is consumer-authored markup with ${title}/${sub}/${id}
- *  placeholders. '' when the kind has no template — the card renders the
- *  default chrome the template block declares. */
-function nodeBodyHtml(host: HTMLElement | null, n: GraphNode): string {
-  if (!host) return ''
-  const tpl = kindTemplateFor(host, n.kind)
-  if (!tpl) return ''
-  return tpl.innerHTML
-    .replace(/\$\{title\}/g, esc(n.title ?? ''))
-    .replace(/\$\{sub\}/g, esc(n.sub ?? ''))
-    .replace(/\$\{id\}/g, esc(n.id))
-}
-
-export default controller(({ nodes, edges, width, height, layout, selectedId }: Scope, host?: Element) => {
-    // The per-kind <template>s are the host's own light-DOM children, and a
-    // node card's body is fixed at FIRST render (a keyed row re-binds its own
-    // attributes, not a nested branch), so the host must be read here — the
-    // resolver passes it as the setup function's 2nd arg. `mount()` re-seeds
-    // it once the instance actually connects, for the same reason `mount:`
-    // used to: `host` can be undefined at setup time.
-    const hostEl = signal<HTMLElement | null>((host as HTMLElement) ?? null)
+export default controller(({ nodes, edges, width, height, layout, selectedId }: Scope) => {
+    const hostEl = signal<HostBag | null>(null)
     mount((el) => { hostEl.set(el) })
 
     const graph = derived(() => {
       const w = width() || 1000
       const h = height() || 600
-      const ns = coerce<GraphNode>(nodes(), [])
+      const ns = coerce(nodes(), []) as GraphNode[]
       return { w, h, ns, pos: computePositions(ns, w, h, layout() || 'positioned') }
     })
 
-    const nodeViews = derived<NodeView[]>(() => {
+    const nodeViews = derived(() => {
       const { w, h, ns, pos } = graph()
+      const sel = selectedId() || ''
       const host = hostEl()
-      const sel = selectedId()
       const out: NodeView[] = []
       for (const n of ns) {
         const p = pos.get(n.id)
         if (!p) continue
         out.push({
-          id: n.id,
-          kind: n.kind,
-          title: n.title ?? n.id,
-          sub: n.sub ?? '',
+          id: n.id, kind: n.kind, title: n.title ?? n.id, sub: n.sub ?? '',
           label: `${n.kind}: ${n.title ?? n.id}`,
-          left: `${(p.x / w) * 100}%`,
-          top: `${(p.y / h) * 100}%`,
+          left: `${(p.x / w) * 100}%`, top: `${(p.y / h) * 100}%`,
           width: n.w ? `${n.w}px` : null,
           selected: sel !== '' && sel === n.id,
           body: nodeBodyHtml(host, n),
@@ -206,13 +59,15 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
       return out
     })
 
-    const edgeViews = derived<EdgeView[]>(() => {
+    const edgeViews = derived(() => {
       const { pos } = graph()
       const out: EdgeView[] = []
-      coerce<GraphEdge>(edges(), []).forEach((e, i) => {
+      const edgeList = coerce(edges(), []) as GraphEdge[]
+      for (let i = 0; i < edgeList.length; i++) {
+        const e = edgeList[i]!
         const a = pos.get(e.from)
         const b = pos.get(e.to)
-        if (!a || !b) return
+        if (!a || !b) continue
         const kind = e.kind ?? 'default'
         out.push({
           key: `${e.from}${e.to}${i}`,
@@ -221,48 +76,40 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           stroke: EDGE_STROKE[kind] ?? EDGE_DEFAULT,
           dash: e.dashed ? '4 3' : null,
         })
-      })
+      }
       return out
     })
 
-    // Consumer-authored node markup — foreign HTML, so it goes through the one
-    // sanctioned reactive-innerHTML path (morph-based, identity-safe).
     const nodeBody: Action<string> = (el, html) => {
       const src = signal(html)
       const stop = bindHtml(el, () => src())
       return { update: (next: string) => src.set(next), destroy: stop }
     }
 
-    const emit = (name: string, id: string, kind: string): void => {
-      hostEl()?.dispatchEvent(
-        new CustomEvent(name, { detail: { id, kind }, bubbles: true, composed: true }),
-      )
+    const emitNode = (name: string, id: string, kind: string): void => {
+      const h = hostEl()
+      if (h) emit(h, name, { id, kind })
     }
-
     const select = (n: NodeView): void => {
-      hostEl()?.setAttribute('selected-id', n.id)
-      emit('sail-node-select', n.id, n.kind)
+      hostEl()?.setAttribute?.('selected-id', n.id)
+      emitNode('sail-node-select', n.id, n.kind)
     }
-
-    const activate = (n: NodeView, e: KeyboardEvent): void => {
+    const activate = (n: NodeView, e: DomEv): void => {
       if (e.key !== 'Enter' && e.key !== ' ') return
       e.preventDefault()
       select(n)
     }
-
-    // Hover fires on ENTERING a node — a mouseover from a child element inside
-    // the same card is the same hover, not a new one.
     let lastHoveredId = ''
     const hover = (n: NodeView): void => {
       if (n.id === lastHoveredId) return
       lastHoveredId = n.id
-      emit('sail-node-hover', n.id, n.kind)
+      emitNode('sail-node-hover', n.id, n.kind)
     }
 
     return { hostEl, nodeViews, edgeViews, nodeBody, select, activate, hover }
-})
-
+  })
 </controller>
+
 <div style({ box: position(relative).w(full).overflow(hidden), paint: bg(surface-1).borderWidth(1).border(border).radius(md) })>
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}

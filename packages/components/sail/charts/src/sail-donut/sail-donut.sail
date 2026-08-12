@@ -24,7 +24,7 @@ import { arcGeometry } from '../engine/geometry-radial'
 import type { Scope } from './sail-donut.sail'
 
 // `error` is identity-only (`unknown` has no decodable <prop>); read on mount.
-interface DonutHost extends Element {
+interface DonutHost {
   error?: unknown
 }
 

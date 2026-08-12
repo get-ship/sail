@@ -1027,6 +1027,8 @@ declare module "@ship/*" {
   export type BoundarySource = any;
   export const scheduleFrame: (fn: () => void) => void;
   export const asSailHost: (node: unknown) => SailHost;
+  export function isSignal(v: unknown): boolean;
+  export function onCleanup(...args: any[]): any;
   export const objectUrlFromBytes: (data: ArrayBuffer | ArrayBufferView, type?: string) => string;
   export const revokeObjectUrl: (url: string) => void;
   export const defineHostProperty: (
@@ -1048,24 +1050,24 @@ declare module "@ship/*" {
   export type Virtual = any;
   export type VirtualItem = any;
   export type ViewMount = any;
-  export const controller: any;
-  export const signal: any;
-  export const derived: any;
-  export const effect: any;
+  export function controller<T = any>(...args: any[]): any;
+  export function signal<T = any>(...args: any[]): any;
+  export function derived<T = any>(...args: any[]): any;
+  export function effect<T = any>(...args: any[]): any;
   export const bindHtml: any;
   export const emit: any;
-  export const mount: any;
-  export const onCleanup: any;
-  export const untrack: any;
-  export const batch: any;
-  export const form: any;
-  export const defineStore: any;
-  export const query: any;
-  export const mutation: any;
+  export function mount(...args: any[]): any;
+  export function onCleanup(...args: any[]): any;
+  export function untrack<T = any>(...args: any[]): any;
+  export function batch<T = any>(...args: any[]): any;
+  export function form<T = any>(...args: any[]): any;
+  export function defineStore<T = any>(...args: any[]): any;
+  export function query<T = any>(...args: any[]): any;
+  export function mutation<T = any>(...args: any[]): any;
   export const navigate: any;
   export const useStore: any;
   export const theme: any;
-  export const createVirtualizer: any;
+  export function createVirtualizer<T = any>(...args: any[]): any;
   const __default: any;
   export default __default;
 }
@@ -1087,6 +1089,8 @@ declare module "@ship/sail-runtime" {
   export type BoundarySource = any;
   export const scheduleFrame: (fn: () => void) => void;
   export const asSailHost: (node: unknown) => SailHost;
+  export function isSignal(v: unknown): boolean;
+  export function onCleanup(...args: any[]): any;
   export const objectUrlFromBytes: (data: ArrayBuffer | ArrayBufferView, type?: string) => string;
   export const revokeObjectUrl: (url: string) => void;
   export const defineHostProperty: (
@@ -1105,10 +1109,13 @@ declare module "@ship/sail-runtime" {
     node: unknown,
     onBox: (width: number, height: number) => void,
   ) => () => void;
-  export const controller: any;
-  export const signal: any;
-  export const derived: any;
-  export const effect: any;
+  export function controller<T = any>(...args: any[]): any;
+  export function signal<T = any>(...args: any[]): any;
+  export function derived<T = any>(...args: any[]): any;
+  export function effect<T = any>(...args: any[]): any;
+  export function batch<T = any>(...args: any[]): any;
+  export function untrack<T = any>(...args: any[]): any;
+  export function isSignal(v: unknown): boolean;
   export const bindHtml: any;
   export const emit: any;
   const __default: any;
@@ -2226,7 +2233,6 @@ fn strip_line_comment(line: &str) -> &str {
     line
 }
 
-
 /// Replace interiors of string/template literals with spaces so needle search
 /// does not match inside them. Delimiter quotes stay so outside columns align.
 fn mask_string_literals(line: &str) -> String {
@@ -2973,7 +2979,6 @@ export default controller((ctx) => {
             "missing ./missing-sibling.sail must hard-fail TS2307 (no *.sail ambient mask), got {diags:?}"
         );
     }
-
 
     #[test]
     fn signal_generic_arity_is_not_type_gate_noise() {

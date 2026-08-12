@@ -31,7 +31,7 @@ function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
 }
 
 export default controller(({ value }: Scope) => {
-  const viewportEl = signal<HTMLDivElement | null>(null)
+  const viewportEl = signal<HostBag | null>(null)
   const seedTransform = parseSnapshot(value())?.transform
   const fallback = createCanvas({
     getViewportElement: () => viewportEl(),
@@ -47,26 +47,24 @@ export default controller(({ value }: Scope) => {
     return `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
   })
 
-  const pointerDown = (e: PointerEvent): void => {
+  const pointerDown = (e: DomEv): void => {
     canvas().onPointerDown(e)
   }
-  const pointerMove = (e: PointerEvent): void => {
+  const pointerMove = (e: DomEv): void => {
     canvas().onPointerMove(e)
   }
-  const pointerUp = (e: PointerEvent): void => {
+  const pointerUp = (e: DomEv): void => {
     canvas().onPointerUp(e)
   }
-  const wheel = (e: WheelEvent): void => {
+  const wheel = (e: DomEv): void => {
     canvas().onWheel(e)
     e.preventDefault()
   }
 
   mount((host) => {
-    Object.defineProperty(host, 'canvas', {
-      configurable: true,
-      get: () => injected(),
+    defineHostProperty(asSailHost(host) as HostBag, 'canvas', {get: () => injected(),
       set: (c: Canvas | null) => {
-        if (c) c.setOptions({ getViewportElement: () => viewportEl() })
+        if (c) c.setOptions({ getViewportElement: () => viewportEl()})
         injected.set(c)
       },
     })
@@ -92,7 +90,7 @@ export default controller(({ value }: Scope) => {
   })
 
   const captureViewport: Action<void> = (node) => {
-    viewportEl.set(node as HTMLDivElement)
+    viewportEl.set(node)
     return { destroy: () => viewportEl.set(null) }
   }
   return { canvas, injected, fallback, captureViewport, debounced, worldTransformCss, pointerDown, pointerMove, pointerUp, wheel }

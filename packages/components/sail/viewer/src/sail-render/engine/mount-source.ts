@@ -70,7 +70,7 @@ const INHERITED_BASELINE: Record<string, string> = {
  * theme/density custom properties still inherit through the boundary.
  * Idempotent — a second call is a no-op once the shadow exists.
  */
-export function attachEngineShadow(host: HTMLElement): ShadowRoot {
+export function attachEngineShadow(host: any): ShadowRoot {
   if (host.shadowRoot) return host.shadowRoot
   const moved = Array.from(host.childNodes)
   const root = host.attachShadow({ mode: 'open' })
@@ -82,7 +82,7 @@ export function attachEngineShadow(host: HTMLElement): ShadowRoot {
  *  role tokens, and return the owning shadow root (where compiled CSS adopts).
  *  Does NOT attach a nested shadow — the stage lives in `sail-render`'s own
  *  shadow, so the specimen stays reachable from `host.shadowRoot`. */
-export function prepareStage(stageEl: HTMLElement): ShadowRoot | null {
+export function prepareStage(stageEl: any): ShadowRoot | null {
   for (const [prop, value] of Object.entries(INHERITED_BASELINE)) {
     stageEl.style.setProperty(prop, value)
   }
@@ -119,7 +119,7 @@ export function adoptCompiledCss(root: ShadowRoot, css: string | null): () => vo
  * so the controller's secondary try/catch renders a panel, not a blank stage.
  */
 export function mountBySource(
-  stageEl: HTMLElement,
+  stageEl: any,
   compile: CompileFn,
   opts: MountSourceOpts,
 ): { mount: ViewMount; js: string; css: string | null } {
@@ -143,7 +143,7 @@ export function mountBySource(
     route: opts.route ?? makeRoute({ url: new URL('http://localhost/') }),
     navigate: opts.navigate ?? (() => {}),
   } as unknown as Parameters<typeof def.setup>[0]
-  const scope = def.setup(ctx) as { __mount: (c: HTMLElement) => () => void }
+  const scope = def.setup(ctx) as { __mount: (c: any) => () => void }
 
   // Clean compile + setup: now safe to tear down the prior mount before the
   // new one appends (so the empties-snapshot diff doesn't catch new nodes).

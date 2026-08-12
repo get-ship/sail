@@ -41,7 +41,7 @@ const ESTIMATED_MESSAGE_HEIGHT = 72
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const items = signal<MessageItem[]>([])
-    const scrollEl = signal<HTMLElement | null>(null)
+    const scrollEl = signal<HostBag | null>(null)
 
     const virt: Virtual = createVirtualizer({
       count: () => items().length,
@@ -64,7 +64,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     })
 
     mount((host) => {
-      const init = (host as unknown as { items?: MessageItem[] }).items
+      const init = (host as { items?: MessageItem[] }).items
       if (init != null) items.set(init)
       Object.defineProperty(host, 'items', {
         configurable: true,
@@ -74,7 +74,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       let pinned = true
 
-      const isAtBottom = (el: HTMLElement): boolean =>
+      const isAtBottom = (el: HostBag): boolean =>
         el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_THRESHOLD
 
       const onScroll = () => {
@@ -103,7 +103,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     })
 
     const captureScroll: Action<void> = (node) => {
-      scrollEl.set(node as HTMLElement)
+      scrollEl.set(node)
       return { destroy: () => scrollEl.set(null) }
     }
     return { items, captureScroll, virt, totalSize, windowItems }

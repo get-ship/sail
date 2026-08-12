@@ -23,7 +23,7 @@
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from '../sail-tree/tree-node'
 import { parseJsonColumns, parseJsonNodes } from '../sail-tree/decode'
 import { treeTableOptions } from '../sail-tree/sail-tree.engine'
 import { treeHeaderViews, windowTreeRows, type TreeHeaderView } from '../sail-tree/sail-tree.view'
@@ -42,7 +42,7 @@ function emptyTree(): Table<AnyTreeNode> {
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
-    const viewportEl = signal<HTMLDivElement | null>(null)
+    const viewportEl = signal<HostBag | null>(null)
 
     const EMPTY = emptyTree()
     const tree = derived<Table<AnyTreeNode>>(() => treeSig() ?? EMPTY)
@@ -84,7 +84,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     mount((host) => {
       // Capture pre-connect `tree={table}` identity (bindDynamic may fire first).
-      const preTree = (host as unknown as { tree?: Table<AnyTreeNode> | null }).tree
+      const preTree = (host as { tree?: Table<AnyTreeNode> | null }).tree
       if (preTree != null) treeSig.set(preTree)
       Object.defineProperty(host, 'tree', {
         configurable: true,
@@ -136,7 +136,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     })
 
     const captureViewport: Action<void> = (node) => {
-      viewportEl.set(node as HTMLElement)
+      viewportEl.set(node)
       return { destroy: () => viewportEl.set(null) }
     }
     return {

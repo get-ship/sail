@@ -29,13 +29,13 @@ export interface CalendarInteractionContext {
  *  slot), or null. Uses `.closest()` off `e.target` — the surface lives in one
  *  shadow root so the target is never retargeted across a boundary. */
 function isoFromEvent(e: Event): string | null {
-  const el = (e.target as HTMLElement | null)?.closest?.('[data-iso]') as HTMLElement | null
+  const el = (e.target as any | null)?.closest?.('[data-iso]') as any | null
   return el?.dataset.iso ?? null
 }
 
 /** The `{ iso, minutes }` of the background time-slot under a pointer event. */
 function slotFromEvent(e: Event): { iso: string; minutes: number } | null {
-  const el = (e.target as HTMLElement | null)?.closest?.('[data-iso][data-minutes]') as HTMLElement | null
+  const el = (e.target as any | null)?.closest?.('[data-iso][data-minutes]') as any | null
   if (!el || el.dataset.minutes == null || !el.dataset.iso) return null
   return { iso: el.dataset.iso, minutes: Number(el.dataset.minutes) }
 }
@@ -49,7 +49,7 @@ function timeAt(iso: string, minutes: number): ISODateTime {
 }
 
 /** Map a keydown to a whole-day delta for Shift+Arrow range extension. */
-function shiftArrowDelta(e: KeyboardEvent): number | null {
+function shiftArrowDelta(e: any): number | null {
   if (!e.shiftKey) return null
   switch (e.key) {
     case 'ArrowRight':
@@ -69,7 +69,7 @@ function shiftArrowDelta(e: KeyboardEvent): number | null {
  *  pointerdown routes month-grid range drag vs. time-grid create/move; keydown
  *  handles Shift+Arrow range extension. Cleanups auto-enroll via
  *  `bindNativeEvent` against the active effect-scope. */
-export function wireCalendarInteractions(host: HTMLElement, ctx: CalendarInteractionContext): void {
+export function wireCalendarInteractions(host: any, ctx: CalendarInteractionContext): void {
   const sr = host.shadowRoot ?? host
   if (!sr) return
   const { calOf, slotMinutes } = ctx
@@ -150,11 +150,11 @@ export function wireCalendarInteractions(host: HTMLElement, ctx: CalendarInterac
   }
 
   const onPointerDown = (e: Event): void => {
-    const target = e.target as HTMLElement | null
+    const target = e.target as any | null
     if (!target) return
 
     // A timed chip → move drag.
-    const chip = target.closest?.('[data-event-id]') as HTMLElement | null
+    const chip = target.closest?.('[data-event-id]') as any | null
     if (chip) {
       beginMove(chip.dataset.eventId!)
       return
@@ -167,16 +167,16 @@ export function wireCalendarInteractions(host: HTMLElement, ctx: CalendarInterac
     }
     // A month-grid day cell → range drag (gated by the engine's range-mode).
     if (calOf().rangeMode === 'none') return
-    const cell = target.closest?.('[role=gridcell][data-iso]') as HTMLElement | null
+    const cell = target.closest?.('[role=gridcell][data-iso]') as any | null
     if (cell) beginMonthRange(cell.dataset.iso!)
   }
 
-  const onKeyDown = (e: KeyboardEvent): void => {
+  const onKeyDown = (e: any): void => {
     const cal = calOf()
     if (cal.rangeMode === 'none') return
-    const cell = (e.target as HTMLElement | null)?.closest?.(
+    const cell = (e.target as any | null)?.closest?.(
       '[role=gridcell][data-iso]',
-    ) as HTMLElement | null
+    ) as any | null
     if (!cell) return
     const delta = shiftArrowDelta(e)
     if (delta == null) return

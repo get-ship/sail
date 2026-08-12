@@ -11,14 +11,14 @@
  * `afterEach(() => cleanup())` removes all of them between tests. */
 export interface TestContainerRegistry {
   /** Make a fresh container, append to body, register for cleanup. */
-  mk(): HTMLElement
+  mk(): any
   /** Remove every registered container from the DOM. */
   cleanup(): void
 }
 
 /** Create a registry. Call `cleanup()` in `afterEach`. */
 export function createContainerRegistry(): TestContainerRegistry {
-  const containers: HTMLElement[] = []
+  const containers: any[] = []
   return {
     mk() {
       const c = document.createElement('div')
@@ -56,7 +56,7 @@ export function mount(
   tag: string,
   attrs: Record<string, string | boolean> = {},
   innerHTML: string = '',
-): { el: HTMLElement; container: HTMLElement } {
+): { el: any; container: any } {
   const container = reg.mk()
   const attrsHtml = Object.entries(attrs)
     .map(([k, v]) =>
@@ -65,7 +65,7 @@ export function mount(
     .filter((s) => s.length > 0)
     .join(' ')
   container.innerHTML = `<${tag}${attrsHtml ? ' ' + attrsHtml : ''}>${innerHTML}</${tag}>`
-  const el = container.querySelector(tag) as HTMLElement
+  const el = container.querySelector(tag) as any
   return { el, container }
 }
 
@@ -74,7 +74,7 @@ export function mount(
  * `currentColor`. Returns the `fill`/`stroke` values that are none of those
  * (a hex/rgb/oklch/color-mix literal); an empty list is a token-clean chart.
  */
-export function nonTokenPaints(root: Element): string[] {
+export function nonTokenPaints(root: any): string[] {
   const offenders: string[] = []
   for (const node of root.querySelectorAll('[fill], [stroke]')) {
     for (const attr of ['fill', 'stroke']) {

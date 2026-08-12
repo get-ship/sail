@@ -26,5 +26,5 @@
   },
   "files": ["node_modules/.sail/types.d.ts"],
   "include": ["src/**/*.ts", "routes/**/*.ts", "src/compositions/**/*.ts", "src/stores/**/*.ts"],
-  "exclude": ["node_modules", "dist", ".deck"]
+  "exclude": ["node_modules", "dist", ".deck", "src/actions", "src/actions/**"]
 }

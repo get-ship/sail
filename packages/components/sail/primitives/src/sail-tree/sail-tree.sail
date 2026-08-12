@@ -20,7 +20,7 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import { createTable, type Table } from '../sail-table/engine/create-table'
-import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
+import type { TreeNode } from './tree-node'
 import { parseJsonNodes } from './decode'
 import { treeTableOptions } from './sail-tree.engine'
 import { flowTreeRows } from './sail-tree.view'
@@ -62,7 +62,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     mount((host) => {
       // Live Table identity on host.tree (not a stringified attribute).
-      const preTree = (host as unknown as { tree?: Table<AnyTreeNode> | null }).tree
+      const preTree = (host as { tree?: Table<AnyTreeNode> | null }).tree
       if (preTree != null) treeSig.set(preTree)
       Object.defineProperty(host, 'tree', {
         configurable: true,

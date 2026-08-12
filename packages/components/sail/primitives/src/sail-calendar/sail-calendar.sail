@@ -171,17 +171,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
         lastDate = d
       })
 
-      const onShadowClick = (e: Event) => {
-        const t = e.target as HTMLElement | null
+      const onShadowClick = (e: DomEv) => {
+        const t = e.target as HostBag | null
         if (!t) return
         const cal = active()
 
-        const viewBtn = t.closest?.('[data-view]') as HTMLElement | null
+        const viewBtn = t.closest?.('[data-view]') as HostBag | null
         if (viewBtn) {
           cal.setView(viewBtn.dataset.view as ViewMode)
           return
         }
-        const navBtn = t.closest?.('[data-nav]') as HTMLElement | null
+        const navBtn = t.closest?.('[data-nav]') as HostBag | null
         if (navBtn) {
           const act = navBtn.dataset.nav
           if (act === 'next') cal.next()
@@ -189,10 +189,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
           else if (act === 'today') cal.today()
           return
         }
-        const chip = t.closest?.('[data-event-id]') as HTMLElement | null
+        const chip = t.closest?.('[data-event-id]') as HostBag | null
         if (chip) {
           const id = chip.dataset.eventId!
-          cal.selectEvent(id, { additive: (e as MouseEvent).metaKey })
+          cal.selectEvent(id, { additive: (e as DomEv).metaKey })
           host.emit!('sail-event-click', { id })
           host.emit!('sail-event-select', {
             id,
@@ -201,15 +201,15 @@ export default controller((ctx: ControllerScope<Scope>) => {
           })
           return
         }
-        const dayCell = t.closest?.('[role=gridcell][data-iso]') as HTMLElement | null
+        const dayCell = t.closest?.('[role=gridcell][data-iso]') as HostBag | null
         if (dayCell) cal.goToDate(dayCell.dataset.iso!)
       }
 
       // Month-grid keyboard: arrows/Home/End/Page*/Enter → engine; DOM focus follows.
-      const onShadowKey = (e: KeyboardEvent) => {
-        const cell = (e.target as HTMLElement | null)?.closest?.(
+      const onShadowKey = (e: DomEv) => {
+        const cell = (e.target as HostBag | null)?.closest?.(
           '[role=gridcell][data-iso]',
-        ) as HTMLElement | null
+        ) as HostBag | null
         if (!cell) return
         // Shift+Arrow = range extension (interactions module owns both).
         if (e.shiftKey) return
@@ -236,13 +236,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
         queueMicrotask(() => {
           const next = (host.shadowRoot ?? host).querySelector(
             `[role=gridcell][data-iso="${iso}"]`,
-          ) as HTMLElement | null
+          ) as HostBag | null
           next?.focus()
         })
       }
 
       ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
-      ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKey as EventListener)
+      ;(host.shadowRoot ?? host).addEventListener('keydown', onShadowKey)
 
       // Range selection (month drag + Shift+Arrow) + drag-to-create/move (time-
       // grid slot drag). The DOM↔engine bridge lives in the interactions module;
@@ -267,7 +267,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         stopView()
         stopEmit()
         ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
-        ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKey as EventListener)
+        ;(host.shadowRoot ?? host).removeEventListener('keydown', onShadowKey)
         delete (host as { calendar?: unknown }).calendar
       }
     })

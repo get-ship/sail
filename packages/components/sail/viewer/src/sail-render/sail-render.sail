@@ -35,13 +35,13 @@ function diagFromError(e: unknown): CompileDiagnostic {
 }
 
 export default controller((ctx: ControllerScope<Scope>) => {
-    const stageEl = signal<HTMLElement | null>(null)
+    const stageEl = signal<HostBag | null>(null)
     const captureStage: Action<void> = (node) => {
-      stageEl.set(node as HTMLElement)
+      stageEl.set(node)
       return { destroy: () => stageEl.set(null) }
     }
 
-    const viewportWidth = (ctx as unknown as { viewportWidth?: () => string }).viewportWidth
+    const viewportWidth = (ctx as { viewportWidth?: () => string }).viewportWidth
     const stageMaxWidth = (): string | null => {
       const w = viewportWidth ? viewportWidth() : 'full'
       return w === 'full' || !w ? null : `var(--breakpoint-${w})`
@@ -67,8 +67,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       // signal.set(fn) treats fn as updater — wrap so function-valued props store as values.
       type AnySig = { (): unknown; set: (u: (p: unknown) => unknown) => void }
       const defineHostProp = (name: string, sig: { (): unknown; set: (v: never) => void }): void => {
-        const s = sig as unknown as AnySig
-        const existing = (host as unknown as Record<string, unknown>)[name]
+        const s = sig as AnySig
+        const existing = (host as Record<string, unknown>)[name]
         if (existing !== undefined) s.set(() => existing)
         Object.defineProperty(host, name, {
           configurable: true,
@@ -151,7 +151,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         }
       })
 
-      function mountSource(stage: HTMLElement, fn: CompileFn, src: string): void {
+      function mountSource(stage: HostBag, fn: CompileFn, src: string): void {
         compiling.set(true)
         try {
           // Compile before dispose so last-good survives a bad source.
@@ -190,7 +190,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       }
 
       function mountTag(
-        stage: HTMLElement,
+        stage: HostBag,
         fn: CompileFn,
         tag: string,
         src: string,
@@ -225,8 +225,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       }
 
       // error-boundary → sail-render:error + runtime panel.
-      const onCaught = (e: Event): void => {
-        const detail = (e as CustomEvent).detail as { error?: unknown } | undefined
+      const onCaught = (e: DomEv): void => {
+        const detail = (e as DomEv).detail as { error?: unknown } | undefined
         const err = detail?.error
         const message = err instanceof Error ? err.message : String(err ?? 'runtime error')
         runtimeError.set(message)

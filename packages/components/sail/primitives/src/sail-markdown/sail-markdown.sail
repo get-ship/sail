@@ -20,7 +20,7 @@ export { renderMarkdown }
 
 export default controller((ctx: Scope) => {
   const paintMarkdown: Action<void> = (node) => {
-    const stop = bindHtml(node as HTMLElement, () => renderMarkdown(ctx.value() ?? ''))
+    const stop = bindHtml(node, () => renderMarkdown(ctx.value() ?? ''))
     return { destroy: stop }
   }
   return { paintMarkdown }

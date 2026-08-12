@@ -8,7 +8,7 @@
 // Events go through the exported free `emit(host, …)` (host-api.ts:60) — the
 // single sanctioned wrapper (it builds `new CustomEvent(name, { detail,
 // bubbles: true, composed: true })`). NOT `host.emit!` (optional-typed), NOT an
-// open-coded `dispatchEvent`. The param is `EventTarget` to match `emit`.
+// open-coded `dispatchEvent`. The param is `any` to match `emit`.
 //
 // Authority: build-spec §"Backbone #2 — the ViewerRenderer contract".
 
@@ -16,10 +16,10 @@ import { emit } from '@ship/sail-runtime/internal'
 import type { ViewerSource } from './types'
 
 export interface ViewerRendererProps {
-  /** prop:src identity (live) — a resolved ViewerSource / Blob / ArrayBuffer /
+  /** prop:src identity (live) — a resolved ViewerSource / any / ArrayBuffer /
    *  object-url / text the consumer already fetched. The renderer never
    *  fetches its own bytes. */
-  src?: ViewerSource | Blob | ArrayBuffer | string
+  src?: ViewerSource | any | ArrayBuffer | string
 }
 
 export interface ViewerRendererEvents {
@@ -30,16 +30,16 @@ export interface ViewerRendererEvents {
 }
 
 /** Fired on first successful render/parse. */
-export function emitViewerLoad(host: EventTarget): void {
+export function emitViewerLoad(host: any): void {
   emit(host, 'sail-viewer-load')
 }
 
 /** Fired on parse/decode failure with the computed message. */
-export function emitViewerError(host: EventTarget, message: string): void {
+export function emitViewerError(host: any, message: string): void {
   emit(host, 'sail-viewer-error', { message })
 }
 
 /** Fired for pdf page-stream progress. */
-export function emitViewerProgress(host: EventTarget, loaded: number, total: number): void {
+export function emitViewerProgress(host: any, loaded: number, total: number): void {
   emit(host, 'sail-viewer-progress', { loaded, total })
 }

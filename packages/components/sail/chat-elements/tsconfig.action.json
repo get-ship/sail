@@ -1,0 +1,30 @@
+{
+  "$comment": "Sail project tsconfig (TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. TypeEnv::Action — ESNext + action-observation.d.ts; no document/window. Ambient pack in files (not include) so node_modules exclude does not drop node_modules/.sail/types.d.ts.",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": ["./src/components/*"],
+      "@/compositions/*": ["./src/compositions/*"],
+      "@/stores/*": ["./src/stores/*"],
+      "@/actions/*": ["./src/actions/*"],
+      "@/themes/*": ["./themes/*"]
+    }
+  },
+  "files": ["node_modules/.sail/types.d.ts", "node_modules/.sail/action-observation.d.ts"],
+  "include": ["src/actions/**/*.ts"],
+  "exclude": ["node_modules", "dist", ".deck"]
+}
