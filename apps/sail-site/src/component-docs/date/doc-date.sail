@@ -91,7 +91,7 @@ export default controller((_ctx: Scope) => {
         disabled={disabled()}
         bind:value={value}
         style(fullW)
-      />
+     />
     </column>
 
     <column slot="knobs" gap="4" align="stretch">
@@ -110,13 +110,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{size()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>xs</span>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size" ticks="xs,sm,md,lg"></slider>
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={invalid} size="sm" /> Invalid</label>

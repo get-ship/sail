@@ -41,7 +41,7 @@ export default controller((_ctx: Scope) => {
   const BDG_SIZES = ['sm', 'md', 'lg'] as const
   const variant = signal('soft')
   const sizeIdx = signal(1)
-  const badgeTone = signal('primary')
+  const badgeTone = signal('muted')
   const badgePill = signal(false)
   const pickBadgeTone = (t: string): void => badgeTone.set(t)
   const clearBadgeTone = (): void => badgeTone.set('')
@@ -71,7 +71,7 @@ export default controller((_ctx: Scope) => {
   const bdgExPill = () =>
     `<badge variant="solid" tone="primary" pill>12</badge>\n<badge variant="soft" tone="destructive" pill>3</badge>`
   const bdgExDefault = () =>
-    `<badge variant="soft">default</badge>\n<badge variant="solid">default</badge>\n<badge variant="outline">default</badge>`
+    `<badge variant="soft">muted</badge>\n<badge variant="solid">muted</badge>\n<badge variant="outline">muted</badge>`
 
   return {
     variant,
@@ -187,12 +187,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{badgeSize()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="2" step="1" size="sm" label="Size" ticks="sm,md,lg"></slider>
       </column>
       <column gap="2">
         <label style(knobLabel)>Pill</label>
@@ -233,13 +228,13 @@ export default controller((_ctx: Scope) => {
 
       <doc-example
         title="Default (theme)"
-        lead="No tone uses the theme’s default badge colors."
+        lead="Default tone is muted — a real colour, not the page background."
         code={bdgExDefault()}
       >
         <row gap="2" align="center" style(demoRow)>
-          <badge variant="soft">default</badge>
-          <badge variant="solid">default</badge>
-          <badge variant="outline">default</badge>
+          <badge variant="soft">muted</badge>
+          <badge variant="solid">muted</badge>
+          <badge variant="outline">muted</badge>
         </row>
       </doc-example>
     </column>

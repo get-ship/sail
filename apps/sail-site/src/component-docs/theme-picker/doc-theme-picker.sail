@@ -104,7 +104,7 @@ export default controller((_ctx: Scope) => {
 
     <column slot="knobs" gap="4" align="stretch">
       <column gap="2">
-        <label style(knobLabel)>Value</label>
+        <label style(knobLabel)>Selected theme</label>
         <select size="sm" bind:value={value} label="Value">
           <option value="">(site default)</option>
           <option value="ship">ship</option>
@@ -133,22 +133,22 @@ export default controller((_ctx: Scope) => {
         <theme-picker></theme-picker>
       </doc-example>
       <doc-example
-        title="Bound value"
-        lead="value + on-theme-change for controlled selection."
+        title="Selected theme"
+        lead="value is the selected theme id — it applies that theme."
         code={exValue()}
       >
         <theme-picker value="console" on-theme-change={onThemeChange}></theme-picker>
       </doc-example>
       <doc-example
         title="Mode only"
-        lead="Light / dark / system cycle — no full catalog."
+        lead="mode-only cycles light / dark / system. No catalog."
         code={exMode()}
       >
         <theme-picker mode-only></theme-picker>
       </doc-example>
       <doc-example
         title="Inline"
-        lead="Panel in document flow (no floating chrome)."
+        lead="Catalog stays in the page — no popover, no hidden trigger."
         code={exInline()}
       >
         <theme-picker inline></theme-picker>

@@ -40,7 +40,7 @@ export const code = {
 <dialog on:keydown|key:Escape={close}>...</dialog>`,
 
   twoWay: `<input bind:value={draft} />
-<input type="checkbox" bind:checked={agreed} />`,
+<checkbox bind:checked={agreed} />`,
 
   slotDef: `<div class="label"><slot name="label"></slot></div>
 <div class="control"><slot></slot></div>

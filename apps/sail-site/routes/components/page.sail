@@ -217,7 +217,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     </row>
                   </column>}{else-if {e.tag === 'textarea'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Release notes</label>
-                    <textarea size="sm" rows="2" placeholder="What changed in this ship?"></textarea>
+                    <textarea size="sm" rows="2" placeholder="What changed in this ship?" />
                   </column>}{else-if {e.tag === 'select'} => <column gap="1" style({ box: w(full) })>
                     <label style(fieldLabel)>Team</label>
                     <select bind:value={team}>

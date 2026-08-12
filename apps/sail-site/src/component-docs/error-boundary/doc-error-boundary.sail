@@ -82,7 +82,7 @@ export default controller((_ctx: Scope) => {
           size="sm"
           placeholder="fallback copy"
           style(fullW)
-        />
+       />
         <p style(mutedXs)>User-facing fallback copy — not the raw Error string.</p>
       </column>
     </column>

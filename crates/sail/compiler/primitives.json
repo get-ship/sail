@@ -176,7 +176,7 @@
           "outline",
           "ghost"
         ],
-        "default": "default"
+        "default": "solid"
       }
     },
     "card": {
@@ -228,6 +228,37 @@
         "default": "default"
       }
     },
+    "checkbox": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "value": {
+        "type": "string",
+        "default": ""
+      }
+    },
     "chip": {
       "disabled": {
         "type": "bool",
@@ -275,9 +306,32 @@
         "type": "string",
         "default": ""
       },
+      "copy": {
+        "type": "bool",
+        "default": "false",
+        "description": "When true, show a Copy control in the top-right of the block."
+      },
       "lang": {
         "type": "string",
         "default": "sail"
+      }
+    },
+    "color": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "value": {
+        "type": "string",
+        "default": "#000000"
       }
     },
     "combobox": {
@@ -292,6 +346,67 @@
     },
     "context-menu": {
       "for": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "date": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "readonly": {
+        "type": "bool",
+        "default": "false"
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "step": {
+        "type": "string",
+        "default": ""
+      },
+      "type": {
+        "values": [
+          "date",
+          "time",
+          "datetime-local",
+          "month",
+          "week"
+        ],
+        "default": "date"
+      },
+      "value": {
         "type": "string",
         "default": ""
       }
@@ -405,6 +520,41 @@
         "default": "false"
       }
     },
+    "file": {
+      "accept": {
+        "type": "string",
+        "default": ""
+      },
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "multiple": {
+        "type": "bool",
+        "default": "false"
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      }
+    },
     "hover-card": {
       "placement": {
         "type": "string",
@@ -440,17 +590,61 @@
       }
     },
     "input": {
+      "autocomplete": {
+        "type": "string",
+        "default": ""
+      },
       "disabled": {
         "type": "bool",
         "default": "false"
+      },
+      "inputmode": {
+        "type": "string",
+        "default": ""
       },
       "invalid": {
         "type": "bool",
         "default": "false"
       },
+      "max": {
+        "type": "string",
+        "default": ""
+      },
+      "maxlength": {
+        "type": "string",
+        "default": ""
+      },
+      "min": {
+        "type": "string",
+        "default": ""
+      },
+      "minlength": {
+        "type": "string",
+        "default": ""
+      },
+      "name": {
+        "type": "string",
+        "default": ""
+      },
+      "pattern": {
+        "type": "string",
+        "default": ""
+      },
       "placeholder": {
         "type": "string",
         "default": ""
+      },
+      "readonly": {
+        "type": "bool",
+        "default": "false"
+      },
+      "required": {
+        "type": "bool",
+        "default": "false"
+      },
+      "reveal": {
+        "type": "bool",
+        "default": "true"
       },
       "size": {
         "values": [
@@ -461,6 +655,10 @@
         ],
         "default": "md"
       },
+      "step": {
+        "type": "string",
+        "default": ""
+      },
       "type": {
         "values": [
           "text",
@@ -470,20 +668,13 @@
           "search",
           "tel",
           "url",
-          "date",
-          "time",
-          "datetime-local",
-          "month",
-          "week",
-          "file",
-          "color",
-          "checkbox",
-          "radio",
-          "range",
-          "submit",
           "hidden"
         ],
         "default": "text"
+      },
+      "value": {
+        "type": "string",
+        "default": ""
       }
     },
     "label": {

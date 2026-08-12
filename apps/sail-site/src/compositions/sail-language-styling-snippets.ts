@@ -63,7 +63,7 @@ export default controller(() => {
 })
 </controller>
 
-<input type="range" min="0" max="200" bind:value={shift} />
+<slider min="0" max="200" bind:value={shift} />
 <card style({ box: w(9).h(9), paint: bg(primary).radius(md).translateX(bind(shiftPx)) })>
 </card>`,
 

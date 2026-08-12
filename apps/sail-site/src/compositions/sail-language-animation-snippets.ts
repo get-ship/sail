@@ -54,7 +54,7 @@ export default controller(() => {
 })
 </controller>
 
-<input type="range" min="0" max="100" bind:value={scrubText} />
+<slider min="0" max="100" bind:value={scrubText} />
 <card style({ paint: translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale)) })>
 </card>`,
 

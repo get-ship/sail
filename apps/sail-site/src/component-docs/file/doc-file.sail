@@ -52,6 +52,7 @@ export default controller((_ctx: Scope) => {
   })
 
   const exAccept = () => `<file accept="image/*" />\n<file accept=".pdf,application/pdf" multiple />`
+  const exDrop = () => `<file variant="drop" accept="image/*" multiple />`
 
   return {
     sizeIdx,
@@ -65,6 +66,7 @@ export default controller((_ctx: Scope) => {
     usageCode,
     specimenCode,
     exAccept,
+    exDrop,
   }
 })
 </controller>
@@ -100,13 +102,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Size</label>
           <span style(sizeValue)>{size()}</span>
         </row>
-        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>xs</span>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={sizeIdx} min="0" max="3" step="1" size="sm" label="Size" ticks="xs,sm,md,lg"></slider>
       </column>
       <row gap="4" align="center">
         <label><checkbox bind:checked={multiple} size="sm" /> Multiple</label>
@@ -122,13 +118,20 @@ export default controller((_ctx: Scope) => {
       <p style(sectionLabel)>Examples</p>
       <doc-example
         title="Filters"
-        lead="accept limits the system picker. For drag-and-drop, pair with dropzone."
+        lead="accept limits the system picker."
         code={exAccept()}
       >
         <column gap="2" style(fieldShell)>
           <file accept="image/*" style(fullW) />
           <file accept=".pdf,application/pdf" multiple style(fullW) />
         </column>
+      </doc-example>
+      <doc-example
+        title="Drop surface"
+        lead='variant="drop" is the dashed target. Same accept and multiple as the picker.'
+        code={exDrop()}
+      >
+        <file variant="drop" accept="image/*" multiple style(fullW) />
       </doc-example>
     </column>
   </sail-component-viewer>

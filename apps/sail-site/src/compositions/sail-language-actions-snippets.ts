@@ -5,7 +5,7 @@
 import { signal } from '@ship/sail-runtime'
 export const code = {
   attach: `<!-- use: hands the element to a function. Nothing to store. -->
-<textarea use:autosize></textarea>
+<textarea use:autosize />
 <div use:clickOutside={close}>…</div>`,
 
   author: `// src/actions/autofocus.ts — author hatch under the action floor.

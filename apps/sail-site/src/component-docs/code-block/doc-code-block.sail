@@ -107,7 +107,7 @@ export default controller((_ctx: Scope) => {
           rows="6"
           placeholder="source text"
           style(fullW)
-        ></textarea>
+        />
         <p style(mutedXs)>Pass source as the code string prop — not children.</p>
       </column>
     </column>

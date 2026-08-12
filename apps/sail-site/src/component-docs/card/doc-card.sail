@@ -76,11 +76,11 @@ export default controller((_ctx: Scope) => {
   })
 
   const cardExDefault = () =>
-    `<card>\n  <strong>Harbor Signals</strong>\n  <p>4 tracks · last played today</p>\n</card>`
+    `<card>\n  <strong slot="header">Harbor Signals</strong>\n  <p>4 tracks · last played today</p>\n  <row slot="footer" gap="2">\n    <button size="sm" variant="ghost">Skip</button>\n    <button size="sm" variant="solid" tone="primary">Play</button>\n  </row>\n</card>`
   const cardExInteractive = () =>
-    `<card interactive accent-bar="static" tone="primary">\n  <strong>Open project</strong>\n</card>`
+    `<card interactive>\n  <strong>Open project</strong>\n  <p>Hover lifts the surface. No tone required.</p>\n</card>`
   const cardExOutline = () =>
-    `<card variant="outline" padding="lg" status-rail>\n  <strong>Outline shell</strong>\n</card>`
+    `<card variant="outline" status-rail>\n  <strong slot="header">Deploy</strong>\n  <p>Pipeline passed on main.</p>\n</card>`
 
   return {
     variant,
@@ -159,13 +159,7 @@ export default controller((_ctx: Scope) => {
           <label style(knobLabel)>Padding</label>
           <span style(sizeValue)>{padding()}</span>
         </row>
-        <slider bind:value={padIdx} min="0" max="3" step="1" size="sm" label="Padding"></slider>
-        <row gap="0" align="center" justify="between" style(tickRow)>
-          <span style(tick)>none</span>
-          <span style(tick)>sm</span>
-          <span style(tick)>md</span>
-          <span style(tick)>lg</span>
-        </row>
+        <slider bind:value={padIdx} min="0" max="3" step="1" size="sm" label="Padding" ticks="none,sm,md,lg"></slider>
       </column>
       <column gap="2">
         <label style(knobLabel)>Tone</label>
@@ -246,35 +240,39 @@ export default controller((_ctx: Scope) => {
       <p style(sectionLabel)>Examples</p>
 
       <doc-example
-        title="Default surface"
-        lead="Theme fill when no tone is set."
+        title="Header, body, footer"
+        lead="Slots give a real card. Default surface is the theme card — no extra tone."
         code={cardExDefault()}
       >
         <card style(specimen)>
-          <strong>Harbor Signals</strong>
+          <strong slot="header">Harbor Signals</strong>
           <p style(mutedXs)>4 tracks · last played today</p>
+          <row slot="footer" gap="2">
+            <button size="sm" variant="ghost">Skip</button>
+            <button size="sm" variant="solid" tone="primary">Play</button>
+          </row>
         </card>
       </doc-example>
 
       <doc-example
-        title="Interactive + accent"
-        lead='interactive hover lift; accent-bar="static" with tone.'
+        title="Interactive"
+        lead="interactive adds hover lift. Leave tone off unless you want a tinted border."
         code={cardExInteractive()}
       >
-        <card interactive accent-bar="static" tone="primary" style(specimen)>
+        <card interactive style(specimen)>
           <strong>Open project</strong>
-          <p style(mutedXs)>Pointer + lift, one attribute.</p>
+          <p style(mutedXs)>Hover lifts the surface. No tone required.</p>
         </card>
       </doc-example>
 
       <doc-example
         title="Outline + status rail"
-        lead='variant="outline" and status-rail for a leading rail.'
+        lead="outline for a lighter shell; status-rail for a leading stripe."
         code={cardExOutline()}
       >
-        <card variant="outline" padding="lg" status-rail style(specimen)>
-          <strong>Outline shell</strong>
-          <p style(mutedXs)>Transparent body, leading rail.</p>
+        <card variant="outline" status-rail style(specimen)>
+          <strong slot="header">Deploy</strong>
+          <p style(mutedXs)>Pipeline passed on main.</p>
         </card>
       </doc-example>
     </column>

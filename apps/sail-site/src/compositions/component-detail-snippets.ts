@@ -67,7 +67,7 @@ export default controller(() => ({ bio: signal('') }))
   size="md"
   rows="3"
   bind:value={bio}
-></textarea>
+/>
 <p>{bio().length} characters</p>`,
 
   select: `<controller>
@@ -180,10 +180,7 @@ export default controller(() => ({ volume: signal(48) }))
   </column>
 </fieldset>`,
 
-  dropzone: `<card dropzone>
-    style({ box: pad(6), animate: enter({ opacity: 'fade' }) })
-  Drop a file, or click to browse
-</card>`,
+  dropzone: `<dropzone accept="image/*" multiple />`,
 
   'theme-picker': `<!-- the whole switcher: trigger, panel, live previews -->
 <theme-picker>

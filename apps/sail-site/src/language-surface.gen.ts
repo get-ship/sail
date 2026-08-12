@@ -5359,11 +5359,11 @@ export const SX_ATOMS: SxAtom[] = [
 export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   {
     "prefix": "hover",
-    "selector": ":hover"
+    "selector": ":hover:not(:disabled):not([aria-disabled='true'])"
   },
   {
     "prefix": "focus",
-    "selector": ":focus-visible"
+    "selector": ":focus-visible:not(:disabled):not([aria-disabled='true'])"
   },
   {
     "prefix": "focus-within",
@@ -5371,7 +5371,7 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   },
   {
     "prefix": "active",
-    "selector": ":active"
+    "selector": ":active:not(:disabled):not([aria-disabled='true'])"
   },
   {
     "prefix": "disabled",
@@ -5702,7 +5702,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
   "stdlib": [
     {
       "tag": "a",
-      "description": "native <a>. Bare (no variant) = text link (sail-base color). With"
+      "description": "native <a>. Dual mode:"
     },
     {
       "tag": "accordion",
@@ -5733,6 +5733,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 surface with header/body/footer slots, tone border, status rail,"
     },
     {
+      "tag": "checkbox",
+      "description": "boolean check product. Impl: native input type=checkbox."
+    },
+    {
       "tag": "chip",
       "description": "filter/selection pill."
     },
@@ -5741,12 +5745,20 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "syntax-highlighted source."
     },
     {
+      "tag": "color",
+      "description": "system color swatch product. Impl: native input type=color."
+    },
+    {
       "tag": "combobox",
       "description": "L1 filtering picker. Text input filters a listbox"
     },
     {
       "tag": "context-menu",
       "description": "L1 right-click menu. Native [popover] + use:contextMenu"
+    },
+    {
+      "tag": "date",
+      "description": "temporal picker product. Impl: native input; type prop selects"
     },
     {
       "tag": "dialog",
@@ -5777,6 +5789,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "form group. Style product only."
     },
     {
+      "tag": "file",
+      "description": "system file picker product. Impl: native input type=file."
+    },
+    {
       "tag": "hover-card",
       "description": "L1 hover-preview overlay. Style value language only."
     },
@@ -5786,7 +5802,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "input",
-      "description": "native field / toggle / range surface. Style product only."
+      "description": "text field product. Style product only."
     },
     {
       "tag": "kbd",
@@ -5846,7 +5862,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "select",
-      "description": "native picker. Field surface + size ladder (Style)."
+      "description": "native closed picker only (host Style). Not a combobox/listbox."
     },
     {
       "tag": "separator",
@@ -6130,6 +6146,41 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
     "syntax": "raw <script>",
     "rule": "sail-no-script",
     "instead": "imperative logic lives in the <controller> block"
+  },
+  {
+    "syntax": "<input type=\"checkbox\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<checkbox>"
+  },
+  {
+    "syntax": "<input type=\"radio\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<radio> inside <radio-group>"
+  },
+  {
+    "syntax": "<input type=\"range\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<slider>"
+  },
+  {
+    "syntax": "<input type=\"file\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<file>"
+  },
+  {
+    "syntax": "<input type=\"color\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<color>"
+  },
+  {
+    "syntax": "<input type=\"date|time|datetime-local|month|week\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<date type=\"date|time|datetime-local|month|week\">"
+  },
+  {
+    "syntax": "<input type=\"submit\">",
+    "rule": "sail-no-freeform-input-type",
+    "instead": "<button type=\"submit\">"
   }
 ]
 
@@ -6372,6 +6423,13 @@ export const ACTIONS: ActionDoc[] = [
     "name": "pagination",
     "param": "void",
     "summary": "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
+    "public": false,
+    "writes": []
+  },
+  {
+    "name": "passwordReveal",
+    "param": "void",
+    "summary": "Internal: password field peek toggle (stamped on type=password when reveal is not false).",
     "public": false,
     "writes": []
   },
