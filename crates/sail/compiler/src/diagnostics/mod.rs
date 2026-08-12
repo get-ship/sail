@@ -59,6 +59,8 @@ pub struct CompileError {
     pub category: Option<String>,
 }
 
+const RULE_FROM_COMPILE_ERROR: &str = "sail-internal-from-compile-error";
+
 impl CompileError {
     pub fn new(message: impl Into<String>) -> Self {
         Self {
@@ -172,15 +174,19 @@ impl Diagnostic {
             }
             None => (1, 1, 1, 1),
         };
-        Self {
+        let mut diag = Self {
             line,
             col,
             end_line,
             end_col,
             severity: DiagSeverity::Error,
             message: err.message.clone(),
-            rule: err.category.clone(),
+            rule: Some(RULE_FROM_COMPILE_ERROR.to_string()),
+        };
+        if let Some(cat) = &err.category {
+            diag.rule = Some(cat.clone());
         }
+        diag
     }
 }
 
@@ -207,11 +213,11 @@ mod tests {
         let err = CompileError::new("oops")
             .with_span(Span::new(4, 5))
             .with_path(PathBuf::from("foo.set"))
-            .with_category("expr");
+            .with_category("sail-internal-test-render");
         let rendered = err.render("abc\ndef");
         assert!(rendered.contains("foo.set"));
         assert!(rendered.contains("line 2"));
-        assert!(rendered.contains("[expr]"));
+        assert!(rendered.contains("[sail-internal-test-render]"));
         assert!(rendered.contains("oops"));
     }
 

@@ -13,6 +13,7 @@ use crate::ir::*;
 use crate::lower::Lowered;
 use crate::lower::presets;
 
+const RULE_ID: &str = "sail-motion-preset";
 /// Built-in `use:` actions shipped by the runtime. When a `use:` directive
 /// names one of these (a bare identifier), the compiler auto-imports it from
 /// `@ship/sail-runtime/actions` so it resolves as an ESM binding — no
@@ -129,7 +130,7 @@ pub fn collect_attr_imports(
                     trigger
                 ))
                 .with_span(*span)
-                .with_category("motion")
+                .with_category(RULE_ID)
             })?;
             for prop in props {
                 // A preset is now OPTIONAL — an inline `{ from, to }` channel
@@ -148,7 +149,7 @@ pub fn collect_attr_imports(
                             prop.property,
                         ))
                         .with_span(*span)
-                        .with_category("motion"));
+                        .with_category(RULE_ID));
                     };
                     let _ = spec.kind;
                 }

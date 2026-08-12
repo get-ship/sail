@@ -13,6 +13,8 @@
 use crate::check::controller_parse::ParsedController;
 use crate::diagnostics::{CompileError, Span};
 
+const RULE_LINT_GATE: &str = "sail-internal-lint-gate";
+
 pub fn check(
     controller: Option<&ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
@@ -80,6 +82,7 @@ pub fn check(
     Err(CompileError::new(msg)
         .with_span(span)
         .with_path(controller_path)
+        .with_category(RULE_LINT_GATE)
         .with_category(first.rule.to_string()))
 }
 

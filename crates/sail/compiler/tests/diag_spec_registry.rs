@@ -184,14 +184,11 @@ fn at_least_one_emission_path_rule_is_registered() {
 // ── 4. Anonymous ratchet still holds ────────────────────────────────────────
 
 #[test]
-fn anonymous_diag_ratchet_still_holds() {
-    // S3.1 Phase 0 gate must remain green while the registry skeleton lands.
-    // Mass anonymous migration is out of scope; growth is still forbidden.
+fn anonymous_diag_ratchet_is_zero() {
     let count = count_anonymous_sites();
-    let baseline = anonymous_baseline();
-    assert!(
-        count <= baseline,
-        "anonymous diagnostic sites grew while landing DiagSpec registry: \
-         {count} > {baseline}. Attach sail-* ids to new sites; do not mass-migrate."
+    assert_eq!(
+        count, 0,
+        "anonymous diagnostic sites must be zero (found {count}).          Attach sail-* ids and register a DiagSpec row."
     );
+    assert_eq!(anonymous_baseline(), 0);
 }

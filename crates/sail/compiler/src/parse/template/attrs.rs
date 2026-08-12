@@ -6,6 +6,7 @@ use crate::ir::*;
 use crate::parse::expr;
 use crate::parse::html;
 
+const RULE_ID: &str = "sail-template-attr";
 pub fn compile_attrs(el: &html::Element, loc_prefix: &str) -> Result<Vec<AttrInstr>, CompileError> {
     let mut out = Vec::new();
     let is_slot = el.tag.eq_ignore_ascii_case("slot");
@@ -39,7 +40,7 @@ fn compile_attr(
             return Err(
                 CompileError::new("mutation= requires a value (e.g. \"demo.addTodo\")")
                     .with_span(value_span)
-                    .with_category(loc.to_string()),
+                    .with_category(RULE_ID),
             );
         }
         return Ok(AttrInstr::Mutation {
@@ -86,7 +87,7 @@ fn compile_attr(
     if name == "sx" {
         return Err(CompileError::new("unknown attribute `sx`")
             .with_span(value_span)
-            .with_category(loc.to_string()));
+            .with_category(RULE_ID));
     }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
@@ -151,7 +152,7 @@ fn compile_attr(
                 };
                 return Err(CompileError::new(msg)
                     .with_span(value_span)
-                    .with_category(loc.to_string()));
+                    .with_category(RULE_ID));
             }
         };
         // Object AST with an explicit `key: value` entry is the
@@ -176,7 +177,7 @@ fn compile_attr(
                 );
                 return Err(CompileError::new(msg)
                     .with_span(value_span)
-                    .with_category(loc.to_string()));
+                    .with_category(RULE_ID));
             }
         }
         // Use the validated inner as the emit source so downstream
@@ -317,7 +318,7 @@ fn compile_on(
     if event.is_empty() {
         return Err(CompileError::new("empty event name in on: binding")
             .with_span(value_span)
-            .with_category(loc.to_string()));
+            .with_category(RULE_ID));
     }
     if !crate::directive_manifest::is_known_event(&event) {
         let mut msg = format!("unknown event {event}");
@@ -334,7 +335,7 @@ fn compile_on(
         }
         return Err(CompileError::new(msg)
             .with_span(value_span)
-            .with_category(loc.to_string()));
+            .with_category(RULE_ID));
     }
     let mut modifiers: Vec<Modifier> = Vec::new();
     for raw in parts {
@@ -346,7 +347,7 @@ fn compile_on(
     if !is_expr_value(value) {
         return Err(CompileError::new("on: handler must be {expression}")
             .with_span(value_span)
-            .with_category(loc.to_string()));
+            .with_category(RULE_ID));
     }
     let inner = strip_braces(value).to_string();
     expr::validate_at(&inner, true, loc, value_span)?;
@@ -358,7 +359,7 @@ fn compile_on(
     })
 }
 
-fn parse_modifier(raw: &str, span: Span, loc: &str) -> Result<Modifier, CompileError> {
+fn parse_modifier(raw: &str, span: Span, _loc: &str) -> Result<Modifier, CompileError> {
     let (head, arg) = match raw.find(':') {
         Some(idx) => (&raw[..idx], Some(raw[idx + 1..].to_string())),
         None => (raw, None),
@@ -386,7 +387,7 @@ fn parse_modifier(raw: &str, span: Span, loc: &str) -> Result<Modifier, CompileE
                 "unknown modifier \"{head}\" — the modifiers are: {known}"
             ))
             .with_span(span)
-            .with_category(loc.to_string()));
+            .with_category(RULE_ID));
         }
     })
 }
@@ -401,7 +402,7 @@ fn compile_bind(
         return Err(
             CompileError::new(format!("bind:{target} expects {{signal}}"))
                 .with_span(value_span)
-                .with_category(loc.to_string()),
+                .with_category(RULE_ID),
         );
     }
     let inner = strip_braces(value).to_string();
@@ -425,13 +426,13 @@ fn compile_bind(
             Err(
                 CompileError::new(format!("unknown bind:{other} — the targets are: {known}"))
                     .with_span(value_span)
-                    .with_category(loc.to_string()),
+                    .with_category(RULE_ID),
             )
         }
     }
 }
 
-fn foreign_idiom_error(syntax_key: &str, value_span: Span, loc: &str) -> CompileError {
+fn foreign_idiom_error(syntax_key: &str, value_span: Span, _loc: &str) -> CompileError {
     let instead = crate::directive_manifest::FOREIGN_IDIOMS
         .iter()
         .find(|e| e.syntax == syntax_key)
@@ -439,30 +440,30 @@ fn foreign_idiom_error(syntax_key: &str, value_span: Span, loc: &str) -> Compile
         .unwrap_or("use the sail form from the language surface");
     CompileError::new(format!("`{syntax_key}` is a foreign idiom — {instead}"))
         .with_span(value_span)
-        .with_category(loc.to_string())
+        .with_category(RULE_ID)
 }
 
-fn unknown_directive_error(name: &str, value_span: Span, loc: &str) -> CompileError {
+fn unknown_directive_error(name: &str, value_span: Span, _loc: &str) -> CompileError {
     let known = crate::directive_manifest::DIRECTIVE_PREFIXES.join(":, ");
     CompileError::new(format!(
         "unknown directive `{name}` — attribute directives use the prefixes: {known}:… \
          (plus sx=, mutation=, slot=). Motion is Style: sx={{style.<trigger>({{…}})}}."
     ))
     .with_span(value_span)
-    .with_category(loc.to_string())
+    .with_category(RULE_ID)
 }
 
 fn compile_reflect_empty(
     value: &str,
     value_span: Span,
-    loc: &str,
+    _loc: &str,
     on_slot: bool,
 ) -> Result<AttrInstr, CompileError> {
     if !on_slot {
         return Err(
             CompileError::new("reflect-empty=\"...\" is only valid on <slot> elements")
                 .with_span(value_span)
-                .with_category(loc.to_string()),
+                .with_category(RULE_ID),
         );
     }
     if is_expr_value(value) {
@@ -470,13 +471,13 @@ fn compile_reflect_empty(
             "reflect-empty must be a static attribute name (e.g. \"data-icon-only\"), not an expression",
         )
         .with_span(value_span)
-        .with_category(loc.to_string()));
+        .with_category(RULE_ID));
     }
     if value.is_empty() {
         return Err(
             CompileError::new("reflect-empty=\"<attr>\" requires a target attribute name")
                 .with_span(value_span)
-                .with_category(loc.to_string()),
+                .with_category(RULE_ID),
         );
     }
     if !is_valid_attr_name(value) {
@@ -484,7 +485,7 @@ fn compile_reflect_empty(
             "reflect-empty target \"{value}\" must match [a-z][a-z0-9-]*"
         ))
         .with_span(value_span)
-        .with_category(loc.to_string()));
+        .with_category(RULE_ID));
     }
     Ok(AttrInstr::SlotReflectEmpty {
         attr: value.to_string(),
@@ -528,7 +529,7 @@ fn compile_use(
     let err = |msg: String| {
         CompileError::new(msg)
             .with_span(value_span)
-            .with_category(loc.to_string())
+            .with_category(RULE_ID)
     };
     if name.is_empty() {
         return Err(err("use: requires an action name".into()));
@@ -571,7 +572,7 @@ fn compile_motion(
     let err = |msg: String| {
         CompileError::new(msg)
             .with_span(value_span)
-            .with_category(loc.to_string())
+            .with_category(RULE_ID)
     };
     if trigger.is_empty() {
         return Err(err(
@@ -661,7 +662,7 @@ fn parse_motion_static_config(
     let err = |msg: String| -> CompileError {
         CompileError::new(msg)
             .with_span(value_span)
-            .with_category(loc.to_string())
+            .with_category(RULE_ID)
     };
     let leading = raw.len() - raw.trim_start().len();
     let s = raw.trim();
@@ -805,7 +806,7 @@ fn parse_motion_channel(
     let err = |msg: String| -> CompileError {
         CompileError::new(msg)
             .with_span(value_span)
-            .with_category(loc.to_string())
+            .with_category(RULE_ID)
     };
     let mut prop = MotionProp {
         property: property.to_string(),
@@ -956,7 +957,7 @@ fn parse_motion_value(
     let err = |msg: String| -> CompileError {
         CompileError::new(msg)
             .with_span(value_span)
-            .with_category(loc.to_string())
+            .with_category(RULE_ID)
     };
     let mut i = start;
     let c = *bytes
@@ -1066,7 +1067,7 @@ fn parse_motion_value(
             e.message
         ))
         .with_span(expr_span)
-        .with_category(loc.to_string())
+        .with_category(RULE_ID)
     })?;
     expr::validate_at(src, false, loc, expr_span)?;
     Ok((

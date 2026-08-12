@@ -28,6 +28,7 @@ use crate::diagnostics::CompileError;
 use crate::ir::Program;
 use crate::parse::expr::{Ast, AstKind, parse_expression, parse_expression_with_arrows};
 
+const RULE_ID: &str = "sail-scope-member";
 pub fn check(program: &Program, controller: Option<&ParsedController>) -> Result<(), CompileError> {
     let table = SymbolTable::build(program, controller);
     let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
@@ -143,18 +144,8 @@ fn check_head_member(
             sorted.join(", ")
         ))
         .with_span(node.span)
-        .with_category(format!("expr `{}`", truncate(prop, 60))),
+        .with_category(RULE_ID),
     )
-}
-
-fn truncate(s: &str, max: usize) -> String {
-    if s.chars().count() <= max {
-        return s.to_string();
-    }
-    s.chars()
-        .take(max - 1)
-        .chain(std::iter::once('…'))
-        .collect()
 }
 
 #[cfg(test)]

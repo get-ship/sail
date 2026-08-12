@@ -20,6 +20,7 @@ use crate::diagnostics::CompileError;
 use crate::ir::{ForInstr, Instr, Program};
 use crate::parse::expr::{Ast, AstKind, parse_expression};
 
+const RULE_ID: &str = "sail-for-key";
 pub fn check(program: &Program) -> Result<(), CompileError> {
     walk_instrs(&program.template)
 }
@@ -68,7 +69,7 @@ fn check_for(f: &ForInstr) -> Result<(), CompileError> {
                 "<for> key={{…}} must have stable per-row identity: {reason}"
             ))
             .with_span(key_expr.span)
-            .with_category("for-key".to_string()));
+            .with_category(RULE_ID));
         }
     }
     walk_instrs(&f.body)?;

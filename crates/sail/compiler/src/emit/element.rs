@@ -23,6 +23,7 @@ use crate::diagnostics::Span;
 use crate::ir::*;
 use serde_json::{Value, json};
 
+const RULE_ID: &str = "sail-element-mode";
 /// Spans on `Program`/`Instr` are byte offsets into the PREPROCESSED source
 /// (`parse::preprocess::preprocess_impl`): brace-attr quoting, self-close
 /// expansion, `sx=`/layout lowering, and any injected `<style>` block can
@@ -210,7 +211,8 @@ pub fn emit_element_with_bindings(
             "element name `{name}` must be lowercase words joined by single \
              hyphens (e.g. `badge`, `empty-state`) — the stdlib registry is what \
              makes it an L1 element"
-        )));
+        ))
+        .with_category(RULE_ID));
     }
     let root_class = format!("sail-{name}");
 
@@ -226,7 +228,8 @@ pub fn emit_element_with_bindings(
     let Some(root) = roots.next() else {
         return Err(
             CompileError::new("element mode: the template needs exactly one root element")
-                .with_span(Span::point(body_start)),
+                .with_span(Span::point(body_start))
+                .with_category(RULE_ID),
         );
     };
     if roots.next().is_some()
@@ -252,7 +255,8 @@ pub fn emit_element_with_bindings(
             "element mode: the template must be ONE static root element \
              (control flow at the top level means this is a component)",
         )
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_ID));
     }
 
     let native = root.tag == name;
@@ -439,7 +443,8 @@ fn serialize_static(
                          parameter is per-instance state and can't ride the static \
                          splice yet; use a param-less action (its config lives in \
                          the action) or author the element as a component",
-                    )));
+                    ))
+                    .with_category(RULE_ID));
                 }
                 out.push_str(" use:");
                 out.push_str(action);
@@ -450,7 +455,8 @@ fn serialize_static(
                      structure; per-instance behavior belongs to the use site or a \
                      component",
                     el.tag
-                )));
+                ))
+                .with_category(RULE_ID));
             }
         }
     }
@@ -472,7 +478,8 @@ fn serialize_static(
             return Err(CompileError::new(format!(
                 "element mode: <{}> is a void element and cannot have children",
                 el.tag
-            )));
+            ))
+            .with_category(RULE_ID));
         }
         return Ok(());
     }
@@ -486,7 +493,8 @@ fn serialize_static(
                     "element mode: <{}> contains control flow or dynamic content — \
                      this is a component; compile it with --component-name",
                     el.tag
-                )));
+                ))
+                .with_category(RULE_ID));
             }
         }
     }

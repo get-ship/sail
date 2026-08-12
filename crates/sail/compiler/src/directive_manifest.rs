@@ -774,7 +774,7 @@ pub struct ForeignIdiomEntry {
 pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
     ForeignIdiomEntry {
         syntax: "class= / class:<name>",
-        instead: "styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element",
+        instead: "class: is retired — styling is a tag-position style({…}) / style(name) / style(partial, …) call on the element",
     },
     ForeignIdiomEntry {
         syntax: "style= / style:<prop>",

@@ -3,6 +3,7 @@
 use crate::diagnostics::CompileError;
 use crate::ir::*;
 
+const RULE_ID: &str = "sail-semantic-a11y";
 /// Run a11y IR checks. Returns the first error.
 pub fn check(program: &Program) -> Result<(), CompileError> {
     for instr in &program.template {
@@ -125,7 +126,7 @@ fn check_element_self(el: &ElementInstr) -> Result<(), CompileError> {
              (accessible name) — authors never write aria-label",
         )
         .with_span(el.span)
-        .with_category("semantic-a11y"));
+        .with_category(RULE_ID));
     }
     Ok(())
 }

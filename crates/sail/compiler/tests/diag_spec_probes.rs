@@ -7,8 +7,9 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sail_compiler::diag_ratchet::is_stable_rule_id;
-use sail_compiler::diagnostics::{lookup, registry};
+use sail_compiler::check_all;
+use sail_compiler::diag_ratchet::{idd_rule_ids, is_stable_rule_id};
+use sail_compiler::diagnostics::{DiagSeverity, lookup, registry};
 
 fn compiler_src() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src")
@@ -82,6 +83,78 @@ fn every_registry_row_has_jurisdiction_and_template() {
             );
         }
     }
+}
+
+#[test]
+fn every_live_compiler_id_resolves_in_registry() {
+    let ids = idd_rule_ids();
+    assert!(
+        !ids.is_empty(),
+        "expected live Idd throw-site ids from compiler src"
+    );
+    let mut missing = Vec::new();
+    let mut incomplete = Vec::new();
+    for id in &ids {
+        assert!(is_stable_rule_id(id), "live throw id is not sail-*: {id}");
+        let Some(spec) = lookup(id) else {
+            missing.push(id.as_str());
+            continue;
+        };
+        let _ = spec.jurisdiction;
+        let _ = spec.default_severity;
+        if spec.message_template.is_empty() {
+            incomplete.push(id.as_str());
+        }
+        assert_eq!(spec.id, id.as_str());
+        let _ = matches!(
+            spec.default_severity,
+            DiagSeverity::Error | DiagSeverity::Warning | DiagSeverity::Fix
+        );
+    }
+    assert!(
+        missing.is_empty(),
+        "live throw-site ids missing from DiagSpec registry: {missing:?}"
+    );
+    assert!(
+        incomplete.is_empty(),
+        "registry rows missing message_template: {incomplete:?}"
+    );
+}
+
+#[test]
+fn check_all_emitted_ids_are_in_registry() {
+    // Same stream sail_check / LSP OnSave consume (`check_all`).
+    let snippets = [
+        "<foobarbaz>hi</foobarbaz>",
+        "<p>{}</p>",
+        "<p>{a; b}</p>",
+        "<for {123 as n} key={0}><p>{n}</p></for>",
+        "<if {true}><p>x</p>",
+        "<button><icon name=\"x\" /></button>",
+        r#"<div mutation="notavalid"></div>"#,
+        r#"<button on:click={count()}></button>"#,
+    ];
+    let mut seen = Vec::new();
+    let mut missing = Vec::new();
+    for src in snippets {
+        for d in check_all(src, None, &[], None) {
+            let Some(id) = d.rule.as_deref() else {
+                continue;
+            };
+            seen.push(id.to_string());
+            if lookup(id).is_none() {
+                missing.push(id.to_string());
+            }
+        }
+    }
+    assert!(
+        !seen.is_empty(),
+        "expected check_all to emit at least one rule id across snippets"
+    );
+    assert!(
+        missing.is_empty(),
+        "check_all/sail_check rule ids not in DiagSpec registry: {missing:?} (emitted={seen:?})"
+    );
 }
 
 #[test]

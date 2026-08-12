@@ -11,6 +11,9 @@ use super::scope_bound::Visitor;
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::Expr;
 
+const RULE_UNDECLARED: &str = "sail-undeclared";
+const RULE_USE_SELF_REF: &str = "sail-use-self-ref";
+const RULE_AMBIGUOUS: &str = "sail-ambiguous-ident";
 /// Walk `expr.source` and flag the first identifier that doesn't
 /// resolve. `extra_locals` are additional bound names from a parent
 /// scope (e.g. a `{#for}` item).
@@ -150,7 +153,7 @@ fn check_expr_inner(expr: &Expr, v: &mut Visitor, extra_locals: &[&str], use_act
                     src = expr.source,
                 ))
                 .with_span(expr.span)
-                .with_category(format!("use:{action} value `{}`", expr.source)),
+                .with_category(RULE_USE_SELF_REF),
             );
             return;
         }
@@ -180,7 +183,7 @@ fn check_expr_inner(expr: &Expr, v: &mut Visitor, extra_locals: &[&str], use_act
                      an identifier.",
                 ))
                 .with_span(expr.span)
-                .with_category(format!("expression `{}`", expr.source)),
+                .with_category(RULE_AMBIGUOUS),
             );
             return;
         }
@@ -201,7 +204,7 @@ fn check_expr_inner(expr: &Expr, v: &mut Visitor, extra_locals: &[&str], use_act
                     v.scope.list_for_diagnostic()
                 ))
                 .with_span(expr.span)
-                .with_category(format!("expression `{}`", expr.source)),
+                .with_category(RULE_UNDECLARED),
             );
             return;
         }

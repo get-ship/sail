@@ -12,6 +12,7 @@ use std::path::Path;
 use crate::diagnostics::{CompileError, Span};
 use crate::emit::util::camel_of;
 
+const RULE_UNCLOSED: &str = "sail-partial-unclosed";
 /// One top-level `<partial kebab-name props: TypeName>…</partial>` declaration.
 #[derive(Debug, Clone)]
 pub struct PartialDecl {
@@ -213,6 +214,7 @@ fn find_top_level_partial_decls(source: &str) -> Result<Vec<PartialDecl>, Compil
                 let close = matching_close(source, open.end, "partial").ok_or_else(|| {
                     CompileError::new("unclosed `<partial>`")
                         .with_span(Span::new(open.start, open.end))
+                        .with_category(RULE_UNCLOSED)
                 })?;
                 let body = source[open.end..close - "</partial>".len()].to_string();
                 (body, close)
@@ -487,6 +489,7 @@ fn expand_invocations_in(
                     let close = matching_close(source, open.end, &open.tag).ok_or_else(|| {
                         CompileError::new(format!("unclosed partial invocation `<{}>`", open.tag))
                             .with_span(Span::new(open.start, open.end))
+                            .with_category(RULE_UNCLOSED)
                     })?;
                     let close_tag = format!("</{}>", open.tag);
                     let body = source[open.end..close - close_tag.len()].to_string();

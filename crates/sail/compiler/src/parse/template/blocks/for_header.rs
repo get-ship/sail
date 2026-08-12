@@ -4,6 +4,7 @@ use crate::diagnostics::{CompileError, Span};
 use crate::ir::Expr;
 use crate::parse::expr;
 
+const RULE_ID: &str = "sail-for-header";
 pub(super) struct ForHeader {
     pub var_name: String,
     pub index_name: Option<String>,
@@ -12,8 +13,11 @@ pub(super) struct ForHeader {
 }
 
 pub(super) fn parse_for_header(src: &str, span: Span) -> Result<ForHeader, CompileError> {
-    let of_idx = find_keyword_index(src, " of ")
-        .ok_or_else(|| CompileError::new("{#for} expects \"X of items\"").with_span(span))?;
+    let of_idx = find_keyword_index(src, " of ").ok_or_else(|| {
+        CompileError::new("{#for} expects \"X of items\"")
+            .with_span(span)
+            .with_category(RULE_ID)
+    })?;
     let left = src[..of_idx].trim();
     let mut right = src[of_idx + 4..].trim().to_string();
 
@@ -42,7 +46,9 @@ pub(super) fn parse_for_header(src: &str, span: Span) -> Result<ForHeader, Compi
 fn parse_for_binding(left: &str, span: Span) -> Result<(String, Option<String>), CompileError> {
     if let Some(rest) = left.strip_prefix('(') {
         let inner = rest.strip_suffix(')').ok_or_else(|| {
-            CompileError::new(format!("{{#for}} bad variable: {left}")).with_span(span)
+            CompileError::new(format!("{{#for}} bad variable: {left}"))
+                .with_span(span)
+                .with_category(RULE_ID)
         })?;
         let mut parts = inner.split(',');
         let v = parts
@@ -50,19 +56,25 @@ fn parse_for_binding(left: &str, span: Span) -> Result<(String, Option<String>),
             .map(|s| s.trim().to_string())
             .filter(|s| is_ident(s))
             .ok_or_else(|| {
-                CompileError::new(format!("{{#for}} bad variable: {left}")).with_span(span)
+                CompileError::new(format!("{{#for}} bad variable: {left}"))
+                    .with_span(span)
+                    .with_category(RULE_ID)
             })?;
         let idx = parts
             .next()
             .map(|s| s.trim().to_string())
             .filter(|s| is_ident(s))
             .ok_or_else(|| {
-                CompileError::new(format!("{{#for}} bad index: {left}")).with_span(span)
+                CompileError::new(format!("{{#for}} bad index: {left}"))
+                    .with_span(span)
+                    .with_category(RULE_ID)
             })?;
         return Ok((v, Some(idx)));
     }
     if !is_ident(left) {
-        return Err(CompileError::new(format!("{{#for}} bad variable: {left}")).with_span(span));
+        return Err(CompileError::new(format!("{{#for}} bad variable: {left}"))
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     Ok((left.to_string(), None))
 }

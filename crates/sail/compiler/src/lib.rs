@@ -388,7 +388,8 @@ pub fn compile_element(
     if let Some(rest) = name.strip_prefix("sail-") {
         return Err(CompileError::new(format!(
             "element name `{name}` is in the `sail-` component namespace — an L1 element is a              bare lowercase name (`{rest}`), and the compiler adds the `sail-` prefix to its              root class itself. A `sail-`-prefixed tag is a custom element, i.e. a component."
-        )));
+        ))
+        .with_category("sail-element-name"));
     }
     if name.is_empty()
         || !name
@@ -397,7 +398,8 @@ pub fn compile_element(
     {
         return Err(CompileError::new(format!(
             "element name `{name}` must be a bare lowercase name (hyphens allowed: `tab-list`)."
-        )));
+        ))
+        .with_category("sail-element-name"));
     }
     // A `<controller>` block is the L2-component behavior channel; L1
     // elements carry behavior as stacked `use:<behavior>` stamps on their
@@ -409,7 +411,8 @@ pub fn compile_element(
         return Err(CompileError::new(
             "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`.",
         )
-        .with_span(crate::diagnostics::Span::point(at)));
+        .with_span(crate::diagnostics::Span::point(at))
+        .with_category("sail-element-mode"));
     }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
@@ -436,7 +439,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             "invalid component name `{}`: {why}. A custom-element tag must be lowercase, \
              start with a letter, and contain a hyphen — e.g. `dash-panel`, not `dashboard`.",
             meta.name
-        )));
+        ))
+        .with_category("sail-component-name"));
     }
     // SPEC-PROJECT-STRUCTURE-1 §4: `<scope>` before `<controller>` is grammar.
     // Check on the author source before stripping the controller block.
@@ -470,7 +474,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
                  parent to fill props; it receives route params from the router. \
                  Props are component members."
                     .to_string(),
-            ),
+            )
+            .with_category("sail-route-props"),
             &opts,
         ));
     }

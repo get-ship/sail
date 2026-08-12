@@ -14,6 +14,7 @@ use super::tokenize::{Discriminant, Token, TokenKind};
 mod for_header;
 use for_header::parse_for_header;
 
+const RULE_ID: &str = "sail-template-block";
 /// Callback that re-enters the top-level parser.
 pub(crate) struct ParseScope {
     #[allow(clippy::type_complexity)]
@@ -63,9 +64,9 @@ pub(crate) fn parse_if(
                 let head_trim = head.trim();
                 if head_trim == "else" {
                     if else_body.is_some() {
-                        return Err(
-                            CompileError::new("<if>: duplicate {else => …} arm").with_span(t.span)
-                        );
+                        return Err(CompileError::new("<if>: duplicate {else => …} arm")
+                            .with_span(t.span)
+                            .with_category(RULE_ID));
                     }
                     else_body = Some(parse_arm_body(body_src, t.span)?);
                     i += 1;
@@ -87,16 +88,20 @@ pub(crate) fn parse_if(
                                 return Err(CompileError::new(
                                     "<if>: {else => …} must be the last arm before </if>",
                                 )
-                                .with_span(n.span));
+                                .with_span(n.span)
+                                .with_category(RULE_ID));
                             }
                         }
                     }
-                    return Err(CompileError::new("missing </if>").with_span(head_span));
+                    return Err(CompileError::new("missing </if>")
+                        .with_span(head_span)
+                        .with_category(RULE_ID));
                 }
                 if let Some(cond_src) = strip_else_if(head_trim) {
                     if else_body.is_some() {
                         return Err(CompileError::new("<if>: {else-if} cannot follow {else}")
-                            .with_span(t.span));
+                            .with_span(t.span)
+                            .with_category(RULE_ID));
                     }
                     expr::validate_at(cond_src, false, "{else-if}", t.span)?;
                     branches.push(IfBranch {
@@ -109,14 +114,15 @@ pub(crate) fn parse_if(
                 return Err(CompileError::new(format!(
                     "<if>: unknown arm {{{head_trim} => …}}; use {{else-if {{cond}} => …}} or {{else => …}}"
                 ))
-                .with_span(t.span));
+                .with_span(t.span).with_category(RULE_ID));
             }
             other => {
                 return Err(CompileError::new(format!(
                     "<if>: unexpected {}; use {{else-if}}/{{else}} arms or </if>",
                     other.label()
                 ))
-                .with_span(t.span));
+                .with_span(t.span)
+                .with_category(RULE_ID));
             }
         }
     }
@@ -173,7 +179,8 @@ pub(crate) fn parse_for(
                         "<for>: only {{else => …}} arm is allowed, got {{{} => …}}",
                         head.trim()
                     ))
-                    .with_span(tokens[i].span));
+                    .with_span(tokens[i].span)
+                    .with_category(RULE_ID));
                 }
                 else_body = Some(parse_arm_body(body_src, tokens[i].span)?);
                 i += 1;
@@ -187,9 +194,14 @@ pub(crate) fn parse_for(
                     "<for>: unexpected {} before </for>",
                     other.label()
                 ))
-                .with_span(tokens[i].span));
+                .with_span(tokens[i].span)
+                .with_category(RULE_ID));
             }
-            None => return Err(CompileError::new("missing </for>").with_span(head_span)),
+            None => {
+                return Err(CompileError::new("missing </for>")
+                    .with_span(head_span)
+                    .with_category(RULE_ID));
+            }
         }
     }
     Ok(InstrResult {
@@ -234,7 +246,8 @@ pub(crate) fn parse_when(
                         "<when>: only {{else => …}} arm is allowed, got {{{} => …}}",
                         head.trim()
                     ))
-                    .with_span(tokens[i].span));
+                    .with_span(tokens[i].span)
+                    .with_category(RULE_ID));
                 }
                 else_body = Some(parse_arm_body(body_src, tokens[i].span)?);
                 i += 1;
@@ -249,10 +262,13 @@ pub(crate) fn parse_when(
                     "<when>: unexpected {} before </when>",
                     other.label()
                 ))
-                .with_span(tokens[i].span));
+                .with_span(tokens[i].span)
+                .with_category(RULE_ID));
             }
             None => {
-                return Err(CompileError::new("missing </when>").with_span(head_span));
+                return Err(CompileError::new("missing </when>")
+                    .with_span(head_span)
+                    .with_category(RULE_ID));
             }
         }
     }
@@ -273,7 +289,8 @@ fn resolve_when_token(token: &str, span: Span) -> Result<&'static str, CompileEr
     if token.is_empty() {
         return Err(
             CompileError::new(format!("<when> requires a theme breakpoint token: {list}"))
-                .with_span(span),
+                .with_span(span)
+                .with_category(RULE_ID),
         );
     }
     if token.chars().any(|c| c.is_ascii_digit())
@@ -284,13 +301,14 @@ fn resolve_when_token(token: &str, span: Span) -> Result<&'static str, CompileEr
         return Err(CompileError::new(format!(
             "<when> rejects raw media queries and pixel values; use a theme breakpoint token: {list} (got {token:?})"
         ))
-        .with_span(span));
+        .with_span(span).with_category(RULE_ID));
     }
     crate::breakpoints::breakpoint_media(token).ok_or_else(|| {
         CompileError::new(format!(
             "unknown breakpoint token {token:?} in <when>; theme scale is: {list}"
         ))
         .with_span(span)
+        .with_category(RULE_ID)
     })
 }
 
@@ -326,7 +344,8 @@ pub(crate) fn parse_match(
                 if head_trim == "else" {
                     if default.is_some() {
                         return Err(CompileError::new("<match>: duplicate {else => …} arm")
-                            .with_span(t.span));
+                            .with_span(t.span)
+                            .with_category(RULE_ID));
                     }
                     default = Some(parse_arm_body(body_src, t.span)?);
                     i += 1;
@@ -347,7 +366,8 @@ pub(crate) fn parse_match(
                     "unexpected token in <match>: {}; arms are {{pattern as binding => …}}",
                     other.label()
                 ))
-                .with_span(t.span));
+                .with_span(t.span)
+                .with_category(RULE_ID));
             }
         }
     }
@@ -368,7 +388,9 @@ fn parse_match_arm_head(
 ) -> Result<(MatchTest, Option<String>), CompileError> {
     let head = head.trim();
     if head.is_empty() {
-        return Err(CompileError::new("<match> arm needs a pattern before =>").with_span(span));
+        return Err(CompileError::new("<match> arm needs a pattern before =>")
+            .with_span(span)
+            .with_category(RULE_ID));
     }
     if let Some(as_at) = find_top_level_as(head) {
         let pat = head[..as_at].trim();
@@ -377,7 +399,8 @@ fn parse_match_arm_head(
             return Err(CompileError::new(format!(
                 "<match> arm binding must be an identifier, got {binding:?}"
             ))
-            .with_span(span));
+            .with_span(span)
+            .with_category(RULE_ID));
         }
         return Ok((pattern_to_test(pat, span)?, Some(binding.to_string())));
     }
@@ -440,10 +463,14 @@ fn parse_arm_body(body_src: &str, span: Span) -> Result<Vec<Instr>, CompileError
         return Ok(Vec::new());
     }
     let nodes = html::parse_fragment(src).map_err(|e| {
-        CompileError::new(format!("arm body parse error: {}", e.message)).with_span(span)
+        CompileError::new(format!("arm body parse error: {}", e.message))
+            .with_span(span)
+            .with_category(RULE_ID)
     })?;
     super::compile_children(&nodes).map_err(|e| {
-        let mut err = CompileError::new(e.message.clone());
+        let mut err = CompileError::new(e.message.clone())
+            .with_category(RULE_ID)
+            .with_category(e.category.clone().unwrap_or_else(|| RULE_ID.to_string()));
         if let Some(s) = e.span {
             err = err.with_span(s);
         } else {

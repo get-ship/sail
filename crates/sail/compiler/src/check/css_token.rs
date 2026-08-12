@@ -16,6 +16,8 @@ use std::path::Path;
 
 use crate::diagnostics::{CompileError, Span};
 
+const RULE_LINT_GATE: &str = "sail-internal-lint-gate";
+
 pub fn check(
     source: &str,
     source_path: Option<&Path>,
@@ -77,6 +79,7 @@ pub fn check(
 
     let mut err = CompileError::new(msg)
         .with_span(span)
+        .with_category(RULE_LINT_GATE)
         .with_category(first.rule.to_string());
     if let Some(p) = source_path {
         err = err.with_path(p.to_path_buf());

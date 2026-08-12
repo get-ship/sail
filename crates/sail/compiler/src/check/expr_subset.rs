@@ -16,6 +16,7 @@
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::expr::Expr;
 
+const RULE_ID: &str = "sail-expr-subset";
 /// Method names allowed when called with arguments.
 ///
 /// Principle: side-effect-free, deterministic methods on primitives/collections
@@ -309,7 +310,7 @@ fn skip_template_literal(bytes: &[u8], from: usize, span: Span) -> Result<usize,
             let body_end = k.min(bytes.len());
             let body_start = start.min(body_end);
             let body = std::str::from_utf8(&bytes[body_start..body_end]).map_err(|_| {
-                CompileError::new("non-UTF8 expression source").with_category("expression")
+                CompileError::new("non-UTF8 expression source").with_category(RULE_ID)
             })?;
             check(&Expr::new(body, span, false))?;
             i = (k + 1).min(bytes.len());
@@ -357,19 +358,10 @@ fn looks_like_regex(bytes: &[u8], at: usize) -> bool {
 
 use crate::scan::{is_ident_cont, is_ident_start};
 
-fn reject(span: Span, msg: String, src: &str) -> CompileError {
+fn reject(span: Span, msg: String, _src: &str) -> CompileError {
     CompileError::new(msg)
         .with_span(span)
-        .with_category(format!("expr `{}`", truncate(src, 60)))
-}
-
-fn truncate(s: &str, max: usize) -> String {
-    if s.chars().count() <= max {
-        return s.to_string();
-    }
-    let mut out: String = s.chars().take(max - 1).collect();
-    out.push('…');
-    out
+        .with_category(RULE_ID)
 }
 
 #[cfg(test)]

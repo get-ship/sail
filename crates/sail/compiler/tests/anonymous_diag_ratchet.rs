@@ -49,6 +49,10 @@ fn stable_rule_id_accepts_sail_ids() {
         is_stable_rule_id("sail-light-shadow-root"),
         "sail-light-shadow-root must be a stable rule id"
     );
+    assert!(
+        is_stable_rule_id("sail-internal-lint-gate"),
+        "sail-internal-* is a stable rule id class"
+    );
 }
 
 #[test]
@@ -109,16 +113,15 @@ fn classifies_rule_some_literal() {
 }
 
 #[test]
-fn anonymous_count_does_not_grow() {
+fn anonymous_count_is_zero() {
     let count = count_anonymous_sites();
-    let baseline = anonymous_baseline();
-    assert!(
-        count <= baseline,
-        "anonymous diagnostic sites grew: {count} > {baseline}\n\
-         Attach a sail-* category/rule to new throw sites \
-         (with_category(\"sail-…\") or rule: Some(\"sail-…\")).\n\
-         Debt reduction (count drop) is free under <= baseline; \
-         only growth fails. Bump baseline only with operator approval \
-         after a real remeasure."
+    assert_eq!(
+        count, 0,
+        "anonymous diagnostic sites must be zero (found {count}).          Attach a sail-* category/rule to every throw site          (with_category(\"sail-…\") or rule: Some(\"sail-…\"))."
+    );
+    assert_eq!(
+        anonymous_baseline(),
+        0,
+        "anonymous_baseline must stay 0 — new unregistered diagnostics fail CI"
     );
 }

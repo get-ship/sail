@@ -48,6 +48,9 @@ use std::path::Path;
 use crate::diagnostics::{CompileError, DiagSeverity, Diagnostic, DiagnosticTier};
 use crate::ir::*;
 
+const RULE_CHECK_GATE: &str = "sail-internal-check-gate";
+const RULE_MUTATION: &str = "sail-mutation";
+
 /// Run every post-parse check. Returns the first error, or `Ok(())`.
 ///
 /// Event handlers (`allow_arrow == true`) are excluded from the renderable
@@ -205,7 +208,9 @@ pub fn gate(
     // Prefer author_source for offset mapping so type-gate lines in the
     // controller region land on the right byte (stripped blanks the block).
     let offset = offset_for_line_col(author_source, d.line, d.col);
-    let mut err = CompileError::new(d.message).with_span(crate::diagnostics::Span::point(offset));
+    let mut err = CompileError::new(d.message)
+        .with_span(crate::diagnostics::Span::point(offset))
+        .with_category(RULE_CHECK_GATE);
     if let Some(rule) = d.rule {
         err = err.with_category(rule);
     }
@@ -555,7 +560,8 @@ fn validate_mutation_expr(expr: &str, span: crate::diagnostics::Span) -> Result<
         return Err(CompileError::new(format!(
             "mutation= must be <client>.<method> (got `{expr}`)"
         ))
-        .with_span(span));
+        .with_span(span)
+        .with_category(RULE_MUTATION));
     }
     Ok(())
 }
