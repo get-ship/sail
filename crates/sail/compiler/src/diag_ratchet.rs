@@ -46,7 +46,7 @@ pub enum SiteClass {
 ///
 /// Gate: `count_anonymous_sites() <= ANONYMOUS_BASELINE`. Prefer `<=` so debt
 /// reduction does not require a pin update in the same PR.
-const ANONYMOUS_BASELINE: usize = 140;
+const ANONYMOUS_BASELINE: usize = 0;
 
 /// Return `true` when `id` is a stable sail rule id (`^sail-[a-z0-9-]+$`).
 pub fn is_stable_rule_id(id: &str) -> bool {
@@ -78,6 +78,18 @@ pub fn classify_snippet(source: &str) -> SiteClass {
 /// Count anonymous throw sites under live `crates/sail/compiler/src/**/*.rs`.
 pub fn count_anonymous_sites() -> usize {
     anonymous_site_locations().len()
+}
+
+/// Stable `sail-*` ids attached at live Idd throw sites (unique, sorted).
+pub fn idd_rule_ids() -> Vec<String> {
+    let mut ids: Vec<String> = scan_compiler_src()
+        .into_iter()
+        .filter(|s| s.class == SiteClass::Idd)
+        .filter_map(|s| s.id)
+        .collect();
+    ids.sort();
+    ids.dedup();
+    ids
 }
 
 /// File + line of each anonymous throw site (for ratchet diagnosis).
