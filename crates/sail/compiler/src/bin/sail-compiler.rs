@@ -1847,26 +1847,37 @@ fn collect_targets(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// Walk up from a source path looking for a sail project root (`package.json`
-/// or `sail.config.json`). Used to place generated per-kind tsconfigs and run
-/// the project-scoped type gate (E1b).
+/// Walk up from a source path looking for a sail project root.
+///
+/// Prefer `package.json` (+ `src`/`routes`) over a nested `sail.config.json`
+/// (e.g. `src/sail.config.json` is a lint preset only — not the app root).
+/// Used to place generated per-kind tsconfigs and run the project-scoped
+/// type gate (E1b).
 fn nearest_project_root(from: &Path) -> Option<PathBuf> {
     let mut dir = if from.is_file() {
         from.parent().map(|p| p.to_path_buf())
     } else {
         Some(from.to_path_buf())
     };
+    let mut nested_config: Option<PathBuf> = None;
     while let Some(d) = dir {
-        if d.join("package.json").is_file() || d.join("sail.config.json").is_file() {
+        // App package root wins (same preference as tscheck::find_project_root).
+        if d.join("package.json").is_file() && (d.join("src").is_dir() || d.join("routes").is_dir())
+        {
             return Some(d);
+        }
+        if nested_config.is_none()
+            && (d.join("sail.config.json").is_file() || d.join("sail.config.jsonc").is_file())
+        {
+            nested_config = Some(d.to_path_buf());
         }
         // Stop at workspace root markers so monorepo apps keep their own root.
         if d.join("Cargo.toml").is_file() && d.join("crates").is_dir() {
-            return None;
+            return nested_config;
         }
         dir = d.parent().map(|p| p.to_path_buf());
     }
-    None
+    nested_config
 }
 
 /// Collect authored product `.ts` files under `project` and run the E1b

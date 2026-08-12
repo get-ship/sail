@@ -5,7 +5,9 @@
 //!
 //! Expected product surface:
 //! - `project_map::at_alias_paths` → SSOT `AtAliasMapping` table
-//! - `ambients::emit_project_tsconfig_json` embeds `baseUrl` + `paths` from that table
+//! - `ambients::emit_project_tsconfig_json` embeds `paths` from that table
+//!   (targets rewritten relative to `node_modules/.sail/`; no `baseUrl` —
+//!   tsgo removes it with TS5102)
 //! - Deck resolve (out of this gate file) must use the same SSOT
 
 use std::path::Path;
@@ -87,11 +89,12 @@ fn at_alias_paths_patterns_are_at_slash() {
 }
 
 #[test]
-fn emit_project_tsconfig_includes_base_url_and_paths() {
+fn emit_project_tsconfig_includes_paths_without_base_url() {
     let body = emit_project_tsconfig_json(&["src/**/*.ts", "routes/**/*.ts"]);
+    // tsgo removes baseUrl (TS5102); paths alone must resolve `@/` from .sail/.
     assert!(
-        body.contains("\"baseUrl\""),
-        "project tsconfig must set baseUrl for `@/` resolution:\n{body}"
+        !body.contains("\"baseUrl\""),
+        "project tsconfig must not emit baseUrl (tsgo TS5102):\n{body}"
     );
     assert!(
         body.contains("\"paths\""),
@@ -100,6 +103,10 @@ fn emit_project_tsconfig_includes_base_url_and_paths() {
     assert!(
         body.contains("\"@/*\"") || body.contains("@/"),
         "project tsconfig paths must include `@/*` (or fixed `@/…` keys):\n{body}"
+    );
+    assert!(
+        body.contains("../../src/stores/*") || body.contains("\"../../src/stores/*\""),
+        "paths targets must be relative to node_modules/.sail/:\n{body}"
     );
 }
 

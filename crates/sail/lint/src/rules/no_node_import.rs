@@ -1,8 +1,9 @@
 //! `sail-no-node-import` — Node/Bun are test and tooling only.
 //!
-//! Product `src` (apps + packages) must not import `node:` / `bun:` specs or
-//! free Node ambients (`process`, `Buffer`, …). Do not install `@types/node`
-//! to silence product code — move the module under `test/` or `scripts/`.
+//! Product `src` (apps + packages) must not import `node:` / `bun:` / bare
+//! `process` specs or free Node ambients (`process`, …). Do not install
+//! `@types/node` to silence product code — move the module under `test/` or
+//! tooling.
 //!
 //! Severity: Error. Path-gated to product surfaces (not test/).
 
@@ -10,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
-use oxc_ast_visit::Visit;
+use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
@@ -18,10 +19,11 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-no-node-import";
 
-const MESSAGE: &str = "Node/Bun is not allowed in product source — lives in test/ and tooling only";
+const MESSAGE: &str =
+    "node/bun is the build toolchain, never a runtime dep — this belongs in test/ or tooling";
 
-const SUGGEST: &str = "Move Node-only code under test/ or scripts/. Do not add `@types/node` \
-     to product Pure/Action surfaces.";
+const SUGGEST: &str = "Move Node/Bun-only code under test/ or a tooling entry. \
+     Do not add `@types/node` to product Pure/Action surfaces.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     if !is_product_scope(path) {
@@ -49,6 +51,7 @@ fn is_product_scope(path: &Path) -> bool {
         || p.contains("/tests/")
         || p.contains("/__tests__/")
         || p.contains("/scripts/")
+        || p.contains("/tooling/")
         || p.ends_with(".test.ts")
         || p.ends_with(".spec.ts")
     {
@@ -63,7 +66,7 @@ fn is_product_scope(path: &Path) -> bool {
 
 fn is_node_or_bun_spec(module: &str) -> bool {
     let m = module.trim();
-    m.starts_with("node:") || m.starts_with("bun:")
+    m.starts_with("node:") || m.starts_with("bun:") || m == "process"
 }
 
 struct NodeImportVisitor<'src> {
@@ -93,6 +96,7 @@ impl<'a> Visit<'a> for NodeImportVisitor<'_> {
         if is_node_or_bun_spec(module) {
             self.report(decl.span, module);
         }
+        walk::walk_import_declaration(self, decl);
     }
 
     fn visit_export_named_declaration(&mut self, decl: &ExportNamedDeclaration<'a>) {
@@ -102,6 +106,8 @@ impl<'a> Visit<'a> for NodeImportVisitor<'_> {
                 self.report(decl.span, module);
             }
         }
+        // Walk declaration body so free `process` in `export const x = process…` fires.
+        walk::walk_export_named_declaration(self, decl);
     }
 
     fn visit_export_all_declaration(&mut self, decl: &ExportAllDeclaration<'a>) {
@@ -109,6 +115,7 @@ impl<'a> Visit<'a> for NodeImportVisitor<'_> {
         if is_node_or_bun_spec(module) {
             self.report(decl.span, module);
         }
+        walk::walk_export_all_declaration(self, decl);
     }
 
     fn visit_import_expression(&mut self, expr: &ImportExpression<'a>) {
@@ -118,24 +125,32 @@ impl<'a> Visit<'a> for NodeImportVisitor<'_> {
                 self.report(expr.span, module);
             }
         }
+        walk::walk_import_expression(self, expr);
     }
 
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
-        // require('node:…')
+        // require('node:…') / require('process')
         let is_require = match &expr.callee {
             Expression::Identifier(id) => id.name.as_str() == "require",
             _ => false,
         };
-        if !is_require {
-            return;
-        }
-        if let Some(arg) = expr.arguments.first() {
-            if let Some(Expression::StringLiteral(lit)) = arg.as_expression() {
-                let module = lit.value.as_str();
-                if is_node_or_bun_spec(module) {
-                    self.report(expr.span, module);
+        if is_require {
+            if let Some(arg) = expr.arguments.first() {
+                if let Some(Expression::StringLiteral(lit)) = arg.as_expression() {
+                    let module = lit.value.as_str();
+                    if is_node_or_bun_spec(module) {
+                        self.report(expr.span, module);
+                    }
                 }
             }
+        }
+        walk::walk_call_expression(self, expr);
+    }
+
+    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
+        // Free `process` ambient (e.g. process.env) — same product ban.
+        if ident.name.as_str() == "process" {
+            self.report(ident.span, "process");
         }
     }
 }
@@ -177,6 +192,11 @@ mod tests {
         assert_eq!(f[0].rule, RULE_ID);
         assert!(f[0].message.contains("node:fs"), "{f:?}");
         assert!(
+            f[0].message.contains("build toolchain") || f[0].message.contains("test/"),
+            "teaching message missing: {}",
+            f[0].message
+        );
+        assert!(
             f[0].suggest
                 .as_deref()
                 .is_some_and(|s| s.contains("test/") && !s.contains("npm i")),
@@ -195,12 +215,49 @@ mod tests {
     }
 
     #[test]
+    fn errors_on_bare_process_module_import() {
+        let f = lint_at(
+            "apps/demo/src/compositions/env.ts",
+            "import process from 'process'\nexport const e = process.env\n",
+        );
+        assert!(
+            f.iter().any(|x| x.message.contains("process")),
+            "bare process module must fire: {f:?}"
+        );
+    }
+
+    #[test]
+    fn errors_on_free_process_identifier() {
+        // Bare + member forms (type-gate also rewrites free process via TS2304).
+        for src in [
+            "export const e = process.env.NODE_ENV\n",
+            "const x = process\nexport { x }\n",
+            "void process\n",
+        ] {
+            let f = lint_at("apps/demo/src/compositions/env.ts", src);
+            assert!(
+                f.iter().any(|x| x.message.contains("process")),
+                "free process must fire for {src:?}: {f:?}"
+            );
+        }
+    }
+
+    #[test]
     fn allows_in_test_path() {
         let f = lint_at(
             "apps/demo/test/helpers/cli.ts",
-            "import { spawn } from 'node:child_process'\n",
+            "import { spawn } from 'node:child_process'\nexport const x = process.env.X\n",
         );
         assert!(f.is_empty(), "test/ is allowed: {f:?}");
+    }
+
+    #[test]
+    fn allows_in_tooling_path() {
+        let f = lint_at(
+            "apps/demo/tooling/gen.ts",
+            "import { readFileSync } from 'node:fs'\n",
+        );
+        assert!(f.is_empty(), "tooling/ is allowed: {f:?}");
     }
 
     #[test]

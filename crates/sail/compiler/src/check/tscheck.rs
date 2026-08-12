@@ -4136,6 +4136,10 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             "must use Bundler resolution:\n{body}"
         );
         assert!(
+            body.contains("\"types\": []"),
+            "must set types:[] so @types/node is not auto-included:\n{body}"
+        );
+        assert!(
             body.contains("../../src/stores/*") || body.contains("\"../../src/stores/*\""),
             "paths must be relative to node_modules/.sail/:\n{body}"
         );

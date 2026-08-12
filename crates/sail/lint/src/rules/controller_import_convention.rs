@@ -1,11 +1,11 @@
 //! `sail-controller-import-convention` — controller value imports are
 //! restricted to allowed surfaces.
 //!
-//! Allowed (apps):
+//! Allowed (apps) — S1 fixed homes:
 //! - `@ship/*`
-//! - `@/` project aliases (e.g. `@/stores/…`, `@/compositions/…`)
+//! - `@/` project aliases (`@/components|compositions|stores|actions|themes/…`)
 //! - relative `.sail`
-//! - relative paths under `src/actions/`, `src/compositions/`, `src/serverfns/`
+//! - relative under `src/actions|compositions|components|serverfns/` or `themes/`
 //!
 //! **Stores** live under `src/stores/` (S1). Controllers must import them via
 //! `@/stores/…`, not cross-dir relatives (`../stores/…`). Relative store hops
@@ -32,11 +32,12 @@ pub const RULE_ID: &str = "sail-controller-import-convention";
 
 // Product-facing: name the law, name the path. No process jargon, no strategy essay.
 const MESSAGE: &str = "disallowed controller import — value imports must be \
-     `@ship/*`, `@/…` (stores/compositions/actions homes), a relative `.sail` \
-     module, or relative under `src/actions/`, `src/compositions/`, or `src/serverfns/`";
+     `@ship/*`, `@/…` (S1 homes: components/compositions/stores/actions/themes), \
+     a relative `.sail` module, or relative under `src/actions|compositions|components|serverfns/` \
+     or `themes/`";
 
-const SUGGEST: &str = "Prefer `@/stores/…`, `@/compositions/…`, or `@/actions/…` for \
-     app homes; or a relative under `src/actions|compositions|serverfns`; \
+const SUGGEST: &str = "Prefer `@/stores|compositions|actions|components|themes/…` for \
+     S1 app homes; relative under `src/actions|compositions|components|serverfns` or `themes/`; \
      `@ship/*` for packages; `import type` when only types are needed.";
 
 const STORE_RELATIVE_MESSAGE: &str =
@@ -260,17 +261,24 @@ fn is_allowed_value_module(
 }
 
 fn is_conventional_dir(p: &str) -> bool {
+    // S1 fixed homes (except stores — relative form teaches `@/stores/…`).
     p.contains("/src/actions/")
         || p.contains("/src/compositions/")
+        || p.contains("/src/components/")
         || p.contains("/src/serverfns/")
+        || p.contains("/themes/")
         || p.starts_with("src/actions/")
         || p.starts_with("src/compositions/")
+        || p.starts_with("src/components/")
         || p.starts_with("src/serverfns/")
-        || p.contains("/actions/") && p.contains("/src/")
+        || p.starts_with("themes/")
+        || (p.contains("/actions/") && p.contains("/src/"))
         // path segment exact: …/src/actions
         || p.ends_with("/src/actions")
         || p.ends_with("/src/compositions")
+        || p.ends_with("/src/components")
         || p.ends_with("/src/serverfns")
+        || p.ends_with("/themes")
 }
 
 fn is_stores_dir(p: &str) -> bool {
@@ -509,6 +517,33 @@ mod tests {
     }
 
     #[test]
+    fn allows_at_alias_components_and_themes() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { Widget } from '@/components/widget'\n\
+             import { ship } from '@/themes/ship'\n\
+             export default controller(() => ({ Widget, ship }))\n",
+        );
+        assert!(
+            f.is_empty(),
+            "@/components and @/themes must be allowed: {f:?}"
+        );
+    }
+
+    #[test]
+    fn allows_relative_components_dir() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { Widget } from './components/widget'\n\
+             export default controller(() => ({ Widget }))\n",
+        );
+        assert!(
+            f.is_empty(),
+            "relative under src/components must be allowed: {f:?}"
+        );
+    }
+
+    #[test]
     fn refuses_relative_stores_and_teaches_at_alias() {
         // store-total style: legal home, wrong form — fire + teach `@/stores/…`.
         let f = lint_at(
@@ -533,6 +568,24 @@ mod tests {
             "must not push stores into compositions: {}",
             f[0].message
         );
+    }
+
+    #[test]
+    fn message_names_s1_legal_homes() {
+        let f = lint_at(
+            "apps/demo/src/page.controller.ts",
+            "import { createVm } from './page-vm'\n\
+             export default controller(() => ({}))\n",
+        );
+        assert_eq!(f.len(), 1, "{f:?}");
+        let msg = &f[0].message;
+        for home in ["components", "compositions", "stores", "actions", "themes"] {
+            assert!(
+                msg.contains(home) || f[0].suggest.as_deref().is_some_and(|s| s.contains(home)),
+                "disallowed message must name S1 home `{home}`: message={msg:?} suggest={:?}",
+                f[0].suggest
+            );
+        }
     }
 
     #[test]

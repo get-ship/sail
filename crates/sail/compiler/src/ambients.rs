@@ -596,7 +596,8 @@ pub fn sail_tsconfig_compiler_options_json_for(env: TypeEnv) -> String {
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "types": []
   }}"#
     )
 }
@@ -647,8 +648,8 @@ pub fn write_project_oxlintrc(project: &Path) -> Result<PathBuf> {
 pub const PROJECT_SAIL_DIR_REL: &str = "node_modules/.sail";
 
 /// Relative path from [`PROJECT_SAIL_DIR_REL`] up to the project root.
-/// Pure/action configs live under `.sail/`; include/exclude/baseUrl use this
-/// prefix so globs still cover the project tree.
+/// Pure/action configs live under `.sail/`; include/exclude/`paths` use this
+/// prefix so globs and aliases still cover the project tree.
 const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
 
 /// Build a Pure-env child tsconfig body (written under [`PROJECT_SAIL_DIR_REL`]).
@@ -664,10 +665,10 @@ const SAIL_DIR_TO_PROJECT_ROOT: &str = "../..";
 /// The ambient pack is listed under `files` as a same-dir path (`./types.d.ts`)
 /// so `exclude: ../../node_modules` does not drop it (SPEC-OUTPUT-1 §4 Option B).
 ///
-/// `compilerOptions.baseUrl` + `paths` come from
-/// [`crate::project_map::at_alias_paths`] (SPEC-PROJECT-STRUCTURE-1 §3) so
-/// editors/tsc and deck resolve share one alias map. `baseUrl` points at the
-/// project root (`../..` from `.sail/`).
+/// `compilerOptions.paths` come from [`crate::project_map::at_alias_paths`]
+/// (SPEC-PROJECT-STRUCTURE-1 §3). Targets are rewritten relative to `.sail/`
+/// (`../../src/…`) — **no `baseUrl`**: tsgo removes it (TS5102) and the gate
+/// must use the same config as `tsc -p` / `tsgo -p`.
 pub fn emit_project_tsconfig_json(include_globs: &[&str]) -> String {
     emit_project_tsconfig_json_for(TypeEnv::Pure, include_globs)
 }
@@ -688,16 +689,20 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         .map(|g| format!("\"{root}/{g}\""))
         .collect();
     let opts = sail_tsconfig_compiler_options_json_for(env);
-    // Drop outer braces so we can inject baseUrl + paths from the SSOT.
+    // Drop outer braces so we can inject paths from the SSOT.
     let opts_inner = opts
         .trim()
         .trim_start_matches('{')
         .trim_end_matches('}')
         .trim();
-    // paths targets stay project-root relative; baseUrl is the project root.
+    // Paths relative to this config dir (no baseUrl — tsgo TS5102).
+    // SSOT targets are project-root relative (`./src/stores/*`); prefix `../../`.
     let path_entries: Vec<String> = crate::project_map::at_alias_paths()
         .iter()
-        .map(|m| format!("      \"{}\": [\"{}\"]", m.pattern, m.target))
+        .map(|m| {
+            let target = m.target.trim_start_matches("./");
+            format!("      \"{}\": [\"{root}/{target}\"]", m.pattern)
+        })
         .collect();
     let paths_block = path_entries.join(",\n");
     // Packs sit beside this config — same-dir paths, not project-root paths.
@@ -723,8 +728,8 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
     };
     format!(
         "{{\n  \
-         \"$comment\": \"Sail kind tsconfig under {sail_dir}/ (G2c / TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. {env_note} Lives beside types.d.ts; root tsconfig.json is a solution that references this file. Gate never reads it.\",\n  \
-         \"compilerOptions\": {{\n    {opts_inner},\n    \"baseUrl\": \"{root}\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
+         \"$comment\": \"Sail kind tsconfig under {sail_dir}/ (G2c / TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. {env_note} Lives beside types.d.ts; root tsconfig.json is a solution that references this file. No baseUrl (tsgo TS5102); paths are relative to this file.\",\n  \
+         \"compilerOptions\": {{\n    {opts_inner},\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
          \"files\": [{files}],\n  \
          \"include\": [{inc}],\n  \
          \"exclude\": [{exclude}]\n\
@@ -2091,10 +2096,16 @@ mod tests {
             body.contains("src/actions"),
             "Pure project tsconfig must exclude src/actions:\n{body}"
         );
-        // Nested under node_modules/.sail/ — baseUrl points at project root.
+        // Nested under node_modules/.sail/ — no baseUrl (tsgo TS5102); paths
+        // reach project root via ../../ prefix.
         assert!(
-            body.contains(&format!("\"baseUrl\": \"{SAIL_DIR_TO_PROJECT_ROOT}\"")),
-            "kind tsconfig baseUrl must be project root from .sail/:\n{body}"
+            !body.contains("\"baseUrl\""),
+            "kind tsconfig must not emit baseUrl (tsgo removed it):\n{body}"
+        );
+        assert!(
+            body.contains(&format!("\"{SAIL_DIR_TO_PROJECT_ROOT}/src/stores/*\""))
+                || body.contains(&format!("{SAIL_DIR_TO_PROJECT_ROOT}/src/stores/*")),
+            "kind paths must be relative to .sail/ (../../src/…):\n{body}"
         );
     }
 
