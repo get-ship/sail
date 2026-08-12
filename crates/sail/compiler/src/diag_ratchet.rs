@@ -111,28 +111,28 @@ pub fn anonymous_baseline() -> usize {
 // ---------------------------------------------------------------------------
 
 fn classify_with_consts(source: &str, consts: &HashMap<String, String>) -> SiteClass {
-    if let Some(id) = extract_with_category(source) {
-        return if resolves_stable(&id, consts) {
-            SiteClass::Idd
-        } else {
-            SiteClass::Anonymous
-        };
+    if resolved_id(source, consts).is_some() {
+        SiteClass::Idd
+    } else {
+        SiteClass::Anonymous
     }
-    if let Some(id) = extract_rule_some(source) {
-        return if resolves_stable(&id, consts) {
-            SiteClass::Idd
-        } else {
-            SiteClass::Anonymous
-        };
-    }
-    SiteClass::Anonymous
 }
 
-fn resolves_stable(token: &str, consts: &HashMap<String, String>) -> bool {
-    if is_stable_rule_id(token) {
-        return true;
+fn resolved_id(source: &str, consts: &HashMap<String, String>) -> Option<String> {
+    if let Some(id) = extract_with_category(source) {
+        return resolved_stable_id(&id, consts);
     }
-    consts.get(token).is_some_and(|v| is_stable_rule_id(v))
+    if let Some(id) = extract_rule_some(source) {
+        return resolved_stable_id(&id, consts);
+    }
+    None
+}
+
+fn resolved_stable_id(token: &str, consts: &HashMap<String, String>) -> Option<String> {
+    if is_stable_rule_id(token) {
+        return Some(token.to_string());
+    }
+    consts.get(token).filter(|v| is_stable_rule_id(v)).cloned()
 }
 
 /// Collect `const NAME: &str = "…"` (optionally `pub`) string bindings.
@@ -316,6 +316,7 @@ struct Site {
     #[allow(dead_code)]
     line: usize,
     class: SiteClass,
+    id: Option<String>,
 }
 
 fn scan_compiler_src() -> Vec<Site> {
@@ -361,11 +362,17 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
         if src[i..].starts_with("CompileError::new(") {
             let line = line_number(src, i);
             let window = compile_error_statement_window(src, i);
-            let class = classify_with_consts(window, &consts);
+            let id = resolved_id(window, &consts);
+            let class = if id.is_some() {
+                SiteClass::Idd
+            } else {
+                SiteClass::Anonymous
+            };
             sites.push(Site {
                 path: path.to_path_buf(),
                 line,
                 class,
+                id,
             });
             i += "CompileError::new(".len();
             continue;
@@ -397,11 +404,17 @@ fn scan_file(path: &Path, src: &str, sites: &mut Vec<Site>) {
                 // product emissions set `message:`; type fields alone aren't emissions
                 if has_message_field(window) {
                     let line = line_number(src, i);
-                    let class = classify_with_consts(window, &consts);
+                    let id = resolved_id(window, &consts);
+                    let class = if id.is_some() {
+                        SiteClass::Idd
+                    } else {
+                        SiteClass::Anonymous
+                    };
                     sites.push(Site {
                         path: path.to_path_buf(),
                         line,
                         class,
+                        id,
                     });
                 }
                 i = next_char_boundary(src, j + 1);
@@ -757,6 +770,7 @@ mod tests {
     fn stable_ids() {
         assert!(is_stable_rule_id("sail-foo"));
         assert!(is_stable_rule_id("sail-light-shadow-root"));
+        assert!(is_stable_rule_id("sail-internal-lint-gate"));
         assert!(!is_stable_rule_id("expression"));
         assert!(!is_stable_rule_id(""));
         assert!(!is_stable_rule_id("sail-"));
@@ -870,17 +884,14 @@ mod tests {
     }
 
     #[test]
-    fn baseline_matches_scan() {
+    fn baseline_is_zero() {
         let count = count_anonymous_sites();
-        assert!(
-            count <= anonymous_baseline(),
-            "remeasure: anonymous={count} baseline={}",
-            anonymous_baseline()
+        assert_eq!(
+            count,
+            0,
+            "anonymous diagnostic sites must be zero (found {count}): {:?}",
+            anonymous_site_locations()
         );
-        // Print for operators remeasuring the pin.
-        eprintln!(
-            "diag_ratchet remeasure: anonymous={count} baseline={}",
-            anonymous_baseline()
-        );
+        assert_eq!(anonymous_baseline(), 0);
     }
 }
