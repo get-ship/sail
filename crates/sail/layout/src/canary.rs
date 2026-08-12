@@ -1,8 +1,7 @@
 //! Layout kinds canary harness.
 //!
-//! Fixture `run` records experimental kinds against labeled HTML. Additive
-//! [`scan_preprocessed`] accepts already-lowered sources at caller viewports
-//! so a compiler-side driver can scan `.sail` without a layout→compiler edge.
+//! `run` scans labeled fixtures under experimental. [`scan_preprocessed`]
+//! accepts already-lowered HTML at caller viewports.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -321,9 +320,6 @@ pub struct PreprocessedScan {
 }
 
 /// Scan already-preprocessed HTML at `viewports`, keeping only `kind`.
-///
-/// Callers that own `.sail` preprocess (compiler) feed the lowered source
-/// here so this crate never depends on `sail-compiler`.
 pub fn scan_preprocessed(
     preprocessed: &str,
     viewports: &[(f32, f32)],

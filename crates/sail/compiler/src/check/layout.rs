@@ -141,17 +141,18 @@ fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::C
 }
 
 /// Map a layout diagnostic's preprocessed span back to original `.sail` bytes.
-/// Falls back to a clamped preprocessed span when the fingerprint walk misses.
+///
+/// Tries class fingerprint, then the nth opening tag of `element_tag`.
+/// Returns `None` on a miss — never invents an EOF-clamped author span.
 pub fn original_byte_span(
     original: &str,
     preprocessed: &str,
     diag: &sail_layout::Diagnostic,
-) -> (usize, usize) {
-    find_original_span(original, preprocessed, diag).unwrap_or_else(|| {
-        let start = diag.span.0.min(original.len());
-        let end = diag.span.1.min(original.len());
-        (start, end)
-    })
+) -> Option<(usize, usize)> {
+    if let Some(span) = find_original_span(original, preprocessed, diag) {
+        return Some(span);
+    }
+    find_nth_tag(original, preprocessed, diag)
 }
 
 /// Stable rule id for a taffy finding kind. Experimental kinds get dedicated
@@ -300,6 +301,81 @@ fn find_original_span(
 
     // Find the same-index occurrence in the original source.
     find_nth_fingerprint(original, &fingerprint, pre_index)
+}
+
+/// Nth opening tag of `diag.element_tag` — used when the class fingerprint
+/// is empty (plain `<a>` / `<em>` / `<if>` / unexpanded hosts).
+///
+/// Skips `div`: layout keywords lower to `<div>`, so a raw nth-div index in
+/// the preprocessed tree is not the same as in the author source.
+fn find_nth_tag(
+    original: &str,
+    preprocessed: &str,
+    diag: &sail_layout::Diagnostic,
+) -> Option<(usize, usize)> {
+    let tag = diag.element_tag.as_str();
+    if tag.is_empty() || tag.eq_ignore_ascii_case("div") {
+        return None;
+    }
+    let n = count_open_tag_before(preprocessed, tag, diag.span.0);
+    find_nth_open_tag(original, tag, n)
+}
+
+fn count_open_tag_before(source: &str, tag: &str, before_byte: usize) -> usize {
+    let mut count = 0;
+    walk_open_tags(source, |pos, tag_end, name| {
+        if pos >= before_byte {
+            return false;
+        }
+        if name.eq_ignore_ascii_case(tag) {
+            count += 1;
+        }
+        let _ = tag_end;
+        true
+    });
+    count
+}
+
+fn find_nth_open_tag(source: &str, tag: &str, n: usize) -> Option<(usize, usize)> {
+    let mut seen = 0;
+    let mut hit = None;
+    walk_open_tags(source, |pos, tag_end, name| {
+        if !name.eq_ignore_ascii_case(tag) {
+            return true;
+        }
+        if seen == n {
+            hit = Some((pos, tag_end));
+            return false;
+        }
+        seen += 1;
+        true
+    });
+    hit
+}
+
+fn walk_open_tags(source: &str, mut visit: impl FnMut(usize, usize, &str) -> bool) {
+    let mut skip_to = 0usize;
+    for (pos, ch) in source.char_indices() {
+        if pos < skip_to {
+            continue;
+        }
+        if source[pos..].starts_with("<!--") {
+            if let Some(end) = source[pos..].find("-->") {
+                skip_to = pos + end + 3;
+            } else {
+                break;
+            }
+            continue;
+        }
+        if ch == '<' {
+            if let Some((tag_end, tag_name, _)) = parse_open_tag(source, pos) {
+                if !visit(pos, tag_end, tag_name) {
+                    return;
+                }
+                skip_to = tag_end;
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -862,6 +938,46 @@ mod tests {
         assert!(
             diags.iter().any(|d| d.message.contains("overflows")),
             "mobile-only overflow must surface through multi-viewport collect: {diags:?}"
+        );
+    }
+
+    fn stub_diag(tag: &str, class: &str, span: (usize, usize)) -> sail_layout::Diagnostic {
+        sail_layout::Diagnostic {
+            kind: "unintended-overflow",
+            severity: sail_layout::Severity::Warning,
+            element_index: 1,
+            element_tag: tag.to_string(),
+            element_class: class.to_string(),
+            message: String::new(),
+            span,
+            geometry: None,
+        }
+    }
+
+    #[test]
+    fn original_byte_span_maps_plain_tag_by_nth_occurrence() {
+        let src = "<p>one</p>\n<p>two <a href=\"x\">go</a></p>\n";
+        let pre = crate::parse::preprocess::preprocess_impl(src, false).expect("preprocess");
+        let a_at = pre.find("<a").expect("preprocessed <a>");
+        let span = original_byte_span(src, &pre, &stub_diag("a", "", (a_at, a_at + 2)))
+            .expect("nth <a> must map");
+        assert!(
+            src[span.0..span.1].starts_with("<a"),
+            "mapped {:?}",
+            &src[span.0..span.1]
+        );
+        let (line, _) = crate::diagnostics::line_col(src, span.0);
+        assert_eq!(line, 2, "second-line <a>, got line {line}");
+    }
+
+    #[test]
+    fn original_byte_span_does_not_invent_eof_on_miss() {
+        let src = "<p>hi</p>\n";
+        let pre = crate::parse::preprocess::preprocess_impl(src, false).expect("preprocess");
+        let miss = stub_diag("dialog", "", (pre.len() + 8, pre.len() + 16));
+        assert!(
+            original_byte_span(src, &pre, &miss).is_none(),
+            "missing tag must not clamp to EOF"
         );
     }
 }

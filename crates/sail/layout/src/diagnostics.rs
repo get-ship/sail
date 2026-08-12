@@ -38,7 +38,7 @@ pub enum MainAxis {
     Height,
 }
 
-/// Solved box in viewport space (taffy location + size).
+/// Parent-relative taffy box (location + size). `x`/`y` are not viewport-absolute.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Serialize)]
 pub struct BoxExtents {
     pub x: f32,
