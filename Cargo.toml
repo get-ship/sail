@@ -99,8 +99,7 @@ libc = "0.2"
 ulid = "1"
 regex = "1"
 takumi = { version = "=2.5.11", features = ["raster-backend", "woff2"] }
-# Last green with takumi 2.5.11 + patched core 0.16.0. 0.4.12+ require
-# takumi-core 0.17/0.18/0.19, which cannot share identity with the path patch.
+# 0.4.12+ pull a takumi-core that cannot share the path-patched 0.16.0 identity.
 takumi-raster = "=0.4.11"
 
 # Type-bridging (RC pin shared by every consumer)
