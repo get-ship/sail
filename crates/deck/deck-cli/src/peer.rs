@@ -21,9 +21,11 @@ use sail_compiler::{
 pub fn print_version(brand: &str) {
     let pkg = env!("CARGO_PKG_VERSION");
     println!("{brand} {pkg}");
-    println!("  package: deck-cli {pkg}");
-    // Peer crates share workspace versioning discipline; surface names only.
-    println!("  peers: compiler, lsp, mcp, layout, inspect (in-process via sail subcommands)");
+    // Cargo package id is historical (`deck-cli`); the product binary is `sail`.
+    // Deck crates (bundler/axum/core/host) are linked in-process — not shell-outs.
+    println!("  binary: sail (cargo package deck-cli {pkg})");
+    println!("  embeds: sail-compiler, sail-lsp, sail-mcp, sail-layout, sail-ops, sail-render,");
+    println!("          deck-bundler, deck-axum, deck-core, deck-config, deck-ssr (in-process)");
     println!("  install: cargo install --path crates/deck/deck-cli --bin sail");
     println!("  docs:    README.md § Build / CLI; `sail doctor` for local health");
 }

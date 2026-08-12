@@ -15,9 +15,9 @@
 //!   of package exports are legal there — ambient inject only owns controllers.
 //! - Component packages (export sail custom elements) remain legal value imports
 //!   from apps (package.json metadata, not a hardcoded list).
-//! - **Deep `packages/**` paths (E3 / G2b):** app product sources must not import
-//!   monorepo packages by relative/`packages/` path. Use `@ship/<name>` package
-//!   exports. Vendor facades are dead — no exemption.
+//! - **Deep `packages/**` paths** are **monorepo hygiene**, not product lint.
+//!   External apps have no monorepo `packages/` tree. Dogfood enforcement lives
+//!   in `tests/hygiene/ambient-corpus-import.test.ts` (and peers), not this rule.
 //!
 //! Components-package conventions (documented for authors):
 //! - Controllers: ambient names only — no `@ship/*` value imports.
@@ -45,15 +45,6 @@ const SUGGEST: &str = "Drop the `@ship/*` value import. Ambient names (signal, c
      Component-package controllers: same law — ambient only; composition stays package-local \
      (relative within the package), not app-style `@ship/*` value imports.";
 
-/// Deep monorepo path dual-path teaching (app product sources only).
-/// what / allowed / instead — external audience (G2b).
-const DEEP_PACKAGE_MESSAGE: &str = "deep `packages/**` imports are forbidden in app code — import the package \
-     as `@ship/<name>` via package exports";
-
-const DEEP_PACKAGE_SUGGEST: &str = "Replace the path into `packages/**` with the package name from its \
-     `package.json` (`@ship/…`). Apps consume monorepo packages through \
-     node_modules resolution / package exports, not relative source hops.";
-
 /// Compiler ambient inject specifier (`runtime_ambient::RUNTIME_SPECIFIER`).
 /// Post-inject controller bodies always carry this line; never treat it as
 /// authored cargo-cult.
@@ -73,8 +64,6 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut visitor = FrameworkImportVisitor {
         source,
         file: path.to_path_buf(),
-        // Deep packages dual-path: apps only. No vendor exemption (G2b).
-        check_deep_packages: is_app_product_path(path),
         // Ambient `@ship/*` value teaching: controllers only (G2b — plain app
         // modules import packages as packages).
         check_ship_ambient: is_ship_ambient_scope(path),
@@ -99,18 +88,6 @@ fn is_app_framework_import_scope(path: &Path) -> bool {
         return false;
     }
     // App surfaces: controllers, routes, src under apps/*.
-    p.contains("/apps/") || p.starts_with("apps/")
-}
-
-/// App product path (not packs). Used to scope the deep-`packages/**` law.
-fn is_app_product_path(path: &Path) -> bool {
-    let p = path.to_string_lossy().replace('\\', "/");
-    if p.contains("/packages/") || p.starts_with("packages/") {
-        return false;
-    }
-    if p.contains("/crates/") || p.starts_with("crates/") {
-        return false;
-    }
     p.contains("/apps/") || p.starts_with("apps/")
 }
 
@@ -273,20 +250,9 @@ fn is_component_package_specifier(module: &str, from_file: &Path) -> bool {
     false
 }
 
-/// Relative or bare path that hops into the monorepo `packages/` tree.
-fn is_deep_packages_specifier(module: &str) -> bool {
-    let m = module.trim().replace('\\', "/");
-    if m.is_empty() || m.starts_with("@") {
-        // Bare package names (`@ship/…`, npm) are not deep path dual paths.
-        return false;
-    }
-    m.contains("/packages/") || m.starts_with("packages/")
-}
-
 struct FrameworkImportVisitor<'src> {
     source: &'src str,
     file: PathBuf,
-    check_deep_packages: bool,
     check_ship_ambient: bool,
     findings: Vec<Finding>,
 }
@@ -304,30 +270,11 @@ impl FrameworkImportVisitor<'_> {
             suggest: Some(SUGGEST.to_string()),
         });
     }
-
-    fn report_deep_package(&mut self, span: Span, module: &str) {
-        let (line, col) = byte_offset_to_line_col(self.source, span.start as usize);
-        self.findings.push(Finding {
-            file: self.file.clone(),
-            line,
-            col,
-            rule: RULE_ID,
-            severity: Severity::Error,
-            message: format!("{DEEP_PACKAGE_MESSAGE} (got `{module}`)"),
-            suggest: Some(DEEP_PACKAGE_SUGGEST.to_string()),
-        });
-    }
 }
 
 impl<'a> Visit<'a> for FrameworkImportVisitor<'_> {
     fn visit_import_declaration(&mut self, decl: &ImportDeclaration<'a>) {
         let module = decl.source.value.as_str();
-
-        // Deep packages dual path — packaging boundary (type-only still dual path).
-        if self.check_deep_packages && is_deep_packages_specifier(module) {
-            self.report_deep_package(decl.span, module);
-            return;
-        }
 
         if !self.check_ship_ambient {
             return;
@@ -369,24 +316,6 @@ impl<'a> Visit<'a> for FrameworkImportVisitor<'_> {
         }
         self.report_ship(decl.span, module);
     }
-
-    fn visit_export_named_declaration(&mut self, decl: &ExportNamedDeclaration<'a>) {
-        // Re-export from deep packages/** is still a dual path.
-        let Some(source) = &decl.source else {
-            return;
-        };
-        let module = source.value.as_str();
-        if self.check_deep_packages && is_deep_packages_specifier(module) {
-            self.report_deep_package(decl.span, module);
-        }
-    }
-
-    fn visit_export_all_declaration(&mut self, decl: &ExportAllDeclaration<'a>) {
-        let module = decl.source.value.as_str();
-        if self.check_deep_packages && is_deep_packages_specifier(module) {
-            self.report_deep_package(decl.span, module);
-        }
-    }
 }
 
 fn byte_offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
@@ -414,13 +343,6 @@ mod tests {
 
     fn lint_at(path: &str, src: &str) -> Vec<Finding> {
         check(Path::new(path), src)
-    }
-
-    fn is_deep_package_teaching(msg: &str) -> bool {
-        let lower = msg.to_ascii_lowercase();
-        lower.contains("packages")
-            && lower.contains("import")
-            && (lower.contains("@ship") || lower.contains("package export"))
     }
 
     #[test]
@@ -538,72 +460,33 @@ mod tests {
     }
 
     #[test]
-    fn errors_on_deep_packages_import_in_app_src() {
+    fn deep_packages_path_is_not_product_lint() {
+        // Monorepo packaging dual-path is hygiene (`tests/hygiene/…`), not
+        // sail-framework-import-teaching. Product rule stays ambient-only.
         let f = lint_at(
             "apps/demo/src/compositions/boot.ts",
             "import { signal } from '../../../../packages/sail/runtime/src/index.ts'\n\
              export const n = signal(0)\n",
         );
-        assert_eq!(f.len(), 1, "deep packages path must Error: {f:?}");
-        assert_eq!(f[0].severity, Severity::Error);
-        assert_eq!(f[0].rule, RULE_ID);
         assert!(
-            is_deep_package_teaching(&f[0].message),
-            "expected deep-package teaching message; got: {:?}",
-            f[0].message
+            f.is_empty(),
+            "deep packages/** must not be product lint (hygiene owns monorepo): {f:?}"
         );
-        assert!(f[0].message.contains("packages/sail/runtime"), "{f:?}");
     }
 
     #[test]
-    fn errors_on_deep_packages_import_in_app_controller() {
+    fn deep_packages_controller_path_is_not_product_lint() {
+        // Controller path: deep relative is not ambient teaching either
+        // (specifier is not @ship/*).
         let f = lint_at(
             "apps/demo/src/widget/widget.controller.ts",
             "import { createTable } from '../../../../packages/components/sail/primitives/src/index.ts'\n\
              export default controller(() => ({}))\n",
         );
-        assert_eq!(f.len(), 1, "{f:?}");
-        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
-    }
-
-    #[test]
-    fn errors_on_type_only_deep_packages_import() {
-        // Dual path is packaging, not ambient — type-only still forbidden.
-        let f = lint_at(
-            "apps/demo/src/stores/tally.ts",
-            "import type { Signal } from '../../../../packages/sail/runtime/src/index.ts'\n\
-             export type T = Signal<number>\n",
+        assert!(
+            f.is_empty(),
+            "deep packages/** must not be product lint: {f:?}"
         );
-        assert_eq!(f.len(), 1, "type-only deep packages still dual path: {f:?}");
-        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
-    }
-
-    #[test]
-    fn vendor_facade_deep_packages_reexport_errors() {
-        // G2b: vendor dies — no packaging-seam exemption.
-        let f = lint_at(
-            "apps/demo/src/vendor/runtime.ts",
-            "export * from '../../../../packages/sail/runtime/src/index.ts'\n",
-        );
-        assert_eq!(
-            f.len(),
-            1,
-            "src/vendor/** is not exempt (G2b facade death): {f:?}"
-        );
-        assert_eq!(f[0].severity, Severity::Error);
-        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
-    }
-
-    #[test]
-    fn nested_non_seam_vendor_still_errors() {
-        let f = lint_at(
-            "apps/demo/src/compositions/vendor/helper.ts",
-            "export * from '../../../../../packages/sail/runtime/src/index.ts'\n",
-        );
-        assert_eq!(f.len(), 1, "deep packages path must Error: {f:?}");
-        assert_eq!(f[0].severity, Severity::Error);
-        assert_eq!(f[0].rule, RULE_ID);
-        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
     }
 
     #[test]
@@ -616,35 +499,6 @@ mod tests {
         assert!(
             f.is_empty(),
             "import via @ship/* package must be free in plain app src: {f:?}"
-        );
-    }
-
-    #[test]
-    fn errors_on_export_named_from_deep_packages() {
-        let f = lint_at(
-            "apps/demo/src/compositions/boot.ts",
-            "export { signal } from '../../../../packages/sail/runtime/src/index.ts'\n",
-        );
-        assert_eq!(
-            f.len(),
-            1,
-            "export {{ x }} from deep packages must Error: {f:?}"
-        );
-        assert_eq!(f[0].rule, RULE_ID);
-        assert!(is_deep_package_teaching(&f[0].message), "{f:?}");
-    }
-
-    #[test]
-    fn pack_deep_packages_not_app_scoped() {
-        // Deep-package law is app-only; components-package monorepo relatives are a separate residual.
-        let f = lint_at(
-            "packages/components/sail/media/src/sail-media-csv/sail-media-csv.controller.ts",
-            "import { createTable } from '../../../../packages/components/sail/primitives/src/index.ts'\n\
-             export default controller(() => ({}))\n",
-        );
-        assert!(
-            f.is_empty(),
-            "components-package deep packages path is not the app deep-package law: {f:?}"
         );
     }
 

@@ -87,7 +87,7 @@ function stripComments(src: string): string {
 
 /**
  * Deep monorepo path imports into packages/ (value, type, or side-effect).
- * Mirrors sail-framework-import-teaching deep-package case (string-level corpus gate).
+ * Monorepo-only packaging dual-path gate (product lint deliberately does not own this).
  * Scans joined source so multiline `import { … }\nfrom '…packages/…'` cannot
  * bypass the ratchet by putting the specifier on a non-import-leading line.
  */

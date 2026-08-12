@@ -3,8 +3,13 @@
 //!
 //! Allowed (apps):
 //! - `@ship/*`
+//! - `@/` project aliases (e.g. `@/stores/…`, `@/compositions/…`)
 //! - relative `.sail`
 //! - relative paths under `src/actions/`, `src/compositions/`, `src/serverfns/`
+//!
+//! **Stores** live under `src/stores/` (S1). Controllers must import them via
+//! `@/stores/…`, not cross-dir relatives (`../stores/…`). Relative store hops
+//! still Error — the lesson is the `@/` form, not “move under compositions.”
 //!
 //! Allowed (components packages, structural — components-package root has `customElements` in
 //! package.json): package-relative modules + pack `dependencies` /
@@ -27,12 +32,18 @@ pub const RULE_ID: &str = "sail-controller-import-convention";
 
 // Product-facing: name the law, name the path. No process jargon, no strategy essay.
 const MESSAGE: &str = "disallowed controller import — value imports must be \
-     `@ship/*`, a relative `.sail` module, or under `src/actions/`, \
-     `src/compositions/`, or `src/serverfns/`";
+     `@ship/*`, `@/…` (stores/compositions/actions homes), a relative `.sail` \
+     module, or relative under `src/actions/`, `src/compositions/`, or `src/serverfns/`";
 
-const SUGGEST: &str = "Move the module under `src/actions/`, `src/compositions/`, \
-     or `src/serverfns/`; import from `@ship/*`; or use `import type` if only \
-     types are needed.";
+const SUGGEST: &str = "Prefer `@/stores/…`, `@/compositions/…`, or `@/actions/…` for \
+     app homes; or a relative under `src/actions|compositions|serverfns`; \
+     `@ship/*` for packages; `import type` when only types are needed.";
+
+const STORE_RELATIVE_MESSAGE: &str =
+    "store imports must use the `@/` alias — not a cross-dir relative into `src/stores/`";
+
+const STORE_RELATIVE_SUGGEST: &str =
+    "Import from `@/stores/<name>` (e.g. `@/stores/counter-store`), not `../stores/…`.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
@@ -62,16 +73,64 @@ struct ImportVisitor<'src> {
 impl ImportVisitor<'_> {
     fn report(&mut self, span: Span, module: &str) {
         let (line, col) = byte_offset_to_line_col(self.source, span.start as usize);
+        let (message, suggest) = teaching_for_disallowed(module, &self.file);
         self.findings.push(Finding {
             file: self.file.clone(),
             line,
             col,
             rule: RULE_ID,
             severity: Severity::Error,
-            message: format!("{MESSAGE} (got `{module}`)"),
-            suggest: Some(SUGGEST.to_string()),
+            message,
+            suggest: Some(suggest),
         });
     }
+}
+
+/// Right fire, right lesson: relative hops into stores teach `@/stores/…`.
+fn teaching_for_disallowed(module: &str, controller_path: &Path) -> (String, String) {
+    let m = module.trim();
+    if let Some(alias) = store_relative_to_at_alias(m, controller_path) {
+        return (
+            format!("{STORE_RELATIVE_MESSAGE} (got `{module}` → use `{alias}`)"),
+            STORE_RELATIVE_SUGGEST.to_string(),
+        );
+    }
+    (format!("{MESSAGE} (got `{module}`)"), SUGGEST.to_string())
+}
+
+/// When `module` is a relative path that resolves under `src/stores/`, return
+/// the preferred `@/stores/…` form (no extension).
+fn store_relative_to_at_alias(module: &str, controller_path: &Path) -> Option<String> {
+    let m = module.trim();
+    if !(m.starts_with('.') || m.starts_with('/')) {
+        return None;
+    }
+    let resolved = if m.starts_with('.') {
+        controller_path.parent().map(|dir| normalize_join(dir, m))?
+    } else {
+        PathBuf::from(m)
+    };
+    let s = resolved.to_string_lossy().replace('\\', "/");
+    let idx = s.find("/src/stores/").or_else(|| {
+        if s.starts_with("src/stores/") {
+            Some(0)
+        } else {
+            None
+        }
+    })?;
+    let after = if s[idx..].starts_with("/src/stores/") {
+        &s[idx + "/src/stores/".len()..]
+    } else {
+        &s[idx + "src/stores/".len()..]
+    };
+    if after.is_empty() {
+        return None;
+    }
+    let after = after
+        .trim_end_matches(".ts")
+        .trim_end_matches(".tsx")
+        .trim_end_matches(".js");
+    Some(format!("@/stores/{after}"))
 }
 
 impl<'a> Visit<'a> for ImportVisitor<'_> {
@@ -145,6 +204,11 @@ fn is_allowed_value_module(
         return true;
     }
 
+    // App `@/` alias (stores, compositions, actions, …) — legal product form.
+    if m.starts_with("@/") {
+        return true;
+    }
+
     // Relative or absolute file path.
     if m.starts_with('.') || m.starts_with('/') {
         // .sail partials (Scope types often imported as value-less; if value,
@@ -163,6 +227,10 @@ fn is_allowed_value_module(
             PathBuf::from(m)
         };
         let resolved_str = resolved.to_string_lossy().replace('\\', "/");
+        // Stores: relative form is illegal (teach `@/stores/…` via report).
+        if is_stores_dir(&resolved_str) || is_stores_dir(m) {
+            return false;
+        }
         if is_conventional_dir(&resolved_str) {
             return true;
         }
@@ -203,6 +271,13 @@ fn is_conventional_dir(p: &str) -> bool {
         || p.ends_with("/src/actions")
         || p.ends_with("/src/compositions")
         || p.ends_with("/src/serverfns")
+}
+
+fn is_stores_dir(p: &str) -> bool {
+    p.contains("/src/stores/")
+        || p.starts_with("src/stores/")
+        || p.ends_with("/src/stores")
+        || p == "src/stores"
 }
 
 fn normalize_join(base: &Path, rel: &str) -> PathBuf {
@@ -421,6 +496,43 @@ mod tests {
              export default controller(() => ({}))\n",
         );
         assert!(f.is_empty(), "{f:?}");
+    }
+
+    #[test]
+    fn allows_at_alias_stores() {
+        let f = lint_at(
+            "apps/demo/src/flow-trace/flow-trace.controller.ts",
+            "import { total } from '@/stores/counter-store'\n\
+             export default controller(() => ({ total }))\n",
+        );
+        assert!(f.is_empty(), "@/stores must be allowed: {f:?}");
+    }
+
+    #[test]
+    fn refuses_relative_stores_and_teaches_at_alias() {
+        // store-total style: legal home, wrong form — fire + teach `@/stores/…`.
+        let f = lint_at(
+            "apps/demo/src/flow-trace/store-total.controller.ts",
+            "import { total } from '../stores/counter-store'\n\
+             export default controller(() => ({ total }))\n",
+        );
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(
+            f[0].message.contains("@/stores/counter-store")
+                || f[0]
+                    .suggest
+                    .as_deref()
+                    .is_some_and(|s| s.contains("@/stores")),
+            "must teach @/stores alias, got message={:?} suggest={:?}",
+            f[0].message,
+            f[0].suggest
+        );
+        assert!(
+            !f[0].message.contains("src/compositions"),
+            "must not push stores into compositions: {}",
+            f[0].message
+        );
     }
 
     #[test]

@@ -12,7 +12,7 @@
 </scope>
 
 <controller>
-import { tally } from '../stores/counter-store'
+import { tally } from '@/stores/counter-store'
 
 export default controller(() => {
   const { clicks, add } = useStore(tally)

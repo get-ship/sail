@@ -54,6 +54,7 @@ pub mod no_data_attr;
 pub mod no_free_aria;
 pub mod no_imperative_style;
 pub mod no_inline_style;
+pub mod no_node_import;
 pub mod no_raw_container;
 pub mod no_script;
 pub mod no_style_block;
@@ -92,6 +93,7 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
         controller_import_convention::RULE_ID,
         controller_import_convention::check,
     ),
+    (no_node_import::RULE_ID, no_node_import::check),
     (controller_set_value::RULE_ID, controller_set_value::check),
     (controller_state_cast::RULE_ID, controller_state_cast::check),
     (
@@ -182,6 +184,7 @@ pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
         no_undeclared_stylesheet::RULE_ID,
         no_undeclared_stylesheet::check,
     ),
+    (no_node_import::RULE_ID, no_node_import::check),
 ];
 
 /// Rules that lint plain app TypeScript under `apps/*/src/**/*.ts`.
@@ -204,6 +207,8 @@ pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
         framework_import_teaching::RULE_ID,
         framework_import_teaching::check,
     ),
+    // Node/Bun tooling boundary (product src only).
+    (no_node_import::RULE_ID, no_node_import::check),
     // SPEC-CTX-1 teach-side (warn only).
     (prefer_query::RULE_ID, prefer_query::check),
 ];

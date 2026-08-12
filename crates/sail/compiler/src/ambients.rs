@@ -804,6 +804,39 @@ fn remove_legacy_root_kind_tsconfigs(project: &Path) {
     }
 }
 
+/// Keep `node_modules/.sail/` free of scratch kind configs
+/// (`tsconfig.pure.g2d.json`, agent debris, etc.). Canonical names only.
+fn sweep_stale_sail_kind_tsconfigs(project: &Path) {
+    let sail_dir = project.join(PROJECT_SAIL_DIR_REL);
+    let Ok(entries) = fs::read_dir(&sail_dir) else {
+        return;
+    };
+    const KEEP: &[&str] = &[
+        "tsconfig.pure.json",
+        "tsconfig.action.json",
+        "types.d.ts",
+        "action-observation.d.ts",
+    ];
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let Some(name_s) = name.to_str() else {
+            continue;
+        };
+        // tsconfig*.json except the two canonical kind files.
+        if name_s.starts_with("tsconfig") && name_s.ends_with(".json") && !KEEP.contains(&name_s) {
+            let _ = fs::remove_file(entry.path());
+        }
+        // tsbuildinfo for removed scratch configs
+        if name_s.starts_with("tsconfig")
+            && name_s.ends_with(".tsbuildinfo")
+            && name_s != "tsconfig.pure.tsbuildinfo"
+            && name_s != "tsconfig.action.tsbuildinfo"
+        {
+            let _ = fs::remove_file(entry.path());
+        }
+    }
+}
+
 /// Write ambient packs + pure/action kind tsconfigs under
 /// [`PROJECT_SAIL_DIR_REL`], plus a solution-style root `tsconfig.json`.
 ///
@@ -844,6 +877,8 @@ pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, P
     }
     // Pre-G2c root kind files are dead; drop when sail-owned.
     remove_legacy_root_kind_tsconfigs(project);
+    // Drop agent/scratch kind configs under `.sail/` (tsconfig.pure.g2d*.json).
+    sweep_stale_sail_kind_tsconfigs(project);
     Ok((types, pure_path, action_path))
 }
 
@@ -2089,6 +2124,19 @@ mod tests {
     fn write_project_type_configs_emits_sail_dir_kinds_and_solution_root() {
         let dir = tempfile::tempdir().unwrap();
         let project = dir.path();
+        // Scratch debris under .sail/ must be swept on regenerate.
+        let sail_dir = project.join(PROJECT_SAIL_DIR_REL);
+        fs::create_dir_all(&sail_dir).unwrap();
+        fs::write(
+            sail_dir.join("tsconfig.pure.g2d.json"),
+            r#"{ "$comment": "scratch" }"#,
+        )
+        .unwrap();
+        fs::write(
+            sail_dir.join("tsconfig.pure.g2d2.json"),
+            r#"{ "$comment": "scratch" }"#,
+        )
+        .unwrap();
         // Pre-G2c legacy root kind files — must be removed when sail-owned.
         fs::write(
             project.join(LEGACY_ROOT_TSCONFIG_PURE),
@@ -2121,6 +2169,15 @@ mod tests {
             !project.join(LEGACY_ROOT_TSCONFIG_PURE).exists()
                 && !project.join(LEGACY_ROOT_TSCONFIG_ACTION).exists(),
             "legacy root kind tsconfigs must be deleted"
+        );
+        assert!(
+            !sail_dir.join("tsconfig.pure.g2d.json").exists()
+                && !sail_dir.join("tsconfig.pure.g2d2.json").exists(),
+            "scratch kind configs under .sail/ must be swept"
+        );
+        assert!(
+            pure.exists() && action.exists(),
+            "canonical pure/action must remain after sweep"
         );
 
         // Hand-authored root is preserved.

@@ -87,6 +87,8 @@ pub const RULE_ACTION_SURFACE: &str = "sail-action-surface";
 pub const RULE_NO_TS_IGNORE: &str = "sail-no-ts-ignore";
 pub const RULE_NO_TYPE_ERASE: &str = "sail-no-type-erase";
 pub const RULE_TYPE_GATE: &str = "sail-type-gate";
+/// Node/Bun live in test/ and tooling only — never product Pure/Action.
+pub const RULE_NO_NODE: &str = "sail-no-node";
 
 /// Loud install fix when tsgo cannot be resolved.
 pub const TSGO_MISSING_MSG: &str = "\
@@ -1442,10 +1444,7 @@ fn write_open_any_stub(dest: &Path, stub: &RelativeStub) -> std::io::Result<()> 
 fn is_precise_ship_module(spec: &str) -> bool {
     matches!(
         spec.trim(),
-        "@ship/sail-runtime"
-            | "@ship/sail-runtime/internal"
-            | "@ship/sail-dom"
-            | "@ship/sail-test"
+        "@ship/sail-runtime" | "@ship/sail-runtime/internal" | "@ship/sail-dom" | "@ship/sail-test"
     )
 }
 
@@ -1485,9 +1484,8 @@ fn ship_packages_paths_entry(ship_nm: &Path, out_dir: &Path) -> Option<String> {
     let nm_canon = ship_nm
         .canonicalize()
         .unwrap_or_else(|_| ship_nm.to_path_buf());
-    let rel = pathdiff_relative(&out_canon, &nm_canon).unwrap_or_else(|| {
-        nm_canon.to_string_lossy().replace('\\', "/")
-    });
+    let rel = pathdiff_relative(&out_canon, &nm_canon)
+        .unwrap_or_else(|| nm_canon.to_string_lossy().replace('\\', "/"));
     let rel = rel.replace('\\', "/");
     Some(format!("      \"@ship/*\": [\"{rel}/*\"]"))
 }
@@ -2030,6 +2028,9 @@ fn gate_temp_dir(source_path: Option<&Path>) -> PathBuf {
 
 // ── project env batch ──────────────────────────────────────────────────────
 
+/// Project batch must match `tsc -p node_modules/.sail/tsconfig.{pure,action}.json`.
+/// Prefer the generated kind config when present; only materialize a mirror when
+/// the kind file is missing (unit fixtures without `sail types`).
 fn typecheck_project_env(
     project_root: &Path,
     env: TypeEnv,
@@ -2040,6 +2041,105 @@ fn typecheck_project_env(
     if files.is_empty() {
         return Ok(());
     }
+    if typecheck_project_env_via_kind_config(project_root, env, files, tool, diags)? {
+        return Ok(());
+    }
+    typecheck_project_env_mirror(project_root, env, files, tool, diags)
+}
+
+/// Run tsgo against the same kind tsconfig product `tsc -p` uses (G2c).
+/// Returns `Ok(true)` when the kind config existed and was used.
+fn typecheck_project_env_via_kind_config(
+    project_root: &Path,
+    env: TypeEnv,
+    files: &[(&Path, &str)],
+    tool: &TsgoTool,
+    diags: &mut Vec<Diagnostic>,
+) -> std::io::Result<bool> {
+    let kind_rel = match env {
+        TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+        TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
+        TypeEnv::Framework => return Ok(true),
+    };
+    let kind_abs = project_root.join(kind_rel);
+    if !kind_abs.is_file() {
+        return Ok(false);
+    }
+
+    // Product file set for attribution + filtering (same homes the batch walked).
+    let product: BTreeSet<String> = files
+        .iter()
+        .map(|(p, _)| {
+            p.strip_prefix(project_root)
+                .unwrap_or(p)
+                .to_string_lossy()
+                .replace('\\', "/")
+        })
+        .collect();
+
+    let output = run_tsgo(tool, &["-p", kind_rel, "--noEmit"], project_root)?;
+    let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+    text.push_str(&String::from_utf8_lossy(&output.stderr));
+
+    for d in text.lines().filter_map(parse_line) {
+        let f = d.file.replace('\\', "/");
+        // Drop ambient/config noise and Framework package sources under node_modules
+        // unless the path is also a product file we are gating.
+        let in_product = product
+            .iter()
+            .any(|rel| f.ends_with(rel.as_str()) || f.contains(&format!("/{rel}")));
+        if !in_product
+            && (f.ends_with("tsconfig.json")
+                || f.ends_with("tsconfig.pure.json")
+                || f.ends_with("tsconfig.action.json")
+                || f.contains("node_modules/.sail/")
+                || f.contains("/node_modules/")
+                || f.contains("/dist/"))
+        {
+            continue;
+        }
+        let real = match resolve_diag_path_to_product(project_root, &f, &product) {
+            Some(p) => p,
+            None => continue,
+        };
+        if let Some(mut mapped) = map_region_diag(&d, env) {
+            mapped.message = format!("{} [{}]", mapped.message, real.display());
+            diags.push(mapped);
+        }
+    }
+    Ok(true)
+}
+
+fn resolve_diag_path_to_product(
+    project_root: &Path,
+    file: &str,
+    product: &BTreeSet<String>,
+) -> Option<PathBuf> {
+    let f = file.replace('\\', "/");
+    for rel in product {
+        if f.ends_with(rel) || f.contains(&format!("/{rel}")) {
+            return Some(project_root.join(rel));
+        }
+    }
+    // Absolute path under project that matches a product relative.
+    let as_path = Path::new(file);
+    if let Ok(rel) = as_path.strip_prefix(project_root) {
+        let rel_s = rel.to_string_lossy().replace('\\', "/");
+        if product.contains(&rel_s) {
+            return Some(project_root.join(rel));
+        }
+    }
+    None
+}
+
+/// Fallback mirror batch when kind configs are not on disk (tests / pre-types).
+fn typecheck_project_env_mirror(
+    project_root: &Path,
+    env: TypeEnv,
+    files: &[(&Path, &str)],
+    tool: &TsgoTool,
+    diags: &mut Vec<Diagnostic>,
+) -> std::io::Result<()> {
     let out_dir = project_root
         .join(".deck")
         .join(format!("type-gate-{}", env_label(env)));
@@ -2202,6 +2302,11 @@ const NAME_CODES: &[&str] = &["TS2304", "TS2552", "TS2584", "TS2503", "TS2551", 
 /// / `@/` project-alias specs) is **not** promoted until the region runs
 /// under full project resolution — see module docs.
 fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
+    // Node ambient / @types/node advice is the wrong lesson for product code.
+    if let Some(diag) = map_node_surface_diag(d) {
+        return Some(diag);
+    }
+
     // Prefer teaching rewrite for DOM-surface name errors.
     if NAME_CODES.contains(&d.code.as_str()) {
         if let Some(name) = extract_not_found_name(&d.message) {
@@ -2273,6 +2378,60 @@ fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
         message: format!("{}: {}", d.code, d.message),
         rule: Some(RULE_TYPE_GATE.to_string()),
     })
+}
+
+/// Rewrite TS2591 / node-module resolution into product teaching (never `@types/node`).
+fn map_node_surface_diag(d: &TsDiag) -> Option<Diagnostic> {
+    let msg = &d.message;
+    let code = d.code.as_str();
+    let nodeish = code == "TS2591"
+        || msg.contains("@types/node")
+        || msg.contains("type definitions for node")
+        || msg.contains("Cannot find module 'node:")
+        || msg.contains("Cannot find module \"node:")
+        || msg.contains("Cannot find module 'bun:")
+        || msg.contains("Cannot find module \"bun:");
+    if !nodeish {
+        // Free `process` / `Buffer` under Pure often arrives as TS2304.
+        if matches!(code, "TS2304" | "TS2552" | "TS2584") {
+            if let Some(name) = extract_not_found_name(msg) {
+                if matches!(
+                    name.as_str(),
+                    "process"
+                        | "Buffer"
+                        | "global"
+                        | "__dirname"
+                        | "__filename"
+                        | "module"
+                        | "exports"
+                        | "require"
+                ) {
+                    return Some(node_product_diag(d, &name));
+                }
+            }
+        }
+        return None;
+    }
+    let name = extract_not_found_name(msg)
+        .or_else(|| extract_cannot_find_module(msg))
+        .unwrap_or_else(|| "node".into());
+    Some(node_product_diag(d, &name))
+}
+
+fn node_product_diag(d: &TsDiag, name: &str) -> Diagnostic {
+    Diagnostic {
+        line: d.line,
+        col: d.col,
+        end_line: d.line,
+        end_col: d.col + name.len().max(1),
+        severity: DiagSeverity::Error,
+        message: format!(
+            "`{name}` is Node/Bun — not nameable in product source. \
+             Node lives in test/ and tooling only; keep app and package src browser-only. \
+             Do not install `@types/node` to silence this."
+        ),
+        rule: Some(RULE_NO_NODE.to_string()),
+    }
 }
 
 /// `"Cannot find module 'X' or its corresponding type declarations."`
