@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
-import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
+import { createCliOpsClient } from './helpers/ops-adapter-cli'
 import {
   __resetDesignForTests,
   __setWorkingDocForTests,

@@ -3,7 +3,7 @@
  * Used by unit tests only — do not import from browser routes.
  */
 
-import type { OpsClient } from './types'
+import type { OpsClient } from '../../src/edit/types'
 
 export function createCliOpsClient(repoRoot: string): OpsClient {
   const run = async (serviceMethod: string, args: object) => {

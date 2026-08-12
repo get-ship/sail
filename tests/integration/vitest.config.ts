@@ -58,7 +58,7 @@ export default defineConfig({
       ),
       '@ship/sail-dom/test-utils': resolve(
         __dirname,
-        '../packages/sail/dom/src/test-utils/compile-sail.ts',
+        '../packages/sail/dom/test/compile-sail.ts',
       ),
       '@ship/sail-dom': resolve(
         __dirname,

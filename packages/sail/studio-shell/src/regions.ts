@@ -103,10 +103,11 @@ export function joinRectToRenderRegions(
       rect.top < y + h &&
       rect.top + rect.height > y
     if (!overlap) continue
+    const selector = typeof r.selector === 'string' ? r.selector : undefined
     out.push({
       nodeId: id,
       label: String(r.label ?? r.tag ?? id),
-      selector: typeof r.selector === 'string' ? r.selector : undefined,
+      ...(selector !== undefined ? { selector } : {}),
     })
   }
   return out

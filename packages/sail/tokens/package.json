@@ -5,12 +5,27 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/index.ts",
-    "./themes": "./src/themes.ts",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./themes": {
+      "types": "./dist/themes.d.ts",
+      "default": "./src/themes.ts"
+    },
     "./qa-themes": "./src/qa-themes.mjs",
-    "./unions": "./src/generated/unions.ts",
-    "./themes-meta": "./src/generated/themes-meta.ts",
-    "./theme-schema": "./src/theme-schema.ts",
+    "./unions": {
+      "types": "./dist/generated/unions.d.ts",
+      "default": "./src/generated/unions.ts"
+    },
+    "./themes-meta": {
+      "types": "./dist/generated/themes-meta.d.ts",
+      "default": "./src/generated/themes-meta.ts"
+    },
+    "./theme-schema": {
+      "types": "./dist/theme-schema.d.ts",
+      "default": "./src/theme-schema.ts"
+    },
     "./themes.css": "./src/themes.css",
     "./tokens.css": "./src/tokens.css",
     "./token-registry.json": "./src/token-registry.json",

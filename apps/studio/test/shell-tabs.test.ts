@@ -12,7 +12,7 @@ import {
   openTab,
   setActiveTab,
 } from '@ship/sail-studio-shell'
-import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
+import { createCliOpsClient } from './helpers/ops-adapter-cli'
 import {
   __resetEditForTests,
   getEditState,

@@ -197,7 +197,8 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
     name: `${name}:shadow-for-component-compile`,
     enforce: 'pre',
     transform(code: string, id: string) {
-      if (!/[\\/]test-utils[\\/]compile-sail\.ts$/.test(id)) return null
+      // G2d: harness lives at packages/sail/dom/test/compile-sail.ts (was src/test-utils/).
+      if (!/[\\/](?:test-utils[\\/]|dom[\\/]test[\\/])compile-sail\.ts$/.test(id)) return null
       const needle = 'setupUrl: opts.setupMarker,'
       if (!code.includes(needle)) return null
       return {

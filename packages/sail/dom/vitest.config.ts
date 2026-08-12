@@ -30,11 +30,9 @@ export default defineConfig({
       },
       { find: '@ship/sail-dom', replacement: resolve(__dirname, 'src/index.ts') },
       // No `@ship/sail-compiler-wasm` alias: the test helper
-      // (src/test-utils/compile-sail.ts) now loads the native sail-compiler as a
-      // Node-API `.node` addon (built by `cargo build -p sail-compiler-napi` /
-      // `just sail-napi`) via process.dlopen — one cargo-current build feeds
-      // both the daemon and this harness, so there is no wasm pkg to alias or
-      // keep fresh (#255). The wasm surface stays browser-only.
+      // (test/compile-sail.ts) loads the native sail-compiler as a Node-API
+      // addon via process.dlopen — one cargo-current build feeds both the
+      // daemon and this harness. The wasm surface stays browser-only.
     ],
     // sail-compiler emits `view.js` next to `view.sail` and the paired `view.ts`
     // (see scripts/build-bundles.mjs::compileSail). Tests target the controller

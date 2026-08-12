@@ -33,6 +33,8 @@
     "build:bundles": "cargo run -p deck-cli -- build-assets",
     "typecheck": "node scripts/typecheck-components.mjs",
     "typecheck:tsgo": "tsgo --noEmit -p packages/sail/runtime/tsconfig.json && tsgo --noEmit -p packages/sail/dom/tsconfig.json",
+    "emit:package-dts": "node scripts/emit-package-dts.mjs",
+    "typecheck:studio-pure": "node scripts/emit-package-dts.mjs && tsc --noEmit -p apps/studio/node_modules/.sail/tsconfig.pure.json",
     "test": "bash -c 'vitest run; v=$?; bun test tests/hygiene || v=1; exit $v'",
     "test:vitest": "vitest run",
     "test:hygiene": "bun test tests/hygiene",

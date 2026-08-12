@@ -35,9 +35,9 @@ import '@ship/sail-runtime/template-hooks'
 /* ----------------------- native addon load ----------------------- */
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-// HERE = packages/sail/dom/src/test-utils; repo root is five dirs up
-// (test-utils → src → dom → sail → packages → repo root).
-const REPO_ROOT = resolve(HERE, '../../../../..')
+// HERE = packages/sail/dom/test; repo root is four dirs up
+// (test → dom → sail → packages → repo root).
+const REPO_ROOT = resolve(HERE, '../../../..')
 const COMPILER_SRC = resolve(REPO_ROOT, 'crates/sail/compiler/src')
 const LINT_SRC = resolve(REPO_ROOT, 'crates/sail/lint/src')
 const STYLE_SRC = resolve(REPO_ROOT, 'crates/sail/style/src')

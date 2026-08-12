@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { compileAndMount as hydrate } from '../src/test-utils/compile-sail'
+import { compileAndMount as hydrate } from './compile-sail'
 import { state, signal, queryKeyed, type Signal } from '@ship/sail-runtime'
 
 const counterSetup = (): { count: Signal<number> } => ({ count: signal(0) })

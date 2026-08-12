@@ -9,7 +9,7 @@ import {
   getShellState,
   __resetShellForTests,
 } from '@ship/sail-studio-shell'
-import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
+import { createCliOpsClient } from './helpers/ops-adapter-cli'
 import {
   APPLY_FIX_READY,
   __resetChecksForTests,

@@ -100,9 +100,12 @@ function chromeFromHash(): { activity?: ActivityId; tabId?: string } {
   if (!hasDom()) return {}
   const m = /^#\/([^/]+)(?:\/(.+))?$/.exec(location.hash)
   if (!m) return {}
-  const activity = decodeURIComponent(m[1]) as ActivityId
+  const activity = decodeURIComponent(m[1]!) as ActivityId
   const tabId = m[2] ? decodeURIComponent(m[2]) : undefined
-  return { activity, tabId }
+  return {
+    activity,
+    ...(tabId !== undefined ? { tabId } : {}),
+  }
 }
 
 function writeChromeHash(): void {

@@ -1,5 +1,6 @@
 import type { BatchItem } from '@ship/sail-studio-shell'
 import { clearBatch, getBatchItems, removeBatchItem } from '@ship/sail-studio-shell'
+import { utf8ToBase64 } from '@ship/sail-runtime'
 import {
   createThread,
   getTasksOpsClient,
@@ -79,11 +80,8 @@ async function attachBatchItems(taskId: string, items: BatchItem[]): Promise<voi
     const png = it.imagePng ?? ''
     // Minimal PNG-less payload so offline tests still attach files.
     // Prefer real crop bytes when the tray has them (evidence thumbs).
-    const content =
-      png ||
-      (typeof btoa !== 'undefined'
-        ? btoa(`batch-${it.id}`)
-        : Buffer.from(`batch-${it.id}`).toString('base64'))
+    // utf8ToBase64 — Pure-safe; do not name btoa/Buffer under product Pure.
+    const content = png || utf8ToBase64(`batch-${it.id}`)
     // sailTaskAddArtifact expects raw base64, not a data: URL.
     const contentB64 = content.startsWith('data:')
       ? content.replace(/^data:[^;]+;base64,/, '')

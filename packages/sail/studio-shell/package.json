@@ -1,13 +1,16 @@
 {
   "name": "@ship/sail-studio-shell",
   "version": "0.1.0",
-  "description": "Sail Studio shell view-model — selection, chrome, annotate/screenshot batch tray.",
+  "description": "Sail Studio shell view-model \u2014 selection, chrome, annotate/screenshot batch tray.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
   },
   "scripts": {
     "test": "vitest run"

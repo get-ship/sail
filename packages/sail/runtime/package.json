@@ -5,19 +5,52 @@
   "type": "module",
   "license": "MIT",
   "main": "src/index.ts",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/server.ts",
-    "./template-hooks": "./src/template-hooks/index.ts",
-    "./dev": "./src/dev.ts",
-    "./route": "./src/route/index.ts",
-    "./patch": "./src/patch.ts",
-    "./virtual": "./src/virtual.ts",
-    "./internal": "./src/internal.ts",
-    "./contracts": "./src/contracts.ts",
-    "./actions": "./src/actions/index.ts",
-    "./framework": "./src/framework-bundle.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./src/server.ts"
+    },
+    "./template-hooks": {
+      "types": "./dist/template-hooks/index.d.ts",
+      "default": "./src/template-hooks/index.ts"
+    },
+    "./dev": {
+      "types": "./dist/dev.d.ts",
+      "default": "./src/dev.ts"
+    },
+    "./route": {
+      "types": "./dist/route/index.d.ts",
+      "default": "./src/route/index.ts"
+    },
+    "./patch": {
+      "types": "./dist/patch.d.ts",
+      "default": "./src/patch.ts"
+    },
+    "./virtual": {
+      "types": "./dist/virtual.d.ts",
+      "default": "./src/virtual.ts"
+    },
+    "./internal": {
+      "types": "./dist/internal.d.ts",
+      "default": "./src/internal.ts"
+    },
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "default": "./src/contracts.ts"
+    },
+    "./actions": {
+      "types": "./dist/actions/index.d.ts",
+      "default": "./src/actions/index.ts"
+    },
+    "./framework": {
+      "types": "./dist/framework-bundle.d.ts",
+      "default": "./src/framework-bundle.ts"
+    }
   },
   "files": [
     "src",

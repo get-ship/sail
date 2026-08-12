@@ -65,6 +65,7 @@ export { scheduleFrame, asSailHost } from './sail-host'
 export type { RouteSignals } from './route-signals'
 // Pure-safe host / media surface growth (SPEC-L2-PACKAGE-1 P1).
 export { objectUrlFromBytes, revokeObjectUrl } from './object-url'
+export { utf8ToBase64 } from './base64'
 export {
   defineHostProperty,
   hostGetAttr,

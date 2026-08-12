@@ -19,5 +19,5 @@
     "noEmit": true
   },
   "include": ["src/**/*"],
-  "exclude": ["test", "dist", "src/test-utils"]
+  "exclude": ["test", "dist"]
 }

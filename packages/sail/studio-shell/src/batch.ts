@@ -63,8 +63,8 @@ export async function addRegionToBatch(
     rect: resolved.rect,
     nodes: resolved.nodes,
     fromRender: resolved.fromRender,
-    imagePng: resolved.imagePng,
     createdAt: Date.now(),
+    ...(resolved.imagePng !== undefined ? { imagePng: resolved.imagePng } : {}),
   }
   items = [...items, item]
   emit()

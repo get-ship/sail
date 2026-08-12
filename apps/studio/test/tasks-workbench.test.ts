@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
+import { createCliOpsClient } from './helpers/ops-adapter-cli'
 import {
   __resetTasksForTests,
   attachLatestCrop,

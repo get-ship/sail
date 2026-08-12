@@ -4,6 +4,5 @@ export * from './region-hit'
 export * from './views'
 export * from './store'
 export * from './ops-adapter'
-// createCliOpsClient is Node-only — import from './ops-adapter-cli' in tests, not here
-// (re-exporting it would pull node: into the browser bundle).
+// createCliOpsClient is Node-only — lives under test/helpers (Pure never sees it).
 export { tokenizeSail, tokenSnapshot } from '../cm/sail-mode'

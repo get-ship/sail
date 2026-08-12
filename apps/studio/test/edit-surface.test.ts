@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { __resetSelectionForTests, getSelection, getShellState } from '@ship/sail-studio-shell'
-import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
+import { createCliOpsClient } from './helpers/ops-adapter-cli'
 import {
   __previewGenForTests,
   __resetEditForTests,
