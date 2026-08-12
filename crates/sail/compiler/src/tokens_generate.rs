@@ -421,8 +421,7 @@ fn materialize_baked_model_inner() -> Result<PathBuf> {
     for (rel, body) in baked_tokens_model::BAKED_MODEL_FILES {
         let dest = base.join(rel);
         if let Some(parent) = dest.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("mkdir {}", parent.display()))?;
+            fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
         }
         fs::write(&dest, body).with_context(|| format!("write {}", dest.display()))?;
     }
@@ -889,13 +888,9 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
             .collect::<Vec<_>>()
             .join(", ")
     ));
-    out.push_str(
-        "export type ThemeOverrideLayer = (typeof THEME_OVERRIDE_ORDER)[number]\n\n",
-    );
+    out.push_str("export type ThemeOverrideLayer = (typeof THEME_OVERRIDE_ORDER)[number]\n\n");
 
-    out.push_str(
-        "/** Per-theme declared mode capability (VSCode model — not universal). */\n",
-    );
+    out.push_str("/** Per-theme declared mode capability (VSCode model — not universal). */\n");
     out.push_str("export type ModeCapability = 'light' | 'dark' | 'both'\n\n");
 
     out.push_str("export interface ThemeMeta {\n");
@@ -905,9 +900,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     out.push_str("  /** Mode names when modes-in-file; empty = legacy single-block theme. */\n");
     out.push_str("  modes: readonly string[]\n");
     out.push_str("  defaultMode: string | null\n");
-    out.push_str(
-        "  /** Declared capability derived from modes: light | dark | both. */\n",
-    );
+    out.push_str("  /** Declared capability derived from modes: light | dark | both. */\n");
     out.push_str("  capability: ModeCapability\n");
     out.push_str("}\n\n");
     out.push_str("export const THEME_META: readonly ThemeMeta[] = [\n");
@@ -940,9 +933,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     out.push_str(
         "export function themeMeta(id: string): ThemeMeta | undefined {\n  return BY_ID[id]\n}\n\n",
     );
-    out.push_str(
-        "/** Capability for a theme id (defaults to both when unknown). */\n",
-    );
+    out.push_str("/** Capability for a theme id (defaults to both when unknown). */\n");
     out.push_str("export function modeCapability(id: string): ModeCapability {\n");
     out.push_str("  return themeMeta(id)?.capability ?? 'both'\n");
     out.push_str("}\n");
@@ -991,7 +982,6 @@ fn is_group(node: &Value) -> bool {
         .map(|o| !o.contains_key("$value"))
         .unwrap_or(false)
 }
-
 
 /// Generator-owned public short name for a DTCG path.
 ///
@@ -1062,15 +1052,27 @@ pub fn public_name(path: &str) -> String {
         return segs.join("-");
     }
     if matches!(root, "typography" | "motion" | "interaction") {
-        return parts[1..].iter().map(|s| camel_to_kebab(s)).collect::<Vec<_>>().join("-");
+        return parts[1..]
+            .iter()
+            .map(|s| camel_to_kebab(s))
+            .collect::<Vec<_>>()
+            .join("-");
     }
     if root == "control" && parts.len() >= 2 && parts[1] == "press" {
-        return parts[1..].iter().map(|s| camel_to_kebab(s)).collect::<Vec<_>>().join("-");
+        return parts[1..]
+            .iter()
+            .map(|s| camel_to_kebab(s))
+            .collect::<Vec<_>>()
+            .join("-");
     }
     if root == "icon" && parts.len() == 2 {
         return format!("icon-size-{}", parts[1]);
     }
-    parts.iter().map(|s| camel_to_kebab(s)).collect::<Vec<_>>().join("-")
+    parts
+        .iter()
+        .map(|s| camel_to_kebab(s))
+        .collect::<Vec<_>>()
+        .join("-")
 }
 
 fn camel_to_kebab(s: &str) -> String {
@@ -1330,9 +1332,7 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
         .filter_map(|e| e.ok())
         .filter(|e| e.path().is_file())
         .filter_map(|e| e.file_name().into_string().ok())
-        .filter(|f| {
-            f.ends_with(".json") && f != "compat-aliases.json" && f != "products.json"
-        })
+        .filter(|f| f.ends_with(".json") && f != "compat-aliases.json" && f != "products.json")
         .collect();
     files.sort();
 
@@ -1920,9 +1920,7 @@ fn schema_levenshtein(a: &str, b: &str) -> usize {
         cur[0] = i;
         for j in 1..=b.len() {
             let cost = if a[i - 1] == b[j - 1] { 0 } else { 1 };
-            cur[j] = (prev[j] + 1)
-                .min(cur[j - 1] + 1)
-                .min(prev[j - 1] + cost);
+            cur[j] = (prev[j] + 1).min(cur[j - 1] + 1).min(prev[j - 1] + cost);
         }
         std::mem::swap(&mut prev, &mut cur);
     }
@@ -1936,9 +1934,7 @@ fn unknown_key_error(label: &str, where_: &str, key: &str, valid: &[&str]) -> an
             "theme {label}: unknown {where_} key \"{key}\" \
              (closest valid key: \"{s}\"; valid: {valid_list})"
         ),
-        None => anyhow!(
-            "theme {label}: unknown {where_} key \"{key}\" (valid: {valid_list})"
-        ),
+        None => anyhow!("theme {label}: unknown {where_} key \"{key}\" (valid: {valid_list})"),
     }
 }
 
@@ -1954,12 +1950,7 @@ pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
 
     for key in obj.keys() {
         if !THEME_ROOT_KEYS.contains(&key.as_str()) {
-            return Err(unknown_key_error(
-                label,
-                "root",
-                key,
-                THEME_ROOT_KEYS,
-            ));
+            return Err(unknown_key_error(label, "root", key, THEME_ROOT_KEYS));
         }
     }
 
@@ -1969,12 +1960,7 @@ pub fn validate_theme_doc_schema(doc: &Value, label: &str) -> Result<()> {
         };
         for key in ext_obj.keys() {
             if key != "sail" {
-                return Err(unknown_key_error(
-                    label,
-                    "$extensions",
-                    key,
-                    &["sail"],
-                ));
+                return Err(unknown_key_error(label, "$extensions", key, &["sail"]));
             }
         }
         if let Some(ship) = ext_obj.get("sail") {
@@ -2470,7 +2456,8 @@ fn read_theme_mode_keys(path: &Path) -> Result<Option<Vec<String>>> {
     if !path.is_file() {
         return Ok(None);
     }
-    let text = fs::read_to_string(path).with_context(|| format!("read theme {}", path.display()))?;
+    let text =
+        fs::read_to_string(path).with_context(|| format!("read theme {}", path.display()))?;
     mode_keys_from_theme_json(&text).map(Some)
 }
 
@@ -2689,12 +2676,7 @@ fn load_products(model_dir: &Path) -> Result<Option<ProductsAxis>> {
 fn emit_products_css(axis: &ProductsAxis) -> String {
     let mut lines = vec![PRODUCTS_HEADER.trim_end().to_string(), String::new()];
     // Pad product ids so selectors align like the historical hand file.
-    let id_width = axis
-        .entries
-        .iter()
-        .map(|e| e.id.len())
-        .max()
-        .unwrap_or(0);
+    let id_width = axis.entries.iter().map(|e| e.id.len()).max().unwrap_or(0);
     for e in &axis.entries {
         let pad = " ".repeat(id_width.saturating_sub(e.id.len()));
         let comment = if e.label.is_empty() {
@@ -3076,7 +3058,6 @@ fn tone_group_table(tokens: &[Token]) -> Vec<(String, Vec<(String, String)>)> {
     out
 }
 
-
 /// Prefer `preferred` order for known members; append unknowns sorted.
 fn order_with_preferred(set: &BTreeSet<String>, preferred: &[&str]) -> Vec<String> {
     let mut out = Vec::with_capacity(set.len());
@@ -3263,7 +3244,9 @@ fn build_unions_ts(base_tokens: &[Token], registry: &Value, theme_ids: &[String]
     }
     out.push_str("} as const\n");
     out.push_str("export type ToneGroup = keyof typeof TONE\n");
-    out.push_str("export type ToneMember<G extends ToneGroup = ToneGroup> = keyof (typeof TONE)[G]\n\n");
+    out.push_str(
+        "export type ToneMember<G extends ToneGroup = ToneGroup> = keyof (typeof TONE)[G]\n\n",
+    );
 
     emit_const_and_type(
         &mut out,
@@ -3627,21 +3610,28 @@ mod tests {
     fn public_name_matches_historical_map() {
         // Spot-check rules against known historical cssNames (bit-identical policy).
         assert_eq!(public_name("color.primary.default"), "primary");
-        assert_eq!(public_name("color.primary.foreground"), "primary-foreground");
+        assert_eq!(
+            public_name("color.primary.foreground"),
+            "primary-foreground"
+        );
         assert_eq!(public_name("color.brandAccent.default"), "accent");
-        assert_eq!(public_name("color.brandAccent.foreground"), "accent-foreground");
+        assert_eq!(
+            public_name("color.brandAccent.foreground"),
+            "accent-foreground"
+        );
         assert_eq!(public_name("component.chip.bg"), "chip");
         assert_eq!(public_name("component.chip.fg"), "chip-foreground");
         assert_eq!(public_name("component.chip.border"), "chip-border");
         assert_eq!(public_name("radius.default"), "radius");
         assert_eq!(public_name("space.4"), "space-4");
-        assert_eq!(public_name("component.error-boundary.icon-fg"), "error-boundary-icon");
+        assert_eq!(
+            public_name("component.error-boundary.icon-fg"),
+            "error-boundary-icon"
+        );
         assert_eq!(public_name("control.press.translate"), "press-translate");
         assert_eq!(public_name("icon.sm"), "icon-size-sm");
         assert_eq!(public_name("color.mix.surfaceMix"), "mix-surface");
     }
-
-
 
     #[test]
     fn component_sources_merge_into_base_with_stable_css_names() {
@@ -4381,8 +4371,7 @@ mod tests {
             "project override still merges into shared full-catalog emit"
         );
         assert!(
-            shared_css.contains("theme='synthwave'")
-                || shared_css.contains("theme=\"synthwave\""),
+            shared_css.contains("theme='synthwave'") || shared_css.contains("theme=\"synthwave\""),
             "package emit keeps full catalog including synthwave"
         );
 
@@ -4654,10 +4643,7 @@ mod tests {
         validate_theme_doc_schema(&doc, "x.json").expect("minimal dark theme ok");
         assert_eq!(mode_capability(&["dark".into()]), "dark");
         assert_eq!(mode_capability(&["light".into()]), "light");
-        assert_eq!(
-            mode_capability(&["light".into(), "dark".into()]),
-            "both"
-        );
+        assert_eq!(mode_capability(&["light".into(), "dark".into()]), "both");
     }
 
     #[test]
@@ -4803,8 +4789,7 @@ mod tests {
             "dark mode selector missing: {css}"
         );
         assert!(
-            css.contains("[theme='ship'][data-mode='light']")
-                || css.contains("[theme='ship']"),
+            css.contains("[theme='ship'][data-mode='light']") || css.contains("[theme='ship']"),
             "author IR [theme=id] selector missing: {css}"
         );
         assert!(
@@ -4922,5 +4907,4 @@ mod tests {
             "expected alias cycle diagnostic, got: {err}"
         );
     }
-
 }

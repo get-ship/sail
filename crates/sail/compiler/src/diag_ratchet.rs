@@ -117,9 +117,7 @@ fn resolves_stable(token: &str, consts: &HashMap<String, String>) -> bool {
     if is_stable_rule_id(token) {
         return true;
     }
-    consts
-        .get(token)
-        .is_some_and(|v| is_stable_rule_id(v))
+    consts.get(token).is_some_and(|v| is_stable_rule_id(v))
 }
 
 /// Collect `const NAME: &str = "…"` (optionally `pub`) string bindings.
@@ -474,7 +472,10 @@ fn first_site_window(source: &str) -> Option<&str> {
             let j = skip_ws(bytes, after_name);
             if j < bytes.len() && bytes[j] == b'{' {
                 let line_start = source[..i].rfind('\n').map(|p| p + 1).unwrap_or(0);
-                let line_end = source[i..].find('\n').map(|p| i + p).unwrap_or(source.len());
+                let line_end = source[i..]
+                    .find('\n')
+                    .map(|p| i + p)
+                    .unwrap_or(source.len());
                 let line_text = &source[line_start..line_end];
                 if line_text.contains("struct") {
                     i = next_char_boundary(source, j + 1);
@@ -643,9 +644,7 @@ fn skip_non_code(bytes: &[u8], i: usize) -> Option<usize> {
         return Some(bytes.len());
     }
     // raw strings r"…" / r#"…"# / br"…"
-    if bytes[i] == b'r'
-        || (bytes[i] == b'b' && i + 1 < bytes.len() && bytes[i + 1] == b'r')
-    {
+    if bytes[i] == b'r' || (bytes[i] == b'b' && i + 1 < bytes.len() && bytes[i + 1] == b'r') {
         let mut j = if bytes[i] == b'b' { i + 2 } else { i + 1 };
         let mut hashes = 0;
         while j < bytes.len() && bytes[j] == b'#' {

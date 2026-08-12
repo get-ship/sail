@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use sail_compiler::project_map::{classify, misplacement_message, Classified, FileKind};
+use sail_compiler::project_map::{Classified, FileKind, classify, misplacement_message};
 
 fn kind_of(path: &str, source: Option<&str>) -> Classified {
     classify(Path::new(path), source)
@@ -14,7 +14,11 @@ fn kind_of(path: &str, source: Option<&str>) -> Classified {
 #[test]
 fn route_page_classifies_as_route() {
     let c = kind_of("apps/x/routes/foo/page.sail", None);
-    assert_eq!(c.kind, FileKind::Route, "page.sail under routes/ is a route");
+    assert_eq!(
+        c.kind,
+        FileKind::Route,
+        "page.sail under routes/ is a route"
+    );
     assert!(
         c.home.contains("routes"),
         "route home must name routes/, got {:?}",

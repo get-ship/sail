@@ -766,8 +766,7 @@ pub fn completions_at_offset(
     byte_offset: usize,
     host: Option<&str>,
 ) -> Vec<Symbol> {
-    let style_items =
-        sail_lint::style::style_complete_at(source, source_path, byte_offset, host);
+    let style_items = sail_lint::style::style_complete_at(source, source_path, byte_offset, host);
     if !style_items.is_empty() {
         return style_items
             .into_iter()
@@ -1081,7 +1080,9 @@ export default controller(() => ({ count: signal(0) }))
         let items = completions_at_offset(src, None, off, None);
         // Not Style context — may return scope symbols (count) when parse ok.
         assert!(
-            !items.iter().any(|s| s.source == "style" && s.kind == "token"),
+            !items
+                .iter()
+                .any(|s| s.source == "style" && s.kind == "token"),
             "non-style caret must not invent style tokens: {:?}",
             items
         );

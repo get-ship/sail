@@ -157,8 +157,7 @@ fn cross_setter_disjoint_slots_do_not_clash() {
 
 #[test]
 fn style_list_lowers_through_ir() {
-    let src =
-        r#"<div style({ paint: bg(primary), match: { variant: { filled: { paint: bg(primary) } } } })> </div>"#;
+    let src = r#"<div style({ paint: bg(primary), match: { variant: { filled: { paint: bg(primary) } } } })> </div>"#;
     let js = compile_component(src).expect("compiles");
     assert!(
         js.contains("s-") || js.contains("class"),

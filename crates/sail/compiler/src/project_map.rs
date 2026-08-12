@@ -313,8 +313,7 @@ fn has_segment(segs: &[String], name: &str) -> bool {
 
 /// True when path has consecutive segments `src` then `dir` (e.g. `src/stores`).
 fn is_under_src_dir(segs: &[String], dir: &str) -> bool {
-    segs.windows(2)
-        .any(|w| w[0] == "src" && w[1] == dir)
+    segs.windows(2).any(|w| w[0] == "src" && w[1] == dir)
 }
 
 fn is_sail(path: &Path) -> bool {
@@ -463,18 +462,18 @@ mod tests {
         let c = classify(Path::new("apps/x/src/compositions/x.ts"), Some(src));
         assert_eq!(c.kind, FileKind::Store);
         assert!(!c.ok);
-        assert!(misplacement_message(c.kind, Path::new("apps/x/src/compositions/x.ts"))
-            .contains("src/stores/"));
+        assert!(
+            misplacement_message(c.kind, Path::new("apps/x/src/compositions/x.ts"))
+                .contains("src/stores/")
+        );
     }
 
     #[test]
     fn define_store_inside_string_does_not_trigger_store() {
         // Review bug: string body used to keep interiors → false Store.
-        let src = "const note = \"call defineStore( later)\";\nexport function useFoo() { return 1 }\n";
-        let c = classify(
-            Path::new("apps/x/src/compositions/use-foo.ts"),
-            Some(src),
-        );
+        let src =
+            "const note = \"call defineStore( later)\";\nexport function useFoo() { return 1 }\n";
+        let c = classify(Path::new("apps/x/src/compositions/use-foo.ts"), Some(src));
         assert_eq!(
             c.kind,
             FileKind::Composition,

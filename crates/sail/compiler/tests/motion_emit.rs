@@ -25,8 +25,10 @@ fn compile_motion(source: &str) -> Result<String, String> {
 
 #[test]
 fn static_hover_scale_emits_runtime_dispatch() {
-    let js = compile_motion(r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })> x</button>"#)
-        .expect("compile");
+    let js = compile_motion(
+        r#"<button style({ animate: hover({ scale: 'spring:snappy' }) })> x</button>"#,
+    )
+    .expect("compile");
     // Runtime dispatch: the per-property `MotionConfig` is embedded as
     // a literal object, then handed to `__sail_motion_attach`. No AOT
     // `el.animate(...)` is emitted — motion.dev owns the animation
@@ -62,8 +64,10 @@ fn static_hover_scale_emits_runtime_dispatch() {
 
 #[test]
 fn unknown_preset_is_a_compile_error() {
-    let err = compile_motion(r#"<button style({ animate: hover({ scale: 'does-not-exist' }) })> x</button>"#)
-        .expect_err("expected compile error");
+    let err = compile_motion(
+        r#"<button style({ animate: hover({ scale: 'does-not-exist' }) })> x</button>"#,
+    )
+    .expect_err("expected compile error");
     assert!(
         err.contains("does-not-exist"),
         "expected error to mention the unknown preset: {err}"
@@ -142,8 +146,8 @@ fn named_style_ref_emits_runtime_motion_attach() {
 
 #[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
-    let js =
-        compile_motion(r#"<img style({ animate: loop({ rotate: 'spin' }) })> x</img>"#).expect("compile");
+    let js = compile_motion(r#"<img style({ animate: loop({ rotate: 'spin' }) })> x</img>"#)
+        .expect("compile");
     assert!(
         js.contains("__sail_motion_attach("),
         "expected runtime attach call:\n{js}"
@@ -181,8 +185,10 @@ fn loop_rotate_spin_emits_infinite_one_direction() {
 
 #[test]
 fn unknown_property_alias_is_rejected() {
-    let err = compile_motion(r#"<button style({ animate: hover({ foo: 'spring:snappy' }) })> x</button>"#)
-        .expect_err("expected compile error");
+    let err = compile_motion(
+        r#"<button style({ animate: hover({ foo: 'spring:snappy' }) })> x</button>"#,
+    )
+    .expect_err("expected compile error");
     assert!(
         err.contains("foo"),
         "expected error to mention 'foo': {err}"

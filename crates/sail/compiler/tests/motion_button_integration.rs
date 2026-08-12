@@ -4,7 +4,8 @@ fn sail_button_with_motion_compiles() {
     // sail-button dissolved to the bare L1 <button> — motion is a LANGUAGE
     // feature on any element, so this integration check uses an inline
     // component with a motion directive (the old file-read target is gone).
-    let source = "<button>\n  style({ animate: hover({ scale: 'spring:snappy' }) })\n  Go\n</button>";
+    let source =
+        "<button>\n  style({ animate: hover({ scale: 'spring:snappy' }) })\n  Go\n</button>";
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,

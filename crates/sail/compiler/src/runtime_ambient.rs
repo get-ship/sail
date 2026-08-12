@@ -47,6 +47,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "paint the document theme session (tokens API on runtime ambient)",
     ),
     (
+        "asSailHost",
+        "asSailHost",
+        "coerce an action node (or host value) to opaque SailHost",
+    ),
+    (
         "attachBoundary",
         "attachBoundary",
         "register an error-boundary handle on a host element",
@@ -96,11 +101,7 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "filteredList",
         "derive a filtered/sorted list signal from a source list",
     ),
-    (
-        "form",
-        "form",
-        "reactive form state helper",
-    ),
+    ("form", "form", "reactive form state helper"),
     (
         "interval",
         "interval",
@@ -145,6 +146,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "readStoredTheme",
         "readStoredTheme",
         "read the persisted theme id",
+    ),
+    (
+        "scheduleFrame",
+        "scheduleFrame",
+        "schedule work on the next animation frame (Pure-safe rAF substitute)",
     ),
     (
         "signal",

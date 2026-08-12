@@ -41,10 +41,7 @@ fn stdlib_dir() -> PathBuf {
 /// Rest-only (SPEC-D1): do **not** list state leaves (`*-hover-bg`,
 /// `field-border-hover`, `*-thumb-hover`, …) — L1 spends free globals for hover.
 const SLICE_READERS: &[(&str, &[&str])] = &[
-    (
-        "button",
-        &["button", "button-foreground", "button-border"],
-    ),
+    ("button", &["button", "button-foreground", "button-border"]),
     (
         "dialog",
         &[
@@ -129,10 +126,7 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
         "toast",
         &["toast", "toast-foreground", "toast-border", "toast-stripe"],
     ),
-    (
-        "navbar",
-        &["navbar", "navbar-foreground", "navbar-border"],
-    ),
+    ("navbar", &["navbar", "navbar-foreground", "navbar-border"]),
     (
         "page",
         &[
@@ -178,7 +172,11 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
     ),
     (
         "context-menu",
-        &["context-menu", "context-menu-foreground", "context-menu-border"],
+        &[
+            "context-menu",
+            "context-menu-foreground",
+            "context-menu-border",
+        ],
     ),
     (
         "hover-card",
@@ -186,22 +184,20 @@ const SLICE_READERS: &[(&str, &[&str])] = &[
     ),
     // L1-POLISH-A — inverted tip bubble (tooltip / tooltip-foreground).
     ("tooltip", &["tooltip", "tooltip-foreground"]),
-    (
-        "badge",
-        &["badge", "badge-foreground", "badge-border"],
-    ),
+    ("badge", &["badge", "badge-foreground", "badge-border"]),
     // L1-POLISH-E — chip soft/outline/ghost rest + solid default via chip*.
-    (
-        "chip",
-        &["chip", "chip-foreground", "chip-border"],
-    ),
+    ("chip", &["chip", "chip-foreground", "chip-border"]),
     // L1-POLISH-C — menu row rest ink from pack; hover → free hover-bg (D1c).
     ("menu-item", &["menu-item-foreground"]),
     // L1-POLISH residual — error-state anatomy chrome + theme-picker meta ink.
     // D1: no state hover leaves in SLICE_READERS (parked ALLOWED_UNREAD).
     (
         "error-state",
-        &["error-state", "error-state-foreground", "error-state-border"],
+        &[
+            "error-state",
+            "error-state-foreground",
+            "error-state-border",
+        ],
     ),
     (
         "theme-picker",
@@ -244,7 +240,13 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ),
     (
         "/* dialog */",
-        &["surface-1", "card-foreground", "border-subtle", "muted", "muted-foreground"],
+        &[
+            "surface-1",
+            "card-foreground",
+            "border-subtle",
+            "muted",
+            "muted-foreground",
+        ],
     ),
     ("/* accordion */", &["surface-1"]),
     ("/* skeleton */", &["muted"]),
@@ -271,14 +273,23 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     // Button-link default rest (shared button pack)
     ("/* a */", &["background", "foreground"]),
     // Slice #3 residual defaults
-    ("/* alert */", &["border", "muted", "muted-foreground", "surface-1"]),
+    (
+        "/* alert */",
+        &["border", "muted", "muted-foreground", "surface-1"],
+    ),
     (
         "/* empty-state */",
         &["muted", "muted-foreground", "foreground"],
     ),
-    ("/* toast */", &["background", "foreground", "muted", "muted-foreground"]),
+    (
+        "/* toast */",
+        &["background", "foreground", "muted", "muted-foreground"],
+    ),
     ("/* navbar */", &["background", "foreground", "border"]),
-    ("/* page */", &["foreground", "muted", "primary", "background"]),
+    (
+        "/* page */",
+        &["foreground", "muted", "primary", "background"],
+    ),
     ("/* spinner */", &["muted-foreground", "border-subtle"]),
     ("/* tab */", &["foreground", "border", "muted-foreground"]),
     // L1-POLISH-D — tab-list strip rest from pack (not free background/border/muted rail).
@@ -291,7 +302,10 @@ const SLICE_NO_FREE_DEFAULT: &[(&str, &[&str])] = &[
     ),
     ("/* dropdown */", &["border"]),
     ("/* context-menu */", &["border"]),
-    ("/* hover-card */", &["border", "foreground", "surface-1", "background"]),
+    (
+        "/* hover-card */",
+        &["border", "foreground", "surface-1", "background"],
+    ),
     // Tooltip rest is inverted PE via tooltip / tooltip-foreground — not free fg/bg.
     ("/* tooltip */", &["foreground", "background"]),
     ("/* badge */", &["muted", "muted-foreground", "border"]),
@@ -387,7 +401,9 @@ fn every_component_pack_has_registry_paths() {
         for css in css_names {
             let found = paths.values().any(|v| v == css);
             if !found {
-                missing.push(format!("component.{pack} cssName `{css}` not in registry paths"));
+                missing.push(format!(
+                    "component.{pack} cssName `{css}` not in registry paths"
+                ));
             }
         }
     }

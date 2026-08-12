@@ -104,7 +104,8 @@ fn skill_generator_matches_product_surface() {
     assert!(
         md.contains("data-sail-host")
             && md.contains("sail-no-data-attr")
-            && (md.contains("role") && md.contains("name") || md.contains("role / accessible name")),
+            && (md.contains("role") && md.contains("name")
+                || md.contains("role / accessible name")),
         "skill must teach data-sail-host is compiler-only and tests use role/name/text"
     );
     assert!(
@@ -123,14 +124,17 @@ fn skill_generator_matches_product_surface() {
     assert!(
         md.contains("box: grow") || md.contains("grow(1)") || md.contains("box channel"),
         "skill must teach box-channel participation: {}",
-        &md[md.find("Participation").unwrap_or(0)..md.find("Participation").unwrap_or(0).saturating_add(200).min(md.len())]
+        &md[md.find("Participation").unwrap_or(0)
+            ..md.find("Participation")
+                .unwrap_or(0)
+                .saturating_add(200)
+                .min(md.len())]
     );
     assert!(
-        md.contains("sail-participation-style")
-            || (md.contains("grow") && md.contains("box")),
+        md.contains("sail-participation-style") || (md.contains("grow") && md.contains("box")),
         "skill hard rules must mention participation → box channel"
     );
-     assert!(
+    assert!(
         md.contains("sail-display-on-layout") || md.contains("display") && md.contains("layout"),
         "skill must warn about display-on-layout footgun"
     );

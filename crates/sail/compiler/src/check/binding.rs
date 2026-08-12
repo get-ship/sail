@@ -184,7 +184,11 @@ pub fn resolve(
         {
             let numeric = matches!(p.kind, PropKind::Number);
             if numeric && dim == SetterDim::Color {
-                return Err(number_to_color_error(&scope_name, site.setter.as_deref(), site.span));
+                return Err(number_to_color_error(
+                    &scope_name,
+                    site.setter.as_deref(),
+                    site.span,
+                ));
             }
             let unit = unit_for_numeric(numeric, dim);
             unit_demand.insert(scope_name.clone(), unit);
@@ -209,10 +213,7 @@ pub fn resolve(
                     .get(m.value_span.start..m.value_span.end)
                     .unwrap_or("");
                 let (numeric, source) = match m.kind {
-                    ScopeKind::Signal => (
-                        signal_is_numeric(init),
-                        StyleBindingSource::Signal,
-                    ),
+                    ScopeKind::Signal => (signal_is_numeric(init), StyleBindingSource::Signal),
                     ScopeKind::Timeline => (false, StyleBindingSource::Signal),
                     ScopeKind::Derived => {
                         let ann = derived_return_is_number(init);
@@ -258,7 +259,14 @@ pub fn resolve(
             continue;
         }
 
-        return Err(refusal(&scope_name, &css_name, program, controller, &action_writes, site.span));
+        return Err(refusal(
+            &scope_name,
+            &css_name,
+            program,
+            controller,
+            &action_writes,
+            site.span,
+        ));
     }
 
     // Reconcile units for multi-site names (later length site upgrades number).
@@ -268,7 +276,10 @@ pub fn resolve(
         }
         // Number source that also touched color on a later site.
         if color_touch.contains(&b.scope_name)
-            && matches!(b.unit, StyleBindingUnit::Number | StyleBindingUnit::LengthPx)
+            && matches!(
+                b.unit,
+                StyleBindingUnit::Number | StyleBindingUnit::LengthPx
+            )
         {
             return Err(number_to_color_error(&b.scope_name, None, Span::new(0, 0)));
         }
@@ -318,18 +329,72 @@ fn setter_dim(setter: Option<&str>) -> SetterDim {
 
 /// Geometry / space / size setters that take lengths (number → px).
 const LENGTH_SETTERS: &[&str] = &[
-    "top", "right", "bottom", "left", "inset", "ms", "me", "ml", "mr", "mt", "mb", "pad",
-    "padX", "padY", "padT", "padB", "padL", "padR", "padS", "padE", "w", "h", "minW", "minH",
-    "maxW", "maxH", "gap", "gapX", "gapY", "basis", "size", "scrollM", "scrollP", "translateX",
-    "translateY", "outlineOffset",
+    "top",
+    "right",
+    "bottom",
+    "left",
+    "inset",
+    "ms",
+    "me",
+    "ml",
+    "mr",
+    "mt",
+    "mb",
+    "pad",
+    "padX",
+    "padY",
+    "padT",
+    "padB",
+    "padL",
+    "padR",
+    "padS",
+    "padE",
+    "w",
+    "h",
+    "minW",
+    "minH",
+    "maxW",
+    "maxH",
+    "gap",
+    "gapX",
+    "gapY",
+    "basis",
+    "size",
+    "scrollM",
+    "scrollP",
+    "translateX",
+    "translateY",
+    "outlineOffset",
 ];
 
-const NUMBER_SETTERS: &[&str] = &["opacity", "z", "grow", "shrink", "order", "flex", "scale", "rotate"];
+const NUMBER_SETTERS: &[&str] = &[
+    "opacity", "z", "grow", "shrink", "order", "flex", "scale", "rotate",
+];
 
 const COLOR_SETTERS: &[&str] = &[
-    "bg", "fg", "border", "borderX", "borderY", "borderT", "borderB", "borderL", "borderR",
-    "borderS", "borderE", "outline", "accent", "caret", "fill", "stroke", "from", "via", "to",
-    "decoration", "shadow", "ring", "divide",
+    "bg",
+    "fg",
+    "border",
+    "borderX",
+    "borderY",
+    "borderT",
+    "borderB",
+    "borderL",
+    "borderR",
+    "borderS",
+    "borderE",
+    "outline",
+    "accent",
+    "caret",
+    "fill",
+    "stroke",
+    "from",
+    "via",
+    "to",
+    "decoration",
+    "shadow",
+    "ring",
+    "divide",
 ];
 
 /// Design-token registry (includes non-action convention tokens). Action
@@ -448,9 +513,7 @@ fn find_group_path_sites(source: &str) -> Vec<GroupPathSite> {
         if bytes[i].is_ascii_alphabetic() || bytes[i] == b'_' {
             let start = i;
             i += 1;
-            while i < bytes.len()
-                && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_')
-            {
+            while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
                 i += 1;
             }
             let root = std::str::from_utf8(&bytes[start..i]).unwrap_or("");
@@ -471,9 +534,7 @@ fn find_group_path_sites(source: &str) -> Vec<GroupPathSite> {
             if i < bytes.len() && bytes[i] == b'.' {
                 let mem_start = i + 1;
                 let mut j = mem_start;
-                while j < bytes.len()
-                    && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_')
-                {
+                while j < bytes.len() && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_') {
                     j += 1;
                 }
                 if j > mem_start {
@@ -678,9 +739,7 @@ fn collect_action_writes(source: &str) -> BTreeSet<&'static str> {
         if source[i..].starts_with("use:") {
             let start = i + 4;
             let mut end = start;
-            while end < bytes.len()
-                && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'_')
-            {
+            while end < bytes.len() && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'_') {
                 end += 1;
             }
             if end > start {
@@ -783,9 +842,7 @@ fn derived_return_is_number(init_text: &str) -> Option<bool> {
 }
 
 fn number_to_color_error(name: &str, setter: Option<&str>, span: Span) -> CompileError {
-    let setter_bit = setter
-        .map(|s| format!(" `{s}`"))
-        .unwrap_or_default();
+    let setter_bit = setter.map(|s| format!(" `{s}`")).unwrap_or_default();
     CompileError::new(format!(
         "`bind({name})` is a number but{setter_bit} is a color setter — number→color is not a \
          legal unit realization. Use a string/color source, or bind the number to a length/number \
@@ -934,7 +991,11 @@ mod tests {
         let source = r#"<div style({ paint: bg(bind(n)) })></div>"#;
         let err = resolve(source, &program, None).unwrap_err();
         assert!(err.message.contains("number"), "{}", err.message);
-        assert!(err.message.contains("color") || err.message.contains("bg"), "{}", err.message);
+        assert!(
+            err.message.contains("color") || err.message.contains("bg"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1058,7 +1119,6 @@ mod tests {
             "size must not bind as color-group"
         );
     }
-
 
     #[test]
     fn style_bind_form_returns_a_binding() {

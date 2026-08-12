@@ -18,7 +18,9 @@ pub mod source;
 // CHANNELS-1: Style pipeline lives in `sail-style`. Re-export under the
 // historical `sail_lint::{style,sx_ir,sx_vocab,scales,tokens}` paths so
 // compiler/layout/ops/lsp keep compiling without a fan-out import thrash.
-pub use sail_style::{component_surfaces, host_ctx, scales, style_ir, style_vocab, token_groups, tokens};
+pub use sail_style::{
+    component_surfaces, host_ctx, scales, style_ir, style_vocab, token_groups, tokens,
+};
 
 /// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
 pub mod style {
@@ -26,12 +28,11 @@ pub mod style {
         CONDITION_PREFIXES, Channel, CssRule, OBJECT_KEYS, PaintArg, PaintOp, Style,
         StyleCompleteContext, StyleCompleteItem, StyleCompleteKind, StyleDiagnostic, StyleEnv,
         TEXT_BEARING_ELEMENTS, channel_for_setter, clash, collect_motion_attaches,
-        collect_motion_attaches_env,
-        collect_style_const_names, color_paint_vocabulary, condition_media, conditions, emit,
-        emit_style, ir, is_geometry_setter, is_interaction_when_key, is_text_bearing,
-        looks_like_utility_string_product, lower_style, lower_style_source,
-        lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes, setters,
-        style_complete_at, style_complete_context_at, style_complete_for_context,
+        collect_motion_attaches_env, collect_style_const_names, color_paint_vocabulary,
+        condition_media, conditions, emit, emit_style, ir, is_geometry_setter,
+        is_interaction_when_key, is_text_bearing, looks_like_utility_string_product, lower_style,
+        lower_style_source, lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes,
+        setters, style_complete_at, style_complete_context_at, style_complete_for_context,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
         surface_pack_for_host, text_channel_host_error, token_groups, when_keys,
         with_bound_group_props, with_host_surface,
@@ -61,10 +62,7 @@ pub const RETIRED_RULE_IDS: &[&str] = &[
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids
 /// (SPEC-LAYOUT-DIAG-1 / S4.1). Emitted by the compiler layout bridge, not
 /// by template lint modules — still registered for the diagnostic ratchet.
-pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &[
-    "sail-clipped-text",
-    "sail-unintended-overflow",
-];
+pub const LAYOUT_DIAG_RULE_IDS: &[&str] = &["sail-clipped-text", "sail-unintended-overflow"];
 
 /// All rule IDs defined by this crate (live rules + layout diag ids + retired forever-ids).
 pub fn all_rule_ids() -> Vec<&'static str> {
@@ -225,8 +223,8 @@ pub fn lint_action_source(path: &std::path::Path, source: &str) -> Vec<Finding> 
 pub fn lint_controller_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     // Instant::now panics on wasm32 (no platform clock) — profiling is native-only.
-    let profile = cfg!(not(target_arch = "wasm32"))
-        && std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    let profile =
+        cfg!(not(target_arch = "wasm32")) && std::env::var_os("SAIL_LINT_PROFILE").is_some();
     for (id, check) in rules::CONTROLLER_RULES {
         #[cfg(not(target_arch = "wasm32"))]
         let t = profile.then(std::time::Instant::now);
@@ -280,8 +278,8 @@ pub fn lint_app_source_source(path: &std::path::Path, source: &str) -> Vec<Findi
 pub fn lint_sail_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     // Instant::now panics on wasm32 (no platform clock) — profiling is native-only.
-    let profile = cfg!(not(target_arch = "wasm32"))
-        && std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    let profile =
+        cfg!(not(target_arch = "wasm32")) && std::env::var_os("SAIL_LINT_PROFILE").is_some();
     for (id, check) in rules::SUI_TEMPLATE_RULES {
         #[cfg(not(target_arch = "wasm32"))]
         let t = profile.then(std::time::Instant::now);

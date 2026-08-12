@@ -357,7 +357,8 @@ fn toggle_skin_vertical_outline_not_variant_variant() {
         el.skin_css
     );
     assert!(
-        el.skin_css.contains("[orientation='vertical'][variant='outline']"),
+        el.skin_css
+            .contains("[orientation='vertical'][variant='outline']"),
         "vertical+outline compound must survive: {}",
         el.skin_css
     );

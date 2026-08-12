@@ -24,11 +24,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use sail_compiler::check::policy::{Policy, ResolutionKind};
-use sail_compiler::policy::{apply_config_to_resolved, LintSeverityValue};
+use sail_compiler::policy::{LintSeverityValue, apply_config_to_resolved};
 use sail_compiler::{
     CompileMode, CompileOpts, DiagSeverity, LintOverride, OverrideSeverity, check_all, compile,
 };
-use sail_lint::config::{SailConfig, RECOGNIZED_KEYS};
+use sail_lint::config::{RECOGNIZED_KEYS, SailConfig};
 
 /// Natural-Warn lint used as the promotion probe (SPEC path-gated apps).
 const WARN_RULE: &str = "sail-no-free-aria";
@@ -138,7 +138,10 @@ fn strict_and_lint_config_do_not_fail_closed_as_unknown_keys() {
 #[test]
 fn sail_config_strict_accessor_reads_top_level_flag() {
     let on = SailConfig::from_json(r#"{ "strict": true }"#);
-    assert!(on.strict(), "strict: true must parse via SailConfig::strict()");
+    assert!(
+        on.strict(),
+        "strict: true must parse via SailConfig::strict()"
+    );
     let off = SailConfig::from_json(r#"{ "preset": "full" }"#);
     assert!(!off.strict(), "absent strict defaults false");
     let explicit_false = SailConfig::from_json(r#"{ "strict": false }"#);
@@ -218,10 +221,7 @@ fn default_without_strict_keeps_warn_lint_non_blocking() {
 
 #[test]
 fn strict_true_promotes_warn_lint_to_error_at_gate() {
-    let (_tmp, sail) = write_pack(
-        r#"{ "preset": "full", "strict": true }"#,
-        WARN_SRC,
-    );
+    let (_tmp, sail) = write_pack(r#"{ "preset": "full", "strict": true }"#, WARN_SRC);
     let diags = warn_rule_diags(&sail, WARN_SRC);
     assert_eq!(
         diags.len(),

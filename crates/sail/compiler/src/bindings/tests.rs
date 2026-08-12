@@ -118,9 +118,7 @@ fn for_body_yields_one_binding_not_per_iteration() {
 
 #[test]
 fn match_emits_match_binding_and_walks_cases() {
-    let r = build_for(
-        "<match {k}>{'a' => <p>{k}</p>}{'b' => <p>B</p>}{else => <p>D</p>}</match>",
-    );
+    let r = build_for("<match {k}>{'a' => <p>{k}</p>}{'b' => <p>B</p>}{else => <p>D</p>}</match>");
     // match boundary, text(k), no bindings in case 'b' or default.
     assert_eq!(r.len(), 2);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::Match);

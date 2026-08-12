@@ -462,8 +462,7 @@ export default controller(() => {
         assert_eq!(f[0].rule, RULE_ID);
         assert_eq!(f[0].severity, Severity::Warn);
         assert!(
-            f[0].message.contains("<when {tablet}>")
-                || f[0].message.contains("when({ tablet"),
+            f[0].message.contains("<when {tablet}>") || f[0].message.contains("when({ tablet"),
             "message must name the fix: {}",
             f[0].message
         );

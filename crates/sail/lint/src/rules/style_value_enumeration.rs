@@ -125,7 +125,10 @@ fn detect_enumeration(block: &str) -> Option<(String, String, usize)> {
     let mut prop_values: HashMap<String, Vec<(usize, String)>> = HashMap::new();
     for (i, (conds, _)) in rows.iter().enumerate() {
         for (k, v) in conds {
-            prop_values.entry(k.clone()).or_default().push((i, v.clone()));
+            prop_values
+                .entry(k.clone())
+                .or_default()
+                .push((i, v.clone()));
         }
     }
 
@@ -160,7 +163,8 @@ fn parse_row(row: &str) -> (HashMap<String, String>, Vec<(String, String)>) {
         if let Some((k, v)) = part.split_once(':') {
             let k = k.trim();
             let v = v.trim().trim_matches(|c| c == '\'' || c == '"');
-            if k.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            if k.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
                 && !v.contains('(')
                 && !v.starts_with('{')
                 && !matches!(

@@ -139,8 +139,7 @@ pub static REGISTRY: &[PolicyEntry] = &[
         ty: PolicyType::PerRuleTree,
         default_json: "null",
         scope: "project",
-        description:
-            "Per-rule severity override (error|warn|off) under the lint.severity. namespace",
+        description: "Per-rule severity override (error|warn|off) under the lint.severity. namespace",
         status: PolicyStatus::Stable,
     },
 ];
@@ -375,9 +374,7 @@ fn validate_key(key: &str) -> Result<(), PolicyError> {
     // (e.g. bare "layout" with a non-object was already leaf-flattened).
     let suggestion = closest_key(key);
     let msg = match suggestion {
-        Some(s) => format!(
-            "unknown policy key \"{key}\" (closest valid key: \"{s}\")"
-        ),
+        Some(s) => format!("unknown policy key \"{key}\" (closest valid key: \"{s}\")"),
         None => format!("unknown policy key \"{key}\""),
     };
     Err(PolicyError { message: msg })
@@ -419,9 +416,7 @@ pub fn resolve_policy_object(raw: &Value) -> Result<Option<ResolvedPolicy>, Poli
         if let Some(rule) = key.strip_prefix(LINT_SEVERITY_PREFIX) {
             let Some(s) = val.as_str() else {
                 return Err(PolicyError {
-                    message: format!(
-                        "\"{key}\" must be a severity string (error|warn|off)"
-                    ),
+                    message: format!("\"{key}\" must be a severity string (error|warn|off)"),
                 });
             };
             let Some(sev) = LintSeverityValue::parse(s) else {
@@ -692,11 +687,7 @@ mod tests {
         });
         // flattens to lint.severty.sail-for-key
         let err = resolve_policy_object(&raw).expect_err("typo must fail");
-        assert!(
-            err.message.contains("closest valid key"),
-            "{}",
-            err.message
-        );
+        assert!(err.message.contains("closest valid key"), "{}", err.message);
     }
 
     #[test]
@@ -712,9 +703,7 @@ mod tests {
                 }
             }
         });
-        let resolved = resolve_policy_object(&raw)
-            .expect("ok")
-            .expect("some");
+        let resolved = resolve_policy_object(&raw).expect("ok").expect("some");
         assert!(resolved.raw_containers);
         assert_eq!(
             resolved.lint_severities.get("sail-for-key"),
@@ -730,7 +719,10 @@ mod tests {
         assert_eq!(payload["mode"], "get");
         assert_eq!(payload["values"]["layout.raw_containers"], true);
         assert_eq!(payload["values"]["lint.severity.sail-for-key"], "warn");
-        assert_eq!(payload["values"]["lint.severity.sail-compose-rhythm"], "off");
+        assert_eq!(
+            payload["values"]["lint.severity.sail-compose-rhythm"],
+            "off"
+        );
     }
 
     #[test]

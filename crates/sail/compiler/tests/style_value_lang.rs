@@ -5,14 +5,14 @@ use sail_compiler::parse::preprocess::preprocess;
 use sail_lint::style::{StyleDiagnostic, clash, lower_style, parse};
 use std::collections::HashMap;
 
-
 fn is_style_product(src: &str) -> bool {
     src.contains("style.") || src.contains("style(")
 }
 
 #[test]
 fn chain_emits_token_vars_on_product_path() {
-    let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })> x</div>"#).expect("preprocess");
+    let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })> x</div>"#)
+        .expect("preprocess");
     assert!(
         out.contains("var(--primary)") || out.contains("s-bgprimary"),
         "chain must emit token paint:\n{out}"
@@ -35,16 +35,17 @@ fn match_emits_attribute_selectors() {
 
 #[test]
 fn when_emits_hover_not_events() {
-    let out =
-        preprocess(r#"<div style({ when: { hover: { paint: bg(muted) } } })> x</div>"#).expect("preprocess");
+    let out = preprocess(r#"<div style({ when: { hover: { paint: bg(muted) } } })> x</div>"#)
+        .expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div style({ compound: [ { pill: true, paint: radius(full) } ] })> x</div>"#)
-        .expect("preprocess");
+    let out =
+        preprocess(r#"<div style({ compound: [ { pill: true, paint: radius(full) } ] })> x</div>"#)
+            .expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
 
@@ -210,8 +211,7 @@ fn card_compiles_and_emits_token_css() {
 
 #[test]
 fn list_and_bind_parse() {
-    let (style, diags) =
-        parse("style({ paint: bg(primary) }, { paint: translateY(bind(rowY)) })");
+    let (style, diags) = parse("style({ paint: bg(primary) }, { paint: translateY(bind(rowY)) })");
     assert!(
         diags.is_empty(),
         "{:?}",
@@ -317,7 +317,9 @@ fn badge_uses_scope_style_decls() {
         "badge proving ground should declare scope Style with style name ="
     );
     assert!(
-        src.contains("soft: style(soft") || src.contains("soft: soft") || src.contains("style soft ="),
+        src.contains("soft: style(soft")
+            || src.contains("soft: soft")
+            || src.contains("style soft ="),
         "badge match arms should ref Style decls"
     );
 }

@@ -523,10 +523,9 @@ mod tests {
 
     #[test]
     fn arm_brace_depth_keeps_nested_tags_as_text() {
-        let nodes = parse_fragment(
-            "<when {tablet}><p>w</p>{else => <if {x()}><span>n</span></if>}</when>",
-        )
-        .expect("parse");
+        let nodes =
+            parse_fragment("<when {tablet}><p>w</p>{else => <if {x()}><span>n</span></if>}</when>")
+                .expect("parse");
         let when = match &nodes[0] {
             super::super::Node::Element(e) => e,
             _ => panic!("expected element"),

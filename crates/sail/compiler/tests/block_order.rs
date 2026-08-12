@@ -12,7 +12,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn component_opts(name: &str) -> CompileOpts {
     CompileOpts {
@@ -75,10 +75,9 @@ fn is_block_order_teaching(msg: &str) -> bool {
 
 #[test]
 fn parser_rejects_controller_before_scope_with_teaching_error() {
-    let err = compile(CONTROLLER_THEN_SCOPE, component_opts("order-bad"))
-        .expect_err(
-            "controller-before-scope must be a compile/parse error (SPEC §4 grammar, not lint)",
-        );
+    let err = compile(CONTROLLER_THEN_SCOPE, component_opts("order-bad")).expect_err(
+        "controller-before-scope must be a compile/parse error (SPEC §4 grammar, not lint)",
+    );
     assert!(
         is_block_order_teaching(&err.message),
         "error must teach `<scope>` before `<controller>`; got: {}",

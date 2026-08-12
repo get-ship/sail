@@ -447,9 +447,7 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
             }
         }
         Instr::When(WhenInstr {
-            body,
-            else_body,
-            ..
+            body, else_body, ..
         }) => {
             visit_instrs(body, v);
             if let Some(eb) = else_body {

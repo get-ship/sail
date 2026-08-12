@@ -671,12 +671,7 @@ impl TemplateEmitter {
     }
 
     /// Emit one match arm branch, binding payload locals when present.
-    fn emit_match_arm_branch(
-        &mut self,
-        w: &mut Writer,
-        disc_rw: &str,
-        c: &MatchCase,
-    ) {
+    fn emit_match_arm_branch(&mut self, w: &mut Writer, disc_rw: &str, c: &MatchCase) {
         match (&c.test, &c.binding) {
             (MatchTest::Kind(kind), Some(binding)) if kind == "ok" || kind == "error" => {
                 let field = if kind == "ok" { "value" } else { "error" };

@@ -385,10 +385,7 @@ mod tests {
             "<!-- Loading… -->\n<button style={style.hover({ foo: 'mystery' })}>x</button>",
         );
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
-        assert!(
-            f[0].message.contains("`foo` is not supported"),
-            "got {f:?}"
-        );
+        assert!(f[0].message.contains("`foo` is not supported"), "got {f:?}");
     }
 
     #[test]

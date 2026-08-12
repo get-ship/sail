@@ -115,7 +115,10 @@ fn scan_attrs(
         // attr name
         let name_start = i;
         while i < bytes.len()
-            && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'-' || bytes[i] == b'_' || bytes[i] == b':')
+            && (bytes[i].is_ascii_alphanumeric()
+                || bytes[i] == b'-'
+                || bytes[i] == b'_'
+                || bytes[i] == b':')
         {
             i += 1;
         }
@@ -163,7 +166,10 @@ fn scan_attrs(
                 value = &region[vs..i];
             } else {
                 let vs = i;
-                while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' && bytes[i] != b'/'
+                while i < bytes.len()
+                    && !bytes[i].is_ascii_whitespace()
+                    && bytes[i] != b'>'
+                    && bytes[i] != b'/'
                 {
                     i += 1;
                 }
@@ -247,16 +253,18 @@ mod tests {
 
     #[test]
     fn allows_box_channel_grow_and_paint() {
-        assert!(run(
-            r#"<div style({ box: grow(1).minW(0), paint: bg(card) })>  x
-</div>"#
-        )
-        .is_empty());
-        assert!(run(
-            r#"<row gap="2" align="center" style({ box: grow(1).w(full) })>  x
+        assert!(
+            run(r#"<div style({ box: grow(1).minW(0), paint: bg(card) })>  x
+</div>"#)
+            .is_empty()
+        );
+        assert!(
+            run(
+                r#"<row gap="2" align="center" style({ box: grow(1).w(full) })>  x
 </row>"#
-        )
-        .is_empty());
+            )
+            .is_empty()
+        );
     }
 
     #[test]
@@ -267,13 +275,13 @@ mod tests {
     #[test]
     fn skips_control_brace_expr_with_w_binding() {
         // `<if {w.canExpand}>` must not flag bare `w` (for-as binding).
-        assert!(run(
-            r#"<for {items() as w} key={w.key}>
+        assert!(
+            run(r#"<for {items() as w} key={w.key}>
   <if {w.canExpand}>
     <row>x</row>
   </if>
-</for>"#
-        )
-        .is_empty());
+</for>"#)
+            .is_empty()
+        );
     }
 }

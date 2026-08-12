@@ -80,7 +80,10 @@ fn action_write_without_use_refuses() {
         None,
     )
     .unwrap_err();
-    assert!(err.contains("bind(rowY)") || err.contains("does not match"), "{err}");
+    assert!(
+        err.contains("bind(rowY)") || err.contains("does not match"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -121,12 +124,16 @@ fn number_to_color_refuses() {
         None,
     )
     .unwrap_err();
-    assert!(err.contains("number") && (err.contains("color") || err.contains("bg")), "{err}");
+    assert!(
+        err.contains("number") && (err.contains("color") || err.contains("bg")),
+        "{err}"
+    );
 }
 
 #[test]
 fn a_global_token_var_ref_emits_no_component_local_wiring() {
-    let js = compile_component(r#"<div style({ paint: bg(surface-2) })> </div>"#, None).expect("compile");
+    let js = compile_component(r#"<div style({ paint: bg(surface-2) })> </div>"#, None)
+        .expect("compile");
     assert!(!js.contains("registerCustomProperties("), "{js}");
     assert!(!js.contains("@property"), "{js}");
 }
@@ -141,8 +148,14 @@ fn an_unmatched_var_ref_refuses_with_did_you_mean() {
         None,
     )
     .unwrap_err();
-    assert!(err.contains("does not match") || err.contains("bind("), "{err}");
-    assert!(err.contains("glowRadius") || err.contains("glow-radius"), "{err}");
+    assert!(
+        err.contains("does not match") || err.contains("bind("),
+        "{err}"
+    );
+    assert!(
+        err.contains("glowRadius") || err.contains("glow-radius"),
+        "{err}"
+    );
 }
 
 #[test]
@@ -152,7 +165,10 @@ fn a_signal_not_returned_from_setup_is_not_reachable() {
         Some("controller((ctx) => { const hue = signal(220); return {}; })"),
     )
     .unwrap_err();
-    assert!(err.contains("does not match") || err.contains("bind(hue)"), "{err}");
+    assert!(
+        err.contains("does not match") || err.contains("bind(hue)"),
+        "{err}"
+    );
 }
 
 #[test]

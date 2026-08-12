@@ -169,11 +169,7 @@ mod tests {
             "packages exempt"
         );
         assert!(
-            check(
-                Path::new("crates/sail/compiler/stdlib/button.sail"),
-                src
-            )
-            .is_empty(),
+            check(Path::new("crates/sail/compiler/stdlib/button.sail"), src).is_empty(),
             "stdlib exempt (compiler stamps, never authors)"
         );
     }

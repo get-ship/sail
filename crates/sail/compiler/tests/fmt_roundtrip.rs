@@ -34,7 +34,8 @@ fn mangled_template_matches_golden() {
     if std::env::var_os("UPDATE_FMT_GOLDEN").is_some() {
         fs::write(&golden_path, &got).unwrap();
     }
-    let golden = fs::read_to_string(&golden_path).expect("template.golden.sail — run with UPDATE_FMT_GOLDEN=1 once");
+    let golden = fs::read_to_string(&golden_path)
+        .expect("template.golden.sail — run with UPDATE_FMT_GOLDEN=1 once");
     assert_eq!(got, golden, "mangled template must format to golden");
     assert_eq!(format(&got), got, "golden must be idempotent");
 }
@@ -47,7 +48,8 @@ fn mangled_counter_matches_golden() {
     if std::env::var_os("UPDATE_FMT_GOLDEN").is_some() {
         fs::write(&golden_path, &got).unwrap();
     }
-    let golden = fs::read_to_string(&golden_path).expect("counter.golden.sail — run with UPDATE_FMT_GOLDEN=1 once");
+    let golden = fs::read_to_string(&golden_path)
+        .expect("counter.golden.sail — run with UPDATE_FMT_GOLDEN=1 once");
     assert_eq!(got, golden, "mangled counter must format to golden");
     assert_eq!(format(&got), got, "golden must be idempotent");
 }

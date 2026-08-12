@@ -1,8 +1,8 @@
 //! `sail-no-sx` — Style product host `style=` banned under `strict` policy.
 //! Rule id keeps historical `sail-no-sx` (capability key remains `"sx"`).
 
-use std::path::Path;
 use crate::report::{Finding, Severity};
+use std::path::Path;
 
 pub const RULE_ID: &str = "sail-no-sx";
 
@@ -13,7 +13,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => { i += end + 3; continue; }
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
                 None => break,
             }
         }
@@ -34,22 +37,34 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             });
         }
         i += 1;
-        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 { i += 1; }
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
     }
     findings
 }
 
 fn next_is_eq(rest: &[u8]) -> bool {
     let mut k = 0;
-    while k < rest.len() && rest[k].is_ascii_whitespace() { k += 1; }
+    while k < rest.len() && rest[k].is_ascii_whitespace() {
+        k += 1;
+    }
     k < rest.len() && rest[k] == b'='
 }
 
 fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
-    let mut line = 1usize; let mut col = 1usize;
+    let mut line = 1usize;
+    let mut col = 1usize;
     for (idx, b) in source.bytes().enumerate() {
-        if idx == offset { break; }
-        if b == b'\n' { line += 1; col = 1; } else { col += 1; }
+        if idx == offset {
+            break;
+        }
+        if b == b'\n' {
+            line += 1;
+            col = 1;
+        } else {
+            col += 1;
+        }
     }
     (line, col)
 }
@@ -57,22 +72,36 @@ fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn run(src: &str) -> usize { check(Path::new("t.sail"), src).len() }
+    fn run(src: &str) -> usize {
+        check(Path::new("t.sail"), src).len()
+    }
     #[test]
     fn flags_static_and_dynamic_style_host() {
         assert_eq!(run(r#"<sail-card style="p-4">x</sail-card>"#), 1);
-        assert_eq!(run(r#"<sail-card style={cond ? 'p-4' : 'p-2'}>x</sail-card>"#), 1);
+        assert_eq!(
+            run(r#"<sail-card style={cond ? 'p-4' : 'p-2'}>x</sail-card>"#),
+            1
+        );
         assert_eq!(run(r#"<sail-card style = "p-4">x</sail-card>"#), 1);
     }
     #[test]
     fn does_not_flag_lookalikes_or_props() {
-        assert_eq!(run(r#"<sail-card padding="lg" data-sx="x">y</sail-card>"#), 0);
+        assert_eq!(
+            run(r#"<sail-card padding="lg" data-sx="x">y</sail-card>"#),
+            0
+        );
         assert_eq!(run(r#"<sail-card styled="x">y</sail-card>"#), 0);
     }
     #[test]
     fn is_warn_and_skips_comments() {
-        let f = check(Path::new("t.sail"), r#"<sail-card style="p-4">x</sail-card>"#);
+        let f = check(
+            Path::new("t.sail"),
+            r#"<sail-card style="p-4">x</sail-card>"#,
+        );
         assert!(matches!(f[0].severity, Severity::Warn));
-        assert_eq!(run(r#"<!-- <sail-card style="p-9"> --> <sail-card>y</sail-card>"#), 0);
+        assert_eq!(
+            run(r#"<!-- <sail-card style="p-9"> --> <sail-card>y</sail-card>"#),
+            0
+        );
     }
 }

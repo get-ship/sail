@@ -452,10 +452,15 @@ fn tag_matches_fingerprint(
     }
 
     let sx_owned;
-    let sx_value: &str = if let Some(v) = attrs.iter().find(|(n, _)| n == "style").map(|(_, v)| v.as_str())
+    let sx_value: &str = if let Some(v) = attrs
+        .iter()
+        .find(|(n, _)| n == "style")
+        .map(|(_, v)| v.as_str())
     {
         v
-    } else if let Some(expr) = tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end)) {
+    } else if let Some(expr) =
+        tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end))
+    {
         sx_owned = expr;
         sx_owned.as_str()
     } else {
@@ -714,7 +719,8 @@ mod tests {
     /// diagnostic lands on the deepest collapsed box with non-zero children
     /// (the div — the column's only child totals 0 after flex shrink, so the
     /// parent case is suppressed by the layout crate's noise gate).
-    const ZERO_MAIN_SRC: &str = r#"<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>"#;
+    const ZERO_MAIN_SRC: &str =
+        r#"<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>"#;
 
     #[test]
     fn maps_zero_main_axis_back_to_collapsed_box() {
@@ -764,8 +770,7 @@ mod tests {
 
     #[test]
     fn duplicate_columns_map_by_index() {
-        let src =
-            "<column>A</column>\n<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>";
+        let src = "<column>A</column>\n<column style({ box: h(0) })><div style({ box: h(20) })>x</div></column>";
         let diags = collect(src);
         let zero = diags
             .iter()

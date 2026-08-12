@@ -142,7 +142,9 @@ fn has_label(el: &ElementInstr) -> bool {
                 return true;
             }
             // title= is a weak name fallback some icon buttons use
-            AttrInstr::Static { name, value, .. } if name == "title" && !value.trim().is_empty() => {
+            AttrInstr::Static { name, value, .. }
+                if name == "title" && !value.trim().is_empty() =>
+            {
                 return true;
             }
             AttrInstr::Expr { name, .. } if name == "title" => return true,
@@ -195,8 +197,8 @@ fn is_decorative_child(instr: &Instr) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::diagnostics::Span;
     use super::*;
+    use crate::diagnostics::Span;
 
     fn sp() -> Span {
         Span::new(0, 1)

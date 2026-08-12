@@ -125,7 +125,11 @@ struct PackContext {
     declared_deps: HashSet<String>,
 }
 
-fn is_allowed_value_module(module: &str, controller_path: &Path, pack: Option<&PackContext>) -> bool {
+fn is_allowed_value_module(
+    module: &str,
+    controller_path: &Path,
+    pack: Option<&PackContext>,
+) -> bool {
     let m = module.trim();
     if m.is_empty() {
         return false;
@@ -274,7 +278,11 @@ fn load_pack_context(root: &Path, pkg_path: &Path) -> Option<PackContext> {
     let text = std::fs::read_to_string(pkg_path).ok()?;
     let value: serde_json::Value = serde_json::from_str(&text).ok()?;
     // `customElements` is the pack identity CEM generation already requires.
-    if value.get("customElements").and_then(|v| v.as_str()).is_none() {
+    if value
+        .get("customElements")
+        .and_then(|v| v.as_str())
+        .is_none()
+    {
         return None;
     }
     let mut declared_deps = HashSet::new();
@@ -343,7 +351,11 @@ mod tests {
         // Touch a co-located engine module so relative resolve is realistic.
         if let Some(parent) = ctrl.parent() {
             fs::write(parent.join("engine.ts"), "export const x = 1\n").ok();
-            fs::write(parent.join("sail-widget.internals.ts"), "export const y = 1\n").ok();
+            fs::write(
+                parent.join("sail-widget.internals.ts"),
+                "export const y = 1\n",
+            )
+            .ok();
         }
         (tmp, ctrl)
     }

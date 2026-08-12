@@ -281,9 +281,7 @@ fn walk_instr(
             *depth -= 1;
         }
         Instr::When(WhenInstr {
-            body,
-            else_body,
-            ..
+            body, else_body, ..
         }) => {
             out.runtime_imports.insert("bindWhen");
             if is_route && *depth == 0 {

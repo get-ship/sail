@@ -22,9 +22,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use sail_compiler::ambients::{
-    emit_action_observation_dts, lib_for_type_env, type_env_for_kind, type_env_for_path, TypeEnv,
+    TypeEnv, emit_action_observation_dts, lib_for_type_env, type_env_for_kind, type_env_for_path,
 };
-use sail_compiler::project_map::{classify, FileKind};
+use sail_compiler::project_map::{FileKind, classify};
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -431,7 +431,11 @@ export function observe(node: Element): { destroy(): void } {
         eprintln!("SKIP action_snippet_observation_set_typechecks: tsc not found");
         // Without tsc: observation ambient must still declare the set.
         let dts = emit_action_observation_dts();
-        for name in ["requestAnimationFrame", "ResizeObserver", "getComputedStyle"] {
+        for name in [
+            "requestAnimationFrame",
+            "ResizeObserver",
+            "getComputedStyle",
+        ] {
             assert!(
                 dts.contains(name),
                 "observation ambient must declare {name} (tsc absent):\n{dts}"
@@ -470,8 +474,5 @@ export function inject(styleText: string): void {
         );
         return;
     };
-    assert!(
-        ok,
-        "Framework env must allow document:\n{out}"
-    );
+    assert!(ok, "Framework env must allow document:\n{out}");
 }

@@ -124,7 +124,8 @@ fn dialog_dismissible_false_emits_bind_open_opts() {
     // Signal cell still stripped — opts are the third arg, not a getter wrap.
     assert!(
         r.js.contains("bindOpen(__e0, ($scope.open), { dismissible: false })")
-            || r.js.contains("bindOpen(__e0, (open), { dismissible: false })"),
+            || r.js
+                .contains("bindOpen(__e0, (open), { dismissible: false })"),
         "expected three-arg bindOpen with signal cell + opts, got:\n{}",
         r.js
     );

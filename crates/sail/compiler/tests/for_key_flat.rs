@@ -62,7 +62,8 @@ fn index_binding_key_emits_flat_closure() {
 
 #[test]
 fn template_literal_key_over_loop_bindings_is_flat() {
-    let src = r#"<ul><for {rows() as row, i} key={`${row.id}-${i}`}><li>{row.label}</li></for></ul>"#;
+    let src =
+        r#"<ul><for {rows() as row, i} key={`${row.id}-${i}`}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
@@ -91,8 +92,7 @@ fn builtin_ident_key_is_flat() {
 
 #[test]
 fn scoped_key_falls_back_to_child_scope() {
-    let src =
-        r#"<ul><for {rows() as row} key={prefix() + row.id}><li>{row.label}</li></for></ul>"#;
+    let src = r#"<ul><for {rows() as row} key={prefix() + row.id}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(

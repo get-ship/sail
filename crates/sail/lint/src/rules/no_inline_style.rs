@@ -1,7 +1,7 @@
 //! `sail-no-inline-style` — raw CSS `style="…"` banned; product host is tag `style(…)`.
 
-use std::path::Path;
 use crate::report::{Finding, Severity};
+use std::path::Path;
 
 pub const RULE_ID: &str = "sail-no-inline-style";
 
@@ -12,7 +12,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => { i += end + 3; continue; }
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
                 None => break,
             }
         }
@@ -30,25 +33,41 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             });
         }
         i += 1;
-        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 { i += 1; }
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
     }
     findings
 }
 
 fn next_is_quoted_eq(rest: &[u8]) -> bool {
     let mut k = 0;
-    while k < rest.len() && rest[k].is_ascii_whitespace() { k += 1; }
-    if k >= rest.len() || rest[k] != b'=' { return false; }
+    while k < rest.len() && rest[k].is_ascii_whitespace() {
+        k += 1;
+    }
+    if k >= rest.len() || rest[k] != b'=' {
+        return false;
+    }
     k += 1;
-    while k < rest.len() && rest[k].is_ascii_whitespace() { k += 1; }
+    while k < rest.len() && rest[k].is_ascii_whitespace() {
+        k += 1;
+    }
     k < rest.len() && (rest[k] == b'"' || rest[k] == b'\'')
 }
 
 fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
-    let mut line = 1usize; let mut col = 1usize;
+    let mut line = 1usize;
+    let mut col = 1usize;
     for (idx, b) in source.bytes().enumerate() {
-        if idx == offset { break; }
-        if b == b'\n' { line += 1; col = 1; } else { col += 1; }
+        if idx == offset {
+            break;
+        }
+        if b == b'\n' {
+            line += 1;
+            col = 1;
+        } else {
+            col += 1;
+        }
     }
     (line, col)
 }
@@ -56,7 +75,9 @@ fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn run(src: &str) -> usize { check(Path::new("t.sail"), src).len() }
+    fn run(src: &str) -> usize {
+        check(Path::new("t.sail"), src).len()
+    }
     #[test]
     fn flags_raw_css_style_string_only() {
         assert_eq!(run(r#"<p style="color: red">x</p>"#), 1);

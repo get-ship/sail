@@ -55,9 +55,7 @@ fn ambient_import_line(body: &str) -> Option<&str> {
 
 fn asserts_ambient_inject(body: &str, idents: &[&str]) {
     let line = ambient_import_line(body).unwrap_or_else(|| {
-        panic!(
-            "expected ambient inject from `{RUNTIME_SPECIFIER}`, got module:\n{body}"
-        )
+        panic!("expected ambient inject from `{RUNTIME_SPECIFIER}`, got module:\n{body}")
     });
     for ident in idents {
         assert!(
@@ -153,7 +151,13 @@ export default controller(() => {
     );
     asserts_ambient_inject(
         &body,
-        &["controller", "signal", "defineStore", "provideStore", "useStore"],
+        &[
+            "controller",
+            "signal",
+            "defineStore",
+            "provideStore",
+            "useStore",
+        ],
     );
 }
 

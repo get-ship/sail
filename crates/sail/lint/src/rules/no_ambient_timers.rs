@@ -10,8 +10,8 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
-use oxc_syntax::scope::ScopeFlags;
 use oxc_span::SourceType;
+use oxc_syntax::scope::ScopeFlags;
 
 use super::ambient::{finding, gate};
 use crate::report::Finding;

@@ -118,11 +118,7 @@ pub(super) fn inline_text_piece(s: &str) -> String {
     if !s.contains('\n') {
         return s.to_string();
     }
-    let parts: Vec<&str> = s
-        .lines()
-        .map(str::trim)
-        .filter(|l| !l.is_empty())
-        .collect();
+    let parts: Vec<&str> = s.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
     if parts.is_empty() {
         String::new()
     } else {

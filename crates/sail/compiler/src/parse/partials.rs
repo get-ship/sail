@@ -211,7 +211,8 @@ fn find_top_level_partial_decls(source: &str) -> Result<Vec<PartialDecl>, Compil
                 (String::new(), open.end)
             } else {
                 let close = matching_close(source, open.end, "partial").ok_or_else(|| {
-                    CompileError::new("unclosed `<partial>`").with_span(Span::new(open.start, open.end))
+                    CompileError::new("unclosed `<partial>`")
+                        .with_span(Span::new(open.start, open.end))
                 })?;
                 let body = source[open.end..close - "</partial>".len()].to_string();
                 (body, close)
@@ -545,8 +546,7 @@ fn walk_invocations(
     type_fields: &HashMap<String, Vec<TypeField>>,
     mut f: impl FnMut(&Invocation<'_>, &PartialDecl, Option<&[TypeField]>) -> Result<(), CompileError>,
 ) -> Result<(), CompileError> {
-    let by_name: HashMap<&str, &PartialDecl> =
-        decls.iter().map(|d| (d.name.as_str(), d)).collect();
+    let by_name: HashMap<&str, &PartialDecl> = decls.iter().map(|d| (d.name.as_str(), d)).collect();
     let bytes = source.as_bytes();
     let mut i = 0usize;
     while i < bytes.len() {
@@ -589,11 +589,14 @@ fn walk_invocations(
                     ("", open.end)
                 } else {
                     let close = matching_close(source, open.end, &open.tag).unwrap_or(open.end);
-                    let c = &source[open.end..close.saturating_sub(format!("</{}>", open.tag).len())];
+                    let c =
+                        &source[open.end..close.saturating_sub(format!("</{}>", open.tag).len())];
                     (c, close)
                 };
                 let attrs = parse_attr_list(&open.attrs_raw);
-                let fields = type_fields.get(decl.props_type.as_str()).map(|v| v.as_slice());
+                let fields = type_fields
+                    .get(decl.props_type.as_str())
+                    .map(|v| v.as_slice());
                 f(
                     &Invocation {
                         open,
@@ -677,8 +680,12 @@ fn scope_bodies(source: &str) -> Vec<String> {
     let mut i = 0usize;
     while let Some(rel) = source[i..].find("<scope") {
         let at = i + rel;
-        let Some(gt) = skip_to_gt(source, at) else { break };
-        let Some(end) = matching_close(source, gt, "scope") else { break };
+        let Some(gt) = skip_to_gt(source, at) else {
+            break;
+        };
+        let Some(end) = matching_close(source, gt, "scope") else {
+            break;
+        };
         let body = &source[gt..end - "</scope>".len()];
         bodies.push(body.to_string());
         i = end;
@@ -814,7 +821,9 @@ fn attr_value_to_expr(value: &str) -> String {
     let inner = if (v.starts_with('"') && v.ends_with('"') && v.len() >= 2)
         || (v.starts_with('\'') && v.ends_with('\'') && v.len() >= 2)
     {
-        v[1..v.len() - 1].replace("&quot;", "\"").replace("&#39;", "'")
+        v[1..v.len() - 1]
+            .replace("&quot;", "\"")
+            .replace("&#39;", "'")
     } else {
         v.to_string()
     };
@@ -908,7 +917,11 @@ fn substitute_idents_in_expr(expr: &str, params: &BTreeMap<String, String>) -> S
                 i += 1;
             }
             let ident = &expr[start..i];
-            let prev_non_ws = out.as_bytes().iter().rev().find(|b| !b.is_ascii_whitespace());
+            let prev_non_ws = out
+                .as_bytes()
+                .iter()
+                .rev()
+                .find(|b| !b.is_ascii_whitespace());
             if prev_non_ws == Some(&b'.') {
                 out.push_str(ident);
                 continue;
@@ -977,8 +990,7 @@ fn project_default_slot(body: &str, children: &str) -> String {
                         };
                         if children.trim().is_empty() {
                             if !open.self_closing {
-                                let fallback =
-                                    &body[open.end..end.saturating_sub("</slot>".len())];
+                                let fallback = &body[open.end..end.saturating_sub("</slot>".len())];
                                 out.push_str(fallback);
                             }
                         } else {
@@ -1494,10 +1506,7 @@ pub fn partial_hover(source: &str, name: &str) -> Option<String> {
             "**partial** `{}` · props: `{}`\n```ts\n{{\n{list}\n}}\n```",
             decl.name, decl.props_type
         ),
-        _ => format!(
-            "**partial** `{}` · props: `{}`",
-            decl.name, decl.props_type
-        ),
+        _ => format!("**partial** `{}` · props: `{}`", decl.name, decl.props_type),
     })
 }
 
@@ -1517,7 +1526,12 @@ type TileProps = { title: string }
 <list-tile title={"Hello"}><span>kid</span></list-tile>
 "#;
         let out = expand_partials(src).expect("expand");
-        assert!(out.contains("{ \"Hello\" }") || out.contains("{\"Hello\"}") || out.contains("\"Hello\""), "got: {out}");
+        assert!(
+            out.contains("{ \"Hello\" }")
+                || out.contains("{\"Hello\"}")
+                || out.contains("\"Hello\""),
+            "got: {out}"
+        );
         assert!(out.contains("<span>kid</span>"), "slot projected: {out}");
         assert!(!out.contains("<partial"), "decl removed: {out}");
         assert!(!out.contains("<list-tile"), "invoc expanded: {out}");
@@ -1586,6 +1600,9 @@ style card = { box: pad(2) }
 "#;
         let out = expand_partials(src).expect("expand");
         assert!(out.contains("style(card)"), "style const kept: {out}");
-        assert!(out.contains("\"Hi\"") || out.contains("Hi"), "param sub: {out}");
+        assert!(
+            out.contains("\"Hi\"") || out.contains("Hi"),
+            "param sub: {out}"
+        );
     }
 }

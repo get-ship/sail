@@ -31,9 +31,7 @@ use std::path::{Path, PathBuf};
 
 use sail_compiler::check::layout;
 use sail_compiler::diag_ratchet::{anonymous_baseline, count_anonymous_sites};
-use sail_compiler::diagnostics::{
-    DiagSeverity, DiagSpec, Jurisdiction, lookup, registry,
-};
+use sail_compiler::diagnostics::{DiagSeverity, DiagSpec, Jurisdiction, lookup, registry};
 
 /// Known product rule ids that Phase 1 must register as sample / proof rows.
 const KNOWN_IDS: &[&str] = &["sail-layout", "sail-unintended-overflow"];
@@ -163,10 +161,7 @@ fn at_least_one_emission_path_rule_is_registered() {
     // product path and the table meet for at least one rule.
     let (_tmp, sail) = write_pack(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
-    let emitted_rules: Vec<&str> = diags
-        .iter()
-        .filter_map(|d| d.rule.as_deref())
-        .collect();
+    let emitted_rules: Vec<&str> = diags.iter().filter_map(|d| d.rule.as_deref()).collect();
     assert!(
         !emitted_rules.is_empty(),
         "expected layout emission with a rule id under strict (got diags={diags:?})"

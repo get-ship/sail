@@ -8,7 +8,7 @@
 //! Implementer must not modify this file.
 
 use sail_compiler::ambients::{
-    emit_project_tsconfig_json, lib_for_type_env, type_env_for_kind, TypeEnv,
+    TypeEnv, emit_project_tsconfig_json, lib_for_type_env, type_env_for_kind,
 };
 use sail_compiler::project_map::FileKind;
 

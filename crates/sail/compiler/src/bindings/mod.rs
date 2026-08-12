@@ -187,5 +187,4 @@ impl Builder {
             self.walk_block(else_body);
         }
     }
-
 }

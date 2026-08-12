@@ -58,10 +58,7 @@ pub fn format_source(source: &str) -> Result<FormatResult, FormatError> {
 }
 
 /// Pretty-print with explicit options (tests pin `use_oxfmt: false`).
-pub fn format_source_with(
-    source: &str,
-    opts: &FormatOpts,
-) -> Result<FormatResult, FormatError> {
+pub fn format_source_with(source: &str, opts: &FormatOpts) -> Result<FormatResult, FormatError> {
     let prepared = preprocess::prepare_fmt(source);
     let nodes = html::parse_fragment(&prepared)?;
     let mut oxfmt_missing = false;

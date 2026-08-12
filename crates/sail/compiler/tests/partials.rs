@@ -51,16 +51,13 @@ fn expand_byte_equal_to_handwritten() {
     let a = expand_partials(&with_partial).expect("expand partial");
     let b = expand_partials(&handwritten).expect("expand none");
     // Normalize whitespace for comparison of the template region.
-    let norm = |s: &str| {
-        s.chars()
-            .filter(|c| !c.is_whitespace())
-            .collect::<String>()
-    };
+    let norm = |s: &str| s.chars().filter(|c| !c.is_whitespace()).collect::<String>();
     let a_n = norm(&a);
     let b_n = norm(&b);
     assert!(
-        a_n.contains(&norm("<row style(card)><text>{run.name}</text><span>kid</span></row>"))
-            || a_n.contains("run.name"),
+        a_n.contains(&norm(
+            "<row style(card)><text>{run.name}</text><span>kid</span></row>"
+        )) || a_n.contains("run.name"),
         "expanded must carry param by reference:\n{a}"
     );
     assert_eq!(
@@ -259,8 +256,7 @@ fn tag_collision_names_both() {
     let err = compile(&body, o).expect_err("collision");
     let msg = format!("{err:?}");
     assert!(
-        msg.contains("list-tile")
-            && (msg.contains("collides") || msg.contains("component")),
+        msg.contains("list-tile") && (msg.contains("collides") || msg.contains("component")),
         "must name both: {msg}"
     );
 }
@@ -305,5 +301,8 @@ fn partial_names_for_lsp() {
     let names = partials::partial_names(&src);
     assert_eq!(names, vec!["list-tile".to_string()]);
     let hover = partials::partial_hover(&src, "list-tile").expect("hover");
-    assert!(hover.contains("title") && hover.contains("TileProps"), "{hover}");
+    assert!(
+        hover.contains("title") && hover.contains("TileProps"),
+        "{hover}"
+    );
 }

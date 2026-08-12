@@ -6683,6 +6683,10 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6704,10 +6708,6 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
 version = "0.1.0"
 
 [[patch.unused]]

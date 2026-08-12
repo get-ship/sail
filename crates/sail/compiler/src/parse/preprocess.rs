@@ -105,7 +105,10 @@ fn for_each_tag_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => { i += end + 3; continue; }
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
                 None => break,
             }
         }
@@ -117,8 +120,14 @@ fn for_each_tag_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
             break;
         }
         if bytes[i] == b'<' && i + 1 < bytes.len() {
-            if bytes[i + 1] == b'/' { i += 2; continue; }
-            if !bytes[i + 1].is_ascii_alphabetic() { i += 1; continue; }
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                continue;
+            }
+            if !bytes[i + 1].is_ascii_alphabetic() {
+                i += 1;
+                continue;
+            }
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -141,22 +150,29 @@ fn for_each_tag_style<'a>(source: &'a str, mut f: impl FnMut(usize, &'a str)) {
                 }
                 k += 1;
             }
-            if k >= bytes.len() { break; }
+            if k >= bytes.len() {
+                break;
+            }
             let gt_pos = k;
             let body_start = k + 1;
             if SKIP_BODY_TAGS.contains(&tag) {
                 if let Some(end) = matching_close(source, body_start, tag) {
-                    i = end; continue;
+                    i = end;
+                    continue;
                 }
-                i = body_start; continue;
+                i = body_start;
+                continue;
             }
             if let Some((lo, _hi, expr)) = find_tag_style_call(source, tag_end, gt_pos) {
                 f(lo, expr);
             }
-            i = body_start; continue;
+            i = body_start;
+            continue;
         }
         let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 { n += 1; }
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
         i = n;
     }
 }
@@ -186,7 +202,10 @@ fn lift_tag_style(
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => { i += end + 3; continue; }
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
                 None => break,
             }
         }
@@ -198,8 +217,14 @@ fn lift_tag_style(
             break;
         }
         if bytes[i] == b'<' && i + 1 < bytes.len() {
-            if bytes[i + 1] == b'/' { i += 2; continue; }
-            if !bytes[i + 1].is_ascii_alphabetic() { i += 1; continue; }
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                continue;
+            }
+            if !bytes[i + 1].is_ascii_alphabetic() {
+                i += 1;
+                continue;
+            }
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -222,14 +247,18 @@ fn lift_tag_style(
                 }
                 k += 1;
             }
-            if k >= bytes.len() { break; }
+            if k >= bytes.len() {
+                break;
+            }
             let gt_pos = k;
             let body_start = k + 1;
             if SKIP_BODY_TAGS.contains(&tag) {
                 if let Some(end) = matching_close(source, body_start, tag) {
-                    i = end; continue;
+                    i = end;
+                    continue;
                 }
-                i = body_start; continue;
+                i = body_start;
+                continue;
             }
             if let Some(bad) = find_bad_tag_style_token(source, tag_end, gt_pos) {
                 return Err(CompileError::new(
@@ -243,12 +272,21 @@ fn lift_tag_style(
                 refuse_text_on_non_text_host(tag, expr, env, call_lo, call_hi)?;
                 let (classes, motions) = lower_sx_value(expr, env, &mut css, &mut seen)
                     .map_err(|diags| style_error(diags, call_lo, call_hi))?;
-                lifts.push(Lift { gt_pos, call_lo, call_hi, classes, motions });
+                lifts.push(Lift {
+                    gt_pos,
+                    call_lo,
+                    call_hi,
+                    classes,
+                    motions,
+                });
             }
-            i = body_start; continue;
+            i = body_start;
+            continue;
         }
         let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 { n += 1; }
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
         i = n;
     }
 
@@ -294,13 +332,22 @@ fn refuse_body_style_statements(source: &str) -> Result<(), CompileError> {
     while i < bytes.len() {
         if source[i..].starts_with("<!--") {
             match source[i..].find("-->") {
-                Some(end) => { i += end + 3; continue; }
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
                 None => break,
             }
         }
         if bytes[i] == b'<' && i + 1 < bytes.len() {
-            if bytes[i + 1] == b'/' { i += 2; continue; }
-            if !bytes[i + 1].is_ascii_alphabetic() { i += 1; continue; }
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                continue;
+            }
+            if !bytes[i + 1].is_ascii_alphabetic() {
+                i += 1;
+                continue;
+            }
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -323,16 +370,20 @@ fn refuse_body_style_statements(source: &str) -> Result<(), CompileError> {
                 }
                 k += 1;
             }
-            if k >= bytes.len() { break; }
+            if k >= bytes.len() {
+                break;
+            }
             let self_closing = k > 0 && bytes[k - 1] == b'/';
             let body_start = k + 1;
             if self_closing || is_void_tag(tag) || SKIP_BODY_TAGS.contains(&tag) {
                 if SKIP_BODY_TAGS.contains(&tag) && !self_closing {
                     if let Some(end) = matching_close(source, body_start, tag) {
-                        i = end; continue;
+                        i = end;
+                        continue;
                     }
                 }
-                i = body_start; continue;
+                i = body_start;
+                continue;
             }
             let body = &source[body_start..];
             if let Some((rel_start, rel_end, _expr)) = try_style_statement(body) {
@@ -345,35 +396,52 @@ fn refuse_body_style_statements(source: &str) -> Result<(), CompileError> {
                 .with_span(Span::new(abs_lo, abs_hi))
                 .with_category("sail-style"));
             }
-            i = body_start; continue;
+            i = body_start;
+            continue;
         }
         let mut n = i + 1;
-        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 { n += 1; }
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
         i = n;
     }
     Ok(())
 }
 
 /// Locate `style(…)` (+ chains) in an open-tag attribute region `[tag_end, gt_pos)`.
-fn find_tag_style_call(source: &str, tag_end: usize, gt_pos: usize) -> Option<(usize, usize, &str)> {
+fn find_tag_style_call(
+    source: &str,
+    tag_end: usize,
+    gt_pos: usize,
+) -> Option<(usize, usize, &str)> {
     let bytes = source.as_bytes();
     let mut j = tag_end;
     let mut quote: Option<u8> = None;
     while j < gt_pos {
         match (quote, bytes[j]) {
-            (Some(q), b) if b == q => { quote = None; j += 1; }
-            (None, b'"') | (None, b'\'') => { quote = Some(bytes[j]); j += 1; }
+            (Some(q), b) if b == q => {
+                quote = None;
+                j += 1;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[j]);
+                j += 1;
+            }
             (Some(_), _) => j += 1,
             (None, _) => {
                 if is_style_word_at(bytes, j) {
                     let after = j + 5;
                     let mut k = after;
-                    while k < gt_pos && bytes[k].is_ascii_whitespace() { k += 1; }
+                    while k < gt_pos && bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
                     if k < gt_pos && bytes[k] == b'(' {
                         let rest = &source[j..gt_pos];
                         let end = consume_style_expr(rest)?;
                         let expr = rest[..end].trim_end();
-                        if expr.is_empty() { return None; }
+                        if expr.is_empty() {
+                            return None;
+                        }
                         return Some((j, j + end, expr));
                     }
                 }
@@ -391,17 +459,26 @@ fn find_bad_tag_style_token(source: &str, tag_end: usize, gt_pos: usize) -> Opti
     let mut quote: Option<u8> = None;
     while j < gt_pos {
         match (quote, bytes[j]) {
-            (Some(q), b) if b == q => { quote = None; j += 1; }
-            (None, b'"') | (None, b'\'') => { quote = Some(bytes[j]); j += 1; }
+            (Some(q), b) if b == q => {
+                quote = None;
+                j += 1;
+            }
+            (None, b'"') | (None, b'\'') => {
+                quote = Some(bytes[j]);
+                j += 1;
+            }
             (Some(_), _) => j += 1,
             (None, _) => {
                 if is_style_word_at(bytes, j) {
                     let after = j + 5;
                     let mut k = after;
-                    while k < gt_pos && bytes[k].is_ascii_whitespace() { k += 1; }
+                    while k < gt_pos && bytes[k].is_ascii_whitespace() {
+                        k += 1;
+                    }
                     if k < gt_pos && bytes[k] == b'(' {
                         if let Some(end) = consume_style_expr(&source[j..gt_pos]) {
-                            j += end; continue;
+                            j += end;
+                            continue;
                         }
                     }
                     return Some(j);
@@ -473,9 +550,7 @@ fn is_style_const_method_call(s: &str) -> bool {
     let Some((head, rest)) = s.split_once('.') else {
         return false;
     };
-    if head.is_empty()
-        || !head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
-    {
+    if head.is_empty() || !head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
         return false;
     }
     let r = rest.trim_start().as_bytes();
@@ -518,20 +593,35 @@ fn consume_style_expr(s: &str) -> Option<usize> {
                 }
                 continue;
             }
-            b'(' => { paren += 1; saw_group = true; }
+            b'(' => {
+                paren += 1;
+                saw_group = true;
+            }
             b')' => {
                 paren -= 1;
-                if paren < 0 { return None; }
+                if paren < 0 {
+                    return None;
+                }
             }
-            b'[' => { brack += 1; saw_group = true; }
+            b'[' => {
+                brack += 1;
+                saw_group = true;
+            }
             b']' => {
                 brack -= 1;
-                if brack < 0 { return None; }
+                if brack < 0 {
+                    return None;
+                }
             }
-            b'{' => { brace += 1; saw_group = true; }
+            b'{' => {
+                brace += 1;
+                saw_group = true;
+            }
             b'}' => {
                 brace -= 1;
-                if brace < 0 { return None; }
+                if brace < 0 {
+                    return None;
+                }
             }
             _ => {}
         }
@@ -996,9 +1086,7 @@ fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
                 let v = value.trim_matches(['"', '\'']);
                 for c in v.split_whitespace() {
                     let cl = c.to_ascii_lowercase();
-                    if cl.starts_with("s-w")
-                        || cl.starts_with("s-minw")
-                        || cl.starts_with("s-maxw")
+                    if cl.starts_with("s-w") || cl.starts_with("s-minw") || cl.starts_with("s-maxw")
                     {
                         return true;
                     }
@@ -1409,8 +1497,7 @@ fn splice_element(
                 // Color-group typed: static first-paint inlines var *references*
                 // (`--tone: var(--primary); --tone-foreground: var(--primary-foreground)`).
                 crate::check::binding::StyleBindingUnit::TokenGroup => {
-                    let Some(members) =
-                        sail_lint::token_groups::group_value_member_publics(&val)
+                    let Some(members) = sail_lint::token_groups::group_value_member_publics(&val)
                     else {
                         continue;
                     };
@@ -1427,7 +1514,9 @@ fn splice_element(
                     }
                 }
                 crate::check::binding::StyleBindingUnit::LengthPx
-                    if val.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-') =>
+                    if val
+                        .chars()
+                        .all(|c| c.is_ascii_digit() || c == '.' || c == '-') =>
                 {
                     if !bind_style.is_empty() {
                         bind_style.push(' ');
@@ -1911,7 +2000,6 @@ fn desugar_tag(tag: &str, tones: &[&str], sizes: &[&str], variants: &[&str]) -> 
     }
     out
 }
-
 
 /// Merge every open tag's duplicate static `class="…"` attributes into the
 /// first one (values space-joined, source order). `lower_sx` rewrites `sx=` to
@@ -3110,8 +3198,8 @@ mod tests {
     fn sx_merges_into_existing_class_attr() {
         // Regression: `<span class="badge" sx={…}>` must merge author class +
         // Style classes into one attribute (not two setAttribute("class") writes).
-        let out =
-            preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#).expect("preprocess");
+        let out = preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#)
+            .expect("preprocess");
         assert!(
             out.contains(r#"class="badge "#) && out.contains("s-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
@@ -3125,8 +3213,8 @@ mod tests {
 
     #[test]
     fn sx_before_class_also_merges() {
-        let out =
-            preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#).expect("preprocess");
+        let out = preprocess(r#"<span class="badge" style({ box: pad(4) })> x</span>"#)
+            .expect("preprocess");
         assert!(
             out.contains("s-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
@@ -3138,8 +3226,8 @@ mod tests {
     fn dynamic_class_with_sx_is_left_alone() {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static Style classes into an expression it can't evaluate.
-        let out =
-            preprocess(r#"<span class={cls()} style({ box: pad(4) })> x</span>"#).expect("preprocess");
+        let out = preprocess(r#"<span class={cls()} style({ box: pad(4) })> x</span>"#)
+            .expect("preprocess");
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -3426,10 +3514,8 @@ mod tests {
 
     #[test]
     fn select_stamps_pad_s_ladder_and_pad_e_chevron_room() {
-        let out = preprocess(
-            r#"<select size="sm"><option>All</option></select>"#,
-        )
-        .expect("preprocess");
+        let out =
+            preprocess(r#"<select size="sm"><option>All</option></select>"#).expect("preprocess");
         assert!(out.contains("sail-select"), "host stamp: {out}");
         assert!(out.contains("s-padE8"), "chevron room on base: {out}");
         assert!(
@@ -3446,11 +3532,13 @@ mod tests {
     #[test]
     fn select_drops_default_wfull_when_author_sets_width_on_box_channel() {
         // Bare w/min-w attrs are retired — author width is box channel only.
-        let via_w = preprocess(
-            r#"<select size="sm" style({ box: w(28) })> <option>x</option></select>"#,
-        )
-        .expect("box w");
-        assert!(via_w.contains("s-w28") || via_w.contains("w28"), "author w: {via_w}");
+        let via_w =
+            preprocess(r#"<select size="sm" style({ box: w(28) })> <option>x</option></select>"#)
+                .expect("box w");
+        assert!(
+            via_w.contains("s-w28") || via_w.contains("w28"),
+            "author w: {via_w}"
+        );
         assert!(
             !via_w.contains("s-wfull"),
             "default w(full) dropped for box w: {via_w}"
@@ -3465,13 +3553,17 @@ mod tests {
             "default w(full) dropped for minW/w: {via_min}"
         );
 
-        let via_sx = preprocess(r#"<select size="sm" style({ box: w(24) })> <option>x</option></select>"#)
-            .expect("sx w");
+        let via_sx =
+            preprocess(r#"<select size="sm" style({ box: w(24) })> <option>x</option></select>"#)
+                .expect("sx w");
         assert!(
             !via_sx.contains("s-wfull"),
             "default w(full) dropped for Style w: {via_sx}"
         );
-        assert!(via_sx.contains("s-w24") || via_sx.contains("w24"), "author sx w: {via_sx}");
+        assert!(
+            via_sx.contains("s-w24") || via_sx.contains("w24"),
+            "author sx w: {via_sx}"
+        );
     }
 
     #[test]
@@ -3580,8 +3672,7 @@ mod tests {
     fn multibyte_chars_do_not_panic_class_merge() {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
-        let src =
-            "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" style({ box: pad(4) })> é…‹›</span>";
+        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" style({ box: pad(4) })> é…‹›</span>";
         let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains(r#"class="x "#) && out.contains("s-"),
@@ -3700,8 +3791,8 @@ mod tests {
 
     #[test]
     fn box_channel_w_full_and_shrink_zero() {
-        let out = preprocess(r#"<main style({ box: w(full).shrink(0) })> x</main>"#)
-            .expect("preprocess");
+        let out =
+            preprocess(r#"<main style({ box: w(full).shrink(0) })> x</main>"#).expect("preprocess");
         assert!(out.contains("s-wfull"), "w full: {out}");
         assert!(out.contains("s-shrink0"), "shrink 0: {out}");
         assert!(out.contains(".s-wfull{width:100%}"), "w css: {out}");
@@ -3728,8 +3819,8 @@ mod tests {
     #[test]
     fn layout_element_sx_merges_into_one_class() {
         // Style lowers first (→ class), then layout folds it into the div's classes.
-        let out =
-            preprocess(r#"<column gap="2" style({ box: pad(4) })> x</column>"#).expect("preprocess");
+        let out = preprocess(r#"<column gap="2" style({ box: pad(4) })> x</column>"#)
+            .expect("preprocess");
         assert!(
             out.contains("sail-col") && out.contains("sail-g-2") && out.contains("s-"),
             "merged: {out}"
@@ -3982,14 +4073,9 @@ mod tests {
     fn surface_and_domdec_markers_ride_to_the_div() {
         // DOMDEC-1 bare markers on layout keywords must survive lowering so
         // chrome / test hooks stay addressable on the emitted div.
-        let out = preprocess(
-            r#"<row surface="edit" edit-surface tab-id="a" grow>x</row>"#,
-        )
-        .expect("preprocess");
-        assert!(
-            out.contains(r#"surface="edit""#),
-            "surface survived: {out}"
-        );
+        let out = preprocess(r#"<row surface="edit" edit-surface tab-id="a" grow>x</row>"#)
+            .expect("preprocess");
+        assert!(out.contains(r#"surface="edit""#), "surface survived: {out}");
         assert!(
             out.contains("edit-surface"),
             "hyphenated boolean marker survived: {out}"
@@ -4063,10 +4149,9 @@ mod tests {
         // Utility-string condition prefixes are residual product (hard error /
         // empty lower). Style product uses object-key when: for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out = preprocess(
-            r#"<div style({ when: { hover: { paint: shadow(none) } } })> x</div>"#,
-        )
-        .expect("preprocess");
+        let out =
+            preprocess(r#"<div style({ when: { hover: { paint: shadow(none) } } })> x</div>"#)
+                .expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(
             out.contains("box-shadow") || out.contains("shadow") || out.contains("s-"),
@@ -4156,17 +4241,24 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn tag_style_statement_lowers_to_class_legacy() {
-        let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#).expect("preprocess");
-        assert!(out.contains("s-") || out.contains("var(--primary)"), "{out}");
+        let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#)
+            .expect("preprocess");
+        assert!(
+            out.contains("s-") || out.contains("var(--primary)"),
+            "{out}"
+        );
         assert!(!out.contains("style({ paint: bg(primary) })"), "{out}");
     }
     #[test]
     fn block_style_const_ref() {
-        let out = preprocess(r#"
+        let out = preprocess(
+            r#"
 <scope>
   const base = style({ box: pad(2) })
 </scope>
-<div style(base)>x</div>"#).expect("preprocess");
+<div style(base)>x</div>"#,
+        )
+        .expect("preprocess");
         assert!(out.contains("s-"), "{out}");
     }
     #[test]
@@ -4224,20 +4316,20 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn text_channel_allowed_on_text_bearing_hosts() {
-        let out = preprocess(r#"<p style({ text: fontSize(sm) })>x</p>"#)
-            .expect("p is text-bearing");
+        let out =
+            preprocess(r#"<p style({ text: fontSize(sm) })>x</p>"#).expect("p is text-bearing");
         assert!(out.contains("s-") || out.contains("font-size"), "{out}");
 
-        let out = preprocess(r#"<button style({ text: fontSize(sm), paint: bg(primary) })>go</button>"#)
-        .expect("button is text-bearing");
+        let out =
+            preprocess(r#"<button style({ text: fontSize(sm), paint: bg(primary) })>go</button>"#)
+                .expect("button is text-bearing");
         assert!(out.contains("s-"), "{out}");
     }
 
     #[test]
     fn non_text_host_box_paint_only_is_ok() {
-        let out =
-            preprocess(r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#)
-                .expect("box+paint on div is legal");
+        let out = preprocess(r#"<div style({ box: pad(4), paint: bg(primary) })>x</div>"#)
+            .expect("box+paint on div is legal");
         assert!(out.contains("s-"), "{out}");
         assert!(!out.contains("style({"), "block Style must lift: {out}");
     }
@@ -4246,8 +4338,14 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn tag_style_object_lowers_to_class() {
         let out = preprocess(r#"<div style({ box: padX(2), paint: bg(primary) })>x</div>"#)
             .expect("preprocess");
-        assert!(out.contains("s-") || out.contains("var(--primary)"), "{out}");
-        assert!(!out.contains("style({"), "tag Style must lift off open tag: {out}");
+        assert!(
+            out.contains("s-") || out.contains("var(--primary)"),
+            "{out}"
+        );
+        assert!(
+            !out.contains("style({"),
+            "tag Style must lift off open tag: {out}"
+        );
     }
 
     #[test]
@@ -4259,11 +4357,13 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn body_style_statement_is_unknown_statement() {
-        let err = preprocess("<div>
+        let err = preprocess(
+            "<div>
   style({ box: pad(2) })
   x
-</div>")
-            .expect_err("body style is unknown statement");
+</div>",
+        )
+        .expect_err("body style is unknown statement");
         let msg = err.message.to_lowercase();
         assert!(
             msg.contains("unknown statement") || msg.contains("open tag"),
@@ -4297,9 +4397,10 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             r#"<button style({ box: pad(3).gap(2), paint: bg(primary).fg(primary-foreground) })>ok</button>"#,
         )
         .expect("tag style must compile");
-        assert!(out.contains("s-") || out.contains("var(--primary)"), "must attach: {out}");
+        assert!(
+            out.contains("s-") || out.contains("var(--primary)"),
+            "must attach: {out}"
+        );
         assert!(!out.contains("style({"), "must lower off the tag: {out}");
     }
-
-
 }

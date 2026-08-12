@@ -11,7 +11,7 @@
 use std::path::Path;
 
 use sail_compiler::ambients::emit_project_tsconfig_json;
-use sail_compiler::project_map::{at_alias_paths, classify, AtAliasMapping, FileKind};
+use sail_compiler::project_map::{AtAliasMapping, FileKind, at_alias_paths, classify};
 
 /// SPEC §3 fixed import roots (`@/<root>/…`).
 const FIXED_ALIAS_ROOTS: &[(&str, &str)] = &[
@@ -109,8 +109,8 @@ fn emit_project_tsconfig_paths_cover_fixed_homes() {
     // Prefer explicit `@/<root>` keys; accept a single `@/*` only when targets
     // for each home also appear in the emitted JSON (via SSOT agreement test).
     for (root, fs_home) in FIXED_ALIAS_ROOTS {
-        let explicit = body.contains(&format!("@/{root}"))
-            || body.contains(&format!("\"@/{root}/*\""));
+        let explicit =
+            body.contains(&format!("@/{root}")) || body.contains(&format!("\"@/{root}/*\""));
         let catch_all = body.contains("\"@/*\"");
         let home_in_body = body.contains(fs_home) || body.contains(&format!("./{fs_home}"));
         assert!(
@@ -136,7 +136,10 @@ fn emit_project_tsconfig_paths_cover_fixed_homes() {
 #[test]
 fn emit_tsconfig_paths_agree_with_at_alias_paths_ssot() {
     let map = at_alias_paths();
-    assert!(!map.is_empty(), "SSOT must not be empty before emit agreement check");
+    assert!(
+        !map.is_empty(),
+        "SSOT must not be empty before emit agreement check"
+    );
     let body = emit_project_tsconfig_json(&["src/**/*.ts", "routes/**/*.ts"]);
     for m in map {
         assert!(

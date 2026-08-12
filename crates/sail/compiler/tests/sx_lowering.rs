@@ -53,7 +53,8 @@ fn style_radius_lowers() {
 
 #[test]
 fn style_chain_multi_setters() {
-    let out = pp(r#"<div style({ box: pad(4), paint: bg(surface-1).fg(muted-foreground) })> x</div>"#);
+    let out =
+        pp(r#"<div style({ box: pad(4), paint: bg(surface-1).fg(muted-foreground) })> x</div>"#);
     assert!(out.contains("s-"), "chain must emit classes:\n{out}");
     assert!(
         out.contains("var(--space-4)") || out.contains("padding"),

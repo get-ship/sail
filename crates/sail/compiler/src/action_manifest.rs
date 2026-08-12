@@ -398,7 +398,19 @@ pub const ACTIONS: &[ActionEntry] = &[
         param: "void",
         summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
         auto_import: true,
-        writes: &["ttTop", "ttBottom", "ttLeft", "ttRight", "ttTx", "ttArrowTop", "ttArrowBottom", "ttArrowLeft", "ttArrowRight", "ttArrowMl", "ttArrowMt"],
+        writes: &[
+            "ttTop",
+            "ttBottom",
+            "ttLeft",
+            "ttRight",
+            "ttTx",
+            "ttArrowTop",
+            "ttArrowBottom",
+            "ttArrowLeft",
+            "ttArrowRight",
+            "ttArrowMl",
+            "ttArrowMt",
+        ],
     },
     ActionEntry {
         name: "toggleGroup",
@@ -588,7 +600,6 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
 // (see drift-guard note above — the tests in `mod tests` enforce
 // the same invariants at `cargo test` time)
 
-
 /// Bind names (`anchorLeft`, …) written by any of the given `use:` actions.
 pub fn writes_for_actions<'a>(
     action_names: impl IntoIterator<Item = &'a str>,
@@ -698,7 +709,14 @@ mod tests {
 
     #[test]
     fn diet_widget_privates_are_not_public() {
-        for name in ["tabs", "radioGroup", "menu", "pagination", "combobox", "icon"] {
+        for name in [
+            "tabs",
+            "radioGroup",
+            "menu",
+            "pagination",
+            "combobox",
+            "icon",
+        ] {
             assert!(
                 !is_public_action(name),
                 "{name} must not be on the public use: surface (ACTIONS-1 diet)"

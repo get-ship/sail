@@ -82,7 +82,9 @@ fn as_is_keyword_not_free_identifier() {
     let expr = Expr::new("markers() as m", Span::new(0, 14), false);
     check_expr(&expr, &mut v, &[]);
     assert!(
-        v.errors.iter().all(|e| !e.message.contains("Identifier 'as'")),
+        v.errors
+            .iter()
+            .all(|e| !e.message.contains("Identifier 'as'")),
         "keyword `as` must not be flagged unbound: {:?}",
         v.errors
     );

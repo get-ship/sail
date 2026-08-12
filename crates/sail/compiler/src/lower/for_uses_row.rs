@@ -55,8 +55,10 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
         Instr::Match(m) => {
             expr_references(&m.discriminant, var_name, idx_name)
                 || m.cases.iter().any(|c| {
-                    (match &c.test { MatchTest::Expr(e) => expr_references(e, var_name, idx_name), MatchTest::Kind(_) => false })
-                        || body_references_for_vars(&c.body, var_name, idx_name)
+                    (match &c.test {
+                        MatchTest::Expr(e) => expr_references(e, var_name, idx_name),
+                        MatchTest::Kind(_) => false,
+                    }) || body_references_for_vars(&c.body, var_name, idx_name)
                 })
                 || m.default
                     .as_ref()
@@ -64,9 +66,9 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
         }
         Instr::When(w) => {
             body_references_for_vars(&w.body, var_name, idx_name)
-                || w.else_body.as_ref().is_some_and(|e| {
-                    body_references_for_vars(e, var_name, idx_name)
-                })
+                || w.else_body
+                    .as_ref()
+                    .is_some_and(|e| body_references_for_vars(e, var_name, idx_name))
         }
     }
 }

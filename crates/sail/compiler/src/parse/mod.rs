@@ -119,5 +119,3 @@ fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError>
         span: Span::new(0, source.len()),
     })
 }
-
-

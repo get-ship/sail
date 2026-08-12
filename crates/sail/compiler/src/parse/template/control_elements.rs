@@ -146,10 +146,7 @@ fn split_as_binding(src: &str) -> Option<(&str, &str)> {
             i += 1;
             continue;
         }
-        if depth == 0
-            && src.is_char_boundary(i + 4)
-            && &src[i..i + 4] == " as "
-        {
+        if depth == 0 && src.is_char_boundary(i + 4) && &src[i..i + 4] == " as " {
             let left = src[..i].trim();
             let right = src[i + 4..].trim();
             if !left.is_empty() && !right.is_empty() {
@@ -258,11 +255,7 @@ fn attr_expr(el: &Element, name: &str) -> Option<String> {
 fn brace_primary(el: &Element) -> Option<String> {
     let raw = el.get_attribute(PRIMARY_BRACE_ATTR)?;
     let inner = strip_attr_expr(&raw).to_string();
-    if inner.is_empty() {
-        None
-    } else {
-        Some(inner)
-    }
+    if inner.is_empty() { None } else { Some(inner) }
 }
 
 fn strip_attr_expr(raw: &str) -> &str {

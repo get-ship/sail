@@ -104,7 +104,9 @@ const DIAG_SPECS: &[DiagSpec] = &[
         default_severity: DiagSeverity::Warning,
         message_template: "hand-rolled flex layout matches a language layout keyword",
         allowed_list_source: None,
-        fix_text: Some("prefer `<row>` / `<column>` / `<grid>` / `<center>` / `<stack>` over raw flex in `<style>`"),
+        fix_text: Some(
+            "prefer `<row>` / `<column>` / `<grid>` / `<center>` / `<stack>` over raw flex in `<style>`",
+        ),
         docs_anchor: Some("docs#sail-layout-primitive"),
     },
     DiagSpec {

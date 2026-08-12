@@ -5,11 +5,11 @@ use std::path::Path;
 
 use crate::parse::html::{Element, Node};
 
+use super::FormatOpts;
 use super::oxfmt::format_ts_region;
 use super::util::{
     dedent_block, indent, inline_text_piece, looks_like_style_stmt, print_attrs, write_attr,
 };
-use super::FormatOpts;
 
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
@@ -18,11 +18,7 @@ const VOID_TAGS: &[&str] = &[
 const RAW_TS_TAGS: &[&str] = &["scope", "controller"];
 const RAW_TEXT_TAGS: &[&str] = &["script", "style", "scope", "controller"];
 
-pub(super) fn print_document(
-    nodes: &[Node],
-    opts: &FormatOpts,
-    oxfmt: Option<&Path>,
-) -> String {
+pub(super) fn print_document(nodes: &[Node], opts: &FormatOpts, oxfmt: Option<&Path>) -> String {
     let mut out = String::new();
     let mut first = true;
     let mut prev_was_block = false;
@@ -100,11 +96,7 @@ fn print_element(
     let is_raw_ts = RAW_TS_TAGS.contains(&tag);
     let is_raw_text = RAW_TEXT_TAGS.contains(&tag);
 
-    let children: Vec<&Node> = el
-        .children
-        .iter()
-        .filter(|c| !is_ignorable_ws(c))
-        .collect();
+    let children: Vec<&Node> = el.children.iter().filter(|c| !is_ignorable_ws(c)).collect();
 
     indent(out, depth, opts);
     out.push('<');
@@ -255,11 +247,7 @@ fn print_element_inline(el: &Element, out: &mut String) {
     if VOID_TAGS.contains(&tag) {
         return;
     }
-    let children: Vec<&Node> = el
-        .children
-        .iter()
-        .filter(|c| !is_ignorable_ws(c))
-        .collect();
+    let children: Vec<&Node> = el.children.iter().filter(|c| !is_ignorable_ws(c)).collect();
     for child in children {
         match child {
             Node::Text(t) => out.push_str(&inline_text_piece(&t.data)),

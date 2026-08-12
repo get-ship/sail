@@ -59,10 +59,18 @@ fn compile_attr(
         return compile_motion(rest, value, value_span, loc);
     }
     if name.starts_with("class:") {
-        return Err(foreign_idiom_error("class= / class:<name>", value_span, loc));
+        return Err(foreign_idiom_error(
+            "class= / class:<name>",
+            value_span,
+            loc,
+        ));
     }
     if name.starts_with("style:") {
-        return Err(foreign_idiom_error("style= / style:<prop>", value_span, loc));
+        return Err(foreign_idiom_error(
+            "style= / style:<prop>",
+            value_span,
+            loc,
+        ));
     }
     if let Some(rest) = name.strip_prefix("use:") {
         return compile_use(rest, value, value_span, loc);

@@ -166,11 +166,7 @@ pub fn lower_attr_name_str<'a>(tag: &str, name: &'a str) -> &'a str {
 
 /// Like [`lower_attr_name_str`] but distinguishes HTML `hidden` (presence /
 /// empty / `"hidden"`) from semantic `hidden="true"` → `aria-hidden`.
-pub fn lower_attr_name_str_valued<'a>(
-    tag: &str,
-    name: &'a str,
-    value: Option<&str>,
-) -> &'a str {
+pub fn lower_attr_name_str_valued<'a>(tag: &str, name: &'a str, value: Option<&str>) -> &'a str {
     if name == "selected" && tag.eq_ignore_ascii_case("option") {
         return name;
     }
@@ -489,7 +485,10 @@ mod tests {
 
     #[test]
     fn stamp_navbar_role() {
-        let s = stamp_host_anatomy("navbar", r#"<row class="sail-navbar" data-sail-host="navbar"></row>"#);
+        let s = stamp_host_anatomy(
+            "navbar",
+            r#"<row class="sail-navbar" data-sail-host="navbar"></row>"#,
+        );
         assert!(s.contains(r#"role="navigation""#), "{s}");
     }
 

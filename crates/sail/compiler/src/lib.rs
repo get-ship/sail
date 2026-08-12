@@ -33,11 +33,11 @@ pub mod action_manifest;
 pub mod ambients;
 pub mod analysis;
 pub mod animation;
+pub mod authoring_bans;
 pub mod bindings;
 pub mod block_manifest;
 pub mod breakpoints;
 pub mod check;
-pub mod authoring_bans;
 pub mod diag_ratchet;
 pub mod diagnostics;
 pub mod directive_manifest;
@@ -71,21 +71,23 @@ pub use analysis::{
     Analysis, Hover, QueryKeyInfo, SsrTier, Symbol, analyze, analyze_with_tier, classify_ssr_tier,
     completions_at, completions_at_offset, extract_query_keys, hover_at,
 };
+pub use authoring_bans::{AUTHORING_BANS, AuthoringBan};
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
 pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, DiagnosticTier, Span};
-pub use fmt::{FormatError, FormatOpts, FormatResult, format_source, format_source_with, is_formatted};
+pub use fmt::{
+    FormatError, FormatOpts, FormatResult, format_source, format_source_with, is_formatted,
+};
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
     L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
 };
-pub use authoring_bans::{AUTHORING_BANS, AuthoringBan};
 pub use region_capability::{
     CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,
 };
 pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
-    is_free_aria_attr, lower_attr_name_str, lookup as lookup_semantic_prop,
+    is_free_aria_attr, lookup as lookup_semantic_prop, lower_attr_name_str,
 };
 pub use used_icons::{collect_used_icons, collect_used_icons_from_source};
 /// Identity stamp embedded in every emitted artifact (JS leading
@@ -305,6 +307,7 @@ pub fn check_all_with_tier(
         Ok(program) => check::collect(
             &program,
             &stripped,
+            source, // author source — type gate maps controller spans here
             source_path,
             controller.as_ref(),
             overrides,
@@ -322,6 +325,12 @@ pub fn check_all_with_tier(
                     source_path,
                     overrides,
                 ));
+            }
+            // Type gate still runs OnSave when parse failed after a controller
+            // was present — DOM law does not depend on a successful template
+            // parse.
+            if matches!(tier, DiagnosticTier::OnSave) {
+                diags.extend(check::tscheck::collect_sail_type_gate(source, source_path));
             }
             diags
         }
@@ -481,6 +490,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     check::gate(
         &program,
         effective_source,
+        source, // author source — type gate (JOB-E1) maps controller spans here
         opts.source_path.as_deref(),
         controller.as_ref(),
         &effective_overrides,

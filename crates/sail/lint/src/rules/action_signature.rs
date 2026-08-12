@@ -120,22 +120,14 @@ impl<'a> Visit<'a> for Visitor<'_> {
     fn visit_export_default_declaration(&mut self, decl: &ExportDefaultDeclaration<'a>) {
         match &decl.declaration {
             ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
-                let name = f
-                    .id
-                    .as_ref()
-                    .map(|i| i.name.as_str())
-                    .unwrap_or("default");
+                let name = f.id.as_ref().map(|i| i.name.as_str()).unwrap_or("default");
                 self.check_fn_params(f.span, name, &f.params);
             }
             ExportDefaultDeclarationKind::ArrowFunctionExpression(a) => {
                 self.check_fn_params(a.span, "default", &a.params);
             }
             ExportDefaultDeclarationKind::FunctionExpression(f) => {
-                let name = f
-                    .id
-                    .as_ref()
-                    .map(|i| i.name.as_str())
-                    .unwrap_or("default");
+                let name = f.id.as_ref().map(|i| i.name.as_str()).unwrap_or("default");
                 self.check_fn_params(f.span, name, &f.params);
             }
             other => {

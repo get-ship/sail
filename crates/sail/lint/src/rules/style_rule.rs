@@ -426,11 +426,7 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
             }
         }
         // Open tag → attrs / tag-position style(…); body Style after `>` is refused.
-        if bytes[i] == b'<'
-            && i + 1 < bytes.len()
-            && bytes[i + 1] != b'/'
-            && bytes[i + 1] != b'!'
-        {
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1] != b'/' && bytes[i + 1] != b'!' {
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -523,10 +519,7 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                         let vstart = k + 1;
                         if let Some(q) = source[vstart..].find('"') {
                             if name == "style" || name == "sx" {
-                                out.push(SxHit::Static(
-                                    &source[vstart..vstart + q],
-                                    vstart,
-                                ));
+                                out.push(SxHit::Static(&source[vstart..vstart + q], vstart));
                             }
                             k = vstart + q + 1;
                             continue;
@@ -535,10 +528,7 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                         let vstart = k + 1;
                         if let Some(q) = source[vstart..].find('\'') {
                             if name == "style" || name == "sx" {
-                                out.push(SxHit::Static(
-                                    &source[vstart..vstart + q],
-                                    vstart,
-                                ));
+                                out.push(SxHit::Static(&source[vstart..vstart + q], vstart));
                             }
                             k = vstart + q + 1;
                             continue;
@@ -686,9 +676,7 @@ fn consume_style_expr_len(s: &str) -> Option<usize> {
                 // Chain tail `.when(` / `.press(` — continue.
                 i += 1;
                 while i < bytes.len()
-                    && (bytes[i].is_ascii_alphanumeric()
-                        || bytes[i] == b'_'
-                        || bytes[i] == b'-')
+                    && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'-')
                 {
                     i += 1;
                 }
@@ -919,10 +907,8 @@ mod tests {
 
     #[test]
     fn bad_token_fail_closed() {
-        let ms = run(
-            r#"<div style({ paint: bg(notARealTokenZzz999) })>  x
-</div>"#,
-        );
+        let ms = run(r#"<div style({ paint: bg(notARealTokenZzz999) })>  x
+</div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
         assert!(
             ms.iter()
@@ -933,10 +919,8 @@ mod tests {
 
     #[test]
     fn unknown_setter_fail_closed() {
-        let ms = run(
-            r#"<div style({ paint: notASetter(primary) })>  x
-</div>"#,
-        );
+        let ms = run(r#"<div style({ paint: notASetter(primary) })>  x
+</div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
     }
 

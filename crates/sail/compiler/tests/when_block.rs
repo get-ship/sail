@@ -45,13 +45,8 @@ fn parses_when_else_and_nests_in_if() {
 
 #[test]
 fn emits_bind_when_with_media_query() {
-    let js = compile_js(
-        r#"<div><when {tablet}><p>wide</p>{else => <p>narrow</p>}</when></div>"#,
-    );
-    assert!(
-        js.contains("bindWhen"),
-        "emit must call bindWhen:\n{js}"
-    );
+    let js = compile_js(r#"<div><when {tablet}><p>wide</p>{else => <p>narrow</p>}</when></div>"#);
+    assert!(js.contains("bindWhen"), "emit must call bindWhen:\n{js}");
     assert!(
         js.contains("(min-width: 768px)") || js.contains("min-width: 768px"),
         "tablet media query must appear:\n{js}"
@@ -64,11 +59,8 @@ fn emits_bind_when_with_media_query() {
 
 #[test]
 fn rejects_raw_px() {
-    let err = compile(
-        r#"<div><when {768px}><p>x</p></when></div>"#,
-        opts(),
-    )
-    .expect_err("raw px must fail");
+    let err = compile(r#"<div><when {768px}><p>x</p></when></div>"#, opts())
+        .expect_err("raw px must fail");
     let msg = format!("{err:?}");
     assert!(
         msg.contains("rejects") || msg.contains("breakpoint") || msg.contains("768"),
@@ -78,11 +70,8 @@ fn rejects_raw_px() {
 
 #[test]
 fn rejects_unknown_token_and_names_scale() {
-    let err = compile(
-        r#"<div><when {bp-md}><p>x</p></when></div>"#,
-        opts(),
-    )
-    .expect_err("unknown token must fail");
+    let err = compile(r#"<div><when {bp-md}><p>x</p></when></div>"#, opts())
+        .expect_err("unknown token must fail");
     let msg = format!("{err:?}");
     assert!(
         msg.contains("mobile") && msg.contains("tablet") && msg.contains("desktop"),
@@ -114,4 +103,3 @@ fn when_without_else_emits_then_only() {
         "no else branch when omitted:\n{js}"
     );
 }
-

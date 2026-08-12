@@ -15,9 +15,7 @@ fn main() {
 fn bake_tokens_model() {
     let manifest = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     // crates/sail/compiler → repo root → packages/sail/tokens/model
-    let model_src = manifest
-        .join("../../..")
-        .join("packages/sail/tokens/model");
+    let model_src = manifest.join("../../..").join("packages/sail/tokens/model");
     let model_src = model_src
         .canonicalize()
         .unwrap_or_else(|_| model_src.clone());
@@ -47,9 +45,7 @@ fn bake_tokens_model() {
     for (rel, abs) in &files {
         // Escape for include_str! path: use absolute path string with forward slashes.
         let abs_s = abs.display().to_string().replace('\\', "/");
-        body.push_str(&format!(
-            "    ({rel:?}, include_str!(r\"{abs_s}\")),\n"
-        ));
+        body.push_str(&format!("    ({rel:?}, include_str!(r\"{abs_s}\")),\n"));
     }
     body.push_str("];\n");
 
@@ -88,9 +84,7 @@ fn collect_model_files(root: &Path, dir: &Path, out: &mut Vec<(String, PathBuf)>
             continue;
         };
         // Bake DTCG JSON + companion chrome CSS consumed by generate.
-        let ok = name.ends_with(".json")
-            || name == "chrome.css"
-            || name == "themes-chrome.css";
+        let ok = name.ends_with(".json") || name == "chrome.css" || name == "themes-chrome.css";
         if !ok {
             continue;
         }

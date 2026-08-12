@@ -21,8 +21,8 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use sail_compiler::ambients::{lib_for_type_env, TypeEnv};
-use sail_lint::{all_rule_ids, lint_app_source_source, RETIRED_RULE_IDS};
+use sail_compiler::ambients::{TypeEnv, lib_for_type_env};
+use sail_lint::{RETIRED_RULE_IDS, all_rule_ids, lint_app_source_source};
 
 /// Dual-enforcement ambient-DOM family deleted by S2.3 (SCOUT-S2 §4a).
 ///
@@ -115,7 +115,9 @@ fn dual_ambient_floors_absent_or_only_retired_in_all_rule_ids() {
     let mut bad = Vec::new();
     for id in DELETED_DUAL_FLOOR_IDS {
         if live.contains(id) {
-            bad.push(format!("{id}: still live (must delete check body + table entry)"));
+            bad.push(format!(
+                "{id}: still live (must delete check body + table entry)"
+            ));
             continue;
         }
         if all.contains(id) && !retired.contains(id) {

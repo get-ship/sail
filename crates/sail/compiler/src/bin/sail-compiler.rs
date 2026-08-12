@@ -300,7 +300,8 @@ fn main() -> Result<()> {
     }
 }
 
-/// Ambient pack → `<project>/node_modules/.sail/types.d.ts` (+ optional tsconfig).
+/// Ambient pack → `<project>/node_modules/.sail/types.d.ts` (+ per-kind
+/// tsconfigs). E1c: generated configs always regenerate — hand edits wiped.
 fn gen_types(
     project: Option<PathBuf>,
     tsconfig_out: Option<PathBuf>,
@@ -320,17 +321,25 @@ fn gen_types(
             }
             let text = sail_compiler::ambients::emit_types_dts();
             fs::write(&p, text).with_context(|| format!("write {}", p.display()))?;
+            // Still regenerate per-kind configs next to the project.
+            let _ = sail_compiler::ambients::write_project_type_configs(&project_dir)?;
             p
         }
-        None => sail_compiler::ambients::write_project_types(&project_dir)?,
+        None => {
+            let (types, pure, action) =
+                sail_compiler::ambients::write_project_type_configs(&project_dir)?;
+            println!("tsconfig.pure: {}", pure.display());
+            println!("tsconfig.action: {}", action.display());
+            types
+        }
     };
     println!("types: {}", path.display());
 
     if let Some(ts_out) = tsconfig_out {
-        let body = sail_compiler::ambients::emit_project_tsconfig_json(&[
-            "src/**/*.ts",
-            "routes/**/*.ts",
-        ]);
+        // Product default is Pure (E1c) — never Framework.
+        let body = sail_compiler::ambients::emit_project_tsconfig_json(
+            sail_compiler::ambients::PROJECT_PURE_INCLUDE,
+        );
         if ts_out.as_os_str() == "-" {
             print!("{body}");
         } else {
@@ -340,8 +349,7 @@ fn gen_types(
                         .with_context(|| format!("mkdir {}", parent.display()))?;
                 }
             }
-            fs::write(&ts_out, body)
-                .with_context(|| format!("write {}", ts_out.display()))?;
+            fs::write(&ts_out, body).with_context(|| format!("write {}", ts_out.display()))?;
             println!("tsconfig: {}", ts_out.display());
         }
     }
@@ -354,10 +362,8 @@ fn gen_types(
 /// on-disk `packages/sail/tokens/model`, else the baked catalog.
 fn gen_tokens(model: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let root = workspace_root().ok();
-    let model_dir = sail_compiler::tokens_generate::resolve_model_dir(
-        root.as_deref(),
-        model.as_deref(),
-    )?;
+    let model_dir =
+        sail_compiler::tokens_generate::resolve_model_dir(root.as_deref(), model.as_deref())?;
     let out_dir = match out {
         Some(p) => p,
         None => root
@@ -458,10 +464,9 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         // SPEC-D1: dotted surface members (`fg(spinner.foreground)`) are legal
         // only under that L1 host unit. Prop-registry re-parses stdlib sources
         // outside `compile_element`, so install the same host surface context.
-        let program = sail_lint::style::with_host_surface(Some(tag), || {
-            sail_compiler::parse::parse(source)
-        })
-        .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
+        let program =
+            sail_lint::style::with_host_surface(Some(tag), || sail_compiler::parse::parse(source))
+                .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
         let mut props = std::collections::BTreeMap::new();
         let mut ts_props: Vec<serde_json::Value> = Vec::new();
         for p in &program.props {
@@ -1064,7 +1069,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     );
 
     // Resolved policy section — FROM the registry (SPEC-POLICY-1).
-    md.push_str(&sail_compiler::policy::format_skill_section(&registry_resolved));
+    md.push_str(&sail_compiler::policy::format_skill_section(
+        &registry_resolved,
+    ));
 
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(
@@ -1684,6 +1691,21 @@ fn build(
             .with_context(|| format!("create out dir {}", out_dir.display()))?;
     }
 
+    // E1c: regenerate ambient pack + per-kind tsconfigs for the nearest
+    // project root before compiling. Hand-edited lib entries are overwritten.
+    if let Some(project) = nearest_project_root(&targets[0]) {
+        let _ = sail_compiler::ambients::write_project_type_configs(&project);
+        // E1b: project-scoped type gate over authored .ts — only when the build
+        // input is a directory (whole project). Single-file builds still gate
+        // .sail controller regions inside compile() (E1a); compositions/actions
+        // ride the directory build / `sail types` + tsconfig.pure/action path.
+        if input.is_dir() {
+            if let Err(e) = project_ts_type_gate(&project) {
+                return Err(e);
+            }
+        }
+    }
+
     // Component mode: tag name comes from --component-name when supplied,
     // otherwise defaults to the filename stem at compile-one time. Shadow
     // is always on for components — no opt-out flag.
@@ -1799,6 +1821,122 @@ fn collect_targets(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
             .is_some_and(is_sail_source)
         {
             out.push(p);
+        }
+    }
+    Ok(())
+}
+
+/// Walk up from a source path looking for a sail project root (`package.json`
+/// or `sail.config.json`). Used to place generated per-kind tsconfigs and run
+/// the project-scoped type gate (E1b).
+fn nearest_project_root(from: &Path) -> Option<PathBuf> {
+    let mut dir = if from.is_file() {
+        from.parent().map(|p| p.to_path_buf())
+    } else {
+        Some(from.to_path_buf())
+    };
+    while let Some(d) = dir {
+        if d.join("package.json").is_file() || d.join("sail.config.json").is_file() {
+            return Some(d);
+        }
+        // Stop at workspace root markers so monorepo apps keep their own root.
+        if d.join("Cargo.toml").is_file() && d.join("crates").is_dir() {
+            return None;
+        }
+        dir = d.parent().map(|p| p.to_path_buf());
+    }
+    None
+}
+
+/// Collect authored product `.ts` files under `project` and run the E1b
+/// project type gate (one tsgo invocation per TypeEnv that has files).
+fn project_ts_type_gate(project: &Path) -> Result<()> {
+    let mut files: Vec<(PathBuf, String)> = Vec::new();
+    collect_ts_sources(project, project, &mut files)?;
+    if files.is_empty() {
+        return Ok(());
+    }
+    let diags = sail_compiler::check::tscheck::collect_project_type_gate(project, &files);
+    let fatals: Vec<_> = diags
+        .into_iter()
+        .filter(|d| d.severity == sail_compiler::DiagSeverity::Error)
+        .collect();
+    if fatals.is_empty() {
+        return Ok(());
+    }
+    for d in &fatals {
+        let rule = d.rule.as_deref().unwrap_or("sail-type-gate");
+        // Project batch encodes the real file as a trailing ` [path]` suffix
+        // (see `typecheck_project_env`). Prefer that for `path:line:col` tooling.
+        let (path_disp, message) = match split_bracketed_path(&d.message) {
+            Some((p, msg)) => (p, msg),
+            None => (project.display().to_string(), d.message.as_str()),
+        };
+        eprintln!(
+            "{}:{}:{}: error[{}]: {}",
+            path_disp, d.line, d.col, rule, message
+        );
+    }
+    Err(anyhow!(
+        "type gate failed ({} error{})",
+        fatals.len(),
+        if fatals.len() == 1 { "" } else { "s" }
+    ))
+}
+
+/// Split a trailing ` [absolute/or/rel/path]` suffix from a type-gate message.
+/// Returns `(path, message_without_suffix)`.
+fn split_bracketed_path(message: &str) -> Option<(String, &str)> {
+    let start = message.rfind(" [")?;
+    let inner = message[start + 2..].strip_suffix(']')?;
+    if inner.is_empty() {
+        return None;
+    }
+    // Heuristic: real paths look like files (contain `/` or end with .ts/.sail).
+    let looks_like_path = inner.contains('/')
+        || inner.contains('\\')
+        || inner.ends_with(".ts")
+        || inner.ends_with(".tsx")
+        || inner.ends_with(".sail");
+    if !looks_like_path {
+        return None;
+    }
+    Some((inner.to_string(), message[..start].trim_end()))
+}
+
+fn collect_ts_sources(project: &Path, dir: &Path, out: &mut Vec<(PathBuf, String)>) -> Result<()> {
+    let skip = ["node_modules", "dist", ".deck", "target", ".git"];
+    let entries = match fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return Ok(()),
+    };
+    for entry in entries {
+        let entry = entry?;
+        let p = entry.path();
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if p.is_dir() {
+            if skip.iter().any(|s| *s == name) {
+                continue;
+            }
+            collect_ts_sources(project, &p, out)?;
+        } else if name.ends_with(".ts") && !name.ends_with(".d.ts") {
+            // Only product homes — compositions / stores / actions / routes.
+            // Framework packages under packages/sail are TypeEnv::Framework and
+            // would be skipped by the gate, but we still avoid scanning them.
+            let rel = p.strip_prefix(project).unwrap_or(&p);
+            let rel_s = rel.to_string_lossy();
+            let product = rel_s.contains("src/actions/")
+                || rel_s.contains("src/compositions/")
+                || rel_s.contains("src/stores/")
+                || rel_s.contains("routes/")
+                || (rel_s.starts_with("src/") && rel_s.ends_with(".ts"));
+            if !product {
+                continue;
+            }
+            if let Ok(src) = fs::read_to_string(&p) {
+                out.push((p, src));
+            }
         }
     }
     Ok(())
@@ -1980,10 +2118,7 @@ mod skill_demo_tests {
             !md.contains("style={style."),
             "must not teach attr host style={{style.…}}: {md}"
         );
-        assert!(
-            !md.contains("sx="),
-            "must not teach retired sx=: {md}"
-        );
+        assert!(!md.contains("sx="), "must not teach retired sx=: {md}");
         assert!(
             !md.contains("style={{style."),
             "doubled braces are invalid Style / format-string leak: {md}"
@@ -2013,10 +2148,7 @@ mod skill_demo_tests {
             !md.contains("style={style."),
             "must not teach attr host style={{style.…}}: {md}"
         );
-        assert!(
-            !md.contains("sx="),
-            "must not teach retired sx=: {md}"
-        );
+        assert!(!md.contains("sx="), "must not teach retired sx=: {md}");
         assert!(
             !md.contains("style={{style."),
             "doubled braces are invalid Style / format-string leak: {md}"
@@ -2032,8 +2164,10 @@ mod skill_demo_tests {
         assert!(
             !md.contains("<div ")
                 && !md.contains("<span ")
-                && !md.lines().any(|l| l.trim_start().starts_with("<div>")
-                    || l.trim_start().starts_with("<span>")),
+                && !md
+                    .lines()
+                    .any(|l| l.trim_start().starts_with("<div>")
+                        || l.trim_start().starts_with("<span>")),
             "no-raw demos must not teach bare div/span tags: {md}"
         );
         assert!(

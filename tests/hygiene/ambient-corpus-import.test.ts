@@ -1,17 +1,22 @@
 /**
- * SPEC-AMBIENT-SURFACE-1 §2–3 / SPIKE S5.2 — corpus import law + tutorial package die.
+ * SPEC-AMBIENT-SURFACE-1 §2–3 / SPIKE S5.2 + S5.3/E3 — corpus import law +
+ * tutorial package die + deep packages/ facade law.
  *
  * Law:
  * 1. `@ship/sail-tutorial` package is gone (content folded into sail-site).
  * 2. App product sources have zero **value** / side-effect imports from `@ship/*`.
  *    Type-only imports (`import type`, `import { type X }`) remain free.
  * 3. Tutorial content still lives under sail-site (lessons or generated data).
+ * 4. App product sources (outside `src/vendor/`) have zero deep `packages/`
+ *    path imports — third-party / monorepo surface is wrapped in app-local
+ *    vendor facades only (S5.2 REVISE + S5.3/E3).
  *
  * Zero allowlist for product apps. Tests/e2e/qa/scripts are out of scope here
  * (same path policy as platform-neutrality-corpus).
  *
  * Wire: `bun test tests/hygiene/ambient-corpus-import.test.ts`
- * Implementer must not modify, skip, or weaken these tests.
+ * Implementer must not skip or weaken the S5.2 gates. E3 may add the deep-import
+ * case only.
  */
 import { describe, expect, test } from 'bun:test'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -175,5 +180,61 @@ describe('S5.2 app corpus zero @ship value imports', () => {
       }
     }
     expect(offenders).toEqual([])
+  })
+})
+
+/**
+ * Deep monorepo path imports into packages/ (value, type, or side-effect).
+ * Mirrors sail-framework-import-teaching facade case (string-level corpus gate).
+ * Scans joined source so multiline `import { … }\nfrom '…packages/…'` cannot
+ * bypass the ratchet by putting the specifier on a non-import-leading line.
+ * Vendor facades under apps/.../src/vendor/ are the legal packaging seam.
+ */
+function deepPackagesImportLines(src: string): string[] {
+  const body = stripComments(src)
+  const hits: string[] = []
+  // Multiline-safe: match import/export … from '…packages/…' across newlines.
+  const re =
+    /(?:import\s+(?:type\s+)?[\s\S]*?\sfrom\s+|export\s+(?:type\s+)?[\s\S]*?\sfrom\s+|import\s+|export\s+\*\s+from\s+)['"]([^'"]*packages\/[^'"]+)['"]/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(body)) !== null) {
+    hits.push(m[0].replace(/\s+/g, ' ').slice(0, 160))
+  }
+  return hits
+}
+
+// Legal packaging seam only: apps/*/src/vendor/** (aligned with lint rule).
+function isVendorFacadePath(rel: string): boolean {
+  const p = rel.replace(/\\/g, '/')
+  return p.includes('/src/vendor/')
+}
+
+describe('S5.3/E3 app corpus zero deep packages/ imports', () => {
+  test('apps product sources (outside src/vendor) have no deep packages/ path imports', () => {
+    const appsRoot = join(REPO, 'apps')
+    const offenders: string[] = []
+    for (const abs of walkFiles(appsRoot)) {
+      const rel = relative(REPO, abs).replace(/\\/g, '/')
+      if (isTestOrToolPath(rel)) continue
+      if (isVendorFacadePath(rel)) continue
+      let src: string
+      try {
+        src = readFileSync(abs, 'utf8')
+      } catch {
+        continue
+      }
+      const hits = deepPackagesImportLines(src)
+      for (const h of hits) {
+        offenders.push(`${rel}: ${h}`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  test('vendor facades exist as the legal packaging seam', () => {
+    // At least one app carries src/vendor (S5.2 REVISE shape).
+    const siteVendor = join(REPO, 'apps/sail-site/src/vendor')
+    const studioVendor = join(REPO, 'apps/studio/src/vendor')
+    expect(existsSync(siteVendor) || existsSync(studioVendor)).toBe(true)
   })
 })

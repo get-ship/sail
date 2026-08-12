@@ -18,9 +18,7 @@ fn component_opts(path: &str, name: &str) -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path.into()),
-        component_meta: Some(ComponentMeta {
-            name: name.into(),
-        }),
+        component_meta: Some(ComponentMeta { name: name.into() }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -53,7 +51,8 @@ export default controller(() => {
 
 #[test]
 fn for_as_binder_compiles_clean() {
-    let out = compile(SRC, component_opts("for-as-probe.sail", "for-as-probe")).expect("compile for-as");
+    let out =
+        compile(SRC, component_opts("for-as-probe.sail", "for-as-probe")).expect("compile for-as");
     assert!(
         out.js.contains("bindFor"),
         "expected bindFor emit:\n{}",

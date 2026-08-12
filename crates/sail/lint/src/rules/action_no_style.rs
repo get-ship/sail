@@ -160,9 +160,7 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
         if name == "attributeStyleMap" || name == "cssText" {
             self.report(
                 m.span,
-                format!(
-                    "author actions do not touch `.{name}` — CSSOM twin of the style hatch"
-                ),
+                format!("author actions do not touch `.{name}` — CSSOM twin of the style hatch"),
             );
         }
 
@@ -171,10 +169,7 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
 
     fn visit_assignment_expression(&mut self, expr: &oxc_ast::ast::AssignmentExpression<'a>) {
         if let Some(target) = assignment_member_name(&expr.left) {
-            if matches!(
-                target,
-                "className" | "cssText" | "scrollTop" | "scrollLeft"
-            ) {
+            if matches!(target, "className" | "cssText" | "scrollTop" | "scrollLeft") {
                 self.report(
                     expr.span,
                     format!(

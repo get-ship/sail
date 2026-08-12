@@ -557,7 +557,6 @@ fn arg_to_token(v: &serde_json::Value) -> Option<String> {
     }
 }
 
-
 fn format_sx_args(args: &[serde_json::Value]) -> String {
     args.iter()
         .map(|a| match a {
@@ -693,7 +692,6 @@ fn channel_value_span(inner: &str, after_key: usize) -> (usize, usize) {
     (start, i)
 }
 
-
 /// Locate tag-position `style(…)` call inside an open tag string.
 fn try_tag_style_in_open(open: &str) -> Option<(usize, usize, String)> {
     let bytes = open.as_bytes();
@@ -725,9 +723,8 @@ fn try_tag_style_in_open(open: &str) -> Option<(usize, usize, String)> {
                             k += 1;
                         }
                         if k < bytes.len() && bytes[k] == b'(' {
-                            return try_block_style_in_body(&open[j..]).map(|(lo, hi, e)| {
-                                (j + lo, j + hi, e)
-                            });
+                            return try_block_style_in_body(&open[j..])
+                                .map(|(lo, hi, e)| (j + lo, j + hi, e));
                         }
                     }
                 }

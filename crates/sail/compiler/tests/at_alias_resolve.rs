@@ -17,7 +17,7 @@
 use std::path::{Path, PathBuf};
 
 use sail_compiler::project_map::{
-    at_alias_paths, classify, resolve_at_alias, AtAliasMapping, FileKind,
+    AtAliasMapping, FileKind, at_alias_paths, classify, resolve_at_alias,
 };
 
 fn fixture_app_root() -> PathBuf {
@@ -35,7 +35,9 @@ fn norm(p: &Path) -> String {
 fn ends_with_home(project_root: &Path, resolved: &Path, expected_rel: &str) -> bool {
     let root = norm(project_root).trim_end_matches('/').to_string();
     let got = norm(resolved);
-    let rel = expected_rel.trim_start_matches("./").trim_start_matches('/');
+    let rel = expected_rel
+        .trim_start_matches("./")
+        .trim_start_matches('/');
     if !got.starts_with(&root) {
         return false;
     }

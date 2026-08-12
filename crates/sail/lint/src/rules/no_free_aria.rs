@@ -86,7 +86,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         if i + 5 <= bytes.len()
             && bytes[i].is_ascii_whitespace()
             && &bytes[i + 1..i + 5] == b"role"
-            && bytes.get(i + 5).is_some_and(|&b| b == b'=' || b.is_ascii_whitespace())
+            && bytes
+                .get(i + 5)
+                .is_some_and(|&b| b == b'=' || b.is_ascii_whitespace())
         {
             if let Some(f) = finding_warn(
                 path,
@@ -148,16 +150,20 @@ mod tests {
 
     #[test]
     fn skips_stdlib_and_packages() {
-        assert!(check(
-            Path::new("crates/sail/compiler/stdlib/alert.sail"),
-            r#"<row role="status" aria-live="polite">x</row>"#,
-        )
-        .is_empty());
-        assert!(check(
-            Path::new("packages/components/sail/x/src/y.sail"),
-            r#"<div role="listbox" aria-label="x">x</div>"#,
-        )
-        .is_empty());
+        assert!(
+            check(
+                Path::new("crates/sail/compiler/stdlib/alert.sail"),
+                r#"<row role="status" aria-live="polite">x</row>"#,
+            )
+            .is_empty()
+        );
+        assert!(
+            check(
+                Path::new("packages/components/sail/x/src/y.sail"),
+                r#"<div role="listbox" aria-label="x">x</div>"#,
+            )
+            .is_empty()
+        );
     }
 
     #[test]

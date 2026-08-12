@@ -233,9 +233,7 @@ fn parse_scope_import(
     if bytes[i] != b'{' && bytes[i] != b'*' {
         let (name, after_name) = read_word(s, i);
         if name.is_empty() {
-            return Err(
-                CompileError::new("malformed `import` in `<scope>`").with_span(span)
-            );
+            return Err(CompileError::new("malformed `import` in `<scope>`").with_span(span));
         }
         i = skip_trivia(s, after_name, None);
         // `import type Foo from '…'` is type-only default — allow.
@@ -295,11 +293,7 @@ fn parse_scope_import(
         .with_span(span));
     }
     let names: Vec<String> = specs.into_iter().map(|sp| sp.local).collect();
-    Ok((
-        stmt,
-        end,
-        ScopeImportKind::StyleValue { names, module },
-    ))
+    Ok((stmt, end, ScopeImportKind::StyleValue { names, module }))
 }
 
 struct ImportSpec {
@@ -330,10 +324,10 @@ fn parse_import_specifiers(inner: &str, span: Span) -> Result<Vec<ImportSpec>, C
             rest.trim()
         };
         if local.is_empty() || !is_import_ident(local) {
-            return Err(CompileError::new(format!(
-                "bad import specifier `{p}` in `<scope>`"
-            ))
-            .with_span(span));
+            return Err(
+                CompileError::new(format!("bad import specifier `{p}` in `<scope>`"))
+                    .with_span(span),
+            );
         }
         out.push(ImportSpec {
             local: local.to_string(),
@@ -341,9 +335,7 @@ fn parse_import_specifiers(inner: &str, span: Span) -> Result<Vec<ImportSpec>, C
         });
     }
     if out.is_empty() {
-        return Err(
-            CompileError::new("empty `import { }` in `<scope>`").with_span(span)
-        );
+        return Err(CompileError::new("empty `import { }` in `<scope>`").with_span(span));
     }
     Ok(out)
 }
@@ -362,17 +354,13 @@ fn consume_import_tail(s: &str, mut i: usize, span: Span) -> Result<usize, Compi
     i = skip_trivia(s, i, None);
     let (from_word, after_from) = read_word(s, i);
     if from_word != "from" {
-        return Err(CompileError::new(
-            "`import` in `<scope>` needs `from '…'`.",
-        )
-        .with_span(span));
+        return Err(CompileError::new("`import` in `<scope>` needs `from '…'`.").with_span(span));
     }
     i = skip_trivia(s, after_from, None);
     if i >= bytes.len() || (bytes[i] != b'\'' && bytes[i] != b'"') {
-        return Err(CompileError::new(
-            "`import … from` needs a string module specifier.",
-        )
-        .with_span(span));
+        return Err(
+            CompileError::new("`import … from` needs a string module specifier.").with_span(span),
+        );
     }
     let q = bytes[i];
     i += 1;
@@ -489,10 +477,7 @@ fn merge_style_value_imports(
     Ok(())
 }
 
-fn resolve_peer_style_env(
-    module: &str,
-    base_dir: Option<&std::path::Path>,
-) -> Option<StyleEnv> {
+fn resolve_peer_style_env(module: &str, base_dir: Option<&std::path::Path>) -> Option<StyleEnv> {
     let mut candidates = Vec::new();
     let m = module.trim();
     if m.is_empty() {
@@ -640,12 +625,7 @@ fn parse_style_const(
     after_const: usize,
     span: Span,
 ) -> Result<(String, Style, usize), CompileError> {
-    parse_named_style_binding(
-        s,
-        after_const,
-        span,
-        StyleBindingKw::Const,
-    )
+    parse_named_style_binding(s, after_const, span, StyleBindingKw::Const)
 }
 
 /// `style name = <Style rhs>` — first-class Style declaration.
@@ -689,9 +669,7 @@ fn parse_named_style_binding(
                      `style quiet = host, { … }`)."
                         .to_string()
                 } else {
-                    format!(
-                        "`style` in `<scope>` needs a name — write `{form_hint}`."
-                    )
+                    format!("`style` in `<scope>` needs a name — write `{form_hint}`.")
                 }
             }
         };
@@ -763,10 +741,7 @@ fn parse_named_style_binding(
 
 fn looks_like_style_const_rhs(rhs: &str) -> bool {
     let t = rhs.trim();
-    if t.starts_with('{')
-        || t.starts_with("style(")
-        || t.starts_with("style.")
-    {
+    if t.starts_with('{') || t.starts_with("style(") || t.starts_with("style.") {
         // Live Style RHS: object form, style({…}) / style(ref, {…}), compose head.
         // Free match(/when(/compound(/list forms are deleted (STYLE-BINDING-1).
         return true;
@@ -1794,7 +1769,10 @@ mod tests {
     #[test]
     fn style_value_import_is_accepted() {
         let b = block("import { filled } from './styles.sail'\nprops: { label = '' }");
-        assert!(b.style_env.contains_key("filled"), "must register Style name");
+        assert!(
+            b.style_env.contains_key("filled"),
+            "must register Style name"
+        );
         assert!(
             b.types.contains("import { filled } from './styles.sail'"),
             "types={}",
@@ -1850,9 +1828,8 @@ mod tests {
 
     #[test]
     fn style_decl_compose_merges() {
-        let b = block(
-            "style a = { box: pad(1) }\nstyle b = a, { box: pad(2) }\nprops: { label = '' }",
-        );
+        let b =
+            block("style a = { box: pad(1) }\nstyle b = a, { box: pad(2) }\nprops: { label = '' }");
         assert!(b.style_env.contains_key("a"));
         assert!(b.style_env.contains_key("b"));
         // Compose is ordered List (same as style(a, {…})).
@@ -1958,8 +1935,16 @@ style next = {
 props: { label = '' }
 "#,
         );
-        assert!(b.style_env.contains_key("host"), "host: {:?}", b.style_env.keys());
-        assert!(b.style_env.contains_key("next"), "next: {:?}", b.style_env.keys());
+        assert!(
+            b.style_env.contains_key("host"),
+            "host: {:?}",
+            b.style_env.keys()
+        );
+        assert!(
+            b.style_env.contains_key("next"),
+            "next: {:?}",
+            b.style_env.keys()
+        );
         assert_eq!(b.style_env.len(), 2);
     }
 
@@ -2096,13 +2081,7 @@ style b = { box: pad(2) }
 </scope>
 <div style(host)></div>
 "#;
-        let diags = crate::check_all_with_tier(
-            src,
-            None,
-            &[],
-            None,
-            crate::DiagnosticTier::OnType,
-        );
+        let diags = crate::check_all_with_tier(src, None, &[], None, crate::DiagnosticTier::OnType);
         let scope_noise: Vec<_> = diags
             .iter()
             .filter(|d| d.message.contains("is not a `<scope>` member"))

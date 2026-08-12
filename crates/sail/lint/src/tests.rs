@@ -381,7 +381,9 @@ fn lint_path_dispatches_app_source_ts() {
     // TypeEnv error, not a lint finding. CSSOM still hits the style floor.
     let findings = lint_app_source_source(path, "el.style.cssText = 'x'");
     assert!(
-        findings.iter().any(|f| f.rule == "sail-no-imperative-style"),
+        findings
+            .iter()
+            .any(|f| f.rule == "sail-no-imperative-style"),
         "app-source dispatch must still run imperative-style: {findings:?}"
     );
     // Silence unused import if lint_path is only referenced for docs.
@@ -415,7 +417,9 @@ fn author_action_path_and_floor_regime() {
     // Author floor: NO style — not even CSS custom properties.
     let action_style = lint_action_source(action, "el.style.setProperty('--row-y', y)");
     assert!(
-        action_style.iter().any(|f| f.rule == "sail-action-no-style"),
+        action_style
+            .iter()
+            .any(|f| f.rule == "sail-action-no-style"),
         "{action_style:?}"
     );
 

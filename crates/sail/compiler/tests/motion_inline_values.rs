@@ -79,7 +79,8 @@ fn inline_delay_is_milliseconds() {
 
 #[test]
 fn a_quoted_duration_may_carry_its_unit() {
-    let ms = ok(r#"<card style({ animate: loop({ rotate: 'spin', duration: '3600ms' }) })> x</card>"#);
+    let ms =
+        ok(r#"<card style({ animate: loop({ rotate: 'spin', duration: '3600ms' }) })> x</card>"#);
     let s = ok(r#"<card style({ animate: loop({ rotate: 'spin', duration: '3.6s' }) })> x</card>"#);
     assert!(ms.contains("duration: 3.6"), "'3600ms' → 3.6s:\n{ms}");
     assert!(s.contains("duration: 3.6"), "'3.6s' → 3.6s:\n{s}");
@@ -87,7 +88,8 @@ fn a_quoted_duration_may_carry_its_unit() {
 
 #[test]
 fn an_unquoted_unit_is_rejected_and_names_the_quoted_form() {
-    let e = err(r#"<card style({ animate: loop({ rotate: 'spin', duration: 3600ms }) })> x</card>"#);
+    let e =
+        err(r#"<card style({ animate: loop({ rotate: 'spin', duration: 3600ms }) })> x</card>"#);
     assert!(
         e.contains("must be quoted") && e.contains("'3600ms'"),
         "the error should name the quoted form: {e}"
@@ -107,7 +109,9 @@ fn a_negative_duration_is_rejected() {
 
 #[test]
 fn inline_cubic_bezier_becomes_the_css_function() {
-    let js = ok(r#"<card style({ animate: loop({ rotate: 'spin', easing: [0.6, 0, 0.2, 1] }) })> x</card>"#);
+    let js = ok(
+        r#"<card style({ animate: loop({ rotate: 'spin', easing: [0.6, 0, 0.2, 1] }) })> x</card>"#,
+    );
     assert!(
         js.contains(r#"easing: "cubic-bezier(0.6, 0, 0.2, 1)""#),
         "expected the bezier to emit as a CSS easing function:\n{js}"
@@ -116,7 +120,8 @@ fn inline_cubic_bezier_becomes_the_css_function() {
 
 #[test]
 fn named_easing_keywords_still_resolve() {
-    let js = ok(r#"<card style({ animate: loop({ rotate: 'spin', easing: 'in-out' }) })> x</card>"#);
+    let js =
+        ok(r#"<card style({ animate: loop({ rotate: 'spin', easing: 'in-out' }) })> x</card>"#);
     assert!(
         js.contains(r#"easing: "cubic-bezier(0.4, 0, 0.2, 1)""#),
         "the `in-out` token should resolve through the catalogue:\n{js}"
@@ -125,7 +130,8 @@ fn named_easing_keywords_still_resolve() {
 
 #[test]
 fn linear_and_raw_css_easings_pass_through() {
-    let js = ok(r#"<card style({ animate: loop({ rotate: 'spin', easing: 'linear' }) })> x</card>"#);
+    let js =
+        ok(r#"<card style({ animate: loop({ rotate: 'spin', easing: 'linear' }) })> x</card>"#);
     assert!(
         js.contains(r#"easing: "linear""#),
         "expected passthrough:\n{js}"
@@ -134,7 +140,9 @@ fn linear_and_raw_css_easings_pass_through() {
 
 #[test]
 fn a_malformed_bezier_names_the_correct_form() {
-    let e = err(r#"<card style({ animate: loop({ rotate: 'spin', easing: [0.6, 0, 0.2] }) })> x</card>"#);
+    let e = err(
+        r#"<card style({ animate: loop({ rotate: 'spin', easing: [0.6, 0, 0.2] }) })> x</card>"#,
+    );
     assert!(
         e.contains("exactly four numbers") && e.contains("[0.6, 0, 0.2, 1]"),
         "the error should name the correct bezier form: {e}"
@@ -143,7 +151,9 @@ fn a_malformed_bezier_names_the_correct_form() {
 
 #[test]
 fn a_bezier_with_out_of_range_x_is_rejected() {
-    let e = err(r#"<card style({ animate: loop({ rotate: 'spin', easing: [1.5, 0, 0.2, 1] }) })> x</card>"#);
+    let e = err(
+        r#"<card style({ animate: loop({ rotate: 'spin', easing: [1.5, 0, 0.2, 1] }) })> x</card>"#,
+    );
     assert!(
         e.contains("x control points must be within 0..1"),
         "CSS will not accept it; catching it here beats a silent no-op: {e}"
@@ -163,7 +173,8 @@ fn a_numeric_easing_is_rejected_with_the_two_valid_forms() {
 
 #[test]
 fn a_bare_inline_object_needs_no_preset() {
-    let js = ok(r#"<card style({ animate: loop({ translate-x: { from: 0, to: 120 } }) })> x</card>"#);
+    let js =
+        ok(r#"<card style({ animate: loop({ translate-x: { from: 0, to: 120 } }) })> x</card>"#);
     assert!(js.contains("from: 0"), "expected inline from:\n{js}");
     assert!(js.contains("to: 120"), "expected inline to:\n{js}");
     assert!(
@@ -176,7 +187,8 @@ fn a_bare_inline_object_needs_no_preset() {
 fn a_unit_bearing_magnitude_is_preserved_verbatim() {
     // The rows archetype translates by -12%, which no preset could express:
     // the old catalogue's `slip` doc literally records "% is not expressible".
-    let js = ok(r#"<card style({ animate: loop({ translate-x: { from: 0, to: '-12%' } }) })> x</card>"#);
+    let js =
+        ok(r#"<card style({ animate: loop({ translate-x: { from: 0, to: '-12%' } }) })> x</card>"#);
     assert!(
         js.contains(r#"to: "-12%""#),
         "the percent unit must survive:\n{js}"
@@ -198,7 +210,8 @@ fn a_numeric_string_and_a_bare_number_mean_the_same_thing() {
 fn a_preset_supplies_defaults_that_inline_fields_override() {
     // `pop` is scale 1 → 1.75. Override just the `to`; `from` stays the
     // preset's. This is the "named default, not a cage" contract.
-    let js = ok(r#"<card style({ animate: loop({ scale: { preset: 'pulse', to: 1.9 } }) })> x</card>"#);
+    let js =
+        ok(r#"<card style({ animate: loop({ scale: { preset: 'pulse', to: 1.9 } }) })> x</card>"#);
     assert!(
         js.contains("from: 1"),
         "the preset's `from` should survive:\n{js}"
@@ -266,8 +279,9 @@ fn config_level_timing_applies_to_every_channel() {
 
 #[test]
 fn setting_a_timing_key_twice_is_rejected() {
-    let e =
-        err(r#"<card style({ animate: loop({ rotate: 'spin', duration: 100, duration: 200 }) })> x</card>"#);
+    let e = err(
+        r#"<card style({ animate: loop({ rotate: 'spin', duration: 100, duration: 200 }) })> x</card>"#,
+    );
     assert!(
         e.contains("set twice"),
         "expected a duplicate-key diagnostic: {e}"
@@ -289,7 +303,8 @@ fn stagger_accepts_a_bare_number_of_milliseconds() {
 
 #[test]
 fn stagger_still_accepts_the_duration_string() {
-    let js = ok(r#"<row style({ animate: enter({ opacity: 'fade', stagger: '450ms' }) })> x</row>"#);
+    let js =
+        ok(r#"<row style({ animate: enter({ opacity: 'fade', stagger: '450ms' }) })> x</row>"#);
     assert!(
         js.contains("stagger: 0.45"),
         "expected 450ms → 0.45s:\n{js}"

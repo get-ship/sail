@@ -124,9 +124,7 @@ impl<'a> Visit<'a> for Visitor<'_> {
         if FORBIDDEN.contains(&n) {
             self.report(
                 id.span,
-                format!(
-                    "author actions do not use `{n}` — forbidden state primitive"
-                ),
+                format!("author actions do not use `{n}` — forbidden state primitive"),
             );
         }
     }

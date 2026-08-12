@@ -31,8 +31,7 @@ fn err_for(src: &str) -> String {
 /// `transition:` used to own, now expressed in the one system.
 #[test]
 fn motion_enter_and_exit_bake_animations() {
-    let src =
-        r#"<card style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#;
+    let src = r#"<card style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })> x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(
         js.contains(r#"trigger: "enter""#),
@@ -139,7 +138,9 @@ fn no_stagger_emits_no_stagger() {
 /// A garbled duration fails the build rather than silently becoming zero.
 #[test]
 fn a_bad_stagger_duration_fails_the_build() {
-    let msg = err_for(r#"<card style({ animate: enter({ opacity: 'fade', stagger: 'soon' }) })> x</card>"#);
+    let msg = err_for(
+        r#"<card style({ animate: enter({ opacity: 'fade', stagger: 'soon' }) })> x</card>"#,
+    );
     assert!(msg.contains("duration"), "must name the problem: {msg}");
 }
 
@@ -182,9 +183,8 @@ fn the_animation_vocabulary_has_exactly_one_source() {
 #[test]
 fn reveal_and_scroll_are_triggers_like_any_other() {
     for trigger in ["reveal", "scroll"] {
-        let src = format!(
-            r#"<card style({{ animate: {trigger}({{ opacity: 'fade' }}) }})> x</card>"#
-        );
+        let src =
+            format!(r#"<card style({{ animate: {trigger}({{ opacity: 'fade' }}) }})> x</card>"#);
         let js = compile(&src, opts()).expect("compiles").js;
         assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
         assert!(
@@ -198,8 +198,7 @@ fn reveal_and_scroll_are_triggers_like_any_other() {
 /// the thing people reach for GSAP to do is a directive with a preset.
 #[test]
 fn parallax_is_one_directive() {
-    let src =
-        r#"<card style({ animate: reveal({ translate-y: 'spring:gentle', opacity: 'fade' }) })> x</card>"#;
+    let src = r#"<card style({ animate: reveal({ translate-y: 'spring:gentle', opacity: 'fade' }) })> x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "reveal""#), "{js}");
     let motion_count = js.matches("property:").count();
@@ -213,9 +212,8 @@ fn parallax_is_one_directive() {
 fn every_advertised_trigger_can_actually_be_written() {
     let mut unwritable = Vec::new();
     for trigger in sail_lint::rules::animate_token_only::MOTION_TRIGGERS {
-        let src = format!(
-            r#"<card style({{ animate: {trigger}({{ opacity: 'fade' }}) }})> x</card>"#
-        );
+        let src =
+            format!(r#"<card style({{ animate: {trigger}({{ opacity: 'fade' }}) }})> x</card>"#);
         match compile(&src, opts()) {
             Ok(out) => assert!(
                 out.js.contains(&format!(r#"trigger: "{trigger}""#)),

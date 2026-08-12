@@ -9,7 +9,7 @@
 
 use std::path::PathBuf;
 
-use sail_lint::{lint_controller_source, Severity};
+use sail_lint::{Severity, lint_controller_source};
 
 fn is_framework_import_teaching(msg: &str) -> bool {
     let lower = msg.to_ascii_lowercase();
@@ -31,9 +31,9 @@ export default controller(() => {
 })
 "#;
     let findings = lint_controller_source(&path, source);
-    let hit = findings.iter().any(|f| {
-        f.severity == Severity::Error && is_framework_import_teaching(&f.message)
-    });
+    let hit = findings
+        .iter()
+        .any(|f| f.severity == Severity::Error && is_framework_import_teaching(&f.message));
     assert!(
         hit,
         "third-party pack controller must get teaching Error on @ship/sail-runtime value import; \

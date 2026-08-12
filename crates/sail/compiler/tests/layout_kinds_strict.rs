@@ -23,7 +23,7 @@ use std::path::{Path, PathBuf};
 
 use sail_compiler::check::layout;
 use sail_compiler::diagnostics::DiagSeverity;
-use sail_lint::config::{SailConfig, RECOGNIZED_KEYS};
+use sail_lint::config::{RECOGNIZED_KEYS, SailConfig};
 
 const RULE_UNINTENDED_OVERFLOW: &str = "sail-unintended-overflow";
 const RULE_CLIPPED_TEXT: &str = "sail-clipped-text";
@@ -99,9 +99,7 @@ fn sail_config_layout_experimental_accessors() {
     // Prefer missing API = compile-fail red. Implementer lands:
     //   SailConfig::layout_experimental() -> bool
     //   SailConfig::layout_text_metrics() -> bool
-    let on = SailConfig::from_json(
-        r#"{ "layoutExperimental": true, "layoutTextMetrics": true }"#,
-    );
+    let on = SailConfig::from_json(r#"{ "layoutExperimental": true, "layoutTextMetrics": true }"#);
     assert!(
         on.layout_experimental(),
         "layoutExperimental: true via SailConfig::layout_experimental()"
@@ -165,10 +163,7 @@ fn strict_true_emits_unintended_overflow_with_stable_rule_id() {
         DiagSeverity::Error,
         "under strict, `{RULE_UNINTENDED_OVERFLOW}` must be Error at the gate: {hit:?}"
     );
-    assert!(
-        hit.line >= 1,
-        "must map to a source span/line: {hit:?}"
-    );
+    assert!(hit.line >= 1, "must map to a source span/line: {hit:?}");
 }
 
 #[test]
@@ -189,7 +184,10 @@ fn layout_experimental_config_emits_unintended_overflow_without_full_strict() {
 
 #[test]
 fn strict_does_not_fire_unintended_overflow_when_overflow_y_auto() {
-    let (_tmp, sail) = write_pack(r#"{ "preset": "full", "strict": true }"#, OVERFLOW_OPTIN_SRC);
+    let (_tmp, sail) = write_pack(
+        r#"{ "preset": "full", "strict": true }"#,
+        OVERFLOW_OPTIN_SRC,
+    );
     let diags = layout_diags(OVERFLOW_OPTIN_SRC, Some(&sail));
     assert!(
         !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),

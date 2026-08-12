@@ -11,7 +11,7 @@
 
 use sail_compiler::check::query_keys;
 use sail_compiler::parse::preprocess::{extract_controller_block, wrap_controller_body};
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 use std::path::PathBuf;
 
 /// App-local CE shape: `src/sail-g2-probe/sail-g2-probe.sail`.
@@ -44,9 +44,8 @@ fn ambient_import_line(body: &str) -> Option<&str> {
 }
 
 fn asserts_ambient(body: &str, idents: &[&str]) {
-    let line = ambient_import_line(body).unwrap_or_else(|| {
-        panic!("expected ambient import from /internal, got module:\n{body}")
-    });
+    let line = ambient_import_line(body)
+        .unwrap_or_else(|| panic!("expected ambient import from /internal, got module:\n{body}"));
     for ident in idents {
         assert!(
             line.contains(ident),
@@ -100,7 +99,8 @@ fn app_local_component_compile_wires_virtual_controller_setup() {
         out.js
     );
     assert!(
-        out.js.contains("component(\"sail-g2-probe\"") || out.js.contains("component('sail-g2-probe'"),
+        out.js.contains("component(\"sail-g2-probe\"")
+            || out.js.contains("component('sail-g2-probe'"),
         "must register the custom element:\n{}",
         out.js
     );

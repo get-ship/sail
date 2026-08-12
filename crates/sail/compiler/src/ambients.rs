@@ -254,6 +254,7 @@ pub fn emit_types_dts() -> String {
          \x20 HotkeyHandler,\n\
          \x20 HotkeysMap,\n\
          \x20 Host,\n\
+         \x20 SailHost,\n\
          \x20 RouteSignals,\n\
          } from '@ship/sail-runtime'\n\
          \n",
@@ -274,8 +275,7 @@ pub fn emit_types_dts() -> String {
 pub fn write_project_types(project: &Path) -> Result<PathBuf> {
     let path = project.join(PROJECT_TYPES_REL);
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("mkdir {}", parent.display()))?;
+        fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
     }
     let text = emit_types_dts();
     fs::write(&path, text).with_context(|| format!("write {}", path.display()))?;
@@ -289,8 +289,7 @@ pub fn write_project_types(project: &Path) -> Result<PathBuf> {
 pub fn write_project_action_observation(project: &Path) -> Result<PathBuf> {
     let path = project.join(PROJECT_ACTION_OBSERVATION_REL);
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("mkdir {}", parent.display()))?;
+        fs::create_dir_all(parent).with_context(|| format!("mkdir {}", parent.display()))?;
     }
     let text = emit_action_observation_dts();
     fs::write(&path, text).with_context(|| format!("write {}", path.display()))?;
@@ -692,19 +691,90 @@ pub fn emit_project_tsconfig_json_for(env: TypeEnv, include_globs: &[&str]) -> S
         }
         TypeEnv::Framework => "TypeEnv::Framework — ESNext + DOM (framework packages).",
     };
+    // Pure product config must not typecheck actions under the Pure env
+    // (no observation pack). Action files live solely under tsconfig.action.json.
+    let exclude = match env {
+        TypeEnv::Pure => {
+            "\"node_modules\", \"dist\", \".deck\", \"src/actions\", \"src/actions/**\""
+        }
+        _ => "\"node_modules\", \"dist\", \".deck\"",
+    };
     format!(
         "{{\n  \
-         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). {env_note} Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
+         \"$comment\": \"Sail project tsconfig (TOOLING-1 WI2 / SPEC-PLATFORM-NEUTRALITY-1). GENERATED — hand edits are overwritten on build. {env_note} Ambient pack in files (not include) so node_modules exclude does not drop {pack}.\",\n  \
          \"compilerOptions\": {{\n    {opts_inner},\n    \"baseUrl\": \".\",\n    \"paths\": {{\n{paths}\n    }}\n  }},\n  \
          \"files\": [{files}],\n  \
          \"include\": [{inc}],\n  \
-         \"exclude\": [\"node_modules\", \"dist\", \".deck\"]\n\
+         \"exclude\": [{exclude}]\n\
          }}\n",
         pack = PROJECT_TYPES_REL,
         paths = paths_block,
         files = files.join(", "),
         inc = includes.join(", "),
     )
+}
+
+/// Relative path of the generated Pure-env project tsconfig (E1b/E1c).
+pub const PROJECT_TSCONFIG_PURE_REL: &str = "tsconfig.pure.json";
+/// Relative path of the generated Action-env project tsconfig (E1b/E1c).
+pub const PROJECT_TSCONFIG_ACTION_REL: &str = "tsconfig.action.json";
+
+/// Default include globs for Pure product typecheck (controllers synthesized
+/// at the gate, compositions, stores, and general `src/**/*.ts`).
+/// Actions are **excluded** via `exclude` in [`emit_project_tsconfig_json_for`]
+/// so IDE/`tsgo -p tsconfig.pure.json` never typechecks `src/actions/**`
+/// under Pure (no observation pack). Actions ride [`PROJECT_TSCONFIG_ACTION_REL`].
+pub const PROJECT_PURE_INCLUDE: &[&str] = &[
+    "src/**/*.ts",
+    "routes/**/*.ts",
+    "src/compositions/**/*.ts",
+    "src/stores/**/*.ts",
+];
+
+/// Default include globs for Action typecheck.
+pub const PROJECT_ACTION_INCLUDE: &[&str] = &["src/actions/**/*.ts"];
+
+/// Write ambient packs + per-kind project tsconfigs under `project`.
+///
+/// **Regeneration is the law** (E1c): every build / `sail types` call
+/// overwrites these files. Hand-edited `lib` entries (e.g. sneaking DOM back
+/// in) are wiped. Returns paths written: types pack, pure tsconfig, action
+/// tsconfig.
+pub fn write_project_type_configs(project: &Path) -> Result<(PathBuf, PathBuf, PathBuf)> {
+    let types = write_project_types(project)?;
+    let pure_path = project.join(PROJECT_TSCONFIG_PURE_REL);
+    let action_path = project.join(PROJECT_TSCONFIG_ACTION_REL);
+    fs::write(
+        &pure_path,
+        emit_project_tsconfig_json_for(TypeEnv::Pure, PROJECT_PURE_INCLUDE),
+    )
+    .with_context(|| format!("write {}", pure_path.display()))?;
+    fs::write(
+        &action_path,
+        emit_project_tsconfig_json_for(TypeEnv::Action, PROJECT_ACTION_INCLUDE),
+    )
+    .with_context(|| format!("write {}", action_path.display()))?;
+    // Default project tsconfig.json also regenerated to Pure (product default).
+    let default_path = project.join("tsconfig.json");
+    // Only overwrite when the file carries our GENERATED marker or is absent —
+    // never clobber a hand-authored root that is not sail-owned. Presence of
+    // the marker (or the older TOOLING-1 header) means compiler owns it.
+    let should_write_default = match fs::read_to_string(&default_path) {
+        Ok(body) => {
+            body.contains("GENERATED")
+                || body.contains("Sail project tsconfig")
+                || body.contains("TOOLING-1")
+        }
+        Err(_) => true,
+    };
+    if should_write_default {
+        fs::write(
+            &default_path,
+            emit_project_tsconfig_json(PROJECT_PURE_INCLUDE),
+        )
+        .with_context(|| format!("write {}", default_path.display()))?;
+    }
+    Ok((types, pure_path, action_path))
 }
 
 // ── token unions ───────────────────────────────────────────────────────────
@@ -714,9 +784,23 @@ fn emit_token_unions(out: &mut String) -> BTreeSet<String> {
     out.push_str("// ── Closed token unions (from lint scales / token registry) ──\n");
 
     let scales = [
-        "color", "space", "size", "radius", "text", "weight", "font", "leading",
-        "tracking", "shadow", "z", "duration", "ease", "percent", "angle",
-        "border-width", "opacity",
+        "color",
+        "space",
+        "size",
+        "radius",
+        "text",
+        "weight",
+        "font",
+        "leading",
+        "tracking",
+        "shadow",
+        "z",
+        "duration",
+        "ease",
+        "percent",
+        "angle",
+        "border-width",
+        "opacity",
     ];
     let mut all_bare: BTreeSet<String> = BTreeSet::new();
 
@@ -844,10 +928,7 @@ fn emit_token_group_types(out: &mut String) {
     for g in color_groups() {
         out.push_str(&format!("  {}: {{\n", g.name));
         for m in g.members {
-            out.push_str(&format!(
-                "    {}: '{}'\n",
-                m.name, m.public_name
-            ));
+            out.push_str(&format!("    {}: '{}'\n", m.name, m.public_name));
         }
         out.push_str("  }\n");
     }
@@ -880,10 +961,7 @@ fn static_group_member_object_type(group_name: &str) -> Option<String> {
         if m.name == "default" {
             continue;
         }
-        fields.push(format!(
-            "readonly {}: '{}.{}'",
-            m.name, group.name, m.name
-        ));
+        fields.push(format!("readonly {}: '{}.{}'", m.name, group.name, m.name));
     }
     if fields.is_empty() {
         return None;
@@ -1025,9 +1103,7 @@ fn emit_style_types(out: &mut String) {
         }
         if *m == "focus-visible" {
             // invalid bare method name in TS — quote
-            out.push_str(
-                "  'focus-visible'(config: SailStyleMotionConfig): SailStyleChain\n",
-            );
+            out.push_str("  'focus-visible'(config: SailStyleMotionConfig): SailStyleChain\n");
             continue;
         }
         out.push_str(&format!(
@@ -1078,9 +1154,7 @@ fn emit_setter_method(out: &mut String, spec: &SetterSpec) {
             | "outline"
             | "ring"
     ) {
-        out.push_str(&format!(
-            "  {name}(a: {arg}, b?: {arg}): SailStyleChain\n"
-        ));
+        out.push_str(&format!("  {name}(a: {arg}, b?: {arg}): SailStyleChain\n"));
         return;
     }
     out.push_str(&format!("  {name}(token: {arg}): SailStyleChain\n"));
@@ -1135,7 +1209,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20 type Mutation<T> = import('@ship/sail-runtime').Mutation<T>\n\
          \x20 type MutationState<T> = import('@ship/sail-runtime').MutationState<T>\n\
          \x20 type QueryKey = import('@ship/sail-runtime').QueryKey\n\
-         \x20 type ControllerScope<S> = import('@ship/sail-runtime').ControllerScope<S>\n",
+         \x20 type ControllerScope<S> = import('@ship/sail-runtime').ControllerScope<S>\n\
+         \x20 /** Opaque mount host — Pure-safe; pass to actions/runtime (JOB-E2 SailHost). */\n\
+         \x20 type SailHost = import('@ship/sail-runtime').SailHost\n\
+         \x20 type Host = import('@ship/sail-runtime').Host\n",
     );
 
     // Setter / motion / when-key names that also appear as token idents need a
@@ -1199,9 +1276,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         if *authored == "__invalidate" {
             // Compiler-only; still declare so rewritten output typechecks.
             out.push_str("  /** compiler-only lowering target for invalidate(ref) */\n");
-            out.push_str(
-                "  function __invalidate(prefix: QueryKey): void\n",
-            );
+            out.push_str("  function __invalidate(prefix: QueryKey): void\n");
             continue;
         }
         if TYPED_IN_AUTHOR_SURFACE.contains(authored) {
@@ -1217,9 +1292,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
                 out.push_str("  function derived<T>(fn: () => T): Derived<T>\n");
             }
             "effect" => {
-                out.push_str(
-                    "  function effect(fn: () => void | (() => void)): () => void\n",
-                );
+                out.push_str("  function effect(fn: () => void | (() => void)): () => void\n");
             }
             "batch" => {
                 out.push_str("  function batch(fn: () => void): void\n");
@@ -1228,9 +1301,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
                 out.push_str("  function untrack<T>(fn: () => T): T\n");
             }
             "mount" => {
-                out.push_str(
-                    "  function mount(fn: (el: Element) => void | (() => void)): void\n",
-                );
+                out.push_str("  function mount(fn: (el: Element) => void | (() => void)): void\n");
             }
             "onCleanup" => {
                 out.push_str("  function onCleanup(fn: () => void): void\n");
@@ -1250,9 +1321,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
             }
             other => {
                 // Future ambient rows — declare as unknown callable until typed.
-                out.push_str(&format!(
-                    "  const {other}: (...args: never[]) => unknown\n"
-                ));
+                out.push_str(&format!("  const {other}: (...args: never[]) => unknown\n"));
             }
         }
     }
@@ -1313,6 +1382,10 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
          \x20 function provideContext<T>(key: ContextKey<T>, value: T): void\n\
          \x20 function injectContext<T>(key: ContextKey<T>): T | null\n\
          \x20 function contextKey<T>(description: string): ContextKey<T>\n\
+         \x20 /** Opaque mount host coerce — Pure-safe (JOB-E2 SailHost). */\n\
+         \x20 function asSailHost(node: unknown): SailHost\n\
+         \x20 /** Next animation frame (or microtask) — Pure must not name rAF. */\n\
+         \x20 function scheduleFrame(fn: () => void): void\n\
          \x20 const theme: Theme\n\
          \x20 function setThemePersist(persist: ThemePersist): void\n\
          \x20 function hydrateTheme(): void\n\
@@ -1477,9 +1550,7 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
         // scroll paint form takes a token; free setter emit covers paint — motion overload:
         // free setter already emitted; add ambient overload via interface merge is hard.
         // Chain method + free motion: re-emit motion-capable free scroll.
-        out.push_str(
-            "  function scroll(config: SailStyleMotionConfig): SailStyleChain\n",
-        );
+        out.push_str("  function scroll(config: SailStyleMotionConfig): SailStyleChain\n");
     }
 
     out.push_str("}\n\n");
@@ -1707,8 +1778,7 @@ mod tests {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
         let path = root.join("packages/sail/runtime/author-surface.json");
         let raw = fs::read_to_string(&path).expect("author-surface.json readable");
-        let v: serde_json::Value =
-            serde_json::from_str(&raw).expect("author-surface.json is JSON");
+        let v: serde_json::Value = serde_json::from_str(&raw).expect("author-surface.json is JSON");
         let exports = v
             .get("exports")
             .and_then(|e| e.as_object())
@@ -1759,13 +1829,28 @@ mod tests {
             "SailStyleObj missing"
         );
         // Free channel-body setters
-        assert!(dts.contains("function pad(") || dts.contains("function padX("), "{dts}");
-        assert!(dts.contains("function bg(") || dts.contains("const bg:"), "free bg");
+        assert!(
+            dts.contains("function pad(") || dts.contains("function padX("),
+            "{dts}"
+        );
+        assert!(
+            dts.contains("function bg(") || dts.contains("const bg:"),
+            "free bg"
+        );
         assert!(dts.contains("function enter("), "free enter motion");
-        assert!(dts.contains("const hover:"), "when-key / motion hybrid hover");
+        assert!(
+            dts.contains("const hover:"),
+            "when-key / motion hybrid hover"
+        );
         assert!(!dts.contains("function match("), "free match() deleted");
-        assert!(!dts.contains("function compound("), "free compound() deleted");
-        assert!(dts.contains("match?: SailMatchBlock") || dts.contains("type SailMatchBlock"), "match: key type");
+        assert!(
+            !dts.contains("function compound("),
+            "free compound() deleted"
+        );
+        assert!(
+            dts.contains("match?: SailMatchBlock") || dts.contains("type SailMatchBlock"),
+            "match: key type"
+        );
         assert!(dts.contains("function bind("));
         assert!(dts.contains("function query<"));
         assert!(dts.contains("function mutation<"));
@@ -1897,6 +1982,11 @@ mod tests {
             body.contains("\"src/**/*.ts\"") && body.contains("\"routes/**/*.ts\""),
             "project tsconfig must include authored globs:\n{body}"
         );
+        // Pure default must exclude actions so IDE pure check matches compiler env.
+        assert!(
+            body.contains("src/actions"),
+            "Pure project tsconfig must exclude src/actions:\n{body}"
+        );
     }
 
     #[test]
@@ -1912,8 +2002,7 @@ mod tests {
                 "{env:?} opts must not include DOM:\n{opts}"
             );
         }
-        let action_body =
-            emit_project_tsconfig_json_for(TypeEnv::Action, &["src/actions/**/*.ts"]);
+        let action_body = emit_project_tsconfig_json_for(TypeEnv::Action, &["src/actions/**/*.ts"]);
         assert!(
             action_body.contains(PROJECT_ACTION_OBSERVATION_REL),
             "Action tsconfig must list observation ambient:\n{action_body}"
@@ -1938,9 +2027,13 @@ mod tests {
         let dts = emit_action_observation_dts();
         assert!(dts.contains("requestAnimationFrame"));
         assert!(dts.contains("ResizeObserver"));
-        assert!(!dts.lines().filter(|l| !l.trim_start().starts_with("//")).any(|l| {
-            l.contains("declare var document") || l.contains("declare const document")
-        }));
+        assert!(
+            !dts.lines()
+                .filter(|l| !l.trim_start().starts_with("//"))
+                .any(|l| {
+                    l.contains("declare var document") || l.contains("declare const document")
+                })
+        );
     }
 
     #[test]
@@ -1994,8 +2087,14 @@ mod tests {
             "\"correctness\": \"error\"",
             "\"suspicious\": \"warn\"",
         ] {
-            assert!(raw.contains(needle), "package oxlint missing {needle}:\n{raw}");
-            assert!(emit.contains(needle), "emit oxlint missing {needle}:\n{emit}");
+            assert!(
+                raw.contains(needle),
+                "package oxlint missing {needle}:\n{raw}"
+            );
+            assert!(
+                emit.contains(needle),
+                "emit oxlint missing {needle}:\n{emit}"
+            );
         }
     }
 }

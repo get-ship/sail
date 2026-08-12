@@ -42,11 +42,7 @@ fn label_lowers_to_aria_label_in_emit() {
 
 #[test]
 fn current_lowers_to_aria_current() {
-    let out = compile(
-        r#"<a href="/" current="page">Home</a>"#,
-        component_opts(),
-    )
-    .expect("compile");
+    let out = compile(r#"<a href="/" current="page">Home</a>"#, component_opts()).expect("compile");
     assert!(
         out.js.contains("aria-current") && out.js.contains("page"),
         "current must stamp aria-current:\n{}",
@@ -56,11 +52,7 @@ fn current_lowers_to_aria_current() {
 
 #[test]
 fn hidden_lowers_to_aria_hidden() {
-    let out = compile(
-        r#"<span hidden="true">x</span>"#,
-        component_opts(),
-    )
-    .expect("compile");
+    let out = compile(r#"<span hidden="true">x</span>"#, component_opts()).expect("compile");
     assert!(
         out.js.contains("aria-hidden"),
         "hidden must stamp aria-hidden:\n{}",
@@ -125,11 +117,8 @@ fn icon_only_button_with_label_ok() {
 
 #[test]
 fn navbar_anatomy_stamps_navigation_role() {
-    let out = compile_element(
-        include_str!("../stdlib/navbar.sail"),
-        "navbar",
-    )
-    .expect("navbar compiles");
+    let out =
+        compile_element(include_str!("../stdlib/navbar.sail"), "navbar").expect("navbar compiles");
     assert!(
         out.structure_html.contains(r#"role="navigation""#),
         "host anatomy must stamp role=navigation:\n{}",
@@ -165,8 +154,7 @@ fn spinner_anatomy_stamps_status_and_label() {
 fn alert_anatomy_stamps_live_region() {
     let out = compile_element(include_str!("../stdlib/alert.sail"), "alert").expect("alert");
     assert!(
-        out.structure_html.contains(r#"role="status""#)
-            && out.structure_html.contains("aria-live"),
+        out.structure_html.contains(r#"role="status""#) && out.structure_html.contains("aria-live"),
         "alert live anatomy:\n{}",
         out.structure_html
     );

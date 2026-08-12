@@ -1,27 +1,1601 @@
-//! Bridge to the shipped TypeScript compiler (tsgo / @typescript/native-preview).
+//! Type gate — `tsgo` red = sail red (JOB-E1).
 //!
-//! The SAIL compiler shells out to `tsgo --noEmit` to type-check embedded TS
-//! blocks (`<props>`, `<variants>`) — REAL TypeScript inference (autocomplete,
-//! "did you mean", type errors) instead of a hand-rolled subset parser. This is
-//! the load-bearing bridge: it writes a harness (the props()/variants() surface)
-//! + the author's block to a temp dir, runs tsgo, and parses the diagnostics
-//! back into structured form the compiler can remap onto `.sail` spans.
-use std::path::Path;
+//! Doctrine: if TypeScript does not compile under the per-kind type
+//! environment, sail does not compile. No report mode, no silent skip.
+//! Product harness diagnostics become sail Errors: DOM-surface unnameables
+//! rewrite to `sail-pure-region` / `sail-action-surface`; intrinsic type
+//! errors become `sail-type-gate`.
+//!
+//! ## Design (synthesize-vs-harness)
+//!
+//! **Harness** (extends the existing props/variants bridge). Whole-region
+//! checking writes the authored `<controller>` body into a temp module under
+//! a Pure (or Action) tsconfig and runs `tsgo --noEmit` once. Span mapping is
+//! line-padding: the harness preserves absolute 1-based line numbers from the
+//! `.sail` author source so tsgo `(L,C)` maps straight back.
+//!
+//! The isolated `region.ts` is **not** a full project checkout. To keep
+//! doctrine honest without false-failing legal controllers on module noise:
+//! 1. **Faithful-enough ambient** — generic runtime HOF stubs, typed
+//!    `@ship/*` module shapes (`Action`, `ControllerScope`, …), inject ABI
+//!    (`@ship/sail-runtime/internal`).
+//! 2. **Relative import stubs** — materialize open `any` modules for
+//!    `./…` / `../…` imports found in the controller body.
+//! 3. **Scoped promotion interim** — residual `TS2307` for unresolved
+//!    relative / `@ship/…` / `@/…` (project alias) specs is **not**
+//!    hard-failed until full project resolution exists. Real type errors
+//!    (TS2322, TS2345, …) and DOM teaching still promote.
+//!
+//! We deliberately do **not** reuse `emit/synthetic` output here — that path
+//! owns the template↔controller *scope contract* (`check_synthetic_controller`)
+//! and filters a different diagnostic set. The type gate owns ambient law +
+//! in-file type parity for the harnessed region.
+//!
+//! ## Resolution (STEP ZERO)
+//!
+//! Prefer the native `@typescript/native-preview-*` binary (same order as
+//! `sail-lsp`), then `node_modules/.bin/tsgo`, then `tsgo` on PATH. Absent →
+//! loud `sail-type-gate` error naming `bun install` / `@typescript/native-preview`.
+//! Never a silent skip (including wasm32 — unsupported target fails loud).
+//!
+//! ## Tiers
+//!
+//! OnSave only (compile / `check_all` / MCP / LSP didSave). Never OnType.
+//!
+//! ## Process cache
+//!
+//! `collect_sail_type_gate` caches by `(source_path, source hash)` so deck
+//! success (`compile` + `emit_build_warnings` → `check_all`) does not double
+//! invoke tsgo for the same file contents in one process.
+
+use std::collections::{BTreeSet, HashMap};
+use std::hash::{Hash, Hasher};
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::{Mutex, OnceLock};
+
+use crate::ambients::{TypeEnv, emit_action_observation_dts, lib_for_type_env, type_env_for_path};
+use crate::diagnostics::{DiagSeverity, Diagnostic};
+use crate::runtime_ambient::RUNTIME_AMBIENT;
 
 /// One diagnostic parsed from tsgo's `path(L,C): error TSxxxx: message` output.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TsDiag {
+    pub file: String,
     pub line: usize,
     pub col: usize,
     pub code: String,
     pub message: String,
 }
 
+/// Resolved tsgo invocation.
+#[derive(Debug, Clone)]
+pub struct TsgoTool {
+    /// Native binary path, OR `node` when using the JS entry.
+    pub program: PathBuf,
+    /// When `Some`, invoke as `node <js_entry> …` (legacy script entry).
+    pub js_entry: Option<PathBuf>,
+}
+
+/// Rule ids owned by the type gate.
+pub const RULE_PURE_REGION: &str = "sail-pure-region";
+pub const RULE_ACTION_SURFACE: &str = "sail-action-surface";
+pub const RULE_NO_TS_IGNORE: &str = "sail-no-ts-ignore";
+pub const RULE_TYPE_GATE: &str = "sail-type-gate";
+
+/// Loud install fix when tsgo cannot be resolved.
+pub const TSGO_MISSING_MSG: &str = "\
+Type gate requires `tsgo` but none was found \
+(searched node_modules/.bin/tsgo, @typescript/native-preview-*, and PATH). \
+Install with `bun install` (provides `@typescript/native-preview`). \
+If tsc does not compile, sail does not compile — the gate never skips.";
+
+// ── tsgo resolution ────────────────────────────────────────────────────────
+
+/// Discover tsgo starting from `start` (file or directory) walking up to root,
+/// then CWD (when `start` is outside the workspace, e.g. `/tmp` fixtures), then
+/// PATH. Returns `None` only when truly absent — callers must fail loud.
+///
+/// Paths are **canonicalized** when possible so later `Command` runs with
+/// `current_dir(temp)` still find the binary (relative workspace paths would
+/// otherwise ENOENT under the harness temp dir).
+pub fn resolve_tsgo(start: Option<&Path>) -> Option<TsgoTool> {
+    let mut starts: Vec<PathBuf> = Vec::new();
+    if let Some(p) = start {
+        let p = p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
+        starts.push(if p.is_file() {
+            p.parent().unwrap_or(p.as_path()).to_path_buf()
+        } else {
+            p
+        });
+    }
+    if let Ok(cwd) = std::env::current_dir() {
+        if starts.first().map(|s| s.as_path()) != Some(cwd.as_path()) {
+            starts.push(cwd);
+        }
+    }
+    // CARGO_MANIFEST_DIR is unavailable at runtime; walk each start to root.
+
+    for start_dir in starts {
+        let mut dir = Some(start_dir);
+        while let Some(d) = dir {
+            if let Some(tool) = look_in_dir(&d) {
+                return Some(tool);
+            }
+            dir = d.parent().map(|p| p.to_path_buf());
+        }
+    }
+
+    if let Some(path) = which("tsgo") {
+        return Some(TsgoTool {
+            program: abs(path),
+            js_entry: None,
+        });
+    }
+    None
+}
+
+fn look_in_dir(d: &Path) -> Option<TsgoTool> {
+    let bin = d.join("node_modules/.bin/tsgo");
+    if bin.exists() {
+        if let Some(nm) = bin.parent().and_then(|p| p.parent()) {
+            if let Some(native) = resolve_native_under(nm) {
+                return Some(TsgoTool {
+                    program: abs(native),
+                    js_entry: None,
+                });
+            }
+        }
+        // Shell script → run via node + package entry when possible.
+        let js = d.join("node_modules/@typescript/native-preview/lib/tsgo.js");
+        if js.exists() {
+            if let Some(node) = which("node") {
+                return Some(TsgoTool {
+                    program: abs(node),
+                    js_entry: Some(abs(js)),
+                });
+            }
+        }
+        return Some(TsgoTool {
+            program: abs(bin),
+            js_entry: None,
+        });
+    }
+    if let Some(native) = platform_native_under(&d.join("node_modules")) {
+        return Some(TsgoTool {
+            program: abs(native),
+            js_entry: None,
+        });
+    }
+    None
+}
+
+fn abs(p: PathBuf) -> PathBuf {
+    p.canonicalize().unwrap_or(p)
+}
+
+fn resolve_native_under(node_modules: &Path) -> Option<PathBuf> {
+    platform_native_under(node_modules)
+}
+
+fn platform_native_under(node_modules: &Path) -> Option<PathBuf> {
+    let os = std::env::consts::OS;
+    let arch = match std::env::consts::ARCH {
+        "x86_64" => "x64",
+        "aarch64" => "arm64",
+        other => other,
+    };
+    let os = if os == "windows" { "win32" } else { os };
+    let pkg = format!("@typescript/native-preview-{os}-{arch}");
+    let mut exe = node_modules.join(&pkg).join("lib").join("tsgo");
+    if cfg!(windows) {
+        exe.set_extension("exe");
+    }
+    exe.exists().then_some(exe)
+}
+
+fn which(name: &str) -> Option<PathBuf> {
+    let path = std::env::var_os("PATH")?;
+    for dir in std::env::split_paths(&path) {
+        let candidate = dir.join(name);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn run_tsgo(tool: &TsgoTool, args: &[&str], cwd: &Path) -> std::io::Result<std::process::Output> {
+    let mut cmd = Command::new(&tool.program);
+    if let Some(js) = &tool.js_entry {
+        cmd.arg(js);
+    }
+    cmd.args(args).current_dir(cwd).output()
+}
+
+// ── public type-gate entry (OnSave) ────────────────────────────────────────
+
+/// Loud message when the type gate cannot run on this target.
+pub const TSGO_UNSUPPORTED_TARGET_MSG: &str = "\
+Type gate requires a native `tsgo` host and is not supported on this target \
+(wasm32). Build/check on a native host — if tsc does not compile, sail does \
+not compile; the gate never skips silently.";
+
+/// Run the type gate for one `.sail` author source. Returns diagnostics in the
+/// shared stream shape. OnSave only — caller enforces tier.
+///
+/// `author_source` is the **original** `.sail` text (controller still present).
+/// `source_path` feeds kind → env resolution and tsgo discovery.
+///
+/// Results are cached per `(path, source hash)` for the process lifetime so a
+/// second OnSave collect over the same bytes (e.g. deck `emit_build_warnings`)
+/// does not spawn another tsgo.
+pub fn collect_sail_type_gate(author_source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let line = extract_controller_region(author_source)
+            .map(|r| r.open_line)
+            .unwrap_or(1);
+        return vec![Diagnostic {
+            line,
+            col: 1,
+            end_line: line,
+            end_col: 1,
+            severity: DiagSeverity::Error,
+            message: TSGO_UNSUPPORTED_TARGET_MSG.to_string(),
+            rule: Some(RULE_TYPE_GATE.to_string()),
+        }];
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let cache_key = cache_key_for(author_source, source_path);
+        if let Some(hit) = gate_cache_get(&cache_key) {
+            return hit;
+        }
+        let diags = collect_sail_type_gate_native(author_source, source_path);
+        gate_cache_put(cache_key, diags.clone());
+        diags
+    }
+}
+
+fn cache_key_for(author_source: &str, source_path: Option<&Path>) -> (String, u64) {
+    let path = source_path
+        .map(|p| p.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "<no-path>".to_string());
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    author_source.hash(&mut hasher);
+    (path, hasher.finish())
+}
+
+fn gate_cache() -> &'static Mutex<HashMap<(String, u64), Vec<Diagnostic>>> {
+    static CACHE: OnceLock<Mutex<HashMap<(String, u64), Vec<Diagnostic>>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn gate_cache_get(key: &(String, u64)) -> Option<Vec<Diagnostic>> {
+    gate_cache().lock().ok()?.get(key).cloned()
+}
+
+fn gate_cache_put(key: (String, u64), diags: Vec<Diagnostic>) {
+    if let Ok(mut g) = gate_cache().lock() {
+        // Bound cache size for long-lived LSP processes.
+        if g.len() > 256 {
+            g.clear();
+        }
+        g.insert(key, diags);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn collect_sail_type_gate_native(
+    author_source: &str,
+    source_path: Option<&Path>,
+) -> Vec<Diagnostic> {
+    let mut diags = Vec::new();
+
+    // E1c: @ts-ignore / @ts-nocheck / @ts-expect-error inside .sail TS regions.
+    diags.extend(scan_ts_ignore(author_source));
+
+    let Some(region) = extract_controller_region(author_source) else {
+        // No controller region — nothing for the type env gate to check.
+        return diags;
+    };
+
+    let env = source_path
+        .map(|p| type_env_for_path(p, Some(author_source)))
+        .unwrap_or(TypeEnv::Pure);
+    // Framework packages keep DOM — type gate does not ban window there.
+    if env == TypeEnv::Framework {
+        return diags;
+    }
+
+    let Some(tool) = resolve_tsgo(source_path) else {
+        diags.push(Diagnostic {
+            line: region.open_line,
+            col: 1,
+            end_line: region.open_line,
+            end_col: 1,
+            severity: DiagSeverity::Error,
+            message: TSGO_MISSING_MSG.to_string(),
+            rule: Some(RULE_TYPE_GATE.to_string()),
+        });
+        return diags;
+    };
+
+    match typecheck_region_harness(&region, env, source_path, &tool) {
+        Ok(ts_diags) => {
+            for d in ts_diags {
+                // Only product harness file — ignore ambient .d.ts noise.
+                if !d.file.ends_with("region.ts") && !d.file.ends_with("region.tsx") {
+                    continue;
+                }
+                if let Some(mapped) = map_region_diag(&d, env) {
+                    diags.push(mapped);
+                }
+            }
+        }
+        Err(e) => {
+            diags.push(Diagnostic {
+                line: region.open_line,
+                col: 1,
+                end_line: region.open_line,
+                end_col: 1,
+                severity: DiagSeverity::Error,
+                message: format!(
+                    "Type gate failed to invoke tsgo ({e}). \
+                     Install with `bun install` (`@typescript/native-preview`)."
+                ),
+                rule: Some(RULE_TYPE_GATE.to_string()),
+            });
+        }
+    }
+
+    diags
+}
+
+/// Project-scoped type gate over `.ts` sources (E1b).
+///
+/// Groups files by [`TypeEnv`] (Pure / Action; Framework skipped), writes
+/// per-kind tsconfigs, runs **one** `tsgo -p` per env that has files.
+/// Returns diagnostics with paths encoded in the message when multi-file
+/// (`… [real/path.ts]`) so multi-file CLIs can print `path:line:col`.
+pub fn collect_project_type_gate(
+    project_root: &Path,
+    ts_files: &[(PathBuf, String)],
+) -> Vec<Diagnostic> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = (project_root, ts_files);
+        return vec![Diagnostic {
+            line: 1,
+            col: 1,
+            end_line: 1,
+            end_col: 1,
+            severity: DiagSeverity::Error,
+            message: TSGO_UNSUPPORTED_TARGET_MSG.to_string(),
+            rule: Some(RULE_TYPE_GATE.to_string()),
+        }];
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        collect_project_type_gate_native(project_root, ts_files)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn collect_project_type_gate_native(
+    project_root: &Path,
+    ts_files: &[(PathBuf, String)],
+) -> Vec<Diagnostic> {
+    let mut diags = Vec::new();
+    if ts_files.is_empty() {
+        return diags;
+    }
+
+    let Some(tool) = resolve_tsgo(Some(project_root)) else {
+        diags.push(Diagnostic {
+            line: 1,
+            col: 1,
+            end_line: 1,
+            end_col: 1,
+            severity: DiagSeverity::Error,
+            message: TSGO_MISSING_MSG.to_string(),
+            rule: Some(RULE_TYPE_GATE.to_string()),
+        });
+        return diags;
+    };
+
+    // E1c: @ts-ignore in any project .ts under product envs.
+    for (path, src) in ts_files {
+        let env = type_env_for_path(path, Some(src));
+        if env == TypeEnv::Framework {
+            continue;
+        }
+        for d in scan_ts_ignore(src) {
+            let mut d = d;
+            d.message = format!("{} ({})", d.message, path.display());
+            diags.push(d);
+        }
+    }
+
+    let mut pure: Vec<(&Path, &str)> = Vec::new();
+    let mut action: Vec<(&Path, &str)> = Vec::new();
+    for (path, src) in ts_files {
+        match type_env_for_path(path, Some(src)) {
+            TypeEnv::Pure => pure.push((path.as_path(), src.as_str())),
+            TypeEnv::Action => action.push((path.as_path(), src.as_str())),
+            TypeEnv::Framework => {}
+        }
+    }
+
+    if let Err(e) = typecheck_project_env(project_root, TypeEnv::Pure, &pure, &tool, &mut diags) {
+        diags.push(io_fail_diag(&e));
+    }
+    if let Err(e) = typecheck_project_env(project_root, TypeEnv::Action, &action, &tool, &mut diags)
+    {
+        diags.push(io_fail_diag(&e));
+    }
+    diags
+}
+
+fn io_fail_diag(e: &std::io::Error) -> Diagnostic {
+    Diagnostic {
+        line: 1,
+        col: 1,
+        end_line: 1,
+        end_col: 1,
+        severity: DiagSeverity::Error,
+        message: format!(
+            "Type gate failed to invoke tsgo ({e}). \
+             Install with `bun install` (`@typescript/native-preview`)."
+        ),
+        rule: Some(RULE_TYPE_GATE.to_string()),
+    }
+}
+
+// ── region harness ─────────────────────────────────────────────────────────
+
+struct ControllerRegion {
+    /// Body text between `<controller…>` and `</controller>`.
+    /// Leading **blank** lines are dropped for line-padding; indentation on the
+    /// first content line is preserved so tsgo columns match author columns.
+    body: String,
+    /// 1-based line of the first body character in the author source.
+    body_start_line: usize,
+    /// Byte offset of the first body character (after leading blank lines).
+    #[allow(dead_code)]
+    body_start_byte: usize,
+    /// 1-based line of the `<controller` open tag (for missing-tsgo pointing).
+    open_line: usize,
+}
+
+fn extract_controller_region(source: &str) -> Option<ControllerRegion> {
+    let start = find_outside_comments(source, "<controller")?;
+    let open_rel = source[start..].find('>')?;
+    let body_start = start + open_rel + 1;
+    let rel = source[body_start..].find("</controller>")?;
+    let body_end = body_start + rel;
+    let raw = &source[body_start..body_end];
+    // Skip leading blank lines only — do **not** strip indentation on the first
+    // content line (that would shift diagnostic columns left).
+    let mut lead = 0usize;
+    {
+        let bytes = raw.as_bytes();
+        let mut i = 0usize;
+        while i < bytes.len() {
+            let line_start = i;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            let line_end = i; // exclusive, before newline
+            let line = &raw[line_start..line_end];
+            if line.chars().all(|c| c.is_whitespace()) {
+                // Consume this blank line including its trailing newline if any.
+                if i < bytes.len() && bytes[i] == b'\n' {
+                    i += 1;
+                }
+                lead = i;
+                continue;
+            }
+            break;
+        }
+    }
+    let body = raw[lead..].trim_end().to_string();
+    if body.is_empty() {
+        return None;
+    }
+    let body_start_byte = body_start + lead;
+    let body_start_line = line_of(source, body_start_byte);
+    let open_line = line_of(source, start);
+    Some(ControllerRegion {
+        body,
+        body_start_line,
+        body_start_byte,
+        open_line,
+    })
+}
+
+/// Comment-aware search — mirrors `parse::preprocess` for `<controller`.
+/// Walks by **bytes** but only compares the needle at ASCII-safe starts so
+/// multi-byte UTF-8 in comments never panics on a mid-char slice.
+fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let needle_b = needle.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'<' && i + 3 < bytes.len() && &bytes[i..i + 4] == b"<!--" {
+            // Search for `-->` in remaining bytes without slicing as str mid-char.
+            if let Some(rel) = find_bytes(&bytes[i + 4..], b"-->") {
+                i = i + 4 + rel + 3;
+                continue;
+            }
+            return None;
+        }
+        if bytes[i..].starts_with(needle_b) {
+            return Some(i);
+        }
+        i += 1;
+    }
+    None
+}
+
+fn find_bytes(hay: &[u8], needle: &[u8]) -> Option<usize> {
+    hay.windows(needle.len()).position(|w| w == needle)
+}
+
+fn line_of(source: &str, byte: usize) -> usize {
+    // Count newlines via bytes so multi-byte UTF-8 never trips a char-boundary panic.
+    let end = byte.min(source.len());
+    source.as_bytes()[..end]
+        .iter()
+        .filter(|&&b| b == b'\n')
+        .count()
+        + 1
+}
+
+fn typecheck_region_harness(
+    region: &ControllerRegion,
+    env: TypeEnv,
+    source_path: Option<&Path>,
+    tool: &TsgoTool,
+) -> std::io::Result<Vec<TsDiag>> {
+    let out_dir = gate_temp_dir(source_path);
+    std::fs::create_dir_all(&out_dir)?;
+
+    // Line-padding harness: body begins at its absolute .sail line number.
+    let mut harness = String::new();
+    for _ in 1..region.body_start_line {
+        harness.push('\n');
+    }
+    harness.push_str(&region.body);
+    if !harness.ends_with('\n') {
+        harness.push('\n');
+    }
+    let region_path = out_dir.join("region.ts");
+    std::fs::write(&region_path, &harness)?;
+
+    // Ambient stubs for runtime vocabulary so only real type/DOM law surfaces.
+    std::fs::write(
+        out_dir.join("sail-runtime-ambient.d.ts"),
+        runtime_ambient_dts(),
+    )?;
+
+    let mut files = vec![
+        "\"./region.ts\"".to_string(),
+        "\"./sail-runtime-ambient.d.ts\"".to_string(),
+    ];
+    // Materialize relative-import stubs so `./local-mod` / `./x.sail` do not
+    // emit TS2307 harness noise (isolated region has no sibling tree).
+    for stub_rel in materialize_relative_import_stubs(&region.body, &out_dir)? {
+        files.push(format!("\"{stub_rel}\""));
+    }
+    if env == TypeEnv::Action {
+        std::fs::write(
+            out_dir.join("action-observation.d.ts"),
+            emit_action_observation_dts(),
+        )?;
+        files.push("\"./action-observation.d.ts\"".to_string());
+    }
+
+    let lib = lib_for_type_env(env);
+    let lib_arr = lib
+        .iter()
+        .map(|e| format!("\"{e}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let tsconfig = format!(
+        r#"{{
+  "compilerOptions": {{
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [{lib_arr}],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true
+  }},
+  "files": [{files}]
+}}
+"#,
+        files = files.join(", "),
+    );
+    let tsconfig_path = out_dir.join("tsconfig.json");
+    std::fs::write(&tsconfig_path, tsconfig)?;
+
+    let output = run_tsgo(tool, &["-p", "tsconfig.json", "--noEmit"], &out_dir);
+    let result = match output {
+        Ok(output) => {
+            let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+            text.push_str(&String::from_utf8_lossy(&output.stderr));
+            Ok(text.lines().filter_map(parse_line).collect())
+        }
+        Err(e) => Err(e),
+    };
+    // Clean temp harness — long-lived LSP/deck processes must not pile up dirs.
+    let _ = std::fs::remove_dir_all(&out_dir);
+    result
+}
+
+fn runtime_ambient_dts() -> String {
+    let mut out = String::from(
+        "// GENERATED for type-gate harness — runtime ambient stubs (not product types).\n\
+         // Faithful-enough vocabulary so in-file type errors + DOM unnameables fire,\n\
+         // without module-resolution / stub-arity noise drowning legal controllers.\n",
+    );
+    for (authored, _, _) in RUNTIME_AMBIENT {
+        // Generic + contextual typing for higher-order helpers:
+        // - `(ctx) =>` callbacks avoid TS7006 under strict
+        // - `signal<T>(…)` / `controller<T>(…)` avoid TS2558 arity gaps
+        match *authored {
+            "controller" | "defineStore" | "form" => {
+                out.push_str(&format!(
+                    "declare function {authored}<Ctx = any, SC = any>(fn: (ctx: Ctx) => SC, ...rest: any[]): any;\n"
+                ));
+            }
+            "signal" | "derived" | "query" | "mutation" | "filteredList" | "createVirtualizer"
+            | "timeline" | "debounce" | "interval" => {
+                out.push_str(&format!(
+                    "declare function {authored}<T = any>(...args: any[]): any;\n"
+                ));
+            }
+            "effect" | "mount" | "batch" | "untrack" | "onCleanup" | "onMount" => {
+                out.push_str(&format!(
+                    "declare function {authored}(fn: (...args: any[]) => any, ...rest: any[]): any;\n"
+                ));
+            }
+            _ => {
+                out.push_str(&format!(
+                    "declare function {authored}<T = any>(...args: any[]): any;\n"
+                ));
+            }
+        }
+    }
+    // Names commonly free in controllers that live in DOM lib in stock tsc
+    // (not ESNext) but are NOT the Pure-region ban surface. Stub so they do
+    // not flood the gate with non-product ambient gaps.
+    for name in [
+        "console",
+        "queueMicrotask",
+        "structuredClone",
+        "URL",
+        "URLSearchParams",
+        "TextEncoder",
+        "TextDecoder",
+        "AbortController",
+        "AbortSignal",
+    ] {
+        out.push_str(&format!("declare const {name}: any;\n"));
+    }
+    // Keep this file a **script** (no top-level import/export) so the
+    // `declare function` runtime names stay global.
+    //
+    // Typed module shapes (not empty `declare module "x"`) so
+    // `import type { Action }` is a type, not TS2709 namespace-as-type.
+    // `@ship/*` covers inject ABI (`…/internal`), virtual, and other subpaths.
+    out.push_str(
+        r#"
+declare module "@ship/*" {
+  export type Action<P = unknown> = (
+    node: any,
+    param?: P,
+  ) => { update?(param: P): void; destroy?(): void } | void;
+  export type Signal<T = any> = ((...args: any[]) => any) & {
+    set(...args: any[]): any;
+  };
+  export type Derived<T = any> = Signal<T>;
+  export type ControllerScope<S = object> = S;
+  export type StoreDef<T = any> = any;
+  export type Theme = any;
+  /** Opaque empty shape — not HTMLElement, not any (capability firewall). */
+  export type SailHost = { readonly __sailHostBrand?: unique symbol };
+  export type Host = any;
+  export type BoundarySource = any;
+  export const scheduleFrame: (fn: () => void) => void;
+  export const asSailHost: (node: unknown) => SailHost;
+  export type Virtual = any;
+  export type VirtualItem = any;
+  export type ViewMount = any;
+  export const controller: any;
+  export const signal: any;
+  export const derived: any;
+  export const effect: any;
+  export const bindHtml: any;
+  export const emit: any;
+  export const mount: any;
+  export const onCleanup: any;
+  export const untrack: any;
+  export const batch: any;
+  export const form: any;
+  export const defineStore: any;
+  export const query: any;
+  export const mutation: any;
+  export const navigate: any;
+  export const useStore: any;
+  export const theme: any;
+  export const createVirtualizer: any;
+  const __default: any;
+  export default __default;
+}
+declare module "@ship/sail-runtime" {
+  export type Action<P = unknown> = (
+    node: any,
+    param?: P,
+  ) => { update?(param: P): void; destroy?(): void } | void;
+  export type Signal<T = any> = ((...args: any[]) => any) & {
+    set(...args: any[]): any;
+  };
+  export type Derived<T = any> = Signal<T>;
+  export type ControllerScope<S = object> = S;
+  export type StoreDef<T = any> = any;
+  export type Theme = any;
+  /** Opaque empty shape — not HTMLElement, not any (capability firewall). */
+  export type SailHost = { readonly __sailHostBrand?: unique symbol };
+  export type Host = any;
+  export type BoundarySource = any;
+  export const scheduleFrame: (fn: () => void) => void;
+  export const asSailHost: (node: unknown) => SailHost;
+  export const controller: any;
+  export const signal: any;
+  export const derived: any;
+  export const effect: any;
+  export const bindHtml: any;
+  export const emit: any;
+  const __default: any;
+  export default __default;
+}
+declare module "@ship/sail-runtime/internal" {
+  export function bindHtml(...args: any[]): any;
+  export function emit(...args: any[]): any;
+  export function controller(...args: any[]): any;
+  export function signal(...args: any[]): any;
+  export function derived(...args: any[]): any;
+  export function effect(...args: any[]): any;
+  export function mount(...args: any[]): any;
+  export function onCleanup(...args: any[]): any;
+  export function untrack(...args: any[]): any;
+  export function batch(...args: any[]): any;
+  export function form(...args: any[]): any;
+  export function defineStore(...args: any[]): any;
+  export function query(...args: any[]): any;
+  export function mutation(...args: any[]): any;
+  export function navigate(...args: any[]): any;
+  export function useStore(...args: any[]): any;
+  export function theme(...args: any[]): any;
+  export type Action<P = unknown> = (
+    node: any,
+    param?: P,
+  ) => { update?(param: P): void; destroy?(): void } | void;
+  export type Signal<T = any> = any;
+  export type ControllerScope<S = object> = S;
+  const __default: any;
+  export default __default;
+}
+declare module "@ship/sail-dom" {
+  const __default: any;
+  export default __default;
+}
+declare module "@ship/sail-test" {
+  const __default: any;
+  export default __default;
+}
+declare module "*.sail" {
+  export type Scope = any;
+  const __default: any;
+  export default __default;
+}
+"#,
+    );
+    out
+}
+
+/// Open `any` exports collected for one relative import specifier.
+#[derive(Default)]
+struct RelativeStub {
+    named: BTreeSet<String>,
+    has_default: bool,
+    /// `import * as ns` — emit a namespace-friendly default object shape.
+    has_namespace: bool,
+}
+
+/// Materialize stub `.ts` modules for relative imports in `body`.
+/// Returns tsconfig `"files"` entries (e.g. `"./markdown-render.ts"`).
+fn materialize_relative_import_stubs(body: &str, out_dir: &Path) -> std::io::Result<Vec<String>> {
+    let stubs = collect_relative_import_stubs(body);
+    let mut files = Vec::new();
+    for (spec, stub) in stubs {
+        let Some(rel_file) = relative_stub_file_name(&spec) else {
+            continue;
+        };
+        let dest = out_dir.join(&rel_file);
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let mut src =
+            String::from("// GENERATED type-gate relative-import stub — open any exports.\n");
+        for name in &stub.named {
+            if is_ts_ident(name) {
+                src.push_str(&format!(
+                    "export type {name} = any;\nexport const {name}: any = undefined as any;\n"
+                ));
+            }
+        }
+        if stub.has_default || stub.has_namespace || stub.named.is_empty() {
+            src.push_str("const __default: any = undefined as any;\nexport default __default;\n");
+        }
+        if src.lines().count() <= 1 {
+            src.push_str("export {};\n");
+        }
+        std::fs::write(&dest, src)?;
+        // tsconfig path uses forward slashes, rooted at out_dir.
+        let rel_s = rel_file.replace('\\', "/");
+        files.push(format!("./{rel_s}"));
+    }
+    Ok(files)
+}
+
+fn is_ts_ident(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' || c == '$' => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
+}
+
+/// Map `./markdown-render` → `markdown-render.ts`, `./x.sail` → `x.sail.ts`.
+/// Rejects path escape (`..` climbing above harness root).
+fn relative_stub_file_name(spec: &str) -> Option<String> {
+    let stripped = spec
+        .strip_prefix("./")
+        .or_else(|| spec.strip_prefix(".\\"))
+        .unwrap_or(spec);
+    if stripped.is_empty() || stripped.starts_with('/') || stripped.starts_with('\\') {
+        return None;
+    }
+    // Disallow escaping the harness dir via `..` segments.
+    let mut depth = 0i32;
+    for part in stripped.split(['/', '\\']) {
+        if part.is_empty() || part == "." {
+            continue;
+        }
+        if part == ".." {
+            depth -= 1;
+            if depth < 0 {
+                return None;
+            }
+        } else {
+            depth += 1;
+        }
+    }
+    Some(format!("{stripped}.ts"))
+}
+
+/// Parse relative `import` / `export … from` specs in a controller body.
+fn collect_relative_import_stubs(body: &str) -> HashMap<String, RelativeStub> {
+    let mut map: HashMap<String, RelativeStub> = HashMap::new();
+    let bytes = body.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        // Skip // line comments and /* */ blocks so strings inside comments
+        // never look like import specs.
+        if bytes[i] == b'/' && i + 1 < bytes.len() {
+            if bytes[i + 1] == b'/' {
+                i += 2;
+                while i < bytes.len() && bytes[i] != b'\n' {
+                    i += 1;
+                }
+                continue;
+            }
+            if bytes[i + 1] == b'*' {
+                i += 2;
+                while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                    i += 1;
+                }
+                i = (i + 2).min(bytes.len());
+                continue;
+            }
+        }
+        // Side-effect: import './x' / import "./x"
+        if rest_starts_with_kw(bytes, i, b"import") {
+            let after_kw = i + 6;
+            let j = skip_ws_bytes(bytes, after_kw);
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                if let Some((spec, next)) = parse_string_lit(bytes, j) {
+                    if is_relative_spec(&spec) {
+                        map.entry(spec).or_default();
+                    }
+                    i = next;
+                    continue;
+                }
+            }
+        }
+        // from './x' after import/export clauses
+        if rest_starts_with_kw(bytes, i, b"from") {
+            let after_kw = i + 4;
+            let j = skip_ws_bytes(bytes, after_kw);
+            if j < bytes.len() && (bytes[j] == b'\'' || bytes[j] == b'"') {
+                if let Some((spec, next)) = parse_string_lit(bytes, j) {
+                    if is_relative_spec(&spec) {
+                        // Walk back over whitespace to the import/export clause.
+                        let clause = clause_before_from(body, i);
+                        let entry = map.entry(spec).or_default();
+                        fill_stub_from_clause(clause, entry);
+                    }
+                    i = next;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    map
+}
+
+fn is_relative_spec(spec: &str) -> bool {
+    spec.starts_with("./") || spec.starts_with("../") || spec.starts_with(".\\")
+}
+
+fn rest_starts_with_kw(bytes: &[u8], i: usize, kw: &[u8]) -> bool {
+    if i + kw.len() > bytes.len() {
+        return false;
+    }
+    if &bytes[i..i + kw.len()] != kw {
+        return false;
+    }
+    // Left boundary: start or non-ident.
+    if i > 0 {
+        let c = bytes[i - 1];
+        if c.is_ascii_alphanumeric() || c == b'_' || c == b'$' {
+            return false;
+        }
+    }
+    // Right boundary.
+    if i + kw.len() < bytes.len() {
+        let c = bytes[i + kw.len()];
+        if c.is_ascii_alphanumeric() || c == b'_' || c == b'$' {
+            return false;
+        }
+    }
+    true
+}
+
+fn skip_ws_bytes(bytes: &[u8], mut i: usize) -> usize {
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    i
+}
+
+fn parse_string_lit(bytes: &[u8], i: usize) -> Option<(String, usize)> {
+    let quote = *bytes.get(i)?;
+    if quote != b'\'' && quote != b'"' {
+        return None;
+    }
+    let mut j = i + 1;
+    let mut out = String::new();
+    while j < bytes.len() {
+        let c = bytes[j];
+        if c == quote {
+            return Some((out, j + 1));
+        }
+        if c == b'\\' && j + 1 < bytes.len() {
+            out.push(bytes[j + 1] as char);
+            j += 2;
+            continue;
+        }
+        if c == b'\n' {
+            return None;
+        }
+        out.push(c as char);
+        j += 1;
+    }
+    None
+}
+
+/// Text of the import/export clause immediately before a `from` keyword.
+fn clause_before_from(body: &str, from_idx: usize) -> &str {
+    let before = &body[..from_idx];
+    // Find the nearest preceding `import` or `export` keyword.
+    let mut start = 0;
+    let b = before.as_bytes();
+    let mut i = 0;
+    while i < b.len() {
+        if rest_starts_with_kw(b, i, b"import") || rest_starts_with_kw(b, i, b"export") {
+            start = i;
+            i += 6;
+            continue;
+        }
+        i += 1;
+    }
+    before[start..].trim()
+}
+
+fn fill_stub_from_clause(clause: &str, stub: &mut RelativeStub) {
+    // clause examples:
+    //   import { a, b as c, type D } from
+    //   import def, { a } from
+    //   import * as ns from
+    //   import type { Scope } from
+    //   export { x } from
+    //   export type { Scope } from
+    let s = clause
+        .trim_start()
+        .trim_start_matches("export")
+        .trim_start()
+        .trim_start_matches("import")
+        .trim_start()
+        .trim_start_matches("type")
+        .trim_start();
+
+    // namespace: * as name
+    if let Some(rest) = s.strip_prefix('*') {
+        let rest = rest.trim_start();
+        if rest.starts_with("as") {
+            stub.has_namespace = true;
+            stub.has_default = true;
+        }
+        // still may have nothing else
+        return;
+    }
+
+    // default + optional named: def, { … }  OR  def
+    // named only: { … }
+    if let Some(brace) = s.find('{') {
+        let head = s[..brace].trim().trim_end_matches(',').trim();
+        if !head.is_empty() && head != "type" {
+            // default binding (possibly `type Default` — rare)
+            let def = head.trim_start_matches("type").trim();
+            if is_ts_ident(def) {
+                stub.has_default = true;
+            }
+        }
+        if let Some(end) = s[brace + 1..].find('}') {
+            let inner = &s[brace + 1..brace + 1 + end];
+            for part in inner.split(',') {
+                let part = part.trim();
+                if part.is_empty() {
+                    continue;
+                }
+                // type Foo / Foo as Bar / default as X
+                let mut tok = part.trim_start_matches("type").trim();
+                if tok.is_empty() {
+                    continue;
+                }
+                if tok.starts_with("default") {
+                    stub.has_default = true;
+                    continue;
+                }
+                // take left of `as`
+                if let Some((left, _)) = tok.split_once(" as ") {
+                    tok = left.trim();
+                } else if let Some((left, _)) = tok.split_once("\tas\t") {
+                    tok = left.trim();
+                } else if let Some(idx) = tok.find(" as") {
+                    // "Foo as Bar"
+                    tok = tok[..idx].trim();
+                }
+                if is_ts_ident(tok) {
+                    stub.named.insert(tok.to_string());
+                }
+            }
+        }
+    } else {
+        // bare default: import Foo from './x'
+        let def = s.trim().trim_end_matches(';').trim();
+        if is_ts_ident(def) {
+            stub.has_default = true;
+        }
+    }
+}
+
+fn gate_temp_dir(source_path: Option<&Path>) -> PathBuf {
+    static COUNTER: OnceLock<std::sync::atomic::AtomicU64> = OnceLock::new();
+    let n = COUNTER
+        .get_or_init(|| std::sync::atomic::AtomicU64::new(0))
+        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let stem = source_path
+        .and_then(|p| p.file_stem())
+        .and_then(|s| s.to_str())
+        .unwrap_or("anon");
+    // Sanitize stem for path safety.
+    let safe: String = stem
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    std::env::temp_dir().join(format!("sail-type-gate-{safe}-{n}"))
+}
+
+// ── project env batch ──────────────────────────────────────────────────────
+
+fn typecheck_project_env(
+    project_root: &Path,
+    env: TypeEnv,
+    files: &[(&Path, &str)],
+    tool: &TsgoTool,
+    diags: &mut Vec<Diagnostic>,
+) -> std::io::Result<()> {
+    if files.is_empty() {
+        return Ok(());
+    }
+    let out_dir = project_root
+        .join(".deck")
+        .join(format!("type-gate-{}", env_label(env)));
+    // Fresh tree each run so stale mirrors cannot leak.
+    let _ = std::fs::remove_dir_all(&out_dir);
+    std::fs::create_dir_all(&out_dir)?;
+
+    // Materialize sources under out_dir preserving relative paths so relative
+    // imports between product files still resolve (no f{i}.ts rename).
+    let mut file_list: Vec<String> = Vec::new();
+    let mut path_map: Vec<(String, PathBuf)> = Vec::new();
+    for (i, (path, src)) in files.iter().enumerate() {
+        let rel = match path.strip_prefix(project_root) {
+            Ok(r) if !r.as_os_str().is_empty() => r.to_path_buf(),
+            _ => PathBuf::from(format!(
+                "_external/f{i}_{}",
+                path.file_name()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("anon.ts")
+            )),
+        };
+        let dest = out_dir.join(&rel);
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&dest, src)?;
+        // tsconfig paths are relative to out_dir.
+        let rel_s = rel.to_string_lossy().replace('\\', "/");
+        file_list.push(format!("\"./{rel_s}\""));
+        path_map.push((rel_s, path.to_path_buf()));
+    }
+
+    std::fs::write(
+        out_dir.join("sail-runtime-ambient.d.ts"),
+        runtime_ambient_dts(),
+    )?;
+    file_list.push("\"./sail-runtime-ambient.d.ts\"".into());
+
+    if env == TypeEnv::Action {
+        std::fs::write(
+            out_dir.join("action-observation.d.ts"),
+            emit_action_observation_dts(),
+        )?;
+        file_list.push("\"./action-observation.d.ts\"".into());
+    }
+
+    let lib = lib_for_type_env(env);
+    let lib_arr = lib
+        .iter()
+        .map(|e| format!("\"{e}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    // Mirror lives at `{project}/.deck/type-gate-{env}/`. Map @/ aliases back to
+    // the real project tree with paths relative to this config dir (tsgo has
+    // removed `baseUrl` — TS5102 — so we must not emit it here).
+    let path_entries: Vec<String> = crate::project_map::at_alias_paths()
+        .iter()
+        .map(|m| {
+            let target = m.target.trim_start_matches("./");
+            // out_dir is project/.deck/type-gate-*/ → ../../ reaches project root.
+            format!("      \"{}\": [\"../../{target}\"]", m.pattern)
+        })
+        .collect();
+    let paths_block = path_entries.join(",\n");
+    let tsconfig = format!(
+        r#"{{
+  "compilerOptions": {{
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [{lib_arr}],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "paths": {{
+{paths_block}
+    }}
+  }},
+  "files": [{files}]
+}}
+"#,
+        files = file_list.join(", "),
+    );
+    std::fs::write(out_dir.join("tsconfig.json"), tsconfig)?;
+
+    let output = run_tsgo(tool, &["-p", "tsconfig.json", "--noEmit"], &out_dir)?;
+    let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+    text.push_str(&String::from_utf8_lossy(&output.stderr));
+
+    for d in text.lines().filter_map(parse_line) {
+        // Skip ambient pack diagnostics — only product mirror files.
+        if d.file.contains("sail-runtime-ambient")
+            || d.file.contains("action-observation")
+            || d.file.ends_with("tsconfig.json")
+        {
+            continue;
+        }
+        // Resolve mirrored relative path → real path for teaching message.
+        let real = path_map
+            .iter()
+            .find(|(n, _)| {
+                let n_slash = n.replace('\\', "/");
+                let f = d.file.replace('\\', "/");
+                f.ends_with(&n_slash) || f.contains(&format!("/{n_slash}"))
+            })
+            .map(|(_, p)| p.display().to_string())
+            .unwrap_or_else(|| d.file.clone());
+        if let Some(mut mapped) = map_region_diag(&d, env) {
+            // Bracketed real path — CLI `project_ts_type_gate` prints it as the
+            // diagnostic file path (`path:line:col`).
+            mapped.message = format!("{} [{}]", mapped.message, real);
+            diags.push(mapped);
+        }
+    }
+    Ok(())
+}
+
+fn env_label(env: TypeEnv) -> &'static str {
+    match env {
+        TypeEnv::Pure => "pure",
+        TypeEnv::Action => "action",
+        TypeEnv::Framework => "framework",
+    }
+}
+
+// ── diagnostic mapping ─────────────────────────────────────────────────────
+
+/// Codes that mean "name/type not found" under a stripped lib — candidates for
+/// Pure/Action DOM teaching rewrites when the missing name is a DOM surface.
+const NAME_CODES: &[&str] = &["TS2304", "TS2552", "TS2584", "TS2503", "TS2551", "TS2339"];
+
+/// Map one tsgo diagnostic into the sail stream.
+///
+/// Doctrine: **if tsc does not compile under a faithful env, sail does not
+/// compile.** DOM-surface unnameables rewrite to `sail-pure-region` /
+/// `sail-action-surface`; intrinsic type errors become `sail-type-gate`.
+/// Residual harness module-resolution noise (`TS2307` for relative / `@ship/`
+/// / `@/` project-alias specs) is **not** promoted until the region runs
+/// under full project resolution — see module docs.
+fn map_region_diag(d: &TsDiag, env: TypeEnv) -> Option<Diagnostic> {
+    // Prefer teaching rewrite for DOM-surface name errors.
+    if NAME_CODES.contains(&d.code.as_str()) {
+        if let Some(name) = extract_not_found_name(&d.message) {
+            if is_dom_surface_name(&name) {
+                // Action observation set is allowed under Action env.
+                if env == TypeEnv::Action && is_action_observation_name(&name) {
+                    return None;
+                }
+                let (rule, message) = match env {
+                    TypeEnv::Pure | TypeEnv::Framework => (
+                        RULE_PURE_REGION,
+                        format!(
+                            "`{name}` is not nameable here — controllers/compositions/stores are Pure \
+                             (ESNext only; no DOM lib). Move DOM work to a `use:` action."
+                        ),
+                    ),
+                    TypeEnv::Action => (
+                        RULE_ACTION_SURFACE,
+                        format!(
+                            "`{name}` is not nameable on the action surface — actions get the observation \
+                             set only (requestAnimationFrame, IntersectionObserver, ResizeObserver, \
+                             MutationObserver, getComputedStyle). Use a handed `node` argument; do not \
+                             name document/window."
+                        ),
+                    ),
+                };
+                return Some(Diagnostic {
+                    line: d.line,
+                    col: d.col,
+                    end_line: d.line,
+                    end_col: d.col + name.len().max(1),
+                    severity: DiagSeverity::Error,
+                    message,
+                    rule: Some(rule.to_string()),
+                });
+            }
+        }
+    }
+
+    // Interim: isolated region harness cannot resolve the author tree.
+    // Ambient packs + relative stubs cover the common cases; any residual
+    // TS2307 for relative / inject-ABI / `@/` project-alias modules is
+    // harness noise, not product law (project batch already emits `@/` paths).
+    if d.code == "TS2307" {
+        if let Some(spec) = extract_cannot_find_module(&d.message) {
+            if is_harness_unresolved_module_noise(&spec) {
+                return None;
+            }
+        }
+    }
+
+    // Intrinsic type errors and remaining name gaps: hard sail-type-gate fail.
+    let end_col = d.col + 1;
+    Some(Diagnostic {
+        line: d.line,
+        col: d.col,
+        end_line: d.line,
+        end_col,
+        severity: DiagSeverity::Error,
+        message: format!("{}: {}", d.code, d.message),
+        rule: Some(RULE_TYPE_GATE.to_string()),
+    })
+}
+
+/// `"Cannot find module 'X' or its corresponding type declarations."`
+fn extract_cannot_find_module(message: &str) -> Option<String> {
+    const PFX: &str = "Cannot find module '";
+    let rest = message.find(PFX).map(|i| &message[i + PFX.len()..])?;
+    let end = rest.find('\'').unwrap_or(rest.len());
+    let spec = &rest[..end];
+    if spec.is_empty() {
+        None
+    } else {
+        Some(spec.to_string())
+    }
+}
+
+/// Relative specs, `@ship/…` inject/runtime paths, and `@/…` project aliases
+/// are expected gaps in the isolated harness (no project `paths` / sibling
+/// tree). Project batch already maps `@/` via `at_alias_paths`; region
+/// harness suppresses residual TS2307 until that fidelity lands here.
+/// Not product law yet — third-party bare modules still promote.
+fn is_harness_unresolved_module_noise(spec: &str) -> bool {
+    is_relative_spec(spec)
+        || spec.starts_with("@ship/")
+        || spec.starts_with("@/")
+        || spec.ends_with(".sail")
+        || spec.contains(".sail")
+}
+
+fn extract_not_found_name(message: &str) -> Option<String> {
+    // "Cannot find name 'window'." / "Cannot find namespace 'NodeJS'."
+    // "Property 'x' does not exist on type ..."
+    let patterns = [
+        "Cannot find name '",
+        "Cannot find namespace '",
+        "Cannot find name “",
+        "Property '",
+    ];
+    for p in patterns {
+        if let Some(rest) = message
+            .strip_prefix(p)
+            .or_else(|| message.find(p).map(|i| &message[i + p.len()..]))
+        {
+            let end = rest.find(['\'', '’', '”', '"']).unwrap_or(rest.len());
+            let name = &rest[..end];
+            if !name.is_empty() {
+                // Property messages are not free-global DOM unnameables for
+                // teaching rewrite (they still promote via sail-type-gate).
+                if p.starts_with("Property") {
+                    return None;
+                }
+                return Some(name.to_string());
+            }
+        }
+    }
+    // TS2584: Cannot find name 'document'. Do you need to change your target library?
+    if let Some(i) = message.find("Cannot find name '") {
+        let rest = &message[i + "Cannot find name '".len()..];
+        let end = rest.find('\'').unwrap_or(rest.len());
+        let name = &rest[..end];
+        if !name.is_empty() {
+            return Some(name.to_string());
+        }
+    }
+    None
+}
+
+fn is_dom_surface_name(name: &str) -> bool {
+    // Allowlist of known DOM globals + constructors/interfaces. Avoid bare
+    // suffix matching (`UserEvent`, `RowElement`) and ambiguous free names
+    // (`self` / `parent` / `top`) that are common user identifiers.
+    matches!(
+        name,
+        "window"
+            | "document"
+            | "Document"
+            | "Window"
+            | "HTMLElement"
+            | "Element"
+            | "Node"
+            | "Event"
+            | "EventTarget"
+            | "localStorage"
+            | "sessionStorage"
+            | "navigator"
+            | "location"
+            | "history"
+            | "History"
+            | "Location"
+            | "Navigator"
+            | "matchMedia"
+            | "MediaQueryList"
+            | "getComputedStyle"
+            | "requestAnimationFrame"
+            | "cancelAnimationFrame"
+            | "IntersectionObserver"
+            | "ResizeObserver"
+            | "MutationObserver"
+            | "customElements"
+            | "DOMParser"
+            | "XMLHttpRequest"
+            | "WebSocket"
+            | "EventSource"
+            | "fetch"
+            | "Headers"
+            | "Request"
+            | "Response"
+            | "FormData"
+            | "FileReader"
+            | "Blob"
+            | "File"
+            | "Image"
+            | "Audio"
+            | "Worker"
+            | "SharedWorker"
+            | "ServiceWorker"
+            | "MessageChannel"
+            | "BroadcastChannel"
+            | "CSSStyleDeclaration"
+            | "DOMRect"
+            | "DOMRectReadOnly"
+            | "HTMLDivElement"
+            | "HTMLInputElement"
+            | "HTMLButtonElement"
+            | "HTMLCanvasElement"
+            | "HTMLSpanElement"
+            | "HTMLAnchorElement"
+            | "HTMLImageElement"
+            | "HTMLTextAreaElement"
+            | "HTMLSelectElement"
+            | "HTMLFormElement"
+            | "HTMLUListElement"
+            | "HTMLLIElement"
+            | "HTMLTableElement"
+            | "SVGElement"
+            | "SVGSVGElement"
+            | "ShadowRoot"
+            | "MutationRecord"
+            | "ResizeObserverEntry"
+            | "IntersectionObserverEntry"
+            | "PointerEvent"
+            | "MouseEvent"
+            | "KeyboardEvent"
+            | "FocusEvent"
+            | "InputEvent"
+            | "TouchEvent"
+            | "WheelEvent"
+            | "DragEvent"
+            | "ClipboardEvent"
+            | "CustomEvent"
+            | "frames"
+            | "screen"
+            | "performance"
+            | "crypto"
+            | "indexedDB"
+            | "caches"
+            | "cookieStore"
+            | "visualViewport"
+    ) || (name.starts_with("HTML") && name.ends_with("Element"))
+        || (name.starts_with("SVG") && name.len() > 3)
+}
+
+fn is_action_observation_name(name: &str) -> bool {
+    matches!(
+        name,
+        "requestAnimationFrame"
+            | "cancelAnimationFrame"
+            | "IntersectionObserver"
+            | "ResizeObserver"
+            | "MutationObserver"
+            | "getComputedStyle"
+            | "Element"
+            | "DOMRectReadOnly"
+            | "CSSStyleDeclaration"
+            | "ResizeObserverEntry"
+            | "ResizeObserverOptions"
+            | "ResizeObserverCallback"
+            | "IntersectionObserverEntry"
+            | "IntersectionObserverInit"
+            | "IntersectionObserverCallback"
+            | "MutationRecord"
+            | "MutationObserverInit"
+            | "MutationCallback"
+            | "MutationRecordType"
+    )
+}
+
+// ── @ts-ignore scan (E1c) ──────────────────────────────────────────────────
+
+fn scan_ts_ignore(source: &str) -> Vec<Diagnostic> {
+    let mut diags = Vec::new();
+    // Only regions that are TS: inside <controller>…</controller> and bare
+    // .ts files (whole source). For .sail, limit to controller body.
+    let region = if source.contains("<controller") {
+        let Some(r) = extract_controller_region(source) else {
+            return diags;
+        };
+        Some(r)
+    } else {
+        None
+    };
+    let (line_lo, line_hi) = match &region {
+        Some(r) => {
+            let body_lines = r.body.lines().count().max(1);
+            (r.body_start_line, r.body_start_line + body_lines)
+        }
+        None => (1, usize::MAX),
+    };
+    let needles = ["@ts-ignore", "@ts-nocheck", "@ts-expect-error"];
+    for (line_idx, line) in source.lines().enumerate() {
+        let line_no = line_idx + 1;
+        if line_no < line_lo || line_no >= line_hi {
+            continue;
+        }
+        for needle in needles {
+            if let Some(col0) = line.find(needle) {
+                diags.push(Diagnostic {
+                    line: line_no,
+                    col: col0 + 1,
+                    end_line: line_no,
+                    end_col: col0 + 1 + needle.len(),
+                    severity: DiagSeverity::Error,
+                    message: format!(
+                        "`{needle}` is not allowed — the type gate is the point. \
+                         Fix the type or move the code to its sanctioned region \
+                         (Pure controller/composition/store vs Action observation)."
+                    ),
+                    rule: Some(RULE_NO_TS_IGNORE.to_string()),
+                });
+            }
+        }
+    }
+    diags
+}
+
+// ── legacy bridge (props/variants + synthetic controller) ──────────────────
+//
+// These helpers are **not** wired into `collect` / `collect_sail_type_gate` /
+// `collect_project_type_gate`. Production OnSave type law is the region/project
+// harness above. Keep for props/variants bridge tests and the synthetic
+// template↔controller scope-contract gate (separate filter set).
+
 /// Type-check `block` (a TS module body) against `harness` (the `.ts` providing
 /// `props()`/`variants()` + the built-in symbols). Returns tsgo's diagnostics —
 /// empty means clean. `node`/`tsgo_js` locate the shipped compiler; production
 /// resolves them from the toolchain, the spike passes them in.
+///
+/// **Not** part of the E1 type gate (`collect_*`); test/legacy props bridge only.
 pub fn typecheck_block(
     harness: &str,
     block: &str,
@@ -54,6 +1628,7 @@ fn parse_line(line: &str) -> Option<TsDiag> {
     let (l, c) = line[open + 1..close].split_once(',')?;
     let line_no = l.trim().parse().ok()?;
     let col_no = c.trim().parse().ok()?;
+    let file = line[..open].trim().to_string();
     let rest = line[close + 1..].trim_start_matches(':').trim();
     let rest = rest.strip_prefix("error").unwrap_or(rest).trim();
     let (code, msg) = rest.split_once(':')?;
@@ -61,6 +1636,7 @@ fn parse_line(line: &str) -> Option<TsDiag> {
         return None;
     }
     Some(TsDiag {
+        file,
         line: line_no,
         col: col_no,
         code: code.trim().to_string(),
@@ -68,17 +1644,14 @@ fn parse_line(line: &str) -> Option<TsDiag> {
     })
 }
 
-/// Type-check the synthetic controller + render pair for an SFC `source`: emit
-/// the pair (composing the inline `<controller>` block), write them alongside a
-/// tsconfig whose `paths` map `@ship/sail-runtime` / `@ship/sail-dom` to the real
-/// package sources under `workspace_root`, and run tsgo. A template expression
-/// that reads a name the controller's typed scope does not provide
-/// (`scope.dragVisible` with no `dragVisible`) is a hard type error here — the
-/// template↔controller contract, gated at compile time. This turns the
-/// `$scope.X is not a function` runtime crash class into a build error.
+/// Type-check the synthetic controller + render pair for an SFC `source`.
 ///
 /// Returns tsgo diagnostics (empty = clean). `Ok(vec![])` when there's no inline
 /// controller to check against (bare fragment) or the pair can't be emitted.
+///
+/// **Not** wired into `collect` / compile gate — owns template↔controller
+/// *scope contract* codes only ([`SCOPE_CONTRACT_CODES`]). E1 type gate is
+/// [`collect_sail_type_gate`] / [`collect_project_type_gate`].
 pub fn check_synthetic_controller(
     source: &str,
     source_dir: &Path,
@@ -92,9 +1665,6 @@ pub fn check_synthetic_controller(
     use crate::emit::writer::js_string;
     use crate::parse::{self, preprocess};
 
-    // SFC: strip the inline `<controller>` block. No block → nothing to check
-    // here (the paired-file model is composed elsewhere); a bare fragment has no
-    // scope contract to violate.
     let (stripped, inline_ctrl) = preprocess::extract_controller_block(source);
     let Some(body) = inline_ctrl else {
         return Ok(Vec::new());
@@ -104,15 +1674,9 @@ pub fn check_synthetic_controller(
     };
 
     std::fs::create_dir_all(out_dir)?;
-    // Lower `query()`/`mutation()`/`invalidate()` before the ambient-import
-    // wrap (see `check::query_keys`). This tsgo pass is best-effort type
-    // checking, not the compile gate — a refusal here just skips the tsgo
-    // run; `check::run`/`compile()` is where a bad usage becomes a real
-    // build error.
     let Ok(rewritten) = crate::check::query_keys::rewrite(&body) else {
         return Ok(Vec::new());
     };
-    // Materialize the inline controller, then compose it into the typed pair.
     std::fs::write(
         out_dir.join("view.controller.ts"),
         preprocess::wrap_controller_body(&rewritten),
@@ -136,13 +1700,6 @@ pub fn check_synthetic_controller(
     )?;
     std::fs::write(out_dir.join("view.render.ts"), &out.render_ts)?;
 
-    // Resolve the controller's sibling imports so the isolated check doesn't
-    // TS2307 on `import type { Scope } from './X.sail'` / `import {..} from
-    // './utils'`. Copy sibling `.ts`/`.d.ts` verbatim, and GENERATE
-    // `<sib>.sail.d.ts` for every sibling `.sail` — the emitted d.ts exports the
-    // `Scope` type and TS resolves `./X.sail` to `./X.sail.d.ts`. Best-effort: a
-    // sibling that fails to compile is skipped (the tsgo run reports the real
-    // error if the missing type actually matters).
     if let Ok(entries) = std::fs::read_dir(source_dir) {
         for entry in entries.flatten() {
             let p = entry.path();
@@ -177,9 +1734,6 @@ pub fn check_synthetic_controller(
         }
     }
 
-    // Map the bare package specifiers to the real workspace sources so tsgo
-    // checks `scope.X` against the REAL runtime types. `baseUrl` was removed in
-    // tsgo v7 — absolute `paths` targets work without it.
     let runtime = workspace_root.join("packages/sail/runtime/src/index.ts");
     let dom = workspace_root.join("packages/sail/dom/src/index.ts");
     let tsconfig = format!(
@@ -201,13 +1755,6 @@ pub fn check_synthetic_controller(
         .output()?;
     let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
     text.push_str(&String::from_utf8_lossy(&output.stderr));
-    // This gate owns exactly ONE contract: does a template expression read a
-    // name / member the controller's typed scope does not provide? Keep only
-    // those diagnostics — a missing property (`scope.dragVisible`) or an unbound
-    // name (`scope.countt`). Everything else tsgo emits over the generated pair
-    // (implicit-any params `TS7006`, module-resolution `TS2307`, strict-null
-    // noise…) is harness strictness, NOT a template↔controller violation, and
-    // must not fail the build.
     Ok(text
         .lines()
         .filter_map(parse_line)
@@ -222,17 +1769,406 @@ pub fn check_synthetic_controller(
 /// did-you-mean).
 const SCOPE_CONTRACT_CODES: &[&str] = &["TS2339", "TS2551", "TS2304", "TS2552"];
 
+// ── tests ──────────────────────────────────────────────────────────────────
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn tsgo_env() -> Option<(String, String)> {
+        let node = std::env::var("SUI_TSGO_NODE").ok()?;
+        let js = std::env::var("SUI_TSGO_JS").ok()?;
+        if Path::new(&node).exists() && Path::new(&js).exists() {
+            Some((node, js))
+        } else {
+            None
+        }
+    }
+
+    #[test]
+    fn resolve_tsgo_finds_workspace() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        let tool = resolve_tsgo(Some(root));
+        assert!(
+            tool.is_some(),
+            "tsgo must resolve from workspace (bun install @typescript/native-preview)"
+        );
+    }
+
+    #[test]
+    fn pure_region_flags_window() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required for type gate tests — run bun install");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const hist = window.history
+  return { hist }
+})
+</controller>
+<div>{hist}</div>
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_PURE_REGION) && d.message.contains("window")
+            }),
+            "expected sail-pure-region on window, got {diags:?}"
+        );
+        // Span should land near the window reference (line in fixture).
+        let hit = diags
+            .iter()
+            .find(|d| d.rule.as_deref() == Some(RULE_PURE_REGION))
+            .unwrap();
+        assert!(
+            hit.line >= 3,
+            "window line must map into controller body, got line {}",
+            hit.line
+        );
+    }
+
+    #[test]
+    fn clean_controller_no_false_positive() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const count = signal(0)
+  const inc = () => count.set(count() + 1)
+  return { count, inc }
+})
+</controller>
+<button on:click={inc}>{count()}</button>
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let type_errs: Vec<_> = diags
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d.rule.as_deref(),
+                    Some(RULE_PURE_REGION | RULE_ACTION_SURFACE | RULE_TYPE_GATE)
+                )
+            })
+            .collect();
+        assert!(
+            type_errs.is_empty(),
+            "clean Pure controller must not type-gate fail: {type_errs:?}"
+        );
+    }
+
+    #[test]
+    fn ts_ignore_is_banned() {
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  // @ts-ignore
+  const x = 1
+  return { x }
+})
+</controller>
+<div />
+"#;
+        let diags = collect_sail_type_gate(src, None);
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(RULE_NO_TS_IGNORE)),
+            "expected sail-no-ts-ignore, got {diags:?}"
+        );
+    }
+
+    #[test]
+    fn action_document_fails_raf_passes() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let bad = (
+            root.join("apps/x/src/actions/bad.ts"),
+            "export function bad(node: Element) { document.body.append(node) }\n".to_string(),
+        );
+        let ok = (
+            root.join("apps/x/src/actions/ok.ts"),
+            "export function ok(node: Element) {\n  requestAnimationFrame(() => {})\n  new IntersectionObserver(() => {}).observe(node)\n}\n"
+                .to_string(),
+        );
+        let diags = collect_project_type_gate(root, &[bad, ok]);
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_ACTION_SURFACE) && d.message.contains("`document`")
+            }),
+            "document must fail under Action: {diags:?}"
+        );
+        // No false positive that names rAF/IO as the banned symbol (teaching
+        // messages may list them as allowed — check the backtick-wrapped name).
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.message.contains("`requestAnimationFrame`")
+                    || d.message.contains("`IntersectionObserver`")),
+            "observation set must pass under Action: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn composition_window_fails() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let file = (
+            root.join("apps/x/src/compositions/use-win.ts"),
+            "export function useWin() { return window.innerWidth }\n".to_string(),
+        );
+        let diags = collect_project_type_gate(root, &[file]);
+        assert!(
+            diags.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_PURE_REGION) && d.message.contains("window")
+            }),
+            "composition window must fail Pure: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn non_dom_type_error_is_type_gate() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        // Doctrine: real type errors (not just DOM names) fail the gate.
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const n: number = "not-a-number"
+  return { n }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(RULE_TYPE_GATE)),
+            "expected sail-type-gate on type mismatch, got {diags:?}"
+        );
+    }
+
+    #[test]
+    fn relative_and_internal_imports_are_not_type_gate_noise() {
+        // Isolated harness must not false-fail legal controllers solely on
+        // TS2307 for `./local-mod` / `@ship/sail-runtime/internal` (no DOM,
+        // no intrinsic type mismatch).
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+import { bindHtml } from '@ship/sail-runtime/internal'
+import type { Action } from '@ship/sail-runtime'
+import type { Scope } from './local-widget.sail'
+import { helper } from './local-mod'
+
+export default controller((ctx: Scope) => {
+  const paint: Action<void> = (node) => {
+    const stop = bindHtml(node as any, () => helper(ctx))
+    return { destroy: stop }
+  }
+  return { paint, helper }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let type_errs: Vec<_> = diags
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d.rule.as_deref(),
+                    Some(RULE_PURE_REGION | RULE_ACTION_SURFACE | RULE_TYPE_GATE)
+                )
+            })
+            .collect();
+        assert!(
+            type_errs.is_empty(),
+            "relative/internal imports without DOM/type errors must not sail-type-gate: {type_errs:?}"
+        );
+    }
+
+    #[test]
+    fn at_alias_imports_are_not_type_gate_noise() {
+        // Isolated region harness has no project `paths` for `@/…` (project
+        // batch does via `at_alias_paths`). Controllers that only import
+        // app-local compositions/stores must not sole-fail as sail-type-gate.
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+import { directory } from '@/compositions/foo'
+import { tally } from '@/stores/counter-store'
+
+export default controller((ctx) => {
+  const n = signal(0)
+  return { n, directory, tally }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let type_errs: Vec<_> = diags
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d.rule.as_deref(),
+                    Some(RULE_PURE_REGION | RULE_ACTION_SURFACE | RULE_TYPE_GATE)
+                )
+            })
+            .collect();
+        assert!(
+            type_errs.is_empty(),
+            "@/ compositions/stores without DOM/type errors must not sail-type-gate: {type_errs:?}"
+        );
+    }
+
+    #[test]
+    fn signal_generic_arity_is_not_type_gate_noise() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const n = signal<number>(0)
+  const s = signal<string | null>(null)
+  return { n, s }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let type_errs: Vec<_> = diags
+            .iter()
+            .filter(|d| d.rule.as_deref() == Some(RULE_TYPE_GATE))
+            .collect();
+        assert!(
+            type_errs.is_empty(),
+            "signal<T> must not emit TS2558 harness noise: {type_errs:?}"
+        );
+    }
+
+    #[test]
+    fn first_body_line_indent_preserves_column() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        // First content line is indented; `window` starts at author col 14
+        // (2-space indent + "const x = " is 10 → window at 13? Let's compute:
+        // "  const x = window" → w is at index 12 → col 13).
+        let src = "<controller>\n  const x = window.history\n  export default controller(() => ({ x }))\n</controller>\n<div />\n";
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        let hit = diags
+            .iter()
+            .find(|d| d.rule.as_deref() == Some(RULE_PURE_REGION) && d.message.contains("`window`"))
+            .unwrap_or_else(|| panic!("expected window pure-region, got {diags:?}"));
+        // Author: line 2, "  const x = window" → col of 'w' is 13 (1-based).
+        assert_eq!(hit.line, 2, "line padding must keep absolute line");
+        assert_eq!(
+            hit.col, 13,
+            "column must preserve indent (not strip first-line spaces), got col {}",
+            hit.col
+        );
+    }
+
+    #[test]
+    fn user_shaped_parent_is_not_pure_region_teaching() {
+        // Undefined `parent` must not be taught as "move DOM work to a use: action".
+        // It may still fail as sail-type-gate (Cannot find name).
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let src = r#"
+<controller>
+export default controller((ctx) => {
+  const x = parent
+  return { x }
+})
+</controller>
+<div />
+"#;
+        let path = root.join("apps/fake/src/widget/widget.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            !diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(RULE_PURE_REGION)
+                    && d.message.contains("`parent`")),
+            "parent must not be sail-pure-region: {diags:?}"
+        );
+        assert!(
+            diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some(RULE_TYPE_GATE)),
+            "undefined parent should still fail type gate: {diags:?}"
+        );
+    }
+
     /// The template↔controller gate: an inline-controller SFC whose template
     /// reads a name the controller's typed scope provides typechecks clean;
-    /// a typo (`countt`) is a hard tsgo error. Proves the `$scope.X is not a
-    /// function` class is caught at compile time.
+    /// a typo (`countt`) is a hard tsgo error.
     #[test]
     fn synthetic_controller_gate_catches_template_typo() {
-        let Some((node, js)) = tsgo() else {
+        let Some((node, js)) = tsgo_env() else {
             eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
             return;
         };
@@ -248,9 +2184,6 @@ mod tests {
             export default controller((ctx) => ({ count: signal(0) }))\n\
             </controller>\n";
 
-        // VALID: the template reads `count`, which the scope provides.
-        // Self-contained controller → a nonexistent source_dir skips the
-        // sibling-resolution copy/generate step.
         let no_sibs = Path::new("/nonexistent-sail-siblings");
         let ok =
             format!("{CTRL}<button on:click={{() => count.set(count() + 1)}}>{{count()}}</button>");
@@ -260,7 +2193,6 @@ mod tests {
             "valid SFC must typecheck clean, got {diags:?}"
         );
 
-        // BROKEN: `countt` is not a scope member — a hard type error.
         let bad = format!("{CTRL}<button>{{countt()}}</button>");
         let diags = check_synthetic_controller(&bad, no_sibs, &dir, &node, &js, &ws).unwrap();
         assert!(
@@ -269,7 +2201,6 @@ mod tests {
         );
     }
 
-    // The props() surface the compiler would generate/ship. Real TS.
     const HARNESS: &str = r#"
 export type Prop<T> = { readonly __prop: T }
 export const tone: Prop<'default'|'primary'|'info'|'success'|'warning'|'destructive'|'accent'|'muted'> = { __prop: 'default' }
@@ -279,27 +2210,14 @@ export const string: Prop<string> = { __prop: '' }
 export function props<T extends Record<string, Prop<unknown> | readonly string[]>>(defs: T): T { return defs }
 "#;
 
-    fn tsgo() -> Option<(String, String)> {
-        // Spike: locate node + the shipped tsgo. Skips (returns None) when the
-        // toolchain isn't present so this stays CI-safe.
-        let node = std::env::var("SUI_TSGO_NODE").ok()?;
-        let js = std::env::var("SUI_TSGO_JS").ok()?;
-        if Path::new(&node).exists() && Path::new(&js).exists() {
-            Some((node, js))
-        } else {
-            None
-        }
-    }
-
     #[test]
     fn tsgo_bridge_catches_typo_with_suggestion() {
-        let Some((node, js)) = tsgo() else {
+        let Some((node, js)) = tsgo_env() else {
             eprintln!("skip: SUI_TSGO_NODE/SUI_TSGO_JS not set");
             return;
         };
         let dir = std::env::temp_dir().join("sail-tscheck-test");
 
-        // VALID: the whole prop surface, tone/size as built-in shorthands.
         let ok = "import { props, tone, size, bool, string } from './sail-embed-harness'\n\
                   export const p = props({ tone, size, variant: ['solid','outline'], disabled: bool, label: string })\n";
         let diags = typecheck_block(HARNESS, ok, &dir, &node, &js).unwrap();
@@ -308,8 +2226,6 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             "valid block should be clean, got {diags:?}"
         );
 
-        // BROKEN: a typo'd built-in shorthand → autocomplete-grade suggestion.
-        // (`size` is imported so tsgo has a near name to suggest.)
         let bad = "import { props, tone, size, bool } from './sail-embed-harness'\n\
                    export const p = props({ tone, sizee, disabled: bool })\n";
         let diags = typecheck_block(HARNESS, bad, &dir, &node, &js).unwrap();

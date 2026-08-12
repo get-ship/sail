@@ -220,12 +220,12 @@ impl TemplateEmitter {
                     // `dismissible={false}` → third-arg opts (ESC/backdrop blocked).
                     let sig = crate::lower::bindings::dialog_open_signal_expr(&expr.source);
                     let sig_rw = self.rw(&sig, &[]);
-                    let opts =
-                        if crate::lower::bindings::dialog_dismissible_is_false(sibling_attrs) {
-                            ", { dismissible: false }"
-                        } else {
-                            ""
-                        };
+                    let opts = if crate::lower::bindings::dialog_dismissible_is_false(sibling_attrs)
+                    {
+                        ", { dismissible: false }"
+                    } else {
+                        ""
+                    };
                     w.line(&format!(
                         "{cleanups_var}.push(bindOpen({el_var}, ({sig_rw}){opts}));"
                     ));
@@ -945,10 +945,11 @@ impl super::TemplateEmitter {
                         classes.push(value.clone());
                     } else {
                         let emit_name = crate::semantic_props::lower_attr_name_str_valued(
-                            &el.tag, name, Some(value),
+                            &el.tag,
+                            name,
+                            Some(value),
                         );
-                        let emit_value = if crate::semantic_props::is_aria_bool_attr(emit_name)
-                        {
+                        let emit_value = if crate::semantic_props::is_aria_bool_attr(emit_name) {
                             crate::semantic_props::coerce_aria_bool_static(value)
                         } else {
                             value.as_str()
@@ -958,11 +959,8 @@ impl super::TemplateEmitter {
                         out.push_str("=\"");
                         out.push_str(&escape_attr(emit_value));
                         out.push('"');
-                        if let Some(extra) =
-                            crate::semantic_props::dual_stamp_aria(&el.tag, name)
-                        {
-                            let extra_val = if crate::semantic_props::is_aria_bool_attr(extra)
-                            {
+                        if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
+                            let extra_val = if crate::semantic_props::is_aria_bool_attr(extra) {
                                 crate::semantic_props::coerce_aria_bool_static(value)
                             } else {
                                 emit_value

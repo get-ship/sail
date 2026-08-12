@@ -18,16 +18,26 @@ pub struct Token {
 pub enum TokenKind {
     Text(String),
     Element(html::Element),
-    Expr { src: String },
+    Expr {
+        src: String,
+    },
     /// `{pattern as binding => body}` or `{else => body}` / `{else-if {c} => body}`.
     Arm {
         head: String,
         body_src: String,
     },
-    OpenIf { src: String },
-    OpenFor { src: String },
-    OpenMatch { src: String },
-    OpenWhen { src: String },
+    OpenIf {
+        src: String,
+    },
+    OpenFor {
+        src: String,
+    },
+    OpenMatch {
+        src: String,
+    },
+    OpenWhen {
+        src: String,
+    },
     CloseIf,
     CloseFor,
     CloseMatch,
@@ -312,7 +322,11 @@ mod tests {
     #[test]
     fn classifies_arm_with_binding() {
         let mut out = Vec::new();
-        tokenize_text("{ok as names => <p>{names}</p>}", Span::new(0, 31), &mut out);
+        tokenize_text(
+            "{ok as names => <p>{names}</p>}",
+            Span::new(0, 31),
+            &mut out,
+        );
         match &out[0].kind {
             TokenKind::Arm { head, body_src } => {
                 assert_eq!(head, "ok as names");

@@ -18,8 +18,8 @@
 
 use std::path::{Path, PathBuf};
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
-use sail_lint::{lint_app_source_source, lint_controller_source, Severity};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
+use sail_lint::{Severity, lint_app_source_source, lint_controller_source};
 
 /// SPEC teaching: names ambient + tells the author to drop the framework import.
 fn is_framework_import_teaching(msg: &str) -> bool {
@@ -31,9 +31,9 @@ fn is_framework_import_teaching(msg: &str) -> bool {
 }
 
 fn has_teaching_error(findings: &[sail_lint::Finding]) -> bool {
-    findings.iter().any(|f| {
-        f.severity == Severity::Error && is_framework_import_teaching(&f.message)
-    })
+    findings
+        .iter()
+        .any(|f| f.severity == Severity::Error && is_framework_import_teaching(&f.message))
 }
 
 fn component_opts(name: &str, path: &str) -> CompileOpts {
@@ -179,7 +179,10 @@ fn query_import_fails_compile_with_teaching_error() {
 fn tokens_import_fails_compile_with_teaching_error() {
     let err = compile(
         CONTROLLER_WITH_TOKENS_IMPORT,
-        component_opts("tokens-import", "apps/demo/src/theme-panel/theme-panel.sail"),
+        component_opts(
+            "tokens-import",
+            "apps/demo/src/theme-panel/theme-panel.sail",
+        ),
     )
     .expect_err("@ship/tokens import in app code must fail compile under the import law");
     assert!(

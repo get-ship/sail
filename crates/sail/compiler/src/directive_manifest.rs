@@ -943,7 +943,14 @@ mod tests {
             assert!(
                 !matches!(
                     head.as_str(),
-                    "fx" | "prop" | "attr" | "class" | "style" | "transition" | "in" | "out" | "motion"
+                    "fx" | "prop"
+                        | "attr"
+                        | "class"
+                        | "style"
+                        | "transition"
+                        | "in"
+                        | "out"
+                        | "motion"
                 ),
                 "DIRECTIVES still advertises dead prefix `{head}:` (`{}`)",
                 d.syntax
@@ -968,15 +975,11 @@ mod tests {
         }
         assert!(!BIND_TARGETS.iter().any(|b| b.target == "this"));
         assert!(
-            FOREIGN_IDIOMS
-                .iter()
-                .any(|r| r.syntax.contains("class=")),
+            FOREIGN_IDIOMS.iter().any(|r| r.syntax.contains("class=")),
             "class= must be listed in FOREIGN_IDIOMS"
         );
         assert!(
-            FOREIGN_IDIOMS
-                .iter()
-                .any(|r| r.syntax.contains("style=")),
+            FOREIGN_IDIOMS.iter().any(|r| r.syntax.contains("style=")),
             "style= must be listed in FOREIGN_IDIOMS"
         );
         assert!(

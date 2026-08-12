@@ -91,7 +91,15 @@ pub fn finding(
     message: impl Into<String>,
     suggest: impl Into<String>,
 ) -> Option<Finding> {
-    finding_with_severity(path, source, offset, rule, Severity::Error, message, suggest)
+    finding_with_severity(
+        path,
+        source,
+        offset,
+        rule,
+        Severity::Error,
+        message,
+        suggest,
+    )
 }
 
 /// Warning-severity finding (SPEC-ARIA-1 free aria/role this cycle).

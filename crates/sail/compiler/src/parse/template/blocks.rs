@@ -271,10 +271,10 @@ pub(crate) fn parse_when(
 fn resolve_when_token(token: &str, span: Span) -> Result<&'static str, CompileError> {
     let list = crate::breakpoints::breakpoint_token_list();
     if token.is_empty() {
-        return Err(CompileError::new(format!(
-            "<when> requires a theme breakpoint token: {list}"
-        ))
-        .with_span(span));
+        return Err(
+            CompileError::new(format!("<when> requires a theme breakpoint token: {list}"))
+                .with_span(span),
+        );
     }
     if token.chars().any(|c| c.is_ascii_digit())
         || token.contains('(')
@@ -461,4 +461,3 @@ fn is_identifier(s: &str) -> bool {
     }
     chars.all(|c| c.is_alphanumeric() || c == '_' || c == '$')
 }
-

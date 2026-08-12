@@ -309,10 +309,7 @@ pub fn emit_element_with_bindings(
     });
     let mut anatomy = json!({ "dom": "light", "classes": classes, "slots": slots });
     if let Some(hs) = host_sem {
-        anatomy
-            .as_object_mut()
-            .unwrap()
-            .insert("host".into(), hs);
+        anatomy.as_object_mut().unwrap().insert("host".into(), hs);
     }
     let manifest = json!({
         "kind": "element",
@@ -398,11 +395,8 @@ fn serialize_static(
                     host_attr_written = true;
                 }
                 // Semantic props (label/current/…) lower to aria-* in structure.
-                let emit_name = crate::semantic_props::lower_attr_name_str_valued(
-                    &el.tag,
-                    name,
-                    Some(&value),
-                );
+                let emit_name =
+                    crate::semantic_props::lower_attr_name_str_valued(&el.tag, name, Some(&value));
                 let mut stamp_value = value.clone();
                 if crate::semantic_props::is_aria_bool_attr(emit_name) {
                     stamp_value =

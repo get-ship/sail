@@ -49,7 +49,10 @@ fn l1_surface_count_is_documented() {
 #[test]
 fn l1_kind_is_stdlib_only() {
     let entries = l1_entries();
-    assert!(!entries.is_empty(), "no stdlib entries — manifest is broken");
+    assert!(
+        !entries.is_empty(),
+        "no stdlib entries — manifest is broken"
+    );
     for entry in &entries {
         assert_eq!(
             entry.kind,
@@ -139,7 +142,10 @@ fn skeleton_description_names_loading_placeholder() {
         .expect("skeleton in L1");
     let d = sk.description.to_ascii_lowercase();
     assert!(
-        d.contains("load") || d.contains("placeholder") || d.contains("shimmer") || d.contains("sheen"),
+        d.contains("load")
+            || d.contains("placeholder")
+            || d.contains("shimmer")
+            || d.contains("sheen"),
         "skeleton description unexpected: {}",
         sk.description
     );

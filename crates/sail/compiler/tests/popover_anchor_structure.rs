@@ -15,8 +15,8 @@ fn page_with_popover_emits_run_action_anchor() {
 <button popovertarget="p">Open</button>
 <popover id="p">Hello</popover>
 "#;
-    let out = sail_compiler::compile(src, sail_compiler::CompileOpts::default())
-        .expect("page compiles");
+    let out =
+        sail_compiler::compile(src, sail_compiler::CompileOpts::default()).expect("page compiles");
     assert!(
         out.js.contains("runAction") && out.js.contains("anchor"),
         "page must emit runAction(..., anchor); js:\n{}",
@@ -42,8 +42,8 @@ export default controller(() => {
   <popover id="p">Hello</popover>
 </if>
 "#;
-    let out = sail_compiler::compile(src, sail_compiler::CompileOpts::default())
-        .expect("page compiles");
+    let out =
+        sail_compiler::compile(src, sail_compiler::CompileOpts::default()).expect("page compiles");
     assert!(
         out.js.contains("cfAnchor") || out.js.contains("anchor: cfAnchor"),
         "wireBoundary param must not be bare `anchor` (shadows use:anchor); js:\n{}",

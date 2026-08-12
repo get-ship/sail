@@ -67,9 +67,7 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
                     .is_some_and(|d| template_references_ident(d, name))
         }
         Instr::When(WhenInstr {
-            body,
-            else_body,
-            ..
+            body, else_body, ..
         }) => {
             template_references_ident(body, name)
                 || else_body

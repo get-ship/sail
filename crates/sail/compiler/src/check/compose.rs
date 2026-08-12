@@ -495,11 +495,7 @@ fn strip_sx_braces(raw: &str) -> &str {
 
 /// Author Style expression for an element: block `style({…})` after the open
 /// tag (product), with residual `style={…}` attr fallback for fixtures mid-migrate.
-fn element_style_expr(
-    source: &str,
-    tag_end: usize,
-    attrs: &[(String, String)],
-) -> Option<String> {
+fn element_style_expr(source: &str, tag_end: usize, attrs: &[(String, String)]) -> Option<String> {
     if let Some(sx) = attr_value(attrs, "style") {
         let expr = strip_sx_braces(&sx);
         if !expr.is_empty() {
@@ -982,10 +978,15 @@ fn tag_matches_fingerprint(
     }
     // Style product: block statement after `>` (CHANNELS) or residual style attr.
     let sx_owned;
-    let sx_value: &str = if let Some(v) = attrs.iter().find(|(n, _)| n == "style").map(|(_, v)| v.as_str())
+    let sx_value: &str = if let Some(v) = attrs
+        .iter()
+        .find(|(n, _)| n == "style")
+        .map(|(_, v)| v.as_str())
     {
         v
-    } else if let Some(expr) = tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end)) {
+    } else if let Some(expr) =
+        tag_style_expr_before(source, tag_end).or_else(|| block_style_expr_after(source, tag_end))
+    {
         sx_owned = expr;
         sx_owned.as_str()
     } else {

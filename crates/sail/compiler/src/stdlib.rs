@@ -178,8 +178,7 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
 
 /// Skeleton sheen — host self only. Geometry lives in skeleton.sail Style.
 /// Band colors ride component.skeleton tokens (global fallbacks in the pack).
-const SKELETON_SHIMMER: &str =
-    "linear-gradient(90deg, var(--skeleton) 0%, var(--skeleton-highlight) 50%, var(--skeleton) 100%)";
+const SKELETON_SHIMMER: &str = "linear-gradient(90deg, var(--skeleton) 0%, var(--skeleton-highlight) 50%, var(--skeleton) 100%)";
 
 const SKELETON_MAP: &[DescRule] = &[DescRule {
     sel: "",

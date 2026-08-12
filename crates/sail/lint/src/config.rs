@@ -655,13 +655,13 @@ mod config_doc_tests {
     /// Nested `deck` is recognized; leftover top-level `render` still refuses.
     #[test]
     fn deck_object_recognized_top_level_render_still_unknown() {
-        let ok = SailConfig::from_json(r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#);
+        let ok = SailConfig::from_json(
+            r#"{ "deck": { "render": "ssr" }, "theme": { "default": "ship" } }"#,
+        );
         assert!(ok.unknown_keys().is_empty(), "nested deck is recognized");
         assert!(ok.has_key("deck"));
 
-        let legacy = SailConfig::from_json(
-            r#"{ "render": "ssr", "deck": { "render": "csr" } }"#,
-        );
+        let legacy = SailConfig::from_json(r#"{ "render": "ssr", "deck": { "render": "csr" } }"#);
         assert_eq!(legacy.unknown_keys(), vec!["render".to_string()]);
     }
 

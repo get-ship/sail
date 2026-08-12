@@ -1446,7 +1446,8 @@ mod tests {
     fn passes_through_non_axis_attrs() {
         // id / class / sx / on:click / data-* are fine on a layout element.
         assert!(
-            run(r#"<column id="hero" style="p-4" on:click={go()} data-x="1">x</column>"#).is_empty()
+            run(r#"<column id="hero" style="p-4" on:click={go()} data-x="1">x</column>"#)
+                .is_empty()
         );
     }
 
@@ -1607,8 +1608,14 @@ mod tests {
         assert!(is_passthrough_attr("data-x"));
         assert!(is_passthrough_attr("on:click"));
         assert!(is_passthrough_attr("aria-label"));
-        assert!(is_passthrough_attr("theme"), "framework theme IR pass-through");
-        assert!(is_passthrough_attr("token"), "design-token identity pass-through");
+        assert!(
+            is_passthrough_attr("theme"),
+            "framework theme IR pass-through"
+        );
+        assert!(
+            is_passthrough_attr("token"),
+            "design-token identity pass-through"
+        );
         assert!(is_passthrough_attr("label"), "semantic a11y prop");
         assert!(is_passthrough_attr("current"), "semantic a11y prop");
         assert!(is_passthrough_attr("surface"), "DOMDEC bare host marker");
@@ -1629,14 +1636,11 @@ mod tests {
     fn surface_and_domdec_markers_pass_on_layout_keywords() {
         // Studio surfaces after DOMDEC-1: `surface="edit"` + bare hooks on
         // layout keywords must not trip unknown-attr.
-        assert!(run(
-            r#"<row surface="edit" edit-surface gap="0" grow>x</row>"#
-        )
-        .is_empty());
-        assert!(run(
-            r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#
-        )
-        .is_empty());
+        assert!(run(r#"<row surface="edit" edit-surface gap="0" grow>x</row>"#).is_empty());
+        assert!(
+            run(r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#)
+                .is_empty()
+        );
         // Axis typos still hard-error (guard not weakened).
         let m = run(r#"<grid colz="7">x</grid>"#);
         assert!(m.iter().any(|s| s.contains("unknown")), "got: {m:?}");

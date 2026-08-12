@@ -5,6 +5,7 @@
 //! renderable-expression subset enforced on every interpolation
 //! expression in the program.
 
+pub mod binding;
 pub mod compose;
 pub mod controller_parse;
 #[cfg(test)]
@@ -37,7 +38,6 @@ mod scope_bound_expr_tests;
 pub mod scope_member;
 pub mod semantic_a11y;
 pub mod signal_called;
-pub mod binding;
 pub mod symbol_table;
 pub mod tscheck;
 
@@ -86,10 +86,7 @@ pub fn run(
     )?;
     // SPEC-PARTIAL-1: author-source checks (leakage, attrs-vs-type, collision).
     // Expansion already ran in preprocess; this inspects the original text.
-    pass!(
-        "partials",
-        partials::check(source, controller, source_path)
-    )?;
+    pass!("partials", partials::check(source, controller, source_path))?;
     pass!("mutations", check_mutations(program))?;
     // Bare names are the language's namespace — reject unknown bare tags
     // (typos / not-yet-language elements) so L1 growth is safe.
@@ -166,14 +163,23 @@ pub fn run(
 /// harness both call. One contract per boundary: a `Severity::Error` finding is
 /// a compile error in ALL three artifacts (CLI, daemon, harness).
 ///
+/// The type gate (JOB-E1, `tscheck`) joins this same stream — DOM globals in
+/// Pure regions, action-surface law, `@ts-ignore` bans — so `compile()` hard-
+/// fails identically to `check_all` / MCP / LSP OnSave.
+///
 /// Returns the first Error-severity diagnostic as a span-bearing
 /// [`CompileError`] (its line/col mapped back to a byte offset so the
 /// napi/wasm surface can render coordinates), or `Ok(())` when the stream is
 /// clean. Runs after [`run`] in [`crate::compile`], so the structural passes
 /// short-circuit first and this catches only the lint Error rules they skip.
+///
+/// `author_source` is the original `.sail` text (controller still present) so
+/// the type gate can map spans onto author lines. `source` remains the
+/// stripped template text used by structural passes.
 pub fn gate(
     program: &Program,
     source: &str,
+    author_source: &str,
     source_path: Option<&Path>,
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
@@ -182,6 +188,7 @@ pub fn gate(
     let fatal = collect(
         program,
         source,
+        author_source,
         source_path,
         controller,
         overrides,
@@ -193,7 +200,9 @@ pub fn gate(
     let Some(d) = fatal else {
         return Ok(());
     };
-    let offset = offset_for_line_col(source, d.line, d.col);
+    // Prefer author_source for offset mapping so type-gate lines in the
+    // controller region land on the right byte (stripped blanks the block).
+    let offset = offset_for_line_col(author_source, d.line, d.col);
     let mut err = CompileError::new(d.message).with_span(crate::diagnostics::Span::point(offset));
     if let Some(rule) = d.rule {
         err = err.with_category(rule);
@@ -230,8 +239,15 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 /// failed build only needs one reason. `collect()` is the editor/agent view.
 ///
 /// `tier` (SPEC-TOOLING-1 §WI6) selects the stream:
-/// - [`DiagnosticTier::OnType`] — parse / vocabulary / semantic; **no taffy**
-/// - [`DiagnosticTier::OnSave`] — full stream including layout + compose
+/// - [`DiagnosticTier::OnType`] — parse / vocabulary / semantic; **no taffy**,
+///   **no type gate** (LSP keystrokes stay fast)
+/// - [`DiagnosticTier::OnSave`] — full stream including layout + compose +
+///   type gate (JOB-E1)
+///
+/// `author_source` is the original `.sail` text (inline `<controller>` still
+/// present). Structural passes use `source` (controller blanked); the type
+/// gate re-extracts the controller region from `author_source` so spans land
+/// on author lines.
 ///
 /// Coverage today: every `expr-subset` violation (the common class) plus the
 /// first error from each remaining structural/semantic pass, merged with the
@@ -243,6 +259,7 @@ fn offset_for_line_col(source: &str, line: usize, col: usize) -> usize {
 pub fn collect(
     program: &Program,
     source: &str,
+    author_source: &str,
     source_path: Option<&Path>,
     controller: Option<&controller_parse::ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
@@ -352,12 +369,10 @@ pub fn collect(
     // (Warn→Error). Off must run before the global floor so the escape hatch
     // still silences under strict.
     let template_findings = crate::check::lint_overrides::apply_strict_or_severity_floor(
-        crate::check::lint_overrides::enforce_floor(
-            crate::check::lint_overrides::apply_overrides(
-                sail_lint::lint_sail_template_source(lint_path, source),
-                overrides,
-            ),
-        ),
+        crate::check::lint_overrides::enforce_floor(crate::check::lint_overrides::apply_overrides(
+            sail_lint::lint_sail_template_source(lint_path, source),
+            overrides,
+        )),
         lint_path,
     );
     for f in template_findings {
@@ -416,6 +431,13 @@ pub fn collect(
         // `Fix` severity diagnostics that the `sail_edit` path turns into
         // source rewrites.
         diags.extend(compose::collect(source, source_path, overrides));
+    }
+
+    // Type gate (JOB-E1) — OnSave only. Never OnType: tsgo is too heavy for
+    // the LSP keystroke path. Joins the same Error stream as lint (no second
+    // gate). One tsgo invocation per call over this file's controller region.
+    if matches!(tier, DiagnosticTier::OnSave) {
+        diags.extend(tscheck::collect_sail_type_gate(author_source, source_path));
     }
 
     // Style match exhaustiveness — a `match` on a closed-union scope prop
@@ -615,7 +637,9 @@ where
         }) => {
             f(discriminant)?;
             for c in cases {
-                if let MatchTest::Expr(e) = &c.test { f(e)?; }
+                if let MatchTest::Expr(e) = &c.test {
+                    f(e)?;
+                }
                 visit_instrs(&c.body, f)?;
             }
             if let Some(d) = default {
@@ -677,7 +701,7 @@ mod gate_tests {
     fn gate_rejects_lint_error_rule_run_skips() {
         let src = r#"<badge size="huge">x</badge>"#;
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None, None, &[], None).unwrap_err();
+        let err = super::gate(&program, src, src, None, None, &[], None).unwrap_err();
         assert_eq!(err.category.as_deref(), Some("sail-prop-value"), "{err:?}");
     }
 
@@ -685,7 +709,7 @@ mod gate_tests {
     fn gate_passes_valid_source() {
         let src = r#"<badge size="md">x</badge>"#;
         let program = parse::parse(src).unwrap();
-        super::gate(&program, src, None, None, &[], None).unwrap();
+        super::gate(&program, src, src, None, None, &[], None).unwrap();
     }
 
     /// The gate's span must map back to the offending line/col so the
@@ -695,7 +719,7 @@ mod gate_tests {
     fn gate_error_span_round_trips_to_finding_location() {
         let src = "<div>\n  <badge size=\"huge\">x</badge>\n</div>";
         let program = parse::parse(src).unwrap();
-        let err = super::gate(&program, src, None, None, &[], None).unwrap_err();
+        let err = super::gate(&program, src, src, None, None, &[], None).unwrap_err();
         let span = err.span.expect("gate error carries a span");
         let (line, _col) = line_col(src, span.start);
         assert_eq!(line, 2, "the bad size is on line 2");
