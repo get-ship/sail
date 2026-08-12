@@ -96,6 +96,11 @@ export const DETAILS: Record<string, DetailEntry> = {
         type: 'xs · sm · md · lg · icon · iconSm · iconLg',
       },
       { name: 'disabled', desc: 'Non-interactive', type: 'bool' },
+      {
+        name: 'label',
+        desc: 'Accessible name — required on icon-only (lowers to aria-label)',
+        type: 'string',
+      },
     ],
   }),
   a: lang('a', 'a', {

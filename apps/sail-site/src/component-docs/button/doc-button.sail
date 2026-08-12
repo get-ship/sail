@@ -90,7 +90,12 @@ export default controller((_ctx: Scope) => {
   const blurb = () => entry.blurb
   const props = () =>
     entry.props.filter(
-      (r) => r.name === 'variant' || r.name === 'tone' || r.name === 'size' || r.name === 'disabled',
+      (r) =>
+        r.name === 'variant' ||
+        r.name === 'tone' ||
+        r.name === 'size' ||
+        r.name === 'disabled' ||
+        r.name === 'label',
     )
   const usageCode = () => entry.usage
 
