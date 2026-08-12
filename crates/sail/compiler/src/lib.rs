@@ -60,6 +60,7 @@ pub(crate) mod scan;
 pub mod scope_manifest;
 pub mod semantic_props;
 pub mod stdlib;
+pub mod theme_gate;
 pub mod tokens_generate;
 pub mod used_icons;
 pub mod used_tags;

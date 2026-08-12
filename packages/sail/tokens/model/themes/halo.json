@@ -73,7 +73,7 @@
         },
         "primary": {
           "default": {
-            "$value": "oklch(0.62 0.14 var(--brand-hue, 50))",
+            "$value": "oklch(0.55 0.14 var(--brand-hue, 50))",
             "$type": "color"
           },
           "foreground": {
