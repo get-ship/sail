@@ -53,12 +53,13 @@ pub mod metrics;
 pub mod style;
 mod style_scale;
 pub mod taffy_tree;
+mod unintended_overflow;
 
 pub use diagnostics::{
     BoxExtents, BoxReport, Diagnostic, MainAxis, OverflowGeometry, ScanInput, ScanResult, Severity,
 };
-pub use html::{Element, parse_source, source_viewport};
-pub use metrics::{Family, Size as TextSize, table as metrics_table};
+pub use html::{parse_source, source_viewport, Element};
+pub use metrics::{table as metrics_table, Family, Size as TextSize};
 pub use style::ResolvedStyle;
 pub use taffy_tree::Layout;
 

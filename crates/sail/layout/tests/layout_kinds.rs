@@ -215,7 +215,7 @@ fn text_metrics_false_suppresses_clipped_text_even_when_experimental() {
     );
 }
 
-// ── LAYOUT-1 tunes: opt-in / metrics / containment (additive) ───────────────
+// ── Additive unintended-overflow opt-in / containment ───────────────────────
 
 /// Stdlib splice: overflow lives in `s-orientation*-overflow*`, not `s-overflow*`.
 const OVERFLOW_ORIENTATION_PREFIXED: &str = r#"
@@ -388,8 +388,7 @@ fn unintended_overflow_skips_when_tablet_at_phone_viewport() {
     );
 }
 
-/// Distant overflow(hidden) clip shell is not a scroller opt-in.
-/// This is the leftover-actions shape (studio detail-head).
+/// Distant overflow(hidden) is clip, not a scroller.
 const OVERFLOW_CLIP_SHELL_ANCESTOR: &str = r#"
 <div class="sail-col s-wfull s-overflowhidden">
   <div class="sail-row sail-nowrap s-w20">
@@ -440,6 +439,40 @@ const OVERFLOW_HIDDEN_FALSE: &str = r#"
 const OVERFLOW_POSITION_RELATIVE: &str = r#"
 <div class="sail-col s-h20 s-wfull">
   <div class="s-h40 s-shrink0 s-positionrelative">x</div>
+</div>
+"#;
+
+/// Vertical scroller ancestor must not hide a horizontal leftover.
+const OVERFLOW_VERTICAL_SCROLLER_HORIZONTAL_LEFTOVER: &str = r#"
+<div class="sail-col s-h40 s-wfull s-overflowyauto">
+  <div class="sail-row sail-nowrap s-w20">
+    <div class="sail-row sail-nowrap s-shrink0">
+      <div class="s-w40 s-shrink0">Open</div>
+      <div class="s-w40 s-shrink0">Thread</div>
+      <div class="s-w40 s-shrink0">Copy</div>
+    </div>
+  </div>
+</div>
+"#;
+
+/// Leftover nowrap cluster plus a small absolute badge must stay red.
+const OVERFLOW_LEFTOVER_WITH_ABSOLUTE_BADGE: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <div class="sail-row sail-nowrap s-shrink0">
+    <div class="s-w40 s-shrink0">Open</div>
+    <div class="s-w40 s-shrink0">Thread</div>
+    <div class="s-w40 s-shrink0">Copy</div>
+    <div class="s-positionabsolute s-w4 s-h4">·</div>
+  </div>
+</div>
+"#;
+
+/// Overflow inside a positioned shell is still on-screen.
+const OVERFLOW_INSIDE_FIXED_SHELL: &str = r#"
+<div class="s-positionfixed s-wfull">
+  <div class="sail-col s-h20 s-wfull">
+    <div class="s-h40 s-shrink0">x</div>
+  </div>
 </div>
 "#;
 
@@ -509,6 +542,44 @@ fn unintended_overflow_still_fires_when_only_a_sibling_is_a_scroller() {
         has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
         "a sibling scroll-area is not an ancestor opt-in — no-opt-in neighbor \
          must stay red: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_still_fires_for_horizontal_leftover_inside_vertical_scroller() {
+    let result = check_preprocessed_with(
+        OVERFLOW_VERTICAL_SCROLLER_HORIZONTAL_LEFTOVER,
+        VP,
+        experimental(),
+    )
+    .expect("layout check");
+    assert!(
+        has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "overflowY(auto) ancestor must not hide a horizontal leftover: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_still_fires_when_leftover_has_absolute_badge() {
+    let result = check_preprocessed_with(OVERFLOW_LEFTOVER_WITH_ABSOLUTE_BADGE, VP, experimental())
+        .expect("layout check");
+    assert!(
+        has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "in-flow leftover that still overflows after excluding an absolute badge \
+         must stay red: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_still_fires_inside_position_fixed_shell() {
+    let result = check_preprocessed_with(OVERFLOW_INSIDE_FIXED_SHELL, VP, experimental())
+        .expect("layout check");
+    assert!(
+        has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "no-opt-in overflow inside a position:fixed shell must stay red: {:?}",
         result.diagnostics
     );
 }
