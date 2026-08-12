@@ -5,15 +5,17 @@ import type { OpsClient } from './types'
 /** Injected or host fetch — `ClientOptions.fetch` is the sanctioned type. */
 type StudioFetch = NonNullable<ClientOptions['fetch']>
 
-interface StudioHost {
-  fetch: StudioFetch
-}
+/** Host view: ES `globalThis` plus the optional fetch slot this file uses. */
+type StudioHost = typeof globalThis & { fetch?: StudioFetch }
 
 function resolveFetch(opts?: ClientOptions): StudioFetch {
   if (opts?.fetch) return opts.fetch
-  // Typed host view — Pure cannot name bare `fetch` / index `globalThis`.
-  const host = globalThis as StudioHost
-  return host.fetch.bind(host)
+  const host: StudioHost = globalThis
+  const fetchFn = host.fetch
+  if (!fetchFn) {
+    throw new Error('host fetch is not available')
+  }
+  return fetchFn.bind(host)
 }
 
 async function writeSourceHttp(
