@@ -141,3 +141,46 @@ fn cli_renders_diagnostic_with_path() {
         "stderr should describe the error: {stderr}"
     );
 }
+
+#[test]
+fn cli_directory_builds_two_fixtures() {
+    let bin = binary_path();
+    if !bin.exists() {
+        eprintln!("binary not built; run `cargo build -p sail-compiler`");
+        return;
+    }
+    let tmp = tempfile::tempdir().unwrap();
+    let src = tmp.path().join("src");
+    std::fs::create_dir_all(&src).unwrap();
+    // Directory builds auto-tag from the stem; custom-element names need a hyphen.
+    std::fs::copy(
+        manifest_dir().join("tests/fixtures/hello.sail"),
+        src.join("hello-world.sail"),
+    )
+    .unwrap();
+    std::fs::copy(
+        manifest_dir().join("tests/fixtures/hello.sail"),
+        src.join("hello-again.sail"),
+    )
+    .unwrap();
+    let out = tmp.path().join("out");
+    let output = Command::new(&bin)
+        .args(["build"])
+        .arg(&src)
+        .args(["--out"])
+        .arg(&out)
+        .output()
+        .expect("invoke sail-compiler directory build");
+    assert!(
+        output.status.success(),
+        "directory build failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(out.join("hello-world.js").exists());
+    assert!(out.join("hello-again.js").exists());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("compiled 2 file"),
+        "expected two-file summary, got: {stdout}"
+    );
+}

@@ -16,7 +16,7 @@ bun tests/perf/scripts/sync-keyed-sail.mjs
 # BENCH_HOME=/path/to/js-framework-benchmark bun tests/perf/scripts/sync-keyed-sail.mjs
 # bun tests/perf/scripts/sync-keyed-sail.mjs --dry-run
 
-# Compiler profile (continue-on-error corpus; no 60s wall)
+# Compiler profile (continue-on-error corpus; no per-file wall)
 bun tests/perf/scripts/profile-compiler.mjs
 bun tests/perf/scripts/profile-compiler.mjs --skip-dev-rss
 

@@ -14,34 +14,24 @@
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process;
-use std::thread;
-use std::time::Duration;
 
 use anyhow::{Context, Result, anyhow};
 use clap::{Parser, Subcommand};
 
+use sail_compiler::file_wall::{
+    CompileWithWallError, FileWorkError, compile_with_file_wall, file_wall, run_with_file_wall,
+    walk_files,
+};
 use sail_compiler::out_layout::resolve_out_dir;
-use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, Policy, compile};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, Policy};
 
-/// Hard caps on virtual memory and wall-clock time. A bug in the
-/// compiler (or a pathological input) must never be able to OOM the
-/// host: a single uncaught `Vec::with_capacity` once allocated 19+GB
-/// before the kernel killed the process and took down the surrounding
-/// VM. These bounds guarantee a clean death long before that.
-///
-/// Generous for any real input: a single `.sail` file compiles in
-/// milliseconds with <100MB RSS. A directory of hundreds compiles in
-/// seconds. Hitting either cap is a bug to file, not a knob to tune.
-/// To override (e.g. unusually large project, deliberate stress run),
-/// set `SAIL_COMPILER_NO_LIMITS=1`.
+/// Cap virtual memory so a runaway allocation cannot OOM the host.
+/// A single uncaught `Vec::with_capacity` once allocated 19+GB.
+/// There is no env-var bypass — a hang is a per-file Error, not a
+/// process abort, and nothing legit needs to disable this.
 const MEM_CAP_BYTES: u64 = 2 * 1024 * 1024 * 1024; // 2 GB virtual memory
-const WALL_CAP_SECS: u64 = 60;
 
-fn install_resource_bounds() {
-    if std::env::var_os("SAIL_COMPILER_NO_LIMITS").is_some() {
-        return;
-    }
+fn install_memory_cap() {
     // SAFETY: setrlimit with valid resource id and rlimit struct is sound.
     unsafe {
         let lim = libc::rlimit {
@@ -50,14 +40,6 @@ fn install_resource_bounds() {
         };
         libc::setrlimit(libc::RLIMIT_AS, &lim);
     }
-    thread::Builder::new()
-        .name("sail-compiler-watchdog".into())
-        .spawn(|| {
-            thread::sleep(Duration::from_secs(WALL_CAP_SECS));
-            eprintln!("sail-compiler: aborted after {WALL_CAP_SECS}s wall-clock cap");
-            process::abort();
-        })
-        .expect("spawn watchdog thread");
 }
 
 #[derive(Parser)]
@@ -236,8 +218,9 @@ enum Command {
         out: Option<PathBuf>,
     },
     /// Measure compile phases over the product corpus.
-    /// Continues past per-file errors so red files cannot hide behind the
-    /// 60s wall. Does not install the product resource watchdog.
+    /// Continues past per-file errors so red files cannot hide later ones.
+    /// Does not install the product memory cap or per-file wall
+    /// (measurement must observe pathological files).
     Profile {
         /// Workspace root. Default: walk up from cwd.
         #[arg(long)]
@@ -276,7 +259,7 @@ impl From<ModeArg> for CompileMode {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     if !matches!(cli.cmd, Command::Profile { .. }) {
-        install_resource_bounds();
+        install_memory_cap();
     }
     match cli.cmd {
         Command::Build {
@@ -1807,72 +1790,136 @@ fn build(
     // component tree, which auto-infer the tag from the path (L2 package gate).
     let count = targets.len();
     let dir_auto_component = input.is_dir();
-    for path in targets {
-        let path_tag = looks_like_component_path(&path);
-        let explicit = mode.is_some() || component_name.is_some();
-        if !explicit && path_tag.is_some() && !dir_auto_component {
-            let tag = path_tag.as_deref().unwrap_or("?");
+    let out_for_walk = out.clone();
+    let mode_for_walk = mode.clone();
+    let name_for_walk = component_name.clone();
+    match walk_files(targets, |path| {
+        compile_target(
+            path,
+            out_for_walk.as_deref(),
+            mode_for_walk.clone(),
+            no_dts,
+            name_for_walk.clone(),
+            emit_component_imports,
+            dir_auto_component,
+        )
+    }) {
+        Ok(_) => {}
+        Err(fail) => {
+            for t in &fail.timeouts {
+                eprintln!("{t}");
+            }
+            if let Some(e) = fail.error {
+                return Err(e);
+            }
             return Err(anyhow!(
-                "refusing to compile {} without a component tag\n\
-                 \n\
-                 The path matches the `<tag>/<tag>.sail` component convention\n\
-                 (tag = `{tag}`). Compiling it without a tag emits component\n\
-                 JS that never calls `customElements.define` — the browser\n\
-                 loads the bundle but nothing registers.\n\
-                 \n\
-                 Pass one of these to confirm what you mean:\n  \
-                 --component-name {tag}    (register under this exact tag)\n  \
-                 --mode component          (register under the filename stem)",
-                path.display(),
+                "per-file wall exceeded ({} file{})",
+                fail.timeouts.len(),
+                if fail.timeouts.len() == 1 { "" } else { "s" }
             ));
         }
-        // ELEMENT MODE dispatches to its own pipeline: structure + skin +
-        // manifest artifacts, no component module.
-        if matches!(mode, Some(ModeArg::Element)) {
-            let name = component_name.clone().unwrap_or_else(|| stem_of(&path));
-            let source = std::fs::read_to_string(&path)?;
-            let el = sail_compiler::compile_element(&source, &name)
-                .map_err(|e| anyhow!("{}: {e}", path.display()))?;
-            let out_dir = out
-                .clone()
-                .unwrap_or_else(|| path.parent().map(|p| p.to_path_buf()).unwrap_or_default());
-            std::fs::create_dir_all(&out_dir)?;
-            let artifact = serde_json::json!({
-                "tag": name,
-                "rootClass": el.root_class,
-                "structure": el.structure_html,
-                "skin": el.skin_css,
-                "manifest": el.manifest,
-            });
-            std::fs::write(
-                out_dir.join(format!("{name}.element.json")),
-                serde_json::to_string_pretty(&artifact)?,
-            )?;
-            std::fs::write(out_dir.join(format!("{name}.skin.css")), &el.skin_css)?;
-            continue;
-        }
-        let component_meta = match (mode.clone(), component_name.clone()) {
-            (Some(ModeArg::Component), name) => Some(ComponentMeta {
-                name: name.unwrap_or_else(|| path_tag.clone().unwrap_or_else(|| stem_of(&path))),
-            }),
-            (_, Some(name)) => Some(ComponentMeta { name }),
-            // Directory auto: prefer `<tag>/<tag>.sail`, else filename stem
-            // (covers co-located siblings like sail-timeline/sail-timeline-item.sail).
-            _ if dir_auto_component => Some(ComponentMeta {
-                name: path_tag.unwrap_or_else(|| stem_of(&path)),
-            }),
-            _ => None,
-        };
-        compile_one(
-            &path,
-            out.as_deref(),
-            mode.clone(),
-            no_dts,
-            component_meta,
-            emit_component_imports,
-        )?;
     }
     println!("compiled {count} file(s)");
+    Ok(())
+}
+
+fn compile_target(
+    path: &Path,
+    out: Option<&Path>,
+    mode: Option<ModeArg>,
+    no_dts: bool,
+    component_name: Option<String>,
+    emit_component_imports: bool,
+    dir_auto_component: bool,
+) -> Result<(), FileWorkError<anyhow::Error>> {
+    let path_tag = looks_like_component_path(path);
+    let explicit = mode.is_some() || component_name.is_some();
+    if !explicit && path_tag.is_some() && !dir_auto_component {
+        let tag = path_tag.as_deref().unwrap_or("?");
+        return Err(FileWorkError::Other(anyhow!(
+            "refusing to compile {} without a component tag\n\
+             \n\
+             The path matches the `<tag>/<tag>.sail` component convention\n\
+             (tag = `{tag}`). Compiling it without a tag emits component\n\
+             JS that never calls `customElements.define` — the browser\n\
+             loads the bundle but nothing registers.\n\
+             \n\
+             Pass one of these to confirm what you mean:\n  \
+             --component-name {tag}    (register under this exact tag)\n  \
+             --mode component          (register under the filename stem)",
+            path.display(),
+        )));
+    }
+    // ELEMENT MODE dispatches to its own pipeline: structure + skin +
+    // manifest artifacts, no component module.
+    if matches!(mode, Some(ModeArg::Element)) {
+        return compile_element_one(path, out, component_name);
+    }
+    let component_meta = match (mode.clone(), component_name) {
+        (Some(ModeArg::Component), name) => Some(ComponentMeta {
+            name: name.unwrap_or_else(|| path_tag.clone().unwrap_or_else(|| stem_of(path))),
+        }),
+        (_, Some(name)) => Some(ComponentMeta { name }),
+        // Directory auto: prefer `<tag>/<tag>.sail`, else filename stem
+        // (covers co-located siblings like sail-timeline/sail-timeline-item.sail).
+        _ if dir_auto_component => Some(ComponentMeta {
+            name: path_tag.unwrap_or_else(|| stem_of(path)),
+        }),
+        _ => None,
+    };
+    compile_one(
+        path,
+        out,
+        mode,
+        no_dts,
+        component_meta,
+        emit_component_imports,
+    )
+}
+
+fn compile_element_one(
+    path: &Path,
+    out: Option<&Path>,
+    component_name: Option<String>,
+) -> Result<(), FileWorkError<anyhow::Error>> {
+    let name = component_name.unwrap_or_else(|| stem_of(path));
+    let source = fs::read_to_string(path)
+        .with_context(|| format!("read {}", path.display()))
+        .map_err(FileWorkError::Other)?;
+    let wall = file_wall();
+    let src = source.clone();
+    let tag = name.clone();
+    let el = match run_with_file_wall(path, wall, move || {
+        sail_compiler::compile_element(&src, &tag)
+    }) {
+        Ok(Ok(el)) => el,
+        Ok(Err(e)) => {
+            return Err(FileWorkError::Other(anyhow!("{}: {e}", path.display())));
+        }
+        Err(t) => return Err(FileWorkError::Timeout(t)),
+    };
+    let out_dir = out
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| path.parent().map(|p| p.to_path_buf()).unwrap_or_default());
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("create out dir {}", out_dir.display()))
+        .map_err(FileWorkError::Other)?;
+    let artifact = serde_json::json!({
+        "tag": name,
+        "rootClass": el.root_class,
+        "structure": el.structure_html,
+        "skin": el.skin_css,
+        "manifest": el.manifest,
+    });
+    fs::write(
+        out_dir.join(format!("{name}.element.json")),
+        serde_json::to_string_pretty(&artifact).map_err(|e| FileWorkError::Other(e.into()))?,
+    )
+    .with_context(|| format!("write {name}.element.json"))
+    .map_err(FileWorkError::Other)?;
+    fs::write(out_dir.join(format!("{name}.skin.css")), &el.skin_css)
+        .with_context(|| format!("write {name}.skin.css"))
+        .map_err(FileWorkError::Other)?;
     Ok(())
 }
 
@@ -2141,7 +2188,7 @@ fn compile_one(
     no_dts: bool,
     component_meta: Option<ComponentMeta>,
     emit_component_imports: bool,
-) -> Result<()> {
+) -> Result<(), FileWorkError<anyhow::Error>> {
     // The ORIGINAL, unstripped source — kept so the synthetic-controller tsgo
     // gate below can re-extract the inline `<controller>` block (the stripped
     // `source` no longer has it).
@@ -2215,10 +2262,13 @@ fn compile_one(
     // compile() already gates the full Error-severity lint stream internally
     // (`check::gate`, #255) — a second check_all here re-ran the identical
     // pass and doubled compile latency on large files.
-    let result = compile(&orig_source, opts).map_err(|e| {
-        let rendered = e.render(&orig_source);
-        anyhow!("{rendered}")
-    })?;
+    let result = match compile_with_file_wall(orig_source.clone(), opts, file_wall()) {
+        Ok(out) => out,
+        Err(CompileWithWallError::Timeout(t)) => return Err(FileWorkError::Timeout(t)),
+        Err(CompileWithWallError::Compile(e)) => {
+            return Err(FileWorkError::Other(anyhow!("{}", e.render(&orig_source))));
+        }
+    };
 
     let stem = path
         .file_name()
@@ -2238,12 +2288,12 @@ fn compile_one(
     fs::write(&js_path, &result.js).with_context(|| format!("write {}", js_path.display()))?;
     if let Some(cem) = result.cem {
         let cem_path = out_dir.join(format!("{stem_no_ext}.custom-elements.json"));
-        let pretty = serde_json::to_string_pretty(&cem)?;
+        let pretty = serde_json::to_string_pretty(&cem).map_err(anyhow::Error::from)?;
         fs::write(&cem_path, pretty).with_context(|| format!("write {}", cem_path.display()))?;
     }
     if let Some(schema) = result.schema {
         let schema_path = out_dir.join(format!("{stem_no_ext}.schema.json"));
-        let pretty = serde_json::to_string_pretty(&schema)?;
+        let pretty = serde_json::to_string_pretty(&schema).map_err(anyhow::Error::from)?;
         fs::write(&schema_path, pretty)
             .with_context(|| format!("write {}", schema_path.display()))?;
     }
@@ -2251,7 +2301,7 @@ fn compile_one(
     // runtime never loads this; it's purely developer-facing fuel.
     if let Some(meta) = result.meta {
         let meta_path = out_dir.join(format!("{stem_no_ext}.sail.meta.json"));
-        let pretty = serde_json::to_string_pretty(&meta)?;
+        let pretty = serde_json::to_string_pretty(&meta).map_err(anyhow::Error::from)?;
         fs::write(&meta_path, pretty).with_context(|| format!("write {}", meta_path.display()))?;
     }
     // `.sail.d.ts` is a TYPE companion to its source, so it is written

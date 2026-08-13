@@ -425,6 +425,17 @@ const DIAG_SPECS: &[DiagSpec] = &[
         docs_anchor: None,
     },
     DiagSpec {
+        id: "sail-file-wall",
+        jurisdiction: Jurisdiction::CompilerError,
+        default_severity: DiagSeverity::Error,
+        message_template: "compile exceeded {0}s per-file wall",
+        allowed_list_source: None,
+        fix_text: Some(
+            "the file hung or is pathologically slow — split it or fix the compile loop; this is not a knob",
+        ),
+        docs_anchor: None,
+    },
+    DiagSpec {
         id: "sail-font-literal",
         jurisdiction: Jurisdiction::Lint,
         default_severity: DiagSeverity::Warning,

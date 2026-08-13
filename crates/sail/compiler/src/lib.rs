@@ -44,6 +44,8 @@ pub mod directive_manifest;
 pub mod edit;
 pub mod emit;
 pub mod escape;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod file_wall;
 pub mod fmt;
 pub mod grammar_vocabulary;
 pub mod icons;
