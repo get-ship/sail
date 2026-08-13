@@ -17,7 +17,7 @@
     text: fontFamily(body).fontSize(sm),
   }
   style close = {
-    box: ms(auto),
+    box: ms(auto).shrink(0).minW(control-h-xs).minH(control-h-xs).w(control-h-xs).h(control-h-xs),
     paint: fg(toast.foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer).opacity(70),
   }
 </scope>

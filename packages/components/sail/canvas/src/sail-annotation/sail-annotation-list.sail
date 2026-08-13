@@ -27,7 +27,7 @@
     text: truncate(),
   }
   style remove = {
-    box: minH(0).padX(1_5).padY(half),
+    box: minH(control-h-xs).padX(1_5).padY(half),
     paint: radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer),
     text: fontSize(xs),
     when: {

@@ -10,7 +10,7 @@
   }
 
   style pill = {
-    box: minH(0).padY(half).padL(0_75).padR(2),
+    box: minH(control-h-xs).padY(half).padL(0_75).padR(2),
     paint: radius(full).fg(foreground).bg(muted).borderWidth(1).border(border).shadow(none).cursor(pointer),
     text: fontSize(xs).leading(snug).fontWeight(normal),
     when: {

@@ -18,7 +18,7 @@
   style pgLabel = { paint: fg(primary), text: fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide) }
   style backLink = { box: display(inline-flex).padX(1_5).h(control-h-sm), paint: radius(md).fg(muted-foreground), text: fontSize(sm).fontWeight(medium).underline(none).whitespace(nowrap), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
   style recipeSelect = { box: minW(48).maxW(64) }
-  style descClamp = { box: minW(0).maxW(64).overflow(hidden), paint: fg(muted-foreground), text: fontSize(sm).whitespace(nowrap) }
+  style descClamp = { box: minW(0).maxW(64).overflow(hidden), paint: fg(muted-foreground), text: fontSize(sm).truncate() }
   // Side-by-side pane: fill height of the split; console stays a fixed foot.
   style previewBand = { box: grow(1).basis(0).minW(0).minH(0).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }
   style previewBandMobile = { box: shrink(0).h(40).minH(32).overflow(hidden), paint: borderWidth(1).border(border).radius(md).bg(surface-1) }

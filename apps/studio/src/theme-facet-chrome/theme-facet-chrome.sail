@@ -4,7 +4,7 @@
 -->
 <scope>
   style chromeRoot = { box: shrink(0).minW(0) }
-  style chromeBar = { box: shrink(0).padX(4).h(10).minH(10).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(background) }
+  style chromeBar = { box: shrink(0).padX(4).h(10).minH(10).minW(0).overflowX(auto), paint: borderBWidth(1).borderB(border-subtle).bg(background) }
   style growMin = { box: grow(1).minW(0) }
   style shrink0 = { box: shrink(0) }
   style tapFloor = { box: shrink(0).minW(control-h-sm).minH(control-h-sm) }

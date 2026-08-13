@@ -16,7 +16,7 @@
   style shell = { box: minH(screen).h(screen) }
   style landingMain = { box: basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto) }
   style appMain = { box: display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden) }
-  style githubLink = { box: display(inline-flex).pad(1), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
+  style githubLink = { box: display(inline-flex).pad(1).minW(control-h-xs).minH(control-h-xs), paint: radius(md).fg(muted-foreground), when: { hover: { paint: fg(foreground).bg(hover-bg) } } }
 </scope>
 
 <controller>
