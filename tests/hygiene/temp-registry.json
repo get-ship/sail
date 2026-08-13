@@ -2,10 +2,10 @@
   "schema": 1,
   "productVersion": "0.0.0",
   "expiryModes": {
-    "never": "KEEP rows (teaching, living policy, false-friend English). No funeral.",
+    "never": "KEEP rows (teaching, living policy, false-friend English).",
     "date": "ISO YYYY-MM-DD. Expired when today >= date.",
     "condition": "Named flag in `conditions`. Expired when the flag is true.",
-    "version": "Semver threshold. Expired when productVersion >= version. Post-release flip: entries become deprecations with expires.version (e.g. \"2.0\"). One registry, two active expiry families (calendar/condition now; version after public ship). Not a second system."
+    "version": "Semver threshold. Expired when productVersion >= version."
   },
   "conditions": {
     "after-spinnaker-cut": false

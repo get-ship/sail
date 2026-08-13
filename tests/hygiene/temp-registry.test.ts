@@ -1,13 +1,12 @@
 /**
- * TEMP registry guard — every temporary thing names its death.
+ * TEMP registry guard.
  *
  * Fails when:
  *   (a) a marker word is in the tracked tree with no covering entry
  *   (b) an expired registry entry is still listed
  *
- * Add an entry in temp-registry.json (this file is not the allowlist —
- * the JSON is). KEEP rows use expires.never; TEMP rows use a date,
- * a named condition, or (post-release) a version.
+ * Entries live in temp-registry.json. KEEP rows use expires.never;
+ * TEMP rows use a date, a named condition, or a version.
  */
 import { describe, expect, test } from 'bun:test'
 import { execSync } from 'node:child_process'
@@ -168,7 +167,7 @@ export function loadRegistry(raw: string): Registry {
   if (reg.schema !== 1) errors.push(`schema must be 1, got ${reg.schema}`)
   if (!reg.productVersion) errors.push('productVersion required')
   if (!reg.expiryModes?.date || !reg.expiryModes?.version) {
-    errors.push('expiryModes must document date and version (one registry, two modes)')
+    errors.push('expiryModes must document date and version')
   }
   if (!Array.isArray(reg.markers) || reg.markers.length === 0) {
     errors.push('markers must be a non-empty array (SSOT for the scanner)')
@@ -182,7 +181,7 @@ export function loadRegistry(raw: string): Registry {
     if (e.id) ids.add(e.id)
     if (!KINDS.has(e.kind)) errors.push(`${e.id}: unknown kind ${e.kind}`)
     if (!e.reason || e.reason.trim().length < 8) {
-      errors.push(`${e.id}: reason required (KEEP-with-reason / death sentence)`)
+      errors.push(`${e.id}: reason required`)
     }
     if (!Array.isArray(e.paths) || e.paths.length === 0) {
       errors.push(`${e.id}: paths must be non-empty`)
@@ -266,7 +265,7 @@ describe('TEMP registry: schema + expiry modes', () => {
   const raw = readFileSync(REGISTRY_PATH, 'utf8')
   const reg = loadRegistry(raw)
 
-  test('registry is loadable and documents both expiry families', () => {
+  test('registry is loadable and documents date and version expiry', () => {
     expect(reg.schema).toBe(1)
     expect(reg.expiryModes.date.length).toBeGreaterThan(0)
     expect(reg.expiryModes.version.length).toBeGreaterThan(0)
@@ -442,7 +441,7 @@ describe('TEMP registry: red/green fixtures', () => {
           id: 'expired-probe',
           kind: 'tombstone',
           verdict: 'DELETE-later',
-          reason: 'already past its funeral date',
+          reason: 'expires.date is in the past',
           paths: ['apps/studio/src/design/store.ts'],
           expires: { date: '2020-01-01' },
         },
@@ -453,10 +452,10 @@ describe('TEMP registry: red/green fixtures', () => {
 
   test('red fixture: version expiry fires only at/after the threshold', () => {
     const entry: Entry = {
-      id: 'post-release-deprecation',
+      id: 'version-expiry',
       kind: 'tombstone',
       verdict: 'DELETE-later',
-      reason: 'post-release flip uses version expiry',
+      reason: 'expired when productVersion reaches 2.0',
       paths: ['src/old.ts'],
       expires: { version: '2.0' },
     }
