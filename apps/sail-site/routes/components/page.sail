@@ -133,9 +133,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       "const greet = (name) => {\n  return `hello, ${name}`\n}\n\ngreet('sail')\n"
     const toolArgs = () => '{ "env": "prod", "limit": 5 }'
     const toolResult = () => '[{ "id": "d-1842", "status": "healthy" }]'
-    // Demo raster URL — PE owns src wiring via the host attribute (CSP img-src https:).
-    const DEMO_PHOTO =
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=640&h=400&fit=crop&auto=format&q=80'
+    // Same-origin demo raster (public/cover-01.webp) — no CDN on a static host.
+    const DEMO_PHOTO = '/cover-01.webp'
 
     return {
       query, packSel, catSel, pickPack, pickCat,
@@ -317,8 +316,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <strong>Harbor Signals</strong>
                     <p style(mutedXs)>4 tracks · last played today</p>
                   </card>}{else-if {e.tag === 'avatar'} => <row gap="2" align="center">
-                    <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop&auto=format&q=80"></avatar>
-                    <avatar name="Grace Hopper" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&auto=format&q=80" tone="accent"></avatar>
+                    <avatar name="Ada Lovelace"></avatar>
+                    <avatar name="Grace Hopper" tone="accent"></avatar>
                     <avatar initials="SK" size="sm"></avatar>
                   </row>}{else-if {e.tag === 'icon'} => <row gap="3" align="center">
                     <icon name="check"></icon>
@@ -347,7 +346,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <a href="#" popovertarget="grid-hc" style({ paint: fg(primary), text: fontSize(sm) })>@ada</a>
                     <hover-card id="grid-hc">
                       <row gap="2" align="center">
-                        <avatar name="Ada Lovelace" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop&auto=format&q=80" size="sm"></avatar>
+                        <avatar name="Ada Lovelace" size="sm"></avatar>
                         <column gap="0">
                           <strong>Ada Lovelace</strong>
                           <p style(mutedXs)>Mathematician · first programmer</p>

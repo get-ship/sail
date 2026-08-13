@@ -113,6 +113,9 @@ packages/sail/l1-conformance/__screenshots__/
 
 # bundle-cost.mjs scratch
 apps/sail-site/.bundle-cost/
+apps/sail-site/.static-inventory.json
+apps/sail-site/.static-crawl.json
+apps/sail-site/.static-crawl.md
 .archive/
 
 # Internal planning (not product docs)

@@ -1,0 +1,20 @@
+# Cloudflare Pages — sail-site static deploy.
+#
+# Repeat deploy (from this directory, after `bun run build:static`):
+#   bun run deploy:pages
+# or:
+#   npx wrangler pages deploy dist --project-name sail-site
+#
+# Required env: CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID
+# (or an existing `npx wrangler login` session).
+#
+# Dashboard (git-connected project):
+#   Build command:   bun run build:static
+#   Output dir:      dist
+#   Root directory:  apps/sail-site
+#   SPA:             _redirects (/* → /index.html 200)
+#   MIME:            _headers (wasm / woff2 / svg)
+
+name = "sail-site"
+compatibility_date = "2026-08-01"
+pages_build_output_dir = "./dist"

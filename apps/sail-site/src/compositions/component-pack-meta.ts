@@ -214,6 +214,5 @@ export function packSlotCopy(tag: string): string {
   return ''
 }
 
-/** Unsplash demo for sail-media-image (string URL via host `src` attr / identity). */
-export const DEMO_PHOTO =
-  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&h=640&fit=crop&auto=format&q=80'
+/** Same-origin demo raster for sail-media-image (static host — no CDN). */
+export const DEMO_PHOTO = '/cover-01.webp'

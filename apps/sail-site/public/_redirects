@@ -1,0 +1,3 @@
+# SPA fallback. Cloudflare Pages serves a real file when it exists;
+# everything else is a client route and gets the CSR shell.
+/*    /index.html   200

@@ -62,9 +62,9 @@ export default controller((ctx) => {
    └─ [id]/
       └─ page.sail         → /users/:id   (read it: route.params.id())`,
 
-  build: `$ sail build --project my-app
-# static output: SSR'd HTML per route + hydrating bundles.
-# Deploy the directory anywhere that serves files.`,
+  build: `$ sail build --project my-app --bundle-framework --base assets --out dist
+# static output: one CSR index.html + /assets + /_deck + public/.
+# Host must SPA-fallback /* → index.html (Cloudflare Pages _redirects).`,
 
   install: `# one package. The 48 elements are in the LANGUAGE —
 # there is no component library to add on top.
