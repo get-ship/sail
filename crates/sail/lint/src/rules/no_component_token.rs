@@ -20,8 +20,8 @@ const RAW_TEXT_TAGS: &[&str] = &["scope", "controller", "style", "script"];
 
 /// Scan app `.sail` for unsanctioned component-token *attribute names*.
 ///
-/// Walks tags the way the product parser does (attrs, brace-primaries,
-/// tag-position `style(…)`, raw-text bodies). Declaration identifiers,
+/// Attr names follow `parse_attrs` / `consume_style_call` (brace-primaries,
+/// tag-position `style(…)`, dotted names). Declaration identifiers,
 /// for/match binders, and setter args are not attr names.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     if !is_ambient_app_path(path) {
@@ -69,8 +69,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             continue;
         }
 
-        // Quote-awareness only inside `{…}` so prose apostrophes stay text.
-        if brace_depth > 0 && matches!(bytes[i], b'"' | b'\'' | b'`') {
+        // Double/backtick strings inside `{…}` can hide a fake `<tag`.
+        // Apostrophes stay text — match/for arms write `it's` next to real tags.
+        if brace_depth > 0 && matches!(bytes[i], b'"' | b'`') {
             in_str = Some(bytes[i]);
             i += 1;
             continue;
@@ -100,7 +101,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 j += 1;
             }
             let tag = source[tag_start..j].to_ascii_lowercase();
-            let (attrs_end, names) = scan_open_tag_attrs(source, j);
+            let (attrs_end, names, self_closed) = scan_open_tag_attrs(source, j);
             for (name_start, name) in names {
                 if !is_unsanctioned_token_attr(&name) {
                     continue;
@@ -113,7 +114,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 }
             }
             i = attrs_end;
-            if RAW_TEXT_TAGS.contains(&tag.as_str()) {
+            // Self-closed raw-text (`<scope />`) has no body — keep scanning siblings.
+            if RAW_TEXT_TAGS.contains(&tag.as_str()) && !self_closed {
                 i = skip_raw_text_body(source, i, &tag);
             }
             continue;
@@ -164,8 +166,8 @@ fn skip_until_gt(bytes: &[u8], mut i: usize) -> usize {
 }
 
 /// Parse open-tag attrs starting at `start` (first byte after the tag name).
-/// Returns the byte after `>` and (offset, name) for each attr name.
-fn scan_open_tag_attrs(source: &str, start: usize) -> (usize, Vec<(usize, String)>) {
+/// Returns the byte after `>`, attr names, and whether the tag was `/>`.
+fn scan_open_tag_attrs(source: &str, start: usize) -> (usize, Vec<(usize, String)>, bool) {
     let bytes = source.as_bytes();
     let mut i = start;
     let mut names = Vec::new();
@@ -174,13 +176,19 @@ fn scan_open_tag_attrs(source: &str, start: usize) -> (usize, Vec<(usize, String
             i += 1;
         }
         if i >= bytes.len() {
-            return (i, names);
+            return (i, names, false);
         }
         if bytes[i] == b'>' {
-            return (i + 1, names);
+            return (i + 1, names, false);
         }
         if bytes[i] == b'/' {
             i += 1;
+            while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            if i < bytes.len() && bytes[i] == b'>' {
+                return (i + 1, names, true);
+            }
             continue;
         }
         if bytes[i] == b'{' {
@@ -444,7 +452,7 @@ mod tests {
 
     #[test]
     fn allows_local_style_page_const() {
-        // Corpus idiom: file-local `style page = {…}` (doc-slider.sail and 90 peers).
+        // File-local style const named page — not a token-reference site.
         let f = app(r#"
 <scope>
   style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
@@ -511,6 +519,22 @@ mod tests {
             f.is_empty(),
             "label= is a semantic prop, not a token ref: {f:?}"
         );
+    }
+
+    #[test]
+    fn flags_attr_after_self_closed_raw_text() {
+        let f = app(r#"<scope /><div button.bg="primary">x</div>"#);
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert!(f[0].message.contains("button.bg"), "{}", f[0].message);
+    }
+
+    #[test]
+    fn flags_attr_after_apostrophe_in_match_arm() {
+        let f = app(
+            r#"<match {status()}>{ok as page => it's <div button.bg="primary">x</div>}</match>"#,
+        );
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert!(f[0].message.contains("button.bg"), "{}", f[0].message);
     }
 
     #[test]

@@ -2047,9 +2047,8 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
                     source: op.source.clone(),
                 });
             }
-            // Color-scale args that name a component token (pack stem, author
-            // path, or emit label) are theme-owned. Pack stems without a
-            // public fill (`page`) still cannot resolve in app Style.
+            // Color-scale args that name a component pack, path, or emit label
+            // are theme-owned.
             if spec.scale == Some("color")
                 && crate::component_surfaces::is_theme_owned_token_name(bare)
             {
