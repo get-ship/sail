@@ -104,6 +104,28 @@ describe('@ship/tokens — webfont manifest (FONTS export)', () => {
     expect(families).toContain('Syne Variable')
     expect(families).toContain('JetBrains Mono Variable')
   })
+
+  it('every face pins Fontsource provenance (id + version + license)', () => {
+    const roles = FONTS.map((f) => f.role)
+    expect(roles).toContain('body')
+    expect(roles).toContain('heading')
+    expect(roles).toContain('mono')
+    for (const face of FONTS) {
+      expect(face.packageId).toMatch(/^@fontsource(-variable)?\/[a-z0-9-]+$/)
+      expect(face.version).toMatch(/^\d+\.\d+\.\d+$/)
+      expect(face.license).toBe('OFL-1.1')
+      expect(face.role.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('fonts-manifest.json stays in lockstep with FONTS (Rust include SSOT)', () => {
+    const raw = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../src/fonts-manifest.json'),
+      'utf8',
+    )
+    const json = JSON.parse(raw) as { faces: typeof FONTS }
+    expect(json.faces).toEqual(FONTS)
+  })
 })
 
 describe('@ship/tokens — sail-base.css webfont drift lock', () => {
