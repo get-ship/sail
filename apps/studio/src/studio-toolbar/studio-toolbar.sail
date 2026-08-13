@@ -4,8 +4,8 @@
 -->
 <scope>
   style toolbarRoot = {
-    box: shrink(0).minW(0).h(7).padX(2).overflow(hidden),
-    paint: borderBWidth(1).borderB(border-subtle).bg(surface-1),
+    box: flow({ shrink: 0 }).size({ h: 7, min-w: 0 }).space({ pad-x: 2 }).overflow({ all: hidden }),
+    paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }),
   }
 </scope>
 

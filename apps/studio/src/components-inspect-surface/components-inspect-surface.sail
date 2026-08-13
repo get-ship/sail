@@ -3,28 +3,28 @@
   Composition: { session, inspect }. Library is the sibling route surface.
 -->
 <scope>
-  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
-  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
-  style treePane = { box: grow(1).minH(0).h(full).minW(panel-min-w-lg).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) }
-  style treeHead = { box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) }
-  style detailPane = { box: grow(1).minH(0).h(full).minW(panel-min-w-md).basis(0).overflow(hidden), paint: bg(background) }
-  style detailHead = { box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
-  style loadRow = { box: shrink(0).padX(4).padY(2) }
-  style treeBody = { box: grow(1).minH(0).basis(0).pad(1).overflow(hidden) }
-  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
-  style bodyPad = { box: pad(5) }
-  style titleLg = { text: fontSize(lg).fontWeight(semibold) }
-  style nodeTag = { text: fontSize(lg).fontWeight(semibold).fontFamily(mono) }
-  style treeHost = { box: w(full).h(full).minH(0) }
-  style shrink0 = { box: shrink(0) }
-  style growMin = { box: grow(1).minW(0) }
-  style msgSm = { text: fontSize(sm) }
-  style monoSm = { box: shrink(0), text: fontSize(sm).fontFamily(mono) }
-  style stateName = { box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() }
-  style pickerMax = { box: maxH(28) }
+  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style treePane = { box: flow({ grow: 1 }).size({ h: full, min-w: panel-min-w-lg, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style treeHead = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-t: 4, pad-b: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style detailPane = { box: flow({ grow: 1 }).size({ h: full, min-w: panel-min-w-md, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style detailHead = { box: flow({ shrink: 0 }).space({ pad-x: 5, pad-y: 4 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style loadRow = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-y: 2 }) }
+  style treeBody = { box: flow({ grow: 1 }).size({ min-h: 0 }).basis(0).space({ pad: 1 }).overflow({ all: hidden }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0) }
+  style bodyPad = { box: space({ pad: 5 }) }
+  style titleLg = { text: type({ size: lg, weight: semibold }) }
+  style nodeTag = { text: type({ family: mono, size: lg, weight: semibold }) }
+  style treeHost = { box: size({ w: full, h: full, min-h: 0 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style msgSm = { text: type({ size: sm }) }
+  style monoSm = { box: flow({ shrink: 0 }), text: type({ family: mono, size: sm }) }
+  style stateName = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: sm, wrap: truncate }) }
+  style pickerMax = { box: size({ max-h: 28 }) }
 </scope>
 
 <controller>
@@ -168,9 +168,9 @@ export default controller(() => {
             <if {inspect.hasLayout()}>
               <p style(muted)>Boxes from the compiler model (not browser computed style).</p>
               <for {inspect.layoutRows() as box} key={box.key}>
-                <row gap="2" align="center" nowrap style({ box: padY(1) })>
+                <row gap="2" align="center" nowrap style({ box: space({ pad-y: 1 }) })>
                   <p style(monoSm)>{box.tag}</p>
-                  <p style(pathMeta, { box: grow(1).minW(0) })>{box.dims}</p>
+                  <p style(pathMeta, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>{box.dims}</p>
                   <if {box.flags}>
                     <badge tone="warning" size="sm" variant="soft" pill style(shrink0)>{box.flags}</badge>
                   </if>

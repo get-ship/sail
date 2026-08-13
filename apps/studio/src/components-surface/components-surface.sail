@@ -3,36 +3,36 @@
   Composition: { session, library }. Inspect is a sibling route surface.
 -->
 <scope>
-  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style muted = { paint: fg(muted-foreground), text: fontSize(sm) }
-  style surfaceRoot = { box: grow(1).minH(0).h(full).minW(0).overflow(hidden), paint: bg(background) }
-  style workbench = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
-  style navPane = { box: grow(1).minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).overflow(hidden), paint: borderRWidth(1).borderR(border-subtle).bg(surface-0) }
-  style navHead = { box: shrink(0).padX(4).padT(4).padB(3), paint: borderBWidth(1).borderB(border-subtle) }
-  style detailPane = { box: grow(1).minH(0).h(full).minW(0).basis(0).overflow(hidden), paint: bg(background) }
-  style detailHead = { box: shrink(0).padX(5).padY(4), paint: borderBWidth(1).borderB(border-subtle).bg(surface-0) }
-  style detailHeadMain = { box: minW(0).overflowX(auto) }
-  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full) }
-  style listPad = { box: pad(3) }
-  style loadRow = { box: shrink(0).padX(4).padY(2) }
-  style shrink0 = { box: shrink(0) }
-  style growMin = { box: grow(1).minW(0) }
-  style detailTitle = { text: fontSize(lg).fontWeight(semibold).tracking(tight).truncate() }
-  style bodyPad = { box: pad(5).minW(0) }
-  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style trafficDots = { box: shrink(0).minW(12) }
-  style trafficDot = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full) }
-  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
-  style previewFrame = { box: minW(0).overflow(hidden), paint: shadow(lg) }
-  style previewBody = { box: pad(6).minH(32), paint: bg(background) }
-  style previewTitle = { text: fontSize(md).fontWeight(semibold).fontFamily(heading) }
-  style previewHint = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed) }
-  style propHead = { box: padY(1), paint: borderBWidth(1).borderB(border-subtle) }
-  style propRow = { box: padY(2), paint: borderBWidth(1).borderB(border-subtle) }
-  style kvLabel = { box: shrink(0).w(24), paint: fg(muted-foreground), text: fontSize(xs) }
-  style kvValue = { box: grow(1).minW(0), text: fontSize(sm).fontFamily(mono).truncate() }
-  style footnote = { box: padX(1), paint: fg(muted-foreground), text: fontSize(xs).leading(snug) }
+  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style navPane = { box: flow({ grow: 1 }).size({ h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md }).basis(0).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style navHead = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-t: 4, pad-b: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style detailPane = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style detailHead = { box: flow({ shrink: 0 }).space({ pad-x: 5, pad-y: 4 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
+  style detailHeadMain = { box: size({ min-w: 0 }).overflow({ x: auto }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0) }
+  style listPad = { box: space({ pad: 3 }) }
+  style loadRow = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-y: 2 }) }
+  style shrink0 = { box: flow({ shrink: 0 }) }
+  style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
+  style detailTitle = { text: type({ size: lg, weight: semibold, tracking: tight, wrap: truncate }) }
+  style bodyPad = { box: space({ pad: 5 }).size({ min-w: 0 }) }
+  style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style trafficDots = { box: flow({ shrink: 0 }).size({ min-w: 12 }) }
+  style trafficDot = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full) }
+  style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
+  style previewFrame = { box: size({ min-w: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
+  style previewBody = { box: space({ pad: 6 }).size({ min-h: 32 }), paint: fill({ color: background }) }
+  style previewTitle = { text: type({ family: heading, size: md, weight: semibold }) }
+  style previewHint = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
+  style propHead = { box: space({ pad-y: 1 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style propRow = { box: space({ pad-y: 2 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style kvLabel = { box: flow({ shrink: 0 }).size({ w: 24 }), paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style kvValue = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: sm, wrap: truncate }) }
+  style footnote = { box: space({ pad-x: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: snug }) }
 </scope>
 
 <controller>
@@ -200,9 +200,9 @@ export default controller(() => {
       <scroll-area components-detail-body style(scrollGrow)>
         <column gap="4" style(bodyPad)>
           <if {session.showNewForm()}>
-            <card new-form padding="md" style({ box: minW(0) })>
+            <card new-form padding="md" style({ box: size({ min-w: 0 }) })>
               <column gap="3">
-                <p style({ text: fontSize(md).fontWeight(semibold) })>New component</p>
+                <p style({ text: type({ size: md, weight: semibold }) })>New component</p>
                 <p style(muted)>Creates a draft brief only — does not write files yet.</p>
                 <field label="Name">
                   <input type="text" size="sm" placeholder="my-widget" value={session.newName()} on:input={session.onNewNameInput} />
@@ -232,9 +232,9 @@ export default controller(() => {
             <column gap="0">
               <row specimen-chrome align="center" gap="2" nowrap style(specimenChrome)>
                 <row gap="2" align="center" nowrap hidden="true" style(trafficDots)>
-                  <stack style(trafficDot, { paint: bg(destructive) })></stack>
-                  <stack style(trafficDot, { paint: bg(warning) })></stack>
-                  <stack style(trafficDot, { paint: bg(success) })></stack>
+                  <stack style(trafficDot, { paint: fill({ color: destructive }) })></stack>
+                  <stack style(trafficDot, { paint: fill({ color: warning }) })></stack>
+                  <stack style(trafficDot, { paint: fill({ color: success }) })></stack>
                 </row>
                 <p style(chromeTitle)>
                   {library.previewTitle()}
@@ -254,10 +254,10 @@ export default controller(() => {
               <tab value="contract">Contract</tab>
             </tab-list>
             <tab-panel value="overview">
-              <column gap="3" style({ box: padY(3) })>
+              <column gap="3" style({ box: space({ pad-y: 3 }) })>
                 <column gap="1">
                   <p style(eyebrow)>Intent</p>
-                  <p detail-intent style({ text: fontSize(sm).leading(relaxed) })>{library.detailIntent()}</p>
+                  <p detail-intent style({ text: type({ size: sm, leading: relaxed }) })>{library.detailIntent()}</p>
                 </column>
                 <column gap="2">
                   <p style(eyebrow)>Meta</p>
@@ -276,7 +276,7 @@ export default controller(() => {
               </column>
             </tab-panel>
             <tab-panel value="contract">
-              <column gap="3" style({ box: padY(3) })>
+              <column gap="3" style({ box: space({ pad-y: 3 }) })>
                 <if {library.schemaNote()}>
                   <p schema-note style(muted)>{library.schemaNote()}</p>
                 </if>
@@ -288,18 +288,18 @@ export default controller(() => {
                 <if {library.hasProps()}>
                   <column props-table gap="1">
                     <row gap="3" nowrap style(propHead)>
-                      <p style(eyebrow, { box: grow(1) })>Name</p>
+                      <p style(eyebrow, { box: flow({ grow: 1 }) })>Name</p>
                       <p style(eyebrow)>Type</p>
                       <p style(eyebrow)>Default</p>
                     </row>
                     <for {library.propRows() as prop} key={prop.key}>
                       <row prop-row gap="3" align="start" nowrap style(propRow)>
                         <column gap="0" style(growMin)>
-                          <p style({ text: fontSize(sm).fontFamily(mono) })>{prop.name}</p>
-                          <p style({ paint: fg(muted-foreground), text: fontSize(xs) })>{prop.requiredLabel}</p>
+                          <p style({ text: type({ family: mono, size: sm }) })>{prop.name}</p>
+                          <p style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>{prop.requiredLabel}</p>
                         </column>
-                        <p style(pathMeta, { box: shrink(0) })>{prop.type}</p>
-                        <p style(pathMeta, { box: shrink(0) })>{prop.defaultValue}</p>
+                        <p style(pathMeta, { box: flow({ shrink: 0 }) })>{prop.type}</p>
+                        <p style(pathMeta, { box: flow({ shrink: 0 }) })>{prop.defaultValue}</p>
                       </row>
                     </for>
                   </column>

@@ -2,30 +2,30 @@
   Color facet specimen — draft paint via theme-session host bind.
 -->
 <scope>
-  style fieldHint = { paint: fg(muted-foreground), text: fontSize(xs) }
-  style pathMeta = { paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style mutedSm = { paint: fg(muted-foreground), text: fontSize(sm).leading(relaxed).fontFamily(body) }
-  style mutedRelaxed = { paint: fg(muted-foreground), text: fontSize(xs).leading(relaxed) }
-  style specimenDock = { box: grow(1).minW(0).maxW(panel-max-w-md).basis(0).minH(0).h(full).overflow(hidden), paint: borderLWidth(1).borderL(border-subtle).bg(background) }
-  style specimenPad = { box: grow(1).minH(0).h(full).pad(4) }
-  style specimenFrame = { box: minW(0).minH(0).h(full).overflow(hidden), paint: shadow(lg) }
-  style fillCol = { box: grow(1).minH(0).h(full) }
-  style specimenChrome = { box: shrink(0).padX(3).h(8).minH(8).minW(0), paint: borderBWidth(1).borderB(border-subtle).bg(surface-1) }
-  style trafficDots = { box: shrink(0).minW(12) }
-  style trafficDotDestructive = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(destructive) }
-  style trafficDotWarning = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(warning) }
-  style trafficDotSuccess = { box: shrink(0).w(2).h(2).minW(2).minH(2), paint: radius(full).bg(success) }
-  style chromeTitle = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
-  style modeMeta = { box: shrink(0), paint: fg(muted-foreground), text: fontSize(xs).fontFamily(mono) }
-  style scrollGrow = { box: grow(1).minH(0).basis(0).h(full), paint: bg(background) }
-  style bodyPad = { box: pad(5).minW(0) }
-  style productTitle = { text: fontSize(md).fontWeight(semibold).fontFamily(heading) }
-  style fgOnSurface = { paint: fg(foreground), text: fontSize(sm) }
-  style cardTitle = { text: fontSize(sm).fontWeight(semibold) }
-  style surfaceBg = { box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(background) }
-  style surface1 = { box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-1) }
-  style surface2 = { box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-2) }
-  style surface3 = { box: pad(3), paint: radius(md).borderWidth(1).border(border-subtle).bg(surface-3) }
+  style fieldHint = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
+  style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) }
+  style mutedRelaxed = { paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: relaxed }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md }).basis(0).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
+  style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
+  style fillCol = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }) }
+  style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style trafficDots = { box: flow({ shrink: 0 }).size({ min-w: 12 }) }
+  style trafficDotDestructive = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full).fill({ color: destructive }) }
+  style trafficDotWarning = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full).fill({ color: warning }) }
+  style trafficDotSuccess = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full).fill({ color: success }) }
+  style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
+  style modeMeta = { box: flow({ shrink: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0), paint: fill({ color: background }) }
+  style bodyPad = { box: space({ pad: 5 }).size({ min-w: 0 }) }
+  style productTitle = { text: type({ family: heading, size: md, weight: semibold }) }
+  style fgOnSurface = { paint: ink({ color: foreground }), text: type({ size: sm }) }
+  style cardTitle = { text: type({ size: sm, weight: semibold }) }
+  style surfaceBg = { box: space({ pad: 3 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: background }) }
+  style surface1 = { box: space({ pad: 3 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style surface2 = { box: space({ pad: 3 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-2 }) }
+  style surface3 = { box: space({ pad: 3 }), paint: radius(md).border({ color: border-subtle, width: 1 }).fill({ color: surface-3 }) }
 </scope>
 
 <controller>

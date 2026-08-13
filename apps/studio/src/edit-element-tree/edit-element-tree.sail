@@ -2,13 +2,13 @@
   <edit-element-tree> — active-doc component tree (sail-tree identity bind).
 -->
 <scope>
-  style surfaceRoot = { box: grow(1).minH(0).basis(0).minW(0).h(full).overflow(hidden) }
-  style headRow = { box: shrink(0).h(7).padX(3), paint: borderBWidth(1).borderB(border-subtle) }
-  style eyebrow = { paint: fg(muted-foreground), text: fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide) }
-  style pathMeta = { box: grow(1).minW(0), paint: fg(muted-foreground), text: fontSize(xs).truncate().fontFamily(mono) }
-  style treeBody = { box: grow(1).minH(0).basis(0).padX(1).padY(1).overflow(hidden) }
-  style emptyFrame = { box: w(full).pad(3), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style treeHost = { box: w(full).h(full).minH(0) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style headRow = { box: flow({ shrink: 0 }).size({ h: 7 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
+  style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
+  style pathMeta = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: truncate }) }
+  style treeBody = { box: flow({ grow: 1 }).size({ min-h: 0 }).basis(0).space({ pad-x: 1, pad-y: 1 }).overflow({ all: hidden }) }
+  style emptyFrame = { box: size({ w: full }).space({ pad: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
+  style treeHost = { box: size({ w: full, h: full, min-h: 0 }) }
 </scope>
 
 <controller>

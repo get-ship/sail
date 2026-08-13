@@ -2,32 +2,32 @@
   <edit-surface> — file explorer + doc tabs + source editor. Live app is the host.
 -->
 <scope>
-  style surfaceRoot = { box: grow(1).minH(0).basis(0).h(full).minW(0).overflow(hidden) }
-  style explorerHost = { box: shrink(0).minH(0).h(full).overflow(hidden) }
-  style mainCol = { box: grow(1).minW(0).minH(0).h(full).basis(0).overflow(hidden) }
-  style tabsStrip = { box: shrink(0).h(8).minW(0).overflow(hidden), paint: borderBWidth(1).borderB(border).bg(surface-1) }
-  style tabList = { box: grow(1).minW(0).h(full).basis(0).overflowX(auto).overflowY(hidden) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style explorerHost = { box: flow({ shrink: 0 }).size({ h: full, min-h: 0 }).overflow({ all: hidden }) }
+  style mainCol = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style tabsStrip = { box: flow({ shrink: 0 }).size({ h: 8, min-w: 0 }).overflow({ all: hidden }), paint: border({ edge: b, color: border, width: 1 }).fill({ color: surface-1 }) }
+  style tabList = { box: flow({ grow: 1 }).size({ h: full, min-w: 0 }).basis(0).overflow({ x: auto, y: hidden }) }
   style docTab = {
-    box: shrink(0).h(full).padX(3).maxW(48),
-    paint: borderRWidth(1).borderR(border-subtle).borderTWidth(2).borderT(transparent).bg(surface-1).fg(muted-foreground).cursor(pointer),
+    box: flow({ shrink: 0 }).size({ h: full, max-w: 48 }).space({ pad-x: 3 }),
+    paint: border({ edge: r, color: border-subtle, width: 1 }).border({ edge: t, color: transparent, width: 2 }).fill({ color: surface-1 }).ink({ color: muted-foreground }).cursor(pointer),
     when: {
-      hover: { paint: bg(hover-bg).fg(foreground) },
-      current: { paint: bg(surface-0).fg(foreground).borderT(primary) },
+      hover: { paint: fill({ color: hover-bg }).ink({ color: foreground }) },
+      current: { paint: fill({ color: surface-0 }).ink({ color: foreground }).border({ edge: t, color: primary }) },
     },
   }
-  style tabLabel = { box: grow(1).minW(0), text: fontSize(sm).truncate() }
-  style dirtyDot = { paint: fg(warning), text: fontSize(xs) }
-  style tabClose = { box: shrink(0).w(control-h-sm).h(control-h-sm).minW(control-h-sm).minH(control-h-sm) }
-  style tabsTrail = { box: shrink(0).padX(2).h(full), paint: borderLWidth(1).borderL(border-subtle) }
-  style routeLabel = { box: maxW(40), paint: fg(muted-foreground), text: fontSize(xs).truncate() }
-  style errorBand = { box: padX(3).padY(1), paint: bg(surface-1).borderBWidth(1).borderB(border) }
-  style errorText = { paint: fg(destructive), text: fontSize(xs) }
-  style emptyHost = { box: grow(1).minH(0).h(full).overflow(hidden), paint: bg(surface-0) }
-  style emptyFrame = { box: w(full).pad(4), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style sourceHost = { box: grow(1).minH(0).basis(0).h(full).overflow(hidden), paint: bg(surface-0) }
-  style emptyInset = { box: w(full).pad(3).m(3), paint: borderWidth(1).border(border-subtle).radius(md) }
-  style fillCol = { box: grow(1).minH(0).basis(0).h(full).overflow(hidden) }
-  style editorFill = { box: w(full).h(full).minH(0) }
+  style tabLabel = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ size: sm, wrap: truncate }) }
+  style dirtyDot = { paint: ink({ color: warning }), text: type({ size: xs }) }
+  style tabClose = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
+  style tabsTrail = { box: flow({ shrink: 0 }).space({ pad-x: 2 }).size({ h: full }), paint: border({ edge: l, color: border-subtle, width: 1 }) }
+  style routeLabel = { box: size({ max-w: 40 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
+  style errorBand = { box: space({ pad-x: 3, pad-y: 1 }), paint: fill({ color: surface-1 }).border({ edge: b, color: border, width: 1 }) }
+  style errorText = { paint: ink({ color: destructive }), text: type({ size: xs }) }
+  style emptyHost = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
+  style emptyFrame = { box: size({ w: full }).space({ pad: 4 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
+  style sourceHost = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
+  style emptyInset = { box: size({ w: full }).space({ pad: 3, m: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
+  style fillCol = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style editorFill = { box: size({ w: full, h: full, min-h: 0 }) }
 </scope>
 
 <controller>
