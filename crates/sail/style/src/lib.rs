@@ -60,7 +60,7 @@ pub use parse::{
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
 };
-pub use theme_env::{NamedStyle, PlayPreset, StylingPolicy, ThemeStyleEnv, VocabTag};
+pub use theme_env::{NamedStyle, PlayPreset, StylingPolicy, TagDefault, ThemeStyleEnv, VocabTag};
 
 #[cfg(test)]
 mod tests {

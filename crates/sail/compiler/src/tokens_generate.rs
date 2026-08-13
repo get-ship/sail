@@ -154,6 +154,8 @@ const THEME_MODE_GROUP_KEYS: &[&str] = &[
     "style",
     "keyframes",
     "play",
+    "tagDefaults",
+    "tags",
 ];
 
 /// Sail theme extensions (SPEC-SPINNAKER-3 §8 / §10). Not DTCG composites —
@@ -654,7 +656,8 @@ pub fn generate_with_options(
     out_dir: &Path,
     opts: &GenerateOptions,
 ) -> Result<GenerateReport> {
-    let (layers, name_index, base_tokens, styles, keyframes, plays) = load_base_layers(model_dir)?;
+    let (layers, name_index, base_tokens, styles, keyframes, plays, tag_defaults) =
+        load_base_layers(model_dir)?;
     if layers.is_empty() {
         bail!("No model/*.json files found in {}", model_dir.display());
     }
@@ -813,7 +816,14 @@ pub fn generate_with_options(
         write_with_trailing_newline(&products_css, &emit_products_css(axis))?;
     }
 
-    let mut registry = build_registry(&base_tokens, &aliases, &styles, &keyframes, &plays);
+    let mut registry = build_registry(
+        &base_tokens,
+        &aliases,
+        &styles,
+        &keyframes,
+        &plays,
+        &tag_defaults,
+    );
     if let Some(ref axis) = products {
         if let Some(obj) = registry.as_object_mut() {
             obj.insert("products".into(), products_registry_meta(axis));
@@ -1394,7 +1404,10 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
         if !node.is_object() {
             continue;
         }
-        // Named styles / keyframe presets are theme data, not CSS leaves.
+        // Named styles / keyframe presets / tag defaults are theme data, not CSS leaves.
+        if is_tag_defaults_group(key) {
+            continue;
+        }
         if node
             .get("$type")
             .and_then(|v| v.as_str())
@@ -1597,6 +1610,58 @@ fn walk_sail_identities(
         next.push(k.clone());
         walk_sail_identities(child, &next, styles, keyframes);
     }
+}
+
+/// True when this group is the tag → type-role table (SPEC-SPINNAKER-3 §10).
+/// Not a CSS layer. Model may author `tagDefaults` or `tags`.
+fn is_tag_defaults_group(key: &str) -> bool {
+    key == "tagDefaults" || key == "tags"
+}
+
+/// Collect tag → type-role assignments from `tagDefaults` / `tags`.
+///
+/// Registry shape is `h2` → `{ "type": "heading" }`. Authoring accepts a
+/// bare role string or an object with `type` / `$value`.
+fn collect_tag_defaults(doc: &Value) -> Map<String, Value> {
+    let mut out = Map::new();
+    for key in ["tagDefaults", "tags"] {
+        let Some(group) = doc.get(key).and_then(|v| v.as_object()) else {
+            continue;
+        };
+        for (tag, raw) in group {
+            if tag.starts_with('$') {
+                continue;
+            }
+            if let Some(entry) = normalize_tag_default(raw) {
+                out.entry(tag.clone()).or_insert(entry);
+            }
+        }
+    }
+    out
+}
+
+fn normalize_tag_default(raw: &Value) -> Option<Value> {
+    let role = match raw {
+        Value::String(s) if !s.is_empty() => s.clone(),
+        Value::Object(obj) => {
+            if let Some(s) = obj.get("type").and_then(|v| v.as_str()) {
+                s.to_string()
+            } else if let Some(s) = obj.get("$value").and_then(|v| v.as_str()) {
+                s.to_string()
+            } else if let Some(inner) = obj.get("$value").and_then(|v| v.as_object()) {
+                inner.get("type").and_then(|v| v.as_str())?.to_string()
+            } else {
+                return None;
+            }
+        }
+        _ => return None,
+    };
+    if role.is_empty() {
+        return None;
+    }
+    let mut meta = Map::new();
+    meta.insert("type".into(), Value::String(role));
+    Some(Value::Object(meta))
 }
 
 /// Named play property-sets (`play.colors` as `$type: transition`).
@@ -1835,6 +1900,7 @@ fn load_base_layers(
     Map<String, Value>,
     Map<String, Value>,
     Map<String, Value>,
+    Map<String, Value>,
 )> {
     let mut files: Vec<String> = fs::read_dir(model_dir)
         .with_context(|| format!("read dir {}", model_dir.display()))?
@@ -1894,8 +1960,17 @@ fn load_base_layers(
 
     let (styles, keyframes) = collect_sail_identities(&base_doc);
     let plays = collect_play_property_sets(&base_doc);
+    let tag_defaults = collect_tag_defaults(&base_doc);
 
-    Ok((layers, name_index, base_tokens, styles, keyframes, plays))
+    Ok((
+        layers,
+        name_index,
+        base_tokens,
+        styles,
+        keyframes,
+        plays,
+        tag_defaults,
+    ))
 }
 
 /// Refuse leftover hyphenated siblings next to a `border` composite
@@ -3456,6 +3531,7 @@ fn build_registry(
     styles: &Map<String, Value>,
     keyframes: &Map<String, Value>,
     plays: &Map<String, Value>,
+    tag_defaults: &Map<String, Value>,
 ) -> Value {
     // Preserve insertion order of base tokens then aliases (like JS object).
     let mut tokens: Map<String, Value> = Map::new();
@@ -3582,6 +3658,7 @@ fn build_registry(
     out.insert("styles".into(), Value::Object(styles.clone()));
     out.insert("keyframes".into(), Value::Object(keyframes.clone()));
     out.insert("plays".into(), Value::Object(plays.clone()));
+    out.insert("tagDefaults".into(), Value::Object(tag_defaults.clone()));
     Value::Object(out)
 }
 
@@ -4267,7 +4344,10 @@ mod tests {
         assert_eq!(public_name("color.card.default"), "card");
         assert_eq!(public_name("color.card.foreground"), "card-foreground");
         assert_eq!(public_name("color.popover.default"), "popover");
-        assert_eq!(public_name("color.popover.foreground"), "popover-foreground");
+        assert_eq!(
+            public_name("color.popover.foreground"),
+            "popover-foreground"
+        );
         assert_eq!(public_name("filter.card-backdrop"), "card-backdrop-filter");
         assert_eq!(public_name("image.card-texture"), "card-texture");
         assert_eq!(public_name("radius.default"), "radius");
@@ -6563,6 +6643,59 @@ mod tests {
                 "identity {banned} must not be a CSS name"
             );
         }
+        assert!(
+            reg.get("tagDefaults").is_some(),
+            "registry always grows a tagDefaults map"
+        );
+        assert!(reg["tagDefaults"].as_object().unwrap().is_empty());
+    }
+
+    #[test]
+    fn generate_emits_tag_defaults_not_css_vars() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "sail": { "selector": ":root", "layer": "base" } },
+  "space": {
+    "4": { "$value": "16px", "$type": "dimension" }
+  },
+  "tagDefaults": {
+    "h2": "heading",
+    "p": "body",
+    "code": "mono"
+  }
+}
+"#,
+        );
+        let report = generate(&model, &out).expect("generate tag defaults");
+        let css = fs::read_to_string(&report.tokens_css).unwrap();
+        assert!(
+            css.contains("--space-4:"),
+            "scalar tokens still flatten: {css}"
+        );
+        assert!(
+            !css.contains("--h2") && !css.contains("--tag-defaults") && !css.contains("--heading:"),
+            "tag defaults are not CSS vars: {css}"
+        );
+        let reg: Value =
+            serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
+        assert_eq!(reg["tagDefaults"]["h2"]["type"], "heading");
+        assert_eq!(reg["tagDefaults"]["p"]["type"], "body");
+        assert_eq!(reg["tagDefaults"]["code"]["type"], "mono");
+        assert!(
+            reg["tagDefaults"].get("a").is_none(),
+            "unset tags stay absent"
+        );
+        let names = reg["names"].as_array().unwrap();
+        for banned in ["h2", "heading", "tagDefaults.h2"] {
+            assert!(
+                names.iter().all(|n| n.as_str() != Some(banned)),
+                "tag default {banned} must not be a CSS name"
+            );
+        }
     }
 
     #[test]
@@ -6591,5 +6724,31 @@ mod tests {
         let (styles, keyframes) = collect_sail_identities(&doc);
         assert_eq!(styles["sample"]["type"], "sail.style");
         assert_eq!(keyframes["fade"]["type"], "sail.keyframes");
+    }
+
+    #[test]
+    fn flatten_skips_tag_defaults_and_collects_roles() {
+        let doc: Value = serde_json::json!({
+            "tagDefaults": {
+                "h2": "heading",
+                "p": { "type": "body" },
+                "code": { "$value": "mono" }
+            },
+            "tags": {
+                "small": "body-sm"
+            },
+            "space": {
+                "4": { "$value": "16px", "$type": "dimension" }
+            }
+        });
+        let tokens = flatten_tokens(&doc, &[], None);
+        assert!(tokens.iter().any(|t| t.path == "space.4"));
+        assert!(tokens.iter().all(|t| !t.path.starts_with("tagDefaults")));
+        assert!(tokens.iter().all(|t| !t.path.starts_with("tags")));
+        let defaults = collect_tag_defaults(&doc);
+        assert_eq!(defaults["h2"]["type"], "heading");
+        assert_eq!(defaults["p"]["type"], "body");
+        assert_eq!(defaults["code"]["type"], "mono");
+        assert_eq!(defaults["small"]["type"], "body-sm");
     }
 }

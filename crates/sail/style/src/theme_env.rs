@@ -63,18 +63,28 @@ pub struct PlayPreset {
     pub value: BTreeMap<String, Value>,
 }
 
+/// Tag → type-role assignment from the theme table (SPEC-SPINNAKER-3 §10).
+///
+/// `<h2>` spends `type_role` unless markup `style()` overrides. Not a CSS var.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TagDefault {
+    pub type_role: String,
+}
+
 /// The only resolver Style parse / complete / emit should call for theme data.
 #[derive(Debug, Clone)]
 pub struct ThemeStyleEnv {
     styles: BTreeMap<String, NamedStyle>,
     plays: BTreeMap<String, PlayPreset>,
+    tag_defaults: BTreeMap<String, TagDefault>,
 }
 
 impl ThemeStyleEnv {
-    /// Load named styles and play presets from the generated token registry.
+    /// Load named styles, play presets, and tag defaults from the generated
+    /// token registry.
     ///
-    /// `styles` / `keyframes` may be absent (Slice A not landed) — they parse
-    /// as empty maps via default. Composites stay in [`crate::tokens`].
+    /// `styles` / `keyframes` / `tagDefaults` may be absent — they parse as
+    /// empty maps via default. Composites stay in [`crate::tokens`].
     pub fn from_registry() -> Self {
         static CACHE: OnceLock<ThemeStyleEnv> = OnceLock::new();
         CACHE
@@ -101,7 +111,19 @@ impl ThemeStyleEnv {
                     .or_insert_with(|| play_preset_from_value(&name, &raw));
             }
         }
-        Self { styles, plays }
+        let mut tag_defaults = BTreeMap::new();
+        for key in ["tagDefaults", "tags"] {
+            for (tag, raw) in object_entries(root, &[key]) {
+                if let Some(def) = tag_default_from_value(&raw) {
+                    tag_defaults.entry(tag).or_insert(def);
+                }
+            }
+        }
+        Self {
+            styles,
+            plays,
+            tag_defaults,
+        }
     }
 
     /// Classify a name against the live vocabulary tables. `None` until a
@@ -126,6 +148,11 @@ impl ThemeStyleEnv {
     /// Theme animation preset or play prop-set (`fade`, `colors`).
     pub fn resolve_play(&self, name: &str) -> Option<PlayPreset> {
         self.plays.get(name).cloned()
+    }
+
+    /// Type role the theme assigns to `tag` (`h2` → `heading`). `None` if unset.
+    pub fn resolve_tag_default(&self, tag: &str) -> Option<TagDefault> {
+        self.tag_defaults.get(tag).cloned()
     }
 
     /// Resolve a name in a style-ref position.
@@ -209,6 +236,28 @@ fn named_style_from_value(name: &str, raw: &Value) -> NamedStyle {
         when,
         animate,
     }
+}
+
+fn tag_default_from_value(raw: &Value) -> Option<TagDefault> {
+    let type_role = match raw {
+        Value::String(s) if !s.is_empty() => s.clone(),
+        Value::Object(obj) => {
+            if let Some(s) = field_str(Some(obj), &["type", "type_role"]) {
+                s.to_string()
+            } else if let Some(s) = obj.get("$value").and_then(Value::as_str) {
+                s.to_string()
+            } else if let Some(inner) = obj.get("$value").and_then(Value::as_object) {
+                field_str(Some(inner), &["type", "type_role"])?.to_string()
+            } else {
+                return None;
+            }
+        }
+        _ => return None,
+    };
+    if type_role.is_empty() {
+        return None;
+    }
+    Some(TagDefault { type_role })
 }
 
 fn play_preset_from_value(name: &str, raw: &Value) -> PlayPreset {
@@ -411,6 +460,74 @@ mod tests {
         let env = ThemeStyleEnv::from_json(r#"{"names":[],"colors":[],"composites":{}}"#);
         assert!(env.resolve_named_style("card-chrome").is_none());
         assert!(env.resolve_play("fade").is_none());
+    }
+
+    #[test]
+    fn h2_resolves_to_heading_type_role() {
+        let env = ThemeStyleEnv::from_registry();
+        let got = env.resolve_tag_default("h2").expect("h2 tag default");
+        assert_eq!(got.type_role, "heading");
+        for tag in ["h1", "h3", "h4", "h5", "h6"] {
+            let got = env
+                .resolve_tag_default(tag)
+                .unwrap_or_else(|| panic!("{tag}"));
+            assert_eq!(got.type_role, "heading", "{tag}");
+        }
+        assert_eq!(
+            env.resolve_tag_default("p").map(|d| d.type_role),
+            Some("body".into())
+        );
+        assert_eq!(
+            env.resolve_tag_default("code").map(|d| d.type_role),
+            Some("mono".into())
+        );
+    }
+
+    #[test]
+    fn unknown_tag_has_no_default() {
+        let env = ThemeStyleEnv::from_registry();
+        assert!(env.resolve_tag_default("not-a-tag-zzz").is_none());
+        assert!(
+            env.resolve_tag_default("a").is_none(),
+            "anchor has no type default — variants own the look"
+        );
+        assert!(
+            env.resolve_tag_default("strong").is_none(),
+            "strong has no type role; weight stays on the tag"
+        );
+    }
+
+    #[test]
+    fn parses_tag_defaults_from_either_key() {
+        let json = r#"{
+            "tagDefaults": {
+                "h2": { "type": "heading" },
+                "p": "body"
+            },
+            "tags": {
+                "code": { "$value": "mono" }
+            }
+        }"#;
+        let env = ThemeStyleEnv::from_json(json);
+        assert_eq!(
+            env.resolve_tag_default("h2").map(|d| d.type_role),
+            Some("heading".into())
+        );
+        assert_eq!(
+            env.resolve_tag_default("p").map(|d| d.type_role),
+            Some("body".into())
+        );
+        assert_eq!(
+            env.resolve_tag_default("code").map(|d| d.type_role),
+            Some("mono".into())
+        );
+        assert!(env.resolve_tag_default("small").is_none());
+    }
+
+    #[test]
+    fn missing_tag_defaults_key_is_empty_not_a_parse_error() {
+        let env = ThemeStyleEnv::from_json(r#"{"names":[],"colors":[],"composites":{}}"#);
+        assert!(env.resolve_tag_default("h2").is_none());
     }
 
     #[test]

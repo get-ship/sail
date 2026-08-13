@@ -3445,6 +3445,38 @@
       }
     }
   },
+  "tagDefaults": {
+    "h1": {
+      "type": "heading"
+    },
+    "h2": {
+      "type": "heading"
+    },
+    "h3": {
+      "type": "heading"
+    },
+    "h4": {
+      "type": "heading"
+    },
+    "h5": {
+      "type": "heading"
+    },
+    "h6": {
+      "type": "heading"
+    },
+    "p": {
+      "type": "body"
+    },
+    "code": {
+      "type": "mono"
+    },
+    "pre": {
+      "type": "mono"
+    },
+    "small": {
+      "type": "body-sm"
+    }
+  },
   "products": {
     "layer": "system",
     "axis": "product",

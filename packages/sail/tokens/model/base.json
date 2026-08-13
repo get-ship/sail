@@ -1322,6 +1322,19 @@
       }
     }
   },
+  "tagDefaults": {
+    "$description": "HTML tag → type role (SPEC-SPINNAKER-3 §10). Theme data, not CSS vars. Markup style() overrides. No heading-2 — the tag is the way. strong/b/a have no type default.",
+    "h1": "heading",
+    "h2": "heading",
+    "h3": "heading",
+    "h4": "heading",
+    "h5": "heading",
+    "h6": "heading",
+    "p": "body",
+    "code": "mono",
+    "pre": "mono",
+    "small": "body-sm"
+  },
   "elevation": {
     "xs": {
       "$type": "elevation",
