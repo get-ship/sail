@@ -55,7 +55,7 @@ pub async fn serve_sail_icon(
     Path(file): Path<String>,
 ) -> Response {
     let name = file.strip_suffix(".svg").unwrap_or(&file);
-    let res = resolution.as_ref().map(|e| e.as_ref().as_ref());
+    let res = resolution.as_ref().map(|e| e.0.as_ref());
     into_axum(deck_core::serve_sail_icon_from(
         mode_from_ext(mode),
         name,
