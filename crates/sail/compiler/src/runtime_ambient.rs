@@ -118,6 +118,11 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
         "read a CSS custom property from the document element",
     ),
     (
+        "hostDispatch",
+        "hostDispatch",
+        "dispatch a named event on a handed node (Pure-safe Event stand-in)",
+    ),
+    (
         "hostFindById",
         "hostFindById",
         "document.getElementById without naming document",

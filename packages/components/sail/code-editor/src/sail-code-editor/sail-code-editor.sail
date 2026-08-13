@@ -222,7 +222,7 @@ export default controller((ctx: Scope) => {
         suppressUpdate = true
         valSig.set(newValue)
         suppressUpdate = false
-        node.dispatchEvent(new DomEv('input', { bubbles: true, composed: true }))
+        hostDispatch(node, 'input', { bubbles: true, composed: true })
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
           ;(node).onChange?.({ value: newValue })

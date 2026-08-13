@@ -86,6 +86,63 @@ fn docs_rail_green_after_e2a_scrub() {
     );
 }
 
+fn type_gate_errors(rel: &str) -> Vec<sail_compiler::Diagnostic> {
+    let path = workspace_root().join(rel);
+    let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {rel}: {e}"));
+    check_all(&src, Some(&path), &[], None)
+        .into_iter()
+        .filter(|d| {
+            d.severity == DiagSeverity::Error
+                && matches!(
+                    d.rule.as_deref(),
+                    Some("sail-pure-region" | "sail-action-surface" | "sail-type-gate")
+                )
+        })
+        .collect()
+}
+
+/// HostBag leftovers: canvas assignability, host callbacks, DomEv-as-value.
+/// `fetch` under Pure on annotation-layer stays red on purpose.
+#[test]
+fn hostbag_region_leftovers() {
+    let media =
+        type_gate_errors("packages/components/sail/media/src/sail-media-av/sail-media-av.sail");
+    assert!(
+        !media.iter().any(|d| d.message.contains("getContext")
+            || d.message.contains("TS2739")
+            || d.line == 103),
+        "media-av drawWaveform/HostBag must be green: {media:?}"
+    );
+
+    let list = type_gate_errors(
+        "packages/components/sail/canvas/src/sail-annotation/sail-annotation-list.sail",
+    );
+    assert!(
+        !list
+            .iter()
+            .any(|d| d.message.contains("onRemove") || d.line == 51),
+        "annotation-list onRemove must be green: {list:?}"
+    );
+
+    let editor = type_gate_errors(
+        "packages/components/sail/code-editor/src/sail-code-editor/sail-code-editor.sail",
+    );
+    assert!(
+        !editor
+            .iter()
+            .any(|d| d.message.contains("DomEv") || d.message.contains("TS2693") || d.line == 225),
+        "code-editor hostDispatch must be green: {editor:?}"
+    );
+
+    let layer = type_gate_errors(
+        "packages/components/sail/canvas/src/sail-annotation/sail-annotation-layer.sail",
+    );
+    assert!(
+        layer.iter().any(|d| d.message.contains("fetch")),
+        "annotation-layer fetch-in-Pure must stay red: {layer:?}"
+    );
+}
+
 #[test]
 fn on_type_skips_type_gate() {
     let src = r#"

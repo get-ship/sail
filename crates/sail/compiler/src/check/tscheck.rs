@@ -1439,6 +1439,8 @@ fn runtime_ambient_dts() -> String {
 \
            removeEventListener(t: string, h: (...a: any[]) => void, o?: any): void;
 \
+           dispatchEvent?(e: unknown): boolean;
+\
            closest(s: string): HostBag | null;
 \
            querySelector(s: string): HostBag | null;
@@ -1463,6 +1465,8 @@ fn runtime_ambient_dts() -> String {
 \
            getBoundingClientRect?(): { x: number; y: number; width: number; height: number; top: number; left: number; right: number; bottom: number };
 \
+           getContext(id: string): { clearRect(x: number, y: number, w: number, h: number): void; fillStyle: string; fillRect(x: number, y: number, w: number, h: number): void } | null;
+\
            getRootNode?(): unknown;
 \
            matches?(s: string): boolean;
@@ -1486,6 +1490,10 @@ fn runtime_ambient_dts() -> String {
            clientWidth: number;
 \
            clientHeight: number;
+\
+           width: number;
+\
+           height: number;
 \
            offsetWidth?: number;
 \
@@ -1537,6 +1545,12 @@ fn runtime_ambient_dts() -> String {
 \
            onErrorCaught?: (...a: any[]) => any;
 \
+           onRemove?: (...a: any[]) => any;
+\
+           onSent?: (...a: any[]) => any;
+\
+           onError?: (...a: any[]) => any;
+\
            scrollIntoView(...a: any[]): any;
 \
          };
@@ -1586,6 +1600,16 @@ fn runtime_ambient_dts() -> String {
            value: string | boolean | null | undefined,
 \
          ): void;
+\
+         declare function hostDispatch(
+\
+           node: unknown,
+\
+           type: string,
+\
+           opts?: { bubbles?: boolean; composed?: boolean; cancelable?: boolean; detail?: unknown },
+\
+         ): boolean;
 \
          declare function observeContentBox(
 \
@@ -1647,6 +1671,11 @@ declare module "@ship/*" {
     name: string,
     value: string | boolean | null | undefined,
   ) => void;
+  export const hostDispatch: (
+    node: unknown,
+    type: string,
+    opts?: { bubbles?: boolean; composed?: boolean; cancelable?: boolean; detail?: unknown },
+  ) => boolean;
   export const observeContentBox: (
     node: unknown,
     onBox: (width: number, height: number) => void,
@@ -1713,6 +1742,11 @@ declare module "@ship/sail-runtime" {
     name: string,
     value: string | boolean | null | undefined,
   ) => void;
+  export const hostDispatch: (
+    node: unknown,
+    type: string,
+    opts?: { bubbles?: boolean; composed?: boolean; cancelable?: boolean; detail?: unknown },
+  ) => boolean;
   export const observeContentBox: (
     node: unknown,
     onBox: (width: number, height: number) => void,

@@ -71,6 +71,7 @@ export {
   hostGetAttr,
   hostHasAttr,
   hostSetAttr,
+  hostDispatch,
   observeContentBox,
   hostIsDarkMode,
   hostCssVar,

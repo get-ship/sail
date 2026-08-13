@@ -85,6 +85,28 @@ export function hostSetAttr(
   el.setAttribute?.(name, value)
 }
 
+/** Dispatch a named event on a handed node (Pure-safe — no Event constructor in authors). */
+export function hostDispatch(
+  node: unknown,
+  type: string,
+  opts?: { bubbles?: boolean; composed?: boolean; cancelable?: boolean; detail?: unknown },
+): boolean {
+  if (node == null) return false
+  const el = unwrapSailHost(node as SailHost) as { dispatchEvent?: (e: unknown) => boolean }
+  const g = globalThis as {
+    CustomEvent?: new (type: string, init?: object) => unknown
+    Event?: new (type: string, init?: object) => unknown
+  }
+  const ev =
+    opts && 'detail' in opts && typeof g.CustomEvent === 'function'
+      ? new g.CustomEvent(type, opts)
+      : typeof g.Event === 'function'
+        ? new g.Event(type, opts)
+        : null
+  if (ev == null) return false
+  return el.dispatchEvent?.(ev) ?? false
+}
+
 /**
  * Observe content-box size of a handed action `node` (or SailHost).
  * Pure-safe stand-in for naming `ResizeObserver` in product modules.

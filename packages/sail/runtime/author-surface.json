@@ -153,6 +153,7 @@
     "hostGetAttr": "host",
     "hostHasAttr": "host",
     "hostSetAttr": "host",
+    "hostDispatch": "host",
     "observeContentBox": "host",
     "HostPropertyDesc": "host",
     "hostIsDarkMode": "host",
