@@ -4,13 +4,10 @@
 //! `didChange` + pull diagnostics, not a new `tsgo` spawn. The product gate
 //! stays OnSave; this file only changes the invocation shape.
 //!
-//! Project sessions must initialize against the real project root so opened
-//! files stay inside the workspace and attach to the on-disk kind tsconfig
-//! (`include`, `paths`, `types.d.ts`, `css-modules.d.ts`). A temp-dir root
-//! with files opened via absolute paths outside that root resolves against
-//! an inferred program — sibling modules that exist become TS2307.
+//! Kind sessions initialize at the real project root so opened files attach
+//! to the on-disk kind tsconfig.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
@@ -784,27 +781,35 @@ pub fn diagnose_project_files(
         .as_mut()
         .ok_or_else(|| std::io::Error::other("tsgo lsp not started"))?;
 
-    // Kind `files` siblings are not product entries. Opening them keeps
-    // `*.css` / runtime names in the live program (TS2882 otherwise).
-    let sail_dir = project_root.join("node_modules/.sail");
-    if sail_dir.is_dir() {
-        for name in ["types.d.ts", "css-modules.d.ts", "action-observation.d.ts"] {
-            let p = sail_dir.join(name);
-            if p.is_file() {
-                if let Ok(text) = std::fs::read_to_string(&p) {
-                    let _ = client.sync_uri(&path_to_uri(&p), &text);
-                }
-            }
-        }
-    }
-
     let mut want: HashMap<String, (PathBuf, String, String, u64)> = HashMap::new();
+    let mut product_uris: HashSet<String> = HashSet::new();
     for (path, src, label) in entries {
         let uri = path_to_uri(path);
+        product_uris.insert(uri.clone());
         want.insert(
             uri,
             (path.clone(), src.clone(), label.clone(), hash_bytes(src)),
         );
+    }
+
+    // Kind `files` siblings share identity/bytes with product entries so
+    // last_diags cannot survive an emptied css-modules.d.ts. Action-only
+    // observation stays off the Pure program (tsc -p kind omits it).
+    let sail_dir = project_root.join("node_modules/.sail");
+    if sail_dir.is_dir() {
+        let mut names = vec!["types.d.ts", "css-modules.d.ts"];
+        if env == TypeEnv::Action {
+            names.push("action-observation.d.ts");
+        }
+        for name in names {
+            let p = sail_dir.join(name);
+            if p.is_file() {
+                if let Ok(text) = std::fs::read_to_string(&p) {
+                    let uri = path_to_uri(&p);
+                    want.insert(uri, (p, text.clone(), name.to_string(), hash_bytes(&text)));
+                }
+            }
+        }
     }
 
     let stale: Vec<String> = session
@@ -833,9 +838,8 @@ pub fn diagnose_project_files(
         return Ok(session.last_diags.clone());
     }
 
-    // Any identity/bytes change: pull every product file so dependents
-    // still report. Same-bytes hits return `last_diags` above.
-    let pull: Vec<String> = want.keys().cloned().collect();
+    // Dependents of a changed product or ambient still need a pull.
+    let pull: Vec<String> = product_uris.into_iter().collect();
     let _ = changed_uris;
 
     let mut out = Vec::new();

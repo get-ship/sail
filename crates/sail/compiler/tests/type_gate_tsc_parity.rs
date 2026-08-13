@@ -6,12 +6,14 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use sail_compiler::DiagSeverity;
 use sail_compiler::ambients::{
     PROJECT_TSCONFIG_ACTION_REL, PROJECT_TSCONFIG_PURE_REL, write_project_type_configs,
 };
 use sail_compiler::check::tscheck::{
-    TsDiag, TsDiagKey, collect_project_gate_files, collect_project_ts_diags, parse_tsc_diagnostics,
-    rel_diag_path, reset_type_gate_servers, resolve_tsgo, ts_diag_key,
+    TsDiag, TsDiagKey, check_project_type_gate, collect_project_gate_files,
+    collect_project_ts_diags, lsp_is_disabled, parse_tsc_diagnostics, rel_diag_path,
+    reset_type_gate_servers, resolve_tsgo, ts_diag_key, tsgo_invocation_count,
 };
 
 fn workspace_root() -> PathBuf {
@@ -76,7 +78,11 @@ fn assert_parity(label: &str, project: &Path, tsc: &Path) {
     let product = product_rels(project, &files);
     reset_type_gate_servers();
     let t0 = std::time::Instant::now();
-    let gate = collect_project_ts_diags(project, &files);
+    let gate = collect_project_ts_diags(project, &files).expect("live program");
+    assert!(
+        !lsp_is_disabled(),
+        "{label}: parity must use the long-lived program, not CLI tsgo -p"
+    );
     let gate_ms = t0.elapsed().as_secs_f64() * 1000.0;
     let t1 = std::time::Instant::now();
     let mut tsc_diags = run_tsc_p(project, tsc, PROJECT_TSCONFIG_PURE_REL);
@@ -174,28 +180,134 @@ fn parity_fixture_red_when_css_ambient_dropped() {
     let tsc_keys = keys_for_product(project, &product, &tsc_diags);
 
     reset_type_gate_servers();
-    let gate = collect_project_ts_diags(project, &files);
+    let gate = collect_project_ts_diags(project, &files).expect("live program");
+    assert!(!lsp_is_disabled(), "live program required");
     let gate_keys = keys_for_product(project, &product, &gate);
     assert_eq!(
         gate_keys, tsc_keys,
         "in-place program must match tsc before the drift seed"
     );
 
-    // Drop the ambient `*.css` script after tsc has already answered. The
-    // gate reloads the kind program and must now disagree (TS2882).
+    // Keep the session live. last_diags must not survive an emptied
+    // css-modules.d.ts (file still present, body changed).
     let css_ambient = project.join("node_modules/.sail/css-modules.d.ts");
     std::fs::write(&css_ambient, "// no declare module '*.css'\n").expect("clear css ambient");
-    reset_type_gate_servers();
-    let drifted = collect_project_ts_diags(project, &files);
-    let drifted_keys = keys_for_product(project, &product, &drifted);
-    assert_ne!(
-        drifted_keys, tsc_keys,
-        "dropping css-modules.d.ts must diverge from tsc -p (fixture is not a tautology)\n  tsc={tsc_keys:?}\n  drifted={drifted_keys:?}"
+    let drifted = check_project_type_gate(project);
+    assert!(
+        !lsp_is_disabled(),
+        "live program required after ambient edit"
     );
     assert!(
-        drifted
+        drifted.iter().any(|d| {
+            d.severity == DiagSeverity::Error
+                && (d.message.contains("TS2882")
+                    || d.message.contains("TS2307")
+                    || d.message.contains(".css"))
+        }),
+        "warm session must go red after css-modules.d.ts body change: {drifted:?}"
+    );
+}
+
+#[test]
+fn pure_project_cannot_name_resize_observer() {
+    let root = workspace_root();
+    if resolve_tsgo(Some(&root)).is_none() {
+        panic!("tsgo required");
+    }
+    let tsc = tsc_bin(&root);
+    let tmp = tempfile::tempdir().unwrap();
+    let project = tmp.path();
+    std::fs::create_dir_all(project.join("src")).unwrap();
+    std::fs::write(
+        project.join("package.json"),
+        r#"{"name":"@ship/parity-pure-ro"}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        project.join("src/observe.ts"),
+        "export const r = new ResizeObserver(() => {})\n",
+    )
+    .unwrap();
+    write_project_type_configs(project).expect("kind configs");
+
+    let tsc_diags = run_tsc_p(project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+    assert!(
+        tsc_diags
             .iter()
-            .any(|d| d.code == "TS2882" || d.code == "TS2307"),
-        "dropped *.css ambient must surface TS2882/TS2307: {drifted:?}"
+            .any(|d| d.code == "TS2304" && d.message.contains("ResizeObserver")),
+        "tsc -p kind must refuse ResizeObserver under Pure: {tsc_diags:?}"
+    );
+
+    reset_type_gate_servers();
+    let files = collect_project_gate_files(project);
+    let gate = collect_project_ts_diags(project, &files).expect("live program");
+    assert!(!lsp_is_disabled(), "live program required");
+    assert!(
+        gate.iter()
+            .any(|d| d.code == "TS2304" && d.message.contains("ResizeObserver")),
+        "Pure live program must match tsc (TS2304 ResizeObserver): {gate:?}"
+    );
+}
+
+#[test]
+fn kind_config_evicts_mirror_session() {
+    let root = workspace_root();
+    if resolve_tsgo(Some(&root)).is_none() {
+        panic!("tsgo required");
+    }
+    let tmp = tempfile::tempdir().unwrap();
+    let project = tmp.path();
+    std::fs::create_dir_all(project.join("src/stores")).unwrap();
+    std::fs::write(
+        project.join("package.json"),
+        r#"{"name":"@ship/parity-evict"}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        project.join("src/stores/counter.ts"),
+        "export const n = 1\n",
+    )
+    .unwrap();
+    std::fs::write(
+        project.join("src/a.ts"),
+        "import { n } from '@/stores/counter'\nimport './local.css'\nexport const m = n\n",
+    )
+    .unwrap();
+    std::fs::write(project.join("src/local.css"), "/* empty */\n").unwrap();
+
+    let files = vec![
+        (
+            project.join("src/a.ts"),
+            std::fs::read_to_string(project.join("src/a.ts")).unwrap(),
+        ),
+        (
+            project.join("src/stores/counter.ts"),
+            std::fs::read_to_string(project.join("src/stores/counter.ts")).unwrap(),
+        ),
+    ];
+
+    reset_type_gate_servers();
+    let before = tsgo_invocation_count();
+    let _mirror = collect_project_ts_diags(project, &files).expect("mirror program");
+    assert!(!lsp_is_disabled(), "live program required");
+    let after_mirror = tsgo_invocation_count();
+    assert!(
+        after_mirror > before,
+        "mirror collect must spawn tsgo ({before} → {after_mirror})"
+    );
+
+    write_project_type_configs(project).expect("kind configs");
+    let kind = collect_project_ts_diags(project, &files).expect("kind program");
+    assert!(!lsp_is_disabled(), "live program required after eviction");
+    assert!(
+        tsgo_invocation_count() > after_mirror,
+        "kind collect must spawn a new program after evicting the mirror session"
+    );
+    let product = product_rels(project, &files);
+    let keys = keys_for_product(project, &product, &kind);
+    assert!(
+        keys.iter()
+            .all(|k| k.code != "TS2882" && k.code != "TS2307"),
+        "in-place kind program must resolve @/ and *.css: {keys:?}"
     );
 }

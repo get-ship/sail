@@ -242,6 +242,18 @@ pub fn reset_type_gate_servers() {
     tsgo_server::reset();
 }
 
+/// True when the long-lived program could not start (CLI fallback only).
+pub fn lsp_is_disabled() -> bool {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        tsgo_server::lsp_is_disabled()
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        true
+    }
+}
+
 /// How many checks reused an already-live program (not a spawn, not a byte-cache hit).
 pub fn type_gate_program_reuse_hits() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
@@ -645,70 +657,62 @@ pub fn parse_tsc_diagnostics(text: &str) -> Vec<TsDiag> {
     text.lines().filter_map(parse_line).collect()
 }
 
-/// Raw TS diagnostics from the same program the project gate uses.
+/// Raw TS diagnostics from the live program (no CLI `tsgo -p` fallback).
+///
+/// Parity fixtures must fail when this returns `Err` — a CLI-only answer
+/// is not the long-lived path the law is about.
 pub fn collect_project_ts_diags(
     project_root: &Path,
     ts_files: &[(PathBuf, String)],
-) -> Vec<TsDiag> {
-    let Some(tool) = resolve_tsgo(Some(project_root)) else {
-        return Vec::new();
-    };
-    let mut pure: Vec<(&Path, &str)> = Vec::new();
-    let mut action: Vec<(&Path, &str)> = Vec::new();
-    for (path, src) in ts_files {
-        match type_env_for_path(path, Some(src)) {
-            TypeEnv::Pure => pure.push((path.as_path(), src.as_str())),
-            TypeEnv::Action => action.push((path.as_path(), src.as_str())),
-            TypeEnv::Framework => {}
-        }
-    }
-    let mut out = Vec::new();
-    for (env, files) in [(TypeEnv::Pure, &pure), (TypeEnv::Action, &action)] {
-        if files.is_empty() {
-            continue;
-        }
-        match collect_env_ts_diags(project_root, env, files, &tool) {
-            Ok(diags) => out.extend(diags),
-            Err(_) => {}
-        }
-    }
-    out
-}
-
-fn collect_env_ts_diags(
-    project_root: &Path,
-    env: TypeEnv,
-    files: &[(&Path, &str)],
-    tool: &TsgoTool,
 ) -> std::io::Result<Vec<TsDiag>> {
+    let Some(tool) = resolve_tsgo(Some(project_root)) else {
+        return Err(std::io::Error::other("tsgo missing"));
+    };
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = (tool, ts_files);
+        return Err(std::io::Error::other("tsgo lsp unsupported on wasm32"));
+    }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        if !tsgo_server::lsp_is_disabled() {
+        if tsgo_server::lsp_is_disabled() {
+            return Err(std::io::Error::other("tsgo lsp disabled"));
+        }
+        let mut pure: Vec<(&Path, &str)> = Vec::new();
+        let mut action: Vec<(&Path, &str)> = Vec::new();
+        for (path, src) in ts_files {
+            match type_env_for_path(path, Some(src)) {
+                TypeEnv::Pure => pure.push((path.as_path(), src.as_str())),
+                TypeEnv::Action => action.push((path.as_path(), src.as_str())),
+                TypeEnv::Framework => {}
+            }
+        }
+        let mut out = Vec::new();
+        for (env, files) in [(TypeEnv::Pure, &pure), (TypeEnv::Action, &action)] {
+            if files.is_empty() {
+                continue;
+            }
             let kind_rel = match env {
                 TypeEnv::Pure => Some(crate::ambients::PROJECT_TSCONFIG_PURE_REL),
                 TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
-                TypeEnv::Framework => return Ok(Vec::new()),
+                TypeEnv::Framework => continue,
             };
             let use_kind = kind_rel
                 .map(|r| project_root.join(r).is_file())
                 .unwrap_or(false);
-            if let Ok(diags) = env_program_ts_diags(project_root, env, files, tool, use_kind) {
-                return Ok(diags);
-            }
+            out.extend(env_program_ts_diags(
+                project_root,
+                env,
+                files,
+                &tool,
+                use_kind,
+            )?);
         }
+        if tsgo_server::lsp_is_disabled() {
+            return Err(std::io::Error::other("tsgo lsp disabled"));
+        }
+        Ok(out)
     }
-    let kind_rel = match env {
-        TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
-        TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
-        TypeEnv::Framework => return Ok(Vec::new()),
-    };
-    if project_root.join(kind_rel).is_file() {
-        let output = run_tsgo(tool, &["-p", kind_rel, "--noEmit"], project_root)?;
-        let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
-        text.push_str(&String::from_utf8_lossy(&output.stderr));
-        return Ok(parse_tsc_diagnostics(&text));
-    }
-    Ok(Vec::new())
 }
 
 /// Overlay body for a failed project gate (HMR compile-error event).
