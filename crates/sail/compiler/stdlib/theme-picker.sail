@@ -20,6 +20,7 @@
   style glyph = {paint: ink({ color: theme-picker.trigger-fg }), text: type({ size: sm, leading: none })}
 
   style panel = {box: place({ position: fixed, inset: auto, left: bind(anchorLeft), top: bind(anchorTop), z: popover }).space({ m: 0, pad: 0 }).size({ w: panel-max-w-sm, max-w: panel-w-toast, min-w: 0, max-h: panel-vh-md }).overflow({ x: hidden, y: auto, overscroll: contain }), paint: ink({ color: theme-picker.foreground }).fill({ color: theme-picker }).border({ color: border, width: hairline }).radius(lg).elevation(lg)}
+  style panelInline = {box: place({ position: static, inset: auto }).space({ m: 0, pad: 0 }).size({ w: full, max-w: none, min-w: 0 }).overflow({ x: hidden }), paint: elevation(none).fill({ color: transparent }).border({ width: 0 })}
 
   style header = {box: size({ w: full, min-w: 0 }).space({ pad-x: 3, pad-t: 3, pad-b: 0 })}
   style headerEyebrow = {paint: ink({ color: theme-picker.option-fg }), text: type({ size: xs, weight: semibold, tracking: wide, case: label-transform, leading: none })}
@@ -41,7 +42,7 @@
   style swatch = {box: place({ position: relative }).size({ w: full, min-w: 0, h: 20, min-h: 20 }).overflow({ all: hidden }), paint: radius(md).fill({ color: background }).ink(foreground).isolate()}
   style overlay = {box: place({ position: absolute, inset: 0, z: 1 }), paint: filter({ opacity: bind(surface-overlay-opacity), blend: bind(surface-overlay-blend) }).fill({ color: bind(surface-overlay) }).pointerEvents(none)}
   style specimen = {box: place({ position: relative, z: 2 }).size({ w: full, h: full, min-w: 0 }).space({ pad: 2_5 })}
-  style title = {paint: ink(foreground), text: type({ family: heading, weight: bind(heading-weight), size: sm, leading: tight, wrap: truncate })}
+  style title = {paint: ink({ color: foreground }), text: type({ family: heading, weight: bind(heading-weight), size: sm, leading: tight, wrap: truncate })}
   // Chromatic trio: primary · secondary · accent
   style stripPrimary = {box: size({ h: 3, min-w: 0 }), paint: radius(sm).fill({ color: primary })}
   style stripSecondary = {box: size({ h: 3, min-w: 0 }), paint: radius(sm).fill({ color: secondary })}
@@ -92,9 +93,11 @@
     placement="bottom-end"
     label="Theme"
     data-theme-listbox
-    style(panel, {compound: [
-        {inline: true, box: place({ position: static }).size({ w: full, max-w: none }).space({ pad: 0 }).overflow({ x: hidden }), paint: elevation(none).fill({ color: transparent }).border({ width: 0 })},
-      ]})
+    style(panel, {match: {
+        inline: {
+          true: panelInline,
+        },
+      }})
   >
     <column gap="2" data-picker-header style(header)>
       <column gap="1" style({box: size({ min-w: 0 })})>

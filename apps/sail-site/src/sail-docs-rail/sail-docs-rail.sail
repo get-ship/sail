@@ -30,7 +30,7 @@
   style railLink = { box: flow({ display: block }).space({ pad-x: 2, pad-y: 1 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: ink({ color: primary }).fill({ color: muted }), text: type({ weight: semibold }) } } }
   style mainDocs = { box: space({ pad: 4 }).size({min-h: 0, basis: 0}).overflow({ x: hidden, y: auto }), when: { tablet: { box: space({ pad: 6 }) } } }
   // Mobile-only chrome — plain div so display:none wins at tablet+.
-  style mobileBar = { box: space({ pad-x: 3, pad-y: 2 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: background }), when: { tablet: { box: flow({ display: none }) } } }
+  style mobileBar = { box: flow({ display: flex }).space({ pad-x: 3, pad-y: 2 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: background }), when: { tablet: { box: flow({ display: none }) } } }
   style contentCol = { box: size({ min-w: 0, min-h: 0 }) }
   style mobileLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   style drawerTitle = { text: type({ size: sm }) }
@@ -120,10 +120,12 @@ export default controller((ctx) => {
   </nav>
 
   <column gap="0" style(contentCol, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
-    <row gap="2" align="center" style(mobileBar)>
-      <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
-      <small style(mobileLabel)>Docs</small>
-    </row>
+    <div style(mobileBar)>
+      <row gap="2" align="center">
+        <button type="button" variant="outline" size="sm" on:click={openNav} expanded={navOpen() ? 'true' : 'false'}>Menu</button>
+        <small style(mobileLabel)>Docs</small>
+      </row>
+    </div>
     <main style(mainDocs, { box: flow({ grow: 1 }).size({ min-w: 0 }) })>
       <slot name="route"></slot>
     </main>

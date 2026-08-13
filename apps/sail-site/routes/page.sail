@@ -9,7 +9,7 @@
   // Do NOT pair overflow({ x: hidden }) with height-capped flex parent and leave Y visible:
   // CSS coerces Y→auto and sections become independent scrollports.
   style page = { box: size({ w: full, min-w: 0, max-w: full }).overflow({ x: hidden }), paint: fill({ color: surface-0 }) }
-  style hero = { box: place({ position: relative }).space({ pad-x: 4, pad-t: 12, pad-b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: { box: space({ pad-x: 8, pad-t: 20, pad-b: 16 }) } } }
+  style hero = { box: place({ position: relative }).space({ pad-x: 4, pad-t: 8, pad-b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: { box: space({ pad-x: 8, pad-t: 10, pad-b: 16 }) } } }
   style glow = { box: place({ top: 0, left: 0, right: 0, z: base }).size({ h: 64 }), paint: fill({ glow: accent }) }
   style heroInner = { box: place({ position: relative }).size({ w: full, min-w: 0, max-w: breakpoint-desktop }).space({ mx: auto }) }
   style eyebrow = { paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }

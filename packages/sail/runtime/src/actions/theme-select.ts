@@ -493,9 +493,13 @@ export const themeSelect: Action<void> = (node) => {
     if (optionLabel) optionLabel.textContent = theme.label
 
     // Live specimen: themes.css scopes tokens via theme + data-mode.
+    // Always stamp data-mode here — a missing mode lets :root[data-mode=dark]
+    // descendant rules paint light-filter cards with the page's dark ink.
     const preview = opt.querySelector<HTMLElement>('[theme]')
     if (preview) {
       preview.setAttribute('theme', theme.id)
+      preview.setAttribute('data-mode', 'light')
+      preview.removeAttribute('hidden')
     }
 
     // Optional static chip row fallback (if markup still has data-swatch-row).

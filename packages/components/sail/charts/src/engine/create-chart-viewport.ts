@@ -1,7 +1,7 @@
 // createChartViewport — responsive geometry adapter (Backbone #2, Slice 4).
 // Pure product surface: observeContentBox stands in for ResizeObserver.
 
-import { signal, type Signal } from '@ship/sail-runtime'
+import { observeContentBox, signal, type Signal } from '@ship/sail-runtime'
 
 export interface ChartViewport {
   width: Signal<number>

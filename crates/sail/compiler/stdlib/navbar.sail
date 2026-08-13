@@ -18,7 +18,7 @@
   }
 
   style base = {paint: fill({ color: navbar }).ink({ color: navbar.foreground }), text: type({ decoration: none })}
-  style placeBar = {box: place({ position: relative }).size({ min-h: 14 }).space({ pad-y: 2, pad-x: 4 })}
+  style placeBar = {box: place({ position: relative }).size({ min-h: 12 }).space({ pad-x: 4 })}
   style placeRail = {box: size({ min-h: 0, min-w: panel-rail-w }).space({ pad-y: 5, pad-x: 4 }).flow({ dir: column })}
   style brand = {box: flow({ shrink: 0 }).size({ min-w: 0 }), text: type({ weight: semibold })}
   // True geometric center: fill the bar, then justify-center the pills.
