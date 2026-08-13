@@ -9504,8 +9504,8 @@
       "rank": 1,
       "path": "apps/studio/src/theme-components-surface/theme-components-surface.sail",
       "wall_ms": 67442.974073,
-      "dominant_phase": "gate",
-      "dominant_ms": 67042.29152099999,
+      "dominant_phase": "compose",
+      "dominant_ms": 61798.243319,
       "pathology": [
         "megapage",
         "dense-template",
@@ -9516,8 +9516,8 @@
       "rank": 2,
       "path": "apps/sail-site/routes/components/page.sail",
       "wall_ms": 13194.267854,
-      "dominant_phase": "gate",
-      "dominant_ms": 13010.387216,
+      "dominant_phase": "compose",
+      "dominant_ms": 11799.551056,
       "pathology": [
         "megapage",
         "dense-template",
@@ -9528,8 +9528,8 @@
       "rank": 3,
       "path": "apps/sail-site/routes/docs/guide/using-components/page.sail",
       "wall_ms": 5104.704124999999,
-      "dominant_phase": "gate",
-      "dominant_ms": 5034.841961,
+      "dominant_phase": "compose",
+      "dominant_ms": 4368.671617999999,
       "pathology": [
         "dense-template",
         "stdlib-expansion"
@@ -9539,8 +9539,8 @@
       "rank": 4,
       "path": "apps/studio/src/theme-shape-surface/theme-shape-surface.sail",
       "wall_ms": 4462.703855,
-      "dominant_phase": "gate",
-      "dominant_ms": 4278.887683,
+      "dominant_phase": "compose",
+      "dominant_ms": 3455.207935,
       "pathology": [
         "megapage",
         "dense-template",
@@ -9551,8 +9551,8 @@
       "rank": 5,
       "path": "apps/studio/src/themes-surface/themes-surface.sail",
       "wall_ms": 4218.163342999999,
-      "dominant_phase": "gate",
-      "dominant_ms": 4045.763891,
+      "dominant_phase": "compose",
+      "dominant_ms": 3290.298389,
       "pathology": [
         "megapage",
         "dense-template",
@@ -9563,8 +9563,8 @@
       "rank": 6,
       "path": "apps/sail-site/routes/page.sail",
       "wall_ms": 3440.6292160000003,
-      "dominant_phase": "gate",
-      "dominant_ms": 3238.4339299999997,
+      "dominant_phase": "compose",
+      "dominant_ms": 2724.921444,
       "pathology": [
         "dense-template",
         "stdlib-expansion"
@@ -9574,8 +9574,8 @@
       "rank": 7,
       "path": "apps/studio/src/components-surface/components-surface.sail",
       "wall_ms": 3237.940369,
-      "dominant_phase": "gate",
-      "dominant_ms": 3144.32608,
+      "dominant_phase": "compose",
+      "dominant_ms": 2462.800403,
       "pathology": [
         "dense-template",
         "stdlib-expansion"
@@ -9585,8 +9585,8 @@
       "rank": 8,
       "path": "apps/sail-site/src/component-docs/theme-picker/doc-theme-picker.sail",
       "wall_ms": 2731.717193,
-      "dominant_phase": "gate",
-      "dominant_ms": 2688.2587089999997,
+      "dominant_phase": "compose",
+      "dominant_ms": 2420.355952,
       "pathology": [
         "stdlib-expansion"
       ]
@@ -9595,8 +9595,8 @@
       "rank": 9,
       "path": "apps/studio/src/theme-assets-surface/theme-assets-surface.sail",
       "wall_ms": 2581.2103300000003,
-      "dominant_phase": "gate",
-      "dominant_ms": 2479.481103,
+      "dominant_phase": "compose",
+      "dominant_ms": 1924.291624,
       "pathology": [
         "dense-template",
         "stdlib-expansion"
@@ -9606,8 +9606,8 @@
       "rank": 10,
       "path": "apps/sail-site/routes/docs/concepts/layout/page.sail",
       "wall_ms": 2563.855391,
-      "dominant_phase": "gate",
-      "dominant_ms": 2505.478996,
+      "dominant_phase": "compose",
+      "dominant_ms": 2249.680897,
       "pathology": [
         "dense-template",
         "stdlib-expansion"

@@ -235,7 +235,7 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
-    /// Measure compile phases over the product corpus (JOB-PERF-0).
+    /// Measure compile phases over the product corpus.
     /// Continues past per-file errors so red files cannot hide behind the
     /// 60s wall. Does not install the product resource watchdog.
     Profile {

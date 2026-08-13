@@ -346,7 +346,7 @@ struct Discovered {
     tree: &'static str,
 }
 
-/// Run the JOB-PERF-0 measurement suite and write JSON to `out`.
+/// Run the compiler phase profile and write JSON to `out`.
 pub fn run(workspace: &Path, out: &Path, skip_dev_rss: bool) -> anyhow::Result<ProfileReport> {
     begin();
     let files = discover(workspace)?;
@@ -447,15 +447,7 @@ pub fn run(workspace: &Path, out: &Path, skip_dev_rss: bool) -> anyhow::Result<P
         .take(10)
         .enumerate()
         .map(|(i, r)| {
-            let (dominant_phase, dominant_ms) = r
-                .phases_ms
-                .iter()
-                .filter(|(k, _)| {
-                    !k.starts_with("layout-viewport") && k.as_str() != "type-gate-cache"
-                })
-                .max_by(|a, b| a.1.total_cmp(b.1))
-                .map(|(k, v)| (k.clone(), *v))
-                .unwrap_or_else(|| ("(none)".into(), 0.0));
+            let (dominant_phase, dominant_ms) = dominant_inner_phase(&r.phases_ms);
             Hotspot {
                 rank: i + 1,
                 path: r.path.clone(),
@@ -1003,6 +995,22 @@ fn error_taxonomy(reports: &[FileReport]) -> ErrorTaxonomy {
     }
 }
 
+/// Parent spans that wrap other recorded phases. Ranking on these hides the
+/// inner cost (compose vs layout vs type-gate).
+fn is_wrapper_phase(name: &str) -> bool {
+    matches!(name, "gate" | "parse-total" | "type-gate-cache")
+        || name.starts_with("layout-viewport")
+}
+
+fn dominant_inner_phase(phases_ms: &BTreeMap<String, f64>) -> (String, f64) {
+    phases_ms
+        .iter()
+        .filter(|(k, _)| !is_wrapper_phase(k))
+        .max_by(|a, b| a.1.total_cmp(b.1))
+        .map(|(k, v)| (k.clone(), *v))
+        .unwrap_or_else(|| ("(none)".into(), 0.0))
+}
+
 fn percentile(sorted: &[f64], p: f64) -> f64 {
     if sorted.is_empty() {
         return 0.0;
@@ -1124,5 +1132,20 @@ mod tests {
         end();
         assert_eq!(samples.len(), 1);
         assert_eq!(samples[0].phase, "parse");
+    }
+
+    #[test]
+    fn hotspot_dominant_phase_skips_wrapper_spans() {
+        let mut phases = BTreeMap::new();
+        phases.insert("gate".into(), 67_042.0);
+        phases.insert("compose".into(), 61_798.0);
+        phases.insert("layout".into(), 4_875.0);
+        phases.insert("layout-viewport.390x844".into(), 1_600.0);
+        phases.insert("parse-total".into(), 376.0);
+        phases.insert("preprocess".into(), 344.0);
+        phases.insert("type-gate".into(), 35.0);
+        let (name, ms) = dominant_inner_phase(&phases);
+        assert_eq!(name, "compose");
+        assert_eq!(ms, 61_798.0);
     }
 }

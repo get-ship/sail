@@ -1,7 +1,7 @@
 # SAIL perf baselines
 
 Two suites share this tree: runtime keyed-bench medians, and compiler
-phase profiles (JOB-PERF-0).
+phase profiles.
 
 | Path | Role |
 |------|------|
