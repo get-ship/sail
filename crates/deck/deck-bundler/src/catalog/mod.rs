@@ -16,9 +16,9 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 pub use workspace::{
-    BundleDecl, WorkspacePackage, component_package_roots, composed_component_index,
-    discover_bundle_declarations, discover_dependency_packages, discover_workspace_packages,
-    discover_workspace_packages_scoped, components_package_id_for_name,
+    BundleDecl, WorkspacePackage, component_package_roots, components_package_id_for_name,
+    composed_component_index, discover_bundle_declarations, discover_dependency_packages,
+    discover_workspace_packages, discover_workspace_packages_scoped,
 };
 use workspace::{read_json, source_tags_for_package};
 
@@ -905,7 +905,9 @@ mod tests {
             .expect("tag must resolve from node_modules pack");
         assert!(src.is_file());
         assert!(
-            src.ends_with("node_modules/@ship/sail-components/src/sail-bar-chart/sail-bar-chart.sail"),
+            src.ends_with(
+                "node_modules/@ship/sail-components/src/sail-bar-chart/sail-bar-chart.sail"
+            ),
             "got: {src:?}"
         );
     }

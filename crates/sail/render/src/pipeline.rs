@@ -360,8 +360,7 @@ fn build_node(
     let phrasing = is_phrasing_tag(&elem.tag);
 
     // Build element children first (keyed by index for flow interleaving).
-    let mut child_by_idx: std::collections::HashMap<usize, Node> =
-        std::collections::HashMap::new();
+    let mut child_by_idx: std::collections::HashMap<usize, Node> = std::collections::HashMap::new();
     for &child_idx in &elem.children {
         if let Some(child) = build_node(elements, layout, sheet, palette, child_idx)? {
             child_by_idx.insert(child_idx, child);

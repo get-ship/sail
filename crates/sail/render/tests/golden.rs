@@ -329,7 +329,9 @@ fn empty_decorative_div_golden_and_behavior() {
     );
     // size(2) → 8×8, size(4) → 16×16
     assert!(
-        boxes.iter().any(|r| (r.w - 8.0).abs() < 0.5 && (r.h - 8.0).abs() < 0.5),
+        boxes
+            .iter()
+            .any(|r| (r.w - 8.0).abs() < 0.5 && (r.h - 8.0).abs() < 0.5),
         "size(2) must resolve to 8×8: {:?}",
         boxes.iter().map(|r| (r.w, r.h)).collect::<Vec<_>>()
     );

@@ -18,9 +18,7 @@ pub mod placeholder;
 pub mod ssr_project;
 pub mod theme;
 
-pub use identity::{
-    DynamicRegion, Region, RegionStyle, absolute_location, is_unjoined_id,
-};
+pub use identity::{DynamicRegion, Region, RegionStyle, absolute_location, is_unjoined_id};
 pub use pipeline::PipelineOutput;
 pub use takumi::prelude::Bitmap;
 pub use theme::{ThemePalette, ThemeSelect};

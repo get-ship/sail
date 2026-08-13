@@ -322,7 +322,8 @@ pub fn build_virtual_ts(sail_source: &str) -> Option<VirtualTs> {
             style_const_block.push_str(": any;\n");
         }
         if !style_const_block.is_empty() {
-            view_text.push_str("\n// ── <scope> Style values (channel form) ────────────────────\n");
+            view_text
+                .push_str("\n// ── <scope> Style values (channel form) ────────────────────\n");
             view_text.push_str(&style_const_block);
         }
     }
@@ -585,7 +586,7 @@ fn quote_reserved_style_keyword_args(src: &str) -> String {
     // Only keywords that appear as Style setter args and are JS reserved
     // or collide with DOM globals when left bare for pure tsc.
     const RESERVED_ARGS: &[&str] = &[
-        "default", "static", "new", "void", "in", "with", // JS reserved
+        "default", "static", "new", "void", "in", "with",   // JS reserved
         "screen", // DOM `screen: Screen` vs Style size keyword
     ];
     let mut out = src.to_string();
@@ -702,8 +703,19 @@ fn quote_bare_style_tokens(src: &str) -> String {
             let boundary_after = j >= bytes.len()
                 || matches!(
                     bytes[j],
-                    b')' | b']' | b',' | b':' | b' ' | b'\t' | b'\n' | b'\r' | b'.' | b';' | b'}'
-                        | b'|' | b'&' | b'?'
+                    b')' | b']'
+                        | b','
+                        | b':'
+                        | b' '
+                        | b'\t'
+                        | b'\n'
+                        | b'\r'
+                        | b'.'
+                        | b';'
+                        | b'}'
+                        | b'|'
+                        | b'&'
+                        | b'?'
                 );
             let s = &src[start..j];
             let quote_us = saw_us
@@ -882,10 +894,7 @@ fn strip_for_as_binding(src: &str) -> &str {
             i += 1;
             continue;
         }
-        if depth == 0
-            && src.is_char_boundary(i + 4)
-            && bytes[i..i + 4] == *b" as "
-        {
+        if depth == 0 && src.is_char_boundary(i + 4) && bytes[i..i + 4] == *b" as " {
             let right = src[i + 4..].trim();
             // Match arms: `ok as v => …` — leave intact (not a for-primary).
             if right.contains("=>") {
@@ -1058,7 +1067,10 @@ fn collect_scope_style_consts(scope_body: &str) -> Vec<String> {
         while j < bytes.len() && bytes[j].is_ascii_whitespace() {
             j += 1;
         }
-        if j >= bytes.len() || !scope_body.is_char_boundary(j) || !scope_body[j..].starts_with("style") {
+        if j >= bytes.len()
+            || !scope_body.is_char_boundary(j)
+            || !scope_body[j..].starts_with("style")
+        {
             i += 5;
             continue;
         }
@@ -1332,10 +1344,7 @@ fn scan_brace_exprs(original: &str) -> Vec<ExprEmbed> {
     let mut i = 0usize;
     while i < bytes.len() {
         // Skip HTML comments so `<!-- session={session} -->` docs are not embeds.
-        if bytes[i] == b'<'
-            && original.is_char_boundary(i)
-            && original[i..].starts_with("<!--")
-        {
+        if bytes[i] == b'<' && original.is_char_boundary(i) && original[i..].starts_with("<!--") {
             if let Some(rel) = original[i + 4..].find("-->") {
                 i = i + 4 + rel + 3;
                 continue;

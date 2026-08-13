@@ -357,7 +357,8 @@ mod tests {
             "<div>hello</div>\n",
         );
 
-        let result = write_component_package_cem(package_root).expect("write_component_package_cem");
+        let result =
+            write_component_package_cem(package_root).expect("write_component_package_cem");
         let out_path = result.expect("expected Some(path)");
 
         assert!(out_path.exists(), "dist/custom-elements.json written");
@@ -463,8 +464,7 @@ mod tests {
         );
 
         // components.gen aggregates the package CEM without a workspace map.
-        let count =
-            generate_components_gen(app, app).expect("generate_components_gen external");
+        let count = generate_components_gen(app, app).expect("generate_components_gen external");
         assert_eq!(count, 1, "node_modules components package must be included");
         let catalog = std::fs::read_to_string(app.join("components.gen.ts")).unwrap();
         assert!(
@@ -483,7 +483,9 @@ mod tests {
             .expect("sail-bar-chart must resolve from node_modules components package");
         assert!(src.is_file());
         assert!(
-            src.ends_with("node_modules/@ship/sail-components/src/sail-bar-chart/sail-bar-chart.sail"),
+            src.ends_with(
+                "node_modules/@ship/sail-components/src/sail-bar-chart/sail-bar-chart.sail"
+            ),
             "resolved path must be under node_modules; got: {src:?}"
         );
     }

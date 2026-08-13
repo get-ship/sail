@@ -34,9 +34,8 @@ fn ambient_import_line(body: &str) -> Option<&str> {
 }
 
 fn assert_ambient(body: &str, idents: &[&str]) {
-    let line = ambient_import_line(body).unwrap_or_else(|| {
-        panic!("expected ambient import from /internal, got module:\n{body}")
-    });
+    let line = ambient_import_line(body)
+        .unwrap_or_else(|| panic!("expected ambient import from /internal, got module:\n{body}"));
     for ident in idents {
         assert!(
             line.contains(ident),

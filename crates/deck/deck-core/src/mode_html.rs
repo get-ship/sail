@@ -176,8 +176,7 @@ pub fn inject_effective_themes_meta(html: &str, project_root: &std::path::Path) 
             .join("themes")
             .is_dir()
     });
-    let Ok(ids) =
-        sail_compiler::tokens_generate::effective_theme_ids_opt(workspace, project_root)
+    let Ok(ids) = sail_compiler::tokens_generate::effective_theme_ids_opt(workspace, project_root)
     else {
         return html.to_string();
     };

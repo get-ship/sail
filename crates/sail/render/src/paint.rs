@@ -514,7 +514,9 @@ impl Paint {
     /// Apply text-channel decls onto a takumi Style (used by `text_node`).
     pub fn apply_text(&self, mut style: Style) -> Style {
         if let Some(px) = self.font_size_px {
-            style = style.with(StyleDeclaration::font_size(FontSize::Length(Length::Px(px))));
+            style = style.with(StyleDeclaration::font_size(FontSize::Length(Length::Px(
+                px,
+            ))));
         }
         if let Some(w) = self.font_weight {
             style = style.with(StyleDeclaration::font_weight(FontWeight::from(w)));
@@ -787,10 +789,7 @@ pub fn parse_font_size_px(css: &str) -> Option<f32> {
         return Some(px);
     }
     // clamp(3rem, 9vw, 8.5rem) — prefer the max length for static display type.
-    if let Some(inner) = css
-        .strip_prefix("clamp(")
-        .and_then(|s| s.strip_suffix(')'))
-    {
+    if let Some(inner) = css.strip_prefix("clamp(").and_then(|s| s.strip_suffix(')')) {
         let mut best: Option<f32> = None;
         for part in inner.split(',') {
             if let Some(px) = parse_css_length_px(part.trim()) {
@@ -917,8 +916,9 @@ mod tests {
         attrs.insert("variant".into(), "default".into());
         let def = Element {
             tag: "button".into(),
-            class: "s-bgtransparent s-variantdefault-bgbackground s-toneprimaryvariantsolid-bgprimary"
-                .into(),
+            class:
+                "s-bgtransparent s-variantdefault-bgbackground s-toneprimaryvariantsolid-bgprimary"
+                    .into(),
             attrs,
             ..Default::default()
         };

@@ -29,7 +29,9 @@ use sail_compiler::parse::preprocess::extract_controller_block;
 pub fn materialize_inline_controller(inline_src: &str) -> Result<String> {
     let lowered = sail_compiler::check::query_keys::rewrite(inline_src)
         .map_err(|e| anyhow!("synthesize (query keys): {}", e.render(inline_src)))?;
-    Ok(sail_compiler::parse::preprocess::wrap_controller_body(&lowered))
+    Ok(sail_compiler::parse::preprocess::wrap_controller_body(
+        &lowered,
+    ))
 }
 
 /// Walk up from this crate to the repo root (the dir holding `package.json`

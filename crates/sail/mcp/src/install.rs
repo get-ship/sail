@@ -181,10 +181,9 @@ fn server_entry(launch: &Launch, project_root: &Path) -> Value {
 /// Merge `name` → `entry` into a host config file with top-level `mcpServers`.
 fn write_mcp_servers_file(path: &Path, name: &str, entry: &Value) -> Result<(), String> {
     let mut root = if path.is_file() {
-        let text = fs::read_to_string(path)
-            .map_err(|e| format!("read {}: {e}", path.display()))?;
-        let v: Value = serde_json::from_str(&text)
-            .map_err(|e| format!("parse {}: {e}", path.display()))?;
+        let text = fs::read_to_string(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+        let v: Value =
+            serde_json::from_str(&text).map_err(|e| format!("parse {}: {e}", path.display()))?;
         if !v.is_object() {
             return Err(format!(
                 "{}: expected JSON object with mcpServers",
@@ -236,9 +235,7 @@ pub fn format_report(report: &InstallReport) -> String {
         ));
     }
     if report.writes.iter().any(|w| w.host == "claude-code") {
-        out.push_str(
-            "  note: Claude Code reads project `.mcp.json` (mcpServers.sail).\n",
-        );
+        out.push_str("  note: Claude Code reads project `.mcp.json` (mcpServers.sail).\n");
     }
     if report.writes.iter().any(|w| w.host == "cursor") {
         out.push_str("  note: Cursor reads project `.cursor/mcp.json`.\n");
@@ -294,7 +291,8 @@ mod tests {
         let report = install(root).expect("install");
         assert!(!report.writes.is_empty());
         let v: Value =
-            serde_json::from_str(&std::fs::read_to_string(root.join(".mcp.json")).unwrap()).unwrap();
+            serde_json::from_str(&std::fs::read_to_string(root.join(".mcp.json")).unwrap())
+                .unwrap();
         assert!(v["mcpServers"]["other"].is_object());
         assert!(v["mcpServers"]["sail"].is_object());
     }

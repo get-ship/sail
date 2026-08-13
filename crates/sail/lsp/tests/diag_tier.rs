@@ -69,13 +69,7 @@ fn typing_in_500_line_sail_never_triggers_layout_pass() {
     for step in 0..40 {
         // Mutate near the end so the buffer stays large.
         text.push(if step % 2 == 0 { ' ' } else { 'x' });
-        let _diags = check_all_with_tier(
-            &text,
-            None,
-            &[],
-            None,
-            DiagnosticTier::OnType,
-        );
+        let _diags = check_all_with_tier(&text, None, &[], None, DiagnosticTier::OnType);
         assert_eq!(
             layout_pass_count(),
             0,

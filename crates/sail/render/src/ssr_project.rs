@@ -89,8 +89,7 @@ pub fn project(source: &str) -> Projected {
         sail_compiler::parse::preprocess::extract_controller_block(source);
     let had_controller = controller_body.is_some();
     let scope = match controller_body {
-        Some(body) => match controller_parse::parse(PathBuf::from("_inline.controller.ts"), body)
-        {
+        Some(body) => match controller_parse::parse(PathBuf::from("_inline.controller.ts"), body) {
             Some(c) => collect_scope(&c),
             None => HashMap::new(),
         },
@@ -842,10 +841,7 @@ fn expand_for(
         // (item.prop must resolve here — outer substitute has no loop vars).
         let nested = expand_control_flow(body, &local, projected, unresolved);
         out.push_str(&substitute_text_exprs(
-            &nested,
-            &local,
-            projected,
-            unresolved,
+            &nested, &local, projected, unresolved,
         ));
     }
     Some((end, out))
@@ -1131,8 +1127,7 @@ fn parse_open_tag(src: &str, start: usize) -> Option<(usize, HashMap<String, Str
             continue;
         }
         let ns = i;
-        while i < bytes.len() && (is_ident_cont(bytes[i]) || bytes[i] == b'-' || bytes[i] == b':')
-        {
+        while i < bytes.len() && (is_ident_cont(bytes[i]) || bytes[i] == b'-' || bytes[i] == b':') {
             i += 1;
         }
         let name = src[ns..i].to_string();
@@ -1505,7 +1500,11 @@ export default controller(() => {
 <span>{ticks()}</span><span>{window.innerWidth}</span>
 "#;
         let p = project(src);
-        assert!(p.source.contains(">0<") || p.source.contains(">0</"), "{}", p.source);
+        assert!(
+            p.source.contains(">0<") || p.source.contains(">0</"),
+            "{}",
+            p.source
+        );
         assert!(
             p.unresolved.iter().any(|u| u.contains("window")),
             "{:?}",
@@ -1573,21 +1572,34 @@ export default controller(() => {
         let src = "<div>\n  style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })\nhello</div>";
         let p = project(src);
         assert!(
-            p.source.contains("style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })"),
+            p.source
+                .contains("style({ box: pad(3), paint: bg(primary).fg(primary-foreground) })"),
             "style payload must survive verbatim: {}",
             p.source
         );
-        assert!(!p.unresolved.iter().any(|u| u.contains("pad")), "{:?}", p.unresolved);
+        assert!(
+            !p.unresolved.iter().any(|u| u.contains("pad")),
+            "{:?}",
+            p.unresolved
+        );
     }
 
     #[test]
     fn when_and_const_ref_calls_survive_projection() {
         let src = "<div>\n  style({ box: pad(2) }).when(hover, { paint: bg(accent) })\nx</div>";
         let p = project(src);
-        assert!(p.source.contains(".when(hover, { paint: bg(accent) })"), "{}", p.source);
+        assert!(
+            p.source.contains(".when(hover, { paint: bg(accent) })"),
+            "{}",
+            p.source
+        );
         let src2 = "<div>\n  cta.press({ paint: bg(primary) })\ny</div>";
         let p2 = project(src2);
-        assert!(p2.source.contains("cta.press({ paint: bg(primary) })"), "{}", p2.source);
+        assert!(
+            p2.source.contains("cta.press({ paint: bg(primary) })"),
+            "{}",
+            p2.source
+        );
     }
 
     #[test]

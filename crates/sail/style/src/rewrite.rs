@@ -179,10 +179,18 @@ fn fold_when_tails(tails: &[String]) -> Vec<String> {
     for t in tails {
         // t is like `(hover, { paint: … })` or `({ hover: … })`
         let inner = t.trim();
-        let inner = inner.strip_prefix('(').and_then(|s| s.strip_suffix(')')).unwrap_or(inner).trim();
+        let inner = inner
+            .strip_prefix('(')
+            .and_then(|s| s.strip_suffix(')'))
+            .unwrap_or(inner)
+            .trim();
         if inner.starts_with('{') {
             // map form already key: value pairs — strip braces
-            let body = inner.strip_prefix('{').and_then(|s| s.strip_suffix('}')).unwrap_or(inner).trim();
+            let body = inner
+                .strip_prefix('{')
+                .and_then(|s| s.strip_suffix('}'))
+                .unwrap_or(inner)
+                .trim();
             if !body.is_empty() {
                 entries.push(body.to_string());
             }
@@ -491,8 +499,7 @@ pub fn lift_style_attr_hosts(src: &str) -> String {
             }
         }
         // Skip <script> / <controller> / <scope> raw bodies — attrs still scanned.
-        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1] != b'/' && bytes[i + 1] != b'!'
-        {
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1] != b'/' && bytes[i + 1] != b'!' {
             let tag_start = i + 1;
             let mut tag_end = tag_start;
             while tag_end < bytes.len()
@@ -692,8 +699,7 @@ fn apply_attr_lift(out: &mut String, e: &AttrLiftEdit) {
     } else {
         gt2
     };
-    let need_space_before =
-        insert_at > 0 && !out.as_bytes()[insert_at - 1].is_ascii_whitespace();
+    let need_space_before = insert_at > 0 && !out.as_bytes()[insert_at - 1].is_ascii_whitespace();
     let mut injection = String::new();
     if need_space_before {
         injection.push(' ');
@@ -777,11 +783,7 @@ fn is_ident_method_call(s: &str) -> bool {
     let Some((head, rest)) = s.split_once('.') else {
         return false;
     };
-    if head.is_empty()
-        || !head
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
-    {
+    if head.is_empty() || !head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
         return false;
     }
     // Not `style.…` (handled by starts_with).
@@ -870,7 +872,6 @@ fn when_expr_to_tag_style(expr: &str) -> String {
 fn rewrite_free_form(t: &str) -> String {
     t.to_string()
 }
-
 
 #[cfg(test)]
 mod tests {

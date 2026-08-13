@@ -36,9 +36,9 @@ const SINGLETONS: [&str; 2] = ["@ship/sail-runtime", "@ship/sail-dom"];
 
 /// True for a bare singleton or any of its subpaths (`@ship/sail-runtime/internal`).
 fn is_singleton_spec(spec: &str) -> bool {
-    SINGLETONS.iter().any(|&s| {
-        spec == s || (spec.starts_with(s) && spec.as_bytes().get(s.len()) == Some(&b'/'))
-    })
+    SINGLETONS
+        .iter()
+        .any(|&s| spec == s || (spec.starts_with(s) && spec.as_bytes().get(s.len()) == Some(&b'/')))
 }
 
 /// Map a pure alias path from [`sail_compiler::project_map::resolve_at_alias`]
@@ -641,7 +641,10 @@ export default controller(() => {
         let body = materialize_virtual_controller(&source)
             .expect("materialize sail-ai-rail")
             .expect("sail-ai-rail has <controller>");
-        assert_ambient(&body, &["controller", "signal", "derived", "mount", "effect"]);
+        assert_ambient(
+            &body,
+            &["controller", "signal", "derived", "mount", "effect"],
+        );
     }
 
     /// GROUPED-DIRECTORY component: stem differs from parent dir but has a hyphen.

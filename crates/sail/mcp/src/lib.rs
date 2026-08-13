@@ -41,7 +41,10 @@ pub fn run() {
     }
     // --http [ADDR]
     if let Some(i) = args.iter().position(|a| a == "--http") {
-        let bind_spec = args.get(i + 1).map(|s| s.as_str()).filter(|s| !s.starts_with("--"));
+        let bind_spec = args
+            .get(i + 1)
+            .map(|s| s.as_str())
+            .filter(|s| !s.starts_with("--"));
         match parse_bind(bind_spec) {
             Ok(addr) => {
                 if let Err(e) = run_http_blocking(addr) {
@@ -61,8 +64,8 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
     use sail_ops::Ctx;
+    use serde_json::json;
 
     use super::*;
 
@@ -138,6 +141,9 @@ mod tests {
                 "missing core tool {expected}: {names:?}"
             );
         }
-        assert!(!names.contains(&"sail_apply"), "sail_apply must stay retired");
+        assert!(
+            !names.contains(&"sail_apply"),
+            "sail_apply must stay retired"
+        );
     }
 }

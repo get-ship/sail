@@ -63,7 +63,12 @@ pub fn mcp_http_router(ctx: Ctx, path: &str) -> Router {
         path: path.clone(),
     };
     Router::new()
-        .route(&path, post(mcp_post).get(method_not_allowed).delete(method_not_allowed))
+        .route(
+            &path,
+            post(mcp_post)
+                .get(method_not_allowed)
+                .delete(method_not_allowed),
+        )
         // Health-ish probe for operators (not part of MCP wire).
         .route("/healthz", get(healthz))
         .with_state(state)
@@ -112,10 +117,8 @@ async fn method_not_allowed() -> Response {
         "Method Not Allowed — MCP 2026-07-28 uses POST only on this endpoint\n",
     )
         .into_response();
-    res.headers_mut().insert(
-        header::ALLOW,
-        HeaderValue::from_static("POST"),
-    );
+    res.headers_mut()
+        .insert(header::ALLOW, HeaderValue::from_static("POST"));
     res
 }
 

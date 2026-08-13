@@ -14,7 +14,8 @@ pub const PROTOCOL_VERSION: &str = "2026-07-28";
 pub const SUPPORTED_VERSIONS: &[&str] = &[PROTOCOL_VERSION];
 
 /// Legacy handshake revisions answered by dual-era `initialize` (no session mint).
-const LEGACY_INITIALIZE_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
+const LEGACY_INITIALIZE_VERSIONS: &[&str] =
+    &["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 
 const META_PROTOCOL_VERSION: &str = "io.modelcontextprotocol/protocolVersion";
 const META_CLIENT_INFO: &str = "io.modelcontextprotocol/clientInfo";
@@ -70,7 +71,12 @@ pub fn request_protocol_version(msg: &Value) -> Option<&str> {
 }
 
 /// Build a standard JSON-RPC error response.
-pub fn jsonrpc_error(id: Value, code: i64, message: impl Into<String>, data: Option<Value>) -> Value {
+pub fn jsonrpc_error(
+    id: Value,
+    code: i64,
+    message: impl Into<String>,
+    data: Option<Value>,
+) -> Value {
     let mut err = json!({
         "code": code,
         "message": message.into(),
@@ -347,11 +353,8 @@ mod tests {
     fn sessionless_discover_and_tool_roundtrip() {
         let ctx = Ctx::from_env();
         // No initialize — first message is server/discover.
-        let disc = handle_message_with_ctx(
-            &modern_request(1, "server/discover", json!({})),
-            &ctx,
-        )
-        .unwrap();
+        let disc = handle_message_with_ctx(&modern_request(1, "server/discover", json!({})), &ctx)
+            .unwrap();
         assert!(disc.get("error").is_none(), "{disc}");
         let result = &disc["result"];
         assert_eq!(result["resultType"], "complete");
@@ -359,11 +362,8 @@ mod tests {
         assert!(result["capabilities"]["tools"].is_object());
 
         // tools/list without prior handshake.
-        let list = handle_message_with_ctx(
-            &modern_request(2, "tools/list", json!({})),
-            &ctx,
-        )
-        .unwrap();
+        let list =
+            handle_message_with_ctx(&modern_request(2, "tools/list", json!({})), &ctx).unwrap();
         assert!(list.get("error").is_none(), "{list}");
         let tools = list["result"]["tools"].as_array().unwrap();
         assert!(

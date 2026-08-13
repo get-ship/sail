@@ -1275,7 +1275,7 @@ mod tests {
             &mut css,
             &mut seen,
         )
-            .expect("valid Style spine lowers");
+        .expect("valid Style spine lowers");
         assert!(classes.contains("s-"), "{classes}");
         assert!(
             css.contains("var(--primary)") || css.contains("background"),

@@ -779,11 +779,7 @@ mod tests {
     #[test]
     fn load_from_project_deck_must_be_object() {
         let dir = tempfile::tempdir().unwrap();
-        std::fs::write(
-            dir.path().join("sail.config.jsonc"),
-            r#"{ "deck": "ssr" }"#,
-        )
-        .unwrap();
+        std::fs::write(dir.path().join("sail.config.jsonc"), r#"{ "deck": "ssr" }"#).unwrap();
         let err = AppServeConfig::load_from_project(dir.path()).unwrap_err();
         assert!(
             err.contains("\"deck\" must be an object"),

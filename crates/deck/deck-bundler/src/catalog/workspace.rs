@@ -320,8 +320,7 @@ fn sail_workspace_root() -> Option<&'static Path> {
         // Confirm it's sail's workspace without requiring the tokens package
         // on disk (catalog is baked; external apps have no packages/sail).
         // Runtime package is the stable framework marker under packages/sail.
-        if d.join("package.json").exists()
-            && d.join("packages/sail/runtime/package.json").exists()
+        if d.join("package.json").exists() && d.join("packages/sail/runtime/package.json").exists()
         {
             Some(d)
         } else {

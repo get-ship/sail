@@ -170,9 +170,8 @@ pub fn text_channel_host_error(tag: &str) -> String {
 /// and slot chrome, not pointer/ARIA thrash.
 pub fn is_interaction_when_key(key: &str) -> bool {
     match key {
-        "hover" | "active" | "focus" | "focusWithin" | "focus-within" | "disabled"
-        | "selected" | "expanded" | "checked" | "pressed" | "open" | "current" | "busy"
-        | "sortable" => true,
+        "hover" | "active" | "focus" | "focusWithin" | "focus-within" | "disabled" | "selected"
+        | "expanded" | "checked" | "pressed" | "open" | "current" | "busy" | "sortable" => true,
         // Structural / pseudo-element — not interaction thrash.
         "empty" | "before" | "after" | "first" | "first-child" | "last" | "last-child" => false,
         other => {
@@ -247,13 +246,7 @@ pub fn style_contains_geometry(style: &Style) -> bool {
 fn is_structural_when_key(key: &str) -> bool {
     matches!(
         key,
-        "before"
-            | "after"
-            | "empty"
-            | "first"
-            | "first-child"
-            | "last"
-            | "last-child"
+        "before" | "after" | "empty" | "first" | "first-child" | "last" | "last-child"
     )
 }
 
@@ -292,9 +285,7 @@ pub fn channel_for_setter(name: &str) -> Option<Channel> {
         | "borderRWidth" | "borderLWidth" => Channel::Paint,
         "radius" | "radiusT" | "radiusB" | "radiusL" | "radiusR" => Channel::Paint,
         "stroke" | "fill" | "ring" | "outline" | "outlineOffset" => Channel::Paint,
-        "translateX" | "translateY" | "z" | "cursor" | "select" | "pointerEvents" => {
-            Channel::Paint
-        }
+        "translateX" | "translateY" | "z" | "cursor" | "select" | "pointerEvents" => Channel::Paint,
         "overscroll" | "appearance" | "content" | "transition" | "duration" | "ease" => {
             Channel::Paint
         }
@@ -329,15 +320,26 @@ pub fn channel_for_setter(name: &str) -> Option<Channel> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse::parse as parse;
+    use crate::parse::parse;
 
     #[test]
     fn text_bearing_list_covers_spec_and_prose() {
-        for t in ["p", "h1", "span", "a", "button", "input", "li", "th", "pre", "text"] {
+        for t in [
+            "p", "h1", "span", "a", "button", "input", "li", "th", "pre", "text",
+        ] {
             assert!(is_text_bearing(t), "{t}");
         }
-        for t in ["row", "column", "grid", "center", "stack", "div", "svg", "scroll-area", "main"]
-        {
+        for t in [
+            "row",
+            "column",
+            "grid",
+            "center",
+            "stack",
+            "div",
+            "svg",
+            "scroll-area",
+            "main",
+        ] {
             assert!(!is_text_bearing(t), "{t}");
         }
         assert!(is_text_bearing("BUTTON"));
@@ -370,7 +372,9 @@ mod tests {
 
     #[test]
     fn geometry_setters_are_dimensional_box() {
-        for s in ["pad", "gap", "w", "minW", "grow", "shrink", "position", "top"] {
+        for s in [
+            "pad", "gap", "w", "minW", "grow", "shrink", "position", "top",
+        ] {
             assert!(is_geometry_setter(s), "{s}");
         }
         assert!(!is_geometry_setter("display"));
@@ -383,19 +387,25 @@ mod tests {
     fn geometry_in_interaction_when_refused() {
         let (_, diags) = parse("style({ box: pad(2), when: { hover: { box: pad(4) } } })");
         assert!(
-            diags.iter().any(|d| d.message().contains("state can't gate layout")),
+            diags
+                .iter()
+                .any(|d| d.message().contains("state can't gate layout")),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, diags) = parse("style({ box: pad(2), when: { tablet: { box: pad(4) } } })");
         assert!(
-            !diags.iter().any(|d| d.message().contains("state can't gate layout")),
+            !diags
+                .iter()
+                .any(|d| d.message().contains("state can't gate layout")),
             "media may gate box: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, diags) = parse("style({ box: pad(2), when: { hover: { paint: bg(muted) } } })");
         assert!(
-            !diags.iter().any(|d| d.message().contains("state can't gate layout")),
+            !diags
+                .iter()
+                .any(|d| d.message().contains("state can't gate layout")),
             "paint under hover ok: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -407,7 +417,9 @@ mod tests {
     fn geometry_interaction_matrix() {
         fn gate_err(src: &str) -> bool {
             let (_, diags) = parse(src);
-            diags.iter().any(|d| d.message().contains("state can't gate layout"))
+            diags
+                .iter()
+                .any(|d| d.message().contains("state can't gate layout"))
         }
 
         // Dimensional geometry under interaction keys — refuse.

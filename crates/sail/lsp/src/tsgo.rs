@@ -764,11 +764,23 @@ fn file_uri(sail_uri: &str, file: VirtualFile, work_dir: &Path) -> String {
 /// (`@ship/deck-router` on npm).
 const FRAMEWORK_TS_PATHS: &[(&str, &str)] = &[
     ("@ship/sail-runtime", "packages/sail/runtime/src/index.ts"),
-    ("@ship/sail-runtime/internal", "packages/sail/runtime/src/internal.ts"),
+    (
+        "@ship/sail-runtime/internal",
+        "packages/sail/runtime/src/internal.ts",
+    ),
     ("@ship/deck/router", "packages/deck/router/src/index.ts"),
-    ("@ship/sail-studio-shell", "packages/sail/studio-shell/src/index.ts"),
-    ("@ship/sail-studio-client", "packages/sail/studio-client/src/index.ts"),
-    ("@ship/sail-studio-bridge", "packages/sail/studio-bridge/src/index.ts"),
+    (
+        "@ship/sail-studio-shell",
+        "packages/sail/studio-shell/src/index.ts",
+    ),
+    (
+        "@ship/sail-studio-client",
+        "packages/sail/studio-client/src/index.ts",
+    ),
+    (
+        "@ship/sail-studio-bridge",
+        "packages/sail/studio-bridge/src/index.ts",
+    ),
     ("@ship/sail-dom", "packages/sail/dom/src/index.ts"),
 ];
 
@@ -784,7 +796,8 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
         }
     }
     // Subpath wildcard for runtime internals (`@ship/sail-runtime/foo`).
-    if let Some(internal) = find_package_src(workspace_hint, "packages/sail/runtime/src/internal.ts")
+    if let Some(internal) =
+        find_package_src(workspace_hint, "packages/sail/runtime/src/internal.ts")
     {
         if let Some(parent) = internal.parent() {
             paths.push_str(&format!(
@@ -845,11 +858,7 @@ fn uri_to_path(uri: &str) -> Option<PathBuf> {
         return Some(pb);
     }
     let pb = PathBuf::from(uri);
-    if pb.is_absolute() {
-        Some(pb)
-    } else {
-        None
-    }
+    if pb.is_absolute() { Some(pb) } else { None }
 }
 
 /// Rewrite `from "./x"` / `from '../x'` specs to absolute paths resolved
@@ -1225,8 +1234,7 @@ export default controller((ctx) => ({ count: signal(0) }))
             .unwrap();
         // Studio L2: shell lives under compositions/shell (see routes/page.sail).
         let from_dir = root.join("apps/studio/routes");
-        let src =
-            "import { appRouteBase } from '../src/compositions/shell/shell-rail'\n";
+        let src = "import { appRouteBase } from '../src/compositions/shell/shell-rail'\n";
         let out = rewrite_relative_imports(src, &from_dir);
         assert!(
             out.contains("shell-rail.ts") || out.contains("shell-rail"),

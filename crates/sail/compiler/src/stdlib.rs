@@ -257,10 +257,7 @@ const COLOR_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "::-moz-color-swatch",
-        paint: DescPaint(&[
-            ("border", "none"),
-            ("border-radius", "var(--radius-sm)"),
-        ]),
+        paint: DescPaint(&[("border", "none"), ("border-radius", "var(--radius-sm)")]),
     },
 ];
 

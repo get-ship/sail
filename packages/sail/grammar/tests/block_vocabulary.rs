@@ -21,8 +21,7 @@ fn tag_from(token: &str) -> &str {
 fn token_present(token: &str) -> bool {
     // Arm clauses are brace-form — covered by `interpolation`.
     if token.trim_start().starts_with('{') {
-        return GRAMMAR_SRC.contains("interpolation:")
-            || GRAMMAR_SRC.contains("$.interpolation");
+        return GRAMMAR_SRC.contains("interpolation:") || GRAMMAR_SRC.contains("$.interpolation");
     }
     let tag = tag_from(token);
     let open = format!("'<{tag}'");

@@ -44,11 +44,7 @@ fn injection_hits(src: &str) -> Vec<(String, String)> {
             .unwrap_or_default();
         for cap in m.captures {
             if cap.index == content_idx {
-                let text = cap
-                    .node
-                    .utf8_text(src.as_bytes())
-                    .unwrap_or("")
-                    .to_string();
+                let text = cap.node.utf8_text(src.as_bytes()).unwrap_or("").to_string();
                 out.push((lang.clone(), text));
             }
         }
@@ -74,7 +70,9 @@ export default controller(() => ({ count: 0 }))
         .filter(|(lang, _)| lang == "typescript")
         .collect();
     assert!(
-        ts_hits.iter().any(|(_, text)| text.contains("export default controller")),
+        ts_hits
+            .iter()
+            .any(|(_, text)| text.contains("export default controller")),
         "controller body text must inject as typescript; hits={hits:?}",
     );
 }
@@ -88,9 +86,8 @@ fn scope_body_injects_typescript() {
 "#;
     let hits = injection_hits(src);
     assert!(
-        hits.iter().any(|(lang, text)| {
-            lang == "typescript" && text.contains("const card")
-        }),
+        hits.iter()
+            .any(|(lang, text)| { lang == "typescript" && text.contains("const card") }),
         "scope body text must inject as typescript; hits={hits:?}",
     );
 }
@@ -141,9 +138,9 @@ hello world
 "#;
     let hits = injection_hits(src);
     assert!(
-        !hits.iter().any(|(lang, text)| {
-            lang == "typescript" && text.contains("hello world")
-        }),
+        !hits
+            .iter()
+            .any(|(lang, text)| { lang == "typescript" && text.contains("hello world") }),
         "plain element text must not inject as typescript; hits={hits:?}",
     );
 }

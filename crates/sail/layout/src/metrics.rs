@@ -105,15 +105,7 @@ pub fn size_from_class(c: &str) -> Option<Size> {
         // Avoid matching text-align / text-transform utility leftovers.
         if matches!(
             tok,
-            "xs" | "sm"
-                | "base"
-                | "md"
-                | "lg"
-                | "xl"
-                | "2xl"
-                | "3xl"
-                | "4xl"
-                | "display"
+            "xs" | "sm" | "base" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "display"
         ) {
             return Some(Size::from_class_token(tok));
         }

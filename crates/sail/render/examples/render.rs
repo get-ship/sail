@@ -18,7 +18,9 @@ fn workspace_root() -> Option<std::path::PathBuf> {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let file = args.get(1).expect("usage: render <file.sail> <out.png> [WxH] [theme] [mode]");
+    let file = args
+        .get(1)
+        .expect("usage: render <file.sail> <out.png> [WxH] [theme] [mode]");
     let out = args.get(2).expect("out.png required");
     let viewport = args.get(3).map(|s| {
         let (w, h) = s.split_once('x').expect("WxH");

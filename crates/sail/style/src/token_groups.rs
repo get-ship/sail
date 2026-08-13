@@ -205,9 +205,7 @@ pub fn reflect_var_reference(group_value: &str, path: &[String]) -> Option<Strin
 }
 
 /// All (member name or "" for default, public_name) pairs for a group value.
-pub fn group_value_member_publics(
-    group_value: &str,
-) -> Option<Vec<(&'static str, &'static str)>> {
+pub fn group_value_member_publics(group_value: &str) -> Option<Vec<(&'static str, &'static str)>> {
     let group = color_groups().iter().find(|g| g.name == group_value)?;
     Some(
         group
@@ -269,10 +267,7 @@ pub fn static_token_group(name: &str) -> Option<&'static TokenGroup> {
 }
 
 /// Resolve a member path on a group. Empty `path` → `default` member.
-pub fn resolve_group_member(
-    group: &TokenGroup,
-    path: &[String],
-) -> Result<&'static str, String> {
+pub fn resolve_group_member(group: &TokenGroup, path: &[String]) -> Result<&'static str, String> {
     let member = match path {
         [] => "default",
         [one] => one.as_str(),
@@ -302,8 +297,7 @@ pub fn resolve_group_member(
 
 /// Resolve static `root.path…` to a public token id, if `root` is a known group.
 pub fn resolve_static_member_path(root: &str, path: &[String]) -> Result<String, String> {
-    let group = static_token_group(root)
-        .ok_or_else(|| format!("unknown token group `{root}`"))?;
+    let group = static_token_group(root).ok_or_else(|| format!("unknown token group `{root}`"))?;
     resolve_group_member(group, path).map(|s| s.to_string())
 }
 
@@ -439,7 +433,12 @@ mod tests {
             "lg".into(),
             "xl".into(),
         ]));
-        assert!(is_size_union(&["sm".into(), "md".into(), "lg".into(), "full".into()]));
+        assert!(is_size_union(&[
+            "sm".into(),
+            "md".into(),
+            "lg".into(),
+            "full".into()
+        ]));
         assert!(!is_size_union(&["primary".into(), "info".into()]));
         assert!(!is_size_union(&["full".into()]));
         assert_eq!(size_step_names(), &["sm", "md", "lg"]);

@@ -8,10 +8,7 @@ use std::path::PathBuf;
 use sail_render::{RenderOptions, render_file, render_source};
 
 fn fonts() -> PathBuf {
-    PathBuf::from(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/tests/fixtures/fonts"
-    ))
+    PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/fonts"))
 }
 
 fn workspace_root() -> Option<PathBuf> {
@@ -132,11 +129,7 @@ export default controller(() => {
         },
     )
     .expect("render inline");
-    assert!(
-        out.html.contains("SSR-RENDER ok"),
-        "got:\n{}",
-        out.html
-    );
+    assert!(out.html.contains("SSR-RENDER ok"), "got:\n{}", out.html);
     assert!(
         out.projected.iter().any(|p| p.contains("heading")),
         "projected sidecar notes should list the binding: {:?}",
@@ -177,9 +170,7 @@ fn unknown_if_does_not_paint_both_branches() {
     );
     assert!(out.html.contains("anchor"), "{}", out.html);
     assert!(
-        out.dynamics
-            .iter()
-            .any(|d| d.reason.contains("window.x")),
+        out.dynamics.iter().any(|d| d.reason.contains("window.x")),
         "dynamics must flag the unresolved if: {:?}",
         out.dynamics
     );
