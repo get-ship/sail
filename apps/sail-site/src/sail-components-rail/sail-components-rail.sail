@@ -27,7 +27,6 @@
 
 <controller>
 import { CATALOG, type CatalogEntry } from '../compositions/component-catalog'
-import { currentNav } from '../compositions/current-nav'
 
 function slugFromPath(p: string): string {
   const m = p.match(/^\/components\/([^/]+)/)
@@ -79,7 +78,7 @@ export default controller((ctx) => {
     })).filter((s: { items: CatalogEntry[] }) => s.items.length > 0)
   })
 
-  return { path, navOpen, openNav, closeNav, noopNav, currentSlug, sections, currentNav }
+  return { path, navOpen, openNav, closeNav, noopNav, currentSlug, sections }
 })
 </controller>
 
