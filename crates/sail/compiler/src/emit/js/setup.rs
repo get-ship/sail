@@ -24,9 +24,9 @@ pub(super) fn emit_setup_body(
     // ── ctx → $scope seeding (unified) ──────────────────────────────────────
     // Every compiled `.sail` is a component module: `setup(ctx)` seeds the scope
     // and returns `{ …$scope, __mount(container), [hydrate] }`. ship/route/
-    // navigate always come from ctx (deck injects them for pages; `undefined`
-    // for a registered component, which never reads them). Routing is deck's —
-    // SAIL vends no router or factory fallback. Props come from `ctx.props`
+    // navigate always come from ctx (deck injects them for pages; registered
+    // CEs read the same host port via the factory). Routing is deck's —
+    // SAIL vends no router. Props come from `ctx.props`
     // (registered components have them, pages don't).
     w.line("const { route, navigate, providers } = ctx;");
     w.line("const $scope = Object.create(null);");

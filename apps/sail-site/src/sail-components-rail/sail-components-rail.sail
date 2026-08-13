@@ -103,7 +103,7 @@ export default controller((ctx) => {
 </partial>
 
 <row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
-  <nav label="Components" testid="components-rail" use:currentNav style(rail, { box: shrink(0) })>
+  <nav label="Components" testid="components-rail" style(rail, { box: shrink(0) })>
     <components-nav path={path} currentSlug={currentSlug} sections={sections} onNav={noopNav}></components-nav>
   </nav>
 
