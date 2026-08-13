@@ -22,7 +22,7 @@
   style sectionTitle = { box: space({ mt: 2 }), text: type({ size: sm, weight: semibold }) }
   // Pack chip strip (row flex + overflowX); avoid column base that zeros the grid.
   style packStack = { box: overflow({ x: auto }).space({ pad-b: 1 }).size({ max-w: full }) }
-  style packBtn = { box: space({ pad: 0 }).overflow({ all: hidden }), paint: radius(md).cursor(pointer).border({ color: border, width: 1, style: solid }).fill({ color: transparent }), text: type({ align: start, wrap: nowrap }), when: { hover: { paint: fill({ color: hover-bg }) }, pressed: { paint: fill({ color: muted }).border({ color: primary }).elevation(sm) } } }
+  style packBtn = { box: overflow({ all: hidden }), text: type({ align: start, wrap: nowrap }) }
   style packLabel = { text: type({ size: sm }) }
   style packCount = { paint: ink({ color: primary }), text: type({ family: mono, size: xs }) }
   style railNote = { paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: relaxed }) }
@@ -162,7 +162,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <p style(eyebrow)>Packs</p>
     <row gap="2" nowrap label="Component packs" style(packStack)>
       <for {packs() as p} key={p.id}>
-        <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style(packBtn, { box: flow({ shrink: 0 }) })>
+        <button size="sm" tone="primary" variant={packSel() === p.id ? 'solid' : 'outline'} on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style(packBtn, { box: flow({ shrink: 0 }) })>
 
           <row gap="2" align="center" style(tileMeta)>
             <strong style(packLabel)>{p.label}</strong>

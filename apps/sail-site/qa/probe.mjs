@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url'
 import { parseThemeList, isDarkTheme } from '../../../packages/sail/tokens/src/qa-themes.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const BASE = process.env.SAIL_PROBE_BASE ?? process.env.SAIL_BEHAVIOR_BASE ?? 'http://127.0.0.1:7890'
+const BASE = process.env.SAIL_PROBE_BASE ?? 'http://127.0.0.1:7890'
 // Empty-by-contract: these render nothing at the host BY DESIGN, so an
 // EMPTY-RENDER on them is expected, not a defect. sail-portal teleports its
 // children out of the host; sail-toast-host is an empty stack until a notify

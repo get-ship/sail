@@ -136,7 +136,6 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 | Path | Class | Notes |
 |------|-------|-------|
 | `probe.mjs` | Recipe | Deterministic layout/contrast probe; `bun run qa` |
-| `behavior.mjs` | Recipe | Prop / overlay / surface-consistency harness (manual) |
 
 One-off screenshot helpers (`snap-cell`, `snap-hero`, `inspect-catalog`) and the thinner `sweep.mjs` (superseded by `probe --sweep`) were removed.
 
