@@ -27,11 +27,9 @@
 //!    TS2305/TS2614 are **not** suppressed (pattern ambient always reports
 //!    `Module '"@ship/*"'` for both roots and subpaths).
 //! 2. **Sibling tree** — `rootDirs` overlays the harness mirror on the
-//!    author project so relative `.ts` imports see the real named exports.
-//!    Requested-name stubs would cache the first writer's bindings and
-//!    invent names the sibling does not export. `.sail` siblings are not
-//!    TS modules and stay stubs. Missing → TS2307.
-//! 3. **`@/` paths** — `at_alias_paths()` + per-import stubs; missing → TS2307.
+//!    author project so relative `.ts` imports see real named exports.
+//!    `.sail` siblings are not TS modules and stay stubs. Missing → TS2307.
+//! 3. **`@/` paths** — real project `paths` for present specs; missing → TS2307.
 //!
 //! We deliberately do **not** reuse `emit/synthetic` output here — that path
 //! owns the template↔controller *scope contract* (`check_synthetic_controller`)
@@ -1028,6 +1026,7 @@ fn typecheck_region_harness(
                     &written.region_rel,
                     &written.harness,
                     &written.tsconfig,
+                    &written.sail_stubs,
                 ) {
                     return Ok(diags);
                 }
@@ -1073,6 +1072,8 @@ struct WrittenHarness {
     region_rel: String,
     harness: String,
     tsconfig: String,
+    /// `.sail` stub paths under `work_dir` — reuse must `didOpen` rewrites.
+    sail_stubs: Vec<String>,
 }
 
 fn write_region_harness(
@@ -1139,9 +1140,9 @@ fn write_region_harness(
         format!("\"{region_rel}\""),
         "\"./sail-runtime-ambient.d.ts\"".to_string(),
     ];
-    for stub_rel in
-        materialize_relative_import_siblings(&import_scan_body, out_dir, source_path, &mirror_rel)?
-    {
+    let sail_stub_rels =
+        materialize_relative_import_siblings(&import_scan_body, out_dir, source_path, &mirror_rel)?;
+    for stub_rel in &sail_stub_rels {
         files.push(format!("\"{stub_rel}\""));
     }
     let (at_files, at_missing_paths) = materialize_at_alias_stubs(&import_scan_body, project_root)?;
@@ -1174,7 +1175,7 @@ fn write_region_harness(
         .join(", ");
 
     // Keep `@/` pointed at the real project. Missing specs get a dead
-    // override so they stay TS2307 instead of an open-any stub.
+    // override (TS2307).
     let base_paths = region_harness_paths_block(project_root, out_dir);
     let ship_paths = ship_nm
         .as_ref()
@@ -1228,6 +1229,10 @@ fn write_region_harness(
         region_rel,
         harness,
         tsconfig,
+        sail_stubs: sail_stub_rels
+            .into_iter()
+            .map(|r| r.trim_start_matches("./").to_string())
+            .collect(),
     })
 }
 
@@ -2047,28 +2052,26 @@ fn emit_open_ship_package_ambient(body: &str, has_ship_nm: bool) -> String {
 }
 
 fn resolve_relative_module(author_dir: &Path, spec: &str) -> Option<PathBuf> {
-    let base = if spec.starts_with("./") || spec.starts_with("../") {
-        author_dir.join(spec)
-    } else {
+    if !(spec.starts_with("./") || spec.starts_with("../")) {
         return None;
-    };
-    // Append extensions — do NOT use `with_extension` which clobbers multi-dot
-    // stems (`sail-annotation.internals` → `.internals` gone).
+    }
+    existing_ts_module(&author_dir.join(spec))
+}
+
+/// Append extensions — do not `with_extension`, which clobbers multi-dot
+/// stems (`sail-annotation.internals` → `.internals` gone).
+fn existing_ts_module(base: &Path) -> Option<PathBuf> {
     let base_s = base.to_string_lossy();
-    let candidates = [
-        base.clone(),
+    [
+        base.to_path_buf(),
         PathBuf::from(format!("{base_s}.ts")),
         PathBuf::from(format!("{base_s}.tsx")),
         PathBuf::from(format!("{base_s}.sail")),
         base.join("index.ts"),
         base.join("index.tsx"),
-    ];
-    for c in candidates {
-        if c.is_file() {
-            return Some(c);
-        }
-    }
-    None
+    ]
+    .into_iter()
+    .find(|c| c.is_file())
 }
 
 fn mirror_join(base: &Path, spec: &str) -> Option<PathBuf> {
@@ -2159,19 +2162,15 @@ fn materialize_at_alias_stubs(
             .collect();
         return Ok((Vec::new(), paths.join(",\n")));
     };
-    // Present `@/` targets use `region_harness_paths_block` (real tree).
-    // Only missing specs get a dead override — an open-any stub here
-    // would hide a real missing export the same way relative stubs did.
+    // Real `@/` targets stay on region_harness_paths_block. Dead override
+    // only when no file exists so a missing spec stays TS2307.
     let mut path_entries = Vec::new();
     let mut i = 0usize;
     for spec in stubs.keys() {
         let resolved = crate::project_map::resolve_at_alias(root, spec);
-        let exists = resolved.as_ref().is_some_and(|p| {
-            p.is_file()
-                || p.with_extension("ts").is_file()
-                || p.with_extension("tsx").is_file()
-                || p.join("index.ts").is_file()
-        });
+        let exists = resolved
+            .as_ref()
+            .is_some_and(|p| existing_ts_module(p).is_some());
         if !exists {
             path_entries.push(format!("      \"{spec}\": [\"./__missing_at__/{i}\"]"));
             i += 1;
@@ -4871,6 +4870,130 @@ export default controller(() => {{
                     || d.message.contains("noSuch")
             }),
             "missing named export on a real sibling must be TS2305, not stub-green: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn existing_ts_module_keeps_multi_dot_stem() {
+        let tmp = tempfile::tempdir().unwrap();
+        let file = tmp.path().join("sail-annotation.internals.ts");
+        std::fs::write(&file, "export const x = 1\n").unwrap();
+        let base = tmp.path().join("sail-annotation.internals");
+        assert_eq!(
+            existing_ts_module(&base).as_deref(),
+            Some(file.as_path()),
+            "append .ts must not clobber a multi-dot stem"
+        );
+        assert!(
+            !base.with_extension("ts").is_file(),
+            "sanity: with_extension would look for sail-annotation.ts"
+        );
+    }
+
+    #[test]
+    fn at_alias_present_module_missing_export_is_ts2305() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src/stores")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/region-at-export"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            project.join("src/stores/kinds.ts"),
+            "export function makeValue() {\n  return { n: 1 }\n}\n",
+        )
+        .unwrap();
+        reset_type_gate_servers();
+        let src = "\
+<controller>
+import { noSuch } from '@/stores/kinds'
+
+export default controller(() => {
+  return { noSuch }
+})
+</controller>
+<div />
+";
+        let path = project.join("src/broken.sail");
+        let diags = collect_sail_type_gate(src, Some(&path));
+        assert!(
+            type_gate_errs(&diags).iter().any(|d| {
+                d.message.contains("TS2305")
+                    || d.message.contains("no exported member")
+                    || d.message.contains("noSuch")
+            }),
+            "present @/ module + missing export must be TS2305, not stub-green: {diags:?}"
+        );
+    }
+
+    #[test]
+    fn reused_region_sees_merged_sail_stub_names() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path();
+        std::fs::create_dir_all(project.join("src")).unwrap();
+        std::fs::write(
+            project.join("package.json"),
+            r#"{"name":"@ship/region-sail-stub"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            project.join("src/shared.sail"),
+            "<controller>\nexport default controller(() => ({}))\n</controller>\n<div />\n",
+        )
+        .unwrap();
+        reset_type_gate_servers();
+
+        let first_src = "\
+<controller>
+import { foo } from './shared.sail'
+
+export default controller(() => {
+  return { foo }
+})
+</controller>
+<div />
+";
+        let first = collect_sail_type_gate(first_src, Some(&project.join("src/first.sail")));
+        assert!(
+            type_gate_errs(&first).is_empty(),
+            "first .sail stub name must be green: {first:?}"
+        );
+
+        let second_src = "\
+<controller>
+import { bar } from './shared.sail'
+
+export default controller(() => {
+  return { bar }
+})
+</controller>
+<div />
+";
+        let second = collect_sail_type_gate(second_src, Some(&project.join("src/second.sail")));
+        let second_errs = type_gate_errs(&second);
+        assert!(
+            second_errs.is_empty(),
+            "rewritten .sail stub must enter the live program (bar after foo): {second_errs:?}"
+        );
+        assert!(
+            !lsp_is_disabled(),
+            ".sail stub merge must use the live program"
         );
     }
 

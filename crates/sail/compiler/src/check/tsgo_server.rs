@@ -547,6 +547,7 @@ pub fn diagnose_region(
     region_rel: &str,
     region_text: &str,
     tsconfig: &str,
+    sail_stubs: &[String],
 ) -> std::io::Result<Vec<TsDiag>> {
     if LSP_DISABLED.load(Ordering::Relaxed) {
         return Err(std::io::Error::other("tsgo lsp disabled"));
@@ -597,6 +598,16 @@ pub fn diagnose_region(
         "action-observation.d.ts",
     ] {
         let p = work_dir.join(name);
+        if p.is_file() {
+            if let Ok(text) = std::fs::read_to_string(&p) {
+                let _ = client.sync_uri(&path_to_uri(&p), &text);
+            }
+        }
+    }
+    // Merged `.sail` stubs must `didChange` — disk rewrite alone leaves
+    // the first writer's names in the live program.
+    for rel in sail_stubs {
+        let p = work_dir.join(rel);
         if p.is_file() {
             if let Ok(text) = std::fs::read_to_string(&p) {
                 let _ = client.sync_uri(&path_to_uri(&p), &text);
