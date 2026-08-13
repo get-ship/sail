@@ -46,7 +46,6 @@ test.describe('style object — compile → DOM', () => {
     expect(shot.styled.height).toBe('80px')
     expect(shot.styled.background).toBe('rgb(200, 40, 20)')
     expect(shot.styled.radius).toBe('6px')
-    // content-box: width/height + pad(4) on each edge.
     expect(shot.styled.boxW).toBe(224)
     expect(shot.styled.boxH).toBe(112)
 

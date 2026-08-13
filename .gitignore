@@ -102,6 +102,10 @@ scratch/
 # Mis-scaffolds if deck/cli is run from monorepo root by mistake
 /routes/
 /app/
+# Playwright leftover if the suite is invoked from the monorepo root
+# (package-local dirs are ignored in packages/sail/runtime/.gitignore).
+/test-results/
+/playwright-report/
 
 # bundle-cost.mjs scratch
 apps/sail-site/.bundle-cost/
