@@ -23,6 +23,7 @@ pub mod scales;
 pub mod setters;
 pub mod style_ir;
 pub mod style_vocab;
+pub mod theme_env;
 pub mod token_groups;
 pub mod tokens;
 
@@ -59,6 +60,7 @@ pub use parse::{
 pub use rewrite::{
     lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
 };
+pub use theme_env::{NamedStyle, PlayPreset, StylingPolicy, ThemeStyleEnv, VocabTag};
 
 #[cfg(test)]
 mod tests {
