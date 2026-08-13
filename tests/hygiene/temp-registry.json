@@ -1,0 +1,393 @@
+{
+  "schema": 1,
+  "productVersion": "0.0.0",
+  "expiryModes": {
+    "never": "KEEP rows (teaching, living policy, false-friend English). No funeral.",
+    "date": "ISO YYYY-MM-DD. Expired when today >= date.",
+    "condition": "Named flag in `conditions`. Expired when the flag is true.",
+    "version": "Semver threshold. Expired when productVersion >= version. Post-release flip: entries become deprecations with expires.version (e.g. \"2.0\"). One registry, two active expiry families (calendar/condition now; version after public ship). Not a second system."
+  },
+  "conditions": {
+    "after-spinnaker-cut": false
+  },
+  "markers": [
+    { "id": "legacy", "re": "\\blegacy\\b" },
+    { "id": "deprecated", "re": "\\bdeprecated\\b" },
+    { "id": "compat", "re": "\\bcompat\\b" },
+    { "id": "transitional", "re": "\\btransitional\\b" },
+    { "id": "migration", "re": "\\bmigration\\b" },
+    { "id": "TODO remove", "re": "TODO remove" },
+    { "id": "keep for now", "re": "keep for now" },
+    { "id": "old path", "re": "old path" },
+    { "id": "shim", "re": "\\bshim\\b" },
+    { "id": "backwards", "re": "\\bbackwards\\b" },
+    { "id": "alias for", "re": "alias for" }
+  ],
+  "entries": [
+    {
+      "id": "product-changelog",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Public digest of shipped changes; history still lives in git.",
+      "paths": ["CHANGELOG.md"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "gitignore-paired-controller-window",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Documents the generated .controller.ts ignore rule, not a product compat path.",
+      "paths": [".gitignore"],
+      "markers": ["migration"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "spinnaker-v3-spec",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Living style-language spec; names the cut, does not keep a dual path.",
+      "paths": ["docs/SPEC-SPINNAKER-3.md"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "foreign-idiom-keypress-teaching",
+      "kind": "guidance",
+      "verdict": "KEEP",
+      "reason": "Foreign-idiom / event-name teaching (prefer keydown). Permanent, not own-API compat.",
+      "paths": ["crates/sail/compiler/src/directive_manifest.rs"],
+      "markers": ["deprecated"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "css-fill-mode-backwards",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "CSS animation-fill-mode keyword `backwards`, not sediment.",
+      "paths": ["crates/sail/compiler/src/animation/mod.rs"],
+      "markers": ["backwards"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "spatial-backwards-scan",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Scan-direction adverb in a comment, not a compat path.",
+      "paths": ["crates/sail/lint/src/rules/surface_not_card.rs"],
+      "markers": ["backwards"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "living-cmd-meta-alias",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Live keyboard modifier alias (cmd ≡ meta), product behavior.",
+      "paths": ["packages/sail/runtime/test/on.test.ts"],
+      "markers": ["alias for"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "living-package-path-alias",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Authored package specifier mapped to a monorepo path; not a retired API.",
+      "paths": ["crates/sail/lsp/src/tsgo.rs"],
+      "markers": ["shim", "alias for"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "token-description-alias-prose",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Token description English (`alias foreground`), not a dual CSS name.",
+      "paths": ["packages/sail/tokens/model/components/avatar.json"],
+      "markers": ["alias for"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "import-rewrite-alias-prose",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Comment about rewriting alias import forms to the SSOT specifier.",
+      "paths": ["packages/components/sail/viewer/src/same-doc-mount.ts"],
+      "markers": ["alias for"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "route-client-alias-vocab",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Live route `<client name>` vocabulary, not a retired dual name.",
+      "paths": ["crates/deck/deck-conformance/src/data_port.rs"],
+      "markers": ["legacy", "alias for"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "deck-features-doc",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Living feature inventory; describes current host seams.",
+      "paths": ["crates/deck/FEATURES.md"],
+      "markers": ["migration", "shim"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "test-isolation-shims",
+      "kind": "keep",
+      "verdict": "KEEP",
+      "reason": "Test/harness isolation modules (runtime-shim, rAF, bun-as-node). Not product compat.",
+      "paths": [
+        "crates/sail/compiler-napi/src/lib.rs",
+        "crates/sail/compiler/tests/ambient_app_tsc.rs",
+        "crates/sail/compiler/tests/for_match_row_reactivity_jsdom.rs",
+        "crates/sail/compiler/tests/parity.rs",
+        "crates/sail/compiler/tests/synthetic_client_jsdom.rs",
+        "crates/sail/compiler/tests/synthetic_jsdom.rs",
+        "crates/sail/compiler/tests/synthetic_tsc.rs",
+        "crates/deck/deck-axum/src/lib.rs",
+        "crates/deck/deck-axum/src/render_helpers.rs",
+        "crates/deck/deck-bundler/tests/g3_wasm_compile.mjs",
+        "crates/deck/deck-ssr/ssr/ssr-entry.ts",
+        "packages/deck/router/src/scroll-restoration.ts",
+        "packages/deck/router/src/server.ts",
+        "packages/sail/dom/src/setup-loader.ts",
+        "packages/sail/runtime/src/error-overlay.ts",
+        "packages/sail/test-setup/src/vitest.ts"
+      ],
+      "markers": ["shim"],
+      "expires": { "never": true }
+    },
+    {
+      "id": "site-legacy-url-redirects",
+      "kind": "tombstone",
+      "verdict": "DELETE-later",
+      "reason": "Old /ai /deck /sail URL stubs. Purge after Spinnaker cut + IA settle.",
+      "paths": [
+        "apps/sail-site/routes/ai/**",
+        "apps/sail-site/routes/deck/**",
+        "apps/sail-site/routes/sail/**"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "site-legacy-stage-and-surface",
+      "kind": "transitional-shim",
+      "verdict": "DELETE-later",
+      "reason": "Docs stage `legacy` hosts + generated language-surface dual-path copy.",
+      "paths": [
+        "apps/sail-site/routes/components/[tag]/page.sail",
+        "apps/sail-site/scripts/scaffold-component-docs.mjs",
+        "apps/sail-site/src/component-docs/_chrome/stage-styles.ts",
+        "apps/sail-site/src/component-docs/types.ts",
+        "apps/sail-site/src/language-surface.gen.ts",
+        "apps/sail-site/src/sail-fill-shell/sail-fill-shell.sail",
+        "apps/sail-site/test/viewer-polish.spec.ts"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "studio-deprecated-aliases-and-dual-read",
+      "kind": "transitional-shim",
+      "verdict": "DELETE-later",
+      "reason": "@deprecated aliases kept for tests + themes/ vs tokens/themes dual-read.",
+      "paths": [
+        "apps/studio/src/checks/findings.ts",
+        "apps/studio/src/checks/review.ts",
+        "apps/studio/src/compositions/theme-color-surface/theme-color-surface-vm.ts",
+        "apps/studio/src/compositions/theme-components-surface/theme-components-edit.ts",
+        "apps/studio/src/compositions/theme-overview-surface/theme-overview-surface-vm.ts",
+        "apps/studio/src/compositions/theme-session/theme-draft-paint.ts",
+        "apps/studio/src/compositions/theme-session/theme-paint.ts",
+        "apps/studio/src/compositions/theme-shape-surface/theme-shape-surface-vm.ts",
+        "apps/studio/src/compositions/themes-surface/themes-surface-vm.ts",
+        "apps/studio/src/design/store-ui.ts",
+        "apps/studio/src/design/store.ts",
+        "apps/studio/src/design/theme-doc.ts",
+        "apps/studio/src/design/theme-io.ts",
+        "apps/studio/src/design/types.ts",
+        "apps/studio/src/edit/views.ts",
+        "apps/studio/test/shell.test.ts",
+        "apps/studio/test/theme-session-lifecycle.test.ts"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "deck-legacy-shapes",
+      "kind": "transitional-shim",
+      "verdict": "DELETE-later",
+      "reason": "Legacy entry shape, tokens/themes dual-read, deck.jsonc comments, ctx alias, 410 mutation tombstone.",
+      "paths": [
+        "crates/deck/deck-bundler/src/app.rs",
+        "crates/deck/deck-bundler/src/publish.rs",
+        "crates/deck/deck-bundler/src/routes.rs",
+        "crates/deck/deck-cli/src/main.rs",
+        "crates/deck/deck-config/src/lib.rs",
+        "crates/deck/deck-conformance/e2e/counter.sh",
+        "crates/deck/deck-conformance/src/lib.rs",
+        "crates/deck/deck-conformance/tests/boundary.rs",
+        "crates/deck/deck-core/src/assets.rs",
+        "crates/deck/deck-core/src/live_wire.rs",
+        "crates/deck/deck-core/src/mode_html.rs",
+        "crates/deck/deck-ssr/tests/serve_wired.rs",
+        "crates/deck/deck-ssr/tests/ssr.rs"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "compiler-src-sediment",
+      "kind": "migration-codemod",
+      "verdict": "DELETE-later",
+      "reason": "MIGRATION-DEBT tags, allow_legacy dual, SAIL_D5_DISABLE, style-const dual, CLI --out.",
+      "paths": [
+        "crates/sail/compiler/src/ambients.rs",
+        "crates/sail/compiler/src/bin/sail-compiler.rs",
+        "crates/sail/compiler/src/check/controller_parse.rs",
+        "crates/sail/compiler/src/check/css_token.rs",
+        "crates/sail/compiler/src/check/lint_overrides.rs",
+        "crates/sail/compiler/src/check/paired_controller.rs",
+        "crates/sail/compiler/src/check/policy.rs",
+        "crates/sail/compiler/src/check/scope_member.rs",
+        "crates/sail/compiler/src/check/tscheck.rs",
+        "crates/sail/compiler/src/emit/js/component.rs",
+        "crates/sail/compiler/src/emit/synthetic/mod.rs",
+        "crates/sail/compiler/src/emit/template_emit.rs",
+        "crates/sail/compiler/src/emit/template_emit/control_emit.rs",
+        "crates/sail/compiler/src/lib.rs",
+        "crates/sail/compiler/src/lower/bindings.rs",
+        "crates/sail/compiler/src/lower/mod.rs",
+        "crates/sail/compiler/src/parse/expr/ast.rs",
+        "crates/sail/compiler/src/parse/expr/mod.rs",
+        "crates/sail/compiler/src/parse/preprocess.rs",
+        "crates/sail/compiler/src/parse/scope_block.rs",
+        "crates/sail/compiler/src/parse/template/control_elements.rs",
+        "crates/sail/compiler/src/policy.rs",
+        "crates/sail/compiler/src/region_capability.rs",
+        "crates/sail/compiler/src/scope_manifest.rs",
+        "crates/sail/compiler/src/tokens_generate.rs"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "compiler-history-pinning-tests",
+      "kind": "pointer-error",
+      "verdict": "DELETE-later",
+      "reason": "Tests that pin retired forms / old-path absence past the migration window.",
+      "paths": [
+        "crates/sail/compiler/tests/component_token_totality.rs",
+        "crates/sail/compiler/tests/confinement_by_default.rs",
+        "crates/sail/compiler/tests/diag_spec_registry.rs",
+        "crates/sail/compiler/tests/diagnostic_id_drift.rs",
+        "crates/sail/compiler/tests/diagnostics.rs",
+        "crates/sail/compiler/tests/element_mode.rs",
+        "crates/sail/compiler/tests/for_key_flat.rs",
+        "crates/sail/compiler/tests/lint_strict_config.rs",
+        "crates/sail/compiler/tests/snapshot.rs",
+        "crates/sail/compiler/tests/sx_host_paint_probe.rs",
+        "crates/sail/compiler/tests/synthetic_client_tsc.rs"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "layout-lint-style-duals",
+      "kind": "migration-codemod",
+      "verdict": "DELETE-later",
+      "reason": "direction / sail-dir-* aliases, allow_legacy parse, empty compat-aliases emit, lint migration windows.",
+      "paths": [
+        "crates/sail/layout/src/html.rs",
+        "crates/sail/layout/src/mapping.rs",
+        "crates/sail/layout/src/metrics.rs",
+        "crates/sail/lint/src/config.rs",
+        "crates/sail/lint/src/lib.rs",
+        "crates/sail/lint/src/rules/controller_matchmedia_layout.rs",
+        "crates/sail/lint/src/rules/controller_size.rs",
+        "crates/sail/lint/src/rules/controller_state_cast.rs",
+        "crates/sail/lint/src/rules/css_literal.rs",
+        "crates/sail/lint/src/rules/css_literals.rs",
+        "crates/sail/lint/src/rules/layout.rs",
+        "crates/sail/lint/src/rules/prop_value.rs",
+        "crates/sail/lint/src/rules/style_rule.rs",
+        "crates/sail/style/src/concerns.rs",
+        "crates/sail/style/src/emit.rs",
+        "crates/sail/style/src/lib.rs",
+        "crates/sail/style/src/parse.rs",
+        "crates/sail/style/src/setters.rs",
+        "crates/sail/style/src/style_ir.rs",
+        "crates/sail/style/src/tokens.rs",
+        "crates/sail/style/sx-schema.gen.json"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "ops-mcp-render-legacy-paths",
+      "kind": "transitional-shim",
+      "verdict": "DELETE-later",
+      "reason": "Theme dual-read, MCP soft-compat, render leftover names.",
+      "paths": [
+        "crates/sail/lsp/src/virtual_ts.rs",
+        "crates/sail/mcp/src/http.rs",
+        "crates/sail/mcp/src/protocol.rs",
+        "crates/sail/mcp/src/stdio.rs",
+        "crates/sail/ops/schemas/catalog.json",
+        "crates/sail/ops/schemas/mcp-tools.json",
+        "crates/sail/ops/src/contracts.rs",
+        "crates/sail/ops/src/fonts.rs",
+        "crates/sail/ops/src/project_store.rs",
+        "crates/sail/ops/src/theme.rs",
+        "crates/sail/render/src/paint.rs",
+        "crates/sail/render/src/ssr_project.rs",
+        "crates/sail/render/src/theme.rs"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "packages-legacy-and-generated",
+      "kind": "transitional-shim",
+      "verdict": "DELETE-later",
+      "reason": "Empty compat-aliases, generated dual-path copy, L2 leftover names, runtime old paths.",
+      "paths": [
+        "packages/components/sail/canvas/test/sail-annotation.test.ts",
+        "packages/components/sail/charts/test/sail-bar-chart.migrated.test.ts",
+        "packages/components/sail/charts/test/sail-line-chart.migrated.test.ts",
+        "packages/components/sail/code-editor/src/sail-code-editor/sail-code-editor.sail-highlight.ts",
+        "packages/components/sail/primitives/src/sail-table/engine/decode.ts",
+        "packages/components/sail/primitives/src/sail-table/engine/nav-tree.ts",
+        "packages/components/sail/viewer/src/sail-component-viewer/sail-component-viewer.sail",
+        "packages/deck/lsp-browser/src/hover.ts",
+        "packages/sail/dom/test/compile-sail.ts",
+        "packages/sail/dom/test/template-hooks.test.ts",
+        "packages/sail/runtime/example/sail-app/scripts/precompile.mjs",
+        "packages/sail/runtime/src/host-api.ts",
+        "packages/sail/runtime/src/motion.ts",
+        "packages/sail/runtime/src/mount.ts",
+        "packages/sail/runtime/src/signal.ts",
+        "packages/sail/studio-client/src/generated/client.ts",
+        "packages/sail/tokens/model/compat-aliases.json",
+        "packages/sail/tokens/src/generated/themes-meta.ts",
+        "packages/sail/tokens/src/generated/unions.ts",
+        "packages/sail/tokens/src/sail-base.css",
+        "packages/sail/tokens/src/themes.ts",
+        "packages/sail/tokens/test/tokens.test.ts"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "parity-legacy-vocab",
+      "kind": "pointer-error",
+      "verdict": "DELETE-later",
+      "reason": "Parity vocab still names sail-dir-* legacy modifiers.",
+      "paths": [
+        "tests/parity/README.md",
+        "tests/parity/verify1/shared.mjs",
+        "tests/parity/verify1/vocab.mjs"
+      ],
+      "expires": { "condition": "after-spinnaker-cut" }
+    },
+    {
+      "id": "dead-env-compiler-no-limits",
+      "kind": "transitional-shim",
+      "verdict": "DELETE-later",
+      "reason": "SAIL_COMPILER_NO_LIMITS is set in CI and never read. Dies with the perf/v3 merge.",
+      "paths": [".github/workflows/hygiene.yml"],
+      "expires": { "condition": "after-spinnaker-cut" }
+    }
+  ]
+}
