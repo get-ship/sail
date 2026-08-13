@@ -1,0 +1,43 @@
+{
+  "captured": "2026-08-13",
+  "label": "perf-7-ram",
+  "git_sha": "63f6d8fd",
+  "status": "blocked",
+  "blocked_reason": "framework regen: cargo could not compile `deck-axum` — crates/deck/deck-axum/src/handlers.rs:58:54 — the method `as_ref` exists for reference `&Resolution`, but its trait bounds were not satisfied",
+  "project": "apps/studio",
+  "addr": "127.0.0.1:18767",
+  "sail_bin": "/home/madvib/dev/Ship/worktrees/tooling-spike/target/debug/sail",
+  "sail_lint": {
+    "cargo_check": "ok",
+    "note": "cargo check -p sail-lint finished; BindingPatternKind is gone. Blocker is deck-axum during ensure_framework_fresh, not sail-lint."
+  },
+  "cargo_regen_observed": true,
+  "framework_stale": [
+    "sail-runtime.js: baked sha=12a04d9c52f0dbd6 current sha=43b5ca55b755516e",
+    "sail-dom.js: baked sha=20262f7d93c40e62 current sha=66fae514f2c06065",
+    "deck-route.js: baked sha=21638e63a768be16 current sha=1b0d7c0482c78876"
+  ],
+  "ram": {
+    "sail_dev": {
+      "attempted": true,
+      "served": false,
+      "rss_kb": null,
+      "note": "framework regen: cargo could not compile `deck-axum` — crates/deck/deck-axum/src/handlers.rs:58:54 — the method `as_ref` exists for reference `&Resolution`, but its trait bounds were not satisfied",
+      "snapshots": {}
+    },
+    "browser": {
+      "attempted": false,
+      "served": false,
+      "rss_kb": null,
+      "note": "not sampled — sail dev did not serve",
+      "snapshots": {}
+    }
+  },
+  "table": [],
+  "verdict": {
+    "claim_1gb": "blocked",
+    "under_500mb": null,
+    "dominant": null,
+    "follow_up": "Unblock `cargo run -p deck-cli -- dev` (deck-axum handlers.rs:58 Resolution AsRef). Re-run bun tests/perf/scripts/profile-sail-dev-ram.mjs. Do not treat a cargo-regen peak as steady state."
+  }
+}
