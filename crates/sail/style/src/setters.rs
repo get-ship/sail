@@ -3730,7 +3730,6 @@ mod tests {
             "style({ paint: border(dashed) })",
             "style({ paint: border(1, border) })",
             "style({ paint: borderX(2, primary) })",
-            "style({ paint: bg(primary) })",
         ] {
             let (_, diags) = parse(src);
             assert!(

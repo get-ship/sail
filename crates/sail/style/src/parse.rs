@@ -1050,6 +1050,11 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
             Style::Empty
         }
         Some(Tok::Word(_)) => {
+            let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+            if next == Some(&Tok::LParen) {
+                // Inline sugar: `style(pad({ t: 2 }))` / `style(type(body-sm).fg(…))`.
+                return parse_channel_chain(p, diags);
+            }
             let name = match p.bump() {
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => return Style::Empty,
@@ -1107,7 +1112,9 @@ fn parse_style_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
     }
 }
 
-/// Style object `{ box/paint/text/animate, when, match, compound }`.
+/// Style object: v2 `{ box/paint/text/animate, when, match, compound }` **or**
+/// a v3 flat chain of concern calls (`size(full).bg(card)`), mixed with the
+/// only remaining keyed members (`when:`, `match:`, `animate:`).
 ///
 /// `allow_axes`: `match:` / `compound:` legal only at the top level of a
 /// `style(…)` argument. Nested partials (when bodies, match arms, compound
@@ -1125,6 +1132,7 @@ fn parse_style_object(
     let mut paint_ch = Style::Empty;
     let mut text_ch = Style::Empty;
     let mut animate_ch = Style::Empty;
+    let mut chain_parts: Vec<Style> = Vec::new();
     let mut when_entries: Vec<(String, Style)> = Vec::new();
     // prop → arms (later match tables for same prop merge arms; same-key arms chain)
     let mut match_tables: BTreeMap<String, BTreeMap<String, Style>> = BTreeMap::new();
@@ -1141,6 +1149,21 @@ fn parse_style_object(
             break;
         }
         let before = p.pos;
+        let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+        // Word + `:` is a keyed member. Word + `(` (or a dotted call) is a
+        // flat chain segment — commas separate calls the same way dots do.
+        let keyed = matches!(p.peek(), Some(Tok::Word(_))) && next == Some(&Tok::Colon);
+        if !keyed {
+            let segment = parse_channel_chain(p, diags);
+            if !matches!(segment, Style::Empty) {
+                chain_parts.push(segment);
+            }
+            p.eat(&Tok::Comma);
+            if p.pos <= before {
+                p.force_progress();
+            }
+            continue;
+        }
         let key = match p.bump() {
             Some(Tok::Word(w)) => w,
             _ => {
@@ -1217,7 +1240,7 @@ fn parse_style_object(
             other => {
                 diags.push(StyleDiagnostic::ParseError {
                     message: format!(
-                        "unknown style object key `{other}` — expected `box`, `paint`, `text`, `animate`, `when`, `match`, or `compound`"
+                        "unknown style object key `{other}` — expected a concern call (`bg(…)`) or `box`/`paint`/`text`/`animate`/`when`/`match`/`compound`"
                     ),
                     source: other.to_string(),
                 });
@@ -1232,8 +1255,13 @@ fn parse_style_object(
     }
     p.expect(Tok::RBrace, diags);
 
-    // Fixed structural precedence (SPEC merge law).
-    let mut parts = vec![box_ch, paint_ch, text_ch, animate_ch];
+    // Fixed structural precedence (SPEC merge law). Flat chain sits with
+    // the dissolved channels (before when/match/compound).
+    let mut parts = Vec::new();
+    if !chain_parts.is_empty() {
+        parts.push(Style::chain(chain_parts));
+    }
+    parts.extend([box_ch, paint_ch, text_ch, animate_ch]);
     if !when_entries.is_empty() {
         parts.push(Style::When {
             entries: when_entries,
@@ -1698,12 +1726,17 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
 
 /// `animate:` body — motion trigger chain without `style.` head:
 /// `enter({…}).exit({…}).loop({…})` → same `MotionAttach` IR as flat methods.
+///
+/// Also accepts the v3 trigger map: `{ enter: play(fade-up), transition: play(colors, fast) }`.
 fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     if matches!(
         p.peek(),
         Some(Tok::Comma) | Some(Tok::RBrace) | Some(Tok::RParen) | None
     ) {
         return Style::Empty;
+    }
+    if p.peek() == Some(&Tok::LBrace) {
+        return parse_animate_trigger_map(p, diags);
     }
     let mut ops = Vec::new();
     let mut iters = 0usize;
@@ -1796,6 +1829,105 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
     }
 }
 
+/// `animate: { enter: play(…), exit: play(…), transition: play(…) }`.
+///
+/// Parses the map so a `play(…)` body does not abort the surrounding style
+/// object. Play preset resolution lives on [`crate::ThemeStyleEnv`]; unknown
+/// presets still attach (a later slice owns play emit).
+fn parse_animate_trigger_map(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    p.expect(Tok::LBrace, diags);
+    let mut ops = Vec::new();
+    let mut iters = 0usize;
+    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "animate map too many triggers".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        let before = p.pos;
+        let trigger = match p.bump() {
+            Some(Tok::Word(w)) => w.to_string(),
+            _ => {
+                p.force_progress();
+                break;
+            }
+        };
+        p.expect(Tok::Colon, diags);
+        if let Some(attach) = parse_animate_map_value(p, &trigger, diags) {
+            ops.push(attach);
+        }
+        p.eat(&Tok::Comma);
+        if p.pos <= before {
+            p.force_progress();
+        }
+    }
+    p.expect(Tok::RBrace, diags);
+    if ops.is_empty() {
+        Style::Empty
+    } else {
+        Style::chain(ops)
+    }
+}
+
+fn parse_animate_map_value(
+    p: &mut Parser<'_>,
+    trigger: &str,
+    diags: &mut Vec<StyleDiagnostic>,
+) -> Option<Style> {
+    match p.peek() {
+        Some(Tok::Word("play")) => {
+            p.bump();
+            let args = parse_paren_args(p, diags, "play");
+            if let Some(PaintArg::Token(name)) = args.first() {
+                let _ = crate::ThemeStyleEnv::from_registry().resolve_play(name);
+            }
+            Some(Style::MotionAttach {
+                trigger: trigger.to_string(),
+                config: format_play_config(&args),
+            })
+        }
+        Some(Tok::Word(w)) if is_motion_chain_method(w) => {
+            let method = match p.bump() {
+                Some(Tok::Word(w)) => w,
+                _ => return None,
+            };
+            parse_motion_call(p, method, diags)
+        }
+        Some(Tok::LBrace) => {
+            let config = p.capture_brace_object(diags)?;
+            Some(Style::MotionAttach {
+                trigger: trigger.to_string(),
+                config,
+            })
+        }
+        _ => {
+            // Do not block the rest of the style object.
+            skip_style_object_value(p, diags);
+            None
+        }
+    }
+}
+
+fn format_play_config(args: &[PaintArg]) -> String {
+    if args.len() == 1 {
+        match &args[0] {
+            PaintArg::Slots(_) => args[0].display(),
+            other => format!("{{ preset: {} }}", other.display()),
+        }
+    } else if args.len() >= 2 {
+        format!(
+            "{{ preset: {}, duration: {} }}",
+            args[0].display(),
+            args[1].display()
+        )
+    } else {
+        "{}".into()
+    }
+}
+
 fn parse_paren_args(
     p: &mut Parser<'_>,
     diags: &mut Vec<StyleDiagnostic>,
@@ -1829,15 +1961,16 @@ fn push_paint_op(
     source: String,
     diags: &mut Vec<StyleDiagnostic>,
 ) {
-    if find_setter(method).is_none() {
+    let (method, args) = crate::concerns::alias_concern_call(method, args);
+    if find_setter(&method).is_none() {
         diags.push(StyleDiagnostic::UnknownSetter {
             setter: method.to_string(),
             source: source.clone(),
-            suggestion: closest_unique_setter(method).map(|s| s.to_string()),
+            suggestion: closest_unique_setter(&method).map(|s| s.to_string()),
         });
     } else {
         let op = PaintOp {
-            setter: method.to_string(),
+            setter: method.clone(),
             args: args.clone(),
             source: source.clone(),
         };
@@ -1846,7 +1979,7 @@ fn push_paint_op(
         }
     }
     ops.push(Style::Set(PaintOp {
-        setter: method.to_string(),
+        setter: method,
         args,
         source,
     }));
@@ -2458,7 +2591,7 @@ mod utility_detect_tests {
 
 #[cfg(test)]
 mod const_rhs_tests {
-    use super::{Style, parse_style_const_rhs};
+    use super::{parse_style_const_rhs, Style};
 
     #[test]
     fn bare_object_form() {
@@ -2486,5 +2619,111 @@ mod const_rhs_tests {
             Style::List(parts) => assert_eq!(parts.len(), 2),
             other => panic!("expected List, got {other:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod flat_chain_tests {
+    use std::collections::HashMap;
+
+    use super::{parse, parse_style_const_rhs, Style};
+    use crate::emit::lower_style;
+
+    fn msgs(diags: &[crate::StyleDiagnostic]) -> Vec<String> {
+        diags.iter().map(|d| d.message()).collect()
+    }
+
+    #[test]
+    fn form_card_parses_and_lowers() {
+        let (style, diags) = parse_style_const_rhs(
+            "{ size(full).pad({ x: 5, y: 4 }).bg(card).border(subtle).radius(lg) }",
+        );
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        assert!(!matches!(style, Style::Empty));
+        let (classes, css) = lower_style(&style, &HashMap::new());
+        assert!(classes.contains("s-"), "{classes}");
+        assert!(
+            css.contains("width") || css.contains("100%"),
+            "size(full) must emit geometry: {css}"
+        );
+        assert!(
+            css.contains("padding"),
+            "pad slots must emit padding: {css}"
+        );
+        assert!(
+            css.contains("background") || css.contains("--fill-card") || css.contains("--card"),
+            "bg(card) must emit fill: {css}"
+        );
+        assert!(
+            css.contains("border"),
+            "border(subtle) must emit border: {css}"
+        );
+        assert!(
+            css.contains("border-radius") || css.contains("--radius"),
+            "radius(lg) must emit radius: {css}"
+        );
+    }
+
+    #[test]
+    fn muted_parses_and_lowers() {
+        let (style, diags) = parse_style_const_rhs("{ type(body-sm).fg(muted-foreground) }");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("font") || css.contains("--type-body"),
+            "type(body-sm) must emit type: {css}"
+        );
+        assert!(
+            css.contains("color") || css.contains("muted-foreground"),
+            "fg(muted-foreground) must emit ink: {css}"
+        );
+    }
+
+    #[test]
+    fn when_bare_chain_parses_and_lowers() {
+        let (style, diags) = parse("style({ when: { hover: bg(surface-2) } })");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(":hover"), "{css}");
+        assert!(
+            css.contains("background") || css.contains("surface-2"),
+            "hover bg must emit fill: {css}"
+        );
+    }
+
+    #[test]
+    fn chain_then_when_in_declared_object() {
+        let (style, diags) = parse_style_const_rhs(
+            "{ pad({ x: 3, y: 2 }).radius(md).type(label), when: { hover: bg(surface-2), current: bg(primary).fg(primary-foreground) } }",
+        );
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(":hover"), "{css}");
+        assert!(
+            css.contains("aria-current") || css.contains("current") || css.contains("primary"),
+            "current when must emit: {css}"
+        );
+    }
+
+    #[test]
+    fn v2_channel_form_still_parses() {
+        let (style, diags) =
+            parse("style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface) })");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        assert!(!matches!(style, Style::Empty));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("padding") || css.contains("width"), "{css}");
+        assert!(
+            css.contains("background") || css.contains("surface"),
+            "{css}"
+        );
+    }
+
+    #[test]
+    fn inline_pad_call_parses() {
+        let (style, diags) = parse("style(pad({ t: 2 }))");
+        assert!(diags.is_empty(), "{:?}", msgs(&diags));
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("padding"), "{css}");
     }
 }

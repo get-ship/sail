@@ -4,6 +4,8 @@
 //! `kind` is a border family key. Slot-merge on `when:` / `match:` is per slot
 //! (override emit writes only the named slots; CSS cascade keeps the rest).
 
+use std::collections::BTreeMap;
+
 use crate::channel::Channel;
 use crate::ir::{PaintArg, PaintOp, StyleDiagnostic};
 use crate::scales;
@@ -947,6 +949,139 @@ pub fn concerns() -> &'static [ConcernSpec] {
 
 pub fn find_concern(name: &str) -> Option<&'static ConcernSpec> {
     concerns().iter().find(|c| c.name == name)
+}
+
+/// Rewrite v3 authoring aliases onto the concern they emit through.
+///
+/// `bg` → `fill`, `fg` → `ink`, `position` → `place`. `pad` / `margin` become
+/// `space` with those slots. Named composites stay scalar (`bg(card)` →
+/// `fill(card)`); other scalars wrap the concern's primary slot so existing
+/// emit/validate run unchanged.
+pub fn alias_concern_call(method: &str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
+    match method {
+        "bg" => alias_to_concern("fill", "color", args),
+        "fg" => alias_to_concern("ink", "color", args),
+        "position" => alias_place(args),
+        "pad" => alias_space_axis("pad", args),
+        "margin" => alias_space_axis("m", args),
+        other => (other.to_string(), args),
+    }
+}
+
+fn alias_to_concern(
+    concern: &'static str,
+    primary_slot: &'static str,
+    args: Vec<PaintArg>,
+) -> (String, Vec<PaintArg>) {
+    let spec = find_concern(concern);
+    let args = match args_one(args) {
+        Some(PaintArg::Token(name))
+            if spec.is_some_and(|s| resolve_concern_name(s, &name).is_some()) =>
+        {
+            vec![PaintArg::Token(name)]
+        }
+        Some(PaintArg::Token(name)) => {
+            vec![PaintArg::Slots(BTreeMap::from([(
+                primary_slot.to_string(),
+                PaintArg::Token(name),
+            )]))]
+        }
+        Some(PaintArg::Slots(slots)) => vec![PaintArg::Slots(slots)],
+        Some(other) => vec![other],
+        None => Vec::new(),
+    };
+    (concern.to_string(), args)
+}
+
+fn alias_place(args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
+    let args = match args_one(args) {
+        Some(PaintArg::Slots(slots)) => {
+            vec![PaintArg::Slots(remap_slots(slots, remap_place_slot))]
+        }
+        Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
+            "position".to_string(),
+            PaintArg::Token(name),
+        )]))],
+        Some(other) => vec![other],
+        None => Vec::new(),
+    };
+    ("place".into(), args)
+}
+
+fn alias_space_axis(scalar_slot: &'static str, args: Vec<PaintArg>) -> (String, Vec<PaintArg>) {
+    let prefix = if scalar_slot == "pad" { "pad" } else { "m" };
+    let args = match args_one(args) {
+        Some(PaintArg::Slots(slots)) => {
+            vec![PaintArg::Slots(remap_slots(slots, |k| {
+                remap_space_slot(prefix, k)
+            }))]
+        }
+        Some(PaintArg::Token(name)) => vec![PaintArg::Slots(BTreeMap::from([(
+            scalar_slot.to_string(),
+            PaintArg::Token(name),
+        )]))],
+        Some(other) => vec![other],
+        None => Vec::new(),
+    };
+    ("space".into(), args)
+}
+
+fn args_one(args: Vec<PaintArg>) -> Option<PaintArg> {
+    if args.len() == 1 {
+        args.into_iter().next()
+    } else if args.is_empty() {
+        None
+    } else {
+        // Positional extras are not a v3 alias form — keep the first so
+        // existing validate can fail closed on arity.
+        args.into_iter().next()
+    }
+}
+
+fn remap_slots(
+    slots: BTreeMap<String, PaintArg>,
+    map_key: impl Fn(&str) -> String,
+) -> BTreeMap<String, PaintArg> {
+    let mut out = BTreeMap::new();
+    for (key, value) in slots {
+        out.insert(map_key(&key), value);
+    }
+    out
+}
+
+fn remap_place_slot(key: &str) -> String {
+    match key {
+        "scheme" => "position".into(),
+        "t" => "top".into(),
+        "b" => "bottom".into(),
+        "l" => "left".into(),
+        "r" => "right".into(),
+        other => other.to_string(),
+    }
+}
+
+fn remap_space_slot(prefix: &str, key: &str) -> String {
+    match (prefix, key) {
+        ("pad", "x") => "pad-x".into(),
+        ("pad", "y") => "pad-y".into(),
+        ("pad", "t") => "pad-t".into(),
+        ("pad", "b") => "pad-b".into(),
+        ("pad", "l") => "pad-l".into(),
+        ("pad", "r") => "pad-r".into(),
+        ("pad", "s") => "pad-s".into(),
+        ("pad", "e") => "pad-e".into(),
+        ("pad", "all") => "pad".into(),
+        ("m", "x") => "mx".into(),
+        ("m", "y") => "my".into(),
+        ("m", "t") => "mt".into(),
+        ("m", "b") => "mb".into(),
+        ("m", "l") => "ml".into(),
+        ("m", "r") => "mr".into(),
+        ("m", "s") => "ms".into(),
+        ("m", "e") => "me".into(),
+        ("m", "all") => "m".into(),
+        (_, other) => other.to_string(),
+    }
 }
 
 pub fn is_marker(name: &str) -> bool {
@@ -2461,5 +2596,45 @@ mod tests {
         assert_eq!(retired_replacement("w").unwrap().0, "size");
         assert_eq!(retired_replacement("shadow").unwrap().0, "elevation");
         assert_eq!(retired_replacement("gap").unwrap().0, "gap");
+    }
+
+    #[test]
+    fn alias_bg_card_stays_fill_composite() {
+        let (name, args) = alias_concern_call("bg", vec![PaintArg::Token("card".into())]);
+        assert_eq!(name, "fill");
+        assert_eq!(args, vec![PaintArg::Token("card".into())]);
+    }
+
+    #[test]
+    fn alias_fg_color_token_wraps_ink_slot() {
+        let (name, args) =
+            alias_concern_call("fg", vec![PaintArg::Token("muted-foreground".into())]);
+        assert_eq!(name, "ink");
+        match &args[0] {
+            PaintArg::Slots(slots) => {
+                assert_eq!(
+                    slots.get("color"),
+                    Some(&PaintArg::Token("muted-foreground".into()))
+                );
+            }
+            other => panic!("expected color slot, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn alias_pad_axis_object_becomes_space_slots() {
+        let slots = BTreeMap::from([
+            ("x".into(), PaintArg::Token("5".into())),
+            ("y".into(), PaintArg::Token("4".into())),
+        ]);
+        let (name, args) = alias_concern_call("pad", vec![PaintArg::Slots(slots)]);
+        assert_eq!(name, "space");
+        match &args[0] {
+            PaintArg::Slots(slots) => {
+                assert_eq!(slots.get("pad-x"), Some(&PaintArg::Token("5".into())));
+                assert_eq!(slots.get("pad-y"), Some(&PaintArg::Token("4".into())));
+            }
+            other => panic!("expected space slots, got {other:?}"),
+        }
     }
 }
