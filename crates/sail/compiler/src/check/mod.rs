@@ -375,13 +375,17 @@ pub fn collect(
     // unconditional styling floor → SPEC-LINTS-1 strict / lint.severity floor
     // (Warn→Error). Off must run before the global floor so the escape hatch
     // still silences under strict.
-    let template_findings = crate::check::lint_overrides::apply_strict_or_severity_floor(
-        crate::check::lint_overrides::enforce_floor(crate::check::lint_overrides::apply_overrides(
-            sail_lint::lint_sail_template_source(lint_path, source),
-            overrides,
-        )),
-        lint_path,
-    );
+    let template_findings = check_span("lint", || {
+        crate::check::lint_overrides::apply_strict_or_severity_floor(
+            crate::check::lint_overrides::enforce_floor(
+                crate::check::lint_overrides::apply_overrides(
+                    sail_lint::lint_sail_template_source(lint_path, source),
+                    overrides,
+                ),
+            ),
+            lint_path,
+        )
+    });
     for f in template_findings {
         diags.push(finding_to_diag(&f));
     }
@@ -432,19 +436,25 @@ pub fn collect(
         // `compile` / `sail check`. Must run on the preprocessed source so
         // class tokens line up with the CSS the compiler emits; spans map
         // back to the author's original source.
-        diags.extend(layout::collect_for(source, source_path));
+        diags.extend(check_span("layout", || {
+            layout::collect_for(source, source_path)
+        }));
 
         // Compose auto-fix — sibling rhythm (spacing) consistency. Emits
         // `Fix` severity diagnostics that the `sail_edit` path turns into
         // source rewrites.
-        diags.extend(compose::collect(source, source_path, overrides));
+        diags.extend(check_span("compose", || {
+            compose::collect(source, source_path, overrides)
+        }));
     }
 
     // Type gate (JOB-E1) — OnSave only. Never OnType: tsgo is too heavy for
     // the LSP keystroke path. Joins the same Error stream as lint (no second
     // gate). One tsgo invocation per call over this file's controller region.
     if matches!(tier, DiagnosticTier::OnSave) {
-        diags.extend(tscheck::collect_sail_type_gate(author_source, source_path));
+        diags.extend(check_span("type-gate", || {
+            tscheck::collect_sail_type_gate(author_source, source_path)
+        }));
     }
 
     // Style match exhaustiveness — a `match` on a closed-union scope prop
@@ -490,6 +500,18 @@ fn finding_to_diag(f: &sail_lint::Finding) -> Diagnostic {
         },
         message,
         rule: Some(f.rule.to_string()),
+    }
+}
+
+fn check_span<R>(phase: &'static str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
     }
 }
 

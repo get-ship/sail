@@ -53,6 +53,8 @@ pub mod lower;
 pub mod out_layout;
 pub mod parse;
 pub mod policy;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod profile;
 pub mod project_map;
 pub mod region_capability;
 pub mod runtime_ambient;
@@ -458,8 +460,9 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // not just the CLI. The controller module itself is materialized by the
     // file-emitting callers (the bin writes `<stem>.controller.ts`); source
     // that was already stripped (the bin pre-strips) is a no-op here.
-    let (stripped_source, inline_controller_src) =
-        parse::preprocess::extract_controller_block(source);
+    let (stripped_source, inline_controller_src) = compile_span("sfc", || {
+        parse::preprocess::extract_controller_block(source)
+    });
     let effective_source: &str = &stripped_source;
     // Resolve the controller for the scope-aware checks in-memory: the inline
     // `<controller>` block (SFC) wins; else the paired `.controller.ts` on disk
@@ -469,7 +472,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     });
     let effective_overrides = opts.lint_overrides.clone();
 
-    let program = parse::parse(effective_source).map_err(|e| attach_path(e, &opts))?;
+    let program = compile_span("parse-total", || parse::parse(effective_source))
+        .map_err(|e| attach_path(e, &opts))?;
     // `<scope>` member sets are POSITION-SCOPED: the same input that names a
     // file (a tag = component; tagless = route/page) decides which members
     // are addable. A route receives params from the router, never props from
@@ -486,29 +490,33 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             &opts,
         ));
     }
-    check::run(
-        &program,
-        effective_source,
-        opts.source_path.as_deref(),
-        controller.as_ref(),
-        &effective_overrides,
-        opts.route_params.as_deref(),
-    )
+    compile_span("check-run", || {
+        check::run(
+            &program,
+            effective_source,
+            opts.source_path.as_deref(),
+            controller.as_ref(),
+            &effective_overrides,
+            opts.route_params.as_deref(),
+        )
+    })
     .map_err(|e| attach_path(e, &opts))?;
     // One contract per boundary (#255): the full Error-severity lint stream
     // (sail-prop-value, sail-attr-bool-prop, sail-css-content-text, controller-*)
     // gates `compile()` itself, so the daemon + napi harness reject exactly
     // what the CLI does. The CLI's post-compile `fatal_diagnostics_gate` is now
     // redundant-but-harmless.
-    check::gate(
-        &program,
-        effective_source,
-        source, // author source — type gate (JOB-E1) maps controller spans here
-        opts.source_path.as_deref(),
-        controller.as_ref(),
-        &effective_overrides,
-        opts.route_params.as_deref(),
-    )
+    compile_span("gate", || {
+        check::gate(
+            &program,
+            effective_source,
+            source, // author source — type gate (JOB-E1) maps controller spans here
+            opts.source_path.as_deref(),
+            controller.as_ref(),
+            &effective_overrides,
+            opts.route_params.as_deref(),
+        )
+    })
     .map_err(|e| attach_path(e, &opts))?;
     // `run`/`gate` above already validated the `(--x)` resolution law
     // (fail-fast); re-resolving here is cheap (pure text scan) and gets us
@@ -520,10 +528,14 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // `is_route` is the master route/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a
     // route iff it is tagless (no `component_meta`); a tag makes it a component.
-    let lowered =
-        lower::lower(&program, opts.component_meta.is_none()).map_err(|e| attach_path(e, &opts))?;
+    let lowered = compile_span("lower", || {
+        lower::lower(&program, opts.component_meta.is_none())
+    })
+    .map_err(|e| attach_path(e, &opts))?;
 
-    let js = emit::js::emit_module(&program, &lowered, &bindings, &opts, &sx_var_bindings);
+    let js = compile_span("emit", || {
+        emit::js::emit_module(&program, &lowered, &bindings, &opts, &sx_var_bindings)
+    });
     // CEM (custom-elements-manifest) describes a custom element, so it's emitted
     // only for tagged sources (components) — a tagless page has no element to
     // describe. Keyed on the tag, like the emit split itself.
@@ -560,6 +572,18 @@ fn attach_path(err: CompileError, opts: &CompileOpts) -> CompileError {
     match &opts.source_path {
         Some(p) => err.with_path(p.clone()),
         None => err,
+    }
+}
+
+fn compile_span<R>(phase: &'static str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
     }
 }
 

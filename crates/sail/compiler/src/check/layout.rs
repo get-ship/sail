@@ -74,7 +74,14 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     let mut any_pass_err = false;
 
     for viewport in viewports {
-        match sail_layout::check_preprocessed_with(&preprocessed, viewport, check_opts) {
+        let phase: String = format!(
+            "layout-viewport.{}x{}",
+            viewport.0 as u32, viewport.1 as u32
+        );
+        let result = layout_span(&phase, || {
+            sail_layout::check_preprocessed_with(&preprocessed, viewport, check_opts)
+        });
+        match result {
             Ok(result) => {
                 any_pass_ok = true;
                 for d in result.diagnostics {
@@ -112,6 +119,18 @@ pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> 
     }
 
     out
+}
+
+fn layout_span<R>(phase: &str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
+    }
 }
 
 /// Resolve experimental layout check options from the nearest package config.

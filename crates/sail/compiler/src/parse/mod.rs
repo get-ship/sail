@@ -46,8 +46,22 @@ pub(crate) fn parse_element_source(source: &str) -> Result<Program, CompileError
 }
 
 fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileError> {
-    let prepared = preprocess::preprocess_impl(source, expand_elements)?;
-    parse_prepared(source, &prepared)
+    let prepared = profile_span("preprocess", || {
+        preprocess::preprocess_impl(source, expand_elements)
+    })?;
+    profile_span("parse", || parse_prepared(source, &prepared))
+}
+
+fn profile_span<R>(phase: &'static str, f: impl FnOnce() -> R) -> R {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span(phase, f)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = phase;
+        f()
+    }
 }
 
 fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError> {

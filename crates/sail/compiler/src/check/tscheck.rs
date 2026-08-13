@@ -56,6 +56,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 
 use crate::ambients::{TypeEnv, emit_action_observation_dts, lib_for_type_env, type_env_for_path};
@@ -212,12 +213,41 @@ fn which(name: &str) -> Option<PathBuf> {
     None
 }
 
+static TSGO_INVOCATIONS: AtomicU64 = AtomicU64::new(0);
+static TYPE_GATE_CACHE_HITS: AtomicU64 = AtomicU64::new(0);
+
+/// How many `tsgo` subprocesses this process has spawned.
+pub fn tsgo_invocation_count() -> u64 {
+    TSGO_INVOCATIONS.load(Ordering::Relaxed)
+}
+
+/// How many type-gate cache hits this process has served.
+pub fn type_gate_cache_hits() -> u64 {
+    TYPE_GATE_CACHE_HITS.load(Ordering::Relaxed)
+}
+
+/// Drop the in-process type-gate cache (measurement only).
+pub fn clear_type_gate_cache() {
+    if let Ok(mut g) = gate_cache().lock() {
+        g.clear();
+    }
+}
+
 fn run_tsgo(tool: &TsgoTool, args: &[&str], cwd: &Path) -> std::io::Result<std::process::Output> {
+    TSGO_INVOCATIONS.fetch_add(1, Ordering::Relaxed);
     let mut cmd = Command::new(&tool.program);
     if let Some(js) = &tool.js_entry {
         cmd.arg(js);
     }
-    cmd.args(args).current_dir(cwd).output()
+    let run = || cmd.args(args).current_dir(cwd).output();
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        crate::profile::span("tsgo", run)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        run()
+    }
 }
 
 // ── public type-gate entry (OnSave) ────────────────────────────────────────
@@ -257,6 +287,9 @@ pub fn collect_sail_type_gate(author_source: &str, source_path: Option<&Path>) -
     {
         let cache_key = cache_key_for(author_source, source_path);
         if let Some(hit) = gate_cache_get(&cache_key) {
+            TYPE_GATE_CACHE_HITS.fetch_add(1, Ordering::Relaxed);
+            #[cfg(not(target_arch = "wasm32"))]
+            crate::profile::span("type-gate-cache", || ());
             return hit;
         }
         let diags = collect_sail_type_gate_native(author_source, source_path);
@@ -387,7 +420,9 @@ pub fn collect_project_type_gate(
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        collect_project_type_gate_native(project_root, ts_files)
+        crate::profile::span("project-type-gate", || {
+            collect_project_type_gate_native(project_root, ts_files)
+        })
     }
 }
 

@@ -235,6 +235,20 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Measure compile phases over the product corpus (JOB-PERF-0).
+    /// Continues past per-file errors so red files cannot hide behind the
+    /// 60s wall. Does not install the product resource watchdog.
+    Profile {
+        /// Workspace root. Default: walk up from cwd.
+        #[arg(long)]
+        workspace: Option<PathBuf>,
+        /// Write the JSON report here.
+        #[arg(long)]
+        out: PathBuf,
+        /// Skip spawning `sail dev` for RSS sampling.
+        #[arg(long)]
+        skip_dev_rss: bool,
+    },
 }
 
 #[derive(Clone, Debug, clap::ValueEnum)]
@@ -260,8 +274,10 @@ impl From<ModeArg> for CompileMode {
 }
 
 fn main() -> Result<()> {
-    install_resource_bounds();
     let cli = Cli::parse();
+    if !matches!(cli.cmd, Command::Profile { .. }) {
+        install_resource_bounds();
+    }
     match cli.cmd {
         Command::Build {
             input,
@@ -297,7 +313,33 @@ fn main() -> Result<()> {
             tsconfig_out,
             out,
         } => gen_types(project, tsconfig_out, out),
+        Command::Profile {
+            workspace,
+            out,
+            skip_dev_rss,
+        } => run_profile(workspace, out, skip_dev_rss),
     }
+}
+
+fn run_profile(workspace: Option<PathBuf>, out: PathBuf, skip_dev_rss: bool) -> Result<()> {
+    let workspace = match workspace {
+        Some(p) => p,
+        None => workspace_root()?,
+    };
+    let report = sail_compiler::profile::run(&workspace, &out, skip_dev_rss)?;
+    println!(
+        "profile: {} files → {} (peak RSS {} KB)",
+        report.files.len(),
+        out.display(),
+        report.ram.peak_rss_kb_compile
+    );
+    for (name, tree) in &report.trees {
+        println!(
+            "  {name}: {} files, {:.0}ms wall, {} ok, {} err",
+            tree.files, tree.wall_ms, tree.ok, tree.err
+        );
+    }
+    Ok(())
 }
 
 /// Ambient pack → `<project>/node_modules/.sail/types.d.ts` (+ per-kind
