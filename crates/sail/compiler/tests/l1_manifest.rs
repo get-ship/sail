@@ -253,19 +253,73 @@ fn component_tokens_and_js_drift_pin_against_compiled_metadata() {
     }
 }
 
+/// Independent pin of residual extras. Must not be sourced from
+/// `hand_matrix_extra` — deleting an arm there must turn this red.
+const EXPECTED_EXTRAS: &[(&str, &[&str])] = &[
+    ("a", &["bare"]),
+    ("avatar", &["src-fallback"]),
+    ("checkbox", &["checked", "indeterminate"]),
+    ("chip", &["leading-icon"]),
+    ("combobox", &["open"]),
+    ("context-menu", &["open"]),
+    ("dialog", &["open"]),
+    ("dropdown", &["open", "placement"]),
+    ("error-boundary", &["caught"]),
+    ("hover-card", &["open", "placement"]),
+    ("popover", &["open", "placement"]),
+    ("progress", &["indeterminate"]),
+    ("radio", &["checked"]),
+    ("theme-picker", &["open"]),
+    ("toast", &["duration-0"]),
+];
+
+fn expected_extras(tag: &str) -> &'static [&'static str] {
+    EXPECTED_EXTRAS
+        .iter()
+        .find(|(t, _)| *t == tag)
+        .map(|(_, xs)| *xs)
+        .unwrap_or(&[])
+}
+
+fn entry(tag: &str) -> sail_compiler::L1Entry {
+    l1_entries()
+        .into_iter()
+        .find(|e| e.tag == tag)
+        .unwrap_or_else(|| panic!("missing L1 `{tag}`"))
+}
+
 #[test]
 fn every_l1_entry_carries_matrix() {
     for e in l1_entries() {
-        matrix_contract(&e).unwrap_or_else(|err| panic!("{err}"));
+        let axis_names: HashSet<&str> = e.matrix.axes.iter().map(|a| a.name.as_str()).collect();
+        for attr in &e.attributes {
+            if !attr.values.is_empty() || attr.ty == "bool" {
+                assert!(
+                    axis_names.contains(attr.name.as_str()),
+                    "L1 `{}` missing derived axis `{}`",
+                    e.tag,
+                    attr.name
+                );
+            }
+        }
+        let want: Vec<String> = expected_extras(&e.tag)
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        assert_eq!(e.matrix.extra, want, "L1 `{}` extra pin", e.tag);
+        for x in &e.matrix.extra {
+            assert!(
+                !axis_names.contains(x.as_str()),
+                "L1 `{}` extra `{x}` collides with a derived axis",
+                e.tag
+            );
+        }
     }
 }
 
 #[test]
 fn gutted_entry_fails_matrix_contract() {
-    let live = l1_entries()
-        .into_iter()
-        .find(|e| e.tag == "button")
-        .expect("button in L1");
+    let live = entry("button");
     assert!(
         matrix_contract(&live).is_ok(),
         "live button must satisfy the matrix contract"
@@ -281,10 +335,7 @@ fn gutted_entry_fails_matrix_contract() {
 
 #[test]
 fn button_matrix_axes_match_vocabulary() {
-    let button = l1_entries()
-        .into_iter()
-        .find(|e| e.tag == "button")
-        .expect("button in L1");
+    let button = entry("button");
     let names: Vec<&str> = button.matrix.axes.iter().map(|a| a.name.as_str()).collect();
     assert_eq!(names, ["disabled", "size", "tone", "variant"]);
     let variant = button
@@ -302,20 +353,23 @@ fn button_matrix_axes_match_vocabulary() {
 }
 
 #[test]
-fn residual_extras_land_on_manifest() {
-    let extra = |tag: &str| {
-        l1_entries()
-            .into_iter()
-            .find(|e| e.tag == tag)
-            .unwrap_or_else(|| panic!("missing L1 `{tag}`"))
-            .matrix
-            .extra
-    };
-    assert_eq!(extra("a"), ["bare"]);
-    assert_eq!(extra("chip"), ["leading-icon"]);
-    assert_eq!(extra("checkbox"), ["checked", "indeterminate"]);
-    assert_eq!(extra("dialog"), ["open"]);
-    assert_eq!(extra("progress"), ["indeterminate"]);
-    assert!(extra("button").is_empty());
-    assert!(extra("kbd").is_empty());
+fn derived_bools_are_not_extras() {
+    let accordion = entry("accordion");
+    assert!(
+        accordion.matrix.axes.iter().any(|a| a.name == "open"),
+        "accordion.open is a host bool"
+    );
+    assert!(
+        !accordion.matrix.extra.iter().any(|x| x == "open"),
+        "accordion.open must not be residual extra"
+    );
+    let switch = entry("switch");
+    assert!(
+        switch.matrix.axes.iter().any(|a| a.name == "checked"),
+        "switch.checked is a host bool"
+    );
+    assert!(
+        !switch.matrix.extra.iter().any(|x| x == "checked"),
+        "switch.checked must not be residual extra"
+    );
 }

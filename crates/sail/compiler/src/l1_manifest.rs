@@ -348,9 +348,6 @@ fn matrix_from_vocab(tag: &str, attributes: &[L1Attribute]) -> L1Matrix {
 }
 
 fn axis_from_attr(a: &L1Attribute) -> Option<L1MatrixAxis> {
-    if is_event_attr(a) {
-        return None;
-    }
     if !a.values.is_empty() {
         return Some(L1MatrixAxis {
             name: a.name.clone(),
@@ -368,10 +365,6 @@ fn axis_from_attr(a: &L1Attribute) -> Option<L1MatrixAxis> {
     None
 }
 
-fn is_event_attr(a: &L1Attribute) -> bool {
-    a.name.starts_with("on") && (a.ty.contains("=>") || a.ty.contains("void"))
-}
-
 /// Residual cells the compiler cannot derive from closed `props:`.
 fn hand_matrix_extra(tag: &str) -> &'static [&'static str] {
     match tag {
@@ -384,14 +377,17 @@ fn hand_matrix_extra(tag: &str) -> &'static [&'static str] {
         // Leading icon is a slot, not a prop.
         "chip" => &["leading-icon"],
         // Native [popover] / <dialog> open — not host props.
-        "combobox" | "context-menu" | "dialog" | "dropdown" | "hover-card" | "popover"
-        | "theme-picker" => &["open"],
+        "combobox" | "context-menu" | "dialog" | "theme-picker" => &["open"],
+        // Open is native; placement is a free string the compiler cannot close.
+        "dropdown" | "hover-card" | "popover" => &["open", "placement"],
+        // group-caught vs healthy — Style when, not a host prop.
+        "error-boundary" => &["caught"],
         // Native progress without value — not a prop.
         "progress" => &["indeterminate"],
         // Native radio IDL.
         "radio" => &["checked"],
-        // Autohide lock — not a closed prop.
-        "toast" => &["sticky"],
+        // duration=0 is the autohide lock; duration itself is a free string.
+        "toast" => &["duration-0"],
         _ => &[],
     }
 }
