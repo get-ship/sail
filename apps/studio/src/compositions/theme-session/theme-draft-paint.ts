@@ -21,8 +21,7 @@ import {
   hostSetAttribute,
   scheduleFrame,
 } from '@ship/sail-studio-shell'
-import type { SailHost } from '@ship/sail-runtime'
-// `theme` is the Pure ambient global (runtime Theme API).
+import { theme, type SailHost } from '@ship/sail-runtime'
 
 export type DraftPaintOpts = {
   doc: Record<string, unknown> | null

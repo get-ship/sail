@@ -1,7 +1,8 @@
 /**
  * Themes session lifecycle — behavioral (draft / dirty / save+generate / leave / paint).
  */
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { theme } from '@ship/sail-runtime'
 import {
   __getSavedDocForTests,
   __resetDesignForTests,
@@ -326,6 +327,34 @@ describe('theme-draft-paint adapter', () => {
     expect(host.getAttribute('data-mode')).toBe('dark')
     expect(host.hasAttribute('data-theme')).toBe(false)
     expect(host.getAttribute('draft-paint')).toBe('registered')
+    unbindPreviewHost(host)
+  })
+
+  it('default applier calls imported theme.applyScope (not a free global)', () => {
+    const applyScope = vi.spyOn(theme, 'applyScope')
+    const host = document.createElement('div')
+    bindPreviewHost(host)
+    const doc = {
+      $extensions: { ship: { themeId: 'preview' } },
+      modes: {
+        light: {
+          color: {
+            primary: { default: { $value: 'oklch(0.5 0.1 40)', $type: 'color' } },
+          },
+        },
+      },
+    }
+    flushDraftPaint({
+      doc,
+      mode: 'light',
+      themeId: 'preview',
+      paintId: 'preview',
+    })
+    expect(applyScope).toHaveBeenCalled()
+    expect(applyScope.mock.calls[0]?.[0]).toBe(host)
+    expect(applyScope.mock.calls[0]?.[1]).toMatchObject({ doc, mode: 'light' })
+    expect(host.getAttribute('draft-paint')).toBe('apply')
+    applyScope.mockRestore()
     unbindPreviewHost(host)
   })
 
