@@ -19,8 +19,18 @@ bun tests/perf/scripts/sync-keyed-sail.mjs
 # Compiler profile (continue-on-error corpus; no 60s wall)
 bun tests/perf/scripts/profile-compiler.mjs
 bun tests/perf/scripts/profile-compiler.mjs --skip-dev-rss
+
+# sail-dev + Studio-tab RSS (PERF-7; after a successful boot, not cargo regen)
+bun tests/perf/scripts/profile-sail-dev-ram.mjs
+bun tests/perf/scripts/profile-compiler.mjs --sail-dev-ram
 ```
 
 The compiler driver is `sail-compiler profile`. It times product
 `compile()` per file, then type-gate / layout / token / HMR anatomy.
 It does not fail-fast: red files are recorded and the walk continues.
+
+The RAM driver boots `sail dev --project apps/studio`, waits until
+HTTP serves, then samples `/proc/<pid>/status` for the daemon +
+children and (if Studio serves) the Playwright Chromium renderer.
+It then applies 10 HMR edits to a tiny Studio route and samples
+again. Cargo-regen peaks are not recorded as steady state.
