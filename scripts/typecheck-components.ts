@@ -1,10 +1,10 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
- * scripts/typecheck-components.mjs — curated root helper (HYGIENE-0).
+ * scripts/typecheck-components.ts — curated root helper (HYGIENE-0).
  *
  * Runs: `bun run typecheck` / `npm run typecheck` (package.json).
  * Contract: regenerate adjacent `.sail.d.ts` companions, then `tsc --noEmit`
- * per component pack. Invokes scripts/gen-component-types.mjs first.
+ * per component pack. Invokes scripts/gen-component-types.ts first.
  *
  * Keep scripts/ to load-bearing root helpers only — no one-shot generators.
  */
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 console.log('▸ generating .sail.d.ts companions')
-execFileSync(process.execPath, [resolve(ROOT, 'scripts/gen-component-types.mjs')], { stdio: 'inherit' })
+execFileSync('bun', [resolve(ROOT, 'scripts/gen-component-types.ts')], { stdio: 'inherit' })
 
 const tsc = resolve(ROOT, 'node_modules/.bin/tsc')
 const PACKS = readdirSync(resolve(ROOT, 'packages/components/sail'))

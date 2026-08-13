@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
- * scripts/gen-component-types.mjs — curated root helper (HYGIENE-0).
+ * scripts/gen-component-types.ts — curated root helper (HYGIENE-0).
  *
- * Runs: invoked by scripts/typecheck-components.mjs (`bun run typecheck`),
+ * Runs: invoked by scripts/typecheck-components.ts (`bun run typecheck`),
  * and pack-level pretypecheck hooks when present.
  * Contract: emit adjacent `<stem>.sail.d.ts` companions for component packs
  * so controllers can `import type { Scope } from './x.sail'`.

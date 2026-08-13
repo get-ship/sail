@@ -5,17 +5,17 @@
   "description": "The SAIL docs site \u2014 a deck app: docs, the 9-lesson tutorial, the component library, and an interactive component playground. SAIL's own red identity, light + dark.",
   "scripts": {
     "wasm": "(cd ../.. && bun run wasm) && cp ../../packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm public/sail_compiler_bg.wasm",
-    "gen": "bun run wasm && (cd ../.. && cargo run -q -p sail-compiler -- prop-registry) && (cd ../../packages/sail/grammar && bun run generate) && node scripts/gen-runtime-surface.mjs && (cd ../.. && cargo run -q -p deck-cli -- build-assets) && node scripts/gen-tutorial.mjs",
+    "gen": "bun run wasm && (cd ../.. && cargo run -q -p sail-compiler -- prop-registry) && (cd ../../packages/sail/grammar && bun run generate) && bun scripts/gen-runtime-surface.ts && (cd ../.. && cargo run -q -p deck-cli -- build-assets) && bun scripts/gen-tutorial.ts",
     "dev": "bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sail-site --addr ${SAIL_SITE_ADDR:-127.0.0.1:7890})",
     "build": "bun run gen && bun run build:static",
-    "build:static": "node scripts/build-static.mjs",
-    "serve:static": "node scripts/static-serve.mjs dist 4173",
-    "crawl:static": "node scripts/crawl-static.mjs",
+    "build:static": "bun scripts/build-static.ts",
+    "serve:static": "bun scripts/static-serve.ts dist 4173",
+    "crawl:static": "bun scripts/crawl-static.ts",
     "deploy:pages": "npx wrangler pages deploy dist --project-name sail-site",
     "test": "playwright test",
-    "qa": "node qa/probe.mjs --sweep --theme=all",
-    "qa:fast": "node qa/probe.mjs --sweep --theme=ship,glass",
-    "qa:probe": "node qa/probe.mjs"
+    "qa": "bun qa/probe.ts --sweep --theme=all",
+    "qa:fast": "bun qa/probe.ts --sweep --theme=ship,glass",
+    "qa:probe": "bun qa/probe.ts"
   },
   "dependencies": {
     "@ship/sail-runtime": "workspace:*",

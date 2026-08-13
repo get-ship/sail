@@ -1,6 +1,6 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Dumb static host for a `sail build --base assets --bundle-framework` dir.
-// Same contract as Cloudflare Pages + packages/deck/e2e/serve-built.mjs,
+// Same contract as Cloudflare Pages + packages/deck/e2e/serve-built.ts,
 // with MIME types Pages needs (wasm / woff2 / webp) so playground compile
 // and font faces work offline. SPA fallback: no-extension paths → index.html.
 import { createServer } from 'node:http'

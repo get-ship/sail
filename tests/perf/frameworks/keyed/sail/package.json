@@ -10,8 +10,8 @@
     "language": "JavaScript"
   },
   "scripts": {
-    "build-dev": "bun scripts/precompile.mjs && esbuild src/main.ts --bundle --format=esm --target=es2020 --outfile=dist/main.js --sourcemap",
-    "build-prod": "bun scripts/precompile.mjs && esbuild src/main.ts --bundle --format=esm --target=es2020 --minify --outfile=dist/main.js"
+    "build-dev": "bun scripts/precompile.ts && esbuild src/main.ts --bundle --format=esm --target=es2020 --outfile=dist/main.js --sourcemap",
+    "build-prod": "bun scripts/precompile.ts && esbuild src/main.ts --bundle --format=esm --target=es2020 --minify --outfile=dist/main.js"
   },
   "devDependencies": {
     "esbuild": "0.24.0"

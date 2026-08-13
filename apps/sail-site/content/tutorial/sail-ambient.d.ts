@@ -4,7 +4,7 @@
 //   `import type { Scope } from './template.sail'`
 // where `template.sail` is a SAIL template file (a custom file extension that
 // the sail-compiler would normally emit an adjacent `<stem>.sail.d.ts` for —
-// see `scripts/gen-component-types.mjs` and the component packs under
+// see `scripts/gen-component-types.ts` and the component packs under
 // `packages/components/sail/*`). The tutorial is a docs asset, not a
 // component pack, and the compiler is a Rust binary that isn't required
 // for `typecheck` here, so we resolve the import via a wildcard ambient

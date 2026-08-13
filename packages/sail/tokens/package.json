@@ -13,7 +13,7 @@
       "types": "./dist/themes.d.ts",
       "default": "./src/themes.ts"
     },
-    "./qa-themes": "./src/qa-themes.mjs",
+    "./qa-themes": "./src/qa-themes.ts",
     "./unions": {
       "types": "./dist/generated/unions.d.ts",
       "default": "./src/generated/unions.ts"

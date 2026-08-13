@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
 //
 // The dev loop (dev-loop.spec) proves `deck dev`. THIS proves the path a user
 // actually SHIPS: `deck build --bundle-framework` → a self-contained dir → served
-// by a dumb static host (serve-built.mjs), no deck process, no shipd. If the
+// by a dumb static host (serve-built.ts), no deck process, no shipd. If the
 // build emits a broken bundle (e.g. an un-importmapped bare pack import — the
 // exact blank-page class deck-bundler now fails loud on), these go red.
 //

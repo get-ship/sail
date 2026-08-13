@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Sync the owned keyed/sail bench app into an external js-framework-benchmark
 // checkout. Single source of truth: tests/perf/frameworks/keyed/sail in this
 // repo. $BENCH_HOME/frameworks/keyed/sail is a sync OUTPUT — never hand-edit it.
@@ -7,9 +7,9 @@
 // leftover). No webdriver run; this is copy + cleanup only.
 //
 // Usage:
-//   bun tests/perf/scripts/sync-keyed-sail.mjs
-//   BENCH_HOME=/path/to/js-framework-benchmark bun tests/perf/scripts/sync-keyed-sail.mjs
-//   bun tests/perf/scripts/sync-keyed-sail.mjs --dry-run
+//   bun tests/perf/scripts/sync-keyed-sail.ts
+//   BENCH_HOME=/path/to/js-framework-benchmark bun tests/perf/scripts/sync-keyed-sail.ts
+//   bun tests/perf/scripts/sync-keyed-sail.ts --dry-run
 
 import {
   cpSync,
@@ -137,4 +137,4 @@ for (const src of files) {
 
 log(`synced ${files.length} file(s) → ${DEST}`)
 log('next (once, in the checkout): cd "$BENCH_HOME/frameworks/keyed/sail" && bun install')
-log('optional smoke (in this repo): SAIL_REPO=<this-repo> bun tests/perf/frameworks/keyed/sail/scripts/precompile.mjs')
+log('optional smoke (in this repo): SAIL_REPO=<this-repo> bun tests/perf/frameworks/keyed/sail/scripts/precompile.ts')

@@ -3,7 +3,7 @@
 # Default jobs fail on harness or structure mismatch (size/style Δ reported,
 # not fatal). Use workflow_dispatch inputs for soft report-only or strict.
 #
-# Local:  SAIL_BIN=target/release/sail node tests/parity/run.mjs
+# Local:  SAIL_BIN=target/release/sail bun tests/parity/run.ts
 # Docs:   tests/parity/README.md
 
 name: parity
@@ -79,17 +79,17 @@ jobs:
       - name: Geometry suite
         env:
           SAIL_BIN: ${{ github.workspace }}/target/release/sail
-          # Leave CHROME_PATH unset so suites use tests/parity/chrome.mjs
+          # Leave CHROME_PATH unset so suites use tests/parity/chrome.ts
           # (playwright.executablePath → ms-playwright cache → pinned fallback).
         run: |
           set -euo pipefail
           # Optional: pre-print the same resolution the suite uses (debugging).
-          node -e "import('./tests/parity/chrome.mjs').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
+          bun -e "import('./tests/parity/chrome.ts').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
           MODE="${{ github.event.inputs.mode || 'structure' }}"
           FLAGS=()
           if [ "$MODE" = "report-only" ]; then FLAGS+=(--report-only); fi
           if [ "$MODE" = "strict" ]; then FLAGS+=(--strict); fi
-          node tests/parity/geometry/run.mjs "${FLAGS[@]}"
+          bun tests/parity/geometry/run.ts "${FLAGS[@]}"
 
       - name: Upload geometry reports
         if: always()
@@ -133,13 +133,13 @@ jobs:
           SAIL_BIN: ${{ github.workspace }}/target/release/sail
         run: |
           set -euo pipefail
-          # Same chrome.mjs resolution as local + geometry job (no divergent find).
-          node -e "import('./tests/parity/chrome.mjs').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
+          # Same chrome.ts resolution as local + geometry job (no divergent find).
+          bun -e "import('./tests/parity/chrome.ts').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
           MODE="${{ github.event.inputs.mode || 'structure' }}"
           FLAGS=()
           if [ "$MODE" = "report-only" ]; then FLAGS+=(--report-only); fi
           if [ "$MODE" = "strict" ]; then FLAGS+=(--strict); fi
-          node tests/parity/paint/run.mjs "${FLAGS[@]}"
+          bun tests/parity/paint/run.ts "${FLAGS[@]}"
 
       - name: Upload paint reports
         if: always()

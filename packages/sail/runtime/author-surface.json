@@ -1,5 +1,5 @@
 {
-  "$comment": "Tier B \u2014 author runtime. Intentional @ship/sail-runtime imports humans may type. Gen (apps/sail-site/scripts/gen-runtime-surface.mjs) walks only the root barrel and emits names listed here. Tier A = compiler tables + ambient (skill/site language pages). Tier C = /internal emit ABI + host-only subpaths (server, framework, dev, \u2026) \u2014 never on language reference.",
+  "$comment": "Tier B \u2014 author runtime. Intentional @ship/sail-runtime imports humans may type. Gen (apps/sail-site/scripts/gen-runtime-surface.ts) walks only the root barrel and emits names listed here. Tier A = compiler tables + ambient (skill/site language pages). Tier C = /internal emit ABI + host-only subpaths (server, framework, dev, \u2026) \u2014 never on language reference.",
   "specifier": "@ship/sail-runtime",
   "entry": ".",
   "categories": {

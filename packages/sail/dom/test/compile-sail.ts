@@ -74,7 +74,7 @@ function ensureNative(): NativeCompile {
 // Locate the cdylib `cargo build` produces. Honour SAIL_COMPILER_ADDON for an
 // explicit override (CI artifact, cross-build); otherwise prefer release over
 // debug under the repo's own target dir — same precedence the bench harness
-// uses for the bin (scripts/precompile.mjs).
+// uses for the bin (scripts/precompile.ts).
 function resolveAddonPath(): string {
   const override = process.env.SAIL_COMPILER_ADDON
   if (override) {

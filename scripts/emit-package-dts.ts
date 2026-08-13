@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Emit declaration-only `dist/` for monorepo packages that app Pure typecheck
  * follows via `@ship/*` (G2d / types→src residual).
@@ -7,7 +7,7 @@
  * `skipLibCheck` only applies to `.d.ts` — so package `types`/`exports.types`
  * must point at emitted declarations, not `src/*.ts`.
  *
- * Usage: `node scripts/emit-package-dts.mjs`
+ * Usage: `node scripts/emit-package-dts.ts`
  * Wire: root `prepare` / `emit:package-dts` / `sail types` (monorepo) /
  *        before pure typecheck scripts.
  *

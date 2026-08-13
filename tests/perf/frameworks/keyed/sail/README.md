@@ -4,5 +4,5 @@ Owned [js-framework-benchmark](https://github.com/krausest/js-framework-benchmar
 `keyed/sail` sources. Edit here; sync overwrites the external checkout.
 
 ```sh
-bun tests/perf/scripts/sync-keyed-sail.mjs
+bun tests/perf/scripts/sync-keyed-sail.ts
 ```

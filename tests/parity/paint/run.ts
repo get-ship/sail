@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * PARITY-1 paint suite — takumi ↔ browser computed style (RENDER-1 skins).
  *
@@ -9,7 +9,7 @@
  *
  * Not pixel parity — colors within channel tolerance; radii/widths within px tol.
  *
- * Geometry (taffy↔browser boxes) lives in tests/parity/geometry/run.mjs.
+ * Geometry (taffy↔browser boxes) lives in tests/parity/geometry/run.ts.
  *
  * Controller-driven content (suite honesty):
  *   Fixtures MUST use static template text only. Signal-driven / deferred
@@ -17,11 +17,11 @@
  *   stays on static L1 fixtures.
  *
  * Invoke:
- *   node tests/parity/paint/run.mjs
- *   node tests/parity/paint/run.mjs --fixture l1-chrome-row
- *   node tests/parity/paint/run.mjs --strict          # style_fail === 0
- *   node tests/parity/paint/run.mjs --report-only     # harness ok only
- *   SAIL_BIN=target/release/sail node tests/parity/paint/run.mjs
+ *   node tests/parity/paint/run.ts
+ *   node tests/parity/paint/run.ts --fixture l1-chrome-row
+ *   node tests/parity/paint/run.ts --strict          # style_fail === 0
+ *   node tests/parity/paint/run.ts --report-only     # harness ok only
+ *   SAIL_BIN=target/release/sail node tests/parity/paint/run.ts
  *
  * Exit codes (default / non-report-only):
  *   0 — harness ok AND structure_ok for every fixture (style Δ non-fatal)
@@ -49,7 +49,7 @@ import { createServer } from 'node:http'
 import { createReadStream } from 'node:fs'
 import { tmpdir } from 'node:os'
 import net from 'node:net'
-import { resolveChrome } from '../chrome.mjs'
+import { resolveChrome } from '../chrome.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')
@@ -893,7 +893,7 @@ async function main() {
     'exit: 0=harness+structure_ok (default); --report-only=harness only; --strict=+style; 1=fail',
   )
   console.log(
-    'note: geometry structure gate lives in tests/parity/geometry/run.mjs',
+    'note: geometry structure gate lives in tests/parity/geometry/run.ts',
   )
 
   if (skipBrowser) {

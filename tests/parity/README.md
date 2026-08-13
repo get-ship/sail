@@ -4,8 +4,8 @@ Two complementary suites:
 
 | Suite | Path | Compares | Default gate |
 |-------|------|----------|--------------|
-| **Geometry** | `geometry/run.mjs` | taffy box tree ↔ browser boxes | **structure** (counts/tags/root width) |
-| **Paint** | `paint/run.mjs` | takumi `regions[].style` ↔ browser `getComputedStyle` | **structure** (L1 host pairing) |
+| **Geometry** | `geometry/run.ts` | taffy box tree ↔ browser boxes | **structure** (counts/tags/root width) |
+| **Paint** | `paint/run.ts` | takumi `regions[].style` ↔ browser `getComputedStyle` | **structure** (L1 host pairing) |
 
 Style/size deltas are **reported** by default and only fail the process with `--strict`.
 
@@ -31,35 +31,35 @@ Style/size deltas are **reported** by default and only fail the process with `--
 
 ```bash
 # Geometry — structure gate (CI default)
-node tests/parity/geometry/run.mjs
+bun tests/parity/geometry/run.ts
 
 # Geometry — soft report (harness only; structure non-fatal)
-node tests/parity/geometry/run.mjs --report-only
+bun tests/parity/geometry/run.ts --report-only
 
 # Geometry — also fail on size Δ
-node tests/parity/geometry/run.mjs --strict
+bun tests/parity/geometry/run.ts --strict
 
 # Paint — L1 skins / tokens / radius / borders (structure gate)
-node tests/parity/paint/run.mjs
+bun tests/parity/paint/run.ts
 
 # Paint — soft report
-node tests/parity/paint/run.mjs --report-only
+bun tests/parity/paint/run.ts --report-only
 
 # Paint — fail on style Δ
-node tests/parity/paint/run.mjs --strict
+bun tests/parity/paint/run.ts --strict
 
 # Single fixture
-node tests/parity/geometry/run.mjs --fixture column-stack
-node tests/parity/paint/run.mjs --fixture l1-chrome-row
+bun tests/parity/geometry/run.ts --fixture column-stack
+bun tests/parity/paint/run.ts --fixture l1-chrome-row
 
 # Both halves (same exit rules as CI)
-node tests/parity/run.mjs
-node tests/parity/run.mjs --report-only
+bun tests/parity/run.ts
+bun tests/parity/run.ts --report-only
 ```
 
 ## Exit codes
 
-### Geometry (`geometry/run.mjs`)
+### Geometry (`geometry/run.ts`)
 
 | Code | Meaning |
 |------|---------|
@@ -74,7 +74,7 @@ Flags:
 - `--taffy-only` — skip browser
 - `--fixture <name>` — filter
 
-### Paint (`paint/run.mjs`)
+### Paint (`paint/run.ts`)
 
 | Code | Meaning |
 |------|---------|
@@ -109,7 +109,7 @@ L1 hosts: button, card, field, input, switch, badge, navbar, sidebar, dialog, ta
 
 ### Chrome resolution
 
-Shared helper: `tests/parity/chrome.mjs` (used by geometry, paint, and CI):
+Shared helper: `tests/parity/chrome.ts` (used by geometry, paint, and CI):
 
 1. `CHROME_PATH` if set and exists  
 2. `playwright` / `playwright-core` `chromium.executablePath()`  
@@ -131,13 +131,13 @@ Runs geometry then paint. Exit `1` if either half fails under the same flags.
 
 Workflow: `.github/workflows/parity.yml`
 
-- **geometry-structure** job: `node tests/parity/geometry/run.mjs` (structure gate)
-- **paint-structure** job: `node tests/parity/paint/run.mjs` (structure gate)
+- **geometry-structure** job: `bun tests/parity/geometry/run.ts` (structure gate)
+- **paint-structure** job: `bun tests/parity/paint/run.ts` (structure gate)
 - Optional soft probe can use `--report-only` on a non-blocking check
 
 Local equivalent:
 
 ```bash
 cargo build -p deck-cli --release
-SAIL_BIN=target/release/sail node tests/parity/run.mjs
+SAIL_BIN=target/release/sail bun tests/parity/run.ts
 ```

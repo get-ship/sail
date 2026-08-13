@@ -108,16 +108,16 @@ monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
 | `cd apps/sail-site && bun run gen` | Law | wasm · prop-registry · grammar · runtime surface · bake · tutorial |
 | `cd apps/sail-site && bun run dev` / `build` | Law | `gen` then deck CLI |
 | `bun run test` | Law | vitest + `tests/hygiene` repo guards |
-| `bun run typecheck` | Law | `scripts/typecheck-components.mjs` (also runs `gen-component-types`) |
+| `bun run typecheck` | Law | `scripts/typecheck-components.ts` (also runs `gen-component-types`) |
 | `cargo install --path crates/deck/deck-cli --bin sail` | Product tool | Public CLI (`dev`, `build`, `check`, `lsp`, `mcp`, …) |
-| `cd apps/sail-site && bun run qa` / `qa:fast` / `qa:probe` | Recipe | Layout probe (`qa/probe.mjs`); needs dev server |
+| `cd apps/sail-site && bun run qa` / `qa:fast` / `qa:probe` | Recipe | Layout probe (`qa/probe.ts`); needs dev server |
 
 ### `scripts/` (repo root — curated; ≤2 files)
 
 | Path | Class | Notes |
 |------|-------|-------|
-| `scripts/typecheck-components.mjs` | Law | Root `typecheck`; regenerates types then `tsc --noEmit` per component pack |
-| `scripts/gen-component-types.mjs` | Law | Emits adjacent `.sail.d.ts` companions; invoked by typecheck |
+| `scripts/typecheck-components.ts` | Law | Root `typecheck`; regenerates types then `tsc --noEmit` per component pack |
+| `scripts/gen-component-types.ts` | Law | Emits adjacent `.sail.d.ts` companions; invoked by typecheck |
 
 Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:hygiene`).
 

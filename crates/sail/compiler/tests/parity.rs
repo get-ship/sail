@@ -4,7 +4,7 @@
 //!
 //! The full DOM-level parity check (compile + interpret side-by-side
 //! in jsdom and compare serialized HTML) lives in
-//! `tests/parity_runner.mjs`. It is gated on `RUN_PARITY=1` because
+//! `tests/parity_runner.ts`. It is gated on `RUN_PARITY=1` because
 //! it requires the workspace to be installed (`bun install`) so the
 //! TypeScript sources of `@ship/sail-dom` and `@ship/sail-runtime`
 //! resolve at runtime.
@@ -13,7 +13,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
@@ -144,15 +144,15 @@ fn full_parity_with_interpreter() {
         );
         return;
     }
-    let runner = fixtures_dir().parent().unwrap().join("parity_runner.mjs");
+    let runner = fixtures_dir().parent().unwrap().join("parity_runner.ts");
     assert!(
         runner.exists(),
-        "parity_runner.mjs missing at {}",
+        "parity_runner.ts missing at {}",
         runner.display()
     );
-    let status = Command::new("node")
+    let status = Command::new("bun")
         .arg(&runner)
         .status()
-        .expect("invoke node");
+        .expect("invoke bun");
     assert!(status.success(), "parity_runner failed");
 }

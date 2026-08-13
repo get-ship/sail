@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Compiles every .sail under src/ via the sail-compiler binary so main.ts
 // can side-effect-import the emitted ESM. Emits sibling <stem>/dist/.
 //
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
-// Package lives at packages/sail/runtime/example/sail-app/; scripts/precompile.mjs
+// Package lives at packages/sail/runtime/example/sail-app/; scripts/precompile.ts
 // → root is sail-app; repo root is four levels up.
 const repoRoot = resolve(root, '..', '..', '..', '..')
 const srcDir = resolve(root, 'src')

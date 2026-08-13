@@ -10,11 +10,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use sail_compiler::out_layout::resolve_out_dir;
 use sail_compiler::{
-    CompileMode, CompileOpts, ComponentMeta, DiagSeverity, Policy, check_all,
-    compile as compile_source,
+    check_all, compile as compile_source, CompileMode, CompileOpts, ComponentMeta, DiagSeverity,
+    Policy,
 };
 
 /// `sail --version` / `sail version` surface (C6).
@@ -81,7 +81,7 @@ fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
 
 /// `sail types` — ambient pack for tsc/tsgo.
 ///
-/// In the monorepo workspace, also runs `scripts/emit-package-dts.mjs` so dual
+/// In the monorepo workspace, also runs `scripts/emit-package-dts.ts` so dual
 /// `exports.types → dist/*.d.ts` packages resolve for Pure/IDE (no silent
 /// fallback to Framework `src/`).
 pub fn types(
@@ -142,31 +142,17 @@ pub fn types(
     Ok(())
 }
 
-/// Run package declaration emit when `scripts/emit-package-dts.mjs` exists above
+/// Run package declaration emit when `scripts/emit-package-dts.ts` exists above
 /// the project (monorepo). Standalone apps skip — published packages ship dist.
 fn emit_monorepo_package_dts(project_dir: &Path) -> Result<()> {
     let Some(root) = topmost_cargo_root(project_dir) else {
         return Ok(());
     };
-    let script = root.join("scripts/emit-package-dts.mjs");
+    let script = root.join("scripts/emit-package-dts.ts");
     if !script.is_file() {
         return Ok(());
     }
-    // Prefer workspace node; fall back to PATH.
-    let node = ["node", "nodejs"]
-        .into_iter()
-        .find(|bin| {
-            Command::new(bin)
-                .arg("-e")
-                .arg("process.exit(0)")
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .status()
-                .map(|s| s.success())
-                .unwrap_or(false)
-        })
-        .unwrap_or("node");
-    let status = Command::new(node)
+    let status = Command::new("bun")
         .arg(&script)
         .current_dir(&root)
         .status()

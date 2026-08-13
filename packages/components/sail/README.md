@@ -39,7 +39,7 @@ carry dual `{ types, default }` (declaration `dist/*.d.ts` + Framework source
 | Domain-prefixed tags (`./charts/sail-bar-chart`, …) | per-tag `.sail.d.ts` | Compiled CE + ambient props |
 
 Adding dual types to a source-only domain means: emit `dist/index.d.ts` via
-`scripts/emit-package-dts.mjs`, point `exports[domain].types` at it, and include
+`scripts/emit-package-dts.ts`, point `exports[domain].types` at it, and include
 the domain `dist/**` in package `files`.
 
 ### Per-component (tree-shake / non-sail)

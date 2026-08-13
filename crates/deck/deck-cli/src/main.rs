@@ -157,7 +157,7 @@ enum Command {
     /// token scales). Pair with `@ship/sail-tsconfig/base` or
     /// `deck build --typecheck`. tsc owns controller/logic types; sail-compiler
     /// owns template/layout/vocabulary. In-workspace also runs
-    /// `scripts/emit-package-dts.mjs` so Pure does not fall back to Framework src.
+    /// `scripts/emit-package-dts.ts` so Pure does not fall back to Framework src.
     Types {
         /// Project directory that receives `node_modules/.sail/types.d.ts`.
         /// Default: cwd.

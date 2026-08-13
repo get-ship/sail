@@ -58,7 +58,7 @@ export default defineConfig({
       // Build a COPY (`.prod-src`) so the build's generated `routes.gen.ts`
       // never races the dev server (port 7878), which writes the same file in
       // `./app` on startup. `--out` isolates the bundle into `.prod-build`.
-      command: `rm -rf ./.prod-src ./.prod-build && cp -r ./app ./.prod-src && cargo run -q -p deck-cli -- build --project ./.prod-src --out ./.prod-build --bundle-framework --base assets && node serve-built.mjs ./.prod-build ${PROD_PORT}`,
+      command: `rm -rf ./.prod-src ./.prod-build && cp -r ./app ./.prod-src && cargo run -q -p deck-cli -- build --project ./.prod-src --out ./.prod-build --bundle-framework --base assets && bun serve-built.ts ./.prod-build ${PROD_PORT}`,
       url: `http://${HOST}:${PROD_PORT}`,
       timeout: 180_000,
       // NEVER reuse: this fixture bakes a static artifact that must reflect the

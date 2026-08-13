@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * PARITY-1 geometry suite — taffy ↔ browser box tree.
  *
@@ -7,7 +7,7 @@
  *   2. Browser boxes via sail build SPA (or lowered-HTML fallback) + Playwright CDP/DOM.
  *   3. Diff report (width/height + parent-relative x/y within tolerance).
  *
- * Paint (takumi ↔ browser style) lives in tests/parity/paint/run.mjs (RENDER-1).
+ * Paint (takumi ↔ browser style) lives in tests/parity/paint/run.ts (RENDER-1).
  *
  * Controller-driven content contract (minimal, suite honesty):
  *   Static render / geometry fixtures MUST use static template text only.
@@ -16,12 +16,12 @@
  *   fixtures here until an SSR-defaults contract is defined product-wide.
  *
  * Invoke:
- *   node tests/parity/geometry/run.mjs
- *   node tests/parity/geometry/run.mjs --fixture column-stack
- *   node tests/parity/geometry/run.mjs --strict          # size_fail === 0
- *   node tests/parity/geometry/run.mjs --strict-spa      # require sail-build mode
- *   node tests/parity/geometry/run.mjs --report-only     # harness ok only (structure non-fatal)
- *   SAIL_BIN=target/release/sail node tests/parity/geometry/run.mjs
+ *   node tests/parity/geometry/run.ts
+ *   node tests/parity/geometry/run.ts --fixture column-stack
+ *   node tests/parity/geometry/run.ts --strict          # size_fail === 0
+ *   node tests/parity/geometry/run.ts --strict-spa      # require sail-build mode
+ *   node tests/parity/geometry/run.ts --report-only     # harness ok only (structure non-fatal)
+ *   SAIL_BIN=target/release/sail node tests/parity/geometry/run.ts
  *
  * Exit codes (default / non-report-only):
  *   0 — harness ok AND structure_ok for every fixture (size Δ reported, non-fatal)
@@ -46,7 +46,7 @@ import { createServer } from 'node:http'
 import { createReadStream } from 'node:fs'
 import { tmpdir } from 'node:os'
 import net from 'node:net'
-import { resolveChrome } from '../chrome.mjs'
+import { resolveChrome } from '../chrome.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')
@@ -756,7 +756,7 @@ async function main() {
     )
   }
   console.log(
-    'paint: see tests/parity/paint/run.mjs (takumi regions[].style ↔ browser computedStyle)',
+    'paint: see tests/parity/paint/run.ts (takumi regions[].style ↔ browser computedStyle)',
   )
   const modeBits = []
   if (reportOnly) modeBits.push('report-only (structure non-fatal)')

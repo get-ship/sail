@@ -5,7 +5,7 @@
   "description": "Standalone SAIL demo — no daemon, no shell, no view-host. Plain HTML + esbuild + the SAIL runtime + compiler. Sanity check for the framework.",
   "type": "module",
   "scripts": {
-    "build": "bun scripts/precompile.mjs && esbuild src/main.ts --bundle --format=esm --target=es2020 --outfile=dist/main.js --sourcemap",
+    "build": "bun scripts/precompile.ts && esbuild src/main.ts --bundle --format=esm --target=es2020 --outfile=dist/main.js --sourcemap",
     "start": "bun run build && python3 -m http.server --bind 127.0.0.1 8765"
   },
   "dependencies": {

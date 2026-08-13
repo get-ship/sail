@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * In-agent recipe for STUDIO boot-smoke:
  *

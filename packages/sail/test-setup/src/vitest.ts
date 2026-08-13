@@ -17,7 +17,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, dirname, basename, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 // @ts-expect-error — JS module, no .d.ts.
-import { spawnBoundedOrThrow } from './spawn-bounded.mjs'
+import { spawnBoundedOrThrow } from './spawn-bounded'
 import { nativeCompileJson } from '@ship/sail-dom/test-utils'
 
 const require = createRequire(import.meta.url)

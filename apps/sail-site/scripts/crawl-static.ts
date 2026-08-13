@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Full nav-graph crawl of the static sail-site build.
 //
 // Seeds: every routes/**/page.sail (dynamic segments expanded from
@@ -11,7 +11,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
-import { createStaticServer } from './static-serve.mjs'
+import { createStaticServer } from './static-serve.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const APP = resolve(HERE, '..')

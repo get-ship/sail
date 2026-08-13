@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Produce a Cloudflare-servable static dir for sail-site.
 //
 //   sail build --bundle-framework --base assets --out dist

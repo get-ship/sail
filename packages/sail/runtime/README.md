@@ -18,7 +18,7 @@ bun test
 Docs gen for tier B:
 
 ```sh
-node apps/sail-site/scripts/gen-runtime-surface.mjs
+node apps/sail-site/scripts/gen-runtime-surface.ts
 # or: (cd apps/sail-site && bun run gen)
 ```
 

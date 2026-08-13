@@ -46,8 +46,8 @@
 //!
 //! The wasm `compile` is `#![cfg(target_arch = "wasm32")]`, so it is NOT
 //! callable in this native test process. We drive it the same way
-//! `parity.rs`/`parity_runner.mjs` drive their JS side: a sibling node script
-//! (`g3_wasm_compile.mjs`) instantiates the local `.wasm` bytes
+//! `parity.rs`/`parity_runner.ts` drive their JS side: a sibling node script
+//! (`g3_wasm_compile.ts`) instantiates the local `.wasm` bytes
 //! (`WebAssembly.instantiate`, no fetch/URL) and returns each fixture's `.js`.
 //! The native side runs the SAME `CompileOpts` the wasm export builds
 //! internally (`source_path: None`, `emit_dts/ssr: false`) so the `.js` body is
@@ -112,7 +112,7 @@ use std::time::Duration;
 use deck_bundler::rolldown_bundle::bundle_target;
 use deck_bundler::targets::BundleLayout;
 use deck_config::DeckConfig;
-use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
+use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 use serde_json::json;
 
 // ── Safety constants (the founder OOM'd this box twice; a runaway here is
@@ -502,10 +502,10 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
             pkg.display()
         );
     }
-    let runner = repo.join("crates/deck/deck-bundler/tests/g3_wasm_compile.mjs");
+    let runner = repo.join("crates/deck/deck-bundler/tests/g3_wasm_compile.ts");
     assert!(
         runner.exists(),
-        "g3_wasm_compile.mjs missing at {}",
+        "g3_wasm_compile.ts missing at {}",
         runner.display()
     );
 
@@ -535,13 +535,13 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
 
     // Spawn node, feed the corpus on stdin, read JSON on stdout, with a bounded
     // wall-clock wait so a hung node aborts the gate.
-    let mut child = Command::new("node")
+    let mut child = Command::new("bun")
         .arg(&runner)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
-        .unwrap_or_else(|e| panic!("G3 PREREQ MISSING: cannot spawn `node` ({e}). Install node."));
+        .unwrap_or_else(|e| panic!("G3 PREREQ MISSING: cannot spawn `bun` ({e}). Install bun."));
 
     use std::io::Write;
     child

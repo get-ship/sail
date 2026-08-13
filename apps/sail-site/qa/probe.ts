@@ -1,13 +1,13 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // LAYOUT PROBE v2 — deterministic render-correctness gate for the component
 // viewer. The detail page (/components/<tag>) now mounts the REAL component and
 // DRIVES it into its interesting state (overlays open, disclosure expands), so
 // the probe measures the real thing — no static fakes, no closed-at-rest blind
 // spots.
 //
-//   node qa/probe.mjs <tag> [--theme=all]       # one component, every catalog theme (default)
-//   node qa/probe.mjs --sweep [--theme=X,Y,Z]   # all components × themes → report.json
-//   node qa/probe.mjs --sweep --theme=ship,glass   # subset
+//   node qa/probe.ts <tag> [--theme=all]       # one component, every catalog theme (default)
+//   node qa/probe.ts --sweep [--theme=X,Y,Z]   # all components × themes → report.json
+//   node qa/probe.ts --sweep --theme=ship,glass   # subset
 //
 // Signals (all deterministic, scoped to the specimen subtree):
 //   NOT-RENDERED   the real <tag> element is absent from the page
@@ -22,7 +22,7 @@ import { chromium } from 'playwright'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseThemeList, isDarkTheme } from '../../../packages/sail/tokens/src/qa-themes.mjs'
+import { parseThemeList, isDarkTheme } from '../../../packages/sail/tokens/src/qa-themes.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const BASE = process.env.SAIL_PROBE_BASE ?? 'http://127.0.0.1:7890'

@@ -1,13 +1,13 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * PARITY-1 umbrella — geometry (structure gate) + paint (structure gate).
  *
  * Forwards argv flags to both suites (--report-only, --strict, --fixture, …).
  * Exit 1 if either half fails.
  *
- *   node tests/parity/run.mjs
- *   node tests/parity/run.mjs --report-only
- *   node tests/parity/run.mjs --strict
+ *   bun tests/parity/run.ts
+ *   bun tests/parity/run.ts --report-only
+ *   bun tests/parity/run.ts --strict
  */
 
 import { spawnSync } from 'node:child_process'
@@ -19,12 +19,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../..')
 const forwarded = process.argv.slice(2)
 
-const geometry = join(__dirname, 'geometry/run.mjs')
-const paint = join(__dirname, 'paint/run.mjs')
+const geometry = join(__dirname, 'geometry/run.ts')
+const paint = join(__dirname, 'paint/run.ts')
 
-function run(label, script) {
+function run(label: string, script: string): number {
   console.log(`\n======== PARITY ${label} ========`)
-  const r = spawnSync(process.execPath, [script, ...forwarded], {
+  const r = spawnSync('bun', [script, ...forwarded], {
     cwd: repoRoot,
     stdio: 'inherit',
     env: process.env,

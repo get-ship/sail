@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // Compiles every .sail under src/ via the sail-compiler binary so main.ts can
 // side-effect-import the emitted ESM (which registers the custom element).
-// Adapted from packages/sail/runtime/example/sail-app/scripts/precompile.mjs.
+// Adapted from packages/sail/runtime/example/sail-app/scripts/precompile.ts.
 //
 // OWNERSHIP: the canonical copy of this file (and the rest of the keyed/sail
 // bench app) lives in the Ship repo at tests/perf/frameworks/keyed/sail/ and is

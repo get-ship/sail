@@ -2,7 +2,7 @@
 // harness asserts (no `deck dev`, no host: just the built bytes over HTTP, the
 // way a user's static host would serve them). Zero deps (Node stdlib only).
 //
-// Usage: node serve-built.mjs <build-dir> <port>
+// Usage: bun serve-built.ts <build-dir> <port>
 //
 // SPA fallback: a request path with no file extension is a client route, so it
 // serves index.html and lets the deck router resolve it client-side (mirrors a
@@ -16,7 +16,7 @@ import { join, extname, normalize } from 'node:path'
 const dir = process.argv[2]
 const port = Number(process.argv[3])
 if (!dir || !port) {
-  console.error('usage: node serve-built.mjs <build-dir> <port>')
+  console.error('usage: node serve-built.ts <build-dir> <port>')
   process.exit(1)
 }
 
