@@ -240,6 +240,10 @@ function logLooksLikeLintOrRegenFail(log) {
     return 'framework regen still stale after automatic rebuild'
   }
   if (t.includes('automatic build-assets (staleness regen) failed')) {
+    const parse = log.match(/target failed target=([^\s]+)[\s\S]*?message: "([^"]+)"/)
+    if (parse) {
+      return `framework regen (build-assets) failed — ${parse[1]}: ${parse[2]}`
+    }
     return 'framework regen (build-assets) failed'
   }
   if (t.includes('initial app build failed')) return 'sail dev: initial app build failed'
