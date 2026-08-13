@@ -43,10 +43,12 @@
 </scope>
 
 <controller>
+import { currentNav } from '../compositions/current-nav'
 /**
  * Live pathname for aria-current. Layout chrome stays mounted across leaf
  * navigations under /docs/* — deck route.pathname updates synchronously on
  * navigate (pathname SSOT), so the rail tracks the leaf without browser API wraps.
+ * currentNav is the DOM fallback when this layout CE does not receive ctx.route.
  */
 export default controller((ctx) => {
   const path = derived(() => ctx.route?.pathname?.() ?? '')
@@ -59,7 +61,7 @@ export default controller((ctx) => {
     path()
     navOpen.set(false)
   })
-  return { path, navOpen, openNav, closeNav, noopNav }
+  return { path, navOpen, openNav, closeNav, noopNav, currentNav }
 })
 </controller>
 
@@ -115,7 +117,7 @@ export default controller((ctx) => {
 </partial>
 
 <row nowrap align="stretch" gap="0" style(shell, { box: w(full).grow(1).minW(0) })>
-  <nav label="Docs" testid="docs-rail" style(rail, { box: shrink(0) })>
+  <nav label="Docs" testid="docs-rail" use:currentNav style(rail, { box: shrink(0) })>
     <docs-nav path={path} onNav={noopNav}></docs-nav>
   </nav>
 

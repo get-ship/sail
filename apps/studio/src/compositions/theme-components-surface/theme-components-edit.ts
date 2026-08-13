@@ -190,7 +190,7 @@ const FACE_GLOBALS: Record<string, { path: string; label: string }[]> = {
 const FACE_HINTS: Record<string, string> = {
   alert: 'Callouts · tone maps to globals + component leaves',
   badge: 'Status chips',
-  button: 'Actions — globals until component.button.* exists',
+  button: 'Actions · rest uses component.button.*; tone fills ignore those leaves',
   a: 'Links · bare text or button-link chrome · component.button.* rest',
   card: 'Surfaces · glass leaves',
   tabs: 'Tabs (list + tab + panel as one face)',
