@@ -409,7 +409,7 @@ describe('TEMP registry: path match exemption edges', () => {
   test('tests/hygiene skip does not hide tests/parity', () => {
     expect(skipRel('tests/hygiene/temp-registry.test.ts')).toBe(true)
     expect(skipRel('tests/hygiene/temp-registry.json')).toBe(true)
-    expect(skipRel('tests/parity/verify1/vocab.mjs')).toBe(false)
+    expect(skipRel('tests/parity/geometry/run.mjs')).toBe(false)
     expect(skipRel('apps/studio/src/.__hygiene_temp_marker.ts')).toBe(true)
     expect(skipRel('third_party/takumi-core/src/lib.rs')).toBe(true)
   })

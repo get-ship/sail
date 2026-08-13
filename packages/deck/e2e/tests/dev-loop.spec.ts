@@ -12,8 +12,8 @@ import { test, expect } from '@playwright/test'
 //   • <a> navigation is client-side (mountRouter intercepts; no document reload)
 //   • the counter hydrates to 0 and signal reactivity drives DOM updates
 //
-// NOTE on rendering: the dev SPA path is CLIENT-rendered. Per-route SSR holds
-// for the named-`view` path (see deck-conformance/e2e/counter.sh) but NOT here.
+// NOTE on rendering: the dev SPA path is CLIENT-rendered. Per-route SSR is
+// not on this loop.
 // The shell test pins `deck-render:csr` on purpose: if deck ever adds dev-time
 // per-route SSR, that assertion goes red and we update it consciously.
 

@@ -61,6 +61,9 @@ apps/**/routes/tsconfig.json
 # Task artifacts (CLAUDE.md: artifacts → .artifacts/)
 .artifacts/
 
+# Profiler dumps — not source. `sail-compiler profile` writes here if you ask.
+tests/perf/baselines/
+
 # Per-package bake trees (same product as root `.deck/`, not source).
 packages/**/.deck/
 

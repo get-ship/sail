@@ -127,7 +127,6 @@ Repo sanitization / boundary guards live under `tests/hygiene/` (`bun run test:h
 |------|-------|-------|
 | `gen-runtime-surface.mjs` | Law | Tier-B runtime surface → `src/runtime-surface.gen.ts` (`bun run gen`) |
 | `gen-tutorial.mjs` | Law | Tutorial prose/lessons → `src/compositions/tutorial-data.ts` |
-| `theme-preview-proof.mjs` | Recipe | Headless proof of `theme.preview` token hatch |
 
 ### `apps/sail-site/qa/`
 

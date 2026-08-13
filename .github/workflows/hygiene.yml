@@ -71,8 +71,6 @@ jobs:
           cargo test -p sail-compiler --lib rejects_settimeout
 
       - name: App corpus builds
-        env:
-          SAIL_COMPILER_NO_LIMITS: "1"
         run: |
           cargo run -p sail-compiler --quiet -- build apps/sail-site/src
           cargo run -p sail-compiler --quiet -- build apps/studio/src

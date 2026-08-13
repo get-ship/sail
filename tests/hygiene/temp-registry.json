@@ -175,7 +175,6 @@
       "reason": "Docs stage `legacy` hosts + generated language-surface dual-path copy.",
       "paths": [
         "apps/sail-site/routes/components/[tag]/page.sail",
-        "apps/sail-site/scripts/scaffold-component-docs.mjs",
         "apps/sail-site/src/component-docs/_chrome/stage-styles.ts",
         "apps/sail-site/src/component-docs/types.ts",
         "apps/sail-site/src/language-surface.gen.ts",
@@ -221,7 +220,6 @@
         "crates/deck/deck-bundler/src/routes.rs",
         "crates/deck/deck-cli/src/main.rs",
         "crates/deck/deck-config/src/lib.rs",
-        "crates/deck/deck-conformance/e2e/counter.sh",
         "crates/deck/deck-conformance/src/lib.rs",
         "crates/deck/deck-conformance/tests/boundary.rs",
         "crates/deck/deck-core/src/assets.rs",
@@ -375,18 +373,8 @@
       "verdict": "DELETE-later",
       "reason": "Parity vocab still names sail-dir-* legacy modifiers.",
       "paths": [
-        "tests/parity/README.md",
-        "tests/parity/verify1/shared.mjs",
-        "tests/parity/verify1/vocab.mjs"
+        "tests/parity/README.md"
       ],
-      "expires": { "condition": "after-spinnaker-cut" }
-    },
-    {
-      "id": "dead-env-compiler-no-limits",
-      "kind": "transitional-shim",
-      "verdict": "DELETE-later",
-      "reason": "SAIL_COMPILER_NO_LIMITS is set in CI and never read. Dies with the perf/v3 merge.",
-      "paths": [".github/workflows/hygiene.yml"],
       "expires": { "condition": "after-spinnaker-cut" }
     }
   ]
