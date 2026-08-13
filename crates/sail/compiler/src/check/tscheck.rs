@@ -577,6 +577,13 @@ pub fn check_project_type_gate(project: &Path) -> Vec<Diagnostic> {
     collect_project_type_gate(project, &files)
 }
 
+/// Product `.ts` set the project gate walks (parity fixture uses the same set).
+pub fn collect_project_gate_files(project: &Path) -> Vec<(PathBuf, String)> {
+    let mut files = Vec::new();
+    let _ = collect_project_ts_sources(project, project, &mut files);
+    files
+}
+
 /// HMR project-gate entry.
 ///
 /// * `force` — unknown/lossy path list (notify overflow). Always run the gate.
@@ -594,6 +601,114 @@ pub fn check_project_type_gate_incremental(
         return Vec::new();
     }
     check_project_type_gate(project)
+}
+
+/// Comparable diagnostic identity: code + project-relative path + message.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TsDiagKey {
+    pub code: String,
+    pub rel_path: String,
+    pub message: String,
+}
+
+/// Collapse whitespace so tsc / tsgo wrap differences are not a mismatch.
+pub fn normalize_ts_diag_message(message: &str) -> String {
+    message.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Project-relative path for a diagnostic file (forward slashes).
+pub fn rel_diag_path(project_root: &Path, file: &str) -> String {
+    let f = file.replace('\\', "/");
+    let proj = project_root
+        .canonicalize()
+        .unwrap_or_else(|_| project_root.to_path_buf())
+        .to_string_lossy()
+        .replace('\\', "/");
+    if let Some(rest) = f.strip_prefix(&proj) {
+        return rest.trim_start_matches('/').to_string();
+    }
+    if let Ok(rel) = Path::new(file).strip_prefix(project_root) {
+        return rel.to_string_lossy().replace('\\', "/");
+    }
+    f.trim_start_matches("./").to_string()
+}
+
+pub fn ts_diag_key(project_root: &Path, d: &TsDiag) -> TsDiagKey {
+    TsDiagKey {
+        code: d.code.clone(),
+        rel_path: rel_diag_path(project_root, &d.file),
+        message: normalize_ts_diag_message(&d.message),
+    }
+}
+
+pub fn parse_tsc_diagnostics(text: &str) -> Vec<TsDiag> {
+    text.lines().filter_map(parse_line).collect()
+}
+
+/// Raw TS diagnostics from the same program the project gate uses.
+pub fn collect_project_ts_diags(
+    project_root: &Path,
+    ts_files: &[(PathBuf, String)],
+) -> Vec<TsDiag> {
+    let Some(tool) = resolve_tsgo(Some(project_root)) else {
+        return Vec::new();
+    };
+    let mut pure: Vec<(&Path, &str)> = Vec::new();
+    let mut action: Vec<(&Path, &str)> = Vec::new();
+    for (path, src) in ts_files {
+        match type_env_for_path(path, Some(src)) {
+            TypeEnv::Pure => pure.push((path.as_path(), src.as_str())),
+            TypeEnv::Action => action.push((path.as_path(), src.as_str())),
+            TypeEnv::Framework => {}
+        }
+    }
+    let mut out = Vec::new();
+    for (env, files) in [(TypeEnv::Pure, &pure), (TypeEnv::Action, &action)] {
+        if files.is_empty() {
+            continue;
+        }
+        match collect_env_ts_diags(project_root, env, files, &tool) {
+            Ok(diags) => out.extend(diags),
+            Err(_) => {}
+        }
+    }
+    out
+}
+
+fn collect_env_ts_diags(
+    project_root: &Path,
+    env: TypeEnv,
+    files: &[(&Path, &str)],
+    tool: &TsgoTool,
+) -> std::io::Result<Vec<TsDiag>> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if !tsgo_server::lsp_is_disabled() {
+            let kind_rel = match env {
+                TypeEnv::Pure => Some(crate::ambients::PROJECT_TSCONFIG_PURE_REL),
+                TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
+                TypeEnv::Framework => return Ok(Vec::new()),
+            };
+            let use_kind = kind_rel
+                .map(|r| project_root.join(r).is_file())
+                .unwrap_or(false);
+            if let Ok(diags) = env_program_ts_diags(project_root, env, files, tool, use_kind) {
+                return Ok(diags);
+            }
+        }
+    }
+    let kind_rel = match env {
+        TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+        TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
+        TypeEnv::Framework => return Ok(Vec::new()),
+    };
+    if project_root.join(kind_rel).is_file() {
+        let output = run_tsgo(tool, &["-p", kind_rel, "--noEmit"], project_root)?;
+        let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+        text.push_str(&String::from_utf8_lossy(&output.stderr));
+        return Ok(parse_tsc_diagnostics(&text));
+    }
+    Ok(Vec::new())
 }
 
 /// Overlay body for a failed project gate (HMR compile-error event).
@@ -2379,28 +2494,70 @@ fn typecheck_project_env_reused(
         })
         .collect();
 
-    let work_dir = tsgo_server::project_work_dir(project_root, env);
+    let ts_diags = env_program_ts_diags(project_root, env, files, tool, use_kind)?;
 
-    let (tsconfig, entries) = if use_kind {
-        let kind_rel = kind_rel.expect("kind env");
-        let kind_path = project_root.join(kind_rel);
-        let mut file_list: Vec<String> = files
+    for d in ts_diags {
+        let f = d.file.replace('\\', "/");
+        let in_product = product
             .iter()
-            .map(|(p, _)| {
-                let abs = if p.is_absolute() {
-                    p.to_path_buf()
+            .any(|rel| f.ends_with(rel.as_str()) || f.contains(&format!("/{rel}")));
+        if !in_product
+            && (f.ends_with("tsconfig.json")
+                || f.ends_with("tsconfig.pure.json")
+                || f.ends_with("tsconfig.action.json")
+                || f.contains("node_modules/.sail/")
+                || f.contains("/node_modules/")
+                || f.contains("/dist/")
+                || f.contains("sail-runtime-ambient")
+                || f.contains("ship-open-stubs")
+                || f.contains("action-observation"))
+        {
+            continue;
+        }
+        let real = match resolve_diag_path_to_product(project_root, &f, &product) {
+            Some(p) => p,
+            None => {
+                let as_path = PathBuf::from(&d.file);
+                if product.iter().any(|rel| {
+                    as_path
+                        .to_string_lossy()
+                        .replace('\\', "/")
+                        .ends_with(rel.as_str())
+                }) {
+                    as_path
                 } else {
-                    project_root.join(p)
-                };
-                format!("\"{}\"", abs.to_string_lossy().replace('\\', "/"))
-            })
-            .collect();
-        file_list.sort();
-        let file_list = file_list.join(", ");
-        let cfg = format!(
-            "{{\n  \"extends\": \"{}\",\n  \"files\": [{file_list}]\n}}\n",
-            kind_path.to_string_lossy().replace('\\', "/")
-        );
+                    continue;
+                }
+            }
+        };
+        if let Some(mut mapped) = map_region_diag(&d, env) {
+            mapped.message = teach_compositions_law(&real, mapped.message);
+            mapped.message = format!("{} [{}]", mapped.message, real.display());
+            diags.push(mapped);
+        }
+    }
+    Ok(())
+}
+
+/// Live program for one TypeEnv. Kind projects stay at the real root.
+#[cfg(not(target_arch = "wasm32"))]
+fn env_program_ts_diags(
+    project_root: &Path,
+    env: TypeEnv,
+    files: &[(&Path, &str)],
+    tool: &TsgoTool,
+    use_kind: bool,
+) -> std::io::Result<Vec<TsDiag>> {
+    let work_dir = tsgo_server::project_work_dir(project_root, env, use_kind);
+    let (tsconfig, entries, persist_tsconfig) = if use_kind {
+        let kind_rel = match env {
+            TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+            TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
+            TypeEnv::Framework => {
+                return Ok(Vec::new());
+            }
+        };
+        let cfg = std::fs::read_to_string(project_root.join(kind_rel))?;
         let entries: Vec<(PathBuf, String, String)> = files
             .iter()
             .map(|(p, src)| {
@@ -2412,7 +2569,7 @@ fn typecheck_project_env_reused(
                 (abs, (*src).to_string(), p.to_string_lossy().into_owned())
             })
             .collect();
-        (cfg, entries)
+        (cfg, entries, false)
     } else {
         let mut file_list: Vec<String> = Vec::new();
         let mut entries: Vec<(PathBuf, String, String)> = Vec::new();
@@ -2509,59 +2666,18 @@ fn typecheck_project_env_reused(
             resolution_opts = HARNESS_RESOLUTION_OPTS,
             files = file_list.join(", "),
         );
-        (cfg, entries)
+        (cfg, entries, true)
     };
 
-    let ts_diags = tsgo_server::diagnose_project_files(
+    tsgo_server::diagnose_project_files(
         tool,
         project_root,
         env,
         &work_dir,
         &tsconfig,
         &entries,
-    )?;
-
-    for d in ts_diags {
-        let f = d.file.replace('\\', "/");
-        let in_product = product
-            .iter()
-            .any(|rel| f.ends_with(rel.as_str()) || f.contains(&format!("/{rel}")));
-        if !in_product
-            && (f.ends_with("tsconfig.json")
-                || f.ends_with("tsconfig.pure.json")
-                || f.ends_with("tsconfig.action.json")
-                || f.contains("node_modules/.sail/")
-                || f.contains("/node_modules/")
-                || f.contains("/dist/")
-                || f.contains("sail-runtime-ambient")
-                || f.contains("ship-open-stubs")
-                || f.contains("action-observation"))
-        {
-            continue;
-        }
-        let real = match resolve_diag_path_to_product(project_root, &f, &product) {
-            Some(p) => p,
-            None => {
-                let as_path = PathBuf::from(&d.file);
-                if product.iter().any(|rel| {
-                    as_path
-                        .to_string_lossy()
-                        .replace('\\', "/")
-                        .ends_with(rel.as_str())
-                }) {
-                    as_path
-                } else {
-                    continue;
-                }
-            }
-        };
-        if let Some(mut mapped) = map_region_diag(&d, env) {
-            mapped.message = teach_compositions_law(&real, mapped.message);
-            mapped.message = format!("{} [{}]", mapped.message, real.display());
-            diags.push(mapped);
-        }
-    }
-    Ok(())
+        persist_tsconfig,
+    )
 }
 
 /// Run tsgo against the same kind tsconfig product `tsc -p` uses (G2c).

@@ -1,8 +1,14 @@
-//! Long-lived `tsgo --lsp` used by the type gate (PERF-5).
+//! Long-lived `tsgo --lsp` used by the type gate.
 //!
 //! One language-service process per `(TypeEnv, project)` so a cache miss is
 //! `didChange` + pull diagnostics, not a new `tsgo` spawn. The product gate
 //! stays OnSave; this file only changes the invocation shape.
+//!
+//! Project sessions must initialize against the real project root so opened
+//! files stay inside the workspace and attach to the on-disk kind tsconfig
+//! (`include`, `paths`, `types.d.ts`, `css-modules.d.ts`). A temp-dir root
+//! with files opened via absolute paths outside that root resolves against
+//! an inferred program — sibling modules that exist become TS2307.
 
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -662,14 +668,29 @@ fn project_key(project_root: &Path, env: TypeEnv) -> ProjectKey {
     ProjectKey { root, env }
 }
 
-pub fn project_work_dir(project_root: &Path, env: TypeEnv) -> PathBuf {
+/// `in_place` keeps the language service rooted at the real project so
+/// opened product files attach to the on-disk kind tsconfig.
+pub fn project_work_dir(project_root: &Path, env: TypeEnv, in_place: bool) -> PathBuf {
     let key = project_key(project_root, env);
     let mut pool = lock_project();
+    let in_place_dir = project_root
+        .canonicalize()
+        .unwrap_or_else(|_| project_root.to_path_buf());
     if let Some(s) = pool.sessions.get(&key) {
-        return s.work_dir.clone();
+        let rooted_here = s.work_dir == in_place_dir;
+        if in_place == rooted_here {
+            return s.work_dir.clone();
+        }
+        // Kind vs mirror root must not share a session — the live program
+        // would keep the other project's include/paths.
+        pool.sessions.remove(&key);
     }
     evict_if_needed(&mut pool.sessions, 8);
-    let work_dir = new_work_dir(&format!("sail-proj-gate-{}", env_tag(env)));
+    let work_dir = if in_place {
+        in_place_dir
+    } else {
+        new_work_dir(&format!("sail-proj-gate-{}", env_tag(env)))
+    };
     pool.sessions.insert(
         key,
         ProjectSession {
@@ -702,6 +723,10 @@ fn hash_bytes(s: &str) -> u64 {
 ///
 /// `entries` are `(absolute path to open, source text, diagnostic file label)`.
 /// The label is what `TsDiag.file` should carry for product mapping.
+///
+/// When `persist_tsconfig` is false the on-disk kind config is the program
+/// identity — do not write a wrapper `tsconfig.json` (that would replace
+/// the solution entry at a real project root).
 pub fn diagnose_project_files(
     tool: &TsgoTool,
     project_root: &Path,
@@ -709,6 +734,7 @@ pub fn diagnose_project_files(
     work_dir: &Path,
     tsconfig: &str,
     entries: &[(PathBuf, String, String)],
+    persist_tsconfig: bool,
 ) -> std::io::Result<Vec<TsDiag>> {
     if LSP_DISABLED.load(Ordering::Relaxed) {
         return Err(std::io::Error::other("tsgo lsp disabled"));
@@ -723,7 +749,9 @@ pub fn diagnose_project_files(
     let tsconfig_path = work_dir.join("tsconfig.json");
     let tsconfig_changed = session.tsconfig != tsconfig;
     if tsconfig_changed {
-        std::fs::write(&tsconfig_path, tsconfig)?;
+        if persist_tsconfig {
+            std::fs::write(&tsconfig_path, tsconfig)?;
+        }
         session.tsconfig = tsconfig.to_string();
     }
 
@@ -737,7 +765,16 @@ pub fn diagnose_project_files(
         }
     } else if tsconfig_changed {
         if let Some(c) = session.client.as_mut() {
-            let _ = c.notify_file_changed(&tsconfig_path);
+            if persist_tsconfig {
+                let _ = c.notify_file_changed(&tsconfig_path);
+            } else {
+                let rel = match env {
+                    TypeEnv::Pure => crate::ambients::PROJECT_TSCONFIG_PURE_REL,
+                    TypeEnv::Action => crate::ambients::PROJECT_TSCONFIG_ACTION_REL,
+                    TypeEnv::Framework => "tsconfig.json",
+                };
+                let _ = c.notify_file_changed(&project_root.join(rel));
+            }
         }
     }
 
@@ -746,6 +783,20 @@ pub fn diagnose_project_files(
         .client
         .as_mut()
         .ok_or_else(|| std::io::Error::other("tsgo lsp not started"))?;
+
+    // Kind `files` siblings are not product entries. Opening them keeps
+    // `*.css` / runtime names in the live program (TS2882 otherwise).
+    let sail_dir = project_root.join("node_modules/.sail");
+    if sail_dir.is_dir() {
+        for name in ["types.d.ts", "css-modules.d.ts", "action-observation.d.ts"] {
+            let p = sail_dir.join(name);
+            if p.is_file() {
+                if let Ok(text) = std::fs::read_to_string(&p) {
+                    let _ = client.sync_uri(&path_to_uri(&p), &text);
+                }
+            }
+        }
+    }
 
     let mut want: HashMap<String, (PathBuf, String, String, u64)> = HashMap::new();
     for (path, src, label) in entries {
