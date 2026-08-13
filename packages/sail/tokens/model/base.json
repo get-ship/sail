@@ -1269,6 +1269,52 @@
         "leading": "{typography.leading.code}",
         "tracking": "{typography.tracking.normal}"
       }
+    },
+    "heading-2": {
+      "$type": "type",
+      "$description": "Second heading type role. Aliases typography.heading + text-lg; does not invent a second scale.",
+      "$value": {
+        "family": "{typography.heading.font}",
+        "size": "{typography.text.lg}",
+        "weight": "{typography.heading.weight}",
+        "leading": "{typography.leading.tight}",
+        "tracking": "{typography.heading.tracking}",
+        "case": "{typography.heading.transform}"
+      }
+    },
+    "heading-3": {
+      "$type": "type",
+      "$description": "Third heading type role. Aliases typography.heading + text-base; does not invent a second scale.",
+      "$value": {
+        "family": "{typography.heading.font}",
+        "size": "{typography.text.base}",
+        "weight": "{typography.heading.weight}",
+        "leading": "{typography.leading.tight}",
+        "tracking": "{typography.heading.tracking}",
+        "case": "{typography.heading.transform}"
+      }
+    },
+    "display-sm": {
+      "$type": "type",
+      "$description": "Small display type role. Aliases typography.displayFont + the 4xl scale step (largest fixed display step before the fluid hero).",
+      "$value": {
+        "family": "{typography.displayFont}",
+        "size": "{typography.text.4xl}",
+        "weight": "{typography.heading.weight}",
+        "leading": "{typography.leading.tight}",
+        "tracking": "{typography.heading.tracking}"
+      }
+    },
+    "mono-sm": {
+      "$type": "type",
+      "$description": "Small mono / code type role. Aliases typography.monoFont + text-xs + leading.code.",
+      "$value": {
+        "family": "{typography.monoFont}",
+        "size": "{typography.text.xs}",
+        "weight": "{typography.font.weight-normal}",
+        "leading": "{typography.leading.code}",
+        "tracking": "{typography.tracking.normal}"
+      }
     }
   },
   "elevation": {
@@ -1638,6 +1684,75 @@
       "$type": "dimension"
     },
     "$type": "dimension"
+  },
+  "style": {
+    "card-chrome": {
+      "$type": "sail.style",
+      "$description": "Default card chrome: card fill, subtle border, lg radius, full size, pad x/y.",
+      "$value": {
+        "bg": "card",
+        "border": "subtle",
+        "radius": "lg",
+        "size": "full",
+        "pad": { "x": 5, "y": 4 }
+      }
+    },
+    "muted": {
+      "$type": "sail.style",
+      "$description": "Muted supporting copy: body-sm + muted-foreground.",
+      "$value": {
+        "type": "body-sm",
+        "fg": "muted-foreground"
+      }
+    },
+    "navLink": {
+      "$type": "sail.style",
+      "$description": "Nav link with hover surface and current primary paint.",
+      "$value": {
+        "pad": { "x": 3, "y": 2 },
+        "radius": "md",
+        "type": "label"
+      },
+      "when": {
+        "hover": { "bg": "surface-2" },
+        "current": { "bg": "primary", "fg": "primary-foreground" }
+      }
+    }
+  },
+  "keyframes": {
+    "fade": {
+      "$type": "sail.keyframes",
+      "$description": "Opacity enter/exit preset.",
+      "$value": {
+        "from": { "opacity": 0 },
+        "to": { "opacity": 1 }
+      }
+    },
+    "fade-scale-in": {
+      "$type": "sail.keyframes",
+      "$description": "Opacity + slight scale enter preset.",
+      "$value": {
+        "from": { "opacity": 0, "transform": "scale(0.96)" },
+        "to": { "opacity": 1, "transform": "scale(1)" }
+      }
+    },
+    "slide-up": {
+      "$type": "sail.keyframes",
+      "$description": "Opacity + upward translate enter preset.",
+      "$value": {
+        "from": { "opacity": 0, "transform": "translateY(8px)" },
+        "to": { "opacity": 1, "transform": "translateY(0)" }
+      }
+    }
+  },
+  "play": {
+    "colors": {
+      "$type": "transition",
+      "$description": "Named play property-set: color-bearing CSS properties. Not a keyframe.",
+      "$value": {
+        "property": "color, background-color, border-color, outline-color, fill, stroke"
+      }
+    }
   },
   "$extensions": {
     "sail": {
