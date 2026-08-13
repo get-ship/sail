@@ -34,9 +34,10 @@ mod virtual_ts;
 /// are thin aliases of `hover_sail` / `complete_sail` / `diagnostics_sail`.
 pub use intelligence::{
     CompletionItemPayload, DiagPayload, HoverPayload, Intelligence, RangePayload, complete_sail,
-    complete_with_session, completion_payloads_from_tsgo, completions_at_sail, diagnostics_for_sail,
-    diagnostics_sail, diagnostics_sail_tier, diagnostics_with_session, doc_key,
-    hover_at_sail, hover_payload_from_tsgo, hover_sail, hover_with_session, with_global_session,
+    complete_with_session, completion_payloads_from_tsgo, completions_at_sail,
+    diagnostics_for_sail, diagnostics_sail, diagnostics_sail_tier, diagnostics_with_session,
+    doc_key, hover_at_sail, hover_payload_from_tsgo, hover_sail, hover_with_session,
+    with_global_session,
 };
 
 // Integration tests (`tests/tsgo_proxy.rs`) exercise the public surface of the
@@ -59,10 +60,10 @@ use lsp_server::{Connection, ExtractError, Message, Request, RequestId, Response
 use lsp_types::{
     CodeAction, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CodeActionResponse, CompletionItem, CompletionItemKind,
-    CompletionOptions, CompletionParams, Diagnostic, DiagnosticSeverity,
-    DocumentFormattingParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
-    HoverParams, HoverProviderCapability, Location, MarkupContent, MarkupKind, NumberOrString,
-    OneOf, OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
+    CompletionOptions, CompletionParams, Diagnostic, DiagnosticSeverity, DocumentFormattingParams,
+    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams,
+    HoverProviderCapability, Location, MarkupContent, MarkupKind, NumberOrString, OneOf,
+    OptionalVersionedTextDocumentIdentifier, Position, PublishDiagnosticsParams, Range,
     ServerCapabilities, TextDocumentEdit, TextDocumentSyncCapability, TextDocumentSyncKind,
     TextEdit, Url, WorkspaceEdit,
 };
@@ -136,7 +137,13 @@ fn handle_notification(
             docs.insert(uri.clone(), p.text_document.text.clone());
             tsgo.on_sail_change(uri.as_str(), &p.text_document.text);
             // On-type tier: parse/vocabulary only (no taffy).
-            publish_diagnostics(conn, tsgo, &uri, &p.text_document.text, DiagnosticTier::OnType)?;
+            publish_diagnostics(
+                conn,
+                tsgo,
+                &uri,
+                &p.text_document.text,
+                DiagnosticTier::OnType,
+            )?;
         }
         "textDocument/didChange" => {
             let p: lsp_types::DidChangeTextDocumentParams = serde_json::from_value(note.params)?;
@@ -212,9 +219,7 @@ fn handle_request(
             respond(req, |id, params| on_definition(docs, tsgo, id, params))
         }
         "textDocument/codeAction" => respond(req, |id, params| on_code_action(docs, id, params)),
-        "textDocument/formatting" => {
-            respond(req, |id, params| on_formatting(docs, id, params))
-        }
+        "textDocument/formatting" => respond(req, |id, params| on_formatting(docs, id, params)),
         _ => None,
     };
     if let Some(resp) = resp {
@@ -355,7 +360,7 @@ fn on_completion(
         return Some(token_completion_items(&text, pos.line as usize, col));
     }
     if let Some(prefix) = icon_name_prefix(&text, pos.line as usize, col) {
-        return Some(icon_completion_items(&prefix));
+        return Some(icon_completion_items(&prefix, path.as_deref()));
     }
     if let Some(prefix) = sx_attr_prefix(&text, pos.line as usize, col) {
         return Some(sx_completion_items(prefix));
@@ -536,35 +541,33 @@ fn icon_name_prefix(text: &str, line_idx: usize, col: usize) -> Option<String> {
     None
 }
 
-fn icon_completion_items(prefix: &str) -> Vec<CompletionItem> {
+fn icon_completion_items(
+    prefix: &str,
+    source_path: Option<&std::path::Path>,
+) -> Vec<CompletionItem> {
     let lower = prefix.to_ascii_lowercase();
-    ICON_NAMES
-        .iter()
-        .filter(|n| n.starts_with(&lower) || lower.is_empty())
+    let registry = sail_compiler::RoleRegistry::load(source_path);
+    registry
+        .role_surfaces()
+        .into_iter()
+        .filter(|row| row.role.starts_with(&lower) || lower.is_empty())
         .take(200)
-        .map(|name| CompletionItem {
-            label: name.clone(),
-            kind: Some(CompletionItemKind::ENUM_MEMBER),
-            detail: Some("lucide icon".into()),
-            insert_text: Some(name.clone()),
-            ..Default::default()
+        .map(|row| {
+            let detail = if row.summary.is_empty() {
+                format!("icon role → {}:{}", row.pack, row.glyph)
+            } else {
+                format!("{} ({}:{})", row.summary, row.pack, row.glyph)
+            };
+            CompletionItem {
+                label: row.role.clone(),
+                kind: Some(CompletionItemKind::ENUM_MEMBER),
+                detail: Some(detail),
+                insert_text: Some(row.role),
+                ..Default::default()
+            }
         })
         .collect()
 }
-
-/// Lucide icon registry (TOOL-10 asset). Keys only — SVG bodies unused here.
-const LUCIDE_ICONS_JSON: &str = include_str!("../../../deck/deck-core/assets/lucide-icons.json");
-
-static ICON_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
-    let v: serde_json::Value =
-        serde_json::from_str(LUCIDE_ICONS_JSON).unwrap_or(serde_json::json!({}));
-    let mut names: Vec<String> = v
-        .as_object()
-        .map(|o| o.keys().cloned().collect())
-        .unwrap_or_default();
-    names.sort();
-    names
-});
 
 /// Detect a tag-open position: a `<` followed by a partial tag name on
 /// the same line, with the cursor at the end. Returns the partial name
@@ -1493,12 +1496,30 @@ mod tests {
     }
 
     #[test]
-    fn icon_completion_from_lucide_registry() {
-        let items = icon_completion_items("sear");
+    fn icon_completion_from_role_registry() {
+        let items = icon_completion_items("sear", None);
         assert!(
             items.iter().any(|i| i.label == "search"),
-            "expected search in lucide registry: {:?}",
+            "expected search in role registry: {:?}",
             items.iter().map(|i| &i.label).take(10).collect::<Vec<_>>()
+        );
+        assert!(
+            items.iter().all(|i| i
+                .detail
+                .as_deref()
+                .is_some_and(|d| d.contains("lucide:") || d.contains("icon role"))),
+            "completions must name the role binding, not a raw pack dump"
+        );
+    }
+
+    #[test]
+    fn icon_completion_enumerates_same_registry_as_compiler() {
+        let items = icon_completion_items("", None);
+        let got: Vec<String> = items.into_iter().map(|i| i.label).collect();
+        let expected = sail_compiler::RoleRegistry::core().role_ids();
+        assert_eq!(
+            got, expected,
+            "LSP roles must equal RoleRegistry (MCP SSOT)"
         );
     }
 

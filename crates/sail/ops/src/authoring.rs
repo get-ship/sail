@@ -24,6 +24,7 @@ pub enum SurfaceTopic {
     Tokens,
     L1,
     ControlFlow,
+    Icons,
 }
 
 impl SurfaceTopic {
@@ -35,6 +36,7 @@ impl SurfaceTopic {
             "tokens" => Some(Self::Tokens),
             "l1" | "elements" => Some(Self::L1),
             "control-flow" | "control_flow" | "controlflow" => Some(Self::ControlFlow),
+            "icons" | "icon" => Some(Self::Icons),
             _ => None,
         }
     }
@@ -47,6 +49,7 @@ impl SurfaceTopic {
             Self::Tokens => "tokens",
             Self::L1 => "l1",
             Self::ControlFlow => "control-flow",
+            Self::Icons => "icons",
         }
     }
 
@@ -58,6 +61,7 @@ impl SurfaceTopic {
             Self::Tokens,
             Self::L1,
             Self::ControlFlow,
+            Self::Icons,
         ]
     }
 }
@@ -324,6 +328,40 @@ Controllers never `.style` / `createElement`.\n\
                  reuse remains the component file (`src/<tag>/<tag>.sail`).\n"
             );
         }
+        SurfaceTopic::Icons => {
+            let _ = writeln!(md, "# Sail surface — icons\n");
+            let _ = writeln!(
+                md,
+                "Author markup uses **roles**, never pack prefixes.\n\n\
+                 `<icon name=\"settings\" />` — `name` is a role in the project set \
+                 (core ∪ `sail.config` `icons.roles`). Unknown role is a compile error \
+                 with close matches (`sail-unknown-icon`).\n\n\
+                 Configure packs in `sail.config.jsonc`:\n\n\
+                 ```jsonc\n\
+                 {{\n  \"icons\": {{\n    \"pack\": \"lucide\",\n    \"version\": \"1.28.0\",\n    \"roles\": {{\n      \"home\": \"house\",\n      \"settings\": \"mdi:cog\"\n    }}\n  }}\n}}\n\
+                 ```\n\n\
+                 Catalog (install targets, not author names):\n"
+            );
+            for entry in sail_compiler::ICONIFY_CATALOG {
+                let _ = writeln!(md, "- `{}` — {} ({})", entry.id, entry.title, entry.summary);
+            }
+            let _ = writeln!(md, "\n### Core roles\n");
+            let registry = sail_compiler::RoleRegistry::core();
+            for row in registry.role_surfaces() {
+                let _ = writeln!(
+                    md,
+                    "- `{}` → `{}:{}`{}",
+                    row.role,
+                    row.pack,
+                    row.glyph,
+                    if row.summary.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" — {}", row.summary)
+                    }
+                );
+            }
+        }
     }
     md
 }
@@ -352,6 +390,11 @@ pub struct CheckDiag {
 }
 
 pub fn surface(args: &Value) -> Result<Value, OpError> {
+    surface_with_ctx(args, None)
+}
+
+/// Same as [`surface`], loading the project role set when `ctx` is present.
+pub fn surface_with_ctx(args: &Value, ctx: Option<&Ctx>) -> Result<Value, OpError> {
     let topic_s = args
         .get("topic")
         .and_then(|v| v.as_str())
@@ -366,10 +409,19 @@ pub fn surface(args: &Value) -> Result<Value, OpError> {
                 .join(", ")
         ))
     })?;
-    Ok(json!({
+    let mut out = json!({
         "topic": topic.as_str(),
         "markdown": surface_markdown(topic),
-    }))
+    });
+    if topic == SurfaceTopic::Icons {
+        let registry = match ctx {
+            Some(c) => sail_compiler::RoleRegistry::load_from_project(&c.project_root),
+            None => sail_compiler::RoleRegistry::core(),
+        };
+        out["roles"] = serde_json::to_value(registry.role_surfaces()).unwrap_or(json!([]));
+        out["packs"] = serde_json::to_value(registry.pack_surfaces()).unwrap_or(json!([]));
+    }
+    Ok(out)
 }
 
 pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
@@ -1202,6 +1254,40 @@ mod tests {
         assert!(
             !l1.contains("### Native reskins"),
             "native reskins section must be gone: {l1}"
+        );
+        let icons = surface_markdown(SurfaceTopic::Icons);
+        assert!(
+            icons.contains("settings"),
+            "core role in icons surface: {icons}"
+        );
+        assert!(
+            !icons.contains("lucide:settings") || icons.contains("never pack prefixes"),
+            "must not teach pack prefixes as author markup: {icons}"
+        );
+    }
+
+    #[test]
+    fn icons_surface_matches_role_registry() {
+        let out = surface(&json!({"topic": "icons"})).expect("surface");
+        assert_eq!(out["topic"], "icons");
+        let roles = out["roles"].as_array().expect("roles array");
+        let registry = sail_compiler::RoleRegistry::core();
+        let expected: Vec<String> = registry.role_ids();
+        let got: Vec<String> = roles
+            .iter()
+            .filter_map(|r| r.get("role").and_then(|v| v.as_str()).map(str::to_string))
+            .collect();
+        assert_eq!(
+            got, expected,
+            "MCP roles must equal RoleRegistry (LSP SSOT)"
+        );
+        assert!(roles.iter().any(|r| r["role"] == "settings"), "{roles:?}");
+        let packs = out["packs"].as_array().expect("packs");
+        assert!(
+            packs
+                .iter()
+                .any(|p| p["id"] == "lucide" && p["configured"] == true),
+            "{packs:?}"
         );
     }
 

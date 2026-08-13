@@ -79,7 +79,7 @@ pub fn call_rpc(
     match (service.as_str(), method) {
         ("SailAuthoring", "Surface") => {
             let _a: contracts::SurfaceArgs = parse_args(args_json)?;
-            authoring::surface(args_json)
+            authoring::surface_with_ctx(args_json, Some(ctx))
         }
         ("SailAuthoring", "Check") => {
             let _a: contracts::CheckArgs = parse_args(args_json)?;
