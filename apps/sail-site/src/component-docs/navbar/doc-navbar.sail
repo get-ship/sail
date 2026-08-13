@@ -138,7 +138,7 @@ export default controller((_ctx: Scope) => {
           <option value="16">16</option>
           <option value="48">48</option>
         </select>
-        <p style(mutedXs)>Sticky top/left place({ inset: number })</p>
+        <p style(mutedXs)>Sticky top/left inset (number).</p>
       </column>
     </column>
 

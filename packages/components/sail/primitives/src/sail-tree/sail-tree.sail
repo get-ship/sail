@@ -166,7 +166,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           },
         })
       >
-        <span style({ box: flow({ display: contents }), when: { selected: { text: type({ weight: medium }) }, busy: { text: italic(true) } } })>
+        <span style({ box: flow({ display: contents }), when: { selected: { text: type({ weight: medium }) }, busy: { text: type({ italic: true }) } } })>
         <!-- Chevron paint only; expand is the row (aria-expanded / data-expanded). -->
         <if {w.canExpand}>
           <row

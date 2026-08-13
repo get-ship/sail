@@ -10,7 +10,7 @@
   style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
   style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style list = { box: space({ pad-l: 6 }), paint: list(decimal) }
+  style list = { box: space({ pad-l: 6 }), text: type({ list: decimal }) }
   style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>

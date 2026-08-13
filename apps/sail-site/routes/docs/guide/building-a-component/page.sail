@@ -100,16 +100,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     There is no stylesheet and no <code>&lt;style&gt;</code> block. Attach
     <strong>Style</strong> as a block statement on the host:
-    <code>style&#40;&#123; box: space({ pad: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) &#125;&#41;</code>.
+    <code>style&#40;&#123; box: space(&#123; pad: 4 &#125;), paint: ink(&#123; color: muted-foreground &#125;), text: type(&#123; size: sm &#125;) &#125;&#41;</code>.
     Channels group the setters — <code>box</code> for space and size,
     <code>paint</code> for color and border, <code>text</code> for type.
-    Values are design tokens: <code>type({ size: sm })</code>,
-    <code>ink({ color: muted-foreground })</code>, <code>space({ pad: 4 })</code>. Prefer
+    Values are design tokens: <code>type(&#123; size: sm &#125;)</code>,
+    <code>ink(&#123; color: muted-foreground &#125;)</code>, <code>space(&#123; pad: 4 &#125;)</code>. Prefer
     <code>style name = &#123; … &#125;</code> in scope when the same paint
     repeats, then attach <code>style&#40;name&#41;</code>.
   </p>
   <p>
-    The values are a closed set. <code>ink({ color: muted-foreground })</code> compiles;
+    The values are a closed set. <code>ink(&#123; color: muted-foreground &#125;)</code> compiles;
     a hex code or a pixel value does not, and the error names what you may
     use instead. That is what keeps a component readable under all nine
     themes: it never names a color, only a role. Utility-string hosts
@@ -117,9 +117,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <p>
     Two setters above are worth naming.
-    <code>type({ family: mono })</code> with <code>nums(tabular)</code> gives
+    <code>type(&#123; family: mono &#125;)</code> with <code>type(&#123; nums: tabular &#125;)</code> gives
     digits a fixed width, so the total does not jitter as it recalculates.
-    <code>size({ max-w: panel-max-w-sm })</code> stops the card from stretching to the
+    <code>size(&#123; max-w: panel-max-w-sm &#125;)</code> stops the card from stretching to the
     width of the page.
   </p>
 

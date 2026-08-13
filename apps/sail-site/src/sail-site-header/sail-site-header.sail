@@ -11,11 +11,11 @@
   style brand = { text: type({ size: lg, tracking: tight, wrap: nowrap }) }
   style brandMark = { paint: ink({ color: primary }) }
   style productSwitch = { box: space({ pad: half }).size({ min-w: 0, max-w: full }).overflow({ x: auto }), paint: fill({ color: muted }).border({ color: border, width: 1, style: solid }).radius(full) }
-  style productLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(full).ink({ color: muted-foreground }), text: type({ size: xs, weight: medium, leading: none, wrap: nowrap }).underline(none), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) }, tablet: { box: space({ pad-x: 2_5 }), text: type({ size: sm }) } } }
+  style productLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(full).ink({ color: muted-foreground }), text: type({size: xs, weight: medium, leading: none, wrap: nowrap, decoration: none}), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) }, current: { paint: fill({ color: primary }).ink({ color: primary-foreground }) }, tablet: { box: space({ pad-x: 2_5 }), text: type({ size: sm }) } } }
   style brandWord = { box: flow({ display: none }), text: type({ wrap: nowrap }), when: { tablet: { box: flow({ display: inline }) } } }
   style shell = { box: size({ h: screen, min-h: screen }) }
-  style landingMain = { box: basis(0).size({ min-w: 0, min-h: 0, max-w: full }).overflow({ x: hidden, y: auto }) }
-  style appMain = { box: flow({ display: flex, dir: column }).basis(0).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style landingMain = { box: size({basis: 0, min-w: 0, min-h: 0, max-w: full}).overflow({ x: hidden, y: auto }) }
+  style appMain = { box: flow({ display: flex, dir: column }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
   style githubLink = { box: flow({ display: inline-flex }).space({ pad: 1 }), paint: radius(md).ink({ color: muted-foreground }), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) } } }
 </scope>
 

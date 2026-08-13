@@ -5,7 +5,7 @@
   style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
   style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style monoBlock = { box: space({ pad: 4, pad-x: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), text: type({ family: mono, size: sm, leading: relaxed }).whitespace(pre-wrap).break(words) }
+  style monoBlock = { box: space({ pad: 4, pad-x: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), text: type({family: mono, size: sm, leading: relaxed, wrap: pre-wrap, break: words}) }
   style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 

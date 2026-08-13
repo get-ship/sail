@@ -22,8 +22,8 @@
   style bandStatus = { box: space({ pad-x: 4, pad-y: 2 }) }
   style bandError = { box: space({ pad-x: 4, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style editorScroll = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style editorScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
   style pageTitle = { text: type({ size: xl, weight: semibold, tracking: tight }) }
   style seedStrip = { box: space({ pad: 3 }).size({ min-w: 0 }), paint: radius(lg).border({ color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
   style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }

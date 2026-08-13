@@ -6,7 +6,7 @@
   style page = { box: space({ pad: 0, mx: auto }).size({ max-w: breakpoint-tablet }) }
   style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style callout = { box: space({ pad: 3, pad-x: 4 }), paint: border({ color: border, width: 1 }).border({ color: primary, width: 3, edge: l }).radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style callout = { box: space({ pad: 3, pad-x: 4 }), paint: border({ edge: t, color: border, width: 1 }).border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }).border({ edge: l, color: primary, width: 3 }).radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) }
   style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
 

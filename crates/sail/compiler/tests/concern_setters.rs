@@ -1,9 +1,7 @@
 //! SPEC-SPINNAKER-2 — concern table is the setter table.
 
 use sail_compiler::compile_element;
-use sail_lint::style::{
-    StyleDiagnostic, clash, lower_style, lower_style_source, parse,
-};
+use sail_lint::style::{clash, lower_style, lower_style_source, parse, StyleDiagnostic};
 use std::collections::HashMap;
 
 fn css_of(src: &str) -> String {
@@ -166,13 +164,51 @@ fn size_slot_object_and_named_full() {
 }
 
 #[test]
-fn kind_stroke_plus_ring_coexist() {
-    let (style, diags) = parse(
-        "style({ paint: border(subtle).border({ kind: ring, color: primary }) })",
+fn size_basis_slot_lowers() {
+    let css = css_of("style({ box: size({ basis: 0, min-w: 0 }) })");
+    assert!(css.contains("flex-basis") && css.contains("0"), "{css}");
+    retired_names_concern("style({ box: basis(0) })", "size");
+}
+
+#[test]
+fn type_italic_nums_wrap_prewrap() {
+    let css = css_of("style({ text: type({ italic: true, nums: tabular, wrap: pre-wrap }) })");
+    assert!(
+        css.contains("font-style") && css.contains("italic"),
+        "{css}"
     );
+    assert!(
+        css.contains("font-variant-numeric") && css.contains("tabular-nums"),
+        "{css}"
+    );
+    assert!(
+        css.contains("white-space") && css.contains("pre-wrap"),
+        "{css}"
+    );
+}
+
+#[test]
+fn ink_gradient_and_motion_transform_bind() {
+    let css = css_of("style({ paint: ink({ gradient: primary }) })");
+    assert!(css.contains("--gradient-primary"), "{css}");
+    assert!(css.contains("background-clip"), "{css}");
+    let css = css_of("style({ paint: motion({ transform: bind(worldTx) }) })");
+    assert!(
+        css.contains("transform") && css.contains("--world-tx"),
+        "{css}"
+    );
+}
+
+#[test]
+fn kind_stroke_plus_ring_coexist() {
+    let (style, diags) =
+        parse("style({ paint: border(subtle).border({ kind: ring, color: primary }) })");
     assert!(diags.is_empty(), "{diags:?}");
     let clashes = clash::detect_clashes(&style, &HashMap::new());
-    assert!(clashes.is_empty(), "stroke + ring must coexist: {clashes:?}");
+    assert!(
+        clashes.is_empty(),
+        "stroke + ring must coexist: {clashes:?}"
+    );
     let css = lower_style(&style, &HashMap::new()).1;
     assert!(
         css.contains("border-color") || css.contains("--border-subtle"),
@@ -205,10 +241,7 @@ fn slot_merge_partial_hover() {
     );
     assert!(css.contains(":hover"), "{css}");
     // Hover rule emits only the named slot — not a whole-concern rewrite.
-    let hover = css
-        .split(":hover")
-        .nth(1)
-        .unwrap_or("");
+    let hover = css.split(":hover").nth(1).unwrap_or("");
     assert!(
         hover.contains("primary") || hover.contains("border-color"),
         "hover writes color: {css}"
@@ -295,5 +328,8 @@ fn sx_attribute_hard_fails() {
 fn intra_channel_chain_stays() {
     let css = css_of("style({ box: size({ w: full }).place({ position: absolute }) })");
     assert!(css.contains("width"), "{css}");
-    assert!(css.contains("position") && css.contains("absolute"), "{css}");
+    assert!(
+        css.contains("position") && css.contains("absolute"),
+        "{css}"
+    );
 }

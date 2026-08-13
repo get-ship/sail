@@ -6,8 +6,8 @@
 //!
 //! | Action              | Required Style bridge                                   |
 //! |---------------------|---------------------------------------------------------|
-//! | `use:virtualRow`    | `translateY(bind(rowY))` or `translate-y-(--row-y)`     |
-//! | `use:virtualSpacer` | `h(bind(rowsH))` / `height-(--rows-h)` / `h-(--rows-h)` |
+//! | `use:virtualRow`    | `motion({ y: bind(rowY) })` or `translate-y-(--row-y)` |
+//! | `use:virtualSpacer` | `size({ h: bind(rowsH) })` / `height-(--rows-h)` |
 //!
 //! Reference: `packages/sail/runtime/src/actions/virtual-row.ts`,
 //! `packages/components/sail/primitives/src/sail-tree/sail-tree.sail`.
@@ -57,14 +57,14 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             rule: RULE_ID,
             severity: Severity::Error,
             message: format!(
-                "<{}> has use:virtualRow but no translateY(bind(rowY)) (or \
+                "<{}> has use:virtualRow but no motion({{ y: bind(rowY) }}) (or \
                  translate-y-(--row-y)) on the same node — virtualRow writes \
                  --row-y; without the Style bridge every absolute row stacks at y=0.",
                 t.tag
             ),
             suggest: Some(
-                "Add tag-position Style with translate for the row offset, e.g. \
-                 `<el use:virtualRow style({ box: position(absolute).left(0).w(full), paint: translateY(bind(rowY)) })>` \
+                "Add tag-position Style with motion y for the row offset, e.g. \
+                 `<el use:virtualRow style({ box: place({ position: absolute, left: 0 }).size({ w: full }), paint: motion({ y: bind(rowY) }) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -81,12 +81,12 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             message: format!(
                 "<{}> has use:virtualSpacer but no height binding for --rows-h \
                  on the same node — virtualSpacer writes --rows-h; without \
-                 h(bind(rowsH)) / h-(--rows-h) the list has no scroll extent.",
+                 size({{ h: bind(rowsH) }}) / h-(--rows-h) the list has no scroll extent.",
                 t.tag
             ),
             suggest: Some(
                 "Add tag-position Style with height from the spacer var, e.g. \
-                 `<el use:virtualSpacer style({ box: h(bind(rowsH)).position(relative).w(full) })>` \
+                 `<el use:virtualSpacer style({ box: place({ position: relative }).size({ w: full, h: bind(rowsH) }) })>` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -118,6 +118,9 @@ fn has_row_translate(sx: &str) -> bool {
     if contains_ci(s, "translateY(bind(rowY))") || contains_ci(s, "translateY(bind(row-y))") {
         return true;
     }
+    if contains_ci(s, "y: bind(rowY)") || contains_ci(s, "y: bind(row-y)") {
+        return true;
+    }
     // Token atoms: translate-y-(--row-y) / translate-y-(--rowy) after sanitize
     if contains_ci(s, "translate-y-(--row-y)") || contains_ci(s, "translate-y-(--rowy)") {
         return true;
@@ -127,7 +130,9 @@ fn has_row_translate(sx: &str) -> bool {
         return true;
     }
     // Loose same-node accept (see module note above).
-    let has_translate = contains_ci(s, "translateY") || contains_ci(s, "translate-y");
+    let has_translate = contains_ci(s, "translateY")
+        || contains_ci(s, "translate-y")
+        || contains_ci(s, "motion({") && (s.contains("y:") || s.contains("y :"));
     let has_rowy = contains_ci(s, "rowY") || contains_ci(s, "row-y") || s.contains("--row-y");
     has_translate && has_rowy
 }
@@ -141,6 +146,8 @@ fn has_spacer_height(sx: &str) -> bool {
     if contains_ci(s, "h(bind(rowsH))")
         || contains_ci(s, "h(bind(rows-h))")
         || contains_ci(s, "height(bind(rowsH))")
+        || contains_ci(s, "h: bind(rowsH)")
+        || contains_ci(s, "h: bind(rows-h)")
     {
         return true;
     }
@@ -153,6 +160,7 @@ fn has_spacer_height(sx: &str) -> bool {
     // Loose same-node accept (see note above).
     let has_h = s.contains("h(bind")
         || contains_ci(s, "height(bind")
+        || contains_ci(s, "h: bind")
         || s.contains("h-(")
         || s.contains("height-(");
     let has_var = contains_ci(s, "rowsH") || contains_ci(s, "rows-h") || s.contains("--rows-h");
@@ -208,7 +216,15 @@ mod tests {
     #[test]
     fn virtual_spacer_with_rows_h_passes() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style({ box: h(bind(rowsH)).position(relative).w(full) })>            </div>
+            <div use:virtualSpacer={totalSize()} style({ box: place({ position: relative }).size({ w: full, h: bind(rowsH) }) })>            </div>
+        "#;
+        assert!(lint(src).is_empty(), "{:?}", lint(src));
+    }
+
+    #[test]
+    fn virtual_row_concern_motion_y_passes() {
+        let src = r#"
+            <column use:virtualRow={w.start} style({ box: place({ position: absolute }), paint: motion({ y: bind(rowY) }) })>row</column>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
     }

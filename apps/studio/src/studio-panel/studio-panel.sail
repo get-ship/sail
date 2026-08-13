@@ -10,7 +10,7 @@
   style panelHeader = { box: flow({ shrink: 0 }).size({ h: 8, min-h: 8 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
   style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   style actionsRow = { box: flow({ shrink: 0 }) }
-  style panelBody = { box: flow({ grow: 1 }).size({ min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style panelBody = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
 </scope>
 
 <column studio-panel gap="0" style(panelRoot)>

@@ -35,9 +35,9 @@
   style liveCard = { box: space({ pad: 5 }), paint: border({ color: border }) }
   style glassMini = { box: size({ w: full, max-w: panel-max-w-sm }).space({ pad: 4 }), paint: border({ color: border }) }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
   style panelRail = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: background }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
   style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
   style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
   style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }

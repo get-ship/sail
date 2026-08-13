@@ -21,7 +21,7 @@
   style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: xs, wrap: truncate }) }
   style errorBand = { box: flow({ shrink: 0 }).size({ h: 7 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border, width: 1 }) }
   style panelTools = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style findingsScroll = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0) }
+  style findingsScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}) }
   style groupHeader = { box: size({ h: 6 }).space({ pad-x: 3 }), when: { hover: { paint: fill({ color: hover-bg }) } } }
   style ruleMono = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, weight: semibold, wrap: truncate }) }
   style findingTrigger = { box: size({ w: full, h: 6 }).space({ pad-x: 3 }), when: { hover: { paint: fill({ color: hover-bg }) } } }

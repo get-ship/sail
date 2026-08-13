@@ -126,8 +126,8 @@ export type CatalogDeclaration = {
   tagName?: string
   customElement?: boolean
   description?: string
-  attributes?: CatalogAttribute[]
-  slots?: string[] | { name?: string }[]
+  attributes?: readonly CatalogAttribute[]
+  slots?: readonly string[] | readonly { name?: string }[]
   cssParts?: unknown
   cssProperties?: unknown
 }
@@ -136,10 +136,10 @@ export type CatalogModule = {
   kind?: string
   path?: string
   package?: string
-  declarations?: CatalogDeclaration[]
+  declarations?: readonly CatalogDeclaration[]
 }
 
 export type ComponentsCatalog = {
   schemaVersion?: string
-  modules?: CatalogModule[]
+  modules?: readonly CatalogModule[]
 }

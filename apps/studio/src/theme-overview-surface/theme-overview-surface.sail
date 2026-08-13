@@ -22,9 +22,9 @@
   style fullBtn = { box: size({ w: full, min-w: control-h-sm, min-h: control-h-sm }) }
   style specimenBtn = { box: flow({ shrink: 0 }).size({ min-w: control-h-sm, min-h: 6 }) }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style editorScroll = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0), paint: fill({ color: background }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({ h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md }).basis(0).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style editorScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
   style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
   style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
   style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
@@ -256,10 +256,9 @@ export default controller(() => {
               <p style(chromeTitle)>Preview · {session.nameEdit()}</p>
               <p style(monoMeta, { box: flow({ shrink: 0 }) })>{session.paintMode()}</p>
             </row>
-            <scroll-area style({  box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0), paint: fill({ color: background })  })>
-              <!-- Plain host: layout column always emits sail-g-* which beats a Style gap bind. -->
-              <div
-                specimen-body style({ box: flow({ display: flex, dir: column }).size({ w: full, min-w: 0 }).space({ pad: bind(densityPad) }).gap(bind(specimenGap)) })>
+            <scroll-area style({  box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}), paint: fill({ color: background })  })>
+              <column
+                specimen-body gap={specimenGap()} style({ box: size({ w: full, min-w: 0 }).space({ pad: bind(densityPad) }) })>
                 <row gap="2" align="center" nowrap specimen-buttons>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="primary" style(specimenBtn)>Primary</button>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="accent" style(specimenBtn)>Accent</button>
@@ -271,7 +270,7 @@ export default controller(() => {
                   <badge tone="warning" size={overview.badgeSize()} variant="solid" pill>Warning</badge>
                   <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill>Danger</badge>
                 </row>
-                <div type-samples style({ box: flow({ display: flex, dir: column }).gap(bind(specimenStackGap)) })>
+                <column type-samples gap={specimenStackGap()}>
                   <p style({ text: type({ family: display, size: xl, weight: semibold, tracking: tight }) })>
                     {overview.typeDisplay()}
                   </p>
@@ -281,7 +280,7 @@ export default controller(() => {
                   <p style({ text: type({ family: mono, size: xs }) })>
                     {overview.typeMono()} — const ok = true
                   </p>
-                </div>
+                </column>
                 <if {overview.hasIconGlyphs()}>
                   <row specimen-icons gap="2" align="center" nowrap>
                     <for {overview.iconGlyphs() as g} key={g.key}>
@@ -289,12 +288,12 @@ export default controller(() => {
                     </for>
                   </row>
                 </if>
-                <div style({ box: flow({ display: flex, dir: column }).gap(bind(specimenStackGap)) })>
+                <column gap={specimenStackGap()}>
                   <p style({ paint: ink({ color: muted-foreground }), text: type({ size: xs }) })>Email</p>
                   <input type="email" size={overview.controlSize()} placeholder="you@company.com" label="Sample email" />
-                </div>
+                </column>
                 <card padding={overview.cardPadding()}>
-                  <div style({ box: flow({ display: flex, dir: column }).gap(bind(specimenStackGap)) })>
+                  <column gap={specimenStackGap()}>
                     <p style({ text: type({ family: heading, size: md, weight: semibold }) })>{session.nameEdit()}</p>
                     <p style({ paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) })>
                       Nested card in this theme.
@@ -303,9 +302,9 @@ export default controller(() => {
                       <button type="button" size={overview.controlSize()} variant="solid" tone="primary" style(specimenBtn)>Continue</button>
                       <button type="button" size={overview.controlSize()} variant="ghost" tone="muted" style(specimenBtn)>Cancel</button>
                     </row>
-                  </div>
+                  </column>
                 </card>
-              </div>
+              </column>
             </scroll-area>
           </column>
         </card>

@@ -22,11 +22,11 @@
   }
   style lineAdd = {
     box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
-    paint: colorMix(success, 15),
+    paint: fill({ color: success, mix: 15 }),
   }
   style lineDel = {
     box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),
-    paint: colorMix(destructive, 15),
+    paint: fill({ color: destructive, mix: 15 }),
   }
   style lineHunk = {
     box: space({ pad-x: 2, pad-y: px }).size({ w: full, min-w: 0 }),

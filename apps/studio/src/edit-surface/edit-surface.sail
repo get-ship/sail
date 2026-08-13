@@ -2,11 +2,11 @@
   <edit-surface> — file explorer + doc tabs + source editor. Live app is the host.
 -->
 <scope>
-  style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style surfaceRoot = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
   style explorerHost = { box: flow({ shrink: 0 }).size({ h: full, min-h: 0 }).overflow({ all: hidden }) }
-  style mainCol = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style mainCol = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
   style tabsStrip = { box: flow({ shrink: 0 }).size({ h: 8, min-w: 0 }).overflow({ all: hidden }), paint: border({ edge: b, color: border, width: 1 }).fill({ color: surface-1 }) }
-  style tabList = { box: flow({ grow: 1 }).size({ h: full, min-w: 0 }).basis(0).overflow({ x: auto, y: hidden }) }
+  style tabList = { box: flow({ grow: 1 }).size({h: full, min-w: 0, basis: 0}).overflow({ x: auto, y: hidden }) }
   style docTab = {
     box: flow({ shrink: 0 }).size({ h: full, max-w: 48 }).space({ pad-x: 3 }),
     paint: border({ edge: r, color: border-subtle, width: 1 }).border({ edge: t, color: transparent, width: 2 }).fill({ color: surface-1 }).ink({ color: muted-foreground }).cursor(pointer),
@@ -24,9 +24,9 @@
   style errorText = { paint: ink({ color: destructive }), text: type({ size: xs }) }
   style emptyHost = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
   style emptyFrame = { box: size({ w: full }).space({ pad: 4 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
-  style sourceHost = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
+  style sourceHost = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
   style emptyInset = { box: size({ w: full }).space({ pad: 3, m: 3 }), paint: border({ color: border-subtle, width: 1 }).radius(md) }
-  style fillCol = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style fillCol = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
   style editorFill = { box: size({ w: full, h: full, min-h: 0 }) }
 </scope>
 

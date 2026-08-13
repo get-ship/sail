@@ -15,10 +15,10 @@
   style heading = { text: type({ size: md, weight: semibold }) }
   style leadText = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style liveFrame = {
-    box: flow({ grow: 1 }).basis(0).size({ min-w: 0 }).space({ pad: 4 }).overflow({ all: visible }),
+    box: flow({ grow: 1 }).size({min-w: 0, basis: 0}).space({ pad: 4 }).overflow({ all: visible }),
     paint: radius(lg).border({ color: border, width: 1 }).fill({ color: surface-0 }),
 }
-  style codeCol = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0 }) }
+  style codeCol = { box: flow({ grow: 1 }).size({min-w: 0, basis: 0}) }
 </scope>
 
 <column gap="3" style(section)>

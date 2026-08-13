@@ -144,6 +144,12 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     scale: Some("color"),
                     keywords: &["auto", "transparent", "current", "currentColor"],
                 },
+                ConcernSlot {
+                    name: "gradient",
+                    css_prop: "",
+                    scale: None,
+                    keywords: &["primary", "accent", "none"],
+                },
             ],
             covered_setters: &["fg", "caret", "accent", "stroke", "textGradient", "color"],
             channel: Channel::Paint,
@@ -440,6 +446,12 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     css_prop: "aspect-ratio",
                     scale: None,
                     keywords: &["square", "video", "auto"],
+                },
+                ConcernSlot {
+                    name: "basis",
+                    css_prop: "flex-basis",
+                    scale: Some("size"),
+                    keywords: &["0", "auto", "full"],
                 },
             ],
             covered_setters: &["w", "h", "minW", "minH", "maxW", "maxH", "aspect", "basis"],
@@ -773,7 +785,9 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     name: "wrap",
                     css_prop: "white-space",
                     scale: None,
-                    keywords: &["normal", "nowrap", "truncate", "pretty", "words"],
+                    keywords: &[
+                        "normal", "nowrap", "truncate", "pretty", "words", "pre-wrap",
+                    ],
                 },
                 ConcernSlot {
                     name: "list",
@@ -786,6 +800,32 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     css_prop: "text-decoration-line",
                     scale: None,
                     keywords: &["none", "underline", "line-through"],
+                },
+                ConcernSlot {
+                    name: "italic",
+                    css_prop: "font-style",
+                    scale: None,
+                    keywords: &["true", "false", "on", "off", "italic", "normal"],
+                },
+                ConcernSlot {
+                    name: "nums",
+                    css_prop: "font-variant-numeric",
+                    scale: None,
+                    keywords: &[
+                        "tabular",
+                        "lining",
+                        "oldstyle",
+                        "proportional",
+                        "ordinal",
+                        "slashed-zero",
+                        "normal",
+                    ],
+                },
+                ConcernSlot {
+                    name: "break",
+                    css_prop: "overflow-wrap",
+                    scale: None,
+                    keywords: &["words", "normal", "anywhere"],
                 },
             ],
             covered_setters: &[
@@ -877,6 +917,12 @@ pub fn concerns() -> &'static [ConcernSpec] {
                     scale: None,
                     keywords: &["spin", "none"],
                 },
+                ConcernSlot {
+                    name: "transform",
+                    css_prop: "transform",
+                    scale: None,
+                    keywords: &["none"],
+                },
             ],
             covered_setters: &[
                 "rotate",
@@ -940,7 +986,9 @@ fn concern_teaching(concern: &str) -> String {
         "radius" => "radius(md) or radius({ all: md })".into(),
         "elevation" => "elevation(sm) or elevation({ shadow: sm })".into(),
         "filter" => "filter({ blur, opacity, … })".into(),
-        "size" => "size(control-md) or size({ w, h, min-w, min-h, max-w, max-h, aspect })".into(),
+        "size" => {
+            "size(control-md) or size({ w, h, min-w, min-h, max-w, max-h, aspect, basis })".into()
+        }
         "space" => "space({ pad-x: 3, pad-y: 2 })".into(),
         "place" => "place({ position: fixed, inset: 0 })".into(),
         "flow" => "flow({ display: flex, dir: column })".into(),
@@ -1436,6 +1484,9 @@ fn lower_slot_object(
     if spec.name == "fill" {
         return lower_fill_slots(spec, op, slots);
     }
+    if spec.name == "ink" {
+        return lower_ink_slots(spec, op, slots);
+    }
     if spec.name == "filter" {
         return lower_filter_slots(spec, op, slots);
     }
@@ -1671,6 +1722,67 @@ fn lower_outline_offset(value: &PaintArg) -> Result<(String, String), StyleDiagn
     Ok(("outline-offset".into(), css))
 }
 
+fn lower_ink_slots(
+    spec: &ConcernSpec,
+    _op: &PaintOp,
+    slots: &std::collections::BTreeMap<String, PaintArg>,
+) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+    let mut out = Vec::new();
+    for (name, value) in slots {
+        if name == "gradient" {
+            let bare = match value {
+                PaintArg::Token(t) => t.as_str(),
+                PaintArg::Bind(n) => {
+                    out.push((
+                        "background".into(),
+                        format!("var(--{})", css_name_for_bind(n)),
+                    ));
+                    out.push(("-webkit-background-clip".into(), "text".into()));
+                    out.push(("background-clip".into(), "text".into()));
+                    out.push(("color".into(), "transparent".into()));
+                    continue;
+                }
+                other => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: "ink:gradient".into(),
+                        value: other.display(),
+                        source: other.display(),
+                    });
+                }
+            };
+            match bare {
+                "none" => {
+                    out.push(("background".into(), "none".into()));
+                    out.push(("-webkit-background-clip".into(), "border-box".into()));
+                    out.push(("background-clip".into(), "border-box".into()));
+                }
+                "primary" | "accent" => {
+                    out.push(("background".into(), format!("var(--gradient-{bare})")));
+                    out.push(("-webkit-background-clip".into(), "text".into()));
+                    out.push(("background-clip".into(), "text".into()));
+                    out.push(("color".into(), "transparent".into()));
+                }
+                other => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: "ink:gradient".into(),
+                        value: other.into(),
+                        source: other.into(),
+                    });
+                }
+            }
+            continue;
+        }
+        let Some(slot) = find_slot(spec, name) else {
+            continue;
+        };
+        if slot.css_prop.is_empty() {
+            continue;
+        }
+        out.push(lower_slot_value(slot, value)?);
+    }
+    Ok(out)
+}
+
 fn lower_fill_slots(
     spec: &ConcernSpec,
     _op: &PaintOp,
@@ -1818,9 +1930,79 @@ fn lower_type_slots(
                 }
                 "nowrap" => out.push(("white-space".into(), "nowrap".into())),
                 "normal" => out.push(("white-space".into(), "normal".into())),
+                "pre-wrap" => out.push(("white-space".into(), "pre-wrap".into())),
                 "words" => out.push(("overflow-wrap".into(), "break-word".into())),
                 _ => out.push(lower_slot_value(slot, value)?),
             }
+            continue;
+        }
+        if name == "italic" {
+            let css = match value {
+                PaintArg::Token(t) => match t.as_str() {
+                    "true" | "on" | "italic" => "italic",
+                    "false" | "off" | "normal" => "normal",
+                    other => {
+                        return Err(StyleDiagnostic::BadToken {
+                            setter: "type:italic".into(),
+                            value: other.into(),
+                            source: other.into(),
+                        });
+                    }
+                },
+                _ => {
+                    out.push(lower_slot_value(slot, value)?);
+                    continue;
+                }
+            };
+            out.push(("font-style".into(), css.into()));
+            continue;
+        }
+        if name == "nums" {
+            let css = match value {
+                PaintArg::Token(t) => match t.as_str() {
+                    "tabular" => "tabular-nums",
+                    "lining" => "lining-nums",
+                    "oldstyle" => "oldstyle-nums",
+                    "proportional" => "proportional-nums",
+                    "ordinal" => "ordinal",
+                    "slashed-zero" => "slashed-zero",
+                    "normal" => "normal",
+                    other => {
+                        return Err(StyleDiagnostic::BadToken {
+                            setter: "type:nums".into(),
+                            value: other.into(),
+                            source: other.into(),
+                        });
+                    }
+                },
+                _ => {
+                    out.push(lower_slot_value(slot, value)?);
+                    continue;
+                }
+            };
+            out.push(("font-variant-numeric".into(), css.into()));
+            continue;
+        }
+        if name == "break" {
+            let css = match value {
+                PaintArg::Token(t) => match t.as_str() {
+                    "words" => "break-word",
+                    "normal" => "normal",
+                    "anywhere" => "anywhere",
+                    other => {
+                        return Err(StyleDiagnostic::BadToken {
+                            setter: "type:break".into(),
+                            value: other.into(),
+                            source: other.into(),
+                        });
+                    }
+                },
+                _ => {
+                    out.push(lower_slot_value(slot, value)?);
+                    continue;
+                }
+            };
+            out.push(("overflow-wrap".into(), css.into()));
             continue;
         }
         if name == "case" {

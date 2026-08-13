@@ -5,7 +5,7 @@
 -->
 <scope>
   style shell = { box: size({ w: full, h: full, min-w: 0, min-h: 0 }).flow({ grow: 1 }).overflow({ all: hidden }) }
-  style mainWorkbench = { box: flow({ display: flex, dir: column }).basis(0).size({ h: fill, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
+  style mainWorkbench = { box: flow({ display: flex, dir: column }).size({h: fill, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
 </scope>
 
 <row nowrap align="stretch" gap="0" style(shell)>

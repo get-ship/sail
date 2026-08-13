@@ -13,12 +13,12 @@
   style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
   style monoLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style monoLabelSm = { paint: ink({ color: muted-foreground }), text: type({ size: xs, tracking: wide, case: uppercase }) }
-  style liveCol = { box: flow({ grow: 1 }).basis(breakpoint-mobile).size({ min-w: 0 }) }
+  style liveCol = { box: flow({ grow: 1 }).size({min-w: 0, basis: breakpoint-mobile}) }
   style livePanel = { box: space({ pad: 6 }).size({ min-h: 8 }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
   style livePanelSm = { box: space({ pad: 6 }), paint: border({ color: border, width: 1 }).radius(lg).fill({ color: surface-1 }) }
   style value = { text: type({ size: lg }) }
   style monoLine = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) }
-  style callout = { box: space({ pad: 3, pad-x: 4 }), paint: border({ color: border, width: 1 }).border({ color: primary, width: 3, edge: l }).radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) }
+  style callout = { box: space({ pad: 3, pad-x: 4 }), paint: border({ edge: t, color: border, width: 1 }).border({ edge: r, color: border, width: 1 }).border({ edge: b, color: border, width: 1 }).border({ edge: l, color: primary, width: 3 }).radius(md).ink({ color: muted-foreground }), text: type({ size: sm }) }
   style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>

@@ -6,7 +6,7 @@
   style pathMeta = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   style mutedSm = { paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) }
   style mutedRelaxed = { paint: ink({ color: muted-foreground }), text: type({ size: xs, leading: relaxed }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md }).basis(0).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
   style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
   style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
   style fillCol = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }) }
@@ -17,7 +17,7 @@
   style trafficDotSuccess = { box: flow({ shrink: 0 }).size({ w: 2, h: 2, min-w: 2, min-h: 2 }), paint: radius(full).fill({ color: success }) }
   style chromeTitle = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, wrap: truncate }) }
   style modeMeta = { box: flow({ shrink: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0), paint: fill({ color: background }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}), paint: fill({ color: background }) }
   style bodyPad = { box: space({ pad: 5 }).size({ min-w: 0 }) }
   style productTitle = { text: type({ family: heading, size: md, weight: semibold }) }
   style fgOnSurface = { paint: ink({ color: foreground }), text: type({ size: sm }) }

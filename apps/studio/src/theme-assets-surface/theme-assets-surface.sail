@@ -16,14 +16,14 @@
   style fontSample = { box: size({ min-w: 0 }), paint: ink({ color: foreground }), text: type({ size: lg, leading: snug }) }
   style catChip = { when: { selected: { paint: fill({ color: selected-bg }).ink({ color: foreground }).border({ color: border }) } } }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style editorScroll = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style editorScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
   style pageTitle = { text: type({ size: xl, weight: semibold, tracking: tight }) }
   style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
   style growMin = { box: flow({ grow: 1 }).size({ min-w: 0 }) }
   style shrink0 = { box: flow({ shrink: 0 }) }
   style catsScroll = { box: overflow({ x: auto }).size({ min-w: 0 }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md }).basis(0).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
   style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
   style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
   style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }

@@ -112,7 +112,7 @@ export default controller(({ value }: Scope) => {
 >
   <div
     use:worldTransform={worldTransformCss()}
-    style({ box: place({ position: absolute, top: 0, left: 0 }), paint: transform(bind(worldTx)) })
+    style({ box: place({ position: absolute, top: 0, left: 0 }), paint: motion({ transform: bind(worldTx) }) })
   >
     <slot></slot>
   </div>

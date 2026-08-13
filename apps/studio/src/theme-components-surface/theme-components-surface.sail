@@ -19,10 +19,10 @@
   style tokenStrip = { box: space({ pad-x: 2, pad-y: 1 }), paint: ink({ color: muted-foreground }).radius(sm).fill({ color: surface-0 }), text: type({ family: mono, size: xs }) }
   style tokenRow = { box: space({ pad-y: 1_5 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
   style panelRail = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: background }) }
   style panelInspector = { box: flow({ shrink: 0 }).size({ w: panel-max-w-sm, h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }), paint: border({ edge: l, color: border-subtle, width: 1 }).fill({ color: background }) }
-  style specimenDock = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style specimenDock = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
   style specimenPad = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
   style specimenFrame = { box: size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: elevation(lg) }
   style specimenChrome = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 8, min-w: 0, min-h: 8 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
@@ -37,7 +37,7 @@
   style iconBtn = { box: flow({ shrink: 0 }).size({ w: control-h-sm, h: control-h-sm, min-w: control-h-sm, min-h: control-h-sm }) }
   style stageHost = { box: size({ w: full }) }
   style sampleMax = { box: size({ w: full, max-w: panel-max-w-sm }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0), paint: fill({ color: background }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}), paint: fill({ color: background }) }
   style stageBody = { box: space({ pad: 5 }).size({ min-w: 0, min-h: full }) }
   style stageTitle = { text: type({ family: heading, size: md, weight: semibold }) }
   style stageBlurb = { paint: ink({ color: muted-foreground }), text: type({ family: body, size: sm, leading: relaxed }) }

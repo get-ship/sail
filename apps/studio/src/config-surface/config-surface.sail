@@ -5,13 +5,13 @@
   style eyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   style muted = { paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
-  style navPane = { box: flow({ grow: 1 }).size({ h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm }).basis(0).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style navPane = { box: flow({ grow: 1 }).size({h: full, min-w: panel-min-w-sm, min-h: 0, max-w: panel-max-w-sm, basis: 0}).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
   style navHead = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-t: 3, pad-b: 2 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}) }
   style navListPad = { box: space({ pad: 2 }) }
   style fullBtn = { box: size({ w: full }) }
-  style mainPane = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: background }) }
+  style mainPane = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: background }) }
   style mainHead = { box: flow({ shrink: 0 }).space({ pad-x: 5, pad-y: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
   style sectionTitle = { text: type({ size: lg, weight: semibold, tracking: tight }) }
   style bodyPad = { box: space({ pad: 4 }).size({ min-w: 0 }) }

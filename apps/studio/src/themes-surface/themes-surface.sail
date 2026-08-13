@@ -7,8 +7,8 @@
   style pageHeader = { box: flow({ shrink: 0 }).space({ pad-x: 6, pad-y: 4 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
   style errorBand = { box: flow({ shrink: 0 }).space({ pad-x: 6, pad-y: 2 }), paint: border({ edge: b, color: border, width: 1 }) }
   style loadBand = { box: flow({ shrink: 0 }).space({ pad-x: 6, pad-y: 2 }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
-  style listPane = { box: flow({ grow: 1 }).size({ min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md }).basis(0), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style listPane = { box: flow({ grow: 1 }).size({min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
   style listHead = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-t: 4, pad-b: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
   style groupLabel = { box: space({ pad-x: 2, pad-t: 1, pad-b: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   style groupLabelCatalog = { box: space({ pad-x: 2, pad-t: 4, pad-b: 1 }), paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
@@ -27,9 +27,9 @@
   style sectionEyebrow = { paint: ink({ color: muted-foreground }), text: type({ size: xs, weight: semibold, tracking: wide, case: uppercase }) }
   style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: sm, wrap: truncate }) }
   style surfaceRoot = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: fill({ color: background }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}) }
   style listPad = { box: space({ pad: 3 }) }
-  style previewScroll = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0), paint: fill({ color: background }) }
+  style previewScroll = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}), paint: fill({ color: background }) }
   style previewCol = { box: space({ pad-x: 8, pad-t: 6, pad-b: 10 }).size({ max-w: panel-max-w-lg }) }
   style previewTitle = { text: type({ family: display, size: 2xl, weight: medium, tracking: tight }) }
   style previewDesc = { paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }

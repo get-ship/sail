@@ -60,11 +60,11 @@ export default controller((ctx) => {
   counterRow: `<row align="center" justify="between" nowrap gap="3">
   <row align="center" gap="2" nowrap>
     <button size="sm" variant="outline" on:click={() => remove()} label="One fewer person">−</button>
-    <span style({ box: size({ w: 8 }), text: type({ family: mono, size: sm, align: center }).nums(tabular) })>
+    <span style({ box: size({ w: 8 }), text: type({ family: mono, size: sm, align: center, nums: tabular }) })>
       {people()}</span>
     <button size="sm" variant="outline" on:click={() => add()} label="One more person">+</button>
   </row>
-  <span style({ text: type({ family: mono, size: 2xl }).nums(tabular) })>
+  <span style({ text: type({ family: mono, size: 2xl, nums: tabular }) })>
     {share()}</span>
 </row>`,
 

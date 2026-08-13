@@ -28,14 +28,14 @@
   style tickerBold = { paint: ink({ color: primary-foreground }), text: type({ size: md, weight: bold, tracking: wide, case: uppercase, wrap: nowrap }) }
   style bento = { box: space({ pad-x: 4, pad-t: 6, pad-b: 10 }).size({ min-w: 0 }).overflow({ x: hidden }), when: { tablet: { box: space({ pad-x: 8, pad-t: 8, pad-b: 12 }) } } }
   style grid = { box: size({ w: full, min-w: 0, max-w: breakpoint-desktop }).space({ mx: auto }) }
-  style cardLink = { box: flow({ display: block }).size({ w: full, min-w: 0 }), paint: ink({ color: foreground }), text: underline(none), when: { hover: { paint: ink({ color: foreground }) } } }
+  style cardLink = { box: flow({ display: block }).size({ w: full, min-w: 0 }), paint: ink({ color: foreground }), text: type({ decoration: none }), when: { hover: { paint: ink({ color: foreground }) } } }
   style cardFill = { box: size({ h: full }).overflow({ all: hidden }), when: { tablet: { box: size({ min-h: 52 }) } } }
   style cardCol = { box: size({ h: full }).space({ pad: 4 }), when: { tablet: { box: space({ pad: 5 }) } } }
   style cardEyebrow = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style cardTitle = { box: space({ mt: 1 }), paint: ink({ color: foreground }), text: type({ size: md, weight: semibold, leading: snug }) }
   style cardBody = { box: space({ mt: 2 }), paint: ink({ color: muted-foreground }), text: type({ size: sm, leading: relaxed }) }
   style cardFoot = { box: space({ pad-t: 5, mt: auto }) }
-  style metric = { paint: ink({ color: foreground }), text: type({ family: mono, size: 2xl, weight: semibold, leading: none }).nums(tabular) }
+  style metric = { paint: ink({ color: foreground }), text: type({family: mono, size: 2xl, weight: semibold, leading: none, nums: tabular}) }
   style metricUnit = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs }) }
   style swatch = { box: size(6), paint: radius(sm).border({ color: border, width: 1 }) }
   style statusLine = { box: size({ min-w: 0 }), paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, wrap: truncate }) }
@@ -43,10 +43,10 @@
   style termAccent = { paint: ink({ color: primary }) }
   style foot = { box: space({ pad-x: 4, pad-t: 8 }), when: { tablet: { box: space({ pad-x: 8, pad-t: 12 }) } } }
   style footRow = { box: size({ w: full, max-w: breakpoint-desktop }).space({ pad-b: 6, mx: auto }), paint: border({ color: border, width: 1, edge: b }).ink({ color: muted-foreground }), text: type({ family: mono, size: sm }) }
-  style footLink = { paint: ink({ color: muted-foreground }), text: underline(none), when: { hover: { paint: ink({ color: primary }) } } }
+  style footLink = { paint: ink({ color: muted-foreground }), text: type({ decoration: none }), when: { hover: { paint: ink({ color: primary }) } } }
   style diamond = { box: flow({ display: inline-block }).size(2), paint: motion({ rotate: 45 }).fill({ color: primary }).radius(sm) }
   style wordmarkWrap = { box: size({ w: full, min-w: 0, max-w: full }).overflow({ all: hidden }) }
-  style wordmark = { box: space({ mb: -8 }).size({ min-w: 0, max-w: full }), paint: textGradient(primary).select(none), text: type({ family: display, size: display, weight: bold, leading: none, tracking: tighter, align: center }) }
+  style wordmark = { box: space({ mb: -8 }).size({ min-w: 0, max-w: full }), paint: ink({ gradient: primary }).select(none), text: type({ family: display, size: display, weight: bold, leading: none, tracking: tighter, align: center }) }
   style wordPrimary = { paint: ink({ color: primary }) }
   // Spring bar-loop — the MOTION bento's live proof that style.loop moves
   // translate-y (animation.spec.ts samples computed translate over time).

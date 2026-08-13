@@ -33,6 +33,63 @@ fn stdlib_sail_files() -> Vec<PathBuf> {
     files
 }
 
+fn workspace_root() -> PathBuf {
+    compiler_root()
+        .join("../../..")
+        .canonicalize()
+        .expect("workspace root")
+}
+
+fn skip_dir(name: &str) -> bool {
+    matches!(
+        name,
+        "node_modules" | "dist" | "target" | ".deck" | ".git" | "test-results"
+    )
+}
+
+fn collect_sail_skipping(dir: &Path, out: &mut Vec<PathBuf>) {
+    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read_dir {}: {e}", dir.display()));
+    for entry in entries {
+        let entry = entry.expect("dirent");
+        let path = entry.path();
+        if path.is_dir() {
+            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+            if skip_dir(name) {
+                continue;
+            }
+            collect_sail_skipping(&path, out);
+        } else if path.extension().and_then(|e| e.to_str()) == Some("sail") {
+            out.push(path);
+        }
+    }
+}
+
+fn first_party_trees() -> Vec<(&'static str, PathBuf)> {
+    let root = workspace_root();
+    [
+        ("stdlib", compiler_root().join("stdlib")),
+        ("studio", root.join("apps/studio")),
+        ("sail-site", root.join("apps/sail-site")),
+        ("packages/components", root.join("packages/components")),
+        ("packages/sail", root.join("packages/sail")),
+    ]
+    .into_iter()
+    .collect()
+}
+
+fn first_party_sail_files() -> Vec<(String, PathBuf)> {
+    let mut out = Vec::new();
+    for (label, dir) in first_party_trees() {
+        let mut files = Vec::new();
+        collect_sail_skipping(&dir, &mut files);
+        for path in files {
+            out.push((label.to_string(), path));
+        }
+    }
+    out.sort_by(|a, b| a.1.cmp(&b.1));
+    out
+}
+
 fn element_tag(path: &Path) -> String {
     let stem = path.file_stem().unwrap().to_string_lossy();
     if stem.as_ref() == "anchor" {
@@ -220,7 +277,29 @@ fn skip_line_comment(src: &str, i: usize) -> Option<usize> {
     None
 }
 
-/// Call sites of absorbed setter names. Skips comments/strings. Not a substring scan.
+fn skip_raw_block(src: &str, i: usize) -> Option<usize> {
+    for tag in ["controller", "script"] {
+        let open = format!("<{tag}");
+        if !src[i..].starts_with(&open) {
+            continue;
+        }
+        let after = i + open.len();
+        let bytes = src.as_bytes();
+        if after < bytes.len() {
+            let c = bytes[after];
+            if !(c.is_ascii_whitespace() || c == b'>' || c == b'/') {
+                continue;
+            }
+        }
+        let close = format!("</{tag}>");
+        return src[i..].find(&close).map(|rel| i + rel + close.len());
+    }
+    None
+}
+
+/// Call sites of absorbed setter names. Skips comments/strings/controller.
+/// Not a substring scan. JS methods in `<controller>` (`.list()`, `.transform()`)
+/// are not Style.
 fn absorbed_setter_sites(src: &str) -> Vec<String> {
     let bytes = src.as_bytes();
     let mut sites = Vec::new();
@@ -231,7 +310,10 @@ fn absorbed_setter_sites(src: &str) -> Vec<String> {
             continue;
         }
         let ch_len = src[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
-        if let Some(end) = skip_line_comment(src, i).or_else(|| skip_string(src, i)) {
+        if let Some(end) = skip_line_comment(src, i)
+            .or_else(|| skip_string(src, i))
+            .or_else(|| skip_raw_block(src, i))
+        {
             i = end;
             continue;
         }
@@ -246,11 +328,14 @@ fn absorbed_setter_sites(src: &str) -> Vec<String> {
                 i += 1;
             }
             let name = &src[start..i];
-            let mut j = i;
-            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
-                j += 1;
-            }
-            if j < bytes.len() && bytes[j] == b'(' && ABSORBED.contains(&name) {
+            // Style calls are `name(` with no space. Teaching prose
+            // (`inset (number)`, `fg (theme override)`) is not a setter.
+            if i < bytes.len() && bytes[i] == b'(' && ABSORBED.contains(&name) {
+                // `{position()}` / `duration={duration()}` are bindings, not Style.
+                if start > 0 && matches!(bytes[start - 1], b'{' | b'=') {
+                    i += ch_len;
+                    continue;
+                }
                 let snippet: String = src[start..].chars().take(48).collect();
                 sites.push(snippet);
             }
@@ -287,10 +372,19 @@ fn dual_detector_hard_fails_on_retired_chain() {
 
 #[test]
 fn stdlib_has_no_absorbed_setters() {
-    let files = stdlib_sail_files();
-    assert!(!files.is_empty(), "stdlib dir missing");
+    first_party_has_no_absorbed_setters_in("stdlib");
+}
+
+#[test]
+fn first_party_has_no_absorbed_setters() {
+    let files = first_party_sail_files();
+    assert!(
+        files.len() > 60,
+        "first-party trees missing, got {}",
+        files.len()
+    );
     let mut failures = Vec::new();
-    for path in &files {
+    for (_label, path) in &files {
         let src = fs::read_to_string(path).unwrap();
         let sites = absorbed_setter_sites(&src);
         if !sites.is_empty() {
@@ -299,8 +393,89 @@ fn stdlib_has_no_absorbed_setters() {
     }
     assert!(
         failures.is_empty(),
-        "stdlib still authors absorbed setters (hard fail):\n{}",
+        "first-party still authors absorbed setters (hard fail):\n{}",
         failures.join("\n")
+    );
+}
+
+fn first_party_has_no_absorbed_setters_in(tree: &str) {
+    let files: Vec<_> = first_party_sail_files()
+        .into_iter()
+        .filter(|(label, _)| label == tree)
+        .collect();
+    assert!(!files.is_empty(), "{tree} dir missing");
+    let mut failures = Vec::new();
+    for (_label, path) in &files {
+        let src = fs::read_to_string(path).unwrap();
+        let sites = absorbed_setter_sites(&src);
+        if !sites.is_empty() {
+            failures.push(format!("{}:\n  {}", path.display(), sites.join("\n  ")));
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "{tree} still authors absorbed setters (hard fail):\n{}",
+        failures.join("\n")
+    );
+}
+
+#[test]
+fn first_party_has_no_sx_attribute() {
+    let files = first_party_sail_files();
+    let mut failures = Vec::new();
+    for (_label, path) in &files {
+        let src = fs::read_to_string(path).unwrap();
+        if let Some(hit) = sx_attr_site(&src) {
+            failures.push(format!("{}: {hit}", path.display()));
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "first-party still authors sx= (hard fail):\n{}",
+        failures.join("\n")
+    );
+}
+
+/// `sx=` product attr. Skips comments/strings. Teaching prose mentioning `sx=` is fine.
+fn sx_attr_site(src: &str) -> Option<String> {
+    let bytes = src.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !src.is_char_boundary(i) {
+            i += 1;
+            continue;
+        }
+        if let Some(end) = skip_line_comment(src, i).or_else(|| skip_string(src, i)) {
+            i = end;
+            continue;
+        }
+        if src[i..].starts_with("sx=") {
+            let prev_ok = i == 0
+                || matches!(
+                    bytes[i - 1],
+                    b' ' | b'\t' | b'\n' | b'\r' | b'/' | b'"' | b'\''
+                );
+            if prev_ok {
+                let snippet: String = src[i..].chars().take(32).collect();
+                return Some(snippet);
+            }
+        }
+        i += src[i..].chars().next().map(|c| c.len_utf8()).unwrap_or(1);
+    }
+    None
+}
+
+#[test]
+fn retired_setter_fixture_names_concern() {
+    let path = compiler_root().join("tests/concern_fixtures/retired-setter.sail");
+    let src = fs::read_to_string(&path).expect("retired-setter.sail");
+    assert!(src.contains("bg("), "fixture must seed a retired setter");
+    let err = compile_element(&src, "card").expect_err("retired setter must fail compilation");
+    assert!(
+        err.message.contains("fill")
+            && (err.message.contains("retired") || err.message.contains("bg")),
+        "compile error must name the `fill` concern: {}",
+        err.message
     );
 }
 

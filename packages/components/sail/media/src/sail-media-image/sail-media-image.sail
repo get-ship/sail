@@ -226,7 +226,7 @@ export default controller((_ctx: Scope) => {
       alt={alt()}
       use:rasterImg
       use:zoomPan={zoomPanSig()}
-      style({ box: flow({ display: block }).size({ w: full, h: full, max-h: full }), paint: objectFit(cover).transform(bind(zoomTx)) })
+      style({ box: flow({ display: block }).size({ w: full, h: full, max-h: full }), paint: objectFit(cover).motion({ transform: bind(zoomTx) }) })
     >
   </center>
   <if {isGallery()}>

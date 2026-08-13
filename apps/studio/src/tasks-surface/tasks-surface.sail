@@ -12,11 +12,11 @@
   style filterActor = { box: size({ w: 28 }) }
   style errorBand = { box: flow({ shrink: 0 }).space({ pad-x: 3 }).size({ h: 7 }), paint: border({ edge: b, color: border, width: 1 }) }
   style errorText = { box: flow({ grow: 1 }).size({ min-w: 0 }), paint: ink({ color: destructive }), text: type({ size: xs, wrap: truncate }) }
-  style workbench = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }) }
-  style navPane = { box: flow({ grow: 1 }).size({ h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md }).basis(0).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
-  style scrollGrow = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0) }
+  style workbench = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }) }
+  style navPane = { box: flow({ grow: 1 }).size({h: full, min-w: panel-min-w-md, min-h: 0, max-w: panel-max-w-md, basis: 0}).overflow({ all: hidden }), paint: border({ edge: r, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
+  style scrollGrow = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}) }
   style listPad = { box: space({ pad-x: 1, pad-y: 1 }) }
-  style detailPane = { box: flow({ grow: 1 }).size({ h: full, min-w: 0, min-h: 0 }).basis(0).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
+  style detailPane = { box: flow({ grow: 1 }).size({h: full, min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: fill({ color: surface-0 }) }
   style emptyCenter = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).space({ pad: 4 }) }
   style fullW = { box: size({ w: full }) }
   style detailHead = { box: flow({ shrink: 0 }).size({ h: 10, min-w: 0 }).space({ pad-x: 3 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
@@ -24,10 +24,10 @@
   style anchorRow = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }).size({ min-w: 0 }), paint: border({ edge: b, color: border-subtle, width: 1 }).fill({ color: surface-0 }) }
   style pathMono = { box: flow({ grow: 1 }).size({ min-w: 0 }), text: type({ family: mono, size: xs, wrap: truncate }) }
   style attachRow = { box: flow({ shrink: 0 }).space({ pad-x: 3, pad-y: 2 }), paint: border({ edge: b, color: border-subtle, width: 1 }) }
-  style conversation = { box: flow({ grow: 1 }).size({ h: full, min-h: 0 }).basis(0).overflow({ all: hidden }) }
+  style conversation = { box: flow({ grow: 1 }).size({h: full, min-h: 0, basis: 0}).overflow({ all: hidden }) }
   style mdScroll = { box: flow({ shrink: 0 }).size({ min-h: 0, max-h: 32 }) }
   style mdPad = { box: space({ pad: 3 }) }
-  style messagesHost = { box: flow({ grow: 1 }).size({ w: full, h: full, min-h: 0 }).basis(0) }
+  style messagesHost = { box: flow({ grow: 1 }).size({w: full, h: full, min-h: 0, basis: 0}) }
   style composer = { box: flow({ shrink: 0 }).space({ pad: 3 }), paint: border({ edge: t, color: border-subtle, width: 1 }).fill({ color: surface-1 }) }
 </scope>
 

@@ -21,7 +21,7 @@
   style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style sectionTitle = { box: space({ mt: 2 }), text: type({ size: sm, weight: semibold }) }
   // Pack chip strip (row flex + overflowX); avoid column base that zeros the grid.
-  style packStack = { box: flow({ display: flex, dir: row }).gap(2).overflow({ x: auto }).space({ pad-b: 1 }).size({ max-w: full }) }
+  style packStack = { box: overflow({ x: auto }).space({ pad-b: 1 }).size({ max-w: full }) }
   style packBtn = { box: space({ pad: 0 }).overflow({ all: hidden }), paint: radius(md).cursor(pointer).border({ color: border, width: 1, style: solid }).fill({ color: transparent }), text: type({ align: start, wrap: nowrap }), when: { hover: { paint: fill({ color: hover-bg }) }, pressed: { paint: fill({ color: muted }).border({ color: primary }).elevation(sm) } } }
   style packLabel = { text: type({ size: sm }) }
   style packCount = { paint: ink({ color: primary }), text: type({ family: mono, size: xs }) }
@@ -160,7 +160,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <column gap="2" style({ box: size({ w: full, min-w: 0 }) })>
     <p style(eyebrow)>Packs</p>
-    <div label="Component packs" style(packStack)>
+    <row gap="2" nowrap label="Component packs" style(packStack)>
       <for {packs() as p} key={p.id}>
         <button on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'} style(packBtn, { box: flow({ shrink: 0 }) })>
 
@@ -170,7 +170,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </row>
         </button>
       </for>
-    </div>
+    </row>
     <p style(railNote)>
       Primitives compile in with no import. Charts, media, chat, mermaid, and the code editor mount from their pack when selected.
     </p>

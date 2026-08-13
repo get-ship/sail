@@ -6,7 +6,7 @@
   style page = { box: size({ max-w: breakpoint-tablet }).space({ mx: auto }) }
   style eyebrow = { box: space({ mb: 2 }), paint: ink({ color: accent }), text: type({ family: mono, size: xs, tracking: wide, case: uppercase }) }
   style lead = { paint: ink({ color: muted-foreground }), text: type({ size: lg, leading: relaxed }) }
-  style list = { box: space({ pad-l: 6 }), paint: list(decimal) }
+  style list = { box: space({ pad-l: 6 }), text: type({ list: decimal }) }
   style footNote = { box: space({ mt: 4 }), paint: ink({ color: muted-foreground }), text: type({ size: sm }) }
   style footNav = { box: space({ pad-t: 4, mt: 8 }), paint: border({ color: border, width: 1, edge: t }) }
 </scope>
@@ -96,10 +96,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
       <code>--muted</code> (and their <code>-foreground</code> partners).
       Status UI spends these directly via Style
-      (<code>style&#40;&#123; paint: fill({ color: destructive }) &#125;&#41;</code>,
-      <code>style&#40;&#123; paint: colorMix(primary, 15) &#125;&#41;</code>).
+      (<code>style&#40;&#123; paint: fill(&#123; color: destructive &#125;) &#125;&#41;</code>,
+      <code>style&#40;&#123; paint: fill(&#123; color: primary, mix: 15 &#125;) &#125;&#41;</code>).
       A color-group typed prop (often named <code>tone</code>, type <code>Tone</code>)
-      binds in Style paint (<code>fill({ color: tone })</code>, <code>ink({ color: tone.foreground })</code>) —
+      binds in Style paint (<code>fill(&#123; color: tone &#125;)</code>, <code>ink(&#123; color: tone.foreground &#125;)</code>) —
       type-keyed, not a special channel; rest paint is omit the attribute.
     </li>
     <li>

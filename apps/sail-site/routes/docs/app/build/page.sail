@@ -19,7 +19,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ buildCmd, buildOu
   <h2>Build a static dir</h2>
   <p><code>sail build --project . --bundle-framework</code> materializes everything the app needs into one directory.</p>
   <code-block code={buildCmd} lang="bash"></code-block>
-  <pre style({ box: space({ pad: 4, pad-x: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), text: type({ family: mono, size: sm, leading: relaxed }).whitespace(pre-wrap).break(words) })>{buildOut}</pre>
+  <pre style({ box: space({ pad: 4, pad-x: 5 }), paint: fill({ color: surface-1 }).border({ color: border, width: 1 }).radius(lg), text: type({family: mono, size: sm, leading: relaxed, wrap: pre-wrap, break: words}) })>{buildOut}</pre>
   <p>You get <code>index.html</code> (the importmap), <code>_deck/</code> (the framework singletons, materialized), and one code-split, lazily-loaded <code>assets/page-&lt;hash&gt;.js</code> chunk per route.</p>
 
   <h2>Deploy anywhere</h2>

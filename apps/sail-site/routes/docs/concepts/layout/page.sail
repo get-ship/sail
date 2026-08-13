@@ -169,8 +169,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.grow}></code-block>
   <p>
     Participation is one spelling: the box channel.
-    <code>flow({ grow: 1 })</code> / <code>flow({ shrink: 0 })</code> are flex participation;
-    <code>size({ w: full })</code>, <code>size({ min-w: 0 })</code>, and <code>size({ max-w: … })</code> take
+    <code>flow(&#123; grow: 1 &#125;)</code> / <code>flow(&#123; shrink: 0 &#125;)</code> are flex participation;
+    <code>size(&#123; w: full &#125;)</code>, <code>size(&#123; min-w: 0 &#125;)</code>, and <code>size(&#123; max-w: … &#125;)</code> take
     the same size tokens as other Style box setters. Bare attrs
     (<code>grow</code>, <code>min-w=</code>, <code>shrink</code>) are refused
     (<code>sail-participation-style</code>) — write

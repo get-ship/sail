@@ -12,6 +12,7 @@ pub fn rewrite_concern_source(src: &str) -> String {
     let bytes = src.as_bytes();
     let mut out = String::with_capacity(src.len());
     let mut i = 0usize;
+    let mut in_scope = false;
     while i < bytes.len() {
         if let Some(end) = skip_comment(src, i) {
             out.push_str(&src[i..end]);
@@ -32,6 +33,22 @@ pub fn rewrite_concern_source(src: &str) -> String {
             out.push_str(&src[i..end]);
             i = end;
             continue;
+        }
+        if bytes[i] == b'<' {
+            if tag_opens(src, i, "scope") {
+                in_scope = true;
+            } else if tag_opens(src, i, "/scope") {
+                in_scope = false;
+            }
+        }
+        // Template text is interpolation, not Style. Folding `inset(0)` there
+        // into `place({ inset: 0 })` authors `{ inset: … }` as a scope lookup.
+        if !in_scope {
+            if let Some(end) = skip_template_text(src, i) {
+                out.push_str(&src[i..end]);
+                i = end;
+                continue;
+            }
         }
         if is_ident_start(bytes[i]) && !is_ident_continue_prev(bytes, i) {
             if let Some((end, calls)) = scan_call_chain(src, i) {
@@ -440,6 +457,52 @@ fn skip_string(src: &str, i: usize) -> Option<usize> {
     Some(scan_string_end(src, i))
 }
 
+fn tag_opens(src: &str, i: usize, name: &str) -> bool {
+    let bytes = src.as_bytes();
+    if bytes[i] != b'<' {
+        return false;
+    }
+    let rest = &src[i + 1..];
+    if !rest.starts_with(name) {
+        return false;
+    }
+    let after = i + 1 + name.len();
+    after >= bytes.len() || {
+        let c = bytes[after];
+        c.is_ascii_whitespace() || c == b'>' || c == b'/'
+    }
+}
+
+/// Copy markup text through to the next tag. Style lives on attributes / `<scope>`.
+fn skip_template_text(src: &str, i: usize) -> Option<usize> {
+    let bytes = src.as_bytes();
+    if i >= bytes.len() || bytes[i] == b'<' {
+        return None;
+    }
+    if !preceded_by_tag_close(bytes, i) {
+        return None;
+    }
+    src[i..].find('<').map(|rel| i + rel)
+}
+
+fn preceded_by_tag_close(bytes: &[u8], i: usize) -> bool {
+    let mut j = i;
+    while j > 0 {
+        j -= 1;
+        match bytes[j] {
+            b'>' => {
+                if j > 0 && matches!(bytes[j - 1], b'=' | b'!' | b'-') {
+                    return false;
+                }
+                return true;
+            }
+            b'<' => return false,
+            _ => {}
+        }
+    }
+    false
+}
+
 fn skip_raw_tag_body(src: &str, i: usize) -> Option<usize> {
     let bytes = src.as_bytes();
     if bytes[i] != b'<' {
@@ -658,5 +721,13 @@ mod tests {
             retired_dual_border_sites("style({ paint: borderBWidth(1).border(primary) })")
                 .is_empty()
         );
+    }
+
+    #[test]
+    fn template_text_is_not_rewritten() {
+        let src = "<p>Sticky top/left inset (number). borderWidth(1).border(primary)</p>";
+        assert_eq!(rw(src), src);
+        let attr = "<div style({ paint: borderWidth(1).border(dialog.border) })>x</div>";
+        assert_eq!(rw(attr), "<div style({ paint: border(dialog) })>x</div>");
     }
 }

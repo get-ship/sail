@@ -23,8 +23,8 @@
   style lessonFoot = { box: flow({ shrink: 0 }).space({ pad-x: 4, pad-y: 2 }), paint: border({ color: border, width: 1, edge: t }).fill({ color: surface-1 }) }
   style allLessons = { box: flow({ display: inline-flex }).space({ pad-x: 3, pad-y: 1_5 }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm, weight: semibold }), when: { hover: { paint: ink({ color: foreground }).fill({ color: surface-2 }) } } }
   style allLessonsSm = { paint: ink({ color: muted-foreground }), text: type({ size: xs }) }
-  style playground = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).space({ pad: 1 }), paint: fill({ color: surface-0 }) }
-  style card = { box: flow({ grow: 1 }).basis(0).size({ min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style playground = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).space({ pad: 1 }), paint: fill({ color: surface-0 }) }
+  style card = { box: flow({ grow: 1 }).size({min-h: 0, basis: 0}).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
   style cardBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: surface-1 }) }
   style paneCol = { box: flow({ grow: 1 }).size({ min-h: 0 }).overflow({ all: hidden }) }
   style diffBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }) }

@@ -7,20 +7,20 @@
   style workbench = { box: size({ w: full, h: fill, min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
   style workbenchMobile = { box: size({ w: full, h: fill, min-h: 0 }).overflow({ all: hidden }) }
   // Full-bleed workbench: single chrome bar, no site navbar tax.
-  style playground = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).space({ pad: half }), paint: fill({ color: surface-0 }) }
+  style playground = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).space({ pad: half }), paint: fill({ color: surface-0 }) }
   // Desktop: editor | preview+console side by side (not stacked).
-  style split = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }) }
-  style card = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style split = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}) }
+  style card = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
   style toolbar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }).fill({ color: surface-1 }) }
   style paneCol = { box: flow({ grow: 1 }).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }) }
   style monoXs = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
   style countLabel = { paint: ink({ color: muted-foreground }), text: type({ family: mono, size: xs, tracking: wide }) }
   style pgLabel = { paint: ink({ color: primary }), text: type({ family: mono, size: xs, weight: medium, tracking: wide }) }
-  style backLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(md).ink({ color: muted-foreground }), text: type({ size: sm, weight: medium, wrap: nowrap }).underline(none), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) } } }
+  style backLink = { box: flow({ display: inline-flex }).space({ pad-x: 1_5 }).size({ h: control-h-sm }), paint: radius(md).ink({ color: muted-foreground }), text: type({size: sm, weight: medium, wrap: nowrap, decoration: none}), when: { hover: { paint: ink({ color: foreground }).fill({ color: hover-bg }) } } }
   style recipeSelect = { box: size({ min-w: 48, max-w: 64 }) }
   style descClamp = { box: size({ min-w: 0, max-w: 64 }).overflow({ all: hidden }), paint: ink({ color: muted-foreground }), text: type({ size: sm, wrap: nowrap }) }
   // Side-by-side pane: fill height of the split; console stays a fixed foot.
-  style previewBand = { box: flow({ grow: 1 }).basis(0).size({ min-w: 0, min-h: 0 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
+  style previewBand = { box: flow({ grow: 1 }).size({min-w: 0, min-h: 0, basis: 0}).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
   style previewBandMobile = { box: flow({ shrink: 0 }).size({ h: 40, min-h: 32 }).overflow({ all: hidden }), paint: border({ color: border, width: 1 }).radius(md).fill({ color: surface-1 }) }
   style previewBar = { box: flow({ shrink: 0 }).space({ pad-x: 2, pad-y: 1 }), paint: border({ color: border, width: 1, edge: b }) }
   style previewHost = { box: size({ w: full, h: full, min-h: 0 }).overflow({ all: auto }).space({ pad: 4 }), paint: fill({ color: surface-0 }) }
