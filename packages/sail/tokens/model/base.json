@@ -1270,30 +1270,6 @@
         "tracking": "{typography.tracking.normal}"
       }
     },
-    "heading-2": {
-      "$type": "type",
-      "$description": "Second heading type role. Aliases typography.heading + text-lg; does not invent a second scale.",
-      "$value": {
-        "family": "{typography.heading.font}",
-        "size": "{typography.text.lg}",
-        "weight": "{typography.heading.weight}",
-        "leading": "{typography.leading.tight}",
-        "tracking": "{typography.heading.tracking}",
-        "case": "{typography.heading.transform}"
-      }
-    },
-    "heading-3": {
-      "$type": "type",
-      "$description": "Third heading type role. Aliases typography.heading + text-base; does not invent a second scale.",
-      "$value": {
-        "family": "{typography.heading.font}",
-        "size": "{typography.text.base}",
-        "weight": "{typography.heading.weight}",
-        "leading": "{typography.leading.tight}",
-        "tracking": "{typography.heading.tracking}",
-        "case": "{typography.heading.transform}"
-      }
-    },
     "display-sm": {
       "$type": "type",
       "$description": "Small display type role. Aliases typography.displayFont + the 4xl scale step (largest fixed display step before the fluid hero).",
@@ -1684,40 +1660,6 @@
       "$type": "dimension"
     },
     "$type": "dimension"
-  },
-  "style": {
-    "card-chrome": {
-      "$type": "sail.style",
-      "$description": "Default card chrome: card fill, subtle border, lg radius, full size, pad x/y.",
-      "$value": {
-        "bg": "card",
-        "border": "subtle",
-        "radius": "lg",
-        "size": "full",
-        "pad": { "x": 5, "y": 4 }
-      }
-    },
-    "muted": {
-      "$type": "sail.style",
-      "$description": "Muted supporting copy: body-sm + muted-foreground.",
-      "$value": {
-        "type": "body-sm",
-        "fg": "muted-foreground"
-      }
-    },
-    "navLink": {
-      "$type": "sail.style",
-      "$description": "Nav link with hover surface and current primary paint.",
-      "$value": {
-        "pad": { "x": 3, "y": 2 },
-        "radius": "md",
-        "type": "label"
-      },
-      "when": {
-        "hover": { "bg": "surface-2" },
-        "current": { "bg": "primary", "fg": "primary-foreground" }
-      }
-    }
   },
   "keyframes": {
     "fade": {

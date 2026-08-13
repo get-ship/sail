@@ -5,7 +5,7 @@
 //! resolves in this order (first hit wins):
 //!
 //! 1. Vocabulary row (concern / axis / plain setter) — not a style ref
-//! 2. Theme named style (`card-chrome`, `navLink`, `muted`)
+//! 2. Theme-registered named style (optional; not the composition path)
 //! 3. File-local `style name =` — Open policy only. Themed → studio
 //! 4. Unknown vocabulary
 //!
@@ -118,7 +118,7 @@ impl ThemeStyleEnv {
         resolve_concern_name(spec, name)
     }
 
-    /// Theme-table named style (`card-chrome`, `navLink`, `muted`).
+    /// Theme-table named style, if the registry has one.
     pub fn resolve_named_style(&self, name: &str) -> Option<NamedStyle> {
         self.styles.get(name).cloned()
     }
