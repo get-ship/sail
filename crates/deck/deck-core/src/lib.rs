@@ -38,8 +38,6 @@ pub mod themes;
 pub mod window_registry;
 
 #[cfg(test)]
-mod lucide_drift;
-#[cfg(test)]
 mod mode_tests;
 
 // (formerly `mod test_lock` with a `ProjectRootGuard` RAII helper — removed with
@@ -62,18 +60,17 @@ pub use window_registry::{
 };
 
 pub use assets::{
-    baked_framework_stamps, lucide_icon_names, lucide_icon_svg, parse_baked_stamp,
-    resolve_route_js, serve_deck_route, serve_framework_font, serve_public_asset,
-    serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay, serve_sail_icon,
-    serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
-    serve_sail_runtime, serve_sail_sdk_client, serve_sail_studio_bridge, serve_scaffold,
-    serve_scaffold_asset,
+    baked_framework_stamps, parse_baked_stamp, resolve_route_js, serve_deck_route,
+    serve_framework_font, serve_public_asset, serve_sail_compiler_wasm, serve_sail_dom,
+    serve_sail_error_overlay, serve_sail_icon, serve_sail_icon_from, serve_sail_live_reload,
+    serve_sail_lsp_completions, serve_sail_lsp_diagnostics, serve_sail_runtime,
+    serve_sail_sdk_client, serve_sail_studio_bridge, serve_scaffold, serve_scaffold_asset,
 };
 pub use form_inject::inject_form_actions;
 pub use meta::{DaemonBuildInfo, serve_meta};
 pub use mode_html::{
-    inject_effective_themes_meta, inject_mode_meta, inject_project_themes_meta,
-    inject_render_meta, inject_theme_defaults_meta, mode_str, sail_project_rel_from_root,
+    inject_effective_themes_meta, inject_mode_meta, inject_project_themes_meta, inject_render_meta,
+    inject_theme_defaults_meta, mode_str, sail_project_rel_from_root,
 };
 pub use resolver::{Resolution, resolve_project_root_with};
 // (formerly `packs::serve_catalog_workspace`) — purged with the `.deck/` runtime read.

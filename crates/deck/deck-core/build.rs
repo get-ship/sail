@@ -9,10 +9,9 @@
 //! `cargo run -p deck-cli -- build-assets` and land in `.deck/framework/`.
 //! This build script copies them into `crates/deck/deck-core/assets/` (the
 //! `include_str!` staging path) before the existence/empty guard runs.
-//! The lucide icon set is committed source (`assets/lucide-icons.json`) —
-//! the daemon embeds it and serves per-icon at `/_deck/icons/{name}.svg`;
-//! regenerate after a lucide-static version bump via
-//! `cargo xtask gen-icons`.
+//! Icon glyphs are not committed here. Sail resolves used roles; Deck
+//! writes those SVGs into the app `.deck` graph. The daemon serves that
+//! bake — it does not embed a pack.
 //! The workspace catalog is emitted to `.deck/catalogs/workspace.json`
 //! by `build-assets` and read at runtime by `src/packs.rs`.
 //!
@@ -34,8 +33,8 @@
 //! `cargo run -p deck-cli -- build-assets` to produce `.deck/framework/*.js`,
 //! then `cargo build` to bake them in. The first `build-assets` compiles
 //! `deck-core` against stubs (see above), so no pre-seeded `.deck/framework/`
-//! or sibling-worktree copy is required. `lucide-icons.json`, `live-reload.js`,
-//! and `error-overlay.js` are committed source — already present in a fresh
+//! or sibling-worktree copy is required. `live-reload.js` and
+//! `error-overlay.js` are committed source — already present in a fresh
 //! clone, so those remain hard requirements (a missing one is a broken
 //! checkout, not the bootstrap race).
 
@@ -69,7 +68,7 @@ const FRAMEWORK_BUNDLES: &[&str] = &[
 /// Unlike the framework bundles, these ship in a fresh clone — a missing one
 /// is a broken checkout, not the build-assets chicken/egg, so they stay a hard
 /// requirement (no stub, no graceful degrade).
-const COMMITTED_ASSETS: &[&str] = &["lucide-icons.json"];
+const COMMITTED_ASSETS: &[&str] = &[];
 
 /// Content written to a framework bundle's staging path when the real bake
 /// output is not yet available (from-zero checkout, or the very build that
@@ -179,8 +178,7 @@ fn main() {
         panic!(
             "build.rs: committed source assets are missing or empty.\n{lines}\n\n\
              These ship in a fresh clone (unlike the framework bundles, which build.rs\n\
-             now stubs and `build-assets` bakes). A missing one means a broken checkout.\n\
-             lucide-icons.json regenerates via `cargo xtask gen-icons`."
+             now stubs and `build-assets` bakes). A missing one means a broken checkout."
         );
     }
 

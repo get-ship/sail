@@ -1,21 +1,21 @@
-//! Compile-collected lucide icons → static app assets under `_deck/icons/`.
+//! Compile-collected icon **roles** → used glyph bytes under `_deck/icons/`.
 //!
-//! Walks project routes **and** resolved components package sources (app
-//! dependency packs with `.sail` files) for static `<icon name="…">` usage,
-//! then writes only those glyphs as standalone SVGs so runtime
-//! `fetch('/_deck/icons/{name}.svg')` works offline / without the daemon.
-//! No CDN.
+//! Sail resolves roles. This module only writes the already-resolved SVGs
+//! the runtime fetches at `/_deck/icons/{role}.svg`. No pack choice, no
+//! full-pack embed, no CDN.
 
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
-use sail_compiler::collect_used_icons_from_source;
+use anyhow::{Context, Result, bail};
+use sail_compiler::{
+    RoleRegistry, UsedGlyph, collect_used_icons_from_source, load_glyph_svg, resolve_used_glyphs,
+};
 
 /// Relative output dir under the app stage / out root.
 pub const ICONS_OUT_REL: &str = "_deck/icons";
 
-/// Collect static icon names from every `.sail` under each root.
+/// Collect static icon **roles** from every `.sail` under each root.
 pub fn collect_project_icons(roots: &[&Path]) -> Result<BTreeSet<String>> {
     let mut icons = BTreeSet::new();
     for root in roots {
@@ -34,7 +34,6 @@ fn walk_sail(dir: &Path, icons: &mut BTreeSet<String>) -> Result<()> {
         let path = entry.path();
         let ft = entry.file_type()?;
         if ft.is_dir() {
-            // Skip heavy/non-source trees.
             let name = entry.file_name();
             let n = name.to_string_lossy();
             if n == "node_modules" || n == "dist" || n == ".deck" || n.starts_with('.') {
@@ -95,11 +94,9 @@ fn walk_dep_roots(
             let Some(root) = package_roots.get(dep_name) else {
                 continue;
             };
-            // Only packs that author .sail (components / app chrome).
             if package_has_sail(root) {
                 out.push(root.clone());
             }
-            // Recurse into workspace deps so transitive components packages count.
             let dep_pkg_path = root.join("package.json");
             if let Ok(raw) = std::fs::read_to_string(&dep_pkg_path) {
                 if let Ok(dep_pkg) = serde_json::from_str::<serde_json::Value>(&raw) {
@@ -111,7 +108,6 @@ fn walk_dep_roots(
 }
 
 fn package_has_sail(root: &Path) -> bool {
-    // Fast path: customElements pack or any .sail under src/.
     let pkg = root.join("package.json");
     if let Ok(raw) = std::fs::read_to_string(&pkg) {
         if let Ok(v) = serde_json::from_str::<serde_json::Value>(&raw) {
@@ -163,9 +159,13 @@ fn dir_contains_sail(dir: &Path, depth: u8) -> bool {
     false
 }
 
-/// Write each used glyph as `_deck/icons/{name}.svg` under `out_dir`.
-pub fn emit_icon_assets(out_dir: &Path, names: &BTreeSet<String>) -> Result<BTreeSet<String>> {
-    if names.is_empty() {
+/// Write each used role's resolved glyph as `_deck/icons/{role}.svg`.
+pub fn emit_icon_assets(
+    out_dir: &Path,
+    used: &[UsedGlyph],
+    search_roots: &[&Path],
+) -> Result<BTreeSet<String>> {
+    if used.is_empty() {
         return Ok(BTreeSet::new());
     }
     let icons_dir = out_dir.join(ICONS_OUT_REL);
@@ -173,24 +173,39 @@ pub fn emit_icon_assets(out_dir: &Path, names: &BTreeSet<String>) -> Result<BTre
         .with_context(|| format!("mkdir {}", icons_dir.display()))?;
 
     let mut written = BTreeSet::new();
-    for name in names {
-        match deck_core::lucide_icon_svg(name) {
+    let mut missing = Vec::new();
+    for item in used {
+        match load_glyph_svg(&item.pack, &item.glyph, search_roots) {
             Some(svg) => {
-                let path = icons_dir.join(format!("{name}.svg"));
+                let path = icons_dir.join(format!("{}.svg", item.role));
                 std::fs::write(&path, svg).with_context(|| format!("write {}", path.display()))?;
-                written.insert(name.clone());
+                written.insert(item.role.clone());
             }
-            None => {
-                eprintln!(
-                    "deck warn: icon `{name}` not in lucide pack — skipped asset emit \
-                     (runtime will show slotted fallback)"
-                );
-            }
+            None => missing.push(item.clone()),
         }
+    }
+    if !missing.is_empty() {
+        let detail = missing
+            .iter()
+            .map(|m| format!("{} → {}:{}", m.role, m.pack, m.glyph))
+            .collect::<Vec<_>>()
+            .join(", ");
+        bail!(
+            "icon role(s) missing offline glyph data (install the pinned pack, no CDN): {detail}"
+        );
     }
 
     let manifest_path = icons_dir.join("manifest.json");
-    let list: Vec<&String> = written.iter().collect();
+    let list: Vec<serde_json::Value> = used
+        .iter()
+        .map(|u| {
+            serde_json::json!({
+                "role": u.role,
+                "pack": u.pack,
+                "glyph": u.glyph,
+            })
+        })
+        .collect();
     let body = serde_json::to_string_pretty(&list).context("serialize icon manifest")?;
     std::fs::write(&manifest_path, format!("{body}\n"))
         .with_context(|| format!("write {}", manifest_path.display()))?;
@@ -208,8 +223,10 @@ pub fn collect_and_emit_project_icons(
     let mut roots: Vec<PathBuf> = vec![routes];
     roots.extend(app_component_source_roots(project, repo_root)?);
     let root_refs: Vec<&Path> = roots.iter().map(PathBuf::as_path).collect();
-    let names = collect_project_icons(&root_refs)?;
-    emit_icon_assets(out_dir, &names)
+    let roles = collect_project_icons(&root_refs)?;
+    let registry = RoleRegistry::load_from_project(project);
+    let used = resolve_used_glyphs(roles, &registry);
+    emit_icon_assets(out_dir, &used, &[project, repo_root])
 }
 
 /// Absolute path helper for tests.
@@ -222,12 +239,37 @@ mod tests {
     use super::*;
     use std::fs;
 
+    fn write_iconify_pack(root: &Path, pack: &str, glyphs: &[(&str, &str)]) {
+        let dir = root.join("node_modules/@iconify-json").join(pack);
+        fs::create_dir_all(&dir).unwrap();
+        let mut icons = serde_json::Map::new();
+        for (name, body) in glyphs {
+            icons.insert((*name).into(), serde_json::json!({ "body": body }));
+        }
+        let doc = serde_json::json!({
+            "prefix": pack,
+            "width": 24,
+            "height": 24,
+            "icons": icons,
+        });
+        fs::write(dir.join("icons.json"), serde_json::to_string(&doc).unwrap()).unwrap();
+    }
+
     #[test]
     fn emit_three_icons_only() {
         let tmp = tempfile::tempdir().unwrap();
         let project = tmp.path().join("app");
         let routes = project.join("routes");
         fs::create_dir_all(&routes).unwrap();
+        write_iconify_pack(
+            tmp.path(),
+            "lucide",
+            &[
+                ("search", "<circle cx=\"11\" cy=\"11\" r=\"8\"/>"),
+                ("check", "<path d=\"M20 6 9 17l-5-5\"/>"),
+                ("rocket", "<path d=\"m4.5 16.5 2.5-2.5\"/>"),
+            ],
+        );
         fs::write(
             routes.join("page.sail"),
             r#"<main>
@@ -240,7 +282,6 @@ mod tests {
         .unwrap();
         let out = tmp.path().join("out");
         fs::create_dir_all(&out).unwrap();
-        // No workspace packs needed — routes alone.
         let written = collect_and_emit_project_icons(&project, &out, tmp.path()).unwrap();
         assert_eq!(
             written,
@@ -251,13 +292,26 @@ mod tests {
             assert!(p.is_file(), "missing {}", p.display());
         }
         assert!(!icon_asset_path(&out, "dyn").exists());
+        let manifest: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(out.join("_deck/icons/manifest.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(manifest.as_array().unwrap().len(), 3);
     }
 
     #[test]
     fn emit_includes_component_pack_icons() {
         let tmp = tempfile::tempdir().unwrap();
         let repo = tmp.path();
-        // Minimal workspace: app depends on @ship/pack-a with a .sail icon.
+        write_iconify_pack(
+            repo,
+            "lucide",
+            &[
+                ("search", "<circle cx=\"11\" cy=\"11\" r=\"8\"/>"),
+                ("chevron-right", "<path d=\"m9 18 6-6-6-6\"/>"),
+                ("alert-triangle", "<path d=\"m10.3 3.9-8 14\"/>"),
+            ],
+        );
         let pack = repo.join("packages/pack-a");
         fs::create_dir_all(pack.join("src")).unwrap();
         fs::write(
@@ -290,7 +344,6 @@ mod tests {
         )
         .unwrap();
 
-        // Workspace package map is built from package.json workspaces — seed it.
         fs::write(
             repo.join("package.json"),
             r#"{
@@ -313,5 +366,86 @@ mod tests {
             "components package icon missing: {written:?}"
         );
         assert_eq!(written.len(), 3, "{written:?}");
+    }
+
+    #[test]
+    fn two_packs_via_role_map() {
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("app");
+        let routes = project.join("routes");
+        fs::create_dir_all(&routes).unwrap();
+        write_iconify_pack(
+            tmp.path(),
+            "lucide",
+            &[("house", "<path d=\"M3 9l9-7 9 7\"/>")],
+        );
+        write_iconify_pack(
+            tmp.path(),
+            "mdi",
+            &[("cog", "<path d=\"M12 8a4 4 0 1 0 0 8\"/>")],
+        );
+        fs::write(
+            project.join("sail.config.jsonc"),
+            r#"{
+              "icons": {
+                "pack": "lucide",
+                "roles": {
+                  "home": "house",
+                  "settings": "mdi:cog"
+                }
+              }
+            }"#,
+        )
+        .unwrap();
+        fs::write(
+            routes.join("page.sail"),
+            r#"<main>
+              <icon name="home"></icon>
+              <icon name="settings"></icon>
+            </main>"#,
+        )
+        .unwrap();
+        let out = tmp.path().join("out");
+        fs::create_dir_all(&out).unwrap();
+        let written = collect_and_emit_project_icons(&project, &out, tmp.path()).unwrap();
+        assert_eq!(written, BTreeSet::from(["home".into(), "settings".into()]));
+        let home = fs::read_to_string(icon_asset_path(&out, "home")).unwrap();
+        let settings = fs::read_to_string(icon_asset_path(&out, "settings")).unwrap();
+        assert!(home.contains("M3 9l9-7 9 7"), "{home}");
+        assert!(settings.contains("M12 8a4 4 0 1 0 0 8"), "{settings}");
+        assert!(!icon_asset_path(&out, "house").exists());
+        assert!(!icon_asset_path(&out, "cog").exists());
+        let manifest: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(out.join("_deck/icons/manifest.json")).unwrap(),
+        )
+        .unwrap();
+        let packs: BTreeSet<&str> = manifest
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|r| r.get("pack").and_then(|p| p.as_str()))
+            .collect();
+        assert_eq!(packs, BTreeSet::from(["lucide", "mdi"]));
+    }
+
+    #[test]
+    fn missing_offline_glyph_is_build_error() {
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("app");
+        let routes = project.join("routes");
+        fs::create_dir_all(&routes).unwrap();
+        // Pack present but the used glyph is not.
+        write_iconify_pack(tmp.path(), "lucide", &[("house", "<path d=\"M1\"/>")]);
+        fs::write(
+            routes.join("page.sail"),
+            r#"<main><icon name="search"></icon></main>"#,
+        )
+        .unwrap();
+        let out = tmp.path().join("out");
+        fs::create_dir_all(&out).unwrap();
+        let err = collect_and_emit_project_icons(&project, &out, tmp.path()).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(msg.contains("search"), "{msg}");
+        assert!(msg.contains("offline"), "{msg}");
     }
 }

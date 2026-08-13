@@ -305,7 +305,7 @@ impl Bundler {
         // Per-route resolver (#255/#267): bundle the route targets TOGETHER
         // (multi-entry) so components shared across routes dedup into shared
         // chunks — the dedup that replaces the umbrella. Everything else stays
-        // per-target. `build_all` is the bake path (xtask build-assets), so the
+        // per-target. `build_all` is the bake path (`deck build-assets`), so the
         // larger multi-entry graph is a one-shot peak, not a daemon-resident cost.
         let mut views: Vec<BundleTarget> = Vec::new();
         let skip_lazy = std::env::var("DECK_DEV_SKIP_LAZY")
@@ -329,7 +329,7 @@ impl Bundler {
                 continue;
             }
             // `production: true` — build_all IS the bake path (deck-cli /
-            // xtask build-assets), so emit minified bundles (#297: the
+            // `deck build-assets`), so emit minified bundles (#297: the
             // framework singletons shipped 188KB raw because the bake left
             // rolldown's `minify` off). Dev rebuilds (`build` single-flight,
             // watch) stay unminified for debuggability. No source maps are

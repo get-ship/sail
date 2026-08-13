@@ -687,7 +687,6 @@ fn build_assets(no_stamp: bool) -> Result<()> {
         "{} build-assets: bundles baked via in-process Rolldown",
         binary_brand()
     );
-    println!("note: lucide-icons.json is committed source; regen via `cargo xtask gen-icons`");
     Ok(())
 }
 
@@ -1202,6 +1201,10 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         let need_tokens_generate = Arc::new(AtomicBool::new(false));
         let project_theme_edit = Arc::new(AtomicBool::new(false));
         let catalog_model_edit = Arc::new(AtomicBool::new(false));
+        // Notify overflow used to be safe (next tick always rebuilt). Skip now
+        // keys off the path list — a dropped `.ts` + later `.sail` would skip
+        // the Pure gate. Sticky unknown forces the gate on the next tick.
+        let hmr_gate_unknown = Arc::new(AtomicBool::new(false));
         // Keep the notify watcher alive for the whole `sail dev` session.
         // Ownership for mid-session theme attach (#13/#14):
         // - Strong `Arc` lives only on the main path (`hmr_watcher`).

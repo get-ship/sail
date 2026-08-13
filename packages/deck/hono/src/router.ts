@@ -26,7 +26,7 @@ import {
 export interface DeckAdaptorConfig {
   /** The `deck build` output dir (`<project>/.deck`): index.html + assets/. */
   buildDir: string;
-  /** deck-core/assets/ — the baked framework singletons + live-reload.js + lucide-icons.json. */
+  /** deck-core/assets/ — the baked framework singletons + live-reload.js. */
   frameworkAssetsDir: string;
   /** package.json `name`; the URL asset namespace is its last '/'-segment. */
   appName: string;
@@ -110,11 +110,16 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
         : serve(notFound(`framework asset ${fw.bake} missing`, mode));
     }
 
-    // 2. framework icons: /_deck/icons/<name>.svg (lucide set, deck-core/assets/lucide-icons.json)
+    // 2. used icons from the app bake: /_deck/icons/<role>.svg
     if (path.startsWith("/_deck/icons/")) {
       const name = path.slice("/_deck/icons/".length).replace(/\.svg$/, "");
-      const svg = await lucideIcon(config.frameworkAssetsDir, name);
-      return svg ? serve(svgAsset(svg)) : serve(notFound(`icon ${name} not found`, mode));
+      if (!/^[a-z0-9-]{1,64}$/.test(name)) {
+        return serve(notFound(`icon ${name} not found`, mode));
+      }
+      const body = await readOpt(join(config.buildDir, "_deck", "icons", `${name}.svg`));
+      return body
+        ? serve(svgAsset(body))
+        : serve(notFound(`icon ${name} not in app output`, mode));
     }
 
     // 3. host-owned live-data under /_deck (SSE / data port)
@@ -152,16 +157,4 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
   };
 }
 
-// lucide icon lookup — deck-core bakes the set into lucide-icons.json
-// ({ name: "<inner svg>" }) and wraps it (assets.rs:347-379). We mirror the wrap.
-let _iconMap: Record<string, string> | null | undefined;
-async function lucideIcon(frameworkAssetsDir: string, name: string): Promise<string | null> {
-  if (!/^[a-z0-9-]{1,64}$/.test(name)) return null;
-  if (_iconMap === undefined) {
-    const raw = await readOpt(join(frameworkAssetsDir, "lucide-icons.json"));
-    _iconMap = raw ? (JSON.parse(new TextDecoder().decode(raw)) as Record<string, string>) : null;
-  }
-  const inner = _iconMap?.[name];
-  if (!inner) return null;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-}
+

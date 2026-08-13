@@ -40,7 +40,7 @@ pub use deck_core::live_wire::{
     format_patch_signals,
 };
 
-// Submodule surfaces consumers reach into directly (shipd, xtask SDK gen).
+// Submodule surfaces consumers reach into directly (shipd, SDK gen).
 //
 // `render_helpers` lives in deck-axum (its `not_found` returns an axum
 // response); `resolver` is pure and lives in deck-core. `route_payload` (the

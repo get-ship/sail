@@ -4,15 +4,16 @@ use deck_config::RenderMode;
 
 const ASSETS_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
-/// deck's OWN baked product (sail-runtime/dom/sdk-client + primitives umbrella +
-/// lucide). These ship inside the deck-core crate, like Next shipping its own
+/// deck's OWN baked product (sail-runtime/dom/sdk-client + primitives umbrella).
+/// These ship inside the deck-core crate, like Next shipping its own
 /// runtime. App + user content is NOT here — see `read_source_asset`.
 ///
-/// Used for committed assets (lucide-icons.json, live-reload.js) that remain in
-/// the crate's `assets/` directory. Framework singletons come from the
-/// `include_str!` constants below — the `.deck/framework/` dev-override was
-/// purged (see deck-purge-root); the framework no longer reads a monorepo-root
-/// `.deck/framework/`.
+/// Used for committed assets (live-reload.js) that remain in the crate's
+/// `assets/` directory. Framework singletons come from the `include_str!`
+/// constants below — the `.deck/framework/` dev-override was purged (see
+/// deck-purge-root); the framework no longer reads a monorepo-root
+/// `.deck/framework/`. Icon glyphs are never embedded: Deck materializes
+/// only used roles into the app out graph.
 fn read_asset(rel: &str) -> Option<String> {
     let path = std::path::Path::new(ASSETS_DIR).join("assets").join(rel);
     std::fs::read_to_string(path).ok()
@@ -54,68 +55,10 @@ const DECK_ROUTE_JS: &str = include_str!("../assets/deck-route.js");
 const SAIL_COMPILER_WASM_JS: &str = include_str!("../assets/sail-compiler-wasm.js");
 const SAIL_LSP_COMPLETIONS_JS: &str = include_str!("../assets/sail-lsp-completions.js");
 const SAIL_LSP_DIAGNOSTICS_JS: &str = include_str!("../assets/sail-lsp-diagnostics.js");
-const SUI_LUCIDE_ICONS_JSON: &str = include_str!("../assets/lucide-icons.json");
 const LIVE_RELOAD_JS: &str = include_str!("../assets/live-reload.js");
 const ERROR_OVERLAY_JS: &str = include_str!("../assets/error-overlay.js");
 const SAIL_STUDIO_BRIDGE_JS: &str = include_str!("../assets/sail-studio-bridge.js");
-// Aliases the runtime used to resolve client-side. Promoted to the daemon so a
-// `<sail-icon name="git">` request finds `git-branch` server-side with no client
-// indirection. Keep in lockstep with `packages/components/sail/primitives/src/sail-icon/registry.ts`.
-const ICON_ALIASES: &[(&str, &str)] = &[
-    ("git", "git-branch"),
-    ("refresh", "refresh-cw"),
-    ("stop", "stop-circle"),
-    ("warning", "triangle-alert"),
-];
 
-/// Parse the embedded `lucide-icons.json` into a `name -> inner-svg-fragment`
-/// map once at first access. `LazyLock` keeps the deserialized map
-/// alongside its initializer — no separate `get_or_init` accessor needed
-/// and no missing-init path.
-static ICON_MAP: std::sync::LazyLock<std::collections::HashMap<String, String>> =
-    std::sync::LazyLock::new(|| {
-        serde_json::from_str(SUI_LUCIDE_ICONS_JSON)
-            .expect("deck-core lucide-icons.json failed to deserialize at startup")
-    });
-
-fn alias_for(name: &str) -> Option<&'static str> {
-    ICON_ALIASES
-        .iter()
-        .find_map(|(k, v)| (*k == name).then_some(*v))
-}
-
-/// Sorted glyph names in the embedded lucide registry (Studio browser + tests).
-pub fn lucide_icon_names() -> Vec<String> {
-    let mut names: Vec<String> = ICON_MAP.keys().cloned().collect();
-    names.sort();
-    names
-}
-
-/// Full standalone SVG for a lucide glyph (or alias), same envelope as
-/// [`serve_sail_icon`]. Used by the bundler to emit static icon assets.
-pub fn lucide_icon_svg(name: &str) -> Option<String> {
-    if name.is_empty()
-        || name.len() > 64
-        || !name
-            .bytes()
-            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-    {
-        return None;
-    }
-    let resolved = if ICON_MAP.contains_key(name) {
-        name
-    } else if let Some(via) = alias_for(name) {
-        via
-    } else {
-        return None;
-    };
-    let inner = ICON_MAP.get(resolved)?;
-    Some(format!(
-        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" \
-         stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" \
-         stroke-linejoin=\"round\">{inner}</svg>"
-    ))
-}
 /// Public helper (used by route.rs). The in-process bundler writes route bundles
 /// to `<root>/.deck/routes/<name>/route.js` (the per-route output dir the bundler
 /// owns). This reads that bundle when it exists so a controller route is served
@@ -391,8 +334,7 @@ pub fn serve_scaffold(
     // grant) ⇒ byte-identical to the historical `'self'` headers.
     // Synthetic path under the project root: only the walk-up parent chain
     // matters; the leaf need not exist on disk.
-    let network =
-        sail_compiler::check::policy::Policy::network_for(&root.join("page.sail"));
+    let network = sail_compiler::check::policy::Policy::network_for(&root.join("page.sail"));
     DeckResponse::html_route_for(html, mode, &network)
 }
 
@@ -611,25 +553,23 @@ pub fn baked_framework_stamps() -> Vec<(&'static str, Option<&'static str>)> {
 pub fn serve_deck_route(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(DECK_ROUTE_JS.to_string(), mode)
 }
-/// the retired whole-blob `/_deck/lucide-icons.json` endpoint (~410 KB fetched
-/// once on first mount). Per-icon serving hands the browser HTTP cache the
-/// granularity that matches usage: each `<sail-icon>` triggers one tiny GET
-/// (typically <1 KB), 304-cached on second mount.
+/// `GET /_deck/icons/{role}.svg` — used glyph bytes from the app out graph.
+/// Deck does not embed a pack. Missing bake → 404 (runtime slotted fallback).
 ///
-/// Meta: `registry.json` (or bare `registry`) returns the full sorted name list
-/// for Studio glyph browser fallback when the build `manifest.json` is empty.
-///
-/// The response is a full standalone `<svg>` with lucide's canonical viewBox
-/// and `stroke="currentColor"` so the icon picks up the host's `color` CSS.
-/// Aliases (`git` → `git-branch` etc.) are resolved server-side so the
-/// client can stay alias-unaware.
+/// `registry.json` lists Sail roles (same registry as MCP / LSP), not a pack.
 pub fn serve_sail_icon(mode: DaemonMode, name: &str) -> DeckResponse {
-    // Full-pack name list for design tooling (Studio browser). Not SVG.
+    serve_sail_icon_from(mode, name, None)
+}
+
+/// Same as [`serve_sail_icon`], probing `{out}/_deck/icons/{role}.svg` first.
+pub fn serve_sail_icon_from(
+    mode: DaemonMode,
+    name: &str,
+    resolution: Option<&crate::resolver::Resolution>,
+) -> DeckResponse {
     if name == "registry" || name == "registry.json" {
         return serve_icon_registry(mode);
     }
-    // Reject path-traversal + non-lucide name shapes early — names are
-    // kebab-case ASCII, identical to the file stems lucide-static ships.
     if name.is_empty()
         || name.len() > 64
         || !name
@@ -638,21 +578,41 @@ pub fn serve_sail_icon(mode: DaemonMode, name: &str) -> DeckResponse {
     {
         return DeckResponse::not_found("invalid icon name", mode);
     }
-    let Some(svg) = lucide_icon_svg(name) else {
-        return DeckResponse::not_found(format!("icon not in lucide set: {name}"), mode);
-    };
-    DeckResponse::new(
-        200,
-        "image/svg+xml; charset=utf-8",
-        crate::response::CachePolicy::Asset,
-        mode,
-        svg.into_bytes(),
-    )
+    if let Some(svg) = read_baked_icon(resolution, name) {
+        return DeckResponse::new(
+            200,
+            "image/svg+xml; charset=utf-8",
+            crate::response::CachePolicy::Asset,
+            mode,
+            svg,
+        );
+    }
+    DeckResponse::not_found(format!("icon not in app output: {name}"), mode)
 }
 
-/// `GET /_deck/icons/registry.json` — sorted lucide glyph names (full pack).
+fn read_baked_icon(
+    resolution: Option<&crate::resolver::Resolution>,
+    name: &str,
+) -> Option<Vec<u8>> {
+    let rel = format!("_deck/icons/{name}.svg");
+    if let Some(res) = resolution {
+        if let Some(root) = res.project_root() {
+            if let Some(bytes) = read_source_asset(&deck_config::deck_out_path(root), &rel) {
+                return Some(bytes);
+            }
+        }
+        for route_root in res.route_bundle_roots() {
+            if let Some(bytes) = read_source_asset(&route_root, &rel) {
+                return Some(bytes);
+            }
+        }
+    }
+    None
+}
+
+/// `GET /_deck/icons/registry.json` — project role ids (Sail SSOT).
 pub fn serve_icon_registry(mode: DaemonMode) -> DeckResponse {
-    let names = lucide_icon_names();
+    let names = sail_compiler::RoleRegistry::core().role_ids();
     let body = serde_json::to_vec(&names).unwrap_or_else(|_| b"[]".to_vec());
     DeckResponse::new(
         200,
@@ -812,17 +772,30 @@ mod tests {
     }
 
     #[test]
-    fn icon_known_name_returns_svg() {
-        let resp = serve_sail_icon(DaemonMode::Development, "search");
-        assert_eq!(resp.status, 200, "lucide ships `search`");
+    fn icon_baked_name_returns_svg() {
+        let tmp = tempfile::tempdir().unwrap();
+        let icons = deck_config::deck_out_path(tmp.path()).join("_deck/icons");
+        std::fs::create_dir_all(&icons).unwrap();
+        std::fs::write(
+            icons.join("search.svg"),
+            "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>",
+        )
+        .unwrap();
+        let resolution = crate::resolver::Resolution::new().with_root(tmp.path());
+        let resp = serve_sail_icon_from(DaemonMode::Development, "search", Some(&resolution));
+        assert_eq!(resp.status, 200, "baked search");
         let body = std::str::from_utf8(&resp.body).unwrap();
-        assert!(body.starts_with("<svg"));
-        assert!(body.contains("viewBox=\"0 0 24 24\""));
-        assert!(body.contains("stroke=\"currentColor\""));
+        assert!(body.starts_with("<svg"), "{body}");
     }
 
     #[test]
-    fn icon_registry_json_lists_full_pack() {
+    fn icon_unbaked_returns_404() {
+        let resp = serve_sail_icon(DaemonMode::Development, "search");
+        assert_eq!(resp.status, 404, "no embed, no bake");
+    }
+
+    #[test]
+    fn icon_registry_json_lists_roles_not_full_pack() {
         let resp = serve_sail_icon(DaemonMode::Development, "registry.json");
         assert_eq!(resp.status, 200);
         assert!(
@@ -831,21 +804,14 @@ mod tests {
             resp.content_type
         );
         let names: Vec<String> = serde_json::from_slice(&resp.body).expect("json names");
-        assert!(names.len() > 100, "full pack expected, got {}", names.len());
-        assert!(names.iter().any(|n| n == "search"));
-        assert!(names.windows(2).all(|w| w[0] <= w[1]), "sorted");
-    }
-
-    #[test]
-    fn icon_alias_resolves_server_side() {
-        let direct = serve_sail_icon(DaemonMode::Development, "git-branch");
-        let aliased = serve_sail_icon(DaemonMode::Development, "git");
-        assert_eq!(direct.status, 200);
-        assert_eq!(aliased.status, 200);
-        assert_eq!(
-            direct.body, aliased.body,
-            "alias must serve identical bytes"
+        assert!(names.iter().any(|n| n == "search"), "{names:?}");
+        assert!(names.iter().any(|n| n == "settings"), "{names:?}");
+        assert!(
+            names.len() < 200,
+            "roles are a closed set, not a full pack: {}",
+            names.len()
         );
+        assert!(names.windows(2).all(|w| w[0] <= w[1]), "sorted");
     }
 
     #[test]

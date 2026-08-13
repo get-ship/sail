@@ -46,15 +46,21 @@ pub async fn serve_deck_route(mode: Option<Extension<DaemonMode>>) -> Response {
     into_axum(deck_core::serve_deck_route(mode_from_ext(mode)))
 }
 
-/// `GET /_deck/icons/{file}` — one lucide icon. `{file}` is captured whole
-/// (e.g. `search.svg`) because axum 0.8 forbids mixing path-params with
-/// literal suffixes in the same segment; we strip `.svg` here.
+/// `GET /_deck/icons/{file}` — one used icon from the app bake. `{file}` is
+/// captured whole (e.g. `search.svg`) because axum 0.8 forbids mixing
+/// path-params with literal suffixes in the same segment; we strip `.svg`.
 pub async fn serve_sail_icon(
     mode: Option<Extension<DaemonMode>>,
+    resolution: Option<Extension<std::sync::Arc<deck_core::Resolution>>>,
     Path(file): Path<String>,
 ) -> Response {
     let name = file.strip_suffix(".svg").unwrap_or(&file);
-    into_axum(deck_core::serve_sail_icon(mode_from_ext(mode), name))
+    let res = resolution.as_ref().map(|e| e.as_ref().as_ref());
+    into_axum(deck_core::serve_sail_icon_from(
+        mode_from_ext(mode),
+        name,
+        res,
+    ))
 }
 
 /// `GET /_deck/fonts/{file}` — one framework woff2 (token-package SSOT).
