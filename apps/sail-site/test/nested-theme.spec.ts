@@ -19,7 +19,7 @@ test.describe('C-TH-NEST-1 nested theme field inheritance', () => {
     await page.evaluate(() => {
       const root = document.documentElement
       root.setAttribute('theme', 'sail')
-      root.setAttribute('data-mode', 'dark')
+      root.setAttribute('mode', 'dark')
       root.classList.remove('dark')
       // Re-stamp nested mode after document mode is known dark.
       document.dispatchEvent(
@@ -35,10 +35,10 @@ test.describe('C-TH-NEST-1 nested theme field inheritance', () => {
         const frame = document.getElementById('shanty-frame')
         return (
           root.getAttribute('theme') === 'sail' &&
-          root.getAttribute('data-mode') === 'dark' &&
+          root.getAttribute('mode') === 'dark' &&
           frame?.getAttribute('theme') === 'paper' &&
-          (frame?.getAttribute('data-mode') === 'light' ||
-            frame?.dataset.mode === 'light')
+          (frame?.getAttribute('mode') === 'light' ||
+            frame?.getAttribute('mode') === 'light')
         )
       },
       undefined,
@@ -80,9 +80,9 @@ test.describe('C-TH-NEST-1 nested theme field inheritance', () => {
       return {
         ok: true as const,
         frameTheme: frame.getAttribute('theme'),
-        frameMode: frame.getAttribute('data-mode') ?? frame.dataset.mode ?? '',
+        frameMode: frame.getAttribute('mode') ?? frame.getAttribute('mode') ?? '',
         rootTheme: root.getAttribute('theme'),
-        rootMode: root.getAttribute('data-mode') ?? '',
+        rootMode: root.getAttribute('mode') ?? '',
         inputType: input.getAttribute('type'),
         fieldBg,
         fieldFg,
@@ -121,13 +121,13 @@ test.describe('C-TH-NEST-1 nested theme field inheritance', () => {
     }
   })
 
-  test('theme chip flip restamps nested data-mode for dual-mode themes', async ({
+  test('theme chip flip restamps nested mode for dual-mode themes', async ({
     page,
   }) => {
     await page.goto('/showcase', { waitUntil: 'domcontentloaded' })
     await page.evaluate(() => {
       document.documentElement.setAttribute('theme', 'sail')
-      document.documentElement.setAttribute('data-mode', 'dark')
+      document.documentElement.setAttribute('mode', 'dark')
       document.dispatchEvent(
         new CustomEvent('ship:theme:change', {
           detail: { id: 'sail', dark: true, mode: 'dark' },
@@ -141,7 +141,7 @@ test.describe('C-TH-NEST-1 nested theme field inheritance', () => {
         const frame = document.getElementById('shanty-frame')
         return (
           frame?.getAttribute('theme') === 'sail' &&
-          frame?.getAttribute('data-mode') === 'dark'
+          frame?.getAttribute('mode') === 'dark'
         )
       },
       undefined,
@@ -154,7 +154,7 @@ test.describe('C-TH-NEST-1 nested theme field inheritance', () => {
         const frame = document.getElementById('shanty-frame')
         return (
           frame?.getAttribute('theme') === 'console' &&
-          frame?.getAttribute('data-mode') === 'dark'
+          frame?.getAttribute('mode') === 'dark'
         )
       },
       undefined,

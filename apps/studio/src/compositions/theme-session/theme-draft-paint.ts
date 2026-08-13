@@ -171,12 +171,13 @@ function applyOne(host: SailHost, opts: DraftPaintOpts): void {
 
 function applyRegisteredAttrs(host: SailHost, opts: DraftPaintOpts): void {
   const id = opts.paintId || opts.themeId || 'studio'
-  // Author IR `theme` + data-mode — paint authority for registered tables
-  // (`[theme=id][data-mode=…]` in themes.css). Never data-theme / data-theme-preview.
+  // Author IR `theme` + `mode` — paint authority for registered tables
+  // (`[theme=id][mode=…]` in themes.css). Never data-*.
   hostSetAttribute(host, 'theme', id)
   hostRemoveAttribute(host, 'data-theme')
   hostRemoveAttribute(host, 'data-theme-preview')
-  hostSetAttribute(host, 'data-mode', opts.mode)
+  hostRemoveAttribute(host, 'data-mode')
+  hostSetAttribute(host, 'mode', opts.mode)
 }
 
 /** Test helper — bound host count. */

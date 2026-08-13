@@ -9,7 +9,7 @@ export const code = {
   apply: `
 
 // applyTheme is the ONLY writer of the theme state: it sets
-// theme + data-mode on <html> for light/dark
+// theme + mode on <html> for light/dark
 // themes, and announces ship:theme:change for any chrome listening.
 applyTheme('console')
 persistTheme('console')   // survives reload

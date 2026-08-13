@@ -17,7 +17,7 @@ export default controller(() => {
       themes: (): Theme[] => THEMES,
       active,
       // applyTheme is the only writer of the page theme (data-theme +
-      // data-mode on <html>). Components repaint because they read tokens,
+      // mode on <html>). Components repaint because they read tokens,
       // not colors. persistTheme keeps the choice across reloads.
       pick: (id: ThemeId): void => {
         applyTheme(id)

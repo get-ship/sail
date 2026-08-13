@@ -1,5 +1,5 @@
 // Theming — drive /docs/concepts/theming. Themes are applyTheme + persistTheme
-// (theme + data-mode). Dark is a mode, not a twin theme id.
+// (theme + mode). Dark is a mode, not a twin theme id.
 
 import { test, expect } from '@playwright/test'
 
@@ -43,7 +43,7 @@ test('theming page: picking a theme sets theme', async ({ page }) => {
   expect(after.primary.length).toBeGreaterThan(0)
 })
 
-test('theming page: dark aesthetic sets theme + data-mode dark', async ({ page }) => {
+test('theming page: dark aesthetic sets theme + mode dark', async ({ page }) => {
   await page.goto('/docs/concepts/theming', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Theming', exact: true })).toBeVisible({
     timeout: 30_000,

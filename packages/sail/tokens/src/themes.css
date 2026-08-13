@@ -6,20 +6,20 @@
  * Regenerate: cargo run -p sail-compiler -- tokens
  */
 
-/* ─── theme:ship (project-themes/ship.json#mode=light) ─── */
+/* ─── theme:ship (themes/ship.json#mode=light) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
-:root[theme='ship'][data-mode='light'],
-:root[theme='ship']:not([data-mode]),
-[theme='ship'][data-mode='light'],
-:root[data-mode='light'] [theme='ship']:not([data-mode]),
-:root:not([data-mode]) [theme='ship']:not([data-mode]) {
+:root[theme='ship'][mode='light'],
+:root[theme='ship']:not([mode]),
+[theme='ship'][mode='light'],
+:root[mode='light'] [theme='ship']:not([mode]),
+:root:not([mode]) [theme='ship']:not([mode]) {
   color-scheme: light;
   --backdrop: oklch(0 0 0 / 40%);
   --background: oklch(0.975 0.002 106.423);
   --border: oklch(0.147 0.004 49.25 / 25%);
   --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
   --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
-  --accent: oklch(0.50 0.23 303);
+  --accent: oklch(0.56 0.23 303);
   --accent-foreground: oklch(0.98 0.02 301);
   --destructive: oklch(0.58 0.22 27);
   --foreground: oklch(0.147 0.004 49.25);
@@ -38,7 +38,7 @@
   --sidebar-accent-foreground: oklch(0.147 0.004 49.25);
   --sidebar-border: oklch(0.147 0.004 49.25 / 12%);
   --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.55 0.16 var(--brand-hue, 58));
+  --sidebar-primary: oklch(0.67 0.16 var(--brand-hue, 58));
   --sidebar-primary-foreground: oklch(0.99 0.02 95);
   --sidebar-ring: oklch(0.67 0.16 58 / 40%);
   --success: oklch(0.62 0.15 150);
@@ -51,8 +51,8 @@
   --surface-overlay-opacity: 1;
   --warning: oklch(0.72 0.15 75);
   --body-font: var(--font-body);
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --heading-font: var(--font-display, var(--font-body));
+  --font-body: var(--font-body-app);
+  --heading-font: var(--font-display);
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -76,11 +76,11 @@
   --selected-strength: 14%;
 }
 
-/* ─── theme:ship (project-themes/ship.json#mode=dark) ─── */
+/* ─── theme:ship (themes/ship.json#mode=dark) ─── */
 /* SHIP theme — light/dark modes in one file (modes-in-file). */
-:root[theme='ship'][data-mode='dark'],
-[theme='ship'][data-mode='dark'],
-:root[data-mode='dark'] [theme='ship']:not([data-mode]) {
+:root[theme='ship'][mode='dark'],
+[theme='ship'][mode='dark'],
+:root[mode='dark'] [theme='ship']:not([mode]) {
   color-scheme: dark;
   --backdrop: oklch(0 0 0 / 55%);
   --background: oklch(0.158 0.012 250);
@@ -119,8 +119,8 @@
   --surface-overlay-opacity: 1;
   --warning: oklch(0.78 0.15 75);
   --body-font: var(--font-body);
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --heading-font: var(--font-display, var(--font-body));
+  --font-body: var(--font-body-app);
+  --heading-font: var(--font-display);
   --heading-tracking: var(--tracking-tight);
   --heading-weight: var(--font-weight-semibold);
   --label-font: var(--font-body);
@@ -146,11 +146,11 @@
 
 /* ─── theme:neutral (themes/neutral.json#mode=light) ─── */
 /* Neutral brand-free theme — light/dark modes in one file. */
-:root[theme='neutral'][data-mode='light'],
-:root[theme='neutral']:not([data-mode]),
-[theme='neutral'][data-mode='light'],
-:root[data-mode='light'] [theme='neutral']:not([data-mode]),
-:root:not([data-mode]) [theme='neutral']:not([data-mode]) {
+:root[theme='neutral'][mode='light'],
+:root[theme='neutral']:not([mode]),
+[theme='neutral'][mode='light'],
+:root[mode='light'] [theme='neutral']:not([mode]),
+:root:not([mode]) [theme='neutral']:not([mode]) {
   color-scheme: light;
   --accent: oklch(0.55 0.090 var(--brand-hue, 255));
   --accent-foreground: oklch(0.985 0.005 255);
@@ -219,9 +219,9 @@
 
 /* ─── theme:neutral (themes/neutral.json#mode=dark) ─── */
 /* Neutral brand-free theme — light/dark modes in one file. */
-:root[theme='neutral'][data-mode='dark'],
-[theme='neutral'][data-mode='dark'],
-:root[data-mode='dark'] [theme='neutral']:not([data-mode]) {
+:root[theme='neutral'][mode='dark'],
+[theme='neutral'][mode='dark'],
+:root[mode='dark'] [theme='neutral']:not([mode]) {
   color-scheme: dark;
   --accent: oklch(0.70 0.100 var(--brand-hue, 255));
   --accent-foreground: oklch(0.18 0.020 255);
@@ -290,10 +290,10 @@
 
 /* ─── theme:paper (themes/paper.json#mode=light) ─── */
 /* Editorial reading mode. Light-only (dark locked — broken dual-mode). */
-:root[theme='paper'][data-mode='light'],
-:root[theme='paper']:not([data-mode]),
-[theme='paper'][data-mode='light'],
-[theme='paper']:not([data-mode]) {
+:root[theme='paper'][mode='light'],
+:root[theme='paper']:not([mode]),
+[theme='paper'][mode='light'],
+[theme='paper']:not([mode]) {
   color-scheme: light;
   --accent: oklch(0.45 0.10 var(--brand-hue, 280));
   --accent-foreground: oklch(0.985 0.02 75);
@@ -398,10 +398,10 @@
 
 /* ─── theme:halo (themes/halo.json#mode=light) ─── */
 /* Soft soft-UI. Modes-in-file (light/dark). */
-:root[theme='halo'][data-mode='light'],
-:root[theme='halo']:not([data-mode]),
-[theme='halo'][data-mode='light'],
-[theme='halo']:not([data-mode]) {
+:root[theme='halo'][mode='light'],
+:root[theme='halo']:not([mode]),
+[theme='halo'][mode='light'],
+[theme='halo']:not([mode]) {
   color-scheme: light;
   --accent: oklch(0.55 0.05 var(--brand-hue, 230));
   --accent-foreground: oklch(0.99 0.005 230);
@@ -504,10 +504,10 @@
 
 /* ─── theme:console (themes/console.json#mode=dark) ─── */
 /* Terminal phosphor. Modes-in-file (light/dark). */
-:root[theme='console'][data-mode='dark'],
-:root[theme='console']:not([data-mode]),
-[theme='console'][data-mode='dark'],
-[theme='console']:not([data-mode]) {
+:root[theme='console'][mode='dark'],
+:root[theme='console']:not([mode]),
+[theme='console'][mode='dark'],
+[theme='console']:not([mode]) {
   color-scheme: dark;
   --accent: oklch(0.78 0.16 var(--brand-hue, 195));
   --accent-foreground: oklch(0.13 0.008 220);
@@ -592,10 +592,10 @@
 
 /* ─── theme:contrast (themes/contrast.json#mode=dark) ─── */
 /* High contrast. Modes-in-file (light/dark). */
-:root[theme='contrast'][data-mode='dark'],
-:root[theme='contrast']:not([data-mode]),
-[theme='contrast'][data-mode='dark'],
-[theme='contrast']:not([data-mode]) {
+:root[theme='contrast'][mode='dark'],
+:root[theme='contrast']:not([mode]),
+[theme='contrast'][mode='dark'],
+[theme='contrast']:not([mode]) {
   color-scheme: dark;
   --accent: oklch(0.87 0.18 var(--brand-hue, 85));
   --accent-foreground: oklch(0.08 0 0);
@@ -676,10 +676,10 @@
 
 /* ─── theme:glass (themes/glass.json#mode=light) ─── */
 /* Glass / frosted. Modes-in-file (light/dark). */
-:root[theme='glass'][data-mode='light'],
-:root[theme='glass']:not([data-mode]),
-[theme='glass'][data-mode='light'],
-[theme='glass']:not([data-mode]) {
+:root[theme='glass'][mode='light'],
+:root[theme='glass']:not([mode]),
+[theme='glass'][mode='light'],
+[theme='glass']:not([mode]) {
   color-scheme: light;
   --accent: oklch(0.55 0.14 var(--brand-hue, 280));
   --accent-foreground: oklch(0.99 0.005 240);
@@ -779,10 +779,10 @@
 
 /* ─── theme:brut (themes/brut.json#mode=light) ─── */
 /* Neo-brutalist. Light-only (dark locked — broken dual-mode). */
-:root[theme='brut'][data-mode='light'],
-:root[theme='brut']:not([data-mode]),
-[theme='brut'][data-mode='light'],
-[theme='brut']:not([data-mode]) {
+:root[theme='brut'][mode='light'],
+:root[theme='brut']:not([mode]),
+[theme='brut'][mode='light'],
+[theme='brut']:not([mode]) {
   color-scheme: light;
   --accent: oklch(0.55 0.24 28);
   --accent-foreground: oklch(0.97 0 0);
@@ -881,10 +881,10 @@
 
 /* ─── theme:8bit (themes/8bit.json#mode=dark) ─── */
 /* Pixel / 8-bit. Modes-in-file (light/dark). */
-:root[theme='8bit'][data-mode='dark'],
-:root[theme='8bit']:not([data-mode]),
-[theme='8bit'][data-mode='dark'],
-[theme='8bit']:not([data-mode]) {
+:root[theme='8bit'][mode='dark'],
+:root[theme='8bit']:not([mode]),
+[theme='8bit'][mode='dark'],
+[theme='8bit']:not([mode]) {
   color-scheme: dark;
   --accent: oklch(0.82 0.20 95);
   --accent-foreground: oklch(0.14 0.03 265);
@@ -964,10 +964,10 @@
 
 /* ─── theme:synthwave (themes/synthwave.json#mode=dark) ─── */
 /* Retro-future neon. Modes-in-file (light/dark). */
-:root[theme='synthwave'][data-mode='dark'],
-:root[theme='synthwave']:not([data-mode]),
-[theme='synthwave'][data-mode='dark'],
-[theme='synthwave']:not([data-mode]) {
+:root[theme='synthwave'][mode='dark'],
+:root[theme='synthwave']:not([mode]),
+[theme='synthwave'][mode='dark'],
+[theme='synthwave']:not([mode]) {
   color-scheme: dark;
   --accent: oklch(0.75 0.22 190);
   --accent-foreground: oklch(0.14 0.03 190);
@@ -1026,11 +1026,11 @@
 
 /* ─── theme:sail (themes/sail.json#mode=light) ─── */
 /* Sail brand theme — dual-mode with cooler electric primary (framework default). */
-:root[theme='sail'][data-mode='light'],
-:root[theme='sail']:not([data-mode]),
-[theme='sail'][data-mode='light'],
-:root[data-mode='light'] [theme='sail']:not([data-mode]),
-:root:not([data-mode]) [theme='sail']:not([data-mode]) {
+:root[theme='sail'][mode='light'],
+:root[theme='sail']:not([mode]),
+[theme='sail'][mode='light'],
+:root[mode='light'] [theme='sail']:not([mode]),
+:root:not([mode]) [theme='sail']:not([mode]) {
   color-scheme: light;
   --backdrop: oklch(0 0 0 / 40%);
   --background: oklch(0.985 0.008 250);
@@ -1096,9 +1096,9 @@
 
 /* ─── theme:sail (themes/sail.json#mode=dark) ─── */
 /* Sail brand theme — dual-mode with cooler electric primary (framework default). */
-:root[theme='sail'][data-mode='dark'],
-[theme='sail'][data-mode='dark'],
-:root[data-mode='dark'] [theme='sail']:not([data-mode]) {
+:root[theme='sail'][mode='dark'],
+[theme='sail'][mode='dark'],
+:root[mode='dark'] [theme='sail']:not([mode]) {
   color-scheme: dark;
   --backdrop: oklch(0 0 0 / 55%);
   --background: oklch(0.16 0.03 255);
@@ -1182,9 +1182,9 @@
   box-shadow: var(--shadow-inset-soft);
 }
 :root[theme='ship'] body,
-:root[theme='ship'][data-mode='dark'] body,
+:root[theme='ship'][mode='dark'] body,
 [theme='ship'].tc-bg,
-[theme='ship'][data-mode='dark'].tc-bg {
+[theme='ship'][mode='dark'].tc-bg {
   background-image: linear-gradient(
     to bottom,
     color-mix(in oklch, var(--surface-0) 100%, white 1.5%) 0%,
@@ -1202,7 +1202,7 @@
     radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
   background-attachment: fixed;
 }
-:root[theme='ship'][data-mode='dark'] body {
+:root[theme='ship'][mode='dark'] body {
   background-image:
     radial-gradient(ellipse 60% 40% at 0% 0%, oklch(1 0 0 / 4%), transparent 60%),
     linear-gradient(
@@ -1278,12 +1278,12 @@
   0%, 49%   { box-shadow: var(--shadow-accent); }
   50%, 100% { box-shadow: 0 0 0 2px oklch(0.78 0.20 145 / 20%); }
 }
-/* Dark-mode syntax palette — data-mode only (no .dark / twin theme ids). */
-:root[data-mode='dark'],
-:root[theme='console'][data-mode='dark'],
-:root[theme='contrast'][data-mode='dark'],
-:root[theme='console']:not([data-mode]),
-:root[theme='contrast']:not([data-mode]) {
+/* Dark-mode syntax palette — mode attr only (no .dark / twin theme ids). */
+:root[mode='dark'],
+:root[theme='console'][mode='dark'],
+:root[theme='contrast'][mode='dark'],
+:root[theme='console']:not([mode]),
+:root[theme='contrast']:not([mode]) {
   --syntax-keyword:  oklch(0.78 0.16 290);
   --syntax-string:   oklch(0.80 0.15 145);
   --syntax-number:   oklch(0.78 0.14 230);

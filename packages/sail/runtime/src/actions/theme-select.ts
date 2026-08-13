@@ -6,6 +6,8 @@ import {
   THEMES,
   isValidTheme,
   paintMode,
+  readPaintModeAttr,
+  writePaintMode,
   readModePreference,
   subscribeSystemPreference,
   themeSupportsMode,
@@ -49,7 +51,7 @@ import { invokeCallback } from '../callback'
  * modeOnly:
  * - Icon trigger cycles light → dark → system via applyMode (mode switcher surface)
  *
- * Never paints data-mode=system. U2.1c: no-op under studioPreview.
+ * Never paints mode=system. U2.1c: no-op under studioPreview.
  */
 
 let uid = 0
@@ -217,7 +219,7 @@ export const themeSelect: Action<void> = (node) => {
     fullTrigger ??
     modeTrigger ??
     root.querySelector<HTMLButtonElement>(
-      'button[popovertarget], button[type="button"]:not([data-mode])',
+      'button[popovertarget], button[type="button"]:not([mode])',
     )
 
   const panel = root.querySelector<HTMLElement>(
@@ -234,7 +236,7 @@ export const themeSelect: Action<void> = (node) => {
   // Filter bar = tablist; mode buttons = tabs (stamped here, not in .sail markup).
   if (modeBar) {
     if (!modeBar.hasAttribute('role')) modeBar.setAttribute('role', 'tablist')
-    for (const tab of modeBar.querySelectorAll<HTMLElement>('button[data-mode]')) {
+    for (const tab of modeBar.querySelectorAll<HTMLElement>('button[mode]')) {
       if (!tab.hasAttribute('role')) tab.setAttribute('role', 'tab')
     }
   }
@@ -245,7 +247,7 @@ export const themeSelect: Action<void> = (node) => {
   const pickerHeader = root.querySelector<HTMLElement>('[data-picker-header]')
 
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
-  const modeOf = (el: Element): string => el.getAttribute('data-mode') ?? ''
+  const modeOf = (el: Element): string => el.getAttribute('mode') ?? ''
 
   const options = (): HTMLElement[] =>
     Array.from(root.querySelectorAll<HTMLElement>('[role="option"][value]'))
@@ -255,7 +257,7 @@ export const themeSelect: Action<void> = (node) => {
     if (!modeBar) return []
     return Array.from(
       modeBar.querySelectorAll<HTMLElement>(
-        'button[data-mode], [role="tab"][data-mode], [role="button"][data-mode]',
+        'button[mode], [role="tab"][mode], [role="button"][mode]',
       ),
     )
   }
@@ -273,15 +275,8 @@ export const themeSelect: Action<void> = (node) => {
   }
 
   const currentPaint = (): PaintMode => {
-    const fromDom = document.documentElement.dataset.mode
-    if (fromDom === 'light' || fromDom === 'dark') return fromDom
-    if (fromDom === 'system' || fromDom) {
-      const healed = paintMode(fromDom)
-      if (document.documentElement.dataset.mode !== healed) {
-        document.documentElement.dataset.mode = healed
-      }
-      return healed
-    }
+    const fromDom = readPaintModeAttr(document.documentElement)
+    if (fromDom) return fromDom
     const meta = THEMES.find((t) => t.id === currentTheme())
     return paintMode(meta?.defaultMode ?? 'light')
   }
@@ -492,13 +487,11 @@ export const themeSelect: Action<void> = (node) => {
     const optionLabel = opt.querySelector<HTMLElement>('[data-option-label]')
     if (optionLabel) optionLabel.textContent = theme.label
 
-    // Live specimen: themes.css scopes tokens via theme + data-mode.
-    // Always stamp data-mode here — a missing mode lets :root[data-mode=dark]
-    // descendant rules paint light-filter cards with the page's dark ink.
+    // Live specimen: themes.css scopes tokens via theme + mode.
     const preview = opt.querySelector<HTMLElement>('[theme]')
     if (preview) {
       preview.setAttribute('theme', theme.id)
-      preview.setAttribute('data-mode', 'light')
+      writePaintMode(preview, 'light')
       preview.removeAttribute('hidden')
     }
 
@@ -618,9 +611,9 @@ export const themeSelect: Action<void> = (node) => {
       const preview = o.querySelector<HTMLElement>('[theme]')
       if (preview && isValidTheme(id)) {
         preview.setAttribute('theme', id)
-        preview.setAttribute('data-mode', swatchModeFor(id, catalogFilter, paint))
+        writePaintMode(preview, swatchModeFor(id, catalogFilter, paint))
       } else if (preview) {
-        preview.setAttribute('data-mode', paint)
+        writePaintMode(preview, paint)
       }
     }
 
@@ -687,7 +680,7 @@ export const themeSelect: Action<void> = (node) => {
     sync()
     invokeCallback(root, 'onThemeChange', {
       theme: v,
-      mode: paintMode(document.documentElement.dataset.mode),
+      mode: readPaintModeAttr(document.documentElement) ?? paintMode(intent),
       preference: readModePreference(),
     })
     // Keep the catalog open so users can compare themes (product request).
@@ -746,10 +739,10 @@ export const themeSelect: Action<void> = (node) => {
   }
 
   const modeFrom = (e: Event): HTMLElement | null => {
-    // Only tabs inside the mode bar (filter tabs), not stray data-mode nodes.
+    // Only tabs inside the mode bar (filter tabs), not stray mode attrs.
     const m =
       (e.target as Element | null)?.closest<HTMLElement>(
-        '[data-mode-bar] button[data-mode], [data-mode-bar] [role="tab"][data-mode], [data-mode-bar] [role="button"][data-mode]',
+        '[data-mode-bar] button[mode], [data-mode-bar] [role="tab"][mode], [data-mode-bar] [role="button"][mode]',
       ) ?? null
     if (!m || !root.contains(m) || m.matches('[role="option"]')) return null
     return m
@@ -843,7 +836,7 @@ export const themeSelect: Action<void> = (node) => {
     const theme = currentTheme()
     if (!themeSupportsMode(theme, 'system')) return
     const rootEl = document.documentElement
-    if (rootEl.dataset.mode !== nextPaint) {
+    if (readPaintModeAttr(rootEl) !== nextPaint) {
       applyTheme(theme, rootEl, 'system')
       sync()
       invokeCallback(root, 'onThemeChange', {

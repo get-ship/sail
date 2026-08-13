@@ -74,7 +74,7 @@ body::after {
  * set on the themed host) follow the nested theme.
  *
  * Re-bind field slots on every themed host so `var(--field*)` resolves
- * against the nearest theme's globals. Pair with `data-mode` so dual-mode
+ * against the nearest theme's globals. Pair with `mode` so dual-mode
  * nested roots select the right mode block; stamp mode from the document
  * paint when the author only sets `theme=` (see resolveNestedPaintMode).
  *
@@ -89,10 +89,10 @@ body::after {
   --field-error: var(--destructive);
   --fieldset-border: var(--border);
 }
-[theme][data-mode='light'] {
+[theme][mode='light'] {
   color-scheme: light;
 }
-[theme][data-mode='dark'] {
+[theme][mode='dark'] {
   color-scheme: dark;
 }
 

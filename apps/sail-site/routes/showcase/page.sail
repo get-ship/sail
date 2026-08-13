@@ -158,7 +158,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </partial>
 
 <!-- Fill remaining viewport under sticky site chrome (`h:fill`).
-     Nested theme root: theme= attr + applyNestedTheme stamps data-mode
+     Nested theme root: theme= + mode= (applyNestedTheme)
      (C-TH-NEST-1; data-* banned in app .sail markup — mode is runtime). -->
 <column id="shanty-frame" theme={theme()} gap="0" style(root)>
   <row align="center" gap="3" style(chrome)>

@@ -120,7 +120,7 @@ export async function loadThemesOn(
       return
     }
     // Hydrate project mode tables from DTCG so gallery swatches paint with the
-    // correct data-mode without relying on package themes-meta contamination.
+    // correct mode without relying on package themes-meta contamination.
     const projectWithModes = await Promise.all(
       projectThemes.map(async (t) => {
         try {

@@ -118,7 +118,7 @@ const THEME_SAIL_KEYS: &[&str] = &[
     "ordered",
 ];
 
-/// Allowed paint mode names (`data-mode` values).
+/// Allowed paint mode names (`mode` values).
 const THEME_PAINT_MODES: &[&str] = &["light", "dark"];
 
 /// Allowed top-level groups inside a mode body (scale + component overrides).
@@ -378,7 +378,7 @@ pub enum CatalogAllowlist {
 pub struct ThemeConfig {
     /// Preferred default theme id (scaffold / host paint).
     pub default: Option<String>,
-    /// Initial `data-mode` (prefer `light` when omitted at host).
+    /// Initial `mode` (prefer `light` when omitted at host).
     pub default_mode: Option<String>,
     /// Catalog theme allowlist (T0). See [`CatalogAllowlist`].
     pub enabled: CatalogAllowlist,
@@ -909,7 +909,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
     ));
     out.push_str("export type ThemeSailKey = (typeof THEME_SAIL_KEYS)[number]\n\n");
 
-    out.push_str("/** Allowed paint mode names (`data-mode` values). */\n");
+    out.push_str("/** Allowed paint mode names (`mode` values). */\n");
     out.push_str(&format!(
         "export const THEME_PAINT_MODES = [{}] as const\n",
         THEME_PAINT_MODES
@@ -953,7 +953,7 @@ fn build_themes_meta_ts(layers: &[&Layer]) -> String {
 
     out.push_str("export interface ThemeMeta {\n");
     out.push_str("  id: string\n");
-    out.push_str("  /** Whether the default mode is a dark surface (data-mode dark). */\n");
+    out.push_str("  /** Whether the default mode is a dark surface (`mode=dark`). */\n");
     out.push_str("  dark: boolean\n");
     out.push_str("  /** Mode names when modes-in-file; empty = legacy single-block theme. */\n");
     out.push_str("  modes: readonly string[]\n");
@@ -2044,19 +2044,19 @@ fn load_theme_layers_from_dir(
         }
 
         // Only light|dark (and future named modes) — reject unknown paint modes
-        // that would never apply via data-mode.
+        // that would never apply via mode=.
         for m in &mode_names {
             if m != "light" && m != "dark" {
                 bail!(
                     "theme {label}: unsupported mode name {m:?} \
-                     (only \"light\" and \"dark\" are valid data-mode values)"
+                     (only \"light\" and \"dark\" are valid mode values)"
                 );
             }
         }
 
         // Path parity among **declared** modes only (single-mode ⇒ no check).
         // Multi-mode: every mode must declare the same $value leaves so
-        // data-mode switches cannot leave sticky CSS vars from another mode.
+        // mode switches cannot leave sticky CSS vars from another mode.
         if mode_names.len() >= 2 {
             let path_sets: Vec<(String, std::collections::BTreeSet<String>)> = mode_names
                 .iter()
@@ -2151,33 +2151,33 @@ fn load_theme_layers_from_dir(
             // Selector family (hard cutover — theme attr only):
             //   • `:root[theme=…]` — app product theme on documentElement
             //   • `[theme=…]` — scoped hosts
-            // Nested hosts without data-mode inherit document mode via
-            // `:root[data-mode=X] [theme=id]:not([data-mode])` — no JS.
-            // Do not emit a global `[theme=id]:not([data-mode])` on the
+            // Nested hosts without mode inherit document mode via
+            // `:root[mode=X] [theme=id]:not([mode])` — no JS.
+            // Do not emit a global `[theme=id]:not([mode])` on the
             // default-mode block (that pinned nested hosts to default).
             let is_default = default_mode.as_deref() == Some(mode_name.as_str());
             meta.selector = if is_default && !multi_mode {
-                // Only mode: a nested host without data-mode always gets these tokens
+                // Only mode: a nested host without mode always gets these tokens
                 // (paper island inside a dark document).
                 format!(
-                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[theme='{id}']:not([data-mode]),\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}']:not([data-mode])"
+                    ":root[theme='{id}'][mode='{mode_name}'],\n\
+                     :root[theme='{id}']:not([mode]),\n\
+                     [theme='{id}'][mode='{mode_name}'],\n\
+                     [theme='{id}']:not([mode])"
                 )
             } else if is_default {
                 format!(
-                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[theme='{id}']:not([data-mode]),\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[data-mode='{mode_name}'] [theme='{id}']:not([data-mode]),\n\
-                     :root:not([data-mode]) [theme='{id}']:not([data-mode])"
+                    ":root[theme='{id}'][mode='{mode_name}'],\n\
+                     :root[theme='{id}']:not([mode]),\n\
+                     [theme='{id}'][mode='{mode_name}'],\n\
+                     :root[mode='{mode_name}'] [theme='{id}']:not([mode]),\n\
+                     :root:not([mode]) [theme='{id}']:not([mode])"
                 )
             } else {
                 format!(
-                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[data-mode='{mode_name}'] [theme='{id}']:not([data-mode])"
+                    ":root[theme='{id}'][mode='{mode_name}'],\n\
+                     [theme='{id}'][mode='{mode_name}'],\n\
+                     :root[mode='{mode_name}'] [theme='{id}']:not([mode])"
                 )
             };
             reject_pseudo_composite_dual_forms(&mode_doc, &[], &label)?;
@@ -2689,7 +2689,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
     let body = format!(
         "{{\n\
          \x20\x20// Sail app config — theme (product) + deck (bundler/serve).\n\
-         \x20\x20// `default` / `defaultMode` drive first paint (theme / data-mode).\n\
+         \x20\x20// `default` / `defaultMode` drive first paint (theme / mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
          \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
          \x20\x20// Project themes under themes/ always emit. Package generate\n\
@@ -4004,7 +4004,7 @@ mod tests {
 
         let themes_css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            themes_css.contains("theme='paper'][data-mode='light'")
+            themes_css.contains("theme='paper'][mode='light'")
                 || themes_css.contains(":root[theme='paper']"),
             "paper modes selectors missing: {themes_css}"
         );
@@ -5462,11 +5462,11 @@ mod tests {
         generate(&model, &out).expect("single-mode theme must generate");
         let css = fs::read_to_string(out.join("themes.css")).unwrap();
         assert!(
-            css.contains("theme='glass'][data-mode='light']"),
+            css.contains("theme='glass'][mode='light']"),
             "expected light selector, got: {css}"
         );
         assert!(
-            !css.contains("theme='glass'][data-mode='dark']"),
+            !css.contains("theme='glass'][mode='dark']"),
             "single-mode glass must not emit dark block"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
@@ -5678,7 +5678,7 @@ mod tests {
     }
 
     #[test]
-    fn modes_in_file_emit_data_theme_and_data_mode() {
+    fn modes_in_file_emit_theme_and_mode() {
         let dir = tempfile::tempdir().unwrap();
         let model = dir.path().join("model");
         let out = dir.path().join("src");
@@ -5757,40 +5757,40 @@ mod tests {
         assert_eq!(report.theme_count, 1, "one theme id, two modes");
         let css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            css.contains("theme='ship'][data-mode='light'")
-                || css.contains(r#"theme='ship'][data-mode='light'"#),
+            css.contains("theme='ship'][mode='light'")
+                || css.contains(r#"theme='ship'][mode='light'"#),
             "light mode selector missing: {css}"
         );
         assert!(
-            css.contains("theme='ship'][data-mode='dark'"),
+            css.contains("theme='ship'][mode='dark'"),
             "dark mode selector missing: {css}"
         );
         assert!(
-            css.contains("[theme='ship'][data-mode='light']") || css.contains("[theme='ship']"),
+            css.contains("[theme='ship'][mode='light']") || css.contains("[theme='ship']"),
             "author IR [theme=id] selector missing: {css}"
         );
         assert!(
-            css.contains(":root[data-mode='dark'] [theme='ship']:not([data-mode])"),
+            css.contains(":root[mode='dark'] [theme='ship']:not([mode])"),
             "dual-mode nested host must inherit document dark: {css}"
         );
         assert!(
-            css.contains(":root[data-mode='light'] [theme='ship']:not([data-mode])")
-                || css.contains(":root:not([data-mode]) [theme='ship']:not([data-mode])"),
+            css.contains(":root[mode='light'] [theme='ship']:not([mode])")
+                || css.contains(":root:not([mode]) [theme='ship']:not([mode])"),
             "dual-mode nested host must inherit document light/cold: {css}"
         );
         assert!(
             css.contains("color-scheme: light") && css.contains("color-scheme: dark"),
             "theme mode blocks must set color-scheme: {css}"
         );
-        // Global `[theme=id]:not([data-mode])` would pin nested dual-mode hosts
+        // Global `[theme=id]:not([mode])` would pin nested dual-mode hosts
         // to the default mode. Only ancestor-qualified forms are allowed.
         let global_bare = css.lines().any(|l| {
-            l.trim() == "[theme='ship']:not([data-mode])"
-                || l.trim() == "[theme='ship']:not([data-mode]),"
+            l.trim() == "[theme='ship']:not([mode])"
+                || l.trim() == "[theme='ship']:not([mode]),"
         });
         assert!(
             !global_bare,
-            "dual-mode must not emit a global [theme=id]:not([data-mode]) selector: {css}"
+            "dual-mode must not emit a global [theme=id]:not([mode]) selector: {css}"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
         assert!(meta.contains("id: 'ship'"));

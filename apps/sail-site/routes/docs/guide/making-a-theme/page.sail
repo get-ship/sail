@@ -133,7 +133,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.themeEntry} lang="ts"></code-block>
   <p>
     <code>dark: true</code> is not cosmetic. It decides whether the
-    <code>data-mode</code> attribute goes on the document, which a number of
+    <code>mode</code> attribute goes on the document, which a number of
     component skins key on. Set it to match the theme you actually built.
   </p>
   <p style(mutedSm)>
@@ -154,7 +154,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.applySource} lang="ts"></code-block>
   <p>
     Three things happen. <code>theme</code> goes on the document, which
-    activates your CSS block. The <code>data-mode</code> attribute is set from
+    activates your CSS block. The <code>mode</code> attribute is set from
     the entry’s <code>dark</code> flag. A <code>ship:theme:change</code>
     event is dispatched, for chrome that needs to react beyond CSS.
   </p>
@@ -182,7 +182,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     is to ship your own stylesheet with a
     <code>:root[theme="mine"]</code> block and set
     <code>document.documentElement.setAttribute('theme', 'mine')</code> yourself, never
-    calling <code>applyTheme</code>. You then also own the <code>data-mode</code>
+    calling <code>applyTheme</code>. You then also own the <code>mode</code>
     class, the change event and persistence, and your theme will not appear
     in the picker. Deck’s own palette is built this way, so the approach is
     proven — but it is a bypass, not a seam.

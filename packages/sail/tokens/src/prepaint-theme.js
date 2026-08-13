@@ -22,6 +22,7 @@ try {
     _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
       ? 'dark' : 'light';
   }
-  _d.setAttribute('data-mode', _paint);
+  _d.setAttribute('mode', _paint);
+  _d.removeAttribute('data-mode');
   if (_d.classList) _d.classList.remove('dark');
 } catch (_e) {}

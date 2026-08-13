@@ -17,7 +17,7 @@ export default controller(() => {
     active,
     // TODO 1: this only updates the label — the page never repaints.
     // applyTheme(id) is the only writer of the theme state (data-theme +
-    // data-mode on <html>); persistTheme(id) makes the choice survive a
+    // mode on <html>); persistTheme(id) makes the choice survive a
     // reload. Call ambient applyTheme + persistTheme here (no package import).
     pick: (id: ThemeId): void => {
       active.set(id)

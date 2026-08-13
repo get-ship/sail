@@ -2,7 +2,7 @@
  * Theme catalog for node QA harnesses (probe / sweep).
  *
  * MUST stay aligned with `themes.ts` THEMES[] and `generated/unions.ts` THEME_IDS.
- * Dark is a **mode** (`data-mode`), not a twin theme id.
+ * Dark is a **mode** (`mode=`), not a twin theme id.
  *
  * When you add a theme: update model/themes/*.json, regenerate tokens,
  * then add one row here (or teach the tokens generator to emit this file).

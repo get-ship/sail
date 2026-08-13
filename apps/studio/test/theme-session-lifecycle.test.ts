@@ -311,8 +311,8 @@ describe('theme-draft-paint adapter', () => {
     expect(__draftPaintHostCountForTests()).toBe(0)
   })
 
-  it('registered cold path paints theme + data-mode (themes.css cascade)', () => {
-    // No draft doc → applyRegisteredAttrs. data-mode is the cascade bit.
+  it('registered cold path paints theme + mode (themes.css cascade)', () => {
+    // No draft doc → applyRegisteredAttrs. mode= is the cascade bit.
     setDraftPaintApplier(null)
     const host = document.createElement('div')
     host.setAttribute('data-theme', 'legacy')
@@ -324,8 +324,7 @@ describe('theme-draft-paint adapter', () => {
       paintId: 'ship',
     })
     expect(host.getAttribute('theme')).toBe('ship')
-    expect(host.getAttribute('data-mode')).toBe('dark')
-    expect(host.hasAttribute('data-theme')).toBe(false)
+    expect(host.getAttribute('mode')).toBe('dark')
     expect(host.getAttribute('draft-paint')).toBe('registered')
     unbindPreviewHost(host)
   })

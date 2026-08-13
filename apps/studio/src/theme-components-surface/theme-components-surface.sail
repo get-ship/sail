@@ -146,7 +146,7 @@ export default controller(() => {
 
     <column specimen-dock components-stage gap="0" style(specimenDock)>
       <column gap="0" style(specimenPad)>
-        <!-- Preview host: draft paint via applyScope (theme + data-mode). No free mode= attr. -->
+        <!-- Preview host: draft paint via applyScope (theme + mode). -->
         <card
           components-specimen
           preview-specimen

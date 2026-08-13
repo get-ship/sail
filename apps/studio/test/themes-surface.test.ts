@@ -220,14 +220,13 @@ describe('themes home — UI contracts (source)', () => {
     expect(sail).toMatch(/theme=\{previewPaintId\(\)\}/)
   })
 
-  it('preview mode stamps data-mode via use:paintMode (not authored data-* / bare mode=)', () => {
+  it('preview mode stamps mode= via use:paintMode (not data-*)', () => {
     const sail = readFileSync(SURFACE, 'utf8')
-    // themes.css selects [theme=id][data-mode=light|dark]. App markup must not
-    // author data-mode= (sail-no-data-attr); local use: action stamps the cascade bit.
+    // themes.css selects [theme=id][mode=light|dark].
     expect(sail).toMatch(/use:paintMode=\{previewModeId\(\)\}/)
     expect(sail).toMatch(/use:paintMode=\{paintMode\}|use:paintMode=\{row\.paintMode\}/)
     expect(sail).toMatch(/const paintMode:\s*Action/)
-    expect(sail).toMatch(/hostSetAttribute\([^,]+,\s*['"]data-mode['"]/)
+    expect(sail).toMatch(/hostSetAttribute\([^,]+,\s*['"]mode['"]/)
   })
 
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {

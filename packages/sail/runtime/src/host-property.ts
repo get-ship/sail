@@ -138,10 +138,10 @@ function doc(): DocLike | null {
   return g.document ?? null
 }
 
-/** True when `<html data-mode="dark">` (or equivalent theme dark). */
+/** True when `<html mode="dark">` (or equivalent theme dark). */
 export function hostIsDarkMode(): boolean {
   const root = doc()?.documentElement
-  return root?.dataset?.mode === 'dark' || root?.getAttribute?.('data-mode') === 'dark'
+  return root?.getAttribute?.('mode') === 'dark'
 }
 
 /** Read a CSS custom property from the document element. */

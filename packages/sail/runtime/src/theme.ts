@@ -264,8 +264,8 @@ export function hydrateTheme(): void {
 // CSSOM.
 //
 // Mode is an arg (or defaultMode on the doc) — not a second top-level author
-// attr. Platform cascade bits set on the host: `theme` (framework IR) +
-// `data-mode` (paint mode). Never data-theme / data-theme-preview.
+// attr. Platform cascade bits set on the host: `theme` + `mode`.
+// Never data-theme / data-theme-preview / data-mode.
 
 /** Loose DTCG theme document (modes-in-file or flat). */
 export type ThemeDoc = Record<string, unknown>
@@ -601,10 +601,11 @@ function applyScope(
   } else if (prev?.themeId) {
     el.removeAttribute('theme')
   }
-  el.setAttribute('data-mode', lowered.mode)
-  // Hard cutover: never dual-write data-theme / data-theme-preview.
+  el.setAttribute('mode', lowered.mode)
+  // Hard cutover: never dual-write data-theme / data-theme-preview / data-mode.
   if (el.hasAttribute('data-theme')) el.removeAttribute('data-theme')
   if (el.hasAttribute('data-theme-preview')) el.removeAttribute('data-theme-preview')
+  if (el.hasAttribute('data-mode')) el.removeAttribute('data-mode')
 
   appliedScopes.set(el, {
     names: nextNames,
@@ -631,7 +632,7 @@ export function clearThemeScope(host: SailHost): void {
   if (prev.themeId) {
     if (el.getAttribute('theme') === prev.themeId) el.removeAttribute('theme')
   }
-  if (el.getAttribute('data-mode') === prev.mode) el.removeAttribute('data-mode')
+  if (el.getAttribute('mode') === prev.mode) el.removeAttribute('mode')
   appliedScopes.delete(el)
 }
 

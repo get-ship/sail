@@ -117,13 +117,13 @@
         nowrap
         style(modeSeg, {box: size({ min-w: 0 })})
       >
-        <button type="button" data-mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn)>
+        <button type="button" mode="light" selected="true" data-active="true" title="Show light themes" style(modeSegBtn)>
           Light
         </button>
-        <button type="button" data-mode="dark" selected="false" title="Show dark themes" style(modeSegBtn)>
+        <button type="button" mode="dark" selected="false" title="Show dark themes" style(modeSegBtn)>
           Dark
         </button>
-        <button type="button" data-mode="system" selected="false" title="Show dual-mode themes" style(modeSegBtn)>
+        <button type="button" mode="system" selected="false" title="Show dual-mode themes" style(modeSegBtn)>
           System
         </button>
       </row>
@@ -138,7 +138,7 @@
         style(option, {when: {hover: {paint: border({ color: border })}, focus: {paint: border({ style: solid, kind: outline, width: 2, color: ring, offset: ring-offset })}, selected: {paint: border({ color: primary })}, forced-colors: {when: {selected: {paint: border({ color: CanvasText })}}}}})
       >
         <column gap="0" style(optionCol, {box: size({ min-w: 0 })})>
-          <column theme="sail" data-mode="light" hidden="true" style(swatch)>
+          <column theme="sail" mode="light" hidden="true" style(swatch)>
             <span style(overlay)></span>
             <column gap="2" justify="between" style(specimen, {box: size({ min-w: 0 })})>
               <row align="center" gap="2" nowrap style({box: size({ min-w: 0, w: full })})>

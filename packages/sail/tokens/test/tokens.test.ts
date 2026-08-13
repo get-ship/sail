@@ -384,14 +384,14 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     }
   })
 
-  it('applyTheme(DEFAULT_THEME) sets theme + data-mode light without .dark', () => {
+  it('applyTheme(DEFAULT_THEME) sets theme + mode light without .dark', () => {
     const root = document.documentElement
     root.removeAttribute('theme')
-    root.removeAttribute('data-mode')
+    root.removeAttribute('mode')
     root.classList.remove('dark')
     applyTheme(DEFAULT_THEME, root)
     expect(root.getAttribute('theme')).toBe(DEFAULT_THEME)
-    expect(root.dataset.mode).toBe(DEFAULT_MODE)
+    expect(root.getAttribute('mode')).toBe(DEFAULT_MODE)
     expect(root.classList.contains('dark')).toBe(false)
   })
 
@@ -405,8 +405,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(PREPAINT_THEME_SCRIPT).toContain(THEME_MODE_STORAGE_KEY)
     expect(PREPAINT_THEME_SCRIPT).toContain(THEME_DEFAULT_META)
     expect(PREPAINT_THEME_SCRIPT).toContain("setAttribute('theme'")
-    expect(PREPAINT_THEME_SCRIPT).toContain('data-mode')
-    expect(PREPAINT_THEME_SCRIPT).toContain("removeAttribute('data-theme')")
+    expect(PREPAINT_THEME_SCRIPT).toContain("setAttribute('mode'")
   })
 
   it('bootTheme uses config meta defaults when storage is empty', () => {
@@ -429,7 +428,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
 
     const root = document.documentElement
     root.removeAttribute('theme')
-    root.removeAttribute('data-mode')
+    root.removeAttribute('mode')
     root.setAttribute('data-theme', 'legacy')
     root.classList.add('dark')
 
@@ -437,7 +436,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(result.theme).toBe('ship')
     expect(result.mode).toBe('dark')
     expect(root.getAttribute('theme')).toBe('ship')
-    expect(root.dataset.mode).toBe('dark')
+    expect(root.getAttribute('mode')).toBe('dark')
     expect(root.hasAttribute('data-theme')).toBe(false)
     expect(root.classList.contains('dark')).toBe(false)
     expect(readConfigDefaultTheme()).toBe('ship')
@@ -496,12 +495,12 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     }
   })
 
-  it('applyMode(dark) sets data-mode dark without .dark class', () => {
+  it('applyMode(dark) sets mode dark without .dark class', () => {
     const root = document.documentElement
     applyTheme('sail', root, 'light')
     applyMode('dark', root)
     expect(root.getAttribute('theme')).toBe('sail')
-    expect(root.dataset.mode).toBe('dark')
+    expect(root.getAttribute('mode')).toBe('dark')
     expect(root.classList.contains('dark')).toBe(false)
   })
 
@@ -510,19 +509,19 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     applyTheme('paper', root, 'light')
     applyMode('dark', root)
     expect(root.getAttribute('theme')).toBe('paper')
-    expect(root.dataset.mode).toBe('light')
+    expect(root.getAttribute('mode')).toBe('light')
   })
 
   // C-TH-NEST-1 — nested theme + mode; field aliases rebind on [theme]
-  it('tokens.css rebinds field slots on [theme] + color-scheme by data-mode', () => {
+  it('tokens.css rebinds field slots on [theme] + color-scheme by mode', () => {
     const css = loadSrc('../src/tokens.css')
     expect(css).toMatch(/\[theme\]\s*\{[^}]*--field\s*:\s*var\(--background\)/s)
     expect(css).toMatch(/\[theme\]\s*\{[^}]*--field-foreground\s*:\s*var\(--foreground\)/s)
     expect(css).toMatch(
-      /\[theme\]\[data-mode=['"]light['"]\]\s*\{\s*color-scheme\s*:\s*light\s*;/,
+      /\[theme\]\[mode=['"]light['"]\]\s*\{\s*color-scheme\s*:\s*light\s*;/,
     )
     expect(css).toMatch(
-      /\[theme\]\[data-mode=['"]dark['"]\]\s*\{\s*color-scheme\s*:\s*dark\s*;/,
+      /\[theme\]\[mode=['"]dark['"]\]\s*\{\s*color-scheme\s*:\s*dark\s*;/,
     )
   })
 
@@ -535,21 +534,21 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(resolveNestedPaintMode('ship', 'light')).toBe('light') // explicit wins
   })
 
-  it('applyNestedTheme stamps theme + data-mode without document event/persist', () => {
+  it('applyNestedTheme stamps theme + mode without document event/persist', () => {
     const root = document.documentElement
     applyTheme('sail', root, 'dark')
     const host = document.createElement('div')
     document.body.appendChild(host)
     const beforeTheme = root.getAttribute('theme')
-    const beforeMode = root.dataset.mode
+    const beforeMode = root.getAttribute('mode')
     const { theme, mode } = applyNestedTheme('paper', host)
     expect(theme).toBe('paper')
     expect(mode).toBe('light')
     expect(host.getAttribute('theme')).toBe('paper')
-    expect(host.dataset.mode).toBe('light')
+    expect(host.getAttribute('mode')).toBe('light')
     // Document product theme untouched
     expect(root.getAttribute('theme')).toBe(beforeTheme)
-    expect(root.dataset.mode).toBe(beforeMode)
+    expect(root.getAttribute('mode')).toBe(beforeMode)
     host.remove()
   })
 
@@ -565,8 +564,8 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
         --field: var(--background);
         --field-foreground: var(--foreground);
       }
-      [theme='paper'][data-mode='light'],
-      [theme='paper']:not([data-mode]) {
+      [theme='paper'][mode='light'],
+      [theme='paper']:not([mode]) {
         --background: #f5f0e6;
         --foreground: #221100;
       }
@@ -578,11 +577,11 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     `
     document.head.appendChild(style)
     document.documentElement.setAttribute('theme', 'sail')
-    document.documentElement.setAttribute('data-mode', 'dark')
+    document.documentElement.setAttribute('mode', 'dark')
 
     const nested = document.createElement('div')
     nested.setAttribute('theme', 'paper')
-    nested.setAttribute('data-mode', 'light')
+    nested.setAttribute('mode', 'light')
     document.body.appendChild(nested)
 
     const nestedField = getComputedStyle(nested).getPropertyValue('--field').trim()
@@ -605,32 +604,32 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     nested.remove()
   })
 
-  it('nested theme= without data-mode inherits document mode (no JS)', () => {
+  it('nested theme= without mode inherits document mode (no JS)', () => {
     const style = document.createElement('style')
     style.textContent = `
-      :root[theme='ship'][data-mode='dark'],
-      [theme='ship'][data-mode='dark'],
-      :root[data-mode='dark'] [theme='ship']:not([data-mode]) {
+      :root[theme='ship'][mode='dark'],
+      [theme='ship'][mode='dark'],
+      :root[mode='dark'] [theme='ship']:not([mode]) {
         --primary: #111111;
       }
-      :root[theme='ship'][data-mode='light'],
-      :root[theme='ship']:not([data-mode]),
-      [theme='ship'][data-mode='light'],
-      :root[data-mode='light'] [theme='ship']:not([data-mode]),
-      :root:not([data-mode]) [theme='ship']:not([data-mode]) {
+      :root[theme='ship'][mode='light'],
+      :root[theme='ship']:not([mode]),
+      [theme='ship'][mode='light'],
+      :root[mode='light'] [theme='ship']:not([mode]),
+      :root:not([mode]) [theme='ship']:not([mode]) {
         --primary: #eeeeee;
       }
-      :root[theme='paper'][data-mode='light'],
-      :root[theme='paper']:not([data-mode]),
-      [theme='paper'][data-mode='light'],
-      [theme='paper']:not([data-mode]) {
+      :root[theme='paper'][mode='light'],
+      :root[theme='paper']:not([mode]),
+      [theme='paper'][mode='light'],
+      [theme='paper']:not([mode]) {
         --primary: #abcdef;
       }
     `
     document.head.appendChild(style)
     const root = document.documentElement
     root.setAttribute('theme', 'ship')
-    root.setAttribute('data-mode', 'dark')
+    root.setAttribute('mode', 'dark')
 
     const nestedShip = document.createElement('div')
     nestedShip.setAttribute('theme', 'ship')
@@ -649,15 +648,15 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     nestedShip.remove()
   })
 
-  it('never sets data-mode=system on document (paintMode resolves)', () => {
+  it('never sets mode=system on document (paintMode resolves)', () => {
     const root = document.documentElement
     applyTheme('sail', root, 'light')
     applyMode('system', root)
-    expect(root.dataset.mode).not.toBe('system')
-    expect(['light', 'dark']).toContain(root.dataset.mode)
+    expect(root.getAttribute('mode')).not.toBe('system')
+    expect(['light', 'dark']).toContain(root.getAttribute('mode'))
     applyTheme('console', root, 'system')
-    expect(root.dataset.mode).not.toBe('system')
-    expect(['light', 'dark']).toContain(root.dataset.mode)
+    expect(root.getAttribute('mode')).not.toBe('system')
+    expect(['light', 'dark']).toContain(root.getAttribute('mode'))
   })
 
   it('paintMode maps system via prefers-color-scheme (mock)', () => {
@@ -708,8 +707,8 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     }
     applyTheme('sail', root, 'light')
     applyMode('system', root)
-    expect(root.dataset.mode).not.toBe('system')
-    expect(['light', 'dark']).toContain(root.dataset.mode)
+    expect(root.getAttribute('mode')).not.toBe('system')
+    expect(['light', 'dark']).toContain(root.getAttribute('mode'))
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('system')
     expect(readModePreference()).toBe('system')
   })
@@ -723,7 +722,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     }
     applyTheme('sail', root, 'light')
     applyMode('dark', root)
-    expect(root.dataset.mode).toBe('dark')
+    expect(root.getAttribute('mode')).toBe('dark')
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('dark')
   })
 
@@ -1052,17 +1051,17 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     // themes.css must override --primary / --surface-1 etc. — the same public
     // surface Layout, Fx, and contracts consume — never invent parallel names.
     // Match modes-in-file theme layers:
-    //   :root[theme='id'][data-mode='…'],
-    //   [theme='id'][data-mode='…'] { … }
+    //   :root[theme='id'][mode='…'],
+    //   [theme='id'][mode='…'] { … }
     // (not themes-chrome structural flourishes on body/card selectors).
     const reg = loadRegistry()
     const known = new Set(reg.names)
     const themesCss = loadSrc('../src/themes.css')
     const selectors = extractThemeSelectors(themesCss)
     expect(selectors.size).toBeGreaterThanOrEqual(2)
-    // Modes-only: every theme block must mention data-mode.
-    expect(themesCss).toMatch(/data-mode=['"]light['"]/)
-    expect(themesCss).toMatch(/data-mode=['"]dark['"]/)
+    // Modes-only: every theme block must mention mode=.
+    expect(themesCss).toMatch(/mode=['"]light['"]/)
+    expect(themesCss).toMatch(/mode=['"]dark['"]/)
     expect(themesCss).not.toMatch(/theme=['"]ship-light['"]/)
     expect(themesCss).not.toMatch(/theme=['"]ship-dark['"]/)
 

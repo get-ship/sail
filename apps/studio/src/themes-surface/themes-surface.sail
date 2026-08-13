@@ -178,13 +178,15 @@ export default controller(() => {
   const paintMode: Action<string | null | undefined> = (node, initial) => {
     const host = asSailHost(node)
     const apply = (m: string | null | undefined): void => {
-      if (m === 'light' || m === 'dark') hostSetAttribute(host, 'data-mode', m)
-      else hostRemoveAttribute(host, 'data-mode')
+      if (m === 'light' || m === 'dark') {
+        hostSetAttribute(host, 'mode', m)
+        hostRemoveAttribute(host, 'data-mode')
+      } else hostRemoveAttribute(host, 'mode')
     }
     apply(initial)
     return {
       update: (next) => apply(next),
-      destroy: () => hostRemoveAttribute(host, 'data-mode'),
+      destroy: () => hostRemoveAttribute(host, 'mode'),
     }
   }
   return {
