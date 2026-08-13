@@ -16,9 +16,10 @@ const MOBILE_VIEWPORT: (f32, f32) = (390.0, 844.0);
 /// Soft taffy findings elevated to Error under `"layout": "error"` (studio).
 const PROMOTE_KINDS: &[&str] = &["child-overflows-parent", "zero-main-axis"];
 
-/// Experimental layout kinds (SPEC-LAYOUT-DIAG-1 / S4.1). Under top-level
-/// `strict: true` these promote to Error at the gate.
-const EXPERIMENTAL_KINDS: &[&str] = &["unintended-overflow", "clipped-text", "sub-min-tap-target"];
+/// Still-experimental layout kinds. Under top-level `strict: true` these
+/// promote to Error at the gate. Promoted kinds (`unintended-overflow`,
+/// `clipped-text`) already emit as Error from the layout crate.
+const EXPERIMENTAL_KINDS: &[&str] = &["sub-min-tap-target"];
 
 /// Viewports used by [`collect`]: mobile reference + source/desktop default.
 /// Dedups when the source already pins a mobile-sized viewport.
@@ -39,10 +40,11 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
 /// profile), which promotes those gate-gap kinds so `sail check` / `compile`
 /// exit non-zero.
 ///
-/// Experimental kinds (`unintended-overflow`, `clipped-text`) emit only when
-/// the nearest config has `"strict": true` or `"layoutExperimental": true`.
-/// `clipped-text` additionally requires `"layoutTextMetrics": true`. Under
-/// `strict`, experimental findings are Error at the gate.
+/// Promoted kinds (`unintended-overflow`, `clipped-text`) always emit as
+/// Error. `clipped-text` can be disabled with `"layoutTextMetrics": false`.
+/// `sub-min-tap-target` emits only when `"strict": true` or
+/// `"layoutExperimental": true`. Under `strict`, experimental findings are
+/// Error at the gate.
 ///
 /// Runs the taffy pass at **at least two viewports** (mobile ~390 and the
 /// source/`data-viewport` desktop default). Identical findings (same mapped
@@ -133,10 +135,10 @@ fn layout_span<R>(phase: &str, f: impl FnOnce() -> R) -> R {
     }
 }
 
-/// Resolve experimental layout check options from the nearest package config.
+/// Resolve layout check options from the nearest package config.
 ///
-/// - `experimental` ← `strict` **or** `layoutExperimental`
-/// - `text_metrics` ← `layoutTextMetrics` only (explicit; noisy path stays opt-in)
+/// - `experimental` ← `strict` **or** `layoutExperimental` (tap only)
+/// - `text_metrics` ← `layoutTextMetrics` when set; default **on** (promoted)
 fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::CheckOptions) {
     let Some(path) = source_path else {
         return (false, sail_layout::CheckOptions::default());
@@ -149,7 +151,7 @@ fn layout_check_options_for(source_path: Option<&Path>) -> (bool, sail_layout::C
     };
     let strict = cfg.strict();
     let experimental = strict || cfg.layout_experimental();
-    let text_metrics = cfg.layout_text_metrics();
+    let text_metrics = cfg.layout_text_metrics_opt().unwrap_or(true);
     (
         strict,
         sail_layout::CheckOptions {

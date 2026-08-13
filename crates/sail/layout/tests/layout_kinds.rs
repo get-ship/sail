@@ -5,7 +5,8 @@
 //!   opt-in (no scroll-area, no overflow setter, no truncate)
 //! - `clipped-text` — measured text run cut without a truncate marker
 //!
-//! Both are **strict/experimental only**. Product entry:
+//! LAYOUT-5: `unintended-overflow` and `clipped-text` are default Error.
+//! `sub-min-tap-target` stays experimental. Product entry:
 //! [`sail_layout::check_preprocessed_with`] + [`sail_layout::CheckOptions`].
 //!
 //! Gate cases (job-spec-spike-s4-1-layout-kinds):
@@ -13,7 +14,7 @@
 //! 2. Overflow with scroll-area / overflow setter → no finding
 //! 3. Clipped text without truncate → finding (experimental/text_metrics path)
 //! 4. Truncate present → no clipped-text
-//! 5. Experimental off → kinds not emitted
+//! 5. Default check emits promoted kinds; tap stays experimental-off
 //!
 //! Implementer: do not weaken these assertions to green-wash a partial land.
 //! Adversarial "must not fire" cases are part of the promotion law.
@@ -166,37 +167,50 @@ fn clipped_text_suppressed_when_truncate_present() {
     );
 }
 
-// ── 5. Experimental off → kinds not emitted ─────────────────────────────────
+// ── 5. Promoted kinds emit on default; tap stays experimental ────────────────
 
 #[test]
-fn experimental_off_does_not_emit_new_kinds_on_overflow_fixture() {
-    // Default entry and explicit experimental:false share the same contract.
+fn default_check_emits_promoted_overflow() {
     let defaulted = check_preprocessed(OVERFLOW_NO_OPTIN, VP).expect("default check");
     let explicit = check_preprocessed_with(OVERFLOW_NO_OPTIN, VP, CheckOptions::default())
-        .expect("explicit off");
-    for (label, result) in [("default", &defaulted), ("explicit-off", &explicit)] {
-        assert!(
-            !has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
-            "{label}: `{KIND_UNINTENDED_OVERFLOW}` must not emit when experimental is off \
-             (rollout protocol): {:?}",
-            result.diagnostics
-        );
-        assert!(
-            !has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
-            "{label}: `{KIND_CLIPPED_TEXT}` must not emit when experimental is off: {:?}",
-            result.diagnostics
+        .expect("explicit default");
+    for (label, result) in [("default", &defaulted), ("explicit-default", &explicit)] {
+        let hit = result
+            .diagnostics
+            .iter()
+            .find(|d| d.kind == KIND_UNINTENDED_OVERFLOW)
+            .unwrap_or_else(|| {
+                panic!(
+                    "{label}: promoted `{KIND_UNINTENDED_OVERFLOW}` must emit: {:?}",
+                    result.diagnostics
+                )
+            });
+        assert_eq!(
+            hit.severity,
+            sail_layout::Severity::Error,
+            "{label}: promoted overflow is Error: {hit:?}"
         );
     }
 }
 
 #[test]
-fn experimental_off_does_not_emit_clipped_text() {
+fn default_check_emits_promoted_clipped_text() {
     let result = check_preprocessed_with(CLIPPED_TEXT_NO_TRUNCATE, VP, CheckOptions::default())
         .expect("layout check");
-    assert!(
-        !has_kind(&result.diagnostics, KIND_CLIPPED_TEXT),
-        "`{KIND_CLIPPED_TEXT}` is experimental/text_metrics only: {:?}",
-        result.diagnostics
+    let hit = result
+        .diagnostics
+        .iter()
+        .find(|d| d.kind == KIND_CLIPPED_TEXT)
+        .unwrap_or_else(|| {
+            panic!(
+                "promoted `{KIND_CLIPPED_TEXT}` must emit on default: {:?}",
+                result.diagnostics
+            )
+        });
+    assert_eq!(
+        hit.severity,
+        sail_layout::Severity::Error,
+        "promoted clipped-text is Error: {hit:?}"
     );
 }
 
@@ -729,4 +743,137 @@ fn tap_target_known_host_with_unknown_child_stays_red() {
         "known 23px button must stay red even when a descendant is unknown: {:?}",
         result.diagnostics
     );
+}
+
+// ── LAYOUT-5 overflow FP classes ────────────────────────────────────────────
+
+/// Unbound `{expr}` source is not a solved width.
+const OVERFLOW_UNBOUND_EXPR: &str = r#"
+<div class="sail-row sail-nowrap s-w8">
+  <p class="s-shrink0 s-fontSizexs">{session.paintMode()}</p>
+</div>
+"#;
+
+/// Same leftover with a known static string — must stay red.
+const OVERFLOW_STATIC_TEXT: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <p class="s-shrink0 s-whitespacenowrap">unbound-expr-is-not-this-static-run</p>
+</div>
+"#;
+
+/// Overlay IR: popover host measured in-flow must not inflate the row.
+const OVERFLOW_POPOVER_OVERLAY: &str = r#"
+<div class="sail-row sail-nowrap s-w20">
+  <div class="s-w10 s-shrink0">Undo</div>
+  <div popover class="s-w40 s-h20">dialog</div>
+</div>
+"#;
+
+/// Host splice: stdlib button class vs a leftover narrower than the token.
+const OVERFLOW_HOST_SPLICE: &str = r#"
+<div class="sail-col s-w14">
+  <button class="sail-button s-sizemd-minHcontrolhmd s-w20 s-h28">x</button>
+</div>
+"#;
+
+#[test]
+fn unintended_overflow_suppressed_for_unbound_expr_width() {
+    let result =
+        check_preprocessed_with(OVERFLOW_UNBOUND_EXPR, VP, experimental()).expect("layout check");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "unbound {{expr}} width is measured-as-unknown — must NOT emit \
+         `{KIND_UNINTENDED_OVERFLOW}`: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_still_fires_for_static_text_leftover() {
+    let result =
+        check_preprocessed_with(OVERFLOW_STATIC_TEXT, VP, experimental()).expect("layout check");
+    assert!(
+        has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "known static text wider than a nowrap leftover must stay red: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_suppressed_for_popover_overlay() {
+    let result = check_preprocessed_with(OVERFLOW_POPOVER_OVERLAY, VP, experimental())
+        .expect("layout check");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "[popover] is out-of-flow overlay IR — must NOT emit \
+         `{KIND_UNINTENDED_OVERFLOW}`: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn unintended_overflow_suppressed_for_spliced_l1_host() {
+    let result =
+        check_preprocessed_with(OVERFLOW_HOST_SPLICE, VP, experimental()).expect("layout check");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_UNINTENDED_OVERFLOW),
+        "sail-button splice vs leftover is host-splice geometry — must NOT emit \
+         `{KIND_UNINTENDED_OVERFLOW}`: {:?}",
+        result.diagnostics
+    );
+}
+
+// ── LAYOUT-5 tap-target scope ───────────────────────────────────────────────
+
+const TAP_PHRASING_LINK: &str = r#"<p>See the <a href="/docs">docs</a> for more.</p>"#;
+const TAP_CHECKBOX_FACE: &str = r#"<input type="checkbox" style:w="16px" style:h="16px">"#;
+const TAP_RADIO_FACE: &str = r#"<input type="radio" style:w="16px" style:h="16px">"#;
+const TAP_RANGE_TRACK: &str = r#"<input type="range" style:w="120px" style:h="20px">"#;
+const TAP_CAPTION_LABEL: &str = r#"<label>Name</label>"#;
+const TAP_LABEL_WRAPS_CHECKBOX: &str = r#"
+<label>
+  <input type="checkbox" style:w="16px" style:h="16px">
+  Enable
+</label>
+"#;
+
+#[test]
+fn tap_target_skips_phrasing_anchor() {
+    let result = check_preprocessed_with(TAP_PHRASING_LINK, VP, experimental()).expect("layout");
+    assert!(
+        !has_kind(&result.diagnostics, KIND_TAP),
+        "inline docs <a> is phrasing, not a standalone target: {:?}",
+        result.diagnostics
+    );
+}
+
+#[test]
+fn tap_target_skips_control_internals() {
+    for (label, src) in [
+        ("checkbox", TAP_CHECKBOX_FACE),
+        ("radio", TAP_RADIO_FACE),
+        ("range", TAP_RANGE_TRACK),
+    ] {
+        let result = check_preprocessed_with(src, VP, experimental()).expect("layout");
+        assert!(
+            !has_kind(&result.diagnostics, KIND_TAP),
+            "{label} face/track is a control internal — label owns the hit area: {:?}",
+            result.diagnostics
+        );
+    }
+}
+
+#[test]
+fn tap_target_skips_caption_label_and_wrapped_face() {
+    for (label, src) in [
+        ("caption", TAP_CAPTION_LABEL),
+        ("wraps-checkbox", TAP_LABEL_WRAPS_CHECKBOX),
+    ] {
+        let result = check_preprocessed_with(src, VP, experimental()).expect("layout");
+        assert!(
+            !has_kind(&result.diagnostics, KIND_TAP),
+            "{label}: caption / wrapped face is not a standalone target: {:?}",
+            result.diagnostics
+        );
+    }
 }

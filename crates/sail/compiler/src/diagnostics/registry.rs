@@ -149,11 +149,11 @@ const DIAG_SPECS: &[DiagSpec] = &[
     DiagSpec {
         id: "sail-clipped-text",
         jurisdiction: Jurisdiction::Lint,
-        default_severity: DiagSeverity::Warning,
-        message_template: "text run is clipped without a truncate opt-in",
+        default_severity: DiagSeverity::Error,
+        message_template: "<{tag}> text measures ~{text}px but its box is {box}px wide — glyphs clip without truncate()",
         allowed_list_source: None,
         fix_text: Some(
-            "add `text: truncate()` if clipping is intentional, or widen the box / wrap the text",
+            "add `text: truncate()` if ellipsis is intended, widen the box, or allow wrapping",
         ),
         docs_anchor: Some("SPEC-LAYOUT-DIAG-1#clipped-text"),
     },
@@ -1206,11 +1206,11 @@ const DIAG_SPECS: &[DiagSpec] = &[
     DiagSpec {
         id: "sail-unintended-overflow",
         jurisdiction: Jurisdiction::Lint,
-        default_severity: DiagSeverity::Warning,
-        message_template: "child overflows parent without an overflow opt-in",
+        default_severity: DiagSeverity::Error,
+        message_template: "<{tag}> is {child}px on the {axis} inside <{parent}> ({parent}px) with no overflow opt-in",
         allowed_list_source: None,
         fix_text: Some(
-            "add `overflowY(auto)` / `overflow(scroll)`, a `<scroll-area>`, or `truncate()` if the overflow is intentional",
+            "grow the parent, wrap or truncate the child, or declare overflowY(auto) / <scroll-area> if scrolling is intended",
         ),
         docs_anchor: Some("SPEC-LAYOUT-DIAG-1#unintended-overflow"),
     },

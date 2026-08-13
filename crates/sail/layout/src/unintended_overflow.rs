@@ -1,4 +1,4 @@
-//! Experimental `unintended-overflow` emit predicates.
+//! `unintended-overflow` emit predicates (promoted, LAYOUT-5).
 
 use crate::html::Element;
 use crate::style::ResolvedStyle;
@@ -53,7 +53,18 @@ pub(crate) fn should_emit(
         child_index,
         main_axis_is_height,
         parent_main,
+        viewport,
     ) {
+        return false;
+    }
+    // Unbound `{expr}` width is a measurement lie — the source text is not
+    // the runtime string. Recorded as this class; do not emit.
+    if !main_axis_is_height && child_width_is_unbound_expr(layout, child_index) {
+        return false;
+    }
+    // Stdlib splice: L1 host min-size vs leftover (or inner splice vs host
+    // token) is cascade geometry, not author overflow.
+    if host_splice_owns_geometry(layout, parent_index, child_index) {
         return false;
     }
     true
@@ -153,11 +164,7 @@ fn class_scrolls_axis(class: &str, height_axis: bool) -> bool {
     class.split_whitespace().any(|c| {
         let s = c.strip_prefix("s-").unwrap_or(c).to_ascii_lowercase();
         let (x, y) = overflow_token_scroll_axes(&s);
-        if height_axis {
-            y
-        } else {
-            x
-        }
+        if height_axis { y } else { x }
     })
 }
 
@@ -243,10 +250,12 @@ fn is_never_shown(elem: &Element, style: &ResolvedStyle, viewport: (f32, f32)) -
 fn is_out_of_flow(elem: &Element, style: &ResolvedStyle) -> bool {
     style.style.position == Position::Absolute
         || class_is_out_of_flow(&elem.class)
-        || is_overlay_host(&elem.tag, &elem.class)
+        || is_overlay_host(elem)
+        || has_popover_attr(&elem.attrs)
 }
 
-fn is_overlay_host(tag: &str, class: &str) -> bool {
+fn is_overlay_host(elem: &Element) -> bool {
+    let tag = elem.tag.as_str();
     matches!(
         tag,
         "dropdown"
@@ -257,7 +266,7 @@ fn is_overlay_host(tag: &str, class: &str) -> bool {
             | "hovercard"
             | "context-menu"
             | "contextmenu"
-    ) || class.split_whitespace().any(|c| {
+    ) || elem.class.split_whitespace().any(|c| {
         matches!(
             c,
             "sail-dropdown"
@@ -267,7 +276,60 @@ fn is_overlay_host(tag: &str, class: &str) -> bool {
                 | "sail-hover-card"
                 | "sail-context-menu"
         )
+    }) || elem
+        .attrs
+        .get("role")
+        .is_some_and(|r| matches!(r.as_str(), "dialog" | "menu" | "listbox" | "tooltip"))
+}
+
+fn has_popover_attr(attrs: &std::collections::HashMap<String, String>) -> bool {
+    attrs.contains_key("popover")
+}
+
+/// `{ident}` / `{ident.method()}` source text is not a solved width.
+fn text_is_unbound_expr(text: &str) -> bool {
+    let t = text.trim();
+    let Some(inner) = t.strip_prefix('{').and_then(|s| s.strip_suffix('}')) else {
+        return false;
+    };
+    let inner = inner.trim();
+    !inner.is_empty() && !inner.contains('{') && !inner.contains('}')
+}
+
+fn child_width_is_unbound_expr(layout: &Layout, index: usize) -> bool {
+    let elem = &layout.elements[index];
+    if text_is_unbound_expr(&elem.text) {
+        return true;
+    }
+    if elem.children.is_empty() {
+        return false;
+    }
+    // Mixed static + expr still has a known static contribution.
+    elem.children
+        .iter()
+        .all(|&i| child_width_is_unbound_expr(layout, i))
+        && elem.text.trim().is_empty()
+}
+
+fn is_spliced_l1_host(elem: &Element) -> bool {
+    elem.class.split_whitespace().any(|c| {
+        matches!(
+            c,
+            "sail-button"
+                | "sail-input"
+                | "sail-select"
+                | "sail-textarea"
+                | "sail-switch"
+                | "sail-checkbox"
+                | "sail-radio"
+                | "sail-slider"
+        )
     })
+}
+
+fn host_splice_owns_geometry(layout: &Layout, parent_index: usize, child_index: usize) -> bool {
+    is_spliced_l1_host(&layout.elements[parent_index])
+        || is_spliced_l1_host(&layout.elements[child_index])
 }
 
 fn class_is_out_of_flow(class: &str) -> bool {
@@ -332,11 +394,25 @@ fn out_of_flow_descendants_account_for_overflow(
     child_index: usize,
     height_axis: bool,
     parent_main: f32,
+    viewport: (f32, f32),
 ) -> bool {
-    if !subtree_has_out_of_flow(layout, child_index) {
+    if !subtree_has_out_of_flow(layout, child_index)
+        && !subtree_has_never_shown(layout, child_index, viewport)
+    {
         return false;
     }
-    in_flow_main(layout, child_index, height_axis) <= parent_main + KIND_EPSILON
+    in_flow_main(layout, child_index, height_axis, viewport) <= parent_main + KIND_EPSILON
+}
+
+fn subtree_has_never_shown(layout: &Layout, index: usize, viewport: (f32, f32)) -> bool {
+    let mut stack = layout.elements[index].children.clone();
+    while let Some(i) = stack.pop() {
+        if is_never_shown(&layout.elements[i], &layout.styles[i], viewport) {
+            return true;
+        }
+        stack.extend(layout.elements[i].children.iter().copied());
+    }
+    false
 }
 
 fn subtree_has_out_of_flow(layout: &Layout, index: usize) -> bool {
@@ -350,17 +426,22 @@ fn subtree_has_out_of_flow(layout: &Layout, index: usize) -> bool {
     false
 }
 
-fn in_flow_main(layout: &Layout, index: usize, height_axis: bool) -> f32 {
+fn in_flow_main(layout: &Layout, index: usize, height_axis: bool, viewport: (f32, f32)) -> f32 {
     if is_out_of_flow(&layout.elements[index], &layout.styles[index]) {
         return 0.0;
     }
+    if is_never_shown(&layout.elements[index], &layout.styles[index], viewport) {
+        return 0.0;
+    }
     let children = &layout.elements[index].children;
-    if children.is_empty() || !subtree_has_out_of_flow(layout, index) {
+    let must_decompose =
+        subtree_has_out_of_flow(layout, index) || subtree_has_never_shown(layout, index, viewport);
+    if children.is_empty() || !must_decompose {
         return element_main(layout, index, height_axis);
     }
     children
         .iter()
-        .map(|&i| in_flow_main(layout, i, height_axis))
+        .map(|&i| in_flow_main(layout, i, height_axis, viewport))
         .sum()
 }
 
@@ -515,6 +596,55 @@ mod tests {
         assert!(attr_is_hidden(&attrs));
         attrs.insert("hidden".into(), String::new());
         assert!(attr_is_hidden(&attrs));
+    }
+
+    #[test]
+    fn unbound_expr_text_is_a_single_interpolation() {
+        assert!(text_is_unbound_expr("{prop.type}"));
+        assert!(text_is_unbound_expr("{session.paintMode()}"));
+        assert!(text_is_unbound_expr("  {id}  "));
+        assert!(!text_is_unbound_expr("{row.from} → {row.to}"));
+        assert!(!text_is_unbound_expr("light"));
+        assert!(!text_is_unbound_expr(""));
+        assert!(!text_is_unbound_expr("{unclosed"));
+    }
+
+    #[test]
+    fn popover_and_dialog_role_are_overlay_hosts() {
+        let mut elem = Element {
+            tag: "div".into(),
+            ..Default::default()
+        };
+        elem.attrs.insert("popover".into(), String::new());
+        assert!(has_popover_attr(&elem.attrs));
+        assert!(is_overlay_host(&Element {
+            tag: "dropdown".into(),
+            ..Default::default()
+        }));
+        let mut dialog = Element {
+            tag: "div".into(),
+            ..Default::default()
+        };
+        dialog.attrs.insert("role".into(), "dialog".into());
+        assert!(is_overlay_host(&dialog));
+        assert!(!is_overlay_host(&Element {
+            tag: "button".into(),
+            ..Default::default()
+        }));
+    }
+
+    #[test]
+    fn spliced_l1_host_matches_sail_button_class() {
+        assert!(is_spliced_l1_host(&Element {
+            tag: "button".into(),
+            class: "sail-button s-sizemd-minHcontrolhmd".into(),
+            ..Default::default()
+        }));
+        assert!(!is_spliced_l1_host(&Element {
+            tag: "button".into(),
+            class: String::new(),
+            ..Default::default()
+        }));
     }
 
     #[test]

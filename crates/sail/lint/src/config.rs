@@ -445,10 +445,13 @@ impl SailConfig {
     /// S4.1 — top-level `"layoutTextMetrics": true` enables text-metrics
     /// kinds (`clipped-text`). Absent / wrong-typed → false.
     pub fn layout_text_metrics(&self) -> bool {
-        matches!(
-            self.raw.get("layoutTextMetrics").and_then(|v| v.as_bool()),
-            Some(true)
-        )
+        matches!(self.layout_text_metrics_opt(), Some(true))
+    }
+
+    /// LAYOUT-5 — explicit `layoutTextMetrics` when set. `None` means the
+    /// promoted default (on) should apply.
+    pub fn layout_text_metrics_opt(&self) -> Option<bool> {
+        self.raw.get("layoutTextMetrics").and_then(|v| v.as_bool())
     }
 
     /// Top-level `"strict": true` — every lint finding is Error at the build

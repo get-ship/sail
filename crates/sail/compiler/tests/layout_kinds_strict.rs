@@ -3,9 +3,8 @@
 //! Product contract:
 //! - Layout kinds `unintended-overflow` / `clipped-text` map to stable rule ids
 //!   `sail-unintended-overflow` / `sail-clipped-text` (register for diagnostic ratchet).
-//! - Enabled only under top-level `strict: true` **or** explicit layout experimental
-//!   config (align with S3.2 rollout: experimental → canary → promote).
-//! - Strict-off / experimental-off → kinds **not emitted** (not merely soft).
+//! - LAYOUT-5: `unintended-overflow` / `clipped-text` are default Error.
+//! - `sub-min-tap-target` stays under `strict: true` **or** `layoutExperimental`.
 //!
 //! Config surface locked here (implementer lands recognition + bridge wiring):
 //! ```jsonc
@@ -114,30 +113,58 @@ fn sail_config_layout_experimental_accessors() {
     assert!(!off.layout_text_metrics());
 }
 
-// ── 5. Strict/experimental off → not emitted ────────────────────────────────
+// ── 5. Promoted kinds emit on default; tap stays experimental ────────────────
 
 #[test]
-fn default_collect_does_not_emit_experimental_layout_rules() {
+fn default_collect_emits_promoted_overflow() {
     let diags = layout_diags(OVERFLOW_SRC, None);
-    assert!(
-        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
-        "default (no strict / no layoutExperimental) must not emit \
-         `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}"
-    );
-    let diags = layout_diags(CLIPPED_TEXT_SRC, None);
-    assert!(
-        !has_rule(&diags, RULE_CLIPPED_TEXT),
-        "default must not emit `{RULE_CLIPPED_TEXT}`: {diags:?}"
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_UNINTENDED_OVERFLOW))
+        .unwrap_or_else(|| {
+            panic!("default collect must emit `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}")
+        });
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "promoted overflow is Error: {hit:?}"
     );
 }
 
 #[test]
-fn package_without_strict_does_not_emit_experimental_layout_rules() {
+fn default_collect_emits_promoted_clipped_text() {
+    let diags = layout_diags(CLIPPED_TEXT_SRC, None);
+    let hit = diags
+        .iter()
+        .find(|d| d.rule.as_deref() == Some(RULE_CLIPPED_TEXT))
+        .unwrap_or_else(|| panic!("default collect must emit `{RULE_CLIPPED_TEXT}`: {diags:?}"));
+    assert_eq!(
+        hit.severity,
+        DiagSeverity::Error,
+        "promoted clipped-text is Error: {hit:?}"
+    );
+}
+
+#[test]
+fn package_without_strict_emits_promoted_overflow() {
     let (_tmp, sail) = write_fixture(r#"{ "preset": "full" }"#, OVERFLOW_SRC);
     let diags = layout_diags(OVERFLOW_SRC, Some(&sail));
     assert!(
-        !has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
-        "strict-off package must not emit `{RULE_UNINTENDED_OVERFLOW}`: {diags:?}"
+        has_rule(&diags, RULE_UNINTENDED_OVERFLOW),
+        "promoted overflow must emit without strict: {diags:?}"
+    );
+}
+
+const TAP_SRC: &str = r#"
+<button type="button" style({ box: w(23).h(40) })>x</button>
+"#;
+
+#[test]
+fn default_collect_does_not_emit_tap_target() {
+    let diags = layout_diags(TAP_SRC, None);
+    assert!(
+        !has_rule(&diags, "sail-sub-min-tap-target"),
+        "tap target stays experimental: {diags:?}"
     );
 }
 

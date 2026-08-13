@@ -3375,6 +3375,16 @@ export default controller(() => {
     }
 
     #[test]
+    fn stdlib_dropdown_splice_is_popover_overlay() {
+        let out = preprocess(r#"<dropdown placement="bottom-end"><p>menu</p></dropdown>"#)
+            .expect("preprocess");
+        assert!(
+            out.contains("popover") || out.contains("positionfixed") || out.contains("s-fixed"),
+            "dropdown splice must stay out-of-flow for overlay IR: {out}"
+        );
+    }
+
+    #[test]
     fn stdlib_spinner_lowers_at_use_site() {
         let out = preprocess(
             r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#,

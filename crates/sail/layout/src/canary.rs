@@ -82,17 +82,16 @@ pub struct CanaryReport {
     pub promotion: PromotionStatus,
 }
 
-/// Promotion criteria prose for RESULT / future promote decision.
+/// Promotion criteria prose for RESULT.
 ///
-/// Kinds stay experimental-only until a corpus canary shows ≈0 false
-/// positives on known vehicles and a broader sample review. Do not flip
-/// default severity from this spike.
+/// LAYOUT-5: overflow + clipped-text promoted (corpus FP ≈ 0). Tap stays
+/// experimental with remaining classes named in RESULT-LAYOUT-5.
 const PROMOTION_CRITERIA: &str = "\
-Promote unintended-overflow / clipped-text to default Error only when a \
-corpus canary under experimental shows FP rate ≈ 0 on intentional true-positive \
-vehicles and a reviewed sample of real corpus findings has no material false \
-positives. Until then keep experimental_only = true (strict / layoutExperimental \
-gate). S4.2 records counts + FP verdicts; it does not promote.";
+unintended-overflow and clipped-text promoted to default Error after LAYOUT-5 \
+corpus canary FP≈0. Seeded no-opt-in / no-truncate fixtures stay red. \
+sub-min-tap-target stays experimental: remaining classes named in \
+RESULT-LAYOUT-5 (control-h-2xs 22px token, doc-button size exhibit, \
+field measure drift, swatch labels, canvas ports).";
 
 /// Run experimental layout kinds against labeled preprocessed fixtures and
 /// optional on-disk corpus roots.
@@ -104,7 +103,7 @@ gate). S4.2 records counts + FP verdicts; it does not promote.";
 /// - `corpus_roots` may be empty; when non-empty, walks `*.html` files
 ///   (treated as preprocessed HTML) as a best-effort extension of the canary.
 /// - Report populates [`CanaryCounts`], samples, per-sample FP verdicts,
-///   and promotion criteria with `experimental_only: true`.
+///   and promotion criteria (overflow + clipped-text promoted).
 pub fn run(
     fixture_sources: &[(&str, &str)],
     corpus_roots: &[&Path],
@@ -151,7 +150,7 @@ pub fn run(
         samples,
         fp_verdicts,
         promotion: PromotionStatus {
-            experimental_only: true,
+            experimental_only: false,
             criteria: PROMOTION_CRITERIA.to_string(),
         },
     })
@@ -231,15 +230,12 @@ fn judge_finding(path: &str, kind: &str) -> (FpJudgment, String) {
         }
         KIND_UNINTENDED_OVERFLOW => (
             FpJudgment::Unclear,
-            "unintended-overflow on non-vehicle path; needs human FP review \
-             before promote (experimental_only remains true)"
+            "unintended-overflow on non-vehicle path; corpus review lives in RESULT-LAYOUT-5"
                 .into(),
         ),
         KIND_CLIPPED_TEXT => (
             FpJudgment::Unclear,
-            "clipped-text on non-vehicle path; needs human FP review before \
-             promote (experimental_only remains true)"
-                .into(),
+            "clipped-text on non-vehicle path; corpus review lives in RESULT-LAYOUT-5".into(),
         ),
         _ => (
             FpJudgment::Unclear,

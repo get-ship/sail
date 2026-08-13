@@ -149,6 +149,22 @@ pub struct CorpusReport {
     pub findings: Vec<CorpusFinding>,
 }
 
+fn promotion_for(kind: &str) -> Promotion {
+    match kind {
+        "unintended-overflow" | "clipped-text" => Promotion {
+            decided: true,
+            experimental_only: false,
+            note: "promoted to default Error after LAYOUT-5 ≈0-FP canary".into(),
+        },
+        _ => Promotion {
+            decided: true,
+            experimental_only: true,
+            note: "sub-min-tap-target stays experimental; remaining classes in RESULT-LAYOUT-5"
+                .into(),
+        },
+    }
+}
+
 /// Walk the product corpus trees and scan `unintended-overflow`.
 ///
 /// Findings are information. This function does not fail because overflow
@@ -278,14 +294,10 @@ pub fn scan_kind(workspace: &Path, kind: &'static str) -> anyhow::Result<CorpusR
 
     Ok(CorpusReport {
         kind_filter: kind,
-        experimental: true,
+        experimental: kind == "sub-min-tap-target",
         stdlib_expand,
         stdlib_error,
-        promotion: Promotion {
-            decided: false,
-            experimental_only: true,
-            note: "experimental only; promotion not decided".into(),
-        },
+        promotion: promotion_for(kind),
         counts,
         trees,
         perf: Perf {
