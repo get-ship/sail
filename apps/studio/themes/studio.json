@@ -17,7 +17,7 @@
             "$type": "color"
           },
           "foreground": {
-            "$value": "oklch(0.98 0.01 70)",
+            "$value": "oklch(0.18 0.02 48)",
             "$type": "color"
           }
         },
@@ -275,7 +275,7 @@
             "$type": "color"
           },
           "foreground": {
-            "$value": "oklch(0.98 0.01 70)",
+            "$value": "oklch(0.18 0.02 48)",
             "$type": "color"
           }
         },
