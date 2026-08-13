@@ -9,6 +9,7 @@ use crate::metrics::{Family, Size as TextSize, table as metrics_table};
 use crate::style::{ResolvedStyle, Role, Visibility, resolve};
 use anyhow::Result;
 use std::collections::HashMap;
+use std::sync::Arc;
 use taffy::prelude::*;
 
 /// Per-leaf context for the taffy measure closure. The element index
@@ -26,7 +27,7 @@ pub struct Layout {
     pub taffy: TaffyTree<NodeContext>,
     pub styles: Vec<ResolvedStyle>,
     pub nodes: Vec<Option<NodeId>>,
-    pub elements: Vec<Element>,
+    pub elements: Arc<[Element]>,
     pub viewport: (f32, f32),
     /// `unknown_subtree[i]` is true iff element `i` (or any descendant in its
     /// subtree) is a tag the layout pass cannot size (custom element or
@@ -48,10 +49,13 @@ pub fn build<I>(elements: I, viewport: (f32, f32)) -> Result<Layout>
 where
     I: IntoIterator<Item = Element>,
 {
+    build_arc(elements.into_iter().collect::<Vec<_>>().into(), viewport)
+}
+
+/// Same as [`build`], sharing one parsed forest across viewports.
+pub fn build_arc(elements: Arc<[Element]>, viewport: (f32, f32)) -> Result<Layout> {
     // SPEC-TOOLING-1 §WI6: every taffy compute is a countable "layout pass".
     crate::record_layout_pass();
-
-    let elements: Vec<Element> = elements.into_iter().collect();
 
     let mut taffy: TaffyTree<NodeContext> = TaffyTree::new();
     let mut styles: Vec<ResolvedStyle> = Vec::with_capacity(elements.len());

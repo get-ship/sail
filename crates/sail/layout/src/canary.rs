@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::{CheckOptions, check_preprocessed_with};
+use crate::{CheckOptions, Forest, check_preprocessed_with, check_tree};
 
 /// Default viewport for canary scans (matches gate vehicles).
 const DEFAULT_VIEWPORT: (f32, f32) = (400.0, 300.0);
@@ -323,12 +323,16 @@ pub fn scan_preprocessed(
     opts: CheckOptions,
 ) -> PreprocessedScan {
     let started = std::time::Instant::now();
+    let forest = Forest::parse(preprocessed);
     let mut findings = Vec::new();
     let mut viewport_errors = Vec::new();
     let mut viewports_ok = 0usize;
 
     for &viewport in viewports {
-        match check_preprocessed_with(preprocessed, viewport, opts) {
+        match forest
+            .layout(viewport)
+            .and_then(|tree| check_tree(&tree, opts))
+        {
             Ok(result) => {
                 viewports_ok += 1;
                 for d in result.diagnostics {

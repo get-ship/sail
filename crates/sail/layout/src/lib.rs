@@ -64,6 +64,32 @@ pub use metrics::{Family, Size as TextSize, table as metrics_table};
 pub use style::ResolvedStyle;
 pub use taffy_tree::Layout;
 
+use std::sync::Arc;
+
+/// Parsed HTML forest. One parse, many viewport layouts.
+#[derive(Debug, Clone)]
+pub struct Forest {
+    elements: Arc<[Element]>,
+}
+
+impl Forest {
+    /// Parse already-preprocessed HTML once.
+    pub fn parse(preprocessed: &str) -> Self {
+        Self {
+            elements: Arc::from(parse_source(preprocessed)),
+        }
+    }
+
+    pub fn elements(&self) -> &[Element] {
+        &self.elements
+    }
+
+    /// Compute a box tree at `viewport`. Shares this forest's elements.
+    pub fn layout(&self, viewport: (f32, f32)) -> anyhow::Result<Layout> {
+        taffy_tree::build_arc(Arc::clone(&self.elements), viewport)
+    }
+}
+
 /// Re-export the engine we wrap. External callers (the bin, future LSP/seam
 /// hooks) build trees and call compute_layout through this alias.
 pub use taffy;
@@ -162,14 +188,14 @@ pub fn check_preprocessed_with(
     viewport: (f32, f32),
     options: CheckOptions,
 ) -> anyhow::Result<ScanResult> {
-    // 1. Parse the lowered HTML (controller-style block already extracted).
-    let elements = parse_source(preprocessed);
+    let forest = Forest::parse(preprocessed);
+    check_tree(&forest.layout(viewport)?, options)
+}
 
-    // 2. Resolve every element to a taffy style and compute the tree.
-    let tree = taffy_tree::build(elements, viewport)?;
-
-    // 3. Walk the computed tree and emit diagnostics (experimental kinds gated).
-    diagnostics::scan_with(&tree, viewport, options)
+/// Scan an already-computed box tree. Callers that share a [`Forest`] across
+/// viewports use this so they do not re-parse HTML.
+pub fn check_tree(layout: &Layout, options: CheckOptions) -> anyhow::Result<ScanResult> {
+    diagnostics::scan_with(layout, layout.viewport, options)
 }
 
 /// Convenience for standalone callers that have their own preprocessor.
