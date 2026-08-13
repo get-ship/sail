@@ -2543,6 +2543,35 @@ fn typecheck_project_env_reused(
     Ok(())
 }
 
+/// CLI walks store CWD-relative paths that already include the project
+/// prefix. Joining those onto `project_root` again opens a directory that
+/// does not exist, and relative imports become TS2307 for siblings on disk.
+pub fn resolve_product_path(project_root: &Path, p: &Path) -> PathBuf {
+    if let Ok(c) = p.canonicalize() {
+        return c;
+    }
+    let root = project_root
+        .canonicalize()
+        .unwrap_or_else(|_| project_root.to_path_buf());
+    let joined = root.join(p);
+    if let Ok(c) = joined.canonicalize() {
+        return c;
+    }
+    let comps: Vec<_> = p.components().collect();
+    for i in 0..comps.len() {
+        let suffix: PathBuf = comps[i..].iter().collect();
+        let cand = root.join(&suffix);
+        if let Ok(c) = cand.canonicalize() {
+            return c;
+        }
+    }
+    if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        joined
+    }
+}
+
 /// Live program for one TypeEnv. Kind projects stay at the real root.
 #[cfg(not(target_arch = "wasm32"))]
 fn env_program_ts_diags(
@@ -2565,12 +2594,12 @@ fn env_program_ts_diags(
         let entries: Vec<(PathBuf, String, String)> = files
             .iter()
             .map(|(p, src)| {
-                let abs = if p.is_absolute() {
-                    p.to_path_buf()
-                } else {
-                    project_root.join(p)
-                };
-                (abs, (*src).to_string(), p.to_string_lossy().into_owned())
+                let abs = resolve_product_path(project_root, p);
+                (
+                    abs.clone(),
+                    (*src).to_string(),
+                    abs.to_string_lossy().into_owned(),
+                )
             })
             .collect();
         (cfg, entries, false)
@@ -3803,6 +3832,33 @@ mod tests {
         } else {
             None
         }
+    }
+
+    #[test]
+    fn resolve_product_path_does_not_double_join_cli_walk() {
+        let tmp = tempfile::tempdir().unwrap();
+        let project = tmp.path().join("apps").join("studio");
+        let file = project.join("src").join("design").join("types.ts");
+        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+        std::fs::write(&file, "export type T = number\n").unwrap();
+        let canon = file.canonicalize().unwrap();
+
+        assert_eq!(resolve_product_path(&project, &file), canon);
+        assert_eq!(
+            resolve_product_path(&project, Path::new("src/design/types.ts")),
+            canon
+        );
+
+        let cli_walk = PathBuf::from("apps/studio/src/design/types.ts");
+        assert_eq!(
+            resolve_product_path(&project, &cli_walk),
+            canon,
+            "CWD-prefixed walk path must open the real file, not project/apps/studio/..."
+        );
+        assert!(
+            !project.join(&cli_walk).exists(),
+            "sanity: naive join is the ghost path"
+        );
     }
 
     #[test]

@@ -62,8 +62,33 @@ fn keys_for_product(
 ) -> BTreeSet<TsDiagKey> {
     diags
         .iter()
-        .filter(|d| product.contains(&rel_diag_path(project, &d.file)))
+        .filter(|d| {
+            let rel = rel_diag_path(project, &d.file);
+            if product.contains(&rel) {
+                return true;
+            }
+            // Same suffix rule the CLI uses — CWD-prefixed labels
+            // (`apps/studio/src/foo.ts`) must not vanish from the fixture.
+            let f = d.file.replace('\\', "/");
+            product
+                .iter()
+                .any(|p| f.ends_with(p.as_str()) || f.contains(&format!("/{p}")))
+        })
         .map(|d| ts_diag_key(project, d))
+        .collect()
+}
+
+/// Walk paths the CLI stores when CWD is the workspace (`apps/studio/src/…`).
+fn cli_walk_files(workspace: &Path, files: &[(PathBuf, String)]) -> Vec<(PathBuf, String)> {
+    files
+        .iter()
+        .map(|(p, src)| {
+            let rel = p
+                .strip_prefix(workspace)
+                .unwrap_or(p.as_path())
+                .to_path_buf();
+            (rel, src.clone())
+        })
         .collect()
 }
 
@@ -112,6 +137,56 @@ fn studio_gate_matches_tsc_p() {
         panic!("tsgo required");
     }
     assert_parity("studio", &root.join("apps/studio"), &tsc_bin(&root));
+}
+
+#[test]
+fn relative_cli_walk_paths_match_tsc_p() {
+    let root = workspace_root();
+    if resolve_tsgo(Some(&root)).is_none() {
+        panic!("tsgo required");
+    }
+    let tsc = tsc_bin(&root);
+    for (label, rel) in [
+        ("studio-cli-walk", "apps/studio"),
+        ("site-cli-walk", "apps/sail-site"),
+        ("components-cli-walk", "packages/components/sail"),
+    ] {
+        let project = root.join(rel);
+        write_project_type_configs(&project).expect("kind configs");
+        let files = collect_project_gate_files(&project);
+        assert!(
+            !files.is_empty(),
+            "{label}: expected product .ts under {}",
+            project.display()
+        );
+        let walked = cli_walk_files(&root, &files);
+        assert!(
+            walked.iter().any(|(p, _)| !p.is_absolute()),
+            "{label}: CLI walk paths must stay CWD-relative"
+        );
+        let product = product_rels(&project, &files);
+        reset_type_gate_servers();
+        let gate = collect_project_ts_diags(&project, &walked).expect("live program");
+        assert!(
+            !lsp_is_disabled(),
+            "{label}: parity must use the long-lived program, not CLI tsgo -p"
+        );
+        let mut tsc_diags = run_tsc_p(&project, &tsc, PROJECT_TSCONFIG_PURE_REL);
+        tsc_diags.extend(run_tsc_p(&project, &tsc, PROJECT_TSCONFIG_ACTION_REL));
+        let gate_keys = keys_for_product(&project, &product, &gate);
+        let tsc_keys = keys_for_product(&project, &product, &tsc_diags);
+        let only_gate: Vec<_> = gate_keys.difference(&tsc_keys).cloned().collect();
+        let only_tsc: Vec<_> = tsc_keys.difference(&gate_keys).cloned().collect();
+        eprintln!(
+            "{label}: product diags gate={} tsc={}",
+            gate_keys.len(),
+            tsc_keys.len()
+        );
+        assert!(
+            only_gate.is_empty() && only_tsc.is_empty(),
+            "{label}: relative walk must match tsc -p (ghost URI regression)\n  only gate: {only_gate:#?}\n  only tsc: {only_tsc:#?}"
+        );
+    }
 }
 
 #[test]
