@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{CompileMode, CompileOpts, compile};
+use sail_compiler::{compile, CompileMode, CompileOpts};
 use sail_lint::rules::no_component_token;
 use sail_lint::rules::no_data_attr;
 
@@ -54,6 +54,30 @@ fn style_bg_card_is_theme_owned() {
 fn style_bg_primary_ok() {
     compile(r#"<div style({ paint: bg(primary) })>x</div>"#, app_opts())
         .expect("bg(primary) must compile");
+}
+
+#[test]
+fn local_style_page_const_ok() {
+    compile(
+        r#"
+<scope>
+  style page = { box: maxW(breakpoint-desktop).mx(auto).w(full).overflow(visible) }
+</scope>
+<column style(page)>x</column>
+"#,
+        app_opts(),
+    )
+    .expect("local style page must compile");
+}
+
+#[test]
+fn style_border_page_is_theme_owned() {
+    let msg = compile_err(r#"<div style({ paint: border(page) })>x</div>"#);
+    assert!(
+        msg.contains("theme-owned") && msg.contains("theme="),
+        "teaching missing: {msg}"
+    );
+    assert!(msg.contains("page"), "must name the token: {msg}");
 }
 
 #[test]

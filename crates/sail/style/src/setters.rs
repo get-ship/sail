@@ -2047,11 +2047,11 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
                     source: op.source.clone(),
                 });
             }
-            // SPEC-D1 / THEMES-1-ENFORCE: component surface public names are
-            // emit labels only — not Style author Tokens. Host units use
-            // dotted MemberPath. App Style gets a theme-owned teaching error.
+            // Color-scale args that name a component token (pack stem, author
+            // path, or emit label) are theme-owned. Pack stems without a
+            // public fill (`page`) still cannot resolve in app Style.
             if spec.scale == Some("color")
-                && crate::component_surfaces::is_component_public_name(bare)
+                && crate::component_surfaces::is_theme_owned_token_name(bare)
             {
                 return Err(StyleDiagnostic::ThemeOwnedToken {
                     name: tok.clone(),
