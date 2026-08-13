@@ -46,11 +46,16 @@
 //!
 //! OnSave only (compile / `check_all` / MCP / LSP didSave). Never OnType.
 //!
-//! ## Process cache
+//! ## Process cache + program reuse
 //!
 //! `collect_sail_type_gate` caches by `(source_path, source hash)` so deck
 //! success (`compile` + `emit_build_warnings` → `check_all`) does not double
 //! invoke tsgo for the same file contents in one process.
+//!
+//! A cache miss talks to a **long-lived** `tsgo --lsp` program (one per
+//! TypeEnv + project). The `.sail` region harness and the project `.ts`
+//! batch share that shape: file identity + bytes invalidate, not a fresh
+//! `tsgo -p` spawn. Missing tsgo is still a loud Error.
 
 use std::collections::{BTreeSet, HashMap};
 use std::fmt::Write as _;
@@ -61,6 +66,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 
 use crate::ambients::{TypeEnv, emit_action_observation_dts, lib_for_type_env, type_env_for_path};
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "tsgo_server.rs"]
+mod tsgo_server;
 use crate::diagnostics::{DiagSeverity, Diagnostic};
 use crate::runtime_ambient::RUNTIME_AMBIENT;
 
@@ -220,6 +229,29 @@ static TYPE_GATE_CACHE_HITS: AtomicU64 = AtomicU64::new(0);
 /// How many `tsgo` subprocesses this process has spawned.
 pub fn tsgo_invocation_count() -> u64 {
     TSGO_INVOCATIONS.load(Ordering::Relaxed)
+}
+
+/// Record a spawn (CLI or long-lived LSP). Used by the reuse server.
+pub(crate) fn note_tsgo_spawn() {
+    TSGO_INVOCATIONS.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Drop live tsgo programs so the next check is a true cold start.
+pub fn reset_type_gate_servers() {
+    #[cfg(not(target_arch = "wasm32"))]
+    tsgo_server::reset();
+}
+
+/// How many checks reused an already-live program (not a spawn, not a byte-cache hit).
+pub fn type_gate_program_reuse_hits() -> u64 {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        tsgo_server::reuse_hits()
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        0
+    }
 }
 
 /// How many type-gate cache hits this process has served.
@@ -551,9 +583,8 @@ pub fn check_project_type_gate(project: &Path) -> Vec<Diagnostic> {
 /// * otherwise skip tsgo when `changed` is non-empty and contains no product
 ///   `.ts`. A `.sail`-only tick is the cheap path.
 ///
-/// A product `.ts` tick still shells `tsgo -p`. That is a full spawn, not
-/// in-process program reuse. Kind tsconfigs may emit `tsBuildInfoFile`;
-/// measured warm ≈ cold on the fixture (spawn dominates).
+/// A product `.ts` tick reuses the live program (file identity + bytes).
+/// Missing tsgo is still loud.
 pub fn check_project_type_gate_incremental(
     project: &Path,
     changed: &[PathBuf],
@@ -853,8 +884,85 @@ fn typecheck_region_harness(
     tool: &TsgoTool,
     author_source: &str,
 ) -> std::io::Result<Vec<TsDiag>> {
+    let project_root = source_path.and_then(find_project_root);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if !tsgo_server::lsp_is_disabled() {
+            let persist = tsgo_server::harness_work_dir(env, project_root.as_deref());
+            if let Ok(written) = write_region_harness(
+                region,
+                env,
+                source_path,
+                author_source,
+                project_root.as_deref(),
+                &persist,
+                true,
+            ) {
+                if let Ok(diags) = tsgo_server::diagnose_region(
+                    tool,
+                    env,
+                    project_root.as_deref(),
+                    &persist,
+                    &written.region_rel,
+                    &written.harness,
+                    &written.tsconfig,
+                ) {
+                    return Ok(diags);
+                }
+            }
+        }
+    }
+    typecheck_region_harness_cli(region, env, source_path, tool, author_source)
+}
+
+fn typecheck_region_harness_cli(
+    region: &ControllerRegion,
+    env: TypeEnv,
+    source_path: Option<&Path>,
+    tool: &TsgoTool,
+    author_source: &str,
+) -> std::io::Result<Vec<TsDiag>> {
     let out_dir = gate_temp_dir(source_path);
     std::fs::create_dir_all(&out_dir)?;
+    let project_root = source_path.and_then(find_project_root);
+    let _ = write_region_harness(
+        region,
+        env,
+        source_path,
+        author_source,
+        project_root.as_deref(),
+        &out_dir,
+        false,
+    )?;
+    let output = run_tsgo(tool, &["-p", "tsconfig.json", "--noEmit"], &out_dir);
+    let result = match output {
+        Ok(output) => {
+            let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+            text.push_str(&String::from_utf8_lossy(&output.stderr));
+            Ok(text.lines().filter_map(parse_line).collect())
+        }
+        Err(e) => Err(e),
+    };
+    let _ = std::fs::remove_dir_all(&out_dir);
+    result
+}
+
+struct WrittenHarness {
+    region_rel: String,
+    harness: String,
+    tsconfig: String,
+}
+
+fn write_region_harness(
+    region: &ControllerRegion,
+    env: TypeEnv,
+    source_path: Option<&Path>,
+    author_source: &str,
+    project_root: Option<&Path>,
+    out_dir: &Path,
+    reuse_include: bool,
+) -> std::io::Result<WrittenHarness> {
+    std::fs::create_dir_all(out_dir)?;
 
     // Scope type aliases / type imports — append so aliases hoist and
     // controller body line numbers stay absolute.
@@ -887,8 +995,7 @@ fn typecheck_region_harness(
 
     // Sibling-tree parity (E4b R2): mirror author dir so `./` / `../` resolve.
     // Present siblings → open-any stubs (existence proven). Missing → TS2307.
-    let project_root = source_path.and_then(find_project_root);
-    let mirror_rel = mirror_region_rel(source_path, project_root.as_deref());
+    let mirror_rel = mirror_region_rel(source_path, project_root);
     let region_path = out_dir.join("mirror").join(&mirror_rel).join("region.ts");
     if let Some(parent) = region_path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -910,12 +1017,12 @@ fn typecheck_region_harness(
         "\"./sail-runtime-ambient.d.ts\"".to_string(),
     ];
     for stub_rel in
-        materialize_relative_import_siblings(&import_scan_body, &out_dir, source_path, &mirror_rel)?
+        materialize_relative_import_siblings(&import_scan_body, out_dir, source_path, &mirror_rel)?
     {
         files.push(format!("\"{stub_rel}\""));
     }
     let (at_files, at_paths_block) =
-        materialize_at_alias_stubs(&import_scan_body, &out_dir, project_root.as_deref())?;
+        materialize_at_alias_stubs(&import_scan_body, out_dir, project_root)?;
     for f in at_files {
         files.push(format!("\"{f}\""));
     }
@@ -923,7 +1030,7 @@ fn typecheck_region_harness(
     // requested names work. Prefer real `node_modules/@ship` types for package
     // roots when present (named-export fidelity); open-any covers subpaths and
     // roots without install.
-    let ship_nm = find_ship_node_modules(project_root.as_deref().or(source_path));
+    let ship_nm = find_ship_node_modules(project_root.or(source_path));
     let open_ship = emit_open_ship_package_ambient(&import_scan_body, ship_nm.is_some());
     if !open_ship.is_empty() {
         std::fs::write(out_dir.join("ship-open-stubs.d.ts"), open_ship)?;
@@ -945,13 +1052,13 @@ fn typecheck_region_harness(
         .join(", ");
 
     let base_paths = if at_paths_block.is_empty() {
-        region_harness_paths_block(project_root.as_deref(), &out_dir)
+        region_harness_paths_block(project_root, out_dir)
     } else {
         at_paths_block
     };
     let ship_paths = ship_nm
         .as_ref()
-        .and_then(|nm| ship_packages_paths_entry(nm, &out_dir))
+        .and_then(|nm| ship_packages_paths_entry(nm, out_dir))
         .unwrap_or_default();
     let paths_block = merge_paths_blocks(&[base_paths, ship_paths]);
 
@@ -961,6 +1068,14 @@ fn typecheck_region_harness(
     // Resolution options match kind tsconfig (`allowImportingTsExtensions`,
     // `types: []`) so legal `.ts` relatives work and monorepo `@types/node`
     // cannot false-green Pure.
+    //
+    // Reuse sessions use `include` so the file set can grow without rewriting
+    // `files` (a tsconfig identity change would reload the program).
+    let file_set = if reuse_include {
+        r#"  "include": ["./mirror/**/*.ts", "./at/**/*.ts", "./*.d.ts"]"#.to_string()
+    } else {
+        format!("  \"files\": [{}]", files.join(", "))
+    };
     let tsconfig = format!(
         r#"{{
   "compilerOptions": {{
@@ -979,26 +1094,19 @@ fn typecheck_region_harness(
 {paths_block}
     }}
   }},
-  "files": [{files}]
+{file_set}
 }}
 "#,
         resolution_opts = HARNESS_RESOLUTION_OPTS,
-        files = files.join(", "),
     );
-    let tsconfig_path = out_dir.join("tsconfig.json");
-    std::fs::write(&tsconfig_path, tsconfig)?;
+    std::fs::write(out_dir.join("tsconfig.json"), &tsconfig)?;
 
-    let output = run_tsgo(tool, &["-p", "tsconfig.json", "--noEmit"], &out_dir);
-    let result = match output {
-        Ok(output) => {
-            let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
-            text.push_str(&String::from_utf8_lossy(&output.stderr));
-            Ok(text.lines().filter_map(parse_line).collect())
-        }
-        Err(e) => Err(e),
-    };
-    let _ = std::fs::remove_dir_all(&out_dir);
-    result
+    let region_rel = region_rel.trim_start_matches("./").to_string();
+    Ok(WrittenHarness {
+        region_rel,
+        harness,
+        tsconfig,
+    })
 }
 
 fn find_project_root(start: &Path) -> Option<PathBuf> {
@@ -2203,10 +2311,257 @@ fn typecheck_project_env(
     if files.is_empty() {
         return Ok(());
     }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if !tsgo_server::lsp_is_disabled() {
+            if let Ok(()) = typecheck_project_env_reused(project_root, env, files, tool, diags) {
+                return Ok(());
+            }
+        }
+    }
     if typecheck_project_env_via_kind_config(project_root, env, files, tool, diags)? {
         return Ok(());
     }
     typecheck_project_env_mirror(project_root, env, files, tool, diags)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn typecheck_project_env_reused(
+    project_root: &Path,
+    env: TypeEnv,
+    files: &[(&Path, &str)],
+    tool: &TsgoTool,
+    diags: &mut Vec<Diagnostic>,
+) -> std::io::Result<()> {
+    let kind_rel = match env {
+        TypeEnv::Pure => Some(crate::ambients::PROJECT_TSCONFIG_PURE_REL),
+        TypeEnv::Action => Some(crate::ambients::PROJECT_TSCONFIG_ACTION_REL),
+        TypeEnv::Framework => return Ok(()),
+    };
+    let kind_abs = kind_rel.map(|r| project_root.join(r));
+    let use_kind = kind_abs.as_ref().is_some_and(|p| p.is_file());
+
+    if use_kind {
+        if let Some(kind_abs) = kind_abs.as_ref() {
+            if let Some(sail_dir) = kind_abs.parent() {
+                let mut required = vec!["types.d.ts", "css-modules.d.ts"];
+                if env == TypeEnv::Action {
+                    required.push("action-observation.d.ts");
+                }
+                for name in required {
+                    let path = sail_dir.join(name);
+                    if !path.is_file() {
+                        diags.push(Diagnostic {
+                            line: 1,
+                            col: 1,
+                            end_line: 1,
+                            end_col: 1,
+                            severity: DiagSeverity::Error,
+                            message: format!(
+                                "kind tsconfig lists `./{name}` but {} is missing",
+                                path.display()
+                            ),
+                            rule: Some(RULE_TYPE_GATE.to_string()),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    let product: BTreeSet<String> = files
+        .iter()
+        .map(|(p, _)| {
+            p.strip_prefix(project_root)
+                .unwrap_or(p)
+                .to_string_lossy()
+                .replace('\\', "/")
+        })
+        .collect();
+
+    let work_dir = tsgo_server::project_work_dir(project_root, env);
+
+    let (tsconfig, entries) = if use_kind {
+        let kind_rel = kind_rel.expect("kind env");
+        let kind_path = project_root.join(kind_rel);
+        let mut file_list: Vec<String> = files
+            .iter()
+            .map(|(p, _)| {
+                let abs = if p.is_absolute() {
+                    p.to_path_buf()
+                } else {
+                    project_root.join(p)
+                };
+                format!("\"{}\"", abs.to_string_lossy().replace('\\', "/"))
+            })
+            .collect();
+        file_list.sort();
+        let file_list = file_list.join(", ");
+        let cfg = format!(
+            "{{\n  \"extends\": \"{}\",\n  \"files\": [{file_list}]\n}}\n",
+            kind_path.to_string_lossy().replace('\\', "/")
+        );
+        let entries: Vec<(PathBuf, String, String)> = files
+            .iter()
+            .map(|(p, src)| {
+                let abs = if p.is_absolute() {
+                    p.to_path_buf()
+                } else {
+                    project_root.join(p)
+                };
+                (abs, (*src).to_string(), p.to_string_lossy().into_owned())
+            })
+            .collect();
+        (cfg, entries)
+    } else {
+        let mut file_list: Vec<String> = Vec::new();
+        let mut entries: Vec<(PathBuf, String, String)> = Vec::new();
+        for (i, (path, src)) in files.iter().enumerate() {
+            let rel = match path.strip_prefix(project_root) {
+                Ok(r) if !r.as_os_str().is_empty() => r.to_path_buf(),
+                _ => PathBuf::from(format!(
+                    "_external/f{i}_{}",
+                    path.file_name()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("anon.ts")
+                )),
+            };
+            let dest = work_dir.join(&rel);
+            if let Some(parent) = dest.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(&dest, src)?;
+            let rel_s = rel.to_string_lossy().replace('\\', "/");
+            file_list.push(format!("\"./{rel_s}\""));
+            entries.push((
+                dest,
+                (*src).to_string(),
+                path.to_string_lossy().into_owned(),
+            ));
+        }
+        std::fs::write(
+            work_dir.join("sail-runtime-ambient.d.ts"),
+            runtime_ambient_dts(),
+        )?;
+        file_list.push("\"./sail-runtime-ambient.d.ts\"".into());
+        let mut scan_body = String::new();
+        for (_, src) in files {
+            scan_body.push_str(src);
+            scan_body.push('\n');
+        }
+        let ship_nm = find_ship_node_modules(Some(project_root));
+        let open_ship = emit_open_ship_package_ambient(&scan_body, ship_nm.is_some());
+        if !open_ship.is_empty() {
+            std::fs::write(work_dir.join("ship-open-stubs.d.ts"), open_ship)?;
+            file_list.push("\"./ship-open-stubs.d.ts\"".into());
+        }
+        if env == TypeEnv::Action {
+            std::fs::write(
+                work_dir.join("action-observation.d.ts"),
+                emit_action_observation_dts(),
+            )?;
+            file_list.push("\"./action-observation.d.ts\"".into());
+        }
+        let lib = lib_for_type_env(env);
+        let lib_arr = lib
+            .iter()
+            .map(|e| format!("\"{e}\""))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let path_entries: Vec<String> = crate::project_map::at_alias_paths()
+            .iter()
+            .map(|m| {
+                let target = m.target.trim_start_matches("./");
+                let abs = project_root.join(target);
+                format!(
+                    "      \"{}\": [\"{}\"]",
+                    m.pattern,
+                    abs.to_string_lossy().replace('\\', "/")
+                )
+            })
+            .collect();
+        let at_paths = path_entries.join(",\n");
+        let ship_paths = ship_nm
+            .as_ref()
+            .and_then(|nm| ship_packages_paths_entry(nm, &work_dir))
+            .unwrap_or_default();
+        let paths_block = merge_paths_blocks(&[at_paths, ship_paths]);
+        let cfg = format!(
+            r#"{{
+  "compilerOptions": {{
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [{lib_arr}],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+{resolution_opts},
+    "paths": {{
+{paths_block}
+    }}
+  }},
+  "files": [{files}]
+}}
+"#,
+            resolution_opts = HARNESS_RESOLUTION_OPTS,
+            files = file_list.join(", "),
+        );
+        (cfg, entries)
+    };
+
+    let ts_diags = tsgo_server::diagnose_project_files(
+        tool,
+        project_root,
+        env,
+        &work_dir,
+        &tsconfig,
+        &entries,
+    )?;
+
+    for d in ts_diags {
+        let f = d.file.replace('\\', "/");
+        let in_product = product
+            .iter()
+            .any(|rel| f.ends_with(rel.as_str()) || f.contains(&format!("/{rel}")));
+        if !in_product
+            && (f.ends_with("tsconfig.json")
+                || f.ends_with("tsconfig.pure.json")
+                || f.ends_with("tsconfig.action.json")
+                || f.contains("node_modules/.sail/")
+                || f.contains("/node_modules/")
+                || f.contains("/dist/")
+                || f.contains("sail-runtime-ambient")
+                || f.contains("ship-open-stubs")
+                || f.contains("action-observation"))
+        {
+            continue;
+        }
+        let real = match resolve_diag_path_to_product(project_root, &f, &product) {
+            Some(p) => p,
+            None => {
+                let as_path = PathBuf::from(&d.file);
+                if product.iter().any(|rel| {
+                    as_path
+                        .to_string_lossy()
+                        .replace('\\', "/")
+                        .ends_with(rel.as_str())
+                }) {
+                    as_path
+                } else {
+                    continue;
+                }
+            }
+        };
+        if let Some(mut mapped) = map_region_diag(&d, env) {
+            mapped.message = teach_compositions_law(&real, mapped.message);
+            mapped.message = format!("{} [{}]", mapped.message, real.display());
+            diags.push(mapped);
+        }
+    }
+    Ok(())
 }
 
 /// Run tsgo against the same kind tsconfig product `tsc -p` uses (G2c).
@@ -3414,6 +3769,60 @@ export default controller((ctx) => {
         assert!(
             type_errs.is_empty(),
             "clean Pure controller must not type-gate fail: {type_errs:?}"
+        );
+    }
+
+    /// HMR / second OnSave: editing a controller identifier must not serve
+    /// the previous program's diagnostics.
+    #[test]
+    fn controller_identifier_edit_reports_new_error() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(3)
+            .expect("workspace root");
+        if resolve_tsgo(Some(root)).is_none() {
+            panic!("tsgo required");
+        }
+        let path = root.join("apps/fake/src/widget/reuse-stale.sail");
+        let src_ok = r#"
+<controller>
+export default controller(() => {
+  const n = signal(0)
+  return { n }
+})
+</controller>
+<div />
+"#;
+        let src_bad = r#"
+<controller>
+export default controller(() => {
+  const n = signal(0)
+  return { n, missingName }
+})
+</controller>
+<div />
+"#;
+        let ok = collect_sail_type_gate(src_ok, Some(&path));
+        let ok_errs = type_gate_errs(&ok);
+        assert!(
+            ok_errs.is_empty(),
+            "clean controller must be green before the edit: {ok_errs:?}"
+        );
+        let bad = collect_sail_type_gate(src_bad, Some(&path));
+        assert!(
+            bad.iter().any(|d| {
+                d.rule.as_deref() == Some(RULE_TYPE_GATE)
+                    && (d.message.contains("missingName")
+                        || d.message.contains("TS2304")
+                        || d.message.contains("TS2552"))
+            }),
+            "identifier edit must report the new Error (no stale program): {bad:?}"
+        );
+        let again = collect_sail_type_gate(src_ok, Some(&path));
+        let again_errs = type_gate_errs(&again);
+        assert!(
+            again_errs.is_empty(),
+            "reverting the identifier must go green again: {again_errs:?}"
         );
     }
 

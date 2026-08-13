@@ -145,7 +145,7 @@ fn overlay_names_the_law() {
     );
 }
 
-/// HMR skip is cheap; a `.ts` tick still pays a tsgo spawn (warm ≈ cold).
+/// HMR skip is cheap; a `.ts` tick reuses the live program (warm ≪ cold).
 #[test]
 fn incremental_hmr_overhead_measured() {
     let tmp = tempfile::tempdir().unwrap();
@@ -178,10 +178,39 @@ fn incremental_hmr_overhead_measured() {
     );
     let skip_ms = t2.elapsed().as_secs_f64() * 1000.0;
     assert!(skipped.is_empty());
-    // Honest: this is skip incrementality, not in-process program reuse.
+    if cold_ms >= 15.0 {
+        assert!(
+            warm_ms < cold_ms * 0.75,
+            "warm project gate must reuse the program (warm={warm_ms:.1}ms cold={cold_ms:.1}ms)"
+        );
+    }
+
+    std::fs::write(
+        project.join("src/compositions/m0.ts"),
+        "export const n0 = window.innerWidth\n",
+    )
+    .unwrap();
+    let t3 = std::time::Instant::now();
+    let after_edit = check_project_type_gate_incremental(
+        project,
+        &[project.join("src/compositions/m0.ts")],
+        false,
+    );
+    let edit_ms = t3.elapsed().as_secs_f64() * 1000.0;
     eprintln!(
-        "HMR project-gate overhead: cold={cold_ms:.1}ms warm={warm_ms:.1}ms skip={skip_ms:.2}ms \
-         (warm≈cold is a tsgo spawn; skip is the cheap path)"
+        "HMR project-gate overhead: cold={cold_ms:.1}ms warm={warm_ms:.1}ms skip={skip_ms:.2}ms edit={edit_ms:.1}ms"
+    );
+    assert!(
+        after_edit.iter().any(|d| {
+            d.rule.as_deref() == Some("sail-pure-region") && d.message.contains("`window`")
+        }),
+        "editing a product identifier must report the new Error: {after_edit:?}"
+    );
+    assert!(
+        after_edit
+            .iter()
+            .any(|d| d.message.contains("[") && d.message.contains("m0.ts")),
+        "project batch diagnostics must keep the [path] suffix: {after_edit:?}"
     );
 }
 

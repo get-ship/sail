@@ -652,6 +652,7 @@ fn measure_type_gate(
             continue;
         };
         tscheck::clear_type_gate_cache();
+        tscheck::reset_type_gate_servers();
         let before = tscheck::tsgo_invocation_count();
         let t = Instant::now();
         let _ = tscheck::collect_sail_type_gate(&source, Some(&disc.path));
@@ -711,9 +712,15 @@ fn measure_type_gate(
         });
     }
 
+    let incremental_program_reuse = probes.iter().any(|p| {
+        p.cold_ms >= 10.0
+            && p.warm_process_miss_ms > 0.0
+            && p.warm_process_miss_ms < p.cold_ms * 0.5
+    });
+
     TypeGateAnatomy {
-        invocation_shape: "per-file tsgo subprocess for .sail controllers; one tsgo -p per TypeEnv for project .ts (no incremental program reuse)".into(),
-        incremental_program_reuse: false,
+        invocation_shape: "long-lived tsgo --lsp program per TypeEnv+project; .sail region miss is didChange, not a spawn; project .ts is one program invalidated by file identity + bytes".into(),
+        incremental_program_reuse,
         tsgo_invocations: tscheck::tsgo_invocation_count(),
         cache_hits: tscheck::type_gate_cache_hits(),
         probes,
@@ -925,7 +932,7 @@ fn measure_hmr(_workspace: &Path, files: &[Discovered], reports: &[FileReport]) 
             "preprocess + parse of the changed .sail".into(),
             "check::run structural passes".into(),
             "lint + layout (2 viewports) + compose".into(),
-            "per-file tsgo type-gate (new subprocess; cache miss on edit)".into(),
+            "per-file type-gate (reused tsgo program; cache miss on edit)".into(),
             "lower + emit".into(),
             "deck emit_build_warnings → check_all (layout/lint again; type-gate cache hit)".into(),
             "rolldown rebuild of graph-affected targets".into(),
