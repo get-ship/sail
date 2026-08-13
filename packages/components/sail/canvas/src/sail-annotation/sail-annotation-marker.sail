@@ -2,6 +2,7 @@
   <sail-annotation-marker> — point pin or region box for a staged/sent annotation.
   Geometry is capture-time overlay px via use:pin / use:rect + Style bind.
   Point pins center on (x, y) via 0×0 anchor + <center>.
+  Point pin is 24×24 so the tap target meets the 24px floor.
 -->
 
 <scope>
@@ -18,7 +19,7 @@
     box: position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY)),
   }
   style pin = {
-    box: w(5).h(5),
+    box: w(6).h(6),
     paint: radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).shadow(sm).cursor(pointer).pointerEvents(auto),
     when: {
       stateActive: { paint: outline(ring-color) },
