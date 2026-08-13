@@ -42,6 +42,32 @@ struct RegistryFile {
     /// path → cssName (canonical tokens only). Present from registry v2.
     #[serde(default)]
     paths: HashMap<String, String>,
+    /// DTCG composite identities (`border.subtle`, `card.border`, …).
+    #[serde(default)]
+    composites: HashMap<String, CompositeMeta>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+struct CompositeMeta {
+    #[serde(default)]
+    path: String,
+    #[serde(default, rename = "type")]
+    r#type: String,
+    #[serde(default)]
+    members: HashMap<String, String>,
+}
+
+/// One DTCG composite identity from the generated registry.
+#[derive(Debug, Clone)]
+pub struct CompositeToken {
+    /// Public identity (`border.subtle`, `dialog.border`).
+    pub name: &'static str,
+    /// DTCG `$type` (`border`, `size`, `elevation`, `type`).
+    pub r#type: &'static str,
+    /// Storage path (`component.dialog.border` or `border.subtle`).
+    pub path: &'static str,
+    /// Slot → CSS custom-property name (no `--`).
+    pub members: &'static [(&'static str, &'static str)],
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -268,6 +294,66 @@ pub fn radius_values() -> &'static [&'static str] {
     })
 }
 
+fn composite_index() -> &'static HashMap<&'static str, CompositeToken> {
+    static CACHE: OnceLock<HashMap<&'static str, CompositeToken>> = OnceLock::new();
+    CACHE.get_or_init(|| {
+        let file = registry_file();
+        let mut out = HashMap::new();
+        for (name, meta) in &file.composites {
+            if name.is_empty() {
+                continue;
+            }
+            let members: Vec<(&'static str, &'static str)> = meta
+                .members
+                .iter()
+                .map(|(slot, css)| {
+                    (
+                        Box::leak(slot.clone().into_boxed_str()) as &'static str,
+                        Box::leak(css.clone().into_boxed_str()) as &'static str,
+                    )
+                })
+                .collect();
+            let token = CompositeToken {
+                name: Box::leak(name.clone().into_boxed_str()),
+                r#type: Box::leak(meta.r#type.clone().into_boxed_str()),
+                path: Box::leak(meta.path.clone().into_boxed_str()),
+                members: Box::leak(members.into_boxed_slice()),
+            };
+            out.insert(token.name, token);
+        }
+        out
+    })
+}
+
+/// Composite identity by public name (`border.subtle`, `card.border`).
+pub fn find_composite(name: &str) -> Option<&'static CompositeToken> {
+    composite_index().get(name)
+}
+
+/// Every composite whose `$type` is `ty`, sorted by public name.
+pub fn composites_of_type(ty: &str) -> Vec<&'static CompositeToken> {
+    let mut out: Vec<&'static CompositeToken> = composite_index()
+        .values()
+        .filter(|c| c.r#type == ty)
+        .collect();
+    out.sort_by_key(|c| c.name);
+    out
+}
+
+/// Every composite identity, sorted by public name.
+pub fn all_composites() -> Vec<&'static CompositeToken> {
+    let mut out: Vec<&'static CompositeToken> = composite_index().values().collect();
+    out.sort_by_key(|c| c.name);
+    out
+}
+
+/// Composite whose member emit label is `css` (`dialog-border`, `border-subtle-color`).
+pub fn composite_for_member_css(css: &str) -> Option<&'static CompositeToken> {
+    composite_index()
+        .values()
+        .find(|c| c.members.iter().any(|(_, name)| *name == css))
+}
+
 /// Resolve a DTCG path (`space.4`, `color.primary.default`) to the public
 /// cssName (`space-4`, `primary`). Registry v2 `paths` map; falls back to
 /// kebab of the path when the map is absent (flat registries).
@@ -314,6 +400,25 @@ pub fn token_value(name: &str) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn composites_include_border_identities() {
+        let names: Vec<&str> = all_composites().iter().map(|c| c.name).collect();
+        for want in ["border.subtle", "card.border", "dialog.border"] {
+            assert!(names.contains(&want), "missing `{want}`: {names:?}");
+        }
+        let subtle = find_composite("border.subtle").expect("border.subtle");
+        assert_eq!(subtle.r#type, "border");
+        assert!(
+            subtle.members.iter().any(|(s, _)| *s == "color"),
+            "{:?}",
+            subtle.members
+        );
+        assert_eq!(
+            composite_for_member_css("dialog-border").map(|c| c.name),
+            Some("dialog.border")
+        );
+    }
 
     #[test]
     fn text_scale_includes_the_full_registry_range() {

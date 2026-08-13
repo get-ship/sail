@@ -29,11 +29,13 @@ pub mod style {
         StyleCompleteContext, StyleCompleteItem, StyleCompleteKind, StyleDiagnostic, StyleEnv,
         TEXT_BEARING_ELEMENTS, all_surface_packs, channel_for_setter, clash,
         collect_motion_attaches, collect_motion_attaches_env, collect_style_const_names,
-        color_paint_vocabulary, condition_media, conditions, emit, emit_style, ir,
-        is_geometry_setter, is_interaction_when_key, is_text_bearing, is_theme_owned_author_root,
+        color_paint_vocabulary, concern_doc_line, concerns, condition_media, conditions,
+        emit, emit_style, find_concern, ir, is_geometry_setter,
+        is_interaction_when_key, is_text_bearing, is_theme_owned_author_root,
         is_theme_owned_token_name, looks_like_utility_string_product, lower_style,
         lower_style_source, lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes,
-        setters, style_complete_at, style_complete_context_at, style_complete_for_context,
+        resolve_concern_name, retired_dual_border_sites, rewrite_concern_source, setters,
+        style_complete_at, style_complete_context_at, style_complete_for_context,
         style_contains_geometry, style_uses_text_channel, style_uses_text_channel_env,
         surface_pack_for_host, surface_slots, text_channel_host_error, token_groups, when_keys,
         with_bound_group_props, with_host_surface,
@@ -58,6 +60,8 @@ pub const RETIRED_RULE_IDS: &[&str] = &[
     "sail-no-ambient-events",
     "sail-no-ambient-nav",
     "sail-no-ambient-storage",
+    // SPEC-SPINNAKER-2: retirement is RetiredSetter (compile error), not warn-mode.
+    "sail-style-concern",
 ];
 
 /// Layout-pass finding kinds mapped to stable `sail-*` rule ids

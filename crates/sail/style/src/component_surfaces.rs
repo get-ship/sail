@@ -80,16 +80,25 @@ fn build_index() -> SurfaceIndex {
         let Some((pack, leaf)) = rest.split_once('.') else {
             continue;
         };
-        if leaf.contains('.') {
+        // Folded composite color member (`border.color`) is the historical
+        // surface slot (`border`). Other dotted leaves stay off the author graph.
+        let storage_leaf = if let Some(slot) = leaf.strip_suffix(".color") {
+            if slot.is_empty() || slot.contains('.') {
+                continue;
+            }
+            slot
+        } else if leaf.contains('.') {
             continue;
-        }
+        } else {
+            leaf
+        };
         // v1 rest-only Style surface slots — no hover/focus as author surface.
-        if is_state_leaf(leaf) {
+        if is_state_leaf(storage_leaf) {
             continue;
         }
-        let author = author_member_for_leaf(pack, leaf);
+        let author = author_member_for_leaf(pack, storage_leaf);
         let author_s = leak_str(author);
-        let leaf_s = leak_str(leaf);
+        let leaf_s = leak_str(storage_leaf);
         rest_public_names.insert(css_s);
         pack_slots
             .entry(pack.to_string())
@@ -322,6 +331,23 @@ mod tests {
     use crate::host_ctx::with_host_surface;
 
     #[test]
+    fn folded_dialog_border_color_is_historical_surface_slot() {
+        with_host_surface(Some("dialog"), || {
+            assert_eq!(
+                resolve_surface_author("dialog", &["border".into()]).unwrap(),
+                "dialog-border"
+            );
+        });
+        let slots = surface_slots("dialog").expect("dialog pack");
+        let border = slots
+            .iter()
+            .find(|s| s.storage_leaf == "border")
+            .expect("dialog.border slot");
+        assert_eq!(border.author_member, "border");
+        assert_eq!(border.public_name, "dialog-border");
+    }
+
+    #[test]
     fn chip_surface_tone_parallel() {
         with_host_surface(Some("chip"), || {
             assert_eq!(resolve_surface_author("chip", &[]).unwrap(), "chip");
@@ -435,7 +461,7 @@ mod emit_integration {
     #[test]
     fn app_style_teaches_theme_owned_for_button() {
         with_host_surface(None, || {
-            let (_, diags) = parse("style({ paint: bg(button) })");
+            let (_, diags) = parse("style({ paint: fill({ color: button }) })");
             assert!(
                 diags.iter().any(|d| {
                     matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "button")
@@ -445,7 +471,7 @@ mod emit_integration {
                 "{:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
-            let (_, diags) = parse("style({ paint: bg(button.bg) })");
+            let (_, diags) = parse("style({ paint: fill({ color: button.bg }) })");
             assert!(
                 diags.iter().any(|d| {
                     matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { name, .. } if name == "button.bg")
@@ -454,12 +480,12 @@ mod emit_integration {
                 "{:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
-            let (_, diags) = parse("style({ paint: bg(primary) })");
+            let (_, diags) = parse("style({ paint: fill({ color: primary }) })");
             assert!(
                 !diags
                     .iter()
                     .any(|d| matches!(d, crate::ir::StyleDiagnostic::ThemeOwnedToken { .. })),
-                "bg(primary) must stay legal: {:?}",
+                "fill({{ color: primary }}) must stay legal: {:?}",
                 diags.iter().map(|d| d.message()).collect::<Vec<_>>()
             );
         });
@@ -471,7 +497,7 @@ mod emit_integration {
             assert_eq!(current_surface_pack(), Some("chip"));
             assert_eq!(resolve_surface_author("chip", &[]).unwrap(), "chip");
             let (style, diags) =
-                parse("style({ paint: bg(chip).fg(chip.foreground).border(chip.border) })");
+                parse("style({ paint: fill({ color: chip }).ink({ color: chip.foreground }).border({ color: chip.border }) })");
             assert!(
                 diags.is_empty(),
                 "{:?}",

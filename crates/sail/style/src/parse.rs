@@ -793,7 +793,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         let preview: String = source.chars().take(80).collect();
         diags.push(StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: pad(4).gap(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })"
+                      style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface), when: { hover: { paint: fill({ color: muted }) } } })"
                 .into(),
             source: if preview.is_empty() {
                 "style.".into()
@@ -881,7 +881,7 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
         // Temporary rename pointer: box-sizing method was `box`, now `boxSizing`
         // so the channel key `box` is free.
         if method == "box" {
-            let args = parse_paren_args(p, diags);
+            let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
                 message: "`style.box(…)` was renamed to `style.boxSizing(…)` for box-sizing".into(),
@@ -892,13 +892,13 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             }
             continue;
         }
-        // P4: `color` retired — sole paint color is `fg`.
+        // `color` retired — paint color is `ink`.
         if method == "color" {
-            let args = parse_paren_args(p, diags);
+            let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
                 message:
-                    "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
+                    "`color(…)` was renamed to `ink(…)` — use paint channel `ink` for text color"
                         .into(),
                 source: format!("style.color({arg_text})"),
             });
@@ -907,7 +907,7 @@ fn flat_chain_style_chain_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
             }
             continue;
         }
-        let args = parse_paren_args(p, diags);
+        let args = parse_paren_args(p, diags, method);
         if p.pos == before {
             p.force_progress();
             continue;
@@ -1585,6 +1585,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
     let mut ops = Vec::new();
     let mut iters = 0usize;
     let mut first = true;
+    let mut prev_setter: Option<String> = None;
     loop {
         iters += 1;
         if iters > MAX_PARSE_ITERS {
@@ -1609,6 +1610,20 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
                 break;
             }
         };
+        // Member access at the use site does not resolve (`size(control-md).h`).
+        if p.peek() != Some(&Tok::LParen) {
+            if let Some(prev) = prev_setter.as_deref() {
+                if crate::concerns::find_concern(prev).is_some() {
+                    diags.push(StyleDiagnostic::ParseError {
+                        message: format!(
+                            "member access `{prev}.{method}` does not resolve at the use site — `{prev}(…)` is indivisible"
+                        ),
+                        source: format!("{prev}(…).{method}"),
+                    });
+                    break;
+                }
+            }
+        }
         if method == "when" {
             diags.push(StyleDiagnostic::ParseError {
                 message: "`.when` belongs on the `style({…})` head, not inside a channel chain"
@@ -1618,7 +1633,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             break;
         }
         if method == "box" {
-            let args = parse_paren_args(p, diags);
+            let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
                 message: "`box(…)` as a setter was renamed to `boxSizing(…)` — use channel key `box:` for geometry"
@@ -1631,11 +1646,11 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             continue;
         }
         if method == "color" {
-            let args = parse_paren_args(p, diags);
+            let args = parse_paren_args(p, diags, method);
             let arg_text = format_arg_text(&args);
             diags.push(StyleDiagnostic::ParseError {
                 message:
-                    "`color(…)` was renamed to `fg(…)` — use paint channel `fg` for text color"
+                    "`color(…)` was renamed to `ink(…)` — use paint channel `ink` for text color"
                         .into(),
                 source: format!("color({arg_text})"),
             });
@@ -1664,13 +1679,14 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
             let _ = parse_motion_call(p, method, diags);
             continue;
         }
-        let args = parse_paren_args(p, diags);
+        let args = parse_paren_args(p, diags, method);
         if p.pos == before {
             p.force_progress();
             continue;
         }
         let arg_text = format_arg_text(&args);
         let source = format!("{method}({arg_text})");
+        prev_setter = Some(method.to_string());
         push_paint_op(&mut ops, method, args, source, diags);
     }
     if ops.is_empty() {
@@ -1733,7 +1749,7 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
                 source: method.to_string(),
             });
             if p.peek() == Some(&Tok::LParen) {
-                let _ = parse_paren_args(p, diags);
+                let _ = parse_paren_args(p, diags, method);
             } else if p.pos == before {
                 p.force_progress();
             }
@@ -1760,7 +1776,7 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
                 ),
                 source: method.to_string(),
             });
-            let _ = parse_paren_args(p, diags);
+            let _ = parse_paren_args(p, diags, method);
             if p.pos == before {
                 p.force_progress();
             }
@@ -1780,15 +1796,19 @@ fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnost
     }
 }
 
-fn parse_paren_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<PaintArg> {
+fn parse_paren_args(
+    p: &mut Parser<'_>,
+    diags: &mut Vec<StyleDiagnostic>,
+    setter: &str,
+) -> Vec<PaintArg> {
     p.expect(Tok::LParen, diags);
     let mut args = Vec::new();
     if p.peek() == Some(&Tok::RParen) {
         args.push(PaintArg::Token(String::new()));
     } else {
-        args.push(parse_paint_arg(p, diags));
+        args.push(parse_paint_arg(p, diags, setter));
         while p.eat(&Tok::Comma) {
-            args.push(parse_paint_arg(p, diags));
+            args.push(parse_paint_arg(p, diags, setter));
         }
     }
     p.expect(Tok::RParen, diags);
@@ -1847,7 +1867,10 @@ fn parse_motion_call(
     })
 }
 
-fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> PaintArg {
+fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>, setter: &str) -> PaintArg {
+    if p.peek() == Some(&Tok::LBrace) {
+        return parse_slot_object(p, diags, setter);
+    }
     match p.bump() {
         Some(Tok::Word("bind")) => {
             p.expect(Tok::LParen, diags);
@@ -1886,12 +1909,65 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Pain
         }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected token, member path, or bind(name)".into(),
+                message: "expected token, member path, bind(name), or `{ slot: … }`".into(),
                 source: p.remainder(),
             });
             PaintArg::Token(String::new())
         }
     }
+}
+
+/// Concern slot object `{ color: muted, width: hairline }`.
+fn parse_slot_object(
+    p: &mut Parser<'_>,
+    diags: &mut Vec<StyleDiagnostic>,
+    setter: &str,
+) -> PaintArg {
+    p.expect(Tok::LBrace, diags);
+    let mut slots = BTreeMap::new();
+    let mut iters = 0usize;
+    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
+        iters += 1;
+        if iters > 32 {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "concern slot object too many entries".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        let before = p.pos;
+        let key = match p.bump() {
+            Some(Tok::Word(w)) => unquote(w).to_string(),
+            _ => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: "expected concern slot name".into(),
+                    source: p.remainder(),
+                });
+                p.force_progress();
+                break;
+            }
+        };
+        p.expect(Tok::Colon, diags);
+        let value = parse_paint_arg(p, diags, setter);
+        match slots.entry(key.clone()) {
+            std::collections::btree_map::Entry::Occupied(_) => {
+                diags.push(StyleDiagnostic::DuplicateSlot {
+                    setter: setter.to_string(),
+                    slot: key.clone(),
+                    source: format!("{key}: {}", value.display()),
+                });
+            }
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                entry.insert(value);
+            }
+        }
+        p.eat(&Tok::Comma);
+        if p.pos <= before {
+            p.force_progress();
+        }
+    }
+    p.expect(Tok::RBrace, diags);
+    PaintArg::Slots(slots)
 }
 
 /// Resolve paint arg identity:
@@ -2399,7 +2475,7 @@ mod const_rhs_tests {
 
     #[test]
     fn bare_object_form() {
-        let (style, diags) = parse_style_const_rhs("{ paint: bg(primary) }");
+        let (style, diags) = parse_style_const_rhs("{ paint: fill({ color: primary }) }");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -2410,14 +2486,14 @@ mod const_rhs_tests {
 
     #[test]
     fn call_form() {
-        let (style, diags) = parse_style_const_rhs("style({ box: pad(2) })");
+        let (style, diags) = parse_style_const_rhs("style({ box: space({ pad: 2 }) })");
         assert!(diags.is_empty(), "{diags:?}");
         assert!(!matches!(style, Style::Empty));
     }
 
     #[test]
     fn compose_form() {
-        let (style, diags) = parse_style_const_rhs("host, { box: pad(2) }");
+        let (style, diags) = parse_style_const_rhs("host, { box: space({ pad: 2 }) }");
         assert!(diags.is_empty(), "{diags:?}");
         match style {
             Style::List(parts) => assert_eq!(parts.len(), 2),

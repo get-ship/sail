@@ -27,6 +27,38 @@ pub struct SetterSpec {
     pub slots: &'static [&'static str],
 }
 
+/// Skill / MCP surface line for one product setter. Concerns document slots;
+/// markers keep vocab + scale. Absorbed names do not appear on the live surface.
+pub fn setter_doc_line(s: &SetterSpec) -> String {
+    if let Some(concern) = crate::concerns::find_concern(s.name) {
+        return crate::concerns::concern_doc_line(concern);
+    }
+    if crate::concerns::retired_replacement(s.name).is_some() {
+        if let Some((concern, teaching)) = crate::concerns::retired_replacement(s.name) {
+            return format!("`style.{}(…)` → retired — use `{teaching}` (`{concern}`)", s.name);
+        }
+    }
+    let scale = s.scale.unwrap_or("—");
+    let kws = if s.keywords.is_empty() {
+        String::new()
+    } else {
+        format!(" keywords: {}", s.keywords.join(", "))
+    };
+    let arity = match s.name {
+        "colorMix" => {
+            " **`(colorToken, pct)`** — soft fill: color-mix toward transparent; pct 5..95 step 5"
+        }
+        "colorDeepen" => {
+            " **`(colorToken, pct)`** — solid deepen: color-mix toward foreground; pct 5..95 step 5"
+        }
+        _ => "",
+    };
+    format!(
+        "`style.{}(…)` → vocab `{}` scale `{scale}`{kws}{arity}",
+        s.name, s.vocab
+    )
+}
+
 /// Closed product setter table (re-homes full vocab coverage via vocab heads).
 pub fn setters() -> &'static [SetterSpec] {
     &[
@@ -1635,6 +1667,71 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
             slots: &["translate", "scale", "box-shadow"],
         },
+        SetterSpec {
+            name: "elevation",
+            vocab: "elevation",
+            scale: None,
+            keywords: &[],
+            negatable: false,
+            slots: &["box-shadow"],
+        },
+        SetterSpec {
+            name: "type",
+            vocab: "type",
+            scale: None,
+            keywords: &[],
+            negatable: false,
+            slots: &["font-size", "font-weight", "line-height", "letter-spacing"],
+        },
+        // SPEC-SPINNAKER-2 concern names that were not already property setters.
+        SetterSpec {
+            name: "ink",
+            vocab: "ink",
+            scale: Some("color"),
+            keywords: &[],
+            negatable: false,
+            slots: &["color", "caret-color", "accent-color"],
+        },
+        SetterSpec {
+            name: "space",
+            vocab: "space",
+            scale: Some("space"),
+            keywords: &[],
+            negatable: false,
+            slots: &["padding", "margin"],
+        },
+        SetterSpec {
+            name: "place",
+            vocab: "place",
+            scale: None,
+            keywords: &[],
+            negatable: false,
+            slots: &["position", "inset", "z-index"],
+        },
+        SetterSpec {
+            name: "flow",
+            vocab: "flow",
+            scale: None,
+            keywords: &[],
+            negatable: false,
+            slots: &["display", "flex-direction", "flex-grow"],
+        },
+        SetterSpec {
+            name: "filter",
+            vocab: "filter",
+            scale: None,
+            keywords: &[],
+            negatable: false,
+            slots: &["filter", "backdrop-filter", "opacity"],
+        },
+        SetterSpec {
+            name: "motion",
+            vocab: "motion",
+            scale: None,
+            keywords: &[],
+            negatable: false,
+            slots: &["rotate", "scale", "translate"],
+        },
     ]
 }
 
@@ -1717,13 +1814,13 @@ fn setter_levenshtein(a: &str, b: &str, cap: usize) -> usize {
     prev[b.len()].min(cap)
 }
 
-/// Paint slots THIS op writes — narrowed from the setter's complete
-/// [`SetterSpec::slots`] union by arg value. `border` / `outline` / `ring` /
-/// `bg` disambiguate color vs width vs style (vs image) by value; every
-/// other setter writes its full slot list regardless of arg. Clash analysis
-/// keys on this, so `style.outline(solid).outline(2).outline(ring)` is three
-/// disjoint writes, not a triple clash.
+/// Paint slots THIS op writes. Concern ops key on `(concern, kind)` so a
+/// base stroke and a focus ring coexist; two ring calls in one scope clash.
+/// Markers still key on CSS longhands.
 pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
+    if crate::concerns::find_concern(&op.setter).is_some() {
+        return crate::concerns::concern_clash_keys(op).unwrap_or_default();
+    }
     let Some(spec) = find_setter(&op.setter) else {
         return Vec::new();
     };
@@ -1737,7 +1834,9 @@ pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
     if is_border_composite(spec.name) {
         return match op.first_arg() {
             // bind / bound group paths resolve through the color entry.
-            PaintArg::Bind(_) | PaintArg::MemberPath { .. } => slots_part(spec, "color"),
+            PaintArg::Bind(_) | PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
+                slots_part(spec, "color")
+            }
             PaintArg::Token(tok) => {
                 let bare = strip_neg(tok).1;
                 if scales::contains("border-width", bare)
@@ -1758,7 +1857,9 @@ pub fn op_slots(op: &PaintOp) -> Vec<&'static str> {
     match spec.name {
         "outline" => {
             return match op.first_arg() {
-                PaintArg::Bind(_) | PaintArg::MemberPath { .. } => vec!["outline-color"],
+                PaintArg::Bind(_) | PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
+                    vec!["outline-color"]
+                }
                 PaintArg::Token(tok) => {
                     let bare = strip_neg(tok).1;
                     if bare == "ring-width" || scales::contains("border-width", bare) {
@@ -1956,6 +2057,12 @@ pub fn when_selector(key: &str) -> Option<String> {
 
 /// Validate paint arg against setter table; fail closed.
 pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
+    if let Some(d) = crate::concerns::retired_diag(&op.setter, &op.source) {
+        return Err(d);
+    }
+    if let Some(concern) = crate::concerns::find_concern(&op.setter) {
+        return crate::concerns::validate_concern_op(concern, op);
+    }
     let Some(spec) = find_setter(&op.setter) else {
         return Err(StyleDiagnostic::UnknownSetter {
             setter: op.setter.clone(),
@@ -1963,18 +2070,10 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             suggestion: closest_unique_setter(&op.setter).map(|s| s.to_string()),
         });
     };
-    // Marker setters with empty arg (group, scrollbarThin, isolate, truncate, srOnly,
-    // control chrome, press).
+    // Marker setters with empty arg. `truncate` is retired — type.wrap.
     if matches!(
         spec.name,
-        "group"
-            | "scrollbarThin"
-            | "isolate"
-            | "truncate"
-            | "srOnly"
-            | "controlFrame"
-            | "controlLift"
-            | "press"
+        "group" | "scrollbarThin" | "isolate" | "srOnly" | "controlFrame" | "controlLift" | "press"
     ) {
         return Ok(());
     }
@@ -1986,6 +2085,11 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
         PaintArg::Bind(_) => Ok(()),
         // Bound paths validated at parse; emit expands before lower.
         PaintArg::MemberPath { .. } => Ok(()),
+        PaintArg::Slots(_) => Err(StyleDiagnostic::BadToken {
+            setter: op.setter.clone(),
+            value: op.first_arg().display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if neg && !spec.negatable {
@@ -2048,6 +2152,12 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
 
 /// Lower a PaintOp to CSS declarations via sx vocab (table-driven).
 pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+    if let Some(d) = crate::concerns::retired_diag(&op.setter, &op.source) {
+        return Err(d);
+    }
+    if let Some(concern) = crate::concerns::find_concern(&op.setter) {
+        return crate::concerns::lower_concern_op(concern, op);
+    }
     let Some(spec) = find_setter(&op.setter) else {
         return Err(StyleDiagnostic::UnknownSetter {
             setter: op.setter.clone(),
@@ -2214,7 +2324,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 let css = css_name_for_bind(name);
                 return Ok(vec![("transform".into(), format!("var(--{css})"))]);
             }
-            PaintArg::MemberPath { .. } => {
+            PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
                 return Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
                     value: arg.display(),
@@ -2364,7 +2474,7 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     })?
                 }
             }
-            PaintArg::MemberPath { .. } => {
+            PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
                 return Err(StyleDiagnostic::BadToken {
                     setter: op.setter.clone(),
                     value: arg.display(),
@@ -2408,6 +2518,13 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         PaintArg::MemberPath { root, path } => {
             let css = crate::token_groups::bridge_var_name(root, path);
             return Ok(bind_css_props(spec, &css));
+        }
+        PaintArg::Slots(_) => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: op.setter.clone(),
+                value: arg.display(),
+                source: op.source.clone(),
+            });
         }
     };
     // Axis overflow / overscroll / text-align / tab-size / underline / list keywords
@@ -2884,6 +3001,7 @@ fn lower_gap_key_css(
                 _ => return None,
             }));
         }
+        PaintArg::Slots(_) => return None,
     };
     let sign = if neg { "-" } else { "" };
     Some(Ok(match name {
@@ -3098,7 +3216,7 @@ fn validate_border_width_arg(
 ) -> Result<(), StyleDiagnostic> {
     match arg {
         PaintArg::Bind(_) => Ok(()),
-        PaintArg::MemberPath { .. } => Err(StyleDiagnostic::BadToken {
+        PaintArg::MemberPath { .. } | PaintArg::Slots(_) => Err(StyleDiagnostic::BadToken {
             setter: op.setter.clone(),
             value: arg.display(),
             source: op.source.clone(),
@@ -3130,6 +3248,11 @@ fn validate_border_color_arg(
 ) -> Result<(), StyleDiagnostic> {
     match arg {
         PaintArg::Bind(_) | PaintArg::MemberPath { .. } => Ok(()),
+        PaintArg::Slots(_) => Err(StyleDiagnostic::BadToken {
+            setter: op.setter.clone(),
+            value: arg.display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if !neg
@@ -3188,7 +3311,7 @@ fn lower_border_width_arg(
                 .map(|p| (p, var.clone()))
                 .collect())
         }
-        PaintArg::MemberPath { .. } => Err(StyleDiagnostic::BadToken {
+        PaintArg::MemberPath { .. } | PaintArg::Slots(_) => Err(StyleDiagnostic::BadToken {
             setter: op.setter.clone(),
             value: arg.display(),
             source: op.source.clone(),
@@ -3235,6 +3358,11 @@ fn lower_border_color_arg(
                 .map(|p| (p, var.clone()))
                 .collect())
         }
+        PaintArg::Slots(_) => Err(StyleDiagnostic::BadToken {
+            setter: op.setter.clone(),
+            value: arg.display(),
+            source: op.source.clone(),
+        }),
         PaintArg::Token(tok) => {
             let bare = strip_neg(tok).1;
             for cand in token_candidates(bare) {
@@ -3259,6 +3387,13 @@ fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), St
     // Position 0: color token or bind.
     match &op.args[0] {
         PaintArg::Bind(_) | PaintArg::MemberPath { .. } => {}
+        PaintArg::Slots(_) => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: op.setter.clone(),
+                value: op.args[0].display(),
+                source: op.source.clone(),
+            });
+        }
         PaintArg::Token(tok) => {
             let (neg, bare) = strip_neg(tok);
             if neg
@@ -3276,7 +3411,7 @@ fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), St
     // Position 1: closed percent ramp 5..95 step 5, or bind.
     match &op.args[1] {
         PaintArg::Bind(_) => {}
-        PaintArg::MemberPath { .. } => {
+        PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
             return Err(StyleDiagnostic::BadToken {
                 setter: op.setter.clone(),
                 value: op.args[1].display(),
@@ -3324,11 +3459,18 @@ fn lower_color_deepen_arg(
             }
         }
         PaintArg::MemberPath { root, path } => crate::token_groups::bridge_var_ref(root, path),
+        PaintArg::Slots(_) => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "colorDeepen".into(),
+                value: token_arg.display(),
+                source: _op.source.clone(),
+            });
+        }
     };
     let pct = match pct_arg {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
         PaintArg::Token(t) => t.clone(),
-        PaintArg::MemberPath { .. } => {
+        PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
             return Err(StyleDiagnostic::BadToken {
                 setter: "colorDeepen".into(),
                 value: pct_arg.display(),
@@ -3361,11 +3503,18 @@ fn lower_color_mix_wash_arg(
             }
         }
         PaintArg::MemberPath { root, path } => crate::token_groups::bridge_var_ref(root, path),
+        PaintArg::Slots(_) => {
+            return Err(StyleDiagnostic::BadToken {
+                setter: "colorMix".into(),
+                value: token_arg.display(),
+                source: _op.source.clone(),
+            });
+        }
     };
     let pct = match pct_arg {
         PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
         PaintArg::Token(t) => t.clone(),
-        PaintArg::MemberPath { .. } => {
+        PaintArg::MemberPath { .. } | PaintArg::Slots(_) => {
             return Err(StyleDiagnostic::BadToken {
                 setter: "colorMix".into(),
                 value: pct_arg.display(),
@@ -3567,190 +3716,58 @@ mod tests {
     }
 
     #[test]
-    fn border_single_arg_unchanged() {
-        let op = only_op("style({ paint: border(border) })");
-        assert_eq!(op.args.len(), 1);
-        let css = lower_op_css(&op).unwrap();
-        assert_eq!(
-            css,
-            vec![("border-color".to_string(), "var(--border)".to_string())]
-        );
-        // width and style by value still work on one arg
-        let op = only_op("style({ paint: border(2) })");
-        assert!(
-            lower_op_css(&op)
-                .unwrap()
-                .iter()
-                .any(|(p, _)| p == "border-width")
-        );
-        let op = only_op("style({ paint: border(dashed) })");
-        assert!(
-            lower_op_css(&op)
-                .unwrap()
-                .iter()
-                .any(|(p, _)| p == "border-style")
-        );
+    fn absorbed_border_forms_are_retired() {
+        for src in [
+            "style({ paint: border(border) })",
+            "style({ paint: border(2) })",
+            "style({ paint: border(dashed) })",
+            "style({ paint: border(1, border) })",
+            "style({ paint: borderX(2, primary) })",
+            "style({ paint: bg(primary) })",
+        ] {
+            let (_, diags) = parse(src);
+            assert!(
+                diags.iter().any(|d| matches!(d, StyleDiagnostic::RetiredSetter { .. })),
+                "{src}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        }
     }
 
     #[test]
-    fn border_composite_width_and_color() {
-        let op = only_op("style({ paint: border(1, border) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&("border-width".to_string(), "1px".to_string())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&("border-color".to_string(), "var(--border)".to_string())),
-            "{css:?}"
-        );
-    }
-
-    #[test]
-    fn border_axis_composites() {
-        let op = only_op("style({ paint: borderX(2, primary) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&("border-left-width".to_string(), "2px".to_string())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&("border-right-width".to_string(), "2px".to_string())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&(
-                "border-left-color".to_string(),
-                "var(--primary)".to_string()
-            )),
-            "{css:?}"
-        );
-        let op = only_op("style({ paint: borderT(1, muted) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&("border-top-width".to_string(), "1px".to_string())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&("border-top-color".to_string(), "var(--muted)".to_string())),
-            "{css:?}"
-        );
-        let op = only_op("style({ paint: borderS(1, border) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&("border-inline-start-width".to_string(), "1px".to_string())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&(
-                "border-inline-start-color".to_string(),
-                "var(--border)".to_string()
-            )),
-            "{css:?}"
-        );
-    }
-
-    #[test]
-    fn border_composite_positions_enforced() {
-        // width token in the color position fails closed
-        let (_, diags) = parse("style({ paint: border(1, 2) })");
-        assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "{diags:?}"
-        );
-        // color token in the width position fails closed
-        let (_, diags) = parse("style({ paint: border(primary, border) })");
-        assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "{diags:?}"
-        );
-        // non-border setters stay single-arg
-        let (_, diags) = parse("style({ paint: bg(primary, muted) })");
-        assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
-            "{diags:?}"
-        );
-    }
-
-    #[test]
-    fn border_composite_binds() {
-        let op = only_op("style({ paint: border(bind(strokeW), bind(toneBorder)) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&("border-width".to_string(), "var(--stroke-w)".to_string())),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&("border-color".to_string(), "var(--tone-border)".to_string())),
-            "{css:?}"
-        );
-    }
-
-    #[test]
-    fn long_tail_setters_lower_like_their_vocab_utilities() {
+    fn markers_and_concerns_lower() {
         let cases: &[(&str, &str, &str)] = &[
-            (
-                "style({ text: decoration(accent) })",
-                "text-decoration-color",
-                "var(--accent)",
-            ),
-            (
-                "style({ text: indent(2) })",
-                "text-indent",
-                "var(--space-2)",
-            ),
-            (
-                "style({ text: underlineOffset(auto) })",
-                "text-underline-offset",
-                "auto",
-            ),
-            (
-                "style({ text: antialiased(true) })",
-                "-webkit-font-smoothing",
-                "antialiased",
-            ),
-            (
-                "style({ paint: caret(primary) })",
-                "caret-color",
-                "var(--primary)",
-            ),
-            (
-                "style({ paint: accent(accent) })",
-                "accent-color",
-                "var(--accent)",
-            ),
-            ("style({ paint: accent(auto) })", "accent-color", "auto"),
             (
                 "style({ paint: objectPosition(top) })",
                 "object-position",
                 "top",
             ),
-            ("style({ box: order(first) })", "order", "-9999"),
-            (
-                "style({ box: justifySelf(center) })",
-                "justify-self",
-                "center",
-            ),
-            ("style({ paint: bgClip(text) })", "background-clip", "text"),
             ("style({ paint: touch(pan-x) })", "touch-action", "pan-x"),
-            ("style({ box: resize(y) })", "resize", "vertical"),
             (
-                "style({ paint: scroll(smooth) })",
+                "style({ paint: ink({ caret: primary }) })",
+                "caret-color",
+                "var(--primary)",
+            ),
+            (
+                "style({ paint: ink({ accent: auto }) })",
+                "accent-color",
+                "auto",
+            ),
+            (
+                "style({ box: place({ order: first }) })",
+                "order",
+                "-9999",
+            ),
+            (
+                "style({ paint: fill({ clip: text }) })",
+                "background-clip",
+                "text",
+            ),
+            (
+                "style({ box: overflow({ scroll: smooth }) })",
                 "scroll-behavior",
                 "smooth",
             ),
-            (
-                "style({ paint: willChange(transform) })",
-                "will-change",
-                "transform",
-            ),
-            ("style({ paint: contain(layout) })", "contain", "layout"),
         ];
         for (src, prop, val) in cases {
             let op = only_op(src);
@@ -3763,135 +3780,34 @@ mod tests {
     }
 
     #[test]
-    fn op_slots_narrow_by_arg_value() {
-        let op = only_op("style({ paint: outline(solid) })");
-        assert_eq!(op_slots(&op), vec!["outline-style"]);
-        let op = only_op("style({ paint: outline(2) })");
-        assert_eq!(op_slots(&op), vec!["outline-width"]);
-        let op = only_op("style({ paint: outline(ring) })");
-        assert_eq!(op_slots(&op), vec!["outline-color"]);
-        let op = only_op("style({ paint: ring(none) })");
-        assert_eq!(op_slots(&op), vec!["outline-style"]);
-        let op = only_op("style({ paint: ring(primary) })");
-        assert_eq!(op_slots(&op), vec!["outline-color"]);
-        let op = only_op("style({ paint: bg(none) })");
-        assert_eq!(op_slots(&op), vec!["background-image"]);
-        let op = only_op("style({ paint: bg(primary) })");
-        assert_eq!(op_slots(&op), vec!["background-color"]);
-        let op = only_op("style({ paint: border(2) })");
-        assert_eq!(op_slots(&op), vec!["border-width"]);
-        let op = only_op("style({ paint: border(dashed) })");
-        assert_eq!(op_slots(&op), vec!["border-style"]);
-        let op = only_op("style({ paint: border(primary) })");
-        assert_eq!(op_slots(&op), vec!["border-color"]);
-        let op = only_op("style({ paint: border(1, border) })");
-        assert_eq!(op_slots(&op), vec!["border-width", "border-color"]);
-        let op = only_op("style({ paint: borderX(2, primary) })");
-        assert_eq!(
-            op_slots(&op),
-            vec![
-                "border-left-width",
-                "border-right-width",
-                "border-left-color",
-                "border-right-color"
-            ]
-        );
-        // single-value setters keep their full static slot list
-        let op = only_op("style({ text: truncate() })");
-        assert_eq!(
-            op_slots(&op),
-            vec!["overflow", "text-overflow", "white-space"]
-        );
+    fn concern_clash_keys_are_kind_aware() {
+        let op = only_op("style({ paint: border(subtle) })");
+        assert_eq!(op_slots(&op), vec!["border:stroke"]);
+        let op = only_op("style({ paint: border({ kind: ring, color: primary }) })");
+        assert_eq!(op_slots(&op), vec!["border:ring"]);
+        let op = only_op("style({ paint: fill({ color: primary }) })");
+        assert_eq!(op_slots(&op), vec!["fill"]);
     }
 
     #[test]
-    fn outline_style_width_color_triple_write_does_not_clash() {
-        let (style, diags) =
-            parse("style({ when: { focus: { paint: outline(solid).outline(2).outline(ring) } } })");
-        assert!(
-            diags.is_empty(),
-            "{:?}",
-            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
-        );
-        let clashes =
-            super::super::clash::detect_clashes(&style, &std::collections::HashMap::new());
-        assert!(clashes.is_empty(), "{clashes:?}");
-    }
-
-    #[test]
-    fn long_tail_setters_reject_off_scale() {
-        let (_, diags) = parse("style({ paint: contain(banana) })");
-        assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "{diags:?}"
-        );
-    }
-
-    #[test]
-    fn border_image_and_backdrop_lower_component_tokens() {
-        let op = only_op("style({ paint: borderImage(corner-image) })");
-        let css = lower_op_css(&op).unwrap();
-        assert_eq!(
-            css,
-            vec![(
-                "border-image".to_string(),
-                "var(--corner-image)".to_string()
-            )]
-        );
-        let op = only_op("style({ paint: borderImage(none) })");
-        assert_eq!(
-            lower_op_css(&op).unwrap(),
-            vec![("border-image".to_string(), "none".to_string())]
-        );
-        let op = only_op("style({ paint: backdrop(card-backdrop-filter) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&(
-                "backdrop-filter".to_string(),
-                "var(--card-backdrop-filter)".to_string()
-            )),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&(
-                "-webkit-backdrop-filter".to_string(),
-                "var(--card-backdrop-filter)".to_string()
-            )),
-            "{css:?}"
-        );
-        // off-table tokens fail closed
-        let (_, diags) = parse("style({ paint: backdrop(banana) })");
-        assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "{diags:?}"
-        );
-        let (_, diags) = parse("style({ paint: borderImage(banana) })");
-        assert!(
-            diags
-                .iter()
-                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "{diags:?}"
-        );
-        // bind lowers to the same longhands
-        let op = only_op("style({ paint: backdrop(bind(cardBlur)) })");
-        let css = lower_op_css(&op).unwrap();
-        assert!(
-            css.contains(&(
-                "backdrop-filter".to_string(),
-                "var(--card-blur)".to_string()
-            )),
-            "{css:?}"
-        );
-        assert!(
-            css.contains(&(
-                "-webkit-backdrop-filter".to_string(),
-                "var(--card-blur)".to_string()
-            )),
-            "{css:?}"
-        );
+    fn outline_and_ring_setters_are_retired() {
+        for src in [
+            "style({ paint: outline(solid) })",
+            "style({ paint: ring(primary) })",
+            "style({ text: truncate() })",
+            "style({ paint: borderImage(none) })",
+            "style({ paint: backdrop(card-backdrop-filter) })",
+            "style({ paint: contain(banana) })",
+        ] {
+            let (_, diags) = parse(src);
+            assert!(
+                diags.iter().any(|d| matches!(
+                    d,
+                    StyleDiagnostic::RetiredSetter { .. } | StyleDiagnostic::UnknownSetter { .. }
+                )),
+                "{src}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        }
     }
 }

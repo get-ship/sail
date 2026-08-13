@@ -251,6 +251,12 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
                     arg.extend(seg.chars().filter(|c| c.is_ascii_alphanumeric()));
                 }
             }
+            PaintArg::Slots(slots) => {
+                for (k, v) in slots {
+                    arg.extend(k.chars().filter(|c| c.is_ascii_alphanumeric()));
+                    arg.extend(v.display().chars().filter(|c| c.is_ascii_alphanumeric()));
+                }
+            }
         }
     }
     let setter: String = op
@@ -312,6 +318,26 @@ fn resolve_surface_args(op: &PaintOp) -> PaintOp {
                     Err(_) => a.clone(),
                 }
             }
+            PaintArg::Slots(slots) => PaintArg::Slots(
+                slots
+                    .iter()
+                    .map(|(k, v)| {
+                        let resolved = match v {
+                            PaintArg::MemberPath { root, path }
+                                if super::component_surfaces::current_surface_pack()
+                                    == Some(root.as_str()) =>
+                            {
+                                match resolve_surface_author(root, path) {
+                                    Ok(public) => PaintArg::Token(public.to_string()),
+                                    Err(_) => v.clone(),
+                                }
+                            }
+                            other => other.clone(),
+                        };
+                        (k.clone(), resolved)
+                    })
+                    .collect(),
+            ),
             other => other.clone(),
         })
         .collect();
@@ -351,7 +377,7 @@ pub fn lower_style_source_with_motion(
     if t.starts_with("style.") {
         return Err(vec![super::ir::StyleDiagnostic::ParseError {
             message: "flat `style.method(…)` chains are retired — use the channel spine: \
-                      style({ box: pad(4).gap(2), paint: bg(primary), when: { hover: { paint: bg(muted) } } })"
+                      style({ box: size({ w: full }).space({ pad: 4 }), paint: fill(surface), when: { hover: { paint: fill({ color: muted }) } } })"
                 .into(),
             source: t.to_string(),
         }]);
@@ -376,14 +402,20 @@ pub fn lower_style_source_with_motion(
             | super::ir::StyleDiagnostic::ThemeOwnedToken { .. }
             | super::ir::StyleDiagnostic::UnknownSetter { .. }
             | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
-            | super::ir::StyleDiagnostic::BadArity { .. } => true,
+            | super::ir::StyleDiagnostic::BadArity { .. }
+            | super::ir::StyleDiagnostic::UnknownConcernSlot { .. }
+            | super::ir::StyleDiagnostic::DuplicateSlot { .. }
+            | super::ir::StyleDiagnostic::RetiredSetter { .. } => true,
             // Hard-fail lifecycle-in-when, geometry-in-interaction-when, color alias.
             super::ir::StyleDiagnostic::ParseError { message, .. } => {
                 message.contains("cannot appear inside when")
                     || message.contains("cannot appear inside interaction when")
                     || message.contains("state can't gate layout")
+                    || message.contains("was renamed to `ink")
                     || message.contains("was renamed to `fg")
                     || message.contains("text channel is only legal")
+                    || message.contains("member access")
+                    || message.contains("does not resolve at the use site")
             }
             _ => false,
         }
