@@ -1,5 +1,4 @@
-// /components/[tag] — detail data for the FULL L1 surface (the 48 elements
-// the l1-conformance gate renders, minus nothing). slug → { heading,
+// /components/[tag] — detail data for the FULL L1 surface. slug → { heading,
 // blurb, variants, props, usage }. Props tables are GENERATED from the
 // compiler's prop registry (see genProps below); regen with
 // `cargo run -p sail-compiler -- prop-registry` after touching a stdlib

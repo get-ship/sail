@@ -35,8 +35,8 @@ interface PortCase {
 }
 
 // Components that dissolved into the language (button, separator, tabs, tab,
-// input, dialog…) are L1 elements, not custom elements — they are covered by
-// the l1-conformance harness, not this per-component smoke net.
+// input, dialog…) are L1 elements, not custom elements — they are not this
+// per-component smoke net.
 const ports: PortCase[] = [
   { tag: 'sail-tree',       attr: 'size',  value: 'sm',      shadowPart: '[role="status"]' },
   { tag: 'sail-tree-grid',  attr: 'size',  value: 'sm',      shadowPart: '[role="status"]' },

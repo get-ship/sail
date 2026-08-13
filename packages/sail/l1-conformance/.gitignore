@@ -1,6 +1,0 @@
-# Screenshots are a local dev artifact — regenerated on every run, eyeballed
-# while iterating. NOT committed: the audit trail is the versioned specs +
-# probes + the CI gate, not binary baselines.
-__screenshots__/
-.layout-fixture/
-.style-match-when-fixture/

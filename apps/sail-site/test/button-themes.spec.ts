@@ -6,7 +6,7 @@
 // glass, brut, 8bit, synthwave, paper, contrast) stay picker catalog / taste,
 // not this CI grid.
 //
-// This is the product suite. l1-conformance hand-HTML is not.
+// Product-compiled <button> × first-party themes.
 
 import { test, expect, type Page } from '@playwright/test'
 

@@ -1,5 +1,4 @@
 // Button docs configurator — knobs must change computed paint / a11y name.
-// This is the gate the l1-conformance hand-HTML suite does not provide.
 
 import { test, expect, type Locator, type Page } from '@playwright/test'
 

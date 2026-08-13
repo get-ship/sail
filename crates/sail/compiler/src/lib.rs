@@ -82,8 +82,8 @@ pub use fmt::{
 };
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
-    L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1SlotType, VOID_TAGS,
-    l1_by_kind, l1_count, l1_entries, l1_kind,
+    L1Attribute, L1ComponentToken, L1Entry, L1Js, L1JsKind, L1Kind, L1Matrix, L1MatrixAxis,
+    L1SlotType, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind, matrix_contract,
 };
 pub use region_capability::{
     CONTROLLER_SIZE_THRESHOLD, REGION_CAPABILITY_MATRIX, RegionCapability,

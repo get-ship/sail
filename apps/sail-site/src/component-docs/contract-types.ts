@@ -52,7 +52,7 @@ export interface SurfaceContract {
   /** component.* leaves this host actually paints (host paint only). */
   faces: readonly FaceLeaf[]
   visual: {
-    /** Zero-config / default row required in l1-conformance rows(). */
+    /** Zero-config / default row required. Matrix lives on l1_manifest. */
     defaultRow: boolean
     /** Paint-affecting axes visual rows should cross. */
     cross: readonly string[]

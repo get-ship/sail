@@ -1,5 +1,5 @@
 /**
- * Theme catalog for node QA harnesses (probe / sweep / l1-conformance).
+ * Theme catalog for node QA harnesses (probe / sweep).
  *
  * MUST stay aligned with `themes.ts` THEMES[] and `generated/unions.ts` THEME_IDS.
  * Dark is a **mode** (`data-mode`), not a twin theme id.

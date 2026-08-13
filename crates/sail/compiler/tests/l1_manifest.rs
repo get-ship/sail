@@ -2,7 +2,9 @@
 
 use std::collections::HashSet;
 
-use sail_compiler::l1_manifest::{L1JsKind, L1Kind, l1_by_kind, l1_entries, l1_kind};
+use sail_compiler::l1_manifest::{
+    L1JsKind, L1Kind, L1Matrix, l1_by_kind, l1_entries, l1_kind, matrix_contract,
+};
 use sail_compiler::stdlib;
 
 #[test]
@@ -157,7 +159,7 @@ fn skeleton_description_names_loading_placeholder() {
 #[test]
 fn every_l1_entry_declares_component_tokens_and_js() {
     let entries = l1_entries();
-    assert_eq!(entries.len(), 59, "stdlib L1 count");
+    assert_eq!(entries.len(), 60, "stdlib L1 count");
     for e in &entries {
         // Fields must be present (empty vec / None-kind is valid).
         let _ = &e.component_tokens;
@@ -249,4 +251,71 @@ fn component_tokens_and_js_drift_pin_against_compiled_metadata() {
             );
         }
     }
+}
+
+#[test]
+fn every_l1_entry_carries_matrix() {
+    for e in l1_entries() {
+        matrix_contract(&e).unwrap_or_else(|err| panic!("{err}"));
+    }
+}
+
+#[test]
+fn gutted_entry_fails_matrix_contract() {
+    let live = l1_entries()
+        .into_iter()
+        .find(|e| e.tag == "button")
+        .expect("button in L1");
+    assert!(
+        matrix_contract(&live).is_ok(),
+        "live button must satisfy the matrix contract"
+    );
+    let mut gutted = live;
+    gutted.matrix = L1Matrix::default();
+    let err = matrix_contract(&gutted).expect_err("gutted button must fail");
+    assert!(
+        err.contains("button") && (err.contains("missing") || err.contains("drifted")),
+        "gutted failure should name the tag: {err}"
+    );
+}
+
+#[test]
+fn button_matrix_axes_match_vocabulary() {
+    let button = l1_entries()
+        .into_iter()
+        .find(|e| e.tag == "button")
+        .expect("button in L1");
+    let names: Vec<&str> = button.matrix.axes.iter().map(|a| a.name.as_str()).collect();
+    assert_eq!(names, ["disabled", "size", "tone", "variant"]);
+    let variant = button
+        .matrix
+        .axes
+        .iter()
+        .find(|a| a.name == "variant")
+        .expect("variant axis");
+    assert_eq!(
+        variant.values,
+        ["default", "solid", "soft", "outline", "ghost"]
+    );
+    assert!(!variant.optional);
+    assert!(button.matrix.extra.is_empty());
+}
+
+#[test]
+fn residual_extras_land_on_manifest() {
+    let extra = |tag: &str| {
+        l1_entries()
+            .into_iter()
+            .find(|e| e.tag == tag)
+            .unwrap_or_else(|| panic!("missing L1 `{tag}`"))
+            .matrix
+            .extra
+    };
+    assert_eq!(extra("a"), ["bare"]);
+    assert_eq!(extra("chip"), ["leading-icon"]);
+    assert_eq!(extra("checkbox"), ["checked", "indeterminate"]);
+    assert_eq!(extra("dialog"), ["open"]);
+    assert_eq!(extra("progress"), ["indeterminate"]);
+    assert!(extra("button").is_empty());
+    assert!(extra("kbd").is_empty());
 }

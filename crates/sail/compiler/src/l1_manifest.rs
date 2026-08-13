@@ -28,6 +28,28 @@ pub struct L1Entry {
     pub component_tokens: Vec<L1ComponentToken>,
     /// JS participation: none / enhancement / required + `use:` behaviors.
     pub js: L1Js,
+    /// State × variant matrix (derived axes + residual extra cells).
+    pub matrix: L1Matrix,
+}
+
+/// State × variant matrix for one L1 element.
+///
+/// `axes` is what closed `props:` already imply. `extra` is residual the
+/// compiler cannot derive (native IDL, omit-as-mode, slots).
+#[derive(Debug, Clone, Default, Serialize, PartialEq, Eq)]
+pub struct L1Matrix {
+    pub axes: Vec<L1MatrixAxis>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub extra: Vec<String>,
+}
+
+/// One closed axis of an L1 matrix.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct L1MatrixAxis {
+    pub name: String,
+    pub values: Vec<String>,
+    /// Union with no default: omit is a legal rest path.
+    pub optional: bool,
 }
 
 /// One L1 component-token slot: author name, default semantic slot, kind.
@@ -190,6 +212,7 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
                 .unwrap_or_default();
             let component_tokens = component_tokens_for_tag(el.tag);
             let js = js_for_element(el);
+            let matrix = matrix_from_vocab(el.tag, &attributes);
             L1Entry {
                 tag: el.tag.to_string(),
                 kind: L1Kind::StdlibElement,
@@ -197,6 +220,7 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
                 attributes,
                 component_tokens,
                 js,
+                matrix,
             }
         })
         .collect();
@@ -309,6 +333,81 @@ fn js_for_element(el: &crate::stdlib::StdlibElement) -> L1Js {
         L1JsKind::Required
     };
     L1Js { kind, behaviors }
+}
+
+fn matrix_from_vocab(tag: &str, attributes: &[L1Attribute]) -> L1Matrix {
+    let mut axes: Vec<L1MatrixAxis> = attributes.iter().filter_map(axis_from_attr).collect();
+    axes.sort_by(|a, b| a.name.cmp(&b.name));
+    L1Matrix {
+        axes,
+        extra: hand_matrix_extra(tag)
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect(),
+    }
+}
+
+fn axis_from_attr(a: &L1Attribute) -> Option<L1MatrixAxis> {
+    if is_event_attr(a) {
+        return None;
+    }
+    if !a.values.is_empty() {
+        return Some(L1MatrixAxis {
+            name: a.name.clone(),
+            values: a.values.clone(),
+            optional: a.default.is_none(),
+        });
+    }
+    if a.ty == "bool" {
+        return Some(L1MatrixAxis {
+            name: a.name.clone(),
+            values: vec!["false".into(), "true".into()],
+            optional: false,
+        });
+    }
+    None
+}
+
+fn is_event_attr(a: &L1Attribute) -> bool {
+    a.name.starts_with("on") && (a.ty.contains("=>") || a.ty.contains("void"))
+}
+
+/// Residual cells the compiler cannot derive from closed `props:`.
+fn hand_matrix_extra(tag: &str) -> &'static [&'static str] {
+    match tag {
+        // Omit variant is a text link; the default variant value is button-link chrome.
+        "a" => &["bare"],
+        // Broken/empty src is a mediaFallback state, not a closed prop value.
+        "avatar" => &["src-fallback"],
+        // Native checkbox IDL — not declared on the host props.
+        "checkbox" => &["checked", "indeterminate"],
+        // Leading icon is a slot, not a prop.
+        "chip" => &["leading-icon"],
+        // Native [popover] / <dialog> open — not host props.
+        "combobox" | "context-menu" | "dialog" | "dropdown" | "hover-card" | "popover"
+        | "theme-picker" => &["open"],
+        // Native progress without value — not a prop.
+        "progress" => &["indeterminate"],
+        // Native radio IDL.
+        "radio" => &["checked"],
+        // Autohide lock — not a closed prop.
+        "toast" => &["sticky"],
+        _ => &[],
+    }
+}
+
+/// Drift pin: live entry matrix must equal vocab-derived + residual extras.
+pub fn matrix_contract(entry: &L1Entry) -> Result<(), String> {
+    let expected = matrix_from_vocab(&entry.tag, &entry.attributes);
+    if entry.matrix == expected {
+        return Ok(());
+    }
+    Err(format!(
+        "L1 `{}` matrix missing or drifted (axes={}, extra={:?})",
+        entry.tag,
+        entry.matrix.axes.len(),
+        entry.matrix.extra
+    ))
 }
 
 fn extract_use_behaviors(html: &str) -> Vec<String> {

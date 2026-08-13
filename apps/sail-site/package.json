@@ -11,9 +11,7 @@
     "test": "playwright test",
     "qa": "node qa/probe.mjs --sweep --theme=all",
     "qa:fast": "node qa/probe.mjs --sweep --theme=ship,glass",
-    "qa:probe": "node qa/probe.mjs",
-    "qa:l1": "node ../../packages/sail/l1-conformance/run.mjs",
-    "check:l1-surface": "bun scripts/check-l1-surface-contract.mjs"
+    "qa:probe": "node qa/probe.mjs"
   },
   "dependencies": {
     "@ship/sail-runtime": "workspace:*",
