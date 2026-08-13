@@ -47,6 +47,9 @@ export default controller(() => {
   style brandDeck = { paint: fg(primary) }
   style version = { box: padX(2), paint: fg(muted-foreground).borderWidth(1).border(border).radius(full), text: fontFamily(mono).fontSize(xs) }
   style main = { box: grow(1).minW(0).pad(7).maxW(breakpoint-tablet) }
+  // Rail default-slot is a nowrap row; short labels wrap to 6–13px letters.
+  // control-h-xs is the 24px tap floor (control-h-2xs is 22).
+  style railLink = { box: minW(control-h-xs).minH(control-h-xs) }
 </scope>
 
 <navbar sticky bordered>
@@ -70,22 +73,22 @@ export default controller(() => {
 <row align="stretch">
   <navbar placement="rail" bordered sticky offset="14">
     <label>Introduction</label>
-    <a href="/" aria-current={path() === '/' ? 'page' : null}>Overview</a>
-    <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Getting started</a>
+    <a style(railLink) href="/" aria-current={path() === '/' ? 'page' : null}>Overview</a>
+    <a style(railLink) href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Getting started</a>
 
     <label>Routing</label>
-    <a href="/routing" aria-current={path() === '/routing' ? 'page' : null}>File routing</a>
-    <a href="/dynamic-routes" aria-current={path() === '/dynamic-routes' ? 'page' : null}>Dynamic routes</a>
-    <a href="/layouts" aria-current={path() === '/layouts' ? 'page' : null}>Layouts</a>
+    <a style(railLink) href="/routing" aria-current={path() === '/routing' ? 'page' : null}>File routing</a>
+    <a style(railLink) href="/dynamic-routes" aria-current={path() === '/dynamic-routes' ? 'page' : null}>Dynamic routes</a>
+    <a style(railLink) href="/layouts" aria-current={path() === '/layouts' ? 'page' : null}>Layouts</a>
 
     <label>Reactivity</label>
-    <a href="/reactivity" aria-current={path() === '/reactivity' ? 'page' : null}>Reactivity</a>
-    <a href="/data" aria-current={path() === '/data' ? 'page' : null}>The data seam</a>
+    <a style(railLink) href="/reactivity" aria-current={path() === '/reactivity' ? 'page' : null}>Reactivity</a>
+    <a style(railLink) href="/data" aria-current={path() === '/data' ? 'page' : null}>The data seam</a>
 
     <label>Rendering &amp; build</label>
-    <a href="/rendering" aria-current={path() === '/rendering' ? 'page' : null}>Rendering modes</a>
-    <a href="/hmr" aria-current={path() === '/hmr' ? 'page' : null}>HMR</a>
-    <a href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
+    <a style(railLink) href="/rendering" aria-current={path() === '/rendering' ? 'page' : null}>Rendering modes</a>
+    <a style(railLink) href="/hmr" aria-current={path() === '/hmr' ? 'page' : null}>HMR</a>
+    <a style(railLink) href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
   </navbar>
 
   <main style(main)>
